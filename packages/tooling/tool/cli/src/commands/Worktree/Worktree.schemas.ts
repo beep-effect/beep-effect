@@ -260,6 +260,39 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
 ) {}
 
 /**
+ * The variable an agent harness exports to name its session process, and the pid it claims.
+ *
+ * **Details**
+ *
+ * Claude Code exports `CLAUDE_PID=<its own pid>` to every tool shell it
+ * spawns. The archive fence does not take the claim on faith: it accepts the
+ * pid only when the invoker ancestor directly below it still carries this
+ * marker in its initial environment, which init, the desktop host, or a pid
+ * copied from another shell can never satisfy.
+ *
+ * **Example** (Name a session)
+ *
+ * ```ts
+ * import { WorktreeSessionMarker } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const marker = WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 4242 })
+ * console.log(marker.name) // "CLAUDE_PID"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeSessionMarker extends S.Class<WorktreeSessionMarker>($I`WorktreeSessionMarker`)(
+  {
+    name: NonEmptyTrimmedStr,
+    pid: ProcessPid,
+  },
+  $I.annote("WorktreeSessionMarker", {
+    description: "Environment variable a harness exports to its children, and the session pid it claims to carry.",
+  })
+) {}
+
+/**
  * The processes the archive fence may exempt on the invoker's behalf.
  *
  * **Details**
@@ -267,20 +300,22 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  * Present on a request, it exempts the invoker's own ancestry (the CLI, its
  * shell, the agent session above them): they are the party asking for the
  * removal, not writers whose later output the archive could lose.
- * `sessionPid` widens that to the whole subtree of one of those ancestors,
- * the agent session process, so the helpers it spawned into the lane (MCP
- * servers, tool shells, its own background jobs) count as the same party.
- * The fence honours the pid only when it really is an invoker ancestor; a
- * stale or foreign value never widens the fence.
+ * `sessionMarker` widens that to the whole subtree of one of those
+ * ancestors, the agent session process, so the helpers it spawned into the
+ * lane (MCP servers, tool shells, its own background jobs) count as the same
+ * party. The fence proves the marker against `/proc` before honouring it, so
+ * a stale, foreign, or universal-ancestor value never widens the fence.
  *
  * **Example** (Exempt the invoker and its session subtree)
  *
  * ```ts
- * import { WorktreeInvokerExemption } from "@beep/repo-cli/commands/Worktree"
+ * import { WorktreeInvokerExemption, WorktreeSessionMarker } from "@beep/repo-cli/commands/Worktree"
  * import * as O from "effect/Option"
  *
- * const exemption = WorktreeInvokerExemption.make({ sessionPid: O.some(4242) })
- * console.log(O.isSome(exemption.sessionPid)) // true
+ * const exemption = WorktreeInvokerExemption.make({
+ *   sessionMarker: O.some(WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 4242 })),
+ * })
+ * console.log(O.isSome(exemption.sessionMarker)) // true
  * ```
  *
  * @category models
@@ -288,11 +323,11 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  */
 export class WorktreeInvokerExemption extends S.Class<WorktreeInvokerExemption>($I`WorktreeInvokerExemption`)(
   {
-    sessionPid: S.OptionFromNullOr(ProcessPid),
+    sessionMarker: S.OptionFromNullOr(WorktreeSessionMarker),
   },
   $I.annote("WorktreeInvokerExemption", {
     description:
-      "Exemption the archive fence grants the invoker: its own ancestry, and the subtree of the session process when one is named.",
+      "Exemption the archive fence grants the invoker: its own ancestry, and the subtree of the session process a harness marker proves.",
   })
 ) {}
 

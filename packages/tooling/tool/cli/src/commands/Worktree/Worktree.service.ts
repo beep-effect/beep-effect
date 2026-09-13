@@ -35,6 +35,7 @@ import {
   runGitOutput,
   runGitRawOutput,
   scanProcessAttachments,
+  sessionRootOf,
 } from "../../internal/repo-run/index.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
@@ -1076,10 +1077,11 @@ const describeAttachedProcesses = Effect.fnUntraced(function* (
 });
 
 // The party asking for the retirement is the invoker's own chain (CLI, shell,
-// agent session) and, when the request names the session process, everything
+// agent session) and, when the request carries a session marker, everything
 // that session spawned: a holder whose ancestry reaches the session pid is one
-// of its helpers, not a writer the archive could lose. The session pid counts
-// only when it really is an invoker ancestor, so a stale or foreign value can
+// of its helpers, not a writer the archive could lose. The marker is proven
+// against /proc first (the invoker ancestor directly below the named pid must
+// carry it), so init, the desktop host, or a pid copied from elsewhere can
 // never widen the fence.
 const blockingHolders = Effect.fnUntraced(function* (
   request: WorktreeRemovalRequest,
@@ -1089,7 +1091,10 @@ const blockingHolders = Effect.fnUntraced(function* (
     return attachments;
   }
   const chain = yield* invokerAncestryPids();
-  const session = O.filter(request.exemptInvoker.sessionPid, (pid) => HashSet.has(chain, pid));
+  const session = yield* O.match(request.exemptInvoker.sessionMarker, {
+    onNone: () => Effect.succeed(O.none<number>()),
+    onSome: (marker) => sessionRootOf(process.pid, marker),
+  });
   const isExempt = (holder: ProcessAttachment): Effect.Effect<boolean, never, FileSystem.FileSystem> =>
     HashSet.has(chain, holder.pid)
       ? Effect.succeed(true)

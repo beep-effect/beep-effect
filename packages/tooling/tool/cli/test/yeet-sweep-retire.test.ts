@@ -3,7 +3,7 @@ import {
   WorktreeRemovalReceipt,
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
-import { RepoRunContext } from "@beep/repo-cli/test/RepoRun";
+import { RepoRunContext, sessionRootOf } from "@beep/repo-cli/test/RepoRun";
 import { GhPrView } from "@beep/repo-cli/test/SharedInternals";
 import {
   planRetire,
@@ -19,6 +19,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as A from "effect/Array";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -513,22 +514,75 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     )
   );
 
-  it.effect("exempts the session's own subtree when the harness names an invoker ancestor", () =>
+  it.effect("exempts the session's own subtree only when the harness marker proves the session", () =>
     withScratchRepo(({ repoRoot, lane, tip, packetDir, env }) =>
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
+          // Under Claude Code the real CLAUDE_PID names an ancestor whose child on
+          // this path carries it, so the holders below are the session's own;
+          // anywhere else there is no session to prove and they still refuse.
+          const claimed = O.flatMap(O.fromNullishOr(process.env.CLAUDE_PID), N.parse);
+          const proven = yield* O.match(claimed, {
+            onNone: () => Effect.succeed(O.none<number>()),
+            onSome: (pid) => sessionRootOf(process.pid, { name: "CLAUDE_PID", pid }),
+          });
           const holder = yield* spawnLaneHolder(lane);
-          // This test process stands in for the agent session: the holders are
-          // its child and grandchild, exactly where a session's MCP servers sit.
-          const output = yield* captureOutput(
-            withEnv({ ...env, CLAUDE_PID: String(process.pid) }, withCwd(lane, sweep(packetDir))).pipe(
+          const attempt = withEnv(
+            { ...env, ...O.match(claimed, { onNone: () => ({}), onSome: (pid) => ({ CLAUDE_PID: String(pid) }) }) },
+            withCwd(lane, sweep(packetDir))
+          ).pipe(provideScopedLayer(ghLayer(tip, "MERGED")));
+          if (O.isSome(proven)) {
+            const output = yield* captureOutput(attempt).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
+            expect(output).toContain("[yeet] retired");
+            expect(yield* fs.exists(lane)).toBe(false);
+            expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+          } else {
+            const error = yield* Effect.flip(attempt).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
+            expect(error.message).toContain("still hold it");
+            expect(yield* fs.exists(lane)).toBe(true);
+          }
+        })
+      )
+    )
+  );
+
+  it.effect("refuses the holder when CLAUDE_PID names init, a universal ancestor", () =>
+    withScratchRepo(({ lane, tip, packetDir, env }) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const holder = yield* spawnLaneHolder(lane);
+          // pid 1 sits on every invoker's chain, but no process on this path was
+          // started by init carrying CLAUDE_PID=1, so the claim proves nothing.
+          const error = yield* Effect.flip(
+            withEnv({ ...env, CLAUDE_PID: "1" }, withCwd(lane, sweep(packetDir))).pipe(
               provideScopedLayer(ghLayer(tip, "MERGED"))
             )
           ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
-          expect(output).toContain("[yeet] retired");
-          expect(yield* fs.exists(lane)).toBe(false);
-          expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+          expect(error.message).toContain("still hold it");
+          expect(error.message).toContain("(sh) via cwd");
+          expect(yield* fs.exists(lane)).toBe(true);
+        })
+      )
+    )
+  );
+
+  it.effect("refuses the holder when CLAUDE_PID names an ancestor that never exported it", () =>
+    withScratchRepo(({ lane, tip, packetDir, env }) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const holder = yield* spawnLaneHolder(lane);
+          // This process's parent is a real ancestor, yet this process was not
+          // started with CLAUDE_PID naming it, so the desktop-host case refuses.
+          const error = yield* Effect.flip(
+            withEnv({ ...env, CLAUDE_PID: String(process.ppid) }, withCwd(lane, sweep(packetDir))).pipe(
+              provideScopedLayer(ghLayer(tip, "MERGED"))
+            )
+          ).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
+          expect(error.message).toContain("still hold it");
+          expect(yield* fs.exists(lane)).toBe(true);
         })
       )
     )

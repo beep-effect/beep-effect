@@ -14,6 +14,7 @@
  * @since 0.0.0
  */
 
+import { NonEmptyTrimmedStr } from "@beep/schema";
 import { Config, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -23,7 +24,11 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ProcessPid, RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
-import { WorktreeInvokerExemption, WorktreeRemovalRequest } from "../../Worktree/Worktree.schemas.ts";
+import {
+  WorktreeInvokerExemption,
+  WorktreeRemovalRequest,
+  WorktreeSessionMarker,
+} from "../../Worktree/Worktree.schemas.ts";
 import { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { YeetRetirePlan } from "./Retire.schemas.ts";
@@ -33,19 +38,21 @@ import type { SweepGitState } from "./Sweep.ts";
 const decodeWorktreeName = S.decodeUnknownEffect(WorktreeRemovalRequest.fields.name);
 const decodeRetirePlan = S.decodeUnknownEffect(YeetRetirePlan);
 
-// Claude Code names its session process for every tool shell it spawns; that
-// harness key lives here, in the command that runs under it, so the worktree
-// service only ever learns "the pid whose subtree is the party asking".
-const SESSION_PID_ENV = "CLAUDE_PID";
+// Claude Code exports its own pid under this name to every tool shell it
+// spawns; that harness key lives here, in the command that runs under it, so
+// the worktree service only ever learns "the marker that names the session".
+const SESSION_PID_ENV = NonEmptyTrimmedStr.make("CLAUDE_PID");
 
 // The lane's own CLI always carries --retire, whatever branch the clone sits on.
 const REPO_CLI_ENTRY_PATH = "packages/tooling/tool/cli/src/bin.ts";
 
 // A malformed value is no session, not a failed retirement; the fence itself
-// drops any pid that is not an invoker ancestor.
-const invokerSessionPid = Config.option(Config.Int(SESSION_PID_ENV)).pipe(
+// proves the marker against /proc before honouring the pid it names.
+const invokerSessionMarker = Config.option(Config.Int(SESSION_PID_ENV)).pipe(
   Effect.orElseSucceed(O.none<number>),
-  Effect.map(O.filter(S.is(ProcessPid)))
+  Effect.map((named) =>
+    O.map(O.filter(named, S.is(ProcessPid)), (pid) => WorktreeSessionMarker.make({ name: SESSION_PID_ENV, pid }))
+  )
 );
 
 const gitOutput = Effect.fn("Yeet.retireGitOutput")(function* (cwd: string, args: ReadonlyArray<string>) {
@@ -196,8 +203,9 @@ export const planRetire = Effect.fn("Yeet.planRetire")(function* (context: RepoR
  * first moves its own working directory to the owning clone and asks the
  * fence to exempt the invoker's ancestry (the shell and agent session that
  * started it) plus, when the harness names the session process through
- * `CLAUDE_PID`, everything that session spawned into the lane (its MCP
- * servers, tool shells, and background jobs). Retiring the lane one is
+ * `CLAUDE_PID` and the fence can prove it did, everything that session
+ * spawned into the lane (its MCP servers, tool shells, and background
+ * jobs). Retiring the lane one is
  * standing in therefore works from a desktop session too, while any other
  * holder (a terminal panel, an editor, another session) still refuses it
  * and the message names what to close.
@@ -237,7 +245,7 @@ export const retireInvokingWorktree = Effect.fn("Yeet.retireInvokingWorktree")(f
   if (isWithin(path, plan.worktreePath, process.cwd())) {
     yield* Effect.sync(() => process.chdir(plan.owningClone));
   }
-  const sessionPid = yield* invokerSessionPid;
+  const sessionMarker = yield* invokerSessionMarker;
   return yield* service
     .remove(
       WorktreeRemovalRequest.make({
@@ -248,7 +256,7 @@ export const retireInvokingWorktree = Effect.fn("Yeet.retireInvokingWorktree")(f
         archive: true,
         deleteBranch: true,
         expectedHead: O.none(),
-        exemptInvoker: WorktreeInvokerExemption.make({ sessionPid }),
+        exemptInvoker: WorktreeInvokerExemption.make({ sessionMarker }),
       })
     )
     .pipe(
