@@ -17,7 +17,9 @@ type-only examples.
 
 Run all marked examples with `bunx turbo run doctest`. Run the hosted-lane shape
 with `bun run beep ci lane doctest`. Both pull requests and pushes execute the
-full Turbo doctest fleet. The doctest lane has no `--mode` flag.
+full Turbo doctest fleet. The doctest lane descriptor lists no `--mode` flag
+(`bun run beep ci lane --list`); the shared `ci lane` command still parses
+`--mode` for the docgen lane, and the doctest lane ignores the value.
 
 The executable proof target for the architecture is `packages/architecture-lab/*`
 with `apps/architecture-lab-proof`. It carries focused runtime tests for
