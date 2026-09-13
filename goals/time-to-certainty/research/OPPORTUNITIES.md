@@ -1288,3 +1288,17 @@ was attempted under the marker-only amendment.
 - Would have prevented it: reading the hosted wall-clock as a gate in the economics baseline
   before merge, not only the local concurrency-4 numbers, and sequencing C4's input narrowing
   (or restoring parallel shards under the same Turbo plan) before retiring the sharded lane.
+
+## 2026-09-12 — Doctest flag cleanup blocked at the compiler launcher
+
+- Doing: validating removal of the deprecated doctest lane `--mode` flag.
+- Evidence: `bun run beep quality test-tsgo`,
+  `bunx turbo run check --filter=@beep/repo-cli`, and
+  `bun run beep quality package-verify @beep/repo-cli --quick` exit 1 because
+  `tools/tsgo-shim/tsgo.js:15` reports `spawnSync node EPERM` while resolving
+  the installed compiler executable, before TypeScript diagnostics. The active
+  session has managed workspace-write permissions and cannot request escalation.
+  The focused tests pass (73/73), as do ESLint, effect-vitest, JSDoc lint, and docgen.
+- Would have prevented it: verifying compiler-launch permission in the execution
+  environment before admitting the type-check gates. Keep these gates unproven
+  until their exact commands pass in a compatible session.
