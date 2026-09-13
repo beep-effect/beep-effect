@@ -12,7 +12,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
+import { LiteralKit, NonEmptyTrimmedStr, PosInt } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, Str } from "@beep/utils";
@@ -171,6 +171,100 @@ export const WorktreeRepositoryHash = S.String.check(
 export type WorktreeRepositoryHash = typeof WorktreeRepositoryHash.Type;
 
 /**
+ * Evidence that settled whether a branch tip was pushed once its configured
+ * upstream was pruned.
+ *
+ * **Details**
+ *
+ * A pruned upstream leaves no `<ref>..HEAD` range to count, so the verdict
+ * records what answered in its place. `ancestor-of-base` proves the tip is
+ * reachable from the named remote default branch; `merged-pull-request`
+ * proves GitHub merged a pull request whose head is exactly this tip;
+ * `unverified` means neither was proven, so the commits stay preserved under
+ * the archive ref.
+ *
+ * **Example** (Recognize a merged-pull-request verdict)
+ *
+ * ```ts
+ * import { WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree"
+ * import { PosInt } from "@beep/schema"
+ *
+ * const verdict: WorktreeUpstreamVerdict = { _tag: "merged-pull-request", number: PosInt.make(1098) }
+ * console.log(WorktreeUpstreamVerdict.guards["merged-pull-request"](verdict)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const WorktreeUpstreamVerdict = S.TaggedUnion({
+  "ancestor-of-base": { base: S.NonEmptyString },
+  "merged-pull-request": { number: PosInt },
+  unverified: {},
+}).pipe(
+  $I.annoteSchema("WorktreeUpstreamVerdict", {
+    description: "Evidence that decided whether a branch tip was pushed once its configured upstream was pruned.",
+  })
+);
+
+/**
+ * Decoded upstream-verdict union.
+ *
+ * @see {@link WorktreeUpstreamVerdict} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorktreeUpstreamVerdict = typeof WorktreeUpstreamVerdict.Type;
+
+/**
+ * Where a branch's configured upstream stands when unpushed commits are counted.
+ *
+ * **Details**
+ *
+ * `unset` covers detached checkouts and branches without an upstream. `live`
+ * names an upstream ref that resolves, so `<ref>..HEAD` can be counted.
+ * `pruned` names an upstream that branch configuration still points at but
+ * that no longer exists locally: `git fetch --prune` drops
+ * `refs/remotes/origin/<branch>` once the hosted branch is deleted after a
+ * merge, so the {@link WorktreeUpstreamVerdict} records what answered in its
+ * place.
+ *
+ * **Example** (Describe a pruned upstream)
+ *
+ * ```ts
+ * import { WorktreeUpstreamState } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const state: WorktreeUpstreamState = {
+ *   _tag: "pruned",
+ *   ref: "refs/remotes/origin/feat/feature-x",
+ *   verdict: { _tag: "unverified" },
+ * }
+ * console.log(state._tag) // "pruned"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const WorktreeUpstreamState = S.TaggedUnion({
+  unset: {},
+  live: { ref: S.String },
+  pruned: { ref: S.String, verdict: WorktreeUpstreamVerdict },
+}).pipe(
+  $I.annoteSchema("WorktreeUpstreamState", {
+    description:
+      "A branch's configured upstream as the unpushed-commit probe sees it: unset, live, or pruned after a merge with the verdict that answered instead.",
+  })
+);
+
+/**
+ * Decoded upstream-state union.
+ *
+ * @see {@link WorktreeUpstreamState} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
+
+/**
  * Durable receipt for worktree state preserved before archive removal.
  *
  * **Details**
@@ -178,6 +272,9 @@ export type WorktreeRepositoryHash = typeof WorktreeRepositoryHash.Type;
  * `branch` is absent for detached worktrees and `patchPath` is absent when no
  * tracked changes differed from `HEAD`. Untracked paths remain repository
  * relative so they can be copied back without rewriting their layout.
+ * `upstream` keeps the branch-upstream state the residue decision was made
+ * under, so a remote branch pruned after its merge is documented next to the
+ * commits it left behind.
  *
  * **Example** (Describe archived untracked residue)
  *
@@ -198,6 +295,7 @@ export type WorktreeRepositoryHash = typeof WorktreeRepositoryHash.Type;
  *   untrackedFiles: ["notes.txt"],
  *   residueRoot: "/home/operator/.cache/beep/worktree-residue/repo-0123456789ab/feature-x-20260902-123456",
  *   reason: "unpushed-commits",
+ *   upstream: { _tag: "live", ref: "refs/remotes/origin/feat/feature-x" },
  * })
  * console.log(manifest.untrackedFiles.length) // 1
  * ```
@@ -217,10 +315,11 @@ export class WorktreeResidueManifest extends S.Class<WorktreeResidueManifest>($I
     untrackedFiles: S.Array(S.String),
     residueRoot: S.String,
     reason: WorktreeResidueReason,
+    upstream: WorktreeUpstreamState,
   },
   $I.annote("WorktreeResidueManifest", {
     description:
-      "Durable receipt for a worktree HEAD, tracked patch, and copied untracked files preserved before removal.",
+      "Durable receipt for a worktree HEAD, tracked patch, copied untracked files, and branch-upstream state preserved before removal.",
   })
 ) {}
 
@@ -318,50 +417,6 @@ export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`W
 ) {}
 
 /**
- * Where a branch's configured upstream stands when unpushed commits are counted.
- *
- * **Details**
- *
- * `unset` covers detached checkouts and branches without an upstream. `live`
- * names an upstream ref that resolves, so `<ref>..HEAD` can be counted.
- * `pruned` names an upstream that branch configuration still points at but
- * that no longer exists locally: `git fetch --prune` drops
- * `refs/remotes/origin/<branch>` once the hosted branch is deleted after a
- * merge, so the remote default branch has to answer in its place.
- *
- * **Example** (Describe a pruned upstream)
- *
- * ```ts
- * import { WorktreeUpstreamState } from "@beep/repo-cli/commands/Worktree"
- *
- * const state: WorktreeUpstreamState = { _tag: "pruned", ref: "refs/remotes/origin/feat/feature-x" }
- * console.log(state._tag) // "pruned"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const WorktreeUpstreamState = S.TaggedUnion({
-  unset: {},
-  live: { ref: S.String },
-  pruned: { ref: S.String },
-}).pipe(
-  $I.annoteSchema("WorktreeUpstreamState", {
-    description:
-      "A branch's configured upstream as the unpushed-commit probe sees it: unset, live, or pruned after a merge.",
-  })
-);
-
-/**
- * Decoded upstream-state union.
- *
- * @see {@link WorktreeUpstreamState} for the runtime schema.
- * @category type-level
- * @since 0.0.0
- */
-export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
-
-/**
  * Answer of the unpushed-commit probe shared by doctor and archive retirement.
  *
  * **Details**
@@ -369,7 +424,8 @@ export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
  * `baseRange` is the comparison against the remote default branch
  * (`origin/<default>..HEAD`, or plain `HEAD` when that ref is absent). When
  * `upstream` is `pruned`, no upstream range could be counted, so `baseRange`
- * decided `unpushed` on its own instead of aborting the probe.
+ * decided `unpushed` on its own instead of aborting the probe and the pruned
+ * state carries the verdict that proved (or failed to prove) the tip pushed.
  *
  * **Example** (Record a probe that fell back to the default branch)
  *
@@ -379,7 +435,11 @@ export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
  * const inspection = WorktreeUnpushedInspection.make({
  *   unpushed: false,
  *   baseRange: "origin/main..HEAD",
- *   upstream: { _tag: "pruned", ref: "refs/remotes/origin/feat/feature-x" },
+ *   upstream: {
+ *     _tag: "pruned",
+ *     ref: "refs/remotes/origin/feat/feature-x",
+ *     verdict: { _tag: "ancestor-of-base", base: "origin/main" },
+ *   },
  * })
  * console.log(inspection.upstream._tag) // "pruned"
  * ```
