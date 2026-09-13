@@ -274,8 +274,9 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  *
  * ```ts
  * import { WorktreeSessionMarker } from "@beep/repo-cli/commands/Worktree"
+ * import { NonEmptyTrimmedStr } from "@beep/schema"
  *
- * const marker = WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 4242 })
+ * const marker = WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 4242 })
  * console.log(marker.name) // "CLAUDE_PID"
  * ```
  *
@@ -310,10 +311,11 @@ export class WorktreeSessionMarker extends S.Class<WorktreeSessionMarker>($I`Wor
  *
  * ```ts
  * import { WorktreeInvokerExemption, WorktreeSessionMarker } from "@beep/repo-cli/commands/Worktree"
+ * import { NonEmptyTrimmedStr } from "@beep/schema"
  * import * as O from "effect/Option"
  *
  * const exemption = WorktreeInvokerExemption.make({
- *   sessionMarker: O.some(WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 4242 })),
+ *   sessionMarker: O.some(WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 4242 })),
  * })
  * console.log(O.isSome(exemption.sessionMarker)) // true
  * ```
