@@ -37347,13 +37347,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/stream-console.test.ts:85:runSync@6#1",
+      "id": "EV001:packages/tooling/tool/cli/test/stream-console.test.ts:86:runSync@6#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/stream-console.test.ts",
-      "line": 85,
-      "endLine": 85,
+      "line": 86,
+      "endLine": 86,
       "symbol": "runSync",
       "occurrence": "v2:d17ac5d4fc095f6a842f422ee899cdb1608d3aad823f015dfa7d0328e9a3833d",
       "class": "runtime-boundary-in-test",
@@ -66600,15 +66600,15 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/stream-console.test.ts:177:provideScopedLayer@7#1",
+      "id": "EV002:packages/tooling/tool/cli/test/stream-console.test.ts:222:provideScopedLayer@7#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/stream-console.test.ts",
-      "line": 177,
-      "endLine": 177,
+      "line": 222,
+      "endLine": 222,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:2784797888ee776da58cb4a309bfae1c2035a96be637b41789a51e92abc75c85",
+      "occurrence": "v2:a90423454200a6b0db714c7d7b7aaa6e343acc517c9a05297af34478969517ac",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(NodeServices.layer)",
       "replacement": {
@@ -164670,13 +164670,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/stream-console.test.ts:4:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/stream-console.test.ts:5:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/stream-console.test.ts",
-      "line": 4,
-      "endLine": 4,
+      "line": 5,
+      "endLine": 5,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",

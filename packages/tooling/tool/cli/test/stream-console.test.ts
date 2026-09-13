@@ -1,6 +1,7 @@
 import { drainProcessStreams, streamConsole } from "@beep/repo-cli/test/Cli";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { provideScopedLayer } from "@beep/test-utils";
+import { P } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Console, Effect } from "effect";
@@ -18,12 +19,12 @@ const captureStreams = <A>(
   const originalErr = process.stderr.write;
   // Settle every write at once so the module's in-flight counter returns to zero.
   process.stdout.write = ((chunk: string | Uint8Array, callback?: () => void) => {
-    stdout.push(String(chunk));
+    stdout.push(P.isString(chunk) ? chunk : new TextDecoder().decode(chunk));
     callback?.();
     return true;
   }) as WriteFn;
   process.stderr.write = ((chunk: string | Uint8Array, callback?: () => void) => {
-    stderr.push(String(chunk));
+    stderr.push(P.isString(chunk) ? chunk : new TextDecoder().decode(chunk));
     callback?.();
     return true;
   }) as WriteFn;
@@ -134,21 +135,65 @@ describe("stream console", () => {
       streamConsole.log("first");
       streamConsole.error("second");
       streamConsole.log("third");
-      expect(callbacks).toHaveLength(3);
+      expect(callbacks).toHaveLength(2);
       let drained = false;
       drainProcessStreams(() => {
         drained = true;
       });
-      // Settling the writes out of order leaves the drain pending while any write is in flight.
-      callbacks[2]?.();
+      // Stderr can finish independently; stdout preserves its FIFO order.
+      callbacks[1]?.();
       expect(drained).toBe(false);
       callbacks[0]?.();
       expect(drained).toBe(false);
-      callbacks[1]?.();
+      expect(callbacks).toHaveLength(3);
+      callbacks[2]?.();
       expect(drained).toBe(true);
     } finally {
       process.stdout.write = originalOut;
       process.stderr.write = originalErr;
+    }
+  });
+
+  it("serializes a 100 KiB UTF-8 line and later logs through bounded callback-driven chunks", () => {
+    const chunks: Array<Uint8Array> = [];
+    const callbacks: Array<() => void> = [];
+    const encoder = new TextEncoder();
+    const line = Str.repeat(20 * 1024)("€ab");
+    expect(encoder.encode(line).byteLength).toBe(100 * 1024);
+    const expected = encoder.encode(`${line}\nFOOTER\n`);
+    const originalOut = process.stdout.write;
+    process.stdout.write = ((chunk: string | Uint8Array, callback?: () => void) => {
+      chunks.push(P.isString(chunk) ? encoder.encode(chunk) : chunk);
+      if (callback !== undefined) {
+        callbacks.push(callback);
+      }
+      return false;
+    }) as WriteFn;
+    try {
+      streamConsole.log(line);
+      streamConsole.log("FOOTER");
+      expect(chunks).toHaveLength(1);
+      let drained = false;
+      drainProcessStreams(() => {
+        drained = true;
+      });
+      let offset = 0;
+      for (const [index, callback] of callbacks.entries()) {
+        expect(drained).toBe(false);
+        const chunk = chunks[index];
+        expect(chunk).toBeDefined();
+        if (chunk !== undefined) {
+          expect(chunk.byteLength).toBeLessThanOrEqual(8192);
+          expect(chunk).toEqual(expected.subarray(offset, offset + chunk.byteLength));
+          offset += chunk.byteLength;
+        }
+        expect(chunks).toHaveLength(index + 1);
+        callback();
+      }
+      expect(offset).toBe(expected.byteLength);
+      expect(drained).toBe(true);
+    } finally {
+      process.stdout.write = originalOut;
     }
   });
 
@@ -158,7 +203,7 @@ describe("stream console", () => {
       const modulePath = new URL("../src/internal/cli/Stdout.ts", import.meta.url).pathname;
       const script = [
         "const { streamConsole, drainProcessStreams } = await import(process.argv[1]);",
-        'streamConsole.log("x".repeat(1024 * 1024) + "FOOTER");',
+        'streamConsole.log("x".repeat(4 * 1024 * 1024) + "FOOTER");',
         "drainProcessStreams(() => process.exit(0));",
       ].join("\n");
       const child = yield* StepExec.runCaptured({
@@ -166,13 +211,13 @@ describe("stream console", () => {
         args: ["--eval", script, modulePath],
         cwd: new URL("..", import.meta.url).pathname,
         source: "stdout",
-        bound: StepExec.OutputBound.make({ maxChars: 4 * 1024 * 1024, truncatedNotice: "\n[test] truncated" }),
+        bound: StepExec.OutputBound.make({ maxChars: 5 * 1024 * 1024, truncatedNotice: "\n[test] truncated" }),
         timeout: "60 seconds",
         extendEnv: true,
       });
       expect(child.exitCode).toBe(0);
       expect(child.truncated).toBe(false);
-      expect(Str.length(child.output)).toBe(1024 * 1024 + Str.length("FOOTER\n"));
+      expect(Str.length(child.output)).toBe(4 * 1024 * 1024 + Str.length("FOOTER\n"));
       expect(Str.endsWith("FOOTER\n")(child.output)).toBe(true);
     }, provideScopedLayer(NodeServices.layer)),
     { timeout: 90_000 }
