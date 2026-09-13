@@ -1280,7 +1280,8 @@ was attempted under the marker-only amendment.
 
 - Doing: the post-merge accounting for #1102 (§7.1.4) against the pre-migration lane census.
 - Evidence: `Heavy / Lint Policy` p50 was 620 s (p95 650 s, n=11) before the migration; the
-  three runs after it took 1,369 s (PR head), 1,303 s (main cold) and 1,323 s (main next). The
+  census split at the merge shows post-migration p50 1,211 s (n=10, p95 1,323 s), with the two
+  main runs at 1,303 s and 1,323 s. The
   D10 plan runs the whole policy fleet in one job on a 4-vCPU runner, where the retired design
   ran sharded jobs in parallel, and consecutive main commits replay almost nothing because the
   root tasks still declare whole-tree inputs.
