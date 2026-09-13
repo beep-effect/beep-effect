@@ -85,7 +85,9 @@ the checkout it runs in, so the lane always carries the merged flags while the
 clone's `main` may still be behind the merge and reject `--retire` as an
 unknown flag (observed 2026-09-12 on the first closeout). The command moves
 its own process out of the lane before removal, so the shell may stay in the
-lane during the run. `--lane <path>` names the lane when the command runs from
+lane during the run, but redirect its output to a file rather than piping it:
+the other stages of a shell pipeline stand in the lane and the fence counts
+them as holders. `--lane <path>` names the lane when the command runs from
 a clone that already carries the merged CLI; without it the command retires
 the checkout it runs in. `--json` prints one
 schema-owned document (`yeet-retire-sweep-plan/v1` with `--plan`,
