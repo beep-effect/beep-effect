@@ -8,6 +8,10 @@
  * COGNEE_API_EMAIL / COGNEE_API_PASSWORD) load from an optional
  * `$HOME/.config/beep-research/env` EnvironmentFile.
  *
+ * Each service waits for NetworkManager through `nm-online` where that helper
+ * exists, because a `Persistent=` timer replays a missed run seconds after
+ * boot, before the network is up; the wait's exit status never fails the run.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
@@ -64,6 +68,12 @@ const unitPairs = (notionPage: O.Option<string>): ReadonlyArray<UnitPair> => [
   },
 ];
 
+// The `-` prefix keeps a missing helper or a timed-out wait from failing the
+// unit; `/bin/sh` exists everywhere the units can run. The line carries no `$`
+// or `%`, so systemd renders it verbatim.
+const NETWORK_ONLINE_WAIT =
+  'ExecStartPre=-/bin/sh -c "command -v nm-online >/dev/null 2>&1 && exec nm-online -q --timeout=90"';
+
 const renderService = (unit: UnitPair, options: ResearchTimerOptions, home: string): string =>
   A.join(
     [
@@ -78,6 +88,7 @@ const renderService = (unit: UnitPair, options: ResearchTimerOptions, home: stri
       // token by schema.
       `WorkingDirectory=${options.repoRoot}`,
       `EnvironmentFile=-${home}/${RESEARCH_ENV_FILE_RELATIVE}`,
+      NETWORK_ONLINE_WAIT,
       `ExecStart="${options.bunPath}" run beep ${unit.execArgs}`,
       "TimeoutStartSec=1800",
       "",

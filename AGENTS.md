@@ -118,13 +118,17 @@ models and effort levels they actually recorded.
   them.
 - Post-merge closeout is the agent's job, not the operator's. Once the PR is
   MERGED, retire the lane and sweep its owning clone in one command, run from
-  the lane worktree as the last command of the session:
-  `cd "$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire --lane "$OLDPWD"`
+  inside the lane worktree as the last command of the session:
+  `CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`
   (archives residue, deletes the branch, sweeps the clone; it refuses until the
-  PR is MERGED and heads that branch, so running it early is safe). The `cd`
-  keeps the shell out of the directory being removed; the fence exempts the
-  invoking session itself and still refuses any other holder. When the merged
-  change touched a systemd unit renderer, follow with
+  PR is MERGED and heads that branch, so running it early is safe). Run it from
+  the lane, never from the clone: `bun run beep` resolves the CLI from the
+  checkout it runs in, and the clone's `main` may still be behind the merge and
+  reject `--retire` as an unknown flag. The command steps its own process out
+  of the lane before removal and the fence exempts the invoking session's
+  ancestry while still refusing any other holder; the trailing `cd` moves the
+  shell to the swept clone. When the merged change touched a systemd unit
+  renderer, follow with
   `bun run beep research install-timers --refresh` and/or
   `bun run beep graft deep install-timer --refresh` (the latter is the only
   agent-allowed form of that command) from the swept clone — the installed
