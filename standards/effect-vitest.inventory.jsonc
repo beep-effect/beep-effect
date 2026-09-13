@@ -37347,13 +37347,13 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/stream-console.test.ts:86:runSync@6#1",
+      "id": "EV001:packages/tooling/tool/cli/test/stream-console.test.ts:111:runSync@6#1",
       "lens": "detector",
       "ruleId": "EV001",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/stream-console.test.ts",
-      "line": 86,
-      "endLine": 86,
+      "line": 111,
+      "endLine": 111,
       "symbol": "runSync",
       "occurrence": "v2:d17ac5d4fc095f6a842f422ee899cdb1608d3aad823f015dfa7d0328e9a3833d",
       "class": "runtime-boundary-in-test",
@@ -66600,13 +66600,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/stream-console.test.ts:222:provideScopedLayer@7#1",
+      "id": "EV002:packages/tooling/tool/cli/test/stream-console.test.ts:247:provideScopedLayer@7#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/stream-console.test.ts",
-      "line": 222,
-      "endLine": 222,
+      "line": 247,
+      "endLine": 247,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:a90423454200a6b0db714c7d7b7aaa6e343acc517c9a05297af34478969517ac",
       "class": "unresolved-layer-provide",

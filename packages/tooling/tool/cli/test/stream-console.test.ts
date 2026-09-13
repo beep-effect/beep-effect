@@ -15,16 +15,20 @@ const captureStreams = <A>(
 ): { readonly result: A; readonly stdout: ReadonlyArray<string>; readonly stderr: ReadonlyArray<string> } => {
   const stdout: Array<string> = [];
   const stderr: Array<string> = [];
+  // One streaming decoder per stream: a multi-byte sequence may straddle the writer's 8 KiB chunk
+  // boundary, so each chunk is decoded with `stream: true` and the tail is flushed at the end.
+  const decodeOut = new TextDecoder();
+  const decodeErr = new TextDecoder();
   const originalOut = process.stdout.write;
   const originalErr = process.stderr.write;
   // Settle every write at once so the module's in-flight counter returns to zero.
   process.stdout.write = ((chunk: string | Uint8Array, callback?: () => void) => {
-    stdout.push(P.isString(chunk) ? chunk : new TextDecoder().decode(chunk));
+    stdout.push(P.isString(chunk) ? chunk : decodeOut.decode(chunk, { stream: true }));
     callback?.();
     return true;
   }) as WriteFn;
   process.stderr.write = ((chunk: string | Uint8Array, callback?: () => void) => {
-    stderr.push(P.isString(chunk) ? chunk : new TextDecoder().decode(chunk));
+    stderr.push(P.isString(chunk) ? chunk : decodeErr.decode(chunk, { stream: true }));
     callback?.();
     return true;
   }) as WriteFn;
@@ -33,6 +37,14 @@ const captureStreams = <A>(
   } finally {
     process.stdout.write = originalOut;
     process.stderr.write = originalErr;
+    const outTail = decodeOut.decode();
+    if (Str.isNonEmpty(outTail)) {
+      stdout.push(outTail);
+    }
+    const errTail = decodeErr.decode();
+    if (Str.isNonEmpty(errTail)) {
+      stderr.push(errTail);
+    }
   }
 };
 
@@ -66,6 +78,19 @@ describe("stream console", () => {
       "timer detail\n",
     ]);
     expect(stderr).toEqual(["boom cause\n", "careful\n", "where\n", "Assertion failed: loud\n"]);
+  });
+
+  it("keeps multi-byte characters intact across the 8 KiB chunk boundary", () => {
+    // 6,000 two-byte characters span two chunks; an odd boundary would split a code point.
+    const line = Str.repeat(6_000)("\u00e9");
+    const { stdout, stderr } = captureStreams(() => {
+      streamConsole.log(line);
+      streamConsole.error(line);
+    });
+    expect(A.length(stdout)).toBeGreaterThan(1);
+    expect(A.join(stdout, "")).toBe(`${line}\n`);
+    expect(A.join(stderr, "")).toBe(`${line}\n`);
+    expect(Str.includes("\uFFFD")(A.join(stdout, ""))).toBe(false);
   });
 
   it("treats grouping, counting, and timing bookkeeping as silent", () => {
