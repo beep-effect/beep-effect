@@ -3,7 +3,7 @@ import {
   WorktreeRemovalReceipt,
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
-import { processEnvironmentValue, RepoRunContext, sessionRootOf } from "@beep/repo-cli/test/RepoRun";
+import { RepoRunContext } from "@beep/repo-cli/test/RepoRun";
 import { GhPrView } from "@beep/repo-cli/test/SharedInternals";
 import {
   planRetire,
@@ -19,7 +19,6 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as A from "effect/Array";
-import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -224,6 +223,38 @@ const spawnLaneHolder = (lane: string) =>
     stdout: "ignore",
     stderr: "ignore",
   });
+
+const RETIRE_FENCE_INVOKER = new URL("./support/RetireFenceInvoker.ts", import.meta.url).pathname;
+
+const RetireInvokerOutcome = S.Struct({ ok: S.Boolean, message: S.String });
+const decodeRetireInvokerOutcome = S.decodeUnknownEffect(S.fromJsonString(RetireInvokerOutcome));
+
+// The retirement step in its own process, with this test process as the agent
+// session above it: whatever CLAUDE_PID `env` carries lands in the invoker's
+// real initial environment, which is the /proc view the fence proves against.
+const runRetireInvoker = Effect.fn("YeetRetireTest.runRetireInvoker")(function* (
+  lane: string,
+  owningClone: string,
+  env: Record<string, string>
+) {
+  const handle = yield* ChildProcess.make(
+    "bun",
+    ["run", RETIRE_FENCE_INVOKER, lane, owningClone, "lane", "claude/lane"],
+    {
+      cwd: lane,
+      env,
+      extendEnv: true,
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "pipe",
+    }
+  );
+  const output = yield* handle.all.pipe(Stream.decodeText(), Stream.runCollect, Effect.map(A.join("")));
+  const exitCode = yield* handle.exitCode;
+  const line = O.getOrElse(A.findLast(Str.split(Str.trim(output), "\n"), Str.startsWith("{")), () => output);
+  const outcome = yield* decodeRetireInvokerOutcome(line);
+  return { exitCode, ...outcome } as const;
+});
 
 describe("yeet sweep --retire", { concurrent: false }, () => {
   it.effect("retires the merged nested lane, deletes its branch, and fast-forwards the owning clone", () =>
@@ -514,36 +545,42 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     )
   );
 
-  it.effect("exempts the session's own subtree only when the harness marker proves the session", () =>
-    withScratchRepo(({ repoRoot, lane, tip, packetDir, env }) =>
+  it.effect("exempts holders under the session that exported CLAUDE_PID to the invoker", () =>
+    withScratchRepo(({ repoRoot, lane, env }) =>
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          // Under Claude Code the CLAUDE_PID this process was started with names
-          // an ancestor whose child on this path carries it, so the holders below
-          // are the session's own; anywhere else there is no session to prove and
-          // they still refuse. The marker is read from /proc, the way the fence
-          // reads it, rather than from the mutable process environment.
-          const claimed = O.flatMap(yield* processEnvironmentValue(process.pid, "CLAUDE_PID"), N.parse);
-          const proven = yield* O.match(claimed, {
-            onNone: () => Effect.succeed(O.none<number>()),
-            onSome: (pid) => sessionRootOf(process.pid, { name: "CLAUDE_PID", pid }),
-          });
+          // This test process is the session: it exports its own pid as CLAUDE_PID
+          // to the invoker it spawns, and the lane holder is its other child, a
+          // sibling of the invoker's chain, exactly where an MCP server sits.
           const holder = yield* spawnLaneHolder(lane);
-          const attempt = withEnv(
-            { ...env, ...O.match(claimed, { onNone: () => ({}), onSome: (pid) => ({ CLAUDE_PID: String(pid) }) }) },
-            withCwd(lane, sweep(packetDir))
-          ).pipe(provideScopedLayer(ghLayer(tip, "MERGED")));
-          if (O.isSome(proven)) {
-            const output = yield* captureOutput(attempt).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
-            expect(output).toContain("[yeet] retired");
-            expect(yield* fs.exists(lane)).toBe(false);
-            expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
-          } else {
-            const error = yield* Effect.flip(attempt).pipe(Effect.ensuring(Effect.ignore(holder.kill())));
-            expect(error.message).toContain("still hold it");
-            expect(yield* fs.exists(lane)).toBe(true);
-          }
+          const outcome = yield* runRetireInvoker(lane, repoRoot, { ...env, CLAUDE_PID: String(process.pid) }).pipe(
+            Effect.ensuring(Effect.ignore(holder.kill()))
+          );
+          expect(outcome).toMatchObject({ ok: true, exitCode: 0 });
+          expect(yield* fs.exists(lane)).toBe(false);
+          expect(yield* runGitText(repoRoot, ["branch", "--list", "claude/lane"])).toBe("");
+        })
+      )
+    )
+  );
+
+  it.effect("refuses the same holder when the invoker was started with CLAUDE_PID naming init", () =>
+    withScratchRepo(({ repoRoot, lane, env }) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          // Same topology, but the marker in the invoker's real environment claims
+          // pid 1: an ancestor of everything that never exported it, so nothing on
+          // the invoker's path vouches for it and the sibling holder still blocks.
+          const holder = yield* spawnLaneHolder(lane);
+          const outcome = yield* runRetireInvoker(lane, repoRoot, { ...env, CLAUDE_PID: "1" }).pipe(
+            Effect.ensuring(Effect.ignore(holder.kill()))
+          );
+          expect(outcome.ok).toBe(false);
+          expect(outcome.message).toContain("still hold it");
+          expect(outcome.message).toContain("(sh) via cwd");
+          expect(yield* fs.exists(lane)).toBe(true);
         })
       )
     )
@@ -590,14 +627,14 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     )
   );
 
-  it.effect("ignores a session pid that is not an invoker ancestor and still refuses the holder", () =>
+  it.effect("refuses the holder when CLAUDE_PID names a pid off the invoker's path", () =>
     withScratchRepo(({ lane, tip, packetDir, env }) =>
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const holder = yield* spawnLaneHolder(lane);
-          // The holder's own pid sits in its ancestry, so only the invoker-ancestor
-          // rule keeps a stale or foreign CLAUDE_PID from widening the fence.
+          // The holder's own pid sits in its ancestry but nowhere on the invoker's
+          // path, so no process below it can carry the marker and the proof fails.
           const error = yield* Effect.flip(
             withEnv({ ...env, CLAUDE_PID: String(holder.pid) }, withCwd(lane, sweep(packetDir))).pipe(
               provideScopedLayer(ghLayer(tip, "MERGED"))

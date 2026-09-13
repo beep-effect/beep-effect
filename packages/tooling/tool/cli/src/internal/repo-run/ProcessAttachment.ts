@@ -310,8 +310,11 @@ export const ancestryPidsOf = (pid: number): Effect.Effect<HashSet.HashSet<numbe
  * A retirement started from inside a lane has the invoking CLI, its shell,
  * and the agent session above them all holding that lane as their cwd. They
  * are the party asking for the removal, not writers whose later output the
- * archive could lose, so the quiescence fence may exempt this chain, and the
- * subtree of the one ancestor a request names as the session process.
+ * archive could lose, so the quiescence fence exempts this chain outright.
+ * Widening it to a session's whole subtree is a separate, proven step:
+ * `sessionRootOf` accepts the named pid only when the ancestor directly below
+ * it on this chain was started carrying the harness marker, so membership in
+ * this set alone (init is always a member) never names a session.
  *
  * **Example** (Build the ancestry effect)
  *
