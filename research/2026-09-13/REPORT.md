@@ -63,7 +63,7 @@ Reaped **6** suggested actions originating in `research/2026-09-03` that remaine
 
 ## Intersections with today's repo-replay
 
-No open research PR. Prior packet #1123 on main. Effect `#8201`/rc.116 + MCP adapter publish gap sits on beep Effect pin / MCP toolkit edge. SEP-2640 Final≠merged sits on Agent Plugins vs wire skills packaging. Patlytics MCP + patent-kb sit next to Tom/IP competitor positioning. Scanners-as-skills sits next to TrustShift / harness scanner watches.
+No open research PR at preflight (this packet becomes the open PR). Prior packet #1123 on main. Effect `#8201`/rc.116 + MCP adapter publish gap sits on beep Effect pin / MCP toolkit edge. SEP-2640 Final≠merged sits on Agent Plugins vs wire skills packaging. Patlytics MCP + patent-kb sit next to Tom/IP competitor positioning. Scanners-as-skills sits next to TrustShift / harness scanner watches.
 
 ## Frictions
 
