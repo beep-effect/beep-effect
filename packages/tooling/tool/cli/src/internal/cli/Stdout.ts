@@ -15,11 +15,11 @@ const formatArgs = (args: ReadonlyArray<unknown>): string =>
     " "
   );
 
-// Every line written through the stream console registers its completion callback here so the
-// exit drain can wait for the bytes to reach the kernel. An empty write's callback is no barrier
-// under Bun (a 1 MiB block lost everything past 128 KiB at exit); a real write's callback is.
+// Count queued lines, including the active line until its final chunk callback fires.
 const inflightWrites = MutableRef.make(0);
 const drainWaiters = MutableRef.make<ReadonlyArray<() => void>>(A.empty());
+const utf8Encoder = new TextEncoder();
+const STREAM_CHUNK_SIZE_BYTES = 8 * 1024;
 
 const settleWrite = (): void => {
   if (MutableRef.decrementAndGet(inflightWrites) > 0) {
@@ -32,10 +32,40 @@ const settleWrite = (): void => {
   }
 };
 
-const writeLine = (stream: NodeJS.WriteStream, args: ReadonlyArray<unknown>): void => {
-  MutableRef.incrementAndGet(inflightWrites);
-  stream.write(`${formatArgs(args)}\n`, settleWrite);
+const makeLineWriter = (stream: () => NodeJS.WriteStream) => {
+  const queue = MutableRef.make<ReadonlyArray<() => void>>(A.empty());
+  const startNext = (): void => {
+    A.match(MutableRef.get(queue), {
+      onEmpty: () => undefined,
+      onNonEmpty: ([start]) => start(),
+    });
+  };
+
+  return (args: ReadonlyArray<unknown>): void => {
+    const bytes = utf8Encoder.encode(`${formatArgs(args)}\n`);
+    const offset = MutableRef.make(0);
+    const writeNext = (): void => {
+      const start = MutableRef.get(offset);
+      if (start >= bytes.byteLength) {
+        MutableRef.update(queue, A.drop(1));
+        startNext();
+        settleWrite();
+        return;
+      }
+      MutableRef.set(offset, start + STREAM_CHUNK_SIZE_BYTES);
+      stream().write(bytes.subarray(start, start + STREAM_CHUNK_SIZE_BYTES), writeNext);
+    };
+    const idle = A.isReadonlyArrayEmpty(MutableRef.get(queue));
+    MutableRef.incrementAndGet(inflightWrites);
+    MutableRef.update(queue, A.append(writeNext));
+    if (idle) {
+      startNext();
+    }
+  };
 };
+
+const writeStdoutLine = makeLineWriter(() => process.stdout);
+const writeStderrLine = makeLineWriter(() => process.stderr);
 
 const noop = (): void => undefined;
 
@@ -46,9 +76,9 @@ const noop = (): void => undefined;
  *
  * **Details**
  *
- * The stream path queues a write the kernel pipe buffer cannot take and drains it from the event
- * loop, so a large rendered block arrives whole. A hosted runner kept exactly the first 64 KiB of
- * one `console.log` and dropped the rest, including the Turbo footer naming the failed task.
+ * Each stream has a FIFO queue of UTF-8 lines. Writes contain at most 8 KiB of bytes; each
+ * completion callback starts the next chunk, preserving order across log calls. Large single
+ * writes can lose their tail under Bun on hosted runners, even when their callback is tracked.
  *
  * **Example** (Provide the stream console to a program)
  *
@@ -66,27 +96,27 @@ const noop = (): void => undefined;
 export const streamConsole: Console.Console = {
   assert: (condition, ...args) => {
     if (!condition) {
-      writeLine(process.stderr, ["Assertion failed:", ...args]);
+      writeStderrLine(["Assertion failed:", ...args]);
     }
   },
   clear: noop,
   count: noop,
   countReset: noop,
-  debug: (...args) => writeLine(process.stdout, args),
-  dir: (item) => writeLine(process.stdout, [item]),
-  dirxml: (...args) => writeLine(process.stdout, args),
-  error: (...args) => writeLine(process.stderr, args),
-  group: (...args) => writeLine(process.stdout, args),
-  groupCollapsed: (...args) => writeLine(process.stdout, args),
+  debug: (...args) => writeStdoutLine(args),
+  dir: (item) => writeStdoutLine([item]),
+  dirxml: (...args) => writeStdoutLine(args),
+  error: (...args) => writeStderrLine(args),
+  group: (...args) => writeStdoutLine(args),
+  groupCollapsed: (...args) => writeStdoutLine(args),
   groupEnd: noop,
-  info: (...args) => writeLine(process.stdout, args),
-  log: (...args) => writeLine(process.stdout, args),
-  table: (tabularData) => writeLine(process.stdout, [tabularData]),
+  info: (...args) => writeStdoutLine(args),
+  log: (...args) => writeStdoutLine(args),
+  table: (tabularData) => writeStdoutLine([tabularData]),
   time: noop,
   timeEnd: noop,
-  timeLog: (label, ...args) => writeLine(process.stdout, [label, ...args]),
-  trace: (...args) => writeLine(process.stderr, args),
-  warn: (...args) => writeLine(process.stderr, args),
+  timeLog: (label, ...args) => writeStdoutLine([label, ...args]),
+  trace: (...args) => writeStderrLine(args),
+  warn: (...args) => writeStderrLine(args),
 };
 
 /**
