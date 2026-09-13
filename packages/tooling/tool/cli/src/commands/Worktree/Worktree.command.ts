@@ -34,6 +34,7 @@ import {
   WorktreeListEntry,
   WorktreeRemovalRequest,
   WorktreeUpstreamState,
+  WorktreeUpstreamVerdict,
 } from "./Worktree.schemas.ts";
 import {
   branchDeleteCommand,
@@ -718,6 +719,13 @@ const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: 
   yield* renderCreationSummary(options.name, branch, targetPath, copies);
 });
 
+const upstreamVerdictLabel = (verdict: WorktreeUpstreamVerdict): string =>
+  WorktreeUpstreamVerdict.match(verdict, {
+    "ancestor-of-base": ({ base }) => `tip is already on ${base}`,
+    "merged-pull-request": ({ number }) => `merged as PR #${number} at this head`,
+    unverified: () => "tip not proven pushed, commits kept under the archive ref",
+  });
+
 const renderUnpushedInspection = Effect.fn("Worktree.renderUnpushedInspection")(function* (
   inspection: O.Option<WorktreeUnpushedInspection>
 ) {
@@ -727,9 +735,9 @@ const renderUnpushedInspection = Effect.fn("Worktree.renderUnpushedInspection")(
       WorktreeUpstreamState.match<Effect.Effect<void>>(upstream, {
         unset: () => Effect.void,
         live: () => Effect.void,
-        pruned: ({ ref }) =>
+        pruned: ({ ref, verdict }) =>
           Console.log(
-            `  upstream: ${ref} no longer resolves (pruned); unpushed commits were counted against ${baseRange} instead`
+            `  upstream: ${ref} no longer resolves (pruned); unpushed commits were counted against ${baseRange} instead; ${upstreamVerdictLabel(verdict)}`
           ),
       }),
   });
@@ -795,7 +803,8 @@ const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function
  *
  * Archive receipts include restoration instructions only for residue that was
  * actually preserved. A pruned upstream is named together with the
- * default-branch range that judged unpushed commits in its place. Non-archive
+ * default-branch range that judged unpushed commits in its place and the
+ * verdict that proved, or failed to prove, the tip pushed. Non-archive
  * receipts retain the shorter legacy output.
  *
  * **Example** (Build clean archive output)
