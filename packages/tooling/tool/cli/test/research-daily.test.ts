@@ -102,7 +102,17 @@ const initVault = Effect.fn("ResearchDailyTest.initVault")(function* (options: {
   yield* git(vaultRoot, ["init", "-q", "-b", "main"]);
   yield* git(vaultRoot, ["config", "user.email", "research-daily@example.test"]);
   yield* git(vaultRoot, ["config", "user.name", "Research Daily Test"]);
-  yield* git(vaultRoot, ["config", "commit.gpgsign", "false"]);
+  // Mirror the workstation: every commit is SSH-signed through a desktop helper
+  // that a headless unit cannot reach. `/bin/false` stands in for that helper,
+  // so a capture commit that tried to sign would fail exactly as it did nightly.
+  yield* git(vaultRoot, ["config", "commit.gpgsign", "true"]);
+  yield* git(vaultRoot, ["config", "gpg.format", "ssh"]);
+  yield* git(vaultRoot, [
+    "config",
+    "user.signingkey",
+    "key::ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPlaceholderPlaceholderPlaceholderPlaceholderPlac",
+  ]);
+  yield* git(vaultRoot, ["config", "gpg.ssh.program", "/bin/false"]);
   if (options.ignoreState) {
     yield* fs.writeFileString(path.join(vaultRoot, ".gitignore"), `${VAULT_DIRS.state}/\n`);
   }
@@ -126,6 +136,8 @@ layer(testLayer, { timeout: "30 seconds" })("research daily commit", (it) => {
       expect(tracked).not.toContain(VAULT_DIRS.state);
       const subject = yield* git(vaultRoot, ["log", "-1", "--format=%s"]);
       expect(Str.startsWith("capture ")(subject)).toBe(true);
+      // Machine captures are committed unsigned; a signing attempt would have failed above.
+      expect(yield* git(vaultRoot, ["log", "-1", "--format=%G?"])).toBe("N");
 
       // A second run finds the vault clean and adds no commit.
       yield* commitVault(vaultRoot);

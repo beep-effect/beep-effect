@@ -1241,3 +1241,50 @@ was attempted under the marker-only amendment.
   a 1 MiB block through a pipe with a forced exit), fail-closed ledgers with a close record naming
   the attempts (landed), exclusively created per-lane directories (landed), and the review lane
   before the push rather than after the tenth hosted round.
+
+## 2026-09-12 — One environment-only flake taxed four of eleven hosted rounds
+
+- Doing: babysitting #1102 to merge-ready; `Test Unit (unit-a)` red on rounds 4, 8, 9, and 11.
+- Evidence: every time the only failed Turbo task was `@beep/test-utils#test`, on the same case
+  (`Vitest.runtime.test.ts` — the live watchdog interrupting a frozen TestClock, a 175 ms watchdog
+  against a 200 ms test timeout), never reproducing locally; each occurrence cost one rerun of the
+  shard plus the aggregate `Test Unit` check, and the rerun had to wait for the whole workflow run
+  to complete because GitHub refuses a failed-job rerun while sibling jobs are still running.
+- Would have prevented it: a wider margin between the watchdog and the vitest timeout in that case
+  (or a flake-quarantine entry for it, since the quarantine machinery exists), so a known
+  environment-only case stops gating every round; and a rerun path that does not wait on the
+  unrelated shards.
+
+## 2026-09-12 — The squash-message prefix pushed a subject past Commitlint's limit
+
+- Doing: checking main after #1102 merged as `e08b24b004`.
+- Evidence: every heavy lane was green; only Commitlint was red, on `footer-max-line-length`.
+  GitHub prefixed a 100-character commit subject with `* ` in the squash message, making it
+  102 characters. The squash commit is immutable; later main commits pass Commitlint.
+- Would have prevented it: keeping commit subjects at 98 characters or fewer so GitHub's `* `
+  prefix fits the squash-message line limit.
+
+## 2026-09-12 — Stream-console output still loses its tail at megabyte scale
+
+- Doing: reading both main `Heavy / Lint Policy` logs after the stream console landed in #1102.
+- Evidence: the cheap blocks end with their Turbo footer and Summary line, but the medium blocks
+  cut mid-line without a footer: `e08b24b004` rendered 30,125 lines (4,903,293 bytes), and
+  `c8d6d2f218` rendered 7,578 lines (1,094,700 bytes). Neither has a capture truncation notice;
+  the 8 MiB bound was not hit. The stream console moved the loss point from 64 KiB to megabytes,
+  but one `process.stdout.write` of a multi-megabyte string still loses its tail on the runner.
+- Would have prevented it: a per-stream FIFO writing chunks of at most 8 KiB and continuing in
+  each chunk's callback (as the JSON adapter already does), plus `--output-logs=errors-only`
+  on grouped Turbo runs. This remains a follow-up, not a completed output-loss repair.
+
+## 2026-09-12 — The one-job policy plan doubled the hosted Lint Policy wall-clock
+
+- Doing: the post-merge accounting for #1102 (§7.1.4) against the pre-migration lane census.
+- Evidence: `Heavy / Lint Policy` p50 was 620 s (p95 650 s, n=11) before the migration; the
+  census split at the merge shows post-migration p50 1,211 s (n=10, p95 1,323 s), with the two
+  main runs at 1,303 s and 1,323 s. The
+  D10 plan runs the whole policy fleet in one job on a 4-vCPU runner, where the retired design
+  ran sharded jobs in parallel, and consecutive main commits replay almost nothing because the
+  root tasks still declare whole-tree inputs.
+- Would have prevented it: reading the hosted wall-clock as a gate in the economics baseline
+  before merge, not only the local concurrency-4 numbers, and sequencing C4's input narrowing
+  (or restoring parallel shards under the same Turbo plan) before retiring the sharded lane.

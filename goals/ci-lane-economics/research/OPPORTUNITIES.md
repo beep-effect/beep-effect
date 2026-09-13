@@ -928,3 +928,14 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** mint baseline rows only from hosted measurements (or reject a
   regenerated row that exceeds the last hosted value), and make coverage-bearing test kits
   Docker-independent or exclude container-gated tests from the ratcheted row.
+
+## 2026-09-12 — post-window live rules changed the admission census population
+
+- **Doing:** reproducing the P3 census after a post-window ruleset change;
+  the census fails closed because the live population no longer represents
+  the admission window.
+- **Evidence:** `bun run beep ci lane-timings --window --since 2026-09-04T00:00:00Z --until 2026-09-11T00:00:00Z --event pull_request`
+  failed with `Ruleset 10240248 must expose exactly 18 required contexts; observed 17.`
+- **Would have prevented it:** resolve the population from the latest ruleset
+  history version strictly before the window's exclusive end, retaining the
+  ratified exact-18 assertion.

@@ -175,9 +175,12 @@ clone's `.claude/worktrees/<name>`, so a Claude Code desktop lane retires with t
 same command. After its pull request merged, the one-shot form is
 `bun run beep yeet sweep --retire [--lane <path>]`: it archive-retires the
 lane (the invoking worktree, or the one `--lane` names when run from the
-clone), deletes the branch, and sweeps the owning clone. The archive fence
-exempts only the invoking session's ancestry, so step the shell out first:
-`cd "$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire --lane "$OLDPWD"`.
+clone), deletes the branch, and sweeps the owning clone. Run it from inside
+the lane, because `bun run beep` resolves the CLI from the checkout it runs in
+and the clone's `main` may still be behind the merge; the command steps its
+own process out of the lane before removal and the archive fence exempts the
+invoking session's ancestry. Step the shell into the swept clone afterwards:
+`CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`.
 
 Forced removal is unsupported and remains denied by agent policy. Archive mode
 is the only removal path for local residue: the CLI inspects tracked and

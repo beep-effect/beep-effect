@@ -120,7 +120,12 @@ import {
 import * as S from "effect/Schema";
 import { aiMetricsDataRootEnvVar } from "../../../internal/cli/Flags.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
-import { resolveUnitBunPath, SystemdUnitPath, systemdUnitPathRule } from "../../../internal/systemd/index.ts";
+import {
+  resolveOperatorPath,
+  resolveSystemdBunPath,
+  SystemdUnitPath,
+  systemdUnitPathRule,
+} from "../../../internal/systemd/index.ts";
 import { AiMetricsCommandError, AiMetricsStatusExit } from "../AIMetrics.errors.ts";
 import type {
   AiMetricsForwarderOtlpExport,
@@ -1867,19 +1872,31 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
   retentionMaxSnapshotExports,
   target,
 }: MakeForwarderTimerProgramOptions) {
-  const home = yield* Config.String("HOME").pipe(
+  const pathApi = yield* Path.Path;
+  const requireHome = Config.String("HOME").pipe(
     Effect.mapError((cause) =>
       AiMetricsCommandError.make({ cause, message: "HOME is not set; cannot resolve the timer Bun executable." })
     )
   );
-  const executable = yield* resolveUnitBunPath({ home, pinned: bunPath }).pipe(
-    Effect.flatMap(decodeSystemdUnitPath),
-    Effect.mapError((cause) =>
-      AiMetricsCommandError.make({
-        cause,
-        message: `Invalid forwarder timer Bun executable path: must be ${systemdUnitPathRule}.`,
-      })
-    )
+  // Only the default candidate probe and a `~/` pin read HOME; an absolute pin
+  // renders in a sanitized container or CI environment that has no HOME at all.
+  const executable = yield* Effect.flatMap(
+    O.match(bunPath, {
+      onNone: () => Effect.flatMap(requireHome, resolveSystemdBunPath),
+      onSome: (pinned) =>
+        Str.startsWith("~/")(pinned)
+          ? Effect.map(requireHome, (home) => resolveOperatorPath(pinned, home, pathApi.resolve))
+          : Effect.succeed(pathApi.resolve(pinned)),
+    }),
+    (candidate) =>
+      decodeSystemdUnitPath(candidate).pipe(
+        Effect.mapError((cause) =>
+          AiMetricsCommandError.make({
+            cause,
+            message: `Invalid forwarder timer Bun executable path: must be ${systemdUnitPathRule}.`,
+          })
+        )
+      )
   );
   const spec = yield* makeCommandInstallSpec({
     dataRoot: yield* resolveDataRoot(dataRoot, target),
