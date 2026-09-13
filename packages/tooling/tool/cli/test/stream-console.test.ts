@@ -20,7 +20,10 @@ type WriteCallback = (error?: Error | null) => void;
 
 const captureStreams = <A>(
   run: () => A,
-  options: { readonly stdoutWrite?: (chunk: string | Uint8Array, callback: WriteCallback) => boolean } = {}
+  options: {
+    readonly stdoutWrite?: (chunk: string | Uint8Array, callback: WriteCallback) => boolean;
+    readonly stderrWrite?: (chunk: string | Uint8Array, callback: WriteCallback) => boolean;
+  } = {}
 ): { readonly result: A; readonly stdout: ReadonlyArray<string>; readonly stderr: ReadonlyArray<string> } => {
   const stdout: Array<string> = [];
   const stderr: Array<string> = [];
@@ -41,6 +44,9 @@ const captureStreams = <A>(
   }) as WriteFn;
   process.stderr.write = ((chunk: string | Uint8Array, callback?: WriteCallback) => {
     stderr.push(P.isString(chunk) ? chunk : decodeErr.decode(chunk, { stream: true }));
+    if (options.stderrWrite !== undefined && callback !== undefined) {
+      return options.stderrWrite(chunk, callback);
+    }
     callback?.();
     return true;
   }) as WriteFn;
@@ -101,6 +107,77 @@ describe("stream console", () => {
     );
   });
 
+  it("signals a stderr write error on stdout and drops later stderr lines", () => {
+    const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.error("a");
+        streamConsole.error("b");
+        streamConsole.log("stdout survives");
+        drainProcessStreams((value) => MutableRef.set(failure, value));
+      },
+      {
+        stderrWrite: (_chunk, callback) => {
+          callback(new Error("EPIPE"));
+          return false;
+        },
+      }
+    );
+    expect(stdout).toEqual([
+      "[beep-cli] stderr write failed: EPIPE; later stderr lines are dropped\n",
+      "stdout survives\n",
+    ]);
+    expect(stderr).toEqual(["a\n"]);
+    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+      StreamWriteFailure.make({ stream: "stderr", message: "EPIPE", droppedLines: 2 })
+    );
+  });
+
+  it("stays silent when both streams have failed", () => {
+    const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+    const failWrite = (_chunk: string | Uint8Array, callback: WriteCallback): boolean => {
+      callback(new Error("EPIPE"));
+      return false;
+    };
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.log("a");
+        streamConsole.error("b");
+        drainProcessStreams((value) => MutableRef.set(failure, value));
+      },
+      { stdoutWrite: failWrite, stderrWrite: failWrite }
+    );
+    expect(stdout).toEqual(["a\n"]);
+    expect(stderr).toEqual(["[beep-cli] stdout write failed: EPIPE; later stdout lines are dropped\n"]);
+    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+      StreamWriteFailure.make({ stream: "stdout", message: "EPIPE", droppedLines: 1 })
+    );
+  });
+
+  it("drops a line queued behind the failing line", () => {
+    const callback = MutableRef.make<O.Option<WriteCallback>>(O.none());
+    const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.log(Str.repeat(100 * 1024)("a"));
+        streamConsole.log("queued");
+        O.getOrThrow(MutableRef.get(callback))(new Error("EPIPE"));
+        drainProcessStreams((value) => MutableRef.set(failure, value));
+      },
+      {
+        stdoutWrite: (_chunk, onWritten) => {
+          MutableRef.set(callback, O.some(onWritten));
+          return false;
+        },
+      }
+    );
+    expect(stdout).toEqual([Str.repeat(8192)("a")]);
+    expect(stderr).toEqual(["[beep-cli] stdout write failed: EPIPE; later stdout lines are dropped\n"]);
+    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+      StreamWriteFailure.make({ stream: "stdout", message: "EPIPE", droppedLines: 2 })
+    );
+  });
+
   it("treats a synchronous write throw as a write error", () => {
     const drained = MutableRef.make(false);
     const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
@@ -135,6 +212,85 @@ describe("stream console", () => {
         message: "boom",
         droppedLines: 3,
       })
+    );
+  });
+
+  it("does not enqueue a marker onto stderr when stderr failed first", () => {
+    const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+    const failWrite = (_chunk: string | Uint8Array, callback: WriteCallback): boolean => {
+      callback(new Error("EPIPE"));
+      return false;
+    };
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.error("a");
+        streamConsole.log("b");
+        drainProcessStreams((value) => MutableRef.set(failure, value));
+      },
+      { stdoutWrite: failWrite, stderrWrite: failWrite }
+    );
+    expect(stderr).toEqual(["a\n"]);
+    expect(stdout).toEqual(["[beep-cli] stderr write failed: EPIPE; later stderr lines are dropped\n"]);
+    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+      StreamWriteFailure.make({ stream: "stdout", message: "EPIPE", droppedLines: 2 })
+    );
+  });
+
+  it("ignores a late callback after a non-Error synchronous throw", () => {
+    const callback = MutableRef.make<O.Option<WriteCallback>>(O.none());
+    const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+    const continuations = MutableRef.make(0);
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.log("aborted");
+        drainProcessStreams((value) => {
+          MutableRef.incrementAndGet(continuations);
+          MutableRef.set(failure, value);
+        });
+        O.getOrThrow(MutableRef.get(callback))(new Error("late error"));
+      },
+      {
+        stdoutWrite: (_chunk, onWritten) => {
+          MutableRef.set(callback, O.some(onWritten));
+          throw "boom";
+        },
+      }
+    );
+    expect(stdout).toEqual(["aborted\n"]);
+    expect(stderr).toEqual(["[beep-cli] stdout write failed: boom; later stdout lines are dropped\n"]);
+    expect(MutableRef.get(continuations)).toBe(1);
+    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+      StreamWriteFailure.make({ stream: "stdout", message: "boom", droppedLines: 1 })
+    );
+  });
+
+  it("settles only once when a write completes then throws", () => {
+    const continuations = MutableRef.make(0);
+    const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+    const { stdout, stderr } = captureStreams(
+      () => {
+        streamConsole.log("completed");
+        streamConsole.error("pending");
+        drainProcessStreams((value) => {
+          MutableRef.incrementAndGet(continuations);
+          MutableRef.set(failure, value);
+        });
+      },
+      {
+        stdoutWrite: (_chunk, callback) => {
+          callback();
+          throw new Error("after completion");
+        },
+      }
+    );
+    expect(stdout).toEqual(["completed\n"]);
+    expect(stderr).toEqual([
+      "[beep-cli] stdout write failed: after completion; later stdout lines are dropped\n",
+      "pending\n",
+    ]);
+    expect(MutableRef.get(continuations)).toBe(1);
+    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+      StreamWriteFailure.make({ stream: "stdout", message: "after completion", droppedLines: 1 })
     );
   });
 

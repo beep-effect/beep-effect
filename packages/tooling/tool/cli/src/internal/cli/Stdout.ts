@@ -66,7 +66,7 @@ export type ProcessStreamName = typeof ProcessStreamName.Type;
  * @since 0.0.0
  */
 export class StreamWriteFailure extends S.Class<StreamWriteFailure>($I`StreamWriteFailure`)(
-  { stream: ProcessStreamName, message: S.String, droppedLines: S.Natural },
+  { stream: ProcessStreamName, message: S.String, droppedLines: S.Int.check(S.isGreaterThan(0)) },
   $I.annote("StreamWriteFailure", { description: "First process stream write error and count of abandoned lines." })
 ) {}
 
@@ -96,7 +96,7 @@ const settleWrite = (): void => {
   }
 };
 
-const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStream) => {
+const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStream, marker: (line: string) => void) => {
   const queue = MutableRef.make<ReadonlyArray<() => void>>(A.empty());
   const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
   const failed = (): boolean => failure.pipe(MutableRef.get, O.isSome);
@@ -112,14 +112,8 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
     );
   };
   const recordFailure = (message: string): void => {
-    if (failed()) {
-      dropLine();
-      return;
-    }
     MutableRef.set(failure, O.some(StreamWriteFailure.make({ stream: name, message, droppedLines: 1 })));
-    if (ProcessStreamName.is.stdout(name)) {
-      writeStderrLine([`[beep-cli] stdout write failed: ${message}; later stdout lines are dropped`]);
-    }
+    marker(`[beep-cli] ${name} write failed: ${message}; later ${name} lines are dropped`);
   };
   const startNext = (): void => {
     A.match(MutableRef.get(queue), {
@@ -143,9 +137,11 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
         return;
       }
       MutableRef.set(done, true);
-      if (O.exists(A.head(MutableRef.get(queue)), (head) => head === writeNext)) {
-        MutableRef.update(queue, A.drop(1));
-      }
+      // Drop this line only if it is the head, without a separate branch.
+      MutableRef.update(
+        queue,
+        A.dropWhile((line) => line === writeNext)
+      );
       startNext();
       settleWrite();
     };
@@ -194,11 +190,27 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
       startNext();
     }
   };
-  return { write, failure };
+  return { write, failure, failed };
 };
 
-const stdoutWriter = makeLineWriter("stdout", () => process.stdout);
-const stderrWriter = makeLineWriter("stderr", () => process.stderr);
+const stdoutWriter = makeLineWriter(
+  "stdout",
+  () => process.stdout,
+  (line) => {
+    if (!stderrWriter.failed()) {
+      stderrWriter.write([line]);
+    }
+  }
+);
+const stderrWriter = makeLineWriter(
+  "stderr",
+  () => process.stderr,
+  (line) => {
+    if (!stdoutWriter.failed()) {
+      stdoutWriter.write([line]);
+    }
+  }
+);
 const writeStdoutLine = stdoutWriter.write;
 const writeStderrLine = stderrWriter.write;
 const currentFailure = (): O.Option<StreamWriteFailure> =>
@@ -241,8 +253,9 @@ const noop = (): void => undefined;
  *
  * Each stream has a FIFO queue of UTF-8 lines. Writes contain at most 8 KiB of bytes; each
  * completion callback starts the next chunk, preserving order across log calls on the same stream;
- * stdout and stderr are independent FIFOs. Large single writes can lose their tail under Bun on
- * hosted runners, even when their callback is tracked.
+ * stdout and stderr are independent FIFOs. Before chunking, a single multi-megabyte write lost its tail
+ * under Bun on hosted runners even with its callback tracked; the bounded chunks and per-stream FIFO
+ * exist to remove that hazard.
  *
  * **Example** (Provide the stream console to a program)
  *
