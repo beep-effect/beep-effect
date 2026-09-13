@@ -3,7 +3,7 @@ import {
   WorktreeRemovalReceipt,
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
-import { RepoRunContext, sessionRootOf } from "@beep/repo-cli/test/RepoRun";
+import { processEnvironmentValue, RepoRunContext, sessionRootOf } from "@beep/repo-cli/test/RepoRun";
 import { GhPrView } from "@beep/repo-cli/test/SharedInternals";
 import {
   planRetire,
@@ -519,10 +519,12 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
       Effect.scoped(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          // Under Claude Code the real CLAUDE_PID names an ancestor whose child on
-          // this path carries it, so the holders below are the session's own;
-          // anywhere else there is no session to prove and they still refuse.
-          const claimed = O.flatMap(O.fromNullishOr(process.env.CLAUDE_PID), N.parse);
+          // Under Claude Code the CLAUDE_PID this process was started with names
+          // an ancestor whose child on this path carries it, so the holders below
+          // are the session's own; anywhere else there is no session to prove and
+          // they still refuse. The marker is read from /proc, the way the fence
+          // reads it, rather than from the mutable process environment.
+          const claimed = O.flatMap(yield* processEnvironmentValue(process.pid, "CLAUDE_PID"), N.parse);
           const proven = yield* O.match(claimed, {
             onNone: () => Effect.succeed(O.none<number>()),
             onSome: (pid) => sessionRootOf(process.pid, { name: "CLAUDE_PID", pid }),
