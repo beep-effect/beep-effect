@@ -9,6 +9,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { P } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Console, Effect } from "effect";
 import * as A from "effect/Array";
 import * as MutableRef from "effect/MutableRef";
@@ -97,8 +98,8 @@ describe("stream console", () => {
       "[beep-cli] stdout write failed: EPIPE; later stdout lines are dropped\n",
       "stderr survives\n",
     ]);
-    expect(O.isSome(MutableRef.get(failure))).toBe(true);
-    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+    assertSome(
+      MutableRef.get(failure),
       StreamWriteFailure.make({
         stream: "stdout",
         message: "EPIPE",
@@ -205,8 +206,8 @@ describe("stream console", () => {
       "[beep-cli] stdout write failed: boom; later stdout lines are dropped\n",
       "stderr survives\n",
     ]);
-    expect(O.isSome(MutableRef.get(failure))).toBe(true);
-    expect(O.getOrThrow(MutableRef.get(failure))).toEqual(
+    assertSome(
+      MutableRef.get(failure),
       StreamWriteFailure.make({
         stream: "stdout",
         message: "boom",
@@ -303,7 +304,7 @@ describe("stream console", () => {
         streamConsole.log("third");
         drainProcessStreams((failure) => {
           MutableRef.incrementAndGet(continuations);
-          expect(O.isNone(failure)).toBe(true);
+          assertNone(failure);
         });
       },
       {
@@ -327,7 +328,7 @@ describe("stream console", () => {
         streamConsole.log("pending");
         drainProcessStreams((failure) => {
           MutableRef.set(drained, true);
-          expect(O.isNone(failure)).toBe(true);
+          assertNone(failure);
         });
         expect(MutableRef.get(drained)).toBe(false);
         O.getOrThrow(MutableRef.get(callback))();
