@@ -251,9 +251,14 @@ const isWithin = (path: Path.Path, root: string, candidate: string): boolean =>
  *
  * **Details**
  *
- * A holder the fence could not exempt is usually a shell or editor left in the
- * lane; the form that works runs from the owning clone and names the lane.
- * Any other removal failure is reported as the service phrased it.
+ * A holder the fence could not exempt is a process outside the invoker's own
+ * ancestry: an editor or another shell left in the lane, or the other stages
+ * of a shell pipeline this command's output was piped into. The hint says to
+ * leave or close them, redirect the output to a file, and rerun from the lane,
+ * because `bun run beep` resolves the CLI from the checkout it runs in and the
+ * owning clone's `main` may still be behind the merge; the `--lane` form is
+ * kept for a clone that already carries the merged CLI. Any other removal
+ * failure is reported as the service phrased it.
  *
  * **Example** (Append the hint only for a holder)
  *
@@ -276,7 +281,7 @@ export const retirementFailureMessage: {
   (message: string): (plan: YeetRetirePlan) => string;
 } = dual(2, (plan: YeetRetirePlan, message: string): string =>
   Str.includes("still hold it")(message)
-    ? `yeet sweep --retire could not retire ${plan.worktreePath}: ${message} Leave the lane first: cd "${plan.owningClone}" && bun run beep yeet sweep --retire --lane "${plan.worktreePath}"`
+    ? `yeet sweep --retire could not retire ${plan.worktreePath}: ${message} Those holders are outside this command's own ancestry (an editor, another shell, or the other stages of a pipeline its output was piped into): leave or close them, redirect output to a file instead of piping it, and rerun from the lane: bun run beep yeet sweep --retire. From a clone that already carries the merged CLI: cd "${plan.owningClone}" && bun run beep yeet sweep --retire --lane "${plan.worktreePath}"`
     : `yeet sweep --retire could not retire ${plan.worktreePath}: ${message}`
 );
 
