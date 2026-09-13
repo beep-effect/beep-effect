@@ -451,18 +451,26 @@ describe("ai-metrics command", () => {
     )
   );
 
-  it.effect("rejects a missing HOME and an unsafe --bun-path for the forwarder timer", () =>
+  it.effect("reads HOME only for the default Bun probe and a ~/ pin when rendering the forwarder timer", () =>
     withTempDirectory(
       Effect.fn(function* (home) {
         const path = yield* Path.Path;
         const timerArgs = ["forwarder", "timer", "--target", "local", "--data-root", path.join(home, "metrics")];
         const withEnvironment = (environment: Record<string, string>) =>
           provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(environment)));
-        const missingHome = yield* Effect.flip(runAiMetricsCommand(timerArgs).pipe(withEnvironment({})));
-        expect(missingHome).toMatchObject({
-          _tag: "AiMetricsCommandError",
-          message: expect.stringContaining("HOME is not set"),
-        });
+        // The default probe and a `~/` pin both need HOME.
+        for (const flags of [[], ["--bun-path", "~/tools/bun"]]) {
+          const missingHome = yield* Effect.flip(
+            runAiMetricsCommand([...timerArgs, ...flags]).pipe(withEnvironment({}))
+          );
+          expect(missingHome).toMatchObject({
+            _tag: "AiMetricsCommandError",
+            message: expect.stringContaining("HOME is not set"),
+          });
+        }
+        // An absolute pin renders with no HOME at all (sanitized containers, CI).
+        yield* runAiMetricsCommand([...timerArgs, "--bun-path", "/opt/bun 1/bin/bun"]).pipe(withEnvironment({}));
+        expect(yield* loggedText()).toContain("/opt/bun 1/bin/bun");
         const unsafePin = yield* Effect.flip(
           runAiMetricsCommand([...timerArgs, "--bun-path", '/opt/"bun"/bin/bun']).pipe(withEnvironment({ HOME: home }))
         );
