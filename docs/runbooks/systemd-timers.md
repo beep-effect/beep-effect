@@ -74,14 +74,20 @@ run in. The archive fence refuses a lane that any process still stands in, and
 it exempts exactly the invoker's ancestry (the CLI, its shell, the agent
 session above them); anything else holding the lane still refuses it and the
 error prints the working form. Run it as the last command of the session, from
-the lane, with the shell stepping out first:
+inside the lane, and step the shell into the swept clone afterwards:
 
 ```bash
-cd "$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire --lane "$OLDPWD"
+CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"
 ```
 
-`--lane <path>` names the lane when the command runs from the owning clone;
-without it the command retires the checkout it runs in. `--json` prints one
+Run it from the lane, not from the clone: `bun run beep` resolves the CLI from
+the checkout it runs in, so the lane always carries the merged flags while the
+clone's `main` may still be behind the merge and reject `--retire` as an
+unknown flag (observed 2026-09-12 on the first closeout). The command moves
+its own process out of the lane before removal, so the shell may stay in the
+lane during the run. `--lane <path>` names the lane when the command runs from
+a clone that already carries the merged CLI; without it the command retires
+the checkout it runs in. `--json` prints one
 schema-owned document (`yeet-retire-sweep-plan/v1` with `--plan`,
 `yeet-retire-sweep-report/v1` otherwise). `--branch` is refused alongside
 `--retire`: the lane's own HEAD is the branch that is retired.
