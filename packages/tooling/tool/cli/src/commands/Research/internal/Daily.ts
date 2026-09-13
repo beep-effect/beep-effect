@@ -70,6 +70,12 @@ const stagePathspecs = (checkIgnoreExit: number): Effect.Effect<ReadonlyArray<st
  * apart with `git check-ignore`, because naming an ignored path in the
  * exclude pathspec makes `git add` exit 1.
  *
+ * The capture commit is made with `commit.gpgsign=false`: the systemd user
+ * unit has no desktop signing agent, so a globally configured SSH signer (for
+ * example the 1Password helper) fails there with "failed to write commit
+ * object", and a machine-generated capture of a private vault needs no
+ * signature.
+ *
  * **Example** (Commit vault git changes)
  *
  * ```ts
@@ -120,7 +126,7 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
     });
   }
   const date = Str.slice(0, 10)(DateTime.formatIso(yield* DateTime.now));
-  yield* run(["commit", "-q", "-m", `capture ${date}`]);
+  yield* run(["-c", "commit.gpgsign=false", "commit", "-q", "-m", `capture ${date}`]);
   yield* Console.log(`research daily: committed vault as "capture ${date}".`);
 });
 

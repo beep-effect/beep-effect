@@ -105,6 +105,18 @@ durable clone. A `Persistent=true` timer whose last run was missed fires once
 immediately after `enable --now`; read its journal rather than waiting for the
 next tick.
 
+The same replay happens seconds after a reboot that crossed a scheduled tick,
+before NetworkManager is online, so each service carries
+`ExecStartPre=-/bin/sh -c "command -v nm-online >/dev/null 2>&1 && exec nm-online -q --timeout=90"`:
+where `nm-online` exists the run waits up to 90 seconds for connectivity, and
+the `-` prefix keeps a missing helper or a timed-out wait from failing the unit.
+
+The daily vault capture commits with `commit.gpgsign=false`. A user unit has no
+desktop signing agent, so a global SSH signer such as the 1Password helper fails
+there with `failed to write commit object` (git exit 128); a machine-generated
+capture of the private vault needs no signature. Re-render installed units after
+a renderer change with `bun run beep research install-timers --repo-root <clone> --refresh`.
+
 ## Related
 
 - `docs/runbooks/graft-local-recovery.md` — what the graft refresh unit does each night.
