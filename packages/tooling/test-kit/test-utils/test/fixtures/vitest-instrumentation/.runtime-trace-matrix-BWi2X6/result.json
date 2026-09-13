@@ -1,0 +1,111 @@
+{
+  "numTotalTestSuites": 8,
+  "numPassedTestSuites": 6,
+  "numFailedTestSuites": 2,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 4,
+  "numPassedTests": 3,
+  "numFailedTests": 1,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1789218260506,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["trace layer"],
+          "fullName": "trace layer trace success",
+          "status": "passed",
+          "title": "trace success",
+          "duration": 5.760217999999895,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1789218277277,
+      "endTime": 1789218277282.7603,
+      "status": "passed",
+      "message": "",
+      "name": "/home/elpresidank/YeeBois/projects/beep-effect/packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-trace-matrix-BWi2X6/trace-off/runtime.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["trace layer"],
+          "fullName": "trace layer trace success",
+          "status": "passed",
+          "title": "trace success",
+          "duration": 13.798423000000184,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1789218269556,
+      "endTime": 1789218269569.7983,
+      "status": "passed",
+      "message": "",
+      "name": "/home/elpresidank/YeeBois/projects/beep-effect/packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-trace-matrix-BWi2X6/trace-ci/runtime.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["trace layer"],
+          "fullName": "trace layer trace success",
+          "status": "passed",
+          "title": "trace success",
+          "duration": 6.09270000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1789218281760,
+      "endTime": 1789218281766.0928,
+      "status": "passed",
+      "message": "",
+      "name": "/home/elpresidank/YeeBois/projects/beep-effect/packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-trace-matrix-BWi2X6/trace-on/runtime.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["trace layer"],
+          "fullName": "trace layer trace failure",
+          "status": "failed",
+          "title": "trace failure",
+          "duration": 25.252887999999984,
+          "failureMessages": ["preserved-failure"],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1789218273523,
+      "endTime": 1789218273548.253,
+      "status": "failed",
+      "message": "",
+      "name": "/home/elpresidank/YeeBois/projects/beep-effect/packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-trace-matrix-BWi2X6/trace-failure/runtime.test.ts"
+    }
+  ]
+}
