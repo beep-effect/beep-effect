@@ -15,10 +15,11 @@ identifier. The lane checks runtime behavior and Effect equality only. Docgen's
 TypeScript example gate remains authoritative for imports and types, including
 type-only examples.
 
-Run all marked examples with `bun run doctest`. Run the hosted-lane shape with
-`bun run beep ci lane doctest --mode affected --base origin/main --head HEAD` or
-`--mode full`. The pull-request lane executes only changed source files which
-contain `import.meta.vitest`; pushes execute the full marked corpus.
+Run all marked examples with `bunx turbo run doctest`. Run the hosted-lane shape
+with `bun run beep ci lane doctest`. Both pull requests and pushes execute the
+full Turbo doctest fleet. The doctest lane descriptor lists no `--mode` flag
+(`bun run beep ci lane --list`); the shared `ci lane` command still parses
+`--mode` for the docgen lane, and the doctest lane ignores the value.
 
 The executable proof target for the architecture is `packages/architecture-lab/*`
 with `apps/architecture-lab-proof`. It carries focused runtime tests for
