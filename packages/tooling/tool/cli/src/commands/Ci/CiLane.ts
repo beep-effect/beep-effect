@@ -441,8 +441,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "workflow-gated",
     replay: "exact",
-    flags: ["--base", "--head"],
-    notes: "Always runs the full Turbo doctest fleet.",
+    flags: [],
+    notes:
+      "Always runs the full Turbo doctest fleet; the shared --base, --head, and --mode flags parse but have no doctest effect.",
   }),
   // This visible family context lands non-required; promotion is a later
   // branch-ruleset action after it establishes a stable green history.

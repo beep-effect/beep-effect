@@ -1074,7 +1074,7 @@ describe("ciLaneStepsForTesting", () => {
   it("lists mode only for Docgen, not Doctest", () => {
     const doctest = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "doctest"));
     const docgen = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "docgen"));
-    expect([...doctest.flags]).toEqual(["--base", "--head"]);
+    expect([...doctest.flags]).toEqual([]);
     expect(doctest.flags).not.toContain("--mode");
     expect(docgen.flags).toContain("--mode");
   });
