@@ -34,7 +34,6 @@ const githubAppWebhookSecretSsmParameterName = "/github-action-runners/app/githu
  * See `goals/ci-fleet-endgame/research/build-mode-typecheck-census.md`.
  */
 const runnerInstanceTypes = ["r7a.2xlarge", "r7i.2xlarge", "r6i.2xlarge", "m7a.4xlarge"];
-const onDemandFailoverErrors = ["InsufficientInstanceCapacity", "InsufficientCapacityOnHost", "UnfulfillableCapacity"];
 
 // The runner agent and every job step both run as this user, so the two cannot
 // be told apart by uid at agent-start time — the reason the post-install IMDS
@@ -731,9 +730,9 @@ type CiFleetControllerArgs = {
  * job whose runner died between launch and pickup (spot reclaim, boot
  * failure) — without it such a job waits on GitHub's six-hour queue timeout,
  * because nothing else re-delivers it. A capacity reclaim mid-job still fails
- * that job and only a workflow re-run recovers it. The heavy pool uses
- * on-demand capacity permanently after repeated interruption sweeps exceeded
- * the fleet's reliability tripwire. `runners_maximum_count` bounds
+ * that job and only a workflow re-run recovers it. The September 15 cost
+ * policy uses Spot without automatic On-Demand fallback. Attribute a runner
+ * loss before spending another attempt. `runners_maximum_count` bounds
  * concurrent instances only — jobs beyond the cap retry from SQS as capacity
  * frees rather than being dropped. `enable_job_queued_check` stays false: its
  * not-queued branch consumes the scale-up message with no retry, so GitHub
@@ -902,7 +901,7 @@ export class CiFleetController extends pulumi.ComponentResource {
          * to ordinary `self-hosted` jobs, so both label sets must be exact.
          */
         enable_runner_bidirectional_label_match: true,
-        enable_runner_on_demand_failover_for_errors: onDemandFailoverErrors,
+        enable_runner_on_demand_failover_for_errors: [],
         enable_ssm_on_runners: false,
         enable_user_data_debug_logging_runner: false,
         github_app: {
@@ -919,12 +918,10 @@ export class CiFleetController extends pulumi.ComponentResource {
             name: githubAppWebhookSecretSsmParameterName,
           },
         },
-        instance_allocation_strategy: "lowest-price",
-        // Permanent heavy-pool posture: the 2026-09-09 interruption sweep
-        // exceeded the >2 interruption-reruns/week tripwire. Launch-time
-        // on-demand failover cannot recover a runner reclaimed mid-job.
-        // Keep the existing cap and ephemeral teardown to bound spending.
-        instance_target_capacity_type: "on-demand",
+        instance_allocation_strategy: "price-capacity-optimized",
+        // Preserve the September 15 containment policy. A larger budget alert
+        // does not authorize automatic fallback to higher-priced capacity.
+        instance_target_capacity_type: "spot",
         instance_termination_watcher: {
           enable: true,
           enable_runner_deregistration: true,
@@ -970,19 +967,18 @@ export class CiFleetController extends pulumi.ComponentResource {
         userdata_post_install: runnerPostInstall,
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,
-        // Concurrency cap, not a budget: each ephemeral VM lives exactly one
-        // job, so the cap only decides how much of a wave runs in parallel. A
-        // push wave requests seven heavy jobs (five verify lanes plus
-        // jsdoc-ratchet and build) and an overlapping PR wave adds six more —
-        // fourteen covers that worst case with one spare. Excess jobs retry
-        // from SQS every ~30s.
-        runners_maximum_count: 14,
+        // September 15 cost policy: keep CI available with two concurrent
+        // workers. Excess jobs retry from SQS as capacity becomes available.
+        // This limits simultaneous spending, not aggregate monthly worker hours.
+        runners_maximum_count: 2,
         runners_ssm_housekeeper: {
           config: { dryRun: false, minimumDaysOld: 1 },
           enabled: true,
           schedule_expression: "rate(1 day)",
         },
         scale_down_schedule_expression: "cron(* * * * ? *)",
+        // Keep job pickup enabled; zero blocks every queued PR verification job.
+        scale_up_reserved_concurrent_executions: 1,
         subnet_ids: args.subnetIds,
         tags: {
           App: "ci-runners",

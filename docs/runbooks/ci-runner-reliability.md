@@ -3,11 +3,18 @@
 Account budgets, audit receipts and image refresh/retention policy are owned by
 [AWS cost operations](./aws-cost-operations.md).
 
-The `beep-ec2-heavy` pool uses On-Demand EC2 capacity. The operator chose this
-permanent posture on 2026-09-09 after repeated Spot reclamations interrupted
-verification. Keep the 14-instance cap, 64 GiB instance choices, and ephemeral
-one-job-per-VM teardown. Changing the purchase model does not require replacing
-running workers; existing workers finish or are reclaimed and drain naturally.
+**September 15, 2026:** the current policy keeps AWS heavy CI available with a
+two-worker cap and a $200/month account budget alert. Scale-up reserved concurrency
+is 1, and the launch/retry queue mappings remain enabled. The earlier emergency
+pause blocked PR job pickup and has been superseded. Follow the current policy
+in AWS cost operations; the 14-worker deployment evidence below is historical.
+
+The current `beep-ec2-heavy` pool uses Spot capacity with
+`price-capacity-optimized` allocation and automatic On-Demand fallback disabled.
+This September 15 containment supersedes the September 9 On-Demand posture.
+Keep the two-instance cap, existing 64 GiB choices and ephemeral one-job-per-VM
+teardown. A budget alert does not enforce a monthly worker-hour limit. Diagnose
+interrupted jobs before retrying; changing the alert does not change running workers.
 
 ## Attribute a runner loss
 
@@ -31,8 +38,9 @@ On 2026-09-09, four workflows supplied nine distinct runner-loss examples.
 Every matching Spot request reported capacity reclamation. A broader retained
 fleet snapshot contained 30 such interruptions. GitHub marked these jobs failed
 roughly 11 minutes after termination. This exceeded the former
-`>2 interruption reruns/week` tripwire; returning this heavy pool to Spot needs
-a new operator decision, not an automatic rollback timer.
+`>2 interruption reruns/week` tripwire. The September 15 cost-containment
+decision subsequently returned the pool to Spot; the interruption evidence
+remains relevant to cost per successful completion.
 
 ## Termination credential access
 
