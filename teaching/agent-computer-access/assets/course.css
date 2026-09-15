@@ -1,0 +1,204 @@
+/* Shared course stylesheet — agent-computer-access workspace.
+   Parchment ground, deep-green accents. Print-friendly. */
+
+:root {
+  --paper: #f7f3e9;
+  --ink: #1f2a24;
+  --ink-soft: #4a5a50;
+  --green: #1d4d3b;
+  --green-bright: #2e7d5b;
+  --accent-bg: #ece5d3;
+  --rule: #d8cfb8;
+  --card: #fffdf7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font:
+    17px / 1.65 Georgia,
+    "Iowan Old Style",
+    "Times New Roman",
+    serif;
+}
+
+main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Gill Sans", "Gill Sans MT", Seravek, Calibri, sans-serif;
+  color: var(--green);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+h1 {
+  font-size: 2.1rem;
+  margin: 0 0 0.25rem;
+}
+h2 {
+  font-size: 1.35rem;
+  margin-top: 2.5rem;
+  border-bottom: 2px solid var(--rule);
+  padding-bottom: 0.3rem;
+}
+h3 {
+  font-size: 1.05rem;
+  margin-top: 1.8rem;
+}
+
+.kicker {
+  font-family: "Gill Sans", "Gill Sans MT", Seravek, Calibri, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+  color: var(--green-bright);
+  margin-bottom: 0.6rem;
+}
+
+.lede {
+  font-size: 1.15rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-top: 0;
+}
+
+a {
+  color: var(--green-bright);
+}
+a:hover {
+  color: var(--green);
+}
+
+blockquote,
+.analogy {
+  background: var(--accent-bg);
+  border: 1px solid var(--rule);
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border-radius: 6px;
+}
+
+.analogy p:first-child {
+  margin-top: 0;
+}
+.analogy p:last-child {
+  margin-bottom: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.92rem;
+  background: var(--card);
+}
+
+th {
+  font-family: "Gill Sans", "Gill Sans MT", Seravek, Calibri, sans-serif;
+  text-align: left;
+  background: var(--green);
+  color: var(--paper);
+  padding: 0.55rem 0.75rem;
+}
+
+td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+.callout {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.callout .label {
+  font-family: "Gill Sans", "Gill Sans MT", Seravek, Calibri, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.7rem;
+  color: var(--green-bright);
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+cite,
+.cite {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+/* Quiz component */
+.quiz {
+  margin: 1.5rem 0;
+}
+.quiz fieldset {
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--card);
+  margin: 0 0 1rem;
+  padding: 1rem 1.25rem;
+}
+.quiz legend {
+  font-family: "Gill Sans", "Gill Sans MT", Seravek, Calibri, sans-serif;
+  font-weight: 600;
+  color: var(--green);
+  padding: 0 0.4rem;
+}
+.quiz label {
+  display: block;
+  padding: 0.3rem 0;
+  cursor: pointer;
+}
+.quiz .result {
+  font-weight: 600;
+  margin-top: 0.5rem;
+  min-height: 1.4em;
+}
+.quiz .result.right {
+  color: var(--green-bright);
+}
+.quiz .result.wrong {
+  color: #a04222;
+}
+
+footer {
+  margin-top: 3.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--rule);
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+@media print {
+  body {
+    background: #fff;
+    font-size: 12pt;
+  }
+  main {
+    max-width: none;
+    padding: 0;
+  }
+  .quiz,
+  .no-print {
+    display: none;
+  }
+  a {
+    color: var(--green);
+    text-decoration: none;
+  }
+}

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0001 — The Playroom and the House</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <p class="kicker">Agent Computer Access · Lesson 0001</p>
+  <h1>The Playroom and the House</h1>
+  <p class="lede">Why a sandboxed agent (Cowork) can make things for you, but only an agent
+  on your actual computer (Claude Code) can work for you.</p>
+
+  <h2>The five-year-old version</h2>
+  <div class="analogy">
+    <p><strong>Cowork gives Claude a playroom.</strong> It's a clean, empty room in
+    Anthropic's building. You slide papers in through a mail slot, Claude makes something
+    nice, and slides it back out. Then the room is <em>demolished</em>. Every visit starts
+    with a brand-new empty room.</p>
+    <p><strong>Claude Code lets Claude into your house.</strong> Your desk, your filing
+    cabinets, your tools, your printer, your calendar on the wall. Whatever it builds —
+    a routine, a script, a tidied-up filing system — is still there tomorrow, working,
+    even when Claude has gone home.</p>
+    <p>You can't hire a housekeeper who is only allowed in a playroom across the street.</p>
+  </div>
+
+  <p>That demolition detail isn't a metaphor — it's Anthropic's own description. In
+  Cowork's cloud sessions, "each session gets its own sandbox, created when the session
+  starts and destroyed when it ends," your files reach it only through a brokered
+  connection to folders you explicitly connected, and its internet access runs through a
+  mandatory allow-list proxy
+  (<a href="https://support.claude.com/en/articles/14479288-claude-cowork-architecture-overview">Cowork architecture overview</a>).
+  Claude Code is the same agent brain, but it runs on your machine with the permissions
+  of whoever launched it (<a href="https://code.claude.com/docs">Claude Code docs</a>).
+  Same engine, two very different rooms
+  (<a href="https://www.datacamp.com/blog/claude-cowork-vs-claude-code">DataCamp comparison</a>).</p>
+
+  <h2>Why the playroom can't do real automation</h2>
+
+  <h3>1. An automation is something that runs when you're not there</h3>
+  <p>A routine, a nightly script, a "watch this folder and file whatever lands in it" —
+  these live <em>on a machine</em> and keep running after the conversation ends. The
+  sandbox is destroyed when the session ends, so there is nowhere for an automation to
+  live. Claude Code can install the routine into the computer itself — a scheduled task,
+  a watcher, a hook — and the <em>machine</em> keeps doing the work.</p>
+
+  <h3>2. Work has to land where work happens</h3>
+  <p>From the playroom, everything comes back out through the mail slot: a file to
+  download, a page written through a connector. On your machine, the agent edits the
+  real documents in the real folders, runs the real installed software, prints to the
+  real printer, and the result is simply <em>done</em> — not delivered for you to go
+  put away.</p>
+
+  <h3>3. "But our systems of record are connected!" — the connector illusion</h3>
+  <p>This is the rebuttal you'll hear, so learn it cold. A connector is a mail slot with
+  a fixed shape: it exposes exactly the operations someone built — read this page, list
+  those files, draft that email. But real work lives in the <strong>connective
+  tissue between systems</strong>: the local folder where scans land, the desktop app with
+  no API, the firm's docketing macro, the network drive, the fifteen-step routine a
+  paralegal does across four programs. A person at a desk can drive <em>all</em> of that.
+  An agent at that same desk can too. An agent in a sandbox can only touch what got a
+  slot cut for it — and connector calls even run outside the sandbox, on Anthropic's
+  servers, precisely to keep credentials out of the room.</p>
+
+  <h3>4. A computer accumulates; a sandbox forgets</h3>
+  <p>Your machine has years of setup in it: installed tools, logins, printers, mapped
+  drives, scripts, muscle memory encoded as configuration. That accumulated state is
+  what makes work fast. The sandbox starts empty every single time — an amnesiac
+  employee with a strict visitor badge.</p>
+
+  <h2>The honest steelman (say this before they do)</h2>
+  <div class="callout">
+    <span class="label">Fairness clause</span>
+    The sandbox is not a defect — it's a deliberate safety feature. If something goes
+    wrong, the blast radius stays inside a disposable room; on a real machine, the agent
+    can touch whatever you can touch, which is why Claude Code asks permission before
+    acting (<a href="https://www.mintmcp.com/blog/claude-cowork-vs-claude-code">MintMCP security comparison</a>).
+    So the pitch is not "Cowork bad." It's: <strong>containment and capability are the
+    same dial.</strong> Cowork is the right tool for trying things safely and for one-off
+    document tasks. But an agent that cannot touch your machine cannot automate your
+    machine — and automation is the part that compounds.
+  </div>
+
+  <h2>Side by side</h2>
+  <table>
+    <tr><th></th><th>Cowork (playroom)</th><th>Claude Code (your house)</th></tr>
+    <tr><td><strong>Where it runs</strong></td><td>Disposable sandbox on Anthropic's servers (or a local VM)</td><td>Your actual computer</td></tr>
+    <tr><td><strong>What it touches</strong></td><td>Files you slide in; connector mail slots</td><td>Anything you can: files, apps, scripts, printers, dev tools</td></tr>
+    <tr><td><strong>When session ends</strong></td><td>Room demolished; outputs must be carried out</td><td>Everything it built stays and keeps working</td></tr>
+    <tr><td><strong>Automations</strong></td><td>None survive the session</td><td>Scheduled tasks, watchers, hooks, routines — installed for good</td></tr>
+    <tr><td><strong>Best for</strong></td><td>Safe one-off tasks, exploring, document work</td><td>Real workflows, routines, scripts, knowledge-work pipelines</td></tr>
+  </table>
+
+  <h2>Check yourself</h2>
+  <div class="quiz">
+    <fieldset class="q">
+      <legend>1. What happens to a Cowork cloud sandbox when the session ends?</legend>
+      <label><input type="radio" name="q1"> It is saved for later</label>
+      <label><input type="radio" name="q1" data-correct> It is fully destroyed</label>
+      <label><input type="radio" name="q1"> It is shared onward</label>
+      <p class="result"></p>
+    </fieldset>
+    <fieldset class="q">
+      <legend>2. Why isn't connecting your systems of record to Cowork enough?</legend>
+      <label><input type="radio" name="q2" data-correct> Real work spans the glue between your systems</label>
+      <label><input type="radio" name="q2"> Real work needs much faster network computers</label>
+      <label><input type="radio" name="q2"> Real work wants far bigger context windows</label>
+      <p class="result"></p>
+    </fieldset>
+    <fieldset class="q">
+      <legend>3. What is the honest way to frame the sandbox?</legend>
+      <label><input type="radio" name="q3"> A flaw Anthropic is fixing</label>
+      <label><input type="radio" name="q3"> A limit nobody planned on</label>
+      <label><input type="radio" name="q3" data-correct> A safety dial that caps it</label>
+      <p class="result"></p>
+    </fieldset>
+  </div>
+
+  <h2>Go deeper</h2>
+  <p><strong>Primary source:</strong> read the
+  <a href="https://support.claude.com/en/articles/14479288-claude-cowork-architecture-overview">Claude Cowork architecture overview</a>
+  (5 minutes). It's Anthropic describing the playroom in their own words — the most
+  credible ammunition you can cite in the room.</p>
+  <p>Quick-reference version of this argument: <a href="../reference/pitch-card.html">the pitch card</a>.</p>
+
+  <footer>
+    <p>Questions, pushback, or a colleague's rebuttal you couldn't answer? Bring it back
+    to your teaching agent — that's what it's for. Next lesson candidate: building one
+    real scheduled automation with Claude Code, live, as the demo that closes the sale.</p>
+  </footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
