@@ -673,10 +673,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         applyPacketGenesisSeed(seed).pipe(
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
-            makeDirectory: (target, options) =>
-              target === eventsDirectory
-                ? Effect.fail(injectedFileSystemError("makeDirectory", target))
-                : fs.makeDirectory(target, options),
+            makeTempDirectory: () => Effect.fail(injectedFileSystemError("makeTempDirectory", eventsDirectory)),
           })
         )
       );
@@ -1570,7 +1567,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
             makeTempDirectory: (options) =>
-              options?.directory === path.dirname(quarantineCreateSeed.eventsDirectory)
+              options?.prefix === ".genesis-rollback-"
                 ? Effect.fail(injectedFileSystemError("makeTempDirectory", options.directory))
                 : fs.makeTempDirectory(options),
           })

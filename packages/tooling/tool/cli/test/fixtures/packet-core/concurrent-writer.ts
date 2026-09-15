@@ -1,5 +1,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
-import { PacketEvent, PacketEventStore, PacketEventStoreLive, PacketStreamLocator } from "@beep/repo-cli/test/Goals";
+import { PacketGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/Migration.schemas";
+import { applyPacketGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/PacketMutation";
+import {
+  PacketEvent,
+  PacketEventStore,
+  PacketEventStoreLive,
+  PacketStreamLocator,
+  packetEventDigest,
+  packetEventFileName,
+  renderPacketEventFile,
+} from "@beep/repo-cli/test/Goals";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { BunRuntime } from "@effect/platform-bun";
 import { NodeServices } from "@effect/platform-node";
@@ -11,7 +21,14 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("test/fixtures/packet-core/concurrent-writer");
-const PausePoint = LiteralKit(["none", "afterRead", "beforePublish", "afterPublish"]).annotate(
+const PausePoint = LiteralKit([
+  "none",
+  "afterRead",
+  "beforePublish",
+  "afterPublish",
+  "beforeGenesisPublish",
+  "afterGenesisPublish",
+]).annotate(
   $I.annote("PausePoint", {
     description: "Real filesystem boundary at which a packet writer waits for its test parent.",
   })
@@ -44,12 +61,29 @@ const main = Effect.gen(function* () {
       if (publishesEvent && PausePoint.is.beforePublish(pausePoint)) {
         yield* pause();
       }
+      if (Eq.equals(target, eventsPath) && PausePoint.is.beforeGenesisPublish(pausePoint)) yield* pause();
       yield* fs.rename(source, target);
+      if (Eq.equals(target, eventsPath) && PausePoint.is.afterGenesisPublish(pausePoint)) yield* pause();
       if (publishesEvent && PausePoint.is.afterPublish(pausePoint)) {
         yield* pause();
       }
     }),
   });
+
+  if (PausePoint.is.beforeGenesisPublish(pausePoint) || PausePoint.is.afterGenesisPublish(pausePoint)) {
+    yield* applyPacketGenesisSeed(
+      PacketGenesisSeed.make({
+        slug: event.packet,
+        eventsDirectory: eventsPath,
+        eventFileName: packetEventFileName(event, yield* packetEventDigest(event)),
+        eventText: yield* renderPacketEventFile(event),
+        tracePath: path.join(packetPath, "ops", "trace.json"),
+        traceText: "{}\n",
+      })
+    ).pipe(Effect.provideService(FileSystem.FileSystem, pausedFs));
+    yield* Console.log("COMMITTED");
+    return;
+  }
 
   const store = Context.get(
     yield* Layer.build(PacketEventStoreLive).pipe(Effect.provideService(FileSystem.FileSystem, pausedFs)),

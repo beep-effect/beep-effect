@@ -987,7 +987,6 @@ const applyPacketGenesisSeedLocked = Effect.fnUntraced(function* (
   const present = yield* fs
     .exists(seed.eventsDirectory)
     .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis stream inspection failed: ${error.message}`)));
-  const eventPath = path.join(seed.eventsDirectory, seed.eventFileName);
   if (present) {
     if (!(yield* ownsGenesisEvent(seed))) {
       return yield* streamError(seed.slug, "event stream appeared after preview; refusing to reseed");
@@ -1002,18 +1001,35 @@ const applyPacketGenesisSeedLocked = Effect.fnUntraced(function* (
   });
   const mutation = Effect.gen(function* () {
     yield* assertOwned;
-    yield* fs
-      .makeDirectory(seed.eventsDirectory)
-      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis directory write failed: ${error.message}`)));
-    createdEventsDirectory = true;
-    yield* assertOwned;
-    yield* writeContainedFileString(path.resolve(seed.eventsDirectory), path.resolve(eventPath), seed.eventText).pipe(
-      Effect.mapError((error) => streamError(seed.slug, `genesis event write failed: ${error.message}`))
+    const stagingDirectory = yield* Effect.acquireRelease(
+      fs
+        .makeTempDirectory({ directory: path.dirname(seed.eventsDirectory), prefix: ".genesis-stage-" })
+        .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis directory write failed: ${error.message}`))),
+      (directory) => fs.remove(directory, { recursive: true, force: true }).pipe(Effect.orDie)
+    );
+    yield* writeContainedFileString(
+      path.resolve(stagingDirectory),
+      path.resolve(stagingDirectory, seed.eventFileName),
+      seed.eventText
+    ).pipe(Effect.mapError((error) => streamError(seed.slug, `genesis event write failed: ${error.message}`)));
+    // Publish the complete directory before trace projection. A killed process
+    // leaves either no final stream or the owned event that trace recovery needs.
+    yield* Effect.uninterruptible(
+      Effect.gen(function* () {
+        yield* assertOwned;
+        yield* fs
+          .rename(stagingDirectory, seed.eventsDirectory)
+          .pipe(
+            Effect.mapError((error) => streamError(seed.slug, `genesis directory publication failed: ${error.message}`))
+          );
+        createdEventsDirectory = true;
+      })
     );
     yield* assertOwned;
     yield* publishGenesisTrace(seed);
   });
   yield* mutation.pipe(
+    Effect.scoped,
     Effect.onInterrupt(() => rollback().pipe(Effect.ignore)),
     Effect.matchEffect({
       onFailure: (original) =>

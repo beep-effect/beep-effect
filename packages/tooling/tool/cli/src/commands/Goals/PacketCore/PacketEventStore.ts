@@ -423,17 +423,16 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
   ) {
     const directory = eventsDir(locator.packetPath);
-    if (!(yield* hasStream(locator.packetPath))) {
-      return yield* PacketStreamError.new(
-        locator.packet,
-        `"${directory}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory. An interrupted directory replacement may also need recovery.`
-      );
-    }
     const entries = yield* fs
       .readDirectory(directory)
       .pipe(
         Effect.mapError((error) =>
-          PacketStreamError.new(locator.packet, `stream could not be read before append: ${error.message}`)
+          PacketStreamError.new(
+            locator.packet,
+            error.reason._tag === "NotFound"
+              ? `"${directory}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory. An interrupted directory replacement may also need recovery.`
+              : `stream could not be read before append: ${error.message}`
+          )
         )
       );
     const listing = yield* readEntries(locator, entries);

@@ -13,6 +13,9 @@ import {
   PacketForkRepairApplierLive,
   PacketStreamError,
   PacketStreamLocator,
+  packetEventDigest,
+  packetEventFileName,
+  renderPacketEventFile,
   withPacketEventLock,
 } from "@beep/repo-cli/test/Goals";
 import { QualitySchedulerError, withJournalFileLock } from "@beep/repo-cli/test/RepoRun";
@@ -321,6 +324,38 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         yield* assertStream(locator, 1);
       }),
       20_000
+    );
+
+    it.effect(
+      "recovers process death on both sides of atomic genesis directory publication",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        for (const pausePoint of ["beforeGenesisPublish", "afterGenesisPublish"]) {
+          const locator = yield* makePacket();
+          const eventsDirectory = path.join(locator.packetPath, "ops", "events");
+          yield* fs.remove(eventsDirectory, { recursive: true });
+          const child = yield* startWriter(locator, "genesis-crash", pausePoint);
+          assertSome(yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead), "PAUSED");
+          expect(yield* fs.exists(eventsDirectory)).toBe(pausePoint === "afterGenesisPublish");
+          yield* child.kill({ killSignal: "SIGKILL" });
+          yield* child.exitCode.pipe(Effect.result);
+          const event = genesis("genesis-crash");
+          const seed = PacketGenesisSeed.make({
+            slug: locator.packet,
+            eventsDirectory,
+            eventFileName: packetEventFileName(event, yield* packetEventDigest(event)),
+            eventText: yield* renderPacketEventFile(event),
+            tracePath: path.join(locator.packetPath, "ops", "trace.json"),
+            traceText: "{}\n",
+          });
+          yield* applyPacketGenesisSeed(seed);
+          yield* assertStream(locator, 1);
+          expect(yield* fs.readFileString(seed.tracePath)).toBe(seed.traceText);
+          expect(yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"))).toBe(false);
+        }
+      }),
+      30_000
     );
 
     it.effect(
