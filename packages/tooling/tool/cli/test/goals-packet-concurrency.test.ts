@@ -412,6 +412,44 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
     );
 
     it.effect(
+      "retains a committed genesis when temporary staging cleanup fails",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const locator = yield* makePacket();
+        const eventsDirectory = path.join(locator.packetPath, "ops", "events");
+        yield* fs.remove(eventsDirectory, { recursive: true });
+        const event = genesis("cleanup-failure");
+        const seed = PacketGenesisSeed.make({
+          slug: locator.packet,
+          eventsDirectory,
+          eventFileName: packetEventFileName(event, yield* packetEventDigest(event)),
+          eventText: yield* renderPacketEventFile(event),
+          tracePath: path.join(locator.packetPath, "ops", "trace.json"),
+          traceText: "{}\n",
+        });
+        const cleanupFs = FileSystem.FileSystem.of({
+          ...fs,
+          remove: Effect.fn("PacketConcurrencyTest.failStagingCleanup")(function* (target, options) {
+            if (Str.includes(".genesis-stage-")(target)) {
+              return yield* PlatformError.systemError({
+                _tag: "PermissionDenied",
+                module: "FileSystem",
+                method: "remove",
+                pathOrDescriptor: target,
+                description: "injected staging cleanup failure",
+              });
+            }
+            return yield* fs.remove(target, options);
+          }),
+        });
+        yield* applyPacketGenesisSeed(seed).pipe(Effect.provideService(FileSystem.FileSystem, cleanupFs));
+        yield* assertStream(locator, 1);
+        expect(yield* fs.readFileString(seed.tracePath)).toBe(seed.traceText);
+      })
+    );
+
+    it.effect(
       "rechecks ownership after staging genesis trace bytes before linking them",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;

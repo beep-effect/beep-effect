@@ -1014,7 +1014,7 @@ const applyPacketGenesisSeedLocked = Effect.fnUntraced(function* (
       fs
         .makeTempDirectory({ directory: path.dirname(seed.eventsDirectory), prefix: ".genesis-stage-" })
         .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis directory write failed: ${error.message}`))),
-      (directory) => fs.remove(directory, { recursive: true, force: true }).pipe(Effect.orDie)
+      (directory) => fs.remove(directory, { recursive: true, force: true }).pipe(Effect.ignore)
     );
     yield* writeContainedFileString(
       path.resolve(stagingDirectory),
