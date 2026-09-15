@@ -1,0 +1,83 @@
+{
+  "schema": "beep.research.nightly.run/v0",
+  "date": "2026-09-13",
+  "status": "partial",
+  "supervised": false,
+  "firstRun": false,
+  "sundayWeekly": true,
+  "window": {
+    "start": "2026-09-12T08:14:00-05:00",
+    "end": "2026-09-13T08:20:00-05:00",
+    "timezone": "America/Chicago",
+    "fallbackHours": 24,
+    "note": "Delta since lastSuccessfulRun of research/2026-09-12 (#1123 merged 2026-09-12 ~6:27 PM CT). No open research PR at preflight. Window ~24h. Sunday: weekly consolidation + tombstone reaper. Local gh CLI token invalid; GitHub MCP used for remote reads."
+  },
+  "claimsEmitted": 32,
+  "collisionRate": 0.438,
+  "novelUrlCollisionRate": 0.2,
+  "collisionNote": "13 intentional refute URL re-cites. Novel-URL collision rate 0.200. SPEC 40% self-reject gate on novel-URL collision. selfReject false.",
+  "selfReject": false,
+  "sourcesSeen": {
+    "web": 15,
+    "arxiv": 1,
+    "github": 16,
+    "x": 0
+  },
+  "quotaPools": {
+    "search": "grok-bot+web+github-mcp+arxiv+npm",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "refutationQuota": {
+    "attempted": 12,
+    "held": 11,
+    "broken": 1,
+    "moved": 3,
+    "standingClaims": [
+      "USPTO ODP four fields",
+      "iManage/TR CoCounsel MCP not GA",
+      "Harvey-Everlaw MCP fall 2026 not GA",
+      "effect tip rc.115 / rc.116 unpublished",
+      "Effect #7265 MCP on npm",
+      "drizzle TaggedErrorClass #6162",
+      "Instant Cloud sunset 2027-08-31",
+      "Jazz alpha.54 tip",
+      "Evolu tip 8.10.0 / 8.11.0 staged",
+      "SEP-2640 Accepted not Final",
+      "MCP #3306 Enterprise IdP docs",
+      "SEP-3004 toward Final"
+    ],
+    "note": "BROKEN: SEP-2640 Status=Final on PR head (still OPEN/unmerged). HOLD: ODP, TR partnership MCP, Harvey-Everlaw, tip rc.115, MCP unpublished, drizzle, Instant, Jazz alpha.54, Evolu 8.10.0, #3306, SEP-3004. MOVES: #8201 changeset grew; Jazz #2748 body; SchemaJIT #7908 updated; SEP-2640 Finalization commits."
+  },
+  "weekly": {
+    "tombstonesReaped": 6,
+    "tombstoneFile": "research/ledger/tombstones/2026-09-13.jsonl",
+    "trends": [
+      "effect-mcp-publish-gap",
+      "sep2640-final-unmerged",
+      "legal-ai-fabric",
+      "local-first-staged",
+      "mcp-supply-chain-realism"
+    ]
+  },
+  "frictions": [
+    {
+      "id": "x-client-not-enrolled",
+      "detail": "user-X search_news + search_posts_all return client-not-enrolled (client_id 29986667). x=0."
+    },
+    {
+      "id": "gh-cli-bad-credentials",
+      "detail": "Local gh CLI GH_TOKEN invalid 401; GitHub MCP used."
+    },
+    {
+      "id": "no-sol-luna",
+      "detail": "Blinded verify seats unavailable; packet partial."
+    },
+    {
+      "id": "arxiv-api-flaky",
+      "detail": "Complex arXiv API queries empty/hung; HTML day lists used for weekend gap."
+    }
+  ]
+}
