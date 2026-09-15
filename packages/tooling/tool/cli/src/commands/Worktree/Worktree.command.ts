@@ -723,7 +723,7 @@ const upstreamVerdictLabel = (verdict: WorktreeUpstreamVerdict): string =>
   WorktreeUpstreamVerdict.match(verdict, {
     "ancestor-of-base": ({ base }) => `tip is already on ${base}`,
     "merged-pull-request": ({ number }) => `merged as PR #${number} at this head`,
-    unverified: () => "tip not proven pushed, commits kept under the archive ref",
+    unverified: () => "tip not proven pushed",
   });
 
 const renderUnpushedInspection = Effect.fn("Worktree.renderUnpushedInspection")(function* (

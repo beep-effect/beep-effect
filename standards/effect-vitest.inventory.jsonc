@@ -68078,7 +68078,7 @@
       "line": 747,
       "endLine": 747,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:c18536bf82c98a92e50165c0e86eaefd0a52ff42e4d05338760dad6a9fe48477",
+      "occurrence": "v2:feae420a0012e0de1667440dcf533f0a016727f2dc71cdde22ed9570827e0b9f",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(TestConsole.layer)",
       "replacement": {
@@ -79250,7 +79250,7 @@
       "line": 1405,
       "endLine": 1523,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:f82261064550b8600170d03d33348fed0293dd5487bfd03e88991c0507951b81",
+      "occurrence": "v2:9d880f2f7c797bf68fad1a162121a5b6a946ebb31991d3fa93292e70cb3ec241",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {

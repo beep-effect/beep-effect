@@ -733,7 +733,7 @@ describe("worktree output rendering", () => {
 
       expect(O.isNone(base.unpushedInspection)).toBe(true);
       expect(prunedLines).toContain(
-        "  upstream: refs/remotes/origin/feat/feature-x no longer resolves (pruned); unpushed commits were counted against origin/main..HEAD instead; tip not proven pushed, commits kept under the archive ref"
+        "  upstream: refs/remotes/origin/feat/feature-x no longer resolves (pruned); unpushed commits were counted against origin/main..HEAD instead; tip not proven pushed"
       );
       expect(ancestorLines).toContain(
         "  upstream: refs/remotes/origin/feat/feature-x no longer resolves (pruned); unpushed commits were counted against origin/main..HEAD instead; tip is already on origin/main"
@@ -1501,7 +1501,7 @@ describe("worktree git operations", () => {
           .pipe(Effect.flatMap(decodeResidueManifest));
         expect(persistedManifest.upstream).toEqual(manifest.upstream);
         expect(yield* collectRemovalReceiptLines(unpushedReceipt, true)).toContain(
-          `  upstream: refs/remotes/origin/${unpushedBranch} no longer resolves (pruned); unpushed commits were counted against origin/trunk..HEAD instead; tip not proven pushed, commits kept under the archive ref`
+          `  upstream: refs/remotes/origin/${unpushedBranch} no longer resolves (pruned); unpushed commits were counted against origin/trunk..HEAD instead; tip not proven pushed`
         );
         expect(yield* fs.exists(unpushedPath)).toBe(false);
 
