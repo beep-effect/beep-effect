@@ -5,6 +5,8 @@ import {
   PacketEvent,
   PacketEventStore,
   PacketEventStoreLive,
+  PacketForkRepairApplier,
+  PacketForkRepairApplierLive,
   PacketStreamLocator,
   packetEventDigest,
   packetEventFileName,
@@ -28,6 +30,7 @@ const PausePoint = LiteralKit([
   "afterPublish",
   "beforeGenesisPublish",
   "afterGenesisPublish",
+  "afterForkBackup",
 ]).annotate(
   $I.annote("PausePoint", {
     description: "Real filesystem boundary at which a packet writer waits for its test parent.",
@@ -63,12 +66,25 @@ const main = Effect.gen(function* () {
       }
       if (Eq.equals(target, eventsPath) && PausePoint.is.beforeGenesisPublish(pausePoint)) yield* pause();
       yield* fs.rename(source, target);
+      if (Eq.equals(source, eventsPath) && PausePoint.is.afterForkBackup(pausePoint)) yield* pause();
       if (Eq.equals(target, eventsPath) && PausePoint.is.afterGenesisPublish(pausePoint)) yield* pause();
       if (publishesEvent && PausePoint.is.afterPublish(pausePoint)) {
         yield* pause();
       }
     }),
   });
+
+  if (PausePoint.is.afterForkBackup(pausePoint)) {
+    const applier = Context.get(
+      yield* Layer.build(PacketForkRepairApplierLive.pipe(Layer.provide(PacketEventStoreLive))).pipe(
+        Effect.provideService(FileSystem.FileSystem, pausedFs)
+      ),
+      PacketForkRepairApplier
+    );
+    yield* applier.apply(PacketStreamLocator.make({ packet: event.packet, root: event.root, packetPath }));
+    yield* Console.log("COMMITTED");
+    return;
+  }
 
   if (PausePoint.is.beforeGenesisPublish(pausePoint) || PausePoint.is.afterGenesisPublish(pausePoint)) {
     yield* applyPacketGenesisSeed(

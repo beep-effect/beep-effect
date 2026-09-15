@@ -829,7 +829,9 @@ const quarantineOwnedGenesisEventsLocked = Effect.fnUntraced(function* (
     .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} event remove failed: ${error.message}`)));
 });
 
-const publishGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+type PacketOwnershipFence = Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>;
+
+const publishGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed, assertOwned: PacketOwnershipFence) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tracePath = path.resolve(seed.tracePath);
@@ -842,6 +844,7 @@ const publishGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed
       yield* fs
         .writeFileString(stagedTracePath, seed.traceText)
         .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace write failed: ${error.message}`)));
+      yield* assertOwned;
       yield* fs
         .link(stagedTracePath, tracePath)
         .pipe(
@@ -859,7 +862,11 @@ const publishGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed
   );
 });
 
-const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed, observed: string) {
+const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (
+  seed: PacketGenesisSeed,
+  observed: string,
+  assertOwned: PacketOwnershipFence
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tracePath = path.resolve(seed.tracePath);
@@ -878,6 +885,7 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
     .pipe(
       Effect.mapError((error) => streamError(seed.slug, `genesis trace quarantine remove failed: ${error.message}`))
     );
+  yield* assertOwned;
   const quarantined = yield* fs.rename(tracePath, quarantinedTracePath).pipe(
     Effect.matchEffect({
       onFailure: (error) =>
@@ -887,7 +895,7 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
               return discardRecoveryRoot.pipe(Effect.as(false));
             }
             if (O.isNone(trace)) {
-              return discardRecoveryRoot.pipe(Effect.andThen(publishGenesisTrace(seed)), Effect.as(false));
+              return discardRecoveryRoot.pipe(Effect.andThen(publishGenesisTrace(seed, assertOwned)), Effect.as(false));
             }
             return Effect.fail(streamError(seed.slug, `genesis trace quarantine failed: ${error.message}`));
           })
@@ -900,6 +908,7 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
     .readFileString(quarantinedTracePath)
     .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace quarantine read failed: ${error.message}`)));
   if (isolated !== observed && isolated !== seed.traceText) {
+    yield* assertOwned;
     yield* fs
       .link(quarantinedTracePath, tracePath)
       .pipe(
@@ -918,8 +927,8 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
       `genesis trace quarantine conflict: changed bytes restored at ${tracePath}; recovery copy preserved at ${quarantinedTracePath}`
     );
   }
-  yield* publishGenesisTrace(seed).pipe(
-    Effect.mapError((error) =>
+  yield* publishGenesisTrace(seed, assertOwned).pipe(
+    Effect.catchTag("PacketStreamError", (error) =>
       streamError(seed.slug, `${error.message}; incomplete trace preserved at ${quarantinedTracePath}`)
     )
   );
@@ -935,11 +944,11 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
   yield* discardRecoveryRoot;
 });
 
-const recoverGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+const recoverGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed, assertOwned: PacketOwnershipFence) {
   const trace = yield* readGenesisTrace(seed);
-  if (O.isNone(trace)) return yield* publishGenesisTrace(seed);
+  if (O.isNone(trace)) return yield* publishGenesisTrace(seed, assertOwned);
   if (trace.value === seed.traceText) return;
-  yield* recoverMismatchedGenesisTrace(seed, trace.value);
+  yield* recoverMismatchedGenesisTrace(seed, trace.value, assertOwned);
 });
 
 /**
@@ -992,7 +1001,7 @@ const applyPacketGenesisSeedLocked = Effect.fnUntraced(function* (
       return yield* streamError(seed.slug, "event stream appeared after preview; refusing to reseed");
     }
     yield* assertOwned;
-    return yield* recoverGenesisTrace(seed);
+    return yield* recoverGenesisTrace(seed, assertOwned);
   }
   let createdEventsDirectory = false;
   const rollback = Effect.fnUntraced(function* () {
@@ -1026,7 +1035,7 @@ const applyPacketGenesisSeedLocked = Effect.fnUntraced(function* (
       })
     );
     yield* assertOwned;
-    yield* publishGenesisTrace(seed);
+    yield* publishGenesisTrace(seed, assertOwned);
   });
   yield* mutation.pipe(
     Effect.scoped,

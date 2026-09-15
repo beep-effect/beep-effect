@@ -27,6 +27,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
 
 const testLayer = PacketForkRepairApplierLive.pipe(
@@ -66,7 +67,12 @@ const startWriter = Effect.fn("PacketConcurrencyTest.startWriter")(function* (
   const writerPath = yield* path.fromFileUrl(writerUrl);
   return yield* ChildProcess.make(
     "bun",
-    [writerPath, locator.packetPath, yield* encodeEvent(genesis(actor)), pausePoint],
+    [
+      writerPath,
+      locator.packetPath,
+      yield* encodeEvent(PacketEvent.make({ ...genesis(actor), packet: locator.packet })),
+      pausePoint,
+    ],
     {
       cwd: process.cwd(),
       stdin: "ignore",
@@ -327,6 +333,123 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
     );
 
     it.effect(
+      "preserves the backup and refuses mutation after SIGKILL between fork-repair renames",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const store = yield* PacketEventStore;
+        const applier = yield* PacketForkRepairApplier;
+        const packet = yield* makePacket();
+        const locator = PacketStreamLocator.make({ ...packet, packet: "forked" });
+        const source = yield* path.fromFileUrl(new URL("./fixtures/packet-core/forked", import.meta.url));
+        yield* fs.copy(source, locator.packetPath, { overwrite: true });
+        const original = yield* store.list(locator);
+        const child = yield* startWriter(locator, "repair", "afterForkBackup");
+        const paused = yield* child.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead);
+        assertSome(paused, "PAUSED");
+        const eventsDirectory = path.join(locator.packetPath, "ops", "events");
+        expect(yield* fs.exists(eventsDirectory)).toBe(false);
+        yield* child.kill({ killSignal: "SIGKILL" });
+        yield* child.exitCode.pipe(Effect.result);
+        expect((yield* applier.apply(locator).pipe(Effect.flip)).message).toContain("Interrupted fork replacement");
+        expect((yield* store.append(locator, genesis("refused")).pipe(Effect.flip)).message).toContain(
+          "Interrupted fork replacement"
+        );
+        const recoveryDirectories = A.filter(
+          yield* fs.readDirectory(locator.packetPath),
+          Str.startsWith(".tmp-packet-repair-")
+        );
+        expect(recoveryDirectories).toHaveLength(1);
+        for (const directory of recoveryDirectories) {
+          const recovery = PacketStreamLocator.make({
+            ...locator,
+            packetPath: path.join(locator.packetPath, directory),
+          });
+          expect(yield* store.list(recovery)).toEqual(original);
+        }
+        expect(yield* fs.exists(eventsDirectory)).toBe(false);
+      }),
+      20_000
+    );
+
+    it.effect(
+      "refuses append and genesis when a killed fork replacement left recovery bytes",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const store = yield* PacketEventStore;
+        const locator = yield* makePacket();
+        yield* store.append(locator, genesis("original"));
+        const original = yield* store.list(locator);
+        const recoveryRoot = yield* fs.makeTempDirectory({
+          directory: locator.packetPath,
+          prefix: ".tmp-packet-repair-",
+        });
+        const eventsDirectory = path.join(locator.packetPath, "ops", "events");
+        const backupDirectory = path.join(recoveryRoot, "ops", "events");
+        yield* fs.makeDirectory(path.dirname(backupDirectory), { recursive: true });
+        // Reproduce the durable state after events-to-backup rename and hard
+        // process death, when no Effect finalizer can restore the directory.
+        yield* fs.rename(eventsDirectory, backupDirectory);
+        const event = genesis("replacement");
+        const seed = PacketGenesisSeed.make({
+          slug: locator.packet,
+          eventsDirectory,
+          eventFileName: packetEventFileName(event, yield* packetEventDigest(event)),
+          eventText: yield* renderPacketEventFile(event),
+          tracePath: path.join(locator.packetPath, "ops", "trace.json"),
+          traceText: "{}\n",
+        });
+        expect((yield* store.append(locator, event).pipe(Effect.flip)).message).toContain(
+          "Interrupted fork replacement"
+        );
+        expect((yield* applyPacketGenesisSeed(seed).pipe(Effect.flip)).message).toContain(
+          "Interrupted fork replacement"
+        );
+        expect(yield* fs.exists(eventsDirectory)).toBe(false);
+        expect(yield* store.list(PacketStreamLocator.make({ ...locator, packetPath: recoveryRoot }))).toEqual(original);
+      })
+    );
+
+    it.effect(
+      "rechecks ownership after staging genesis trace bytes before linking them",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const locator = yield* makePacket();
+        const eventsDirectory = path.join(locator.packetPath, "ops", "events");
+        yield* fs.remove(eventsDirectory, { recursive: true });
+        const event = genesis("trace-fence");
+        const seed = PacketGenesisSeed.make({
+          slug: locator.packet,
+          eventsDirectory,
+          eventFileName: packetEventFileName(event, yield* packetEventDigest(event)),
+          eventText: yield* renderPacketEventFile(event),
+          tracePath: path.join(locator.packetPath, "ops", "trace.json"),
+          traceText: "{}\n",
+        });
+        const lockPath = path.join(locator.packetPath, "ops", ".packet-events.lock");
+        const traceFs = FileSystem.FileSystem.of({
+          ...fs,
+          writeFileString: Effect.fn("PacketConcurrencyTest.traceFenceWrite")(function* (file, content, options) {
+            yield* fs.writeFileString(file, content, options);
+            if (Str.includes(".genesis-trace-publish-")(file)) yield* fs.remove(lockPath, { force: true });
+          }),
+        });
+        const result = yield* applyPacketGenesisSeed(seed).pipe(
+          Effect.provideService(FileSystem.FileSystem, traceFs),
+          Effect.result
+        );
+        expect(result._tag).toBe("Failure");
+        expect(yield* fs.exists(seed.tracePath)).toBe(false);
+        yield* assertStream(locator, 1);
+        yield* applyPacketGenesisSeed(seed);
+        expect(yield* fs.readFileString(seed.tracePath)).toBe(seed.traceText);
+      }),
+      20_000
+    );
+
+    it.effect(
       "recovers process death on both sides of atomic genesis directory publication",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -389,7 +512,7 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         yield* child.kill({ killSignal: "SIGKILL" });
         yield* child.exitCode.pipe(Effect.result);
         const failure = yield* store.append(locator, genesis("published")).pipe(Effect.flip);
-        assertTrue(isPacketCasConflictError(failure));
+        failure.pipe(isPacketCasConflictError, assertTrue);
         expect(failure).toMatchObject({ expectedRevision: 0, actualRevision: 1 });
         yield* assertStream(locator, 1);
       }),

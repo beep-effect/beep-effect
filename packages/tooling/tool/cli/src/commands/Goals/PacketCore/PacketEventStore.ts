@@ -89,6 +89,34 @@ export class PacketStreamLocator extends S.Class<PacketStreamLocator>($I`PacketS
   })
 ) {}
 
+// Called under the packet lock before any mutation can interpret an absent
+// canonical directory as a fresh stream. Recovery never guesses among backups.
+const refuseInterruptedForkReplacement = Effect.fn("PacketEventStore.refuseInterruptedForkReplacement")(function* (
+  locator: PacketStreamLocator
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const entries = yield* fs.readDirectory(locator.packetPath);
+  const recoveryEntries = A.filter(entries, Str.startsWith(".tmp-packet-repair-"));
+  if (A.isReadonlyArrayEmpty(recoveryEntries)) return;
+  if (yield* fs.exists(path.join(locator.packetPath, ...PACKET_EVENTS_SEGMENTS))) return;
+  for (const entry of recoveryEntries) {
+    const recoveryRoot = path.join(locator.packetPath, entry);
+    for (const packetPath of [
+      recoveryRoot,
+      path.join(recoveryRoot, "failed-packet"),
+      path.join(recoveryRoot, "staged-packet"),
+    ]) {
+      if (yield* fs.exists(path.join(packetPath, ...PACKET_EVENTS_SEGMENTS))) {
+        return yield* PacketStreamError.new(
+          locator.packet,
+          `Interrupted fork replacement: canonical ops/events is absent and recovery bytes remain at "${recoveryRoot}". Restore the reviewed stream before retrying; mutation refused.`
+        );
+      }
+    }
+  }
+});
+
 /**
  * Serialize a packet mutation under its process-owned event-stream lock.
  *
@@ -143,7 +171,14 @@ export const withPacketEventLock: {
     const lockPath = path.join(locator.packetPath, "ops", ".packet-events.lock");
     return yield* withJournalFileLock(
       lockPath,
-      (lockToken) => operation(assertJournalFileLockOwned(lockPath, lockToken)).pipe(Effect.result),
+      (lockToken) =>
+        refuseInterruptedForkReplacement(locator).pipe(
+          Effect.catchTag("PlatformError", (error) =>
+            PacketStreamError.new(locator.packet, `event-stream recovery inspection failed: ${error.message}`)
+          ),
+          Effect.andThen(() => operation(assertJournalFileLockOwned(lockPath, lockToken))),
+          Effect.result
+        ),
       undefined,
       `Packet ${locator.packet} has another active writer; retry after it completes.`
     ).pipe(
@@ -210,7 +245,9 @@ export interface PacketEventStoreShape {
     event: PacketEvent
   ) => Effect.Effect<StoredPacketEvent, PacketCasConflictError | PacketStreamError>;
   /**
-   * Whether the packet has opted into event sourcing (`ops/events/` exists).
+   * Best-effort opt-in probe for an existing `ops/events/` directory.
+   * Returns false when the directory is absent or cannot be probed. Mutation
+   * paths perform strict reads and report unreadable streams separately.
    *
    * @since 0.0.0
    */

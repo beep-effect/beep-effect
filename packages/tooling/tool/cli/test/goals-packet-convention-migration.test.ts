@@ -1568,7 +1568,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
             ...fs,
             makeTempDirectory: (options) =>
               options?.prefix === ".genesis-rollback-"
-                ? Effect.fail(injectedFileSystemError("makeTempDirectory", options.directory))
+                ? Effect.fail(injectedFileSystemError("makeTempDirectory", root))
                 : fs.makeTempDirectory(options),
           })
         )
