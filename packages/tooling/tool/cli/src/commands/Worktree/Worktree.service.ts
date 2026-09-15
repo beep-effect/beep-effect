@@ -642,8 +642,9 @@ const judgePrunedUpstream = Effect.fn("WorktreeRemovalService.judgePrunedUpstrea
   // The pruned upstream can no longer be counted against, so the verdict records what
   // proved the tip pushed instead. A tip already reachable from the remote default
   // branch needs no further evidence; otherwise only a merged pull request at exactly
-  // this head proves it, and anything less stays unverified so the commits are
-  // preserved under the archive ref rather than trusted away.
+  // this head proves it. This evidence does not change the base-range count:
+  // a squash-merged tip still gets an archive ref when its commits are absent
+  // from the default branch, whether the verdict is merged or unverified.
   if (O.isSome(base) && baseCount === 0) {
     return { _tag: "ancestor-of-base", base: base.value };
   }
@@ -698,7 +699,8 @@ const inspectUpstreamState = Effect.fn("WorktreeRemovalService.inspectUpstreamSt
 
 const inspectUnpushed = Effect.fn("WorktreeRemovalService.inspectUnpushed")(function* (
   targetPath: string,
-  branch: O.Option<string>
+  branch: O.Option<string>,
+  judgePruned: typeof judgePrunedUpstream = judgePrunedUpstream
 ): Effect.fn.Return<WorktreeUnpushedInspection, WorktreePreservationError, UpstreamProbeRequirements> {
   const defaultBranch = yield* resolveOriginDefaultBranch(targetPath);
   const baseExists = yield* refExists(
@@ -717,7 +719,7 @@ const inspectUnpushed = Effect.fn("WorktreeRemovalService.inspectUnpushed")(func
     onTrue: () => O.some(`origin/${defaultBranch}`),
   });
   const upstream = yield* inspectUpstreamState(targetPath, branch, (branchName) =>
-    judgePrunedUpstream(targetPath, branchName, base, baseCount)
+    judgePruned(targetPath, branchName, base, baseCount)
   );
   // A pruned upstream leaves nothing to count, so the default-branch range answers for it.
   const upstreamCount = yield* WorktreeUpstreamState.match<
@@ -738,7 +740,13 @@ const inspectUnpushedAsCommandError = Effect.fn("WorktreeRemovalService.inspectU
   targetPath: string,
   branch: O.Option<string>
 ): Effect.fn.Return<WorktreeUnpushedInspection, WorktreeCommandError, UpstreamProbeRequirements> {
-  return yield* inspectUnpushed(targetPath, branch).pipe(
+  // Doctor consumes only the count-derived boolean, so it needs no remote
+  // merged-PR evidence. Removal retains the full probe for its receipt.
+  return yield* inspectUnpushed(
+    targetPath,
+    branch,
+    (): Effect.Effect<WorktreeUpstreamVerdict> => Effect.succeed({ _tag: "unverified" })
+  ).pipe(
     Effect.mapError((error) =>
       WorktreeCommandError.make({
         message: error.message,

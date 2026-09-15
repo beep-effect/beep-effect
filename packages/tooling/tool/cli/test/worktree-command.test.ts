@@ -41,7 +41,7 @@ import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, P, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, Path, Runtime, Sink, Stream } from "effect";
+import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Runtime, Sink, Stream } from "effect";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -1538,6 +1538,7 @@ describe("worktree git operations", () => {
         yield* runGit(targetPath, ["config", `branch.${branch}.remote`, "origin"]);
         yield* runGit(targetPath, ["config", `branch.${branch}.merge`, `refs/heads/${branch}`]);
 
+        const probeCalls = yield* Ref.make(0);
         // The probe answers only for the exact branch and head the service must ask about.
         const probe = Layer.succeed(
           WorktreeMergedPullRequestProbe,
@@ -1547,12 +1548,14 @@ describe("worktree git operations", () => {
                 Str.Equivalence(askedBranch, branch) && Str.Equivalence(askedHead, head)
                   ? O.some(PosInt.make(1098))
                   : O.none()
-              )
+              ).pipe(Effect.tap(() => Ref.update(probeCalls, (count) => count + 1)))
             ),
           })
         );
         const receipt = yield* Effect.gen(function* () {
           const removalService = yield* WorktreeRemovalService;
+          expect(yield* removalService.hasUnpushedCommits(targetPath, O.some(branch))).toBe(true);
+          expect(yield* Ref.get(probeCalls)).toBe(0);
           return yield* removalService.remove(
             WorktreeRemovalRequest.make({
               name: NonEmptyTrimmedStr.make("squash-merged-lane"),
@@ -1571,6 +1574,7 @@ describe("worktree git operations", () => {
           Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(context.worktreesRoot))
         );
 
+        expect(yield* Ref.get(probeCalls)).toBe(1);
         // A squash merge leaves the tip off origin/main, so the commits are still
         // archived; the manifest and receipt record which pull request proved them pushed.
         const expectedUpstream = {

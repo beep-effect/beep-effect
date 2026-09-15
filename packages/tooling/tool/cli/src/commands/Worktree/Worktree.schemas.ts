@@ -180,8 +180,12 @@ export type WorktreeRepositoryHash = typeof WorktreeRepositoryHash.Type;
  * records what answered in its place. `ancestor-of-base` proves the tip is
  * reachable from the named remote default branch; `merged-pull-request`
  * proves GitHub merged a pull request whose head is exactly this tip;
- * `unverified` means neither was proven, so the commits stay preserved under
- * the archive ref.
+ * `unverified` means neither was proven. These verdicts record evidence beside
+ * the count-derived preservation decision; they do not override it. A
+ * squash-merged tip still gets an archive ref when its commits are absent from
+ * the default branch, even with `merged-pull-request` evidence. Only
+ * `ancestor-of-base` has a zero base count, allowing clean removal when no
+ * other residue needs preservation.
  *
  * **Example** (Recognize a merged-pull-request verdict)
  *

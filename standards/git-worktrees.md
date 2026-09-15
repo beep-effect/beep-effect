@@ -192,7 +192,12 @@ later `git fetch --prune` drops `refs/remotes/origin/<branch>` while
 unpushed commits are judged against `origin/<default>..HEAD` instead, and the
 pruned state records a verdict — the tip is already on the default branch, a
 merged pull request landed exactly this head (`gh pr list`, exact head match),
-or `unverified`, in which case the commits stay preserved. An initialized
+or `unverified`. The verdict records evidence; it does not override the
+base-range preservation decision. A squash-merged tip with a matching merged
+PR still gets an archive ref when its commits are absent from the default
+branch. Only `ancestor-of-base` has a zero base count and permits clean removal
+when no other residue needs preservation. Doctor's boolean check uses the
+commit counts without querying GitHub for receipt evidence. An initialized
 submodule with uncommitted work cannot be represented by the top-level patch,
 so archive retirement stops before removal and names the submodule that must
 be committed or cleaned.
