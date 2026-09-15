@@ -183,7 +183,9 @@ invoking session's subtree when a `claude` session command proves its root.
 Without that root, only the invoking ancestry is exempt: other terminal tabs
 and CI worker jobs still block retirement. Finish writes from session MCP
 servers and other exempt children before retiring the lane. Exemption permits
-retirement but does not preserve their writes after archive capture.
+retirement but cannot include file writes made after archive capture. This
+process fence controls which active writers block retirement; it does not
+decide whether commits need an archive ref.
 Step the shell into the swept clone afterwards:
 `CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`.
 
@@ -198,7 +200,7 @@ unpushed commits are judged against `origin/<default>..HEAD` instead, and the
 pruned state records a verdict — the tip is already on the default branch, a
 merged pull request landed exactly this head (`gh pr list`, exact head match),
 or `unverified`. The verdict records evidence; it does not override the
-base-range preservation decision. A squash-merged tip with a matching merged
+commit-count decision to create an archive ref. A squash-merged tip with a matching merged
 PR still gets an archive ref when its commits are absent from the default
 branch. Only `ancestor-of-base` has a zero base count and permits clean removal
 when no other residue needs preservation. Doctor's boolean check uses the
