@@ -369,7 +369,7 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
       'cd "/clones/x" && bun run beep yeet sweep --retire --lane "/clones/x/.claude/worktrees/lane"'
     );
     expect(retirementFailureMessage(plan, "pid 7 via cwd still hold it, and any write would be lost.")).toContain(
-      "leave or close them and rerun from the lane: bun run beep yeet sweep --retire."
+      "Leave or close the holders and rerun from the lane: bun run beep yeet sweep --retire."
     );
     expect(retirementFailureMessage(plan, "Could not write the residue manifest.")).not.toContain("--lane");
     expect(pipe(plan, retirementFailureMessage("disk full"))).toBe(retirementFailureMessage(plan, "disk full"));
