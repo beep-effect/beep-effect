@@ -644,8 +644,13 @@ const evalsCompareCommand = Command.make(
     candidate: Flag.File("candidate", { mustExist: true }).pipe(
       Flag.withDescription("Candidate convention trial JSON receipt")
     ),
+    failIncomparable: Flag.Boolean("fail-incomparable").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Exit non-zero after printing an Incomparable report")
+    ),
   },
-  ({ baseline, candidate }) => runAgentConventionComparison(baseline, candidate).pipe(Effect.asVoid)
+  ({ baseline, candidate, failIncomparable }) =>
+    runAgentConventionComparison(baseline, candidate, failIncomparable).pipe(Effect.asVoid)
 ).pipe(Command.withDescription("Compare declared convention controls and separate measured outcomes as JSON"));
 
 const evalsCommand = Command.make("evals", {}, () =>

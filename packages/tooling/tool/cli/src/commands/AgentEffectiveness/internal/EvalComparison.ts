@@ -18,6 +18,7 @@ import {
   AgentConventionDifferences,
   AgentConventionTrial,
 } from "../AgentEffectiveness.schemas.ts";
+import type { AgentConventionMeasurements } from "../AgentEffectiveness.schemas.ts";
 
 const controlsEqual = S.toEquivalence(AgentConventionControls);
 const Decision = AgentConventionComparison.fields.result;
@@ -33,7 +34,10 @@ const measuredDifference = (baseline: O.Option<number>, candidate: O.Option<numb
 const hasValidScore = (trial: AgentConventionTrial) =>
   A.every([trial.evaluation.score, ...R.values(trial.evaluation.breakdown)], isFraction);
 
-const acceptanceCount = (trial: AgentConventionTrial, outcome: "passed" | "not-run") =>
+const acceptanceCount = (
+  trial: AgentConventionTrial,
+  outcome: typeof AgentConventionMeasurements.fields.acceptance.value.Type
+) =>
   pipe(
     trial.controls.acceptanceChecks,
     A.dedupe,
@@ -61,6 +65,7 @@ const differences = (baseline: AgentConventionTrial, candidate: AgentConventionT
     biome: newScore.biome - oldScore.biome,
     violationCount: A.length(candidate.evaluation.violations) - A.length(baseline.evaluation.violations),
     acceptancePassed: acceptanceCount(candidate, "passed") - acceptanceCount(baseline, "passed"),
+    acceptanceFailed: acceptanceCount(candidate, "failed") - acceptanceCount(baseline, "failed"),
     acceptanceNotRun: acceptanceCount(candidate, "not-run") - acceptanceCount(baseline, "not-run"),
     elapsedMs: after.elapsedMs - before.elapsedMs,
     inputTokens: measuredDifference(before.inputTokens, after.inputTokens),
@@ -151,6 +156,11 @@ const readTrial = Effect.fn("AgentConventionComparison.readTrial")(function* (fi
 /**
  * Read two receipts and print their schema-validated comparison as JSON.
  *
+ * **Details**
+ *
+ * With `failIncomparable`, a refused pairing still prints its report before
+ * failing the command. The default succeeds whenever a report is produced.
+ *
  * **Example** (Prepare a local receipt comparison)
  *
  * ```ts
@@ -166,7 +176,8 @@ const readTrial = Effect.fn("AgentConventionComparison.readTrial")(function* (fi
  */
 export const runAgentConventionComparison = Effect.fn("AgentConventionComparison.run")(function* (
   baselineFile: string,
-  candidateFile: string
+  candidateFile: string,
+  failIncomparable = false
 ) {
   const baseline = yield* readTrial(baselineFile);
   const candidate = yield* readTrial(candidateFile);
@@ -175,5 +186,11 @@ export const runAgentConventionComparison = Effect.fn("AgentConventionComparison
     Effect.mapError(AgentEffectivenessEvalScorerError.mapError("Cannot encode convention comparison."))
   );
   yield* Console.log(json);
+  if (failIncomparable && Decision.guards.Incomparable(comparison.result)) {
+    return yield* AgentEffectivenessEvalScorerError.new(
+      `Convention trials are incomparable: ${A.join(comparison.result.reasons, ", ")}.`,
+      { exitCode: 1 }
+    );
+  }
   return comparison;
 });

@@ -61,12 +61,17 @@ The output retains both receipts and a tagged result:
   changed surfaces. No differences are emitted for these pairs.
 
 Higher completion, law fractions, and passed-check counts indicate better
-reported outcomes. Lower defects, interventions, not-run checks, time, and token
+reported outcomes. Acceptance differences include separate `acceptancePassed`,
+`acceptanceFailed`, and `acceptanceNotRun` counts over the required checks.
+Lower defects, interventions, failed or not-run checks, time, and token
 counts indicate better reported outcomes. Missing measurements remain `null`.
 There is no combined grade, winner, or exchange rate between correctness and
 speed. Inspect the original receipts when two differences cancel or a value is
 unknown. Exit zero means the comparison document was produced, including an
 `Incomparable` result; malformed or unreadable input fails the command.
+For a CI gate, add `--fail-incomparable`: the command prints the same JSON, then
+exits non-zero when the receipts cannot be compared. A comparable pair still
+exits zero; interpreting its measured outcomes remains the caller's decision.
 
 A single matched pair is descriptive evidence. Repeat predeclared tasks,
 counterbalance run order, retain failed runs, and inspect distributions before

@@ -487,6 +487,7 @@ export class AgentConventionDifferences extends S.Class<AgentConventionDifferenc
     biome: S.Finite,
     violationCount: S.Int,
     acceptancePassed: S.Int,
+    acceptanceFailed: S.Int,
     acceptanceNotRun: S.Int,
     elapsedMs: S.Finite,
     inputTokens: S.OptionFromNullOr(S.Int),

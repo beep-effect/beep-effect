@@ -9,9 +9,13 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import baselineInput from "./fixtures/agent-effectiveness/comparison/baseline.json";
-import candidateInput from "./fixtures/agent-effectiveness/comparison/candidate.json";
+import baselineInput from "./fixtures/agent-effectiveness/comparison/baseline.json" with { type: "json" };
+import candidateInput from "./fixtures/agent-effectiveness/comparison/candidate.json" with { type: "json" };
 
 const decodeTrial = S.decodeUnknownEffect(AgentConventionTrial);
 const decodeComparison = S.decodeUnknownEffect(S.fromJsonString(AgentConventionComparison));
@@ -24,6 +28,22 @@ const compare = Effect.fn("ConventionComparisonTest.compare")(function* (candida
 });
 
 describe("declared convention comparisons", () => {
+  it.effect(
+    "distinguishes failed acceptance from checks that did not run",
+    Effect.fnUntraced(function* () {
+      const report = yield* compare({
+        ...candidateInput,
+        measurements: { ...candidateInput.measurements, acceptance: { check: "failed" } },
+      });
+      if (Decision.guards.Comparable(report.result)) {
+        expect(report.result.differences).toMatchObject({
+          acceptancePassed: -2,
+          acceptanceFailed: 1,
+          acceptanceNotRun: 1,
+        });
+      } else expect.unreachable();
+    })
+  );
   it.effect(
     "preserves separate outcomes and unknown measurements through JSON",
     Effect.fnUntraced(function* () {
@@ -95,7 +115,7 @@ describe("declared convention comparisons", () => {
         { reasoningEffort: "high" },
         { tokenBudget: 1 },
         { timeBudgetMs: 1 },
-        { acceptanceChecks: ["a-different-test"] },
+        { acceptanceChecks: A.of("a-different-test") },
         { safetyPolicyDigest: candidate.variant.navigation },
         { harnessDigest: candidate.variant.navigation },
         { environmentDigest: candidate.variant.navigation },
@@ -128,20 +148,31 @@ describe("declared convention comparisons", () => {
   );
   it.effect.prop(
     "reversing a matched pair reverses measured differences",
-    { elapsed: AgentConventionMeasurements.fields.elapsedMs },
-    ({ elapsed }) =>
+    { before: AgentConventionMeasurements, after: AgentConventionMeasurements },
+    ({ before, after }) =>
       Effect.gen(function* () {
-        const [baseline, original] = yield* pair;
+        const [initial, original] = yield* pair;
+        const baseline = AgentConventionTrial.make({ ...initial, measurements: before });
         const candidate = AgentConventionTrial.make({
           ...original,
-          measurements: AgentConventionMeasurements.make({ ...original.measurements, elapsedMs: elapsed }),
+          measurements: after,
         });
         const forward = compareAgentConventionTrials(baseline, candidate).result;
-        const backward = compareAgentConventionTrials(baseline)(candidate).result;
+        const backward = compareAgentConventionTrials(candidate, baseline).result;
         expect(forward._tag).toBe("Comparable");
         expect(backward._tag).toBe("Comparable");
         if (Decision.guards.Comparable(forward) && Decision.guards.Comparable(backward)) {
-          expect(forward.differences.elapsedMs + backward.differences.elapsedMs).toBe(0);
+          for (const [key, value] of R.toEntries(forward.differences)) {
+            const reversed = backward.differences[key];
+            if (P.isNumber(value)) {
+              expect(reversed).toBe(value === 0 ? 0 : -value);
+            } else {
+              expect(reversed).toEqual(O.map(value, (count) => (count === 0 ? 0 : -count)));
+            }
+          }
+          for (const key of ["inputTokens", "outputTokens", "introducedDefects", "humanInterventions"] as const) {
+            if (O.isNone(before[key]) || O.isNone(after[key])) assertNone(forward.differences[key]);
+          }
         }
       }),
     { arbitrary: fcRuns(50) }
