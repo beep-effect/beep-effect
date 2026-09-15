@@ -37,6 +37,7 @@ import {
 import { PACKET_TRACE_SEGMENTS } from "../PacketCore/PacketTransitionWriter.ts";
 import { goalStagePosition } from "../SetStatus.ts";
 import { PacketGenesisSeed } from "./Migration.schemas.ts";
+import type { QualitySchedulerError } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import type { GoalManifest } from "../Goals.schemas.ts";
 import type { GoalPacketRecord } from "../Inventory.ts";
 import type { PacketDerivedState } from "../PacketCore/PacketCore.schemas.ts";
@@ -316,7 +317,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
 
   const applyLocked = Effect.fn("PacketForkRepairApplier.applyLocked")(function* (
     locator: PacketStreamLocator,
-    assertOwned: Effect.Effect<void, PacketStreamError, FileSystem.FileSystem>
+    assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
   ) {
     const original = yield* store.list(locator);
     if (A.isReadonlyArrayNonEmpty(original.issues)) {
@@ -431,9 +432,13 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
   });
 
   const apply = Effect.fn("PacketForkRepairApplier.apply")(function* (locator: PacketStreamLocator) {
-    return yield* withPacketEventLock(locator, (assertOwned) =>
-      applyLocked(locator, assertOwned.pipe(Effect.mapError((error) => streamError(locator.packet, error.message))))
-    ).pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.provideService(Path.Path, path));
+    return yield* withPacketEventLock(locator, (assertOwned) => applyLocked(locator, assertOwned)).pipe(
+      Effect.catchTag("QualitySchedulerError", () =>
+        streamError(locator.packet, "event-stream ownership was lost during fork repair; retry the mutation")
+      ),
+      Effect.provideService(FileSystem.FileSystem, fs),
+      Effect.provideService(Path.Path, path)
+    );
   });
 
   return PacketForkRepairApplier.of({ preview, apply });
@@ -704,6 +709,15 @@ export const planPacketGenesisSeed = Effect.fn("Goals.planPacketGenesisSeed")(fu
   );
 });
 
+const genesisStreamLocator = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+  const path = yield* Path.Path;
+  return PacketStreamLocator.make({
+    packet: seed.slug,
+    root: "goals",
+    packetPath: path.dirname(path.dirname(seed.eventsDirectory)),
+  });
+});
+
 const removeQuarantinedGenesisEvent = Effect.fnUntraced(function* (
   seed: PacketGenesisSeed,
   context: "genesis rollback" | "seed rollback",
@@ -770,6 +784,20 @@ export const quarantineOwnedGenesisEvents = Effect.fn("Goals.quarantineOwnedGene
   seed: PacketGenesisSeed,
   context: "genesis rollback" | "seed rollback"
 ) {
+  return yield* withPacketEventLock(yield* genesisStreamLocator(seed), (assertOwned) =>
+    quarantineOwnedGenesisEventsLocked(seed, context, assertOwned)
+  ).pipe(
+    Effect.catchTag("QualitySchedulerError", () =>
+      streamError(seed.slug, `${context} lost event-stream ownership; preserved bytes require a retry`)
+    )
+  );
+});
+
+const quarantineOwnedGenesisEventsLocked = Effect.fnUntraced(function* (
+  seed: PacketGenesisSeed,
+  context: "genesis rollback" | "seed rollback",
+  assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const entries = yield* fs
@@ -782,6 +810,7 @@ export const quarantineOwnedGenesisEvents = Effect.fn("Goals.quarantineOwnedGene
     .makeTempDirectory({ directory: path.dirname(seed.eventsDirectory), prefix: ".genesis-rollback-" })
     .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} quarantine failed: ${error.message}`)));
   const quarantineDirectory = path.join(rollbackRoot, "events");
+  yield* assertOwned;
   yield* fs
     .rename(seed.eventsDirectory, quarantineDirectory)
     .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} quarantine failed: ${error.message}`)));
@@ -940,6 +969,19 @@ const recoverGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed
  * @since 0.0.0
  */
 export const applyPacketGenesisSeed = Effect.fn("Goals.applyPacketGenesisSeed")(function* (seed: PacketGenesisSeed) {
+  return yield* withPacketEventLock(yield* genesisStreamLocator(seed), (assertOwned) =>
+    applyPacketGenesisSeedLocked(seed, assertOwned)
+  ).pipe(
+    Effect.catchTag("QualitySchedulerError", () =>
+      streamError(seed.slug, "genesis seed lost event-stream ownership; preserved bytes require a retry")
+    )
+  );
+});
+
+const applyPacketGenesisSeedLocked = Effect.fnUntraced(function* (
+  seed: PacketGenesisSeed,
+  assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const present = yield* fs
@@ -950,24 +992,29 @@ export const applyPacketGenesisSeed = Effect.fn("Goals.applyPacketGenesisSeed")(
     if (!(yield* ownsGenesisEvent(seed))) {
       return yield* streamError(seed.slug, "event stream appeared after preview; refusing to reseed");
     }
+    yield* assertOwned;
     return yield* recoverGenesisTrace(seed);
   }
   let createdEventsDirectory = false;
   const rollback = Effect.fnUntraced(function* () {
     if (!createdEventsDirectory) return;
-    yield* quarantineOwnedGenesisEvents(seed, "genesis rollback");
+    yield* quarantineOwnedGenesisEventsLocked(seed, "genesis rollback", assertOwned);
   });
   const mutation = Effect.gen(function* () {
+    yield* assertOwned;
     yield* fs
       .makeDirectory(seed.eventsDirectory)
       .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis directory write failed: ${error.message}`)));
     createdEventsDirectory = true;
+    yield* assertOwned;
     yield* writeContainedFileString(path.resolve(seed.eventsDirectory), path.resolve(eventPath), seed.eventText).pipe(
       Effect.mapError((error) => streamError(seed.slug, `genesis event write failed: ${error.message}`))
     );
+    yield* assertOwned;
     yield* publishGenesisTrace(seed);
   });
   yield* mutation.pipe(
+    Effect.onInterrupt(() => rollback().pipe(Effect.ignore)),
     Effect.matchEffect({
       onFailure: (original) =>
         rollback().pipe(

@@ -3,7 +3,7 @@ import { PacketEvent, PacketEventStore, PacketEventStoreLive, PacketStreamLocato
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { BunRuntime } from "@effect/platform-bun";
 import { NodeServices } from "@effect/platform-node";
-import { Console, Duration, Effect, FileSystem, Path, Schedule } from "effect";
+import { Console, Context, Duration, Effect, FileSystem, Layer, Path, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
@@ -51,17 +51,23 @@ const main = Effect.gen(function* () {
     }),
   });
 
+  const store = Context.get(
+    yield* Layer.build(PacketEventStoreLive).pipe(Effect.provideService(FileSystem.FileSystem, pausedFs)),
+    PacketEventStore
+  );
   yield* Effect.gen(function* () {
-    const store = yield* PacketEventStore;
     const locator = PacketStreamLocator.make({ packet: event.packet, root: event.root, packetPath });
     yield* store.append(locator, event);
     yield* Console.log("COMMITTED");
   }).pipe(
-    Effect.catchTag("PacketCasConflictError", () => Console.log("CONFLICT")),
-    Effect.catchTag("PacketStreamError", (error) => Console.log(`REFUSED: ${error.message}`)),
-    Effect.provide(PacketEventStoreLive),
-    Effect.provideService(FileSystem.FileSystem, pausedFs)
+    Effect.catchTags({
+      PacketCasConflictError: () => Console.log("CONFLICT"),
+      PacketStreamError: (error) => Console.log(`REFUSED: ${error.message}`),
+    })
   );
-}).pipe(Effect.provide(NodeServices.layer));
+});
 
-BunRuntime.runMain(main);
+const program = Effect.scoped(
+  Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => main.pipe(Effect.provide(context))))
+);
+BunRuntime.runMain(program);

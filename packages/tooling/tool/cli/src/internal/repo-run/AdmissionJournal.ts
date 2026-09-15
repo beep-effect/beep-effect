@@ -1411,12 +1411,20 @@ const runFencedOperation = Effect.fnUntraced(function* <Success, Failure, Requir
   operation: (lockToken: string) => Effect.Effect<Success, Failure, Requirements>,
   busyMessage: string
 ): Effect.fn.Return<
-  Result.Result<Success, Failure | QualitySchedulerError>,
+  Result.Result<Result.Result<Success, Failure>, QualitySchedulerError>,
   never,
   FileSystem.FileSystem | Path.Path | Requirements
 > {
-  return yield* Effect.acquireUseRelease(acquireFencedGeneration(lockPath, busyMessage), operation, (lockToken) =>
-    releaseJournalFileLock(lockPath, lockToken)
+  return yield* Effect.acquireUseRelease(
+    acquireFencedGeneration(lockPath, busyMessage),
+    Effect.fnUntraced(function* (lockToken) {
+      const outcome = yield* operation(lockToken).pipe(Effect.result);
+      // Callback failures are data until our own fence establishes lock loss.
+      // A caller's scheduler-shaped error alone must never trigger replay.
+      yield* assertJournalFileLockOwned(lockPath, lockToken);
+      return outcome;
+    }),
+    (lockToken) => releaseJournalFileLock(lockPath, lockToken)
   ).pipe(Effect.result);
 });
 
@@ -1456,10 +1464,10 @@ export const withJournalFileLock = Effect.fnUntraced(function* <Success, Failure
   for (let attempt = 0; attempt < retryAttempts; attempt++) {
     const outcome = yield* runFencedOperation(lockPath, operation, busyMessage);
     if (Result.isSuccess(outcome)) {
-      return outcome.success;
+      return yield* Effect.fromResult(outcome.success);
     }
-    if (!S.is(QualitySchedulerError)(outcome.failure) || outcome.failure.reason !== "journal-lock-lost") {
-      return yield* Effect.fail(outcome.failure);
+    if (outcome.failure.reason !== "journal-lock-lost") {
+      return yield* outcome.failure;
     }
     yield* pauseBeforeLockRetry(attempt, retryAttempts);
   }

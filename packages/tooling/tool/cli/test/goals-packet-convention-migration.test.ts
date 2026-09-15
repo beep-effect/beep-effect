@@ -1604,17 +1604,15 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       );
 
       const rescanSeed = yield* makeGenesisRollbackSeed(root, "rescan-failure");
-      let rescanCalls = 0;
       const rescanFailure = yield* Effect.exit(
         applyPacketGenesisSeed(rescanSeed).pipe(
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
-            readDirectory: (target, options) => {
-              rescanCalls += 1;
-              return rescanCalls === 1
-                ? fs.readDirectory(target, options)
-                : Effect.fail(injectedFileSystemError("readDirectory", target));
-            },
+            readDirectory: Effect.fn("PacketMigrationTest.failQuarantineRescan")((target, options) =>
+              Str.includes(".genesis-rollback-")(target)
+                ? Effect.fail(injectedFileSystemError("readDirectory", target))
+                : fs.readDirectory(target, options)
+            ),
           })
         )
       );

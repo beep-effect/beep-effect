@@ -1,3 +1,8 @@
+import { PacketGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/Migration.schemas";
+import {
+  applyPacketGenesisSeed,
+  quarantineOwnedGenesisEvents,
+} from "@beep/repo-cli/commands/Goals/Migration/PacketMutation";
 import {
   foldPacketEvents,
   PacketCasConflictError,
@@ -10,10 +15,10 @@ import {
   PacketStreamLocator,
   withPacketEventLock,
 } from "@beep/repo-cli/test/Goals";
-import { withJournalFileLock } from "@beep/repo-cli/test/RepoRun";
+import { QualitySchedulerError, withJournalFileLock } from "@beep/repo-cli/test/RepoRun";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Context, Deferred, Effect, Fiber, FileSystem, Layer, Path, PlatformError, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -25,8 +30,9 @@ const testLayer = PacketForkRepairApplierLive.pipe(
   Layer.provideMerge(PacketEventStoreLive),
   Layer.provideMerge(NodeServices.layer)
 );
-const writerPath = new URL("./fixtures/packet-core/concurrent-writer.ts", import.meta.url).pathname;
+const writerUrl = new URL("./fixtures/packet-core/concurrent-writer.ts", import.meta.url);
 const encodeEvent = S.encodeEffect(S.fromJsonString(PacketEvent));
+const isPacketCasConflictError = S.is(PacketCasConflictError);
 
 const genesis = (actor: string) =>
   PacketEvent.make({
@@ -53,6 +59,8 @@ const startWriter = Effect.fn("PacketConcurrencyTest.startWriter")(function* (
   actor: string,
   pausePoint = "none"
 ) {
+  const path = yield* Path.Path;
+  const writerPath = yield* path.fromFileUrl(writerUrl);
   return yield* ChildProcess.make(
     "bun",
     [writerPath, locator.packetPath, yield* encodeEvent(genesis(actor)), pausePoint],
@@ -97,6 +105,44 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
     );
 
     it.effect(
+      "preserves scheduler-shaped callback failures without replaying them",
+      Effect.fnUntraced(function* () {
+        const path = yield* Path.Path;
+        const locator = yield* makePacket();
+        const failure = QualitySchedulerError.make({ reason: "journal-lock-lost", message: "caller-owned failure" });
+        let calls = 0;
+        const operation = Effect.sync(() => {
+          calls++;
+        }).pipe(Effect.andThen(Effect.fail(failure)));
+        expect(
+          yield* withJournalFileLock(path.join(locator.packetPath, "callback.lock"), () => operation).pipe(Effect.flip)
+        ).toBe(failure);
+        expect(yield* withPacketEventLock(locator, () => operation).pipe(Effect.flip)).toBe(failure);
+        expect(calls).toBe(2);
+      })
+    );
+
+    it.effect(
+      "reacquires after its own fence confirms generation loss",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const locator = yield* makePacket();
+        let calls = 0;
+        const result = yield* withPacketEventLock(locator, (assertOwned) =>
+          Effect.gen(function* () {
+            calls++;
+            if (calls === 1) yield* fs.remove(path.join(locator.packetPath, "ops", ".packet-events.lock"));
+            yield* assertOwned;
+            return "owned";
+          })
+        );
+        expect(result).toBe("owned");
+        expect(calls).toBe(2);
+      })
+    );
+
+    it.effect(
       "releases a newly acquired journal lock when its operation is interrupted",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -127,6 +173,46 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
     );
 
     it.effect(
+      "restores fork-repair bytes when interrupted between directory renames",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const packet = yield* makePacket();
+        const locator = PacketStreamLocator.make({ ...packet, packet: "forked" });
+        const source = yield* path.fromFileUrl(new URL("./fixtures/packet-core/forked", import.meta.url));
+        yield* fs.copy(source, locator.packetPath, { overwrite: true });
+        const store = yield* PacketEventStore;
+        const original = yield* store.list(locator);
+        const eventsDirectory = path.join(locator.packetPath, "ops", "events");
+        const moved = yield* Deferred.make<void>();
+        const pausingFs = FileSystem.FileSystem.of({
+          ...fs,
+          rename: Effect.fn("PacketConcurrencyTest.pauseRepairRename")(function* (from, to) {
+            yield* fs.rename(from, to);
+            if (from === eventsDirectory) {
+              yield* Deferred.succeed(moved, undefined);
+              return yield* Effect.never;
+            }
+          }),
+        });
+        const applier = Context.get(
+          yield* Layer.build(Layer.fresh(PacketForkRepairApplierLive)).pipe(
+            Effect.provideService(FileSystem.FileSystem, pausingFs)
+          ),
+          PacketForkRepairApplier
+        );
+        const repairing = yield* applier.apply(locator).pipe(Effect.forkChild);
+        yield* Deferred.await(moved);
+        expect(yield* fs.exists(eventsDirectory)).toBe(false);
+        const refused = yield* store.append(locator, genesis("contender")).pipe(Effect.flip);
+        expect(refused.message).toContain("another active writer");
+        yield* Fiber.interrupt(repairing);
+        expect(yield* store.list(locator)).toEqual(original);
+        expect(yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"))).toBe(false);
+      })
+    );
+
+    it.effect(
       "refuses an unreadable directory instead of appending a second genesis",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -137,7 +223,7 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         const eventsDirectory = path.join(locator.packetPath, "ops", "events");
         const unreadableFs = FileSystem.FileSystem.of({
           ...fs,
-          readDirectory: (directory, options) =>
+          readDirectory: Effect.fn("PacketConcurrencyTest.readDirectory")((directory, options) =>
             directory === eventsDirectory
               ? Effect.fail(
                   PlatformError.systemError({
@@ -148,7 +234,8 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
                     description: "injected directory read failure",
                   })
                 )
-              : fs.readDirectory(directory, options),
+              : fs.readDirectory(directory, options)
+          ),
         });
         const isolated = Context.get(
           yield* Layer.build(Layer.fresh(PacketEventStoreLive)).pipe(
@@ -163,7 +250,7 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
     );
 
     it.effect(
-      "commits one of two concurrent appends and returns the moved revision to the loser",
+      "commits one of two concurrent appends and returns a typed refusal to the loser",
       Effect.fnUntraced(function* () {
         const locator = yield* makePacket();
         const store = yield* PacketEventStore;
@@ -177,7 +264,12 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         expect(A.length(A.filter(outcomes, Result.isSuccess))).toBe(1);
         const failures = A.getFailures(outcomes);
         expect(A.length(failures)).toBe(1);
-        expect(O.getOrUndefined(A.head(failures))).toMatchObject({ expectedRevision: 0, actualRevision: 1 });
+        const loser = O.getOrThrow(A.head(failures));
+        if (isPacketCasConflictError(loser)) {
+          expect(loser).toMatchObject({ expectedRevision: 0, actualRevision: 1 });
+        } else {
+          expect(loser.message).toContain("another active writer");
+        }
         yield* assertStream(locator, 1);
       })
     );
@@ -198,6 +290,34 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         yield* assertStream(locator, 0);
         yield* fs.writeFileString(path.join(locator.packetPath, "release-writer"), "release");
         expect(yield* first.exitCode).toBe(0);
+        yield* assertStream(locator, 1);
+      }),
+      20_000
+    );
+
+    it.effect(
+      "serializes genesis seeding and quarantine with a separate append process",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const locator = yield* makePacket();
+        const writer = yield* startWriter(locator, "holding", "afterRead");
+        assertSome(yield* writer.stdout.pipe(Stream.decodeText(), Stream.splitLines, Stream.runHead), "PAUSED");
+        const seed = PacketGenesisSeed.make({
+          slug: locator.packet,
+          eventsDirectory: path.join(locator.packetPath, "ops", "events"),
+          eventFileName: "00001-packet-created-deadbeef.json",
+          eventText: "{}\n",
+          tracePath: path.join(locator.packetPath, "ops", "trace.json"),
+          traceText: "{}\n",
+        });
+        expect((yield* applyPacketGenesisSeed(seed).pipe(Effect.flip)).message).toContain("another active writer");
+        expect((yield* quarantineOwnedGenesisEvents(seed, "seed rollback").pipe(Effect.flip)).message).toContain(
+          "another active writer"
+        );
+        yield* assertStream(locator, 0);
+        yield* fs.writeFileString(path.join(locator.packetPath, "release-writer"), "release");
+        expect(yield* writer.exitCode).toBe(0);
         yield* assertStream(locator, 1);
       }),
       20_000
@@ -234,7 +354,7 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
         yield* child.kill({ killSignal: "SIGKILL" });
         yield* child.exitCode.pipe(Effect.result);
         const failure = yield* store.append(locator, genesis("published")).pipe(Effect.flip);
-        expect(S.is(PacketCasConflictError)(failure)).toBe(true);
+        assertTrue(isPacketCasConflictError(failure));
         expect(failure).toMatchObject({ expectedRevision: 0, actualRevision: 1 });
         yield* assertStream(locator, 1);
       }),

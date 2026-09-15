@@ -23,12 +23,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str, thunkFalse } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
+import { Context, Effect, FileSystem, Layer, Match, Order, Path } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { assertJournalFileLockOwned, withJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
 import { publishJournalTextAtomically } from "../../../internal/repo-run/JournalFile.ts";
-import { QualitySchedulerError } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { PacketCasConflictError, PacketStreamError } from "./PacketCore.errors.ts";
 import { PacketChainIssue, PacketEvent, PacketRoot, PacketSlug, StoredPacketEvent } from "./PacketCore.schemas.ts";
 import {
@@ -38,6 +37,7 @@ import {
   renderPacketEventFile,
 } from "./PacketDigest.ts";
 import { foldPacketEvents, upcastPacketEventJson } from "./PacketFold.ts";
+import type { QualitySchedulerError } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import type { PacketDerivedState } from "./PacketCore.schemas.ts";
 import type { PacketEventFileNameParts } from "./PacketDigest.ts";
 
@@ -98,14 +98,16 @@ export class PacketStreamLocator extends S.Class<PacketStreamLocator>($I`PacketS
  * receives an ownership check to run immediately before publishing bytes.
  * Dead owners are recoverable; a live owner produces a typed retry refusal.
  *
- * **Example** (Read under the packet mutation lock)
+ * **Example** (Check ownership before a locked operation)
  *
  * ```ts
  * import { PacketStreamLocator, withPacketEventLock } from "@beep/repo-cli/test/Goals"
  * import { Effect } from "effect"
  *
  * const locator = PacketStreamLocator.make({ packet: "demo", root: "goals", packetPath: "goals/demo" })
- * const program = withPacketEventLock(locator, () => Effect.succeed("locked"))
+ * const program = withPacketEventLock(locator, (assertOwned) =>
+ *   assertOwned.pipe(Effect.as("still owned"))
+ * )
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -141,13 +143,26 @@ export const withPacketEventLock: {
     const lockPath = path.join(locator.packetPath, "ops", ".packet-events.lock");
     return yield* withJournalFileLock(
       lockPath,
-      (lockToken) => operation(assertJournalFileLockOwned(lockPath, lockToken)),
+      (lockToken) => operation(assertJournalFileLockOwned(lockPath, lockToken)).pipe(Effect.result),
       undefined,
       `Packet ${locator.packet} has another active writer; retry after it completes.`
     ).pipe(
       Effect.mapError((error) =>
-        S.is(QualitySchedulerError)(error) ? PacketStreamError.new(locator.packet, error.message) : error
-      )
+        PacketStreamError.new(
+          locator.packet,
+          Match.value(error.reason).pipe(
+            Match.when(
+              "journal-lock-retry-exhausted",
+              () => `Packet ${locator.packet} repeatedly lost its event-stream lock; retry the mutation.`
+            ),
+            Match.orElse(
+              () =>
+                `Packet ${locator.packet} event-stream lock could not be acquired; another active writer or inaccessible lock may require retry.`
+            )
+          )
+        )
+      ),
+      Effect.flatMap(Effect.fromResult)
     );
   })
 );
@@ -408,6 +423,12 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
   ) {
     const directory = eventsDir(locator.packetPath);
+    if (!(yield* hasStream(locator.packetPath))) {
+      return yield* PacketStreamError.new(
+        locator.packet,
+        `"${directory}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory. An interrupted directory replacement may also need recovery.`
+      );
+    }
     const entries = yield* fs
       .readDirectory(directory)
       .pipe(
@@ -454,12 +475,6 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
   });
 
   const append = Effect.fn("PacketEventStore.append")(function* (locator: PacketStreamLocator, event: PacketEvent) {
-    if (!(yield* hasStream(locator.packetPath))) {
-      return yield* PacketStreamError.new(
-        locator.packet,
-        `"${eventsDir(locator.packetPath)}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory.`
-      );
-    }
     return yield* withPacketEventLock(locator, (assertOwned) => appendLocked(locator, event, assertOwned)).pipe(
       Effect.catchTag("QualitySchedulerError", (error) => PacketStreamError.new(locator.packet, error.message)),
       Effect.provideService(FileSystem.FileSystem, fs),
