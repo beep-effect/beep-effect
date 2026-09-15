@@ -14,6 +14,7 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { renderToStaticMarkup } from "react-dom/server";
 
 const decodeExplanation = S.decodeUnknownSync(ClaimEvidenceExplanation);
+const decodeCurrentSource = S.decodeUnknownSync(ClaimEvidenceExplanation.fields.currentSource);
 const decodeReview = S.decodeUnknownSync(ClaimEvidenceReview);
 const encodeBasis = S.encodeSync(ClaimEvidenceBasis);
 const digest = "sha256:1e7dc6d6c16565406afd121a89164b990879f5f47695e03b9c3fd0f07395a4ca";
@@ -131,6 +132,11 @@ describe("ClaimEvidenceReviewPanel", () => {
   it("shows unverified source text without a verified highlight or transferable approval", () => {
     const unverified = ClaimEvidenceExplanation.make({
       ...explanation,
+      currentSource: decodeCurrentSource({
+        ...explanation.currentSource,
+        sourceRef: "document:replacement",
+        locator: "documents/replacement.txt",
+      }),
       verification: ClaimEvidenceVerification.cases.Unverified.make({ reason: "stale-source" }),
       review: ClaimEvidenceReviewStatus.cases.Stale.make({ review, reason: "source-unverified" }),
     });
@@ -140,6 +146,12 @@ describe("ClaimEvidenceReviewPanel", () => {
     expect(markup).toContain("stale-source");
     expect(markup).toContain('aria-label="Current unverified source text"');
     expect(markup).toContain(explanation.sourceText);
+    expect(markup).toContain("Extracted source</dt>");
+    expect(markup).toContain("Extracted document</dt>");
+    expect(markup).toContain(">document:example</dd>");
+    expect(markup).toContain(">documents/example.txt</dd>");
+    expect(markup).toContain(">document:replacement</dd>");
+    expect(markup).toContain(">documents/replacement.txt</dd>");
     expect(markup).not.toContain("<mark");
     expect(markup).toContain("Previous approval is stale");
     expect(markup).toContain("The current source no longer verifies.");

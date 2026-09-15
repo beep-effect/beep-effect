@@ -174,6 +174,14 @@ export function ClaimEvidenceReviewPanel({
                 <dd className="wrap-anywhere">{basis.source.scopeRef}</dd>
               </div>
               <div>
+                <dt className="text-muted-foreground">Extracted source</dt>
+                <dd className="wrap-anywhere">{basis.source.sourceRef}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Extracted document</dt>
+                <dd className="wrap-anywhere">{basis.source.locator}</dd>
+              </div>
+              <div>
                 <dt className="text-muted-foreground">Extracted with</dt>
                 <dd>
                   {basis.source.extractor.name} · {basis.source.extractor.version}
