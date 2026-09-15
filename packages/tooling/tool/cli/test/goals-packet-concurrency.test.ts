@@ -222,6 +222,95 @@ layer(testLayer, { excludeTestServices: true, timeout: "30 seconds" })(
     );
 
     it.effect(
+      "keeps an empty repair residue separate from a missing opted-in stream",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const locator = yield* makePacket();
+        const store = yield* PacketEventStore;
+        const eventsDirectory = path.join(locator.packetPath, "ops", "events");
+        const residue = path.join(locator.packetPath, ".tmp-packet-repair-empty");
+        yield* fs.remove(eventsDirectory, { recursive: true });
+        yield* fs.makeDirectory(residue);
+        yield* fs.writeFileString(path.join(residue, "receipt.txt"), "preserved repair receipt");
+        expect(yield* withPacketEventLock(locator, () => Effect.succeed("inspected"))).toBe("inspected");
+        const failure = yield* store.append(locator, genesis("missing-stream")).pipe(Effect.flip);
+        expect(failure.message).toContain("does not exist");
+        expect(failure.message).not.toContain("Interrupted fork replacement");
+        expect(yield* fs.exists(eventsDirectory)).toBe(false);
+        expect(yield* fs.readFileString(path.join(residue, "receipt.txt"))).toBe("preserved repair receipt");
+      })
+    );
+
+    it.effect(
+      "refuses an unreadable recovery inventory before invoking a mutation",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const locator = yield* makePacket();
+        const unreadableFs = FileSystem.FileSystem.of({
+          ...fs,
+          readDirectory: Effect.fn("PacketConcurrencyTest.refuseRecoveryInventory")((directory, options) =>
+            directory === locator.packetPath
+              ? Effect.fail(
+                  PlatformError.systemError({
+                    _tag: "PermissionDenied",
+                    module: "FileSystem",
+                    method: "readDirectory",
+                    pathOrDescriptor: directory,
+                    description: "injected recovery inventory failure",
+                  })
+                )
+              : fs.readDirectory(directory, options)
+          ),
+        });
+        const failure = yield* withPacketEventLock(locator, () => Effect.die("mutation must not run")).pipe(
+          Effect.provideService(FileSystem.FileSystem, unreadableFs),
+          Effect.flip
+        );
+        expect(failure.message).toContain("event-stream recovery inspection failed");
+        expect(yield* fs.exists(path.join(locator.packetPath, "ops", ".packet-events.lock"))).toBe(false);
+        yield* assertStream(locator, 0);
+      })
+    );
+
+    it.effect(
+      "keeps discovery best effort while refusing a mutation after a failed operations probe",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const locator = yield* makePacket();
+        const unreadablePaths = [path.join(locator.packetPath, "ops"), path.join(locator.packetPath, "ops", "events")];
+        const unreadableFs = FileSystem.FileSystem.of({
+          ...fs,
+          exists: Effect.fn("PacketConcurrencyTest.refuseStreamProbe")((target) =>
+            A.contains(unreadablePaths, target)
+              ? Effect.fail(
+                  PlatformError.systemError({
+                    _tag: "PermissionDenied",
+                    module: "FileSystem",
+                    method: "exists",
+                    pathOrDescriptor: target,
+                    description: "injected stream probe failure",
+                  })
+                )
+              : fs.exists(target)
+          ),
+        });
+        const isolated = Context.get(
+          yield* Layer.build(Layer.fresh(PacketEventStoreLive)).pipe(
+            Effect.provideService(FileSystem.FileSystem, unreadableFs)
+          ),
+          PacketEventStore
+        );
+        expect(yield* isolated.hasStream(locator.packetPath)).toBe(false);
+        const failure = yield* isolated.append(locator, genesis("unreadable-ops")).pipe(Effect.flip);
+        expect(failure.message).toContain("injected stream probe failure");
+        yield* assertStream(locator, 0);
+      })
+    );
+
+    it.effect(
       "refuses an unreadable directory instead of appending a second genesis",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;

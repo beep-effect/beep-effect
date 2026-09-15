@@ -680,6 +680,23 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       expect(Exit.isFailure(directoryFailure) ? directoryFailure.cause.toString() : "").toContain(
         "genesis directory write failed"
       );
+
+      const publicationFailure = yield* applyPacketGenesisSeed(seed).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: Effect.fn("PacketMigrationTest.refuseGenesisPublication")((source, target) =>
+            target === eventsDirectory
+              ? Effect.fail(injectedFileSystemError("rename", target))
+              : fs.rename(source, target)
+          ),
+        }),
+        Effect.flip
+      );
+      expect(publicationFailure.message).toContain("genesis directory publication failed");
+      expect(yield* fs.exists(eventsDirectory)).toBe(false);
+      expect(yield* fs.exists(seed.tracePath)).toBe(false);
+      yield* applyPacketGenesisSeed(seed);
+      expect(yield* fs.readFileString(`${eventsDirectory}/${seed.eventFileName}`)).toBe(seed.eventText);
     })
   );
 
@@ -1415,6 +1432,66 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         )
       );
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("genesis trace quarantine read failed");
+    })
+  );
+
+  it.effect(
+    "accepts a completed trace when recovery quarantine loses the rename race",
+    Effect.fnUntraced(function* () {
+      const { fs, retry } = yield* preparePartialTraceRecovery();
+      yield* applyPacketGenesisSeed(retry).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: Effect.fn("PacketMigrationTest.completeTraceBeforeQuarantine")((source, target) =>
+            source === retry.tracePath
+              ? fs
+                  .writeFileString(source, retry.traceText)
+                  .pipe(Effect.andThen(Effect.fail(injectedFileSystemError("rename", source))))
+              : fs.rename(source, target)
+          ),
+        })
+      );
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(retry.traceText);
+    })
+  );
+
+  it.effect(
+    "republishes a vanished trace when recovery quarantine loses the rename race",
+    Effect.fnUntraced(function* () {
+      const { fs, retry } = yield* preparePartialTraceRecovery();
+      yield* applyPacketGenesisSeed(retry).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: Effect.fn("PacketMigrationTest.removeTraceBeforeQuarantine")((source, target) =>
+            source === retry.tracePath
+              ? fs.remove(source).pipe(Effect.andThen(Effect.fail(injectedFileSystemError("rename", source))))
+              : fs.rename(source, target)
+          ),
+        })
+      );
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(retry.traceText);
+    })
+  );
+
+  it.effect(
+    "preserves an incomplete trace when quarantine cannot rename it",
+    Effect.fnUntraced(function* () {
+      const { fs, partialTrace, retry } = yield* preparePartialTraceRecovery();
+      const failure = yield* applyPacketGenesisSeed(retry).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: Effect.fn("PacketMigrationTest.refuseTraceQuarantine")((source, target) =>
+            source === retry.tracePath
+              ? Effect.fail(injectedFileSystemError("rename", source))
+              : fs.rename(source, target)
+          ),
+        }),
+        Effect.flip
+      );
+      expect(failure.message).toContain("genesis trace quarantine failed");
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(partialTrace);
+      yield* applyPacketGenesisSeed(retry);
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(retry.traceText);
     })
   );
 
