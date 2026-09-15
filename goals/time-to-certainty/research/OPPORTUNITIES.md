@@ -1317,3 +1317,28 @@ was attempted under the marker-only amendment.
   first red) into the owning session, coalesced per head so one push becomes one actionable wake,
   with attribution before any fixer lane launches. Captured as
   `explorations/pr-event-awareness`, a capture-stage exploration packet; not scheduled.
+
+## 2026-09-13 — A refs-check flood truncated the Lint Policy capture and hid the failing step
+
+- **Doing:** attributing a required Lint Policy red on #1131 (head 448700281a).
+- **Evidence:** the medium step's captured output ended with `[beep-cli] output truncated after
+  8388608 characters` because `//:knowledge:refs-check` printed about 30,000 `verified …` rows;
+  `gh run view --log` returned 31,936 lines ending mid-word with no failure marker. The real cause,
+  `lint:effect-vitest: exit 1` on four EV006 findings in `stream-console.test.ts`, was only visible
+  in the 9.5 MB raw job log, which took three download attempts to fetch. The local
+  `bun run beep lint policy` buffered 37,000 lines per step for the same reason.
+- **Would have prevented it:** refs-check printing only non-`verified` rows by default (counts for
+  the rest) so a step capture stays far below the 8 MiB bound, and `yeet monitor` naming the
+  failing sub-step from the lane's own failure summary instead of requiring the log.
+
+## 2026-09-13 — Board-settle watchers raced check registration and empty API answers
+
+- **Doing:** driving #1130, #1131, and #1135 to merge-ready with detached settle, closeout, and
+  monitor watchers.
+- **Evidence:** one watcher declared the board settled 90 s after a push while heavy checks were
+  still registering (its own summary line read `pending=4`); another stopped on an empty
+  `gh pr view --json state` answer; `yeet monitor` failed twice on a transient GraphQL error
+  while the same review-thread query succeeded by hand with a full rate budget.
+- **Would have prevented it:** a settle rule keyed on the expected check census (a registered
+  minimum plus zero pending) and on the head SHA, with empty or failed API reads treated as
+  retryable — the per-head coalescing that `explorations/pr-event-awareness` now records.
