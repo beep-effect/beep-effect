@@ -159,7 +159,7 @@ const readTrial = Effect.fn("AgentConventionComparison.readTrial")(function* (fi
  * **Details**
  *
  * With `failIncomparable`, a refused pairing still prints its report before
- * failing the command. The default succeeds whenever a report is produced.
+ * failing the command. Set it to false to succeed whenever a report is produced.
  *
  * **Example** (Prepare a local receipt comparison)
  *
@@ -167,7 +167,7 @@ const readTrial = Effect.fn("AgentConventionComparison.readTrial")(function* (fi
  * import { runAgentConventionComparison } from "@beep/repo-cli/test/AgentEffectiveness"
  * import { Effect } from "effect"
  *
- * const program = runAgentConventionComparison("baseline.json", "candidate.json")
+ * const program = runAgentConventionComparison("baseline.json", "candidate.json", false)
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -177,7 +177,7 @@ const readTrial = Effect.fn("AgentConventionComparison.readTrial")(function* (fi
 export const runAgentConventionComparison = Effect.fn("AgentConventionComparison.run")(function* (
   baselineFile: string,
   candidateFile: string,
-  failIncomparable = false
+  failIncomparable: boolean
 ) {
   const baseline = yield* readTrial(baselineFile);
   const candidate = yield* readTrial(candidateFile);

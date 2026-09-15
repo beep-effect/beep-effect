@@ -162,17 +162,25 @@ describe("declared convention comparisons", () => {
         expect(forward._tag).toBe("Comparable");
         expect(backward._tag).toBe("Comparable");
         if (Decision.guards.Comparable(forward) && Decision.guards.Comparable(backward)) {
-          for (const [key, value] of R.toEntries(forward.differences)) {
-            const reversed = backward.differences[key];
-            if (P.isNumber(value)) {
-              expect(reversed).toBe(value === 0 ? 0 : -value);
-            } else {
-              expect(reversed).toEqual(O.map(value, (count) => (count === 0 ? 0 : -count)));
-            }
-          }
-          for (const key of ["inputTokens", "outputTokens", "introducedDefects", "humanInterventions"] as const) {
-            if (O.isNone(before[key]) || O.isNone(after[key])) assertNone(forward.differences[key]);
-          }
+          expect(backward.differences).toEqual(
+            R.map(forward.differences, (value) => (P.isNumber(value) ? 0 - value : O.map(value, (count) => 0 - count)))
+          );
+        }
+      }),
+    { arbitrary: fcRuns(50) }
+  );
+  it.effect.prop(
+    "keeps count differences unknown when either measurement is missing",
+    { before: AgentConventionMeasurements, after: AgentConventionMeasurements },
+    ({ before, after }) =>
+      Effect.gen(function* () {
+        const [initial, original] = yield* pair;
+        const baseline = AgentConventionTrial.make({ ...initial, measurements: before });
+        const candidate = AgentConventionTrial.make({ ...original, measurements: after });
+        const result = compareAgentConventionTrials(baseline, candidate).result;
+        if (!Decision.guards.Comparable(result)) return expect.unreachable();
+        for (const key of ["inputTokens", "outputTokens", "introducedDefects", "humanInterventions"] as const) {
+          if (O.isNone(before[key]) || O.isNone(after[key])) assertNone(result.differences[key]);
         }
       }),
     { arbitrary: fcRuns(50) }
