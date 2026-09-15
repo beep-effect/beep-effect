@@ -349,7 +349,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
       expect(result.output).toContain("TestHang");
       expect(result.output).toContain("watchdog concrete name");
       expect(result.output).toContain("distinctive-watchdog-log");
-      expect(result.output).toContain("175ms watchdog");
+      expect(result.output).toContain("4750ms watchdog");
       expect(result.cleanup).toContain("distinctive-watchdog-log");
       expect(result.cleanup).toContain("released\n");
       expect(result.cleanup).toContain("effect-vitest test start");

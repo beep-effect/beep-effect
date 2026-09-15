@@ -116,7 +116,9 @@ if (mode === "watchdog") {
             recordCleanup("released\n");
           })
         ).pipe(Effect.andThen(Effect.never)),
-      { timeout: 200 }
+      // Exercise the real clock with the full 250ms reporting margin. The
+      // controlled-clock fixtures below cover tiny budgets without a timer race.
+      { timeout: 5_000 }
     );
   });
 }
