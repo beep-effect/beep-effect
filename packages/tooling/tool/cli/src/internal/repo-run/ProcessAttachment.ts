@@ -11,12 +11,11 @@ import { Effect, FileSystem, Match } from "effect";
 import * as A from "effect/Array";
 import { constant } from "effect/Function";
 import * as HashSet from "effect/HashSet";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ProcessPid, ProcessTable } from "./ProcessTable.ts";
+import { ProcessPid, ProcessStatus, ProcessTable, processLineage } from "./ProcessTable.ts";
 import type { ProcessTableShape } from "./ProcessTable.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/ProcessAttachment");
@@ -215,16 +214,23 @@ export const ancestryChainOf = Effect.fnUntraced(function* (
   pid: number
 ): Effect.fn.Return<ReadonlyArray<number>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const seen = MutableHashSet.empty<number>();
-  let chain: ReadonlyArray<number> = A.empty();
-  let current = pid;
-  while (current > 0 && !MutableHashSet.has(seen, current)) {
-    MutableHashSet.add(seen, current);
-    chain = A.append(chain, current);
-    const status = yield* fs.readFileString(`/proc/${current}/status`).pipe(Effect.option);
-    current = O.getOrElse(O.flatMap(status, parentPidOf), noParent);
-  }
-  return chain;
+  // Read the real kernel ancestry for marker proofs even when attachment scans
+  // use a scripted table. An unreadable status retains the current pid and stops.
+  const chain = yield* processLineage(pid, (current) =>
+    fs.readFileString(`/proc/${current}/status`).pipe(
+      Effect.option,
+      Effect.map((status) =>
+        O.some(
+          ProcessStatus.make({
+            pid: current,
+            parent: O.getOrElse(O.flatMap(status, parentPidOf), noParent),
+            command: "",
+          })
+        )
+      )
+    )
+  );
+  return A.map(chain, (status) => status.pid);
 });
 
 /**

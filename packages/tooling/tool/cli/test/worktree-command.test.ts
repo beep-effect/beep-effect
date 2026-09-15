@@ -1746,7 +1746,7 @@ describe("worktree git operations", () => {
               expect(yield* removeUnder(70, rootCommand, rootCommand === "ghostty" ? process.pid : 100)).toBe(
                 "retired"
               );
-              yield* Effect.gen(function* () {
+              {
                 const fs = yield* FileSystem.FileSystem;
                 const path = yield* Path.Path;
                 const removal = yield* WorktreeRemovalService;
@@ -1808,7 +1808,7 @@ describe("worktree git operations", () => {
                   Effect.provideService(ConfigProvider.ConfigProvider, config),
                   Effect.ensuring(Effect.ignore(holder.kill()))
                 );
-              });
+              }
             })
           );
           expect(yield* fs.exists(targetPath)).toBe(false);

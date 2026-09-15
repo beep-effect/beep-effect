@@ -79544,7 +79544,7 @@
       "line": 1665,
       "endLine": 1818,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:c22adcda2dbcd2acb120839ead9e84ec60c89bd36f5f52e8eb344c542d028e09",
+      "occurrence": "v2:735a1f2223b74625e1c4fd2d14afbb52b9aabd5f1700cf67a65cace9f087848e",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -86978,7 +86978,7 @@
       "line": 1726,
       "endLine": 1813,
       "symbol": "scoped",
-      "occurrence": "v2:f945e089bc84af82578b97b8f791693f650021de97e945c3eb28f662abf901a0",
+      "occurrence": "v2:e09b8d6a4fe9a2ed774313ea0d7eaecd4ee9a729bb27a0a89824f95593ddb65d",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { yield* fs.open(path.join(targetPath, \"README.md\"), { flag: \"r\" }); const ownName = Str.trim(yield* fs.readFileString(\"/proc/self/comm\")); // Under the other se",
       "replacement": {

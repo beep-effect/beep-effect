@@ -519,20 +519,22 @@ const isChainBoundary = (status: ProcessStatus): boolean => status.pid === INIT_
  * ```
  *
  * @param pid - The process to start from.
+ * @param readStatus - Optional status reader; otherwise uses the injected process table.
  * @returns The statuses from the process up through its readable ancestors.
  * @category utilities
  * @since 0.0.0
  */
 export const processLineage = Effect.fnUntraced(function* (
-  pid: number
+  pid: number,
+  readStatus?: ProcessTableShape["status"]
 ): Effect.fn.Return<ReadonlyArray<ProcessStatus>, never, FileSystem.FileSystem> {
-  const table = yield* ProcessTable;
+  const read = readStatus ?? (yield* ProcessTable).status;
   const seen = MutableHashSet.empty<number>();
   let chain: ReadonlyArray<ProcessStatus> = A.empty();
   let current = pid;
   while (current > 0 && !MutableHashSet.has(seen, current)) {
     MutableHashSet.add(seen, current);
-    const status = yield* table.status(current);
+    const status = yield* read(current);
     if (O.isNone(status)) {
       break;
     }
