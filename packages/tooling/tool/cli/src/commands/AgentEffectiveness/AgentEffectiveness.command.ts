@@ -42,6 +42,7 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { aiMetricsDataRootFlag as dataRootFlag, jsonFlag } from "../../internal/cli/Flags.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { resolveDataRoot } from "../AIMetrics/AIMetrics.config.ts";
+import { runAgentConventionComparison } from "./internal/EvalComparison.ts";
 import { runAgentEffectivenessEvalScoreCommand } from "./internal/EvalScorer.ts";
 import type {
   AgentEffectivenessAnnotationCheckReport,
@@ -634,9 +635,25 @@ const evalsScoreCommand = Command.make(
   flow(makeEvalScoreProgram, runAgentEffectivenessProgram)
 ).pipe(Command.withDescription("Score a SkillOpt eval fixture with completion and repo-law checks"));
 
+const evalsCompareCommand = Command.make(
+  "compare",
+  {
+    baseline: Flag.File("baseline", { mustExist: true }).pipe(
+      Flag.withDescription("Baseline convention trial JSON receipt")
+    ),
+    candidate: Flag.File("candidate", { mustExist: true }).pipe(
+      Flag.withDescription("Candidate convention trial JSON receipt")
+    ),
+  },
+  ({ baseline, candidate }) => runAgentConventionComparison(baseline, candidate).pipe(Effect.asVoid)
+).pipe(Command.withDescription("Compare declared convention controls and separate measured outcomes as JSON"));
+
 const evalsCommand = Command.make("evals", {}, () =>
-  printLines(["Agent-effectiveness eval commands:", "- score"])
-).pipe(Command.withDescription("Run SkillOpt eval scorer commands"), Command.withSubcommands([evalsScoreCommand]));
+  printLines(["Agent-effectiveness eval commands:", "- score", "- compare"])
+).pipe(
+  Command.withDescription("Run SkillOpt eval scorer commands"),
+  Command.withSubcommands([evalsScoreCommand, evalsCompareCommand])
+);
 
 /**
  * Root of the `agent-effectiveness` command tree: doctor, annotations, bundles, and evals.
@@ -673,6 +690,7 @@ export const agentEffectivenessCommand = Command.make("agent-effectiveness", {},
     "- prompts bundle",
     "- experiments bundle",
     "- evals score",
+    "- evals compare",
     "- phoenix sync",
   ])
 ).pipe(
