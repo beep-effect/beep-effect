@@ -219,11 +219,23 @@ CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run b
   checkout it runs in, and the owning clone's `main` may still be behind the
   merge and reject `--retire` as an unknown flag. The command steps its own
   process out of the lane before removal; the trailing `cd` moves your shell
-  to the swept clone. `--lane <path>` is for a clone that already carries the
-  merged CLI. A recognized session-command root exempts its subtree, including
-  its shell, pipelines, and MCP servers. A chain-top fallback (plain terminal
-  or CI) exempts only the invoking ancestry; sibling pipelines and other tabs
-  still block. Exempt children must finish writes before archive capture.
+  to the swept clone. The fence exempts the invoking session's own ancestry
+  and, when Claude Code names the session through `CLAUDE_PID`, everything
+  that session spawned into the lane (MCP servers, tool shells, background
+  jobs), so a desktop session retires its own lane. Any other holder (a
+  desktop terminal panel, an editor, another session) still refuses it and
+  is named in the error: close or `cd` it out, then rerun. Outside Claude
+  Code, redirect the output to a file rather than piping it: the other stages
+  of a shell pipeline stand in the lane and count as holders. `--lane <path>`
+  retires a lane from elsewhere: the owning clone, or any sibling lane of
+  the same clone (a later session's lane at a current checkout). When only
+  the clone is at hand and its checkout predates `--retire`, run the lane's
+  own CLI from the clone:
+
+```bash
+cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep --retire --lane <lane>
+```
+
   `--json` prints one document; `--branch` is refused with `--retire`.
 
 - Post and resolve the drafted review-thread replies for this branch's PR:

@@ -18,6 +18,7 @@ import { ISOStr } from "@beep/schema/Timestamp";
 import { A, Str } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
+import { ProcessPid } from "../../internal/repo-run/ProcessTable.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");
 
@@ -365,6 +366,81 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
 ) {}
 
 /**
+ * The variable an agent harness exports to name its session process, and the pid it claims.
+ *
+ * **Details**
+ *
+ * Claude Code exports `CLAUDE_PID=<its own pid>` to every tool shell it
+ * spawns. The archive fence does not take the claim on faith: it accepts the
+ * pid only when the entry immediately before that session in the nearest-first
+ * ancestry chain (toward index 0 and the invoker) still carries this marker
+ * in its initial environment, which init, the desktop host, or a pid
+ * copied from another shell can never satisfy.
+ *
+ * **Example** (Name a session)
+ *
+ * ```ts
+ * import { WorktreeSessionMarker } from "@beep/repo-cli/commands/Worktree"
+ * import { NonEmptyTrimmedStr } from "@beep/schema"
+ *
+ * const marker = WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 4242 })
+ * console.log(marker.name) // "CLAUDE_PID"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeSessionMarker extends S.Class<WorktreeSessionMarker>($I`WorktreeSessionMarker`)(
+  {
+    name: NonEmptyTrimmedStr,
+    pid: ProcessPid,
+  },
+  $I.annote("WorktreeSessionMarker", {
+    description: "Environment variable a harness exports to its children, and the session pid it claims to carry.",
+  })
+) {}
+
+/**
+ * The processes the archive fence may exempt on the invoker's behalf.
+ *
+ * **Details**
+ *
+ * Present on a request, it exempts the invoker's own ancestry (the CLI, its
+ * shell, the agent session above them): they are the party asking for the
+ * removal, not writers whose later output the archive could lose.
+ * `sessionMarker` widens that to the whole subtree of one of those
+ * ancestors, the agent session process, so the helpers it spawned into the
+ * lane (MCP servers, tool shells, its own background jobs) count as the same
+ * party. The fence proves the marker against `/proc` before honouring it, so
+ * a stale, foreign, or universal-ancestor value never widens the fence.
+ *
+ * **Example** (Exempt the invoker and its session subtree)
+ *
+ * ```ts
+ * import { WorktreeInvokerExemption, WorktreeSessionMarker } from "@beep/repo-cli/commands/Worktree"
+ * import { NonEmptyTrimmedStr } from "@beep/schema"
+ * import * as O from "effect/Option"
+ *
+ * const exemption = WorktreeInvokerExemption.make({
+ *   sessionMarker: O.some(WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 4242 })),
+ * })
+ * console.log(O.isSome(exemption.sessionMarker)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeInvokerExemption extends S.Class<WorktreeInvokerExemption>($I`WorktreeInvokerExemption`)(
+  {
+    sessionMarker: S.OptionFromNullOr(WorktreeSessionMarker),
+  },
+  $I.annote("WorktreeInvokerExemption", {
+    description:
+      "Exemption the archive fence grants the invoker: its own ancestry, and the subtree of the session process a harness marker proves.",
+  })
+) {}
+
+/**
  * Fully resolved request accepted by the worktree-removal service.
  *
  * **Details**
@@ -381,6 +457,12 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  * the archived head — an advance at any point up to the final ref update
  * fails the deletion instead of orphaning commits; directory removal never
  * touches the shared object store.
+ *
+ * `exemptInvoker` selects the explicit ancestry and harness-marker proof used
+ * by Yeet. It takes precedence over `exemptInvokerSession`, even when its
+ * marker cannot be proven. Callers that omit `exemptInvoker` may request
+ * command-name inference with `exemptInvokerSession`; without either request,
+ * every attached process remains a holder.
  *
  * **Example** (Request archive retirement)
  *
@@ -413,8 +495,13 @@ export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`W
     archive: S.Boolean,
     deleteBranch: S.Boolean,
     expectedHead: S.OptionFromNullOr(GitObjectId),
-    // `yeet sweep --retire` retires the lane its own shell and session stand in;
-    // a recognized session-command root exempts its subtree. A chain-top
+    // `yeet sweep --retire` retires the lane its own shell, session, and the
+    // session's helpers stand in; they are the invoker, not writers the
+    // archive could lose.
+    exemptInvoker: S.optionalKey(WorktreeInvokerExemption),
+    // Callers may explicitly request command-name inference when no
+    // `exemptInvoker` proof is supplied. An explicit proof always takes precedence,
+    // including when its marker cannot be proven. A recognized session-command root exempts its subtree. A chain-top
     // fallback exempts only the invoking ancestry, retaining sibling holders.
     // Exempt children must finish their writes before archive capture.
     exemptInvokerSession: S.optionalKey(S.Boolean),

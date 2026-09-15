@@ -179,15 +179,19 @@ clone), deletes the branch, and sweeps the owning clone. Run it from inside
 the lane, because `bun run beep` resolves the CLI from the checkout it runs in
 and the clone's `main` may still be behind the merge; the command steps its
 own process out of the lane before removal and the archive fence exempts the
-invoking session's subtree when a `claude` session command proves its root.
-Without that root, only the invoking ancestry is exempt: other terminal tabs
-and CI worker jobs still block retirement. Finish writes from session MCP
-servers and other exempt children before retiring the lane. Exemption permits
-retirement but cannot include file writes made after archive capture. This
-process fence controls which active writers block retirement; it does not
-decide whether commits need an archive ref.
-Step the shell into the swept clone afterwards:
+invoking session's ancestry plus, when Claude Code names the session through
+`CLAUDE_PID`, everything that session spawned into the lane (MCP servers, tool
+shells, background jobs). Any other holder (a desktop terminal panel, an
+editor, another session) still refuses the retirement and is named in the
+error. Finish writes from session MCP servers and other exempt children before
+retiring the lane: file writes after archive capture are not included. This
+process fence controls active writers, independently of the commit-count
+decision to create an archive ref. Step the shell into the swept clone afterwards:
 `CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`.
+`--lane <path>` also retires a leftover lane from any sibling lane of the same
+clone; when only the clone is at hand and its checkout predates `--retire`,
+run the lane's own CLI from the clone:
+`cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep --retire --lane <lane>`.
 
 Forced removal is unsupported and remains denied by agent policy. Archive mode
 is the only removal path for local residue: the CLI inspects tracked and
