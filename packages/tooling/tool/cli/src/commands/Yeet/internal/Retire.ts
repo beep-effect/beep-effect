@@ -37,6 +37,7 @@ import type { SweepGitState } from "./Sweep.ts";
 
 const decodeWorktreeName = S.decodeUnknownEffect(WorktreeRemovalRequest.fields.name);
 const decodeRetirePlan = S.decodeUnknownEffect(YeetRetirePlan);
+const isProcessPid = S.is(ProcessPid);
 
 // Claude Code exports its own pid under this name to every tool shell it
 // spawns; that harness key lives here, in the command that runs under it, so
@@ -51,7 +52,7 @@ const REPO_CLI_ENTRY_PATH = "packages/tooling/tool/cli/src/bin.ts";
 const invokerSessionMarker = Config.option(Config.Int(SESSION_PID_ENV)).pipe(
   Effect.orElseSucceed(O.none<number>),
   Effect.map((named) =>
-    O.map(O.filter(named, S.is(ProcessPid)), (pid) => WorktreeSessionMarker.make({ name: SESSION_PID_ENV, pid }))
+    O.map(O.filter(named, isProcessPid), (pid) => WorktreeSessionMarker.make({ name: SESSION_PID_ENV, pid }))
   )
 );
 
