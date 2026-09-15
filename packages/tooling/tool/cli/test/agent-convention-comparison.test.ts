@@ -22,6 +22,10 @@ const decodeComparison = S.decodeUnknownEffect(S.fromJsonString(AgentConventionC
 const encodeComparison = S.encodeEffect(S.fromJsonString(AgentConventionComparison));
 const comparisonEqual = S.toEquivalence(AgentConventionComparison);
 const Decision = AgentConventionComparison.fields.result;
+const differencesEqual = S.toEquivalence(Decision.cases.Comparable.fields.differences);
+const decodeDifferences = S.decodeUnknownEffect(
+  S.toType(S.Struct(Decision.cases.Comparable.fields.differences.fields))
+);
 const pair = Effect.all([decodeTrial(baselineInput), decodeTrial(candidateInput)]);
 const compare = Effect.fn("ConventionComparisonTest.compare")(function* (candidate: unknown) {
   return compareAgentConventionTrials(yield* decodeTrial(baselineInput), yield* decodeTrial(candidate));
@@ -162,12 +166,33 @@ describe("declared convention comparisons", () => {
         expect(forward._tag).toBe("Comparable");
         expect(backward._tag).toBe("Comparable");
         if (Decision.guards.Comparable(forward) && Decision.guards.Comparable(backward)) {
-          expect(backward.differences).toEqual(
+          const reversed = yield* decodeDifferences(
             R.map(forward.differences, (value) => (P.isNumber(value) ? 0 - value : O.map(value, (count) => 0 - count)))
           );
+          expect(differencesEqual(backward.differences, reversed)).toBe(true);
         }
       }),
     { arbitrary: fcRuns(50) }
+  );
+  it.effect(
+    "treats signed zero as the same elapsed difference when reversing a pair",
+    Effect.fnUntraced(function* () {
+      const [initial, candidate] = yield* pair;
+      const baseline = AgentConventionTrial.make({
+        ...initial,
+        measurements: AgentConventionMeasurements.make({ ...candidate.measurements, elapsedMs: -0 }),
+      });
+      const zeroCandidate = AgentConventionTrial.make({
+        ...candidate,
+        measurements: AgentConventionMeasurements.make({ ...candidate.measurements, elapsedMs: 0 }),
+      });
+      const forward = compareAgentConventionTrials(baseline, zeroCandidate).result;
+      const backward = compareAgentConventionTrials(zeroCandidate, baseline).result;
+      if (!Decision.guards.Comparable(forward) || !Decision.guards.Comparable(backward)) return expect.unreachable();
+      expect(forward.differences.elapsedMs).toBe(0);
+      expect(backward.differences.elapsedMs).toBe(-0);
+      expect(differencesEqual(backward.differences, forward.differences)).toBe(true);
+    })
   );
   it.effect.prop(
     "keeps count differences unknown when either measurement is missing",
