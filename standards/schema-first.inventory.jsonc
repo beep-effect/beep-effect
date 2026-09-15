@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-09-10",
+  "generatedOn": "2026-09-15",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -832,6 +832,34 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "One-call formatting contract intentionally couples runtime colorizer functions with their glyph and fraction operands; it has no decode or persistence boundary."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
+      "symbol": "ProcessTableShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Effect service contract with filesystem-dependent operations and live Effect values; process data is modeled separately by ProcessStatus and ProcessTableEntry schemas."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
+      "symbol": "processTableFromEntries",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 315,
+      "owner": "@beep/repo-cli",
+      "reason": "Test service factory consumes already modeled ProcessTableEntry rows and returns filesystem-compatible Effect operations; its output is a live service implementation, not a serialized data boundary."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
+      "symbol": "processTableWithLineage",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 370,
+      "owner": "@beep/repo-cli",
+      "reason": "Test service adapter accepts a live ProcessTableShape implementation and returns closures that preserve its attachment operations while substituting schema-modeled lineage rows."
     }
   ]
 }
