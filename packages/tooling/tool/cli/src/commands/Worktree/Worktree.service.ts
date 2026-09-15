@@ -1080,8 +1080,9 @@ const describeAttachedProcesses = Effect.fnUntraced(function* (
 // agent session) and, when the request carries a session marker, everything
 // that session spawned: a holder whose ancestry reaches the session pid is one
 // of its helpers, not a writer the archive could lose. The marker is proven
-// against /proc first (the invoker ancestor directly below the named pid must
-// carry it), so init, the desktop host, or a pid copied from elsewhere can
+// against /proc first (the entry immediately before the named session in the
+// nearest-first chain, toward index 0 and the invoker, must carry it), so init,
+// the desktop host, or a pid copied from elsewhere can
 // never widen the fence.
 const blockingHolders = Effect.fnUntraced(function* (
   request: WorktreeRemovalRequest,

@@ -14,7 +14,7 @@
 import { WorktreeRemovalServiceLive } from "@beep/repo-cli/commands/Worktree";
 import { retireInvokingWorktree, SweepGitState, YeetRetirePlan } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
-import { Console, Effect, Layer, Result } from "effect";
+import { Console, Effect, Layer, ManagedRuntime, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -51,6 +51,7 @@ const state = SweepGitState.make({
 });
 
 const layer = Layer.mergeAll(NodeServices.layer, WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer)));
+await using runtime = ManagedRuntime.make(layer);
 
 const program = Effect.result(retireInvokingWorktree(plan, state)).pipe(
   Effect.map(
@@ -58,12 +59,9 @@ const program = Effect.result(retireInvokingWorktree(plan, state)).pipe(
       onFailure: (error) => ({ ok: false, message: error.message }),
       onSuccess: (receipt) => ({ ok: true, message: receipt.reason }),
     })
-  ),
-  // This spawned script is the process entrypoint and owns its service layer.
-  // @effect-diagnostics-next-line strictEffectProvide:off
-  Effect.provide(layer)
+  )
 );
 
-const outcome = await Effect.runPromise(program);
+const outcome = await runtime.runPromise(program);
 await Effect.runPromise(S.encodeEffect(S.fromJsonString(S.Unknown))(outcome).pipe(Effect.flatMap(Console.log)));
 process.exitCode = outcome.ok ? 0 : 1;

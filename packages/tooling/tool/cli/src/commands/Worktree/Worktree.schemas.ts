@@ -266,8 +266,9 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  *
  * Claude Code exports `CLAUDE_PID=<its own pid>` to every tool shell it
  * spawns. The archive fence does not take the claim on faith: it accepts the
- * pid only when the invoker ancestor directly below it still carries this
- * marker in its initial environment, which init, the desktop host, or a pid
+ * pid only when the entry immediately before that session in the nearest-first
+ * ancestry chain (toward index 0 and the invoker) still carries this marker
+ * in its initial environment, which init, the desktop host, or a pid
  * copied from another shell can never satisfy.
  *
  * **Example** (Name a session)
