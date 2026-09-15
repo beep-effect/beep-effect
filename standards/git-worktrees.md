@@ -184,10 +184,23 @@ invoking session's ancestry. Step the shell into the swept clone afterwards:
 
 Forced removal is unsupported and remains denied by agent policy. Archive mode
 is the only removal path for local residue: the CLI inspects tracked and
-untracked changes plus commits absent from `origin/main` and, when configured,
-commits ahead of the branch upstream. An initialized submodule with uncommitted
-work cannot be represented by the top-level patch, so archive retirement stops
-before removal and names the submodule that must be committed or cleaned.
+untracked changes plus commits absent from the remote default branch and, when
+configured, commits ahead of the branch upstream. A configured upstream whose
+remote-tracking ref was pruned (GitHub deletes the head branch at merge and a
+later `git fetch --prune` drops `refs/remotes/origin/<branch>` while
+`branch.<name>.merge` still names it) never fails the `inspect-upstream` step:
+unpushed commits are judged against `origin/<default>..HEAD` instead, and the
+pruned state records a verdict — the tip is already on the default branch, a
+merged pull request landed exactly this head (`gh pr list`, exact head match),
+or `unverified`. The verdict records evidence; it does not override the
+base-range preservation decision. A squash-merged tip with a matching merged
+PR still gets an archive ref when its commits are absent from the default
+branch. Only `ancestor-of-base` has a zero base count and permits clean removal
+when no other residue needs preservation. Doctor's boolean check uses the
+commit counts without querying GitHub for receipt evidence. An initialized
+submodule with uncommitted work cannot be represented by the top-level patch,
+so archive retirement stops before removal and names the submodule that must
+be committed or cleaned.
 If preservation is needed, it completes all of these steps before removal:
 
 1. Creates a new create-only
@@ -198,7 +211,8 @@ If preservation is needed, it completes all of these steps before removal:
 3. Copies every untracked, non-ignored file under `untracked/`, preserving its
    repository-relative path.
 4. Writes a schema-decoded `manifest.json` with the raw name, branch, old `HEAD`,
-   archive ref, repository hash, artifact paths, and retirement reason.
+   archive ref, repository hash, artifact paths, retirement reason, and the
+   branch-upstream state (`unset`, `live`, or `pruned` with its verdict).
 
 Residue defaults to
 `~/.cache/beep/worktree-residue/<repo-basename>-<hash12>/<name>-<stamp>/`,
