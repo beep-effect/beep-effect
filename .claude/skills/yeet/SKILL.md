@@ -219,7 +219,9 @@ CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run b
   checkout it runs in, and the owning clone's `main` may still be behind the
   merge and reject `--retire` as an unknown flag. The command steps its own
   process out of the lane before removal; the trailing `cd` moves your shell
-  to the swept clone. `--lane <path>` is for a clone that already carries the
+  to the swept clone. Redirect the output to a file rather than piping it:
+  the other stages of a shell pipeline stand in the lane and the fence counts
+  them as holders. `--lane <path>` is for a clone that already carries the
   merged CLI. The fence exempts the invoking session's own ancestry and
   refuses any other process still standing in the lane. `--json` prints one
   document; `--branch` is refused with `--retire`.
