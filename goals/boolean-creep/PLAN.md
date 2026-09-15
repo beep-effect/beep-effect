@@ -19,13 +19,26 @@ Mutable execution plan. Contract: [`SPEC.md`](./SPEC.md); binding decisions:
 
 ## Current lane
 
-**Paused at Benjamin's request on 2026-09-09 to publish a draft save PR.**
-The [pause handoff](./PAUSE.md) records the current state, unanswered decisions
-and resume order. Main `0c975f970b4ac4b101d7c1b11957a799d481af35` is merged;
-the [latest source-forward receipt](./data/post-r31-main0c-source-forward.json)
-verifies preservation of 1,469 committed packet files. The three audits of its
-seven changed source files are incomplete and have released their holds.
-No census, independent review, or implementation continues during the pause.
+**Resumed at Benjamin's instruction on 2026-09-14, after save PR #1069 merged.**
+The [handoff](./PAUSE.md) preserves the unanswered decisions and resume order.
+The new continuation branch starts from main
+`cecfb9f8e9a5f20d768666c65f89425349f7f9e6`. The prepared classifier resolves
+3,114 included corpus files across 27 lanes; 465 included files changed since
+the completed main-e7b refresh, affecting recorded source/evidence paths for 52
+qualified cases. This is a source-impact map, not a completed census or review.
+The [resumption receipt](./data/resume-2026-09-14-source-forward.json) records
+that map and the [bounded audit](./data/resume-2026-09-14-bounded-audit.json).
+Six qualified designs now have current-source corrections: Pincite, both
+MemoryFileSystem carriers, both Sweep clusters and coverage resolution. Coverage
+changes from 16/7 to 16/9 because scoped and no-op replacement are now supported;
+the target also preserves optional topology-owner arrays. One new D1 baseline
+writer-options row brings the inventory to 754 /145 qualified /609 disqualified.
+Nine existing rows are corrected with unchanged qualification statuses. The
+remaining 46 changed-path qualified cases and complete owner audits are pending.
+The historical [main-0c source-forward receipt](./data/post-r31-main0c-source-forward.json)
+and its three unfinished audits remain preserved. Rebind each audit to current
+inputs before reuse. The two citation decisions still prevent final R31
+reconciliation; GATE 2 and implementation remain evidence-gated.
 
 The scanner prerequisite [PR #1059](https://github.com/beep-effect/beep-effect/pull/1059)
 is merged as `be5b589aa013c8350a4fad5cdfe36a6f6188db1f`. Its [local full proof](./data/scanner-prerequisite-main702-proof.json)

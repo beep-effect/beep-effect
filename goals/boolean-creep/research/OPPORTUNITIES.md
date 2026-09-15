@@ -1326,3 +1326,45 @@ Local coverage should announce and validate its Node runtime against the
 hosted lane before starting its full prebuild and test fan-out. Reading that
 existing pin first would have avoided rediscovering an already documented
 runtime defect during this recovery.
+
+
+## 2026-09-14 — Source-forward validation and designs retained pre-upgrade assumptions
+
+Resuming the saved packet on main `cecfb9f8` exposed two stale inventory anchors:
+`ci-local-step-plan` pointed beyond the shortened CiLane file, and PinciteInfo's
+E4 annotation pointed beyond its current end. The inventory validator reported
+both; current-source inspection preserved their prior qualification decisions
+and repaired the anchors. Frozen source hashes plus an explicit changed-owner
+worklist make this repair reviewable without treating a line-number fix as a
+new census result.
+
+The MemoryFileSystem descriptor design also required the old negative stored
+seek positions and FileSystem.Size IO results. Current main rejects seek
+positions before zero with BadArgument and uses number IO counts under Effect
+`4.0.0-rc.113`; Characterization tests 07 and 13 record that behavior. Following
+the stale design would undo the dependency migration. Source-hash checks on
+behavioral requirements, including supporting test fixtures, would catch this
+drift before implementation. The exact old designs are archived; the refreshed
+P2 designs retain the new contract and still require independent P3 review.
+
+
+The same refresh found a semantic change beyond shifted anchors: Tasks.ts now
+accepts scoped `--replace-all`, and its selected/noop producers preserve that
+intent. The archived coverage operation design required the removed rejection
+and therefore counted seven legal states instead of nine. Current resolver
+source and `quality-tasks.test.ts`'s scoped replacement fixture establish the
+correction. The new optional topology-owner array also distinguishes an absent
+list from an empty list. Design refresh must compare complete producer payloads
+and supported fixtures, not just the count or spelling of Boolean fields.
+
+
+## 2026-09-14 — Reboot interrupted final packet validation
+
+The final inventory/design validators and reflection-artifact command remained
+in kernel `path_openat` waits with zero CPU use. Other Bun processes were also
+waiting, so the symptom was not limited to a validator assertion. No cause was
+confirmed and no unrelated process was changed. Benjamin requested saving work
+before reboot; termination was requested for this task's validators only.
+Receipt/archive hashes and all 3,114 frozen source hashes passed, but the last
+754-record inventory and six-design revision still need their final command
+checks after reboot. Earlier 753-record passes do not cover those later edits.

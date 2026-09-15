@@ -1,10 +1,30 @@
-# Campaign paused — 2026-09-09
+# Campaign resumed — 2026-09-14
+
+Benjamin explicitly instructed `resume` after save PR #1069 merged. Campaign
+execution is authorized again under the unchanged SPEC and DECISIONS contract.
+The continuation starts on `codex/boolean-creep-resume-2026-09-14` at current
+main `cecfb9f8e9a5f20d768666c65f89425349f7f9e6`; the saved packet is unchanged
+between the published head and that main tree. The two citation decisions below
+remain unanswered. GATE 2, independent review and implementation remain subject
+to their existing evidence requirements. Follow the resume order below.
+
+## Reboot checkpoint — 2026-09-14
+
+Benjamin requested saving work before reboot. The resumed packet now has 754
+records (145 qualified /609 disqualified), six refreshed qualified designs and
+46 changed-path qualified cases still to audit. The [bounded audit receipt](./data/resume-2026-09-14-bounded-audit.json)
+records passed hash checks and the incomplete final Bun validators. Re-run those
+commands after reboot before using the revised packet as validated evidence.
+The two citation decisions remain unanswered; no census, P3 or implementation
+has started. Continue from the saved branch and private active handoff.
+
+## Historical pause — 2026-09-09
 
 Benjamin requested a pause and a PR to save the current work. Campaign execution
-is paused; resume only on his instruction. He subsequently authorized taking
+was paused until his instruction to resume. He subsequently authorized taking
 PR #1069 to a mergeable state while retaining draft status. That authorization
 covers quality and review fixes for this PR; the census and implementation
-campaign remain paused. The packet lifecycle remains `active`
+campaign remained paused until the resumption above. The packet lifecycle remains `active`
 because its acceptance criteria are unfinished. This draft save PR does not
 ratify GATE 2 or authorize implementation.
 

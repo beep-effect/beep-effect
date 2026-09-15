@@ -38,10 +38,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-**Campaign execution is paused at Benjamin's request to save the current work
-in a draft PR.** The [pause handoff](./PAUSE.md) records the unfinished audits,
-two pending citation decisions and the order for resuming. Lifecycle remains
-`active`; the save PR grants no GATE 2 or implementation approval.
+**Campaign execution resumed at Benjamin's instruction on 2026-09-14.** Save
+PR #1069 merged as `65c29e5177293cfdacc47d3b33c64596a512e6a4`. The
+[handoff](./PAUSE.md) preserves the unfinished audits, two pending citation
+decisions and resume order. Work continues from main
+`cecfb9f8e9a5f20d768666c65f89425349f7f9e6`; lifecycle remains `active`, and
+the save PR grants no GATE 2 or implementation approval.
 
 The moving-main census and design refresh remain in progress. GATE 1 passed on
 2026-08-17. Benjamin's 2026-09-03 amendment revoked the stale zero-findings
@@ -53,6 +55,18 @@ introduced E1-E4 cases without another user gate; all original qualification
 and compatibility laws remain binding.
 
 ## Latest Evidence
+
+The [resumption receipt](./data/resume-2026-09-14-source-forward.json) binds
+current main, the unchanged saved packet, the 3,114-file corpus plan and the
+465-file source-impact list. The [bounded audit](./data/resume-2026-09-14-bounded-audit.json)
+refreshes six qualified designs, preserves their exact predecessors, and corrects
+nine inventory rows. Coverage resolution now has nine legal states rather than
+seven because current main supports scoped and no-op replacement. The two
+MemoryFileSystem designs preserve the rc.113 seek and IO contract, Pincite's
+consumer map is corrected, and both Sweep designs include retirement consumers.
+One newly inspected independent baseline-write options model is recorded as D1.
+The other 46 qualified cases with changed source/evidence paths still need their
+refresh. This work supplies no dry-round or independent-review credit.
 
 Main `0c975f970b4ac4b101d7c1b11957a799d481af35` is merged through
 `8d4580ae820726732784562c1b6c1c913e5bba00`. The [latest merge receipt](./data/post-r31-main0c-source-forward.json)
@@ -68,8 +82,8 @@ merge; the final review-thread inspection found no threads. The recorded two
 Vercel failures are provider rate limits. The monitor is terminal and the merged
 scanner configuration is now available to the packet's eventual publication.
 
-The canonical inventory contains **753 records: 145 qualified and 608 disqualified**
-(D1 390 / D2 218). The qualified set is **113 Tier 1 and 32 Tier 2**; statuses are 21
+The canonical inventory contains **754 records: 145 qualified and 609 disqualified**
+(D1 391 / D2 218). The qualified set is **113 Tier 1 and 32 Tier 2**; statuses are 21
 historically `reviewed`, 124 `designed`, and 0 `applied`. All await replacement
 independent review. Four additional owners remain in an [explicit unresolved hold](./data/r31-law-owner-holds.json).
 

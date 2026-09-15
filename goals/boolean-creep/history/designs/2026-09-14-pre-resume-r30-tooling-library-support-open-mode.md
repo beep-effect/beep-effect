@@ -1,16 +1,12 @@
 # r30-tooling-library-support-open-mode
 
-Historical R30 proposal: Codex `gpt-6-astra` with `xhigh` reasoning, source
-`e7b1e907726421c7d2a2e1cdd140280df47f2353`, main
-`bed30c6adf3beed7de8538209fbdc84d26a3b8ce`. Its exact pre-refresh text is retained
-in `history/designs/2026-09-14-pre-resume-r30-tooling-library-support-open-mode.md`.
-
-Current P2 refresh, 2026-09-14: source and main
-`cecfb9f8e9a5f20d768666c65f89425349f7f9e6`; source file SHA256
-`f60c016d62eb22dee35836d7df19baeca822acf8a707888e3cf7a7db6f1281ec`.
-The qualification remains `designed`, with replacement independent P3 review
-pending. This is no implementation or independent approval. Tier 1, ordered
-Tier1E tooling batch; shared-file edits are serial.
+Native P2 proposal prepared by Codex `gpt-6-astra` with `xhigh` reasoning under
+the user's current AGENTS instructions, superseding older packet effort wording.
+Source HEAD `e7b1e907726421c7d2a2e1cdd140280df47f2353`; immutable main `bed30c6adf3beed7de8538209fbdc84d26a3b8ce`.
+Source file SHA 256 `4993bd3b1d5cd8d0a0765c80f2ad2e81a6ecc80ecb19d396a7f0ecaad6e45566`.
+The raw R 30 proposal is confirmed; parent may admit this complete design as
+`designed` after census reconciliation. This is not implementation or independent
+P3 approval. Tier 1, ordered Tier1E tooling batch; shared-file edits are serial.
 Derived/internal carrier: six OpenMode Booleans, 64 representable / 10 legal states.
 
 Unless explicitly qualified, source line references below refer to
@@ -19,17 +15,17 @@ Paths beginning `src/` or `test/` are relative to `packages/tooling/test-kit/tes
 
 ## Current shape
 
-Private `OpenMode` at 716–728 is a real S.Class with six required Boolean fields
-at 718–723: readable, writable, append, create, exclusive and truncate. The sole
-constructor `openMode` 742–750 derives all six from the existing annotated
-`OpenFlag` LiteralKit 736–740. It has exactly the ten public FileSystem flags.
+Private `OpenMode` at 715–727 is a real S.Class with six required Boolean fields
+at 717–722: readable, writable, append, create, exclusive and truncate. The sole
+constructor `openMode` 741–749 derives all six from the existing annotated
+`OpenFlag` LiteralKit 735–739. It has exactly the ten public FileSystem flags.
 No OpenMode member or constructor is exported; this is internal operational
 data, not an external SDK Boolean options mirror.
 
-The mapper runs at 1789 for opening,1811 for open watch events and 2243 for
+The mapper runs at 1788 for opening,1810 for open watch events and 2240 for
 writeFile watch events. Mode is threaded through target selection, existing
-and new/symlink targets, and descriptor allocation 1676–1800. Only three of the
-six values are copied into the separate stored descriptor 1765–1767. The
+and new/symlink targets, and descriptor allocation 1675–1799. Only three of the
+six values are copied into the separate stored descriptor 1764–1766. The
 companion descriptor design owns that different 8/5 carrier.
 
 This authored implementation lives under src/ despite its .test-kit.ts suffix.
@@ -56,7 +52,7 @@ All ten six-bit rows are distinct, versus 64 representable Boolean combinations.
 Each flag has a supported public opening witness: existing regular files for
 nonexclusive flags; a fresh missing path with an existing parent for exclusive
 flags. `r` and `r+` do not create; every other flag can create. Current explicit
-exclusive flag fixtures cover wx/wx+/ax/ax+ at `test/MemoryFileSystem/Coverage.test.ts:379–393`.
+exclusive flag fixtures cover wx/wx+/ax/ax+ at `test/MemoryFileSystem/Coverage.test.ts:365–379`.
 
 E4 follows from the sole mapper: append/exclusive/truncate each imply create,
 create implies writable, append excludes truncate, and no successful mode has
@@ -64,7 +60,7 @@ neither read nor write access. Plus-suffix flags permit both readable and
 writable; these are legitimate combined-true states, not exclusions. The full
 table, not only a pairwise implication, establishes 64/10.
 
-The public boundary accepts FileSystem.OpenFlag strings, validated at 1788;
+The public boundary accepts FileSystem.OpenFlag strings, validated at 1787;
 it never accepts an OpenMode bag. Private schema permissiveness is not a
 supported constructor contract for arbitrary six-bit inputs. Reads after a
 successful open and existing test fixtures introduce no alternate producer.
@@ -93,7 +89,7 @@ observations, not persisted parallel flags.
 
 Replace OpenMode parameters with OpenFlag in the existing helpers without
 changing their return schemas, services or errors. Keep the validated flag at
-1787–1789; preserve validation order and the original default at each caller:
+1786–1788; preserve validation order and the original default at each caller:
 open defaults r, writeFile defaults w. Do not hoist event decisions before the
 successful state transition or change caller-option read timing unnecessarily.
 
@@ -108,18 +104,18 @@ No new service, module, public export or FileSystem API is needed.
 
 | Source / consumer | Required migration and preserved behavior |
 | --- | --- |
-|716–750|Remove the six-field class and its sole mapper; retain the exact ten-value OpenFlag, annotation and isOpenFlag guard. Add only named schema-derived operational subsets needed by readers.|
-|1676–1700|Pass the flag to openExistingTarget. Exclusive existing paths fail AlreadyExists before following/truncating. Failed resolution may follow a dangling final link only for creating flags. Preserve error path, symlink traversal/cycle behavior, File-kind check, retry payload and truncation timing.|
-|1703–1741|Pass the flag through link/create helpers. Reclaim newly allocated inode on link failure; retry AlreadyExists only when nonexclusive; retain complete creation permissions/mode, timestamps, allocation and getAllocatedFile invariant error.|
-|1743–1800|Pass the flag through selectOpenTarget and its retry loop. NotFound creates only for creating flags; other errors retain current remapping. Keep flag validation before validateMode and allocation only on Ready.|
-|1760–1779|Coordinate direct flag-to-descriptor access mapping with the distinct descriptor design. Preserve fd/inode/position=0, counter increment, map insertion and inode openCount. Do not carry create/exclusive/truncate onto the descriptor.|
-|1669–1674|Keep truncateOpenTarget's scalar parameter and state/timestamp behavior; supply a derived truncating-flag result. This anonymous function Boolean is not a new model or deletion target.|
-|1802–1829|Open event selection still uses prior resolution failure for Create, truncating-open for Update, otherwise no event. Preserve inodeUpdateEvents for all linked paths and successful final path resolution for Create.|
-|2222–2253|writeFile retains default w, transactional open/write/close, exact raw options, data bytes and withOperationError remapping. Changed-event predicate remains truncating flag OR nonempty data. Empty r+ writing produces no content-change event, while empty default-w still truncates.|
-|762–781,1831–2112|Descriptor access/error/cursor/close operations are migrated by the companion design. This mode design preserves the current File/SeekMode contract, number IO counts and ByteSize file information.|
-|2979–3034|Keep the one-permit volume, interruptible acquisition, uninterruptible mutation/commit, map replacement and state-assignment/event-publication ordering. No failure may partially commit a newly opened/truncated file.|
-|3084–3111,3146,3180|Keep FileSystem.make wiring, make's fresh-volume contract, layer lifetimes and the public FileSystem service return.|
-|src/MemoryFileSystem/index.ts:14; package.json exports 19–20; src/index.ts|Only make/layer are exposed by the dedicated facade; implementation subpaths remain blocked, root exports unchanged. No new schema test export or public compatibility API.|
+|715–749|Remove the six-field class and its sole mapper; retain the exact ten-value OpenFlag, annotation and isOpenFlag guard. Add only named schema-derived operational subsets needed by readers.|
+|1675–1699|Pass the flag to openExistingTarget. Exclusive existing paths fail AlreadyExists before following/truncating. Failed resolution may follow a dangling final link only for creating flags. Preserve error path, symlink traversal/cycle behavior, File-kind check, retry payload and truncation timing.|
+|1702–1740|Pass the flag through link/create helpers. Reclaim newly allocated inode on link failure; retry AlreadyExists only when nonexclusive; retain complete creation permissions/mode, timestamps, allocation and getAllocatedFile invariant error.|
+|1742–1799|Pass the flag through selectOpenTarget and its retry loop. NotFound creates only for creating flags; other errors retain current remapping. Keep flag validation before validateMode and allocation only on Ready.|
+|1759–1778|Coordinate direct flag-to-descriptor access mapping with the distinct descriptor design. Preserve fd/inode/position=0, counter increment, map insertion and inode openCount. Do not carry create/exclusive/truncate onto the descriptor.|
+|1668–1673|Keep truncateOpenTarget's scalar parameter and state/timestamp behavior; supply a derived truncating-flag result. This anonymous function Boolean is not a new model or deletion target.|
+|1801–1828|Open event selection still uses prior resolution failure for Create, truncating-open for Update, otherwise no event. Preserve inodeUpdateEvents for all linked paths and successful final path resolution for Create.|
+|2219–2250|writeFile retains default w, transactional open/write/close, exact raw options, data bytes and withOperationError remapping. Changed-event predicate remains truncating flag OR nonempty data. Empty r+ writing produces no content-change event, while empty default-w still truncates.|
+|761–780,1830–2109|Descriptor access/error/cursor/close operations are migrated by the companion design. This mode design changes no accepted File/Size/SeekMode contract.|
+|2976–3031|Keep the one-permit volume, interruptible acquisition, uninterruptible mutation/commit, map replacement and state-assignment/event-publication ordering. No failure may partially commit a newly opened/truncated file.|
+|3081–3108,3143,3177|Keep FileSystem.make wiring, make's fresh-volume contract, layer lifetimes and the public FileSystem service return.|
+|src/MemoryFileSystem/index.ts:8; package.json exports 19–20; src/index.ts|Only make/layer are exposed by the dedicated facade; implementation subpaths remain blocked, root exports unchanged. No new schema test export or public compatibility API.|
 
 Graft callers reported an ambiguous OpenFileDescriptor name in excluded
 scratchpad code; exhaustive scoped source searches established the actual
@@ -129,10 +125,10 @@ test files. Their FileSystem-facing signatures remain unchanged.
 
 ## Guard-deletion accounting
 
-Delete six OpenMode fields, six producer projections 742–750 and all three
-openMode materializations 1789/1811/2243. Remove the mode bag and its type threading
-from five helper signatures. Replace two exclusive reads 1683/1714, two create
-reads 1686/1754 and three truncate reads 1699/1812/2247 with derived source-flag
+Delete six OpenMode fields, six producer projections 741–749 and all three
+openMode materializations 1788/1810/2240. Remove the mode bag and its type threading
+from five helper signatures. Replace two exclusive reads 1682/1713, two create
+reads 1685/1753 and three truncate reads 1698/1811/2244 with derived source-flag
 queries. The actual IO/error/event branches stay; there is no existing generic
 coherence guard to claim as deleted.
 
@@ -151,12 +147,8 @@ None: neither the private OpenMode nor the private State has a JSON, disk or
 wire codec. Public APIs continue using the exact same ten FileSystem.OpenFlag
 strings, defaults, path/byte payloads, numeric mode and typed PlatformError
 shapes. Do not export or serialize the internal subset schemas. Current Effect
-`4.0.0-rc.113` is bound by the installed package and committed catalog/lockfile.
-Both the installed FileSystem.ts and the local Effect reference at
-`51d4a2f08a5c7691dc876415bc9fc0ecf467e153` declare number read/write counts,
-number readAlloc sizes and a bigint seek result with PlatformError at lines
-863–869. File information uses ByteSize. The companion descriptor design
-preserves these upgraded signatures; this proposal changes no dependency.
+rc.112 contract is bound by root catalog/lockfile, installed Effect package and
+FileSystem.ts; dependencies do not change.
 
 Preserve error method/module/pathOrDescriptor, BadArgument flag rejection,
 AlreadyExists and BadResource ordering, original symlink paths and IO return
@@ -173,9 +165,9 @@ read/write permissions, append versus positional writes and initial contents.
 This proves behavior through FileSystem, without exporting private schemas or
 constructing arbitrary old OpenMode tuples. Explicitly retain defaults r/w.
 
-Keep Coverage.test.ts 347–393 dangling-link/cycle/kind/exclusive cases and
+Keep Coverage.test.ts 333–379 dangling-link/cycle/kind/exclusive cases and
 MemoryFileSystem.test.ts 115–123 dangling-exclusive preservation. Keep shared
-FileSystemConformance.ts 322–380 r+ overwrite, empty writes, r rejection,
+FileSystemConformance.ts 317–375 r+ overwrite, empty writes, r rejection,
 append and exclusive tests. Assert invalid flag versus invalid creation-mode
 error order and unchanged state/descriptor allocation on failure. Preserve
 watch effects for empty write under w versus r+, existing/created paths and
@@ -201,6 +193,7 @@ The risk is losing an opening distinction too early: r+ and w+ have identical
 descriptor access but different creation/truncation effects, and wx/w must not
 collapse before exclusivity has been enforced. Preserve the ten-flag source
 through the whole open transaction, then project only at descriptor allocation.
-Do not infer permission restrictions from file mode metadata or fold cursor/byte facts into this enum. The companion 8/5 design remains separately
+Do not infer permission restrictions from file mode metadata or fold signed
+cursor/byte facts into this enum. The companion 8/5 design remains separately
 adjudicated, with no duplicated deletion credit. Parent census reconciliation precedes admission of these P2 proposals;
 independent P3 precedes implementation. No source change is claimed here.
