@@ -25,6 +25,13 @@
 export const VERSION = "0.0.0" as const;
 
 /**
+ * Inspectable claim evidence and controlled human review.
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export * from "./ClaimEvidenceReview/ClaimEvidenceReviewPanel.tsx";
+/**
  * Contradiction-triage presentation components.
  *
  * @category components

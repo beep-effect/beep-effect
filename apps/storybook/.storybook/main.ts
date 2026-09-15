@@ -7,6 +7,9 @@ import type { StorybookConfig } from "@storybook/react-vite";
 import type { Plugin, ServerOptions } from "vite";
 
 const repoRoot = new URL("../../..", import.meta.url).pathname;
+const epistemicStories = fileURLToPath(
+  new URL("./stories/**/*.stories.@(ts|tsx)", import.meta.resolve("@beep/epistemic-ui/package.json"))
+);
 const portlessConfig = Effect.runSync(
   Config.all({
     mode: Config.String("PORTLESS").pipe(Config.withDefault("1")),
@@ -67,6 +70,7 @@ const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
 const config: StorybookConfig = {
   framework: "@storybook/react-vite",
   stories: [
+    epistemicStories,
     "../../../packages/foundation/ui-system/*/stories/**/*.stories.@(ts|tsx)",
     // graph-3d driver stories (goal graph-3d-view): the storybook app is a
     // composition root, so hosting driver stories keeps slice `ui` clean of
@@ -101,3 +105,5 @@ const config: StorybookConfig = {
 };
 
 export default config;
+
+import { fileURLToPath } from "node:url";

@@ -362,6 +362,7 @@
       "name": "@beep/storybook",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/epistemic-ui": "workspace:^",
         "@beep/graph-3d": "workspace:^",
         "@beep/ui": "workspace:^",
         "@storybook/addon-a11y": "catalog:",
@@ -1753,6 +1754,8 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-browser": "catalog:",
+        "@storybook/react-vite": "catalog:",
         "@types/node": "catalog:",
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
@@ -1779,6 +1782,7 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",

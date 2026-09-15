@@ -26,6 +26,7 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const witnessStub = "(()=>{/* witness stub */})();";
+const appOrigin = "http://storybook.beep.localhost:1355";
 
 const TestLayer = Layer.mergeAll(
   Collector.layer.pipe(Layer.provide(Witness.layerScript(witnessStub)), Layer.provide(NodeServices.layer)),
@@ -71,6 +72,7 @@ describe("@beep/qa-capture collector", () => {
             const collector = yield* Collector;
             const running = yield* collector.serve(
               CollectorServeOptions.make({
+                allowedOrigins: [appOrigin],
                 eventsPath,
                 handlePath: O.some(handlePath),
                 port: 0,
@@ -89,7 +91,20 @@ describe("@beep/qa-capture collector", () => {
 
             const eventsResponse = yield* HttpClient.post(`${base}/events`, {
               body: HttpBody.text(batch, "text/plain;charset=UTF-8"),
+              headers: { origin: appOrigin },
             });
+            expect(eventsResponse.headers["access-control-allow-origin"]).toBe(appOrigin);
+            const preflight = yield* HttpClient.options(`${base}/events`, {
+              headers: { origin: appOrigin, "access-control-request-method": "POST" },
+            });
+            expect(preflight.status).toBe(204);
+            expect(preflight.headers["access-control-allow-origin"]).toBe(appOrigin);
+            const unrelatedOrigin = yield* HttpClient.get(`${base}/health`, {
+              headers: { origin: "https://unrelated.example" },
+            });
+            // A single allowed origin is emitted as a constant; it must never
+            // reflect the unrelated caller or allow every origin.
+            expect(unrelatedOrigin.headers["access-control-allow-origin"]).toBe(appOrigin);
             const accepted = yield* Effect.flatMap(eventsResponse.text, decodeEventsAccepted);
             expect(accepted.accepted).toBe(2);
             expect(accepted.rejected).toBe(1);

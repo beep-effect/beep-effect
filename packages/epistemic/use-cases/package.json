@@ -39,6 +39,7 @@
     "./public": "./src/public.ts",
     "./server": "./src/server.ts",
     "./ClaimDisposition": "./src/ClaimDisposition/index.ts",
+    "./ClaimEvidenceReview": "./src/ClaimEvidenceReview/index.ts",
     "./ClaimGate": "./src/ClaimGate/index.ts",
     "./ClaimLifecycle": "./src/ClaimLifecycle/index.ts",
     "./ClaimProjection": "./src/ClaimProjection/index.ts",
@@ -67,6 +68,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-bun": "catalog:",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
