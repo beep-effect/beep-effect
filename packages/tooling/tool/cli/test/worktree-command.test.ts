@@ -15,6 +15,7 @@ import {
   WorktreeDoctorEntry,
   WorktreeExistsError,
   WorktreeMergedPullRequestProbe,
+  WorktreeMergedPullRequestProbeLive,
   WorktreePreservationError,
   WorktreeRemovalReceipt,
   WorktreeRemovalRequest,
@@ -39,13 +40,13 @@ import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, P, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, Path, Runtime, Stream } from "effect";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { ConfigProvider, Effect, FileSystem, Layer, Path, Runtime, Sink, Stream } from "effect";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree";
 
 const provideScopedLayer =
@@ -154,6 +155,48 @@ const withScratchRepo = <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E,
       ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true }).pipe(Effect.ignore)
     ).pipe(provideScopedLayer(testLayer))
   );
+
+layer(WorktreeMergedPullRequestProbeLive, { timeout: "1 second" })("merged pull-request probe", (it) => {
+  it.effect("finds an older exact head when a branch name was reused", () => {
+    const head = GitObjectId.make("1111111111111111111111111111111111111111");
+    const output = new TextEncoder().encode(
+      '[{"number":1100,"headRefOid":"2222222222222222222222222222222222222222"},{"number":1098,"headRefOid":"1111111111111111111111111111111111111111"}]'
+    );
+    const spawner = ChildProcessSpawner.make((command) => {
+      expect(command._tag).toBe("StandardCommand");
+      if (command._tag === "StandardCommand") {
+        expect(command.args).toContain("100");
+        expect(command.args).toContain("reused-branch");
+      }
+      return Effect.succeed(
+        ChildProcessSpawner.makeHandle({
+          pid: ChildProcessSpawner.ProcessId(1),
+          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+          isRunning: Effect.succeed(false),
+          kill: () => Effect.void,
+          stdin: Sink.drain,
+          stdout: Stream.make(output),
+          stderr: Stream.empty,
+          all: Stream.make(output),
+          getInputFd: () => Sink.drain,
+          getOutputFd: () => Stream.empty,
+          unref: Effect.succeed(Effect.void),
+        })
+      );
+    });
+    return Effect.gen(function* () {
+      const probe = yield* WorktreeMergedPullRequestProbe;
+      expect(yield* probe.mergedAtHead("/repo", "reused-branch", head)).toEqual(O.some(PosInt.make(1098)));
+      expect(
+        yield* probe.mergedAtHead(
+          "/repo",
+          "reused-branch",
+          GitObjectId.make("3333333333333333333333333333333333333333")
+        )
+      ).toEqual(O.none());
+    }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+  });
+});
 
 describe("worktree argument builders", () => {
   it("builds a worktree add argv with a new branch", () => {

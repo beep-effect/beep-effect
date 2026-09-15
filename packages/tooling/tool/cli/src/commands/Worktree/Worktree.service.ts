@@ -149,15 +149,14 @@ const ghMergedAtHead = Effect.fn("WorktreeMergedPullRequestProbe.ghMergedAtHead"
   // Any gh failure or undecodable payload answers none: an unavailable probe can only
   // make the retirement more conservative, never fail it.
   const rows = yield* ghOutput({
-    args: ["pr", "list", "--head", branch, "--state", "merged", "--json", "number,headRefOid", "--limit", "1"],
+    args: ["pr", "list", "--head", branch, "--state", "merged", "--json", "number,headRefOid", "--limit", "100"],
     cwd,
     label: `gh pr list --head ${branch} --state merged`,
     onFailure: (failure) => failure,
   }).pipe(Effect.flatMap(decodeMergedPullRequestRows), Effect.option);
   return pipe(
     rows,
-    O.flatMap(A.head),
-    O.filter((row) => Str.Equivalence(row.headRefOid, head)),
+    O.flatMap(A.findFirst((row) => Str.Equivalence(row.headRefOid, head))),
     O.map((row) => row.number)
   );
 });
