@@ -1,5 +1,5 @@
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -10,9 +10,8 @@ import type { Plugin, ServerOptions } from "vite";
 
 const repoRoot = new URL("../../..", import.meta.url).pathname;
 const require = createRequire(import.meta.url);
-const epistemicStories = join(
-  dirname(require.resolve("@beep/epistemic-ui/package.json")),
-  "stories/**/*.stories.@(ts|tsx)"
+const epistemicStories = fileURLToPath(
+  new URL("./stories/**/*.stories.@(ts|tsx)", pathToFileURL(require.resolve("@beep/epistemic-ui/package.json")))
 );
 const portlessConfig = Effect.runSync(
   Config.all({

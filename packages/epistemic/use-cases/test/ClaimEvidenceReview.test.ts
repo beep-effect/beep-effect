@@ -35,7 +35,7 @@ const makeBasis = () =>
   });
 const reviewer = decodeUser({ kind: "User", userId: 1 });
 
-layer(BunCrypto.layer)("claim evidence explanation and approval", (it) => {
+layer(BunCrypto.layer, { timeout: "5 seconds" })("claim evidence explanation and approval", (it) => {
   it.effect(
     "verifies before creating a detached timestamped approval",
     Effect.fnUntraced(function* () {

@@ -6,7 +6,6 @@ import {
 } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -47,31 +46,21 @@ const review = decodeReview({
 const verified = ClaimEvidenceVerification.cases.Verified.make({});
 
 describe("claim evidence review applicability", () => {
-  it.effect(
+  it.prop(
     "preserves arbitrary review history without transferring approval to changed assertions",
-    Effect.fnUntraced(function* () {
-      const result = yield* Arbitrary.checkEffect(
-        interpretations,
-        ([assertion, subject]) => {
-          const generated = ClaimEvidenceReview.make({
-            ...review,
-            basis: ClaimEvidenceBasis.make({ ...basis, assertion, subject }),
-          });
-          const retained = decodeReviewJson(encodeReviewJson(generated));
-          const changed = ClaimEvidenceBasis.make({
-            ...generated.basis,
-            assertion: `${generated.basis.assertion} changed`,
-          });
-          return (
-            reviewsEquivalent(generated, retained) &&
-            reviewStatusFor(generated.basis, verified, O.some(retained))._tag === "Current" &&
-            reviewStatusFor(changed, verified, O.some(retained))._tag === "Stale"
-          );
-        },
-        fcRuns(50)
-      );
-      expect(result._tag).toBe("Passed");
-    })
+    { interpretation: interpretations },
+    ({ interpretation: [assertion, subject] }) => {
+      const generated = ClaimEvidenceReview.make({
+        ...review,
+        basis: ClaimEvidenceBasis.make({ ...basis, assertion, subject }),
+      });
+      const retained = decodeReviewJson(encodeReviewJson(generated));
+      const changed = ClaimEvidenceBasis.make({ ...generated.basis, assertion: `${assertion} changed` });
+      expect(reviewsEquivalent(generated, retained)).toBe(true);
+      expect(reviewStatusFor(generated.basis, verified, O.some(retained))._tag).toBe("Current");
+      expect(reviewStatusFor(changed, verified, O.some(retained))._tag).toBe("Stale");
+    },
+    { arbitrary: fcRuns(50) }
   );
   it("keeps source verification separate from human approval", () => {
     expect(reviewStatusFor(basis, verified, O.none())._tag).toBe("Pending");

@@ -15,15 +15,10 @@ import {
 } from "@beep/qa-capture";
 import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, expect, layer } from "@effect/vitest";
 import { Effect, Fiber, FileSystem, Layer, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient, HttpBody, HttpClient } from "effect/unstable/http";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const witnessStub = "(()=>{/* witness stub */})();";
 const appOrigin = "http://storybook.beep.localhost:1355";
@@ -37,7 +32,7 @@ const TestLayer = Layer.mergeAll(
 const decodeEventsAccepted = S.decodeUnknownEffect(S.fromJsonString(EventsAccepted));
 const decodeMarkAccepted = S.decodeUnknownEffect(S.fromJsonString(MarkAccepted));
 
-describe("@beep/qa-capture collector", () => {
+layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it) => {
   it.effect(
     "collects NDJSON events end to end and cleans up on scope close",
     () =>
@@ -67,6 +62,8 @@ describe("@beep/qa-capture collector", () => {
         const validLines = yield* Effect.forEach([down, marker], (event) => encodeActionEventJson(event));
         const batch = [...validLines, "this is not json"].join("\n");
 
+        // This shorter scope is the subject of the cleanup assertions below:
+        // the collector must finish before we inspect its files and handle.
         yield* Effect.scoped(
           Effect.gen(function* () {
             const collector = yield* Collector;
@@ -138,7 +135,7 @@ describe("@beep/qa-capture collector", () => {
         expect(A.map(decoded, (event) => event.seq)).toEqual([1, 2, 3]);
 
         yield* fs.remove(tmpDir, { force: true, recursive: true });
-      }).pipe(provideScopedLayer(TestLayer)),
+      }),
     15000
   );
 
@@ -187,7 +184,7 @@ describe("@beep/qa-capture collector", () => {
         expect(remaining.sessionId).toBe("qa-live-foreign");
 
         yield* fs.remove(tmpDir, { force: true, recursive: true });
-      }).pipe(provideScopedLayer(TestLayer)),
+      }),
     15000
   );
 
@@ -252,7 +249,7 @@ describe("@beep/qa-capture collector", () => {
         expect(remaining.sessionId).toBe("qa-successor");
 
         yield* fs.remove(tmpDir, { force: true, recursive: true });
-      }).pipe(provideScopedLayer(TestLayer)),
+      }),
     15000
   );
 });
