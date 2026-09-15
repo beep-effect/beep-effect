@@ -49,9 +49,10 @@ const terminal: ReadonlyArray<ProcessTableEntry> = [
 const withTable =
   (table: ProcessTableShape) =>
   <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem>): Effect.Effect<A, E> =>
-    // Each test invocation owns this isolated no-op platform layer.
-    // @effect-diagnostics-next-line strictEffectProvide:off
-    effect.pipe(Effect.provideService(ProcessTable, table), Effect.provide(FileSystem.layerNoop({})));
+    effect.pipe(
+      Effect.provideService(ProcessTable, table),
+      Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({}))
+    );
 
 const pidsOf = (statuses: ReadonlyArray<{ readonly pid: number }>): ReadonlyArray<number> =>
   A.map(statuses, (status) => status.pid);
