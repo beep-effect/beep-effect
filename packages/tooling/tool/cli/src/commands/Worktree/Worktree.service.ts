@@ -30,6 +30,8 @@ import {
   descendsFromProcess,
   invokerSessionRoot,
   ProcessAttachmentKind,
+  ProcessTable,
+  processLineage,
   resolveGitCommit,
   runGitOutput,
   runGitRawOutput,
@@ -1068,12 +1070,23 @@ const describeAttachedProcesses = (attachments: A.NonEmptyReadonlyArray<ProcessA
 // The invoking session (its root process and everything running under it: the
 // CLI, its shell, the agent session, that session's MCP servers and tool
 // pipelines) is the party asking for the retirement, so a request that says so
-// exempts every holder whose parent chain passes through the session root and
-// still refuses any other: another session's shell, a stray editor.
+// exempts holders under a recognized session command. Without that proof,
+// only the invoking ancestry is exempt; terminal/worker siblings still block.
 const pidsOutsideInvokerSession = Effect.fnUntraced(function* (
   pids: ReadonlyArray<number>
 ): Effect.fn.Return<HashSet.HashSet<number>, never, FileSystem.FileSystem> {
   const root = yield* invokerSessionRoot();
+  if (root.rule === "chain-top") {
+    const table = yield* ProcessTable;
+    const chain = A.takeWhile(yield* processLineage(table.self), (status) => status.pid !== root.pid);
+    const ancestry = HashSet.fromIterable(
+      A.prepend(
+        A.map(chain, (status) => status.pid),
+        root.pid
+      )
+    );
+    return HashSet.fromIterable(A.filter(pids, (pid) => !HashSet.has(ancestry, pid)));
+  }
   const outside = yield* Effect.filter(pids, (pid) => Effect.map(descendsFromProcess(pid, root.pid), Bool.not));
   return HashSet.fromIterable(outside);
 });

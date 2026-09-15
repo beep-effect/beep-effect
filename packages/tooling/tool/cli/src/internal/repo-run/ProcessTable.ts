@@ -553,9 +553,12 @@ export const processLineage = Effect.fnUntraced(function* (
  * the top of that chain, and when even the invoking process cannot be read it
  * is the invoking process itself. A retirement started from inside a lane has
  * the CLI, its shell, the agent session, and the session's other children
- * (MCP servers, the tool shell's own pipelines) all holding that lane; they
- * are the party asking for the removal, not writers whose later output the
- * archive could lose.
+ * (MCP servers, the tool shell's own pipelines) all holding that lane.
+ * Only a `session-command` root permits the retirement fence to exempt its
+ * subtree. A `chain-top` root bounds the invoking ancestry only; sibling
+ * terminal tabs and worker jobs remain foreign holders.
+ * Exempt session children must finish writing before retirement: writes after
+ * archive capture are not preserved merely because their process is exempt.
  *
  * **Example** (Resolve the root of a scripted session)
  *

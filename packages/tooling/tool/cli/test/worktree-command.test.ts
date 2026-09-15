@@ -1510,8 +1510,9 @@ describe("worktree git operations", () => {
           ProcessTableEntry.make({ pid: 70, parent: 60, command: "zsh" }),
           ProcessTableEntry.make({ pid: 100, parent: 70, command: "bun" }),
           ProcessTableEntry.make({ pid: 90, parent: 50, command: "zsh" }),
+          ProcessTableEntry.make({ pid: 95, parent: 60, command: "zsh" }),
         ];
-        const removeUnder = (parent: number) =>
+        const removeUnder = (parent: number, sessionCommand = "claude") =>
           removalService
             .remove(
               WorktreeRemovalRequest.make({
@@ -1532,7 +1533,12 @@ describe("worktree git operations", () => {
                 processTableWithLineage({
                   base: procProcessTable,
                   self: 100,
-                  entries: A.append(session, ProcessTableEntry.make({ pid: process.pid, parent, command: "vitest" })),
+                  entries: A.append(
+                    A.map(session, (entry) =>
+                      entry.pid === 60 ? ProcessTableEntry.make({ ...entry, command: sessionCommand }) : entry
+                    ),
+                    ProcessTableEntry.make({ pid: process.pid, parent, command: "vitest" })
+                  ),
                 })
               ),
               Effect.map(() => "retired"),
@@ -1544,6 +1550,15 @@ describe("worktree git operations", () => {
             yield* fs.open(path.join(targetPath, "README.md"), { flag: "r" });
             // Under the other session's shell the descriptor is a foreign holder.
             expect(yield* removeUnder(90)).toContain(
+              `Refusing to retire ${targetPath}: pid ${process.pid} via descriptor`
+            );
+            expect(yield* fs.exists(targetPath)).toBe(true);
+            // A shared terminal is not a proven agent session: both a sibling
+            // pipeline and another tab below it must retain the archive fence.
+            expect(yield* removeUnder(70, "ghostty")).toContain(
+              `Refusing to retire ${targetPath}: pid ${process.pid} via descriptor`
+            );
+            expect(yield* removeUnder(95, "ghostty")).toContain(
               `Refusing to retire ${targetPath}: pid ${process.pid} via descriptor`
             );
             expect(yield* fs.exists(targetPath)).toBe(true);

@@ -179,7 +179,12 @@ clone), deletes the branch, and sweeps the owning clone. Run it from inside
 the lane, because `bun run beep` resolves the CLI from the checkout it runs in
 and the clone's `main` may still be behind the merge; the command steps its
 own process out of the lane before removal and the archive fence exempts the
-invoking session's ancestry. Step the shell into the swept clone afterwards:
+invoking session's subtree when a `claude` session command proves its root.
+Without that root, only the invoking ancestry is exempt: other terminal tabs
+and CI worker jobs still block retirement. Finish writes from session MCP
+servers and other exempt children before retiring the lane. Exemption permits
+retirement but does not preserve their writes after archive capture.
+Step the shell into the swept clone afterwards:
 `CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`.
 
 Forced removal is unsupported and remains denied by agent policy. Archive mode
