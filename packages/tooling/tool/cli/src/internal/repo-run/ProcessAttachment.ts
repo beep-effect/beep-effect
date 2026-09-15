@@ -312,8 +312,9 @@ export const ancestryPidsOf = (pid: number): Effect.Effect<HashSet.HashSet<numbe
  * are the party asking for the removal, not writers whose later output the
  * archive could lose, so the quiescence fence exempts this chain outright.
  * Widening it to a session's whole subtree is a separate, proven step:
- * `sessionRootOf` accepts the named pid only when the ancestor directly below
- * it on this chain was started carrying the harness marker, so membership in
+ * `sessionRootOf` accepts the named pid only when the entry immediately before
+ * it in this nearest-first chain (toward index 0 and the invoker) was started
+ * carrying the harness marker, so membership in
  * this set alone (init is always a member) never names a session.
  *
  * **Example** (Build the ancestry effect)
@@ -441,8 +442,8 @@ export const sessionRootOf = Effect.fnUntraced(function* (
 ): Effect.fn.Return<O.Option<number>, never, FileSystem.FileSystem> {
   const chain = yield* ancestryChainOf(invoker);
   const index = A.findFirstIndex(chain, (pid) => pid === marker.pid);
-  // The process one step below the session on the invoker's path is the one
-  // the session started; only its environment can prove the claim.
+  // The chain is nearest-first: the entry before the session, toward index 0
+  // and the invoker, is its child. Only that child's environment proves the claim.
   const child = O.flatMap(index, (at) => A.get(chain, at - 1));
   if (O.isNone(child)) {
     return O.none();
