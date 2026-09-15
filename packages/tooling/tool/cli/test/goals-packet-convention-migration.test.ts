@@ -920,7 +920,10 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const writeLocator = yield* makeFixture("draft-write");
       const writeApplier = yield* makeApplier({
         ...fs,
-        writeFileString: (target) => Effect.fail(injectedFileSystemError("writeFileString", target)),
+        writeFileString: (target, content, options) =>
+          Str.endsWith(".json")(target)
+            ? Effect.fail(injectedFileSystemError("writeFileString", target))
+            : fs.writeFileString(target, content, options),
       });
       expect(failureMessage(yield* Effect.exit(writeApplier.apply(writeLocator)))).toContain(
         "rebased event write failed"
@@ -953,7 +956,8 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const stagedIntegrityLocator = yield* makeFixture("staged-integrity");
       const stagedIntegrityApplier = yield* makeApplier({
         ...fs,
-        writeFileString: (target, _content, options) => fs.writeFileString(target, "not json\n", options),
+        writeFileString: (target, content, options) =>
+          fs.writeFileString(target, Str.endsWith(".json")(target) ? "not json\n" : content, options),
       });
       expect(failureMessage(yield* Effect.exit(stagedIntegrityApplier.apply(stagedIntegrityLocator)))).toContain(
         "staged repair does not pass event integrity checks"

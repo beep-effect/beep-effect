@@ -22,7 +22,12 @@ import {
   StoredPacketEvent,
 } from "../PacketCore/PacketCore.schemas.ts";
 import { packetEventDigest, packetEventFileName, renderPacketEventFile } from "../PacketCore/PacketDigest.ts";
-import { PACKET_EVENTS_SEGMENTS, PacketEventStore, PacketStreamLocator } from "../PacketCore/PacketEventStore.ts";
+import {
+  PACKET_EVENTS_SEGMENTS,
+  PacketEventStore,
+  PacketStreamLocator,
+  withPacketEventLock,
+} from "../PacketCore/PacketEventStore.ts";
 import {
   foldPacketEvents,
   planForkRepair,
@@ -309,7 +314,10 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     }
   });
 
-  const apply = Effect.fn("PacketForkRepairApplier.apply")(function* (locator: PacketStreamLocator) {
+  const applyLocked = Effect.fn("PacketForkRepairApplier.applyLocked")(function* (
+    locator: PacketStreamLocator,
+    assertOwned: Effect.Effect<void, PacketStreamError, FileSystem.FileSystem>
+  ) {
     const original = yield* store.list(locator);
     if (A.isReadonlyArrayNonEmpty(original.issues)) {
       return yield* streamError(locator.packet, "stream has integrity issues; fork repair refuses ambiguous bytes");
@@ -384,12 +392,14 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
           .pipe(
             Effect.mapError((error) => streamError(locator.packet, `repair backup staging failed: ${error.message}`))
           );
+        yield* assertOwned;
         yield* fs
           .rename(eventsDirectory, backupDirectory)
           .pipe(
             Effect.mapError((error) => streamError(locator.packet, `existing stream move failed: ${error.message}`))
           );
         yield* verifyMovedForkStream(backupLocator, original);
+        yield* assertOwned;
         yield* fs
           .rename(stagedEvents, eventsDirectory)
           .pipe(
@@ -418,6 +428,12 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
       }),
       cleanup
     );
+  });
+
+  const apply = Effect.fn("PacketForkRepairApplier.apply")(function* (locator: PacketStreamLocator) {
+    return yield* withPacketEventLock(locator, (assertOwned) =>
+      applyLocked(locator, assertOwned.pipe(Effect.mapError((error) => streamError(locator.packet, error.message))))
+    ).pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.provideService(Path.Path, path));
   });
 
   return PacketForkRepairApplier.of({ preview, apply });

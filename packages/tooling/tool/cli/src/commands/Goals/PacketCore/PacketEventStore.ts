@@ -12,7 +12,10 @@
  * of the decoded event, not the raw file bytes. Reformatting a file does not
  * change its identity. Unknown input keys are discarded by the event schema
  * before identity is computed, so untrusted extension data cannot drive the
- * recursive canonical encoder.
+ * recursive canonical encoder. Appends serialize across processes under an
+ * owned-generation lock in `ops/`, re-read the tip while holding that lock,
+ * and publish the complete event through a synced staging file and atomic
+ * rename. Interrupted staging files are never treated as committed events.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -23,6 +26,9 @@ import { A, O, pipe, Str, thunkFalse } from "@beep/utils";
 import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { assertJournalFileLockOwned, withJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
+import { publishJournalTextAtomically } from "../../../internal/repo-run/JournalFile.ts";
+import { QualitySchedulerError } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { PacketCasConflictError, PacketStreamError } from "./PacketCore.errors.ts";
 import { PacketChainIssue, PacketEvent, PacketRoot, PacketSlug, StoredPacketEvent } from "./PacketCore.schemas.ts";
 import {
@@ -82,6 +88,69 @@ export class PacketStreamLocator extends S.Class<PacketStreamLocator>($I`PacketS
     description: "Identity of one packet stream on disk (slug, root, packet directory path).",
   })
 ) {}
+
+/**
+ * Serialize a packet mutation under its process-owned event-stream lock.
+ *
+ * **Details**
+ *
+ * Appends and directory replacement must share this boundary. The callback
+ * receives an ownership check to run immediately before publishing bytes.
+ * Dead owners are recoverable; a live owner produces a typed retry refusal.
+ *
+ * **Example** (Read under the packet mutation lock)
+ *
+ * ```ts
+ * import { PacketStreamLocator, withPacketEventLock } from "@beep/repo-cli/test/Goals"
+ * import { Effect } from "effect"
+ *
+ * const locator = PacketStreamLocator.make({ packet: "demo", root: "goals", packetPath: "goals/demo" })
+ * const program = withPacketEventLock(locator, () => Effect.succeed("locked"))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param locator - Packet whose mutations must serialize.
+ * @param operation - Read-and-publish operation with its generation fence.
+ * @returns The result or a typed lock refusal, preserving caller errors.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const withPacketEventLock: {
+  <Success, Failure, Requirements>(
+    locator: PacketStreamLocator,
+    operation: (
+      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+    ) => Effect.Effect<Success, Failure, Requirements>
+  ): Effect.Effect<Success, Failure | PacketStreamError, FileSystem.FileSystem | Path.Path | Requirements>;
+  <Success, Failure, Requirements>(
+    operation: (
+      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+    ) => Effect.Effect<Success, Failure, Requirements>
+  ): (
+    locator: PacketStreamLocator
+  ) => Effect.Effect<Success, Failure | PacketStreamError, FileSystem.FileSystem | Path.Path | Requirements>;
+} = dual(
+  2,
+  Effect.fn("PacketEventStore.withLock")(function* <Success, Failure, Requirements>(
+    locator: PacketStreamLocator,
+    operation: (
+      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+    ) => Effect.Effect<Success, Failure, Requirements>
+  ) {
+    const path = yield* Path.Path;
+    const lockPath = path.join(locator.packetPath, "ops", ".packet-events.lock");
+    return yield* withJournalFileLock(
+      lockPath,
+      (lockToken) => operation(assertJournalFileLockOwned(lockPath, lockToken)),
+      undefined,
+      `Packet ${locator.packet} has another active writer; retry after it completes.`
+    ).pipe(
+      Effect.mapError((error) =>
+        S.is(QualitySchedulerError)(error) ? PacketStreamError.new(locator.packet, error.message) : error
+      )
+    );
+  })
+);
 
 /**
  * Result of reading one packet stream: verified events plus chain issues.
@@ -312,9 +381,11 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     return yield* fs.exists(eventsDir(packetPath)).pipe(Effect.orElseSucceed(thunkFalse));
   });
 
-  const list = Effect.fn("PacketEventStore.list")(function* (locator: PacketStreamLocator) {
+  const readEntries = Effect.fn("PacketEventStore.readEntries")(function* (
+    locator: PacketStreamLocator,
+    entries: ReadonlyArray<string>
+  ) {
     const directory = eventsDir(locator.packetPath);
-    const entries = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(A.empty<string>));
     const fileNames = pipe(entries, A.filter(Str.endsWith(".json")), A.sort(Order.String));
     let events = A.empty<StoredPacketEvent>();
     let issues = A.empty<PacketChainIssue>();
@@ -326,16 +397,25 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     return PacketStreamListing.make({ events, issues });
   });
 
-  const append = Effect.fn("PacketEventStore.append")(function* (locator: PacketStreamLocator, event: PacketEvent) {
+  const list = Effect.fn("PacketEventStore.list")(function* (locator: PacketStreamLocator) {
+    const entries = yield* fs.readDirectory(eventsDir(locator.packetPath)).pipe(Effect.orElseSucceed(A.empty<string>));
+    return yield* readEntries(locator, entries);
+  });
+
+  const appendLocked = Effect.fn("PacketEventStore.appendLocked")(function* (
+    locator: PacketStreamLocator,
+    event: PacketEvent,
+    assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+  ) {
     const directory = eventsDir(locator.packetPath);
-    const present = yield* hasStream(locator.packetPath);
-    if (!present) {
-      return yield* PacketStreamError.new(
-        locator.packet,
-        `"${directory}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory.`
+    const entries = yield* fs
+      .readDirectory(directory)
+      .pipe(
+        Effect.mapError((error) =>
+          PacketStreamError.new(locator.packet, `stream could not be read before append: ${error.message}`)
+        )
       );
-    }
-    const listing = yield* list(locator);
+    const listing = yield* readEntries(locator, entries);
     const derived = yield* foldUnambiguousStream(locator, listing);
     if (event.expectedRevision !== derived.revision) {
       return yield* PacketCasConflictError.make({
@@ -364,10 +444,27 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
       Effect.mapError((error) => PacketStreamError.new(locator.packet, `event could not be rendered: ${error.message}`))
     );
     const fileName = packetEventFileName(event, digest);
-    yield* fs
-      .writeFileString(path.join(directory, fileName), content)
-      .pipe(Effect.mapError((error) => PacketStreamError.new(locator.packet, `event write failed: ${String(error)}`)));
+    yield* publishJournalTextAtomically(
+      path.join(directory, fileName),
+      content,
+      `packet event for ${locator.packet}`,
+      assertOwned
+    );
     return StoredPacketEvent.make({ id: digest, fileName, event });
+  });
+
+  const append = Effect.fn("PacketEventStore.append")(function* (locator: PacketStreamLocator, event: PacketEvent) {
+    if (!(yield* hasStream(locator.packetPath))) {
+      return yield* PacketStreamError.new(
+        locator.packet,
+        `"${eventsDir(locator.packetPath)}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory.`
+      );
+    }
+    return yield* withPacketEventLock(locator, (assertOwned) => appendLocked(locator, event, assertOwned)).pipe(
+      Effect.catchTag("QualitySchedulerError", (error) => PacketStreamError.new(locator.packet, error.message)),
+      Effect.provideService(FileSystem.FileSystem, fs),
+      Effect.provideService(Path.Path, path)
+    );
   });
 
   return PacketEventStore.of({ hasStream, list, append });
