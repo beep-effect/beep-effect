@@ -79250,7 +79250,7 @@
       "line": 1487,
       "endLine": 1574,
       "symbol": "withScratchRepo",
-      "occurrence": "v2:e6a9e8c1b1c670fe837d214e19003c5ffd6bb34d4d440431c93a041e26db44c7",
+      "occurrence": "v2:0d69e09774274ea0d0384a362c93c8c03f9274101906bb8430982ce3d3de0566",
       "class": "resource-wrapper",
       "evidence": "withScratchRepo((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const removalService = yield* WorktreeRemovalService; const context = yi",
       "replacement": {
@@ -86663,7 +86663,7 @@
       "line": 1548,
       "endLine": 1569,
       "symbol": "scoped",
-      "occurrence": "v2:4210e2c6c34a45167fe7408a2e8808810820d467e91b2292462c880b26d5edc8",
+      "occurrence": "v2:d1e0e5fc310e035f73fd13d4e009054ed0b22ee410896607a618e36823f9f354",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { yield* fs.open(path.join(targetPath, \"README.md\"), { flag: \"r\" }); // Under the other session's shell the descriptor is a foreign holder. expect(yield* removeU",
       "replacement": {

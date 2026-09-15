@@ -70,10 +70,13 @@ and hosted CI has no user manager at all.
 ## Retiring the lane that ran the closeout
 
 `bun run beep yeet sweep --retire` archive-retires the linked worktree it is
-run in. The archive fence refuses a lane that any process still stands in, and
-it exempts exactly the invoker's ancestry (the CLI, its shell, the agent
-session above them); anything else holding the lane still refuses it and the
-error prints the working form. Run it as the last command of the session, from
+run in. For a recognized session-command root, the archive fence exempts that
+session's subtree, including its shell, pipelines, and MCP servers. A chain-top
+fallback (such as a plain terminal or CI process) exempts only the invoking
+ancestry; sibling pipelines and other terminal tabs still block. Exempt children
+must finish writes before archive capture. Any holder outside the applicable
+exemption refuses retirement and the error prints the working form.
+Run it as the last command of the session, from
 inside the lane, and step the shell into the swept clone afterwards:
 
 ```bash
@@ -85,9 +88,8 @@ the checkout it runs in, so the lane always carries the merged flags while the
 clone's `main` may still be behind the merge and reject `--retire` as an
 unknown flag (observed 2026-09-12 on the first closeout). The command moves
 its own process out of the lane before removal, so the shell may stay in the
-lane during the run; the fence exempts the invoking session's whole process
-tree (its shell, the pipelines that shell runs, its MCP servers) and refuses
-only holders from outside it. `--lane <path>` names the lane when the command
+lane during the run under the applicable exemption described above.
+`--lane <path>` names the lane when the command
 runs from a clone that already carries the merged CLI; without it the command
 retires the checkout it runs in. `--json` prints one
 schema-owned document (`yeet-retire-sweep-plan/v1` with `--plan`,

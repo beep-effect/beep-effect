@@ -220,10 +220,11 @@ CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run b
   merge and reject `--retire` as an unknown flag. The command steps its own
   process out of the lane before removal; the trailing `cd` moves your shell
   to the swept clone. `--lane <path>` is for a clone that already carries the
-  merged CLI. The fence exempts the invoking session's whole process tree
-  (the agent session, its shell and the pipelines that shell runs, its MCP
-  servers) and refuses any process from outside it still standing in the
-  lane. `--json` prints one document; `--branch` is refused with `--retire`.
+  merged CLI. A recognized session-command root exempts its subtree, including
+  its shell, pipelines, and MCP servers. A chain-top fallback (plain terminal
+  or CI) exempts only the invoking ancestry; sibling pipelines and other tabs
+  still block. Exempt children must finish writes before archive capture.
+  `--json` prints one document; `--branch` is refused with `--retire`.
 
 - Post and resolve the drafted review-thread replies for this branch's PR:
 

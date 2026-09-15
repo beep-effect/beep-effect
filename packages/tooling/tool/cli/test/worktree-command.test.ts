@@ -1483,7 +1483,7 @@ describe("worktree git operations", () => {
     )
   );
 
-  it.effect("exempts a holder under the invoking session root and still refuses one from another session", () =>
+  it.effect.each(["claude", "ghostty"])("exempts permitted ancestry holders and refuses siblings (%s)", (rootCommand) =>
     withScratchRepo((repoRoot) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -1512,7 +1512,7 @@ describe("worktree git operations", () => {
           ProcessTableEntry.make({ pid: 90, parent: 50, command: "zsh" }),
           ProcessTableEntry.make({ pid: 95, parent: 60, command: "zsh" }),
         ];
-        const removeUnder = (parent: number, sessionCommand = "claude") =>
+        const removeUnder = (parent: number, sessionCommand = "claude", self = 100) =>
           removalService
             .remove(
               WorktreeRemovalRequest.make({
@@ -1532,7 +1532,7 @@ describe("worktree git operations", () => {
                 ProcessTable,
                 processTableWithLineage({
                   base: procProcessTable,
-                  self: 100,
+                  self,
                   entries: A.append(
                     A.map(session, (entry) =>
                       entry.pid === 60 ? ProcessTableEntry.make({ ...entry, command: sessionCommand }) : entry
@@ -1562,9 +1562,9 @@ describe("worktree git operations", () => {
               `Refusing to retire ${targetPath}: pid ${process.pid} via descriptor`
             );
             expect(yield* fs.exists(targetPath)).toBe(true);
-            // Under the session's own shell it is the invoker: the same open
-            // descriptor no longer blocks the retirement.
-            expect(yield* removeUnder(70)).toBe("retired");
+            // A recognized session exempts its descendants. A terminal fallback
+            // must also permit the holder when it is the invoking process itself.
+            expect(yield* removeUnder(70, rootCommand, rootCommand === "ghostty" ? process.pid : 100)).toBe("retired");
           })
         );
         expect(yield* fs.exists(targetPath)).toBe(false);

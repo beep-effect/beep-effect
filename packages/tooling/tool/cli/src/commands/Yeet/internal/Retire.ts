@@ -179,11 +179,11 @@ export const planRetire = Effect.fn("Yeet.planRetire")(function* (context: RepoR
  * preserved under the residue root rather than blocking the closeout. The
  * archive fence refuses a lane any process still stands in; this command
  * first moves its own working directory to the owning clone and asks the
- * fence to exempt the invoking session's process tree (the agent session
- * that started it and everything running under it: its shell, its MCP
- * servers, the pipelines the shell runs), so retiring the lane one is
- * standing in works, while a holder from outside that session still refuses
- * it with the command that would work instead.
+ * fence to exempt the subtree of a recognized session-command root. A
+ * chain-top fallback instead exempts only the invoking ancestry; sibling
+ * pipelines and other terminal tabs still block retirement. Exempt children,
+ * including session MCP servers, must finish writes before archive capture.
+ * Holders outside the applicable exemption refuse retirement with a retry hint.
  *
  * **Example** (Build the retirement effect)
  *
@@ -253,11 +253,11 @@ const isWithin = (path: Path.Path, root: string, candidate: string): boolean =>
  *
  * **Details**
  *
- * A holder the fence could not exempt is a process outside the invoking
- * session's process tree: a shell or editor from another session, or a job
- * that detached from this one and was reparented to the service manager. The
- * session's own shell, the pipelines that shell runs, and its MCP servers are
- * exempt. The hint says to leave or close the holders and rerun from the
+ * A recognized session-command root exempts its subtree. A chain-top fallback
+ * exempts only the invoking ancestry, so sibling pipelines or other terminal
+ * tabs can block even under the same terminal root. Exempt session children
+ * must finish writes before archive capture. The hint says to leave or close
+ * holders outside the applicable exemption and rerun from the
  * lane, because `bun run beep` resolves the CLI from the checkout it runs in
  * and the owning clone's `main` may still be behind the merge; the `--lane`
  * form is kept for a clone that already carries the merged CLI. Any other
@@ -284,7 +284,7 @@ export const retirementFailureMessage: {
   (message: string): (plan: YeetRetirePlan) => string;
 } = dual(2, (plan: YeetRetirePlan, message: string): string =>
   Str.includes("still hold it")(message)
-    ? `yeet sweep --retire could not retire ${plan.worktreePath}: ${message} Those holders run outside the invoking session (a shell or editor from another session, or a job that detached from this one): leave or close them and rerun from the lane: bun run beep yeet sweep --retire. From a clone that already carries the merged CLI: cd "${plan.owningClone}" && bun run beep yeet sweep --retire --lane "${plan.worktreePath}"`
+    ? `yeet sweep --retire could not retire ${plan.worktreePath}: ${message} Those holders are outside the applicable exemption: a recognized session-command exempts its subtree; a chain-top fallback exempts only the invoking ancestry. Leave or close the holders and rerun from the lane: bun run beep yeet sweep --retire. From a clone that already carries the merged CLI: cd "${plan.owningClone}" && bun run beep yeet sweep --retire --lane "${plan.worktreePath}"`
     : `yeet sweep --retire could not retire ${plan.worktreePath}: ${message}`
 );
 
