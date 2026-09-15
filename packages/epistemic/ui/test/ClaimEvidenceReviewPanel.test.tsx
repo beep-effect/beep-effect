@@ -6,9 +6,11 @@ import {
   ClaimEvidenceVerification,
 } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import { ClaimEvidenceReviewPanel } from "@beep/epistemic-ui";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { constVoid } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { renderToStaticMarkup } from "react-dom/server";
 
 const decodeExplanation = S.decodeUnknownSync(ClaimEvidenceExplanation);
@@ -42,8 +44,30 @@ const review = decodeReview({
   reviewedBy: { kind: "User", userId: 1 },
   reviewedAt: 0,
 });
+const confidenceArbitrary = Arbitrary.schema(ClaimEvidenceBasis.fields.evidence.fields.confidence);
 
 describe("ClaimEvidenceReviewPanel", () => {
+  it.prop(
+    "never presents extraction confidence as human approval",
+    { confidence: confidenceArbitrary },
+    ({ confidence }) => {
+      const scored = ClaimEvidenceExplanation.make({
+        ...explanation,
+        basis: ClaimEvidenceBasis.make({
+          ...explanation.basis,
+          evidence: ClaimEvidenceBasis.fields.evidence.make({ ...explanation.basis.evidence, confidence }),
+        }),
+      });
+      const markup = renderToStaticMarkup(<ClaimEvidenceReviewPanel explanation={scored} onApprove={constVoid} />);
+
+      expect(markup).toContain("Awaiting review");
+      expect(markup).toContain("Approve this claim");
+      expect(markup).not.toContain("Claim approved");
+      expect(markup).not.toContain('disabled=""');
+    },
+    { arbitrary: fcRuns(50) }
+  );
+
   it("shows the exact evidence and keeps verification separate from human approval", () => {
     const markup = renderToStaticMarkup(<ClaimEvidenceReviewPanel explanation={explanation} onApprove={constVoid} />);
 
