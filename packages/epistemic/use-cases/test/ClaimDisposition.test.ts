@@ -7,6 +7,7 @@ import {
 import { makeClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -69,6 +70,33 @@ const admittedInput = decodeOutcomeInput({
 });
 
 describe("@beep/epistemic-use-cases claim disposition", () => {
+  it.layer(inMemoryClaimDispositions, { timeout: "10 seconds" })("rejections without violations", (it) => {
+    it.effect(
+      "persists an explanatory fallback without advancing the claim",
+      Effect.fnUntraced(function* () {
+        const dispositions = yield* ClaimDispositionRepository;
+        const resolver = makeClaimGateOutcomeResolver(dispositions, makeClaimTransition());
+        const input = ClaimGateOutcomeInput.make({
+          ...rejectedInput,
+          gateResult: { verdict: "rejected", violations: [] },
+        });
+
+        const outcome = yield* resolver.resolve(input);
+        const persisted = yield* dispositions.listByClaim(input.claim.id);
+
+        expect(outcome.claim).toStrictEqual(input.claim);
+        expect(persisted).toMatchObject([
+          {
+            reason: "Claim gate rejected the claim without an explanatory violation.",
+            status: ClaimDispositionStatus.Enum.rejected,
+            violations: [],
+          },
+        ]);
+        assertSome(outcome.disposition, persisted[0]);
+      })
+    );
+  });
+
   // The stub repository is the only dependency the resolver does not build itself.
   it.layer(inMemoryClaimDispositions)("resolving a claim gate verdict", (it) => {
     it.effect(
