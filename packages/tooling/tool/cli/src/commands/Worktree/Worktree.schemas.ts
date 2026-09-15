@@ -274,7 +274,8 @@ export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
  * relative so they can be copied back without rewriting their layout.
  * `upstream` keeps the branch-upstream state the residue decision was made
  * under, so a remote branch pruned after its merge is documented next to the
- * commits it left behind.
+ * commits it left behind. Older manifests that omit `upstream` decode as
+ * `unset`; their archived files and commit references remain readable.
  *
  * **Example** (Describe archived untracked residue)
  *
@@ -315,7 +316,9 @@ export class WorktreeResidueManifest extends S.Class<WorktreeResidueManifest>($I
     untrackedFiles: S.Array(S.String),
     residueRoot: S.String,
     reason: WorktreeResidueReason,
-    upstream: WorktreeUpstreamState,
+    upstream: WorktreeUpstreamState.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(WorktreeUpstreamState.cases.unset.make({})))
+    ),
   },
   $I.annote("WorktreeResidueManifest", {
     description:

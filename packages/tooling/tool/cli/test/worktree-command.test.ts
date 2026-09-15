@@ -343,6 +343,28 @@ describe("parseWorktreePorcelain", () => {
 });
 
 describe("WorktreeResidueManifest", () => {
+  it.effect("decodes archived manifests written before upstream evidence was recorded", () =>
+    Effect.gen(function* () {
+      const manifest = yield* decodeResidueManifest(`{
+        "name": "feature-x",
+        "branch": "feat/feature-x",
+        "head": "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
+        "archivedAt": "2026-09-02T12:34:56.000Z",
+        "archiveRef": "refs/archive/worktrees/feature-x/20260902-123456",
+        "repositoryHash": "0123456789ab",
+        "patchPath": null,
+        "untrackedFiles": ["notes.txt"],
+        "residueRoot": "/cache/beep-effect-0123456789ab/feature-x-20260902-123456",
+        "reason": "dirty+unpushed"
+      }`);
+      expect(manifest.upstream).toEqual({ _tag: "unset" });
+      expect(manifest.untrackedFiles).toEqual(["notes.txt"]);
+      expect(manifest.archiveRef).toBe("refs/archive/worktrees/feature-x/20260902-123456");
+      const decoded = yield* encodeResidueManifest(manifest).pipe(Effect.flatMap(decodeResidueManifest));
+      expect(decoded).toEqual(manifest);
+    })
+  );
+
   it.effect("round-trips through its JSON codec", () =>
     Effect.gen(function* () {
       const manifest = yield* decodeResidueManifestValue({
@@ -1477,12 +1499,13 @@ describe("worktree git operations", () => {
         const probe = Layer.succeed(
           WorktreeMergedPullRequestProbe,
           WorktreeMergedPullRequestProbe.of({
-            mergedAtHead: (_cwd, askedBranch, askedHead) =>
+            mergedAtHead: Effect.fn("WorktreeMergedPullRequestProbe.mergedAtHead")((_cwd, askedBranch, askedHead) =>
               Effect.succeed(
                 Str.Equivalence(askedBranch, branch) && Str.Equivalence(askedHead, head)
                   ? O.some(PosInt.make(1098))
                   : O.none()
-              ),
+              )
+            ),
           })
         );
         const receipt = yield* Effect.gen(function* () {
