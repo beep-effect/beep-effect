@@ -238,13 +238,21 @@ if (
     const controlledIt = makeIt(controlled.clock);
     controlledIt.effect(
       "tiny positive timeout",
-      () =>
-        Effect.gen(function* () {
+      (context) => {
+        // Vitest has armed the outer 5s deadline before calling this factory.
+        // Instrumentation snapshots task metadata after the factory returns,
+        // so the controlled watchdog still exercises the exact 25ms budget.
+        // This keeps CI scheduling latency outside the tiny-budget assertion.
+        context.task.timeout = 25;
+        return Effect.gen(function* () {
           yield* controlled.awaitArmed;
+          // Real setup can exceed 25ms without consuming controlled time.
+          yield* diagnosticClock.sleep(Duration.millis(50));
           yield* controlled.advance("12.5 millis");
           return yield* Effect.never;
-        }).pipe(Effect.ensuring(Effect.sync(() => recordCleanup("tiny body released\n")))),
-      { timeout: 25 }
+        }).pipe(Effect.ensuring(Effect.sync(() => recordCleanup("tiny body released\n"))));
+      },
+      { timeout: 5000 }
     );
   }
 
