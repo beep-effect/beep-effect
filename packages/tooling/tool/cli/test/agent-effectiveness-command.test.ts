@@ -6,6 +6,7 @@ import {
   AgentEffectivenessPromptBundle,
 } from "@beep/repo-ai-metrics";
 import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness";
+import { AgentConventionComparison } from "@beep/repo-cli/test/AgentEffectiveness";
 import { fcRuns, privacySafeSystemTempRoot } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -23,6 +24,7 @@ const decodeAnnotationCheckReport = S.decodeUnknownEffect(S.fromJsonString(Agent
 const decodeDatasetBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessDatasetBundle));
 const decodePhoenixSyncResult = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessPhoenixSyncResult));
 const decodePromptBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));
+const decodeConventionComparison = S.decodeUnknownEffect(S.fromJsonString(AgentConventionComparison));
 const decodeDoctorReportResult = S.decodeUnknownResult(S.fromJsonString(AgentEffectivenessDoctorReport));
 const decodeAnnotationCheckReportResult = S.decodeUnknownResult(
   S.fromJsonString(AgentEffectivenessAnnotationCheckReport)
@@ -40,12 +42,12 @@ const AnnotationCheckReportArbitrary = Arbitrary.schema(AgentEffectivenessAnnota
 const PhoenixSyncResultArbitrary = Arbitrary.schema(AgentEffectivenessPhoenixSyncResult);
 const PromptBundleArbitrary = Arbitrary.schema(AgentEffectivenessPromptBundle);
 
-const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
+const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1, reported = false) => {
   expect(Exit.isFailure(exit)).toBe(true);
   if (Exit.isFailure(exit)) {
     const error = Cause.squash(exit.cause);
     expect(Runtime.getErrorExitCode(error)).toBe(exitCode);
-    expect(Runtime.getErrorReported(error)).toBe(false);
+    expect(Runtime.getErrorReported(error)).toBe(reported);
   }
 };
 
@@ -115,6 +117,65 @@ const lastLoggedLine = Effect.fn("AgentEffectivenessCommandTest.lastLoggedLine")
 });
 
 describe("agent-effectiveness command", () => {
+  it.effect("compares declared convention receipts through CLI flags", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const baseline = yield* path.fromFileUrl(
+        new URL("./fixtures/agent-effectiveness/comparison/baseline.json", import.meta.url)
+      );
+      const candidate = yield* path.fromFileUrl(
+        new URL("./fixtures/agent-effectiveness/comparison/candidate.json", import.meta.url)
+      );
+      yield* runAgentEffectivenessCommand([
+        "evals",
+        "compare",
+        "--baseline",
+        baseline,
+        "--candidate",
+        candidate,
+        "--fail-incomparable",
+      ]);
+      const report = yield* decodeConventionComparison(yield* lastLoggedLine());
+      expect(report.result).toMatchObject({ _tag: "Comparable", changedSurface: "navigation" });
+      expect(report.baseline.runId).not.toBe(report.candidate.runId);
+    }).pipe(provideScopedLayer(CommandTestLayer))
+  );
+
+  it.effect("prints an incomparable report before applying the optional CLI failure gate", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const baseline = yield* path.fromFileUrl(
+        new URL("./fixtures/agent-effectiveness/comparison/baseline.json", import.meta.url)
+      );
+      const args = ["evals", "compare", "--baseline", baseline, "--candidate", baseline];
+      yield* runAgentEffectivenessCommand(args);
+      const report = yield* decodeConventionComparison(yield* lastLoggedLine());
+      expect(report.result).toEqual({ _tag: "Incomparable", reasons: ["run-reused", "surface-count"] });
+      expectReportedExit(
+        yield* Effect.exit(runAgentEffectivenessCommand(A.append(args, "--fail-incomparable"))),
+        1,
+        true
+      );
+      const gatedReport = yield* decodeConventionComparison(yield* lastLoggedLine());
+      expect(gatedReport).toEqual(report);
+    }).pipe(provideScopedLayer(CommandTestLayer))
+  );
+
+  it.effect("refuses a malformed convention receipt without printing a partial report", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const path = yield* Path.Path;
+        const malformed = path.join(tmpDir, "malformed-trial.json");
+        yield* writeText(malformed, "{ invalid JSON");
+        const exit = yield* Effect.exit(
+          runAgentEffectivenessCommand(["evals", "compare", "--baseline", malformed, "--candidate", malformed])
+        );
+        expectReportedExit(exit, 1, true);
+        expect(yield* TestConsole.logLines).toEqual([]);
+      })
+    )
+  );
+
   it("round-trips schema-derived report data through JSON command boundaries", () =>
     expect(
       Effect.runSync(

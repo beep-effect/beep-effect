@@ -122,18 +122,18 @@ export const compareAgentConventionTrials: {
   )
     reasons = A.append(reasons, "task-mismatch");
   if (!hasValidScore(baseline) || !hasValidScore(candidate)) reasons = A.append(reasons, "invalid-score");
-  if (A.length(changedSurfaces) !== 1) reasons = A.append(reasons, "surface-count");
-  const result = A.match(reasons, {
-    onEmpty: () =>
-      A.match(changedSurfaces, {
-        onEmpty: () => Decision.cases.Incomparable.make({ reasons: ["surface-count"] }),
-        onNonEmpty: ([changedSurface]) =>
+  if (A.length(changedSurfaces) > 1) reasons = A.append(reasons, "surface-count");
+  const result = A.match(changedSurfaces, {
+    onEmpty: () => Decision.cases.Incomparable.make({ reasons: A.append(reasons, "surface-count") }),
+    onNonEmpty: ([changedSurface]) =>
+      A.match(reasons, {
+        onEmpty: () =>
           Decision.cases.Comparable.make({
             changedSurface,
             differences: differences(baseline, candidate),
           }),
+        onNonEmpty: (reasons) => Decision.cases.Incomparable.make({ reasons }),
       }),
-    onNonEmpty: (reasons) => Decision.cases.Incomparable.make({ reasons }),
   });
   return AgentConventionComparison.make({
     schemaVersion: "agent-convention-comparison/v1",
