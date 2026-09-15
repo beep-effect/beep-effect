@@ -117,54 +117,63 @@ const lastLoggedLine = Effect.fn("AgentEffectivenessCommandTest.lastLoggedLine")
 });
 
 describe("agent-effectiveness command", () => {
-  it.effect("compares declared convention receipts through CLI flags", () =>
-    Effect.gen(function* () {
-      const path = yield* Path.Path;
-      const baseline = yield* path.fromFileUrl(
-        new URL("./fixtures/agent-effectiveness/comparison/baseline.json", import.meta.url)
-      );
-      const candidate = yield* path.fromFileUrl(
-        new URL("./fixtures/agent-effectiveness/comparison/candidate.json", import.meta.url)
-      );
-      yield* runAgentEffectivenessCommand([
-        "evals",
-        "compare",
-        "--baseline",
-        baseline,
-        "--candidate",
-        candidate,
-        "--fail-incomparable",
-      ]);
-      const report = yield* decodeConventionComparison(yield* lastLoggedLine());
-      expect(report.result).toMatchObject({ _tag: "Comparable", changedSurface: "navigation" });
-      expect(report.baseline.runId).not.toBe(report.candidate.runId);
-    }).pipe(provideScopedLayer(CommandTestLayer))
-  );
-
-  it.effect("prints an incomparable report before applying the optional CLI failure gate", () =>
-    Effect.gen(function* () {
-      const path = yield* Path.Path;
-      const baseline = yield* path.fromFileUrl(
-        new URL("./fixtures/agent-effectiveness/comparison/baseline.json", import.meta.url)
-      );
-      const args = ["evals", "compare", "--baseline", baseline, "--candidate", baseline];
-      yield* runAgentEffectivenessCommand(args);
-      const report = yield* decodeConventionComparison(yield* lastLoggedLine());
-      expect(report.result).toEqual({ _tag: "Incomparable", reasons: ["run-reused", "surface-count"] });
-      expectReportedExit(
-        yield* Effect.exit(runAgentEffectivenessCommand(A.append(args, "--fail-incomparable"))),
-        1,
-        true
-      );
-      const gatedReport = yield* decodeConventionComparison(yield* lastLoggedLine());
-      expect(gatedReport).toEqual(report);
-    }).pipe(provideScopedLayer(CommandTestLayer))
-  );
-
-  it.effect("refuses a malformed convention receipt without printing a partial report", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
+  it.layer(CommandTestLayer, { timeout: "10 seconds" })("comparable convention receipts", (layerIt) => {
+    layerIt.effect("compares declared convention receipts through CLI flags", () =>
+      Effect.gen(function* () {
         const path = yield* Path.Path;
+        const baseline = yield* path.fromFileUrl(
+          new URL("./fixtures/agent-effectiveness/comparison/baseline.json", import.meta.url)
+        );
+        const candidate = yield* path.fromFileUrl(
+          new URL("./fixtures/agent-effectiveness/comparison/candidate.json", import.meta.url)
+        );
+        yield* runAgentEffectivenessCommand([
+          "evals",
+          "compare",
+          "--baseline",
+          baseline,
+          "--candidate",
+          candidate,
+          "--fail-incomparable",
+        ]);
+        const report = yield* decodeConventionComparison(yield* lastLoggedLine());
+        expect(report.result).toMatchObject({ _tag: "Comparable", changedSurface: "navigation" });
+        expect(report.baseline.runId).not.toBe(report.candidate.runId);
+      })
+    );
+  });
+
+  it.layer(CommandTestLayer, { timeout: "10 seconds" })("incomparable convention receipts", (layerIt) => {
+    layerIt.effect("prints an incomparable report before applying the optional CLI failure gate", () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const baseline = yield* path.fromFileUrl(
+          new URL("./fixtures/agent-effectiveness/comparison/baseline.json", import.meta.url)
+        );
+        const args = ["evals", "compare", "--baseline", baseline, "--candidate", baseline];
+        yield* runAgentEffectivenessCommand(args);
+        const report = yield* decodeConventionComparison(yield* lastLoggedLine());
+        expect(report.result).toEqual({ _tag: "Incomparable", reasons: ["run-reused", "surface-count"] });
+        expectReportedExit(
+          yield* Effect.exit(runAgentEffectivenessCommand(A.append(args, "--fail-incomparable"))),
+          1,
+          true
+        );
+        const gatedReport = yield* decodeConventionComparison(yield* lastLoggedLine());
+        expect(gatedReport).toEqual(report);
+      })
+    );
+  });
+
+  it.layer(CommandTestLayer, { timeout: "10 seconds" })("malformed convention receipts", (layerIt) => {
+    layerIt.effect("refuses a malformed convention receipt without printing a partial report", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({
+          directory: privacySafeSystemTempRoot(),
+          prefix: "beep-agent-convention-",
+        });
         const malformed = path.join(tmpDir, "malformed-trial.json");
         yield* writeText(malformed, "{ invalid JSON");
         const exit = yield* Effect.exit(
@@ -173,8 +182,8 @@ describe("agent-effectiveness command", () => {
         expectReportedExit(exit, 1, true);
         expect(yield* TestConsole.logLines).toEqual([]);
       })
-    )
-  );
+    );
+  });
 
   it("round-trips schema-derived report data through JSON command boundaries", () =>
     expect(
