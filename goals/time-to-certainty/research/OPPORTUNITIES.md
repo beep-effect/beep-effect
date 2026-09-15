@@ -1303,6 +1303,21 @@ was attempted under the marker-only amendment.
   environment before admitting the type-check gates. Keep these gates unproven
   until their exact commands pass in a compatible session.
 
+## 2026-09-12 — The operator was the PR-event notification path during the C3 closeout train
+
+- **Doing:** babysitting #1102, #1126, #1130, and #1131 to merge-ready while implementation ran
+  in detached Codex lanes.
+- **Evidence:** three times the orchestrator learned of a PR event from the operator rather than
+  from tooling ("1102 is conflicted.", "PR comment on 1126", "conflicts on 1130"). `yeet monitor`
+  blocks until the board ends or the first red; `--watch` polls at 10 s but delivers only at the
+  next tool boundary through the inbox hook, so an orchestrator idle between rounds (or restarted
+  twice that day) acts on nothing until it moves. One push produced about twenty check events and
+  three review threads on one head.
+- **Would have prevented it:** an idle-wake delivery of watch transitions (conflict, thread,
+  first red) into the owning session, coalesced per head so one push becomes one actionable wake,
+  with attribution before any fixer lane launches. Captured as
+  `explorations/pr-event-awareness`, a capture-stage exploration packet; not scheduled.
+
 ## 2026-09-13 — A refs-check flood truncated the Lint Policy capture and hid the failing step
 
 - **Doing:** attributing a required Lint Policy red on #1131 (head 448700281a).
