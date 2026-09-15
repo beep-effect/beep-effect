@@ -18,7 +18,7 @@ import { ISOStr } from "@beep/schema/Timestamp";
 import { A, Str } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { ProcessPid } from "../../internal/repo-run/ProcessAttachment.ts";
+import { ProcessPid } from "../../internal/repo-run/ProcessTable.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");
 
@@ -458,6 +458,12 @@ export class WorktreeInvokerExemption extends S.Class<WorktreeInvokerExemption>(
  * fails the deletion instead of orphaning commits; directory removal never
  * touches the shared object store.
  *
+ * `exemptInvoker` selects the explicit ancestry and harness-marker proof used
+ * by Yeet. It takes precedence over `exemptInvokerSession`, even when its
+ * marker cannot be proven. Callers that omit `exemptInvoker` may request
+ * command-name inference with `exemptInvokerSession`; without either request,
+ * every attached process remains a holder.
+ *
  * **Example** (Request archive retirement)
  *
  * ```ts
@@ -493,6 +499,12 @@ export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`W
     // session's helpers stand in; they are the invoker, not writers the
     // archive could lose.
     exemptInvoker: S.optionalKey(WorktreeInvokerExemption),
+    // Callers may explicitly request command-name inference when no
+    // `exemptInvoker` proof is supplied. An explicit proof always takes precedence,
+    // including when its marker cannot be proven. A recognized session-command root exempts its subtree. A chain-top
+    // fallback exempts only the invoking ancestry, retaining sibling holders.
+    // Exempt children must finish their writes before archive capture.
+    exemptInvokerSession: S.optionalKey(S.Boolean),
   },
   $I.annote("WorktreeRemovalRequest", {
     description:

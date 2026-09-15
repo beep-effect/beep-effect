@@ -7,21 +7,20 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect, FileSystem, Match, pipe } from "effect";
+import { Effect, FileSystem, Match } from "effect";
 import * as A from "effect/Array";
 import { constant } from "effect/Function";
 import * as HashSet from "effect/HashSet";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ProcessPid, ProcessStatus, ProcessTable, processLineage } from "./ProcessTable.ts";
+import type { ProcessTableShape } from "./ProcessTable.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/ProcessAttachment");
 
-const PID_DIRECTORY_NAME = /^[0-9]+$/u;
 const PID_SCAN_CONCURRENCY = 8;
-const LINK_SCAN_CONCURRENCY = 16;
 
 /**
  * How a process holds a path inside a scanned directory.
@@ -50,36 +49,6 @@ export const ProcessAttachmentKind = LiteralKit(["cwd", "descriptor"]).pipe(
  * @since 0.0.0
  */
 export type ProcessAttachmentKind = typeof ProcessAttachmentKind.Type;
-
-/**
- * Numeric `/proc` entry name of a running process.
- *
- * **Example** (Recognize a pid)
- *
- * ```ts
- * import { ProcessPid } from "@beep/repo-cli/test/RepoRun"
- * import * as S from "effect/Schema"
- *
- * console.log(S.is(ProcessPid)(4242)) // true
- * console.log(S.is(ProcessPid)(0)) // false
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const ProcessPid = S.Int.check(S.isGreaterThan(0)).pipe(
-  $I.annoteSchema("ProcessPid", {
-    description: "Numeric /proc entry name of a running process.",
-  })
-);
-
-/**
- * Pid accepted by the `/proc` scans.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ProcessPid = typeof ProcessPid.Type;
 
 /**
  * One same-uid process holding a path inside a scanned directory.
@@ -119,54 +88,39 @@ const isPathWithin =
   (candidate: string): boolean =>
     Str.Equivalence(candidate, root) || Str.startsWith(`${root}/`)(candidate);
 
-const readLinkTarget = Effect.fnUntraced(function* (
-  link: string
-): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  return yield* fs.readLink(link).pipe(Effect.option);
-});
-
 const attachmentWithin =
   (pid: number, kind: ProcessAttachmentKind, within: (candidate: string) => boolean) =>
-  (target: O.Option<string>): O.Option<ProcessAttachment> =>
-    pipe(
-      target,
-      O.filter(within),
-      O.map((held) => ProcessAttachment.make({ pid, kind, target: held }))
-    );
+  (target: string): O.Option<ProcessAttachment> =>
+    O.map(O.liftPredicate(target, within), (held) => ProcessAttachment.make({ pid, kind, target: held }));
 
 const cwdAttachments = Effect.fnUntraced(function* (
+  table: ProcessTableShape,
   pid: number,
   within: (candidate: string) => boolean
 ): Effect.fn.Return<ReadonlyArray<ProcessAttachment>, never, FileSystem.FileSystem> {
-  const cwd = yield* readLinkTarget(`/proc/${pid}/cwd`);
-  return cwd.pipe(attachmentWithin(pid, "cwd", within), A.fromOption);
+  const cwd = yield* table.cwd(pid);
+  return A.fromOption(O.flatMap(cwd, attachmentWithin(pid, "cwd", within)));
 });
 
 const descriptorAttachments = Effect.fnUntraced(function* (
+  table: ProcessTableShape,
   pid: number,
   within: (candidate: string) => boolean
 ): Effect.fn.Return<ReadonlyArray<ProcessAttachment>, never, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const names = yield* fs.readDirectory(`/proc/${pid}/fd`).pipe(Effect.option);
-  if (O.isNone(names)) {
-    return A.empty();
-  }
-  const targets = yield* Effect.forEach(names.value, (name) => readLinkTarget(`/proc/${pid}/fd/${name}`), {
-    concurrency: LINK_SCAN_CONCURRENCY,
-  });
+  const targets = yield* table.descriptors(pid);
   return A.getSomes(A.map(targets, attachmentWithin(pid, "descriptor", within)));
 });
 
 const pidAttachments = (
+  table: ProcessTableShape,
   pid: number,
   within: (candidate: string) => boolean,
   kinds: ReadonlyArray<ProcessAttachmentKind>
 ): Effect.Effect<ReadonlyArray<ProcessAttachment>, never, FileSystem.FileSystem> =>
   Effect.forEach(kinds, (kind) =>
     Match.value(kind).pipe(
-      Match.when("cwd", () => cwdAttachments(pid, within)),
-      Match.when("descriptor", () => descriptorAttachments(pid, within)),
+      Match.when("cwd", () => cwdAttachments(table, pid, within)),
+      Match.when("descriptor", () => descriptorAttachments(table, pid, within)),
       Match.exhaustive
     )
   ).pipe(Effect.map(A.flatten));
@@ -190,6 +144,8 @@ const pidAttachments = (
  * directory withholds the result. Reading descriptors visits every
  * `/proc/<pid>/fd` link, which is the thorough form a destructive step wants;
  * a cwd-only scan is the cheap form a liveness probe repeats per candidate.
+ * The table is read through the `ProcessTable` reference, so a test can
+ * substitute a scripted one.
  *
  * **Example** (Find the invoking process through its cwd)
  *
@@ -210,19 +166,14 @@ export const scanProcessAttachments = Effect.fnUntraced(function* (
   request: ProcessAttachmentScan
 ): Effect.fn.Return<O.Option<ReadonlyArray<ProcessAttachment>>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const names = yield* fs.readDirectory("/proc").pipe(Effect.option);
+  const table = yield* ProcessTable;
+  const pids = yield* table.pids;
   const resolved = yield* fs.realPath(request.directory).pipe(Effect.option);
-  if (O.isNone(names) || O.isNone(resolved)) {
+  if (O.isNone(pids) || O.isNone(resolved)) {
     return O.none();
   }
   const within = isPathWithin(resolved.value);
-  const pids = pipe(
-    names.value,
-    A.filter((name) => PID_DIRECTORY_NAME.test(name)),
-    A.map(N.parse),
-    A.getSomes
-  );
-  const attachments = yield* Effect.forEach(pids, (pid) => pidAttachments(pid, within, request.kinds), {
+  const attachments = yield* Effect.forEach(pids.value, (pid) => pidAttachments(table, pid, within, request.kinds), {
     concurrency: PID_SCAN_CONCURRENCY,
   });
   return O.some(A.flatten(attachments));
@@ -263,16 +214,23 @@ export const ancestryChainOf = Effect.fnUntraced(function* (
   pid: number
 ): Effect.fn.Return<ReadonlyArray<number>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const seen = MutableHashSet.empty<number>();
-  let chain: ReadonlyArray<number> = A.empty();
-  let current = pid;
-  while (current > 0 && !MutableHashSet.has(seen, current)) {
-    MutableHashSet.add(seen, current);
-    chain = A.append(chain, current);
-    const status = yield* fs.readFileString(`/proc/${current}/status`).pipe(Effect.option);
-    current = O.getOrElse(O.flatMap(status, parentPidOf), noParent);
-  }
-  return chain;
+  // Read the real kernel ancestry for marker proofs even when attachment scans
+  // use a scripted table. An unreadable status retains the current pid and stops.
+  const chain = yield* processLineage(pid, (current) =>
+    fs.readFileString(`/proc/${current}/status`).pipe(
+      Effect.option,
+      Effect.map((status) =>
+        O.some(
+          ProcessStatus.make({
+            pid: current,
+            parent: O.getOrElse(O.flatMap(status, parentPidOf), noParent),
+            command: "",
+          })
+        )
+      )
+    )
+  );
+  return A.map(chain, (status) => status.pid);
 });
 
 /**

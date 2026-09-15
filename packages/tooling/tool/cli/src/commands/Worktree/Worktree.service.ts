@@ -33,8 +33,12 @@ import { ghOutput } from "../../internal/github/index.ts";
 import {
   ancestryPidsOf,
   collectUntrackedPaths,
+  descendsFromProcess,
   invokerAncestryPids,
+  invokerSessionRoot,
   ProcessAttachmentKind,
+  ProcessTable,
+  processLineage,
   processName,
   resolveGitCommit,
   runGitOutput,
@@ -1266,7 +1270,8 @@ const blockingHolders = Effect.fnUntraced(function* (
   attachments: ReadonlyArray<ProcessAttachment>
 ): Effect.fn.Return<ReadonlyArray<ProcessAttachment>, never, FileSystem.FileSystem> {
   if (request.exemptInvoker === undefined) {
-    return attachments;
+    const foreign = yield* foreignHolderPids(request, attachments);
+    return A.filter(attachments, (attachment) => HashSet.has(foreign, attachment.pid));
   }
   const chain = yield* invokerAncestryPids();
   const session = yield* O.match(request.exemptInvoker.sessionMarker, {
@@ -1282,6 +1287,41 @@ const blockingHolders = Effect.fnUntraced(function* (
         });
   return yield* Effect.filter(attachments, (holder) => Effect.map(isExempt(holder), Bool.not));
 });
+
+// The invoking session (its root process and everything running under it: the
+// CLI, its shell, the agent session, that session's MCP servers and tool
+// pipelines) is the party asking for the retirement, so a request that says so
+// exempts holders under a recognized session command. Without that proof,
+// only the invoking ancestry is exempt; terminal/worker siblings still block.
+const pidsOutsideInvokerSession = Effect.fnUntraced(function* (
+  pids: ReadonlyArray<number>
+): Effect.fn.Return<HashSet.HashSet<number>, never, FileSystem.FileSystem> {
+  const root = yield* invokerSessionRoot();
+  if (root.rule === "chain-top") {
+    const table = yield* ProcessTable;
+    const chain = A.takeWhile(yield* processLineage(table.self), (status) => status.pid !== root.pid);
+    const ancestry = HashSet.fromIterable(
+      A.prepend(
+        A.map(chain, (status) => status.pid),
+        root.pid
+      )
+    );
+    return HashSet.fromIterable(A.filter(pids, (pid) => !HashSet.has(ancestry, pid)));
+  }
+  const outside = yield* Effect.filter(pids, (pid) => Effect.map(descendsFromProcess(pid, root.pid), Bool.not));
+  return HashSet.fromIterable(outside);
+});
+
+const foreignHolderPids = (
+  request: WorktreeRemovalRequest,
+  attachments: ReadonlyArray<ProcessAttachment>
+): Effect.Effect<HashSet.HashSet<number>, never, FileSystem.FileSystem> => {
+  const pids = A.dedupe(A.map(attachments, (attachment) => attachment.pid));
+  return Bool.match(request.exemptInvokerSession === true, {
+    onFalse: () => Effect.succeed(HashSet.fromIterable(pids)),
+    onTrue: () => pidsOutsideInvokerSession(pids),
+  });
+};
 
 const assertQuiescentFence = Effect.fnUntraced(function* (
   request: WorktreeRemovalRequest,
