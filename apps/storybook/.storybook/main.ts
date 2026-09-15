@@ -1,3 +1,5 @@
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -7,8 +9,10 @@ import type { StorybookConfig } from "@storybook/react-vite";
 import type { Plugin, ServerOptions } from "vite";
 
 const repoRoot = new URL("../../..", import.meta.url).pathname;
-const epistemicStories = fileURLToPath(
-  new URL("./stories/**/*.stories.@(ts|tsx)", import.meta.resolve("@beep/epistemic-ui/package.json"))
+const require = createRequire(import.meta.url);
+const epistemicStories = join(
+  dirname(require.resolve("@beep/epistemic-ui/package.json")),
+  "stories/**/*.stories.@(ts|tsx)"
 );
 const portlessConfig = Effect.runSync(
   Config.all({
@@ -105,5 +109,3 @@ const config: StorybookConfig = {
 };
 
 export default config;
-
-import { fileURLToPath } from "node:url";

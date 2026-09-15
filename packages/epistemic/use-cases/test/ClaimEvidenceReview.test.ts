@@ -165,8 +165,8 @@ layer(BunCrypto.layer)("claim evidence explanation and approval", (it) => {
       const crypto = yield* Crypto.Crypto;
       const basis = makeBasis();
       const human = decodeUser({ kind: "User", userId: 1 });
-      const mutatingCrypto = Crypto.make({
-        randomBytes: crypto.randomBytes,
+      const mutatingCrypto = Crypto.Crypto.of({
+        ...crypto,
         digest: Effect.fn("EvidenceReviewTest.mutatingDigest")((algorithm, data) =>
           Effect.sync(() => {
             Reflect.set(basis, "assertion", "Changed while hashing");
