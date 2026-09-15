@@ -475,6 +475,17 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
   });
 
   const append = Effect.fn("PacketEventStore.append")(function* (locator: PacketStreamLocator, event: PacketEvent) {
+    // The lock's parent is stable across event-directory replacement. Check only
+    // that parent here; appendLocked still checks the stream after acquisition.
+    const hasOperationsDirectory = yield* fs
+      .exists(path.join(locator.packetPath, "ops"))
+      .pipe(Effect.mapError((error) => PacketStreamError.new(locator.packet, error.message)));
+    if (!hasOperationsDirectory) {
+      return yield* PacketStreamError.new(
+        locator.packet,
+        `"${eventsDir(locator.packetPath)}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory.`
+      );
+    }
     return yield* withPacketEventLock(locator, (assertOwned) => appendLocked(locator, event, assertOwned)).pipe(
       Effect.catchTag("QualitySchedulerError", (error) => PacketStreamError.new(locator.packet, error.message)),
       Effect.provideService(FileSystem.FileSystem, fs),
