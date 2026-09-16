@@ -2011,3 +2011,19 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   `settle: base-conflict; merge origin/main and push` as a non-terminal wait that never
   spends the budget (exit codes unchanged), and a context once seen registered for a head
   should not regress to `missing` on one empty poll. Both are B8 follow-ups on this branch.
+
+## 2026-09-16 — B8: a rollup flap on a `MERGEABLE` head also read as `settle-timeout`
+
+- Doing: babysitting #1155 (head `715993591d`) with the pre-fix loop while the heavy matrix
+  sat queued behind the pool for 70 minutes.
+- Evidence: the previous poll held 35 checks with every `Heavy / *` context registered (budget
+  correctly not applying); the next poll returned an empty rollup while `gh pr view` still said
+  `MERGEABLE BLOCKED` and the status artifact still recorded `checks: 35`. Every context turned
+  `missing`, the budget applied, and the loop exited 1 with `settle-timeout`. No push, no
+  conflict — one bad read.
+- Prevention: this is the registration-memory case (`rememberRegistered`): a context seen
+  registered for a head stays pending across an empty poll (`[yeet] rollup: N registered
+  context(s) absent this poll, kept pending`). The relaunch on the fixed code held through the
+  rest of the queue; Benjamin merged #1155 at 13:15Z as `d7e8c46f4d`. The optional
+  `Heavy / Coverage Regression` red on that head is inherited (`Yeet/internal/Inbox.ts` and
+  `VersionSync/*` rows, no B8 file).
