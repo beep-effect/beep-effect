@@ -13,7 +13,7 @@ import { VersionSyncDriftError, VersionSyncModeMatch } from "../VersionSync.sche
 import { CategorySelectionServiceLive } from "./services/CategorySelectionService.ts";
 import { ResolverService, ResolverServiceLive } from "./services/ResolverService.ts";
 import { UpdateApplierService, UpdateApplierServiceLive } from "./services/UpdateApplierService.ts";
-import type { NoSuchFileError } from "@beep/repo-utils";
+import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
 import type { HttpClient } from "effect/unstable/http";
 import type { VersionSyncError, VersionSyncOptions } from "../VersionSync.schemas.ts";
@@ -67,7 +67,7 @@ export const handleVersionSync: (
 ) => Effect.Effect<
   void,
   VersionSyncError | VersionSyncDriftError | NoSuchFileError,
-  FileSystem.FileSystem | Path.Path | HttpClient.HttpClient
+  FileSystem.FileSystem | Path.Path | HttpClient.HttpClient | FsUtils
 > = (options) =>
   Effect.scoped(
     Layer.build(VersionSyncServicesLive).pipe(

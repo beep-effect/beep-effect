@@ -9,9 +9,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Effect, FileSystem, Number as N, Order, Path } from "effect";
+import { Effect, Number as N, Order } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -20,8 +19,10 @@ import {
   VersionCategoryStatusEnum,
   VersionCategoryStatusThunk,
   VersionDriftItem,
-  VersionSyncError,
 } from "../../VersionSync.schemas.ts";
+import { readRootPackageJson } from "./RootCatalog.ts";
+import type { FileSystem, Path } from "effect";
+import type { VersionSyncError } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/EffectResolver");
 const VERSION_SPECIFIER_PATTERN = /^([~^<>=\s]*)(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/;
@@ -29,18 +30,6 @@ const EXACT_VERSION_PATTERN = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
 const EFFECT_SMOL_SNAPSHOT_PATTERN = /^https:\/\/pkg\.pr\.new\/Effect-TS\/effect(?:-smol)?\/(.+)@([0-9a-f]+)$/i;
 const LOCKSTEP_EFFECT_PACKAGE_PREFIX = "@effect/";
 const NON_LOCKSTEP_EFFECT_PACKAGES = ["@effect/markdown-toc", "@effect/tsgo"] as const;
-
-class RootPackageJsonDocument extends S.Class<RootPackageJsonDocument>($I`RootPackageJsonDocument`)(
-  {
-    catalog: S.Record(S.String, S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(R.empty<string, string>())),
-      S.withDecodingDefault(Effect.succeed(R.empty<string, string>()))
-    ),
-  },
-  $I.annote("RootPackageJsonDocument", {
-    description: "Subset of root package.json fields required for Effect catalog version resolution.",
-  })
-) {}
 
 class EffectCatalogPackage extends S.Class<EffectCatalogPackage>($I`EffectCatalogPackage`)(
   {
@@ -150,17 +139,7 @@ export const resolveEffectCatalog: (
   repoRoot: string
 ) => Effect.Effect<EffectCatalogState, VersionSyncError, FileSystem.FileSystem | Path.Path> = Effect.fn(
   function* (repoRoot) {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const pkgJsonPath = path.join(repoRoot, "package.json");
-
-    const pkgJsonContent = yield* fs
-      .readFileString(pkgJsonPath)
-      .pipe(VersionSyncError.mapError("Failed to read package.json", "package.json"));
-
-    const pkgJson = yield* decodeJsoncTextAs(RootPackageJsonDocument)(pkgJsonContent).pipe(
-      VersionSyncError.mapError("Failed to parse package.json", "package.json")
-    );
+    const pkgJson = yield* readRootPackageJson(repoRoot);
 
     const canonicalSpecifier = O.getOrElse(R.get(pkgJson.catalog, "effect"), thunkEmptyStr);
     const canonicalMajor = O.flatMap(splitVersionSpecifier(canonicalSpecifier), (parts) =>

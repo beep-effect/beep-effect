@@ -19,7 +19,7 @@ orchestrator owns schemas, contracts, and judgment.
       Still open, deferred by design: the machine-wide ledger as a P3 candidate and the second
       enforced pair (pre-push to merged preview) once env profiles are proven in the key.
 
-## P1 — Journal facts, then hygiene — IN PROGRESS (independent small PRs, Codex lanes in sibling worktrees)
+## P1 — Journal facts, then hygiene — COMPLETE 2026-09-15 (independent small PRs, Codex lanes in sibling worktrees)
 
 - [x] A5 journal facts — landed 2026-09-03 (PR #964 merged as 58e063757b, under rulings 11–16) and
       completed by A5b (PR #978, below): attempt rows carry the resolved head, tree fingerprint, tier,
@@ -60,12 +60,20 @@ orchestrator owns schemas, contracts, and judgment.
       separately with the failing variable named — done 2026-09-03 (PR #953 merged as 484e24c2e9:
       the secret resolver receives only the cache quad, unrelated references cannot block remote
       reads, the quad still fails closed, and the health probe names failing variables only).
-- [~] B3 cheap precise gates first, wave fails immediately — implemented in PR #1006 with the
-      schema-backed `gate-order/v1` A1/A4 seed, policy/preflight-first `WaveOrder` service,
-      early stop for every red not explicitly classified as imprecise, durable
-      `not-run-early-stop` facts, and the default-off `--no-fail-fast` escape hatch; awaiting
-      hosted exact-head proof before completion.
-- [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
+- [x] B3 cheap precise gates first, wave fails immediately — done 2026-09-04 (PR #1006 merged as
+      d7a08b513b, 30/30 hosted checks green on its exact head): the schema-backed `gate-order/v1`
+      A1/A4 seed, policy/preflight-first `WaveOrder` service, early stop for every red not
+      explicitly classified as imprecise, durable `not-run-early-stop` facts, and the default-off
+      `--no-fail-fast` escape hatch.
+- [x] B5 detached durable proof jobs — done 2026-09-15 (PR #1143 on `ttc/b5-detached-proof-jobs`,
+      rulings 35–40): `--detach` on verify/publish/closeout/monitor/repair starts `beep-proof-<jobId>.service`
+      through `systemd-run --user` under `agent-runs.slice` (transient service, not scope, so the job
+      outlives the submitter and is the lease's accounting unit); one durable record per job under
+      `.beep/yeet/jobs/`; the `ExecStopPost` finalizer stamps systemd's result, appends
+      `attempt-terminated` for every dead runner (`signal`, `oom-killed`, `timeout`,
+      `cancelled`, `unrecorded-failure`); a start failure has a terminal job record but no runner attempt. It reports one `proof-job-finished` inbox row (P2 green /
+      P1 otherwise) acknowledged by the new `observed` resolution; `yeet job list|status|wait|logs|cancel`.
+      Brief and evidence: `research/b5-brief.md`, `research/b5-implementation.md`.
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):
       rows landed in PR #964, emission was gated behind the unknown-row preservation rollout in PR
       #978, and PR #993 made each death a crash-recoverable per-sink claim. A disabled admission sink

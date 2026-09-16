@@ -210,6 +210,17 @@ describe("changeset status wrapper", () => {
       expect(changesetStatusVerdict(partition)).toBe("lab-exempt");
     });
 
+    it("treats a workspace turbo.json as pipeline wiring rather than a product change", () => {
+      const partition = partitionChangedFilesForStatus(
+        ["apps/labs/cognee/src/main.ts", "packages/demo/turbo.json"],
+        fixtureWorkspaceDirs
+      );
+
+      expect(partition.productWorkspaceDirs).toEqual([]);
+      expect(partition.neutralPaths).toEqual(["packages/demo/turbo.json"]);
+      expect(changesetStatusVerdict(partition)).toBe("lab-exempt");
+    });
+
     it("keeps non-companion identity files inside workspace ownership", () => {
       const partition = partitionChangedFilesForStatus(
         ["apps/labs/cognee/src/main.ts", "packages/foundation/modeling/identity/src/index.ts"],

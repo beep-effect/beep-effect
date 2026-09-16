@@ -378,7 +378,7 @@ const reportMembership = Effect.fnUntraced(function* (
  *
  * **Details**
  *
- * The operation verifies the installed rc.113 pin, builds one syntax-only
+ * The operation verifies the installed rc.115 pin, builds one syntax-only
  * project from the D9 paths, and returns a scan receipt distinct from package
  * test timing.
  *
@@ -447,7 +447,7 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
   const graphBackedFindings = yield* applyEffectVitestPrimitiveGraph(findings, graph);
   const sortedFindings = A.sort(graphBackedFindings, findingOrder);
   const existing = yield* readEffectVitestInventory(root);
-  if (O.isSome(existing) && !Equal.equals(existing.value.effectVitestVersion, graph.version)) {
+  if (!options.write && O.isSome(existing) && !Equal.equals(existing.value.effectVitestVersion, graph.version)) {
     return yield* EffectVitestLintError.new(
       `Baseline pin ${existing.value.effectVitestVersion} does not match graph pin ${graph.version}; refresh it with effect-vitest --write after reviewing the pinned source diff.`
     );

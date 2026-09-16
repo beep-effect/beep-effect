@@ -17,7 +17,7 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Effect, Exit, FileSystem, Path } from "effect";
+import { Effect, Exit, FileSystem, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -128,6 +128,36 @@ describe("Turbo lane digests", () => {
       expect(O.map(every, (value) => A.map(value.tasks, (row) => `${row.taskId}=${row.hash}`))).toEqual(
         O.some(["//#lint:allowlist=newer", "//#lint:typos=t1"])
       );
+    }, providePlatform)
+  );
+
+  it.effect(
+    "does not read historical summaries when collecting a new lane digest",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-history-" });
+      const runs = path.join(root, ".turbo", "runs");
+      yield* fs.makeDirectory(runs, { recursive: true });
+      const stalePath = path.join(runs, "stale.json");
+      const freshPath = path.join(runs, "fresh.json");
+      yield* fs.writeFileString(stalePath, "historical output must not be read");
+      yield* fs.utimes(stalePath, 1, 1);
+      yield* encodeSummary(summary("fresh", 1_789_185_601_000, [task("//#lint:allowlist", "new", "MISS")])).pipe(
+        Effect.flatMap((text) => fs.writeFileString(freshPath, text))
+      );
+      // Include a same-second write even when the filesystem rounds its mtime.
+      yield* fs.utimes(freshPath, 1_789_185_600, 1_789_185_600);
+      const reads = yield* Ref.make(A.empty<string>());
+      const digest = yield* readTurboLaneDigest(root, "2026-09-12T04:00:00.500Z", ["lint:allowlist"]).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          readFileString: (file, ...args) =>
+            fs.readFileString(file, ...args).pipe(Effect.tap(() => Ref.update(reads, A.append(file)))),
+        })
+      );
+      expect(yield* Ref.get(reads)).toEqual([freshPath]);
+      expect(O.map(digest, (value) => value.summaryIds)).toEqual(O.some(["fresh"]));
     }, providePlatform)
   );
 

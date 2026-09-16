@@ -1,6 +1,6 @@
 # ONNX Runtime installer ZIP replacement
 
-`onnxruntime-node@1.29.0` uses `adm-zip@0.6.0` only in its native-library
+`onnxruntime-node@1.30.0` uses `adm-zip@0.6.0` only in its native-library
 installer. That dependency is affected by
 [GHSA-vwc7-r8mq-g2x9](https://github.com/advisories/GHSA-vwc7-r8mq-g2x9),
 which follows pre-existing destination symlinks during extraction. No patched
@@ -17,7 +17,7 @@ The patched installer selects only manifest entries, downloads into a private
 `mkdtemp` directory, and stages each output in a private directory on the
 destination filesystem. Renaming the staged file replaces an existing binary
 or symlink without following the final symlink. ONNX Runtime and its native
-bindings remain at 1.29.0.
+bindings remain at 1.30.0.
 
 The scoped override requires lockfile version 3, supported by the repository's
 pinned Bun 1.4.2. The existing OSV scanner can read this lockfile format.
