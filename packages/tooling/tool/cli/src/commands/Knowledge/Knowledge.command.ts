@@ -8,6 +8,7 @@
 import { NonNegativeInt } from "@beep/schema";
 import { Console, Effect, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
@@ -56,6 +57,10 @@ const surfaceFlag = Flag.ChoiceWithValue("surface", [
 const refsJsonFlag = Flag.Boolean("json").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Render the whole census as JSON")
+);
+const refsVerboseFlag = Flag.Boolean("verbose").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Include verified observations in the detailed listing")
 );
 const refsCheckFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
@@ -271,30 +276,67 @@ const topDocuments = (report: KnowledgeRefsReport): ReadonlyArray<string> =>
     A.map((row) => `  ${row.count} ${row.documentId}`)
   );
 
-const renderRefsReport = (report: KnowledgeRefsReport, surface: KnowledgeRefSurfaceFilter): string => {
-  const live = A.length(
-    A.filter(report.observations, (observation) => KnowledgeRefSurface.is.live(observation.surface))
-  );
-  const archival = A.length(report.observations) - live;
-  const listed = KnowledgeRefSurfaceFilter.is.all(surface)
-    ? report.observations
-    : A.filter(report.observations, (observation) => observation.surface === surface);
-  return A.join(
-    [
-      `knowledge refs @ ${report.treeish} (${report.commit})`,
-      `observations: ${A.length(report.observations)} (live ${live}, archival ${archival})`,
-      `skipped: ${A.length(report.skipped)}`,
-      ...A.map(report.skipped, (blob) => `  ${blob.reason} ${blob.path}`),
-      "classification:",
-      ...classificationCounts(report),
-      "top documents:",
-      ...topDocuments(report),
-      `observations (${surface}) (${A.length(listed)}):`,
-      ...A.map(listed, renderObservation),
-    ],
-    "\n"
-  );
-};
+/**
+ * Renders a reference census with verified observations summarized unless verbose output is requested.
+ *
+ * **Details**
+ *
+ * The surface filter narrows the listing only; summary counts remain whole-corpus.
+ * The listing header includes verified observations even when their rows are omitted.
+ *
+ * **Example** (Render an empty census)
+ *
+ * ```ts
+ * import { renderKnowledgeRefsReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.command"
+ * import { KnowledgeRefsReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ *
+ * const report = KnowledgeRefsReport.make({
+ *   treeish: "HEAD",
+ *   commit: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4",
+ *   observations: [],
+ *   skipped: [],
+ * })
+ * console.log(renderKnowledgeRefsReport(report, "all", { verbose: false }))
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderKnowledgeRefsReport: {
+  (surface: KnowledgeRefSurfaceFilter, options: { readonly verbose: boolean }): (report: KnowledgeRefsReport) => string;
+  (report: KnowledgeRefsReport, surface: KnowledgeRefSurfaceFilter, options: { readonly verbose: boolean }): string;
+} = dual(
+  3,
+  (report: KnowledgeRefsReport, surface: KnowledgeRefSurfaceFilter, options: { readonly verbose: boolean }): string => {
+    const live = A.length(
+      A.filter(report.observations, (observation) => KnowledgeRefSurface.is.live(observation.surface))
+    );
+    const archival = A.length(report.observations) - live;
+    const listed = KnowledgeRefSurfaceFilter.is.all(surface)
+      ? report.observations
+      : A.filter(report.observations, (observation) => observation.surface === surface);
+    const visible = options.verbose
+      ? listed
+      : A.filter(listed, (observation) => !KnowledgeRefClassification.is.verified(observation.classification));
+    const omitted = A.length(listed) - A.length(visible);
+    return A.join(
+      [
+        `knowledge refs @ ${report.treeish} (${report.commit})`,
+        `observations: ${A.length(report.observations)} (live ${live}, archival ${archival})`,
+        `skipped: ${A.length(report.skipped)}`,
+        ...A.map(report.skipped, (blob) => `  ${blob.reason} ${blob.path}`),
+        "classification:",
+        ...classificationCounts(report),
+        "top documents:",
+        ...topDocuments(report),
+        `observations (${surface}) (${A.length(listed)}):`,
+        ...A.map(visible, renderObservation),
+        ...(options.verbose ? [] : [`  verified: ${omitted} row(s) omitted (--verbose lists them)`]),
+      ],
+      "\n"
+    );
+  }
+);
 
 /**
  * The failure a checked census gates on, if any.
@@ -414,6 +456,7 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
   readonly surface: KnowledgeRefSurfaceFilter;
   readonly json: boolean;
   readonly check: boolean;
+  readonly verbose: boolean;
 }) {
   const knowledge = yield* KnowledgeService;
   const report = yield* knowledge.refsTree(options.tree);
@@ -423,7 +466,7 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
     );
     yield* Console.log(json);
   } else {
-    yield* Console.log(renderRefsReport(report, options.surface));
+    yield* Console.log(renderKnowledgeRefsReport(report, options.surface, { verbose: options.verbose }));
   }
   if (options.check) {
     yield* applyKnowledgeRefsCheck(report, { json: options.json });
@@ -439,7 +482,8 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
  * that tree's tracked entries rather than against the working filesystem. `--tree` accepts any
  * commit-ish and defaults to `HEAD`; no fetch ever occurs. Human output prints the whole-corpus
  * totals, the count of every one of the twelve classes including the empty ones, the highest-density
- * documents, and then the per-observation listing. `--json` emits the complete report on one line.
+ * documents, and then the per-observation listing, omitting verified rows unless `--verbose` is set.
+ * `--json` emits the complete report on one line.
  *
  * **Gotchas**
  *
@@ -463,7 +507,7 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
  */
 export const knowledgeRefsCommand = Command.make(
   "refs",
-  { tree: treeFlag, surface: surfaceFlag, json: refsJsonFlag, check: refsCheckFlag },
+  { tree: treeFlag, surface: surfaceFlag, json: refsJsonFlag, check: refsCheckFlag, verbose: refsVerboseFlag },
   runRefs
 ).pipe(
   Command.withDescription("Census every reference in one tracked tree; --check gates on live host-path debt"),
@@ -497,7 +541,7 @@ export const knowledgeRefsCommand = Command.make(
  */
 export const knowledgeCommand = Command.make("knowledge", {}, () =>
   Console.log(
-    "Knowledge commands: refs [--tree <rev>] [--surface live|archival|all] [--json] [--check], semantic-delta [--base <ref>] [--json]"
+    "Knowledge commands: refs [--tree <rev>] [--surface live|archival|all] [--json] [--check] [--verbose], semantic-delta [--base <ref>] [--json]"
   )
 ).pipe(
   Command.withDescription("Knowledge-surface verification commands"),
