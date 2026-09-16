@@ -36,8 +36,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { Console, DateTime, Duration, Effect, FileSystem, flow, Ref, Result } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -45,6 +47,7 @@ import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
+import { YeetCheckOutcome } from "./CheckOutcome.ts";
 import { PrCloseoutReportJson } from "./Closeout.ts";
 import {
   appendYeetInboxRowOnce,
@@ -63,14 +66,23 @@ import {
   renderYeetMonitorCommentStreamStopped,
   YEET_MONITOR_COMMENT_FAILURE_BUDGET,
 } from "./MonitorComments.ts";
+import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
 import { dispatchYeetCheckFailure, supersedeYeetDispatchState } from "./Remediation.ts";
+import {
+  deriveSettleVerdict,
+  readYeetRulesetRequiredContexts,
+  renderYeetSettleDetail,
+  YeetRulesetRequiredContexts,
+  YeetSettleCheck,
+  YeetSettleInput,
+} from "./Settle.ts";
 import { YeetMergeReadyCriteria } from "./Verdict.ts";
 import {
   classifyYeetCheckOutcome,
   countYeetWatchFailures,
+  countYeetWatchOptionalFailures,
   diffYeetWatchSnapshots,
   renderYeetWatchEventLine,
-  YeetCheckOutcome,
   YeetCheckSignal,
   YeetWatchCheck,
   YeetWatchDiffInput,
@@ -86,6 +98,7 @@ import type { Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorCommentWatermark } from "./MonitorComments.ts";
+import type { YeetSettleVerdict } from "./Settle.ts";
 import type { YeetWatchEvent } from "./WatchStream.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WatchMode");
@@ -355,6 +368,15 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   });
 });
 
+class WatchSettleState extends S.Class<WatchSettleState>($I`WatchSettleState`)(
+  {
+    headSha: S.NonEmptyString,
+    firstObservedMs: S.Finite,
+    expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("WatchSettleState", { description: "One head's cached ruleset and settle clock origin." })
+) {}
+
 const isoNow = DateTime.now.pipe(Effect.map(DateTime.formatIso));
 
 const emitWatchEvent = (event: YeetWatchEvent): Effect.Effect<void, YeetCommandError> =>
@@ -537,6 +559,7 @@ const emitWatchEnded = Effect.fn("Yeet.emitWatchEnded")(function* (
   const ended = YeetWatchEnded.make({
     at: yield* isoNow,
     failing: countYeetWatchFailures(snapshot),
+    optionalFailing: countYeetWatchOptionalFailures(snapshot),
     headSha: snapshot.headSha,
     reason,
   });
@@ -565,7 +588,10 @@ const watchTickEnd = (snapshot: YeetWatchSnapshot, emptyPolls: number): O.Option
 const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   context: RepoRunContext,
   prev: YeetWatchSnapshot,
-  emptyPolls: number
+  emptyPolls: number,
+  settle: (
+    snapshot: YeetWatchSnapshot
+  ) => Effect.Effect<YeetWatchSnapshot, never, ChildProcessSpawner.ChildProcessSpawner>
 ) {
   const polled = yield* collectYeetWatchSnapshot(context).pipe(
     Effect.asSome,
@@ -576,7 +602,7 @@ const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   if (O.isNone(polled)) {
     return O.none<{ readonly emptyPolls: number; readonly snapshot: YeetWatchSnapshot }>();
   }
-  const next = polled.value;
+  const next = yield* settle(polled.value);
   const observedAt = yield* isoNow;
   const events = diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: observedAt, next, prev }));
   yield* Effect.forEach(events, emitWatchEvent, { discard: true });
@@ -613,11 +639,14 @@ const watchStreamEnd = (
   ) {
     return end;
   }
+  if (O.exists(snapshot.settle, (verdict) => O.contains(verdict.reason, "settle-timeout"))) {
+    return O.some(YeetWatchEndReason.Enum["settle-timeout"]);
+  }
   const eventExit = untilEvent && countYeetWatchFailures(snapshot) > 0;
   if (eventExit || (untilEvent && O.exists(settleTicks, (remaining) => remaining <= 0))) {
     return O.some(YeetWatchEndReason.Enum.event);
   }
-  return end;
+  return O.exists(snapshot.settle, (verdict) => !verdict.settled) ? O.none() : end;
 };
 
 // A zero-check snapshot inside the registration window is narrated to stderr
@@ -675,7 +704,7 @@ const reportWatchRegistrationWait = (snapshot: YeetWatchSnapshot, emptyPolls: nu
  * failures are softer still: they degrade the comment surface alone, on the
  * classic monitor's consecutive-failure budget, and never end the watch.
  *
- * An `untilEvent` exit on a failing check keys on the snapshot, not the
+ * An `untilEvent` exit on a failing required check keys on the snapshot, not the
  * transition: a relaunched session over a still-red head exits again
  * immediately. That is deliberate — the ritual relaunches the watch after
  * acting (a push moves the head and starts a fresh wave), and a supervisor
@@ -711,14 +740,48 @@ const reportWatchRegistrationWait = (snapshot: YeetWatchSnapshot, emptyPolls: nu
 // fallow-ignore-next-line complexity -- the polling loop owns one coherent snapshot, comment cursor, and exit decision
 export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function* (
   context: RepoRunContext,
-  config: { readonly intervalMillis: number; readonly untilEvent?: boolean }
+  config: {
+    readonly intervalMillis: number;
+    readonly untilEvent?: boolean;
+    readonly settleTimeoutMs?: number;
+    readonly rulesetRead?: typeof readYeetRulesetRequiredContexts | undefined;
+    readonly now?: Effect.Effect<DateTime.Utc>;
+  }
 ): Effect.fn.Return<
   YeetWatchEnded,
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const untilEvent = config.untilEvent === true;
-  let current = yield* collectYeetWatchSnapshot(context);
+  let head = O.none<WatchSettleState>();
+  const settle = Effect.fn("Yeet.watchSettle")(function* (snapshot: YeetWatchSnapshot) {
+    const now = yield* config.now ?? DateTime.now;
+    const millis = DateTime.toEpochMillis(now);
+    if (O.isNone(head) || head.value.headSha !== snapshot.headSha) {
+      head = O.some(
+        WatchSettleState.make({
+          headSha: snapshot.headSha,
+          firstObservedMs: millis,
+          expected: yield* (config.rulesetRead ?? readYeetRulesetRequiredContexts)(context),
+        })
+      );
+    }
+    const currentHead = O.getOrThrow(head);
+    const verdict = deriveSettleVerdict(
+      YeetSettleInput.make({
+        expected: currentHead.expected,
+        checks: A.map(snapshot.checks, (check) =>
+          YeetSettleCheck.make({ name: check.name, outcome: check.outcome, required: check.required })
+        ),
+        closeoutBound: snapshot.criteria.closeoutRun,
+        waitedMs: millis - currentHead.firstObservedMs,
+        timeoutMs: config.settleTimeoutMs ?? YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS,
+      })
+    );
+    yield* Console.error(`[yeet] ${renderYeetSettleDetail(verdict)}`);
+    return YeetWatchSnapshot.make({ ...snapshot, settle: O.some(verdict) });
+  });
+  let current = yield* collectYeetWatchSnapshot(context).pipe(Effect.flatMap(settle));
   const startedAt = yield* isoNow;
   yield* emitWatchEvent(
     YeetWatchStarted.make({
@@ -754,8 +817,11 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
       return yield* emitWatchEnded(current, end.value);
     }
     yield* reportWatchRegistrationWait(current, emptyPolls);
-    yield* Effect.sleep(Duration.millis(config.intervalMillis));
-    const advanced = yield* advanceYeetWatchTick(context, current, emptyPolls);
+    // Every successful collection passes through settle before entering this loop.
+    const verdict = O.getOrThrow(current.settle);
+    const sleepMillis = yeetWatchSettleSleepMillis(verdict, config.intervalMillis);
+    yield* Effect.sleep(Duration.millis(sleepMillis));
+    const advanced = yield* advanceYeetWatchTick(context, current, emptyPolls, settle);
     if (O.isNone(advanced)) {
       return yield* emitWatchEnded(current, YeetWatchEndReason.Enum["poll-error"]);
     }
@@ -777,7 +843,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
  * console.log(yeetWatchExitFailure({ failing: 0, reason: "pr-closed" })) // true
  * ```
  *
- * @param ended - The end reason and the final failure census.
+ * @param ended - The end reason and required failure count; optional failures do not affect the exit.
  * @returns Whether the command should exit non-zero.
  * @category predicates
  * @since 0.0.0
@@ -785,4 +851,51 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
 export const yeetWatchExitFailure = (ended: Pick<YeetWatchEnded, "failing" | "reason">): boolean =>
   ended.failing > 0 ||
   YeetWatchEndReason.is["pr-closed"](ended.reason) ||
-  YeetWatchEndReason.is["poll-error"](ended.reason);
+  YeetWatchEndReason.is["poll-error"](ended.reason) ||
+  YeetWatchEndReason.is["settle-timeout"](ended.reason);
+
+/**
+ * How long the watch sleeps before its next poll, given the settle verdict.
+ *
+ * **Details**
+ *
+ * Only the registration budget shortens a sleep: while no check has registered
+ * or an expected context is missing, the sleep is clamped to the remaining
+ * budget so `settle-timeout` fires on time. A settled head, or an unsettled
+ * head whose required checks have registered and are merely queued (ruling
+ * 49), sleeps the normal interval — never the 0 ms spin a spent budget would
+ * otherwise produce.
+ *
+ * **Example** (A registered queued check keeps the normal interval)
+ *
+ * ```ts
+ * import { YeetExpectedContextCensus, YeetSettleVerdict, yeetWatchSettleSleepMillis } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const census = YeetExpectedContextCensus.make({ matched: ["Lint"], unmatched: [], pending: ["Lint"], missing: [] })
+ * const queued = YeetSettleVerdict.make({
+ *   settled: false, reason: O.some("required-pending"), census, waitedMs: 5_000, timeoutMs: 1_000, budgetApplies: false
+ * })
+ * const missing = YeetSettleVerdict.make({
+ *   settled: false, reason: O.some("required-pending"),
+ *   census: YeetExpectedContextCensus.make({ matched: [], unmatched: [], pending: [], missing: ["Lint"] }),
+ *   waitedMs: 400, timeoutMs: 1_000, budgetApplies: true
+ * })
+ * console.log(yeetWatchSettleSleepMillis(queued, 10_000)) // 10000
+ * console.log(yeetWatchSettleSleepMillis(missing, 10_000)) // 600
+ * ```
+ *
+ * @param verdict - The settle verdict of the snapshot just observed.
+ * @param intervalMillis - The configured poll interval.
+ * @returns Milliseconds to sleep before the next poll.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetWatchSettleSleepMillis: {
+  (intervalMillis: number): (verdict: YeetSettleVerdict) => number;
+  (verdict: YeetSettleVerdict, intervalMillis: number): number;
+} = dual(2, (verdict: YeetSettleVerdict, intervalMillis: number): number =>
+  verdict.settled || !verdict.budgetApplies
+    ? intervalMillis
+    : Math.min(intervalMillis, Math.max(0, verdict.timeoutMs - verdict.waitedMs))
+);
