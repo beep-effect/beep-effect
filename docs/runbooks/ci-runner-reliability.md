@@ -23,7 +23,7 @@ capacity. Two workflows share one decision, `bun run beep ci admission`: the
 `Heavy Admission` job in `check.yml` runs it on every push (a pull request
 enters the heavy matrix only with the `ready-for-heavy` label, or as a main
 push / merge group; a docs-only diff is called with `admitted: false` so every
-lane reports `skipped`; an unlabelled code PR holds outside the queue), and
+lane passes without work on a hosted runner; an unlabelled code PR holds outside the queue), and
 `heavy-admit.yml` runs the same job plus the heavy caller when the label is
 applied, so labelling never cancels or re-runs tier 1. Throughput is
 still heavy duration times queue depth. Pool sizing — `runners_maximum_count`,
