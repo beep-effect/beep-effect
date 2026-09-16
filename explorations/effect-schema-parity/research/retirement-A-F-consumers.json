@@ -1,0 +1,584 @@
+{
+  "method": "rg candidate census plus TypeScript syntax import/root member resolution; no transitive reexport closure",
+  "concepts": {
+    "AbortSignal": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["isAbortSignal", "AbortSig"]
+    },
+    "Age": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "ArrayBuffer": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["ArrayBuf", "isArrayBuf"]
+    },
+    "ArrayOf": {
+      "count": 6,
+      "files": [
+        "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts",
+        "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
+        "packages/tooling/library/repo-utils/src/JSDoc/models/TagParameters.model.ts",
+        "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+        "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
+        "packages/workspace/domain/src/entities/EmailArtifact/EmailArtifact.model.ts"
+      ],
+      "rootNames": [
+        "ArrayOfStrings",
+        "NonEmptyArrayOfStrings",
+        "ArrayOfNonEmptyStrings",
+        "NonEmptyArrayOfNonEmptyStrings",
+        "ArrayOfNumbers",
+        "NonEmptyArrayOfNumbers",
+        "ArrayOfInts",
+        "NonEmptyArrayOfInts"
+      ]
+    },
+    "AtURI": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["AtUri"]
+    },
+    "BigDecimal": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["BigDecimalFromNumber"]
+    },
+    "BinaryFileExtension": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "BufferEncoding": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["BuffEncoding", "BufferEncoding"]
+    },
+    "Bytes": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["Bytes"]
+    },
+    "CardinalDirection": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "Color": {
+      "count": 4,
+      "files": [
+        "packages/drivers/cosmos/src/Cosmos.renderer.ts",
+        "packages/foundation/ui-system/brand/src/Brand.schema.ts",
+        "packages/foundation/ui-system/brand/src/Brand.tokens.ts",
+        "packages/foundation/ui-system/ui/src/components/color-picker.tsx"
+      ],
+      "rootNames": [
+        "ColorAmount",
+        "Darken",
+        "DarkenInput",
+        "Lighten",
+        "LightenInput",
+        "MixColors",
+        "MixColorsInput",
+        "RgbaColorString",
+        "WithAlpha",
+        "WithAlphaInput",
+        "HexColor",
+        "HexColorInput",
+        "NormalizeHexColor",
+        "OklchChroma",
+        "OklchColor",
+        "OklchCoordinate",
+        "OklchHue",
+        "OklchInput",
+        "OklchLightness",
+        "Rgb",
+        "RgbChannel",
+        "RgbInput",
+        "RgbInputChannel",
+        "GenerateAlphaScale",
+        "GenerateAlphaScaleInput",
+        "GenerateNeutralScale",
+        "GenerateNeutralScaleInput",
+        "GenerateScale",
+        "GenerateScaleInput",
+        "HexColorScale12",
+        "HexToOklch",
+        "HexToRgb",
+        "OklchToHex",
+        "OklchToRgb",
+        "RgbToHex",
+        "RgbToOklch"
+      ]
+    },
+    "CommonTextSchemas": {
+      "count": 3,
+      "files": [
+        "apps/oip-web/src/contact/ContactSubmission.model.ts",
+        "apps/professional-desktop/src/chat/DerivedThreadTitle.ts",
+        "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts"
+      ],
+      "rootNames": [
+        "TrimmedNonEmptyText",
+        "CommaSeparatedList",
+        "NormalizedBooleanString"
+      ]
+    },
+    "Conformance": {
+      "count": 35,
+      "files": [
+        "packages/foundation/modeling/html/src/Html.conformance.ts",
+        "packages/foundation/modeling/html/src/Html.policy.ts",
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-authoring-invariants.ts",
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-boundary-invariants.ts",
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-profile-registry.ts",
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-registry.ts",
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-source-registry.ts",
+        "packages/foundation/modeling/html/src/internal/conformance/Html.conformance-structure-invariants.ts",
+        "packages/foundation/modeling/html/src/internal/conformance/Html.policy-conformance-registry.ts",
+        "packages/foundation/modeling/html/test/Html.conformance-annotation.test.ts",
+        "packages/foundation/modeling/lexical/src/Lexical.conformance.ts",
+        "packages/foundation/modeling/lexical/src/internal/conformance/Lexical.conformance-registry.ts",
+        "packages/foundation/modeling/lexical/test/Lexical.conformance-annotation.test.ts",
+        "packages/foundation/modeling/md/src/Md.conformance.ts",
+        "packages/foundation/modeling/md/src/internal/conformance/Md.invariant-registry.ts",
+        "packages/foundation/modeling/md/src/internal/conformance/Md.profile-registry.ts",
+        "packages/foundation/modeling/md/src/internal/conformance/Md.specification-source-registry.ts",
+        "packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts",
+        "packages/foundation/modeling/md/test/Md.conformance.test.ts",
+        "packages/foundation/modeling/pandoc-ast/src/Pandoc.conformance.ts",
+        "packages/foundation/modeling/pandoc-ast/src/internal/conformance/Pandoc.conformance-registry.ts",
+        "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-annotation.test.ts",
+        "packages/foundation/modeling/rdf/src/SemanticSchemaConformance.ts",
+        "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata/SemanticSchemaMetadata.schema.ts",
+        "packages/foundation/modeling/rdf/test/SemanticSchemaConformance.test.ts",
+        "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.evidence.ts",
+        "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.schema.ts",
+        "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.test-kit.ts",
+        "packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts",
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+        "packages/tooling/tool/cli/src/commands/Worktree/Reap.service.ts",
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+        "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+        "packages/tooling/tool/cli/test/worktree-command.test.ts"
+      ],
+      "rootNames": ["Conformance"]
+    },
+    "ContinentCode": {
+      "count": 0,
+      "files": [],
+      "rootNames": [
+        "ContinentCode",
+        "ContinentName",
+        "ContinentNameFromCode",
+        "ContinentCodeFromName"
+      ]
+    },
+    "ContinentName": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "CountryCode": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["CountryCode", "CountryCodeFromName", "CountryNameFromCode"]
+    },
+    "CountryName": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["CountryName"]
+    },
+    "CrossOriginEmbedderPolicy": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "CrossOriginOpenerPolicy": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "CrossOriginResourcePolicy": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "CryptoTxnHash": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "CryptoWalletAddress": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "Csp": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "Csv": {
+      "count": 1,
+      "files": [
+        "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts"
+      ],
+      "rootNames": [
+        "CSV",
+        "Csv",
+        "CsvDocument",
+        "CsvText",
+        "RowSchemaWithFields"
+      ]
+    },
+    "CsvCodecOptions": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "CsvError": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "CsvFormatter": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "CsvParser": {
+      "count": 2,
+      "files": [
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.csv.ts",
+        "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts"
+      ],
+      "rootNames": []
+    },
+    "Cuid": {
+      "count": 10,
+      "files": [
+        "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
+        "packages/agents/server/src/ProviderInstance/ProviderInstance.layer.ts",
+        "packages/agents/server/src/ProviderInstance/ProviderInstance.repo.ts",
+        "packages/agents/server/test/ProviderInstance.integration.test.ts",
+        "packages/shared/domain/src/entity/PublicEntityId.ts",
+        "packages/shared/domain/test/EntityKernel.test.ts",
+        "packages/workspace/server/src/aggregates/Thread/Thread.layer.ts",
+        "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
+        "packages/workspace/server/test/ThreadStore.test.ts",
+        "packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts"
+      ],
+      "rootNames": []
+    },
+    "CurrencyCode": {
+      "count": 0,
+      "files": [],
+      "rootNames": [
+        "CurrencyCode",
+        "CurrencyName",
+        "isCurrencyCode",
+        "USD",
+        "EUR",
+        "GBP",
+        "JPY",
+        "CHF",
+        "CAD",
+        "AUD",
+        "CNY",
+        "HKD",
+        "SGD"
+      ]
+    },
+    "DateTimeUtcFromValid": {
+      "count": 2,
+      "files": [
+        "packages/foundation/ui-system/ui/src/components/effect-date-time-picker.tsx",
+        "packages/foundation/ui-system/ui/test/AdapterEffectDateTime.test.ts"
+      ],
+      "rootNames": [
+        "DateInputToDateTime",
+        "DateTimeAdapterTimezone",
+        "applyTimezone",
+        "createDateTimeWithTimezone",
+        "createInvalidDateTime",
+        "DateTimeInputKind",
+        "DateTimeInputString",
+        "DateTimeInputNumber",
+        "DateTimeInputDate",
+        "DateTimeInputDateTime",
+        "DateTimeInputInstant",
+        "DateTimeInputInstantWithZone",
+        "DateTimeInputParts",
+        "DateTimeInput",
+        "DateTimeUtcFromValid"
+      ]
+    },
+    "Did": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["Did"]
+    },
+    "DomCssProperties": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "DomDragEvent": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "DomEvent": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "DomHtmlElement": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "DomMouseEvent": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "DomReactNode": {
+      "count": 1,
+      "files": ["packages/foundation/ui-system/editor/src/chat/config.ts"],
+      "rootNames": []
+    },
+    "Double": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["Double"]
+    },
+    "Duration": {
+      "count": 2,
+      "files": [
+        "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+        "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts"
+      ],
+      "rootNames": [
+        "Duration",
+        "DurationValue",
+        "DurationFromInput",
+        "DurationFromInputValue",
+        "DurationInput",
+        "DurationInputValue",
+        "DurationObject",
+        "DurationUnit",
+        "DurationUnitValue",
+        "FromInput",
+        "DurationUnitAlias"
+      ]
+    },
+    "EffectSchema": {
+      "count": 5,
+      "files": [
+        "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.ports.ts",
+        "packages/law-practice/use-cases/src/CandorRecord/CandorRecord.ports.ts",
+        "packages/law-practice/use-cases/src/LegalPositionRecord/LegalPositionRecord.ports.ts",
+        "packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.ports.ts",
+        "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts"
+      ],
+      "rootNames": ["isEffect", "EffectSchema"]
+    },
+    "Email": {
+      "count": 5,
+      "files": [
+        "apps/oip-web/src/components/ContactForm.tsx",
+        "apps/oip-web/src/content/OipContent.model.ts",
+        "apps/oip-web/test/oip-web.test.tsx",
+        "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts",
+        "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts"
+      ],
+      "rootNames": ["EmailString", "Email"]
+    },
+    "EthAmount": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "EthereumValidatorPublicKey": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "EvmAddress": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "ExpectCt": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "FileDiff.schema": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["FileDiff"]
+    },
+    "FileExtension": {
+      "count": 3,
+      "files": [
+        "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts",
+        "packages/tooling/tool/cli/src/commands/Files/Files.media.ts",
+        "packages/tooling/tool/cli/src/commands/Image/Image.service.ts"
+      ],
+      "rootNames": [
+        "extractMimeExtensions",
+        "ApplicationFileExtension",
+        "VideoFileExtension",
+        "TextFileExtension",
+        "ImageFileExtension",
+        "AudioFileExtension",
+        "MiscFileExtension",
+        "FileExtension"
+      ]
+    },
+    "FileInfo": {
+      "count": 1,
+      "files": ["packages/law-practice/server/src/PracticeKg.emails.ts"],
+      "rootNames": ["FileInfoType", "FileInfo"]
+    },
+    "FileName": {
+      "count": 1,
+      "files": [
+        "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts"
+      ],
+      "rootNames": ["FileName"]
+    },
+    "FilePath": {
+      "count": 6,
+      "files": [
+        "packages/documents/domain/src/values/Taxonomy/Taxonomy.model.ts",
+        "packages/documents/domain/src/values/Taxonomy/Taxonomy.projection.ts",
+        "packages/tooling/library/ai-metrics/src/data-root.ts",
+        "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+        "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+        "packages/workspace/domain/src/entities/Workspace/Workspace.values.ts"
+      ],
+      "rootNames": [
+        "HasNullByte",
+        "SupportedWindowsNamespace",
+        "UsesPosixSeparator",
+        "UsesWindowsSeparator",
+        "EndsWithSeparator",
+        "WindowsDriveRoot",
+        "WindowsUncRoot",
+        "HasLeafSegment",
+        "SupportedPathFamily",
+        "FilePath",
+        "WindowsDotSegment",
+        "ValidWindowsPlainPathSegment",
+        "ValidWindowsRootSegment",
+        "ValidWindowsPathSegment",
+        "WindowsSegments",
+        "ValidWindowsUncRest",
+        "ValidWindowsUncSegments",
+        "WindowsDrivePath",
+        "WindowsUncPath",
+        "WindowsRelativePath"
+      ]
+    },
+    "FileTypeChecker": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["FileTypeChecker"]
+    },
+    "Fixed32": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["Fixed32"]
+    },
+    "Fixed64": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["Fixed64"]
+    },
+    "Float": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["Float"]
+    },
+    "Float16Array": {
+      "count": 0,
+      "files": [],
+      "rootNames": [
+        "isFloat16Array",
+        "Float16Arr",
+        "Float16ArrayFromArray",
+        "Float16ArrayField"
+      ]
+    },
+    "Float32Array": {
+      "count": 3,
+      "files": [
+        "packages/drivers/cosmos/src/Cosmos.projection.ts",
+        "packages/drivers/graph-3d/src/Graph3D.projection.ts",
+        "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts"
+      ],
+      "rootNames": ["Float32Arr", "Float32ArrayFromArray", "Float32ArrayField"]
+    },
+    "Float64Array": {
+      "count": 0,
+      "files": [],
+      "rootNames": ["Float64Arr", "Float64ArrayFromArray", "Float64ArrayField"]
+    },
+    "Fn": {
+      "count": 22,
+      "files": [
+        "apps/professional-desktop/src/spikes/CosmosSpike.tsx",
+        "packages/agents/server/src/AssistantTurn/ScanState.ts",
+        "packages/drivers/cosmos/src/Cosmos.renderer.ts",
+        "packages/drivers/exiftool/src/Exiftool.service.ts",
+        "packages/drivers/exiftool/src/ExiftoolConfig.ts",
+        "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+        "packages/drivers/graph-3d/src/Graph3D.renderer.ts",
+        "packages/drivers/obs/src/ObsProtocol.service.ts",
+        "packages/drivers/runpod/src/RunpodDocs.service.ts",
+        "packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts",
+        "packages/epistemic/use-cases/src/ClaimProjection/ClaimProjection.ts",
+        "packages/foundation/capability/colors/src/internal/ColorsSchema.ts",
+        "packages/foundation/capability/observability/src/server/DevTools.ts",
+        "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.ports.ts",
+        "packages/law-practice/use-cases/src/CandorRecord/CandorRecord.ports.ts",
+        "packages/law-practice/use-cases/src/LegalPositionRecord/LegalPositionRecord.ports.ts",
+        "packages/law-practice/use-cases/src/LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.ports.ts",
+        "packages/tooling/library/ai-metrics/src/data-root.ts",
+        "packages/tooling/library/ai-sync/src/models.ts",
+        "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
+        "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+        "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"
+      ],
+      "rootNames": [
+        "FnType",
+        "FnSchemaNoArg",
+        "FnSchemaUnary",
+        "FnSchema",
+        "FnSchemaStatics",
+        "AnyFn",
+        "ThunkOf",
+        "Fn"
+      ]
+    },
+    "ForceHttpsRedirect": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    },
+    "FrameGuard": {
+      "count": 0,
+      "files": [],
+      "rootNames": []
+    }
+  },
+  "unresolved": []
+}
