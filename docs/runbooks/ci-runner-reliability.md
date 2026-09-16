@@ -16,6 +16,18 @@ Keep the two-instance cap, existing 64 GiB choices and ephemeral one-job-per-VM
 teardown. A budget alert does not enforce a monthly worker-hour limit. Diagnose
 interrupted jobs before retrying; changing the alert does not change running workers.
 
+## Admission and capacity
+
+Admission bounds what enters the `beep-ec2-heavy` queue; it does not add
+capacity. The `Heavy Admission` job in `check.yml` runs
+`bun run beep ci admission` once per run: a pull request enters the heavy
+matrix only with the `ready-for-heavy` label (or as a main push / merge group),
+a docs-only diff is called with `admitted: false` so every lane reports
+`skipped`, and an unlabelled code PR holds outside the queue. Throughput is
+still heavy duration times queue depth. Pool sizing — `runners_maximum_count`,
+Spot versus On-Demand, the two-worker cap above — remains the operator's lever
+and is unchanged by admission (time-to-certainty ruling 56).
+
 ## Attribute a runner loss
 
 1. Read every relevant attempt with

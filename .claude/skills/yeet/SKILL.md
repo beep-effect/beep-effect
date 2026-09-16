@@ -425,8 +425,17 @@ and those children must finish. A missing parent with no children keeps waiting.
 If the ruleset read fails, one warning precedes fallback to the `--required`
 view. Optional reds do not affect exit codes. `--settle-timeout` defaults to
 30 minutes; it applies to `--until-ready`, `--until-merged`, and `--watch`.
-Gate lines name `registration`, `required-pending`, `closeout-pending`, or
-`settle-timeout`, including missing and pending contexts. A settled head does
+Gate lines name `registration`, `required-pending`, `heavy-not-admitted`,
+`closeout-pending`, or `settle-timeout`, including missing and pending
+contexts. `heavy-not-admitted` is tier-2 admission (B8): the loop computes the
+heavy verdict every poll from the same function CI runs (`ready-for-heavy`
+label, docs-only diff) and, while the verdict is `hold` with `Heavy / *`
+contexts still open, moves them from `missing`/`pending` into a `gated` census
+bucket and prints
+`settle: heavy-not-admitted; gated: …; admit: gh pr edit --add-label ready-for-heavy; waited …`.
+Held time never counts toward `--settle-timeout`; the settle clock resets when
+the verdict changes, and the label admits within one poll. `skip-satisfied`
+(docs-only) settles on the reported `skip` outcomes. A settled head does
 not time out while waiting for review closeout. The final readiness gate line
 includes the head timeline and push→ready wall clock when the push date is known.
 
@@ -446,7 +455,9 @@ includes the head timeline and push→ready wall clock when the push date is kno
    Keep the tool call attached and wait for its result. Exit 0 with
    `merge-ready: yes` means hand the PR to the operator; it does not merge it.
    On exit 1, read the summary line, fix the named blocker, publish, and re-arm
-   the command. Act on unresolved review threads through the reply flow while
+   the command. A code PR holds at `heavy-not-admitted` until you apply the
+   `ready-for-heavy` label (see Merge Loop); do that once tier 1 is green, not
+   at publish. Act on unresolved review threads through the reply flow while
    the loop waits. The loop runs read-first closeout automatically after the
    required checks settle. `monitor --summary` remains a one-shot compact read.
 7. Run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`
@@ -513,6 +524,16 @@ the authoritative gates.
 the merge-loop porcelain. They read the clone and the PR; none of them plan
 turbo work, so they are cheap to run mid-loop.
 
+- **Heavy admission is a deliberate verb.** Publish without the label and let
+  tier 1 (lint shards, unit shards, cheap gates) go green first; `Heavy
+  Admission` in `check.yml` then holds a code PR (`Heavy / *` stays
+  "Expected", merge blocked) until `gh pr edit <n> --add-label ready-for-heavy`.
+  Apply it yourself, then run `bun run beep yeet monitor --until-ready` — the
+  held loop prints that exact command and does not burn its settle budget.
+  Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,
+  any `*.md`, packet prose) need no label: the heavy lanes report `skipped` and
+  satisfy the ruleset. Removing the label changes nothing already reported;
+  cancel a heavy run from the Actions UI if it must stop.
 - `monitor --until-merged` re-reads status every poll, so a push landing
   mid-session is picked up as the new budget scope. Job triage is job-level
   and mid-run: a completed red job is classified on the poll after it
