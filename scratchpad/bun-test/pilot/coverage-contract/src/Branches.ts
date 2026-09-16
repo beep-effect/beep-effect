@@ -1,3 +1,8 @@
+/**
+ * Branching functions used to compare coverage providers on a fixed source workload.
+ *
+ * @since 0.0.0
+ */
 import * as P from "effect/Predicate";
 
 /**

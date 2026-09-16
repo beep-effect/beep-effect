@@ -1,8 +1,8 @@
 # Quality runtime inventory
 
-Inspected 2026-09-15 at base `d142324fe0`. This is a read-only source and installed-launcher inventory, not a new execution benchmark. Concurrent implementation may supersede these script values. No hosted jobs, dependency installs, or quality suites ran for this report.
+Initially inspected 2026-09-15 at base `d142324fe0`. The task inventory and manifest counts below describe that source and installed-launcher snapshot; the coverage row and recommendations incorporate the subsequent [coverage runtime follow-up](COVERAGE-RUNTIME-RESULTS.md). This inventory is not an execution benchmark. No hosted jobs, dependency installs, or quality suites ran for this report.
 
-Coverage and doctests are the clearest remaining Node-hosted Vitest candidates. Most ordinary tests, integration tests, property tests, docgen, Knip, and repository CLI logic already request Bun. Compiler and formatter workloads often execute native binaries; changing their JavaScript launcher cannot move the substantive work to Bun.
+Coverage and doctests are concrete remaining Node-hosted Vitest workloads. Coverage now has a demonstrated provider-compatibility blocker; doctests still need separate qualification. Most ordinary tests, integration tests, property tests, docgen, Knip, and repository CLI logic already request Bun. Compiler and formatter workloads often execute native binaries; changing their JavaScript launcher cannot move the substantive work to Bun.
 
 ## Setup does not determine the child runtime
 
@@ -16,7 +16,7 @@ Paths below are relative to the repository root. `CiLane.ts` means `packages/too
 
 | Task | Current executable chain and owner | Runtime implication |
 | --- | --- | --- |
-| Coverage | `CiLane.ts:1338` invokes the root coverage operator, concurrency 3. Workspace scripts use `bunx vitest run --coverage`, with package exclusions/config overrides. Example: `packages/foundation/modeling/schema/package.json:12`. `vitest.shared.ts:249` selects V8. | Node by normal Vitest shebang dispatch; hosted reference is Node 22.22.3. The pilot separately witnessed actual Bun workers running the same provider. Preserve coverage populations, per-package baselines, branch counts, and runtime-specific behavior before adoption. |
+| Coverage | `CiLane.ts:1338` invokes the root coverage operator, concurrency 3. Workspace scripts use `bunx vitest run --coverage`, with package exclusions/config overrides. Example: `packages/foundation/modeling/schema/package.json:12`. The updated `vitest.shared.ts` selects V8 under Node and Istanbul under Bun. | Canonical launchers retain Node/V8; hosted reference is Node 22.22.3. Bun/V8 is rejected for false-positive coverage of unexecuted code. Explicit Bun/Istanbul runs pass the bounded counter and threshold controls but fail the unchanged schema per-file ratchet with 260 findings. See the [follow-up evidence](COVERAGE-RUNTIME-RESULTS.md). |
 | Doctest | `CiLane.ts:1185` schedules Turbo `doctest`. Generator lines 1191, 1218, 1247, 1269, 1290, 1316 prescribe `BEEP_VITEST_DOCTEST=1 bunx vitest run`. | Still a Node-hosted Vitest candidate. Requires a separate doctest-plugin, example-isolation, timeout and TSX qualification. Ordinary-test success does not cover this task. |
 | Unit and property | `CiLane.ts:1497` selects unit tasks; lines 1435–1445 schedule `test:property`. Generator lines 1174, 1204, 1230 prescribe `bunx --bun vitest run ...`; property scripts delegate to `beep:test`. | Already Bun-hosted Vitest in almost every inspected package. Native Bun test is a runner migration, not a Node-to-Bun runtime switch. |
 | Integration | `CiLane.ts:1496` selects integration tasks. Generator lines 1179, 1209, 1235 prescribe `bunx --bun vitest run test/integration ...`. | Already Bun-hosted. Containers, PGlite/WASM, databases, network and external tools retain their own costs. |
@@ -34,7 +34,7 @@ Paths below are relative to the repository root. `CiLane.ts` means `packages/too
 
 ## Exceptions and scope
 
-A direct scan of current `packages/**/package.json` and `apps/**/package.json` found 139 `beep:test` scripts: 138 explicitly use `bunx --bun`, while `@beep/identity` uses `bunx vitest run` (`packages/foundation/modeling/identity/package.json:31`). This is a manifest count, not the set of tasks selected by a particular PR. The scan found 133 coverage scripts, all plain `bunx vitest`; 28 explicit doctest implementations, all plain `bunx vitest`; and 90 explicit integration implementations using `bunx --bun`.
+A direct scan of `packages/**/package.json` and `apps/**/package.json` at the initial snapshot found 139 `beep:test` scripts: 138 explicitly use `bunx --bun`, while `@beep/identity` uses `bunx vitest run` (`packages/foundation/modeling/identity/package.json:31`). This is a manifest count, not the set of tasks selected by a particular PR. The scan found 133 coverage scripts, all plain `bunx vitest`; 28 explicit doctest implementations, all plain `bunx vitest`; and 90 explicit integration implementations using `bunx --bun`.
 
 The infrastructure workspace is separate from those counts. `infra/package.json:38–40` combines Bun-hosted Vitest with a Lambda task that runs its own typecheck, native `bun test`, and bundle/zip checks. Its build is intentionally a no-op (line 32).
 
@@ -42,9 +42,9 @@ The infrastructure workspace is separate from those counts. `infra/package.json:
 
 Workspace scripts are governed by the canonical package-script generator. Coverage rules are marked `owned` in generator lines 827–841, preserving package-specific commands; test/docgen/doctest defaults live at 1163–1316. Change the owning policy through its supported mechanism and run `bun run beep lint package-scripts --write`; preserve package exclusions and special configurations. The root CLI's task planning lives in `commands/Quality/Tasks.ts`, and hosted lane selection in `commands/Ci/CiLane.ts`. Node setup pins remain necessary for other consumers even if coverage changes.
 
-1. Qualify Bun-hosted Vitest coverage first using the existing pilot evidence. Explain the five differing source coverage counts and observed memory increase; do not rewrite baseline expectations to hide a provider difference.
-2. Consider doctests next, then the identity test exception. Their remaining Node invocation is concrete, but benefit has not been measured.
+1. Keep canonical coverage on Node/V8. Any further coverage adoption work must resolve the 260 Bun/Istanbul ratchet findings: 252 vanished-file findings from 63 omitted zero-unit files and eight executable-source metric findings. Shared-config controls establish correct provider selection, expected unreachable-code counters, and threshold rejection; they do not establish per-file baseline compatibility. The one-worker pair still fails that compatibility gate. Do not reset baselines to conceal the difference, and do not use the rejected Bun/V8 observations to justify adoption or a memory conclusion.
+2. Prioritize a separate doctest qualification, then the identity test exception, for further Node-to-Bun candidate work. Their remaining Node invocation is concrete, but benefit has not been measured. Neither requires resolving the coverage-provider migration first.
 3. Consider JavaScript `tsc`/Babel build children only as a separate artifact-equivalence experiment. Storybook needs separate browser/addon qualification.
 4. Do not sell native compiler, Biome, oxlint, Fallow, scanner, or already-Bun work as Node migration savings. Setup, cache misses, queue time, retries and external services remain separate contributors.
 
-No duration, memory, or billed saving is inferred from this inventory. The earlier pilot worker witnesses support the coverage runtime observation only; the other rows are source-defined launch behavior pending execution witnesses where needed.
+No duration, memory, or billed saving is inferred from this inventory. The [coverage follow-up](COVERAGE-RUNTIME-RESULTS.md) separates the shared-config worker witnesses from the single diagnostic schema measurements and documents their distinct resource limits. The other rows remain source-defined launch behavior pending execution witnesses where needed.

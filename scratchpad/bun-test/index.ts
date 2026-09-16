@@ -1,6 +1,8 @@
 /**
  * Effect testing helpers for Bun's native `bun:test` runner.
  *
+ * **Details**
+ *
  * The experimental API follows `@effect/vitest` (`it.effect`, `it.live`,
  * `layer`, `it.prop`, `flakyTest`, …). See PILOT-RESULTS.md
  * for known unsupported contracts before attempting migration.
@@ -305,6 +307,8 @@ export const assert: {
 /**
  * A stand-in for Vitest's `TestContext`. Bun's test runner doesn't pass a
  * context object to the test function, so the test wrapper synthesises one.
+ *
+ * **Details**
  *
  * The `signal` aborts when the wrapper-managed timeout fires, interrupting the
  * test's Effect fiber so its finalizers run — something Bun's own timeout

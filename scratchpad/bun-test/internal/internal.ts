@@ -1,4 +1,6 @@
 /**
+ * Implements scoped Effect execution and completion hooks for the experimental Bun adapter.
+ *
  * @since 0.0.0
  */
 
@@ -83,7 +85,23 @@ class CompletionFailure extends S.TaggedError<CompletionFailure>($I`CompletionFa
   $I.annote("CompletionFailure", { description: "Test body and completion hook failures retained during cleanup." })
 ) {}
 
-/** @internal */
+/**
+ * Configure Bun and the adapter's interruptible default before collecting tests.
+ *
+ * **Example** (Use setDefaultTimeout in a test)
+ *
+ * ```ts
+ * import { setDefaultTimeout, effect } from "@beep/scratchpad/bun-test/internal/internal"
+ * import * as Effect from "effect/Effect"
+ *
+ * setDefaultTimeout(30_000)
+ * effect("uses the configured deadline", () => Effect.succeed(42))
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
 export const setDefaultTimeout = (millis: number): void => {
   bunSetDefaultTimeout(millis)
   defaultTimeoutMillis = millis
@@ -206,7 +224,22 @@ const skipCollector = Object.assign(
   }
 )
 
-/** @internal */
+/**
+ * Register plain Bun tests with synthetic completion and failure callbacks.
+ *
+ * **Example** (Register a plain test)
+ *
+ * ```ts
+ * import { expect } from "bun:test"
+ * import { defaultApi } from "@beep/scratchpad/bun-test/internal/internal"
+ *
+ * defaultApi("plain assertion", () => expect(2 + 2).toBe(4))
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
 export const defaultApi: BunTest.Collector = Object.assign(baseCollector, {
   skip: skipCollector,
   only: registerWith(bunTest.only) as BunTest.API,
@@ -254,12 +287,36 @@ const runPromise: <E, A>(
 /** @internal */
 const runTest = (ctx?: BunTest.TestContext) => <E, A>(effect: Effect.Effect<A, E>) => runPromise(effect, ctx)
 
-/** @internal */
+/**
+ * Test clock and console services supplied to scoped Effect test callbacks.
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
 export type TestContext = TestConsole.TestConsole | TestClock.TestClock
 
 const TestEnv = Layer.mergeAll(TestConsole.layer, TestClock.layer())
 
-/** @internal */
+/**
+ * Keep the upstream setup entrypoint available without registering custom equality testers.
+ *
+ * **Example** (Use addEqualityTesters in a test)
+ *
+ * ```ts
+ * import { expect } from "bun:test"
+ * import { addEqualityTesters } from "@beep/scratchpad/bun-test/internal/internal"
+ * import * as Equal from "effect/Equal"
+ * import * as O from "effect/Option"
+ *
+ * addEqualityTesters()
+ * expect(Equal.equals(O.some(1), O.some(1))).toBe(true)
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
 export const addEqualityTesters = () => {
   // No-op: `bun:test`'s `expect` does not currently expose
   // `addEqualityTesters`. Use `Equal.equals` directly (or the helpers in
@@ -436,7 +493,25 @@ const makeTester = <R>(
   return Object.assign(f, { skip, skipIf, runIf, only, each, fails, prop })
 }
 
-/** @internal */
+/**
+ * Check a synchronous property with schema-derived inputs and explicit run options.
+ *
+ * **Example** (Use prop in a test)
+ *
+ * ```ts
+ * import { expect } from "bun:test"
+ * import { prop } from "@beep/scratchpad/bun-test/internal/internal"
+ * import * as S from "effect/Schema"
+ *
+ * prop("generates integers", [S.Int], ([value]) => {
+ *   expect(Number.isInteger(value)).toBe(true)
+ * }, { arbitrary: { runs: 5, seed: 42 } })
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
 export const prop: BunTest.BunTest.Methods["prop"] = (name, arbitraries, self, timeout) => {
   const arbitrary = makeArbitrary(arbitraries)
   return defaultApi(
@@ -458,7 +533,26 @@ export const prop: BunTest.BunTest.Methods["prop"] = (name, arbitraries, self, t
 // layer
 // ----------------------------------------------------------------------------
 
-/** @internal */
+/**
+ * Share a Layer across tests in a block, closing its resources when the block finishes.
+ *
+ * **Example** (Use layer in a test)
+ *
+ * ```ts
+ * import { expect } from "bun:test"
+ * import { layer } from "@beep/scratchpad/bun-test/internal/internal"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
+ *
+ * layer(Layer.empty)("shared layer", (tests) => {
+ *   tests.effect("runs in scope", () => Effect.sync(() => expect(true).toBe(true)))
+ * })
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
 export const layer = <R, E>(
   layer_: Layer.Layer<R, E>,
   options?: {
@@ -547,7 +641,22 @@ export const layer = <R, E>(
   })
 }
 
-/** @internal */
+/**
+ * Retry a scoped Effect failure within the helper's bounded retry policy.
+ *
+ * **Example** (Use flakyTest in a test)
+ *
+ * ```ts
+ * import { flakyTest, effect } from "@beep/scratchpad/bun-test/internal/internal"
+ * import * as Effect from "effect/Effect"
+ *
+ * effect("retries transient work", () => flakyTest(Effect.succeed(42)))
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
 export const flakyTest = <A, E, R>(
   self: Effect.Effect<A, E, R | Scope.Scope>,
   timeout: Duration.Input = Duration.seconds(30)
@@ -570,7 +679,24 @@ export const flakyTest = <A, E, R>(
     Effect.orDie
   )
 
-/** @internal */
+/**
+ * Extend a compatible collector with scoped Effect and property-test methods.
+ *
+ * **Example** (Use makeMethods in a test)
+ *
+ * ```ts
+ * import { expect } from "bun:test"
+ * import { makeMethods, defaultApi } from "@beep/scratchpad/bun-test/internal/internal"
+ * import * as Effect from "effect/Effect"
+ *
+ * const tests = makeMethods(defaultApi)
+ * tests.effect("uses an extended collector", () => Effect.sync(() => expect(true).toBe(true)))
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
 export const makeMethods = (it: BunTest.Collector): BunTest.BunTest.Methods =>
   extendApi(it, {
     effect: makeTester<Scope.Scope>(flow(Effect.scoped, Effect.provide(TestEnv)), it),
@@ -582,13 +708,62 @@ export const makeMethods = (it: BunTest.Collector): BunTest.BunTest.Methods =>
 
 /** @internal */
 export const {
-  /** @internal */
+  /**
+   * Register a scoped Effect test with TestClock and TestConsole services.
+   *
+   * **Example** (Use effect in a test)
+   *
+   * ```ts
+   * import { expect } from "bun:test"
+   * import { effect } from "@beep/scratchpad/bun-test/internal/internal"
+   * import * as Effect from "effect/Effect"
+   *
+   * effect("asserts inside an Effect", () => Effect.sync(() => expect(2 + 2).toBe(4)))
+   * ```
+   *
+   * @internal
+   * @category testing
+   * @since 0.0.0
+   */
   effect,
-  /** @internal */
+  /**
+   * Register a scoped Effect test using the live runtime clock.
+   *
+   * **Example** (Use live in a test)
+   *
+   * ```ts
+   * import { live } from "@beep/scratchpad/bun-test/internal/internal"
+   * import * as Effect from "effect/Effect"
+   *
+   * live("waits on the live clock", () => Effect.sleep("1 millis"))
+   * ```
+   *
+   * @internal
+   * @category testing
+   * @since 0.0.0
+   */
   live
 } = makeMethods(defaultApi)
 
-/** @internal */
+/**
+ * Create a named suite whose callback receives the Effect-aware collector.
+ *
+ * **Example** (Use describeWrapped in a test)
+ *
+ * ```ts
+ * import { expect } from "bun:test"
+ * import { describeWrapped } from "@beep/scratchpad/bun-test/internal/internal"
+ * import * as Effect from "effect/Effect"
+ *
+ * describeWrapped("Effect examples", (tests) => {
+ *   tests.effect("asserts a result", () => Effect.sync(() => expect(1).toBe(1)))
+ * })
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
 export const describeWrapped = (name: string, f: (it: BunTest.BunTest.Methods) => void): void => {
   describe(name, () => {
     f(makeMethods(defaultApi))

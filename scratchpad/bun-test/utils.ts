@@ -1,6 +1,8 @@
 /**
  * Provides assertion helpers for the experimental native Bun test adapter.
  *
+ * **Details**
+ *
  * This module defines small assertion functions built on Node's `assert` and
  * Effect's equality support. The helpers cover basic equality, thrown errors,
  * defined and undefined values, strings, regular expressions, class instances,

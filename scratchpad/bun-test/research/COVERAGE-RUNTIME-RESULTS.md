@@ -62,6 +62,42 @@ A production transition needs an explicit, reviewed treatment of provider
 identity, zero-unit files, newly instrumented constructs, and runtime-specific
 paths. A bulk baseline reset cannot by itself establish preserved guarantees.
 
+## Shared configuration and one-worker follow-up
+
+The follow-up used a four-CPU quota, 4 GiB memory cap, and zero swap. Its
+receipts form a separate resource configuration from the earlier 16 GiB runs.
+The shared-config fixture selected V8 under Node and Istanbul under Bun without
+a provider override. Worker witnesses identified Node 22.22.3 and Bun 1.4.2.
+Both single-test runs produced identical statement, branch, and function
+counters: the unreachable break stayed uncovered, the guard recorded `[0,3]`,
+the nullish expression recorded `[1,0]`, and the untouched executable source
+retained zero statement and function counters.
+
+Both negative threshold controls passed their test, then exited 1 because
+branch coverage was 50% against the deliberately impossible 100% threshold.
+The BigInt title control passed under both Bun-hosted Vitest and the native
+adapter, one test each. The PR-lane adapter smoke run recorded 40 passing tests,
+five skipped tests, and zero failures. Its logged property-failure diagnostics
+belong to passing negative tests.
+
+A separate one-worker schema coverage pair passed all 717 tests in both arms:
+
+| Requested runtime/provider | Elapsed | Cgroup peak memory | Cgroup CPU time | Source files |
+| --- | ---: | ---: | ---: | ---: |
+| Node 22.22.3 / V8 | 66.003 s | 1,222,459,392 bytes | 80.635796 s | 271 |
+| Bun 1.4.2 / Istanbul | 27.564 s | 1,123,852,288 bytes | 40.378048 s | 208 |
+
+The canonical comparator again returned zero findings for Node/V8 and 260 for
+Bun/Istanbul, with no minimum-coverage or missing-package findings in either.
+The provider mismatch therefore persists under the canonical worker count.
+
+These are single diagnostic observations on a shared workstation, not accepted
+performance samples. Provider compatibility remains unqualified, and these
+runs cannot establish CI cost savings or performance acceptance gates. The
+full schema pair records explicit launcher/provider arguments but contains no
+new worker-runtime witness; the witnesses above belong to the shared-config
+fixture. None of these nine follow-up runs recorded an OOM event.
+
 ## Other runtime opportunities
 
 [The runtime inventory](quality-runtime-inventory.md) records the current
@@ -77,6 +113,11 @@ Raw requests, counters, receipts, and logs live under the ignored
 failed attempts and machine-local provenance. The bounded contract fixture is
 tracked under `pilot/coverage-contract/` and intentionally allows explicit
 provider overrides to reproduce the rejected combination.
+
+The sanitized [follow-up receipts](coverage-followup-attempts.json) preserve the
+additional executed attempts separately from the original pilot ledger. Across
+both ledgers, 65 attempts consumed 305,613 ms of the 3,600,000 ms execution
+budget; queue waiting is excluded. No accepted performance samples exist.
 
 No measured reduction in total CI cost per successful PR is established.
 The agreed adoption threshold remains at least 10% savings supported by the

@@ -123,3 +123,18 @@
   then rerun its quick verification; both lint and check passed.
 - Prevention: build referenced projects before selecting the quick verification
   subset in a fresh dependency installation.
+
+## 2026-09-15: docgen success did not prove inventory compliance
+
+- Work: document the new experimental adapter and coverage pilot for PR #1145.
+- Evidence: hosted JSDoc Ratchet rejected growth in six metrics after package
+  docgen passed. The regenerated inventory attributed all growth to the new
+  scratch adapter: 11 internal exports, four default configuration exports,
+  the internal module header, and three multi-paragraph lead descriptions.
+- Impact: docgen omits internal and default-export surfaces that the inventory
+  still scores; passing example compilation alone missed those obligations.
+- Recovery: add descriptions, titled examples, categories, and versions to the
+  owning exports; give module headers a lead and put secondary prose in Details.
+  Preserve existing internal visibility and the committed ratchet baseline.
+- Prevention: regenerate the ignored CI inventory and run the actual JSDoc
+  ratchet alongside package docgen when adding scratch modules or configurations.
