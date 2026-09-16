@@ -51,13 +51,13 @@ const assertEncodedRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema:
 };
 
 // Decoded-side equivalence additionally pins that the decoded instance equals
-// the generated one. It is asserted only for plain-data schemas: on an
-// `S.TaggedError` the decoded side is an `Error` subclass whose equivalence is
-// NOT a stable schema law — two structurally identical instances compare
-// unequal at a low rate. Measured on this schema set at 60 seeds x 400 runs:
-// DocTextError 682/24000 unequal, while DocTextErrorReason and
-// DocTextErrorOptions were 0/24000. That instability is what made the hosted
-// Property Laws lane fail at run 121 on a seed this repo pins for determinism.
+// the generated one. It holds for `S.TaggedError` classes too: Effect derives a
+// Schema class's equivalence from its declared field struct by construction
+// (effect@4.0.0-rc.113), so the `Error` runtime metadata never takes part.
+// Measured on this schema set at 60 seeds x 400 runs on rc.113: DocTextError,
+// DocTextErrorReason and DocTextErrorOptions all 0/24000 unequal (the rc.109
+// run that motivated a class-level hook was 682/24000 on DocTextError; see
+// goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-annote-error-proof.md).
 const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
   assertEncodedRoundTrip(schema);
   expect(
@@ -147,7 +147,7 @@ describe("@beep/doc-text", () => {
   it("round-trips document text driver schemas", () => {
     assertSchemaRoundTrip(DocTextErrorReason);
     assertSchemaRoundTrip(DocTextErrorOptions);
-    assertEncodedRoundTrip(DocTextError);
+    assertSchemaRoundTrip(DocTextError);
   });
 
   it.effect(

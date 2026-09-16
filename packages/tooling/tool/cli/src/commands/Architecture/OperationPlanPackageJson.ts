@@ -108,12 +108,6 @@ export const renderPackageJsonOperation = Effect.fn(function* (operation: WriteP
       ...scaffoldPackageScripts("library", ["lint:fix", "test:integration"]),
       babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
       "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
-      "beep:policy": `bun --cwd ${pipe(
-        operation.repositoryDirectory,
-        Str.split("/"),
-        A.map(() => "../"),
-        A.join("")
-      )} run beep lint package-test-imports --include-root ${operation.repositoryDirectory}`,
       coverage: "bunx vitest run --coverage --exclude=test/integration/**",
     },
     exports: packageExportMapFor(operation.role, operation.exports, false),

@@ -1,0 +1,18 @@
+--- a/ai/llm/openai.js
++++ b/ai/llm/openai.js
+@@ -1,3 +1,4 @@
++import { appendFileSync as __dumpAppend } from "node:fs";
+ /**
+  * OpenAI-compatible transport. Wraps the `openai` SDK pointed at any
+  * OpenAI-compatible endpoint (OpenAI, OpenRouter, Fireworks, a LiteLLM proxy,
+@@ -187,6 +188,10 @@
+         return this.client.chat.completions.create(attempt);
+     }
+     fromResponse(resp, format) {
++        // Local patch (2026-09-09): raw response dump for diagnosing empty-parsed cruxes.
++        if (process.env.GRAFT_DUMP_DIR) {
++            try { __dumpAppend(process.env.GRAFT_DUMP_DIR + "/responses.jsonl", JSON.stringify(resp) + "\n"); } catch {}
++        }
+         const choice = resp.choices[0];
+         const msg = choice?.message;
+         const rawCalls = (msg?.tool_calls ?? []).filter((c) => c.type === "function");

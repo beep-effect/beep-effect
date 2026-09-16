@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig, mergeConfig } from "vitest/config";
-import shared from "../../vitest.shared.ts";
+import shared, { vitestDoctestActive } from "../../vitest.shared.ts";
 
 export default mergeConfig(
   shared,
@@ -19,7 +19,7 @@ export default mergeConfig(
         const message = error instanceof Error ? error.message : String(error);
         return message.includes("error during concurrent rendering") ? false : undefined;
       },
-      include: ["test/**/*.test.{ts,tsx}"],
+      include: vitestDoctestActive ? [] : ["test/**/*.test.{ts,tsx}"],
       exclude: ["test/integration/**"],
       setupFiles: [fileURLToPath(new URL("./test/setup.dom.ts", import.meta.url))],
       server: {

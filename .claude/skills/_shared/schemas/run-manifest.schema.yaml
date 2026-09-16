@@ -1,6 +1,6 @@
 # RunManifest — reproducibility record; one per auditor run. Pinning is REQUIRED by
 # default; only an explicit user waiver (recorded here) relaxes it. The validator
-# checks this file (required fields, cq_count >= 1, seat flags) and, under --repo,
+# checks this file (required fields, cq_count >= 1, seat flags, seat effort) and, under --repo,
 # recomputes the CQ digest AND counts the CQ file's entries against cq_count —
 # the zero-CQ hard stop keys off a verified count, never an asserted one.
 # File layout: ontologies/{name}/work/run-manifest.yaml.
@@ -40,11 +40,15 @@ agents:                            # EVERY seat is inside the reproducibility lo
                                    # the role→prompt binding is FIXED (validator
                                    # rejects omitted or swapped prompt paths and
                                    # recomputes each digest from the shipped bytes)
-  denotation: {model: "", prompt: "prompts/denotation.md", prompt_sha256_12: ""}
-  foundational: {model: "", prompt: "prompts/ufo-analysis.md", prompt_sha256_12: ""}
-  synthesis: {model: "", prompt: "prompts/synthesis.md", prompt_sha256_12: ""}
-  adversary: {model: "", prompt: "prompts/ontoclean-adversary.md", prompt_sha256_12: "", independent_context: true}
-  alternative: {model: "", prompt: "prompts/alternative-model.md", prompt_sha256_12: "", blinded: true}
+  denotation: {model: "", effort: "", prompt: "prompts/denotation.md", prompt_sha256_12: ""}  # effort records the reasoning-effort setting
+                                   # the seat was LAUNCHED with (max, xhigh, medium);
+                                   # default when the model exposes no effort control.
+                                   # Recorded provenance the harness cannot
+                                   # cryptographically bind (same status as model).
+  foundational: {model: "", effort: "", prompt: "prompts/ufo-analysis.md", prompt_sha256_12: ""}
+  synthesis: {model: "", effort: "", prompt: "prompts/synthesis.md", prompt_sha256_12: ""}
+  adversary: {model: "", effort: "", prompt: "prompts/ontoclean-adversary.md", prompt_sha256_12: "", independent_context: true}
+  alternative: {model: "", effort: "", prompt: "prompts/alternative-model.md", prompt_sha256_12: "", blinded: true}
 first_run: false                   # true ONLY on an ontology's first run — the sole
                                    # legal reason for an empty prior_index
 prior_index: ""                    # previous run's ARCHIVED index (runs/<run_id>.index.yaml) — REQUIRED

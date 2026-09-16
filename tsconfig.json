@@ -2144,6 +2144,13 @@
       ],
       "@beep/test-utils/test/Vitest": [
         "./packages/tooling/test-kit/test-utils/src/test/Vitest.test-kit.ts"
+      ],
+      "@beep/acp/json": ["./packages/drivers/acp/src/AcpJson.codec.ts"],
+      "@beep/epistemic-domain/values/ClaimEvidenceReview": [
+        "./packages/epistemic/domain/src/values/ClaimEvidenceReview/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ClaimEvidenceReview": [
+        "./packages/epistemic/use-cases/src/ClaimEvidenceReview/index.ts"
       ]
     }
   }

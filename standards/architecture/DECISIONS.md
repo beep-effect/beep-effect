@@ -1414,9 +1414,44 @@ checklist. Keeping the CI lane non-required prevents a stale lab from blocking
 unrelated upstream work, while requiring the lab's own PR to pass preserves the
 claim that it is a faithful proving ground.
 
-## 2026-08-24: Tagged Errors Declare Diagnostic Equivalence
+## 2026-09-12: Schema Classes Derive Equivalence By Construction
 
 - **Status:** Active
+- **Supersedes:** 2026-08-24 Tagged Errors Declare Diagnostic Equivalence
+
+Decision:
+
+No Schema class (`S.Class`, `S.TaggedClass`, `S.Error`, `S.TaggedError`)
+declares a class-level `toEquivalence` annotation. Effect derives a class's
+equivalence from its declared field struct by construction
+(`effect@4.0.0-rc.113`, upstream `84864bc30c`, "Fix Schema class equivalence
+derivation"), so `S.toEquivalence(ErrorClass)` already compares declared
+fields only and ignores `Error` runtime metadata. `$I.annoteError` returns
+identity metadata and documentation extras and installs no hook; the
+`adoptDeclaredFieldsEquivalence` and `declaredFieldsEquivalence` helpers are
+deleted. A field that must not take part in identity declares an always-equal
+equivalence on its own schema (`Defect` from `@beep/schema`, or
+`S.Unknown.annotate({ toEquivalence: () => () => true })` for a local opaque
+payload); nothing is excluded at the class.
+
+The schema-first rule `SFV4-tagged-error-equivalence` is inverted: it now
+reports a `toEquivalence` key reached from the annotations argument of any
+Schema class factory call, including through a referenced annotation record.
+Intentional divergences enter `standards/schema-first.inventory.jsonc` through
+`bun run beep lint schema-first --write` with a justification.
+
+Rationale:
+
+The 2026-08-24 rule encoded a premise that upstream removed two RCs later. A
+lint that demands the hook teaches every new error class the wrong thing and
+hides the derived law behind a ritual. The 60-seed by 400-run measurement on
+`packages/drivers/doc-text` that motivated the hook (682/24,000 unequal on
+rc.109 without it) reports 0/24,000 on rc.113 with the hook deleted
+(`goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-annote-error-proof.md`).
+
+## 2026-08-24: Tagged Errors Declare Diagnostic Equivalence
+
+- **Status:** Superseded by 2026-09-12 (Schema classes derive equivalence by construction)
 
 Decision:
 
@@ -1782,6 +1817,173 @@ duplicate scheduled pull requests. Separating hosted judgment from local proof,
 failing closed on handoff integrity, reusing the existing receipt vocabulary,
 and withholding publisher authority address those observed failure modes. Work
 packet: `explorations/grok-bot-automation/`.
+
+## 2026-09-11: Pull Requests Are Judged Against the Baseline Rows They Raise
+
+- **Status:** Active
+
+Decision:
+
+On a base-pinned coverage run (`TURBO_SCM_BASE` set, which is every
+pull-request run of the `Heavy / Coverage Regression` lane), the ratchet keeps
+judging the measurement against the base revision's rows and additionally
+judges every row the pull request raised against the pull request's own value.
+A row is raised, per metric, when the branch's
+`standards/coverage.regression-baseline.jsonc` carries a stricter floor than
+the base revision's document: a higher percentage (beyond epsilon) or fewer
+uncovered units. Package total rows and file rows are both covered. New files
+already use the branch row and are not re-judged; rows the pull request lowered
+or left unchanged are judged by the base floors alone. A raised row the lane
+does not reach fails with the distinct reason `row raised beyond hosted reach`,
+naming the row, the base value, the proposed value, and the measured value,
+under its own section, with a remediation that says to set the row to the
+measured value or lower. The scoped writer is not offered for that failure,
+because a local regeneration is what mints such rows. The ok line reports how
+many raised row metrics were judged. Runs without a pinned base (main pushes
+and local runs) behave as before.
+
+Rationale:
+
+PR #1068 regenerated the baseline locally and raised the
+`Lint/Lint.command.ts` and `Yeet/internal/Planner.ts` rows above what the
+hosted lane measures. The pull-request run was green because it compared the
+measurement against main's rows; main went red on the first push after the
+merge and every later pull request inherited that red until a floor-restoring
+PR landed. The lane had already measured both files on the pull request and
+produced the exact numbers main later failed on, so the verdict was available
+before the merge and simply not asked for. Judging only raised rows keeps the
+one legitimate direction open: a floor-lowering fix proposes nothing stricter
+than main and stays governed by the base comparison it was already subject to.
+The predicate reused for the raised-row verdict is the same drop rule main
+applies after the merge, so a pull-request pass on a raised row is a prediction
+that main stays green on that row.
+
+This extends the 2026-08-24 rule that the hosted lane is the authority for the
+floors: a raised row is now proven by the hosted lane before it can merge.
+
+## 2026-09-12: Pull Requests Lower Floors Only Where They Could Not Have Moved Them; Scoped Writes Hold Untouched Packages
+
+- **Status:** Active
+
+Decision:
+
+On a base-pinned coverage run (`TURBO_SCM_BASE` set, which is every
+pull-request run of the `Heavy / Coverage Regression` lane), a row metric the
+pull request lowered is judged at the lowered value when the package could not
+have moved it. Three questions decide that, all answered from the change set
+the run already collects (`base...HEAD` plus dirty files):
+
+1. the package owns no changed file, source or test, through the same
+   ownership tables affected-scope planning uses, repository fixtures included;
+2. the package is not a workspace dependent of a package that owns one; and
+3. no changed path other than `standards/coverage.regression-baseline.jsonc`
+   itself yields a full-run reason — a pull request that edits `vitest.shared.ts`,
+   a tsconfig, `turbo.json`, `patches/`, or `.github/` gets no self-judging exit
+   on any package.
+
+Authorship is decided against the merge-base document, not the base tip: a row
+is lowered by this pull request only when the workspace document is looser than
+`git show <merge-base>:standards/coverage.regression-baseline.jsonc`. Reading
+the tip would attribute every row `main` raised after the branch diverged to the
+branch and silently downgrade floors the branch never touched. Both reads fail
+closed: an unreadable merge-base document or an unresolvable change set leaves
+every row at the base floor, which is the behaviour before this entry.
+
+A lowered row on a package that is not self-judge eligible keeps the base floor
+and its diagnostic names both the value the branch proposed and the witness that
+withheld it (`package owns changed file X`, `dependent of @beep/y`, or
+`global input Z changed`). Rows the pull request raised keep the 2026-09-11
+verdict unchanged, and the raised and lowered rules never claim the same metric:
+a row stricter than the base tip is the raised rule's. Policy fields (`epsilon`,
+`minimum`, `exemptions`, `follow_ups`) stay sourced from the base document, so a
+pull request cannot relax the tier or add a follow-up through its own copy. The
+vanished-file rule and the tier minimum keep judging at the base floors: lowering
+a row cannot make a disappearance benign, and the writer cannot lift a package
+above the repository tier. A package present in the base document, measured by
+the run, and absent from the pull request's document fails with the distinct
+reason `package-row-removed`; the only sanctioned delete path remains the
+workspace-removal subtraction.
+
+Every lowered floor is reported — through the ratchet's tighten slot on a green
+run and inside the regression block on a red one — with the base value, the
+lowered value, and what the lane measured. When the lane measures strictly above
+a lowered floor the line carries a `tighten` advisory naming the measured value.
+A hard `row-lowered-below-reach` verdict is deliberately deferred until a week of
+tighten lines is on record. Every path a failure reports also prints the row this
+run measured, encoded through the same schema the committed document uses, so an
+operator pastes hosted evidence instead of running a local writer.
+
+A coverage baseline write — scoped or unscoped — now shares one plan. A scoped
+write adopts a measured package only when it owns a changed file or is a
+workspace dependent of one; an unscoped write keeps the 2026-08-24 rule and
+adopts direct owners alone, because the seven foundation packages close over at
+least 111 of 128 owners and one reflex regeneration must not import that much
+downstream drift. Every other measured package holds its committed row
+byte-for-byte, and a scoped run carries the committed rows it never measured.
+`--replace-all` is valid on a scoped write as the deliberate re-measure path,
+and every raise it records is judged on the pull request by the 2026-09-11 rule.
+Each write reports its per-package disposition, says so loudly when it held
+everything it measured, and names every value it raised above the committed
+rows.
+
+The full-coverage shards, scoped baseline writes, and the narrow ratchet
+invocation all derive their Vitest passthrough from one function: file
+parallelism on, worker count chosen from the packages the invocation measures.
+
+Rationale:
+
+Between 2026-09-10 and 09-12 the lane was red on `main` and on every pull
+request because a local scoped `--write-baseline` (#1068) replaced the whole
+`@beep/repo-cli` block with one workstation snapshot, raising two rows on files
+that pull request never touched above what the lane measures. The restore PR
+(#1090) was red on its own run because a base-pinned run judged every surviving
+row at the base tip's floor, so no pull request could lower a floor. Zero of the
+31 failed coverage jobs that week were memory failures. #1091 already fails a
+pull request that raises a row beyond hosted reach; this entry closes the other
+half of the deadlock and stops the reflex regeneration from rewriting untouched
+packages. The topology unification removes the last way a writer and the lane
+that judges it can disagree about how a row was measured.
+
+Supersedes one clause of the 2026-09-11 entry: "rows the pull request lowered or
+left unchanged are judged by the base floors alone" now holds only for unchanged
+rows and for packages that are not self-judge eligible. Supersedes the
+2026-08-25 sentence that the remediation "names the scoped regeneration command
+for exactly the regressed packages": a drop on an existing row now prints the
+measured rows and names no writer, and the scoped writer is named only for a new
+file or a new package. The 2026-08-24 clause that an unscoped `--write-baseline`
+adopts only the direct owners of the changed files stays exactly as written; a
+scoped write is the one that also adopts dependents, and widening the unscoped
+writer remains deferred. Everything else in the 2026-08-24, 2026-08-25, and
+2026-09-11 entries stays active.
+
+Remediation prose is pull-request prose only on a base-pinned run. An unpinned
+run — a push to `main`, a local run without `TURBO_SCM_BASE` — prints neither
+the measured-row proposals nor the self-judge paragraphs: a dropped row there
+says to restore the coverage or open a pull request that lowers only those rows
+to the values the run printed, which is the runbook line for a red `main`.
+
+## 2026-09-12: Stale Ignored Projections Are Refreshed by Their Checks
+
+- **Status:** Active (amends 2026-08-27 "The Exploration Atlas Is an Untracked D3 Projection")
+
+Decision:
+
+`beep explore atlas --check` and `beep goals index --check` keep proving that every projection is
+derivable, and README-region drift still fails the Atlas check. A present `explorations/ATLAS.md`
+or `goals/INDEX.md` whose bytes differ from the projection is no longer rejected: the check rewrites
+the ignored file from the projection, logs the refresh, and succeeds. When README drift is refused,
+a stale Atlas beside it is named, not rewritten. `--check` never writes a tracked file; `--write`
+remains the only path that rewrites README status regions.
+
+Rationale:
+
+Both files are git-ignored workstation state, so no hosted lane ever carries one and the rejection
+could only fire locally: every fast-forward that landed a packet manifest change left the local
+copy stale and turned `bun run lint` red on a head CI had just proven green (acked as "stale local
+INDEX.md" three times in the Yeet inbox). Rejecting the bytes protected nothing that refreshing does
+not protect better: the projection may carry no authored doctrine, and overwriting an authored-into
+copy enforces that rule instead of leaving the copy in place behind a red. The whole-file projection
+contract is unchanged; only the remedy moved from the operator to the check.
 
 ## Known Unknowns
 

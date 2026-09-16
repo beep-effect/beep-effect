@@ -29,6 +29,12 @@
         "node_modules/.bin/vite scratchpad/graph-3d-bench --host 127.0.0.1 --port \"${PORT:-5199}\" --strictPort"
       ],
       "autoPort": true
+    },
+    {
+      "name": "todox",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/todox", "dev"],
+      "autoPort": true
     }
   ]
 }

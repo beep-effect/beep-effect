@@ -247,6 +247,7 @@ VAL --self-test
 # MODEL = the exact model id every seat command runs with; it is what the
 # manifest records (the harness cannot cryptographically bind it — Known limits)
 MODEL="<model-id-recorded-in-manifest>"
+EFFORT="<reasoning-effort-recorded-in-manifest>"  # Exact effort every Codex seat launches with; agents.<role>.effort records it (default for a model without an effort control).
 
 # Step 1 — create the manifest FROM the exemplar, then pin digests into it
 # (FULL sha256 for record ids; 12-hex short forms for manifest display fields).
@@ -295,14 +296,14 @@ VAL $ONT --repo .
 
 # Step 3 — Denote: fresh agent context; contracts passed EXPLICITLY (a fresh
 # agent in a target repo has no _shared/ of its own)
-codex exec -s workspace-write --cd . -m "$MODEL" "$(cat $SKILL/prompts/denotation.md)
+codex exec -s workspace-write --cd . -m "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$(cat $SKILL/prompts/denotation.md)
 
 CONTRACTS: $SHARED/schemas/denotation-hypothesis.schema.yaml $SHARED/foundational-analysis.md
 INPUT FILES: $WORK/observations/*.yaml $WORK/prose-observations/*.yaml  CQ suite: $ONT/docs/competency-questions.yaml
 OUTPUT: one DenotationHypothesis per file into $WORK/hypotheses/"
 
 # Step 4 — Analyze: foundational analysis of SURVIVING hypotheses, fresh context
-codex exec -s workspace-write --cd . -m "$MODEL" "$(cat $SKILL/prompts/ufo-analysis.md)
+codex exec -s workspace-write --cd . -m "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$(cat $SKILL/prompts/ufo-analysis.md)
 
 CONTRACTS: $SHARED/schemas/identity-card.schema.yaml $SHARED/schemas/foundational-analysis.schema.yaml $SHARED/foundational-analysis.md $SHARED/ontoclean-rules.yaml
 INPUT FILES: $WORK/hypotheses/*.yaml $WORK/observations/*.yaml $WORK/prose-observations/*.yaml
@@ -315,14 +316,14 @@ OUTPUT: ic-/fa- record pairs into $WORK/foundational/"
 # to INPUT FILES and each revised proposal MUST carry a revision_log entry
 # naming the FAILed digest it answers (the gate refuses a post-FAIL PASS
 # without one — a whitespace tweak is not a revision).
-codex exec -s workspace-write --cd . -m "$MODEL" "$(cat $SKILL/prompts/synthesis.md)
+codex exec -s workspace-write --cd . -m "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$(cat $SKILL/prompts/synthesis.md)
 
 CONTRACTS: $SHARED/schemas/ontology-term-proposal.schema.yaml
 INPUT FILES: $WORK/hypotheses/*.yaml $WORK/foundational/*.yaml  CQ suite: $ONT/docs/competency-questions.yaml  reuse report: <scout report path>
 OUTPUT: one OntologyTermProposal per file into $WORK/proposals/"
 
 # Step 7a — adversary seat: NEEDS observations (all kinds) + the CQ file
-codex exec -s workspace-write --cd . -m "$MODEL" "$(cat $SKILL/prompts/ontoclean-adversary.md)
+codex exec -s workspace-write --cd . -m "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$(cat $SKILL/prompts/ontoclean-adversary.md)
 
 CONTRACTS: $SKILL/templates/review-disposition.yaml $SHARED/ontoclean-rules.yaml $SHARED/foundational-analysis.md
 INPUT FILES: $WORK/proposals/otp-*.yaml $WORK/foundational/*.yaml $WORK/observations/*.yaml $WORK/prose-observations/*.yaml $WORK/hypotheses/*.yaml  CQ suite: $ONT/docs/competency-questions.yaml
@@ -337,7 +338,7 @@ attack row needs rule + counterexample and evidence cites observation/CQ ids)"
 
 # Step 7b — blinded alternative seat: observations + hypotheses ONLY; emits
 # BOTH an ic- and an fa- record per hypothesis (half a second opinion is none)
-codex exec -s workspace-write --cd . -m "$MODEL" "$(cat $SKILL/prompts/alternative-model.md)
+codex exec -s workspace-write --cd . -m "$MODEL" -c "model_reasoning_effort=\"$EFFORT\"" "$(cat $SKILL/prompts/alternative-model.md)
 
 CONTRACTS: $SHARED/schemas/identity-card.schema.yaml $SHARED/schemas/foundational-analysis.schema.yaml $SHARED/foundational-analysis.md
 INPUT FILES: $WORK/observations/*.yaml $WORK/prose-observations/*.yaml $WORK/hypotheses/*.yaml
@@ -398,7 +399,7 @@ fi
 # observations. Archive them at the SIBLING shelter, OUTSIDE the scan root
 # (refuse-if-exists; deterministically regenerable from the archived
 # manifest's pin). runs/ itself is the ROTATION LEDGER — manifest/index
-# pairs and engine history only; the validator (v14) REFUSES record-prefixed
+# pairs and engine history only; the validator (v15) REFUSES record-prefixed
 # files under runs/, so per-run record trees can never ride there as live
 # evidence, and no in-root exemption exists to hide live records in:
 ARCH=$(dirname "$ONT")/archives/$(basename "$ONT")

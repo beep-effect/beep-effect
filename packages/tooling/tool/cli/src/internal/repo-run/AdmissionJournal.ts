@@ -1406,17 +1406,26 @@ const acquireFencedGeneration = Effect.fnUntraced(function* (
   });
 });
 
-const runFencedOperation = Effect.fnUntraced(function* <Success, Requirements>(
+const runFencedOperation = Effect.fnUntraced(function* <Success, Failure, Requirements>(
   lockPath: string,
-  operation: (lockToken: string) => Effect.Effect<Success, QualitySchedulerError, Requirements>,
+  operation: (lockToken: string) => Effect.Effect<Success, Failure, Requirements>,
   busyMessage: string
 ): Effect.fn.Return<
-  Result.Result<Success, QualitySchedulerError>,
-  QualitySchedulerError,
+  Result.Result<Result.Result<Success, Failure>, QualitySchedulerError>,
+  never,
   FileSystem.FileSystem | Path.Path | Requirements
 > {
-  const lockToken = yield* acquireFencedGeneration(lockPath, busyMessage);
-  return yield* Effect.ensuring(operation(lockToken), releaseJournalFileLock(lockPath, lockToken)).pipe(Effect.result);
+  return yield* Effect.acquireUseRelease(
+    acquireFencedGeneration(lockPath, busyMessage),
+    Effect.fnUntraced(function* (lockToken) {
+      const outcome = yield* operation(lockToken).pipe(Effect.result);
+      // Callback failures are data until our own fence establishes lock loss.
+      // A caller's scheduler-shaped error alone must never trigger replay.
+      yield* assertJournalFileLockOwned(lockPath, lockToken);
+      return outcome;
+    }),
+    (lockToken) => releaseJournalFileLock(lockPath, lockToken)
+  ).pipe(Effect.result);
 });
 
 /**
@@ -1426,8 +1435,9 @@ const runFencedOperation = Effect.fnUntraced(function* <Success, Requirements>(
  *
  * A lost generation never acknowledges the operation. The boundary releases
  * any surviving generation, reacquires with a fresh token, and reruns the
- * operation from its durable read state. Only lock-loss failures retry; an I/O
- * failure is surfaced unchanged.
+ * operation from its durable read state. Only lock-loss failures retry; I/O
+ * and caller-specific failures are surfaced unchanged. Acquisition and release
+ * are interruption-safe so cancellation cannot strand a newly acquired lock.
  *
  * **Example** (Reference the locked journal boundary)
  *
@@ -1445,16 +1455,16 @@ const runFencedOperation = Effect.fnUntraced(function* <Success, Requirements>(
  * @category utilities
  * @since 0.0.0
  */
-export const withJournalFileLock = Effect.fnUntraced(function* <Success, Requirements>(
+export const withJournalFileLock = Effect.fnUntraced(function* <Success, Failure, Requirements>(
   lockPath: string,
-  operation: (lockToken: string) => Effect.Effect<Success, QualitySchedulerError, Requirements>,
+  operation: (lockToken: string) => Effect.Effect<Success, Failure, Requirements>,
   retryAttempts = LOCKED_OPERATION_RETRY_ATTEMPTS,
   busyMessage = `Journal lock "${lockPath}" stayed busy; could not start the locked operation.`
-): Effect.fn.Return<Success, QualitySchedulerError, FileSystem.FileSystem | Path.Path | Requirements> {
+): Effect.fn.Return<Success, Failure | QualitySchedulerError, FileSystem.FileSystem | Path.Path | Requirements> {
   for (let attempt = 0; attempt < retryAttempts; attempt++) {
     const outcome = yield* runFencedOperation(lockPath, operation, busyMessage);
     if (Result.isSuccess(outcome)) {
-      return outcome.success;
+      return yield* Effect.fromResult(outcome.success);
     }
     if (outcome.failure.reason !== "journal-lock-lost") {
       return yield* outcome.failure;

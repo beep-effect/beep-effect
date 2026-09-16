@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run",
+    "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
     "doctest": "bun run beep:doctest"
   }
 }

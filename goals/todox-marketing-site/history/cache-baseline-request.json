@@ -1,0 +1,14 @@
+{
+  "previous": "96007a5cac5d80f5cee1d0a8ec78d08ee7eef51f421249d07eadd0f50b6327dc",
+  "review": {
+    "reviewer": "goal-executor",
+    "reason": "Accept the @beep/todox workspace dependency edges (identity, schema) introduced by the product-site build without broadening cache qualification.",
+    "basis": {
+      "path": "goals/todox-marketing-site/history/cache-baseline-review.md",
+      "sha256": "aed39ac4d6f8a965eb4fa21bd0bb7a7177732ec508eb0aa4c4952f40d4002724"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

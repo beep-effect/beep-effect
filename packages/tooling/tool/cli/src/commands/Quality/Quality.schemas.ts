@@ -1263,6 +1263,10 @@ const NullableLaneInputDigest = S.OptionFromNullOr(S.String).pipe(
  * `inputDigest` encodes absence as `null`; callers supply a digest only when it
  * comes from the executor, such as a Turbo task hash.
  *
+ * `commandText` is the lane's own launch command. Yeet reads it back as the
+ * lane's repair command when no known sub-lane hint applies, so a red lane
+ * never needs a broad output scan to name what to rerun.
+ *
  * **Example** (Record a completed lane)
  *
  * ```ts
@@ -1277,7 +1281,8 @@ const NullableLaneInputDigest = S.OptionFromNullOr(S.String).pipe(
  *   endedAt: O.some("2026-09-03T00:00:01.000Z"),
  *   durationMs: O.some(1000),
  *   exitCode: O.some(0),
- *   inputDigest: O.none()
+ *   inputDigest: O.none(),
+ *   commandText: O.some("bun run check")
  * })
  * console.log(lane.status) // "passed"
  * ```
@@ -1296,6 +1301,7 @@ export class QualityTaskLaneRun extends S.Class<QualityTaskLaneRun>($I`QualityTa
     exitCode: OptionalLaneRunFinite,
     inputDigest: NullableLaneInputDigest,
     redSchedulingDecision: OptionalGateRedSchedulingDecision,
+    commandText: OptionalLaneRunString,
   },
   $I.annote("QualityTaskLaneRun", {
     description: "Timing and outcome facts for one lane executed inside a wrapper command.",

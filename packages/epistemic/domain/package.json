@@ -47,6 +47,7 @@
     "./entities/UsageRecord": "./src/entities/UsageRecord/index.ts",
     "./values": "./src/values/index.ts",
     "./values/ClaimDispositionStatus": "./src/values/ClaimDispositionStatus/index.ts",
+    "./values/ClaimEvidenceReview": "./src/values/ClaimEvidenceReview/index.ts",
     "./values/Contradiction": "./src/values/Contradiction/index.ts",
     "./values/ClaimGate": "./src/values/ClaimGate/index.ts",
     "./values/ClaimLifecycle": "./src/values/ClaimLifecycle/index.ts",

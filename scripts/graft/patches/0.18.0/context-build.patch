@@ -1,0 +1,23 @@
+--- a/context/build.js
++++ b/context/build.js
+@@ -162,10 +162,20 @@
+         const cached = Array.isArray(nodes) && nodes.length > 0;
+         if (!cached) {
+             nodes = await opts.synthesizer.synthesize(batches[b]);
++            // Local patch (2026-09-09): an empty batch is usually the model ignoring
++            // tool_choice; retry a bounded number of times before accepting the hole.
++            const emptyRetries = Number(process.env.GRAFT_SYNTH_EMPTY_RETRIES ?? 2);
++            for (let attempt = 1; nodes.length === 0 && attempt <= emptyRetries; attempt++) {
++                console.error(`  synthesis batch ${b + 1}/${batches.length}: empty, retry ${attempt}/${emptyRetries}`);
++                nodes = await opts.synthesizer.synthesize(batches[b]);
++            }
+             if (nodes.length > 0)
+                 cache.synth[key] = nodes;
+             else
+                 delete cache.synth[key];
++            // Local patch (2026-09-09): checkpoint after every batch so a thrown
++            // provider error cannot discard hours of finished synthesis.
++            saveCache(outDir, cache);
+         }
+         const links = nodes.reduce((n, node) => n + node.links.length, 0);
+         console.error(`  synthesis batch ${b + 1}/${batches.length}: ${nodes.length} nodes, ${links} links${cached ? " (cached)" : ""}`);

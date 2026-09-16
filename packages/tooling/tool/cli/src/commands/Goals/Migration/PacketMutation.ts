@@ -22,7 +22,12 @@ import {
   StoredPacketEvent,
 } from "../PacketCore/PacketCore.schemas.ts";
 import { packetEventDigest, packetEventFileName, renderPacketEventFile } from "../PacketCore/PacketDigest.ts";
-import { PACKET_EVENTS_SEGMENTS, PacketEventStore, PacketStreamLocator } from "../PacketCore/PacketEventStore.ts";
+import {
+  PACKET_EVENTS_SEGMENTS,
+  PacketEventStore,
+  PacketStreamLocator,
+  withPacketEventLock,
+} from "../PacketCore/PacketEventStore.ts";
 import {
   foldPacketEvents,
   planForkRepair,
@@ -32,6 +37,7 @@ import {
 import { PACKET_TRACE_SEGMENTS } from "../PacketCore/PacketTransitionWriter.ts";
 import { goalStagePosition } from "../SetStatus.ts";
 import { PacketGenesisSeed } from "./Migration.schemas.ts";
+import type { QualitySchedulerError } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import type { GoalManifest } from "../Goals.schemas.ts";
 import type { GoalPacketRecord } from "../Inventory.ts";
 import type { PacketDerivedState } from "../PacketCore/PacketCore.schemas.ts";
@@ -309,7 +315,10 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
     }
   });
 
-  const apply = Effect.fn("PacketForkRepairApplier.apply")(function* (locator: PacketStreamLocator) {
+  const applyLocked = Effect.fn("PacketForkRepairApplier.applyLocked")(function* (
+    locator: PacketStreamLocator,
+    assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+  ) {
     const original = yield* store.list(locator);
     if (A.isReadonlyArrayNonEmpty(original.issues)) {
       return yield* streamError(locator.packet, "stream has integrity issues; fork repair refuses ambiguous bytes");
@@ -384,12 +393,14 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
           .pipe(
             Effect.mapError((error) => streamError(locator.packet, `repair backup staging failed: ${error.message}`))
           );
+        yield* assertOwned;
         yield* fs
           .rename(eventsDirectory, backupDirectory)
           .pipe(
             Effect.mapError((error) => streamError(locator.packet, `existing stream move failed: ${error.message}`))
           );
         yield* verifyMovedForkStream(backupLocator, original);
+        yield* assertOwned;
         yield* fs
           .rename(stagedEvents, eventsDirectory)
           .pipe(
@@ -417,6 +428,16 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
         return O.some(PacketForkRepairOutcome.make({ plan: repair, revision: publishedDerived.revision }));
       }),
       cleanup
+    );
+  });
+
+  const apply = Effect.fn("PacketForkRepairApplier.apply")(function* (locator: PacketStreamLocator) {
+    return yield* withPacketEventLock(locator, (assertOwned) => applyLocked(locator, assertOwned)).pipe(
+      Effect.catchTag("QualitySchedulerError", () =>
+        streamError(locator.packet, "event-stream ownership was lost during fork repair; retry the mutation")
+      ),
+      Effect.provideService(FileSystem.FileSystem, fs),
+      Effect.provideService(Path.Path, path)
     );
   });
 
@@ -688,6 +709,15 @@ export const planPacketGenesisSeed = Effect.fn("Goals.planPacketGenesisSeed")(fu
   );
 });
 
+const genesisStreamLocator = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+  const path = yield* Path.Path;
+  return PacketStreamLocator.make({
+    packet: seed.slug,
+    root: "goals",
+    packetPath: path.dirname(path.dirname(seed.eventsDirectory)),
+  });
+});
+
 const removeQuarantinedGenesisEvent = Effect.fnUntraced(function* (
   seed: PacketGenesisSeed,
   context: "genesis rollback" | "seed rollback",
@@ -754,6 +784,20 @@ export const quarantineOwnedGenesisEvents = Effect.fn("Goals.quarantineOwnedGene
   seed: PacketGenesisSeed,
   context: "genesis rollback" | "seed rollback"
 ) {
+  return yield* withPacketEventLock(yield* genesisStreamLocator(seed), (assertOwned) =>
+    quarantineOwnedGenesisEventsLocked(seed, context, assertOwned)
+  ).pipe(
+    Effect.catchTag("QualitySchedulerError", () =>
+      streamError(seed.slug, `${context} lost event-stream ownership; preserved bytes require a retry`)
+    )
+  );
+});
+
+const quarantineOwnedGenesisEventsLocked = Effect.fnUntraced(function* (
+  seed: PacketGenesisSeed,
+  context: "genesis rollback" | "seed rollback",
+  assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const entries = yield* fs
@@ -766,6 +810,7 @@ export const quarantineOwnedGenesisEvents = Effect.fn("Goals.quarantineOwnedGene
     .makeTempDirectory({ directory: path.dirname(seed.eventsDirectory), prefix: ".genesis-rollback-" })
     .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} quarantine failed: ${error.message}`)));
   const quarantineDirectory = path.join(rollbackRoot, "events");
+  yield* assertOwned;
   yield* fs
     .rename(seed.eventsDirectory, quarantineDirectory)
     .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} quarantine failed: ${error.message}`)));
@@ -784,7 +829,9 @@ export const quarantineOwnedGenesisEvents = Effect.fn("Goals.quarantineOwnedGene
     .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} event remove failed: ${error.message}`)));
 });
 
-const publishGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+type PacketOwnershipFence = Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>;
+
+const publishGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed, assertOwned: PacketOwnershipFence) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tracePath = path.resolve(seed.tracePath);
@@ -797,6 +844,7 @@ const publishGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed
       yield* fs
         .writeFileString(stagedTracePath, seed.traceText)
         .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace write failed: ${error.message}`)));
+      yield* assertOwned;
       yield* fs
         .link(stagedTracePath, tracePath)
         .pipe(
@@ -814,7 +862,11 @@ const publishGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed
   );
 });
 
-const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed, observed: string) {
+const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (
+  seed: PacketGenesisSeed,
+  observed: string,
+  assertOwned: PacketOwnershipFence
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tracePath = path.resolve(seed.tracePath);
@@ -833,6 +885,7 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
     .pipe(
       Effect.mapError((error) => streamError(seed.slug, `genesis trace quarantine remove failed: ${error.message}`))
     );
+  yield* assertOwned;
   const quarantined = yield* fs.rename(tracePath, quarantinedTracePath).pipe(
     Effect.matchEffect({
       onFailure: (error) =>
@@ -842,7 +895,7 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
               return discardRecoveryRoot.pipe(Effect.as(false));
             }
             if (O.isNone(trace)) {
-              return discardRecoveryRoot.pipe(Effect.andThen(publishGenesisTrace(seed)), Effect.as(false));
+              return discardRecoveryRoot.pipe(Effect.andThen(publishGenesisTrace(seed, assertOwned)), Effect.as(false));
             }
             return Effect.fail(streamError(seed.slug, `genesis trace quarantine failed: ${error.message}`));
           })
@@ -855,6 +908,7 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
     .readFileString(quarantinedTracePath)
     .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis trace quarantine read failed: ${error.message}`)));
   if (isolated !== observed && isolated !== seed.traceText) {
+    yield* assertOwned;
     yield* fs
       .link(quarantinedTracePath, tracePath)
       .pipe(
@@ -873,8 +927,8 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
       `genesis trace quarantine conflict: changed bytes restored at ${tracePath}; recovery copy preserved at ${quarantinedTracePath}`
     );
   }
-  yield* publishGenesisTrace(seed).pipe(
-    Effect.mapError((error) =>
+  yield* publishGenesisTrace(seed, assertOwned).pipe(
+    Effect.catchTag("PacketStreamError", (error) =>
       streamError(seed.slug, `${error.message}; incomplete trace preserved at ${quarantinedTracePath}`)
     )
   );
@@ -890,11 +944,11 @@ const recoverMismatchedGenesisTrace = Effect.fnUntraced(function* (seed: PacketG
   yield* discardRecoveryRoot;
 });
 
-const recoverGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
+const recoverGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed, assertOwned: PacketOwnershipFence) {
   const trace = yield* readGenesisTrace(seed);
-  if (O.isNone(trace)) return yield* publishGenesisTrace(seed);
+  if (O.isNone(trace)) return yield* publishGenesisTrace(seed, assertOwned);
   if (trace.value === seed.traceText) return;
-  yield* recoverMismatchedGenesisTrace(seed, trace.value);
+  yield* recoverMismatchedGenesisTrace(seed, trace.value, assertOwned);
 });
 
 /**
@@ -924,34 +978,68 @@ const recoverGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed
  * @since 0.0.0
  */
 export const applyPacketGenesisSeed = Effect.fn("Goals.applyPacketGenesisSeed")(function* (seed: PacketGenesisSeed) {
+  return yield* withPacketEventLock(yield* genesisStreamLocator(seed), (assertOwned) =>
+    applyPacketGenesisSeedLocked(seed, assertOwned)
+  ).pipe(
+    Effect.catchTag("QualitySchedulerError", () =>
+      streamError(seed.slug, "genesis seed lost event-stream ownership; preserved bytes require a retry")
+    )
+  );
+});
+
+const applyPacketGenesisSeedLocked = Effect.fnUntraced(function* (
+  seed: PacketGenesisSeed,
+  assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const present = yield* fs
     .exists(seed.eventsDirectory)
     .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis stream inspection failed: ${error.message}`)));
-  const eventPath = path.join(seed.eventsDirectory, seed.eventFileName);
   if (present) {
     if (!(yield* ownsGenesisEvent(seed))) {
       return yield* streamError(seed.slug, "event stream appeared after preview; refusing to reseed");
     }
-    return yield* recoverGenesisTrace(seed);
+    yield* assertOwned;
+    return yield* recoverGenesisTrace(seed, assertOwned);
   }
   let createdEventsDirectory = false;
   const rollback = Effect.fnUntraced(function* () {
     if (!createdEventsDirectory) return;
-    yield* quarantineOwnedGenesisEvents(seed, "genesis rollback");
+    yield* quarantineOwnedGenesisEventsLocked(seed, "genesis rollback", assertOwned);
   });
   const mutation = Effect.gen(function* () {
-    yield* fs
-      .makeDirectory(seed.eventsDirectory)
-      .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis directory write failed: ${error.message}`)));
-    createdEventsDirectory = true;
-    yield* writeContainedFileString(path.resolve(seed.eventsDirectory), path.resolve(eventPath), seed.eventText).pipe(
-      Effect.mapError((error) => streamError(seed.slug, `genesis event write failed: ${error.message}`))
+    yield* assertOwned;
+    const stagingDirectory = yield* Effect.acquireRelease(
+      fs
+        .makeTempDirectory({ directory: path.dirname(seed.eventsDirectory), prefix: ".genesis-stage-" })
+        .pipe(Effect.mapError((error) => streamError(seed.slug, `genesis directory write failed: ${error.message}`))),
+      (directory) => fs.remove(directory, { recursive: true, force: true }).pipe(Effect.ignore)
     );
-    yield* publishGenesisTrace(seed);
+    yield* writeContainedFileString(
+      path.resolve(stagingDirectory),
+      path.resolve(stagingDirectory, seed.eventFileName),
+      seed.eventText
+    ).pipe(Effect.mapError((error) => streamError(seed.slug, `genesis event write failed: ${error.message}`)));
+    // Publish the complete directory before trace projection. A killed process
+    // leaves either no final stream or the owned event that trace recovery needs.
+    yield* Effect.uninterruptible(
+      Effect.gen(function* () {
+        yield* assertOwned;
+        yield* fs
+          .rename(stagingDirectory, seed.eventsDirectory)
+          .pipe(
+            Effect.mapError((error) => streamError(seed.slug, `genesis directory publication failed: ${error.message}`))
+          );
+        createdEventsDirectory = true;
+      })
+    );
+    yield* assertOwned;
+    yield* publishGenesisTrace(seed, assertOwned);
   });
   yield* mutation.pipe(
+    Effect.scoped,
+    Effect.onInterrupt(() => rollback().pipe(Effect.ignore)),
     Effect.matchEffect({
       onFailure: (original) =>
         rollback().pipe(

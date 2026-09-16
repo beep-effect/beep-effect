@@ -8,6 +8,7 @@
  */
 
 import { Str, Text } from "@beep/utils";
+import { doctestFenceInfo } from "../../../internal/jsdoc/DoctestSource.ts";
 
 /**
  * Build the identity composer accessor name for a package.
@@ -56,7 +57,7 @@ export const typedIdentityExportBlock = (packageName: string): string => {
     " *",
     " * **Example** (Make package ID)",
     " *",
-    ` * ${fence}ts import.meta.vitest name="Make package ID"`,
+    ` * ${fence}${doctestFenceInfo("Make package ID")}`,
     ` * import { ${accessorName} } from "@beep/identity/packages"`,
     " *",
     ` * const id = ${accessorName}.make("${exampleName}")`,

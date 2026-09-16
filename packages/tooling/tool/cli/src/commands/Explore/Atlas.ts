@@ -704,6 +704,8 @@ const refuseIssues = Effect.fn("Explore.refuseIssues")(function* (projection: Ex
   return yield* failWithReportedExit(`explore atlas: ${summary}.`);
 });
 
+const isTrackedProjectionPath = (driftPath: string): boolean => driftPath !== EXPLORATION_ATLAS_PATH;
+
 const refuseDrift = Effect.fn("Explore.refuseDrift")(function* (drift: ReadonlyArray<string>) {
   const summary = `${A.length(drift)} generated projection(s) drift; run \`${ATLAS_WRITE_COMMAND}\``;
   yield* Console.error(`${ATLAS_LOG_PREFIX} ${summary}:`);
@@ -712,7 +714,7 @@ const refuseDrift = Effect.fn("Explore.refuseDrift")(function* (drift: ReadonlyA
   }
   if (A.contains(drift, EXPLORATION_ATLAS_PATH)) {
     yield* Console.error(
-      `${ATLAS_LOG_PREFIX} ${EXPLORATION_ATLAS_PATH} is a git-ignored local projection: a stale copy fails only local checks, and the rewrite never appears in git diff.`
+      `${ATLAS_LOG_PREFIX} ${EXPLORATION_ATLAS_PATH} is a git-ignored local projection: it is rewritten with the README regions and never appears in git diff.`
     );
   }
   return yield* failWithReportedExit(`explore atlas: ${summary}.`);
@@ -758,17 +760,19 @@ export const writeExplorationAtlas = Effect.fn("Explore.writeExplorationAtlas")(
 });
 
 /**
- * Prove the local Atlas and every README status region are current.
+ * Prove every projection is derivable and every README status region is current.
  *
  * **Details**
  *
- * Underivable packets and drifting projections are both refused through the
+ * Underivable packets and drifting README regions are refused through the
  * silent `CliReportedExit` sentinel, so the check prints its evidence on
  * stderr first: every underivable input by path and detail, or every drifting
  * path with the `--write` command that regenerates it. The Atlas is a
- * git-ignored local projection, so its drift is called out separately: a
- * stale copy fails only local checks and the rewrite never appears in git
- * diff.
+ * git-ignored local projection that may carry no authored doctrine and that no
+ * hosted lane carries, so a present copy whose bytes differ is rewritten from
+ * the projection and logged instead of failing (decision log 2026-09-12);
+ * beside README drift it is only named, and `--check` never writes a tracked
+ * file.
  *
  * **Example** (Build the check program)
  *
@@ -780,7 +784,8 @@ export const writeExplorationAtlas = Effect.fn("Explore.writeExplorationAtlas")(
  * ```
  *
  * @param repoRoot - Optional repository root override for callers that already resolved it.
- * @returns Succeeds only when every projection is derivable and current.
+ * @returns Succeeds when every projection is derivable and every tracked README region is
+ * current; a stale git-ignored Atlas is refreshed in place rather than failing.
  * @category use-cases
  * @since 0.0.0
  */
@@ -791,7 +796,22 @@ export const checkExplorationAtlas = Effect.fn("Explore.checkExplorationAtlas")(
   if (A.isReadonlyArrayNonEmpty(projection.issues)) return yield* refuseIssues(projection);
   const local = yield* fs.readFileString(path.join(projection.root, EXPLORATION_ATLAS_PATH)).pipe(Effect.option);
   const drift = explorationProjectionDriftPaths(projection, local);
-  if (A.isReadonlyArrayNonEmpty(drift)) return yield* refuseDrift(drift);
+  if (A.some(drift, isTrackedProjectionPath)) return yield* refuseDrift(drift);
+  // Only the git-ignored Atlas drifts: a pull left it stale or someone authored into it. It may
+  // carry no authored doctrine and no hosted lane carries it, so the check rewrites it from the
+  // projection instead of failing a red only local runs could hit; tracked files are never
+  // written here.
+  if (A.isReadonlyArrayNonEmpty(drift)) {
+    yield* writeContainedFileString(
+      projection.root,
+      path.join(projection.root, EXPLORATION_ATLAS_PATH),
+      projection.atlasContent
+    );
+    yield* Console.log(
+      `${ATLAS_LOG_PREFIX} refreshed stale git-ignored ${EXPLORATION_ATLAS_PATH} from the D3 projection.`
+    );
+    return;
+  }
   yield* Console.log(`${ATLAS_LOG_PREFIX} OK: D3 Atlas and README projections are current.`);
 });
 
@@ -801,7 +821,9 @@ const writeFlag = Flag.Boolean("write").pipe(
 );
 const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
-  Flag.withDescription("Fail on underivable state or Atlas/README projection drift")
+  Flag.withDescription(
+    "Fail on underivable state or README projection drift; refresh a stale git-ignored Atlas in place"
+  )
 );
 
 /**

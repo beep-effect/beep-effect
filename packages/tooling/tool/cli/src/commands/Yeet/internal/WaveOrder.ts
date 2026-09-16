@@ -177,7 +177,9 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
   lanes: [
     cheapWrapperRow("quality:changeset-status", 35 / 832, O.some(10)),
     repoSanityRow("repo-sanity:changeset-graph", 2 / 832, O.some(39)),
+    // taskIds: //#config-sync:check (+ //#lint:policy-fingerprint).
     repoSanityRow("repo-sanity:tsconfig-sync", 9 / 832, O.some(22)),
+    // taskIds: //#fallow:boundaries:config-check (+ //#lint:policy-fingerprint).
     repoSanityRow("repo-sanity:fallow-boundaries-config", 17 / 832, O.some(14)),
     repoSanityRow("repo-sanity:versions", 0),
     repoSanityRow("repo-sanity:syncpack", 0),
@@ -197,6 +199,8 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       HEAVY_BASIS
     ),
     hostedRow("quality:lint", 267, 0, 67 / 832, O.some(6)),
+    // taskIds: policy root tasks plus lint:laws and affected lint:jsdoc/lint:deprecated-apis;
+    // hosted legacy ESLint/shards and CLI aggregates have no task hash (Stage E).
     hostedRow("quality:lint-policy", 363, 1, 23 / 832, O.some(12)),
     hostedRow(
       "quality:check",
@@ -207,11 +211,14 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "precise",
       "Terminal reds occur after the established environment-only TS2589 quarantine."
     ),
+    // taskIds: //#knip:check (+ //#lint:policy-fingerprint).
     policyHostedRow("quality:knip", 80, 9, 11 / 832, O.some(20)),
+    // taskIds: //#jsdoc:inventory:check; CLI compare follows a fresh inventory.
     hostedRow("quality:jsdoc-ratchet", 82, 16, 0),
     hostedRow("quality:docgen", 115, 5, 0),
     // Hosted "Heavy / Doctest" is laneRows[16] (p50 82 s); the lane joined the
     // pre-push set with the quality-lane audit (2026-09-09, D8).
+    // taskIds: <owner>#doctest (+ upstream transit).
     hostedRow("quality:doctest", 82, 16, 0),
     hostedRow(
       "quality:coverage",
@@ -239,6 +246,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "heavy",
       HEAVY_BASIS
     ),
+    // taskIds: //#fallow:audit:check (+ //#lint:policy-fingerprint).
     seedRow(
       "fallow:audit",
       1.863,
@@ -251,6 +259,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
       "policy-preflight",
       POLICY_PREFLIGHT_BASIS
     ),
+    // taskIds: //#fallow:dead-code:check (+ //#lint:policy-fingerprint).
     seedRow(
       "fallow:dead-code",
       1.863,
@@ -265,6 +274,7 @@ export const DEFAULT_GATE_ORDER_SEED = GateOrderSeed.make({
     ),
     // Unseeded lanes sort after every seeded one, which put this 2-second gate
     // behind coverage (quality-lane audit 2026-09-09, D2 / D8).
+    // taskIds: //#fallow:health:check (+ //#lint:policy-fingerprint).
     seedRow(
       "fallow:health",
       1.863,

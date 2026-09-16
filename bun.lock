@@ -362,6 +362,7 @@
       "name": "@beep/storybook",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/epistemic-ui": "workspace:^",
         "@beep/graph-3d": "workspace:^",
         "@beep/ui": "workspace:^",
         "@storybook/addon-a11y": "catalog:",
@@ -397,11 +398,16 @@
       "name": "@beep/todox",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/atom-react": "catalog:",
+        "effect": "catalog:",
         "next": "catalog:",
         "react": "catalog:",
         "react-dom": "catalog:",
       },
       "devDependencies": {
+        "@effect/vitest": "catalog:",
         "@testing-library/dom": "catalog:",
         "@testing-library/react": "catalog:",
         "@types/node": "catalog:",
@@ -1748,6 +1754,8 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-browser": "catalog:",
+        "@storybook/react-vite": "catalog:",
         "@types/node": "catalog:",
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
@@ -1774,6 +1782,7 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -6700,7 +6709,7 @@
 
     "ignore-walk": ["ignore-walk@8.0.0", "", { "dependencies": { "minimatch": "^10.0.3" } }, "sha512-FCeMZT4NiRQGh+YkeKMtWrOmBgWjHjMJ26WQWrRQyoyzqevdaGSakUaJW5xQYmjLlUVk2qUnCjYVBax9EKKg8A=="],
 
-    "image-size": ["image-size@2.0.2", "", { "bin": { "image-size": "bin/image-size.js" } }, "sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w=="],
+    "image-size": ["image-size@2.0.4", "", { "bin": { "image-size": "bin/image-size.js" } }, "sha512-QRUkFFsRV/6fuESxb9Vkq+a0LkSrgKXuc2NEqfikiXxxN/G3tjWt5EVUlMaImRBZRZK/jRBEbYvpPYZL8t08Zw=="],
 
     "immediate": ["immediate@3.0.6", "", {}, "sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ=="],
 

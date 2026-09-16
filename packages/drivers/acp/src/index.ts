@@ -69,6 +69,22 @@ export * as Agent from "./AcpAgent.service.ts";
  */
 export * as Client from "./AcpClient.service.ts";
 /**
+ * ACP JSON text codec exports.
+ *
+ * **Example** (Read a JSON text with an escaped key)
+ *
+ * ```ts
+ * import { Json } from "@beep/acp"
+ * import * as Result from "effect/Result"
+ *
+ * console.log(Result.isSuccess(Json.readJsonText('{"\\n":true}')))
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export * as Json from "./AcpJson.codec.ts";
+/**
  * ACP transport protocol exports.
  *
  * **Example** (Create patched ACP protocol)

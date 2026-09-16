@@ -14,6 +14,7 @@ import {
   EffectVitestPrimitive,
   EffectVitestPrimitiveGraphDocument,
   EffectVitestReplacement,
+  formatEffectVitestIntroducedReport,
   makeEffectVitestFindingKey,
   preserveEffectVitestExceptions,
   readEffectVitestPrimitiveGraph,
@@ -25,7 +26,7 @@ import { A, Str } from "@beep/utils";
 import { NodePath, NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertFalse, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
@@ -113,16 +114,33 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
       const fsUtils = yield* FsUtils;
       const absolute = path.join(repositoryRoot, "packages/tooling/tool/cli/test/effect-vitest-store.test.ts");
       const inventory = path.join(repositoryRoot, EffectVitestInventoryPath);
+      let reported = A.empty<string>();
+      const currentConsole = yield* Console.Console;
+      const capturingConsole: Console.Console = {
+        ...currentConsole,
+        error: (...args) => {
+          reported = A.appendAll(reported, A.map(args, String));
+        },
+      };
       const failure = yield* runEffectVitestLint(EffectVitestLintOptions.make({ census: false, write: false })).pipe(
         Effect.provideService(FsUtils, { ...fsUtils, globFiles: () => Effect.succeed([absolute]) }),
         Effect.provideService(FileSystem.FileSystem, {
           ...fs,
           exists: (file) => (file === inventory ? Effect.succeed(false) : fs.exists(file)),
         }),
+        Effect.provideService(Console.Console, capturingConsole),
         Effect.flip
       );
       assertTrue(failure._tag === "CliReportedExit");
       assertTrue(failure.message === "effect-vitest: ratchet failed on new instances.");
+      assertTrue(O.exists(A.head(reported), (line) => /^\[effect-vitest\] \d+ new finding\(s\)$/u.test(line)));
+      assertTrue(
+        A.some(
+          reported,
+          Str.startsWith("[effect-vitest]   packages/tooling/tool/cli/test/effect-vitest-store.test.ts: ")
+        )
+      );
+      assertTrue(O.exists(A.last(reported), Str.startsWith("[effect-vitest] total: ")));
     })
   );
 
@@ -382,6 +400,29 @@ it("classifies baseline growth and resolution with the shared membership semanti
   const row = finding(4, "Fx.runSync(program)");
   assertTrue(diffEffectVitestFindings([row], []).introduced.length === 1);
   assertTrue(diffEffectVitestFindings([], [row]).resolved.length === 1);
+});
+
+it("reports introduced findings grouped by file in path order behind the stable count line", () => {
+  const inFile = (file: string, line: number): EffectVitestFinding =>
+    EffectVitestFinding.make({
+      ...finding(line, "Effect.runSync(program)"),
+      id: `EV001:${file}:${line}:runSync@4#1`,
+      file,
+    });
+  const introduced = [
+    inFile("packages/zeta/test/z.test.ts", 3),
+    inFile("packages/example/test/a.test.ts", 4),
+    inFile("apps/labs/demo/test/App.test.ts", 5),
+    inFile("packages/example/test/a.test.ts", 9),
+  ];
+  deepStrictEqual(formatEffectVitestIntroducedReport(introduced), [
+    "[effect-vitest] 4 new finding(s)",
+    "[effect-vitest]   apps/labs/demo/test/App.test.ts: 1 new finding(s)",
+    "[effect-vitest]   packages/example/test/a.test.ts: 2 new finding(s)",
+    "[effect-vitest]   packages/zeta/test/z.test.ts: 1 new finding(s)",
+    "[effect-vitest] total: 4 new finding(s) in 3 file(s); refresh with `bun run beep lint effect-vitest --write` after reviewing them",
+  ]);
+  deepStrictEqual(formatEffectVitestIntroducedReport([]), []);
 });
 
 it("preserves a justified exception on the matching live row", () => {

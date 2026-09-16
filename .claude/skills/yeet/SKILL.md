@@ -202,6 +202,42 @@ bun run beep yeet sweep --plan
 bun run beep yeet sweep
 ```
 
+- From inside a linked worktree (a Claude Code `.claude/worktrees/<name>` lane
+  or a sibling `-worktrees` lane) the sweep above only fetch-prunes, because
+  `main` lives in the owning clone and the merged branch is checked out right
+  here. `--retire` is the post-merge closeout for that case: it archive-retires
+  this worktree (dirty files and unpushed commits preserved under the residue
+  root), deletes the branch, then sweeps the owning clone. It refuses until the
+  PR is MERGED and heads this branch, so running it early is safe:
+
+```bash
+bun run beep yeet sweep --retire --plan
+CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"
+```
+
+  Run it from inside the lane: `bun run beep` resolves the CLI from the
+  checkout it runs in, and the owning clone's `main` may still be behind the
+  merge and reject `--retire` as an unknown flag. The command steps its own
+  process out of the lane before removal; the trailing `cd` moves your shell
+  to the swept clone. The fence exempts the invoking session's own ancestry
+  and, when Claude Code names the session through `CLAUDE_PID`, everything
+  that session spawned into the lane (MCP servers, tool shells, background
+  jobs), so a desktop session retires its own lane. Any other holder (a
+  desktop terminal panel, an editor, another session) still refuses it and
+  is named in the error: close or `cd` it out, then rerun. Outside Claude
+  Code, redirect the output to a file rather than piping it: the other stages
+  of a shell pipeline stand in the lane and count as holders. `--lane <path>`
+  retires a lane from elsewhere: the owning clone, or any sibling lane of
+  the same clone (a later session's lane at a current checkout). When only
+  the clone is at hand and its checkout predates `--retire`, run the lane's
+  own CLI from the clone:
+
+```bash
+cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep --retire --lane <lane>
+```
+
+  `--json` prints one document; `--branch` is refused with `--retire`.
+
 - Post and resolve the drafted review-thread replies for this branch's PR:
 
 ```bash
@@ -278,9 +314,11 @@ build, lint, check, test, or docgen lane starts. `yeet repair` applies its
 deterministic fixers, runs the same collected tier, and stops before heavy
 feedback if a cheap gate still fails. The fixers end by regenerating the
 git-ignored local projections (`goals/INDEX.md`, `explorations/ATLAS.md`, and
-the generated README status regions), so a stale copy left behind by a pull
-never fails `goals:index-check` or `explore:atlas-check`; hosted lanes never
-carry those ignored files, so that red was always local-only.
+the generated README status regions). `goals:index-check` and
+`explore:atlas-check` refresh a stale ignored copy left behind by a pull in
+place (hosted lanes never carry those files, so that red was always
+local-only); drift in the tracked README status regions still fails
+`explore:atlas-check`.
 
 The full proof then dispatches the *hosted lane bodies themselves* — `beep ci lane`
 `check`, bare `lint`, `lint-policy`, bare `test-unit`, and `test-integration`,
@@ -357,9 +395,15 @@ from a real security failure) before shipping such a fix.
     conflicted. `bun run beep yeet status --remote` prints a `merge-ready:` line
     that names the first failing criterion instead of making you read three
     surfaces.
-11. After the merge lands, run `bun run beep yeet sweep` — or let
-    `monitor --until-merged` run it on merged detection — so the next branch does
-    not start from a stale clone.
+11. After the merge lands, run `bun run beep yeet sweep` — or, from a lane
+    worktree, `bun run beep yeet sweep --retire` — or let
+    `monitor --until-merged` run the sweep on merged detection — so the next
+    branch does not start from a stale clone and the lane does not linger.
+    If the merged change touched a systemd unit renderer, re-render the
+    installed units from the swept clone with
+    `bun run beep research install-timers --refresh` and/or
+    `bun run beep graft deep install-timer --refresh` (see
+    `docs/runbooks/systemd-timers.md`). Do not hand any of this to the operator.
 
 `yeet closeout` is read-first. It classifies review threads and bot findings and
 writes Yeet artifacts locally. It posts a Greptile rerun comment only when
@@ -543,10 +587,21 @@ turbo work, so they are cheap to run mid-loop.
   stale-base refusals. Intent refusals print a summarized path list on stderr;
   the full list lives in the packet. Known sub-lane hints cover typos,
   terse-effect, every cheap gate, docgen, changeset status, secrets, SAST,
-  security, and Nix. Hint selection prefers output near the
-  actual failure marker before falling back to broad log scanning. Prefer the
-  suggested repair command in `yeet status`, the packet, or `verdict.json` over
-  rerunning the whole loop blindly.
+  security, and Nix. Hint selection follows the lane-run record: a tier lane's
+  `repairCommand` in `verdict.json` is its first red inner lane's repair
+  command, and each red inner lane carries its own (the catalog hint for its
+  exact lane id, else a known marker inside that lane's own output segment,
+  else the lane's recorded launch command). The failure packet
+  (`quality-issue-index.json`, the per-package packet, the inbox capsule)
+  follows the same record: a wrapper step's raw issue takes its sub-category,
+  category, message, and remediation from its first red inner lane. A red
+  inner lane that yields no repair command (no catalog hint, no marker in its
+  own segment, no recorded launch command) gives the tier lane the wrapper's
+  own command instead. Broad log scanning of the whole wrapper output is only
+  the fallback when the record names no red inner lane, which includes
+  wrappers that emitted no record at all. Prefer the suggested repair command
+  in `yeet status`, the packet, or `verdict.json` over rerunning the whole
+  loop blindly.
 - Root composite lanes prefer streaming accumulation where child commands are
   independent. For example, root `lint` streams the Turbo/Biome aggregate and
   then still runs repo-law policy lints, so one lint-family failure does not

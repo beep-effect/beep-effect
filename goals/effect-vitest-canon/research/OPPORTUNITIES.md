@@ -1593,3 +1593,90 @@ missing prerequisite without launching a scanner. Both failures are retained;
 the path was corrected and the fixed three-run cohort above followed. Stop
 dependent commands after an unsuccessful prerequisite rather than issuing
 them in the same orchestration batch.
+
+### Inventory not refreshed by the PR that added tests, 2026-09-11
+
+While publishing the coverage-ratchet hardening (`fix/coverage-raised-rows-own-floors`,
+PR #1091) the local Yeet cheap gate `lint:effect-vitest` went red with
+`[effect-vitest] 93 new finding(s)` and no per-finding listing. Attribution by
+content key (file, rule, symbol, evidence) against `HEAD:standards/effect-vitest.inventory.jsonc`
+showed 90 of 91 content-new findings in the cache test files that #1068 added
+(`packages/tooling/tool/cli/test/cache-*.test.ts`, `CacheQualification.policy.test.ts`)
+and one in the branch's own test file (an EV006 `expect(...).toEqual(O.some(...))`,
+fixed with `assertSome`). #1068 merged after the canon foundation (#1067) without
+refreshing the inventory, so every publish from main has failed this gate since,
+while the hosted lanes stay green because no hosted lane runs the linter. The
+inventory refresh was left out of #1091 to keep the diff focused; it needs its own
+`bun run beep lint effect-vitest --write` commit. What would have prevented it:
+the linter printing the new findings grouped by file (the count alone forced a
+hand attribution), and a hosted `lint:effect-vitest` lane or a main-push check so
+a stale inventory reds the PR that introduces it rather than every later publish.
+
+### Grouped ratchet report and a hosted seat for `lint:effect-vitest`, 2026-09-11
+
+Follow-through on the receipt above. `bun run beep lint effect-vitest` now prints the
+introduced findings grouped by file under the unchanged `[effect-vitest] N new finding(s)`
+first line (one line per file in path order, then a total with the refresh command), so
+a stale inventory names the change that added the tests instead of forcing a hand
+attribution by content key. Exercised against origin/main e16e7a9297 from a fresh
+`beep worktree new` checkout: the ratchet reported `2 new finding(s)` and the new lines
+attributed both to `packages/tooling/tool/cli/test/quality-tasks.test.ts`. A `--write`
+refresh from that head changed no content key at all (8,228 rows before and after,
+0 gone / 0 added by `(file, ruleId, symbol, evidence)`), so the two rows were duplicate
+fingerprints whose lines moved after the #1093 refresh and whose id-based membership
+refuses to bridge; the 488/488-line inventory diff is id churn only.
+
+Hosted decision: `lint:effect-vitest` joins the `lint:policy` step list beside
+`lint:package-test-typecheck`, so the hosted Lint Policy lane runs it on every PR and
+main push. The cheap-gates lane keeps the same step id (TTC ruling 28: one command, one
+name across tiers), no hosted check name changes, and the cost is one full scan of about
+8-10 s (R3 cohort 10.3-10.7 s, 8.0-8.3 s here) inside a lane whose measured wall time is
+about 363 s. The alternative, a dedicated `check.yml` job like JSDoc Ratchet, would add a
+new hosted check name and a runner spin-up for a 10 s scan; a note-only outcome would
+leave every later local `yeet publish` as the first place a stale inventory is noticed,
+which is the failure this receipt records. The same-tier repeat costs the local
+`lint policy` proof one extra scan, matching how `lint:schema-first` already runs in both.
+
+Second live case while this branch was open: main moved to 9292600368 and #1094 added
+`packages/tooling/tool/cli/test/graft-deep-refresh.test.ts` without a refresh. After the
+fast-forward the report read `1 new finding(s)` attributed to that file (EV010, a
+`@effect/platform-node` import), and the refresh added exactly that content key with none
+gone. With the hosted seat in place, #1094's own Lint Policy run would have been the place
+that red surfaced instead of this branch.
+
+### Refresh PR proof: seed-dependent acp falsification and an inherited coverage red, 2026-09-11
+
+The inventory refresh itself (PR #1093, `chore/effect-vitest-inventory-cache` from
+origin/main 662823dd96) was a one-file change, yet its `yeet publish --start-pr-early`
+run produced three reds that all needed attribution before the PR could be called done.
+
+Local full proof: `quality:coverage` shard 4 exited 1 on `@beep/acp#coverage`.
+`test/protocol.test.ts:109` ("round-trips schema-derived JSON-RPC notifications and
+responses through JSON boundaries") reported `Property falsified after 15 run(s) and
+24 shrink(s)` with an `AssertionError` on a `result` payload. One rerun of
+`bun run coverage --fileParallelism=true --maxWorkers=1` inside `packages/drivers/acp`
+passed 3 files / 17 tests, so the red was attributed as a seed-dependent flake in an
+untouched package and the PR was left to hosted checks instead of a second full proof.
+The follow-up lane (PR #1096) found the cause was not the schema: Node 24's V8
+(12.8 through 13.7) `JSON.parse` resolves an escaped object key through an existing map
+transition when the raw source prefix matches, so some generated payloads decode to a
+different key than they encoded; Bun and Node 22 are clean. `@beep/acp` now reads wire
+frames through its own JSON text reader with pinned regression cases. What would have
+prevented the attribution cost: the first red carrying the shrunk counterexample and
+seed in the captured log, so a reader can classify "flake in an untouched package"
+without re-running the suite.
+
+Hosted: 34 checks green and `Heavy / Coverage Regression` red with six `@beep/repo-cli`
+rows (`Lint.command.ts` branches/lines/statements, `Planner.ts`
+functions/lines/statements). The rows were byte-identical to main's own red job at
+662823dd96, so the red was inherited from #1068's raised floors (repaired by #1090 and
+#1091, then #1104). Attribution recipe that worked: `gh run view --job <id> --log` on the
+PR job and on main tip's job, `grep -A8 'regression(s) detected'` on both, and a plain
+`diff`. A monitor that compared a red job's regression rows against main tip's job and
+labeled an identical set "inherited" would have made that a one-line read.
+
+Verdict noise: `verdict.json` listed `publish:03-pr-provenance-stamp: failed` with a
+manual `gh pr edit` repair while the PR body already carried the provenance footer; the
+log showed the stamp had preserved a concurrent body edit by Blacksmith. A stamp that
+lost a race but converged should record `passed` (or a distinct `raced` state), not a
+failure that invites an unnecessary repair.

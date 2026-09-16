@@ -199,6 +199,8 @@ describe("gate staleness reporting", () => {
     expect(A.every(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand.length > 0)).toBe(true);
     expect(YEET_GATE_AUXILIARY_ARTIFACT_PATHS).toStrictEqual(["standards/jsdoc-documentation.inventory.md"]);
     expect(A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand)).toStrictEqual([
+      // Every descriptor command is pasted into a report inside backticks, so it
+      // has to run as written: no placeholder package names here.
       "bun run coverage:baseline:write",
       "bun run beep quality jsdoc-inventory && bun run beep quality jsdoc-ratchet --write-baseline",
       "bun run beep quality knip --write-baseline",

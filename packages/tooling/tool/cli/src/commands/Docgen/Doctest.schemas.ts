@@ -275,12 +275,13 @@ export class ConsoleRewrite extends S.Class<ConsoleRewrite>($I`ConsoleRewrite`)(
  * **Example** (Plan a marker edit)
  *
  * ```ts
+ * import { doctestFenceInfo } from "@beep/repo-cli/test/Docgen"
  * import { FenceLocation, MarkPlan } from "@beep/repo-cli/commands/Docgen"
  *
  * const plan = MarkPlan.make({
  *   location: FenceLocation.make({ file: "packages/example/src/index.ts", startLine: 4, endLine: 6 }),
  *   sourceDigest: "effect-hash:123",
- *   expectedInfoString: 'ts import.meta.vitest name="Add numbers"',
+ *   expectedInfoString: doctestFenceInfo("Add numbers"),
  *   addMarker: true,
  *   addName: "Add numbers",
  *   consoleRewrites: []

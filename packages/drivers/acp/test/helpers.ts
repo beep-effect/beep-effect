@@ -1,4 +1,4 @@
-import { Client as AcpClient } from "@beep/acp";
+import { Client as AcpClient, Json as AcpJson } from "@beep/acp";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Queue from "effect/Queue";
@@ -51,7 +51,7 @@ export const encodeJsonl: {
   <A>(value: A): <I>(schema: S.Codec<A, I>) => Effect.Effect<Uint8Array<ArrayBuffer>, S.SchemaError>;
   <A, I>(schema: S.Codec<A, I>, value: A): Effect.Effect<Uint8Array<ArrayBuffer>, S.SchemaError>;
 } = dual(2, <A, I>(schema: S.Codec<A, I>, value: A) =>
-  Effect.map(S.encodeEffect(S.fromJsonString(schema))(value), (encoded) => encoder.encode(`${encoded}\n`))
+  Effect.map(S.encodeEffect(AcpJson.fromJsonText(schema))(value), (encoded) => encoder.encode(`${encoded}\n`))
 );
 
 // fallow-ignore-next-line code-duplication -- test transport stays independent from the package-internal process adapter

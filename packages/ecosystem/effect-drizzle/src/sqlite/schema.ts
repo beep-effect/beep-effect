@@ -38,7 +38,6 @@ import {
   validatePhysicalTableNames,
   validateSchemaNames,
 } from "../core/assembly.ts";
-import { declaredFieldsEquivalence } from "../core/declaredFieldsEquivalence.ts";
 import * as Field from "../core/Field.ts";
 import * as Meta from "../core/Meta.ts";
 import { snakeCase } from "../internal/case.ts";
@@ -88,7 +87,6 @@ export class SchemaAssemblyError extends TaggedError<SchemaAssemblyError>("@beep
   },
   {
     description: "A @beep/effect-drizzle cross-table reference could not be resolved or validated.",
-    toEquivalence: (typeParameters) => declaredFieldsEquivalence<SchemaAssemblyError>(typeParameters),
   }
 ) {}
 

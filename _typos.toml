@@ -1,4 +1,5 @@
 [default.extend-words]
+wdth = "wdth" # OpenType variable-font width axis tag (font-variation-settings)
 # Effect-TS vocabulary
 Struct = "Struct"
 Fnc = "Fnc"

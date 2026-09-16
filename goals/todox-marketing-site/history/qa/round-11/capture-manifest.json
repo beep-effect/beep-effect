@@ -1,0 +1,362 @@
+{
+  "round": "11",
+  "url": "http://todox.beep.localhost:1355",
+  "scenarios": [
+    {
+      "name": "hero-first-viewport",
+      "screenshots": ["hero-first-viewport--first-viewport.png"],
+      "assertions": [
+        {
+          "name": "headline present",
+          "ok": true,
+          "detail": "The AI runtime your firm actually controls."
+        },
+        {
+          "name": "primary CTA inside the first viewport",
+          "ok": true,
+          "detail": "bottom=618.609375"
+        },
+        {
+          "name": "evidence graph rendered",
+          "ok": true,
+          "detail": "w=460.421875"
+        },
+        {
+          "name": "direction contract in the body",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "notes": []
+    },
+    {
+      "name": "evidence-graph-interaction",
+      "screenshots": [
+        "evidence-graph-interaction--hover-superseded.png",
+        "evidence-graph-interaction--selected-superseded.png",
+        "evidence-graph-interaction--keyboard-brief.png"
+      ],
+      "assertions": [
+        {
+          "name": "graph opens on the core claim",
+          "ok": true,
+          "detail": "CLM 0101 · CLIENT CASH NEEDACCEPTED (SCOPED)The Park househo"
+        },
+        {
+          "name": "hover lights the node's two edges",
+          "ok": true,
+          "detail": "active=2"
+        },
+        {
+          "name": "click selects CLM 0099 and shows SUPERSEDED",
+          "ok": true,
+          "detail": "CLM 0099 · PRIOR INTENTSUPERSEDEDFund the renovation deposit from taxable ····44"
+        },
+        {
+          "name": "Tab then Enter selects the next node",
+          "ok": true,
+          "detail": "brief :: PKT 0501 · MEETING BRIEFACCEPTED (SCOPED"
+        }
+      ],
+      "consoleErrors": [
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "notes": []
+    },
+    {
+      "name": "nav-anchors-and-sections",
+      "screenshots": ["nav-anchors-and-sections--after-anchor.png"],
+      "assertions": [
+        {
+          "name": "five section links",
+          "ok": true,
+          "detail": "#product,#how-it-works,#skills,#why-todox,#faq"
+        },
+        {
+          "name": "#product resolves",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "#how-it-works resolves",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "#skills resolves",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "#why-todox resolves",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "#faq resolves",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "anchor scroll lands below the sticky nav",
+          "ok": true,
+          "detail": "top=73"
+        }
+      ],
+      "consoleErrors": [
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "notes": []
+    },
+    {
+      "name": "session-demo-keyboard-and-pointer",
+      "screenshots": [
+        "session-demo-keyboard-and-pointer--default-open.png",
+        "session-demo-keyboard-and-pointer--inspector-open-tsk-0202.png",
+        "session-demo-keyboard-and-pointer--after-click.png"
+      ],
+      "assertions": [
+        {
+          "name": "demo opens on the rejected candidate",
+          "ok": true,
+          "detail": "demo:CLM 0104"
+        },
+        {
+          "name": "ArrowDown x3 lands on TSK 0202",
+          "ok": true,
+          "detail": "demo:TSK 0202"
+        },
+        {
+          "name": "Enter opens exactly the addressed record",
+          "ok": true,
+          "detail": "demo:TSK 0202"
+        },
+        {
+          "name": "receipt names the deterministic producer",
+          "ok": true,
+          "detail": "FIXTURE RUNTIME (DETERMINISTIC · NO LIVE MODEL)"
+        },
+        {
+          "name": "Escape closes the inspector",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "click opens the WHAT CHANGED entry",
+          "ok": true,
+          "detail": "demo:WHAT CHANGED:0"
+        },
+        {
+          "name": "inspector lights span S2",
+          "ok": true,
+          "detail": ""
+        }
+      ],
+      "consoleErrors": [
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "notes": []
+    },
+    {
+      "name": "faq-and-form",
+      "screenshots": ["faq-and-form--faq-open.png", "faq-and-form--form.png"],
+      "assertions": [
+        {
+          "name": "second FAQ opens on click",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "form posts to the placeholder action",
+          "ok": true,
+          "detail": "/api/request-demo"
+        },
+        {
+          "name": "name field accepts typing",
+          "ok": true,
+          "detail": "Sample Advisor"
+        }
+      ],
+      "consoleErrors": [
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "notes": []
+    },
+    {
+      "name": "printable-sections-desktop",
+      "screenshots": [
+        "printable-sections-desktop--product-top.png",
+        "printable-sections-desktop--skills-top.png",
+        "printable-sections-desktop--why-todox-top.png",
+        "printable-sections-desktop--trust-top.png",
+        "printable-sections-desktop--full-page-1440.png"
+      ],
+      "assertions": [],
+      "consoleErrors": [
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "notes": []
+    },
+    {
+      "name": "mobile-360",
+      "screenshots": [
+        "mobile-360--hero-360.png",
+        "mobile-360--demo-360.png",
+        "mobile-360--compare-360.png",
+        "mobile-360--form-360.png"
+      ],
+      "assertions": [
+        {
+          "name": "no horizontal overflow at 360px",
+          "ok": true,
+          "detail": ""
+        },
+        {
+          "name": "document not wider than the viewport",
+          "ok": true,
+          "detail": "delta=0"
+        }
+      ],
+      "consoleErrors": [
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED",
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "notes": []
+    },
+    {
+      "name": "reduced-motion-and-no-js",
+      "screenshots": [
+        "reduced-motion-and-no-js--reduced-motion-at-load.png",
+        "reduced-motion-and-no-js--no-js-demo.png"
+      ],
+      "assertions": [
+        {
+          "name": "no running animations under reduced motion",
+          "ok": true,
+          "detail": "animations=0"
+        },
+        {
+          "name": "no-JS: the default receipt renders statically",
+          "ok": true,
+          "detail": "receipts=1"
+        },
+        {
+          "name": "no-JS: every record row renders",
+          "ok": true,
+          "detail": "rows=11"
+        },
+        {
+          "name": "no-JS: the graph detail shows the core claim",
+          "ok": true,
+          "detail": "CLM 0101 · CLIENT CASH NEEDACCEPTED (SCO"
+        }
+      ],
+      "consoleErrors": [
+        "Access to fetch at 'http://127.0.0.1:43117/events' from origin 'https://todox.beep.localhost:1355' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+        "Failed to load resource: net::ERR_FAILED"
+      ],
+      "notes": []
+    }
+  ]
+}

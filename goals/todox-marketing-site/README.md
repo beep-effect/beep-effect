@@ -2,9 +2,18 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Shipped 2026-09-12. The Todox product site landed in
+[#1097](https://github.com/beep-effect/beep-effect/pull/1097): Evergreen Ledger
+direction (deep green + parchment), Notion positioning, interactive evidence
+graph, one synthetic-session console, held demo-request form, DESIGN.md and
+`.impeccable/design.json` from the built world. Merged by Benjamin at `4079f72`
+with every required check green. Evidence: [`PLAN.md`](./PLAN.md) (redesign
+evidence log), QA archives under `history/qa/`, reflections under
+`history/reflections/`.
 
 ## Mission
 
@@ -40,13 +49,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Pre-flight, not started: choose typefaces against rendered specimens per
-ASSET-PLAN, record licenses, and write the Impeccable direction contract into
-the root layout from SHAPE-BRIEF.
+P2 complete on the redesign (2026-09-11, evening): Benjamin rejected the
+Terminal of Record build and pinned a standard product site in his own palette
+(Evergreen Ledger) with the Notion positioning. Rebuilt the same evening:
+finish reviewer disposition `ship`, QA round 11 `requiredCount: 0` and round 15
+capture green on the final code, app audit and package-verify green,
+`apps/todox/DESIGN.md` rewritten from the built world. P3 (yeet publish → PR)
+waits for Benjamin's explicit go; nothing is committed or pushed.
 
 ## Latest Evidence
 
-Not started. Decompose-stage review artifact:
+See the evidence log in [`PLAN.md`](./PLAN.md). Typeface receipts:
+[`history/fonts-and-licenses.md`](./history/fonts-and-licenses.md). QA harness:
+[`history/qa/qa-capture.mjs`](./history/qa/qa-capture.mjs) (rounds live under
+the gitignored `.beep/qa/`). Decompose-stage review artifact:
 <https://claude.ai/code/artifact/8c7c7e46-5ff9-4e17-9396-e1399c0228b9>.
 
 ## Notes

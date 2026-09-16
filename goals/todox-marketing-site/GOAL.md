@@ -1,13 +1,14 @@
-# GOAL: Build the Todox Terminal of Record homepage
+# GOAL: Build the Todox product site (direction changed 2026-09-11)
 
 Repo root: the current working directory — the `beep-effect` checkout you are
 running in. All paths below are repo-relative.
 
-Outcome: `apps/todox` serves one responsive public marketing homepage in the
-human-locked Terminal of Record direction — claim-gated copy, the exact
-deterministic synthetic session, visible synthetic labeling, an Impeccable
-direction contract, finish review, and DESIGN.md — proven locally and left
-unpublished until Benjamin's explicit go.
+Outcome: `apps/todox` serves one responsive public product site in the
+direction Benjamin pinned on 2026-09-11 (deep green + parchment, Notion
+positioning; see SPEC.md "Direction change") — synthetic-labeled
+demonstration, an Impeccable direction contract, finish review, and DESIGN.md —
+proven locally and left unpublished until Benjamin's explicit go. The
+Terminal of Record workflow below is superseded; PLAN.md carries the evidence.
 
 This is a compact `/goal` launcher. The packet files are the contract:
 

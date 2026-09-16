@@ -424,6 +424,64 @@ describe("ai-metrics command", () => {
     )
   );
 
+  it.effect("resolves the forwarder timer Bun shim, fallback, and explicit pin", () =>
+    withTempDirectory(
+      Effect.fn(function* (home) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const shim = path.join(home, ".local/share/mise/shims/bun");
+        const render = Effect.fn(function* (flags: ReadonlyArray<string>) {
+          yield* runAiMetricsCommand([
+            "forwarder",
+            "timer",
+            "--target",
+            "local",
+            "--data-root",
+            path.join(home, "metrics"),
+            ...flags,
+          ]).pipe(provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ HOME: home }))));
+          return yield* loggedText();
+        }, provideScopedLayer(TestConsole.layer));
+        expect(yield* render([])).toContain(process.execPath);
+        yield* writeText(shim, "");
+        yield* fs.chmod(shim, 0o755);
+        expect(yield* render([])).toContain(shim);
+        expect(yield* render(["--bun-path", "~/tools/bun"])).toContain(path.join(home, "tools/bun"));
+      })
+    )
+  );
+
+  it.effect("reads HOME only for the default Bun probe and a ~/ pin when rendering the forwarder timer", () =>
+    withTempDirectory(
+      Effect.fn(function* (home) {
+        const path = yield* Path.Path;
+        const timerArgs = ["forwarder", "timer", "--target", "local", "--data-root", path.join(home, "metrics")];
+        const withEnvironment = (environment: Record<string, string>) =>
+          provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(environment)));
+        // The default probe and a `~/` pin both need HOME.
+        for (const flags of [[], ["--bun-path", "~/tools/bun"]]) {
+          const missingHome = yield* Effect.flip(
+            runAiMetricsCommand([...timerArgs, ...flags]).pipe(withEnvironment({}))
+          );
+          expect(missingHome).toMatchObject({
+            _tag: "AiMetricsCommandError",
+            message: expect.stringContaining("HOME is not set"),
+          });
+        }
+        // An absolute pin renders with no HOME at all (sanitized containers, CI).
+        yield* runAiMetricsCommand([...timerArgs, "--bun-path", "/opt/bun 1/bin/bun"]).pipe(withEnvironment({}));
+        expect(yield* loggedText()).toContain("/opt/bun 1/bin/bun");
+        const unsafePin = yield* Effect.flip(
+          runAiMetricsCommand([...timerArgs, "--bun-path", '/opt/"bun"/bin/bun']).pipe(withEnvironment({ HOME: home }))
+        );
+        expect(unsafePin).toMatchObject({
+          _tag: "AiMetricsCommandError",
+          message: expect.stringContaining("Invalid forwarder timer Bun executable path"),
+        });
+      }, provideScopedLayer(TestConsole.layer))
+    )
+  );
+
   it.effect("renders a bounded dankserver forwarder timer command", () =>
     withTempDirectory((tmpDir) =>
       Effect.gen(function* () {
@@ -450,8 +508,7 @@ describe("ai-metrics command", () => {
         expect(output).toContain("--parquet-mode");
         expect(output).toContain("none");
         expect(output).toContain("OnUnitInactiveSec=30m");
-        expect(output).toContain("pins the Bun executable path");
-        expect(output).toContain(process.execPath);
+        expect(output).toContain("uses the resolved Bun executable");
         expect(output).toContain("packages/tooling/tool/cli/src/bin.ts");
         expect(output).toContain("ai-metrics");
         expect(output).toContain("forwarder");

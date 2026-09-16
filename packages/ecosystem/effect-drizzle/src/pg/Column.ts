@@ -42,7 +42,6 @@ import {
 import { fromUndefinedOr, getOrElse, none, some as someOption } from "effect/Option";
 import { hasProperty, isBoolean, isNumber, isString, isUndefined, Struct as StructPredicate } from "effect/Predicate";
 import { String as StringSchema, TaggedError } from "effect/Schema";
-import { declaredFieldsEquivalence } from "../core/declaredFieldsEquivalence.ts";
 import { assignStatics } from "../internal/statics.ts";
 import type { SQL } from "drizzle-orm";
 import type {
@@ -74,7 +73,6 @@ class ColumnInvariantError extends TaggedError<ColumnInvariantError>("@beep/effe
   },
   {
     description: "A PostgreSQL column descriptor violates its shape invariant.",
-    toEquivalence: (typeParameters) => declaredFieldsEquivalence<ColumnInvariantError>(typeParameters),
   }
 ) {}
 

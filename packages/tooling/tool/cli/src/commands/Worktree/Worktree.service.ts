@@ -8,6 +8,10 @@
  * untracked residue is written outside the checkout, and only then is the
  * fenced copy deleted and its branch ref removed by compare-and-swap on the
  * archived head.
+ * A pruned upstream never fails the retirement: the manifest records the
+ * pruned upstream together with the verdict that judged the tip pushed (a tip
+ * on the remote default branch, or a merged pull request at exactly that
+ * head), and anything unproven stays preserved.
  * Plain removal keeps its existing refusal when the target has uncommitted
  * changes.
  *
@@ -16,22 +20,33 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, Str } from "@beep/utils";
 import { Config, Context, DateTime, Effect, FileSystem, Layer, Match, Path, pipe, Result } from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
+import { ghOutput } from "../../internal/github/index.ts";
 import {
+  ancestryPidsOf,
   collectUntrackedPaths,
+  descendsFromProcess,
+  invokerAncestryPids,
+  invokerSessionRoot,
   ProcessAttachmentKind,
+  ProcessTable,
+  processLineage,
+  processName,
   resolveGitCommit,
   runGitOutput,
   runGitRawOutput,
   scanProcessAttachments,
+  sessionRootOf,
 } from "../../internal/repo-run/index.ts";
+import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
   parseWorktreePorcelain,
@@ -41,11 +56,16 @@ import {
   WorktreeRepositoryHash,
   WorktreeResidueManifest,
   WorktreeResidueReason,
+  WorktreeUnpushedInspection,
+  WorktreeUpstreamState,
 } from "./Worktree.schemas.ts";
 import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter, ProcessAttachment } from "../../internal/repo-run/index.ts";
-import type { WorktreeResidueReason as WorktreeResidueReasonType } from "./Worktree.schemas.ts";
+import type {
+  WorktreeResidueReason as WorktreeResidueReasonType,
+  WorktreeUpstreamVerdict,
+} from "./Worktree.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.service");
 
@@ -66,6 +86,112 @@ const decodeIsoString = S.decodeUnknownEffect(ISOStr);
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeWorktreeRepositoryHash = S.decodeUnknownEffect(WorktreeRepositoryHash);
 const encodeResidueManifest = S.encodeEffect(S.fromJsonString(WorktreeResidueManifest, { space: 2 }));
+
+const MergedPullRequestRows = S.Struct({ number: PosInt, headRefOid: S.String }).pipe(
+  S.Array,
+  S.fromJsonString,
+  $I.annoteSchema("MergedPullRequestRows", {
+    description: "Merged pull-request rows decoded from gh pr list --json number,headRefOid output.",
+  })
+);
+const decodeMergedPullRequestRows = S.decodeUnknownEffect(MergedPullRequestRows);
+
+/**
+ * Service contract answering whether a merged pull request landed exactly the tip being retired.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface WorktreeMergedPullRequestProbeShape {
+  /**
+   * Number of the merged pull request for `branch` whose head is exactly `head`,
+   * or none when no such pull request exists or the question cannot be answered.
+   *
+   * @since 0.0.0
+   */
+  readonly mergedAtHead: (
+    cwd: string,
+    branch: string,
+    head: GitObjectId
+  ) => Effect.Effect<O.Option<PosInt>, never, ChildProcessSpawner.ChildProcessSpawner>;
+}
+
+/**
+ * Service tag for the merged-pull-request probe consulted once a branch upstream was pruned.
+ *
+ * **When to use**
+ *
+ * Use with {@link WorktreeRemovalServiceLayer} to substitute the `gh`-backed
+ * probe in tests or offline runs; {@link WorktreeRemovalServiceLive} already
+ * carries the live probe.
+ *
+ * **Example** (Stub the probe with a fixed merged pull request)
+ *
+ * ```ts
+ * import { WorktreeMergedPullRequestProbe } from "@beep/repo-cli/commands/Worktree"
+ * import { PosInt } from "@beep/schema"
+ * import { Effect, Layer } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const stub = Layer.succeed(
+ *   WorktreeMergedPullRequestProbe,
+ *   WorktreeMergedPullRequestProbe.of({ mergedAtHead: () => Effect.succeed(O.some(PosInt.make(1098))) })
+ * )
+ * console.log(typeof stub) // "object"
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class WorktreeMergedPullRequestProbe extends Context.Service<
+  WorktreeMergedPullRequestProbe,
+  WorktreeMergedPullRequestProbeShape
+>()($I`WorktreeMergedPullRequestProbe`) {}
+
+const ghMergedAtHead = Effect.fn("WorktreeMergedPullRequestProbe.ghMergedAtHead")(function* (
+  cwd: string,
+  branch: string,
+  head: GitObjectId
+): Effect.fn.Return<O.Option<PosInt>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  // Any gh failure or undecodable payload answers none: an unavailable probe can only
+  // make the retirement more conservative, never fail it.
+  const rows = yield* ghOutput({
+    args: ["pr", "list", "--head", branch, "--state", "merged", "--json", "number,headRefOid", "--limit", "100"],
+    cwd,
+    label: `gh pr list --head ${branch} --state merged`,
+    onFailure: (failure) => failure,
+  }).pipe(Effect.flatMap(decodeMergedPullRequestRows), Effect.option);
+  return pipe(
+    rows,
+    O.flatMap(A.findFirst((row) => Str.Equivalence(row.headRefOid, head))),
+    O.map((row) => row.number)
+  );
+});
+
+/**
+ * Live merged-pull-request probe backed by `gh pr list`.
+ *
+ * **Details**
+ *
+ * Any `gh` spawn failure, non-zero exit, undecodable payload, or head mismatch
+ * answers none, so an unavailable or unauthenticated `gh` can only make the
+ * removal more conservative, never fail it.
+ *
+ * **Example** (Reference the live probe layer)
+ *
+ * ```ts
+ * import { WorktreeMergedPullRequestProbeLive } from "@beep/repo-cli/commands/Worktree"
+ *
+ * console.log(typeof WorktreeMergedPullRequestProbeLive) // "object"
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const WorktreeMergedPullRequestProbeLive: Layer.Layer<WorktreeMergedPullRequestProbe> = Layer.succeed(
+  WorktreeMergedPullRequestProbe,
+  WorktreeMergedPullRequestProbe.of({ mergedAtHead: ghMergedAtHead })
+);
 
 /**
  * Build the `git worktree remove` argument vector after optional preservation.
@@ -304,7 +430,13 @@ export const worktreeResidueReason: {
  * @since 0.0.0
  */
 export interface WorktreeRemovalServiceShape {
-  /** Inspect whether `HEAD` contains commits absent from `origin/main` or its upstream. @since 0.0.0 */
+  /**
+   * Inspect whether `HEAD` contains commits absent from the remote default
+   * branch or the branch upstream; a pruned upstream defers to the default
+   * branch instead of failing.
+   *
+   * @since 0.0.0
+   */
   readonly hasUnpushedCommits: (
     targetPath: string,
     branch: O.Option<string>
@@ -345,7 +477,10 @@ type WorktreeRemovalServiceRequirements =
   | Crypto.Crypto
   | FileSystem.FileSystem
   | Path.Path
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | WorktreeMergedPullRequestProbe;
+
+type UpstreamProbeRequirements = ChildProcessSpawner.ChildProcessSpawner | WorktreeMergedPullRequestProbe;
 
 const commandErrorAdapter = (failMessage: string): GitCommandErrorAdapter<WorktreeCommandError> => ({
   onSpawnFailure: (commandLine) => WorktreeCommandError.new(failMessage, { command: commandLine }),
@@ -409,6 +544,19 @@ const runPreservationCommand = Effect.fn("WorktreeRemovalService.runPreservation
   return yield* runGitOutput(cwd, args, preservationErrorAdapter(step, failMessage, affectedPath));
 });
 
+const runPreservationProbe = Effect.fn("WorktreeRemovalService.runPreservationProbe")(function* (
+  cwd: string,
+  args: ReadonlyArray<string>,
+  step: WorktreePreservationError["step"],
+  failMessage: string,
+  affectedPath?: string
+): Effect.fn.Return<string, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+  // Machine-read probes take stdout alone: a zero-exit git diagnostic on stderr
+  // (a warning, advice, or trace line) must never pass for a ref name or a count.
+  const output = yield* runGitRawOutput(cwd, args, preservationErrorAdapter(step, failMessage, affectedPath));
+  return Str.trim(output);
+});
+
 const decodeCount = Effect.fn("WorktreeRemovalService.decodeCount")(function* (
   output: string,
   step: WorktreePreservationError["step"]
@@ -423,7 +571,7 @@ const countCommits = Effect.fn("WorktreeRemovalService.countCommits")(function* 
   revision: string,
   step: WorktreePreservationError["step"]
 ): Effect.fn.Return<NonNegativeInt, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* runPreservationCommand(
+  const output = yield* runPreservationProbe(
     targetPath,
     ["rev-list", "--count", revision, "--"],
     step,
@@ -433,45 +581,179 @@ const countCommits = Effect.fn("WorktreeRemovalService.countCommits")(function* 
   return yield* decodeCount(output, step);
 });
 
-const inspectUnpushed = Effect.fn("WorktreeRemovalService.inspectUnpushed")(function* (
+const ORIGIN_REMOTE_PREFIX = "refs/remotes/origin/";
+const ORIGIN_DEFAULT_BRANCH = "main";
+const UPSTREAM_UNSET: WorktreeUpstreamState = { _tag: "unset" };
+
+const refExists = Effect.fn("WorktreeRemovalService.refExists")(function* (
   targetPath: string,
-  branch: O.Option<string>
+  ref: string,
+  step: WorktreePreservationError["step"],
+  failMessage: string
 ): Effect.fn.Return<boolean, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
-  const originMain = yield* runPreservationCommand(
+  // for-each-ref also lists refs nested under the pattern, so only an exact
+  // refname line proves that the ref itself exists.
+  const output = yield* runPreservationProbe(
     targetPath,
-    ["for-each-ref", "--format=%(objectname)", "refs/remotes/origin/main"],
-    "inspect-origin-main",
-    "Failed to inspect origin/main.",
+    ["for-each-ref", "--format=%(refname)", ref],
+    step,
+    failMessage,
     targetPath
   );
-  const originMainRevision = Str.isNonEmpty(Str.trim(originMain)) ? "origin/main..HEAD" : "HEAD";
-  const originMainCount = yield* countCommits(targetPath, originMainRevision, "inspect-origin-main");
+  return A.contains(Str.split(output, "\n"), ref);
+});
 
-  const upstreamCount = yield* O.match(branch, {
-    onNone: () => Effect.succeed(NonNegativeInt.make(0)),
+const resolveOriginDefaultBranch = Effect.fn("WorktreeRemovalService.resolveOriginDefaultBranch")(function* (
+  targetPath: string
+): Effect.fn.Return<string, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+  // A dangling origin/HEAD lists nothing, so the probe falls back to `main`.
+  const symref = yield* runPreservationProbe(
+    targetPath,
+    ["for-each-ref", "--format=%(symref:lstrip=3)", "refs/remotes/origin/HEAD"],
+    "inspect-origin-main",
+    "Failed to inspect origin/HEAD.",
+    targetPath
+  );
+  return pipe(
+    symref,
+    O.liftPredicate(Str.isNonEmpty),
+    O.getOrElse(() => ORIGIN_DEFAULT_BRANCH)
+  );
+});
+
+const resolveHeadObjectId = Effect.fn("WorktreeRemovalService.resolveHeadObjectId")(function* (
+  targetPath: string,
+  step: WorktreePreservationError["step"]
+): Effect.fn.Return<GitObjectId, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+  const headOutput = yield* resolveGitCommit(
+    targetPath,
+    "HEAD",
+    preservationErrorAdapter(step, "Failed to resolve the worktree HEAD.", targetPath)
+  );
+  return yield* decodeGitObjectId(Str.trim(headOutput)).pipe(
+    Effect.mapError((cause) =>
+      WorktreePreservationError.new(step, "Git returned an invalid full object id for HEAD.", {
+        cause,
+        path: targetPath,
+      })
+    )
+  );
+});
+
+const judgePrunedUpstream = Effect.fn("WorktreeRemovalService.judgePrunedUpstream")(function* (
+  targetPath: string,
+  branchName: string,
+  base: O.Option<string>,
+  baseCount: NonNegativeInt
+): Effect.fn.Return<WorktreeUpstreamVerdict, WorktreePreservationError, UpstreamProbeRequirements> {
+  // The pruned upstream can no longer be counted against, so the verdict records what
+  // proved the tip pushed instead. A tip already reachable from the remote default
+  // branch needs no further evidence; otherwise only a merged pull request at exactly
+  // this head proves it. This evidence does not change the base-range count:
+  // a squash-merged tip still gets an archive ref when its commits are absent
+  // from the default branch, whether the verdict is merged or unverified.
+  if (O.isSome(base) && baseCount === 0) {
+    return { _tag: "ancestor-of-base", base: base.value };
+  }
+  const probe = yield* WorktreeMergedPullRequestProbe;
+  const head = yield* resolveHeadObjectId(targetPath, "inspect-upstream");
+  const merged = yield* probe.mergedAtHead(targetPath, branchName, head);
+  return O.match(merged, {
+    onNone: (): WorktreeUpstreamVerdict => ({ _tag: "unverified" }),
+    onSome: (number): WorktreeUpstreamVerdict => ({ _tag: "merged-pull-request", number }),
+  });
+});
+
+const inspectUpstreamState = Effect.fn("WorktreeRemovalService.inspectUpstreamState")(function* (
+  targetPath: string,
+  branch: O.Option<string>,
+  judgePruned: (
+    branchName: string
+  ) => Effect.Effect<WorktreeUpstreamVerdict, WorktreePreservationError, UpstreamProbeRequirements>
+): Effect.fn.Return<WorktreeUpstreamState, WorktreePreservationError, UpstreamProbeRequirements> {
+  return yield* O.match(branch, {
+    onNone: () => Effect.succeed(UPSTREAM_UNSET),
     onSome: Effect.fn("WorktreeRemovalService.inspectBranchUpstream")(function* (branchName) {
-      const upstream = yield* runPreservationCommand(
+      const ref = yield* runPreservationProbe(
         targetPath,
         ["for-each-ref", "--format=%(upstream)", `refs/heads/${branchName}`],
         "inspect-upstream",
         `Failed to inspect the upstream for ${branchName}.`,
         targetPath
       );
-      const upstreamRef = Str.trim(upstream);
-      return Str.isEmpty(upstreamRef)
-        ? NonNegativeInt.make(0)
-        : yield* countCommits(targetPath, `${upstreamRef}..HEAD`, "inspect-upstream");
+      if (Str.isEmpty(ref)) {
+        return UPSTREAM_UNSET;
+      }
+      // Branch configuration keeps naming the upstream after `git fetch --prune`
+      // drops the remote-tracking ref of a merged branch, so `<ref>..HEAD` would
+      // be unresolvable; report it pruned instead of failing the inspection.
+      const resolves = yield* refExists(
+        targetPath,
+        ref,
+        "inspect-upstream",
+        `Failed to resolve the upstream ${ref} for ${branchName}.`
+      );
+      return yield* Bool.match(resolves, {
+        onFalse: () =>
+          judgePruned(branchName).pipe(
+            Effect.map((verdict): WorktreeUpstreamState => ({ _tag: "pruned", ref, verdict }))
+          ),
+        onTrue: () => Effect.succeed<WorktreeUpstreamState>({ _tag: "live", ref }),
+      });
     }),
   });
+});
 
-  return originMainCount > 0 || upstreamCount > 0;
+const inspectUnpushed = Effect.fn("WorktreeRemovalService.inspectUnpushed")(function* (
+  targetPath: string,
+  branch: O.Option<string>,
+  judgePruned: typeof judgePrunedUpstream = judgePrunedUpstream
+): Effect.fn.Return<WorktreeUnpushedInspection, WorktreePreservationError, UpstreamProbeRequirements> {
+  const defaultBranch = yield* resolveOriginDefaultBranch(targetPath);
+  const baseExists = yield* refExists(
+    targetPath,
+    `${ORIGIN_REMOTE_PREFIX}${defaultBranch}`,
+    "inspect-origin-main",
+    `Failed to inspect origin/${defaultBranch}.`
+  );
+  const baseRange = Bool.match(baseExists, {
+    onFalse: () => "HEAD",
+    onTrue: () => `origin/${defaultBranch}..HEAD`,
+  });
+  const baseCount = yield* countCommits(targetPath, baseRange, "inspect-origin-main");
+  const base = Bool.match(baseExists, {
+    onFalse: () => O.none<string>(),
+    onTrue: () => O.some(`origin/${defaultBranch}`),
+  });
+  const upstream = yield* inspectUpstreamState(targetPath, branch, (branchName) =>
+    judgePruned(targetPath, branchName, base, baseCount)
+  );
+  // A pruned upstream leaves nothing to count, so the default-branch range answers for it.
+  const upstreamCount = yield* WorktreeUpstreamState.match<
+    Effect.Effect<NonNegativeInt, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner>
+  >(upstream, {
+    unset: () => Effect.succeed(NonNegativeInt.make(0)),
+    pruned: () => Effect.succeed(baseCount),
+    live: ({ ref }) => countCommits(targetPath, `${ref}..HEAD`, "inspect-upstream"),
+  });
+  return WorktreeUnpushedInspection.make({
+    unpushed: baseCount > 0 || upstreamCount > 0,
+    baseRange,
+    upstream,
+  });
 });
 
 const inspectUnpushedAsCommandError = Effect.fn("WorktreeRemovalService.inspectUnpushedAsCommandError")(function* (
   targetPath: string,
   branch: O.Option<string>
-): Effect.fn.Return<boolean, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* inspectUnpushed(targetPath, branch).pipe(
+): Effect.fn.Return<WorktreeUnpushedInspection, WorktreeCommandError, UpstreamProbeRequirements> {
+  // Doctor consumes only the count-derived boolean, so it needs no remote
+  // merged-PR evidence. Removal retains the full probe for its receipt.
+  return yield* inspectUnpushed(
+    targetPath,
+    branch,
+    (): Effect.Effect<WorktreeUpstreamVerdict> => Effect.succeed({ _tag: "unverified" })
+  ).pipe(
     Effect.mapError((error) =>
       WorktreeCommandError.make({
         message: error.message,
@@ -582,6 +864,7 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
   request: WorktreeRemovalRequest,
   head: GitObjectId,
   reason: WorktreeResidueReasonType,
+  upstream: WorktreeUpstreamState,
   trackedPatch: string,
   untrackedFiles: ReadonlyArray<string>,
   baseRoot: string
@@ -672,6 +955,7 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
     untrackedFiles,
     residueRoot: plan.residueRoot,
     reason,
+    upstream,
   });
   const manifestJson = yield* encodeResidueManifest(manifest).pipe(
     Effect.mapError((cause) =>
@@ -709,13 +993,17 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   const path = yield* Path.Path;
   const target = path.resolve(request.targetPath);
   const managedRoot = path.join(path.dirname(request.mainCheckout), `${path.basename(request.mainCheckout)}-worktrees`);
+  // Claude Code's desktop app nests its lanes under the clone itself; both
+  // roots are retirement-eligible, and the target must sit in exactly one.
+  const nestedRoot = path.join(request.mainCheckout, CLAUDE_WORKTREES_RELATIVE_ROOT);
+  const root = target === path.resolve(nestedRoot, request.name) ? nestedRoot : managedRoot;
   const invalid = () =>
     WorktreeCommandError.make({
       message:
-        "Removal target must be an exact registered worktree beneath the managed root with the same Git common directory.",
+        "Removal target must be an exact registered worktree beneath the managed or nested worktrees root with the same Git common directory.",
       path: request.targetPath,
     });
-  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(managedRoot, request.name)) {
+  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(root, request.name)) {
     return yield* invalid();
   }
   const listed = yield* runWorktreeGitCapture(
@@ -727,7 +1015,7 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   if (!A.some(entries, (entry) => path.resolve(entry.path) === target)) {
     return yield* invalid();
   }
-  const canonicalRoot = yield* fs.realPath(managedRoot).pipe(Effect.mapError(invalid));
+  const canonicalRoot = yield* fs.realPath(root).pipe(Effect.mapError(invalid));
   const canonicalTarget = yield* fs.realPath(target).pipe(Effect.mapError(invalid));
   if (canonicalTarget !== path.join(canonicalRoot, request.name)) {
     return yield* invalid();
@@ -750,7 +1038,8 @@ const makeRemovalReceipt = (
   request: WorktreeRemovalRequest,
   reason: WorktreeResidueReasonType,
   manifest: O.Option<WorktreeResidueManifest>,
-  branchDeleted: boolean
+  branchDeleted: boolean,
+  unpushedInspection: O.Option<WorktreeUnpushedInspection>
 ): WorktreeRemovalReceipt =>
   WorktreeRemovalReceipt.make({
     targetPath: request.targetPath,
@@ -758,6 +1047,7 @@ const makeRemovalReceipt = (
     reason,
     manifest,
     branchDeleted,
+    unpushedInspection,
   });
 
 const inspectRemovalChanges = Effect.fn("WorktreeRemovalService.inspectRemovalChanges")(function* <Error>(
@@ -809,25 +1099,14 @@ const assertNoDirtySubmodules = Effect.fn("WorktreeRemovalService.assertNoDirtyS
 const inspectArchiveHead = Effect.fn("WorktreeRemovalService.inspectArchiveHead")(function* (
   request: WorktreeRemovalRequest
 ): Effect.fn.Return<GitObjectId, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
-  const headOutput = yield* resolveGitCommit(
-    request.targetPath,
-    "HEAD",
-    preservationErrorAdapter("inspect-head", "Failed to resolve the worktree HEAD.", request.targetPath)
-  );
-  return yield* decodeGitObjectId(Str.trim(headOutput)).pipe(
-    Effect.mapError((cause) =>
-      WorktreePreservationError.new("inspect-head", "Git returned an invalid full object id for HEAD.", {
-        cause,
-        path: request.targetPath,
-      })
-    )
-  );
+  return yield* resolveHeadObjectId(request.targetPath, "inspect-head");
 });
 
 const captureAndPreserveResidue = Effect.fn("WorktreeRemovalService.captureAndPreserveResidue")(function* (
   request: WorktreeRemovalRequest,
   head: GitObjectId,
-  reason: WorktreeResidueReasonType
+  reason: WorktreeResidueReasonType,
+  upstream: WorktreeUpstreamState
 ): Effect.fn.Return<WorktreeResidueManifest, WorktreePreservationError, WorktreeRemovalServiceRequirements> {
   const baseRoot = yield* residueBaseRoot(request.targetPath);
   const trackedPatch = yield* runGitRawOutput(
@@ -839,34 +1118,43 @@ const captureAndPreserveResidue = Effect.fn("WorktreeRemovalService.captureAndPr
     request.targetPath,
     preservationErrorAdapter("inspect-residue", "Failed to list untracked worktree residue.", request.targetPath)
   );
-  return yield* preserveResidue(request, head, reason, trackedPatch, untrackedFiles, baseRoot);
+  return yield* preserveResidue(request, head, reason, upstream, trackedPatch, untrackedFiles, baseRoot);
 });
 
 const preserveArchiveResidue = Effect.fn("WorktreeRemovalService.preserveArchiveResidue")(function* (
   request: WorktreeRemovalRequest,
   head: GitObjectId,
   reason: WorktreeResidueReasonType,
+  upstream: WorktreeUpstreamState,
   needsPreservation: boolean
 ): Effect.fn.Return<O.Option<WorktreeResidueManifest>, WorktreePreservationError, WorktreeRemovalServiceRequirements> {
   return yield* Bool.match(needsPreservation, {
     onFalse: () => Effect.succeed(O.none<WorktreeResidueManifest>()),
-    onTrue: () => captureAndPreserveResidue(request, head, reason).pipe(Effect.asSome),
+    onTrue: () => captureAndPreserveResidue(request, head, reason, upstream).pipe(Effect.asSome),
   });
 });
+
+type ArchiveRemovalPlan = {
+  readonly reason: WorktreeResidueReasonType;
+  readonly manifest: O.Option<WorktreeResidueManifest>;
+  readonly unpushedInspection: WorktreeUnpushedInspection;
+};
 
 const planArchiveRemoval = Effect.fn("WorktreeRemovalService.planArchiveRemoval")(function* (
   request: WorktreeRemovalRequest,
   head: GitObjectId,
   dirty: boolean
-): Effect.fn.Return<
-  readonly [WorktreeResidueReasonType, O.Option<WorktreeResidueManifest>],
-  WorktreePreservationError,
-  WorktreeRemovalServiceRequirements
-> {
-  const unpushed = yield* inspectUnpushed(request.targetPath, request.branch);
-  const reason = worktreeResidueReason(dirty, unpushed);
-  const manifest = yield* preserveArchiveResidue(request, head, reason, dirty || unpushed);
-  return [reason, manifest];
+): Effect.fn.Return<ArchiveRemovalPlan, WorktreePreservationError, WorktreeRemovalServiceRequirements> {
+  const unpushedInspection = yield* inspectUnpushed(request.targetPath, request.branch);
+  const reason = worktreeResidueReason(dirty, unpushedInspection.unpushed);
+  const manifest = yield* preserveArchiveResidue(
+    request,
+    head,
+    reason,
+    unpushedInspection.upstream,
+    dirty || unpushedInspection.unpushed
+  );
+  return { reason, manifest, unpushedInspection };
 });
 
 const removeWorktree = Effect.fn("WorktreeRemovalService.removeWorktree")(function* (
@@ -941,7 +1229,7 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
   return yield* A.match(changes, {
     onEmpty: () =>
       removeWorktree(request, false).pipe(
-        Effect.as(makeRemovalReceipt(request, WorktreeResidueReason.Enum.clean, O.none(), false))
+        Effect.as(makeRemovalReceipt(request, WorktreeResidueReason.Enum.clean, O.none(), false, O.none()))
       ),
     onNonEmpty: (dirtyChanges) => WorktreeDirtyError.new(request.targetPath, A.length(dirtyChanges)),
   });
@@ -949,15 +1237,90 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
 
 const MAX_REPORTED_HOLDERS = 8;
 
-const describeAttachedProcesses = (attachments: A.NonEmptyReadonlyArray<ProcessAttachment>): string => {
+// `comm` is the kernel's short executable name: enough to tell an operator
+// which holder (a `zsh` terminal panel, a `node` editor helper) to close.
+const describeHolder = Effect.fnUntraced(function* (
+  holder: ProcessAttachment
+): Effect.fn.Return<string, never, FileSystem.FileSystem> {
+  const name = yield* processName(holder.pid);
+  const named = O.match(name, { onNone: () => "", onSome: (comm) => ` (${comm})` });
+  return `pid ${holder.pid}${named} via ${holder.kind}`;
+});
+
+const describeAttachedProcesses = Effect.fnUntraced(function* (
+  attachments: A.NonEmptyReadonlyArray<ProcessAttachment>
+): Effect.fn.Return<string, never, FileSystem.FileSystem> {
   const holders = A.dedupeWith(attachments, (left, right) => left.pid === right.pid);
   const shown = A.take(holders, MAX_REPORTED_HOLDERS);
-  const listed = A.join(
-    A.map(shown, (holder) => `pid ${holder.pid} via ${holder.kind}`),
-    ", "
-  );
+  const listed = A.join(yield* Effect.forEach(shown, describeHolder), ", ");
   const hidden = A.length(holders) - A.length(shown);
   return hidden > 0 ? `${listed} and ${hidden} more` : listed;
+});
+
+// The party asking for the retirement is the invoker's own chain (CLI, shell,
+// agent session) and, when the request carries a session marker, everything
+// that session spawned: a holder whose ancestry reaches the session pid is one
+// of its helpers, not a writer the archive could lose. The marker is proven
+// against /proc first (the entry immediately before the named session in the
+// nearest-first chain, toward index 0 and the invoker, must carry it), so init,
+// the desktop host, or a pid copied from elsewhere can
+// never widen the fence.
+const blockingHolders = Effect.fnUntraced(function* (
+  request: WorktreeRemovalRequest,
+  attachments: ReadonlyArray<ProcessAttachment>
+): Effect.fn.Return<ReadonlyArray<ProcessAttachment>, never, FileSystem.FileSystem> {
+  if (request.exemptInvoker === undefined) {
+    const foreign = yield* foreignHolderPids(request, attachments);
+    return A.filter(attachments, (attachment) => HashSet.has(foreign, attachment.pid));
+  }
+  const chain = yield* invokerAncestryPids();
+  const session = yield* O.match(request.exemptInvoker.sessionMarker, {
+    onNone: () => Effect.succeed(O.none<number>()),
+    onSome: (marker) => sessionRootOf(process.pid, marker),
+  });
+  const isExempt = (holder: ProcessAttachment): Effect.Effect<boolean, never, FileSystem.FileSystem> =>
+    HashSet.has(chain, holder.pid)
+      ? Effect.succeed(true)
+      : O.match(session, {
+          onNone: () => Effect.succeed(false),
+          onSome: (pid) => Effect.map(ancestryPidsOf(holder.pid), HashSet.has(pid)),
+        });
+  return yield* Effect.filter(attachments, (holder) => Effect.map(isExempt(holder), Bool.not));
+});
+
+// The invoking session (its root process and everything running under it: the
+// CLI, its shell, the agent session, that session's MCP servers and tool
+// pipelines) is the party asking for the retirement, so a request that says so
+// exempts holders under a recognized session command. Without that proof,
+// only the invoking ancestry is exempt; terminal/worker siblings still block.
+const pidsOutsideInvokerSession = Effect.fnUntraced(function* (
+  pids: ReadonlyArray<number>
+): Effect.fn.Return<HashSet.HashSet<number>, never, FileSystem.FileSystem> {
+  const root = yield* invokerSessionRoot();
+  if (root.rule === "chain-top") {
+    const table = yield* ProcessTable;
+    const chain = A.takeWhile(yield* processLineage(table.self), (status) => status.pid !== root.pid);
+    const ancestry = HashSet.fromIterable(
+      A.prepend(
+        A.map(chain, (status) => status.pid),
+        root.pid
+      )
+    );
+    return HashSet.fromIterable(A.filter(pids, (pid) => !HashSet.has(ancestry, pid)));
+  }
+  const outside = yield* Effect.filter(pids, (pid) => Effect.map(descendsFromProcess(pid, root.pid), Bool.not));
+  return HashSet.fromIterable(outside);
+});
+
+const foreignHolderPids = (
+  request: WorktreeRemovalRequest,
+  attachments: ReadonlyArray<ProcessAttachment>
+): Effect.Effect<HashSet.HashSet<number>, never, FileSystem.FileSystem> => {
+  const pids = A.dedupe(A.map(attachments, (attachment) => attachment.pid));
+  return Bool.match(request.exemptInvokerSession === true, {
+    onFalse: () => Effect.succeed(HashSet.fromIterable(pids)),
+    onTrue: () => pidsOutsideInvokerSession(pids),
+  });
 };
 
 const assertQuiescentFence = Effect.fnUntraced(function* (
@@ -970,9 +1333,11 @@ const assertQuiescentFence = Effect.fnUntraced(function* (
       message: `Refusing to retire ${request.targetPath}: the processes attached to it could not be enumerated, so the archive cannot be proven complete.`,
     });
   }
-  if (A.isReadonlyArrayNonEmpty(scan.value)) {
+  const holders = yield* blockingHolders(request, scan.value);
+  if (A.isReadonlyArrayNonEmpty(holders)) {
+    const described = yield* describeAttachedProcesses(holders);
     return yield* WorktreeCommandError.make({
-      message: `Refusing to retire ${request.targetPath}: ${describeAttachedProcesses(scan.value)} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
+      message: `Refusing to retire ${request.targetPath}: ${described} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
     });
   }
 });
@@ -981,7 +1346,7 @@ const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(
   request: WorktreeRemovalRequest,
   fenced: WorktreeRemovalRequest
 ): Effect.fn.Return<
-  readonly [WorktreeResidueReasonType, O.Option<WorktreeResidueManifest>, GitObjectId],
+  ArchiveRemovalPlan & { readonly head: GitObjectId },
   WorktreeCommandError | WorktreePreservationError,
   WorktreeRemovalServiceRequirements
 > {
@@ -999,8 +1364,8 @@ const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(
   // Authority is re-tied to the state actually being archived: the fenced HEAD must
   // still be the object id the caller's decision was made under.
   yield* assertAuthorizedHead(request, head);
-  const [reason, manifest] = yield* planArchiveRemoval(fenced, head, A.isReadonlyArrayNonEmpty(changes));
-  return [reason, manifest, head] as const;
+  const plan = yield* planArchiveRemoval(fenced, head, A.isReadonlyArrayNonEmpty(changes));
+  return { ...plan, head };
 });
 
 const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedWorktree")(function* (
@@ -1049,7 +1414,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
     );
     return yield* planned.failure;
   }
-  const [reason, manifest, head] = planned.success;
+  const { reason, manifest, head, unpushedInspection } = planned.success;
   // Re-verify quiescence after capture and before the destructive remove. A scan is a
   // one-time observation, so a same-uid process could have attached to the fenced copy
   // during the capture phase (git status, patch, file copy) — the longest part of the
@@ -1076,7 +1441,7 @@ const removeArchivedWorktree = Effect.fn("WorktreeRemovalService.removeArchivedW
   // the shared object store intact, and the branch ref falls only to this
   // compare-and-swap on the archived head.
   const branchDeleted = yield* deleteArchivedBranch(request, head);
-  return makeRemovalReceipt(request, reason, manifest, branchDeleted);
+  return makeRemovalReceipt(request, reason, manifest, branchDeleted, O.some(unpushedInspection));
 });
 
 const removeImpl = Effect.fn("WorktreeRemovalService.remove")(function* (
@@ -1100,13 +1465,49 @@ const makeWorktreeRemovalService = Effect.fn("WorktreeRemovalService.make")(func
       removeImpl(request).pipe(Effect.provide(runtimeContext))
     ),
     hasUnpushedCommits: Effect.fn("WorktreeRemovalService.hasUnpushedCommits")((targetPath, branch) =>
-      inspectUnpushedAsCommandError(targetPath, branch).pipe(Effect.provide(runtimeContext))
+      inspectUnpushedAsCommandError(targetPath, branch).pipe(
+        Effect.map((inspection) => inspection.unpushed),
+        Effect.provide(runtimeContext)
+      )
     ),
   });
 });
 
 /**
- * Live layer for preservation-first worktree removal.
+ * Removal layer that still requires a {@link WorktreeMergedPullRequestProbe}.
+ *
+ * **When to use**
+ *
+ * Use when the merged-pull-request probe must be substituted, such as a test
+ * that asserts the verdict recorded for a pruned upstream without reaching
+ * GitHub. Command wiring uses {@link WorktreeRemovalServiceLive} instead.
+ *
+ * **Example** (Provide a stub probe to the removal layer)
+ *
+ * ```ts
+ * import { WorktreeMergedPullRequestProbe, WorktreeRemovalServiceLayer } from "@beep/repo-cli/commands/Worktree"
+ * import { Effect, Layer } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const probe = Layer.succeed(
+ *   WorktreeMergedPullRequestProbe,
+ *   WorktreeMergedPullRequestProbe.of({ mergedAtHead: () => Effect.succeed(O.none()) })
+ * )
+ * const removal = WorktreeRemovalServiceLayer.pipe(Layer.provide(probe))
+ * console.log(typeof removal) // "object"
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const WorktreeRemovalServiceLayer: Layer.Layer<
+  WorktreeRemovalService,
+  never,
+  WorktreeRemovalServiceRequirements
+> = Layer.effect(WorktreeRemovalService, makeWorktreeRemovalService());
+
+/**
+ * Live layer for preservation-first worktree removal with the `gh`-backed probe.
  *
  * **Example** (Reference the live removal layer)
  *
@@ -1122,5 +1523,5 @@ const makeWorktreeRemovalService = Effect.fn("WorktreeRemovalService.make")(func
 export const WorktreeRemovalServiceLive: Layer.Layer<
   WorktreeRemovalService,
   never,
-  WorktreeRemovalServiceRequirements
-> = Layer.effect(WorktreeRemovalService, makeWorktreeRemovalService());
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> = WorktreeRemovalServiceLayer.pipe(Layer.provide(WorktreeMergedPullRequestProbeLive));

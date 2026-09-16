@@ -16,12 +16,10 @@ import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { declaredFieldsEquivalence } from "../src/core/declaredFieldsEquivalence.ts";
 
 class ReadmeAssemblyError extends S.TaggedError<ReadmeAssemblyError>("@beep/effect-drizzle/ReadmeAssemblyError")(
   "ReadmeAssemblyError",
-  { message: S.String },
-  { toEquivalence: (typeParameters) => declaredFieldsEquivalence<ReadmeAssemblyError>(typeParameters) }
+  { message: S.String }
 ) {}
 
 const START_MARKER = "<!-- docgen:api-reference:start -->";

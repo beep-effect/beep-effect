@@ -37,20 +37,10 @@ import type { JSX } from "react";
 const $I = $ProfessionalDesktopId.create("spikes/CosmosSpike");
 
 const CosmosWorkerInitializationErrorFields = {
-  cause: S.Unknown,
+  // cause is an opaque defect: it stays payload and never takes part in declared identity.
+  cause: S.Unknown.annotate({ toEquivalence: () => () => true }),
   message: S.NonEmptyString,
 } satisfies S.Struct.Fields;
-const CosmosWorkerInitializationErrorEquivalenceFields = {
-  message: CosmosWorkerInitializationErrorFields.message,
-} satisfies S.Struct.Fields;
-// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
-const sameCosmosWorkerInitializationErrorFields = S.toEquivalence(
-  S.TaggedStruct("CosmosWorkerInitializationError", CosmosWorkerInitializationErrorEquivalenceFields)
-);
-const sameCosmosWorkerInitializationError = (
-  self: CosmosWorkerInitializationError,
-  that: CosmosWorkerInitializationError
-): boolean => sameCosmosWorkerInitializationErrorFields(self, that);
 
 /**
  * Failure raised when the Cosmos spike projection worker cannot initialize.
@@ -75,12 +65,8 @@ export class CosmosWorkerInitializationError extends S.TaggedError<CosmosWorkerI
 )(
   "CosmosWorkerInitializationError",
   CosmosWorkerInitializationErrorFields,
-  $I.annoteClass<
-    S.declare<CosmosWorkerInitializationError>,
-    readonly [S.TaggedStruct<"CosmosWorkerInitializationError", typeof CosmosWorkerInitializationErrorFields>]
-  >("CosmosWorkerInitializationError", {
+  $I.annoteError<CosmosWorkerInitializationError>("CosmosWorkerInitializationError", {
     description: "The Cosmos spike projection worker could not be initialized.",
-    toEquivalence: () => sameCosmosWorkerInitializationError,
   })
 ) {}
 

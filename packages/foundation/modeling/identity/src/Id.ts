@@ -36,7 +36,6 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { TString } from "@beep/types";
-import type { Equivalence } from "effect/Equivalence";
 import type { PayloadEncoding } from "effect/unstable/httpapi/HttpApiSchema";
 import type { Get, Paths } from "type-fest";
 import type { CoreVocab, Predicate, VocabShape } from "./Vocab.ts";
@@ -91,11 +90,6 @@ const preserveSchemaStatics = <Schema extends S.Top>(
   return annotated as AnnotatedSchema<Schema>;
 };
 
-// Effect calls the hook with the declared struct's equivalence. Narrowing it from `never` to `Self`
-// is the contravariant direction (`Self` extends the struct type), so the assertion is sound.
-const adoptDeclaredFieldsEquivalence = <Self>(typeParameters: readonly [Equivalence<never>]): Equivalence<Self> =>
-  typeParameters[0] as Equivalence<Self>;
-
 /**
  * Bootstrap identity annotation helper for schemas defined before `make` exists.
  *
@@ -115,7 +109,6 @@ const $I = {
     schemaId: Symbol.for(identifier),
     identifier,
     title: extras.title ?? identifier,
-    toEquivalence: adoptDeclaredFieldsEquivalence<Self>,
   }),
 };
 
@@ -635,18 +628,17 @@ export type DeclarationAnnotationExtras<
 > = S.Annotations.Declaration<T, TypeParameters>;
 
 /**
- * Annotation record produced by `annoteError`: identity metadata, caller extras, and a
- * `toEquivalence` hook that adopts the declared field struct's equivalence.
+ * Annotation record produced by `annoteError`: identity metadata plus the caller's
+ * documentation extras.
  *
  * **Details**
  *
- * Effect calls a declaration's `toEquivalence` hook with the derived equivalences of its type
- * parameters; for `S.TaggedError` that single parameter is the declared `TaggedStruct`, so the
- * hook returns it and `S.toEquivalence(ErrorClass)` compares declared fields only. The hook is
- * typed over `never` type parameters and `Self` on purpose: that shape is assignable to every
- * `S.Annotations.Declaration<Self, readonly [S.TaggedStruct<Tag, Fields>]>` without naming the
- * fields, and it does not require the compiler to infer anything from `Self` inside the class's
- * own base expression.
+ * The record carries no `toEquivalence` hook. Since `effect@4.0.0-rc.113` every Schema class
+ * (`S.Class`, `S.TaggedClass`, `S.Error`, `S.TaggedError`) derives its equivalence from the
+ * declared field struct by construction, so `S.toEquivalence(ErrorClass)` already compares
+ * declared fields only and ignores `Error` runtime metadata. Fields that must not take part in
+ * identity say so on their own schema (`Defect` from `@beep/schema` declares an always-equal
+ * equivalence); nothing is hand-excluded at the class.
  *
  * The `iri` and `curie` members are present only when the record came from a composer bound to
  * an authority and prefix; the bootstrap `annoteError` shim never sets them.
@@ -671,7 +663,6 @@ export interface ErrorAnnotationRecord<Self> extends S.Annotations.Documentation
   readonly iri?: string | undefined;
   readonly schemaId: symbol;
   readonly title: string;
-  readonly toEquivalence: (typeParameters: readonly [Equivalence<never>]) => Equivalence<Self>;
 }
 
 /**
@@ -1069,10 +1060,13 @@ export interface IdentityComposer<
    * **Details**
    *
    * Supply the declared schema and schema type-parameter tuple so
-   * declaration-only hooks such as `toCodecArbitrary` and `toEquivalence` receive
-   * their real contextual types.
+   * declaration-only hooks receive their real contextual types. Schema classes
+   * (`S.Class`, `S.TaggedClass`, `S.Error`, `S.TaggedError`) derive their
+   * equivalence from the declared field struct by construction, so a class
+   * annotation never needs a `toEquivalence` hook; reserve the hooks for
+   * `S.declare` schemas whose behaviour Effect cannot derive.
    *
-   * **Example** (Supply a declaration-only equivalence hook)
+   * **Example** (Annotate a class declaration with documentation extras)
    *
    * ```ts
    * import { make } from "@beep/identity"
@@ -1081,7 +1075,7 @@ export interface IdentityComposer<
    * const { $MyPkgId } = make("my-pkg")
    * const Fields = S.Struct({ value: S.String })
    * const ann = $MyPkgId.annoteClass<typeof Fields, readonly [typeof Fields]>("Value", {
-   *   toEquivalence: ([sameFields]) => (self, that) => sameFields(self, that)
+   *   description: "A value carried by the class."
    * })
    *
    * console.log(ann.identifier)// "@beep/my-pkg/Value"
@@ -1100,17 +1094,16 @@ export interface IdentityComposer<
   ): S.Annotations.Declaration<Schema["Type"], TP>;
 
   /**
-   * Produce the identity annotation record for an `S.TaggedError` whose equivalence is its
-   * declared fields.
+   * Produce the identity annotation record for an `S.TaggedError`.
    *
    * **Details**
    *
-   * Without a `toEquivalence` annotation a tagged-error declaration falls back to `Equal.equals`,
-   * which compares `Error` runtime metadata and makes field-equal instances compare unequal
-   * depending on construction site. This record adopts the declared field struct's equivalence, so
-   * `S.toEquivalence(ErrorClass)` compares the declared fields only. Fields that must not take part
-   * in identity say so on their own schema (`Defect` from `@beep/schema` declares an always-equal
-   * equivalence); nothing is hand-excluded at the class.
+   * The record adds the interned `schemaId`, `identifier`, and `title` (plus `iri` and `curie`
+   * when the composer is bound to an authority) to the caller's documentation extras. It installs
+   * no `toEquivalence` hook: Effect derives a Schema class's equivalence from its declared field
+   * struct by construction, so `S.toEquivalence(ErrorClass)` compares the declared fields only.
+   * Fields that must not take part in identity say so on their own schema (`Defect` from
+   * `@beep/schema` declares an always-equal equivalence); nothing is hand-excluded at the class.
    *
    * **Example** (Declare a tagged error with fields-only identity)
    *
@@ -1907,7 +1900,6 @@ const createComposer = <
             curie: merged.curie,
           }),
       title: extras?.title ?? merged.title,
-      toEquivalence: adoptDeclaredFieldsEquivalence<Self>,
     };
   };
 

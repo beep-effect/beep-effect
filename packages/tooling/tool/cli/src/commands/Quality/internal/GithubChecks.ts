@@ -9,6 +9,8 @@ import { A, Str } from "@beep/utils";
 import { Match, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import { readTurboCacheEnvironmentSync } from "../../../internal/cli/EnvConfig.ts";
+import { resolveTurboCachePlan, turboCachePlanArgs } from "../../../internal/cli/TurboCache.ts";
 import { QualityTaskStep } from "../../../internal/process/index.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import {
@@ -77,6 +79,23 @@ const bunxLane = (repoRoot: string, label: string, args: ReadonlyArray<string>):
     command: "bunx",
     args,
     cwd: repoRoot,
+  });
+
+const rootTaskLane = (repoRoot: string, label: string, task: string, base?: string): QualityTaskStep =>
+  QualityTaskStep.make({
+    ...bunxLane(repoRoot, label, [
+      "turbo",
+      "run",
+      task,
+      ...turboCachePlanArgs(
+        resolveTurboCachePlan(readTurboCacheEnvironmentSync(), {
+          args: ["--summarize"],
+          ci: Bun.env.CI === "true",
+        })
+      ),
+      "--summarize",
+    ]),
+    ...(base === undefined ? {} : { env: { BEEP_PROOF_BASE: base } }),
   });
 
 /**
@@ -296,11 +315,17 @@ const tsconfigSyncLane = (repoRoot: string, tier: GithubCheckLaneTier): GithubCh
     tier,
     "repo-sanity",
     "preflight",
-    bunRunLane(repoRoot, "repo-sanity:tsconfig-sync", ["config-sync:check"])
+    rootTaskLane(repoRoot, "repo-sanity:tsconfig-sync", "config-sync:check")
   );
 
 const knipLane = (repoRoot: string, tier: GithubCheckLaneTier): GithubCheckLaneSpec =>
-  githubCheckLane("quality:knip", tier, "repo-quality", "preflight", repoCliLane(repoRoot, "quality:knip", ["knip"]));
+  githubCheckLane(
+    "quality:knip",
+    tier,
+    "repo-quality",
+    "preflight",
+    rootTaskLane(repoRoot, "quality:knip", "knip:check")
+  );
 
 /**
  * Build the repo-quality diagnostic lanes used by GitHub check collectors.
@@ -494,7 +519,7 @@ export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<Gith
     "pre-push",
     "repo-sanity",
     "preflight",
-    repoCliLane(repoRoot, "repo-sanity:fallow-boundaries-config", ["fallow", "boundaries", "config-check", "--check"])
+    rootTaskLane(repoRoot, "repo-sanity:fallow-boundaries-config", "fallow:boundaries:config-check")
   ),
   githubCheckLane(
     "repo-sanity:versions",
@@ -637,14 +662,14 @@ export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCh
     "pre-push",
     "repo-quality",
     "preflight",
-    repoCliLane(repoRoot, "fallow:audit", ["fallow", "audit", "--check", "--quiet"])
+    rootTaskLane(repoRoot, "fallow:audit", "fallow:audit:check", PRE_PUSH_CI_LANE_PLAN.base)
   ),
   githubCheckLane(
     "fallow:dead-code",
     "pre-push",
     "repo-quality",
     "preflight",
-    repoCliLane(repoRoot, "fallow:dead-code", ["fallow", "dead-code", "--check", "--quiet"])
+    rootTaskLane(repoRoot, "fallow:dead-code", "fallow:dead-code:check", PRE_PUSH_CI_LANE_PLAN.base)
   ),
   githubCheckLane(
     "fallow:health",
@@ -664,9 +689,8 @@ export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCh
  * failures without scheduling any heavyweight build, lint, check, test, or
  * docgen lane. Lanes that repeat a lint-policy step or a pre-push lane carry
  * that step's id, so one command has one name across tiers (TTC ruling 28).
- * The JSDoc lane reads the committed inventory and baseline and therefore
- * names a different command than `quality:jsdoc-ratchet`, whose full
- * inventory rescan remains in the documentation wave of `pre-push`.
+ * The committed-inventory comparison remains a distinct CLI aggregate; the
+ * hosted JSDoc dispatcher generates a fresh Turbo inventory before comparison.
  *
  * **Example** (Inspect cheap gates)
  *
@@ -695,7 +719,7 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "cheap-gates",
     "repo-sanity",
     "preflight",
-    bunRunLane(repoRoot, "goals:index-check", ["beep", "goals", "index", "--check"])
+    rootTaskLane(repoRoot, "goals:index-check", "goals:index-check")
   ),
   githubCheckLane(
     "explore:atlas-check",
@@ -710,14 +734,14 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "cheap-gates",
     "repo-quality",
     "preflight",
-    bunRunLane(repoRoot, "lint:effect-imports", ["beep", "laws", "effect-imports", "--check"])
+    rootTaskLane(repoRoot, "lint:effect-imports", "lint:effect-imports")
   ),
   githubCheckLane(
     "lint:schema-first",
     "cheap-gates",
     "repo-quality",
     "preflight",
-    bunRunLane(repoRoot, "lint:schema-first", ["beep", "lint", "schema-first"])
+    rootTaskLane(repoRoot, "lint:schema-first", "lint:schema-first")
   ),
   githubCheckLane(
     "lint:effect-vitest",
@@ -731,14 +755,14 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "cheap-gates",
     "repo-sanity",
     "preflight",
-    bunRunLane(repoRoot, "lint:allowlist", ["beep", "laws", "allowlist-check"])
+    rootTaskLane(repoRoot, "lint:allowlist", "lint:allowlist")
   ),
   githubCheckLane(
     "goals:doctor",
     "cheap-gates",
     "repo-sanity",
     "preflight",
-    bunRunLane(repoRoot, "goals:doctor", ["beep", "goals", "doctor"])
+    rootTaskLane(repoRoot, "goals:doctor", "goals:doctor")
   ),
   githubCheckLane(
     "quality:jsdoc-ratchet:committed",
