@@ -522,7 +522,8 @@ describe("proof job recovery boundaries", () => {
         expect(yield* launcher.prune(1)).toEqual([first.jobId]);
         expect(yield* fs.exists(first.unit.logPath)).toBe(false);
         expect(yield* fs.exists(second.unit.logPath)).toBe(true);
-        assertTrue(O.isSome(yield* launcher.read(active.jobId)));
+        const retained = yield* launcher.read(active.jobId);
+        retained.pipe(O.isSome, assertTrue);
       })
     )
   );
