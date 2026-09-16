@@ -154,6 +154,10 @@ describe("@beep/infra CiFleetController", () => {
       const moduleRunnerGroupNames = MutableHashMap.empty<string, unknown>();
       const moduleCapacityTypes = MutableHashMap.empty<string, unknown>();
       const moduleRunnerCaps = MutableHashMap.empty<string, unknown>();
+      const moduleAllocationStrategies = MutableHashMap.empty<string, unknown>();
+      const moduleOnDemandFailover = MutableHashMap.empty<string, unknown>();
+      const moduleScaleUpConcurrency = MutableHashMap.empty<string, unknown>();
+      const moduleScaleDownSchedules = MutableHashMap.empty<string, unknown>();
       const policyDocuments = MutableHashMap.empty<string, string>();
       const rolePolicyRoles = MutableHashMap.empty<string, unknown>();
       const lambdaRegions = MutableHashMap.empty<string, unknown>();
@@ -191,6 +195,18 @@ describe("@beep/infra CiFleetController", () => {
                   MutableHashMap.set(moduleRunnerGroupNames, args.name, args.inputs.runner_group_name);
                   MutableHashMap.set(moduleCapacityTypes, args.name, args.inputs.instance_target_capacity_type);
                   MutableHashMap.set(moduleRunnerCaps, args.name, args.inputs.runners_maximum_count);
+                  MutableHashMap.set(moduleAllocationStrategies, args.name, args.inputs.instance_allocation_strategy);
+                  MutableHashMap.set(
+                    moduleOnDemandFailover,
+                    args.name,
+                    args.inputs.enable_runner_on_demand_failover_for_errors
+                  );
+                  MutableHashMap.set(
+                    moduleScaleUpConcurrency,
+                    args.name,
+                    args.inputs.scale_up_reserved_concurrent_executions
+                  );
+                  MutableHashMap.set(moduleScaleDownSchedules, args.name, args.inputs.scale_down_schedule_expression);
                 }
                 const policy = args.inputs.policy;
                 if (args.type === "aws:kms/grant:Grant") {
@@ -265,8 +281,16 @@ describe("@beep/infra CiFleetController", () => {
       expect(capturedManagedPolicyArns.value).toEqual(["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"]);
       expect(capturedOrganizationRunnerEnabled.value).toBe(true);
       expect(capturedRunnerGroupName.value).toBe("beep-ec2-heavy");
-      expect(MutableHashMap.get(moduleCapacityTypes, "ci-fleet-controller-test")).toEqual(O.some("on-demand"));
-      expect(MutableHashMap.get(moduleRunnerCaps, "ci-fleet-controller-test")).toEqual(O.some(14));
+      expect(MutableHashMap.get(moduleCapacityTypes, "ci-fleet-controller-test")).toEqual(O.some("spot"));
+      expect(MutableHashMap.get(moduleAllocationStrategies, "ci-fleet-controller-test")).toEqual(
+        O.some("price-capacity-optimized")
+      );
+      expect(MutableHashMap.get(moduleOnDemandFailover, "ci-fleet-controller-test")).toEqual(O.some([]));
+      expect(MutableHashMap.get(moduleRunnerCaps, "ci-fleet-controller-test")).toEqual(O.some(2));
+      expect(MutableHashMap.get(moduleScaleUpConcurrency, "ci-fleet-controller-test")).toEqual(O.some(1));
+      expect(MutableHashMap.get(moduleScaleDownSchedules, "ci-fleet-controller-test")).toEqual(
+        O.some("cron(* * * * ? *)")
+      );
       expect(MutableHashMap.size(rolePolicyRoles)).toBe(0);
       expect(MutableHashMap.size(decryptGrants)).toBe(6);
       for (const functionName of [
