@@ -3,9 +3,9 @@ name: Check
 on:
   pull_request:
     branches: [main]
-    # `labeled` admits the heavy matrix through the `ready-for-heavy` label
-    # (time-to-certainty B8, ruling 51); `unlabeled` is deliberately absent.
-    types: [opened, synchronize, reopened, labeled]
+    # Default types only. The `ready-for-heavy` label is handled by
+    # heavy-admit.yml, so applying it never cancels or re-runs tier 1 here
+    # (time-to-certainty B8, ruling 51).
   push:
     branches: [main]
 
@@ -56,7 +56,8 @@ jobs:
   # the PR is merge-blocked until the `ready-for-heavy` label lands). The
   # decision is `bun run beep ci admission`, unit-tested in the CLI; the
   # monitor loop evaluates the same function for its `heavy-not-admitted`
-  # settle wait.
+  # settle wait, and heavy-admit.yml runs the same two jobs when the label
+  # is applied, so the label never restarts tier 1.
   admission:
     name: Heavy Admission
     runs-on: ubuntu-24.04

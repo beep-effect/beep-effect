@@ -557,6 +557,8 @@ turbo work, so they are cheap to run mid-loop.
   "Expected", merge blocked) until `gh pr edit <n> --add-label ready-for-heavy`.
   Apply it yourself, then run `bun run beep yeet monitor --until-ready` — the
   held loop prints that exact command and does not burn its settle budget.
+  The label triggers `heavy-admit.yml`, which runs only the admission job and
+  the heavy matrix for that head; tier 1 is neither cancelled nor re-run.
   Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,
   any `*.md`, packet prose) need no label: the heavy lanes report `skipped` and
   satisfy the ruleset. Removing the label changes nothing already reported;
