@@ -21,6 +21,7 @@ import {
   Exit,
   FileSystem,
   flow,
+  Match,
   Path,
   pipe,
   Ref,
@@ -67,7 +68,7 @@ import {
   YeetAttemptStarted,
   YeetAttemptTerminated,
 } from "./AttemptJournal.ts";
-import { PrCloseoutOptions, PrCloseoutReportJson, runPrCloseout } from "./Closeout.ts";
+import { PrCloseoutOptions, runPrCloseout, writePrCloseoutReport } from "./Closeout.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -102,6 +103,7 @@ import {
   YEET_CHECK_REGISTRATION_BACKOFF,
 } from "./MonitorChecks.ts";
 import { runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
+import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
 import {
   buildYeetRunPlanWithMode,
   CI_PARITY_STEP_ID,
@@ -141,15 +143,15 @@ import {
 } from "./PublishScope.ts";
 import { ensurePullRequest } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
-import { collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
+import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
+import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
-import type { PrCloseoutReport } from "./Closeout.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
 import type { ProofJobLauncherShape } from "./ProofJobLauncher.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
@@ -1114,6 +1116,108 @@ const assertNoUnresolvedReviewThreads = Effect.fn("Yeet.assertNoUnresolvedReview
   });
 });
 
+const MonitorCheckReconciliation = S.TaggedUnion({
+  retry: { results: S.Array(RepoStepRunResult) },
+  "optional-only": {},
+  "required-red": {},
+  timeout: { names: S.String },
+  unreadable: {},
+}).annotate(
+  $I.annote("MonitorCheckReconciliation", {
+    description: "Required-census decision after a nonzero check watch attempt.",
+  })
+);
+type MonitorCheckReconciliation = typeof MonitorCheckReconciliation.Type;
+
+const retryPendingMonitorChecks = Effect.fn("Yeet.retryPendingMonitorChecks")(function* (
+  names: string,
+  deadline: number,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  attempt: Effect.Effect<
+    ReadonlyArray<RepoStepRunResult>,
+    YeetCommandError,
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  >
+): Effect.fn.Return<
+  MonitorCheckReconciliation,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const remaining = deadline - (yield* Clock.currentTimeMillis);
+  if (remaining <= 0) return MonitorCheckReconciliation.cases.timeout.make({ names });
+  yield* Console.log(`[yeet] required checks pending: ${names}; retrying check watch`);
+  const lastAttempt = yield* Ref.get(recorder);
+  const retried = yield* Effect.sleep(Math.min(10_000, remaining)).pipe(
+    Effect.andThen(attempt),
+    Effect.timeoutOption(remaining)
+  );
+  if (O.isNone(retried)) {
+    yield* Ref.set(recorder, lastAttempt);
+    return MonitorCheckReconciliation.cases.timeout.make({ names });
+  }
+  return MonitorCheckReconciliation.cases.retry.make({ results: retried.value });
+});
+
+const reconcileMonitorCheckCensus = Effect.fn("Yeet.reconcileMonitorCheckCensus")(function* (
+  context: RepoRunContext,
+  results: ReadonlyArray<RepoStepRunResult>,
+  deadline: number,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  attempt: Effect.Effect<
+    ReadonlyArray<RepoStepRunResult>,
+    YeetCommandError,
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  >
+): Effect.fn.Return<
+  MonitorCheckReconciliation,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  if (isAwaitingYeetCheckRegistration(results)) return MonitorCheckReconciliation.cases.unreadable.make({});
+  const required = yield* collectRemoteChecks(context, true);
+  if (O.isNone(required)) return MonitorCheckReconciliation.cases.unreadable.make({});
+  const outcome = flow(YeetCheckSignal.make, classifyYeetCheckOutcome);
+  if (A.some(required.value, (check) => outcome(check) === "fail")) {
+    return MonitorCheckReconciliation.cases["required-red"].make({});
+  }
+  const pending = A.filter(required.value, (check) => outcome(check) === "pending");
+  if (A.isReadonlyArrayNonEmpty(pending)) {
+    const names = A.join(
+      A.map(pending, (check) => check.name),
+      ", "
+    );
+    return yield* retryPendingMonitorChecks(names, deadline, recorder, attempt);
+  }
+  const all = yield* collectRemoteChecks(context, false);
+  if (O.isNone(all)) return MonitorCheckReconciliation.cases.unreadable.make({});
+  const optionalRed = A.filter(
+    all.value,
+    (check) => outcome(check) === "fail" && !A.some(required.value, (row) => row.name === check.name)
+  );
+  if (A.isReadonlyArrayEmpty(optionalRed)) return MonitorCheckReconciliation.cases.unreadable.make({});
+  yield* Console.log(
+    `[yeet] optional check(s) red: ${A.join(
+      A.map(optionalRed, (check) => check.name),
+      ", "
+    )}; required census green`
+  );
+  return MonitorCheckReconciliation.cases["optional-only"].make({});
+});
+
+const acceptOptionalMonitorReds = Effect.fn("Yeet.acceptOptionalMonitorReds")(function* (
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  checkSteps: ReadonlyArray<RepoPlanStep>
+) {
+  yield* Ref.update(recorder, (entries) =>
+    A.map(entries, (entry) =>
+      A.some(checkSteps, (step) => step.id === entry.step.id)
+        ? YeetExecutedStep.make({ ...entry, result: RepoStepRunResult.make({ ...entry.result, exitCode: 0 }) })
+        : entry
+    )
+  );
+  return O.none<string>();
+});
+
 // A pushed head whose checks have not registered yet is not a head with
 // nothing to watch. The watch re-attempts on a bounded backoff, and only an
 // exhausted backoff lets the empty answer stand — as a failure naming that
@@ -1123,7 +1227,8 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
   checkSteps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   failureMessage: string,
-  delays: ReadonlyArray<Duration.Duration> = YEET_CHECK_REGISTRATION_BACKOFF
+  delays: ReadonlyArray<Duration.Duration> = YEET_CHECK_REGISTRATION_BACKOFF,
+  settleTimeoutMs: number = YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS
 ): Effect.fn.Return<
   void,
   YeetCommandError,
@@ -1138,13 +1243,30 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
   // the pre-attempt snapshot before each try makes the last attempt the only
   // one that survives.
   const beforeAttempts = yield* Ref.get(recorder);
-  const results = yield* Ref.set(recorder, beforeAttempts).pipe(
+  const attempt = Ref.set(recorder, beforeAttempts).pipe(
     Effect.andThen(runPhase(context, checkSteps, recorder)),
     awaitYeetCheckRegistration(delays)
   );
-  if (A.every(results, (result) => result.exitCode === 0)) {
-    return;
+  let results = yield* attempt;
+  const deadline = (yield* Clock.currentTimeMillis) + settleTimeoutMs;
+  while (!A.every(results, (result) => result.exitCode === 0)) {
+    const reconciled = yield* reconcileMonitorCheckCensus(context, results, deadline, recorder, attempt);
+    if (MonitorCheckReconciliation.guards.retry(reconciled)) {
+      results = reconciled.results;
+      continue;
+    }
+    const failure = yield* Match.value(reconciled).pipe(
+      Match.tag("optional-only", () => acceptOptionalMonitorReds(recorder, checkSteps)),
+      Match.tag("required-red", () => Effect.succeedSome(failureMessage)),
+      Match.tag("timeout", ({ names }) => Effect.succeedSome(`${failureMessage} settle-timeout; pending: ${names}`)),
+      Match.tag("unreadable", () => Effect.succeedSome(failureMessage)),
+      Match.exhaustive
+    );
+    if (O.isNone(failure)) return;
+    failureMessage = failure.value;
+    break;
   }
+  if (A.every(results, (result) => result.exitCode === 0)) return;
   return yield* failWithIssueArtifacts(
     context,
     checkSteps,
@@ -1156,7 +1278,16 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
 });
 
 /**
- * Run the monitor check watch in isolation, with an injectable backoff.
+ * Run the monitor check watch in isolation, with injectable registration and settle bounds.
+ *
+ * **Example** (Prepare a bounded monitor test)
+ *
+ * ```ts
+ * import { runMonitorCheckWatchForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * const runWatch = runMonitorCheckWatchForTesting
+ * console.log(typeof runWatch) // "function"
+ * ```
  *
  * @category testing
  * @since 0.0.0
@@ -1258,20 +1389,6 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
     yield* Console.log(renderYeetStatusSummary(snapshot));
   }
   return yield* emptyPlanResult(context);
-});
-
-// Encoded through the artifact schema so Option fields (reviewedHeadSha) land
-// in the optional-key form `yeet status` decodes, not as raw Option objects.
-const writePrCloseoutReport = Effect.fn("Yeet.writePrCloseoutReport")(function* (
-  context: RepoRunContext,
-  report: PrCloseoutReport
-): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const reportPath = yield* runOutputPathForContext(context, "pr-closeout.json");
-  const json = yield* PrCloseoutReportJson.encode(report).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to encode yeet PR closeout report."))
-  );
-  yield* writeTextFile(reportPath, `${json}\n`);
-  return reportPath;
 });
 
 /**

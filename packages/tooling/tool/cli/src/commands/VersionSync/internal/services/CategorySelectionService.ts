@@ -42,11 +42,17 @@ const shouldCheck: CategorySelectionServiceShape["shouldCheck"] = (options, cate
     Match.when("docker", () => options.dockerOnly),
     Match.when("biome", () => options.biomeOnly),
     Match.when("effect", () => options.effectOnly),
+    Match.when("turbo", () => options.turboOnly),
     Match.exhaustive
   );
 
   const hasAnyExplicitCategoryFilter =
-    options.bunOnly || options.nodeOnly || options.dockerOnly || options.biomeOnly || options.effectOnly;
+    options.bunOnly ||
+    options.nodeOnly ||
+    options.dockerOnly ||
+    options.biomeOnly ||
+    options.effectOnly ||
+    options.turboOnly;
 
   return !hasAnyExplicitCategoryFilter || hasExplicitCategoryFilter;
 };

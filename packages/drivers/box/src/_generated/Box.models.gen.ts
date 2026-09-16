@@ -143,6 +143,8 @@ export const BoxMethodName = LiteralKit([
   "chunkedUploads.createFileUploadSessionCommit",
   "chunkedUploads.createFileUploadSessionCommitByUrl",
   "chunkedUploads.createFileUploadSessionForExistingFile",
+  "chunkedUploads.createFileUploadSessionPlan",
+  "chunkedUploads.createFileUploadSessionPlanByUrl",
   "chunkedUploads.deleteFileUploadSessionById",
   "chunkedUploads.deleteFileUploadSessionByUrl",
   "chunkedUploads.getFileUploadSessionById",
@@ -1657,6 +1659,100 @@ export class CreateFileUploadSessionOptionalsInput extends S.Class<CreateFileUpl
   },
   $I.annote("CreateFileUploadSessionOptionalsInput", {
     description: "Generated Box SDK schema for CreateFileUploadSessionOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateFileUploadSessionPlanByUrlHeaders.
+ *
+ * **Example** (Inspect the CreateFileUploadSessionPlanByUrlHeaders schema)
+ *
+ * ```ts
+ * import { CreateFileUploadSessionPlanByUrlHeaders } from "@beep/box"
+ *
+ * console.log(CreateFileUploadSessionPlanByUrlHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateFileUploadSessionPlanByUrlHeaders extends S.Class<CreateFileUploadSessionPlanByUrlHeaders>($I`CreateFileUploadSessionPlanByUrlHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("CreateFileUploadSessionPlanByUrlHeaders", {
+    description: "Generated Box SDK schema for CreateFileUploadSessionPlanByUrlHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateFileUploadSessionPlanByUrlOptionalsInput.
+ *
+ * **Example** (Inspect the CreateFileUploadSessionPlanByUrlOptionalsInput schema)
+ *
+ * ```ts
+ * import { CreateFileUploadSessionPlanByUrlOptionalsInput } from "@beep/box"
+ *
+ * console.log(CreateFileUploadSessionPlanByUrlOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateFileUploadSessionPlanByUrlOptionalsInput extends S.Class<CreateFileUploadSessionPlanByUrlOptionalsInput>($I`CreateFileUploadSessionPlanByUrlOptionalsInput`)(
+  {
+    headers: S.suspend(() => CreateFileUploadSessionPlanByUrlHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("CreateFileUploadSessionPlanByUrlOptionalsInput", {
+    description: "Generated Box SDK schema for CreateFileUploadSessionPlanByUrlOptionalsInput."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateFileUploadSessionPlanHeaders.
+ *
+ * **Example** (Inspect the CreateFileUploadSessionPlanHeaders schema)
+ *
+ * ```ts
+ * import { CreateFileUploadSessionPlanHeaders } from "@beep/box"
+ *
+ * console.log(CreateFileUploadSessionPlanHeaders.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateFileUploadSessionPlanHeaders extends S.Class<CreateFileUploadSessionPlanHeaders>($I`CreateFileUploadSessionPlanHeaders`)(
+  {
+    extraHeaders: S.Record(S.String, S.String.pipe(S.UndefinedOr)).pipe(S.optionalKey),
+  },
+  $I.annote("CreateFileUploadSessionPlanHeaders", {
+    description: "Generated Box SDK schema for CreateFileUploadSessionPlanHeaders."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for CreateFileUploadSessionPlanOptionalsInput.
+ *
+ * **Example** (Inspect the CreateFileUploadSessionPlanOptionalsInput schema)
+ *
+ * ```ts
+ * import { CreateFileUploadSessionPlanOptionalsInput } from "@beep/box"
+ *
+ * console.log(CreateFileUploadSessionPlanOptionalsInput.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateFileUploadSessionPlanOptionalsInput extends S.Class<CreateFileUploadSessionPlanOptionalsInput>($I`CreateFileUploadSessionPlanOptionalsInput`)(
+  {
+    headers: S.suspend(() => CreateFileUploadSessionPlanHeaders).pipe(S.optionalKey),
+    cancellationToken: S.instanceOf(AbortSignal).pipe(S.optionalKey),
+  },
+  $I.annote("CreateFileUploadSessionPlanOptionalsInput", {
+    description: "Generated Box SDK schema for CreateFileUploadSessionPlanOptionalsInput."
   })
 ) {}
 
@@ -11838,6 +11934,57 @@ export const UploadPart = S.Unknown.pipe($I.annoteSchema("UploadPart", {
 export type UploadPart = typeof UploadPart.Type;
 
 /**
+ * Generated Box SDK schema for UploadPartPlan.
+ *
+ * **Example** (Inspect the UploadPartPlan schema)
+ *
+ * ```ts
+ * import { UploadPartPlan } from "@beep/box"
+ *
+ * console.log(UploadPartPlan.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UploadPartPlan extends S.Class<UploadPartPlan>($I`UploadPartPlan`)(
+  {
+    offset: S.Finite,
+    size: S.Finite,
+    sha512: S.String,
+  },
+  $I.annote("UploadPartPlan", {
+    description: "Generated Box SDK schema for UploadPartPlan."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for UploadPartPlanHit.
+ *
+ * **Example** (Inspect the UploadPartPlanHit schema)
+ *
+ * ```ts
+ * import { UploadPartPlanHit } from "@beep/box"
+ *
+ * console.log(UploadPartPlanHit.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UploadPartPlanHit extends S.Class<UploadPartPlanHit>($I`UploadPartPlanHit`)(
+  {
+    offset: S.Finite,
+    size: S.Finite,
+    sha512: S.String,
+    partId: S.String,
+  },
+  $I.annote("UploadPartPlanHit", {
+    description: "Generated Box SDK schema for UploadPartPlanHit."
+  })
+) {}
+
+/**
  * Generated Box SDK schema for UploadParts.
  *
  * **Example** (Inspect the UploadParts schema)
@@ -11952,6 +12099,54 @@ export class UploadSession extends S.Class<UploadSession>($I`UploadSession`)(
 ) {}
 
 /**
+ * Generated Box SDK schema for UploadSessionPlanRequest.
+ *
+ * **Example** (Inspect the UploadSessionPlanRequest schema)
+ *
+ * ```ts
+ * import { UploadSessionPlanRequest } from "@beep/box"
+ *
+ * console.log(UploadSessionPlanRequest.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UploadSessionPlanRequest extends S.Class<UploadSessionPlanRequest>($I`UploadSessionPlanRequest`)(
+  {
+    parts: S.suspend(() => UploadPartPlan).pipe(S.Array),
+  },
+  $I.annote("UploadSessionPlanRequest", {
+    description: "Generated Box SDK schema for UploadSessionPlanRequest."
+  })
+) {}
+
+/**
+ * Generated Box SDK schema for UploadSessionPlanResponse.
+ *
+ * **Example** (Inspect the UploadSessionPlanResponse schema)
+ *
+ * ```ts
+ * import { UploadSessionPlanResponse } from "@beep/box"
+ *
+ * console.log(UploadSessionPlanResponse.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UploadSessionPlanResponse extends S.Class<UploadSessionPlanResponse>($I`UploadSessionPlanResponse`)(
+  {
+    uploadSessionId: S.String,
+    hits: S.suspend(() => UploadPartPlanHit).pipe(S.Array),
+    misses: S.suspend(() => UploadPartPlan).pipe(S.Array),
+  },
+  $I.annote("UploadSessionPlanResponse", {
+    description: "Generated Box SDK schema for UploadSessionPlanResponse."
+  })
+) {}
+
+/**
  * Generated Box SDK schema for UploadSessionSessionEndpointsField.
  *
  * **Example** (Inspect the UploadSessionSessionEndpointsField schema)
@@ -11967,6 +12162,7 @@ export class UploadSession extends S.Class<UploadSession>($I`UploadSession`)(
  */
 export class UploadSessionSessionEndpointsField extends S.Class<UploadSessionSessionEndpointsField>($I`UploadSessionSessionEndpointsField`)(
   {
+    plan: S.String.pipe(S.optionalKey),
     uploadPart: S.String.pipe(S.optionalKey),
     commit: S.String.pipe(S.optionalKey),
     abort: S.String.pipe(S.optionalKey),
@@ -13565,6 +13761,56 @@ export class ChunkedUploadsCreateFileUploadSessionForExistingFilePayload extends
   },
   $I.annote("ChunkedUploadsCreateFileUploadSessionForExistingFilePayload", {
     description: "Payload for Box SDK method chunkedUploads.createFileUploadSessionForExistingFile."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method chunkedUploads.createFileUploadSessionPlan.
+ *
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionPlanPayload schema)
+ *
+ * ```ts
+ * import { ChunkedUploadsCreateFileUploadSessionPlanPayload } from "@beep/box"
+ *
+ * console.log(ChunkedUploadsCreateFileUploadSessionPlanPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ChunkedUploadsCreateFileUploadSessionPlanPayload extends S.Class<ChunkedUploadsCreateFileUploadSessionPlanPayload>($I`ChunkedUploadsCreateFileUploadSessionPlanPayload`)(
+  {
+    uploadSessionId: S.String,
+    requestBody: S.suspend(() => UploadSessionPlanRequest),
+    optionalsInput: S.suspend(() => CreateFileUploadSessionPlanOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("ChunkedUploadsCreateFileUploadSessionPlanPayload", {
+    description: "Payload for Box SDK method chunkedUploads.createFileUploadSessionPlan."
+  })
+) {}
+
+/**
+ * Payload for Box SDK method chunkedUploads.createFileUploadSessionPlanByUrl.
+ *
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionPlanByUrlPayload schema)
+ *
+ * ```ts
+ * import { ChunkedUploadsCreateFileUploadSessionPlanByUrlPayload } from "@beep/box"
+ *
+ * console.log(ChunkedUploadsCreateFileUploadSessionPlanByUrlPayload.ast)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ChunkedUploadsCreateFileUploadSessionPlanByUrlPayload extends S.Class<ChunkedUploadsCreateFileUploadSessionPlanByUrlPayload>($I`ChunkedUploadsCreateFileUploadSessionPlanByUrlPayload`)(
+  {
+    url: S.String,
+    requestBody: S.suspend(() => UploadSessionPlanRequest),
+    optionalsInput: S.suspend(() => CreateFileUploadSessionPlanByUrlOptionalsInput).pipe(S.optionalKey),
+  },
+  $I.annote("ChunkedUploadsCreateFileUploadSessionPlanByUrlPayload", {
+    description: "Payload for Box SDK method chunkedUploads.createFileUploadSessionPlanByUrl."
   })
 ) {}
 
@@ -15291,6 +15537,74 @@ export const ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess = S.sus
  * @since 0.0.0
  */
 export type ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess = typeof ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method chunkedUploads.createFileUploadSessionPlan.
+ *
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionPlanSuccess schema)
+ *
+ * ```ts
+ * import { ChunkedUploadsCreateFileUploadSessionPlanSuccess } from "@beep/box"
+ *
+ * console.log(ChunkedUploadsCreateFileUploadSessionPlanSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ChunkedUploadsCreateFileUploadSessionPlanSuccess = S.suspend(() => UploadSessionPlanResponse).pipe($I.annoteSchema("ChunkedUploadsCreateFileUploadSessionPlanSuccess", {
+    description: "Decoded success value for Box SDK method chunkedUploads.createFileUploadSessionPlan."
+  }));
+
+/**
+ * Type for {@link ChunkedUploadsCreateFileUploadSessionPlanSuccess}.
+ *
+ * **Example** (Reference the ChunkedUploadsCreateFileUploadSessionPlanSuccess type)
+ *
+ * ```ts
+ * import type { ChunkedUploadsCreateFileUploadSessionPlanSuccess } from "@beep/box"
+ *
+ * type Value = ChunkedUploadsCreateFileUploadSessionPlanSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ChunkedUploadsCreateFileUploadSessionPlanSuccess = typeof ChunkedUploadsCreateFileUploadSessionPlanSuccess.Type;
+
+/**
+ * Decoded success value for Box SDK method chunkedUploads.createFileUploadSessionPlanByUrl.
+ *
+ * **Example** (Inspect the ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess schema)
+ *
+ * ```ts
+ * import { ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess } from "@beep/box"
+ *
+ * console.log(ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess = S.suspend(() => UploadSessionPlanResponse).pipe($I.annoteSchema("ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess", {
+    description: "Decoded success value for Box SDK method chunkedUploads.createFileUploadSessionPlanByUrl."
+  }));
+
+/**
+ * Type for {@link ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess}.
+ *
+ * **Example** (Reference the ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess type)
+ *
+ * ```ts
+ * import type { ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess } from "@beep/box"
+ *
+ * type Value = ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess = typeof ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess.Type;
 
 /**
  * Decoded success value for Box SDK method chunkedUploads.deleteFileUploadSessionById.

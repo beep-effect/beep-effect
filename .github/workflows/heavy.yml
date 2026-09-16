@@ -2,6 +2,17 @@ name: Heavy
 
 on:
   workflow_call:
+    inputs:
+      admitted:
+        description: >-
+          Whether the heavy matrix runs. `false` skips the verify job at job
+          level, so every `Heavy / <lane>` context reports `skipped` (accepted
+          by the main ruleset) without consuming a beep-ec2-heavy runner.
+          Callers pass `false` only for admission verdicts that must satisfy
+          the ruleset without proof (docs-only pull requests).
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -9,6 +20,11 @@ permissions:
 jobs:
   verify:
     name: ${{ matrix.name }}
+    # Job-level skip (not step-level): a skipped job never queues on the
+    # heavy pool, and GitHub reports each matrix context as skipped, which
+    # satisfies a required status check. Never gate the caller job instead:
+    # a skipped caller creates no `Heavy / *` check runs at all.
+    if: ${{ inputs.admitted }}
     runs-on: beep-ec2-heavy
     timeout-minutes: ${{ matrix.timeout_minutes }}
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}

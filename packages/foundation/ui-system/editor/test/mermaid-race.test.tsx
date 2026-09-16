@@ -706,6 +706,74 @@ describe("Mermaid async ownership", { concurrent: false }, () => {
   );
 
   it.effect(
+    "retains stylesheet filter references to namespaced internal fragments",
+    Effect.fnUntraced(function* () {
+      const source = "graph TD\nNeo-->Shadow";
+      const view = render(<MermaidView renderKey="stylesheet-fragment" source={source} />);
+      yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+      const pending = getPendingRender(source);
+
+      yield* Effect.sync(() => {
+        act(() =>
+          pending.resolve({
+            svg: mermaidSvg(
+              pending.id,
+              `<defs><filter id="drop-shadow"></filter></defs><style>#${pending.id} [data-look="neo"].node rect { filter: url(#drop-shadow); }</style><g class="node" data-look="neo"><rect data-stylesheet-fragment="yes" width="1" height="1"></rect></g>`
+            ),
+          })
+        );
+      });
+      yield* Effect.promise(() =>
+        waitFor(() =>
+          expect(within(view.container).getByTestId("mermaid-diagram").querySelector("[data-stylesheet-fragment]"))
+        )
+      );
+
+      const filterId = view.container.querySelector("filter")?.getAttribute("id");
+      expect(filterId).toBe(`${pending.id}-fragment-0`);
+      expect(view.container.querySelector("style")).toHaveTextContent(`filter: url(#${filterId})`);
+      expect(view.container.querySelector("style")).not.toHaveTextContent("url(#drop-shadow)");
+    })
+  );
+
+  it.effect(
+    "rejects stylesheet url() references without a unique internal fragment target",
+    Effect.fnUntraced(function* () {
+      const attacks = [
+        ["missing-fragment", "url(#missing)"],
+        ["external", 'url("https://attacker.invalid/filter")'],
+        ["escaped-external", "u\\72 l(https://attacker.invalid/escaped)"],
+      ] as const;
+
+      for (const [key, value] of attacks) {
+        const source = `graph TD\nStylesheetUrl-->${key}`;
+        const view = render(<MermaidView renderKey={`stylesheet-url-${key}`} source={source} />);
+        yield* Effect.promise(() => waitFor(() => expect(mermaidStub.pending.has(source)).toBe(true)));
+        const pending = getPendingRender(source);
+
+        yield* Effect.sync(() => {
+          act(() =>
+            pending.resolve({
+              svg: mermaidSvg(
+                pending.id,
+                `<defs><filter id="present"></filter></defs><style>#${pending.id} .node rect { filter: ${value}; }</style><g class="node"><rect width="1" height="1"></rect></g>`
+              ),
+            })
+          );
+        });
+        yield* Effect.promise(() =>
+          waitFor(() =>
+            expect(within(view.container).getByText("Diagram output did not satisfy the desktop safety policy."))
+          )
+        );
+
+        expect(view.container.querySelector("svg, style")).toBeNull();
+        view.unmount();
+      }
+    })
+  );
+
+  it.effect(
     "rejects stylesheet rules that can affect the containing document",
     Effect.fnUntraced(function* () {
       const attacks = [

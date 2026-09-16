@@ -573,8 +573,8 @@ if (mode === "each-titles") {
   expect(originalTasks.map((task) => task.name)).toEqual([
     "tuple same 1 index=0 oneBased=1 escaped=% undefined",
     "tuple same 1 index=1 oneBased=2 escaped=% undefined",
-    "object 'alpha' nested=1 index=0 oneBased=1 escaped=% { label: 'alpha', nested: { value: 1 } }",
-    "object 'beta' nested=2 index=1 oneBased=2 escaped=% { label: 'beta', nested: { value: 2 } }",
+    "object alpha nested=1 index=0 oneBased=1 escaped=% { label: 'alpha', nested: [Object] }",
+    "object beta nested=2 index=1 oneBased=2 escaped=% { label: 'beta', nested: { value: 2 } }",
   ]);
   afterAll(() => {
     expect(originalRuns).toBe(4);
