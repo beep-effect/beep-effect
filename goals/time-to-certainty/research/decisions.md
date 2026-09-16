@@ -604,10 +604,12 @@ gains `heavy-not-admitted`; `YeetSettleInput` gains `families` (`YeetGatedContex
 prefix, admitting label, members folded from the ruleset's expected contexts) and an optional
 `admission`. Under `hold`, gated contexts leave `missing`/`pending` for a `gated` census bucket;
 the reason order is `registration`, `required-pending` (non-gated work open),
-`heavy-not-admitted` (only gated work open). A head is held only when the verdict is `hold`
-**and** gated contexts are actually open (Stage A refinement): with no `Heavy / *` context in the
-ruleset, or after a failed ruleset read, an unlabelled PR still times out as B7 does, so the
-label never masks an unrelated never-registering context. `settle-timeout` is unreachable while
+`heavy-not-admitted` (only gated work open). A head is held only when the verdict is `hold`,
+gated contexts are open, at least one check has registered, **and nothing non-gated is missing
+or pending** (review rounds 1–2): held ⇔ the reason would be `heavy-not-admitted`. With no
+`Heavy / *` context in the ruleset, after a failed ruleset read, with nothing registered, or
+with an unregistered required context, an unlabelled PR still times out as B7 does, so the label
+never masks an unrelated never-registering context. `settle-timeout` is unreachable while
 held and the loop resets its settle clock when the verdict changes. `run` restores B7 exactly;
 `skip-satisfied` settles on the reported `skip` outcomes. The gate line names the gated
 contexts and the admitting command. Exit codes are unchanged.
