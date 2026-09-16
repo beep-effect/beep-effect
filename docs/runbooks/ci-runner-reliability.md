@@ -19,11 +19,13 @@ interrupted jobs before retrying; changing the alert does not change running wor
 ## Admission and capacity
 
 Admission bounds what enters the `beep-ec2-heavy` queue; it does not add
-capacity. The `Heavy Admission` job in `check.yml` runs
-`bun run beep ci admission` once per run: a pull request enters the heavy
-matrix only with the `ready-for-heavy` label (or as a main push / merge group),
-a docs-only diff is called with `admitted: false` so every lane reports
-`skipped`, and an unlabelled code PR holds outside the queue. Throughput is
+capacity. Two workflows share one decision, `bun run beep ci admission`: the
+`Heavy Admission` job in `check.yml` runs it on every push (a pull request
+enters the heavy matrix only with the `ready-for-heavy` label, or as a main
+push / merge group; a docs-only diff is called with `admitted: false` so every
+lane reports `skipped`; an unlabelled code PR holds outside the queue), and
+`heavy-admit.yml` runs the same job plus the heavy caller when the label is
+applied, so labelling never cancels or re-runs tier 1. Throughput is
 still heavy duration times queue depth. Pool sizing — `runners_maximum_count`,
 Spot versus On-Demand, the two-worker cap above — remains the operator's lever
 and is unchanged by admission (time-to-certainty ruling 57).

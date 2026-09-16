@@ -150,7 +150,7 @@ Exit 0 for every verdict; non-zero only for unreadable inputs.
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, labeled]
+    # default types; the label is handled by heavy-admit.yml (on: labeled)
 jobs:
   admission:
     name: Heavy Admission
@@ -167,9 +167,14 @@ jobs:
       admitted: ${{ needs.admission.outputs.verdict == 'run' }}
 ```
 
-Costs accepted: a `labeled` event (any label) starts a new run and cancels an in-progress run
-of the same ref (tier 1 restarts); `size/*` labels do not trigger because they come from
-`GITHUB_TOKEN`. The admission job adds about one hosted minute before the heavy call.
+Label path (review round 1, replaces the earlier `labeled` type on `check.yml`):
+`heavy-admit.yml` triggers on `pull_request: types: [labeled]` with its own concurrency group
+(no cancel-in-progress), runs the same admission job gated on
+`github.event.label.name == 'ready-for-heavy'` and the heavy caller, so applying the label
+starts only admission + heavy and tier 1 is neither cancelled nor re-run; `check.yml`'s
+admission job cancels a superseded head's `Heavy Admit` matrix on the next push. `size/*`
+labels do not trigger anything (they come from `GITHUB_TOKEN`). The admission job adds about
+one hosted minute before the heavy call.
 `unlabeled` is not a trigger: check runs are per commit, so removing the label cannot
 un-report an outcome; the operator cancels a heavy run from the Actions UI if needed.
 

@@ -16,9 +16,14 @@ on:
     branches: [main]
     types: [labeled]
 
+# No cancel-in-progress: every `labeled` event (any label, from any actor)
+# starts a run in this group, and cancelling would kill the heavy matrix a
+# previous `ready-for-heavy` run is executing. Runs for other labels skip at
+# job level; a superseded head's matrix is cancelled by check.yml's
+# admission job, never by a later label.
 concurrency:
   group: heavy-admit-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
