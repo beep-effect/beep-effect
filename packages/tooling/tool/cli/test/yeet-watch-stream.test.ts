@@ -1,6 +1,7 @@
 import {
   classifyYeetCheckOutcome,
   countYeetWatchFailures,
+  deriveSettleVerdict,
   diffYeetWatchSnapshots,
   renderYeetWatchEventLine,
   YEET_WATCH_SCHEMA_VERSION,
@@ -8,6 +9,8 @@ import {
   YeetMergeReadyCriteria,
   YeetMonitorIssueComment,
   YeetMonitorReviewComment,
+  YeetSettleCheck,
+  YeetSettleInput,
   YeetWatchCheck,
   YeetWatchDiffInput,
   YeetWatchEnded,
@@ -336,4 +339,40 @@ describe("yeetWatchCommentEvent", () => {
       expect(decoded.schemaVersion).toBe(YEET_WATCH_SCHEMA_VERSION);
     })
   );
+});
+
+describe("settle-changed events", () => {
+  it("emits reason changes with the open census and suppresses elapsed-only changes", () => {
+    const registering = deriveSettleVerdict(
+      YeetSettleInput.make({ checks: [], closeoutBound: false, waitedMs: 0, timeoutMs: 1000 })
+    );
+    const pending = deriveSettleVerdict(
+      YeetSettleInput.make({
+        checks: [YeetSettleCheck.make({ name: "Lint", outcome: "pending" })],
+        closeoutBound: false,
+        waitedMs: 1,
+        timeoutMs: 1000,
+      })
+    );
+    const prev = snapshot({ settle: O.some(registering) });
+    const next = snapshot({ settle: O.some(pending) });
+    expect(diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: AT, prev, next }))).toMatchObject([
+      { kind: "settle-changed", from: "registration", to: "required-pending", pending: ["Lint"], missing: [] },
+    ]);
+    expect(diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: AT, prev: next, next }))).toEqual([]);
+    const settled = deriveSettleVerdict(
+      YeetSettleInput.make({
+        checks: [YeetSettleCheck.make({ name: "Lint", outcome: "pass" })],
+        closeoutBound: true,
+        waitedMs: 2,
+        timeoutMs: 1000,
+      })
+    );
+    expect(
+      diffYeetWatchSnapshots(
+        YeetWatchDiffInput.make({ at: AT, prev: next, next: snapshot({ settle: O.some(settled) }) })
+      )
+    ).toMatchObject([{ kind: "settle-changed", from: "required-pending", to: null }]);
+    expect(diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: AT, prev: next, next: snapshot() }))).toEqual([]);
+  });
 });

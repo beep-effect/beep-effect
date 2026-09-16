@@ -197,7 +197,7 @@ export type YeetMonitorLoopPolicy = typeof YeetMonitorLoopPolicy.Type;
 export const yeetMonitorPolicyTerminals = (policy: YeetMonitorLoopPolicy): HashSet.HashSet<YeetMonitorTerminalState> =>
   Match.value(policy).pipe(
     Match.discriminator("kind")("until-merged", () =>
-      HashSet.make<ReadonlyArray<YeetMonitorTerminalState>>("merged", "closed", "poll-error-budget")
+      HashSet.make<ReadonlyArray<YeetMonitorTerminalState>>("merged", "closed", "settle-timeout", "poll-error-budget")
     ),
     Match.discriminator("kind")("until-ready", () =>
       HashSet.make<ReadonlyArray<YeetMonitorTerminalState>>(

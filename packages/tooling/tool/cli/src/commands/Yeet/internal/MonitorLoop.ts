@@ -52,7 +52,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Console, Duration, Effect, flow, HashSet, Match, pipe } from "effect";
+import { Console, DateTime, Duration, Effect, flow, HashSet, Match, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -67,19 +67,34 @@ import {
 } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
-import { YeetMonitorTerminalState } from "./MonitorPolicy.ts";
+import {
+  YeetHeadTimeline,
+  YeetMonitorTerminalState,
+  YeetUntilMergedPolicy,
+  yeetHeadTimelineStamp,
+} from "./MonitorPolicy.ts";
+import {
+  deriveSettleVerdict,
+  readYeetRulesetRequiredContexts,
+  renderYeetSettleDetail,
+  YeetRulesetRequiredContexts,
+  YeetSettleInput,
+  YeetSettleVerdict,
+} from "./Settle.ts";
 import {
   collectRemoteWorkflowRuns,
   collectYeetStatus,
   renderYeetStatusSummary,
   writeYeetStatusSnapshot,
+  YeetStatusSnapshot,
 } from "./Status.ts";
 import { executeSweep } from "./Sweep.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetCommandError } from "../Yeet.errors.ts";
-import type { YeetStatusSnapshot } from "./Status.ts";
+import type { runYeetAutomaticCloseout } from "./Closeout.ts";
+import type { YeetMonitorLoopPolicy } from "./MonitorPolicy.ts";
 import type { YeetMergeReady } from "./Verdict.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
@@ -929,6 +944,10 @@ export const applyYeetMonitorJobDecision = Effect.fn("YeetMonitorLoop.applyDecis
  * operator-authorized wrapper can substitute a plan-only run.
  */
 interface YeetMonitorUntilMergedOptions {
+  readonly capture?: typeof runRepoCommandCapture | undefined;
+  readonly closeout?: typeof runYeetAutomaticCloseout | undefined;
+  readonly collectStatus?: typeof collectYeetStatus | undefined;
+  readonly now?: Effect.Effect<DateTime.Utc> | undefined;
   readonly onMerged?:
     | ((
         context: RepoRunContext
@@ -938,7 +957,9 @@ interface YeetMonitorUntilMergedOptions {
         FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
       >)
     | undefined;
+  readonly policy?: YeetMonitorLoopPolicy | undefined;
   readonly pollInterval?: Duration.Duration | undefined;
+  readonly rulesetRead?: typeof readYeetRulesetRequiredContexts | undefined;
 }
 
 const renderMergeReadyGateDetail = (mergeReady: YeetMergeReady): string =>
@@ -956,40 +977,116 @@ const renderMergeReadyGate = (snapshot: YeetStatusSnapshot): string =>
     })
   );
 
+class MonitorHeadState extends S.Class<MonitorHeadState>($I`MonitorHeadState`)(
+  {
+    timeline: YeetHeadTimeline,
+    firstObservedMs: S.Finite,
+    expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("MonitorHeadState", { description: "Cached ruleset and first observations for the current head." })
+) {}
+
+const readPushedAt = Effect.fn("YeetMonitorLoop.readPushedAt")(function* (
+  context: RepoRunContext,
+  headSha: string,
+  capture: typeof runRepoCommandCapture
+) {
+  return yield* capture(
+    "gh",
+    ["api", `repos/{owner}/{repo}/commits/${headSha}`, "--jq", ".commit.committer.date"],
+    context.repoRoot
+  ).pipe(
+    Effect.map((result) =>
+      result.exitCode === 0 && !result.truncated
+        ? DateTime.make(Str.trim(result.output)).pipe(O.map(DateTime.formatIso))
+        : O.none<string>()
+    ),
+    Effect.orElseSucceed(O.none<string>)
+  );
+});
+
 const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   context: RepoRunContext,
   options: YeetMonitorUntilMergedOptions,
-  budget: YeetMonitorRerunBudget
-): Effect.fn.Return<
-  { readonly budget: YeetMonitorRerunBudget; readonly terminal: O.Option<YeetMonitorTerminalState> },
-  YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const snapshot = yield* collectYeetStatus(context, true);
+  budget: YeetMonitorRerunBudget,
+  previous: O.Option<MonitorHeadState>
+) {
+  let snapshot = yield* (options.collectStatus ?? collectYeetStatus)(context, true);
+  const now = yield* options.now ?? DateTime.now;
+  const at = DateTime.formatIso(now);
+  const millis = DateTime.toEpochMillis(now);
+  const policy = options.policy ?? YeetUntilMergedPolicy.make({});
+  let head = previous;
+  const headSha = snapshot.remote.headSha;
+  if (O.isSome(headSha)) {
+    if (O.isNone(head) || head.value.timeline.headSha !== headSha.value) {
+      head = O.some(
+        MonitorHeadState.make({
+          timeline: YeetHeadTimeline.make({
+            headSha: headSha.value,
+            firstObservedAt: at,
+            pushedAt: yield* readPushedAt(context, headSha.value, options.capture ?? runRepoCommandCapture),
+          }),
+          firstObservedMs: millis,
+          expected: yield* (options.rulesetRead ?? readYeetRulesetRequiredContexts)(context),
+        })
+      );
+    }
+    const current = O.getOrThrow(head);
+    const verdict = deriveSettleVerdict(
+      YeetSettleInput.make({
+        expected: current.expected,
+        checks: snapshot.remote.checks,
+        closeoutBound: O.exists(snapshot.mergeReady, (ready) => ready.criteria.closeoutRun),
+        waitedMs: millis - current.firstObservedMs,
+        timeoutMs: policy.settleTimeoutMs,
+      })
+    );
+    let timeline = current.timeline;
+    if (verdict.settled) timeline = yeetHeadTimelineStamp(timeline, "settledAt", at);
+    if (O.exists(snapshot.mergeReady, (ready) => ready.criteria.closeoutRun)) {
+      timeline = yeetHeadTimelineStamp(timeline, "closeoutAt", at);
+    }
+    if (verdict.settled && O.exists(snapshot.mergeReady, (ready) => ready.ready)) {
+      timeline = yeetHeadTimelineStamp(timeline, "readyAt", at);
+    }
+    const from = O.getOrNull(O.flatMap(current.verdict, (value) => value.reason));
+    const to = O.getOrNull(verdict.reason);
+    if (from !== to) yield* Console.log(`[yeet] settle: ${from ?? "settled"} → ${to ?? "settled"}`);
+    head = O.some(MonitorHeadState.make({ ...current, timeline, verdict: O.some(verdict) }));
+    snapshot = YeetStatusSnapshot.make({ ...snapshot, timeline: O.some(timeline) });
+  }
   yield* writeYeetStatusSnapshot(snapshot);
   yield* Console.log(renderYeetStatusSummary(snapshot));
+  const verdict = O.flatMap(head, (value) => value.verdict);
+  yield* Console.log(
+    `${renderMergeReadyGate(snapshot)}${O.match(verdict, {
+      onNone: () => "",
+      onSome: (value) => `; ${renderYeetSettleDetail(value)}`,
+    })}`
+  );
   const terminal = yeetMonitorTerminalState(O.fromUndefinedOr(snapshot.remote.state));
   if (O.exists(terminal, (state) => state === YeetMonitorTerminalState.Enum.merged)) {
     yield* Console.log("[yeet] pull request is MERGED; running the post-merge workspace sweep");
-    yield* O.getOrElse(O.fromNullishOr(options.onMerged), () => executeSweep)(context);
-    return { budget, terminal };
+    yield* (options.onMerged ?? executeSweep)(context);
+    return { budget, terminal, head };
   }
   if (O.isSome(terminal)) {
     yield* Console.log("[yeet] pull request is CLOSED without merging; ending the merge loop");
-    return { budget, terminal };
+    return { budget, terminal, head };
   }
-  yield* Console.log(renderMergeReadyGate(snapshot));
-  const headSha = snapshot.remote.headSha;
-  const failingCheckCount = O.getOrElse(O.fromUndefinedOr(snapshot.remote.failingCheckCount), () => 0);
-  if (failingCheckCount === 0 || O.isNone(headSha)) {
-    return { budget, terminal };
+  if (O.exists(verdict, (value) => O.contains(value.reason, "settle-timeout"))) {
+    return { budget, terminal: O.some(YeetMonitorTerminalState.Enum["settle-timeout"]), head };
   }
+  const failingCheckCount = snapshot.remote.failingCheckCount ?? 0;
+  if (failingCheckCount === 0 || O.isNone(headSha)) return { budget, terminal, head };
   const failedJobs = yield* collectYeetMonitorFailedJobs(context, headSha.value);
   const plan = planYeetMonitorReruns(budget, headSha.value, failedJobs);
   yield* Effect.forEach(plan.decisions, (decision) => applyYeetMonitorJobDecision(context, decision), {
     concurrency: 1,
   });
-  return { budget: plan.budget, terminal };
+  return { budget: plan.budget, terminal, head };
 });
 
 /**
@@ -1034,19 +1131,28 @@ export const runYeetMonitorUntilMerged = Effect.fn("Yeet.runMonitorUntilMerged")
 > {
   const interval = O.getOrElse(O.fromNullishOr(options.pollInterval), () => mergeLoopPollInterval);
   const followFrom = (
-    budget: YeetMonitorRerunBudget
+    budget: YeetMonitorRerunBudget,
+    head: O.Option<MonitorHeadState>
   ): Effect.Effect<
     YeetMonitorTerminalState,
     YeetCommandError,
     FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > =>
-    pollUntilMerged(context, options, budget).pipe(
+    pollUntilMerged(context, options, budget, head).pipe(
       Effect.flatMap((next) =>
         O.match(next.terminal, {
-          onNone: () => Effect.sleep(interval).pipe(Effect.andThen(Effect.suspend(() => followFrom(next.budget)))),
+          onNone: () => {
+            const remaining = O.flatMap(next.head, (value) => value.verdict).pipe(
+              O.filter((verdict) => !verdict.settled),
+              O.map((verdict) => Duration.millis(Math.max(0, verdict.timeoutMs - verdict.waitedMs)))
+            );
+            return Effect.sleep(O.match(remaining, { onNone: () => interval, onSome: Duration.min(interval) })).pipe(
+              Effect.andThen(Effect.suspend(() => followFrom(next.budget, next.head)))
+            );
+          },
           onSome: Effect.succeed,
         })
       )
     );
-  return yield* followFrom(emptyYeetMonitorRerunBudget);
+  return yield* followFrom(emptyYeetMonitorRerunBudget, O.none());
 });

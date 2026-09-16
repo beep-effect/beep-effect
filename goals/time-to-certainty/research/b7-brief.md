@@ -21,7 +21,9 @@ at the moment they happen (public repo: redact, `~` for home, minimal error text
      `rulesetRequiredContextsFromRules`, `readYeetRulesetRequiredContexts` (gh boundary, degrades
      to `None`), `YeetSettleCheck`, `YeetExpectedContextInput`/`Census`, `matchExpectedContexts`,
      `YeetSettleInput`, `YeetSettleVerdict`, `deriveSettleVerdict`, `yeetSettleVerdictIsTerminal`,
-     `renderYeetSettleDetail`, `yeetSettleCheckFrom`, `yeetSettleStampFor`.
+     `renderYeetSettleDetail`, `yeetSettleStampFor`; `YeetRulesetRulesPayload`; the check-outcome and
+     settle-reason literal domains live in `CheckOutcome.ts` (a leaf both `WatchStream.ts` and
+     `Settle.ts` import).
    - `commands/Yeet/internal/MonitorPolicy.ts` — `YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS`,
      `YEET_MONITOR_POLL_ERROR_BUDGET`, `YeetMonitorTerminalState` (moved here from
      `MonitorLoop.ts`; now `merged | closed | ready | required-red | settle-timeout |

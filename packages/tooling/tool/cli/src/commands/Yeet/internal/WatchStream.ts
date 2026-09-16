@@ -31,14 +31,16 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, HashMap, Match } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { YeetSettleVerdict } from "./Settle.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriteria, YeetMergeReadyCriterion } from "./Verdict.ts";
 import type { YeetMonitorComment } from "./MonitorComments.ts";
 
@@ -59,86 +61,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/WatchStream");
  * @since 0.0.0
  */
 export const YEET_WATCH_SCHEMA_VERSION = "yeet-watch/v1";
-
-/**
- * Closed outcome domain a check occupies from the watch's point of view.
- *
- * **Details**
- *
- * This is the internal vocabulary events speak. The boundary keeps GitHub's
- * raw `bucket`/`state` strings; {@link classifyYeetCheckOutcome} maps them
- * here totally, so downstream code matches on four cases instead of an
- * open-ended string set.
- *
- * **Example** (Check an outcome)
- *
- * ```ts
- * import { YeetCheckOutcome } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(YeetCheckOutcome.is.fail("fail")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const YeetCheckOutcome = LiteralKit(["pending", "pass", "fail", "skip"]).pipe(
-  $I.annoteSchema("YeetCheckOutcome", {
-    title: "Yeet Check Outcome",
-    description: "Closed classification of one PR check's state within a watch snapshot.",
-  })
-);
-
-/**
- * Closed outcome domain a check occupies from the watch's point of view.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type YeetCheckOutcome = typeof YeetCheckOutcome.Type;
-
-/**
- * Why a merge loop is still waiting on a head, as the gate line names it.
- *
- * **Details**
- *
- * `registration`: no checks have reported for the head yet (GitHub's
- * post-push registration window). `required-pending`: expected required
- * contexts are missing or still pending. `closeout-pending`: the required
- * census settled and the read-first closeout has not yet bound this head.
- * `settle-timeout`: the census never settled within `--settle-timeout`; the
- * only terminal reason. The settle rule itself lives in `Settle.ts`; the
- * reason lives here because `settle-changed` streams it.
- *
- * **Example** (Check a reason)
- *
- * ```ts
- * import { YeetSettleReason } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(YeetSettleReason.is["settle-timeout"]("settle-timeout")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const YeetSettleReason = LiteralKit([
-  "registration",
-  "required-pending",
-  "closeout-pending",
-  "settle-timeout",
-]).pipe(
-  $I.annoteSchema("YeetSettleReason", {
-    title: "Yeet Settle Reason",
-    description: "Why a merge loop is still waiting on a pull request head.",
-  })
-);
-
-/**
- * Why a merge loop is still waiting on a head.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type YeetSettleReason = typeof YeetSettleReason.Type;
 
 // The contains-lists mirror yeet status's classifiers (Status.ts), which have
 // watched these strings in the field since the monitor existed. Order matters:
@@ -287,6 +209,7 @@ export class YeetWatchThread extends S.Class<YeetWatchThread>($I`YeetWatchThread
  */
 export class YeetWatchSnapshot extends S.Class<YeetWatchSnapshot>($I`YeetWatchSnapshot`)(
   {
+    settle: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     checks: S.Array(YeetWatchCheck),
     headSha: S.NonEmptyString,
     mergeable: S.String,
@@ -662,7 +585,14 @@ export const yeetWatchCommentEvent: {
  * @category models
  * @since 0.0.0
  */
-export const YeetWatchEndReason = LiteralKit(["all-terminal", "pr-merged", "pr-closed", "poll-error", "event"]).pipe(
+export const YeetWatchEndReason = LiteralKit([
+  "all-terminal",
+  "pr-merged",
+  "pr-closed",
+  "poll-error",
+  "event",
+  "settle-timeout",
+]).pipe(
   $I.annoteSchema("YeetWatchEndReason", {
     title: "Yeet Watch End Reason",
     description: "Why a yeet watch stream ended.",
@@ -844,8 +774,23 @@ export class YeetWatchDiffInput extends S.Class<YeetWatchDiffInput>($I`YeetWatch
  */
 export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray<YeetWatchEvent> => {
   const { at, next, prev } = input;
+  const from = O.getOrNull(O.flatMap(prev.settle, (verdict) => verdict.reason));
+  const to = O.getOrNull(O.flatMap(next.settle, (verdict) => verdict.reason));
+  const settleEvents: ReadonlyArray<YeetWatchEvent> =
+    from === to || O.isNone(next.settle)
+      ? []
+      : [
+          YeetSettleChanged.make({
+            at,
+            headSha: next.headSha,
+            from,
+            to,
+            pending: next.settle.value.census.pending,
+            missing: next.settle.value.census.missing,
+          }),
+        ];
   if (prev.headSha !== next.headSha) {
-    return [YeetHeadChanged.make({ at, from: prev.headSha, to: next.headSha })];
+    return [YeetHeadChanged.make({ at, from: prev.headSha, to: next.headSha }), ...settleEvents];
   }
 
   const previousChecks = checkOutcomes(prev);
@@ -904,7 +849,7 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
         ];
   });
 
-  return A.appendAll(A.appendAll(A.appendAll(checkEvents, threadEvents), mergeabilityEvents), criteriaEvents);
+  return [...checkEvents, ...threadEvents, ...mergeabilityEvents, ...criteriaEvents, ...settleEvents];
 };
 
 /**

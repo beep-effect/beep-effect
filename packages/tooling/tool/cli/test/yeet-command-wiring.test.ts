@@ -173,3 +173,22 @@ describe("yeet inbox command wiring", () => {
     expect(children).toEqual(expect.arrayContaining(["list", "ack", "append"]));
   });
 });
+
+describe("settle-timeout route legality", () => {
+  it.each([
+    { watch: false, untilMerged: false, expected: "invalid-settle-timeout" },
+    { watch: true, untilMerged: false, expected: "watch" },
+    { watch: false, untilMerged: true, expected: "merge-loop" },
+  ])("routes $expected", ({ watch, untilMerged, expected }) => {
+    expect(yeetMonitorCommandRoute({ plan: false, untilEvent: false, settleTimeout: "30m", watch, untilMerged })).toBe(
+      expected
+    );
+  });
+  it.effect("rejects a timeout on plain monitor before hydration", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.result(runYeetCommand(["monitor", "--settle-timeout", "30m"]));
+      expect(result._tag).toBe("Failure");
+      if (result._tag === "Failure") expect(String(result.failure)).toContain("requires --until-merged or --watch");
+    }).pipe(provideScopedLayer(commandTestLayer))
+  );
+});

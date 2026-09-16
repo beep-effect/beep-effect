@@ -35,7 +35,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { YeetCheckOutcome, YeetSettleReason } from "./WatchStream.ts";
+import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -135,14 +135,44 @@ export class YeetRulesetRequiredContexts extends S.Class<YeetRulesetRequiredCont
 const isRequiredStatusChecksRule = (rule: GhBranchRule): boolean => rule.type === "required_status_checks";
 
 /**
+ * The decoded branch-rules payload with the coordinates of its read.
+ *
+ * **Example** (Construct a payload)
+ *
+ * ```ts
+ * import { GhBranchRule, YeetRulesetRulesPayload } from "@beep/repo-cli/test/Yeet"
+ *
+ * const payload = YeetRulesetRulesPayload.make({
+ *   base: "main",
+ *   readAt: "2026-09-16T00:00:00.000Z",
+ *   rules: [GhBranchRule.make({ type: "pull_request", ruleset_id: 1 })]
+ * })
+ * console.log(payload.rules.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetRulesetRulesPayload extends S.Class<YeetRulesetRulesPayload>($I`YeetRulesetRulesPayload`)(
+  {
+    base: S.NonEmptyString,
+    readAt: S.String,
+    rules: S.Array(GhBranchRule),
+  },
+  $I.annote("YeetRulesetRulesPayload", {
+    description: "Decoded branch rules for one base branch, stamped with the read instant.",
+  })
+) {}
+
+/**
  * Fold the branch-rules payload into the expected required-context set.
  *
  * **Example** (Fold two rules into one expected set)
  *
  * ```ts
- * import { GhBranchRule, rulesetRequiredContextsFromRules } from "@beep/repo-cli/test/Yeet"
+ * import { GhBranchRule, rulesetRequiredContextsFromRules, YeetRulesetRulesPayload } from "@beep/repo-cli/test/Yeet"
  *
- * const expected = rulesetRequiredContextsFromRules({
+ * const expected = rulesetRequiredContextsFromRules(YeetRulesetRulesPayload.make({
  *   base: "main",
  *   readAt: "2026-09-16T00:00:00.000Z",
  *   rules: [
@@ -153,7 +183,7 @@ const isRequiredStatusChecksRule = (rule: GhBranchRule): boolean => rule.type ==
  *       parameters: { required_status_checks: [{ context: "Test Unit" }, { context: "Lint" }] }
  *     })
  *   ]
- * })
+ * }))
  * console.log(expected.contexts) // [ "Lint", "Test Unit" ]
  * ```
  *
@@ -162,11 +192,7 @@ const isRequiredStatusChecksRule = (rule: GhBranchRule): boolean => rule.type ==
  * @category utilities
  * @since 0.0.0
  */
-export const rulesetRequiredContextsFromRules = (input: {
-  readonly base: string;
-  readonly readAt: string;
-  readonly rules: ReadonlyArray<GhBranchRule>;
-}): YeetRulesetRequiredContexts => {
+export const rulesetRequiredContextsFromRules = (input: YeetRulesetRulesPayload): YeetRulesetRequiredContexts => {
   const statusRules = A.filter(input.rules, isRequiredStatusChecksRule);
   const contexts = pipe(
     statusRules,
@@ -250,7 +276,7 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
             })
           )
     ),
-    Effect.map((rules) => rulesetRequiredContextsFromRules({ base, readAt, rules }))
+    Effect.map((rules) => rulesetRequiredContextsFromRules(YeetRulesetRulesPayload.make({ base, readAt, rules })))
   );
   return yield* read.pipe(
     Effect.asSome,
@@ -683,28 +709,6 @@ export const yeetSettleSchemasForTesting = {
   YeetSettleInput,
   YeetSettleVerdict,
 } as const;
-
-/**
- * Build a settle check from a watch-style check record.
- *
- * **Example** (Map a required pending check)
- *
- * ```ts
- * import { yeetSettleCheckFrom } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(yeetSettleCheckFrom({ name: "Lint", outcome: "pending", required: true }).name) // "Lint"
- * ```
- *
- * @param check - Any record carrying a check name, classified outcome, and required flag.
- * @returns The settle-rule view of that check.
- * @category utilities
- * @since 0.0.0
- */
-export const yeetSettleCheckFrom = (check: {
-  readonly name: string;
-  readonly outcome: YeetCheckOutcome;
-  readonly required: boolean;
-}): YeetSettleCheck => YeetSettleCheck.make({ name: check.name, outcome: check.outcome, required: check.required });
 
 /**
  * Map a wait reason to the head-timeline stamp it produces, if any.

@@ -7,10 +7,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
-import { ConfigProvider, Effect, Match } from "effect";
+import { ConfigProvider, Duration, Effect, Match, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { yeetStateRootEnvVar, yeetStateRootFlag } from "../../internal/cli/Flags.ts";
 import { WorktreeRemovalServiceLive } from "../Worktree/Worktree.service.ts";
@@ -22,6 +23,7 @@ import {
 import { runYeet } from "./internal/Handler.ts";
 import { YeetInboxSeverity } from "./internal/Inbox.ts";
 import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
+import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./internal/MonitorPolicy.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
 import {
   rejectYeetUntilEventPairing,
@@ -438,10 +440,59 @@ const untilEventFlag = Flag.Boolean("until-event").pipe(
   )
 );
 
+const settleTimeoutFlag = Flag.String("settle-timeout").pipe(
+  Flag.withDefault(""),
+  Flag.withDescription("Maximum wait for required checks to register and settle (default 30 minutes; loop modes only)")
+);
+
+const decodeDurationFromString = S.decodeEffect(S.DurationFromString);
+const decodePositiveMillis = S.decodeEffect(S.Finite.pipe(S.check(S.isGreaterThan(0))));
+
+/**
+ * Decode a positive finite monitor duration, accepting compact units.
+ *
+ * **Details**
+ *
+ * An empty flag selects the thirty-minute default. Compact seconds, minutes,
+ * and hours normalize before the Effect duration codec decodes them.
+ *
+ * **Example** (Decode thirty minutes)
+ *
+ * ```ts
+ * import { yeetMonitorDurationMillis } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const program = yeetMonitorDurationMillis("30m")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param value - Duration flag text.
+ * @returns Positive finite milliseconds, or a typed command error.
+ * @category codecs
+ * @since 0.0.0
+ */
+export const yeetMonitorDurationMillis = Effect.fn("Yeet.monitorDurationMillis")(
+  function* (value: string) {
+    const text = Str.trim(value);
+    if (Str.isEmpty(text)) return YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS;
+    const normalized = pipe(
+      text,
+      Str.replace(/^([0-9]+(?:\.[0-9]+)?)s$/u, "$1 seconds"),
+      Str.replace(/^([0-9]+(?:\.[0-9]+)?)m$/u, "$1 minutes"),
+      Str.replace(/^([0-9]+(?:\.[0-9]+)?)h$/u, "$1 hours")
+    );
+    const duration = yield* decodeDurationFromString(normalized);
+    const millis = Duration.toMillis(duration);
+    return yield* decodePositiveMillis(millis);
+  },
+  Effect.mapError(YeetCommandError.new("--settle-timeout requires a positive finite duration."))
+);
+
 const monitorFlags = {
   ...sharedFlags,
   summary: summaryFlag,
   stateRoot: yeetStateRootFlag,
+  settleTimeout: settleTimeoutFlag,
   untilEvent: untilEventFlag,
   untilMerged: untilMergedFlag,
   watch: watchFlag,
@@ -567,11 +618,18 @@ const yeetPublishCommand = Command.make("publish", publishFlags, ({ stateRoot, .
   provideYeetStateRoot(runYeetMode("publish", options), stateRoot)
 ).pipe(Command.withDescription("Commit reviewed staged changes, prove the commit, then push"));
 
-const YeetMonitorCommandRoute = LiteralKit(["classic", "invalid-until-event", "merge-loop", "watch"]);
+const YeetMonitorCommandRoute = LiteralKit([
+  "classic",
+  "invalid-until-event",
+  "invalid-settle-timeout",
+  "merge-loop",
+  "watch",
+]);
 
 const SelectYeetMonitorCommandRoute = Fn({
   input: S.Struct({
     plan: S.Boolean,
+    settleTimeout: S.String.pipe(SchemaUtils.withKeyDefaults("")),
     untilEvent: S.Boolean,
     untilMerged: S.Boolean,
     watch: S.Boolean,
@@ -608,6 +666,10 @@ const SelectYeetMonitorCommandRoute = Fn({
  */
 export const yeetMonitorCommandRoute = SelectYeetMonitorCommandRoute.implementSync((options) =>
   Match.value(options).pipe(
+    Match.when(
+      (value) => Str.isNonEmpty(value.settleTimeout) && !value.untilMerged && !value.watch,
+      () => YeetMonitorCommandRoute.Enum["invalid-settle-timeout"]
+    ),
     Match.when({ plan: true }, () => YeetMonitorCommandRoute.Enum.classic),
     Match.when({ untilEvent: true, untilMerged: true }, () => YeetMonitorCommandRoute.Enum["invalid-until-event"]),
     Match.when({ untilEvent: true, watch: false }, () => YeetMonitorCommandRoute.Enum["invalid-until-event"]),
@@ -620,18 +682,29 @@ export const yeetMonitorCommandRoute = SelectYeetMonitorCommandRoute.implementSy
 const yeetMonitorCommand = Command.make(
   "monitor",
   monitorFlags,
-  ({ stateRoot, untilEvent, untilMerged, watch, ...options }) => {
-    const route = yeetMonitorCommandRoute({ plan: options.plan, untilEvent, untilMerged, watch });
-    return provideYeetStateRoot(
+  Effect.fn("Yeet.monitorCommand")(function* ({
+    stateRoot,
+    settleTimeout,
+    untilEvent,
+    untilMerged,
+    watch,
+    ...options
+  }) {
+    const route = yeetMonitorCommandRoute({ plan: options.plan, settleTimeout, untilEvent, untilMerged, watch });
+    const settleTimeoutMs = yield* yeetMonitorDurationMillis(settleTimeout);
+    return yield* provideYeetStateRoot(
       {
+        "invalid-settle-timeout": Effect.fail(
+          YeetCommandError.make({ message: "--settle-timeout requires --until-merged or --watch.", exitCode: 1 })
+        ),
         classic: runYeetMode("monitor", options),
         "invalid-until-event": rejectYeetUntilEventPairing,
-        "merge-loop": runYeetMergeLoop(options),
-        watch: runYeetWatchLoop(options, untilEvent),
+        "merge-loop": runYeetMergeLoop(options, { settleTimeoutMs }),
+        watch: runYeetWatchLoop(options, untilEvent, { settleTimeoutMs }),
       }[route],
       stateRoot
     );
-  }
+  })
 ).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
 
 const yeetSweepCommand = Command.make("sweep", sweepFlags, (options) => runYeetSweep(options)).pipe(

@@ -29,6 +29,7 @@ import {
 } from "./GateStaleness.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
 import { YeetHeadTimeline } from "./MonitorPolicy.ts";
+import { YeetSettleCheck } from "./Settle.ts";
 import {
   mergeReadyCriterionHolds,
   YeetMergeReady,
@@ -37,6 +38,7 @@ import {
   YeetMergeReadyFromEncoded,
   YeetVerdict,
 } from "./Verdict.ts";
+import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutReport } from "./Closeout.ts";
@@ -230,6 +232,7 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     available: S.Boolean,
     checked: S.Boolean,
     detail: S.String,
+    checks: YeetSettleCheck.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<YeetSettleCheck>())),
     checkCount: S.optionalKey(S.Finite),
     failingCheckCount: S.optionalKey(S.Finite),
     isDraft: S.optionalKey(S.Boolean),
@@ -1040,6 +1043,16 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     available: true,
     checked: true,
     detail: `PR #${view.number} ${view.state}`,
+    checks: A.map(O.getOrElse(checks, A.empty), (row) =>
+      YeetSettleCheck.make({
+        name: row.name,
+        outcome: classifyYeetCheckOutcome(YeetCheckSignal.make({ bucket: row.bucket, state: row.state })),
+        required: O.exists(
+          requiredChecks,
+          A.some((required) => required.name === row.name)
+        ),
+      })
+    ),
     isDraft: view.isDraft,
     number: view.number,
     state: view.state,

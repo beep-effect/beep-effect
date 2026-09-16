@@ -32,6 +32,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { mergePr } from "./Merge.ts";
 import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
+import { YeetUntilMergedPolicy } from "./MonitorPolicy.ts";
 import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
 import { runGhPullRequestView } from "./PullRequest.ts";
 import { renderYeetReplyFailureVerdict, replyReportPathForContext, runYeetReply } from "./Reply.ts";
@@ -98,6 +99,7 @@ interface YeetMonitorRouteDependencies {
   readonly mergeLoop?: typeof runYeetMonitorUntilMerged;
   readonly registry?: PrSessionRegistryShape;
   readonly rulesetRead?: typeof readYeetRulesetRequiredContexts;
+  readonly settleTimeoutMs?: number;
   readonly view?: typeof runGhPullRequestView;
   readonly watchStream?: typeof runYeetWatchStream;
 }
@@ -441,7 +443,23 @@ export const runYeetMergeLoop = Effect.fn("Yeet.runMergeLoopCommand")(function* 
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const context = yield* hydrateMonitoredContext(options, dependencies);
-  return yield* (dependencies.mergeLoop ?? runYeetMonitorUntilMerged)(context, {});
+  const terminal = yield* (dependencies.mergeLoop ?? runYeetMonitorUntilMerged)(context, {
+    collectStatus: dependencies.collectStatus,
+    rulesetRead: dependencies.rulesetRead,
+    closeout: dependencies.closeout,
+    capture: dependencies.capture,
+    policy: YeetUntilMergedPolicy.make(
+      dependencies.settleTimeoutMs === undefined ? {} : { settleTimeoutMs: dependencies.settleTimeoutMs }
+    ),
+  });
+  if (terminal === "settle-timeout") {
+    return yield* YeetCommandError.make({
+      message:
+        "The required census did not settle within --settle-timeout; see the missing and pending contexts above.",
+      exitCode: 1,
+    });
+  }
+  return terminal;
 });
 
 /**
@@ -510,6 +528,8 @@ export const runYeetWatchLoop = Effect.fn("Yeet.runWatchLoopCommand")(function* 
   const context = yield* hydrateMonitoredContext(options, dependencies);
   const ended = yield* (dependencies.watchStream ?? runYeetWatchStream)(context, {
     intervalMillis: YEET_WATCH_INTERVAL_MILLIS,
+    rulesetRead: dependencies.rulesetRead,
+    ...(dependencies.settleTimeoutMs === undefined ? {} : { settleTimeoutMs: dependencies.settleTimeoutMs }),
     untilEvent,
   });
   const verdict = `yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`;
