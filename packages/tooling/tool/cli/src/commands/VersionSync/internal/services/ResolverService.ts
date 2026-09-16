@@ -61,6 +61,13 @@ export class ResolverService extends Context.Service<ResolverService, ResolverSe
 
 /**
  * Run a category resolver, degrading to its empty state with a warning when it fails.
+ *
+ * @param label - Category label used in the logged warning.
+ * @param resolution - The resolver effect for the category.
+ * @param empty - The empty state returned when resolution fails.
+ * @returns The resolved state, or `empty` after logging the failure.
+ * @category utilities
+ * @since 0.0.0
  */
 const resolveOrEmpty = <State>(
   label: string,
