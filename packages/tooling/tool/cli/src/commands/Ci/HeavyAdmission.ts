@@ -618,6 +618,19 @@ export const renderHeavyAdmissionSummary = (admission: HeavyAdmission): string =
 /**
  * Every heavy-admission schema, for arbitrary-based round-trip tests.
  *
+ * **Example** (Round-trip every admission schema)
+ *
+ * ```ts
+ * import { heavyAdmissionSchemasForTesting } from "@beep/repo-cli/commands/Ci"
+ *
+ * const names = Object.keys(heavyAdmissionSchemasForTesting).sort()
+ * console.log(names)
+ * // ["GhPullRequestEventPayload", "HeavyAdmission", "HeavyAdmissionEvent", "HeavyAdmissionReadInput"]
+ * console.log(heavyAdmissionSchemasForTesting.HeavyAdmission.make({
+ *   verdict: "hold", admitted: false, sources: [], docsOnly: false, changedPathCount: 3
+ * }).verdict) // "hold"
+ * ```
+ *
  * @category testing
  * @since 0.0.0
  */
