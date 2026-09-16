@@ -378,6 +378,7 @@ layer(testLayer)("Graft cache sync", (it) => {
       yield* fs.makeDirectory(path.join(directory, "unrelated", ".git"), { recursive: true });
       yield* fs.writeFileString(path.join(directory, "beep-effect-file"), "not a directory");
       yield* fs.symlink(source, path.join(directory, "beep-effect-alias"));
+      yield* fs.symlink(path.join(directory, "unrelated"), path.join(directory, "beep-effect-redirect"));
       const sync = yield* GraftCacheSync;
       expect(yield* sync.discoverSiblings(source)).toEqual([matching, target]);
     })

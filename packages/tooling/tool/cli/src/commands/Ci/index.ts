@@ -19,6 +19,13 @@ export * from "./Ci.command.ts";
  */
 export * from "./Ci.errors.ts";
 /**
+ * Public heavy-admission subcommand export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiAdmission.ts";
+/**
  * Public CI lane definitions export.
  *
  * @category cli-commands
@@ -32,6 +39,13 @@ export * from "./CiLane.ts";
  * @since 0.0.0
  */
 export * from "./CiLanePartitions.ts";
+/**
+ * Public heavy-admission decision export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./HeavyAdmission.ts";
 /**
  * Public CI lane-timings collector export.
  *
