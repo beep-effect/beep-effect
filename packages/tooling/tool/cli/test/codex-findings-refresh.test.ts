@@ -69,7 +69,9 @@ const arrivingInfo: CaptureFinding = {
 
 // Bundle ingest spawns the upstream exporter and hashes artifacts, so the
 // command now needs the spawner and crypto services even on the CSV path.
-const testLayer = Layer.mergeAll(NodeTestLayer, NodeCrypto.layer, NodeChildProcessSpawner.layer);
+const testLayer = Layer.mergeAll(NodeCrypto.layer, NodeChildProcessSpawner.layer).pipe(
+  Layer.provideMerge(NodeTestLayer)
+);
 
 const testEffect = <A, E>(effect: Effect.Effect<A, E, Layer.Success<typeof testLayer>>) =>
   withTempWorkingDirectory(effect).pipe(provideScopedLayer(testLayer));
