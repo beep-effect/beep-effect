@@ -1704,3 +1704,16 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   in the same per-commit gate batch as `lint circular` and `lint schema-first`; it runs in about
   a minute and the sandboxed Codex lane can run it too, so the lane brief can require it before
   the results file is written.
+
+## 2026-09-16 — Fallow health is repo-wide, so an inherited B5 fixture blocked the B7 publish
+
+- **Doing:** publishing B7 PR1 (#1149) after the divergence merge that brought B5 (#1143) in.
+- **Evidence:** `fallow audit --check --base origin/main` passed with `complexity_introduced: 0`,
+  but `fallow health --check` exited 1 on one `not-applicable` yet `blocking` finding: the
+  anonymous generator in `test/proof-job.test.ts` ("proof verdict bookkeeping", cognitive 10 over
+  the 8 ceiling), authored by B5 and already on `main`. The publish proof's cheap-gates wave runs
+  both, so an inherited test-fixture finding fails every PR opened after it lands.
+- **Would have prevented it:** the health gate attributing repo-wide findings the way the audit
+  does (inherited findings advisory, introduced findings blocking), or B5's own publish catching
+  the fixture before merge. Fixed here in test only with the permitted
+  `fallow-ignore-next-line complexity -- <reason>` on that generator; no source suppression.

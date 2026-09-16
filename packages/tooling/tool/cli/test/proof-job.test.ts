@@ -994,6 +994,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof verdict bookkeepi
   for (const identity of ["valid", "failed", "invalid", "missing-record"]) {
     it.effect(`records the verdict despite ${identity} job bookkeeping`, () =>
       fixture(
+        // fallow-ignore-next-line complexity -- Inherited B5 fixture walks four bookkeeping identities in one generator.
         Effect.fnUntraced(function* (root) {
           const launcher = yield* ProofJobLauncher.make(root);
           const record = yield* launcher.submit(submission(root));
