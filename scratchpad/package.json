@@ -68,7 +68,6 @@
     "@effect/platform-node-shared": "catalog:",
     "@google-cloud/pubsub": "catalog:",
     "@google-cloud/storage": "catalog:",
-    "@openai/codex-security": "catalog:",
     "@xenova/transformers": "catalog:",
     "@zip.js/zip.js": "catalog:",
     "ajv": "catalog:",
