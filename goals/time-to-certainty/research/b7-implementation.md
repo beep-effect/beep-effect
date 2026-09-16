@@ -598,3 +598,14 @@ check has registered or an expected context is missing (`settleBudgetApplies`), 
 Existing timeout tests (a never-registered context, a checkless PR) still time out; the settle
 property test and one new assertion pin the queued-check case. The transcript below the amendment
 is the second babysit, against the head that carries it.
+
+## Review fix (orchestrator, 2026-09-16)
+
+The L2 review on #1149 found that ruling 49 made "unsettled past the budget" reachable, and both
+sleep formulas (`nextMonitorSleep`, the watch tick sleep) then clamped to 0 ms and busy-polled
+GitHub. `YeetSettleVerdict` now carries `budgetApplies`, set by `deriveSettleVerdict`; only a
+verdict whose registration budget still applies shortens a sleep, and `yeetWatchSettleSleepMillis`
+is the shared pure rule for the watch. Two TestClock cases pin the dogfood shape (a registered
+queued check keeps the 30 s interval past a 1 s budget; a missing context still times out at
+exactly 1 s) and a unit table pins the watch helper. The ruling 49 body's stale "Ruling 39" is now
+"Ruling 45".

@@ -659,11 +659,15 @@ export class YeetSettleVerdict extends S.Class<YeetSettleVerdict>($I`YeetSettleV
     census: YeetExpectedContextCensus,
     waitedMs: S.Finite,
     timeoutMs: S.Finite,
+    budgetApplies: S.Boolean.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true))
+    ),
     admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetSettleVerdict", {
     description:
-      "Whether the required census settled, the wait reason the gate line names, the census behind it, and the heavy admission it was judged under.",
+      "Whether the required census settled, the wait reason the gate line names, the census behind it, whether the registration budget still applies, and the heavy admission it was judged under.",
   })
 ) {}
 
@@ -790,7 +794,10 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
   const census = admissionIsHold(input.admission) ? gateCensus(open, input.families) : open;
   const held = heldOutsideRegistration(input.admission, census, inRegistrationWindow(input, census));
   const unsettled = unsettledReason(input, census);
-  const timedOut = !held && input.waitedMs >= input.timeoutMs && settleBudgetApplies(input, census);
+  // A held head's budget never applies: it neither times out nor shortens a
+  // loop sleep, the same way a registered-but-queued check does not.
+  const budgetApplies = !held && settleBudgetApplies(input, census);
+  const timedOut = input.waitedMs >= input.timeoutMs && budgetApplies;
   return O.match(unsettled, {
     onSome: (reason) =>
       YeetSettleVerdict.make({
@@ -799,6 +806,7 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
         census,
         waitedMs: input.waitedMs,
         timeoutMs: input.timeoutMs,
+        budgetApplies,
         admission: input.admission,
       }),
     onNone: () =>
@@ -808,6 +816,7 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
         census,
         waitedMs: input.waitedMs,
         timeoutMs: input.timeoutMs,
+        budgetApplies: false,
         admission: input.admission,
       }),
   });

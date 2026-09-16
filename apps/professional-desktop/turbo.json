@@ -4,11 +4,14 @@
   "tasks": {
     "check": {
       "inputs": [
-        "$TURBO_DEFAULT$",
+        "$TURBO_EXTENDS$",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
-        "$TURBO_ROOT$/packages/_internal/db-admin/drizzle/**",
-        "!.beep/**"
+        "$TURBO_ROOT$/packages/_internal/db-admin/drizzle/**"
       ]
+    },
+    "build": {
+      "inputs": ["$TURBO_EXTENDS$", ".env*"],
+      "env": ["$TURBO_EXTENDS$", "TAURI_*"]
     }
   }
 }

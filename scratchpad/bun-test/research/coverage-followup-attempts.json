@@ -1,0 +1,401 @@
+{
+  "classification": "qualification-and-diagnostics-not-confirmation",
+  "originalLedger": "pilot-attempts.json",
+  "budgetMillis": 3600000,
+  "aggregateAttemptCount": 65,
+  "aggregateConsumedMillis": 305613,
+  "acceptedPerformanceSamples": 0,
+  "attempts": [
+    {
+      "id": "adapter-smoke-pr-lane-15",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 189,
+      "cpuMicroseconds": 271951,
+      "aggregatePeakBytes": 80461824,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=4294967296",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-each-title-values-08",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 193,
+      "cpuMicroseconds": 168304,
+      "aggregatePeakBytes": 59498496,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=17179869184",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-each-title-values-12",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 253,
+      "cpuMicroseconds": 170674,
+      "aggregatePeakBytes": 64974848,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=4294967296",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-vitest-each-title-values-08",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 250,
+      "cpuMicroseconds": 348327,
+      "aggregatePeakBytes": 139718656,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=17179869184",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-vitest-each-title-values-12",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 246,
+      "cpuMicroseconds": 342808,
+      "aggregatePeakBytes": 117137408,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=4294967296",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-bun-istanbul-10",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 15020,
+      "cpuMicroseconds": 48575964,
+      "aggregatePeakBytes": 1724575744,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=17179869184",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-bun-istanbul-one-worker-16",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 27564,
+      "cpuMicroseconds": 40378048,
+      "aggregatePeakBytes": 1123852288,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=4294967296",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-contract-bun-istanbul-09",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 527,
+      "cpuMicroseconds": 644514,
+      "aggregatePeakBytes": 166109184,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=17179869184",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-contract-bun-v8-09",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 453,
+      "cpuMicroseconds": 547975,
+      "aggregatePeakBytes": 143147008,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=17179869184",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-contract-node-istanbul-09",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 772,
+      "cpuMicroseconds": 1032031,
+      "aggregatePeakBytes": 186634240,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=17179869184",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-contract-node-v8-09",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 549,
+      "cpuMicroseconds": 619742,
+      "aggregatePeakBytes": 259887104,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=17179869184",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-node-istanbul-10",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 28539,
+      "cpuMicroseconds": 87590731,
+      "aggregatePeakBytes": 1827078144,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=17179869184",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-node-v8-one-worker-16",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 66003,
+      "cpuMicroseconds": 80635796,
+      "aggregatePeakBytes": 1222459392,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=4294967296",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-shared-bun-13",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 695,
+      "cpuMicroseconds": 1021586,
+      "aggregatePeakBytes": 369623040,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=4294967296",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-shared-bun-threshold-14",
+      "exitCode": 1,
+      "expectedExit": 1,
+      "expectedOutcome": true,
+      "elapsedMillis": 668,
+      "cpuMicroseconds": 969177,
+      "aggregatePeakBytes": 369078272,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=4294967296",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-shared-node-13",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 913,
+      "cpuMicroseconds": 1213465,
+      "aggregatePeakBytes": 491786240,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=4294967296",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-shared-node-threshold-14",
+      "exitCode": 1,
+      "expectedExit": 1,
+      "expectedOutcome": true,
+      "elapsedMillis": 805,
+      "cpuMicroseconds": 1149437,
+      "aggregatePeakBytes": 397676544,
+      "limits": [
+        "CPUQuotaPerSecUSec=4s",
+        "MemoryMax=4294967296",
+        "MemorySwapMax=0"
+      ],
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    }
+  ]
+}

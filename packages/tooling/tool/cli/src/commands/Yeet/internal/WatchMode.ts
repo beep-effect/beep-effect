@@ -39,6 +39,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { Console, DateTime, Duration, Effect, FileSystem, flow, Ref, Result } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -78,7 +79,6 @@ import {
   YeetSettleCheck,
   YeetSettleInput,
   yeetGatedFamiliesFor,
-  yeetSettleVerdictIsHeld,
 } from "./Settle.ts";
 import { YeetMergeReadyCriteria } from "./Verdict.ts";
 import {
@@ -102,6 +102,7 @@ import type { Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorCommentWatermark } from "./MonitorComments.ts";
+import type { YeetSettleVerdict } from "./Settle.ts";
 import type { YeetWatchEvent } from "./WatchStream.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WatchMode");
@@ -875,10 +876,8 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
     // A held head has no budget to race: it sleeps the full interval and
     // re-reads the labels, since only the label can move it.
     const verdict = O.getOrThrow(current.settle);
-    const sleepMillis =
-      verdict.settled || yeetSettleVerdictIsHeld(verdict)
-        ? config.intervalMillis
-        : Math.min(config.intervalMillis, Math.max(0, verdict.timeoutMs - verdict.waitedMs));
+    // A held head reports `budgetApplies: false`, so it keeps the interval here too.
+    const sleepMillis = yeetWatchSettleSleepMillis(verdict, config.intervalMillis);
     yield* Effect.sleep(Duration.millis(sleepMillis));
     const advanced = yield* advanceYeetWatchTick(context, current, emptyPolls, settle);
     if (O.isNone(advanced)) {
@@ -912,3 +911,49 @@ export const yeetWatchExitFailure = (ended: Pick<YeetWatchEnded, "failing" | "re
   YeetWatchEndReason.is["pr-closed"](ended.reason) ||
   YeetWatchEndReason.is["poll-error"](ended.reason) ||
   YeetWatchEndReason.is["settle-timeout"](ended.reason);
+
+/**
+ * How long the watch sleeps before its next poll, given the settle verdict.
+ *
+ * **Details**
+ *
+ * Only the registration budget shortens a sleep: while no check has registered
+ * or an expected context is missing, the sleep is clamped to the remaining
+ * budget so `settle-timeout` fires on time. A settled head, or an unsettled
+ * head whose required checks have registered and are merely queued (ruling
+ * 49), sleeps the normal interval — never the 0 ms spin a spent budget would
+ * otherwise produce.
+ *
+ * **Example** (A registered queued check keeps the normal interval)
+ *
+ * ```ts
+ * import { YeetExpectedContextCensus, YeetSettleVerdict, yeetWatchSettleSleepMillis } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const census = YeetExpectedContextCensus.make({ matched: ["Lint"], unmatched: [], pending: ["Lint"], missing: [] })
+ * const queued = YeetSettleVerdict.make({
+ *   settled: false, reason: O.some("required-pending"), census, waitedMs: 5_000, timeoutMs: 1_000, budgetApplies: false
+ * })
+ * const missing = YeetSettleVerdict.make({
+ *   settled: false, reason: O.some("required-pending"),
+ *   census: YeetExpectedContextCensus.make({ matched: [], unmatched: [], pending: [], missing: ["Lint"] }),
+ *   waitedMs: 400, timeoutMs: 1_000, budgetApplies: true
+ * })
+ * console.log(yeetWatchSettleSleepMillis(queued, 10_000)) // 10000
+ * console.log(yeetWatchSettleSleepMillis(missing, 10_000)) // 600
+ * ```
+ *
+ * @param verdict - The settle verdict of the snapshot just observed.
+ * @param intervalMillis - The configured poll interval.
+ * @returns Milliseconds to sleep before the next poll.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetWatchSettleSleepMillis: {
+  (intervalMillis: number): (verdict: YeetSettleVerdict) => number;
+  (verdict: YeetSettleVerdict, intervalMillis: number): number;
+} = dual(2, (verdict: YeetSettleVerdict, intervalMillis: number): number =>
+  verdict.settled || !verdict.budgetApplies
+    ? intervalMillis
+    : Math.min(intervalMillis, Math.max(0, verdict.timeoutMs - verdict.waitedMs))
+);

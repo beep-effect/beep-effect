@@ -552,7 +552,7 @@ the skill, `pr-merge-ready` observed-ack wiring with `yeet job wait`, the FileCh
 spike result, and the scratchpad watcher's retirement receipt. Whoever lands second renumbers
 rulings via a divergence merge, never a force-push.
 
-**Ruling 49 (B7-5 amended) — the settle timeout bounds registration, not execution.** Ruling 39
+**Ruling 49 (B7-5 amended) — the settle timeout bounds registration, not execution.** Ruling 45
 expired the budget "while unsettled", which included required checks that had registered and were
 queued or running. PR #1149's own babysit hit that at 30 minutes with `Heavy / Lint Policy` and
 `Heavy / Test Integration` registered but still queued behind six other heavy runs, and exited 1
