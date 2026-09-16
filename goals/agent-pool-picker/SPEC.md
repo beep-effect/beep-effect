@@ -19,7 +19,7 @@ printed launch command, so orchestrators run what it prints instead of reading d
 
 ## Target Surfaces
 
-- `packages/tooling/tool/cli/src/commands/AgentPool/` — schemas, `CodexMeter` service, command.
+- `packages/tooling/tool/cli/src/commands/AgentPool/**` — schemas, `CodexMeter` service, command.
 - `packages/tooling/library/ai-metrics` evidence-root convention for the dry-marker path
   (`$XDG_STATE_HOME/beep/agent-pools/cursor-dry-<UTC day>`).
 - Lane wrapper hook: the runbook's recipe writes the dry marker on the limit signature.
@@ -45,7 +45,7 @@ printed launch command, so orchestrators run what it prints instead of reading d
 | Claim | Command |
 | --- | --- |
 | Decision table | package tests with fixtures for 100% / 6% / 4% used and dry-marker present/absent |
-| Live probe | `bun run beep agent-pool pick --json` against the workstation |
+| Live probe | `beep agent-pool pick --json` against the workstation (after P1 adds the command) |
 
 ## Stop Conditions
 

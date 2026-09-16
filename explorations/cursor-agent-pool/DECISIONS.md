@@ -127,7 +127,7 @@ quality but not safety. Rejected: full parity gate (slow); no gate (blind lanes)
 plugin stays Codex-only and is simply not used when Codex is below floor.
 
 **Rationale.** Keeps doctrine out of a third-party plugin and avoids a throwaway wrapper.
-Rejected: teach the codex plugin; ship a `scripts/agent-lane.sh` wrapper now.
+Rejected: teach the codex plugin; ship an agent-lane shell wrapper under `scripts/` now.
 
 ### D11 — NO ZDR seats
 
@@ -148,8 +148,8 @@ tier. Rejected: avoid NO ZDR seats; wait for L3.
 (`codex exec`, `cursor-agent`, grok-4.6 proxy lane) with copy-paste blocks; goal packets keep their
 task-specific prompt files and cite the runbook.
 
-**Rationale.** One doctrine surface, no template renderer to maintain. Rejected: `.agents/prompts/`
-templates; keep citing tsgo-045 (a sweep packet that will close).
+**Rationale.** One doctrine surface, no template renderer to maintain. Rejected: a prompt
+template directory under `.agents/`; keep citing tsgo-045 (a sweep packet that will close).
 
 ## Open (blocked on research lanes)
 

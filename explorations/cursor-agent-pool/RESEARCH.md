@@ -12,13 +12,13 @@ Facts verified on the workstation and in this checkout; paths are repo-relative 
   (`cursor-agent -p --trust --force --sandbox enabled --model <id> --output-format stream-json
   "<prompt>" </dev/null`, no-git rule verified from transcript `"command":` values). Smoke test passed
   in 25.9 s: `goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-cursor-smoke.md`.
-- **CLI state.** `cursor-agent` 2026.09.10-fd3934a at `~/.local/bin` (alias `agent`), logged in.
+- **CLI state.** `cursor-agent` 2026.09.10-fd3934a at `$HOME/.local/bin` (alias `agent`), logged in.
   `~/.cursor/cli-config.json`: `approvalMode: allowlist`, `permissions.allow: ["Shell(ls)"]`,
   `sandbox.mode: disabled` globally (lanes override with `--sandbox enabled`), default model
   `gpt-5.6-sol` at context 272k / reasoning xhigh, `exploreSubagentModel: default`. `~/.cursor/mcp.json`
   holds `sourcegraph` and `open-knowledge`. `~/.cursor/agents/` is empty. `~/.cursor/skills-cursor/`
   ships built-in skills (`create-hook`, `create-rule`, `create-skill`, `create-subagent`, `sdk`,
-  `loop`, `autopilot`, ...). One self-hosted worker id is registered for `~/YeeBois/projects/beep-effect5`.
+  `loop`, `autopilot`, ...). One self-hosted worker id is registered for the sibling `beep-effect5` checkout.
 - **Cursor catalog** (`cursor-agent --list-models`, 227 lines): `claude-fable-5-1-{low..max}` and
   `-thinking-*` (all "NO ZDR"), `claude-fable-5-*`, `claude-opus-5-*`, `claude-sonnet-5-*`,
   `gpt-5.6-sol-{high,xhigh}(-fast)` "1M", `gpt-5.6-luna-high`, `gpt-5.3-codex-*`, `gpt-5.2`,
@@ -198,7 +198,7 @@ lanes' (CONFIRMED = official cursor.com/docs or 2+ sources).
   PostToolUseFailure — CONFIRMED. Cloud Agents load only repo command hooks and drop sessionStart/End.
   A forum thread (staff, "known gap") said only sessionStart fires headless on an older build; the local
   smoke on 2026.09.10 proved eight events fire, so the runbook cites the smoke, not the thread.
-- Skills: `.claude/skills`, `.codex/skills`, `.agents/skills`, `.cursor/skills` all auto-discovered
+- Skills: `.{claude,codex,agents,cursor}/skills` are all auto-discovered
   (`.grok/skills` is not) — CONFIRMED. No copying needed.
 - Subagents: `.cursor/agents/*.md`, `.claude/agents/*.md`, `.codex/agents/*.md` discovered
   (`.codex/agents/*.toml` is not); frontmatter `name`, `description`, `model` (pinnable), `readonly`,
