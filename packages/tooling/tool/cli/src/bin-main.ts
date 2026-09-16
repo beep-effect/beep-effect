@@ -91,7 +91,9 @@ const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
 const { Cause, Console, Effect, Exit, Layer, Option, Runtime } = await import("effect");
-const { drainProcessStreams, ProcessStreamName, streamConsole } = await import("./internal/cli/Stdout.ts");
+const { drainProcessStreams, ProcessStreamName, streamConsole, writeBestEffortLine } = await import(
+  "./internal/cli/Stdout.ts"
+);
 const O = await import("effect/Option");
 const P = await import("effect/Predicate");
 
@@ -130,14 +132,14 @@ const renderCliFailure = (exit: import("effect").Exit.Exit<unknown, unknown>) =>
   // The cause is appended rather than substituted so the common case still leads
   // with the human-readable line.
   if (P.hasProperty(error, "message") && P.isString(error.message)) {
-    process.stderr.write(`${error.message}\n`);
+    writeBestEffortLine(process.stderr, process.stdout, `${error.message}\n`);
     if (shouldRenderFailureCause(argv)) {
-      process.stderr.write(`${Cause.pretty(exit.cause)}\n`);
+      writeBestEffortLine(process.stderr, process.stdout, `${Cause.pretty(exit.cause)}\n`);
     }
     return;
   }
 
-  process.stderr.write(`${Cause.pretty(exit.cause)}\n`);
+  writeBestEffortLine(process.stderr, process.stdout, `${Cause.pretty(exit.cause)}\n`);
 };
 
 /**
@@ -159,7 +161,11 @@ const restoreSharedTerminal = (): void => {
   if (process.stdout.isTTY) {
     // Disable mouse tracking (?1000 normal, ?1002 button-event, ?1003
     // any-motion, ?1006 SGR) and show the cursor (?25h).
-    process.stdout.write("\u001B[?1000l\u001B[?1002l\u001B[?1003l\u001B[?1006l\u001B[?25h");
+    try {
+      process.stdout.write("\u001B[?1000l\u001B[?1002l\u001B[?1003l\u001B[?1006l\u001B[?25h");
+    } catch {
+      // A dead stdout must not skip the raw-mode reset.
+    }
   }
   if (process.stdin.isTTY) {
     process.stdin.setRawMode(false);
@@ -186,17 +192,6 @@ const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
       } catch {
         // A dead terminal must not abort before the drain and exit.
       }
-      const writeExitNotice = (preferred: NodeJS.WriteStream, fallback: NodeJS.WriteStream, line: string): void => {
-        try {
-          preferred.write(line);
-        } catch {
-          try {
-            fallback.write(line);
-          } catch {
-            // Both handles are dead; exit still proceeds.
-          }
-        }
-      };
       Runtime.defaultTeardown(exit, (code) => {
         // The runner's onExit hard-exits on a nonzero code, so the drain must come first.
         drainProcessStreams((failure) => {
@@ -204,7 +199,7 @@ const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
             const { stream, message, droppedLines } = failure.value;
             const channel = ProcessStreamName.is.stderr(stream) ? process.stdout : process.stderr;
             const fallback = ProcessStreamName.is.stderr(stream) ? process.stderr : process.stdout;
-            writeExitNotice(
+            writeBestEffortLine(
               channel,
               fallback,
               `[beep-cli] exiting with code ${code}; ${stream} write failed: ${message}; ${droppedLines} line(s) dropped\n`

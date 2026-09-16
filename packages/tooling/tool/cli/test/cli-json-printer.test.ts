@@ -2,14 +2,22 @@ import {
   CommandJsonOutput,
   DEFAULT_JSON_FORMATTING_OPTIONS,
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
+  drainProcessStreams,
   formatDurationSeconds,
   logTaggedSummary,
   makeTaggedLogger,
   printCommandJson,
   renderPrettyCommandJson,
+  resetProcessStreamStateForTesting,
+  StreamWriteFailure,
 } from "@beep/repo-cli/test/Cli";
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Layer } from "effect";
+import * as A from "effect/Array";
+import * as MutableRef from "effect/MutableRef";
+import * as O from "effect/Option";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { vi } from "vitest";
 
@@ -63,6 +71,88 @@ describe("internal/cli/Json renderPrettyCommandJson", () => {
 });
 
 describe("internal/cli/Json printCommandJson", () => {
+  beforeEach(resetProcessStreamStateForTesting);
+
+  for (const mode of ["callback", "throw", "non-error-throw"] as const) {
+    it.effect(
+      `stops after the first chunk on a ${mode} error and reports it at drain`,
+      Effect.fnUntraced(function* () {
+        const attempts = MutableRef.make(0);
+        const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+        const markers = A.empty<string>();
+        const originalOut = process.stdout.write;
+        const originalErr = process.stderr.write;
+        process.stdout.write = ((_chunk: Uint8Array, callback: (error?: Error | null) => void) => {
+          MutableRef.incrementAndGet(attempts);
+          if (mode === "callback") {
+            callback(new Error("JSON EPIPE"));
+            callback(new Error("duplicate"));
+            return false;
+          }
+          if (mode === "non-error-throw") {
+            throw "JSON EPIPE";
+          }
+          throw new Error("JSON EPIPE");
+        }) as typeof process.stdout.write;
+        process.stderr.write = ((chunk: Uint8Array, callback: () => void) => {
+          markers.push(new TextDecoder().decode(chunk));
+          callback();
+          return true;
+        }) as typeof process.stderr.write;
+        try {
+          yield* printCommandJson({ value: Str.repeat(20_000)("x") });
+          drainProcessStreams((value) => MutableRef.set(failure, value));
+          expect(MutableRef.get(attempts)).toBe(1);
+          assertSome(
+            MutableRef.get(failure),
+            StreamWriteFailure.make({ stream: "stdout", message: "JSON EPIPE", droppedLines: 1 })
+          );
+          expect(markers).toEqual(["[beep-cli] stdout write failed: JSON EPIPE; later stdout lines are dropped\n"]);
+        } finally {
+          process.stdout.write = originalOut;
+          process.stderr.write = originalErr;
+        }
+      })
+    );
+  }
+
+  it.effect(
+    "ignores duplicate chunk callbacks and completes once",
+    Effect.fnUntraced(function* () {
+      const originalOut = process.stdout.write;
+      const callbacks = A.empty<() => void>();
+      const lengths = A.empty<number>();
+      const completions = MutableRef.make(0);
+      process.stdout.write = ((chunk: Uint8Array, callback: () => void) => {
+        lengths.push(chunk.byteLength);
+        callbacks.push(callback);
+        return true;
+      }) as typeof process.stdout.write;
+      try {
+        const output = yield* CommandJsonOutput;
+        yield* output(Str.repeat(20_000)("x")).pipe(
+          Effect.tap(() =>
+            Effect.sync(() => {
+              MutableRef.incrementAndGet(completions);
+            })
+          ),
+          Effect.forkChild
+        );
+        yield* Effect.yieldNow;
+        for (const callback of callbacks) {
+          callback();
+          callback();
+        }
+        yield* Effect.yieldNow;
+        expect(lengths).toEqual([8192, 8192, 3616]);
+        expect(MutableRef.get(completions)).toBe(1);
+        drainProcessStreams(assertNone);
+      } finally {
+        process.stdout.write = originalOut;
+      }
+    })
+  );
+
   it.effect(
     "routes output through an injected writer",
     Effect.fnUntraced(function* () {

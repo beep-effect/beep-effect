@@ -7,6 +7,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, P } from "@beep/utils";
+import { dual } from "effect/Function";
 import { toStringUnknown } from "effect/Inspectable";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
@@ -52,6 +53,12 @@ export type ProcessStreamName = typeof ProcessStreamName.Type;
 
 /**
  * Records the first write error on a stream and the number of abandoned lines, including the aborted line.
+ *
+ * **Details**
+ *
+ * First means the first error recorded by a line's failure path, latched at the `fail` boundary.
+ * A line whose callback completed before its write threw is delivered and records nothing.
+ * Later lines on that stream are counted, never re-recorded.
  *
  * **Example** (Describe a lost line)
  *
@@ -132,6 +139,8 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
     const bytes = utf8Encoder.encode(`${formatArgs(args)}\n`);
     const offset = MutableRef.make(0);
     const done = MutableRef.make(false);
+    // Every caller (fail, drop, end-of-bytes) is behind a done check.
+    // Each chunk callback fires at most once, so complete needs no done guard.
     const complete = (): void => {
       MutableRef.set(done, true);
       // Drop this line only if it is the head, without a separate branch.
@@ -190,7 +199,7 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
       startNext();
     }
   };
-  return { write, failure, failed };
+  return { write, failure, failed, recordFailure };
 };
 
 const stdoutWriter = makeLineWriter(
@@ -215,6 +224,73 @@ const writeStdoutLine = stdoutWriter.write;
 const writeStderrLine = stderrWriter.write;
 const currentFailure = (): O.Option<StreamWriteFailure> =>
   O.orElse(MutableRef.get(stdoutWriter.failure), () => MutableRef.get(stderrWriter.failure));
+
+/**
+ * Writes a raw teardown notice, falling back to the other stream after a synchronous throw.
+ *
+ * **Details**
+ *
+ * These best-effort writes are untracked. A write accepted with backpressure still returns true;
+ * false means both streams threw synchronously.
+ *
+ * **Example** (Send a teardown notice)
+ *
+ * ```ts
+ * import { writeBestEffortLine } from "@beep/repo-cli/test/Cli"
+ *
+ * const accepted = writeBestEffortLine(process.stderr, process.stdout, "exiting\n")
+ * console.log(accepted)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const writeBestEffortLine: {
+  (fallback: NodeJS.WriteStream, line: string): (preferred: NodeJS.WriteStream) => boolean;
+  (preferred: NodeJS.WriteStream, fallback: NodeJS.WriteStream, line: string): boolean;
+} = dual(3, (preferred: NodeJS.WriteStream, fallback: NodeJS.WriteStream, line: string): boolean => {
+  try {
+    preferred.write(line);
+    return true;
+  } catch {
+    try {
+      fallback.write(line);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+});
+
+/**
+ * Records an external writer's first failure and sends the existing marker to the sibling stream.
+ *
+ * **Details**
+ *
+ * The first failure counts one dropped line. Repeated notifications on a failed stream do nothing.
+ * The drain reports this record alongside failures from the console line writers.
+ *
+ * **Example** (Report a failed stdout payload)
+ *
+ * ```ts
+ * import { noteProcessStreamWriteFailure, drainProcessStreams } from "@beep/repo-cli/test/Cli"
+ *
+ * noteProcessStreamWriteFailure("stdout", "EPIPE")
+ * drainProcessStreams((failure) => console.log(failure))
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const noteProcessStreamWriteFailure: {
+  (message: string): (stream: ProcessStreamName) => void;
+  (stream: ProcessStreamName, message: string): void;
+} = dual(2, (stream: ProcessStreamName, message: string): void => {
+  const writer = ProcessStreamName.is.stdout(stream) ? stdoutWriter : stderrWriter;
+  if (!writer.failed()) {
+    writer.recordFailure(message);
+  }
+});
 
 /**
  * Clears process stream failure records and their dropped-line counts between tests.

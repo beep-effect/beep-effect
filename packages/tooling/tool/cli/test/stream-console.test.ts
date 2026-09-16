@@ -1,8 +1,11 @@
 import {
   drainProcessStreams,
+  noteProcessStreamWriteFailure,
+  ProcessStreamName,
   resetProcessStreamStateForTesting,
   StreamWriteFailure,
   streamConsole,
+  writeBestEffortLine,
 } from "@beep/repo-cli/test/Cli";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -69,6 +72,97 @@ const captureStreams = <A>(
 
 describe("stream console", () => {
   beforeEach(resetProcessStreamStateForTesting);
+
+  it("accepts a teardown notice on the preferred stream, including backpressure", () => {
+    const originalOut = process.stdout.write;
+    const originalErr = process.stderr.write;
+    const preferred = A.empty<string>();
+    const fallback = A.empty<string>();
+    process.stderr.write = (line: string | Uint8Array) => {
+      preferred.push(String(line));
+      return false;
+    };
+    process.stdout.write = (line: string | Uint8Array) => {
+      fallback.push(String(line));
+      return true;
+    };
+    try {
+      expect(writeBestEffortLine(process.stderr, process.stdout, "notice\n")).toBe(true);
+      expect(preferred).toEqual(["notice\n"]);
+      expect(fallback).toEqual([]);
+    } finally {
+      process.stdout.write = originalOut;
+      process.stderr.write = originalErr;
+    }
+  });
+
+  it("falls back for teardown notices when the preferred stream throws", () => {
+    const originalOut = process.stdout.write;
+    const originalErr = process.stderr.write;
+    const fallback = A.empty<string>();
+    process.stderr.write = () => {
+      throw new Error("dead stderr");
+    };
+    process.stdout.write = (line: string | Uint8Array) => {
+      fallback.push(String(line));
+      return true;
+    };
+    try {
+      expect(writeBestEffortLine(process.stderr, process.stdout, "notice\n")).toBe(true);
+      expect(fallback).toEqual(["notice\n"]);
+    } finally {
+      process.stdout.write = originalOut;
+      process.stderr.write = originalErr;
+    }
+  });
+
+  it("returns false when both teardown streams throw", () => {
+    const originalOut = process.stdout.write;
+    const originalErr = process.stderr.write;
+    process.stderr.write = () => {
+      throw new Error("dead stderr");
+    };
+    process.stdout.write = () => {
+      throw new Error("dead stdout");
+    };
+    try {
+      expect(writeBestEffortLine(process.stderr, process.stdout, "notice\n")).toBe(false);
+    } finally {
+      process.stdout.write = originalOut;
+      process.stderr.write = originalErr;
+    }
+  });
+
+  for (const stream of ProcessStreamName.Options) {
+    it(`records only the first external ${stream} failure and drains its sibling marker`, () => {
+      const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+      const drained = MutableRef.make(false);
+      const callback = MutableRef.make<O.Option<WriteCallback>>(O.none());
+      const holdMarker = (_chunk: string | Uint8Array, onWritten: WriteCallback): boolean => {
+        MutableRef.set(callback, O.some(onWritten));
+        return true;
+      };
+      const { stdout, stderr } = captureStreams(
+        () => {
+          noteProcessStreamWriteFailure(stream, "first");
+          noteProcessStreamWriteFailure(stream, "second");
+          drainProcessStreams((value) => {
+            MutableRef.set(failure, value);
+            MutableRef.set(drained, true);
+          });
+          expect(MutableRef.get(drained)).toBe(false);
+          callback.pipe(MutableRef.get, O.getOrThrow)();
+          expect(MutableRef.get(drained)).toBe(true);
+        },
+        stream === "stdout" ? { stderrWrite: holdMarker } : { stdoutWrite: holdMarker }
+      );
+      expect(stream === "stdout" ? stdout : stderr).toEqual([]);
+      expect(stream === "stdout" ? stderr : stdout).toEqual([
+        `[beep-cli] ${stream} write failed: first; later ${stream} lines are dropped\n`,
+      ]);
+      assertSome(MutableRef.get(failure), StreamWriteFailure.make({ stream, message: "first", droppedLines: 1 }));
+    });
+  }
 
   it("aborts a line and drops later stdout lines after a write error", () => {
     const drained = MutableRef.make(false);
