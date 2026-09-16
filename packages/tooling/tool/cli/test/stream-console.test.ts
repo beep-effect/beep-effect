@@ -164,6 +164,32 @@ describe("stream console", () => {
     });
   }
 
+  it("keeps the first failure when an in-flight stdout chunk errors after another writer latched the stream", () => {
+    const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());
+    const held = MutableRef.make<O.Option<WriteCallback>>(O.none());
+    const { stderr } = captureStreams(
+      () => {
+        streamConsole.log("in flight");
+        // A JSON payload notes EPIPE while the console line's chunk is still pending.
+        noteProcessStreamWriteFailure("stdout", "first");
+        held.pipe(MutableRef.get, O.getOrThrow)(new Error("second"));
+        drainProcessStreams((value) => MutableRef.set(failure, value));
+      },
+      {
+        stdoutWrite: (_chunk, onWritten) => {
+          MutableRef.set(held, O.some(onWritten));
+          return true;
+        },
+      }
+    );
+    // One marker, the first message, and the in-flight line counted as dropped.
+    expect(stderr).toEqual(["[beep-cli] stdout write failed: first; later stdout lines are dropped\n"]);
+    assertSome(
+      MutableRef.get(failure),
+      StreamWriteFailure.make({ stream: "stdout", message: "first", droppedLines: 2 })
+    );
+  });
+
   it("aborts a line and drops later stdout lines after a write error", () => {
     const drained = MutableRef.make(false);
     const failure = MutableRef.make<O.Option<StreamWriteFailure>>(O.none());

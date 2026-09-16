@@ -10,7 +10,6 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { P } from "@beep/utils";
 import { Context, Effect, Result } from "effect";
 import { dual } from "effect/Function";
-import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
@@ -26,22 +25,16 @@ const writeCommandJsonStdout = (text: string): Effect.Effect<void> =>
   Effect.callback<void>((resume) => {
     const bytes = utf8Encoder.encode(text);
     let offset = 0;
-    const settled = MutableRef.make(false);
+    // writeChunkOnce reports each chunk exactly once and a failed chunk starts
+    // no successor, so the callback settles at most once without its own latch.
     const complete = (): void => {
-      MutableRef.set(settled, true);
       resume(Effect.void);
     };
     const fail = (message: string): void => {
-      if (MutableRef.get(settled)) {
-        return;
-      }
       noteProcessStreamWriteFailure("stdout", message);
       complete();
     };
     const writeNext = (failure: O.Option<string>): void => {
-      if (MutableRef.get(settled)) {
-        return;
-      }
       if (O.isSome(failure)) {
         fail(failure.value);
         return;

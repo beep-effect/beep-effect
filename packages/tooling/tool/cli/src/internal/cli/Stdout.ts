@@ -192,8 +192,15 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
       startNext();
       settleWrite();
     };
+    // First failure wins: a chunk that errors after another writer already
+    // latched this stream (a JSON payload noting EPIPE mid-line) only counts
+    // as one more dropped line and never re-emits the marker.
     const fail = (message: string): void => {
-      recordFailure(message);
+      if (failed()) {
+        dropLine();
+      } else {
+        recordFailure(message);
+      }
       complete();
     };
     const writeNext = (failure: O.Option<string>): void => {
