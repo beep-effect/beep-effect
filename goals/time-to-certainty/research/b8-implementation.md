@@ -272,3 +272,28 @@ Verification (`zsh -ic`, worktree root):
 
 Deviation 2 (held = `hold` AND `gated` non-empty) is kept; deviation 1 is closed. Harness
 rework stayed small: the spawner branch is four lines and no poll index is consumed.
+
+## Acceptance (live, 2026-09-16, PR #1155)
+
+- **Hold never times out.** Head `15a1e77a99`, unlabelled: `Heavy Admission=success`,
+  `Heavy=skipped`, zero `Heavy / *` check runs, `mergeStateStatus: BLOCKED`. Tier 1 settled and
+  `yeet monitor --until-ready` printed `settle: heavy-not-admitted; gated: Heavy / Check, Heavy /
+  Docgen, Heavy / Doctest, Heavy / Lint Policy, Heavy / Test Integration; admit: gh pr edit
+  --add-label ready-for-heavy; waited 30m 10s (not counted toward the 30m settle timeout)` —
+  past the default budget with no `settle-timeout`.
+- **The label admits within one poll.** `gh pr edit 1155 --add-label ready-for-heavy` at
+  08:41:59Z; the next poll logged `heavy admission: hold → run` and `settle: heavy-not-admitted →
+  required-pending; missing: Heavy / …; waited 0 of 30m` (clock reset). `Heavy Admit` run
+  35075215936 started at 08:42:03Z; the Check run from 08:11 stayed `completed/success`, so the
+  label neither cancelled nor re-ran tier 1.
+- **`size/*` never triggers.** Head `8d87484c2f` received exactly one Check run although the
+  pr-size job applied `size/L` mid-run (GITHUB_TOKEN events do not start workflows).
+- **Main pushes always admit.** Push run 35066098614 after PR A ran all seven heavy lanes.
+- **Docs-only skip.** Pending PR C (`explorations/github-merge-queue/`, branch pushed): expected
+  `Heavy Admission=success`, heavy called with `admitted: false`, every `Heavy / <lane>` reports
+  skipped, ruleset satisfied, `--until-ready` exit 0.
+- **Gap found and closed the same day.** A push after the label admits the new head through
+  `check.yml` while the previous head's `Heavy Admit` matrix keeps running (concurrency groups
+  do not cross workflows); the admission job now cancels superseded `Heavy Admit` runs for the
+  ref (`actions: write`, `gh run cancel`).
+
