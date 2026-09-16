@@ -71,7 +71,7 @@ orchestrator owns schemas, contracts, and judgment.
       outlives the submitter and is the lease's accounting unit); one durable record per job under
       `.beep/yeet/jobs/`; the `ExecStopPost` finalizer stamps systemd's result, appends
       `attempt-terminated` for every dead runner (`signal`, `oom-killed`, `timeout`,
-      `job-start-failed`, `cancelled`), and reports one `proof-job-finished` inbox row (P2 green /
+      `cancelled`, `unrecorded-failure`); a start failure has a terminal job record but no runner attempt. It reports one `proof-job-finished` inbox row (P2 green /
       P1 otherwise) acknowledged by the new `observed` resolution; `yeet job list|status|wait|logs|cancel`.
       Brief and evidence: `research/b5-brief.md`, `research/b5-implementation.md`.
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):

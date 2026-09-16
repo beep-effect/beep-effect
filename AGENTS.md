@@ -96,8 +96,9 @@ models and effort levels they actually recorded.
   left alone because it may belong to an admission racing with the reaper.
   Without the installed slice file, systemd uses a transient slice with defaults.
 - Detached proofs run in `beep-proof-<jobId>.service`: use `--detach` for a proof
-  expected to outlive the repair loop, then `yeet job wait <jobId>`; a job death
-  is journaled by the systemd finalizer.
+  expected to outlive the repair loop, then `yeet job wait <jobId>`; the systemd finalizer journals dead runners
+  (`signal`, `oom-killed`, `timeout`, `cancelled`, `unrecorded-failure`);
+  start failures have a terminal job record and inbox row, without an attempt.
 - `main` is PR-only. Do not commit saving/wip/tmp checkpoints to shared
   branches; publish from a feature branch through Yeet and let hosted required
   checks gate the merge. GitHub merge/squash commit messages are also

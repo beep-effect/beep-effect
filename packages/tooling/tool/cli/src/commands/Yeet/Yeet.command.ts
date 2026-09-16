@@ -9,9 +9,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { ConfigProvider, Console, DateTime, Duration, Effect, Match, Path } from "effect";
+import { O } from "@beep/utils";
+import { ConfigProvider, Console, DateTime, Duration, Effect, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
@@ -41,6 +41,7 @@ import {
   runYeetWatchLoop,
 } from "./internal/Porcelain.ts";
 import {
+  isSettledProofJob,
   isTerminalProofJobPhase,
   ProofJobExitCode,
   ProofJobRecord,
@@ -50,6 +51,7 @@ import {
   ProofJobSubmitter,
   ProofJobSystemdResult,
   ProofJobWaitOptions,
+  proofJobUnitName,
 } from "./internal/ProofJob.ts";
 import { ProofJobLauncher } from "./internal/ProofJobLauncher.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
@@ -600,15 +602,27 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
 const jobIdArgument = Argument.String("jobId").pipe(Argument.withSchema(UUID));
 const decodeDuration = S.decodeEffect(S.DurationFromString);
 const encodeProofJobRecordJson = S.encodeEffect(S.fromJsonString(ProofJobRecord));
+const encodeProofJobListJson = S.encodeEffect(ProofJobRecord.pipe(S.Array, S.fromJsonString));
+const encodeProofJobStatusJson = S.encodeEffect(
+  S.fromJsonString(S.Struct({ record: ProofJobRecord, telemetry: S.NullOr(S.String) }))
+);
+const isPositiveFiniteDuration = S.is(S.Finite.check(S.isGreaterThan(0)));
 const decodeServiceResultOption = S.decodeUnknownOption(ProofJobServiceResult);
 const decodeExitCodeOption = S.decodeUnknownOption(ProofJobExitCode);
 const durationMillis = Effect.fn("Yeet.jobDuration")(function* (text: string) {
-  const normalized = Str.replace(/^(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)$/u, "$1 $2")(text);
+  const normalized = pipe(
+    text,
+    Str.replace(/^(\d+(?:\.\d+)?)\s*ms$/u, "$1 millis"),
+    Str.replace(/^(\d+(?:\.\d+)?)\s*s$/u, "$1 seconds"),
+    Str.replace(/^(\d+(?:\.\d+)?)\s*m$/u, "$1 minutes"),
+    Str.replace(/^(\d+(?:\.\d+)?)\s*h$/u, "$1 hours"),
+    Str.replace(/^(\d+(?:\.\d+)?)\s*d$/u, "$1 days")
+  );
   const duration = yield* decodeDuration(normalized).pipe(
     Effect.mapError(YeetCommandError.new("Expected a duration such as '30 seconds'."))
   );
   const millis = Duration.toMillis(duration);
-  if (!S.is(S.Finite.check(S.isGreaterThan(0)))(millis))
+  if (!isPositiveFiniteDuration(millis))
     return yield* YeetCommandError.make({ message: "Job duration must be positive and finite." });
   return millis;
 });
@@ -631,19 +645,22 @@ const submitDetachedProofJob = Effect.fn("Yeet.submitDetached")(function* (mode:
   const root = yield* jobRoot();
   const path = yield* Path.Path;
   const git = Effect.fnUntraced(function* (args: ReadonlyArray<string>) {
-    const result = yield* runRepoCommandCapture("git", args, root).pipe(
-      Effect.mapError(YeetCommandError.new("Failed to read detached job git coordinates."))
-    );
+    const result = yield* runRepoCommandCapture(
+      "git",
+      args,
+      root,
+      O.getSomesStruct({ PATH: yield* configStringOption("PATH") })
+    ).pipe(Effect.mapError(YeetCommandError.new("Failed to read detached job git coordinates.")));
     if (result.exitCode !== 0) return yield* YeetCommandError.make({ message: result.output });
     return Str.trim(result.output);
   });
   const branch = yield* git(["rev-parse", "--abbrev-ref", "HEAD"]);
   const head = yield* git(["rev-parse", "--verify", options.head]);
+  const entrypoint = O.fromUndefinedOr(process.argv[1]);
+  if (O.isNone(entrypoint)) return yield* YeetCommandError.make({ message: "Cannot detach without a CLI entrypoint." });
   const words = A.dropWhile(A.drop(process.argv, 2), (word) => word === "--");
   if (A.head(words).pipe(O.getOrElse(() => "")) !== "yeet")
     return yield* YeetCommandError.make({ message: "Cannot detach: original argv must begin with yeet." });
-  const entrypoint = O.fromUndefinedOr(process.argv[1]);
-  if (O.isNone(entrypoint)) return yield* YeetCommandError.make({ message: "Cannot detach without a CLI entrypoint." });
   const maxRuntimeSeconds = Str.isEmpty(options.jobMaxRuntime)
     ? O.none<number>()
     : O.some(Math.ceil((yield* durationMillis(options.jobMaxRuntime)) / 1000));
@@ -684,9 +701,7 @@ const jobListCommand = Command.make(
     const records = yield* launcher.list;
     if (options.json) {
       yield* Console.log(
-        yield* S.encodeEffect(ProofJobRecord.pipe(S.Array, S.fromJsonString))(records).pipe(
-          Effect.mapError(YeetCommandError.new("Failed to encode jobs."))
-        )
+        yield* encodeProofJobListJson(records).pipe(Effect.mapError(YeetCommandError.new("Failed to encode jobs.")))
       );
     } else for (const record of records) yield* renderJob(record, false);
   })
@@ -700,25 +715,26 @@ const jobStatusCommand = Command.make(
     const record = yield* requireJob(launcher, options.jobId);
     const live = isTerminalProofJobPhase(record.phase)
       ? O.none<string>()
-      : O.some(
-          (yield* runRepoCommandCapture(
-            "systemctl",
-            ["--user", "show", record.unit.unitName, "-p", "ActiveState,SubState,MainPID,MemoryPeak"],
-            root
-          ).pipe(Effect.mapError(YeetCommandError.new("Failed to read job telemetry.")))).output
+      : yield* runRepoCommandCapture(
+          "systemctl",
+          ["--user", "show", record.unit.unitName, "-p", "ActiveState,SubState,MainPID,MemoryPeak"],
+          root,
+          O.getSomesStruct({ PATH: yield* configStringOption("PATH") })
+        ).pipe(
+          Effect.mapError(YeetCommandError.new("Failed to read job telemetry.")),
+          Effect.map((result) => (result.exitCode === 0 ? O.some(result.output) : O.none<string>()))
         );
     if (options.json) {
-      const document = S.Struct({ record: ProofJobRecord, telemetry: S.NullOr(S.String) });
       yield* Console.log(
-        yield* S.encodeEffect(S.fromJsonString(document))({ record, telemetry: O.getOrNull(live) }).pipe(
+        yield* encodeProofJobStatusJson({ record, telemetry: O.getOrNull(live) }).pipe(
           Effect.mapError(YeetCommandError.new("Failed to encode job status."))
         )
       );
     } else {
       yield* renderJob(record, false);
-      if (O.isSome(live)) yield* Console.log(live.value);
+      if (!isTerminalProofJobPhase(record.phase)) yield* Console.log(O.getOrElse(live, () => "unit not loaded"));
     }
-    if (options.ack && isTerminalProofJobPhase(record.phase)) {
+    if (options.ack && isSettledProofJob(record)) {
       yield* writeYeetAckReceipt(
         root,
         YeetAckReceipt.make({
@@ -774,20 +790,39 @@ const jobCancelCommand = Command.make(
       return yield* YeetCommandError.make({ message: "systemctl could not stop the job." });
   })
 );
+/**
+ * Fence accidental finalization by same-user processes; these environment
+ * checks are an accident fence, not an authorization boundary.
+ */
 const jobFinalizeCommand = Command.make(
   "finalize",
   { jobId: jobIdArgument },
   Effect.fn("Yeet.jobFinalize")(function* (options) {
+    for (const [name, expected] of [
+      ["BEEP_YEET_JOB_ID", options.jobId],
+      ["BEEP_YEET_JOB_UNIT", proofJobUnitName(options.jobId)],
+    ]) {
+      if (!O.contains(yield* configStringOption(name), expected))
+        return yield* YeetCommandError.make({ message: `${name} does not match the proof job.` });
+    }
+    const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
+    const record = yield* requireJob(launcher, options.jobId);
+    const invocationId = yield* configStringOption("INVOCATION_ID");
+    if (
+      O.isSome(record.unit.invocationId) &&
+      O.isSome(invocationId) &&
+      record.unit.invocationId.value !== invocationId.value
+    )
+      return yield* YeetCommandError.make({ message: "INVOCATION_ID does not match the proof job." });
     const serviceResult = yield* configStringOption("SERVICE_RESULT");
     const exitCode = yield* configStringOption("EXIT_CODE");
     const result = ProofJobSystemdResult.make({
       serviceResult: O.getOrElse(O.flatMap(serviceResult, decodeServiceResultOption), () => "unknown"),
       exitCode: O.flatMap(exitCode, decodeExitCodeOption),
       exitStatus: yield* configStringOption("EXIT_STATUS"),
-      invocationId: yield* configStringOption("INVOCATION_ID"),
+      invocationId,
       finalizedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
     });
-    const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
     yield* launcher.finalize(options.jobId, result);
   })
 ).pipe(Command.unlisted);

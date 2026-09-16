@@ -175,6 +175,15 @@ describe("yeet inbox command wiring", () => {
 });
 
 it.layer(commandTestLayer, { timeout: "30 seconds" })("detached proof job command wiring", (it) => {
+  it.effect(
+    "rejects a runtime ceiling without detachment and malformed resume coordinates",
+    Effect.fnUntraced(function* () {
+      expect(yield* runYeetCommand(["verify", "--job-max-runtime", "30 seconds"]).pipe(Effect.flip)).toMatchObject({
+        message: "--job-max-runtime requires --detach.",
+      });
+      expect((yield* runYeetCommand(["resume", "invalid"]).pipe(Effect.flip))._tag).toBe("YeetCommandError");
+    })
+  );
   it("registers the complete job group and hides its finalizer", () => {
     const job = O.getOrThrow(findSubcommand("job"));
     const children = A.flatMap(job.subcommands, (group) => group.commands);

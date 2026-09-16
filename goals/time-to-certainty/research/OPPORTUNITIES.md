@@ -1488,3 +1488,24 @@ was attempted under the marker-only amendment.
   signal cost a full detached proof round (cancelled at minute 20).
 - **Would have prevented it:** oxlint on touched files in the pre-commit hook or in
   `package-verify --quick`; the 2026-09-12 note already records the same class.
+
+## 2026-09-15 — review coverage needs an explicit producer-test list
+
+- **Doing:** restoring the six B5 coverage rows with Node/V8 coverage.
+- **Evidence:** the initial `test/yeet*.test.ts` selection also launched unrelated lane-retirement
+  integration tests, which failed under the restricted sandbox; the run was interrupted (130).
+  The next run names the command, inbox, artifact, phase, verdict, and journal producer tests.
+- **Would have prevented it:** a maintained per-file producer-test list beside the coverage
+  ratchet output, so a focused repair does not discover its scope by running unrelated suites.
+
+## 2026-09-15 — inherited proof-step integration stalls in the Node threads lane
+
+- **Doing:** reproducing the Handler coverage floor under Node/V8.
+- **Evidence:** `CI=true bunx vitest run --pool=threads --testTimeout=10000
+  --reporter=verbose test/yeet-review-fixes.test.ts -t 'stops the proof phase'`
+  produced no test result before interruption (130); the same test under
+  `bunx --bun vitest` passed (0). The coordinator-only selection passed on Node.
+- **Would have prevented it:** separate the real-runtime smoke from deterministic
+  Handler tests. Added a controlled child-process service test for fail-fast,
+  successful steps, RSS present/invalid/absent, and inbox failure-to-fix receipts;
+  the Node coverage proof uses those cases instead of the stalled subprocess case.

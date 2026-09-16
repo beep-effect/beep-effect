@@ -823,11 +823,11 @@ export class ProofJobSystemdResult extends S.Class<ProofJobSystemdResult>($I`Pro
  *
  * **Details**
  *
- * Phase invariants, enforced by the launcher's transitions rather than by the
- * schema: `submitted` carries no runner, outcome, or systemd result; `running`
- * carries a runner; `finished` carries an outcome (its systemd result arrives
- * with the finalizer); `terminated` carries a termination reason and, except
- * for `finalizer-missing`, a systemd result.
+ * The CLI writes `finished` through `markFinished`. Finalization is the only
+ * writer of `terminated` and the systemd stamp, including recovery when the
+ * finalizer is missing or launching fails. A job is settled when it is
+ * `terminated` or carries a stamp; wait, prune, and inbox publication use
+ * that definition. An unstamped `finished` record still awaits finalization.
  *
  * **Example** (A freshly submitted record)
  *
@@ -880,6 +880,26 @@ export class ProofJobRecord extends S.Class<ProofJobRecord>($I`ProofJobRecord`)(
       "One detached proof job: identity, phase, request, submitter, unit, runner facts, recorded outcome, systemd result, termination reason, and cancel request.",
   })
 ) {}
+
+/**
+ * Recognize a job whose finalization has settled.
+ *
+ * **Example** (Distinguish a verdict from finalization)
+ *
+ * ```ts
+ * import { isSettledProofJob } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ * console.log(isSettledProofJob({ phase: "finished", systemd: O.none() })) // false
+ * console.log(isSettledProofJob({ phase: "terminated", systemd: O.none() })) // true
+ * ```
+ *
+ * @param record - Phase and finalization stamp of the job.
+ * @returns Whether the job can be observed and retained as settled.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isSettledProofJob = (record: Pick<ProofJobRecord, "phase" | "systemd">): boolean =>
+  record.phase === "terminated" || O.isSome(record.systemd);
 
 /**
  * Decide the inbox severity of a job's row (ruling 37): `P2` only for a

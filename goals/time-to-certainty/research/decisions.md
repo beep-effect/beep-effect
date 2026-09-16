@@ -432,6 +432,8 @@ Finalize is idempotent. A `submitted`/`running` record whose unit is `not-found`
 pid is dead is reconciled to `terminated / finalizer-missing` by the next `job` read. Retention
 keeps the newest 50 terminal records and their logs; pruning runs at submit.
 
+Amendment, review round 1 (2026-09-15): The CLI writes `finished`; finalization alone writes `terminated` and the systemd stamp, including launch-failure and missing-finalizer recovery. Settled means terminated or stamped for wait, prune, and inbox publication. Each transition uses a per-record file mutex for consistency, not an admission lock; unstamped finished records with dead owners and missing units gain an unknown stamp.
+
 **Ruling 37 — the job reports through the inbox as one row, acknowledged by observation.** The
 finalizer appends exactly one `proof-job-finished` row per job (id derived from the job id):
 severity `P2` when the verdict is green (session-start surfacing only), `P1` when the verdict is
@@ -450,6 +452,8 @@ when `yeet job cancel` recorded the request before the stop; `unrecorded-failure
 `exit-code` with no terminal row. `YeetAttemptTerminationReason` gains `oom-killed`, `timeout`,
 `job-start-failed` and `cancelled`; the economics loader's reason set grows in step. M5 counts a
 job death as journaled only through this row, never through the job record alone.
+
+Amendment, review round 1 (2026-09-15): Journal coverage is every dead runner (`signal`, `oom-killed`, `timeout`, `cancelled`, `unrecorded-failure`); `job-start-failed` precedes a runner attempt and is a job-record reason with an inbox row, not an attempt-journal fact.
 
 **Ruling 39 — the job environment is an allowlist of names; values are never recorded.** The
 unit receives, by `--setenv`, exact names `PATH HOME USER LOGNAME SHELL LANG LC_ALL TMPDIR

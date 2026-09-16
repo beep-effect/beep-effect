@@ -214,3 +214,682 @@ The branch itself was published by a detached job (`yeet publish --start-pr-earl
 `beep-proof-<id>.service` with the forwarded `SSH_AUTH_SOCK`, and the full pre-push wave ran under
 the job unit as its admission run scope. The PR provenance footer records the agent as `unknown`
 because ruling 39 forwards no harness environment into the job.
+
+
+## Review round 1
+
+Local review fixes for PR #1143, 2026-09-15. This lane made no git writes and did not
+publish or reply to GitHub threads. Fable owns those actions and outside-sandbox proof.
+
+### Decisions and rejected alternatives
+
+- **I15 — PRRT_kwDOPbO_N86ixI15:** every existing-record transition now rereads and
+  writes under the existing journal mutex implementation, using a per-job `.lock`,
+  `pid:procStart:nonce` ownership, bounded retries, identity-fenced stale takeover,
+  and guaranteed release. Publication stays idempotent inside the mutex. This is a
+  per-record consistency mutex, not a scheduler or admission lock. Rejected a third
+  lock implementation and stale snapshot writes. Cancel releases the mutex before
+  `systemctl stop`, avoiding a stop/ExecStopPost deadlock. Barrier-driven repeated
+  cancel-first/finalize-first cases cover ordering, stamps, reasons, late updates,
+  cleanup, and dead-owner takeover.
+- **I5w — PRRT_kwDOPbO_N86ixI5w:** unstamped finished jobs with dead runners and
+  missing units reconcile through finalization, retain the verdict, gain an unknown
+  systemd stamp, publish once, and become observable by wait/ack. Both green and red
+  verdicts are tested. Rejected treating an unstamped finished phase as settled.
+- **I5e — PRRT_kwDOPbO_N86ixI5e:** documented CLI-finished versus finalizer-stamped
+  state; shared `isSettledProofJob` governs wait and prune. Added ruling 36 amendment.
+- **LRl / Yeh — PRRT_kwDOPbO_N86ixLRl / PRRT_kwDOPbO_N86ixYeh:** nonzero systemctl
+  results produce null JSON telemetry and an active-job text note, never error output
+  presented as telemetry. ConfigProvider PATH is forwarded at the command boundary
+  so the tests exercise actual handler subprocess routing.
+- **LRm — PRRT_kwDOPbO_N86ixLRm:** finalize requires matching job id and unit; when
+  both invocation ids exist they must match. Errors name the offending variable.
+  This same-user accident fence is explicitly not an authorization boundary.
+- **LRW — PRRT_kwDOPbO_N86ixLRW:** corrected the three journal claims and appended
+  ruling 38 amendment: dead runners have attempt facts; launch failure has a terminal
+  job record and inbox row without inventing an attempt.
+- **LRb / LRh — PRRT_kwDOPbO_N86ixLRb / PRRT_kwDOPbO_N86ixLRh:** appended the
+  installed Arbitrary API correction and added lint/type commands to the brief.
+  Ratified text was preserved.
+- Coverage tests additionally exercise list/status/wait/logs/cancel/finalize, detach
+  guards, observed acknowledgments, missing/busy journals, verdict bookkeeping, and
+  fail-fast proof execution with valid/invalid/absent RSS. Duration shorthand tests
+  exposed an existing `30s` normalization bug; normalization now uses Effect's actual
+  duration unit names. Compiled codecs and predicates live at module scope.
+- Rejected lowering coverage floors or editing the effect-vitest inventory. An
+  inherited Node-thread real-subprocess proof test stalls; its Bun version passes.
+  Deterministic spawner-backed proof cases provide Node coverage for the same seam.
+  Broad wildcard coverage selected unrelated retirement suites and was stopped;
+  targeted producer suites below give explicit, reproducible coverage. Both friction
+  points were recorded in OPPORTUNITIES when encountered.
+
+### Review round 1 — files
+
+- `AGENTS.md`
+- `goals/time-to-certainty/PLAN.md`
+- `goals/time-to-certainty/ops/manifest.json`
+- `goals/time-to-certainty/research/OPPORTUNITIES.md`
+- `goals/time-to-certainty/research/b5-brief.md`
+- `goals/time-to-certainty/research/b5-implementation.md`
+- `goals/time-to-certainty/research/decisions.md`
+- `packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts`
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJob.ts`
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJobLauncher.ts`
+- `packages/tooling/tool/cli/test/proof-job.test.ts`
+- `packages/tooling/tool/cli/test/yeet-command-wiring.test.ts`
+
+The untracked `research/b5-review-1-brief.md` was provided to this lane and was not edited.
+No forbidden configuration, manifest script, inventory, or journal implementation file
+was edited; the journal mutex helpers were already exported by AdmissionJournal.
+
+### Verification
+
+Commands run from the worktree root unless the coverage section specifies otherwise.
+Final successful reruns supersede corrected intermediate lint/type failures.
+
+| Exact command | Exit | Result |
+| --- | ---: | --- |
+| `bunx --bun vitest run packages/tooling/tool/cli/test/proof-job.test.ts packages/tooling/tool/cli/test/yeet-command-wiring.test.ts --pool=threads` | 0 | 90 tests pass; deterministic race barriers and full job command matrix. |
+| `bunx biome check --write packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJob.ts packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJobLauncher.ts packages/tooling/tool/cli/test/proof-job.test.ts packages/tooling/tool/cli/test/yeet-command-wiring.test.ts goals/time-to-certainty/ops/manifest.json` | 0 | Touched TypeScript and JSON formatted; the final test-only formatting pass also exits 0. |
+| `bunx oxlint --disable-nested-config packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJob.ts packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJobLauncher.ts packages/tooling/tool/cli/test/proof-job.test.ts packages/tooling/tool/cli/test/yeet-command-wiring.test.ts` | 0 | No beep errors; one inherited warning on the fixture UUID Effect.runSync. |
+| `bun run beep lint effect-vitest` | 0 | Zero introduced findings; inventory unchanged. |
+| `bun run beep lint schema-first` | 0 | No advisories. |
+| `bun run beep quality fallow audit --check --base origin/main` | 0 | No findings. |
+| `bun run beep quality fallow health --check --base origin/main` | 0 | No findings. |
+| `bun run beep lint jsdoc --package packages/tooling/tool/cli` | 0 | Pass. |
+| `bun run beep quality test-tsgo` | 1 | Blocked by sandbox: spawnSync node EPERM. |
+| `bunx turbo run check --filter=@beep/repo-cli` | 1 | Blocked by sandbox: spawnSync node EPERM. |
+| `bun run beep quality package-verify @beep/repo-cli` | 1 | Blocked at tsgo by sandbox; build passed, package docgen not reached. |
+| `bunx tsc -p packages/tooling/tool/cli/tsconfig.check.json --noEmit` | 0 | Supporting source check; does not replace canonical gates. |
+| `bunx tsc -p packages/tooling/tool/cli/test/tsconfig.json --rootDir packages/tooling/tool/cli --noEmit` | 0 | Supporting test check. |
+| `git diff --check` | 0 | Read-only whitespace check. |
+
+Canonical type gates are blocked by sandbox (`spawnSync node EPERM`); direct tsc
+checks are supporting evidence only. Package docgen, default-pool and live-systemd
+proof are not claimed by this review lane.
+
+### Coverage restoration
+
+All percentages are lines / statements / branches / functions. Coverage is V8 under
+Node with `--pool=threads`. The union below merges Istanbul hit counts from explicit
+producer suites, not averages; Yeet.command uses only its final-source run. No source
+coverage exclusions or baseline reductions were introduced.
+
+| File | Final | Floor | Result |
+| --- | --- | --- | --- |
+| `commands/Yeet/Yeet.command.ts` | 97.41 / 96.01 / 100 / 80 | 96.77 / 92.36 / 100 / 67.74 | restored |
+| `commands/Yeet/internal/Ack.ts` | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 | restored |
+| `commands/Yeet/internal/Handler.ts` | 49.39 / 47.59 / 37.5 / 39.26 | 49.39 / 47.5 / 37 / 38.27 | restored |
+| `commands/Yeet/internal/Inbox.ts` | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 | restored |
+| `commands/Yeet/internal/InboxPorcelain.ts` | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 | restored |
+| `internal/repo-run/AttemptTerminationJournal.ts` | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 | restored |
+
+The following reproducible Node invocations identify each completed coverage run from
+`packages/tooling/tool/cli`; every run exited 0. Reporter argument order is normalized
+here, and presentation-only `--reporter=verbose` is omitted. JSON reports were retained
+alongside LCOV where requested to merge counts.
+
+| Reproducible coverage invocation | Exit | Tests |
+| --- | ---: | ---: |
+| `CI=true bunx vitest run --pool=threads --testTimeout=30000 --coverage --coverage.include=src/commands/Yeet/Yeet.command.ts --coverage.include=src/commands/Yeet/internal/Ack.ts --coverage.include=src/commands/Yeet/internal/Inbox.ts --coverage.include=src/commands/Yeet/internal/InboxPorcelain.ts --coverage.include=src/commands/Yeet/internal/Handler.ts --coverage.include=src/internal/repo-run/AttemptTerminationJournal.ts --coverage.reporter=lcov --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-core-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/proof-job.test.ts test/yeet-command-wiring.test.ts test/yeet-ack.test.ts test/yeet-inbox.test.ts test/yeet-inbox-porcelain.test.ts test/yeet-inbox-view.test.ts test/yeet-artifact-writers.test.ts test/yeet-verdict-lane-repair.test.ts` | 0 | 181 |
+| `CI=true bunx vitest run --pool=threads --testTimeout=30000 --coverage --coverage.include=src/internal/repo-run/AttemptTerminationJournal.ts --coverage.reporter=lcov --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-journal-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/yeet.test.ts -t 'yeet attempt journal'` | 0 | 25 |
+| `CI=true bunx vitest run --pool=threads --testTimeout=30000 --coverage --coverage.include=src/internal/repo-run/AttemptTerminationJournal.ts --coverage.reporter=lcov --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-scheduler-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/quality-scheduler.test.ts -t 'keeps a protocol-disabled eviction sink pending'` | 0 | 1 |
+| `CI=true bunx vitest run --pool=threads --testTimeout=30000 --coverage --coverage.include=src/commands/Yeet/internal/Handler.ts --coverage.reporter=lcov --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-handler-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/yeet-monitor-phase-empty.test.ts test/yeet-monitor-check-registration.test.ts test/yeet-provenance-footer.test.ts test/flake-quarantine.test.ts` | 0 | 69 |
+| `CI=true bunx vitest run --pool=threads --testTimeout=30000 --coverage --coverage.include=src/commands/Yeet/internal/Handler.ts --coverage.reporter=lcov --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-verdict-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/yeet.test.ts -t 'verdict\|pre-push red\|wrapper lane facts'` | 0 | 6 |
+| `CI=true bunx vitest run --pool=threads --testTimeout=30000 --coverage --coverage.include=src/commands/Yeet/Yeet.command.ts --coverage.reporter=lcov --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-command-final-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/proof-job.test.ts test/yeet-command-wiring.test.ts` | 0 | 86 |
+| `CI=true bunx vitest run --pool=threads --testTimeout=10000 --coverage --coverage.include=src/commands/Yeet/internal/Handler.ts --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-coordinator-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/yeet-review-fixes.test.ts -t 'installs a persistent\|allows two same-origin\|serializes same-origin'` | 0 | 3 |
+| `CI=true bunx vitest run --pool=threads --testTimeout=30000 --coverage --coverage.include=src/commands/Yeet/internal/Handler.ts --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-proof-phase-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/proof-job.test.ts -t 'proof phase record integration'` | 0 | 3 |
+| `CI=true bunx vitest run --pool=threads --testTimeout=30000 --coverage --coverage.include=src/commands/Yeet/internal/Handler.ts --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-handler-plan-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/yeet.test.ts -t 'shares ProofFact\|journals every terminal\|carries immutable attempt\|builds \|plans \|keeps pushed false\|requires a publish message\|rejects push-only reuse'` | 0 | 29 |
+| `CI=true bunx vitest run --pool=threads --testTimeout=30000 --coverage --coverage.include=src/commands/Yeet/internal/Handler.ts --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-handler-refusal-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/yeet.test.ts -t 'refuses publish on main\|requires explicit --pr'` | 0 | 2 |
+| `CI=true bunx vitest run --pool=threads --testTimeout=30000 --coverage --coverage.include=src/commands/Yeet/internal/Handler.ts --coverage.reporter=json-summary --coverage.reporter=json --coverage.reportsDirectory=/tmp/b5-bookkeeping-cov --coverage.thresholds.lines=0 --coverage.thresholds.functions=0 --coverage.thresholds.branches=0 --coverage.thresholds.statements=0 test/proof-job.test.ts -t 'proof verdict bookkeeping'` | 0 | 4 |
+
+Aggregation command (root, exit 0):
+
+```sh
+node /tmp/b5-merge-coverage.cjs /tmp/b5-core-cov /tmp/b5-journal-cov /tmp/b5-scheduler-cov /tmp/b5-handler-cov /tmp/b5-verdict-cov /tmp/b5-command-final-cov /tmp/b5-coordinator-cov /tmp/b5-proof-phase-cov /tmp/b5-handler-plan-cov /tmp/b5-handler-refusal-cov /tmp/b5-bookkeeping-cov
+```
+
+Reproducible aggregator body; output `/tmp/b5-cov-final/{lcov.info,coverage-summary.json,coverage-final.json}`:
+
+```js
+const fs = require('node:fs');
+const coverage = require(process.cwd() + '/node_modules/istanbul-lib-coverage');
+const report = require(process.cwd() + '/node_modules/istanbul-lib-report');
+const reports = require(process.cwd() + '/node_modules/istanbul-reports');
+const map = coverage.createCoverageMap({});
+for (const directory of process.argv.slice(2)) { const input = JSON.parse(fs.readFileSync(directory + '/coverage-final.json', 'utf8')); for (const key of Object.keys(input)) if (key.endsWith('/Yeet.command.ts') && directory !== '/tmp/b5-command-final-cov') delete input[key]; map.merge(input); }
+const context = report.createContext({dir: '/tmp/b5-cov-final', coverageMap: map});
+for (const name of ['lcovonly', 'json-summary', 'json']) reports.create(name).execute(context);
+for (const file of map.files()) {
+  const summary = map.fileCoverageFor(file).toSummary().toJSON();
+  console.log(file.slice(file.indexOf('/src/') + 5), ...['lines','statements','branches','functions'].map(k => summary[k].pct));
+}
+```
+
+Remaining zero-hit LCOV entries are below. Ack, Inbox, InboxPorcelain and
+AttemptTerminationJournal have none. Handler retains inherited uncovered orchestration
+paths while meeting every floor; command branches are all covered.
+
+<details>
+<summary>packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts — FNF:50, FNH:40, LF:232, LH:226, BRF:63, BRH:63</summary>
+
+```text
+FNDA:0,(anonymous_36)
+FNDA:0,(anonymous_37)
+FNDA:0,(anonymous_38)
+FNDA:0,(anonymous_40)
+FNDA:0,(anonymous_42)
+FNDA:0,(anonymous_43)
+FNDA:0,(anonymous_44)
+FNDA:0,(anonymous_46)
+FNDA:0,(anonymous_47)
+FNDA:0,(anonymous_48)
+DA:958,0
+DA:960,0
+DA:963,0
+DA:985,0
+DA:997,0
+DA:1045,0
+```
+
+</details>
+
+<details>
+<summary>packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts — FNF:163, FNH:64, LF:498, LH:246, BRF:200, BRH:75</summary>
+
+```text
+FNDA:0,(anonymous_7)
+FNDA:0,(anonymous_11)
+FNDA:0,(anonymous_14)
+FNDA:0,(anonymous_17)
+FNDA:0,(anonymous_18)
+FNDA:0,(anonymous_19)
+FNDA:0,(anonymous_24)
+FNDA:0,(anonymous_29)
+FNDA:0,(anonymous_30)
+FNDA:0,(anonymous_33)
+FNDA:0,(anonymous_34)
+FNDA:0,(anonymous_35)
+FNDA:0,(anonymous_36)
+FNDA:0,(anonymous_37)
+FNDA:0,(anonymous_38)
+FNDA:0,(anonymous_39)
+FNDA:0,(anonymous_40)
+FNDA:0,(anonymous_41)
+FNDA:0,(anonymous_44)
+FNDA:0,(anonymous_47)
+FNDA:0,(anonymous_48)
+FNDA:0,(anonymous_49)
+FNDA:0,(anonymous_50)
+FNDA:0,(anonymous_51)
+FNDA:0,(anonymous_52)
+FNDA:0,(anonymous_53)
+FNDA:0,(anonymous_54)
+FNDA:0,(anonymous_55)
+FNDA:0,(anonymous_56)
+FNDA:0,(anonymous_57)
+FNDA:0,(anonymous_58)
+FNDA:0,(anonymous_59)
+FNDA:0,(anonymous_60)
+FNDA:0,(anonymous_61)
+FNDA:0,(anonymous_62)
+FNDA:0,(anonymous_63)
+FNDA:0,(anonymous_64)
+FNDA:0,(anonymous_65)
+FNDA:0,(anonymous_66)
+FNDA:0,(anonymous_67)
+FNDA:0,(anonymous_68)
+FNDA:0,(anonymous_69)
+FNDA:0,(anonymous_70)
+FNDA:0,(anonymous_71)
+FNDA:0,(anonymous_72)
+FNDA:0,(anonymous_73)
+FNDA:0,(anonymous_74)
+FNDA:0,(anonymous_75)
+FNDA:0,(anonymous_76)
+FNDA:0,(anonymous_77)
+FNDA:0,(anonymous_85)
+FNDA:0,(anonymous_88)
+FNDA:0,(anonymous_89)
+FNDA:0,(anonymous_90)
+FNDA:0,(anonymous_92)
+FNDA:0,(anonymous_99)
+FNDA:0,(anonymous_100)
+FNDA:0,(anonymous_105)
+FNDA:0,(anonymous_106)
+FNDA:0,(anonymous_108)
+FNDA:0,(anonymous_110)
+FNDA:0,(anonymous_114)
+FNDA:0,(anonymous_118)
+FNDA:0,(anonymous_122)
+FNDA:0,(anonymous_125)
+FNDA:0,(anonymous_126)
+FNDA:0,(anonymous_127)
+FNDA:0,(anonymous_128)
+FNDA:0,(anonymous_129)
+FNDA:0,(anonymous_130)
+FNDA:0,(anonymous_131)
+FNDA:0,(anonymous_132)
+FNDA:0,(anonymous_133)
+FNDA:0,(anonymous_134)
+FNDA:0,(anonymous_135)
+FNDA:0,(anonymous_136)
+FNDA:0,(anonymous_137)
+FNDA:0,(anonymous_138)
+FNDA:0,(anonymous_139)
+FNDA:0,(anonymous_140)
+FNDA:0,(anonymous_141)
+FNDA:0,(anonymous_142)
+FNDA:0,(anonymous_143)
+FNDA:0,(anonymous_144)
+FNDA:0,(anonymous_145)
+FNDA:0,(anonymous_146)
+FNDA:0,(anonymous_147)
+FNDA:0,(anonymous_148)
+FNDA:0,(anonymous_149)
+FNDA:0,(anonymous_150)
+FNDA:0,(anonymous_151)
+FNDA:0,(anonymous_152)
+FNDA:0,(anonymous_153)
+FNDA:0,(anonymous_154)
+FNDA:0,(anonymous_155)
+FNDA:0,(anonymous_156)
+FNDA:0,(anonymous_157)
+FNDA:0,(anonymous_158)
+FNDA:0,(anonymous_159)
+DA:180,0
+DA:181,0
+DA:270,0
+DA:271,0
+DA:272,0
+DA:306,0
+DA:307,0
+DA:309,0
+DA:313,0
+DA:383,0
+DA:394,0
+DA:397,0
+DA:400,0
+DA:401,0
+DA:402,0
+DA:463,0
+DA:515,0
+DA:516,0
+DA:517,0
+DA:527,0
+DA:528,0
+DA:539,0
+DA:549,0
+DA:610,0
+DA:611,0
+DA:612,0
+DA:614,0
+DA:615,0
+DA:628,0
+DA:629,0
+DA:630,0
+DA:640,0
+DA:641,0
+DA:642,0
+DA:644,0
+DA:652,0
+DA:655,0
+DA:656,0
+DA:692,0
+DA:693,0
+DA:717,0
+DA:718,0
+DA:719,0
+DA:720,0
+DA:722,0
+DA:746,0
+DA:780,0
+DA:781,0
+DA:784,0
+DA:786,0
+DA:787,0
+DA:788,0
+DA:789,0
+DA:790,0
+DA:791,0
+DA:792,0
+DA:793,0
+DA:794,0
+DA:797,0
+DA:813,0
+DA:814,0
+DA:815,0
+DA:817,0
+DA:818,0
+DA:831,0
+DA:834,0
+DA:835,0
+DA:841,0
+DA:842,0
+DA:845,0
+DA:849,0
+DA:850,0
+DA:851,0
+DA:858,0
+DA:859,0
+DA:863,0
+DA:869,0
+DA:874,0
+DA:888,0
+DA:892,0
+DA:893,0
+DA:899,0
+DA:900,0
+DA:902,0
+DA:903,0
+DA:904,0
+DA:911,0
+DA:913,0
+DA:919,0
+DA:920,0
+DA:923,0
+DA:927,0
+DA:928,0
+DA:929,0
+DA:931,0
+DA:932,0
+DA:934,0
+DA:954,0
+DA:955,0
+DA:957,0
+DA:958,0
+DA:959,0
+DA:969,0
+DA:992,0
+DA:995,0
+DA:996,0
+DA:1005,0
+DA:1006,0
+DA:1009,0
+DA:1010,0
+DA:1012,0
+DA:1026,0
+DA:1027,0
+DA:1028,0
+DA:1029,0
+DA:1030,0
+DA:1032,0
+DA:1033,0
+DA:1042,0
+DA:1043,0
+DA:1044,0
+DA:1057,0
+DA:1058,0
+DA:1060,0
+DA:1061,0
+DA:1062,0
+DA:1063,0
+DA:1074,0
+DA:1075,0
+DA:1076,0
+DA:1077,0
+DA:1081,0
+DA:1093,0
+DA:1094,0
+DA:1106,0
+DA:1107,0
+DA:1108,0
+DA:1110,0
+DA:1188,0
+DA:1194,0
+DA:1219,0
+DA:1222,0
+DA:1223,0
+DA:1224,0
+DA:1253,0
+DA:1254,0
+DA:1255,0
+DA:1256,0
+DA:1258,0
+DA:1260,0
+DA:1301,0
+DA:1314,0
+DA:1315,0
+DA:1316,0
+DA:1317,0
+DA:1320,0
+DA:1321,0
+DA:1324,0
+DA:1325,0
+DA:1326,0
+DA:1329,0
+DA:1330,0
+DA:1332,0
+DA:1397,0
+DA:1398,0
+DA:1399,0
+DA:1400,0
+DA:1402,0
+DA:1445,0
+DA:1454,0
+DA:1458,0
+DA:1461,0
+DA:1473,0
+DA:1482,0
+DA:1515,0
+DA:1617,0
+DA:1687,0
+DA:1688,0
+DA:1689,0
+DA:1690,0
+DA:1691,0
+DA:1712,0
+DA:1733,0
+DA:1734,0
+DA:1736,0
+DA:1737,0
+DA:1738,0
+DA:1741,0
+DA:1742,0
+DA:1747,0
+DA:1748,0
+DA:1749,0
+DA:1750,0
+DA:1761,0
+DA:1762,0
+DA:1763,0
+DA:1764,0
+DA:1765,0
+DA:1772,0
+DA:1773,0
+DA:1774,0
+DA:1775,0
+DA:1776,0
+DA:1777,0
+DA:1778,0
+DA:1780,0
+DA:1781,0
+DA:1782,0
+DA:1783,0
+DA:1786,0
+DA:1787,0
+DA:1788,0
+DA:1791,0
+DA:1792,0
+DA:1793,0
+DA:1795,0
+DA:1808,0
+DA:1809,0
+DA:1810,0
+DA:1811,0
+DA:1816,0
+DA:1824,0
+DA:1826,0
+DA:1839,0
+DA:1842,0
+DA:1848,0
+DA:1861,0
+DA:1865,0
+DA:1899,0
+DA:1900,0
+DA:1901,0
+DA:1902,0
+DA:1903,0
+DA:1904,0
+DA:1906,0
+DA:1908,0
+DA:1925,0
+DA:1926,0
+DA:1927,0
+DA:1930,0
+DA:1933,0
+DA:1934,0
+DA:1935,0
+DA:1938,0
+DA:1939,0
+DA:1957,0
+DA:1958,0
+DA:2003,0
+DA:2027,0
+DA:2028,0
+DA:2029,0
+DA:2032,0
+BRDA:305,3,0,0
+BRDA:306,4,0,0
+BRDA:306,4,1,0
+BRDA:312,5,0,0
+BRDA:373,7,1,0
+BRDA:376,8,1,0
+BRDA:377,9,1,0
+BRDA:418,10,0,0
+BRDA:441,12,0,0
+BRDA:495,15,0,0
+BRDA:537,16,0,0
+BRDA:611,17,0,0
+BRDA:611,17,1,0
+BRDA:629,18,0,0
+BRDA:629,18,1,0
+BRDA:641,19,0,0
+BRDA:641,19,1,0
+BRDA:661,20,2,0
+BRDA:661,20,3,0
+BRDA:672,21,0,0
+BRDA:673,22,0,0
+BRDA:692,23,0,0
+BRDA:692,23,1,0
+BRDA:694,24,0,0
+BRDA:694,24,1,0
+BRDA:712,25,0,0
+BRDA:715,26,0,0
+BRDA:745,27,0,0
+BRDA:780,30,0,0
+BRDA:780,30,1,0
+BRDA:788,31,0,0
+BRDA:788,31,1,0
+BRDA:789,32,0,0
+BRDA:789,32,1,0
+BRDA:793,33,0,0
+BRDA:793,33,1,0
+BRDA:813,34,0,0
+BRDA:813,34,1,0
+BRDA:845,35,0,0
+BRDA:845,35,1,0
+BRDA:845,35,2,0
+BRDA:850,36,0,0
+BRDA:850,36,1,0
+BRDA:899,37,0,0
+BRDA:899,37,1,0
+BRDA:903,38,0,0
+BRDA:903,38,1,0
+BRDA:923,39,0,0
+BRDA:923,39,1,0
+BRDA:923,39,2,0
+BRDA:928,40,0,0
+BRDA:928,40,1,0
+BRDA:931,41,0,0
+BRDA:931,41,1,0
+BRDA:955,42,0,0
+BRDA:955,42,1,0
+BRDA:969,43,0,0
+BRDA:969,43,1,0
+BRDA:1005,44,0,0
+BRDA:1005,44,1,0
+BRDA:1013,45,0,0
+BRDA:1013,45,1,0
+BRDA:1029,46,0,0
+BRDA:1029,46,1,0
+BRDA:1032,47,0,0
+BRDA:1032,47,1,0
+BRDA:1081,48,0,0
+BRDA:1081,48,1,0
+BRDA:1083,49,0,0
+BRDA:1083,49,1,0
+BRDA:1106,50,0,0
+BRDA:1106,50,1,0
+BRDA:1107,51,0,0
+BRDA:1107,51,1,0
+BRDA:1152,54,0,0
+BRDA:1187,56,0,0
+BRDA:1221,57,0,0
+BRDA:1255,58,0,0
+BRDA:1255,58,1,0
+BRDA:1316,59,0,0
+BRDA:1316,59,1,0
+BRDA:1320,60,0,0
+BRDA:1320,60,1,0
+BRDA:1459,62,0,0
+BRDA:1467,63,1,0
+BRDA:1469,64,0,0
+BRDA:1472,65,0,0
+BRDA:1504,67,0,0
+BRDA:1530,69,0,0
+BRDA:1712,77,0,0
+BRDA:1712,77,1,0
+BRDA:1712,78,0,0
+BRDA:1712,78,1,0
+BRDA:1716,79,0,0
+BRDA:1716,79,1,0
+BRDA:1727,80,0,0
+BRDA:1733,81,0,0
+BRDA:1733,81,1,0
+BRDA:1766,82,0,0
+BRDA:1766,82,1,0
+BRDA:1782,83,0,0
+BRDA:1782,83,1,0
+BRDA:1787,84,0,0
+BRDA:1787,84,1,0
+BRDA:1816,85,0,0
+BRDA:1816,85,1,0
+BRDA:1816,86,0,0
+BRDA:1816,86,1,0
+BRDA:1817,87,0,0
+BRDA:1817,87,1,0
+BRDA:1820,88,0,0
+BRDA:1820,88,1,0
+BRDA:1820,89,0,0
+BRDA:1820,89,1,0
+BRDA:1826,90,0,0
+BRDA:1826,90,1,0
+BRDA:1848,91,0,0
+BRDA:1848,91,1,0
+BRDA:1903,92,0,0
+BRDA:1903,92,1,0
+BRDA:1956,93,0,0
+BRDA:2002,96,0,0
+BRDA:2023,97,1,0
+BRDA:2027,98,0,0
+BRDA:2027,98,1,0
+```
+
+</details>
+
+Earlier broad coverage attempts were interrupted (exit 130), rather than counted as
+passing proof. The isolated inherited Node proof-step probe was likewise interrupted;
+`bunx --bun vitest run packages/tooling/tool/cli/test/yeet-review-fixes.test.ts --pool=threads --testTimeout=10000 --reporter=verbose -t 'stops the proof phase'`
+exited 0 (one test). Narrow coverage producers above all completed.
+
+Inbox attribution commands (all exit 0):
+
+| Exact command | Exit |
+| --- | ---: |
+| `bun run beep yeet inbox ack proof-job-cf6c8083-11e8-439a-b19a-ed0c1482db7e --observed` | 0 |
+| `bun run beep yeet inbox ack local-shard-ffe20774941b --thread-url https://github.com/beep-effect/beep-effect/pull/1143` | 0 |
+| `bun run beep yeet inbox ack local-shard-a5a4a4612b50 --environment-only --reason 'Package audit failed at the tsgo shim because the sandbox denied spawnSync node with EPERM; canonical type verification must run outside this sandbox.'` | 0 |
+
+The final inbox inspection showed zero unacknowledged rows. No remote thread reply is
+claimed by the local thread-url acknowledgment.

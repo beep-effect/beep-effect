@@ -194,3 +194,12 @@ Never edit `.claude/settings.json`, `turbo.json`, `package.json` scripts, or any
 other than the three named. Do not add `as const` to inline `LiteralKit([...])` arrays; JSDoc on
 every export uses `**Example** (Title)` with an observable result; no plain `Set`/`Map`; no
 `node:http`; Effect helpers over native helpers; `Effect.fn`/`Effect.fnUntraced` for generators.
+
+## Amendments (2026-09-15, review round 1)
+
+- Property tests use `Arbitrary.schema` / `Arbitrary.sampleEffect` from
+  `effect/unstable/arbitrary` with `it.effect.prop`. The installed Effect exports
+  neither `FastCheck` from `effect/testing` nor `Schema.toArbitrary`.
+- The verification list also requires `bun run beep lint effect-vitest`,
+  `bunx oxlint --disable-nested-config <touched files>`, and
+  `bun run beep quality test-tsgo`.
