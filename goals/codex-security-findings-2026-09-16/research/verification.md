@@ -46,6 +46,7 @@ docgen already passed during repair and package docgen passed independently.
   longer exist on main.
 - Attempt 2 (06:48Z): cheap gates failed only on `fallow:health`, one
   inherited cognitive finding in `proof-job.test.ts` (from #1143; main's own
-  Fallow check is red on the same tree). Repaired by lifting the identity-keyed
-  conditionals into a case table; the file's 62 tests pass and the health gate
-  exits 0. Effect Vitest ratchet unchanged.
+  Fallow check is red on the same tree). A local table-driven repair passed the
+  file's 62 tests and the health gate, then main landed the same fix as #1150,
+  so the branch merged main again and adopted #1150's version instead.
+  Effect Vitest ratchet unchanged.

@@ -990,17 +990,35 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
   }
 );
 
-const verdictBookkeepingCases = {
-  valid: { verdictOutcome: "success", jobId: (recordJobId: string) => recordJobId, finishes: true },
-  failed: { verdictOutcome: "failure", jobId: (recordJobId: string) => recordJobId, finishes: true },
-  invalid: { verdictOutcome: "success", jobId: () => "bad-id", finishes: false },
-  "missing-record": { verdictOutcome: "success", jobId: () => attemptId, finishes: false },
-} as const;
+type BookkeepingCase = {
+  readonly identity: string;
+  readonly outcome: "success" | "failure";
+  readonly jobId: (recordJobId: UUID) => string;
+  readonly recorded: boolean;
+};
+const bookkeepingCases: ReadonlyArray<BookkeepingCase> = [
+  { identity: "valid", outcome: "success", jobId: (recordJobId) => recordJobId, recorded: true },
+  { identity: "failed", outcome: "failure", jobId: (recordJobId) => recordJobId, recorded: true },
+  { identity: "invalid", outcome: "success", jobId: () => "bad-id", recorded: false },
+  { identity: "missing-record", outcome: "success", jobId: () => attemptId, recorded: false },
+];
+const expectBookkeeping = Effect.fnUntraced(function* (
+  launcher: Job.ProofJobLauncherShape,
+  jobId: UUID,
+  testCase: BookkeepingCase
+) {
+  if (!testCase.recorded) {
+    expect(A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n")).toContain("job bookkeeping failed");
+    return;
+  }
+  const finished = O.getOrThrow(yield* launcher.read(jobId));
+  expect(finished.phase).toBe("finished");
+  expect(O.getOrThrow(finished.outcome).verdictOutcome).toBe(testCase.outcome);
+});
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof verdict bookkeeping", (it) => {
-  for (const identity of ["valid", "failed", "invalid", "missing-record"] as const) {
-    const bookkeeping = verdictBookkeepingCases[identity];
-    it.effect(`records the verdict despite ${identity} job bookkeeping`, () =>
+  for (const testCase of bookkeepingCases) {
+    it.effect(`records the verdict despite ${testCase.identity} job bookkeeping`, () =>
       fixture(
         Effect.fnUntraced(function* (root) {
           const launcher = yield* ProofJobLauncher.make(root);
@@ -1055,28 +1073,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof verdict bookkeepi
             0,
             recorder,
             extras,
-            bookkeeping.verdictOutcome,
+            testCase.outcome,
             "verified",
             O.none()
           ).pipe(
             Effect.provideService(
               ConfigProvider.ConfigProvider,
-              ConfigProvider.fromUnknown({
-                PATH: root,
-                BEEP_YEET_JOB_ID: bookkeeping.jobId(record.jobId),
-              })
+              ConfigProvider.fromUnknown({ PATH: root, BEEP_YEET_JOB_ID: testCase.jobId(record.jobId) })
             )
           );
           const fs = yield* FileSystem.FileSystem;
           expect(yield* fs.exists(yield* Job.runArtifactPathForContext(context, "verdict.json"))).toBe(true);
-          if (bookkeeping.finishes) {
-            const finished = O.getOrThrow(yield* launcher.read(record.jobId));
-            expect(finished.phase).toBe("finished");
-            expect(O.getOrThrow(finished.outcome).verdictOutcome).toBe(bookkeeping.verdictOutcome);
-          } else
-            expect(A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n")).toContain(
-              "job bookkeeping failed"
-            );
+          yield* expectBookkeeping(launcher, record.jobId, testCase);
         })
       )
     );

@@ -66,5 +66,8 @@ The second proof failed `fallow:health` on a test loop body that arrived
 through the same merge (`proof-job.test.ts`, cognitive 10 against the ceiling
 of 8). Main's own `Fallow Advisory Envelopes` check is red on the same tree, so
 the finding is inherited. It was repaired here with a table-driven case list
-rather than a baseline refresh; the remediation branch did not touch that file
-before the merge.
+rather than a baseline refresh, and main then landed the same table-driven fix
+in #1150 while the proof queued. The branch merged main again and took #1150's
+version, so the file carries no security-branch edits. Two merges in one hour
+for one PR is the friction: a merge-preview that reruns after admission, or a
+stale-base check before the proof rather than after it, would have saved both.
