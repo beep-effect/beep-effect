@@ -27,6 +27,7 @@ notifier_rev="${7:-}"
 origin_cwd="${8:-}"
 open_uri="${9:-}"
 origin_terminal="${10:-}"
+action_listener_pid=""
 # Do not propagate a local navigation override to transport subprocesses.
 unset BEEP_SEQUENCE_BREAK_OPEN_URI
 
@@ -403,8 +404,10 @@ desktop_origin() {
   else
     common=""
   fi
+  common="${common%/}"
   case "${common}" in
     */.git) clone="${common%/.git}" ;;
+    *.git) clone="${common}" ;;
     *) clone="${root}" ;;
   esac
   label="Clone: ${clone##*/}"
@@ -436,7 +439,7 @@ deliver_action_notification() {
   (
     XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \
       timeout 3600s stdbuf -oL notify-send --app-name="beep agent" --urgency="${urgency}" --expire-time=0 \
-      --print-id --action="default=Open task" "${title}" "${body}" 8>/dev/null |
+      --print-id --action="default=Open task" "${title}" "${body}" 7>/dev/null |
       {
         local notification_id action
         if ! IFS= read -r notification_id; then
@@ -447,12 +450,14 @@ deliver_action_notification() {
           "" | *[!0-9]*) append_delivery desktop "${stage}" failed command-failed "${measured_age}"; exit 0 ;;
         esac
         append_delivery desktop "${stage}" sent "" "${measured_age}"
-        if IFS= read -r action && [ "${action}" = "default" ] && [ ! -e "${disarm_sentinel}" ]; then
+        if IFS= read -r action && [ "${action}" = "default" ] && [ ! -e "${disarm_sentinel}" ] &&
+          [ "$(bracket_status)" = "open" ]; then
           XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \
             timeout 5s xdg-open "${open_uri}" </dev/null >/dev/null 2>&1 || true
         fi
       }
   ) </dev/null >/dev/null 2>&1 &
+  action_listener_pid=$!
 }
 
 deliver_desktop() {
@@ -485,15 +490,15 @@ deliver_desktop() {
   body="${body}$(notification_body "${stage}" "${measured_age}")"
 
   # Ghostty binds its native OSC notification to the emitting surface, including
-  # the tab/split click action. FD 8 was opened before the hook detached. Never
+  # the tab/split click action. FD 7 was opened before the hook detached. Never
   # write terminal escapes to hook stdout or reopen a potentially recycled PTY.
-  if [ -z "${open_uri}" ] && [ "${origin_terminal}" = "ghostty" ] && [ -t 8 ]; then
+  if [ -z "${open_uri}" ] && [ "${origin_terminal}" = "ghostty" ] && [ -t 7 ]; then
     local osc_body
     # Ghostty uses the body as its notification ID. Distinguish simultaneous
     # sessions in the same checkout so one cannot replace the other's action.
     osc_body="$(jq -nr --arg body "${body} [${session_id:0:12}]" '$body | gsub("[\u0000-\u001f\u007f-\u009f;]"; " ")')"
     if [ ! -e "${disarm_sentinel}" ] &&
-      timeout 2s bash -c 'printf "\\033]777;notify;%s;%s\\033\\\\" "$1" "$2" >&8' bash "${title}" "${osc_body}"; then
+      timeout 2s bash -c 'printf "\\033]777;notify;%s;%s\\033\\\\" "$1" "$2" >&7' bash "${title}" "${osc_body}"; then
       append_delivery desktop "${stage}" sent "" "${measured_age}"
       return 0
     fi
@@ -531,6 +536,12 @@ deliver_desktop() {
     return 0
   fi
   if [ -n "${open_uri}" ] && command -v xdg-open >/dev/null 2>&1 && command -v stdbuf >/dev/null 2>&1; then
+    # The existing persistent notification remains actionable. Damping later
+    # desktop stages keeps at most one listener per wait; ntfy still escalates.
+    if [ -n "${action_listener_pid}" ] && kill -0 "${action_listener_pid}" 2>/dev/null; then
+      append_delivery desktop "${stage}" skipped storm-damped "${measured_age}"
+      return 0
+    fi
     deliver_action_notification "${stage}" "${measured_age}" "${urgency}" "${title}" "${body}"
     return 0
   fi

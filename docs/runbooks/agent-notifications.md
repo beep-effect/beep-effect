@@ -38,14 +38,18 @@ and terminal delimiters are removed, and notification markup is escaped.
   origin labels when hosted elsewhere.
 
 An explicit `BEEP_SEQUENCE_BREAK_OPEN_URI` also accepts `codex://threads/<UUID>`
-for Codex. Routes must match the agent; arbitrary URLs, extra query parameters,
+for Codex, where the hook also requires that UUID to equal the notifying session.
+Routes must match the agent; arbitrary URLs, extra query parameters,
 and “last session” destinations are rejected. This override is for a launcher
 that already knows the session, not a command to evaluate. An explicit app route
 takes precedence over Ghostty terminal notification delivery.
 
 The desktop action listener runs separately from the permission hook and reminder
-worker, and expires after one hour. Dismissing a notification never opens an app.
-The listener honors the hook-pulse disarm sentinel before opening a destination.
+worker, and expires after one hour. Each wait has at most one live action listener:
+while its persistent notification remains actionable, later desktop reminder stages
+are damped. Phone escalation continues normally. Dismissing a notification never opens an app.
+The listener checks that the wait is still open and honors the hook-pulse disarm
+sentinel before opening a destination.
 It requires `notify-send`, `stdbuf`, and `xdg-open`; without the action helpers,
 delivery falls back to a labeled notification. Desktop focus policy can still
 affect whether an application comes to the foreground.

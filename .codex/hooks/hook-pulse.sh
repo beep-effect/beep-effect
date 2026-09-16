@@ -387,11 +387,14 @@ if [ "${notifier_rev}" != "log-only-0" ]; then
       # ledgers. Preserve the controlling terminal before setsid detaches us.
       notification_terminal=""
       if [ "${TERM_PROGRAM:-}" = "ghostty" ]; then
-        if { exec 8>/dev/tty; } 2>/dev/null && [ -t 8 ]; then
+        if { exec 7>/dev/tty; } 2>/dev/null && [ -t 7 ]; then
           notification_terminal="ghostty"
         fi
       fi
       notification_uri="${BEEP_SEQUENCE_BREAK_OPEN_URI:-}"
+      if [ "${notification_uri}" != "codex://threads/${raw_session_id}" ]; then
+        notification_uri=""
+      fi
       if [ -z "${notification_uri}" ] &&
         [ "${CODEX_INTERNAL_ORIGINATOR_OVERRIDE:-}" = "Codex Desktop" ] &&
         [ -n "${CODEX_THREAD_ID:-}" ] && [ "${CODEX_THREAD_ID}" = "${raw_session_id}" ]; then
