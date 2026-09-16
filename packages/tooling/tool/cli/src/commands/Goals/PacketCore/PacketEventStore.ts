@@ -12,7 +12,10 @@
  * of the decoded event, not the raw file bytes. Reformatting a file does not
  * change its identity. Unknown input keys are discarded by the event schema
  * before identity is computed, so untrusted extension data cannot drive the
- * recursive canonical encoder.
+ * recursive canonical encoder. Appends serialize across processes under an
+ * owned-generation lock in `ops/`, re-read the tip while holding that lock,
+ * and publish the complete event through a synced staging file and atomic
+ * rename. Interrupted staging files are never treated as committed events.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -20,9 +23,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str, thunkFalse } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
+import { Context, Effect, FileSystem, Layer, Match, Order, Path } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { assertJournalFileLockOwned, withJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
+import { publishJournalTextAtomically } from "../../../internal/repo-run/JournalFile.ts";
 import { PacketCasConflictError, PacketStreamError } from "./PacketCore.errors.ts";
 import { PacketChainIssue, PacketEvent, PacketRoot, PacketSlug, StoredPacketEvent } from "./PacketCore.schemas.ts";
 import {
@@ -32,6 +37,7 @@ import {
   renderPacketEventFile,
 } from "./PacketDigest.ts";
 import { foldPacketEvents, upcastPacketEventJson } from "./PacketFold.ts";
+import type { QualitySchedulerError } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import type { PacketDerivedState } from "./PacketCore.schemas.ts";
 import type { PacketEventFileNameParts } from "./PacketDigest.ts";
 
@@ -83,6 +89,119 @@ export class PacketStreamLocator extends S.Class<PacketStreamLocator>($I`PacketS
   })
 ) {}
 
+// Called under the packet lock before any mutation can interpret an absent
+// canonical directory as a fresh stream. Recovery never guesses among backups.
+const refuseInterruptedForkReplacement = Effect.fn("PacketEventStore.refuseInterruptedForkReplacement")(function* (
+  locator: PacketStreamLocator
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const entries = yield* fs.readDirectory(locator.packetPath);
+  const recoveryEntries = A.filter(entries, Str.startsWith(".tmp-packet-repair-"));
+  if (A.isReadonlyArrayEmpty(recoveryEntries)) return;
+  if (yield* fs.exists(path.join(locator.packetPath, ...PACKET_EVENTS_SEGMENTS))) return;
+  for (const entry of recoveryEntries) {
+    const recoveryRoot = path.join(locator.packetPath, entry);
+    for (const packetPath of [
+      recoveryRoot,
+      path.join(recoveryRoot, "failed-packet"),
+      path.join(recoveryRoot, "staged-packet"),
+    ]) {
+      if (yield* fs.exists(path.join(packetPath, ...PACKET_EVENTS_SEGMENTS))) {
+        return yield* PacketStreamError.new(
+          locator.packet,
+          `Interrupted fork replacement: canonical ops/events is absent and recovery bytes remain at "${recoveryRoot}". Restore the reviewed stream before retrying; mutation refused.`
+        );
+      }
+    }
+  }
+});
+
+/**
+ * Serialize a packet mutation under its process-owned event-stream lock.
+ *
+ * **Details**
+ *
+ * Appends and directory replacement must share this boundary. The callback
+ * receives an ownership check to run immediately before publishing bytes.
+ * Dead owners are recoverable; a live owner produces a typed retry refusal.
+ *
+ * **Example** (Check ownership before a locked operation)
+ *
+ * ```ts
+ * import { PacketStreamLocator, withPacketEventLock } from "@beep/repo-cli/test/Goals"
+ * import { Effect } from "effect"
+ *
+ * const locator = PacketStreamLocator.make({ packet: "demo", root: "goals", packetPath: "goals/demo" })
+ * const program = withPacketEventLock(locator, (assertOwned) =>
+ *   assertOwned.pipe(Effect.as("still owned"))
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param locator - Packet whose mutations must serialize.
+ * @param operation - Read-and-publish operation with its generation fence.
+ * @returns The result or a typed lock refusal, preserving caller errors.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const withPacketEventLock: {
+  <Success, Failure, Requirements>(
+    locator: PacketStreamLocator,
+    operation: (
+      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+    ) => Effect.Effect<Success, Failure, Requirements>
+  ): Effect.Effect<Success, Failure | PacketStreamError, FileSystem.FileSystem | Path.Path | Requirements>;
+  <Success, Failure, Requirements>(
+    operation: (
+      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+    ) => Effect.Effect<Success, Failure, Requirements>
+  ): (
+    locator: PacketStreamLocator
+  ) => Effect.Effect<Success, Failure | PacketStreamError, FileSystem.FileSystem | Path.Path | Requirements>;
+} = dual(
+  2,
+  Effect.fn("PacketEventStore.withLock")(function* <Success, Failure, Requirements>(
+    locator: PacketStreamLocator,
+    operation: (
+      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+    ) => Effect.Effect<Success, Failure, Requirements>
+  ) {
+    const path = yield* Path.Path;
+    const lockPath = path.join(locator.packetPath, "ops", ".packet-events.lock");
+    return yield* withJournalFileLock(
+      lockPath,
+      (lockToken) =>
+        refuseInterruptedForkReplacement(locator).pipe(
+          Effect.catchTag("PlatformError", (error) =>
+            PacketStreamError.new(locator.packet, `event-stream recovery inspection failed: ${error.message}`)
+          ),
+          Effect.andThen(() => operation(assertJournalFileLockOwned(lockPath, lockToken))),
+          Effect.result
+        ),
+      undefined,
+      `Packet ${locator.packet} has another active writer; retry after it completes.`
+    ).pipe(
+      Effect.mapError((error) =>
+        PacketStreamError.new(
+          locator.packet,
+          Match.value(error.reason).pipe(
+            Match.when(
+              "journal-lock-retry-exhausted",
+              () => `Packet ${locator.packet} repeatedly lost its event-stream lock; retry the mutation.`
+            ),
+            Match.orElse(
+              () =>
+                `Packet ${locator.packet} event-stream lock could not be acquired; another active writer or inaccessible lock may require retry.`
+            )
+          )
+        )
+      ),
+      Effect.flatMap(Effect.fromResult)
+    );
+  })
+);
+
 /**
  * Result of reading one packet stream: verified events plus chain issues.
  *
@@ -126,7 +245,9 @@ export interface PacketEventStoreShape {
     event: PacketEvent
   ) => Effect.Effect<StoredPacketEvent, PacketCasConflictError | PacketStreamError>;
   /**
-   * Whether the packet has opted into event sourcing (`ops/events/` exists).
+   * Best-effort opt-in probe for an existing `ops/events/` directory.
+   * Returns false when the directory is absent or cannot be probed. Mutation
+   * paths perform strict reads and report unreadable streams separately.
    *
    * @since 0.0.0
    */
@@ -312,9 +433,11 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     return yield* fs.exists(eventsDir(packetPath)).pipe(Effect.orElseSucceed(thunkFalse));
   });
 
-  const list = Effect.fn("PacketEventStore.list")(function* (locator: PacketStreamLocator) {
+  const readEntries = Effect.fn("PacketEventStore.readEntries")(function* (
+    locator: PacketStreamLocator,
+    entries: ReadonlyArray<string>
+  ) {
     const directory = eventsDir(locator.packetPath);
-    const entries = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(A.empty<string>));
     const fileNames = pipe(entries, A.filter(Str.endsWith(".json")), A.sort(Order.String));
     let events = A.empty<StoredPacketEvent>();
     let issues = A.empty<PacketChainIssue>();
@@ -326,16 +449,30 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     return PacketStreamListing.make({ events, issues });
   });
 
-  const append = Effect.fn("PacketEventStore.append")(function* (locator: PacketStreamLocator, event: PacketEvent) {
+  const list = Effect.fn("PacketEventStore.list")(function* (locator: PacketStreamLocator) {
+    const entries = yield* fs.readDirectory(eventsDir(locator.packetPath)).pipe(Effect.orElseSucceed(A.empty<string>));
+    return yield* readEntries(locator, entries);
+  });
+
+  const appendLocked = Effect.fn("PacketEventStore.appendLocked")(function* (
+    locator: PacketStreamLocator,
+    event: PacketEvent,
+    assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+  ) {
     const directory = eventsDir(locator.packetPath);
-    const present = yield* hasStream(locator.packetPath);
-    if (!present) {
-      return yield* PacketStreamError.new(
-        locator.packet,
-        `"${directory}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory.`
+    const entries = yield* fs
+      .readDirectory(directory)
+      .pipe(
+        Effect.mapError((error) =>
+          PacketStreamError.new(
+            locator.packet,
+            error.reason._tag === "NotFound"
+              ? `"${directory}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory. An interrupted directory replacement may also need recovery.`
+              : `stream could not be read before append: ${error.message}`
+          )
+        )
       );
-    }
-    const listing = yield* list(locator);
+    const listing = yield* readEntries(locator, entries);
     const derived = yield* foldUnambiguousStream(locator, listing);
     if (event.expectedRevision !== derived.revision) {
       return yield* PacketCasConflictError.make({
@@ -364,10 +501,32 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
       Effect.mapError((error) => PacketStreamError.new(locator.packet, `event could not be rendered: ${error.message}`))
     );
     const fileName = packetEventFileName(event, digest);
-    yield* fs
-      .writeFileString(path.join(directory, fileName), content)
-      .pipe(Effect.mapError((error) => PacketStreamError.new(locator.packet, `event write failed: ${String(error)}`)));
+    yield* publishJournalTextAtomically(
+      path.join(directory, fileName),
+      content,
+      `packet event for ${locator.packet}`,
+      assertOwned
+    );
     return StoredPacketEvent.make({ id: digest, fileName, event });
+  });
+
+  const append = Effect.fn("PacketEventStore.append")(function* (locator: PacketStreamLocator, event: PacketEvent) {
+    // The lock's parent is stable across event-directory replacement. Check only
+    // that parent here; appendLocked still checks the stream after acquisition.
+    const hasOperationsDirectory = yield* fs
+      .exists(path.join(locator.packetPath, "ops"))
+      .pipe(Effect.mapError((error) => PacketStreamError.new(locator.packet, error.message)));
+    if (!hasOperationsDirectory) {
+      return yield* PacketStreamError.new(
+        locator.packet,
+        `"${eventsDir(locator.packetPath)}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory.`
+      );
+    }
+    return yield* withPacketEventLock(locator, (assertOwned) => appendLocked(locator, event, assertOwned)).pipe(
+      Effect.catchTag("QualitySchedulerError", (error) => PacketStreamError.new(locator.packet, error.message)),
+      Effect.provideService(FileSystem.FileSystem, fs),
+      Effect.provideService(Path.Path, path)
+    );
   });
 
   return PacketEventStore.of({ hasStream, list, append });
