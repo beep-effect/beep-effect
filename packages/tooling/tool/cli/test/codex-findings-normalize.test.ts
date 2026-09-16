@@ -309,3 +309,53 @@ describe("codex findings ingest options", () => {
       expect(options.json).toBe(false);
     }));
 });
+
+describe("codex findings source identity consistency", () => {
+  const sealedPayloadOf = (findings: ReadonlyArray<ReturnType<typeof captureFinding>>) => {
+    const payload = payloadOf(findings);
+    return { ...payload, capture: { ...payload.capture, source: "security-bundle" } };
+  };
+
+  const reasonOf = (value: unknown) =>
+    planFrom(value).pipe(
+      Effect.map(() => "accepted"),
+      Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.reason))
+    );
+
+  it.effect("refuses a local identity declared as a cloud capture", () =>
+    Effect.gen(function* () {
+      expect(yield* reasonOf(payloadOf([captureFinding({ codexId: "local:csf_aaaaaaaaaaaaaaaaaaaaaaaa" })]))).toBe(
+        "payload-invalid"
+      );
+    })
+  );
+
+  it.effect("refuses a cloud identity declared as a sealed bundle capture", () =>
+    Effect.gen(function* () {
+      expect(yield* reasonOf(sealedPayloadOf([captureFinding({ codexId: hex("aa", 32) })]))).toBe("payload-invalid");
+    })
+  );
+
+  it.effect("plans a sealed bundle capture whose identities are all local", () =>
+    Effect.gen(function* () {
+      const plan = yield* planFrom(
+        sealedPayloadOf([captureFinding({ codexId: "local:csf_aaaaaaaaaaaaaaaaaaaaaaaa" })])
+      );
+
+      expect(plan.source).toBe("security-bundle");
+      expect(A.map(plan.records, (record) => record.id)).toEqual(["CSF-001"]);
+    })
+  );
+
+  it.effect("reserves no ordinal for a prior binding that is not a CSF identity", () =>
+    Effect.gen(function* () {
+      const plan = yield* decodePayload(payloadOf([captureFinding({ codexId: hex("aa", 32) })])).pipe(
+        Effect.flatMap((payload) =>
+          planPacket(payload, { priorIds: priorIdsOfEntries([{ id: "retired", codexId: hex("zz", 32) }]) })
+        )
+      );
+
+      expect(A.map(plan.records, (record) => record.id)).toEqual(["CSF-001"]);
+    })
+  );
+});

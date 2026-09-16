@@ -594,3 +594,41 @@ describe("codex findings preservation-safe refresh", () => {
     )
   );
 });
+
+describe("codex findings first-capture ingest", () => {
+  const csvPath = "codex-security-findings-2026-08-04T16-06-15.518Z.csv";
+  const ingestOptions = {
+    from: csvPath,
+    slug: O.none<string>(),
+    date: O.none<string>(),
+    branch: O.none<string>(),
+    expectedCount: O.none<number>(),
+    refresh: false,
+    force: false,
+    dryRun: false,
+    json: false,
+  };
+
+  it.effect("bootstraps a packet from a cloud export, then refuses to renumber over an unreadable ledger", () =>
+    testEffect(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory(".git", { recursive: true });
+        yield* fs.makeDirectory("goals", { recursive: true });
+        yield* fs.writeFileString(csvPath, csvSnapshot([alpha, beta]));
+
+        yield* runCodexFindingsIngest(ingestOptions);
+        assert.strictEqual(yield* fs.exists(`goals/${SLUG}/ops/triage.json`), true);
+
+        // A ledger that exists but does not decode must stop the ingest rather
+        // than reassign every CSF-NNN from the current sort order.
+        yield* fs.writeFileString(`goals/${SLUG}/ops/triage.json`, "{ malformed");
+        const reason = yield* runCodexFindingsIngest(ingestOptions).pipe(
+          Effect.map(() => "accepted"),
+          Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
+        );
+        assert.strictEqual(reason, "ledger-unreadable");
+      })
+    )
+  );
+});
