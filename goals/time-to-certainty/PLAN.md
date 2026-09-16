@@ -79,7 +79,7 @@ orchestrator owns schemas, contracts, and judgment.
       automatic read-first closeout on settle, an exit-0 `ready` terminal, required-only exit
       codes in every monitor mode, one P1 `pr-merge-ready` inbox row per head, push→ready
       measurement. PR1 #1149 merged 2026-09-16 (push→ready 1h 0m 7s on its own babysit, exit 0 with
-      two optional reds); PR2 <PR2>: detach recipe, `--observed` for merge-ready rows, inbox-list
+      two optional reds); PR2 #1161: detach recipe, `--observed` for merge-ready rows, inbox-list
       liveness, idle-wake spike, watcher retirement.
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):
       rows landed in PR #964, emission was gated behind the unknown-row preservation rollout in PR

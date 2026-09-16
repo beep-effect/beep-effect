@@ -709,6 +709,8 @@ export const YEET_CENSUS_SUSPECT_MESSAGE =
  * console.log(yeetCensusReadIsSuspect(YeetCensusRead.make({ registered: false, checks: [] }))) // false
  * ```
  *
+ * @param read - One poll's reported checks with the head's registration flag.
+ * @returns Whether the loop must treat the poll as a failed read instead of an observation.
  * @category predicates
  * @since 0.0.0
  */
