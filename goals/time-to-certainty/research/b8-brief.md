@@ -89,7 +89,7 @@ Decision (pure, total): `sources` = `main-push` when `push`; `merge-group` when 
 `label` when `pull_request` and `labels` contains the label. `docsOnly` = `pull_request` with a
 non-empty `changedPaths` where every path matches `heavyDocsOnlyPattern`. Verdict: `run` when
 `sources` is non-empty, else `skip-satisfied` when `docsOnly`, else `hold`. `draft` is carried
-for the record and never admits (ruling 50).
+for the record and never admits (ruling 51).
 
 `heavyDocsOnlyPattern` (one RegExp, exported, with a `isHeavyDocsOnlyPath` guard): the
 `goals_document_pattern` of `scripts/ci-change-profile.sh` verbatim, plus `^docs/`,

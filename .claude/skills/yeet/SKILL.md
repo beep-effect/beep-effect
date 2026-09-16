@@ -67,6 +67,30 @@ ps -eo pid,ppid,stat,etime,comm | rg 'bun|node|beep|turbo|gh|git' | rg -v 'rg|ps
 
 ## Canonical Commands
 
+### Detached durable jobs
+
+Use `--detach` for a proof expected to outlive the current repair loop. It runs
+as a transient systemd user service and reports completion or death through the
+checkout inbox. An unavailable user manager is an error.
+
+```bash
+bun run beep yeet verify --tier cheap-gates --detach
+bun run beep yeet publish --message "feat: describe change" --detach
+bun run beep yeet job wait <jobId> --timeout "1 hour"
+bun run beep yeet job status <jobId> --ack
+bun run beep yeet job logs <jobId> --tail 100
+bun run beep yeet job cancel <jobId>
+```
+
+`repair`, `closeout`, and `monitor` also accept `--detach`. Use
+`--job-max-runtime "2 hours"` to set a systemd runtime ceiling. `--plan` and
+recursive detachment inside a job are rejected. `job wait` returns 0 for green,
+1 for red, and 2 for termination, and acknowledges the informational inbox row.
+Use `yeet inbox ack <id> --observed` to acknowledge a job result manually.
+The finalizer records abnormal deaths in the attempt journal; job records and
+logs remain under `.beep/yeet/jobs/`, with the newest 50 terminal jobs retained.
+
+
 - Repair local work:
 
 ```bash
@@ -424,7 +448,10 @@ is absent but `<context> (<variant>)` children report, the parent is tolerated
 and those children must finish. A missing parent with no children keeps waiting.
 If the ruleset read fails, one warning precedes fallback to the `--required`
 view. Optional reds do not affect exit codes. `--settle-timeout` defaults to
-30 minutes; it applies to `--until-ready`, `--until-merged`, and `--watch`.
+30 minutes; it applies to `--until-ready`, `--until-merged`, and `--watch`, and
+it bounds registration only: the budget counts while no check has registered
+or an expected context is still missing, never while a registered required
+check is queued or running (that wait is GitHub's job timeout, not ours).
 Gate lines name `registration`, `required-pending`, `heavy-not-admitted`,
 `closeout-pending`, or `settle-timeout`, including missing and pending
 contexts. `heavy-not-admitted` is tier-2 admission (B8): the loop computes the

@@ -710,6 +710,14 @@ const gateCensus = (
 const admissionIsHold = (admission: O.Option<HeavyAdmission>): boolean =>
   O.exists(admission, (value) => HeavyAdmissionVerdict.is.hold(value.verdict));
 
+// The settle budget is a registration budget: it counts only while nothing has
+// registered or an expected context is still missing. A registered check that
+// is queued or running is GitHub's to time out, not ours. Under `hold` the
+// gated contexts have already left `missing`, so a held head's absent heavy
+// lanes never count as missing here either.
+const settleBudgetApplies = (input: YeetSettleInput, census: YeetExpectedContextCensus): boolean =>
+  inRegistrationWindow(input, census) || A.isReadonlyArrayNonEmpty(census.missing);
+
 const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCensus): O.Option<YeetSettleReason> =>
   inRegistrationWindow(input, census)
     ? O.some(YeetSettleReason.Enum.registration)
@@ -724,13 +732,19 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
  *
  * **Details**
  *
- * The timeout applies only while unsettled: a settled head never times out, and
- * an unsettled head whose `waitedMs` reached `timeoutMs` reports
- * `settle-timeout` with the census that was still open, so the operator sees
- * which contexts never came. A held head (admission `hold` with gated contexts
- * open) is the exception: its wait is named `heavy-not-admitted` once nothing
- * non-gated is open, and the timeout comparison is skipped entirely, because
- * the absent contexts are absent by design until the label lands.
+ * The timeout bounds registration, never execution: it expires only while no
+ * check has registered for the head or at least one expected context is
+ * missing (no exact name, no matrix child). A required check that has
+ * registered and is queued or running is waited for however long GitHub takes
+ * — its own job timeout is the bound there. A settled head never times out.
+ * On expiry the verdict reports `settle-timeout` with the census that was
+ * still open, so the operator sees which contexts never came (the B7 dogfood
+ * amendment, after PR #1149's own babysit hit the budget with two heavy lanes
+ * registered but queued). A held head (admission `hold` with gated contexts
+ * open, ttc B8) is the other exception: its wait is named
+ * `heavy-not-admitted` once nothing non-gated is open, and the timeout
+ * comparison is skipped entirely, because the absent contexts are absent by
+ * design until the label lands.
  *
  * **Example** (Registration, then required-pending, then settled)
  *
@@ -763,7 +777,7 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
   const census = admissionIsHold(input.admission) ? gateCensus(open, input.families) : open;
   const held = admissionIsHold(input.admission) && A.isReadonlyArrayNonEmpty(census.gated);
   const unsettled = unsettledReason(input, census);
-  const timedOut = !held && input.waitedMs >= input.timeoutMs;
+  const timedOut = !held && input.waitedMs >= input.timeoutMs && settleBudgetApplies(input, census);
   return O.match(unsettled, {
     onSome: (reason) =>
       YeetSettleVerdict.make({
@@ -841,10 +855,17 @@ export const yeetSettleVerdictIsTerminal = (verdict: YeetSettleVerdict): boolean
 const renderNames = (label: string, names: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.isReadonlyArrayEmpty(names) ? [] : [`${label}: ${A.join(names, ", ")}`];
 
+// The budget is named only while it applies (registration or missing
+// contexts); a registered-but-queued wait shows elapsed time alone.
+// A held wait names the budget it is exempt from; otherwise the budget is
+// named only while it applies (registration or missing contexts), and a
+// registered-but-queued wait shows elapsed time alone.
 const renderWaited = (verdict: YeetSettleVerdict): string =>
   yeetSettleVerdictIsHeld(verdict)
     ? `waited ${Duration.format(Duration.millis(verdict.waitedMs))} (not counted toward the ${Duration.format(Duration.millis(verdict.timeoutMs))} settle timeout)`
-    : `waited ${Duration.format(Duration.millis(verdict.waitedMs))} of ${Duration.format(Duration.millis(verdict.timeoutMs))}`;
+    : A.isReadonlyArrayNonEmpty(verdict.census.missing) || O.exists(verdict.reason, YeetSettleReason.is.registration)
+      ? `waited ${Duration.format(Duration.millis(verdict.waitedMs))} of ${Duration.format(Duration.millis(verdict.timeoutMs))}`
+      : `waited ${Duration.format(Duration.millis(verdict.waitedMs))}; registered checks are GitHub's to time out`;
 
 const renderGated = (verdict: YeetSettleVerdict): ReadonlyArray<string> =>
   A.isReadonlyArrayEmpty(verdict.census.gated)

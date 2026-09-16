@@ -19,7 +19,7 @@
  *
  * `draft` is carried for the record and never admits: nearly every PR here is
  * non-draft, so admitting on it would be the status quo. The label is the
- * only pull-request admission source (ruling 50).
+ * only pull-request admission source (ruling 51).
  *
  * @since 0.0.0
  */

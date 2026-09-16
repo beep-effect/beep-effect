@@ -1,6 +1,6 @@
 # B8 implementation — heavy-check admission
 
-Lane reports for the stages of `goals/time-to-certainty/research/b8-brief.md` (rulings 49–56).
+Lane reports for the stages of `goals/time-to-certainty/research/b8-brief.md` (rulings 50–57).
 Worktree `ttc-b8`, branch `ttc/b8-heavy-admission`, stacked on B7. No git writes by the lanes.
 
 ## Stage A
@@ -213,7 +213,7 @@ Not run (left for the orchestrator's proof): `bun run beep quality test-tsgo`, s
 ### Stage A follow-up (--watch)
 
 Closes deviation 1 above: `yeet monitor --watch` now computes heavy admission from the same
-function as CI and the `--until-ready` loop, so rulings 53/54 hold for both loops.
+function as CI and the `--until-ready` loop, so rulings 54/55 hold for both loops.
 
 Files:
 

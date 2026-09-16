@@ -26,7 +26,7 @@ a docs-only diff is called with `admitted: false` so every lane reports
 `skipped`, and an unlabelled code PR holds outside the queue. Throughput is
 still heavy duration times queue depth. Pool sizing — `runners_maximum_count`,
 Spot versus On-Demand, the two-worker cap above — remains the operator's lever
-and is unchanged by admission (time-to-certainty ruling 56).
+and is unchanged by admission (time-to-certainty ruling 57).
 
 ## Attribute a runner loss
 

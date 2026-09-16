@@ -281,6 +281,12 @@ describe("B7 settle contracts", () => {
     assertNone(verdict({ checks: [check("Lint")], closeoutBound: true, waitedMs: 1000 }).reason);
     expect(verdict({ checks: [check("Lint")], waitedMs: 1000 }).settled).toBe(true);
     expect(yeetSettleVerdictIsTerminal(verdict({ waitedMs: 999 }))).toBe(false);
+    // Ruling 49: a registered required check that is still queued never trips the budget.
+    const queued = verdict({ expected: expected(["Lint"]), checks: [check("Lint", "pending")], waitedMs: 5000 });
+    assertSome(queued.reason, "required-pending");
+    expect(yeetSettleVerdictIsTerminal(queued)).toBe(false);
+    expect(renderYeetSettleDetail(queued)).toContain("registered checks are GitHub's to time out");
+    expect(renderYeetSettleDetail(queued)).not.toContain("of 1s");
     const timeout = verdict({
       expected: expected(["Heavy / Check"]),
       checks: [check("Outside", "pending")],
@@ -396,10 +402,10 @@ describe("B7 settle contracts", () => {
     assertSome(stale.reason, "heavy-not-admitted");
     expect(stale.census.pending).toEqual([]);
     expect(stale.census.gated).toEqual(["Heavy / Check", "Heavy / Docgen"]);
-    // Hold without any gated family is B7: nothing to gate, the budget applies.
+    // Hold without any gated family is B7: nothing to gate, a missing context still spends the budget.
     const ungated = verdict({
-      expected: expected(["Lint"]),
-      checks: [check("Lint", "pending")],
+      expected: expected(["Lint", "Docs"]),
+      checks: [check("Lint")],
       admission: admission("hold"),
       waitedMs: 1000,
     });
@@ -437,7 +443,13 @@ describe("B7 settle contracts", () => {
       expect(held).toBe(
         O.exists(input.admission, (value) => value.verdict === "hold") && A.isReadonlyArrayNonEmpty(result.census.gated)
       );
-      expect(reason === "settle-timeout").toBe(!held && input.waitedMs >= input.timeoutMs);
+      // The budget bounds registration (B7) and never a held head (B8); the
+      // gated census is the one the budget reads, since hold moves members out of missing.
+      const budgeted =
+        A.isReadonlyArrayEmpty(input.checks) ||
+        A.isReadonlyArrayNonEmpty(result.census.missing) ||
+        (O.isNone(input.expected) && A.isReadonlyArrayEmpty(result.census.matched));
+      expect(reason === "settle-timeout").toBe(!held && input.waitedMs >= input.timeoutMs && budgeted);
       expect(reason === "heavy-not-admitted").toBe(
         held &&
           A.isReadonlyArrayEmpty(result.census.pending) &&
@@ -755,6 +767,7 @@ it.effect("status retains classified checks from the existing two gh views", () 
   temporary((root) =>
     Effect.gen(function* () {
       const checkReads = yield* Ref.make(0);
+      // fallow-ignore-next-line complexity -- Fixture routes git and GitHub command families to fixed census responses.
       const runner = ChildProcessSpawner.make((command) => {
         if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
         const [first, second] = command.args;

@@ -154,6 +154,7 @@ const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>, diff: string =
             return Effect.die("the watch never spawns a piped command");
           }
           const line = A.join([command.command, ...command.args], " ");
+          // fallow-ignore-next-line complexity -- Scripted command router preserves independent per-family poll cursors.
           return Effect.gen(function* () {
             if (Str.includes("rules/branches/")(line)) return stubHandle(1, "rules unavailable");
             // The once-per-head merge-base diff owns no poll index: it answers by argv prefix.

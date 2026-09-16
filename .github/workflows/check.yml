@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     # `labeled` admits the heavy matrix through the `ready-for-heavy` label
-    # (time-to-certainty B8, ruling 50); `unlabeled` is deliberately absent.
+    # (time-to-certainty B8, ruling 51); `unlabeled` is deliberately absent.
     types: [opened, synchronize, reopened, labeled]
   push:
     branches: [main]
@@ -48,7 +48,7 @@ jobs:
             });
             await core.summary.addRaw(`Changed files: ${count}; applied label: ${label}`).write();
 
-  # Tier-2 admission (time-to-certainty B8, rulings 49–56). One hosted job
+  # Tier-2 admission (time-to-certainty B8, rulings 50–57). One hosted job
   # decides, before the reusable workflow is called, whether the heavy matrix
   # runs (`run`), is skipped at job level so every `Heavy / <lane>` context
   # reports skipped (`skip-satisfied`, docs-only diffs), or is held (`hold`:
