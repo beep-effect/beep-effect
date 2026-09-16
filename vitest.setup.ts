@@ -1,11 +1,10 @@
-// Bun-API shim for NODE-based vitest runs (the coverage lane).
-// WHY: istanbul coverage under `bunx --bun vitest` instruments nothing
-// (measured 0% on packages with passing tests), so per-package `coverage`
-// scripts run plain node vitest (v8 provider) while `test` scripts stay
-// bun-native. Tests that call Bun APIs (spawnSync, Glob, TOML, serve, ...)
-// still execute under node via this shim. The guard below leaves real Bun
-// untouched: it only installs when globalThis.Bun lacks the probed surface
-// (quality-gate-ratchets A1, 2026-07-06).
+// Bun-API shim for Node-based Vitest runs, including the canonical coverage lane.
+// Explicit Bun coverage runs use Istanbul instrumentation; Node uses V8.
+// Runtime/provider qualification lives in scratchpad/bun-test. The per-file
+// regression baseline still requires Node/V8, so production coverage commands
+// retain that runtime until a compatible baseline migration is validated.
+// Tests calling Bun APIs still execute under Node through this shim. The guard
+// leaves real Bun untouched and only installs when the probed surface is absent.
 //
 // This file is typechecked by the root tsconfig.configs.json project
 // (repo-sanity:config-typecheck). It is a Node polyfill of Bun's
