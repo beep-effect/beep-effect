@@ -372,6 +372,36 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
     );
 
     it.effect(
+      "ignores sources outside root JSDoc scan scope while retaining lab manifest discovery",
+      Effect.fnUntraced(function* () {
+        const { root, binary } = yield* fixture();
+        const id = "//#lint:jsdoc:root";
+        const baseline = yield* dryRun(root, binary, [id], false);
+        const excludedSources = [
+          "scripts/check.ts",
+          "tools/check.ts",
+          "scratchpad/check.ts",
+          "apps/labs/probe/check.ts",
+          "packages/probe/.context/check.ts",
+          "infra/standalone/check.tsx",
+          "apps/probe/check.js",
+        ];
+        yield* Effect.forEach(excludedSources, (file) => writeFile(root, file, "export const value = 1;\n"));
+        const changed = yield* dryRun(root, binary, [id], false);
+        expect(rowFor(changed, id).hash).toBe(rowFor(baseline, id).hash);
+        for (const file of excludedSources) {
+          expect(R.has(rowFor(changed, id).inputs, file), file).toBe(false);
+        }
+        const manifest = "apps/labs/probe/package.json";
+        yield* writeFile(root, manifest, "{}\n");
+        const discovered = yield* dryRun(root, binary, [id], false);
+        expect(R.has(rowFor(discovered, id).inputs, manifest)).toBe(true);
+        expect(rowFor(discovered, id).hash).not.toBe(rowFor(baseline, id).hash);
+      }),
+      { timeout: 60_000 }
+    );
+
+    it.effect(
       "retains nested authored source directories consumed by root scanners",
       Effect.fnUntraced(function* () {
         const { root, binary } = yield* fixture();

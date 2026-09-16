@@ -156,7 +156,11 @@
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint"],
       "inputs": [
-        "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+        "apps/**/*.{ts,tsx}",
+        "packages/**/*.{ts,tsx}",
+        "infra/**/*.ts",
+        "!apps/labs/**/*.{ts,tsx}",
+        "!**/.context/**/*.{ts,tsx}",
         "!**/node_modules/**",
         "eslint.config.mjs",
         "tsdoc.json",

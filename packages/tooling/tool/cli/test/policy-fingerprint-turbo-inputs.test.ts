@@ -320,6 +320,10 @@ describe("Stage B eslint task inputs", { concurrent: false }, () => {
           "packages/dependency/src/index.ts",
           "packages/unrelated/src/index.ts",
           "scripts/check.ts",
+          "tools/check.ts",
+          "scratchpad/check.ts",
+          "apps/labs/probe/check.ts",
+          "packages/probe/.context/check.ts",
           "infra/standalone/check.ts",
           "packages/tooling/policy-pack/repo-configs/src/eslint/rule.ts",
           "packages/tooling/policy-pack/repo-configs/src/internal/eslint/helper.ts",
@@ -350,7 +354,16 @@ describe("Stage B eslint task inputs", { concurrent: false }, () => {
           expect(yield* policyHashes(root, binary)).toEqual(baseline);
         });
         yield* assertMutation("packages/consumer/src/index.ts", [true, true, true]);
-        yield* assertMutation("scripts/check.ts", [false, false, true]);
+        yield* Effect.forEach(
+          [
+            "scripts/check.ts",
+            "tools/check.ts",
+            "scratchpad/check.ts",
+            "apps/labs/probe/check.ts",
+            "packages/probe/.context/check.ts",
+          ],
+          (file) => assertMutation(file, [false, false, false])
+        );
         yield* assertMutation("infra/standalone/check.ts", [false, false, true]);
         yield* assertMutation("packages/unrelated/package.json", [true, false, true]);
         yield* assertMutation("packages/unrelated/src/index.ts", [false, false, true]);
