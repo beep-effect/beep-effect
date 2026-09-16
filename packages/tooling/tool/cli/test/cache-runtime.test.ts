@@ -10,14 +10,18 @@ import {
 } from "@beep/repo-cli/commands/Cache";
 import * as Census from "@beep/repo-cli/commands/Cache/Cache.census";
 import * as Fingerprint from "@beep/repo-cli/commands/Cache/Cache.fingerprint";
-import { CacheRuntimeFileGuards as FsGuards, CacheRuntimeProcess as StepExec } from "@beep/repo-cli/test/Cache";
+import {
+  collectCacheGitExclusions,
+  CacheRuntimeFileGuards as FsGuards,
+  CacheRuntimeProcess as StepExec,
+} from "@beep/repo-cli/test/Cache";
 import { QualityTaskStep } from "@beep/repo-cli/test/Quality";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
-import { NodeCrypto } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, describe, expect, it, vi } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Duration, Effect, FileSystem, Layer, Path } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -140,6 +144,71 @@ const runtimeSnapshot = CacheToolchainSnapshot.make({
   biome: runtimeTool,
   sources: [],
 });
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "Git exclusion runtime identity",
+  (it) => {
+    it.effect("binds content across clone and linked-worktree paths and rejects unsafe files", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-git-exclusions-" });
+        const clone = path.join(root, "clone");
+        const worktree = path.join(root, "linked");
+        yield* fs.makeDirectory(clone);
+        const git = Effect.fn("test.gitExclusions.git")(function* (args: ReadonlyArray<string>) {
+          const result = yield* StepExec.runCaptured({
+            command: "git",
+            args,
+            cwd: clone,
+            extendEnv: false,
+            env: { PATH: "/usr/bin", HOME: root, GIT_CONFIG_NOSYSTEM: "1" },
+            source: "all",
+            timeout: Duration.seconds(10),
+            bound: StepExec.OutputBound.make({ maxChars: 4096, truncatedNotice: "[git fixture overflow]" }),
+          });
+          expect(result.exitCode).toBe(0);
+          expect(result.truncated).toBe(false);
+        });
+        yield* git(["init", "--template=", "."]);
+        yield* git([
+          "-c",
+          "user.name=Fixture",
+          "-c",
+          "user.email=fixture@example.invalid",
+          "commit",
+          "--allow-empty",
+          "-m",
+          "fixture",
+        ]);
+        yield* git(["worktree", "add", "--detach", worktree]);
+        const absent = yield* collectCacheGitExclusions(clone);
+        yield* fs.makeDirectory(path.join(clone, ".git/info"), { recursive: true });
+        const exclude = path.join(clone, ".git/info/exclude");
+        yield* fs.writeFileString(exclude, "");
+        expect(yield* collectCacheGitExclusions(worktree)).toEqual(absent);
+        yield* fs.writeFileString(exclude, "/src/index.ts\n");
+        const changed = yield* collectCacheGitExclusions(worktree);
+        expect(changed).toEqual(yield* collectCacheGitExclusions(clone));
+        expect(changed.path).toBe(".git/info/exclude");
+        expect(changed.sha256).not.toBe(absent.sha256);
+        expect(
+          yield* hashCacheToolchain(CacheToolchainSnapshot.make({ ...runtimeSnapshot, sources: [changed] }))
+        ).not.toBe(yield* hashCacheToolchain(CacheToolchainSnapshot.make({ ...runtimeSnapshot, sources: [absent] })));
+        yield* fs.remove(exclude);
+        yield* fs.makeDirectory(exclude);
+        yield* collectCacheGitExclusions(clone).pipe(Effect.flip);
+        yield* fs.remove(exclude, { recursive: true });
+        yield* fs.writeFileString(path.join(root, "outside"), "/src/index.ts\n");
+        yield* fs.symlink(path.join(root, "outside"), exclude);
+        yield* collectCacheGitExclusions(clone).pipe(Effect.flip);
+        yield* fs.remove(exclude);
+        yield* fs.writeFile(exclude, new Uint8Array(1048577));
+        yield* collectCacheGitExclusions(clone).pipe(Effect.flip);
+      })
+    );
+  }
+);
 const runtimeNode = CacheCensusNode.make({
   id: "@fixture/dependency#lint",
   workspace: "@fixture/dependency",

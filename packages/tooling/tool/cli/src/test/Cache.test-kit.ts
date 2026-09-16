@@ -24,6 +24,7 @@ export {
   runCacheSyntheticForTesting,
 } from "../commands/Cache/Cache.experiment.ts";
 export {
+  collectCacheGitExclusions,
   collectCacheToolchain,
   fingerprintCacheComputation,
   projectCacheActivation,
