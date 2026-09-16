@@ -72,6 +72,8 @@
   },
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
+    "@effect/platform-browser": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

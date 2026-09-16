@@ -54798,69 +54798,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/library/qa-capture/test/Collector.test.ts:126:provideScopedLayer@14#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/qa-capture",
-      "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
-      "line": 126,
-      "endLine": 126,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:e7ae0c7069eeba8fbfbc42bee3b7b529dd4b406d31ea61cc7daa828ad5c62bfb",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(TestLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/library/qa-capture/test/Collector.test.ts:175:provideScopedLayer@14#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/qa-capture",
-      "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
-      "line": 175,
-      "endLine": 175,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:13811677e2c9af391b4bbc296a562128e068b55633586705d4d192f845dbde6a",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(TestLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/library/qa-capture/test/Collector.test.ts:240:provideScopedLayer@14#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/qa-capture",
-      "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
-      "line": 240,
-      "endLine": 240,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:c2a67aba0876c9488b753625a5db8ee6634f2ae74e7449e3856c53c5d76ebe49",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(TestLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/tooling/library/qa-capture/test/SessionStore.test.ts:104:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -75672,27 +75609,6 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/library/qa-capture/test/Collector.test.ts:24:provideScopedLayer@2#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/qa-capture",
-      "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
-      "line": 24,
-      "endLine": 26,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:3824c2cc1cd7970503272d6b9ed4325e1e635eeba272a27f5f93a9c1272143e1",
-      "class": "resource-wrapper",
-      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.fla",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/tooling/library/qa-capture/test/SessionStore.test.ts:8:provideScopedLayer@2#1",
       "lens": "resource",
       "ruleId": "EV003",
@@ -83967,13 +83883,13 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/library/qa-capture/test/Collector.test.ts:151:scoped@29#1",
+      "id": "EV004:packages/tooling/library/qa-capture/test/Collector.test.ts:161:scoped@29#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/qa-capture",
       "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
-      "line": 151,
-      "endLine": 165,
+      "line": 161,
+      "endLine": 175,
       "symbol": "scoped",
       "occurrence": "v2:189bf8cbe40a41917ae6738e82b47fc449ece60f15d4ab98033ad5898edd97ff",
       "class": "shorter-scope-lifetime-review",
@@ -83988,13 +83904,13 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/library/qa-capture/test/Collector.test.ts:211:scoped@15#1",
+      "id": "EV004:packages/tooling/library/qa-capture/test/Collector.test.ts:221:scoped@15#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/qa-capture",
       "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
-      "line": 211,
-      "endLine": 233,
+      "line": 221,
+      "endLine": 243,
       "symbol": "scoped",
       "occurrence": "v2:7a50c3951686075e26d9a0e59c2d9bdf6856b31ae9f0106a71defd265d4389cf",
       "class": "shorter-scope-lifetime-review",
@@ -84009,17 +83925,17 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/library/qa-capture/test/Collector.test.ts:69:scoped@15#1",
+      "id": "EV004:packages/tooling/library/qa-capture/test/Collector.test.ts:65:scoped@15#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/qa-capture",
       "file": "packages/tooling/library/qa-capture/test/Collector.test.ts",
-      "line": 69,
-      "endLine": 113,
+      "line": 65,
+      "endLine": 123,
       "symbol": "scoped",
-      "occurrence": "v2:f9fa2fa68b470c3ab948d500c6a5cc8c6d0939326383389a661da14a97bfb108",
+      "occurrence": "v2:93b159bd2bc288e34597628509a640fed197009fada8c625d70e2e63291526d0",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const collector = yield* Collector; const running = yield* collector.serve( CollectorServeOptions.make({ eventsPath, handlePath: O.some(handlePath), port: 0, r",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const collector = yield* Collector; const running = yield* collector.serve( CollectorServeOptions.make({ allowedOrigins: [appOrigin], eventsPath, handlePath: O",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."

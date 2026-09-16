@@ -7,6 +7,13 @@
  */
 
 /**
+ * Exact-evidence explanation and human-review commands and functions.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./ClaimEvidenceReview/index.ts";
+/**
  * Claim projection pure read-model exports.
  *
  * **Example** (Empty claims projection total)
