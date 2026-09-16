@@ -785,19 +785,53 @@ export const summarizeRemoteChecksForTesting: {
   }
 );
 
-const collectRemoteChecks = Effect.fn("YeetStatus.collectRemoteChecks")(function* (
-  context: RepoRunContext,
-  required: boolean
-): Effect.fn.Return<O.Option<ReadonlyArray<GhStatusCheck>>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket"];
-  const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to inspect PR checks for yeet status."))
-  );
-  if (result.truncated) {
-    return O.none();
-  }
-  return yield* decodeGhStatusChecks(result.output).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
-});
+/**
+ * Read either check census, retaining an unreadable response as None.
+ *
+ * **Example** (Prepare a required census read)
+ *
+ * ```ts
+ * import { collectRemoteChecksForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * const readRequired = collectRemoteChecksForTesting(true)
+ * ```
+ *
+ * @param context - Repository context whose current branch identifies the pull request.
+ * @param required - Restrict the read to required checks when true; otherwise read all checks.
+ * @returns Decoded rows, or None when the response is unreadable or truncated.
+ * @category getters
+ * @since 0.0.0
+ */
+export const collectRemoteChecks: {
+  (
+    required: boolean
+  ): (
+    context: RepoRunContext
+  ) => Effect.Effect<O.Option<ReadonlyArray<GhStatusCheck>>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner>;
+  (
+    context: RepoRunContext,
+    required: boolean
+  ): Effect.Effect<O.Option<ReadonlyArray<GhStatusCheck>>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner>;
+} = dual(
+  2,
+  Effect.fn("YeetStatus.collectRemoteChecks")(function* (
+    context: RepoRunContext,
+    required: boolean
+  ): Effect.fn.Return<
+    O.Option<ReadonlyArray<GhStatusCheck>>,
+    YeetCommandError,
+    ChildProcessSpawner.ChildProcessSpawner
+  > {
+    const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket"];
+    const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
+      Effect.mapError(YeetCommandError.new("Failed to inspect PR checks for yeet status."))
+    );
+    if (result.truncated) {
+      return O.none();
+    }
+    return yield* decodeGhStatusChecks(result.output).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
+  })
+);
 
 const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThreads")(function* (
   context: RepoRunContext,

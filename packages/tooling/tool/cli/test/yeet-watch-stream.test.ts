@@ -1,6 +1,7 @@
 import {
   classifyYeetCheckOutcome,
   countYeetWatchFailures,
+  countYeetWatchOptionalFailures,
   deriveSettleVerdict,
   diffYeetWatchSnapshots,
   renderYeetWatchEventLine,
@@ -229,11 +230,17 @@ describe("yeetWatchEndReason", () => {
 });
 
 describe("countYeetWatchFailures", () => {
-  it("counts only failing checks", () => {
-    const counted = countYeetWatchFailures(
-      snapshot({ checks: [check("A", "fail"), check("B", "pass"), check("C", "fail"), check("D", "skip")] })
-    );
-    expect(counted).toBe(2);
+  it("counts required and optional failures separately", () => {
+    const board = snapshot({
+      checks: [
+        YeetWatchCheck.make({ name: "Required", outcome: "fail", required: true }),
+        YeetWatchCheck.make({ name: "Optional", outcome: "fail", required: false }),
+        check("Green", "pass"),
+        check("Skipped", "skip"),
+      ],
+    });
+    expect(countYeetWatchFailures(board)).toBe(1);
+    expect(countYeetWatchOptionalFailures(board)).toBe(1);
   });
 });
 
@@ -376,3 +383,12 @@ describe("settle-changed events", () => {
     expect(diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: AT, prev: next, next: snapshot() }))).toEqual([]);
   });
 });
+
+it.effect("decodes legacy watch-ended rows with zero optional failures", () =>
+  Effect.gen(function* () {
+    const row = yield* decodeUnknownYeetWatchEventJson(
+      '{"kind":"watch-ended","schemaVersion":"yeet-watch/v1","at":"now","headSha":"abc","reason":"all-terminal","failing":0}'
+    );
+    expect(row).toEqual(YeetWatchEnded.make({ at: "now", headSha: "abc", reason: "all-terminal", failing: 0 }));
+  })
+);

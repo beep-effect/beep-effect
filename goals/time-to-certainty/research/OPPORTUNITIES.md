@@ -1443,3 +1443,35 @@ was attempted under the marker-only amendment.
   before stamping or announcing readiness. Tests exercise exact and matrix reds with GitHub's
   required flag false and assert no ready line or inbox row. Prevention: derive readiness and
   required-red decisions from the same required-set predicate.
+## 2026-09-16 — B7 Stage C command cwd mismatch
+
+A local edit script used root-relative paths from the CLI package cwd and failed with
+`FileNotFoundError`. No edits were applied by that invocation. Run edits from the worktree root
+and tests from the package directory in separate commands.
+
+## 2026-09-16 — B7 Stage C fixture assumptions
+
+The first three-suite Node run exited 1: a new watch test used the wrong temp-repo helper,
+and its optional-check fixture omitted `required: false` (the schema defaults to true).
+Use the existing `inTempRepo` helper and set the required flag explicitly in census tests.
+
+The next fixture run also failed because JSON check reads were scripted with watch-style
+nonzero exit codes. Match the existing scripted spawner JSON-read contract (exit 0), keeping
+nonzero watch-step exits in the plain-monitor suite. The compiler also rejected passing a
+schema decoder directly to `Effect.forEach`: its second argument is parse options, not an
+array index. Keep the adapter lambda for that call.
+
+## 2026-09-16 — B7 Stage C sandbox verification limits
+
+`bun run beep quality package-verify @beep/repo-cli` built the package, then audit failed
+at the tsgo shim with `spawnSync node EPERM`. Direct source and test compiler checks passed.
+The orchestrator must rerun the canonical package gate outside this sandbox. The resulting
+P0 audit row is being acknowledged as environment-only with that evidence.
+
+The default Bun Vitest pool emitted only its startup banner and was interrupted (exit 130).
+A bounded `--pool=threads` run is supplemental proof, not a default-pool pass. A coverage
+invocation from the worktree root was also interrupted; rerun from the CLI package cwd.
+
+The corrected scoped Node run passed 123 tests but failed the full-file 100% floor for
+`Handler.ts` and `Status.ts`. Preserve that unmet gate in the handoff; narrow regression
+coverage does not prove the unrelated publish and status paths in those large modules.

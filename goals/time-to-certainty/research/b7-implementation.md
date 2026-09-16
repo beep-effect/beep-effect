@@ -264,3 +264,149 @@ but its lcov section has 36/36 lines and 25/25 functions; no branch records.
    in Node's subprocess stdin stream under Bun with EPERM, including three pre-existing tests.
    The v4 Bun spawner re-exports that shared Node implementation, so changing the layer is not a fix.
 4. No live PR smoke or push-to-ready wall-clock measurement; no Stage C, commit, or hosted proof.
+## Stage C
+
+Implemented the Stage C required-only census, regression tests, and docs in the Stage C
+worktree. Acceptance remains incomplete because the full-file coverage floor and canonical
+package verification are not green. No git writes, graft commands, or Stage B file edits.
+
+Decisions and rejected alternatives:
+
+- A nonzero plain-monitor watch first retains the registration retry behavior, then reads
+  `collectRemoteChecks(context, true)`. Required reds and unreadable required data keep the
+  failure. Required pending rows retry the same fail-fast watch after a ten-second pause.
+- Pending retries use the existing 30-minute settle default. The remaining deadline also wraps
+  the retrying watch, so a hanging retry cannot outlive the bound. A sixth test-only argument
+  on `runMonitorCheckWatchForTesting` injects the bound. Timeout reports pending check names
+  and restores the last completed recorder snapshot if interruption happened during a retry.
+- Once required rows are terminal and non-red, the all-check view names optional failures.
+  Only observed optional reds justify replacing the recorder's failed exit code with zero.
+  An unreadable all-check view or no optional failure evidence retains the failure. Prior recorder entries and watch command output stay intact.
+- Exported the existing `collectRemoteChecks` with `dual(2, ...)`; the test kit exposes it as
+  `collectRemoteChecksForTesting`. No additional check read was added to status collection.
+- `countYeetWatchFailures` now counts required failures. The existing event predicate and exit
+  classifier consume that count. Added `countYeetWatchOptionalFailures` and the independent
+  `watch-ended.optionalFailing` count. Its schema defaults to zero on construction and when
+  decoding legacy rows. Optional transitions and inbox failure capsules remain observable.
+- Rejected swallowing every nonzero watch result, interpreting unreadable check data as green,
+  changing fail-fast, and treating optional failures as event wakes. Reused the existing outcome
+  classifier so unknown required states continue waiting rather than becoming terminal.
+- Updated the yeet recipe, settle explanation, readiness announcement, and lean AGENTS closeout
+  instruction. PLAN carries the requested `PR1 landed; PR2 after B5` closeout marker for the
+  orchestrator's final PR1 commit. This lane has not published or observed PR1 land.
+- Existing changeset, exploration links, and rulings were preserved without duplication.
+  All regression additions are in existing test files; no new test file or inventory entry.
+
+### Stage C — files
+
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts`
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts`
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts`
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts`
+- `packages/tooling/tool/cli/src/test/Yeet.test-kit.ts`
+- `packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts`
+- `packages/tooling/tool/cli/test/yeet-watch-mode.test.ts`
+- `packages/tooling/tool/cli/test/yeet-watch-stream.test.ts`
+- `.claude/skills/yeet/SKILL.md`
+- `AGENTS.md`
+- `goals/time-to-certainty/PLAN.md`
+- `goals/time-to-certainty/research/OPPORTUNITIES.md`
+- `goals/time-to-certainty/research/b7-implementation.md`
+
+### Stage C — verification
+
+Vitest cwd is `packages/tooling/tool/cli`. `SUITES` denotes these explicit arguments:
+
+```text
+test/yeet-monitor-check-registration.test.ts
+test/yeet-watch-mode.test.ts
+test/yeet-watch-stream.test.ts
+test/yeet-status-triage.test.ts
+```
+
+`COMPILER` is the root-relative native artifact
+`node_modules/@effect/tsgo-linux-x64/artifacts/typescript/7.0.2/tsc`.
+Logs and lcov are local scratch evidence, not files for the orchestrator to stage.
+
+| Command | Exit | Observed result |
+| --- | ---: | --- |
+| `bunx vitest run $SUITES` | 0 | 4 suites, 126 tests; `/tmp/b7c-node-verified.log` |
+| `bunx --bun vitest run $SUITES` | 130 | Banner only; interrupted; no passing proof |
+| `timeout 120s bunx --bun vitest run $SUITES --pool=threads` | 0 | 126 tests passed |
+| `$COMPILER -p packages/tooling/tool/cli/tsconfig.check.json` | 0 | Source check passed |
+| `$COMPILER -p packages/tooling/tool/cli/test/tsconfig.json --rootDir .` | 0 | Test check passed |
+| `bun run beep quality package-verify @beep/repo-cli` | 1 | Build passed; audit shim `EPERM` |
+| Scoped lcov command below | 1 | 126 tests pass; Handler/Status below the 100% floor |
+| `bunx biome check` on the eight listed TypeScript files | 0 | Final check; no fixes needed |
+| `git diff --check` | 0 | No whitespace errors |
+
+Final compiler logs: `/tmp/b7c-source-final.log`, `/tmp/b7c-tests-final.log`.
+Bun thread-pool log: `/tmp/b7c-bun-verified.log`.
+Package log: `/tmp/b7c-package.log`. The resulting audit P0 was acknowledged environment-only
+through `yeet inbox ack`; that command exited 0 (`/tmp/b7c-ack.log`).
+
+Coverage command (100% per-file floor, with executable test-kit coverage requested):
+
+```sh
+bunx vitest run $SUITES --coverage \
+  --coverage.include='src/commands/Yeet/internal/{Handler,Status,WatchMode,WatchStream}.ts' \
+  --coverage.include='src/test/Yeet.test-kit.ts' \
+  --coverage.reporter=lcov --coverage.reporter=text \
+  --coverage.reportsDirectory=/tmp/b7c-coverage-final \
+  --coverage.thresholds.lines=100 --coverage.thresholds.branches=100 \
+  --coverage.thresholds.functions=100 --coverage.thresholds.statements=100 \
+  --coverage.thresholds.perFile
+```
+
+The command exited 1. All 126 tests passed, but Handler and Status failed the coverage floor.
+Log: `/tmp/b7c-coverage-verified.log`; lcov: `/tmp/b7c-coverage-final/lcov.info`.
+
+| Source | Lines % | Branches % | Functions % | Statements % |
+| --- | ---: | ---: | ---: | ---: |
+| `Handler.ts` | 29.15 | 15.06 | 14.28 | 29.12 |
+| `Status.ts` | 62.21 | 51 | 55.23 | 61.67 |
+| `WatchMode.ts` | 100 | 100 | 100 | 100 |
+| `WatchStream.ts` | 100 | 100 | 100 | 100 |
+| `Yeet.test-kit.ts` | N/A | N/A | N/A | N/A |
+
+The test kit only re-exports symbols; lcov reports zero executable lines, functions, and
+branches for it. Its displayed 0% is not an executable coverage deficit.
+
+### Stage C — blockers
+
+- The full-file coverage floor remains unmet in Handler and Status. The passing regressions
+  are not full-module proof for their unrelated publishing and status branches.
+- The canonical package gate needs an orchestrator rerun because the sandbox rejects the
+  Node spawn in `tools/tsgo-shim/tsgo.js`. Direct compiler passes are supporting evidence only.
+- The default Bun pool did not finish; the passing threads run is supplemental evidence.
+- No full repo lint, canonical test-tsgo, docgen, Fallow, hosted checks, or live PR smoke ran
+  here. No new test files were added, so the new-file effect-vitest inventory write was not run.
+- Stage B integration belongs to the orchestrator. The Stage B loop, CLI routing, inbox,
+  acknowledgment, and hook files were not changed by this lane.
+
+## Measurement
+
+No live push→ready wall clock was observed in this sandbox. Scripted runtime tests are not a
+live PR measurement. After combining Stage B and C, the orchestrator should babysit PR1 with
+this exact attached command from a background tool call:
+
+```sh
+bun run beep yeet monitor --until-ready
+```
+
+Paste the actual command's exit code and these emitted lines into the PR description:
+
+- The settle gate lines containing `settle: registration` and/or `settle: required-pending`,
+  including any missing contexts and tolerated matrix parents that were observed.
+- The gate line containing `settle: closeout-pending` and the
+  `[yeet] closeout: <issueCount> issue(s) for head <sha7>` line.
+- The `merge-ready: yes` status line and the final readiness gate line carrying
+  `push→ready <duration>` and its parenthesized pushed, settled, closeout, and ready instants.
+- The terminal summary
+  `[yeet] merge-ready: every hard criterion is green; hand the pull request to the operator`
+  and exit code 0. If it exits 1, paste that actual failure summary instead and re-arm after
+  fixing the blocker and publishing.
+
+Keep `push→ready unknown` if the commit date could not be read. Do not invent timestamps or
+paste a reason that never appeared. The measured transcript, plus the orchestrator's canonical
+verification results, must come from the combined PR1 head.
