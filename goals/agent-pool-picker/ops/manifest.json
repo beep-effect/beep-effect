@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "agent-pool-picker",
+    "title": "Agent Pool Picker",
+    "status": "paused",
+    "created": "2026-09-16",
+    "updated": "2026-09-16",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/agent-pool-picker",
+  "lifecycle": "paused",
+  "mission": "Ship `beep agent-pool pick`: read the Codex meter, apply the pool floors, and print the exact lane command the doctrine implies (or `hold` with reasons).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/cursor-agent-pool",
+    "graduated": "2026-09-16"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-pool-picker/README.md",
+    "goals/agent-pool-picker/SPEC.md",
+    "goals/agent-pool-picker/PLAN.md",
+    "goals/agent-pool-picker/GOAL.md",
+    "goals/agent-pool-picker/research/SOURCES.md",
+    "goals/agent-pool-doctrine/SPEC.md",
+    "explorations/cursor-agent-pool/MAP.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agent-pool-picker/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/agent-pool-picker/GOAL.md)\" -le 4000",
+    "jq . goals/agent-pool-picker/ops/manifest.json",
+    "rg -n \"agent-pool-picker|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/agent-pool-picker",
+    "git diff --check -- goals/agent-pool-picker",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored, not started. Resumes when goals/agent-pool-doctrine ships (its seat map and floors are this packet's input)."
+}

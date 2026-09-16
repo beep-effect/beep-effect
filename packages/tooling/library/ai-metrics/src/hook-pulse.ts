@@ -206,7 +206,7 @@ export type HookPulseSchemaVersion = typeof HookPulseSchemaVersion.Type;
  * @category models
  * @since 0.0.0
  */
-export const HookPulseAgentKind = LiteralKit(["claude-code", "codex-cli"]).pipe(
+export const HookPulseAgentKind = LiteralKit(["claude-code", "codex-cli", "cursor-cli"]).pipe(
   $I.annoteSchema("HookPulseAgentKind", {
     description: "Coding-agent harnesses that emit hook-pulse ledger records.",
   })

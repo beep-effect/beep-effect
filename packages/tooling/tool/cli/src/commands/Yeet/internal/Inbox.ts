@@ -658,6 +658,87 @@ export const YeetInboxRow = S.Union([
  */
 export type YeetInboxRow = typeof YeetInboxRow.Type;
 
+/**
+ * The inbox row kinds acknowledged by observation instead of an attributed closing move.
+ *
+ * **Details**
+ *
+ * Proof-job results (ruling 37) and merge-ready announcements (ruling 46) are
+ * informational. `yeet inbox ack --observed` admits exactly these kinds, and the
+ * remediation wave never owns them, so `yeet inbox list` always treats them as
+ * live. Both call sites read this one kit, so adding a kind here changes both.
+ *
+ * **Example** (Check a row kind)
+ *
+ * ```ts
+ * import { YeetInboxObservedRowKind } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetInboxObservedRowKind.is["pr-merge-ready"]("pr-merge-ready")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetInboxObservedRowKind = LiteralKit(["proof-job-finished", "pr-merge-ready"]).pipe(
+  $I.annoteSchema("YeetInboxObservedRowKind", {
+    title: "Yeet Inbox Observed Row Kind",
+    description: "Inbox row kinds acknowledged by observation: proof-job results and merge-ready announcements.",
+  })
+);
+
+/**
+ * The inbox row kinds acknowledged by observation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetInboxObservedRowKind = typeof YeetInboxObservedRowKind.Type;
+
+const isYeetInboxObservedRowKind = S.is(YeetInboxObservedRowKind);
+
+/**
+ * Whether an inbox row is acknowledged by observation rather than an attributed closing move.
+ *
+ * **Example** (A merge-ready row is observed; a check failure is not)
+ *
+ * ```ts
+ * import {
+ *   YeetCheckFailedRow,
+ *   YeetFailureCapsule,
+ *   yeetInboxRowId,
+ *   yeetInboxRowIsObserved
+ * } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetFailureCapsule.make({
+ *   bucket: "fail",
+ *   headSha: "abc123",
+ *   lane: "Check",
+ *   link: null,
+ *   observedAt: "2026-08-17T00:00:00Z",
+ *   prNumber: 754,
+ *   state: "FAILURE",
+ *   workflow: null
+ * })
+ * const row = YeetCheckFailedRow.make({
+ *   capsule,
+ *   checkout: "/repo",
+ *   id: yeetInboxRowId(capsule),
+ *   severity: "P0",
+ *   ts: "2026-08-17T00:00:00Z"
+ * })
+ *
+ * console.log(yeetInboxRowIsObserved(row)) // false
+ * ```
+ *
+ * @param row - The inbox row to classify.
+ * @returns Whether `--observed` acknowledges the row and the list treats it as always live, narrowing the row to those kinds.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetInboxRowIsObserved = (
+  row: YeetInboxRow
+): row is Extract<YeetInboxRow, { readonly kind: YeetInboxObservedRowKind }> => isYeetInboxObservedRowKind(row.kind);
+
 const yeetInboxIdentityId = (label: string, parts: ReadonlyArray<string>): string => {
   const digest = createHash("sha256").update(A.join(parts, ":")).digest("hex").slice(0, 12);
   return `${safeArtifactName(label)}-${digest}`;

@@ -249,6 +249,16 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("detached proof job comman
       )
     );
   }
+  it.effect("reaches the detached submit for --until-ready before any route legality", () =>
+    runYeetCommand(["monitor", "--until-ready", "--detach", "--plan"]).pipe(
+      Effect.flip,
+      Effect.tap((error) =>
+        Effect.sync(() =>
+          expect(error).toMatchObject({ _tag: "YeetCommandError", message: "--detach cannot be combined with --plan." })
+        )
+      )
+    )
+  );
   for (const name of ["status", "pre-push-hook"]) {
     it.effect(`does not accept --detach on ${name}`, () =>
       runYeetCommand([name, "--detach"]).pipe(

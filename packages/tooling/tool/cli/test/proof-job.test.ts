@@ -867,7 +867,7 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
       });
       yield* Job.appendYeetInboxRow(root, row);
       expect(yield* runJobCommand(["inbox", "ack", row.id, "--observed"]).pipe(Effect.flip)).toMatchObject({
-        message: "--observed applies only to proof-job-finished rows.",
+        message: "--observed applies only to proof-job-finished and pr-merge-ready rows.",
       });
     })
   );
