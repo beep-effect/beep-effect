@@ -575,6 +575,15 @@ job is skipped, the contexts stay "Expected", the PR is merge-blocked until admi
 verdict, its sources and the docs-only flag are data (`HeavyAdmission`), never a scatter of
 `if:` strings.
 
+*Amendment (2026-09-16, probe #1164):* `skip-satisfied` is not a job-level skip. A matrix job
+skipped by `if:` is never expanded; GitHub reports a single `Heavy / matrix.name: skipped`
+context and the required per-lane contexts stay "Expected", so the docs-only PR was `BLOCKED`.
+The mechanism is instead: the verify job always runs, `runs-on` switches to `ubuntu-24.04` when
+`admitted` is false, and `lane-gate` skips every lane step, so each `Heavy / <lane>` context
+expands and passes without work. `hold` is unchanged (the caller job is skipped on purpose so
+no context exists). Every "lanes report skipped" phrase in the packet, skill, runbook and the
+settle detail now reads "lanes pass without work".
+
 **Ruling 51 (B8-2) — the label `ready-for-heavy` is the only pull-request admission source.**
 `HeavyAdmissionSource = label | merge-group | main-push`. `draft == false` never admits (it is
 the status quo), `ready_for_review` is not a source (unobservable from `gh pr view`, so the

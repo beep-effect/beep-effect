@@ -2093,6 +2093,8 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   for exit 130 under a stop), and a boot-time resume that re-submits `--until-ready` jobs whose
   PR is still open. B5's "survives session restarts" does not extend to a reboot; the recipe says
   so now.
+- **Outcome:** it happened again the same afternoon: a second reboot (~15:58Z) stopped the
+  re-submitted #1161 job 59 minutes into its heavy wait, and `main` moved again (#1165) under it.
 
 ## 2026-09-16 — Two branches fixed the same settle regression and both called it ruling 50
 
@@ -2130,3 +2132,18 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   hosted evidence; paste the lane's printed `measured rows` instead, and the VersionSync floors need
   tests from the branch that owns those files (#1156). #1163 covered the merge-ready row on `main`
   first, so #1159 was closed as superseded and this receipt moved to B7 PR2.
+
+## 2026-09-16 — B8: a skipped matrix job reports `Heavy / matrix.name`, not the lanes
+
+- Doing: the docs-only probe PR C #1164 after PR B merged; the admission job said
+  `verdict=skip-satisfied`, heavy was called with `admitted: false`.
+- Evidence: the head's check runs were `Heavy Admission: success` and exactly one heavy
+  context, `Heavy / matrix.name: completed skipped`; `gh pr checks --required` listed no
+  `Heavy / *` row and the PR sat `BLOCKED MERGEABLE`. GitHub never expands a matrix for a job
+  its `if:` skipped, so the per-lane names required by the ruleset do not exist. PR A's design
+  comment ("GitHub reports each matrix context as skipped") was wrong and was only provable on
+  `main`, since the runner group admits main-ref workflows only.
+- Prevention: the brief's plan B is now PR D (`runs-on` switch to `ubuntu-24.04` when not
+  admitted, steps skipped by `lane-gate`). The general lesson: any ruleset-satisfying "skip"
+  must keep the job running and skip its steps; a workflow-file claim that can only be proven
+  on `main` needs its probe PR planned before the claim merges, not after.
