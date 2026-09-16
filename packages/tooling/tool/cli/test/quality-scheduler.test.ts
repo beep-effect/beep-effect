@@ -3161,8 +3161,11 @@ describe("quality-scheduler", () => {
               )
             );
 
-            yield* Effect.sleep("120 millis");
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
+            const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+              until: A.isReadonlyArrayNonEmpty,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)));
+            expect(queued).toHaveLength(1);
             expect(sameCheckout.pollUnsafe()).toBeUndefined();
 
             const sibling = yield* withQualityAdmission(
@@ -3456,9 +3459,12 @@ describe("quality-scheduler", () => {
             const fiber = yield* Effect.forkChild(
               withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig)
             );
-            yield* Effect.sleep("100 millis");
+            const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+              until: A.isReadonlyArrayNonEmpty,
+              schedule: Schedule.spaced(Duration.millis(10)),
+            }).pipe(Effect.timeout(Duration.seconds(5)));
             expect(fiber.pollUnsafe()).toBeUndefined();
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
+            expect(queued).toHaveLength(1);
             yield* Ref.set(busy, false);
             expect(yield* Fiber.join(fiber)).toBe("ran");
             expect(yield* Ref.get(releases)).toBe(1);
