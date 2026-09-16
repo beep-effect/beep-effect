@@ -2,8 +2,9 @@
   "$schema": "https://v2-10-13.turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
-    "lint": {
-      "cache": false
+    "build": {
+      "inputs": ["$TURBO_EXTENDS$", ".env*"],
+      "env": ["$TURBO_EXTENDS$", "ANALYZE"]
     }
   }
 }

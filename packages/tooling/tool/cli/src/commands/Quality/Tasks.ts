@@ -1084,12 +1084,17 @@ const turboCacheArgsFor = (tasks: ReadonlyArray<string>, args: ReadonlyArray<str
 
 const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> => {
   const [optionArgs, passthroughArgs] = splitAtTurboPassthrough(args);
+  // Golden regeneration writes fixtures, so even a second identical invocation
+  // must execute instead of replaying a successful cached regeneration.
+  const executionArgs = configStringEqualsSync("REGEN_GOLDENS", "1")
+    ? ["--force", ...A.filter(optionArgs, (arg) => arg !== "--force" && !Str.startsWith(arg, "--force="))]
+    : optionArgs;
   return [
     "turbo",
     "run",
     ...tasks,
     ...turboCacheArgsFor(tasks, args),
-    ...optionArgs,
+    ...executionArgs,
     ...labsExcludeFilterArgs(tasks, optionArgs),
     ...passthroughArgs,
   ];
