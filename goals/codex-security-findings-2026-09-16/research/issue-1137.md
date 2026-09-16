@@ -6,11 +6,15 @@ while the origin gate is busy and releases it after use`. The logged assertion
 expected one queue entry and observed zero, at line 3461 of the captured source.
 It ran after a fixed 100 ms sleep. No property seed or counterexample was involved.
 
-The test now completes a Deferred when the gate is first attempted and waits for
-that event before inspecting the queue. The busy gate remains held until after
-the assertion; the test then releases it, joins the work, and checks one release.
-The five-second timeout bounds a broken fixture without assuming startup latency.
-The focused scheduler suite passed with the other security regression suites.
+This branch first replaced the sleep with a Deferred completed on the gate's
+first attempt, bounded by a five-second timeout. While that change queued for
+publication, PR #1149 landed a rewrite of the same test on main: it polls the
+queue directory under the live clock until an entry appears, with the same
+five-second bound, and holds the busy gate until after the assertion. The two
+fixes remove the same fixed sleep, so the branch adopted main's version at the
+merge and carries no edit of its own to that test. The focused scheduler suite
+passes on the merged tree, and this pull request closes the issue on the
+strength of that merged state.
 
 Issue #1086 contained only an empty nightly publisher mailbox, with no comments
 or defect report. The operator explicitly authorized closing it if meaningless;

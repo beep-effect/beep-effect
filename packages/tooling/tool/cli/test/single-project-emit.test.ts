@@ -1,3 +1,4 @@
+import { findRepoRoot } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -60,18 +61,6 @@ const emitScriptsOf = (raw: string): ReadonlyArray<string> => {
   const parsed = JSON.parse(raw) as { readonly scripts?: Readonly<Record<string, string>> };
   return A.getSomes([O.fromNullishOr(parsed.scripts?.["beep:build"]), O.fromNullishOr(parsed.scripts?.["beep:check"])]);
 };
-
-const findRepoRoot = Effect.fnUntraced(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  let rootDir = path.resolve(process.cwd());
-  while (!(yield* fs.exists(path.join(rootDir, "turbo.json")))) {
-    const parent = path.dirname(rootDir);
-    expect(parent).not.toBe(rootDir);
-    rootDir = parent;
-  }
-  return rootDir;
-});
 
 const collectViolations = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;

@@ -64,6 +64,7 @@ const renderCategoryLabel = (report: VersionCategoryReportValue): string =>
     docker: () => "Docker Images",
     biome: () => "Biome Schema",
     effect: () => "Effect Catalog",
+    turbo: () => "Turbo Schema",
   });
 
 const renderStatusLabel = (status: VersionCategoryStatusValue): string =>

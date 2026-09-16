@@ -1,5 +1,5 @@
 {
-  "$schema": "https://v2-10-2.turborepo.dev/schema.json",
+  "$schema": "https://v2-10-13.turborepo.dev/schema.json",
   "futureFlags": {
     "affectedUsingTaskInputs": true,
     "filterUsingTasks": true,
@@ -15,7 +15,7 @@
       "tsconfig.base.json",
       "tsconfig.packages.json"
     ],
-    "env": ["BEEP_ESLINT_PROFILE", "VITE_COSMOS_SPIKE"],
+    "env": ["BEEP_ESLINT_PROFILE", "VITE_COSMOS_SPIKE", "REGEN_GOLDENS"],
     "passThroughEnv": [
       "BEEP_AGENT_SESSION_ID",
       "BEEP_NODE_BIN",
@@ -37,7 +37,6 @@
       "CODEX_SESSION_ID",
       "CODEX_THREAD_ID",
       "GITHUB_ACTIONS",
-      "REGEN_GOLDENS",
       "TURBO_CACHE",
       "TURBO_FORCE",
       "TURBO_TOKEN",
@@ -58,7 +57,7 @@
     "doctest": {
       "cache": true,
       "outputs": [],
-      "dependsOn": ["^transit"],
+      "dependsOn": ["^transit", "@beep/utils#transit"],
       "env": ["BEEP_VITEST_DOCTEST"],
       "inputs": [
         "src/**",
@@ -71,7 +70,9 @@
         "$TURBO_ROOT$/vitest.aliases.generated.json",
         "$TURBO_ROOT$/packages/foundation/modeling/utils/src/**",
         "!node_modules/**",
-        "$TURBO_ROOT$/packages/tooling/tool/cli/test/global-cleanup.ts"
+        "$TURBO_ROOT$/packages/tooling/tool/cli/test/global-cleanup.ts",
+        ".env",
+        ".env.*"
       ]
     },
     "lint:deprecated-apis": {
@@ -95,7 +96,26 @@
         "$TURBO_ROOT$/apps/**/package.json",
         "$TURBO_ROOT$/infra/package.json",
         "!node_modules/**",
-        "!.beep/**"
+        "!.beep/**",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/docs/**",
+        "!**/.next/**",
+        "!**/coverage/**",
+        "!**/.turbo/**",
+        "!**/.cache/**",
+        "!**/generated/**",
+        "!**/vendor/**",
+        "!$TURBO_ROOT$/**/node_modules/**/package.json",
+        "!$TURBO_ROOT$/**/dist/**/package.json",
+        "!$TURBO_ROOT$/**/build/**/package.json",
+        "!$TURBO_ROOT$/**/.next/**/package.json",
+        "!$TURBO_ROOT$/**/coverage/**/package.json",
+        "!$TURBO_ROOT$/**/storybook-static/**/package.json",
+        "!$TURBO_ROOT$/**/.turbo/**/package.json",
+        "!$TURBO_ROOT$/**/.beep/**/package.json",
+        ".env",
+        ".env.*"
       ]
     },
     "lint:jsdoc": {
@@ -110,7 +130,25 @@
         "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/package.json",
         "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/**",
         "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
-        "!node_modules/**"
+        "!node_modules/**",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/docs/**",
+        "!**/.next/**",
+        "!**/coverage/**",
+        "!**/storybook-static/**",
+        "!**/.turbo/**",
+        "!**/src-tauri/target/**",
+        "!$TURBO_ROOT$/**/node_modules/**/package.json",
+        "!$TURBO_ROOT$/**/dist/**/package.json",
+        "!$TURBO_ROOT$/**/build/**/package.json",
+        "!$TURBO_ROOT$/**/.next/**/package.json",
+        "!$TURBO_ROOT$/**/coverage/**/package.json",
+        "!$TURBO_ROOT$/**/storybook-static/**/package.json",
+        "!$TURBO_ROOT$/**/.turbo/**/package.json",
+        "!$TURBO_ROOT$/**/.beep/**/package.json",
+        ".env",
+        ".env.*"
       ]
     },
     "//#lint:jsdoc:root": {
@@ -118,15 +156,28 @@
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint"],
       "inputs": [
-        "**/*.{ts,tsx,js,jsx,mjs,cjs}",
-        "!packages/**",
-        "!apps/**",
-        "!infra/**",
+        "apps/**/*.{ts,tsx}",
+        "packages/**/*.{ts,tsx}",
+        "infra/**/*.ts",
+        "!apps/labs/**/*.{ts,tsx}",
+        "!**/.context/**/*.{ts,tsx}",
         "!**/node_modules/**",
         "eslint.config.mjs",
         "tsdoc.json",
         "packages/tooling/policy-pack/repo-configs/src/eslint/**",
-        "packages/tooling/policy-pack/repo-configs/src/internal/eslint/**"
+        "packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!**/src-tauri/target/**",
+        "!docs/generated/**",
+        "!docs/_internal/**",
+        "!{apps,packages,infra}/**/docs/**",
+        "**/package.json",
+        "!**/.beep/**/package.json",
+        "!**/build/**/package.json"
       ]
     },
     "//#lint:policy-fingerprint": {
@@ -213,7 +264,14 @@
       "persistent": false,
       "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!.beep/**",
+        "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
+        "$TURBO_ROOT$/tools/tsgo-shim/package.json",
+        ".env",
+        ".env.*"
+      ],
       "env": [
         "APP_ADMINS_EMAILS",
         "ALLOWED_EMAILS",
@@ -245,7 +303,8 @@
     },
     "@beep/api-docs#build": {
       "dependsOn": ["^build"],
-      "outputs": []
+      "outputs": [],
+      "inputs": ["$TURBO_DEFAULT$", ".env", ".env.*"]
     },
     "lint": {
       "cache": true,
@@ -255,7 +314,9 @@
         "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/rules/**",
         "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/configs/**",
         "!$TURBO_ROOT$/tsconfig*.json",
-        "!.beep/**"
+        "!.beep/**",
+        ".env",
+        ".env.*"
       ]
     },
     "lint:fix": {
@@ -269,11 +330,18 @@
     },
     "check": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!.beep/**",
+        "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
+        "$TURBO_ROOT$/tools/tsgo-shim/package.json",
+        ".env",
+        ".env.*"
+      ],
       "outputs": []
     },
     "test": {
-      "dependsOn": ["^transit"],
+      "dependsOn": ["^transit", "@beep/utils#transit"],
       "passThroughEnv": [
         "GITHUB_STEP_SUMMARY",
         "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE"
@@ -282,8 +350,12 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
-        "!.beep/**"
-      ]
+        "$TURBO_ROOT$/vitest.aliases.generated.json",
+        "!.beep/**",
+        ".env",
+        ".env.*"
+      ],
+      "env": ["BEEP_FC_NUM_RUNS", "BEEP_FC_SEED"]
     },
     "package-test-typecheck": {
       "cache": false,
@@ -303,13 +375,16 @@
       "outputs": [".turbo/package-test-typecheck-result.json"]
     },
     "test:property": {
-      "dependsOn": ["^transit"],
+      "dependsOn": ["^transit", "@beep/utils#transit"],
       "env": ["BEEP_FC_NUM_RUNS", "BEEP_FC_SEED"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
-        "!.beep/**"
+        "$TURBO_ROOT$/vitest.aliases.generated.json",
+        "!.beep/**",
+        ".env",
+        ".env.*"
       ]
     },
     "test:integration": {
@@ -326,6 +401,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
+        "$TURBO_ROOT$/vitest.aliases.generated.json",
         "!.beep/**"
       ]
     },
@@ -343,6 +419,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
+        "$TURBO_ROOT$/vitest.aliases.generated.json",
         "!.beep/**"
       ]
     },
@@ -354,6 +431,7 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
+        "$TURBO_ROOT$/vitest.aliases.generated.json",
         "!.beep/**"
       ]
     },
@@ -387,7 +465,7 @@
       "inputs": ["$TURBO_DEFAULT$", "!.beep/**"]
     },
     "audit": {
-      "cache": true,
+      "cache": false,
       "dependsOn": ["^audit"],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -432,8 +510,8 @@
     },
     "docgen": {
       "cache": true,
-      "dependsOn": ["transit"],
-      "inputs": ["$TURBO_DEFAULT$", "!.beep/**"],
+      "dependsOn": ["transit", "@beep/repo-docgen#transit"],
+      "inputs": ["$TURBO_DEFAULT$", "!.beep/**", ".env", ".env.*"],
       "outputs": ["docs/**", ".beep/docgen/**", ".jsdoc-loop/generated-docs/**"]
     },
     "dev": {
@@ -457,7 +535,9 @@
         "$TURBO_ROOT$/packages/foundation/ui-system/*/assets/**",
         "$TURBO_ROOT$/packages/foundation/ui-system/*/styles/**",
         "$TURBO_ROOT$/packages/drivers/graph-3d/src/**",
-        "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**"
+        "$TURBO_ROOT$/packages/drivers/graph-3d/stories/**",
+        ".env",
+        ".env.*"
       ],
       "outputs": ["storybook-static/**"]
     },
@@ -494,7 +574,22 @@
         "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
         "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
         "$TURBO_ROOT$/standards/effect-laws.allowlist.jsonc",
-        "!node_modules/**"
+        "!node_modules/**",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/.turbo/**",
+        "!**/coverage/**",
+        "!$TURBO_ROOT$/**/node_modules/**/package.json",
+        "!$TURBO_ROOT$/**/dist/**/package.json",
+        "!$TURBO_ROOT$/**/build/**/package.json",
+        "!$TURBO_ROOT$/**/.next/**/package.json",
+        "!$TURBO_ROOT$/**/coverage/**/package.json",
+        "!$TURBO_ROOT$/**/storybook-static/**/package.json",
+        "!$TURBO_ROOT$/**/.turbo/**/package.json",
+        "!$TURBO_ROOT$/**/.beep/**/package.json",
+        ".env",
+        ".env.*"
       ]
     },
     "//#lint:native-runtime:roots": {
@@ -507,7 +602,15 @@
         "packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts",
         "packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
         "packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
-        "standards/effect-laws.allowlist.jsonc"
+        "standards/effect-laws.allowlist.jsonc",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/storybook-static/**",
+        "!**/.next/**",
+        "!**/.turbo/**",
+        "!**/docs/**"
       ]
     },
     "//#lint:package-scripts": {
@@ -521,7 +624,14 @@
         "apps/**/src/**/*.{ts,tsx}",
         "**/vitest*.config.ts",
         "!**/node_modules/**",
-        "!**/test/fixtures/**"
+        "!**/test/fixtures/**",
+        "!**/.beep/**/package.json",
+        "!**/.turbo/**/package.json",
+        "!**/dist/**/package.json",
+        "!**/build/**/package.json",
+        "!**/coverage/**/package.json",
+        "!**/.next/**/package.json",
+        "!**/storybook-static/**/package.json"
       ]
     },
     "//#knowledge:semantic-delta": {
@@ -590,7 +700,14 @@
         "**/package.json",
         "packages/foundation/modeling/identity/src/packages.ts",
         "!**/node_modules/**",
-        "!**/dist/**"
+        "!**/dist/**",
+        "!**/dist-test/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.turbo/**",
+        "!**/.beep/**/package.json",
+        "!**/.next/**/package.json",
+        "!**/storybook-static/**/package.json"
       ]
     },
     "//#lint:effect-imports": {
@@ -616,7 +733,8 @@
         "tsconfig.json",
         "vitest.aliases.generated.json",
         "!**/node_modules/**",
-        "!**/dist/**"
+        "!**/dist/**",
+        "!**/coverage/**"
       ]
     },
     "//#lint:oxlint": {
@@ -669,16 +787,7 @@
       "cache": true,
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint"],
-      "inputs": [
-        "**/*",
-        "!.git/**",
-        "!**/.git/**",
-        "!**/node_modules/**",
-        "!.beep/**",
-        "!**/dist/**",
-        "!**/.turbo/**",
-        "!**/coverage/**"
-      ]
+      "inputs": ["docs/ROADMAP.md", "goals/**", "explorations/**"]
     },
     "//#lint:judge-rubric": {
       "cache": true,
@@ -948,7 +1057,13 @@
         "docs/**/*.{md,mdx}",
         "goals/*/[A-Z]*.md",
         "packages/foundation/**/package.json",
-        "packages/foundation/**/src/**"
+        "packages/foundation/**/src/**",
+        "!{.patterns,standards,.claude/skills,docs,goals}/**/node_modules/**",
+        "!{.patterns,standards,.claude/skills,docs,goals}/**/dist/**",
+        "!{.patterns,standards,.claude/skills,docs,goals}/**/vendor/**",
+        "!{.patterns,standards,.claude/skills,docs,goals}/**/.repos/**",
+        "!{.patterns,standards,.claude/skills,docs,goals}/**/generated/**",
+        "!{.patterns,standards,.claude/skills,docs,goals}/**/_generated/**"
       ]
     },
     "//#lint:ecosystem-polarity": {
@@ -1007,7 +1122,21 @@
         "**/tsconfig*.json",
         "**/docgen.json",
         "syncpack.config.ts",
-        "tsconfig.base.json"
+        "tsconfig.base.json",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!**/src-tauri/target/**",
+        "!**/src-tauri/gen/**",
+        "!**/.jsdoc-loop/generated-docs/**",
+        "!docs/generated/**",
+        "!docs/_internal/**",
+        "!{apps,packages,infra}/**/docs/**"
       ]
     },
     "//#repo-sanity:changeset-graph": {
@@ -1018,24 +1147,92 @@
         ".changeset/**",
         "**/package.json",
         "bun.lock",
-        "standards/changesets.retired-packages.json"
+        "standards/changesets.retired-packages.json",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!**/src-tauri/target/**",
+        "!**/src-tauri/gen/**",
+        "!**/.jsdoc-loop/generated-docs/**",
+        "!docs/generated/**",
+        "!docs/_internal/**",
+        "!{apps,packages,infra}/**/docs/**"
       ]
     },
     "//#repo-sanity:syncpack": {
       "cache": true,
       "outputs": [],
-      "inputs": ["syncpack.config.ts", "**/package.json", "bun.lock"]
+      "inputs": [
+        "syncpack.config.ts",
+        "**/package.json",
+        "bun.lock",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!**/src-tauri/target/**",
+        "!**/src-tauri/gen/**",
+        "!**/.jsdoc-loop/generated-docs/**",
+        "!docs/generated/**",
+        "!docs/_internal/**",
+        "!{apps,packages,infra}/**/docs/**"
+      ]
     },
     "//#repo-sanity:sherif": {
       "cache": true,
       "outputs": [],
-      "inputs": ["**/package.json", "bun.lock"]
+      "inputs": [
+        "**/package.json",
+        "bun.lock",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!**/src-tauri/target/**",
+        "!**/src-tauri/gen/**",
+        "!**/.jsdoc-loop/generated-docs/**",
+        "!docs/generated/**",
+        "!docs/_internal/**",
+        "!{apps,packages,infra}/**/docs/**"
+      ]
     },
     "//#repo-sanity:versions": {
       "cache": true,
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint"],
-      "inputs": [".bun-version", ".nvmrc", "**/package.json", "mise.toml"]
+      "inputs": [
+        ".bun-version",
+        ".nvmrc",
+        "**/package.json",
+        "mise.toml",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!**/src-tauri/target/**",
+        "!**/src-tauri/gen/**",
+        "!**/.jsdoc-loop/generated-docs/**",
+        "!docs/generated/**",
+        "!docs/_internal/**",
+        "!{apps,packages,infra}/**/docs/**"
+      ]
     },
     "//#repo-sanity:bun-audit": {
       "cache": false,
@@ -1060,7 +1257,23 @@
       "cache": true,
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint"],
-      "inputs": ["**/package.json"]
+      "inputs": [
+        "**/package.json",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!**/src-tauri/target/**",
+        "!**/src-tauri/gen/**",
+        "!**/.jsdoc-loop/generated-docs/**",
+        "!docs/generated/**",
+        "!docs/_internal/**",
+        "!{apps,packages,infra}/**/docs/**"
+      ]
     }
   }
 }

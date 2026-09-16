@@ -50,3 +50,10 @@ decides whether the seconds target needs a webhook source at all.
   operator PR #921 and is not live (appended correction in CAPTURE). The
   reframed gap is push source + idle wake + lane dispatch. Capture stays open
   until the operator signals the dump is done; nothing is scheduled.
+- 2026-09-16: the polling half of the reframed gap is being built as
+  [`goals/time-to-certainty`](../../goals/time-to-certainty/PLAN.md) item B7
+  (`yeet monitor --until-ready`, rulings 41–49 in that packet's
+  `research/decisions.md`): a ruleset-keyed settle rule, automatic read-first
+  closeout, an exit-0 ready terminal, required-only exit codes, and one
+  `pr-merge-ready` inbox row per head. Webhooks, push sources, and lane
+  dispatch stay out of scope here; this packet stays at capture.

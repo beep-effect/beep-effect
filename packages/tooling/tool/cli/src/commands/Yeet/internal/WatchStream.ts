@@ -31,14 +31,16 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, HashMap, Match } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { YeetSettleVerdict } from "./Settle.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriteria, YeetMergeReadyCriterion } from "./Verdict.ts";
 import type { YeetMonitorComment } from "./MonitorComments.ts";
 
@@ -59,42 +61,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/WatchStream");
  * @since 0.0.0
  */
 export const YEET_WATCH_SCHEMA_VERSION = "yeet-watch/v1";
-
-/**
- * Closed outcome domain a check occupies from the watch's point of view.
- *
- * **Details**
- *
- * This is the internal vocabulary events speak. The boundary keeps GitHub's
- * raw `bucket`/`state` strings; {@link classifyYeetCheckOutcome} maps them
- * here totally, so downstream code matches on four cases instead of an
- * open-ended string set.
- *
- * **Example** (Check an outcome)
- *
- * ```ts
- * import { YeetCheckOutcome } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(YeetCheckOutcome.is.fail("fail")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const YeetCheckOutcome = LiteralKit(["pending", "pass", "fail", "skip"]).pipe(
-  $I.annoteSchema("YeetCheckOutcome", {
-    title: "Yeet Check Outcome",
-    description: "Closed classification of one PR check's state within a watch snapshot.",
-  })
-);
-
-/**
- * Closed outcome domain a check occupies from the watch's point of view.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type YeetCheckOutcome = typeof YeetCheckOutcome.Type;
 
 // The contains-lists mirror yeet status's classifiers (Status.ts), which have
 // watched these strings in the field since the monitor existed. Order matters:
@@ -243,6 +209,7 @@ export class YeetWatchThread extends S.Class<YeetWatchThread>($I`YeetWatchThread
  */
 export class YeetWatchSnapshot extends S.Class<YeetWatchSnapshot>($I`YeetWatchSnapshot`)(
   {
+    settle: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     checks: S.Array(YeetWatchCheck),
     headSha: S.NonEmptyString,
     mergeable: S.String,
@@ -427,6 +394,53 @@ export class YeetHeadChanged extends S.Class<YeetHeadChanged>($I`YeetHeadChanged
 ) {}
 
 /**
+ * The settle wait reason changed between polls.
+ *
+ * **Details**
+ *
+ * `from`/`to` are `null` when the head was settled with the closeout bound —
+ * the state in which merge readiness is evaluated. `pending` and `missing`
+ * carry the open census at the moment of the change so a stream consumer sees
+ * which contexts hold the wait without re-reading the ruleset.
+ *
+ * **Example** (Registration ended, required contexts still pending)
+ *
+ * ```ts
+ * import { YeetSettleChanged } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = YeetSettleChanged.make({
+ *   at: "2026-09-16T00:01:00Z",
+ *   headSha: "abc123",
+ *   from: "registration",
+ *   to: "required-pending",
+ *   pending: ["Heavy / Check"],
+ *   missing: ["Heavy / Docgen"]
+ * })
+ * console.log(row.kind) // "settle-changed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetSettleChanged extends S.Class<YeetSettleChanged>($I`YeetSettleChanged`)(
+  {
+    kind: S.tag("settle-changed"),
+    schemaVersion: S.Literal(YEET_WATCH_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_WATCH_SCHEMA_VERSION))
+    ),
+    at: S.String,
+    headSha: S.NonEmptyString,
+    from: S.NullOr(YeetSettleReason),
+    to: S.NullOr(YeetSettleReason),
+    pending: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
+    missing: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
+  },
+  $I.annote("YeetSettleChanged", {
+    description: "The merge loop's settle wait reason moved between polls, with the open census.",
+  })
+) {}
+
+/**
  * A pull request comment arrived: one row per observed comment.
  *
  * **Details**
@@ -571,7 +585,14 @@ export const yeetWatchCommentEvent: {
  * @category models
  * @since 0.0.0
  */
-export const YeetWatchEndReason = LiteralKit(["all-terminal", "pr-merged", "pr-closed", "poll-error", "event"]).pipe(
+export const YeetWatchEndReason = LiteralKit([
+  "all-terminal",
+  "pr-merged",
+  "pr-closed",
+  "poll-error",
+  "event",
+  "settle-timeout",
+]).pipe(
   $I.annoteSchema("YeetWatchEndReason", {
     title: "Yeet Watch End Reason",
     description: "Why a yeet watch stream ended.",
@@ -587,7 +608,19 @@ export const YeetWatchEndReason = LiteralKit(["all-terminal", "pr-merged", "pr-c
 export type YeetWatchEndReason = typeof YeetWatchEndReason.Type;
 
 /**
- * The watch ended, with the reason and the final failure census.
+ * The watch ended, with separate required and optional failure counts.
+ *
+ * **Example** (Optional failures do not fail the watch)
+ *
+ * ```ts
+ * import { YeetWatchEnded } from "@beep/repo-cli/test/Yeet"
+ *
+ * const ended = YeetWatchEnded.make({
+ *   at: "2026-09-16T00:00:00Z", headSha: "abc", reason: "all-terminal",
+ *   failing: 0, optionalFailing: 1
+ * })
+ * console.log(ended.failing) // 0
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -602,6 +635,10 @@ export class YeetWatchEnded extends S.Class<YeetWatchEnded>($I`YeetWatchEnded`)(
     headSha: S.NonEmptyString,
     reason: YeetWatchEndReason,
     failing: S.Finite,
+    optionalFailing: S.Finite.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(0)),
+      S.withConstructorDefault(Effect.succeed(0))
+    ),
   },
   $I.annote("YeetWatchEnded", {
     description: "Last row of a watch stream: why it ended and how many checks were failing.",
@@ -627,6 +664,7 @@ export const YeetWatchEvent = S.Union([
   YeetMergeabilityChanged,
   YeetMergeReadyCriterionChanged,
   YeetHeadChanged,
+  YeetSettleChanged,
   YeetCommentPosted,
   YeetWatchEnded,
 ]).pipe(
@@ -733,7 +771,7 @@ export class YeetWatchDiffInput extends S.Class<YeetWatchDiffInput>($I`YeetWatch
  *   threads: []
  * })
  * const next = YeetWatchSnapshot.make({
- *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "fail" })],
+ *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "fail", required: true })],
  *   headSha: "abc",
  *   mergeable: "MERGEABLE",
  *   prNumber: 751,
@@ -752,8 +790,23 @@ export class YeetWatchDiffInput extends S.Class<YeetWatchDiffInput>($I`YeetWatch
  */
 export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray<YeetWatchEvent> => {
   const { at, next, prev } = input;
+  const from = O.getOrNull(O.flatMap(prev.settle, (verdict) => verdict.reason));
+  const to = O.getOrNull(O.flatMap(next.settle, (verdict) => verdict.reason));
+  const settleEvents: ReadonlyArray<YeetWatchEvent> =
+    from === to || O.isNone(next.settle)
+      ? []
+      : [
+          YeetSettleChanged.make({
+            at,
+            headSha: next.headSha,
+            from,
+            to,
+            pending: next.settle.value.census.pending,
+            missing: next.settle.value.census.missing,
+          }),
+        ];
   if (prev.headSha !== next.headSha) {
-    return [YeetHeadChanged.make({ at, from: prev.headSha, to: next.headSha })];
+    return [YeetHeadChanged.make({ at, from: prev.headSha, to: next.headSha }), ...settleEvents];
   }
 
   const previousChecks = checkOutcomes(prev);
@@ -812,7 +865,7 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
         ];
   });
 
-  return A.appendAll(A.appendAll(A.appendAll(checkEvents, threadEvents), mergeabilityEvents), criteriaEvents);
+  return [...checkEvents, ...threadEvents, ...mergeabilityEvents, ...criteriaEvents, ...settleEvents];
 };
 
 /**
@@ -864,7 +917,7 @@ export const yeetWatchEndReason = (snapshot: YeetWatchSnapshot): O.Option<YeetWa
 };
 
 /**
- * Count the failing checks in a snapshot.
+ * Count the failing required checks in a snapshot.
  *
  * **Example** (Count a red snapshot)
  *
@@ -872,7 +925,7 @@ export const yeetWatchEndReason = (snapshot: YeetWatchSnapshot): O.Option<YeetWa
  * import { countYeetWatchFailures, YeetWatchCheck, YeetWatchSnapshot } from "@beep/repo-cli/test/Yeet"
  *
  * const snapshot = YeetWatchSnapshot.make({
- *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "fail" })],
+ *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "fail", required: true })],
  *   headSha: "abc",
  *   mergeable: "MERGEABLE",
  *   prNumber: 751,
@@ -884,9 +937,34 @@ export const yeetWatchEndReason = (snapshot: YeetWatchSnapshot): O.Option<YeetWa
  * ```
  *
  * @param snapshot - The snapshot to count within.
- * @returns How many checks classify as `fail`.
+ * @returns How many required checks classify as `fail`.
  * @category getters
  * @since 0.0.0
  */
 export const countYeetWatchFailures = (snapshot: YeetWatchSnapshot): number =>
-  A.length(A.filter(snapshot.checks, (check) => YeetCheckOutcome.is.fail(check.outcome)));
+  A.length(A.filter(snapshot.checks, (check) => check.required && YeetCheckOutcome.is.fail(check.outcome)));
+
+/**
+ * Count optional failures for stream consumers without changing the exit code.
+ *
+ * **Example** (Count an optional red)
+ *
+ * ```ts
+ * import {
+ *   countYeetWatchOptionalFailures, YeetWatchCheck, YeetWatchSnapshot
+ * } from "@beep/repo-cli/test/Yeet"
+ *
+ * const snapshot = YeetWatchSnapshot.make({
+ *   checks: [YeetWatchCheck.make({ name: "Vercel", outcome: "fail", required: false })],
+ *   headSha: "abc", mergeable: "MERGEABLE", prNumber: 751, state: "OPEN", threads: []
+ * })
+ * console.log(countYeetWatchOptionalFailures(snapshot)) // 1
+ * ```
+ *
+ * @param snapshot - The observed check board, including each check's required flag.
+ * @returns The number of optional checks with a failing outcome.
+ * @category getters
+ * @since 0.0.0
+ */
+export const countYeetWatchOptionalFailures = (snapshot: YeetWatchSnapshot): number =>
+  A.length(A.filter(snapshot.checks, (check) => !check.required && YeetCheckOutcome.is.fail(check.outcome)));

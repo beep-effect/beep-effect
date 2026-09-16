@@ -369,3 +369,149 @@ describe("the monitor check watch recorder", () => {
     ).pipe(provideScopedLayer(PlatformLayer))
   );
 });
+
+// B7: a nonzero fail-fast watch is only a failure when the required census is red.
+const censusSpawnerLayer = (
+  calls: Ref.Ref<number>,
+  required: ReadonlyArray<string>,
+  all = '[{"name":"Vercel","bucket":"fail","state":"FAILURE"}]'
+) =>
+  Layer.effect(
+    ChildProcessSpawner.ChildProcessSpawner,
+    Effect.succeed(
+      ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) return Effect.die("expected a standard command");
+        if (A.contains(command.args, "--watch")) {
+          return Ref.updateAndGet(calls, (n) => n + 1).pipe(Effect.as(stubHandle(1, "checks failed")));
+        }
+        if (A.contains(command.args, "--required")) {
+          return Ref.get(calls).pipe(
+            Effect.map((n) => stubHandle(0, required[Math.min(n - 1, required.length - 1)] ?? "invalid"))
+          );
+        }
+        return Effect.succeed(stubHandle(0, all));
+      })
+    )
+  );
+
+const requiredGreen = '[{"name":"Check","bucket":"pass","state":"SUCCESS"}]';
+const requiredPending = '[{"name":"Check","bucket":"pending","state":"QUEUED"}]';
+const requiredRed = '[{"name":"Check","bucket":"fail","state":"FAILURE"}]';
+
+describe("plain monitor required census", () => {
+  for (const required of [requiredGreen, "[]"]) {
+    it.live(`passes optional reds and replaces the recorded failure (${required})`, () =>
+      withTempDirectory((root) =>
+        Effect.gen(function* () {
+          const calls = yield* Ref.make(0);
+          const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+          yield* runMonitorCheckWatchForTesting(
+            monitorPhaseContext(root),
+            A.drop(monitorSteps(root), 1),
+            recorder,
+            "watch failed",
+            []
+          ).pipe(provideScopedLayer(censusSpawnerLayer(calls, [required])));
+          expect(yield* Ref.get(calls)).toBe(1);
+          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([0]);
+          expect(
+            A.some(
+              A.map(yield* TestConsole.logLines, String),
+              Str.includes("optional check(s) red: Vercel; required census green")
+            )
+          ).toBe(true);
+        })
+      ).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, TestConsole.layer)))
+    );
+  }
+
+  for (const required of [requiredRed, "invalid"]) {
+    it.live(`preserves a failure for a red or unreadable required census (${required})`, () =>
+      withTempDirectory((root) =>
+        Effect.gen(function* () {
+          const calls = yield* Ref.make(0);
+          const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+          const error = yield* Effect.flip(
+            runMonitorCheckWatchForTesting(
+              monitorPhaseContext(root),
+              A.drop(monitorSteps(root), 1),
+              recorder,
+              "watch failed",
+              []
+            ).pipe(provideScopedLayer(censusSpawnerLayer(calls, [required])))
+          );
+          expect(error.message).toContain("watch failed");
+          expect(yield* Ref.get(calls)).toBe(1);
+          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
+        })
+      ).pipe(provideScopedLayer(PlatformLayer))
+    );
+  }
+
+  it.live(
+    "retries pending required checks, retaining only the successful census attempt",
+    () =>
+      withTempDirectory((root) =>
+        Effect.gen(function* () {
+          const calls = yield* Ref.make(0);
+          const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+          yield* runMonitorCheckWatchForTesting(
+            monitorPhaseContext(root),
+            A.drop(monitorSteps(root), 1),
+            recorder,
+            "watch failed",
+            []
+          ).pipe(provideScopedLayer(censusSpawnerLayer(calls, [requiredPending, requiredGreen])));
+          expect(yield* Ref.get(calls)).toBe(2);
+          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([0]);
+        })
+      ).pipe(provideScopedLayer(PlatformLayer)),
+    20_000
+  );
+
+  for (const all of ["invalid", "[]", requiredRed]) {
+    it.live(`does not relabel an unproven optional failure as green (${all})`, () =>
+      withTempDirectory((root) =>
+        Effect.gen(function* () {
+          const calls = yield* Ref.make(0);
+          const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+          const error = yield* Effect.flip(
+            runMonitorCheckWatchForTesting(
+              monitorPhaseContext(root),
+              A.drop(monitorSteps(root), 1),
+              recorder,
+              "watch failed",
+              []
+            ).pipe(provideScopedLayer(censusSpawnerLayer(calls, [requiredGreen], all)))
+          );
+          expect(error.message).toContain("watch failed");
+          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
+        })
+      ).pipe(provideScopedLayer(PlatformLayer))
+    );
+  }
+
+  for (const timeout of [0, 20]) {
+    it.live(`bounds pending retries and preserves their failure record (${timeout}ms)`, () =>
+      withTempDirectory((root) =>
+        Effect.gen(function* () {
+          const calls = yield* Ref.make(0);
+          const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+          const error = yield* Effect.flip(
+            runMonitorCheckWatchForTesting(
+              monitorPhaseContext(root),
+              A.drop(monitorSteps(root), 1),
+              recorder,
+              "watch failed",
+              [],
+              timeout
+            ).pipe(provideScopedLayer(censusSpawnerLayer(calls, [requiredPending])))
+          );
+          expect(error.message).toContain("settle-timeout; pending: Check");
+          expect(yield* Ref.get(calls)).toBe(1);
+          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
+        })
+      ).pipe(provideScopedLayer(PlatformLayer))
+    );
+  }
+});

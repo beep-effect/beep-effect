@@ -50,3 +50,13 @@ docgen already passed during repair and package docgen passed independently.
   file's 62 tests and the health gate, then main landed the same fix as #1150,
   so the branch merged main again and adopted #1150's version instead.
   Effect Vitest ratchet unchanged.
+- Attempt 4 (07:33Z–08:36Z, head `ad75cdfd58`): all 15 cheap gates, the 30
+  pre-push lanes, and all ten coverage shards passed; the coverage ratchet
+  failed only on the new-file rule for `ProofJob.ts` and `ProofJobLauncher.ts`,
+  which #1143 added to main without baseline rows. Main's own hosted Coverage
+  Regression is red on the same rule at `8a99d4aac9` and `5e520d997e`.
+- Merged `origin/main` at `9e77f17410`: #1149 rewrote the #1137 scheduler test
+  (main's version adopted), #1145 moved to Effect Vitest rc.115 (reinstalled,
+  ratchet zero introduced / zero resolved; sixteen stale rows dropped that
+  main's own tree no longer produces), and the security regression suites plus
+  fallow health pass on the merged tree.

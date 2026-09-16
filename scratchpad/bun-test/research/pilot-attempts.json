@@ -1,0 +1,873 @@
+{
+  "baseRevision": "d142324fe0ff4288bb57debd4381c5bec11975dc",
+  "classification": "qualification-and-diagnostics-not-confirmation",
+  "budgetMillis": 3600000,
+  "consumedMillis": 161974,
+  "acceptedPerformanceSamples": 0,
+  "attempts": [
+    {
+      "id": "preflight-version-01",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 1,
+      "cpuMicroseconds": 2198,
+      "aggregatePeakBytes": 11571200,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-vitest-default-timeout-finalizer-01",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 348,
+      "cpuMicroseconds": 351708,
+      "aggregatePeakBytes": 116727808,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-vitest-finished-hook-throws-01",
+      "exitCode": 1,
+      "expectedExit": 1,
+      "expectedOutcome": true,
+      "elapsedMillis": 230,
+      "cpuMicroseconds": 296975,
+      "aggregatePeakBytes": 107704320,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-vitest-property-completion-once-01",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 237,
+      "cpuMicroseconds": 322326,
+      "aggregatePeakBytes": 111083520,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-vitest-synchronous-throw-cleanup-01",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 212,
+      "cpuMicroseconds": 271674,
+      "aggregatePeakBytes": 114253824,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-vitest-tuple-each-01",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 274,
+      "cpuMicroseconds": 370685,
+      "aggregatePeakBytes": 118005760,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-vitest-unnamed-layer-lifetime-01",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 262,
+      "cpuMicroseconds": 365333,
+      "aggregatePeakBytes": 117514240,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-default-timeout-finalizer-01",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 378,
+      "cpuMicroseconds": 281557,
+      "aggregatePeakBytes": 59461632,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-finished-hook-throws-01",
+      "exitCode": 0,
+      "expectedExit": 1,
+      "expectedOutcome": false,
+      "elapsedMillis": 152,
+      "cpuMicroseconds": 157028,
+      "aggregatePeakBytes": 46731264,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-property-completion-once-01",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 90,
+      "cpuMicroseconds": 99153,
+      "aggregatePeakBytes": 45039616,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-synchronous-throw-cleanup-01",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 98,
+      "cpuMicroseconds": 109672,
+      "aggregatePeakBytes": 47673344,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-tuple-each-01",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 119,
+      "cpuMicroseconds": 140606,
+      "aggregatePeakBytes": 56401920,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-unnamed-layer-lifetime-01",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 122,
+      "cpuMicroseconds": 139806,
+      "aggregatePeakBytes": 57651200,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-default-timeout-finalizer-02",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 354,
+      "cpuMicroseconds": 186801,
+      "aggregatePeakBytes": 61796352,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-finished-hook-throws-02",
+      "exitCode": 1,
+      "expectedExit": 1,
+      "expectedOutcome": true,
+      "elapsedMillis": 97,
+      "cpuMicroseconds": 105527,
+      "aggregatePeakBytes": 47415296,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-property-completion-once-02",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 100,
+      "cpuMicroseconds": 118468,
+      "aggregatePeakBytes": 48717824,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-synchronous-throw-cleanup-02",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 104,
+      "cpuMicroseconds": 115705,
+      "aggregatePeakBytes": 46817280,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-tuple-each-02",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 131,
+      "cpuMicroseconds": 149182,
+      "aggregatePeakBytes": 56438784,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-unnamed-layer-lifetime-02",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 135,
+      "cpuMicroseconds": 156004,
+      "aggregatePeakBytes": 52379648,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "adapter-existing-suite-01",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 130,
+      "cpuMicroseconds": 224482,
+      "aggregatePeakBytes": 69910528,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-vitest-finished-hook-continues-cleanup-03",
+      "exitCode": 1,
+      "expectedExit": 1,
+      "expectedOutcome": true,
+      "elapsedMillis": 251,
+      "cpuMicroseconds": 328973,
+      "aggregatePeakBytes": 112869376,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-finished-hook-continues-cleanup-03",
+      "exitCode": 1,
+      "expectedExit": 1,
+      "expectedOutcome": true,
+      "elapsedMillis": 135,
+      "cpuMicroseconds": 159577,
+      "aggregatePeakBytes": 57978880,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "schema-json-proto-vitest-01",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 3508,
+      "cpuMicroseconds": 5746859,
+      "aggregatePeakBytes": 965488640,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "schema-json-proto-bun-01",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 43,
+      "cpuMicroseconds": 50702,
+      "aggregatePeakBytes": 27549696,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "discovery-ordinary-01",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 332,
+      "cpuMicroseconds": 439248,
+      "aggregatePeakBytes": 149811200,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "schema-json-proto-bun-02",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 3115,
+      "cpuMicroseconds": 3938135,
+      "aggregatePeakBytes": 338825216,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "discovery-property-01",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 637,
+      "cpuMicroseconds": 707470,
+      "aggregatePeakBytes": 151527424,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "schema-ordinary-bun-03",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 5222,
+      "cpuMicroseconds": 18125522,
+      "aggregatePeakBytes": 1786122240,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "schema-ordinary-vitest-04",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 10122,
+      "cpuMicroseconds": 36449053,
+      "aggregatePeakBytes": 1594560512,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "schema-property-vitest-04",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 7856,
+      "cpuMicroseconds": 26950999,
+      "aggregatePeakBytes": 1966358528,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "schema-property-bun-04",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 6917,
+      "cpuMicroseconds": 15928540,
+      "aggregatePeakBytes": 1323474944,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-vitest-inherited-suite-timeout-04",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 429,
+      "cpuMicroseconds": 313150,
+      "aggregatePeakBytes": 117731328,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-inherited-suite-timeout-04",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 399,
+      "cpuMicroseconds": 182102,
+      "aggregatePeakBytes": 64532480,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-node-vitest-05",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 21301,
+      "cpuMicroseconds": 70619520,
+      "aggregatePeakBytes": 1728417792,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-bun-vitest-05",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 11347,
+      "cpuMicroseconds": 38351225,
+      "aggregatePeakBytes": 1817804800,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-bun-native-05",
+      "exitCode": 1,
+      "expectedExit": 0,
+      "expectedOutcome": false,
+      "elapsedMillis": 4739,
+      "cpuMicroseconds": 17630716,
+      "aggregatePeakBytes": 1712435200,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-node-vitest-witness-06",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 23255,
+      "cpuMicroseconds": 76290606,
+      "aggregatePeakBytes": 1574797312,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-bun-vitest-witness-06",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 13193,
+      "cpuMicroseconds": 42388205,
+      "aggregatePeakBytes": 1785540608,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-node-vitest-witness-07",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 24900,
+      "cpuMicroseconds": 79488230,
+      "aggregatePeakBytes": 1445994496,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "coverage-bun-vitest-witness-07",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 19273,
+      "cpuMicroseconds": 60511821,
+      "aggregatePeakBytes": 1685987328,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-default-timeout-finalizer-07",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 276,
+      "cpuMicroseconds": 172926,
+      "aggregatePeakBytes": 58515456,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-finished-hook-throws-07",
+      "exitCode": 1,
+      "expectedExit": 1,
+      "expectedOutcome": true,
+      "elapsedMillis": 123,
+      "cpuMicroseconds": 140419,
+      "aggregatePeakBytes": 60112896,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-synchronous-throw-cleanup-07",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 186,
+      "cpuMicroseconds": 214594,
+      "aggregatePeakBytes": 59109376,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-property-completion-once-07",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 116,
+      "cpuMicroseconds": 137864,
+      "aggregatePeakBytes": 57389056,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-tuple-each-07",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 191,
+      "cpuMicroseconds": 216598,
+      "aggregatePeakBytes": 62988288,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-unnamed-layer-lifetime-07",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 114,
+      "cpuMicroseconds": 136589,
+      "aggregatePeakBytes": 57315328,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "control-bun-finished-hook-continues-cleanup-07",
+      "exitCode": 1,
+      "expectedExit": 1,
+      "expectedOutcome": true,
+      "elapsedMillis": 288,
+      "cpuMicroseconds": 335658,
+      "aggregatePeakBytes": 61423616,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    },
+    {
+      "id": "adapter-existing-suite-07",
+      "exitCode": 0,
+      "expectedExit": 0,
+      "expectedOutcome": true,
+      "elapsedMillis": 132,
+      "cpuMicroseconds": 209904,
+      "aggregatePeakBytes": 73916416,
+      "memoryEvents": {
+        "low": 0,
+        "high": 0,
+        "max": 0,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      }
+    }
+  ]
+}
