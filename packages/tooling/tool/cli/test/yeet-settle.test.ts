@@ -482,11 +482,11 @@ describe("B7 settle contracts", () => {
     const skipped = verdict(skippedInput);
     expect(skipped.settled).toBe(true);
     assertSome(skipped.reason, "closeout-pending");
-    expect(renderYeetSettleDetail(skipped)).toContain("heavy: docs-only, lanes report skipped");
+    expect(renderYeetSettleDetail(skipped)).toContain("heavy: docs-only, lanes pass without work");
     const bound = verdict({ ...skippedInput, closeoutBound: true });
     assertNone(bound.reason);
     expect(renderYeetSettleDetail(bound)).toBe(
-      "settle: settled; closeout bound; heavy: docs-only, lanes report skipped"
+      "settle: settled; closeout bound; heavy: docs-only, lanes pass without work"
     );
     const skippedPending = verdict({
       ...gated,
@@ -494,7 +494,7 @@ describe("B7 settle contracts", () => {
       admission: admission("skip-satisfied", true),
     });
     assertSome(skippedPending.reason, "required-pending");
-    expect(renderYeetSettleDetail(skippedPending)).toContain("heavy: docs-only, lanes report skipped");
+    expect(renderYeetSettleDetail(skippedPending)).toContain("heavy: docs-only, lanes pass without work");
     // hold with non-gated work still open stays required-pending and names the gate.
     const mixed = verdict({
       ...gated,

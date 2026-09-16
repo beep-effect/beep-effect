@@ -1144,7 +1144,7 @@ const renderGated = (verdict: YeetSettleVerdict): ReadonlyArray<string> =>
 
 const renderDocsOnly = (verdict: YeetSettleVerdict): ReadonlyArray<string> =>
   O.exists(verdict.admission, (admission) => HeavyAdmissionVerdict.is["skip-satisfied"](admission.verdict))
-    ? ["heavy: docs-only, lanes report skipped"]
+    ? ["heavy: docs-only, lanes pass without work"]
     : [];
 
 const renderCensusTail = (verdict: YeetSettleVerdict): ReadonlyArray<string> => [

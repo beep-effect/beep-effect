@@ -1815,7 +1815,7 @@ describe("B8 watch heavy admission", () => {
         expect(ended.reason).toBe("all-terminal");
         expect(yeetWatchExitFailure(ended)).toBe(false);
         expect(yield* stderr).toContain(
-          "settle: closeout-pending; required census settled, running the read-first closeout; heavy: docs-only, lanes report skipped"
+          "settle: closeout-pending; required census settled, running the read-first closeout; heavy: docs-only, lanes pass without work"
         );
       })
     ).pipe(

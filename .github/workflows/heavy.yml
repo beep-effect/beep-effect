@@ -5,9 +5,12 @@ on:
     inputs:
       admitted:
         description: >-
-          Whether the heavy matrix runs. `false` skips the verify job at job
-          level, so every `Heavy / <lane>` context reports `skipped` (accepted
+          Whether the heavy matrix runs. `false` moves the verify job to a
+          GitHub-hosted runner and skips every lane step, so each
+          `Heavy / <lane>` context still expands and reports success (accepted
           by the main ruleset) without consuming a beep-ec2-heavy runner.
+          A job-level skip cannot do this: a skipped matrix job never expands
+          and reports one context named `Heavy / matrix.name` (probe #1164).
           Callers pass `false` only for admission verdicts that must satisfy
           the ruleset without proof (docs-only pull requests).
         required: false
@@ -20,12 +23,14 @@ permissions:
 jobs:
   verify:
     name: ${{ matrix.name }}
-    # Job-level skip (not step-level): a skipped job never queues on the
-    # heavy pool, and GitHub reports each matrix context as skipped, which
-    # satisfies a required status check. Never gate the caller job instead:
-    # a skipped caller creates no `Heavy / *` check runs at all.
-    if: ${{ inputs.admitted }}
-    runs-on: beep-ec2-heavy
+    # Not admitted: run the matrix on a GitHub-hosted runner with every lane
+    # step skipped (`lane-gate` says `should_run=false`), so each context
+    # reports success without touching the heavy pool. Never skip this job
+    # with `if:`: a skipped matrix job is never expanded and reports a single
+    # `Heavy / matrix.name` context, which leaves the required contexts
+    # "Expected". Never gate the caller job for this either: a skipped caller
+    # creates no `Heavy / *` check runs at all (that is the `hold` verdict).
+    runs-on: ${{ inputs.admitted && 'beep-ec2-heavy' || 'ubuntu-24.04' }}
     timeout-minutes: ${{ matrix.timeout_minutes }}
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
     permissions:
@@ -99,12 +104,20 @@ jobs:
       - name: Determine lane execution
         id: lane-gate
         shell: bash
+        env:
+          ADMITTED: ${{ inputs.admitted }}
+          LANE_NAME: ${{ matrix.name }}
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
-          if [[ "$goals_only" == "true" ]]; then
+          if [[ "${ADMITTED}" != "true" ]]; then
+            echo "heavy admission: not admitted; ${LANE_NAME} passes without work"
             should_run=false
+          else
+            eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+            if [[ "$goals_only" == "true" ]]; then
+              should_run=false
+            fi
           fi
 
           if [[ "${{ matrix.id }}" == "docgen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then

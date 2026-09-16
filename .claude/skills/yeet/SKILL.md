@@ -563,8 +563,8 @@ turbo work, so they are cheap to run mid-loop.
   The label triggers `heavy-admit.yml`, which runs only the admission job and
   the heavy matrix for that head; tier 1 is neither cancelled nor re-run.
   Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,
-  any `*.md`, packet prose) need no label: the heavy lanes report `skipped` and
-  satisfy the ruleset. Removing the label changes nothing already reported;
+  any `*.md`, packet prose) need no label: every heavy lane passes without work on
+  a hosted runner and satisfies the ruleset. Removing the label changes nothing already reported;
   cancel a heavy run from the Actions UI if it must stop.
 - `monitor --until-merged` re-reads status every poll, so a push landing
   mid-session is picked up as the new budget scope. Job triage is job-level

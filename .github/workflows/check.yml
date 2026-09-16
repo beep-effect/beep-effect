@@ -50,8 +50,8 @@ jobs:
 
   # Tier-2 admission (time-to-certainty B8, rulings 50–57). One hosted job
   # decides, before the reusable workflow is called, whether the heavy matrix
-  # runs (`run`), is skipped at job level so every `Heavy / <lane>` context
-  # reports skipped (`skip-satisfied`, docs-only diffs), or is held (`hold`:
+  # runs (`run`), is called with `admitted: false` so every `Heavy / <lane>`
+  # context passes without work (`skip-satisfied`, docs-only diffs), or is held (`hold`:
   # the caller job is skipped, the required contexts stay "Expected", and
   # the PR is merge-blocked until the `ready-for-heavy` label lands). The
   # decision is `bun run beep ci admission`, unit-tested in the CLI; the
