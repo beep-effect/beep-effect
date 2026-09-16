@@ -34,9 +34,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Doctrine PR, not started. Next concrete action: decide the publish branch
-(packet-only PR, or the P0 docs PR carrying both packets), then from a lane
-branch write the dated entry in `standards/architecture/DECISIONS.md` and the
+P0 Doctrine PR, not started; it opens after PR #1154 (this packet) merges.
+Next concrete action: from a lane branch off main, write the dated entry in `standards/architecture/DECISIONS.md` and the
 rule text in `standards/architecture/11-evolution-and-deprecation.md` per
 `SPEC.md` §Phase Contract, narrow the AGENTS.md LiteralKit line, add the
 `@beep/schema` README rule, and publish through Yeet.
@@ -51,10 +50,8 @@ fidelity reviewed twice by Codex on 2026-09-15:
 
 ## Notes
 
-- The packet was authored in the `effect-schema-parity-align` worktree on
-  branch `@chore/slop-fixes-09-12-26`; the exploration packet rides the same
-  branch. Decide at publish time whether it lands with that branch or on a
-  packet-only branch.
+- Both packets were published through PR #1154 from the packet-only lane
+  `docs/effect-schema-parity-graduate` (2026-09-16).
 - `.repos/effect` is a machine-local symlink absent in linked worktrees until
   `scripts/setup-effect-ref.sh` runs there; P1 needs it locally.
 - repo-cli is the largest LiteralKit consumer (230 files) and its lint rule

@@ -44,8 +44,9 @@ shapes the solution three ways:
 - Codemods, not hand edits, for anything over 100 files (`Number` 361, the
   `LiteralKit` facet renames 212, `Int` 143, `Unknown` 128, `Opaque` 103).
 - Only families with census confidence at least 0.70 and reach at least 100
-  files become detectors (F01, F03, F13, F24, plus the F26 correction). The
-  rest are skill prose or dropped.
+  files become detectors (F03, F13, F24, plus the F26 correction; F01 was
+  dropped on 2026-09-15 after the LiteralKit ADAPT reopen, the type checker
+  gates the trim). The rest are skill prose or dropped.
 - The 77 KEEP concepts are not touched. Retirement is intent coverage, not a
   rewrite of `@beep/schema`.
 

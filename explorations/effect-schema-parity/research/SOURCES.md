@@ -39,16 +39,16 @@ Local-only sources (no URL; cite the on-disk path): the graft index built at `$H
 
 | Brick | Path | Disposition |
 |-------|------|-------------|
-| Schema-first lint (detectors/policy/project/scan/store/arbitrary coverage) | `packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirst*.ts` | extend (new `UpstreamParity*` family) |
+| Schema-first lint (detectors/policy/project/scan/store/arbitrary coverage) | `packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirst*.ts` | extend (`SFV4-*` rules for F03, F13, F24 on the schema-first ratchet; the `UpstreamParity*` family proposed at research was superseded by decision "First gate cut", 2026-09-14) |
 | Effect-vitest lint + sha-pinned fixture pattern | `.../Lint/internal/EffectVitest*.ts`, `packages/tooling/tool/cli/test/fixtures/effect-vitest-rc115/`, `standards/effect-vitest.primitives.jsonc` | reuse pattern |
 | Lint schemas (rule domain, finding, inventory, identity key) | `.../Lint/Lint.schemas.ts` | extend |
 | Shared ratchet | `packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts`, `RatchetLifecycle.ts` | reuse |
 | Hosted lint-policy route | `.github/workflows/heavy.yml`, `.../commands/Ci/CiLane.ts`, `.../commands/Quality/Tasks.ts`, `.../Quality/internal/GithubChecks.ts` | reuse |
 | Effect reference provisioning | `scripts/setup-effect-ref.sh`, `.repos/effect` symlink | reuse |
 | `beep graft` command (cache sync / deep) | `packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts` | reuse as-is; effect index is plain `graft build <dir>` |
-| `@beep/schema` concept modules (137) | `packages/foundation/modeling/schema/src` | retire 52 / adapt 2 / keep 77 / unsure 6 (proposed) |
+| `@beep/schema` concept modules (137) | `packages/foundation/modeling/schema/src` | retire 50 / Role B retire 6 / adapt 4 (LiteralKit, MappedLiteralKit, SchemaUtils, Float) / keep 77 (post-align 2026-09-15; research proposed 52 / 2 / 77 / 6) |
 | Deterministic upstream symbol extractor | proposed `scripts/upstream-parity-inventory.ts` (prototype: `research/tools/schema-inventory.ts`) | NET-NEW |
-| Parity policy edges, independent baseline, prompt templating | proposed | NET-NEW |
+| Prompt templating from inventory rows | goal P1 | NET-NEW; the research-stage "parity policy edges + independent baseline" superseded by the `SFV4-*` cut on the existing schema-first ratchet |
 | Doctrine entry + README policy | `standards/architecture/DECISIONS.md`, `packages/foundation/modeling/schema/README.md` | proposed text in `research/gate-and-knowledge-plumbing.md` §(g) |
 
 ## 5. Cross-links & provenance

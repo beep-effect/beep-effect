@@ -4,14 +4,11 @@
 
 Status: `pending`
 
-Execution is open. This packet and its source exploration are uncommitted in
-the `effect-schema-parity-align` worktree on branch
-`@chore/slop-fixes-09-12-26`; the first publish (a packet-only PR, or the P0
-docs PR carrying both packets) lands them on `main`, and the branch is the
-operator's call at publish time. Each phase is one or more Yeet PRs; the
-phase is complete when its last PR reports `merge-ready: yes` and its
-done-signal in `SPEC.md` §Phase Contract holds. P0 plus P1 are the first
-vertical slice.
+Execution is open. This packet and its source exploration landed on `main`
+through PR #1154 (2026-09-16); P0 starts after that merge. Each phase is
+one or more Yeet PRs; the phase is complete when its last PR reports
+`merge-ready: yes` and its done-signal in `SPEC.md` §Phase Contract holds.
+P0 plus P1 are the first vertical slice.
 
 ## Phases
 
