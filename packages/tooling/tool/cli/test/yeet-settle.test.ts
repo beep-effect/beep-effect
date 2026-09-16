@@ -29,6 +29,7 @@ import {
   YeetSettleChanged,
   YeetSettleCheck,
   YeetSettleInput,
+  YeetSettleVerdict,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusSnapshot,
@@ -84,6 +85,22 @@ const admission = (verdict: HeavyAdmission["verdict"], docsOnly = false) =>
       changedPathCount: 1,
     })
   );
+// Property-test predicates, named so the property body stays flat (fallow CRAP gate).
+const expectSettledVerdict = (input: YeetSettleInput, result: YeetSettleVerdict): void => {
+  const reason = O.getOrNull(result.reason);
+  expect(reason === null || reason === "closeout-pending").toBe(true);
+  expect(reason === null).toBe(input.closeoutBound);
+};
+const holdWithGatedOpen = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
+  O.exists(input.admission, (value) => value.verdict === "hold") && A.isReadonlyArrayNonEmpty(result.census.gated);
+const settleBudgeted = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
+  A.isReadonlyArrayEmpty(input.checks) ||
+  A.isReadonlyArrayNonEmpty(result.census.missing) ||
+  (O.isNone(input.expected) && A.isReadonlyArrayEmpty(result.census.matched));
+const onlyGatedOpen = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
+  A.isReadonlyArrayEmpty(result.census.pending) &&
+  A.isReadonlyArrayEmpty(result.census.missing) &&
+  A.isReadonlyArrayNonEmpty(input.checks);
 const heavyContexts = ["Lint", "Heavy / Check", "Heavy / Docgen"];
 const heavyFamilies = expected(heavyContexts).pipe(O.getOrThrow, yeetGatedFamiliesFor);
 const verdict = (values: Partial<YeetSettleInput> = {}) =>
@@ -432,30 +449,20 @@ describe("B7 settle contracts", () => {
       const result = deriveSettleVerdict(input);
       expect(result.waitedMs).toBe(input.waitedMs);
       expect(result.timeoutMs).toBe(input.timeoutMs);
-      const reason = O.getOrNull(result.reason);
       if (result.settled) {
-        expect(reason === null || reason === "closeout-pending").toBe(true);
-        expect(reason === null).toBe(input.closeoutBound);
+        expectSettledVerdict(input, result);
         return;
       }
+      const reason = O.getOrNull(result.reason);
       expect(["registration", "required-pending", "heavy-not-admitted", "settle-timeout"]).toContain(reason);
       const held = yeetSettleVerdictIsHeld(result);
-      expect(held).toBe(
-        O.exists(input.admission, (value) => value.verdict === "hold") && A.isReadonlyArrayNonEmpty(result.census.gated)
-      );
+      expect(held).toBe(holdWithGatedOpen(input, result));
       // The budget bounds registration (B7) and never a held head (B8); the
       // gated census is the one the budget reads, since hold moves members out of missing.
-      const budgeted =
-        A.isReadonlyArrayEmpty(input.checks) ||
-        A.isReadonlyArrayNonEmpty(result.census.missing) ||
-        (O.isNone(input.expected) && A.isReadonlyArrayEmpty(result.census.matched));
-      expect(reason === "settle-timeout").toBe(!held && input.waitedMs >= input.timeoutMs && budgeted);
-      expect(reason === "heavy-not-admitted").toBe(
-        held &&
-          A.isReadonlyArrayEmpty(result.census.pending) &&
-          A.isReadonlyArrayEmpty(result.census.missing) &&
-          A.isReadonlyArrayNonEmpty(input.checks)
+      expect(reason === "settle-timeout").toBe(
+        !held && input.waitedMs >= input.timeoutMs && settleBudgeted(input, result)
       );
+      expect(reason === "heavy-not-admitted").toBe(held && onlyGatedOpen(input, result));
     },
     { arbitrary: fcRuns(40) }
   );
