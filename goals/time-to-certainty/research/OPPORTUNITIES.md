@@ -1728,3 +1728,19 @@ in the law command's flag help to prevent a vacuous success from looking like pr
 - **Would have prevented it:** the orchestrator re-running the fallow pair on the final tree
   before committing (it now does, alongside oxlint, test-tsgo and effect-vitest), and a lane rule
   that the verification table is re-run after the last edit, not appended to.
+
+## 2026-09-16 — The coverage ratchet judged main's new files on the first PR to touch the package
+
+- **Doing:** the full local proof of B7 PR1 (#1149) on the head that merged `origin/main` twice.
+- **Evidence:** `ci:coverage` failed on `@beep/repo-cli` with eleven rows: three introduced
+  (`Yeet/internal/Inbox.ts` functions/lines/statements below its 100 baseline after the
+  `pr-merge-ready` row kind landed without a describe/id test) and eight inherited from files this
+  PR never touched — `VersionSync/*` from #1148 and `ProofJob*.ts` from B5 #1143 — reported as
+  "new file has uncovered unit(s) (no baseline file identity)" because rows for a package the PR
+  changes are judged at the base floor, and those PRs merged without recording their rows. The
+  hosted `Heavy / Coverage Regression` (optional) was red on the same head for the same reasons.
+- **Would have prevented it:** the PRs that add files recording their baseline rows before merge
+  (the hosted check being optional let them land red), or the ratchet holding rows for files a
+  PR did not author. Here: covered the new row kinds in `yeet-inbox.test.ts` (Inbox.ts back to
+  100) and recorded the inherited rows with `bun run coverage -- --filter=@beep/repo-cli
+  --write-baseline`, called out in the PR description for the reviewer.

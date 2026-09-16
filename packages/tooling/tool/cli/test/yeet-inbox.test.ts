@@ -11,6 +11,9 @@ import {
   YeetInboxRowJson,
   YeetLocalShardFailedRow,
   YeetLocalShardFailureCapsule,
+  YeetPrMergeReadyCapsule,
+  YeetPrMergeReadyRow,
+  YeetProofJobFinishedRow,
   YeetReviewThreadCapsule,
   YeetReviewThreadRow,
   YeetSiblingCollisionCapsule,
@@ -21,6 +24,7 @@ import {
   yeetInboxPaths,
   yeetInboxRowId,
   yeetLocalShardFailedRowId,
+  yeetPrMergeReadyRowId,
   yeetReviewThreadRowId,
   yeetSiblingCollisionRowId,
 } from "@beep/repo-cli/test/Yeet";
@@ -33,6 +37,7 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const AT = "2026-08-17T00:00:00Z";
@@ -415,4 +420,70 @@ describe("appendYeetInboxRow", () => {
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
+});
+
+const decodeProofJobRow = S.decodeUnknownSync(YeetProofJobFinishedRow);
+
+describe("merge-ready and proof-job rows", () => {
+  it("identifies both kinds deterministically and describes them for operators", () => {
+    const readyCapsule = YeetPrMergeReadyCapsule.make({
+      headSha: "abc123def456",
+      prNumber: 1149,
+      url: "https://github.com/o/r/pull/1149",
+      readyAt: AT,
+      pushedAt: AT,
+      settledAt: AT,
+      closeoutAt: AT,
+      pushToReadyMs: 3_607_000,
+    });
+    const quietCapsule = YeetPrMergeReadyCapsule.make({ ...readyCapsule, pushToReadyMs: null });
+    const readyRow = YeetPrMergeReadyRow.make({
+      capsule: readyCapsule,
+      checkout: "/repo",
+      id: yeetPrMergeReadyRowId(readyCapsule),
+      severity: "P1",
+      ts: AT,
+    });
+    const quietRow = YeetPrMergeReadyRow.make({
+      capsule: quietCapsule,
+      checkout: "/repo",
+      id: yeetPrMergeReadyRowId(quietCapsule),
+      severity: "P1",
+      ts: AT,
+    });
+    const jobRow = decodeProofJobRow({
+      schemaVersion: YEET_INBOX_SCHEMA_VERSION,
+      kind: "proof-job-finished",
+      id: "proof-job-0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60",
+      severity: "P2",
+      checkout: "/repo",
+      ts: AT,
+      capsule: {
+        jobId: "0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60",
+        mode: "verify",
+        branch: "feature/job",
+        headSha: "abc123def456",
+        unitName: "beep-proof-0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60.service",
+        phase: "finished",
+        serviceResult: "success",
+        exitStatus: "0",
+        verdictOutcome: "success",
+        terminationReason: null,
+        elapsedMs: 1000,
+        logPath: "/repo/.beep/yeet/jobs/x.log",
+      },
+    });
+    // The merge-ready id is the head's identity: timeline measurements never change it.
+    expect(yeetPrMergeReadyRowId(readyCapsule)).toBe(yeetPrMergeReadyRowId(quietCapsule));
+    expect(yeetPrMergeReadyRowId(readyCapsule)).not.toBe(
+      yeetPrMergeReadyRowId(YeetPrMergeReadyCapsule.make({ ...readyCapsule, headSha: "fedcba654321" }))
+    );
+    expect(yeetInboxExpectedRowId(readyRow)).toBe(readyRow.id);
+    expect(yeetInboxExpectedRowId(jobRow)).toBe(jobRow.id);
+    expect(describeYeetInboxRow(readyRow)).toBe("merge-ready pr #1149 @ abc123d (push→ready 3607s)");
+    expect(describeYeetInboxRow(quietRow)).toBe("merge-ready pr #1149 @ abc123d");
+    expect(describeYeetInboxRow(jobRow)).toBe(
+      "proof job 0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60: finished; log /repo/.beep/yeet/jobs/x.log"
+    );
+  });
 });
