@@ -166,7 +166,7 @@ write_state() {
 }
 
 entry_label='def row_label:
-  (.capsule.lane // .capsule.shard // .capsule.threadId // .capsule.base // .kind // "incident") as $label
+  (.capsule.lane // .capsule.shard // .capsule.threadId // .capsule.base // .capsule.jobId // .kind // "incident") as $label
   | "\(.severity) \($label) [\(.id)]";
 def detail:
   row_label +
@@ -179,6 +179,7 @@ render_context() {
     "Fix this now. The checkout has unacknowledged Yeet inbox work:\n" +
     (map("- " + detail) | join("\n")) +
     "\nAcknowledge each row with exactly one form: " +
+    "`bun run beep yeet inbox ack <id> --observed` (proof jobs); " +
     "`bun run beep yeet inbox ack <id> --fix-sha <sha>`; " +
     "`bun run beep yeet inbox ack <id> --environment-only --reason \"<text>\"`; " +
     "`bun run beep yeet inbox ack <id> --wontfix --reason \"<text>\"`; " +

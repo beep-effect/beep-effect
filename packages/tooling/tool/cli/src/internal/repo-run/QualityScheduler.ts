@@ -81,7 +81,13 @@ import {
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
-import { RunScopeRecord, RunScopeStopOutcome, RunScopeSupport, RunScopeTelemetry } from "./RunScope.schemas.ts";
+import {
+  isProofJobUnitName,
+  RunScopeRecord,
+  RunScopeStopOutcome,
+  RunScopeSupport,
+  RunScopeTelemetry,
+} from "./RunScope.schemas.ts";
 import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeForReap } from "./RunScope.ts";
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/schema/String";
@@ -2389,12 +2395,17 @@ const deadLeaseScopePlan = (
   { lease, path }: LiveAdmissionState["deadLeases"][number]
 ): DeadLeaseScopePlan => {
   const recorded = O.fromUndefinedOr(lease.runScope);
-  if (Str.isEmpty(lease.nonce)) {
+  const unitName = pipe(
+    recorded,
+    O.map((scope) => scope.unitName),
+    O.filter(isProofJobUnitName),
+    O.getOrElse(() => runScopeUnitName(lease.nonce))
+  );
+  if (Str.isEmpty(lease.nonce) && !isProofJobUnitName(unitName)) {
     return O.isSome(recorded)
       ? { _tag: "retain", leasePath: path, reason: "legacy-nonce-missing" }
       : { _tag: "reap", leasePath: path };
   }
-  const unitName = runScopeUnitName(lease.nonce);
   if (O.exists(recorded, (scope) => !Str.Equivalence(scope.unitName, unitName))) {
     return { _tag: "retain", leasePath: path, reason: "recorded-unit-mismatch" };
   }
@@ -2403,7 +2414,9 @@ const deadLeaseScopePlan = (
   }
   return O.exists(
     recorded,
-    (scope) => RunScopeSupport.is.disabled(scope.support) || RunScopeSupport.is.unsupported(scope.support)
+    (scope) =>
+      !isProofJobUnitName(scope.unitName) &&
+      (RunScopeSupport.is.disabled(scope.support) || RunScopeSupport.is.unsupported(scope.support))
   )
     ? { _tag: "reap", leasePath: path }
     : { _tag: "stop", leasePath: path, unitName };
