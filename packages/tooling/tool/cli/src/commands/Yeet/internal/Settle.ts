@@ -836,15 +836,22 @@ const gateCensus = (
 const admissionIsHold = (admission: O.Option<HeavyAdmission>): boolean =>
   O.exists(admission, (value) => HeavyAdmissionVerdict.is.hold(value.verdict));
 
-// A head is held only outside the registration window: with nothing
-// registered, a held head and a broken CI that never registers look the same,
-// so B7's registration budget keeps applying there. Once any check has
-// registered and only gated contexts are open, the absence is by design.
+// A head is held only when the gated contexts are the ONLY open work and the
+// registration window is over: with nothing registered, a held head and a
+// broken CI that never registers look the same, and with a non-gated context
+// still missing or pending the B7 rule must keep judging that context (its
+// registration budget, or GitHub's own execution bound). Held is therefore
+// exactly the state whose reason is `heavy-not-admitted`.
 const heldOutsideRegistration = (
   admission: O.Option<HeavyAdmission>,
   census: YeetExpectedContextCensus,
   registering: boolean
-): boolean => !registering && admissionIsHold(admission) && A.isReadonlyArrayNonEmpty(census.gated);
+): boolean =>
+  !registering &&
+  admissionIsHold(admission) &&
+  A.isReadonlyArrayNonEmpty(census.gated) &&
+  A.isReadonlyArrayEmpty(census.missing) &&
+  A.isReadonlyArrayEmpty(census.pending);
 
 // The settle budget is a registration budget: it counts only while nothing has
 // registered or an expected context is still missing. A registered check that
@@ -883,13 +890,17 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
  * still open, so the operator sees which contexts never came (the B7 dogfood
  * amendment, after PR #1149's own babysit hit the budget with two heavy lanes
  * registered but queued). A held head (ttc B8) is the other exception. A head
- * is held exactly when admission is `hold`, gated contexts are open, and the
- * head is outside the registration window (at least one check has
- * registered): its wait is named `heavy-not-admitted` once nothing non-gated
- * is open, and the timeout comparison is skipped entirely, because the absent
- * contexts are absent by design until the label lands. With zero checks
- * registered the reason stays `registration` and the registration budget still
- * applies even under `hold` — a broken CI that never registers must time out.
+ * is held exactly when admission is `hold`, gated contexts are the only open
+ * work (`missing` and `pending` are both empty), and the head is outside the
+ * registration window (at least one check has registered) — the state whose
+ * reason is `heavy-not-admitted`: the timeout comparison is skipped entirely,
+ * because the absent contexts are absent by design until the label lands.
+ * With zero checks registered the reason stays `registration` and the
+ * registration budget still applies even under `hold` — a broken CI that never
+ * registers must time out. With a non-gated context still missing or pending
+ * under `hold` the head is not held: the reason is `required-pending` and the
+ * B7 rule judges that context alone (a missing one spends the budget, a
+ * registered one is GitHub's to time out).
  *
  * **Example** (Registration, then required-pending, then settled)
  *
@@ -969,10 +980,11 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
  *
  * A held head never reaches `settle-timeout` and the loop sleeps its full
  * interval instead of racing the budget; `waitedMs` is still reported so the
- * gate line can say how long the head has waited for the label. A `hold`
- * verdict whose reason is `registration` (or a `settle-timeout` reached from
- * that window) is not held: nothing has registered yet, so the registration
- * budget still applies.
+ * gate line can say how long the head has waited for the label. Held means
+ * the gated contexts are the only open work: a `hold` verdict whose reason is
+ * `registration` (or a `settle-timeout` reached from that window) is not held,
+ * nothing having registered yet, and neither is a `required-pending` one, a
+ * non-gated context still being missing or pending.
  *
  * **Example** (A held head)
  *
@@ -1001,6 +1013,49 @@ export const yeetSettleVerdictIsHeld = (verdict: YeetSettleVerdict): boolean =>
       (reason) => YeetSettleReason.is.registration(reason) || YeetSettleReason.is["settle-timeout"](reason)
     )
   );
+
+/**
+ * Whether the settle census treats a reported check name as required: an
+ * expected context matched by exact name, or a matrix child of a tolerated
+ * expected parent (`Test Unit (unit-a)` under `Test Unit`).
+ *
+ * **Details**
+ *
+ * `gh pr checks --required` lists only exact context names, so a failed
+ * matrix child of a required parent carries `required: false` from GitHub.
+ * The merge loop's red triage and the watch's failure census both consult
+ * this rule alongside that flag, so a required parent's children count as
+ * required in every consumer. `None` (no settle verdict yet) requires nothing.
+ *
+ * **Example** (A matrix child of a required parent)
+ *
+ * ```ts
+ * import { YeetExpectedContextCensus, YeetSettleVerdict, yeetSettleCensusRequires } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const census = YeetExpectedContextCensus.make({ matched: ["Lint"], unmatched: ["Test Unit"], pending: [], missing: [] })
+ * const verdict = O.some(YeetSettleVerdict.make({ settled: false, reason: O.some("required-pending"), census, waitedMs: 1, timeoutMs: 1 }))
+ * console.log(yeetSettleCensusRequires(verdict, "Test Unit (unit-a)")) // true
+ * console.log(yeetSettleCensusRequires(verdict, "Vercel")) // false
+ * ```
+ *
+ * @param verdict - The head's settle verdict, when one has been derived.
+ * @param name - The reported check name.
+ * @returns Whether the census requires that name.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetSettleCensusRequires: {
+  (name: string): (verdict: O.Option<YeetSettleVerdict>) => boolean;
+  (verdict: O.Option<YeetSettleVerdict>, name: string): boolean;
+} = dual(2, (verdict: O.Option<YeetSettleVerdict>, name: string): boolean =>
+  O.exists(
+    verdict,
+    (value) =>
+      A.contains(value.census.matched, name) ||
+      A.some(value.census.unmatched, (parent) => isMatrixChildOf(parent, name))
+  )
+);
 
 /**
  * Whether a settle verdict ends the loop: only `settle-timeout` is terminal.

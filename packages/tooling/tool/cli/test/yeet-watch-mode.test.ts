@@ -1173,6 +1173,53 @@ describe("comment rows and --until-event", () => {
     )
   );
 
+  // A required matrix parent's child reports with required=false from GitHub; the
+  // settle census still requires it, so its red wakes the supervisor.
+  it.live("exits with reason event on a failed matrix child of a required parent", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          untilEvent: true,
+          rulesetRead: () =>
+            Effect.succeedSome(
+              YeetRulesetRequiredContexts.make({
+                base: "main",
+                contexts: ["Test Unit"],
+                rulesetIds: [10240248],
+                readAt: "2026-09-16T00:00:00Z",
+              })
+            ),
+        });
+        expect(ended.reason).toBe("event");
+        expect(ended.failing).toBe(1);
+        expect(ended.optionalFailing).toBe(0);
+        expect(yeetWatchExitFailure(ended)).toBe(true);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: {
+                exitCode: 0,
+                output: checksJson([
+                  { bucket: "fail", name: "Test Unit (unit-a)", state: "FAILURE" },
+                  { bucket: "pending", name: "Test Unit (unit-b)", state: "QUEUED" },
+                ]),
+              },
+              requiredChecks: { exitCode: 0, output: checksJson([]) },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
   // The event exit on a red keys on the snapshot while siblings still run —
   // the whole point of the mode: the supervisor is woken with the failure
   // capsule already durable instead of waiting out the rest of the wave.

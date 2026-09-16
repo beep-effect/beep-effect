@@ -40,7 +40,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
-import { YeetSettleVerdict } from "./Settle.ts";
+import { YeetSettleVerdict, yeetSettleCensusRequires } from "./Settle.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriteria, YeetMergeReadyCriterion } from "./Verdict.ts";
 import type { YeetMonitorComment } from "./MonitorComments.ts";
 
@@ -826,7 +826,7 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
             headSha: next.headSha,
             name: check.name,
             from: O.getOrNull(before),
-            required: check.required,
+            required: yeetWatchCheckIsRequired(next, check),
             to: check.outcome,
           }),
         ];
@@ -946,7 +946,12 @@ export const yeetWatchEndReason = (snapshot: YeetWatchSnapshot): O.Option<YeetWa
  * @since 0.0.0
  */
 export const countYeetWatchFailures = (snapshot: YeetWatchSnapshot): number =>
-  A.length(A.filter(snapshot.checks, (check) => check.required && YeetCheckOutcome.is.fail(check.outcome)));
+  A.length(
+    A.filter(
+      snapshot.checks,
+      (check) => yeetWatchCheckIsRequired(snapshot, check) && YeetCheckOutcome.is.fail(check.outcome)
+    )
+  );
 
 /**
  * Count optional failures for stream consumers without changing the exit code.
@@ -971,4 +976,59 @@ export const countYeetWatchFailures = (snapshot: YeetWatchSnapshot): number =>
  * @since 0.0.0
  */
 export const countYeetWatchOptionalFailures = (snapshot: YeetWatchSnapshot): number =>
-  A.length(A.filter(snapshot.checks, (check) => !check.required && YeetCheckOutcome.is.fail(check.outcome)));
+  A.length(
+    A.filter(
+      snapshot.checks,
+      (check) => !yeetWatchCheckIsRequired(snapshot, check) && YeetCheckOutcome.is.fail(check.outcome)
+    )
+  );
+
+/**
+ * Whether a watch check counts as required: GitHub's `--required` flag, or
+ * the settle census requiring its name (an expected context, or a matrix
+ * child of a tolerated expected parent).
+ *
+ * **Details**
+ *
+ * `gh pr checks --required` names only exact contexts, so a required matrix
+ * parent's children arrive with `required: false`. The failure census, the
+ * `--until-event` trigger, and the `check-transition` rows all classify
+ * through this rule, so a failed `Test Unit (unit-a)` under a required
+ * `Test Unit` is a required failure everywhere. Before the first settle
+ * verdict only the flag speaks.
+ *
+ * **Example** (A required parent's failed child)
+ *
+ * ```ts
+ * import {
+ *   deriveSettleVerdict, YeetRulesetRequiredContexts, YeetSettleCheck, YeetSettleInput,
+ *   YeetWatchCheck, YeetWatchSnapshot, yeetWatchCheckIsRequired
+ * } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const child = YeetWatchCheck.make({ name: "Test Unit (unit-a)", outcome: "fail", required: false })
+ * const settle = deriveSettleVerdict(YeetSettleInput.make({
+ *   expected: O.some(YeetRulesetRequiredContexts.make({ base: "main", contexts: ["Test Unit"], rulesetIds: [1], readAt: "2026-09-16T00:00:00.000Z" })),
+ *   checks: [YeetSettleCheck.make({ name: child.name, outcome: child.outcome, required: false })],
+ *   closeoutBound: false, waitedMs: 0, timeoutMs: 1_000
+ * }))
+ * const snapshot = YeetWatchSnapshot.make({
+ *   checks: [child], headSha: "abc", mergeable: "MERGEABLE", prNumber: 751, state: "OPEN", threads: [], settle: O.some(settle)
+ * })
+ * console.log(yeetWatchCheckIsRequired(snapshot, child)) // true
+ * ```
+ *
+ * @param snapshot - The snapshot the check belongs to, carrying its settle verdict.
+ * @param check - The reported check.
+ * @returns Whether the check is required for merge readiness.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetWatchCheckIsRequired: {
+  (check: YeetWatchCheck): (snapshot: YeetWatchSnapshot) => boolean;
+  (snapshot: YeetWatchSnapshot, check: YeetWatchCheck): boolean;
+} = dual(
+  2,
+  (snapshot: YeetWatchSnapshot, check: YeetWatchCheck): boolean =>
+    check.required || yeetSettleCensusRequires(snapshot.settle, check.name)
+);

@@ -93,10 +93,12 @@ const expectSettledVerdict = (input: YeetSettleInput, result: YeetSettleVerdict)
   expect(reason === null || reason === "closeout-pending").toBe(true);
   expect(reason === null).toBe(input.closeoutBound);
 };
-// Held = hold AND gated open AND outside the registration window (a check has registered).
+// Held = hold AND gated is the only open work AND outside the registration window.
 const holdWithGatedOpen = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
   O.exists(input.admission, (value) => value.verdict === "hold") &&
   A.isReadonlyArrayNonEmpty(result.census.gated) &&
+  A.isReadonlyArrayEmpty(result.census.missing) &&
+  A.isReadonlyArrayEmpty(result.census.pending) &&
   A.isReadonlyArrayNonEmpty(input.checks) &&
   !(O.isNone(input.expected) && A.isReadonlyArrayEmpty(result.census.matched));
 const settleBudgeted = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
@@ -476,9 +478,39 @@ describe("B7 settle contracts", () => {
     expect(mixed.census.pending).toEqual(["Lint"]);
     expect(mixed.census.gated).toEqual(["Heavy / Check", "Heavy / Docgen"]);
     expect(yeetSettleVerdictIsTerminal(mixed)).toBe(false);
+    // Not held: a non-gated required check is still open, so the B7 rule judges it
+    // (registered and queued → GitHub's to time out, the budget does not apply).
+    expect(yeetSettleVerdictIsHeld(mixed)).toBe(false);
+    expect(mixed.budgetApplies).toBe(false);
     expect(renderYeetSettleDetail(mixed)).toBe(
-      "settle: required-pending; pending: Lint; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 5s (not counted toward the 1s settle timeout)"
+      "settle: required-pending; pending: Lint; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 5s; registered checks are GitHub's to time out"
     );
+    // Hold with a non-gated context never registered: it spends the budget and times out,
+    // gated or not — the label cannot hide a required context that never came.
+    const lintMissing = verdict({
+      expected: expected([...heavyContexts, "Docs"]),
+      families: heavyFamilies,
+      checks: [check("Lint")],
+      admission: admission("hold"),
+      waitedMs: 1000,
+      timeoutMs: 1000,
+    });
+    assertSome(lintMissing.reason, "settle-timeout");
+    expect(lintMissing.census.missing).toEqual(["Docs"]);
+    expect(lintMissing.census.gated).toEqual(["Heavy / Check", "Heavy / Docgen"]);
+    expect(yeetSettleVerdictIsHeld(lintMissing)).toBe(false);
+    expect(yeetSettleVerdictIsTerminal(lintMissing)).toBe(true);
+    const lintMissingEarly = verdict({
+      expected: expected([...heavyContexts, "Docs"]),
+      families: heavyFamilies,
+      checks: [check("Lint")],
+      admission: admission("hold"),
+      waitedMs: 500,
+      timeoutMs: 1000,
+    });
+    assertSome(lintMissingEarly.reason, "required-pending");
+    expect(lintMissingEarly.budgetApplies).toBe(true);
+    expect(renderYeetSettleDetail(lintMissingEarly)).toContain("waited 500ms of 1s");
     // A pending heavy check or matrix child under hold is gated too, by its member name.
     const stale = verdict({
       ...gated,

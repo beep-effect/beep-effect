@@ -100,6 +100,7 @@ import {
   YeetSettleVerdict,
   yeetBaseConflictFor,
   yeetGatedFamiliesFor,
+  yeetSettleCensusRequires,
 } from "./Settle.ts";
 import {
   collectRemoteWorkflowRuns,
@@ -1067,12 +1068,7 @@ class MonitorPoll extends S.Class<MonitorPoll>($I`MonitorPoll`)(
 
 const requiredName = (snapshot: YeetStatusSnapshot, verdict: O.Option<YeetSettleVerdict>, name: string): boolean =>
   A.some(snapshot.remote.checks, (check) => check.required && check.name === name) ||
-  O.exists(
-    verdict,
-    (value) =>
-      A.contains(value.census.matched, name) ||
-      A.some(value.census.unmatched, (parent) => Str.startsWith(`${parent} (`)(name))
-  );
+  yeetSettleCensusRequires(verdict, name);
 
 const bindRequiredCensus = (snapshot: YeetStatusSnapshot, verdict: YeetSettleVerdict): YeetStatusSnapshot => {
   if (
