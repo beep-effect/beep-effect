@@ -51,7 +51,7 @@ fidelity reviewed twice by Codex on 2026-09-15:
 ## Notes
 
 - Both packets were published through PR #1154 from the packet-only lane
-  `docs/effect-schema-parity-graduate` (2026-09-16).
+  (branch `effect-schema-parity-graduate` under the `docs` prefix, 2026-09-16).
 - `.repos/effect` is a machine-local symlink absent in linked worktrees until
   `scripts/setup-effect-ref.sh` runs there; P1 needs it locally.
 - repo-cli is the largest LiteralKit consumer (230 files) and its lint rule

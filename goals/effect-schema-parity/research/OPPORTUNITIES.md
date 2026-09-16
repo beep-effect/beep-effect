@@ -33,7 +33,8 @@ machine ids, quote only the minimal identifying error text.
 ## 2026-09-16 — Exploration research scripts trip the production lint and fallow gates at publish
 
 - **What I was doing:** First Yeet repair on the packet-only lane
-  (`docs/effect-schema-parity-graduate`), a docs-and-evidence PR.
+  (branch `effect-schema-parity-graduate` under the `docs` prefix), a
+  docs-and-evidence PR.
 - **Evidence:** `feedback:00-heavy:01-lint-fix` exit 1 (biome `noConsole`,
   `useTemplate`, `useNodejsImportProtocol`, `noUselessStringRaw`,
   `noInnerDeclarations`, `noExplicitAny` across nine files under
