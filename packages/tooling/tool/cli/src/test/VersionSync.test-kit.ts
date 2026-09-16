@@ -11,7 +11,10 @@ export * from "@beep/repo-cli/commands/VersionSync/internal/resolvers/BunResolve
 export * from "@beep/repo-cli/commands/VersionSync/internal/resolvers/DockerResolver";
 export * from "@beep/repo-cli/commands/VersionSync/internal/resolvers/EffectResolver";
 export * from "@beep/repo-cli/commands/VersionSync/internal/resolvers/NodeResolver";
+export * from "@beep/repo-cli/commands/VersionSync/internal/resolvers/RootCatalog";
+export * from "@beep/repo-cli/commands/VersionSync/internal/resolvers/TurboResolver";
 export * from "@beep/repo-cli/commands/VersionSync/internal/services/UpdateApplierService";
+export * from "@beep/repo-cli/commands/VersionSync/internal/updaters/JsoncSchemaUpdater";
 export * from "@beep/repo-cli/commands/VersionSync/internal/updaters/PackageJsonUpdater";
 export * from "@beep/repo-cli/commands/VersionSync/internal/updaters/PlainTextUpdater";
 export * from "@beep/repo-cli/commands/VersionSync/internal/updaters/VercelJsonUpdater";

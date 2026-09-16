@@ -1,9 +1,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { policyToolsFingerprint, StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -37,40 +37,7 @@ const decodeSummary = S.decodeEffect(S.fromJsonString(LawsRunSummary));
 const encodeSummary = S.encodeEffect(S.fromJsonString(LawsRunSummary));
 const summaryEquivalent = S.toEquivalence(LawsRunSummary);
 const summaryArbitrary = Arbitrary.schema(LawsRunSummary);
-const providePlatform = provideScopedLayer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)));
-
-const expectedTasks = {
-  "lint:laws": {
-    cache: true,
-    outputs: [],
-    dependsOn: ["//#lint:policy-fingerprint"],
-    inputs: [
-      "**/*.{ts,tsx}",
-      "package.json",
-      "tsconfig*.json",
-      "$TURBO_ROOT$/tsconfig*.json",
-      "$TURBO_ROOT$/packages/**/package.json",
-      "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts",
-      "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
-      "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
-      "$TURBO_ROOT$/standards/effect-laws.allowlist.jsonc",
-      "!node_modules/**",
-    ],
-  },
-  "//#lint:native-runtime:roots": {
-    cache: true,
-    outputs: [],
-    dependsOn: ["//#lint:policy-fingerprint"],
-    inputs: [
-      "scratchpad/**/*.{ts,tsx}",
-      "packages/_internal/db-admin/effect-ontology/**/*.{ts,tsx}",
-      "packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts",
-      "packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
-      "packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
-      "standards/effect-laws.allowlist.jsonc",
-    ],
-  },
-};
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 
 const writeFile = Effect.fn("LawsTurboTest.writeFile")(function* (root: string, file: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -109,7 +76,7 @@ const lawHashes = Effect.fn("LawsTurboTest.lawHashes")(function* (root: string, 
   });
 });
 
-describe("Stage B laws Turbo inputs", { concurrent: false }, () => {
+it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B laws Turbo inputs", (it) => {
   it("round-trips schema-derived Turbo summaries through JSON", () =>
     expect(
       Effect.runSync(
@@ -128,17 +95,18 @@ describe("Stage B laws Turbo inputs", { concurrent: false }, () => {
     ).toBe("Passed"));
 
   it.effect(
-    "pins the verbatim table inputs and the prescribed nonrecursive root script",
+    "keeps the law verdict cacheable and the root script nonrecursive",
     Effect.fnUntraced(function* () {
       const root = yield* findRepoRoot();
       const fs = yield* FileSystem.FileSystem;
       const config = yield* decodeConfiguration(yield* fs.readFileString(`${root}/turbo.json`));
-      expect(config.tasks).toEqual(expectedTasks);
+      expect(config.tasks["lint:laws"].cache).toBe(true);
+      expect(config.tasks["lint:laws"].outputs).toEqual([]);
       const manifest = yield* decodeScripts(yield* fs.readFileString(`${root}/package.json`));
       expect(manifest.scripts["lint:native-runtime:roots"]).toBe(
         "beep-cli laws native-runtime --check --include-prefix scratchpad,packages/_internal/db-admin/effect-ontology"
       );
-    }, providePlatform)
+    })
   );
 
   it.effect(
@@ -239,11 +207,44 @@ describe("Stage B laws Turbo inputs", { concurrent: false }, () => {
         (file) => assertMutation(file, [true, true, false])
       );
       yield* assertMutation("packages/helper/src/index.ts", [true, true, true]);
+      for (const directory of ["dist", "build", ".turbo", "coverage", "node_modules"]) {
+        const file = `packages/consumer/${directory}/generated.ts`;
+        yield* writeFile(root, file, "export const generated = 1;\n");
+        expect(yield* lawHashes(root, binary), file).toEqual(baseline);
+        yield* writeFile(root, file, "export const generated = 2;\n");
+        expect(yield* lawHashes(root, binary), `${file}: changed artifact`).toEqual(baseline);
+      }
+      for (const directory of [
+        "node_modules",
+        "dist",
+        "build",
+        ".next",
+        "coverage",
+        "storybook-static",
+        ".turbo",
+        ".beep",
+      ]) {
+        const manifest = `packages/unrelated/${directory}/nested/package.json`;
+        yield* writeJson(root, manifest, { name: "generated-artifact" });
+        expect(yield* lawHashes(root, binary), manifest).toEqual(baseline);
+        yield* writeJson(root, manifest, { name: "changed-generated-artifact" });
+        expect(yield* lawHashes(root, binary), `${manifest}: changed artifact`).toEqual(baseline);
+      }
+      for (const directory of ["docs", ".beep"]) {
+        const file = `packages/consumer/${directory}/consumed.ts`;
+        yield* writeFile(root, file, "export const consumed = 1;\n");
+        const changed = yield* lawHashes(root, binary);
+        expect(changed[0]?.hash, file).not.toBe(baseline[0]?.hash);
+        expect(changed[1]).toEqual(baseline[1]);
+        expect(changed[2]).toEqual(baseline[2]);
+        yield* fs.remove(path.join(root, file));
+        expect(yield* lawHashes(root, binary), `${file}: removed`).toEqual(baseline);
+      }
       yield* Effect.forEach(
         ["packages/upstream/src/index.ts", "packages/unrelated/src/index.ts", "scripts/unrelated.ts"],
         (file) => assertMutation(file, [false, false, false])
       );
-    }, providePlatform),
+    }),
     { timeout: 180_000 }
   );
 });

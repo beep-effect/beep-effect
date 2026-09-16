@@ -105,6 +105,30 @@ export const LAB_EXEMPT_COMPANION_PATHS: ReadonlyArray<string> = [
 ];
 
 /**
+ * Exact file basenames that are pipeline wiring rather than shipped package
+ * content, so a change to them inside a workspace never demands a changeset.
+ *
+ * **Details**
+ *
+ * A workspace `turbo.json` only configures Turborepo task graphs and caching.
+ * `beep version-sync --write` rewrites its `$schema` URL on every `turbo`
+ * bump, and that rewrite touches many workspaces at once without changing
+ * what any of them publishes.
+ *
+ * **Example** (Inspect the neutral basenames)
+ *
+ * ```ts
+ * import { CHANGESET_STATUS_NEUTRAL_BASENAMES } from "@beep/repo-cli/commands/Quality/ChangesetStatus"
+ *
+ * console.log(CHANGESET_STATUS_NEUTRAL_BASENAMES[0]) // "turbo.json"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const CHANGESET_STATUS_NEUTRAL_BASENAMES: ReadonlyArray<string> = ["turbo.json"];
+
+/**
  * Changed-file partition computed from a merge-base diff (P2-D12).
  *
  * **Example** (Make a partition)
@@ -233,7 +257,8 @@ const workspaceDirFromPackageJsonPath = Str.replace(/\/package\.json$/, "");
 
 const isChangesetStatusNeutralPath = (filePath: string): boolean =>
   A.contains(LAB_EXEMPT_COMPANION_PATHS, filePath) ||
-  A.some(CHANGESET_STATUS_NEUTRAL_PATH_PREFIXES, (prefix) => Str.startsWith(prefix)(filePath));
+  A.some(CHANGESET_STATUS_NEUTRAL_PATH_PREFIXES, (prefix) => Str.startsWith(prefix)(filePath)) ||
+  A.some(CHANGESET_STATUS_NEUTRAL_BASENAMES, (basename) => Str.endsWith(`/${basename}`)(filePath));
 
 const ownerWorkspaceDir =
   (workspaceDirs: ReadonlyArray<string>) =>
