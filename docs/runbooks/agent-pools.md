@@ -202,10 +202,15 @@ structural. `sudo`/`pkexec` denial prevents YubiKey prompts that hang headless r
 (https://cursor.com/docs/cli/reference/permissions), so `/usr/bin/git`, `env git`, and
 `bash -lc "git ..."` slip past `cli.json`. The second layer is `.cursor/hooks/deny-shell.sh` on
 `beforeShellExecution` with `failClosed: true`: it denies when **any** token's basename is `git`,
-`sudo`, or `pkexec` after splitting on whitespace, quotes, and shell operators, and a crash or
-timeout blocks the command. Smoke (goal history `2026-09-16-deny-shell-proof.md`): the eight
-fixtures `git status`, `/usr/bin/git status`, `env git status`, `bash -lc "git commit -m x"`,
-`sudo systemctl restart x`, `FOO=1 pkexec ls` deny; `echo hello`, `bun run beep --help` allow.
+`sudo`, or `pkexec`, and a crash or timeout blocks the command. Before splitting it deletes
+backslashes and quotes, so `\git`, `g"i"t`, and `git\ status` rejoin into the real word, then
+treats shell operators, backticks, `$`, and `=` as separators, so `$(git ...)` and `var=git` expose
+the name. Arguments count: `echo git` and `rg sudo` are denied on purpose, so lanes search with the
+agent's file tools instead of shell. Smoke (goal history `2026-09-16-deny-shell-proof.md`): 18
+fixtures, including the escape, quote-splice, and substitution evasions.
+
+A static scan cannot follow runtime expansion: `a=gi; ${a}t status` still passes the hook. The
+post-lane git state check below is the backstop for anything that slips through.
 
 ### Transcript verification (tsgo-045 D13)
 
@@ -215,8 +220,21 @@ After a Cursor lane, the orchestrator verifies no git commands ran:
 grep -oE '"command":"[^"]*"' <lane>.ndjson | { grep -cE '\bgit\b' || true; }
 ```
 
-Count must be 0 (`grep -c` exits 1 on zero matches, hence the `|| true` under `set -e`). Also
-run `git status --porcelain` from the orchestrator (not the lane) to confirm the worktree state.
+Count must be 0 (`grep -c` exits 1 on zero matches, hence the `|| true` under `set -e`). The
+transcript grep only sees literal command text, so the orchestrator (not the lane) also compares git
+state captured before and after the lane:
+
+```sh
+git_state() {
+  git rev-parse HEAD
+  git for-each-ref --format='%(refname) %(objectname)' refs/heads refs/stash
+  git diff --cached --name-only
+}
+git_state > "$LANE.git-before"   # before launching the lane
+git_state | diff "$LANE.git-before" - && git status --porcelain   # after the lane exits
+```
+
+Any diff line means a git write happened inside the lane: stop and inspect before staging.
 
 ## Hooks and metrics
 
