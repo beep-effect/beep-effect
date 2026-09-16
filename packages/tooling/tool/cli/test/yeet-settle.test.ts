@@ -11,6 +11,8 @@ import {
   renderYeetSettleDetail,
   rulesetRequiredContextsFromRules,
   runYeetMonitorUntilMerged,
+  YEET_CENSUS_SUSPECT_MESSAGE,
+  YeetCensusRead,
   YeetExpectedContextInput,
   YeetHeadTimeline,
   YeetMergeReady,
@@ -30,6 +32,7 @@ import {
   YeetStatusWorktree,
   YeetUntilMergedPolicy,
   YeetUntilReadyPolicy,
+  yeetCensusReadIsSuspect,
   yeetHeadTimelineStamp,
   yeetMonitorDurationMillis,
   yeetMonitorPolicyTerminals,
@@ -47,6 +50,7 @@ import { Duration, Effect, Fiber, FileSystem, HashSet, Layer, Ref, Sink, Stream 
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -678,5 +682,25 @@ it.layer(platform)("B7 sleep after a spent registration budget (ruling 49)", (la
         expect(yield* Ref.get(calls)).toBe(2);
       })
     )
+  );
+});
+
+describe("yeetCensusReadIsSuspect (ruling 50)", () => {
+  it("flags an empty census only after the head's census registered", () => {
+    expect(yeetCensusReadIsSuspect(YeetCensusRead.make({ registered: true, checks: [] }))).toBe(true);
+    expect(yeetCensusReadIsSuspect(YeetCensusRead.make({ registered: false, checks: [] }))).toBe(false);
+    expect(
+      yeetCensusReadIsSuspect(
+        YeetCensusRead.make({ registered: true, checks: [YeetSettleCheck.make({ name: "Lint", outcome: "pending" })] })
+      )
+    ).toBe(false);
+    expect(Str.startsWith("PR checks read returned no rows")(YEET_CENSUS_SUSPECT_MESSAGE)).toBe(true);
+  });
+  it.prop(
+    "a read with any check, or before registration, is never suspect",
+    { read: Arbitrary.schema(YeetCensusRead) },
+    ({ read }) => {
+      expect(yeetCensusReadIsSuspect(read)).toBe(read.registered && A.isReadonlyArrayEmpty(read.checks));
+    }
   );
 });

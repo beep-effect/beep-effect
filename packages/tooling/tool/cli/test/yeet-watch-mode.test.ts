@@ -994,6 +994,50 @@ describe("registration patience", () => {
     )
   );
 
+  // Ruling 50: once a census has registered, an empty checks reply is a bad
+  // read; a zero settle budget must not end the watch as settle-timeout.
+  it.live("rides through an empty census after registration on its last verdict", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0, settleTimeoutMs: 0 });
+
+        expect(ended.reason).toBe("all-terminal");
+        expect(ended.failing).toBe(1);
+        const errors = A.map(yield* TestConsole.errorLines, String);
+        expect(A.some(errors, Str.includes("no rows for a head whose census already registered"))).toBe(true);
+        expect(A.some(errors, Str.includes("settle-timeout"))).toBe(false);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ bucket: "pending", name: "Coverage", state: "QUEUED" }]) },
+              requiredChecks: {
+                exitCode: 0,
+                output: checksJson([{ bucket: "pending", name: "Coverage", state: "QUEUED" }]),
+              },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+            unregistered("aaa111"),
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ bucket: "fail", name: "Coverage", state: "FAILURE" }]) },
+              requiredChecks: {
+                exitCode: 0,
+                output: checksJson([{ bucket: "fail", name: "Coverage", state: "FAILURE" }]),
+              },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
   it.live("times out a checkless PR instead of declaring a green settle", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {

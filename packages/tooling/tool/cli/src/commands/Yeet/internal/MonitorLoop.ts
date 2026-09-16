@@ -91,9 +91,12 @@ import {
   deriveSettleVerdict,
   readYeetRulesetRequiredContexts,
   renderYeetSettleDetail,
+  YEET_CENSUS_SUSPECT_MESSAGE,
+  YeetCensusRead,
   YeetRulesetRequiredContexts,
   YeetSettleInput,
   YeetSettleVerdict,
+  yeetCensusReadIsSuspect,
 } from "./Settle.ts";
 import {
   collectRemoteWorkflowRuns,
@@ -113,6 +116,7 @@ import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorLoopPolicy } from "./MonitorPolicy.ts";
+import type { YeetSettleCheck } from "./Settle.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
 
@@ -998,6 +1002,7 @@ class MonitorHeadState extends S.Class<MonitorHeadState>($I`MonitorHeadState`)(
   {
     timeline: YeetHeadTimeline,
     firstObservedMs: S.Finite,
+    registered: S.Boolean,
     expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     announcedRow: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -1102,6 +1107,7 @@ const observeMonitorHead = Effect.fn("YeetMonitorLoop.observeHead")(function* (
       pushedAt: yield* readPushedAt(context, headSha.value, options.capture ?? runRepoCommandCapture),
     }),
     firstObservedMs: millis,
+    registered: false,
     expected: yield* (options.rulesetRead ?? readYeetRulesetRequiredContexts)(context),
   });
   return MonitorObservation.make({ ...observation, poll: MonitorPoll.make({ ...poll, head: O.some(head) }) });
@@ -1190,13 +1196,35 @@ const reportMonitorSettleTransition = Effect.fn("YeetMonitorLoop.reportSettleTra
   if (from !== to) yield* Console.log(`[yeet] settle: ${from ?? "settled"} → ${to ?? "settled"}`);
 });
 
+// Ruling 50: a head that has registered never re-enters the registration
+// window; an empty census afterwards is a bad read that spends the poll-error
+// budget, never the settle budget.
+const registerMonitorCensus = (
+  poll: MonitorPoll,
+  checks: ReadonlyArray<YeetSettleCheck>
+): Result.Result<MonitorHeadState, MonitorPoll> => {
+  const previous = O.getOrThrow(poll.head);
+  return yeetCensusReadIsSuspect(YeetCensusRead.make({ registered: previous.registered, checks }))
+    ? Result.fail(
+        MonitorPoll.make({
+          ...poll,
+          failure: O.some(YeetCommandError.make({ message: YEET_CENSUS_SUSPECT_MESSAGE })),
+        })
+      )
+    : Result.succeed(
+        MonitorHeadState.make({ ...previous, registered: previous.registered || A.isReadonlyArrayNonEmpty(checks) })
+      );
+};
+
 const settleAndCloseoutMonitorHead = Effect.fn("YeetMonitorLoop.settleAndCloseout")(function* (
   context: RepoRunContext,
   options: YeetMonitorUntilMergedOptions,
   observation: MonitorObservation
 ) {
   if (O.isNone(observation.snapshot.remote.headSha)) return Result.succeed(observation);
-  const current = O.getOrThrow(observation.poll.head);
+  const registered = registerMonitorCensus(observation.poll, observation.snapshot.remote.checks);
+  if (Result.isFailure(registered)) return Result.fail(registered.failure);
+  const current = registered.success;
   const policy = options.policy ?? YeetUntilMergedPolicy.make({});
   let verdict = settleMonitorHead(observation, current, policy);
   const timeline = verdict.settled

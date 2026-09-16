@@ -1775,6 +1775,8 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   against the poll-error budget as a bad read, not against the settle budget as a regression.
   Candidate ruling for B7's next amendment; the settle schema already carries `budgetApplies`, so
   the change is one predicate plus a TestClock test.
+- **Outcome:** it did bite: the second blip landed at 30m 4s and the #1159 loop exited 1 with
+  `settle-timeout`. Fixed in PR2 as ruling 50 (`yeetCensusReadIsSuspect`), same day.
 
 ## 2026-09-16 — A hand push raced yeet's early push and killed the publish at the ref lock
 

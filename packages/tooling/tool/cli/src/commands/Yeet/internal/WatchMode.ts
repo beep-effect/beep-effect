@@ -72,9 +72,13 @@ import {
   deriveSettleVerdict,
   readYeetRulesetRequiredContexts,
   renderYeetSettleDetail,
+  YEET_CENSUS_SUSPECT_MESSAGE,
+  YeetCensusRead,
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
+  YeetSettleVerdict,
+  yeetCensusReadIsSuspect,
 } from "./Settle.ts";
 import { YeetMergeReadyCriteria } from "./Verdict.ts";
 import {
@@ -98,7 +102,6 @@ import type { Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorCommentWatermark } from "./MonitorComments.ts";
-import type { YeetSettleVerdict } from "./Settle.ts";
 import type { YeetWatchEvent } from "./WatchStream.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WatchMode");
@@ -372,9 +375,13 @@ class WatchSettleState extends S.Class<WatchSettleState>($I`WatchSettleState`)(
   {
     headSha: S.NonEmptyString,
     firstObservedMs: S.Finite,
+    registered: S.Boolean,
     expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
-  $I.annote("WatchSettleState", { description: "One head's cached ruleset and settle clock origin." })
+  $I.annote("WatchSettleState", {
+    description: "One head's cached ruleset, settle clock origin, registration flag, and last verdict.",
+  })
 ) {}
 
 const isoNow = DateTime.now.pipe(Effect.map(DateTime.formatIso));
@@ -762,20 +769,35 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
         WatchSettleState.make({
           headSha: snapshot.headSha,
           firstObservedMs: millis,
+          registered: false,
           expected: yield* (config.rulesetRead ?? readYeetRulesetRequiredContexts)(context),
         })
       );
     }
     const currentHead = O.getOrThrow(head);
+    const checks = A.map(snapshot.checks, (check) =>
+      YeetSettleCheck.make({ name: check.name, outcome: check.outcome, required: check.required })
+    );
+    // Ruling 50: an empty census after registration is a bad read; keep the
+    // last verdict instead of re-opening the registration budget.
+    if (yeetCensusReadIsSuspect(YeetCensusRead.make({ registered: currentHead.registered, checks }))) {
+      yield* Console.error(`[yeet] ${YEET_CENSUS_SUSPECT_MESSAGE}`);
+      return YeetWatchSnapshot.make({ ...snapshot, settle: currentHead.verdict });
+    }
     const verdict = deriveSettleVerdict(
       YeetSettleInput.make({
         expected: currentHead.expected,
-        checks: A.map(snapshot.checks, (check) =>
-          YeetSettleCheck.make({ name: check.name, outcome: check.outcome, required: check.required })
-        ),
+        checks,
         closeoutBound: snapshot.criteria.closeoutRun,
         waitedMs: millis - currentHead.firstObservedMs,
         timeoutMs: config.settleTimeoutMs ?? YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS,
+      })
+    );
+    head = O.some(
+      WatchSettleState.make({
+        ...currentHead,
+        registered: currentHead.registered || A.isReadonlyArrayNonEmpty(checks),
+        verdict: O.some(verdict),
       })
     );
     yield* Console.error(`[yeet] ${renderYeetSettleDetail(verdict)}`);

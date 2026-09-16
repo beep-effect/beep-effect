@@ -563,3 +563,17 @@ names the elapsed time without the budget in that state. `deriveSettleVerdict` s
 `settle-timeout` terminal, its exit code, and the missing-context naming are unchanged. Rejected:
 raising the default to cover the observed heavy queue (the queue depth is not a property of the
 head); counting queued checks against a second, longer budget (GitHub already owns that bound).
+
+**Ruling 50 (B7-5 amended again, PR2) — a head that has registered never re-enters the
+registration window.** Ruling 49 left one door open: `deriveSettleVerdict` reads zero reported
+checks as the registration window, so a single empty `gh pr checks` reply on a head whose census
+had been registered for twenty minutes re-applied the registration budget, and the second such
+reply on #1159 (at 30m 4s of a 30m budget) exited 1 with `settle-timeout` for a wait that was
+GitHub's. GitHub does not unregister checks, so an empty census after registration is a bad read,
+not an observation: the loop remembers that a head registered (`MonitorHeadState.registered`,
+`WatchSettleState.registered`), and a later empty census fails the poll (`YeetCensusRead`,
+`yeetCensusReadIsSuspect`) against the five-poll error budget instead of deriving a verdict; the
+watch stream keeps its last verdict for that tick. `deriveSettleVerdict` stays pure and unchanged.
+Rejected: a longer registration budget (the blip would still be a regression, just a rarer exit);
+treating an empty census as "all pending" (fabricates rows the read did not return); counting the
+blip in the settle budget with a grace window (a second budget for the same wait).

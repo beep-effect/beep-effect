@@ -625,6 +625,12 @@ Ruling 48's deferred half, now that B5 (#1143) is on main:
   manager is unreachable. A wiring test proves `--until-ready --detach` reaches the detached
   submit before route legality.
 - The scratchpad watcher is retired with a receipt in `OPPORTUNITIES.md`; PLAN.md B7 is checked.
+- Ruling 50 (found while babysitting #1159 with the PR1 loop): a head that has registered never
+  re-enters the registration window. `MonitorHeadState` and `WatchSettleState` carry `registered`;
+  `YeetCensusRead` + `yeetCensusReadIsSuspect` (Settle.ts) name an empty census after
+  registration a bad read, which the merge loop fails against the poll-error budget and the watch
+  stream rides through on its last verdict. TestClock test: the budget elapses, GitHub answers
+  with no rows, the loop logs `poll failed (1/5)` and still reaches `ready`.
 
 ### Idle-wake spike (proposed, unverified)
 

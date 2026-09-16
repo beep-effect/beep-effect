@@ -646,6 +646,75 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
 export const yeetSettleVerdictIsTerminal = (verdict: YeetSettleVerdict): boolean =>
   O.exists(verdict.reason, YeetSettleReason.is["settle-timeout"]);
 
+/**
+ * One poll's check census for a head, with whether an earlier poll already saw
+ * checks registered for it.
+ *
+ * **Example** (A registered head reporting nothing)
+ *
+ * ```ts
+ * import { YeetCensusRead } from "@beep/repo-cli/test/Yeet"
+ *
+ * const read = YeetCensusRead.make({ registered: true, checks: [] })
+ * console.log(read.registered) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetCensusRead extends S.Class<YeetCensusRead>($I`YeetCensusRead`)(
+  {
+    registered: S.Boolean,
+    checks: S.Array(YeetSettleCheck),
+  },
+  $I.annote("YeetCensusRead", {
+    description: "One poll's reported checks with whether the head's census had registered on an earlier poll.",
+  })
+) {}
+
+/**
+ * The poll-failure message a loop logs for a suspect census read.
+ *
+ * **Example** (The logged line)
+ *
+ * ```ts
+ * import { YEET_CENSUS_SUSPECT_MESSAGE } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_CENSUS_SUSPECT_MESSAGE.startsWith("PR checks read returned no rows")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const YEET_CENSUS_SUSPECT_MESSAGE =
+  "PR checks read returned no rows for a head whose census already registered; counted as a bad read, not a regression.";
+
+/**
+ * Whether a census read is a bad read rather than an observation.
+ *
+ * **Details**
+ *
+ * A head leaves the registration window once any check reports for it and
+ * never re-enters it: GitHub does not unregister checks. A later poll that
+ * reports zero checks is a transient read (an empty `gh pr checks` reply), so
+ * the loops count it against their poll-error budget instead of deriving a
+ * settle verdict that would re-open the registration budget (ruling 50).
+ *
+ * **Example** (Empty census after registration)
+ *
+ * ```ts
+ * import { YeetCensusRead, yeetCensusReadIsSuspect } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetCensusReadIsSuspect(YeetCensusRead.make({ registered: true, checks: [] }))) // true
+ * console.log(yeetCensusReadIsSuspect(YeetCensusRead.make({ registered: false, checks: [] }))) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetCensusReadIsSuspect = (read: YeetCensusRead): boolean =>
+  read.registered && A.isReadonlyArrayEmpty(read.checks);
+
 const renderNames = (label: string, names: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.isReadonlyArrayEmpty(names) ? [] : [`${label}: ${A.join(names, ", ")}`];
 

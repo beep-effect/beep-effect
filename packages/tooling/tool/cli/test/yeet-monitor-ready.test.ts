@@ -457,6 +457,37 @@ it.layer(platform)("B7 remaining boundaries", (test) => {
       })
     )
   );
+  test.effect("counts an empty census after registration as a bad read, never a settle regression", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const polls = yield* Ref.make(0);
+        const closes = yield* Ref.make(0);
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 1000 }),
+          collectStatus: Effect.fnUntraced(function* () {
+            const n = yield* Ref.getAndUpdate(polls, (value) => value + 1);
+            if (n === 0) return snapshot(root, [check("Lint", "pending")], false);
+            if (n === 1) {
+              // The whole registration budget elapses, then GitHub answers with no rows.
+              yield* TestClock.adjust("1000 millis");
+              return snapshot(root, [], false);
+            }
+            return snapshot(root, [check()], n > 2);
+          }),
+          closeout: () => Ref.update(closes, (n) => n + 1).pipe(Effect.as(report())),
+        });
+        expect(terminal).toBe("ready");
+        expect(yield* Ref.get(closes)).toBe(1);
+        const errors = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+        expect(errors).toContain("poll failed (1/5)");
+        expect(errors).toContain("no rows for a head whose census already registered");
+        // The console accumulates across this layer block, so the proof is positive: the head went
+        // straight from required-pending to settled, never through settle-timeout.
+        expect(yield* lines).toContain("settle: required-pending → settled");
+      })
+    )
+  );
   test.effect("counts a post-closeout reread failure without repeating the successful closeout", () =>
     fixture((root) =>
       Effect.gen(function* () {
