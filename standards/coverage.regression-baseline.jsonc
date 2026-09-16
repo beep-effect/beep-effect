@@ -25042,15 +25042,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": {
-          "lines": 85.83,
-          "statements": 86.2,
-          "branches": 80.93,
-          "functions": 87.36,
+          "lines": 84.28,
+          "statements": 84.67,
+          "branches": 77.31,
+          "functions": 86.41,
           "uncovered": {
-            "lines": 149,
-            "statements": 152,
-            "branches": 82,
-            "functions": 46
+            "lines": 148,
+            "statements": 151,
+            "branches": 88,
+            "functions": 44
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/index.ts": {
@@ -26782,15 +26782,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts": {
-          "lines": 78.37,
-          "statements": 78.66,
-          "branches": 64.86,
-          "functions": 65,
+          "lines": 61.7,
+          "statements": 60.41,
+          "branches": 36,
+          "functions": 33.33,
           "uncovered": {
-            "lines": 16,
-            "statements": 16,
-            "branches": 13,
-            "functions": 7
+            "lines": 18,
+            "statements": 19,
+            "branches": 16,
+            "functions": 8
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts": {
