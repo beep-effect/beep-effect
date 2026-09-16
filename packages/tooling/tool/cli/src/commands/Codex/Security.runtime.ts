@@ -23,6 +23,9 @@ const PluginMetadata = S.fromJsonString(
   S.Struct({ name: S.Literal("codex-security"), version: S.Literal(SECURITY_PLUGIN_VERSION) })
 );
 
+const decodePackageMetadata = S.decodeEffect(PackageMetadata);
+const decodePluginMetadata = S.decodeEffect(PluginMetadata);
+
 /**
  * Resolves and verifies the pinned package and bundled plugin without installing.
  *
@@ -51,8 +54,8 @@ export const securityRuntime = Effect.gen(function* () {
       message: `Install the pinned runtime: npm install --prefix ${INSTALL_PREFIX} --ignore-scripts --no-audit --no-fund --save-exact @openai/codex-security@${SECURITY_PACKAGE_VERSION}`,
     });
   }
-  yield* S.decodeEffect(PackageMetadata)(yield* fs.readFileString(path.join(packageRoot, "package.json")));
-  yield* S.decodeEffect(PluginMetadata)(
+  yield* decodePackageMetadata(yield* fs.readFileString(path.join(packageRoot, "package.json")));
+  yield* decodePluginMetadata(
     yield* fs.readFileString(path.join(packageRoot, "_bundled_plugin/.codex-plugin/plugin.json"))
   );
   return {

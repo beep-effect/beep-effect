@@ -27,6 +27,9 @@ import {
 
 const KNOWLEDGE_BASE = "docs/security/threat-model.md";
 const isValidMaxCost = S.is(SecurityScanOptions.fields.maxCost);
+const decodeSourceReceipt = S.decodeEffect(SecuritySourceReceipt);
+const encodeSourceReceiptJson = S.encodeEffect(S.fromJsonString(SecuritySourceReceipt));
+const decodeSecurityScanOptions = S.decodeEffect(SecurityScanOptions);
 const isValidTimeout = S.is(SecurityScanOptions.fields.timeoutMinutes);
 const isRepoRelativePath = S.is(RepoRelativePath);
 const TARGET_MESSAGE = "--path must name an existing path inside the repository.";
@@ -106,7 +109,7 @@ const gitOutput = Effect.fn("CodexSecurity.gitOutput")(function* (repo: string, 
 /** Binds the repository's origin slug and `HEAD` into the receipt written next to the scan. */
 const resolveSourceReceipt = Effect.fn("CodexSecurity.resolveSourceReceipt")(function* (repo: string) {
   const repository = yield* securityRepositoryFromRemote(yield* gitOutput(repo, ["remote", "get-url", "origin"]));
-  return yield* S.decodeEffect(SecuritySourceReceipt)({
+  return yield* decodeSourceReceipt({
     schemaVersion: "beep-security-source/v1",
     repository,
     revision: yield* gitOutput(repo, ["rev-parse", "HEAD"]),
@@ -198,11 +201,10 @@ const writeSourceReceipt = Effect.fn("CodexSecurity.writeSourceReceipt")(functio
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* assertPrivateOutputDirectory(repoRealPath, outputDir);
-  yield* fs.writeFileString(
-    path.join(outputDir, "beep-source.json"),
-    yield* S.encodeEffect(S.fromJsonString(SecuritySourceReceipt))(source),
-    { flag: "wx", mode: 0o600 }
-  );
+  yield* fs.writeFileString(path.join(outputDir, "beep-source.json"), yield* encodeSourceReceiptJson(source), {
+    flag: "wx",
+    mode: 0o600,
+  });
 });
 
 const run = Effect.fn("CodexSecurity.run")(
@@ -300,7 +302,7 @@ const boundMessage = (values: RawScanOptions): string =>
  * @since 0.0.0
  */
 export const decodeScanOptions = Effect.fn("CodexSecurity.decodeScanOptions")(function* (values: RawScanOptions) {
-  return yield* S.decodeEffect(SecurityScanOptions)({
+  return yield* decodeSecurityScanOptions({
     outputDir: values.output,
     maxCost: values.maxCost,
     timeoutMinutes: values.timeoutMinutes,

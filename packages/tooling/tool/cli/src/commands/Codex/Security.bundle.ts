@@ -44,6 +44,8 @@ type ScanIdentity = {
   readonly repositorySource: "local-source-receipt" | "sealed-remote-unverified";
 };
 const remoteSlugOption = S.decodeOption(GitHubRepoSlugFromRemote);
+const decodeRemoteSlug = S.decodeEffect(GitHubRepoSlugFromRemote);
+const encodeManifest = S.encodeEffect(SecurityManifest);
 
 /**
  * Decodes a credential-free GitHub remote into a repository slug with a safe error.
@@ -64,7 +66,7 @@ const remoteSlugOption = S.decodeOption(GitHubRepoSlugFromRemote);
  * @since 0.0.0
  */
 export const securityRepositoryFromRemote = Effect.fn("CodexSecurity.repositoryFromRemote")((remote: string) =>
-  S.decodeEffect(GitHubRepoSlugFromRemote)(remote).pipe(
+  decodeRemoteSlug(remote).pipe(
     Effect.mapError((cause) =>
       CodexSecurityError.make({ message: "Repository remote is not a credential-free GitHub slug.", cause })
     )
@@ -286,7 +288,7 @@ const projectCapture = Effect.fn("CodexSecurity.projectCapture")(function* (inpu
     targetRevision: manifest.scan.target.revision,
     repository: identity.repository,
     repositorySource: identity.repositorySource,
-    scope: (yield* S.encodeEffect(SecurityManifest)(manifest)).scan.scope,
+    scope: (yield* encodeManifest(manifest)).scan.scope,
     coverage: input.coverageInput,
     findings: input.findingsInput,
   };
