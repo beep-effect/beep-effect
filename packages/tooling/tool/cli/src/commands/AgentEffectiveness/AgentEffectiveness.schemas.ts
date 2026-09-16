@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema/Sha256";
 import { A } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -312,3 +313,224 @@ const scoreReportJsonCodec = JsonStringCodec(AgentEffectivenessEvalScoreReport);
 export const encodeAgentEffectivenessEvalScoreReportJson: (
   report: AgentEffectivenessEvalScoreReport
 ) => Effect.Effect<string, S.SchemaError> = scoreReportJsonCodec.encode;
+
+const NonNegativeMeasure = S.Finite.check(S.isGreaterThanOrEqualTo(0));
+const Count = S.Int.check(S.isGreaterThanOrEqualTo(0));
+
+/**
+ * Inputs that must stay fixed when comparing two convention variants.
+ *
+ * **Details**
+ *
+ * Digests identify the source snapshot, harness, environment, and safety policy.
+ * They are declarations by the experiment runner, not independently verified
+ * attestations. The task contains the prompt and deterministic completion rules.
+ *
+ * **Example** (Require a fixed acceptance suite)
+ *
+ * ```ts
+ * import { AgentConventionControls } from "@beep/repo-cli/commands/AgentEffectiveness"
+ * import * as S from "effect/Schema"
+ *
+ * const decodeChecks = S.decodeUnknownOption(AgentConventionControls.fields.acceptanceChecks)
+ * console.log(decodeChecks(["check", "test"]))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AgentConventionControls extends S.Class<AgentConventionControls>($I`AgentConventionControls`)(
+  {
+    task: SkillOptTaskManifest,
+    repositorySnapshot: Sha256Hex,
+    harnessDigest: Sha256Hex,
+    environmentDigest: Sha256Hex,
+    safetyPolicyDigest: Sha256Hex,
+    model: S.NonEmptyString,
+    reasoningEffort: S.NonEmptyString,
+    tokenBudget: Count,
+    timeBudgetMs: NonNegativeMeasure,
+    acceptanceChecks: S.NonEmptyArray(S.NonEmptyString),
+  },
+  $I.annote("AgentConventionControls", {
+    description: "Declared task, model, safety, acceptance, runtime, and budget controls for a paired comparison.",
+  })
+) {}
+
+/**
+ * Content identities for the three independently variable convention surfaces.
+ *
+ * **Example** (Validate a guidance identity)
+ *
+ * ```ts
+ * import { AgentConventionVariant } from "@beep/repo-cli/commands/AgentEffectiveness"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(AgentConventionVariant.fields.guidance)("missing")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AgentConventionVariant extends S.Class<AgentConventionVariant>($I`AgentConventionVariant`)(
+  { guidance: Sha256Hex, navigation: Sha256Hex, handoff: Sha256Hex },
+  $I.annote("AgentConventionVariant", { description: "Content digests of guidance, navigation, and handoff inputs." })
+) {}
+
+const AcceptanceOutcome = LiteralKit(["passed", "failed", "not-run"]);
+
+/**
+ * Measurements retained separately from the existing deterministic scorer.
+ *
+ * **Details**
+ *
+ * Null means unmeasured, including defect and intervention counts. A missing
+ * acceptance-check key is counted as not run. Durations are milliseconds and
+ * tokens are provider-reported counts; missing measurements never become zero.
+ *
+ * **Example** (Represent unknown resource use)
+ *
+ * ```ts
+ * import { AgentConventionMeasurements } from "@beep/repo-cli/commands/AgentEffectiveness"
+ * import * as O from "effect/Option"
+ *
+ * const measurements = AgentConventionMeasurements.make({
+ *   elapsedMs: 1200, inputTokens: O.none(), outputTokens: O.none(),
+ *   introducedDefects: O.none(), humanInterventions: O.some(0), acceptance: { check: "passed" }
+ * })
+ * console.log(O.isNone(measurements.inputTokens)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AgentConventionMeasurements extends S.Class<AgentConventionMeasurements>($I`AgentConventionMeasurements`)(
+  {
+    elapsedMs: NonNegativeMeasure,
+    inputTokens: S.OptionFromNullOr(Count),
+    outputTokens: S.OptionFromNullOr(Count),
+    introducedDefects: S.OptionFromNullOr(Count),
+    humanInterventions: S.OptionFromNullOr(Count),
+    acceptance: S.Record(S.NonEmptyString, AcceptanceOutcome),
+  },
+  $I.annote("AgentConventionMeasurements", {
+    description: "Reported outcomes and resource measurements for one trial.",
+  })
+) {}
+
+/**
+ * Portable receipt combining existing eval output with declared experiment controls.
+ *
+ * **Gotchas**
+ *
+ * The comparison command reads receipts only. It does not execute an agent,
+ * verify source digests, inspect raw transcripts, or authenticate measurements.
+ * Keep sensitive prompts and source content out of publicly shared receipts.
+ *
+ * **Example** (Reject an incomplete receipt)
+ *
+ * ```ts
+ * import { AgentConventionTrial } from "@beep/repo-cli/commands/AgentEffectiveness"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(AgentConventionTrial)({ schemaVersion: "agent-convention-trial/v1" })) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AgentConventionTrial extends S.Class<AgentConventionTrial>($I`AgentConventionTrial`)(
+  {
+    schemaVersion: S.Literal("agent-convention-trial/v1"),
+    runId: S.NonEmptyString,
+    pairId: S.NonEmptyString,
+    controls: AgentConventionControls,
+    variant: AgentConventionVariant,
+    evaluation: AgentEffectivenessEvalScoreReport,
+    measurements: AgentConventionMeasurements,
+  },
+  $I.annote("AgentConventionTrial", {
+    description: "One independently identified run in a declared paired convention experiment.",
+  })
+) {}
+
+const ConventionSurface = LiteralKit(["guidance", "navigation", "handoff"]);
+const ComparisonRefusal = LiteralKit([
+  "controls-differ",
+  "pair-differs",
+  "run-reused",
+  "task-mismatch",
+  "invalid-score",
+  "surface-count",
+]);
+
+/**
+ * Candidate-minus-baseline differences without an aggregate score or winner.
+ *
+ * **Example** (Keep a missing token difference unknown)
+ *
+ * ```ts
+ * import { AgentConventionDifferences } from "@beep/repo-cli/commands/AgentEffectiveness"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownOption(AgentConventionDifferences.fields.inputTokens)(null))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AgentConventionDifferences extends S.Class<AgentConventionDifferences>($I`AgentConventionDifferences`)(
+  {
+    completion: S.Finite,
+    schemaFirst: S.Finite,
+    tsgo: S.Finite,
+    biome: S.Finite,
+    violationCount: S.Int,
+    acceptancePassed: S.Int,
+    acceptanceFailed: S.Int,
+    acceptanceNotRun: S.Int,
+    elapsedMs: S.Finite,
+    inputTokens: S.OptionFromNullOr(S.Int),
+    outputTokens: S.OptionFromNullOr(S.Int),
+    introducedDefects: S.OptionFromNullOr(S.Int),
+    humanInterventions: S.OptionFromNullOr(S.Int),
+  },
+  $I.annote("AgentConventionDifferences", {
+    description: "Separate outcome and resource differences; null differences remain unmeasured.",
+  })
+) {}
+
+/**
+ * A checked pairing decision with the original receipts retained for inspection.
+ *
+ * **Details**
+ *
+ * Comparable means the declared controls match and exactly one convention
+ * surface changed. A single pair is descriptive evidence, not a causal finding.
+ *
+ * **Example** (Inspect the report version contract)
+ *
+ * ```ts
+ * import { AgentConventionComparison } from "@beep/repo-cli/commands/AgentEffectiveness"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(AgentConventionComparison.fields.schemaVersion)("agent-convention-comparison/v1")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AgentConventionComparison extends S.Class<AgentConventionComparison>($I`AgentConventionComparison`)(
+  {
+    schemaVersion: S.Literal("agent-convention-comparison/v1"),
+    baseline: AgentConventionTrial,
+    candidate: AgentConventionTrial,
+    result: S.TaggedUnion({
+      Comparable: { changedSurface: ConventionSurface, differences: AgentConventionDifferences },
+      Incomparable: { reasons: S.NonEmptyArray(ComparisonRefusal) },
+    }),
+  },
+  $I.annote("AgentConventionComparison", {
+    description: "Auditable paired comparison or an explicit refusal to compare unmatched inputs.",
+  })
+) {}

@@ -1,5 +1,94 @@
 # AWS cost operations
 
+## Current policy — September 15, 2026
+
+The operator targets **$200/month while preserving production services and
+working PR checks**. This supersedes the earlier September 15 $100 target,
+September 9 $500 guardrail and 14-worker concurrency policy below. The earlier audit and deployment sections
+remain historical evidence.
+
+Cost Explorer reported $431.64 month-to-date and a $1,194.95 monthly forecast.
+EC2 compute contributed $394.36. The seven detected anomalies totaled $283.68
+of impact, of which $276.93 came from compute. High CI usage occurred on both
+Spot and On-Demand; changing purchase model alone does not resolve total usage.
+
+### Keep CI available with a smaller pool
+
+- Set `RUNNERS_MAXIMUM_COUNT` to 2 and retain the deployed Spot instance
+  choices with `price-capacity-optimized` allocation and no automatic
+  On-Demand fallback. Retain ephemeral workers and cleanup.
+- Keep `beep-ci-scale-up` reserved concurrency at 1. A value of 0 prevents PR
+  verification jobs from acquiring runners and must not be used as the normal
+  budget policy.
+- Keep the SQS event-source mappings for `beep-ci-scale-up` and
+  `beep-ci-job-retry` enabled. Jobs beyond the cap wait and retry as capacity
+  becomes available. Do not purge queued work as a cost-control shortcut.
+- Keep scale-down, the age-based reaper, instance-termination handling and
+  deregistration retry enabled. Existing busy workers finish and self-terminate.
+- Set the existing `Monthly Budget` to $200, preserving cost types, subscribers
+  and percentage thresholds. Actual-spend alerts correspond to $100, $160 and
+  $200; the forecast threshold is $200.
+- Preserve production resources, hosted zones, domains, current state, images,
+  backups and the CI cache.
+
+An initial emergency containment set scale-up concurrency to 0 and disabled
+both queue mappings. The operator reported that PR jobs stopped being picked
+up. That pause is superseded by the smaller active pool above. No automatic
+pause or timed closure is part of the current policy.
+
+### Spending and verification limits
+
+The two-worker cap limits simultaneous spend and increases queue time. It does
+not cap aggregate monthly worker hours or guarantee a $200 bill. At the observed
+September On-Demand `r6i.2xlarge` rate of $0.504/hour, $200 purchases fewer than 397
+aggregate worker hours before storage, networking or production costs. Keeping
+the same total workload can still exceed that budget. Spot prices and interrupted
+attempts change cost per completed job. Budget notifications are
+informational; further reductions require measured changes to job allocation,
+runtime or capacity pricing while preserving successful verification.
+
+Before changing the pool, refresh the live cap, purchase model, Lambda
+concurrency, queue mappings and queued GitHub jobs. Verify actual job pickup
+and subsequent worker termination after changing those controls. Preserve the
+$200 budget unless the operator changes it; do not restore an older checkout's
+$500 policy or 14-worker cap accidentally.
+
+Billing and anomaly views lag resource changes. The current month's charges
+are already incurred, and historical anomalies remain valid records. A lower
+forecast or a sustained $200 monthly run rate requires later billing evidence.
+
+### September 15 reconciliation and runner-loss evidence
+
+The operator raised the target from $100 to $200 after the initial containment.
+The saved live restoration receipt had already changed the pool to Spot,
+`price-capacity-optimized`, two workers and no On-Demand fallback. The source
+still described On-Demand; reconcile it so a later deployment preserves the
+active cost policy. Raising the alert does not double the concurrency cap.
+
+The follow-up applied only the existing budget amount through the AWS Budgets
+API and read it back at $200. Cost types, filters, time period, four notification
+rules and each subscriber list were verified unchanged. The live Spot pool,
+two-worker cap and enabled job pickup were preserved. This was not a full
+Pulumi stack deployment; the source and mocked-resource tests reconcile the
+previously applied fleet settings for the next deployment.
+
+AWS reported $432.63 accrued and a $1,194.95 forecast at the follow-up read.
+Those account-wide estimates include historical usage and billing lag; they
+are not evidence of the post-containment monthly run rate. September 3 and 9
+alone contributed about $222.50, over half the month-to-date total. Reducing
+redundant full verification waves and interrupted work matters more than the
+alert amount.
+
+For PR #1138, the coverage retry lost Spot capacity at 19:47:58 UTC; GitHub
+reported runner loss at 20:00:02. The lint retry lost Spot capacity at 21:09:38;
+GitHub reported runner loss at 21:20:45. Both retained Spot requests reported
+`instance-terminated-no-capacity`. These are infrastructure failures, not
+coverage or lint findings. Do not repeatedly rerun unchanged failures without
+attribution, restore the fourteen-worker pool, or enable automatic On-Demand
+fallback to clear a queue.
+
+## September 9 policy and audit history
+
 Status: decisions locked; approved legacy cleanup executed September 9, 2026.
 Cost controls and runner freshness changes are in implementation and validation.
 This runbook owns the account cost policy and the single-PR implementation plan. [CI runner reliability](./ci-runner-reliability.md) owns

@@ -12,12 +12,13 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, NonEmptyTrimmedStr } from "@beep/schema";
+import { LiteralKit, NonEmptyTrimmedStr, PosInt } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, Str } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
+import { ProcessPid } from "../../internal/repo-run/ProcessTable.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.schemas");
 
@@ -171,6 +172,104 @@ export const WorktreeRepositoryHash = S.String.check(
 export type WorktreeRepositoryHash = typeof WorktreeRepositoryHash.Type;
 
 /**
+ * Evidence that settled whether a branch tip was pushed once its configured
+ * upstream was pruned.
+ *
+ * **Details**
+ *
+ * A pruned upstream leaves no `<ref>..HEAD` range to count, so the verdict
+ * records what answered in its place. `ancestor-of-base` proves the tip is
+ * reachable from the named remote default branch; `merged-pull-request`
+ * proves GitHub merged a pull request whose head is exactly this tip;
+ * `unverified` means neither was proven. These verdicts record evidence beside
+ * the count-derived preservation decision; they do not override it. A
+ * squash-merged tip still gets an archive ref when its commits are absent from
+ * the default branch, even with `merged-pull-request` evidence. Only
+ * `ancestor-of-base` has a zero base count, allowing clean removal when no
+ * other residue needs preservation.
+ *
+ * **Example** (Recognize a merged-pull-request verdict)
+ *
+ * ```ts
+ * import { WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree"
+ * import { PosInt } from "@beep/schema"
+ *
+ * const verdict: WorktreeUpstreamVerdict = { _tag: "merged-pull-request", number: PosInt.make(1098) }
+ * console.log(WorktreeUpstreamVerdict.guards["merged-pull-request"](verdict)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const WorktreeUpstreamVerdict = S.TaggedUnion({
+  "ancestor-of-base": { base: S.NonEmptyString },
+  "merged-pull-request": { number: PosInt },
+  unverified: {},
+}).pipe(
+  $I.annoteSchema("WorktreeUpstreamVerdict", {
+    description: "Evidence that decided whether a branch tip was pushed once its configured upstream was pruned.",
+  })
+);
+
+/**
+ * Decoded upstream-verdict union.
+ *
+ * @see {@link WorktreeUpstreamVerdict} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorktreeUpstreamVerdict = typeof WorktreeUpstreamVerdict.Type;
+
+/**
+ * Where a branch's configured upstream stands when unpushed commits are counted.
+ *
+ * **Details**
+ *
+ * `unset` covers detached checkouts and branches without an upstream. `live`
+ * names an upstream ref that resolves, so `<ref>..HEAD` can be counted.
+ * `pruned` names an upstream that branch configuration still points at but
+ * that no longer exists locally: `git fetch --prune` drops
+ * `refs/remotes/origin/<branch>` once the hosted branch is deleted after a
+ * merge, so the {@link WorktreeUpstreamVerdict} records what answered in its
+ * place.
+ *
+ * **Example** (Describe a pruned upstream)
+ *
+ * ```ts
+ * import { WorktreeUpstreamState } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const state: WorktreeUpstreamState = {
+ *   _tag: "pruned",
+ *   ref: "refs/remotes/origin/feat/feature-x",
+ *   verdict: { _tag: "unverified" },
+ * }
+ * console.log(state._tag) // "pruned"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const WorktreeUpstreamState = S.TaggedUnion({
+  unset: {},
+  live: { ref: S.String },
+  pruned: { ref: S.String, verdict: WorktreeUpstreamVerdict },
+}).pipe(
+  $I.annoteSchema("WorktreeUpstreamState", {
+    description:
+      "A branch's configured upstream as the unpushed-commit probe sees it: unset, live, or pruned after a merge with the verdict that answered instead.",
+  })
+);
+
+/**
+ * Decoded upstream-state union.
+ *
+ * @see {@link WorktreeUpstreamState} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
+
+/**
  * Durable receipt for worktree state preserved before archive removal.
  *
  * **Details**
@@ -178,6 +277,10 @@ export type WorktreeRepositoryHash = typeof WorktreeRepositoryHash.Type;
  * `branch` is absent for detached worktrees and `patchPath` is absent when no
  * tracked changes differed from `HEAD`. Untracked paths remain repository
  * relative so they can be copied back without rewriting their layout.
+ * `upstream` keeps the branch-upstream state the residue decision was made
+ * under, so a remote branch pruned after its merge is documented next to the
+ * commits it left behind. Older manifests that omit `upstream` decode as
+ * `unset`; their archived files and commit references remain readable.
  *
  * **Example** (Describe archived untracked residue)
  *
@@ -198,6 +301,7 @@ export type WorktreeRepositoryHash = typeof WorktreeRepositoryHash.Type;
  *   untrackedFiles: ["notes.txt"],
  *   residueRoot: "/home/operator/.cache/beep/worktree-residue/repo-0123456789ab/feature-x-20260902-123456",
  *   reason: "unpushed-commits",
+ *   upstream: { _tag: "live", ref: "refs/remotes/origin/feat/feature-x" },
  * })
  * console.log(manifest.untrackedFiles.length) // 1
  * ```
@@ -217,10 +321,13 @@ export class WorktreeResidueManifest extends S.Class<WorktreeResidueManifest>($I
     untrackedFiles: S.Array(S.String),
     residueRoot: S.String,
     reason: WorktreeResidueReason,
+    upstream: WorktreeUpstreamState.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(WorktreeUpstreamState.cases.unset.make({})))
+    ),
   },
   $I.annote("WorktreeResidueManifest", {
     description:
-      "Durable receipt for a worktree HEAD, tracked patch, and copied untracked files preserved before removal.",
+      "Durable receipt for a worktree HEAD, tracked patch, copied untracked files, and branch-upstream state preserved before removal.",
   })
 ) {}
 
@@ -259,6 +366,81 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
 ) {}
 
 /**
+ * The variable an agent harness exports to name its session process, and the pid it claims.
+ *
+ * **Details**
+ *
+ * Claude Code exports `CLAUDE_PID=<its own pid>` to every tool shell it
+ * spawns. The archive fence does not take the claim on faith: it accepts the
+ * pid only when the entry immediately before that session in the nearest-first
+ * ancestry chain (toward index 0 and the invoker) still carries this marker
+ * in its initial environment, which init, the desktop host, or a pid
+ * copied from another shell can never satisfy.
+ *
+ * **Example** (Name a session)
+ *
+ * ```ts
+ * import { WorktreeSessionMarker } from "@beep/repo-cli/commands/Worktree"
+ * import { NonEmptyTrimmedStr } from "@beep/schema"
+ *
+ * const marker = WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 4242 })
+ * console.log(marker.name) // "CLAUDE_PID"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeSessionMarker extends S.Class<WorktreeSessionMarker>($I`WorktreeSessionMarker`)(
+  {
+    name: NonEmptyTrimmedStr,
+    pid: ProcessPid,
+  },
+  $I.annote("WorktreeSessionMarker", {
+    description: "Environment variable a harness exports to its children, and the session pid it claims to carry.",
+  })
+) {}
+
+/**
+ * The processes the archive fence may exempt on the invoker's behalf.
+ *
+ * **Details**
+ *
+ * Present on a request, it exempts the invoker's own ancestry (the CLI, its
+ * shell, the agent session above them): they are the party asking for the
+ * removal, not writers whose later output the archive could lose.
+ * `sessionMarker` widens that to the whole subtree of one of those
+ * ancestors, the agent session process, so the helpers it spawned into the
+ * lane (MCP servers, tool shells, its own background jobs) count as the same
+ * party. The fence proves the marker against `/proc` before honouring it, so
+ * a stale, foreign, or universal-ancestor value never widens the fence.
+ *
+ * **Example** (Exempt the invoker and its session subtree)
+ *
+ * ```ts
+ * import { WorktreeInvokerExemption, WorktreeSessionMarker } from "@beep/repo-cli/commands/Worktree"
+ * import { NonEmptyTrimmedStr } from "@beep/schema"
+ * import * as O from "effect/Option"
+ *
+ * const exemption = WorktreeInvokerExemption.make({
+ *   sessionMarker: O.some(WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 4242 })),
+ * })
+ * console.log(O.isSome(exemption.sessionMarker)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorktreeInvokerExemption extends S.Class<WorktreeInvokerExemption>($I`WorktreeInvokerExemption`)(
+  {
+    sessionMarker: S.OptionFromNullOr(WorktreeSessionMarker),
+  },
+  $I.annote("WorktreeInvokerExemption", {
+    description:
+      "Exemption the archive fence grants the invoker: its own ancestry, and the subtree of the session process a harness marker proves.",
+  })
+) {}
+
+/**
  * Fully resolved request accepted by the worktree-removal service.
  *
  * **Details**
@@ -275,6 +457,12 @@ export class WorktreeArchivePlan extends S.Class<WorktreeArchivePlan>($I`Worktre
  * the archived head — an advance at any point up to the final ref update
  * fails the deletion instead of orphaning commits; directory removal never
  * touches the shared object store.
+ *
+ * `exemptInvoker` selects the explicit ancestry and harness-marker proof used
+ * by Yeet. It takes precedence over `exemptInvokerSession`, even when its
+ * marker cannot be proven. Callers that omit `exemptInvoker` may request
+ * command-name inference with `exemptInvokerSession`; without either request,
+ * every attached process remains a holder.
  *
  * **Example** (Request archive retirement)
  *
@@ -307,59 +495,22 @@ export class WorktreeRemovalRequest extends S.Class<WorktreeRemovalRequest>($I`W
     archive: S.Boolean,
     deleteBranch: S.Boolean,
     expectedHead: S.OptionFromNullOr(GitObjectId),
-    // `yeet sweep --retire` retires the lane its own shell and session stand in;
-    // those ancestors are the invoker, not writers the archive could lose.
-    exemptInvokerAncestry: S.optionalKey(S.Boolean),
+    // `yeet sweep --retire` retires the lane its own shell, session, and the
+    // session's helpers stand in; they are the invoker, not writers the
+    // archive could lose.
+    exemptInvoker: S.optionalKey(WorktreeInvokerExemption),
+    // Callers may explicitly request command-name inference when no
+    // `exemptInvoker` proof is supplied. An explicit proof always takes precedence,
+    // including when its marker cannot be proven. A recognized session-command root exempts its subtree. A chain-top
+    // fallback exempts only the invoking ancestry, retaining sibling holders.
+    // Exempt children must finish their writes before archive capture.
+    exemptInvokerSession: S.optionalKey(S.Boolean),
   },
   $I.annote("WorktreeRemovalRequest", {
     description:
       "Resolved worktree removal request, optionally pinned to the HEAD object id its authority was decided under.",
   })
 ) {}
-
-/**
- * Where a branch's configured upstream stands when unpushed commits are counted.
- *
- * **Details**
- *
- * `unset` covers detached checkouts and branches without an upstream. `live`
- * names an upstream ref that resolves, so `<ref>..HEAD` can be counted.
- * `pruned` names an upstream that branch configuration still points at but
- * that no longer exists locally: `git fetch --prune` drops
- * `refs/remotes/origin/<branch>` once the hosted branch is deleted after a
- * merge, so the remote default branch has to answer in its place.
- *
- * **Example** (Describe a pruned upstream)
- *
- * ```ts
- * import { WorktreeUpstreamState } from "@beep/repo-cli/commands/Worktree"
- *
- * const state: WorktreeUpstreamState = { _tag: "pruned", ref: "refs/remotes/origin/feat/feature-x" }
- * console.log(state._tag) // "pruned"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const WorktreeUpstreamState = S.TaggedUnion({
-  unset: {},
-  live: { ref: S.String },
-  pruned: { ref: S.String },
-}).pipe(
-  $I.annoteSchema("WorktreeUpstreamState", {
-    description:
-      "A branch's configured upstream as the unpushed-commit probe sees it: unset, live, or pruned after a merge.",
-  })
-);
-
-/**
- * Decoded upstream-state union.
- *
- * @see {@link WorktreeUpstreamState} for the runtime schema.
- * @category type-level
- * @since 0.0.0
- */
-export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
 
 /**
  * Answer of the unpushed-commit probe shared by doctor and archive retirement.
@@ -369,7 +520,8 @@ export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
  * `baseRange` is the comparison against the remote default branch
  * (`origin/<default>..HEAD`, or plain `HEAD` when that ref is absent). When
  * `upstream` is `pruned`, no upstream range could be counted, so `baseRange`
- * decided `unpushed` on its own instead of aborting the probe.
+ * decided `unpushed` on its own instead of aborting the probe and the pruned
+ * state carries the verdict that proved (or failed to prove) the tip pushed.
  *
  * **Example** (Record a probe that fell back to the default branch)
  *
@@ -379,7 +531,11 @@ export type WorktreeUpstreamState = typeof WorktreeUpstreamState.Type;
  * const inspection = WorktreeUnpushedInspection.make({
  *   unpushed: false,
  *   baseRange: "origin/main..HEAD",
- *   upstream: { _tag: "pruned", ref: "refs/remotes/origin/feat/feature-x" },
+ *   upstream: {
+ *     _tag: "pruned",
+ *     ref: "refs/remotes/origin/feat/feature-x",
+ *     verdict: { _tag: "ancestor-of-base", base: "origin/main" },
+ *   },
  * })
  * console.log(inspection.upstream._tag) // "pruned"
  * ```

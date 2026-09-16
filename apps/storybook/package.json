@@ -38,6 +38,7 @@
     "test:storybook:ui": "bun run scripts/run-storybook-tests.mjs \"$(git rev-parse --show-toplevel)/packages/foundation/ui-system/ui/stories\""
   },
   "dependencies": {
+    "@beep/epistemic-ui": "workspace:^",
     "@beep/graph-3d": "workspace:^",
     "@beep/ui": "workspace:^",
     "@storybook/addon-a11y": "catalog:",
