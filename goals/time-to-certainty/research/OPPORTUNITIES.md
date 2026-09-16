@@ -1729,6 +1729,289 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   before committing (it now does, alongside oxlint, test-tsgo and effect-vitest), and a lane rule
   that the verification table is re-run after the last edit, not appended to.
 
+## 2026-09-16 — A fresh lane worktree has no Effect reference checkout
+
+- **Doing:** authoring the B7 settle schemas in a sibling lane created by
+  `bun run beep worktree new ttc-b7`.
+- **Evidence:** `ls <lane>/.repos/` → `No such file or directory`; the `.repos/effect` symlink is
+  provisioned per checkout by `scripts/setup-effect-ref.sh` and `worktree new` copies `.env` and
+  editor files but not it, so every "validate against the v4 source" read had to go through the
+  owning clone's absolute path, and the Codex lane brief has to say so explicitly.
+- **Would have prevented it:** `worktree new` re-creating the machine-local reference symlink
+  (or running the setup script) as part of bootstrap, so AGENTS.md's tool-routing rule holds in
+  every lane without a per-brief workaround.
+
+## 2026-09-16 — B7 Stage A sandbox type-check spawn
+
+- **Doing:** `bunx turbo run check --filter=@beep/repo-cli` after wiring settle state.
+- **Evidence:** exit 1; `tools/tsgo-shim/tsgo.js` reports `spawnSync node EPERM` before checking source. Remote cache was unavailable; 32 dependency builds replayed locally.
+- **Would have prevented it:** run the named type-check gate in the orchestrator's admitted environment; keep this lane's result marked unverified until that gate passes.
+
+## 2026-09-16 — B7 arbitrary API drift
+
+- **Doing:** implementing the brief's generated schema round-trips.
+- **Evidence:** neither the designated Effect v4 reference nor installed `effect/Schema` exports `toArbitrary`; the reference exports `Arbitrary.schema` and `Arbitrary.sampleEffect` from `effect/unstable/arbitrary/Arbitrary`.
+- **Would have prevented it:** specify the current v4 arbitrary API in implementation briefs. Use that API for the same generated round-trip proof.
+
+## 2026-09-16 — B7 package audit repeats sandbox shim failure
+
+- **Doing:** required `bun run beep quality package-verify @beep/repo-cli` handoff gate.
+- **Evidence:** exit 1 after package build; audit stopped at `tsgo -p tsconfig.check.json` with `spawnSync node EPERM`. Tests, lint, and docgen in that gate did not complete. The installed Effect compiler invoked directly against the same check config exited 0.
+- **Would have prevented it:** run the canonical gate from the orchestrator environment. Acknowledged the resulting local audit P0 as environment-only, retaining the rerun requirement.
+
+## 2026-09-16 — B7 Bun fork pool stalls before tests
+
+- **Doing:** requested `bunx --bun vitest run` over the seven focused suites.
+- **Evidence:** only the Vitest startup banner appeared; no suite result before interruption (exit 130). The same new settle suite with `--pool=threads` passed 32 tests in 4.81 s.
+- **Would have prevented it:** use a Bun-compatible worker pool for the package's Bun launcher. Keep the unmodified requested invocation marked incomplete, and report the thread-pool run separately.
+
+## 2026-09-16 — B7 scoped full-file coverage floor
+
+- **Doing:** focused Stage A suites with lcov and explicit 100% per-file line, branch, function, and statement thresholds.
+- **Evidence:** all 220 assertions passed; the coverage gate exited 1. `Settle.ts`, `MonitorPolicy.ts`, and `WatchStream.ts` reached 100%; larger existing command/status/porcelain files remained below the full-file floor. A broader `yeet*.test.ts` sweep was interrupted before completion and supplies no passing evidence.
+- **Would have prevented it:** establish per-file baseline coverage before assigning a small stage spanning large existing modules, or budget their unrelated coverage gaps explicitly. Retain the requested 100% gate as unpassed; do not relabel a partial measurement as complete.
+
+## 2026-09-16 — B7 Stage B — Effect helper signatures
+
+- During loop implementation, the direct source check caught `TS2554` on `String.slice` and
+  an invalid curried `HashSet.has` use. The v4 reference exposes data-last string helpers and
+  a value-first curried set lookup. Corrected against the reference before tests.
+- **Would have prevented it:** inspect the full overload/body at each helper call, not just its export index.
+
+## 2026-09-16 — B7 Stage B — contract-aware loop fixtures
+
+- The first Node run exposed fixtures that assumed monitor never invokes closeout, supplied
+  inconsistent merge-ready criteria, or hid the new hook row behind a different-head dispatch.
+  Evidence: `Schema validation failed`, an expected rerun count of 1 observed as 0, and empty
+  hook output. Updated fixtures to bind closeout, derive the first failing criterion, and remove
+  unrelated dispatch state. The next focused run passed all 59 tests.
+- **Would have prevented it:** reuse the schema's criterion helper and explicit per-head closeout state in loop
+  fixtures; make hook liveness setup part of each new row-kind test.
+
+## 2026-09-16 — B7 Stage B — stale remediation wave suppresses readiness
+
+- Hook review found that its head-liveness join treated every capsule as owned by the remediation
+  wave. A ready row for a newly pushed head would disappear while dispatch still named the old
+  failed head. Evidence: the ready-row adapter fixture produced empty output with the old wave.
+- Ready-row supersession now follows the loop's fix-sha ack receipts, not the unrelated dispatch
+  head; the regression deliberately retains that stale wave. Prevention: make row ownership
+  explicit in liveness joins rather than applying one producer's head to every row kind.
+
+## 2026-09-16 — B7 Stage B — sandbox verification limits
+
+- `bun run beep quality package-verify @beep/repo-cli` built its dependency closure, then its
+  audit stopped at the tsgo shim: `spawnSync node EPERM` (exit 1). This is the same environment
+  boundary as Stage A; the direct native compiler is supporting evidence only. The audit inbox
+  row is acknowledged as environment-only, not as a passing package proof.
+- The default-pool Bun run of the six B7 suites printed only the startup banner and reached
+  the 90-second bound (exit 124); a thread-pool run is tracked separately.
+- Scoped Node/V8 coverage ran all 162 tests successfully but failed the explicit full-file 100%
+  gate in MonitorLoop, Porcelain, and Yeet.command. Prevention: maintain full-file seam coverage
+  for the command/porcelain modules, and provide an orchestrator verification runner that can
+  execute the canonical shim inside this lane's sandbox.
+
+## 2026-09-16 — B7 Stage B — Bun hook subprocess stdin
+
+- The thread-pool fallback completed the five non-hook suites, but four hook-adapter tests
+  failed with empty payload output and 26 unhandled `EPERM: operation not permitted, write`
+  errors in Node's stream adapter under Bun. The failures include three pre-existing hook tests;
+  Node passes the same suite. The existing adapter uses NodeServices for both runtimes.
+- The v4 reference shows BunChildProcessSpawner re-exports the Node shared implementation, so
+  switching service layers cannot remove that pipe path. Prevention: run the canonical Bun
+  subprocess proof in the orchestrator environment and keep each runtime verdict separate.
+
+## 2026-09-16 — B7 Stage B — required matrix children and the readiness gate
+
+- Review found a second meaning of required: status readiness uses GitHub's required view,
+  while B7 terminal decisions also use exact ruleset contexts and tolerated matrix children.
+  A red matrix child omitted from the required view could emit a ready row before classification.
+- The loop now binds the same census-backed required set into its persisted readiness criterion
+  before stamping or announcing readiness. Tests exercise exact and matrix reds with GitHub's
+  required flag false and assert no ready line or inbox row. Prevention: derive readiness and
+  required-red decisions from the same required-set predicate.
+## 2026-09-16 — B7 Stage C command cwd mismatch
+
+A local edit script used root-relative paths from the CLI package cwd and failed with
+`FileNotFoundError`. No edits were applied by that invocation. Run edits from the worktree root
+and tests from the package directory in separate commands.
+
+## 2026-09-16 — B7 Stage C fixture assumptions
+
+The first three-suite Node run exited 1: a new watch test used the wrong temp-repo helper,
+and its optional-check fixture omitted `required: false` (the schema defaults to true).
+Use the existing `inTempRepo` helper and set the required flag explicitly in census tests.
+
+The next fixture run also failed because JSON check reads were scripted with watch-style
+nonzero exit codes. Match the existing scripted spawner JSON-read contract (exit 0), keeping
+nonzero watch-step exits in the plain-monitor suite. The compiler also rejected passing a
+schema decoder directly to `Effect.forEach`: its second argument is parse options, not an
+array index. Keep the adapter lambda for that call.
+
+## 2026-09-16 — B7 Stage C sandbox verification limits
+
+`bun run beep quality package-verify @beep/repo-cli` built the package, then audit failed
+at the tsgo shim with `spawnSync node EPERM`. Direct source and test compiler checks passed.
+The orchestrator must rerun the canonical package gate outside this sandbox. The resulting
+P0 audit row is being acknowledged as environment-only with that evidence.
+
+The default Bun Vitest pool emitted only its startup banner and was interrupted (exit 130).
+A bounded `--pool=threads` run is supplemental proof, not a default-pool pass. A coverage
+invocation from the worktree root was also interrupted; rerun from the CLI package cwd.
+
+The corrected scoped Node run passed 123 tests but failed the full-file 100% floor for
+`Handler.ts` and `Status.ts`. Preserve that unmet gate in the handoff; narrow regression
+coverage does not prove the unrelated publish and status paths in those large modules.
+
+## 2026-09-16 — B7 Stage D matcher inference
+
+The direct source compiler rejected the new reconciliation fold: `TS7031` on the
+`tagsExhaustive` timeout payload and `TS377117` on wrapped Option success values.
+Use individually inferred `Match.tag` arms and the v4 `Effect.succeedSome` helper.
+The initial log-tail command also used an unsupported shorthand; `tail -n 30` works.
+
+## 2026-09-16 — B7 Stage D Bun pool startup
+
+`timeout 60s bunx --bun vitest run` over the nine-suite oracle emitted only the
+Vitest banner and exited 124. Retrying the same oracle with `--pool=threads`, as
+allowed by the remediation contract. Node's default pool passed all 257 tests.
+The raw Fallow file contains trailing output after its JSON document; read the first
+JSON value when extracting metrics instead of treating the whole file as one JSON value.
+
+## 2026-09-16 — B7 Stage D Bun subprocess restriction
+
+The nine-suite Bun threads oracle exited 1: eight suites passed; four hook-adapter
+cases failed with 26 uncaught `EPERM: operation not permitted, write` errors in
+`internal:fs/streams`. This reproduces the Stage B Bun subprocess-pipe blocker,
+including untouched hook tests. Node passed all nine suites. Preserve the hook
+assertions and report the Bun runtime limitation rather than weakening the oracle.
+
+## 2026-09-16 — B7 Stage D canonical package gate
+
+`bun run beep quality package-verify @beep/repo-cli` exited 1 at the audit's
+`tools/tsgo-shim/tsgo.js` invocation: `spawnSync node EPERM`. Direct native source
+and test compiler checks both exited 0. Acknowledge the package-audit P0 as
+environment-only; the orchestrator must rerun the canonical gate with working
+process-spawn permissions. No shim or package-script workaround was introduced.
+
+## 2026-09-16 — B7 Stage D diagnostic attribution overhead
+
+An auxiliary Fallow audit with a zero CRAP reporting threshold exited 2:
+`could not create a temporary worktree for base ref 'origin/main'`. This diagnostic
+would invoke the base-attribution path even though both required gates already pass.
+Use `--gate all` for raw per-function diagnostic metrics so no base worktree is requested;
+retain the canonical new-only audit for the actual acceptance result.
+
+## 2026-09-16 — B7 Stage D law-check scope
+
+`beep lint laws --package @beep/repo-cli` exited 0 but scanned zero source files;
+this command expects a directory, unlike `quality package-verify`. The corrected
+`--package packages/tooling/tool/cli` scanned 819 files and passed, with eight
+advisory terse-effect findings in untouched code. Prefer explicit directory wording
+in the law command's flag help to prevent a vacuous success from looking like proof.
+
+## 2026-09-16 — The Fallow complexity gate fired at publish, not at the stage commits
+
+- **Doing:** publishing B7 PR1 (#1149) after three stage commits that each passed type check,
+  full lint, docgen, test-tsgo, and both test runtimes.
+- **Evidence:** `yeet publish --start-pr-early` pushed, then its cheap-gates wave failed
+  `fallow:audit` and `fallow:health` on five introduced complexity findings, the largest being
+  `pollUntilMerged` at cyclomatic 43 over 185 lines (threshold 20 / 60). The kickoff listed the
+  Fallow audit among the per-commit gates; the orchestrator ran every other gate per commit and
+  left Fallow to the publish proof, so the monolith rode through two commits and a merge before
+  a lane had to decompose it (Stage D: 43 → 6, no suppression).
+- **Would have prevented it:** `bun run beep quality fallow audit --check --base origin/main`
+  in the same per-commit gate batch as `lint circular` and `lint schema-first`; it runs in about
+  a minute and the sandboxed Codex lane can run it too, so the lane brief can require it before
+  the results file is written.
+
+## 2026-09-16 — Fallow health is repo-wide, so an inherited B5 fixture blocked the B7 publish
+
+- **Doing:** publishing B7 PR1 (#1149) after the divergence merge that brought B5 (#1143) in.
+- **Evidence:** `fallow audit --check --base origin/main` passed with `complexity_introduced: 0`,
+  but `fallow health --check` exited 1 on one `not-applicable` yet `blocking` finding: the
+  anonymous generator in `test/proof-job.test.ts` ("proof verdict bookkeeping", cognitive 10 over
+  the 8 ceiling), authored by B5 and already on `main`. The publish proof's cheap-gates wave runs
+  both, so an inherited test-fixture finding fails every PR opened after it lands.
+- **Would have prevented it:** the health gate attributing repo-wide findings the way the audit
+  does (inherited findings advisory, introduced findings blocking), or B5's own publish catching
+  the fixture before merge. Fixed here in test only with the permitted
+  `fallow-ignore-next-line complexity -- <reason>` on that generator; no source suppression.
+
+## 2026-09-16 — B8 ruling numbers collide across stacked branches
+
+- Doing: numbering B8 rulings while stacked on B7 (PR #1149), whose branch still carries
+  rulings 35–42 although `main` (B5, PR #1143) already used 35–40.
+- Evidence: `grep -oE 'Ruling [0-9]+' research/decisions.md | tail -1` prints `40` on
+  `origin/main` and `42` on `origin/ttc/b7-until-ready`; `git merge-tree` lists
+  `research/decisions.md` among seven conflicting paths.
+- Prevention: number rulings at publish time from `origin/main` only (the kickoff rule) and
+  make `beep goals ... --check` flag duplicate ruling numbers across `origin/main` and the
+  branch, so a stacked packet learns the collision before review instead of at the
+  divergence merge. B8 took 49–56 assuming B7 would renumber to 41–48; B7 renumbered to 41–49, so B8 shifted to 50–57 at its merge.
+
+## 2026-09-16 — B8 PR A local proof red on an inherited fallow health finding
+
+- Doing: `yeet publish --start-pr-early --monitor --pr` for a YAML-only change
+  (`.github/workflows/heavy.yml` + one changeset), PR #1151.
+- Evidence: the cheap-gates tier failed `fallow:health` with "Fallow health failed with
+  status ok", envelope `findingAttributionSummary` `introduced 0 / notApplicable 1`, raw
+  finding `packages/tooling/tool/cli/test/proof-job.test.ts:997` (cognitive 10 > 8, landed
+  with B5 #1143). `bun run beep quality fallow health --check --quiet` on the `main` clone
+  exits 1 with the same finding; hosted "Fallow Advisory Envelopes" is red on #1149 and
+  #1151 alike and is not a required context.
+- Prevention: the local cheap-gates tier should run `fallow health` with the same
+  new-only attribution the hosted audit uses (a `notApplicable`-only envelope is green), or
+  the B5 follow-up should clear the finding on `main`; until then every publish from every
+  branch pays one attribution + ack.
+
+## 2026-09-16 — B8 Stage A lane receipts (detail in `research/b8-implementation.md`)
+
+- Doing: Stage A (admission schemas, `ci admission`, `heavy-not-admitted` settle wait) as a
+  Fable subagent lane in the stacked `ttc-b8` worktree.
+- Evidence (five receipts, verbatim detail in the report's "Friction receipts"): a schema
+  defect inside the forked monitor loop surfaces only as a wrong poll count (`expected 1 to be
+  3`), five runs to find `YeetMergeReady.make … Schema validation failed`; `TestConsole` is
+  shared across `it.layer` tests so a `not.toContain("settle-timeout")` assertion sees the
+  previous test's line; `Fiber.poll` is not yieldable in v4; tsgo TS377118 prefers
+  `Effect.fromOption` over `O.match` + `Effect.fail`; `lint tooling-schema-first` is red on
+  `main` (289 inherited findings) and cannot gate a lane.
+- Prevention: export a `mergeReadyFor(criteria)` fixture from the Yeet test-kit and assert on
+  the loop fiber's exit before poll counts; add a `TestConsole` line-cursor helper (or a canon
+  note that `it.layer` shares the console); add TS377118 to the lane-brief trap list; make the
+  local schema-first lane new-only like the hosted audit.
+
+## 2026-09-16 — B8 PR A default-path proof: main push runs all seven heavy lanes, two inherited reds
+
+- Doing: proving on `main` (push run 35066098614, head 5e520d997e = #1150 on top of #1151) that
+  the new `heavy.yml` `admitted` input defaulting to `true` changes nothing on the push path.
+- Evidence: every `Heavy / *` lane ran (Check, Test Integration, Docgen, Doctest, Build green),
+  so the default is proven. Two reds are inherited, not PR A's: `Heavy / Lint Policy` failed in
+  `knowledge:refs-check` on `broken-target … explorations/ATLAS.md` and `docs/solutions/…`
+  references inside untouched packets (the push path runs the policy unscoped; the PR-scoped
+  run on #1151 passed); `Heavy / Coverage Regression` reported `new file has N uncovered
+  unit(s) … (no baseline file identity)` for `Yeet/internal/ProofJob.ts` and
+  `ProofJobLauncher.ts`, B5's new files (#1143), already red on #1151 as an optional context.
+- Prevention: main-push-only policy reds are invisible to every PR because PR runs are
+  affected-scoped; a nightly or post-merge `knowledge:refs-check` inbox row (or the same scoped
+  view on main) would name the owning packet. B5's follow-up should add baseline rows for its two
+  files (`standards/coverage.regression-baseline.jsonc`) or cover the seven functions.
+
+## 2026-09-16 — B8: a conflicting PR reads as `settle-timeout`, twice
+
+- Doing: babysitting #1155 with `yeet monitor --until-ready` after the label admitted the heavy
+  matrix; B7 (#1149) merged to `main` as a squash at 08:45Z and the stacked branch went
+  `CONFLICTING`.
+- Evidence: the loop had waited 50m on registered, queued `Heavy / *` checks ("registered
+  checks are GitHub's to time out"), then one poll saw `mergeStateStatus: DIRTY` with zero
+  reported checks (status artifact `checks: 0`), every expected context became `missing`, the
+  registration budget applied and the loop exited 1 with `settle-timeout` — and a relaunch
+  exited the same way within one poll. GitHub empties the check rollup of a conflicting PR; no
+  push had happened.
+- Prevention: name the state. A `DIRTY`/`CONFLICTING` head should print
+  `settle: base-conflict; merge origin/main and push` as a non-terminal wait that never
+  spends the budget (exit codes unchanged), and a context once seen registered for a head
+  should not regress to `missing` on one empty poll. Both are B8 follow-ups on this branch.
+
 ## 2026-09-16 — The Codex pool ran dry mid-train and the PR2 lane died before its first edit
 
 - **Doing:** launching the B7 PR2 implementation lane (`codex exec --model gpt-6-astra`) in a
@@ -1776,7 +2059,10 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   Candidate ruling for B7's next amendment; the settle schema already carries `budgetApplies`, so
   the change is one predicate plus a TestClock test.
 - **Outcome:** it did bite: the second blip landed at 30m 4s and the #1159 loop exited 1 with
-  `settle-timeout`. Fixed in PR2 as ruling 50 (`yeetCensusReadIsSuspect`), same day.
+  `settle-timeout`. PR2 carried a fix (a per-head `registered` flag failing the poll), but B8's
+  live-acceptance amendment to rulings 54–55 (#1155) landed first with a stronger one: both loops
+  remember every context seen registered and keep an absent one `pending`, and a conflicting head
+  reads `base-conflict`. PR2 dropped its version at the merge with `main`.
 
 ## 2026-09-16 — A hand push raced yeet's early push and killed the publish at the ref lock
 
@@ -1792,3 +2078,55 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   done (a `git ls-remote` compare before `git push`, or retrying once on the ref-lock error);
   and the recipe for "push now" should be one command, `yeet publish --start-pr-early`, never a
   hand push beside it.
+
+## 2026-09-16 — A reboot stopped both detached babysit jobs and nothing re-armed them
+
+- **Doing:** babysitting #1161 and #1159 with `yeet monitor --until-ready --detach` while their
+  heavy lanes sat queued.
+- **Evidence:** the user manager stopped both `beep-proof-<jobId>.service` units in the same second
+  (main process exit 130) during a logout, 1h 40m into the wait; the machine came back two hours
+  later with no unit loaded, and the `yeet job wait` callers had died with them. The job logs end
+  on `settle: required-pending … registered checks are GitHub's to time out`. Linger was on, so
+  only a reboot or manager stop explains it. Meanwhile `main` moved three merges and both PRs went
+  `DIRTY`; nobody was told.
+- **Would have prevented it:** a finalizer row for a job stopped by the manager (the inbox has none
+  for exit 130 under a stop), and a boot-time resume that re-submits `--until-ready` jobs whose
+  PR is still open. B5's "survives session restarts" does not extend to a reboot; the recipe says
+  so now.
+
+## 2026-09-16 — Two branches fixed the same settle regression and both called it ruling 50
+
+- **Doing:** merging `origin/main` into B7 PR2 (#1161) after B8 (#1155) landed.
+- **Evidence:** PR2 added ruling 50 (a per-head `registered` flag; an empty census fails the poll)
+  for the empty-rollup false `settle-timeout` seen on #1159. B8 had already numbered its own
+  rulings 50–57 and, from the same symptom on #1155, amended rulings 54–55 with per-context
+  registration memory (`rememberRegistered`) plus a `base-conflict` wait. Both branches were open
+  the same afternoon and neither's receipt named the other. The merge conflicted in `Settle.ts`,
+  `WatchMode.ts`, the settle tests and `decisions.md`.
+- **Would have prevented it:** reserving a ruling number and naming the fix in the shared ledger
+  before implementing (the B8 "ruling numbers collide across stacked branches" receipt already
+  asked for this), and reading open sibling branches' receipts before designing a fix for a
+  symptom another lane was babysitting. Resolved by keeping `main`'s memory and dropping PR2's.
+
+## 2026-09-16 — The coverage ratchet judged main's new files on the first PR to touch the package
+
+- **Doing:** the full local proof of B7 PR1 (#1149) on the head that merged `origin/main` twice.
+- **Evidence:** `ci:coverage` failed on `@beep/repo-cli` with eleven rows: three introduced
+  (`Yeet/internal/Inbox.ts` functions/lines/statements below its 100 baseline after the
+  `pr-merge-ready` row kind landed without a describe/id test) and eight inherited from files this
+  PR never touched — `VersionSync/*` from #1148 and `ProofJob*.ts` from B5 #1143 — reported as
+  "new file has uncovered unit(s) (no baseline file identity)" because rows for a package the PR
+  changes are judged at the base floor, and those PRs merged without recording their rows. The
+  hosted `Heavy / Coverage Regression` (optional) was red on the same head for the same reasons.
+- **Would have prevented it:** the PRs that add files recording their baseline rows before merge
+  (the hosted check being optional let them land red), or the ratchet holding rows for files a
+  PR did not author. Here: covered the new row kinds in `yeet-inbox.test.ts` (Inbox.ts back to
+  100) and recorded the inherited rows with `bun run coverage -- --filter=@beep/repo-cli
+  --write-baseline`, called out in the PR description for the reviewer.
+- **Outcome:** the local `--write-baseline` rows did not satisfy the hosted lane on #1159:
+  `VersionSync.render.ts` and `CategorySelectionService.ts` measured below their base floors
+  hosted ("row lowered by this pull request … judged at the base floor"), and the locally raised
+  `Quality/Tasks.ts` and package-total rows were "raised beyond hosted reach". A local regen is not
+  hosted evidence; paste the lane's printed `measured rows` instead, and the VersionSync floors need
+  tests from the branch that owns those files (#1156). #1163 covered the merge-ready row on `main`
+  first, so #1159 was closed as superseded and this receipt moved to B7 PR2.

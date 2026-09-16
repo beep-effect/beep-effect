@@ -1,22 +1,28 @@
 import { fcRuns } from "@beep/fc-runs";
+import { HEAVY_ADMISSION_LABEL, HeavyAdmission } from "@beep/repo-cli/commands/Ci";
 import {
   collectYeetStatus,
   deriveSettleVerdict,
   deriveYeetMergeReady,
   GhBranchRule,
+  GreptileSummary,
   matchExpectedContexts,
+  mergeReadyCriterionHolds,
+  PrCloseoutReport,
   RepoRunContext,
   readYeetRulesetRequiredContexts,
+  rememberRegistered,
   renderYeetHeadTimeline,
   renderYeetSettleDetail,
   rulesetRequiredContextsFromRules,
   runYeetMonitorUntilMerged,
-  YEET_CENSUS_SUSPECT_MESSAGE,
-  YeetCensusRead,
+  YeetExpectedContextCensus,
   YeetExpectedContextInput,
+  YeetGatedContextFamily,
   YeetHeadTimeline,
   YeetMergeReady,
   YeetMergeReadyCriteria,
+  YeetMergeReadyCriterion,
   YeetMonitorExit,
   YeetMonitorLoopPolicy,
   YeetPrMergeReadyRow,
@@ -25,6 +31,7 @@ import {
   YeetSettleChanged,
   YeetSettleCheck,
   YeetSettleInput,
+  YeetSettleVerdict,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusSnapshot,
@@ -32,13 +39,16 @@ import {
   YeetStatusWorktree,
   YeetUntilMergedPolicy,
   YeetUntilReadyPolicy,
-  yeetCensusReadIsSuspect,
+  yeetBaseConflictFor,
+  yeetGatedFamiliesFor,
   yeetHeadTimelineStamp,
   yeetMonitorDurationMillis,
   yeetMonitorPolicyTerminals,
   yeetPushToReadyMillis,
+  yeetSettleClockReset,
   yeetSettleSchemasForTesting,
   yeetSettleStampFor,
+  yeetSettleVerdictIsHeld,
   yeetSettleVerdictIsTerminal,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -50,7 +60,6 @@ import { Duration, Effect, Fiber, FileSystem, HashSet, Layer, Ref, Sink, Stream 
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -70,6 +79,47 @@ const expected = (contexts: ReadonlyArray<string>) =>
   );
 const check = (name: string, outcome: YeetSettleCheck["outcome"] = "pass", required = true) =>
   YeetSettleCheck.make({ name, outcome, required });
+const admission = (verdict: HeavyAdmission["verdict"], docsOnly = false) =>
+  O.some(
+    HeavyAdmission.make({
+      verdict,
+      admitted: verdict === "run",
+      sources: verdict === "run" ? ["label"] : [],
+      docsOnly,
+      changedPathCount: 1,
+    })
+  );
+// Property-test predicates, named so the property body stays flat (fallow CRAP gate).
+const expectSettledVerdict = (input: YeetSettleInput, result: YeetSettleVerdict): void => {
+  const reason = O.getOrNull(result.reason);
+  expect(reason === null || reason === "closeout-pending").toBe(true);
+  expect(reason === null).toBe(input.closeoutBound);
+};
+// Held = hold AND gated is the only open work AND outside the registration window.
+const holdWithGatedOpen = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
+  O.exists(input.admission, (value) => value.verdict === "hold") &&
+  A.isReadonlyArrayNonEmpty(result.census.gated) &&
+  A.isReadonlyArrayEmpty(result.census.missing) &&
+  A.isReadonlyArrayEmpty(result.census.pending) &&
+  A.isReadonlyArrayNonEmpty(input.checks) &&
+  !(O.isNone(input.expected) && A.isReadonlyArrayEmpty(result.census.matched));
+const settleBudgeted = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
+  A.isReadonlyArrayEmpty(input.checks) ||
+  A.isReadonlyArrayNonEmpty(result.census.missing) ||
+  (O.isNone(input.expected) && A.isReadonlyArrayEmpty(result.census.matched));
+// A base conflict is named first, never spends the budget, and is never terminal.
+const expectBaseConflict = (result: YeetSettleVerdict): void => {
+  assertSome(result.reason, "base-conflict");
+  expect(result.settled).toBe(false);
+  expect(result.budgetApplies).toBe(false);
+  expect(yeetSettleVerdictIsTerminal(result)).toBe(false);
+};
+const onlyGatedOpen = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
+  A.isReadonlyArrayEmpty(result.census.pending) &&
+  A.isReadonlyArrayEmpty(result.census.missing) &&
+  A.isReadonlyArrayNonEmpty(input.checks);
+const heavyContexts = ["Lint", "Heavy / Check", "Heavy / Docgen"];
+const heavyFamilies = expected(heavyContexts).pipe(O.getOrThrow, yeetGatedFamiliesFor);
 const verdict = (values: Partial<YeetSettleInput> = {}) =>
   deriveSettleVerdict(
     YeetSettleInput.make({
@@ -131,7 +181,13 @@ const temporary = Effect.fn("settleTest.temporary")(function* <V, E, R>(use: (ro
   });
   return yield* use("/settle-test").pipe(Effect.provideService(FileSystem.FileSystem, fs));
 });
-const snapshot = (root: string, headSha = "aaa111", checks: ReadonlyArray<YeetSettleCheck> = [], state = "OPEN") =>
+const snapshot = (
+  root: string,
+  headSha = "aaa111",
+  checks: ReadonlyArray<YeetSettleCheck> = [],
+  state = "OPEN",
+  labels: ReadonlyArray<string> = [HEAVY_ADMISSION_LABEL]
+) =>
   YeetStatusSnapshot.make({
     base: "origin/main",
     branch: "feature/settle",
@@ -151,6 +207,7 @@ const snapshot = (root: string, headSha = "aaa111", checks: ReadonlyArray<YeetSe
       headSha: O.some(headSha),
       checks,
       state,
+      labels,
     }),
   });
 
@@ -291,6 +348,235 @@ describe("B7 settle contracts", () => {
     assertSome(yeetSettleStampFor(O.none()), "settledAt");
     assertSome(yeetSettleStampFor(O.some("closeout-pending")), "settledAt");
     assertNone(O.some<"registration">("registration").pipe(yeetSettleStampFor));
+    assertNone(O.some<"heavy-not-admitted">("heavy-not-admitted").pipe(yeetSettleStampFor));
+  });
+  it("names a base conflict first, uncounted and never terminal, and clears on the repaired push", () => {
+    const dirty = { expected: expected(["Lint", "Test Unit"]), baseConflict: true, timeoutMs: 1000 };
+    // GitHub emptied the rollup: every context reads missing, yet the budget does not apply.
+    const conflict = verdict({ ...dirty, waitedMs: 5000 });
+    expectBaseConflict(conflict);
+    expect(conflict.census.missing).toEqual(["Lint", "Test Unit"]);
+    assertNone(conflict.reason.pipe(yeetSettleStampFor));
+    expect(renderYeetSettleDetail(conflict)).toBe(
+      "settle: base-conflict; merge origin/main and push; waited 5s (not counted toward the 1s settle timeout)"
+    );
+    // Precedence: a conflict explains an empty rollup better than the registration window.
+    assertSome(verdict({ ...dirty, checks: [] }).reason, "base-conflict");
+    assertSome(verdict({ ...dirty, checks: [check("Lint", "pending")] }).reason, "base-conflict");
+    assertSome(
+      verdict({ ...dirty, checks: [check("Lint"), check("Test Unit")], closeoutBound: true }).reason,
+      "base-conflict"
+    );
+    // The same observations with the conflict repaired follow the B7 rule again.
+    assertSome(verdict({ ...dirty, baseConflict: false, checks: [], waitedMs: 5000 }).reason, "settle-timeout");
+    expect(yeetBaseConflictFor(O.some("CONFLICTING"), O.none())).toBe(true);
+    expect(yeetBaseConflictFor(O.some("mergeable"), O.some("dirty"))).toBe(true);
+    expect(yeetBaseConflictFor(O.some("MERGEABLE"), O.some("CLEAN"))).toBe(false);
+    expect(yeetBaseConflictFor(O.none(), O.none())).toBe(false);
+  });
+  it("restarts the settle clock only when the budget resumes", () => {
+    const withBudget = (budgetApplies: boolean) =>
+      YeetSettleVerdict.make({
+        settled: false,
+        reason: O.some(budgetApplies ? "registration" : "base-conflict"),
+        census: YeetExpectedContextCensus.make({ matched: [], unmatched: [], pending: [], missing: ["Lint"] }),
+        waitedMs: 9000,
+        timeoutMs: 1000,
+        budgetApplies,
+      });
+    expect(yeetSettleClockReset(O.some(withBudget(false)), withBudget(true))).toBe(true);
+    expect(yeetSettleClockReset(O.some(withBudget(true)), withBudget(true))).toBe(false);
+    expect(yeetSettleClockReset(O.some(withBudget(false)), withBudget(false))).toBe(false);
+    expect(yeetSettleClockReset(O.some(withBudget(true)), withBudget(false))).toBe(false);
+    expect(yeetSettleClockReset(O.none(), withBudget(true))).toBe(false);
+    // The budget also resumes out of a held wait and a registered-but-queued wait.
+    const heldVerdict = verdict({
+      expected: expected(heavyContexts),
+      families: heavyFamilies,
+      checks: [check("Lint")],
+      admission: admission("hold"),
+    });
+    const missingVerdict = verdict({ expected: expected(["Lint"]), checks: [check("Docs", "pass", false)] });
+    expect(yeetSettleClockReset(O.some(heldVerdict), missingVerdict)).toBe(true);
+    expect(yeetSettleClockReset(O.some(verdict({ checks: [check("Lint", "pending")] })), missingVerdict)).toBe(true);
+  });
+  it("remembers registered contexts and keeps an absent one pending, never missing", () => {
+    const first = rememberRegistered(HashSet.empty(), [check("Lint", "pending"), check("Vercel", "pass", false)]);
+    expect(first.recalled).toEqual([]);
+    expect(first.checks).toEqual([check("Lint", "pending"), check("Vercel", "pass", false)]);
+    expect(HashSet.size(first.registered)).toBe(2);
+    expect(HashSet.has(first.registered, "Lint") && HashSet.has(first.registered, "Vercel")).toBe(true);
+    // The rollup came back empty: both names are recalled as pending, non-required rows.
+    const second = rememberRegistered(first.registered, []);
+    expect(second.recalled).toEqual(["Lint", "Vercel"]);
+    expect(second.checks).toEqual([check("Lint", "pending", false), check("Vercel", "pending", false)]);
+    expect(HashSet.size(second.registered)).toBe(2);
+    // Under the ruleset census the remembered expected context holds as pending, not missing;
+    // a never-registered context stays missing and keeps the budget.
+    const recalled = verdict({ expected: expected(["Lint", "Docs"]), checks: second.checks, waitedMs: 500 });
+    assertSome(recalled.reason, "required-pending");
+    expect(recalled.census.pending).toEqual(["Lint"]);
+    expect(recalled.census.missing).toEqual(["Docs"]);
+    expect(recalled.budgetApplies).toBe(true);
+    assertSome(
+      verdict({ expected: expected(["Lint", "Docs"]), checks: second.checks, waitedMs: 5000 }).reason,
+      "settle-timeout"
+    );
+    const onlyRecalled = verdict({ expected: expected(["Lint"]), checks: second.checks, waitedMs: 5000 });
+    assertSome(onlyRecalled.reason, "required-pending");
+    expect(onlyRecalled.census.missing).toEqual([]);
+    expect(onlyRecalled.budgetApplies).toBe(false);
+    expect(yeetSettleVerdictIsTerminal(onlyRecalled)).toBe(false);
+    // A reported name is never duplicated by its memory.
+    const third = rememberRegistered(second.registered, [check("Lint")]);
+    expect(third.recalled).toEqual(["Vercel"]);
+    expect(A.map(third.checks, (row) => row.name)).toEqual(["Lint", "Vercel"]);
+  });
+  it("folds gated families out of the expected set", () => {
+    expect(heavyFamilies).toEqual([
+      YeetGatedContextFamily.make({
+        prefix: "Heavy / ",
+        admittedBy: HEAVY_ADMISSION_LABEL,
+        members: ["Heavy / Check", "Heavy / Docgen"],
+      }),
+    ]);
+    expect(yeetGatedFamiliesFor(O.getOrThrow(expected(["Lint", "Test Unit"])))).toEqual([]);
+  });
+  it("holds, times out, or settles the heavy family by admission verdict", () => {
+    const gated = { expected: expected(heavyContexts), families: heavyFamilies, timeoutMs: 1000 };
+    // (1) hold: absent heavy contexts are gated, the wait is named, the budget is not compared.
+    const held = verdict({ ...gated, checks: [check("Lint")], admission: admission("hold"), waitedMs: 5000 });
+    assertSome(held.reason, "heavy-not-admitted");
+    expect(held.settled).toBe(false);
+    expect(yeetSettleVerdictIsTerminal(held)).toBe(false);
+    expect(yeetSettleVerdictIsHeld(held)).toBe(true);
+    expect(held.census).toEqual(
+      expect.objectContaining({
+        matched: ["Lint"],
+        missing: [],
+        pending: [],
+        gated: ["Heavy / Check", "Heavy / Docgen"],
+      })
+    );
+    expect(renderYeetSettleDetail(held)).toBe(
+      "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 5s (not counted toward the 1s settle timeout)"
+    );
+    // (2) run: B7 exactly — missing, and settle-timeout past the budget.
+    const running = verdict({ ...gated, checks: [check("Lint")], admission: admission("run"), waitedMs: 999 });
+    assertSome(running.reason, "required-pending");
+    expect(running.census.missing).toEqual(["Heavy / Check", "Heavy / Docgen"]);
+    expect(running.census.gated).toEqual([]);
+    expect(yeetSettleVerdictIsHeld(running)).toBe(false);
+    const timedOut = verdict({ ...gated, checks: [check("Lint")], admission: admission("run"), waitedMs: 1000 });
+    assertSome(timedOut.reason, "settle-timeout");
+    expect(yeetSettleVerdictIsTerminal(timedOut)).toBe(true);
+    // No admission at all is the B7 rule too.
+    assertSome(verdict({ ...gated, checks: [check("Lint")], waitedMs: 1000 }).reason, "settle-timeout");
+    // (3) skip-satisfied: the lanes report skip and the head settles; the line says why.
+    const skippedInput = {
+      ...gated,
+      checks: [check("Lint"), check("Heavy / Check", "skip"), check("Heavy / Docgen", "skip")],
+      admission: admission("skip-satisfied", true),
+      waitedMs: 5000,
+    };
+    const skipped = verdict(skippedInput);
+    expect(skipped.settled).toBe(true);
+    assertSome(skipped.reason, "closeout-pending");
+    expect(renderYeetSettleDetail(skipped)).toContain("heavy: docs-only, lanes report skipped");
+    const bound = verdict({ ...skippedInput, closeoutBound: true });
+    assertNone(bound.reason);
+    expect(renderYeetSettleDetail(bound)).toBe(
+      "settle: settled; closeout bound; heavy: docs-only, lanes report skipped"
+    );
+    const skippedPending = verdict({
+      ...gated,
+      checks: [check("Lint", "pending"), check("Heavy / Check", "skip")],
+      admission: admission("skip-satisfied", true),
+    });
+    assertSome(skippedPending.reason, "required-pending");
+    expect(renderYeetSettleDetail(skippedPending)).toContain("heavy: docs-only, lanes report skipped");
+    // hold with non-gated work still open stays required-pending and names the gate.
+    const mixed = verdict({
+      ...gated,
+      checks: [check("Lint", "pending")],
+      admission: admission("hold"),
+      waitedMs: 5000,
+    });
+    assertSome(mixed.reason, "required-pending");
+    expect(mixed.census.pending).toEqual(["Lint"]);
+    expect(mixed.census.gated).toEqual(["Heavy / Check", "Heavy / Docgen"]);
+    expect(yeetSettleVerdictIsTerminal(mixed)).toBe(false);
+    // Not held: a non-gated required check is still open, so the B7 rule judges it
+    // (registered and queued → GitHub's to time out, the budget does not apply).
+    expect(yeetSettleVerdictIsHeld(mixed)).toBe(false);
+    expect(mixed.budgetApplies).toBe(false);
+    expect(renderYeetSettleDetail(mixed)).toBe(
+      "settle: required-pending; pending: Lint; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 5s; registered checks are GitHub's to time out"
+    );
+    // Hold with a non-gated context never registered: it spends the budget and times out,
+    // gated or not — the label cannot hide a required context that never came.
+    const lintMissing = verdict({
+      expected: expected([...heavyContexts, "Docs"]),
+      families: heavyFamilies,
+      checks: [check("Lint")],
+      admission: admission("hold"),
+      waitedMs: 1000,
+      timeoutMs: 1000,
+    });
+    assertSome(lintMissing.reason, "settle-timeout");
+    expect(lintMissing.census.missing).toEqual(["Docs"]);
+    expect(lintMissing.census.gated).toEqual(["Heavy / Check", "Heavy / Docgen"]);
+    expect(yeetSettleVerdictIsHeld(lintMissing)).toBe(false);
+    expect(yeetSettleVerdictIsTerminal(lintMissing)).toBe(true);
+    const lintMissingEarly = verdict({
+      expected: expected([...heavyContexts, "Docs"]),
+      families: heavyFamilies,
+      checks: [check("Lint")],
+      admission: admission("hold"),
+      waitedMs: 500,
+      timeoutMs: 1000,
+    });
+    assertSome(lintMissingEarly.reason, "required-pending");
+    expect(lintMissingEarly.budgetApplies).toBe(true);
+    expect(renderYeetSettleDetail(lintMissingEarly)).toContain("waited 500ms of 1s");
+    // A pending heavy check or matrix child under hold is gated too, by its member name.
+    const stale = verdict({
+      ...gated,
+      checks: [check("Lint"), check("Heavy / Check", "pending"), check("Heavy / Docgen (a)", "pending", false)],
+      admission: admission("hold"),
+    });
+    assertSome(stale.reason, "heavy-not-admitted");
+    expect(stale.census.pending).toEqual([]);
+    expect(stale.census.gated).toEqual(["Heavy / Check", "Heavy / Docgen"]);
+    // Hold without any gated family is B7: nothing to gate, a missing context still spends the budget.
+    const ungated = verdict({
+      expected: expected(["Lint", "Docs"]),
+      checks: [check("Lint")],
+      admission: admission("hold"),
+      waitedMs: 1000,
+    });
+    assertSome(ungated.reason, "settle-timeout");
+    expect(yeetSettleVerdictIsHeld(ungated)).toBe(false);
+    // Under hold with zero registered checks the head is NOT held: the reason stays
+    // registration, the registration budget applies, and past it the head times out
+    // (a broken CI that never registers must never hide behind the label).
+    const registering = verdict({ ...gated, admission: admission("hold"), waitedMs: 500 });
+    assertSome(registering.reason, "registration");
+    expect(yeetSettleVerdictIsHeld(registering)).toBe(false);
+    expect(renderYeetSettleDetail(registering)).toContain("waited 500ms of 1s");
+    const neverRegistered = verdict({ ...gated, admission: admission("hold"), waitedMs: 1000 });
+    assertSome(neverRegistered.reason, "settle-timeout");
+    expect(yeetSettleVerdictIsTerminal(neverRegistered)).toBe(true);
+    expect(yeetSettleVerdictIsHeld(neverRegistered)).toBe(false);
+    // Every heavy context reported green under hold: nothing gated, settled as B7.
+    const green = verdict({
+      ...gated,
+      checks: [check("Lint"), check("Heavy / Check"), check("Heavy / Docgen")],
+      admission: admission("hold"),
+      closeoutBound: true,
+    });
+    assertNone(green.reason);
+    expect(green.census.gated).toEqual([]);
   });
   it.prop(
     "every generated settle input yields a coherent verdict",
@@ -299,18 +585,24 @@ describe("B7 settle contracts", () => {
       const result = deriveSettleVerdict(input);
       expect(result.waitedMs).toBe(input.waitedMs);
       expect(result.timeoutMs).toBe(input.timeoutMs);
-      const reason = O.getOrNull(result.reason);
-      if (result.settled) {
-        expect(reason === null || reason === "closeout-pending").toBe(true);
-        expect(reason === null).toBe(input.closeoutBound);
+      if (input.baseConflict) {
+        expectBaseConflict(result);
         return;
       }
-      expect(["registration", "required-pending", "settle-timeout"]).toContain(reason);
-      const budgeted =
-        A.isReadonlyArrayEmpty(input.checks) ||
-        A.isReadonlyArrayNonEmpty(result.census.missing) ||
-        (O.isNone(input.expected) && A.isReadonlyArrayEmpty(result.census.matched));
-      expect(reason === "settle-timeout").toBe(input.waitedMs >= input.timeoutMs && budgeted);
+      if (result.settled) {
+        expectSettledVerdict(input, result);
+        return;
+      }
+      const reason = O.getOrNull(result.reason);
+      expect(["registration", "required-pending", "heavy-not-admitted", "settle-timeout"]).toContain(reason);
+      const held = yeetSettleVerdictIsHeld(result);
+      expect(held).toBe(holdWithGatedOpen(input, result));
+      // The budget bounds registration (B7) and never a held head (B8); the
+      // gated census is the one the budget reads, since hold moves members out of missing.
+      expect(reason === "settle-timeout").toBe(
+        !held && input.waitedMs >= input.timeoutMs && settleBudgeted(input, result)
+      );
+      expect(reason === "heavy-not-admitted").toBe(held && onlyGatedOpen(input, result));
     },
     { arbitrary: fcRuns(40) }
   );
@@ -359,42 +651,164 @@ describe("B7 settle contracts", () => {
 });
 
 it.layer(platform)("B7 merge-loop timing", (layerIt) => {
-  layerIt.effect("ends exactly at timeout, persists the head timeline, and names the missing context", () =>
-    temporary((root) =>
-      Effect.gen(function* () {
-        yield* TestClock.setTime(0);
-        const calls = yield* Ref.make(0);
-        const reads = yield* Ref.make(0);
-        const done = yield* Ref.make(false);
-        const program = runYeetMonitorUntilMerged(contextFor(root), {
-          collectStatus: () => Ref.update(calls, (n) => n + 1).pipe(Effect.as(snapshot(root))),
-          rulesetRead: () => Ref.update(reads, (n) => n + 1).pipe(Effect.as(expected(["Heavy / Check"]))),
-          capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
-          policy: YeetUntilMergedPolicy.make({ settleTimeoutMs: 1000 }),
-          pollInterval: Duration.seconds(30),
-        }).pipe(Effect.tap(() => Ref.set(done, true)));
-        const fiber = yield* Effect.forkChild(program);
-        yield* TestClock.adjust("999 millis");
-        expect(yield* Ref.get(done)).toBe(false);
-        yield* TestClock.adjust("1 millis");
-        expect(yield* Fiber.join(fiber)).toBe("settle-timeout");
-        expect(yield* Ref.get(calls)).toBe(2);
-        expect(yield* Ref.get(reads)).toBe(1);
-        const fs = yield* FileSystem.FileSystem;
-        const saved = yield* fs
-          .readFileString(`${root}/status.json`)
-          .pipe(Effect.flatMap(YeetStatusSnapshotJson.decode));
-        assertSome(
-          O.map(saved.timeline, (timeline) => timeline.headSha),
-          "aaa111"
-        );
-        assertSome(
-          O.flatMap(saved.timeline, (timeline) => timeline.pushedAt),
-          at
-        );
-        expect(A.join(A.map(yield* TestConsole.logLines, String), "\n")).toContain("missing: Heavy / Check");
-      })
-    )
+  layerIt.effect(
+    "ends exactly at timeout for an admitted head, persists the timeline, and names the missing context",
+    () =>
+      temporary((root) =>
+        Effect.gen(function* () {
+          yield* TestClock.setTime(0);
+          const calls = yield* Ref.make(0);
+          const reads = yield* Ref.make(0);
+          const done = yield* Ref.make(false);
+          const program = runYeetMonitorUntilMerged(contextFor(root), {
+            collectStatus: () =>
+              Ref.update(calls, (n) => n + 1).pipe(Effect.as(snapshot(root, "aaa111", [check("Lint")]))),
+            rulesetRead: () => Ref.update(reads, (n) => n + 1).pipe(Effect.as(expected(["Heavy / Check"]))),
+            capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
+            policy: YeetUntilMergedPolicy.make({ settleTimeoutMs: 1000 }),
+            pollInterval: Duration.seconds(30),
+          }).pipe(Effect.tap(() => Ref.set(done, true)));
+          const fiber = yield* Effect.forkChild(program);
+          yield* TestClock.adjust("999 millis");
+          expect(yield* Ref.get(done)).toBe(false);
+          yield* TestClock.adjust("1 millis");
+          expect(yield* Fiber.join(fiber)).toBe("settle-timeout");
+          expect(yield* Ref.get(calls)).toBe(2);
+          expect(yield* Ref.get(reads)).toBe(1);
+          const fs = yield* FileSystem.FileSystem;
+          const saved = yield* fs
+            .readFileString(`${root}/status.json`)
+            .pipe(Effect.flatMap(YeetStatusSnapshotJson.decode));
+          assertSome(
+            O.map(saved.timeline, (timeline) => timeline.headSha),
+            "aaa111"
+          );
+          assertSome(
+            O.flatMap(saved.timeline, (timeline) => timeline.pushedAt),
+            at
+          );
+          expect(A.join(A.map(yield* TestConsole.logLines, String), "\n")).toContain("missing: Heavy / Check");
+        })
+      )
+  );
+
+  layerIt.effect(
+    "holds an unlabelled head past the budget, admits on the label within one poll, and reaches ready",
+    () =>
+      temporary((root) =>
+        Effect.gen(function* () {
+          yield* TestClock.setTime(0);
+          // The layer shares one TestConsole across tests: read only this test's lines.
+          const priorLines = A.length(yield* TestConsole.logLines);
+          const ownLines = TestConsole.logLines.pipe(
+            Effect.map((lines) => A.join(A.map(A.drop(lines, priorLines), String), "\n"))
+          );
+          const calls = yield* Ref.make(0);
+          const closeouts = yield* Ref.make(0);
+          const captures = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+          const criteria = (closeoutRun: boolean) =>
+            YeetMergeReadyCriteria.make({
+              prOpen: true,
+              notDraft: true,
+              closeoutRun,
+              requiredChecksGreen: true,
+              threadsResolved: true,
+              mergeable: true,
+              mergeStateAcceptable: true,
+              reviewDecisionAcceptable: true,
+              greptileScore: O.none(),
+            });
+          // Polls 0–2: tier 1 green, no label, heavy absent → held. Poll 3: the label
+          // lands and the heavy lanes report → settle → closeout (poll 4 rereads) → ready.
+          const fiber = yield* runYeetMonitorUntilMerged(contextFor(root), {
+            collectStatus: () =>
+              Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+                Effect.map((n) => {
+                  const labelled = n >= 3;
+                  const value = snapshot(
+                    root,
+                    "aaa111",
+                    labelled ? [check("Lint"), check("Heavy / Check"), check("Heavy / Docgen")] : [check("Lint")],
+                    "OPEN",
+                    labelled ? ["size/M", HEAVY_ADMISSION_LABEL] : ["size/M"]
+                  );
+                  const ready = criteria(n >= 4);
+                  return YeetStatusSnapshot.make({
+                    ...value,
+                    mergeReady: O.some(
+                      YeetMergeReady.make({
+                        ready: n >= 4,
+                        criteria: ready,
+                        failing: A.findFirst(
+                          YeetMergeReadyCriterion.Options,
+                          (criterion) => !mergeReadyCriterionHolds(ready, criterion)
+                        ),
+                      })
+                    ),
+                  });
+                })
+              ),
+            rulesetRead: () => Effect.succeed(expected(heavyContexts)),
+            capture: (_command, args) =>
+              Ref.update(captures, A.append(args)).pipe(
+                Effect.as({
+                  exitCode: 0,
+                  output: args[0] === "diff" ? "packages/a/src/index.ts\n" : at,
+                  truncated: false,
+                })
+              ),
+            closeout: () =>
+              Ref.update(closeouts, (n) => n + 1).pipe(
+                Effect.as({
+                  reportPath: "closeout.json",
+                  report: PrCloseoutReport.make({
+                    actionableReviewThreadCount: 0,
+                    botCommentCount: 0,
+                    greptile: GreptileSummary.make({ issueCount: 0, score: "5/5" }),
+                    issueCount: 0,
+                    issues: [],
+                    prNumber: 1,
+                    prUrl: "https://github.com/beep/repo/pull/1",
+                    reviewedHeadSha: O.some("aaa111"),
+                    retriggeredGreptile: false,
+                    schemaVersion: "yeet-pr-closeout/v1",
+                  }),
+                })
+              ),
+            policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 50 }),
+            pollInterval: Duration.millis(100),
+          }).pipe(Effect.forkChild);
+          // Three held polls span 200ms against a 50ms budget: a held head never times out,
+          // and it sleeps the full interval instead of racing the exhausted budget.
+          yield* TestClock.adjust("250 millis");
+          expect(yield* Ref.get(calls)).toBe(3);
+          const heldLines = yield* ownLines;
+          expect(heldLines).toContain(
+            "settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Docgen; admit: gh pr edit --add-label ready-for-heavy; waited 200ms (not counted toward the 50ms settle timeout)"
+          );
+          expect(heldLines).not.toContain("settle-timeout");
+          yield* TestClock.adjust("100 millis");
+          expect(yield* Fiber.join(fiber)).toBe("ready");
+          expect(yield* Ref.get(calls)).toBe(5);
+          expect(yield* Ref.get(closeouts)).toBe(1);
+          // One merge-base diff and one push-time read per head, never per poll.
+          expect(A.map(yield* Ref.get(captures), (args) => args[0])).toEqual(["api", "diff"]);
+          const lines = yield* ownLines;
+          expect(lines).toContain("[yeet] heavy admission: hold → run");
+          // The closeout runs inside the same poll, so the reason moves straight to settled.
+          expect(lines).toContain("[yeet] settle: heavy-not-admitted → settled");
+          expect(lines).toContain("merge-ready: yes");
+          expect(lines).not.toContain("settle-timeout");
+          const fs = yield* FileSystem.FileSystem;
+          const saved = yield* fs
+            .readFileString(`${root}/status.json`)
+            .pipe(Effect.flatMap(YeetStatusSnapshotJson.decode));
+          const timeline = O.getOrThrow(saved.timeline);
+          assertSome(timeline.settledAt, "1970-01-01T00:00:00.300Z");
+          assertSome(timeline.readyAt, "1970-01-01T00:00:00.300Z");
+          expect(saved.remote.labels).toEqual(["size/M", HEAVY_ADMISSION_LABEL]);
+        })
+      )
   );
 
   layerIt.effect("re-reads once for a new head, stamps settled/closeout/ready once, and sweeps only on merge", () =>
@@ -442,7 +856,8 @@ it.layer(platform)("B7 merge-loop timing", (layerIt) => {
         yield* TestClock.adjust("300 millis");
         expect(yield* Fiber.join(fiber)).toBe("merged");
         expect(yield* Ref.get(reads)).toBe(2);
-        expect(yield* Ref.get(captures)).toBe(2);
+        // Two heads × (pushedAt read + merge-base diff): both are once per head.
+        expect(yield* Ref.get(captures)).toBe(4);
         expect(yield* Ref.get(sweeps)).toBe(1);
         const fs = yield* FileSystem.FileSystem;
         const saved = yield* fs
@@ -518,6 +933,7 @@ it.effect("status retains classified checks from the existing two gh views", () 
                 isDraft: false,
                 reviewDecision: null,
                 headRefOid: "aaa111",
+                labels: [{ id: "L1", name: "ready-for-heavy", color: "0e8a16" }, { name: "size/M" }],
               })
             )
           );
@@ -559,12 +975,14 @@ it.effect("status retains classified checks from the existing two gh views", () 
       expect(result.remote.checks).toEqual([check("Lint", "pending"), check("Vercel", "fail", false)]);
       expect(result.remote.pendingRequiredCheckCount).toBe(1);
       expect(result.remote.failingOptionalCheckCount).toBe(1);
+      expect(result.remote.labels).toEqual(["ready-for-heavy", "size/M"]);
       const legacy = yield* decodeStatusRemote({
         available: false,
         checked: false,
         detail: "legacy",
       });
       expect(legacy.checks).toEqual([]);
+      expect(legacy.labels).toEqual([]);
     })
   ).pipe(provideScopedLayer(platform))
 );
@@ -682,25 +1100,5 @@ it.layer(platform)("B7 sleep after a spent registration budget (ruling 49)", (la
         expect(yield* Ref.get(calls)).toBe(2);
       })
     )
-  );
-});
-
-describe("yeetCensusReadIsSuspect (ruling 50)", () => {
-  it("flags an empty census only after the head's census registered", () => {
-    expect(yeetCensusReadIsSuspect(YeetCensusRead.make({ registered: true, checks: [] }))).toBe(true);
-    expect(yeetCensusReadIsSuspect(YeetCensusRead.make({ registered: false, checks: [] }))).toBe(false);
-    expect(
-      yeetCensusReadIsSuspect(
-        YeetCensusRead.make({ registered: true, checks: [YeetSettleCheck.make({ name: "Lint", outcome: "pending" })] })
-      )
-    ).toBe(false);
-    expect(Str.startsWith("PR checks read returned no rows")(YEET_CENSUS_SUSPECT_MESSAGE)).toBe(true);
-  });
-  it.prop(
-    "a read with any check, or before registration, is never suspect",
-    { read: Arbitrary.schema(YeetCensusRead) },
-    ({ read }) => {
-      expect(yeetCensusReadIsSuspect(read)).toBe(read.registered && A.isReadonlyArrayEmpty(read.checks));
-    }
   );
 });

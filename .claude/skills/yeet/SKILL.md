@@ -453,8 +453,20 @@ view. Optional reds do not affect exit codes. `--settle-timeout` defaults to
 it bounds registration only: the budget counts while no check has registered
 or an expected context is still missing, never while a registered required
 check is queued or running (that wait is GitHub's job timeout, not ours).
-Gate lines name `registration`, `required-pending`, `closeout-pending`, or
-`settle-timeout`, including missing and pending contexts. A settled head does
+Gate lines name `registration`, `required-pending`, `heavy-not-admitted`,
+`base-conflict`, `closeout-pending`, or `settle-timeout`, including missing and
+pending contexts. `base-conflict` means the base moved under the head (GitHub
+reports `CONFLICTING`/`DIRTY` and empties the check rollup): merge `origin/main`
+and push; the wait never spends the budget. A context once seen registered for
+a head stays `pending` when one poll omits it, never `missing`. `heavy-not-admitted` is tier-2 admission (B8): the loop computes the
+heavy verdict every poll from the same function CI runs (`ready-for-heavy`
+label, docs-only diff) and, while the verdict is `hold` with `Heavy / *`
+contexts still open, moves them from `missing`/`pending` into a `gated` census
+bucket and prints
+`settle: heavy-not-admitted; gated: …; admit: gh pr edit --add-label ready-for-heavy; waited …`.
+Held time never counts toward `--settle-timeout`; the settle clock resets when
+the verdict changes, and the label admits within one poll. `skip-satisfied`
+(docs-only) settles on the reported `skip` outcomes. A settled head does
 not time out while waiting for review closeout. The final readiness gate line
 includes the head timeline and push→ready wall clock when the push date is known.
 
@@ -473,13 +485,16 @@ includes the head timeline and push→ready wall clock when the push date is kno
    on it from a background tool call:
    `bun run beep yeet monitor --until-ready --detach`, then
    `bun run beep yeet job wait <jobId>`. The job survives session restarts and
-   the ten-minute tool-call cap; `job wait` returns 0 for green (the loop ended
-   `ready`), 1 for red (`required-red`, `settle-timeout`, `closed`, or a spent
-   poll-error budget), 2 for a terminated job. When the user manager is
-   unreachable, run `bun run beep yeet monitor --until-ready` attached instead.
-   Exit 0 with `merge-ready: yes` means hand the PR to the operator; it does not
-   merge it. On exit 1, read the summary line, fix the named blocker, publish,
-   and re-arm the command. Act on unresolved review threads through the reply flow while
+   the ten-minute tool-call cap, but not a reboot: re-submit it after one.
+   `job wait` returns 0 for green (the loop ended `ready`), 1 for red
+   (`required-red`, `settle-timeout`, `closed`, or a spent poll-error budget),
+   2 for a terminated job. When the user manager is unreachable, run
+   `bun run beep yeet monitor --until-ready` attached instead. Exit 0 with
+   `merge-ready: yes` means hand the PR to the operator; it does not merge it.
+   On exit 1, read the summary line, fix the named blocker, publish, and re-arm
+   the command. A code PR holds at `heavy-not-admitted` until you apply the
+   `ready-for-heavy` label (see Merge Loop); do that once tier 1 is green, not
+   at publish. Act on unresolved review threads through the reply flow while
    the loop waits. The loop runs read-first closeout automatically after the
    required checks settle. `monitor --summary` remains a one-shot compact read.
 7. Run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`
@@ -546,6 +561,18 @@ the authoritative gates.
 the merge-loop porcelain. They read the clone and the PR; none of them plan
 turbo work, so they are cheap to run mid-loop.
 
+- **Heavy admission is a deliberate verb.** Publish without the label and let
+  tier 1 (lint shards, unit shards, cheap gates) go green first; `Heavy
+  Admission` in `check.yml` then holds a code PR (`Heavy / *` stays
+  "Expected", merge blocked) until `gh pr edit <n> --add-label ready-for-heavy`.
+  Apply it yourself, then run `bun run beep yeet monitor --until-ready` — the
+  held loop prints that exact command and does not burn its settle budget.
+  The label triggers `heavy-admit.yml`, which runs only the admission job and
+  the heavy matrix for that head; tier 1 is neither cancelled nor re-run.
+  Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,
+  any `*.md`, packet prose) need no label: the heavy lanes report `skipped` and
+  satisfy the ruleset. Removing the label changes nothing already reported;
+  cancel a heavy run from the Actions UI if it must stop.
 - `monitor --until-merged` re-reads status every poll, so a push landing
   mid-session is picked up as the new budget scope. Job triage is job-level
   and mid-run: a completed red job is classified on the poll after it

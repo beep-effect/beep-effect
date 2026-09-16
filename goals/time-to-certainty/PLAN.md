@@ -81,6 +81,12 @@ orchestrator owns schemas, contracts, and judgment.
       measurement. PR1 #1149 merged 2026-09-16 (push→ready 1h 0m 7s on its own babysit, exit 0 with
       two optional reds); PR2 #1161: detach recipe, `--observed` for merge-ready rows, inbox-list
       liveness, idle-wake spike, watcher retirement.
+- [~] B8 heavy-check admission (rulings 50–57): three-valued admission (`run`, `skip-satisfied`,
+      `hold`) decided by `bun run beep ci admission` from the `ready-for-heavy` label and a docs-only
+      merge-base diff; `heavy.yml` `admitted` input (PR A) then the `Heavy Admission` job and the
+      `heavy-not-admitted` settle wait (PR B); docs-only probe = the B9 capture PR.
+- [ ] B9 merge queue (`merge_group`, `checks_requested`, ruleset `merge_queue`): authority moves from
+      "merge" to "enqueue"; `/explore` capture then grill before any implementation (ruling 56).
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):
       rows landed in PR #964, emission was gated behind the unknown-row preservation rollout in PR
       #978, and PR #993 made each death a crash-recoverable per-sink claim. A disabled admission sink

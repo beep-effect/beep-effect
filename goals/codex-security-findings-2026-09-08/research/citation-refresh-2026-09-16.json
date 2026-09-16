@@ -1,0 +1,220 @@
+{
+  "reason": "Inherited source line movement; anchors mapped through unchanged blocks from the captured commit. Capture metadata, hashes, payloads, and generator bytes remain unchanged.",
+  "receipts": [
+    {
+      "manifest": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-fleet/MANIFEST.yaml",
+      "sourceManifestSha256": "346cf0cbe92857daef6f3aca83c9e6a2843852bed4d01cabf535a2d739b81707",
+      "updatedManifestSha256": "bbc932819a126e49911803e11aa02fed9522d133894ac00f6c8fdb5ab77cd71a",
+      "captureCommit": "a9035c364e045a8d30a353aeb5ec1972552b72b4",
+      "changes": [
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+          "capturedLine": 564,
+          "currentLine": 570,
+          "needle": "schemaVersion: S.Literal(\"yeet-verdict/v2\")"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+          "capturedLine": 1531,
+          "currentLine": 1515,
+          "needle": "const verdictJson = yield* YeetVerdictJson.encode(verdict)"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+          "capturedLine": 593,
+          "currentLine": 599,
+          "needle": "failureKind: YeetFailureKind.pipe"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+          "capturedLine": 592,
+          "currentLine": 598,
+          "needle": "failedStepId: S.optionalKey(S.String)"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+          "capturedLine": 188,
+          "currentLine": 194,
+          "needle": "export const YeetFailureKind ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+          "capturedLine": 355,
+          "currentLine": 356,
+          "needle": "export const TurboCachePlanTag ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+          "capturedLine": 852,
+          "currentLine": 992,
+          "needle": "resolveTurboCachePlan(readTurboCacheEnvironmentSync()"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+          "capturedLine": 1685,
+          "currentLine": 1705,
+          "needle": "stayed busy; dropping one"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 965,
+          "currentLine": 1094,
+          "needle": "const createReapClaim ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 669,
+          "currentLine": 798,
+          "needle": "quarantineEntry(directories, entryPath, \"undecodable\")"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 777,
+          "currentLine": 906,
+          "needle": "evictedAtMillis: claimedAtMillis"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 765,
+          "currentLine": 894,
+          "needle": "const admissionEventForReapClaim ="
+        }
+      ],
+      "totalBytesBefore": 19054995,
+      "totalBytesAfter": 19054996
+    },
+    {
+      "manifest": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet/MANIFEST.yaml",
+      "sourceManifestSha256": "e572275653a7808e88011d729d7672ad697c54c23728d083432fc2767d17865d",
+      "updatedManifestSha256": "158e8c8a9fd60d3821d52ab7d59451f3e3dabb9666f70fa22477c74fc6b6d5ad",
+      "captureCommit": "a9035c364e045a8d30a353aeb5ec1972552b72b4",
+      "changes": [
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 894,
+          "currentLine": 1023,
+          "needle": "const processReapClaim ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+          "capturedLine": 1685,
+          "currentLine": 1705,
+          "needle": "stayed busy; dropping one"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 965,
+          "currentLine": 1094,
+          "needle": "const createReapClaim ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 669,
+          "currentLine": 798,
+          "needle": "quarantineEntry(directories, entryPath, \"undecodable\")"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 777,
+          "currentLine": 906,
+          "needle": "evictedAtMillis: claimedAtMillis"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 776,
+          "currentLine": 905,
+          "needle": "lastHeartbeatAtMillis: lease.heartbeatAtMillis"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 726,
+          "currentLine": 855,
+          "needle": "const PROTOCOL_DEFERRED_REAP_CLAIM_SUFFIX ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 765,
+          "currentLine": 894,
+          "needle": "const admissionEventForReapClaim ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 1678,
+          "currentLine": 1810,
+          "needle": "const leasePath = path.join(directories.leases,"
+        }
+      ],
+      "totalBytesBefore": 15980568,
+      "totalBytesAfter": 15980570
+    },
+    {
+      "manifest": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-synthetic/MANIFEST.yaml",
+      "sourceManifestSha256": "8131d233729e5a5d8e0ae3b6b782d4732f9df42c8caadad2d78876261a0f7d3d",
+      "updatedManifestSha256": "05ffba1e2b5c0a287dbc3ec6e648163522038472d74423733e6a5f922321b6cd",
+      "captureCommit": "a9035c364e045a8d30a353aeb5ec1972552b72b4",
+      "changes": [
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 894,
+          "currentLine": 1023,
+          "needle": "const processReapClaim ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+          "capturedLine": 1685,
+          "currentLine": 1705,
+          "needle": "stayed busy; dropping one"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 965,
+          "currentLine": 1094,
+          "needle": "const createReapClaim ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 669,
+          "currentLine": 798,
+          "needle": "quarantineEntry(directories, entryPath, \"undecodable\")"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 777,
+          "currentLine": 906,
+          "needle": "evictedAtMillis: claimedAtMillis"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 776,
+          "currentLine": 905,
+          "needle": "lastHeartbeatAtMillis: lease.heartbeatAtMillis"
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 726,
+          "currentLine": 855,
+          "needle": "const PROTOCOL_DEFERRED_REAP_CLAIM_SUFFIX ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 765,
+          "currentLine": 894,
+          "needle": "const admissionEventForReapClaim ="
+        },
+        {
+          "file": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
+          "capturedLine": 1678,
+          "currentLine": 1810,
+          "needle": "const leasePath = path.join(directories.leases,"
+        }
+      ],
+      "totalBytesBefore": 43001,
+      "totalBytesAfter": 43003
+    }
+  ],
+  "verification": {
+    "corpusRegressionTests": 84,
+    "result": "passed",
+    "pinVerification": "All five full verifiers report verified unchanged after the citation-only refresh."
+  }
+}

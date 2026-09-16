@@ -58,15 +58,14 @@ exact captured findings until no packet-applicable finding remains open.
       regression check where executable behavior changes.
 - [x] Packet counts, manifest, triage ledger, launcher size, sanitation, and
       whitespace checks pass.
-- [ ] Yeet repair and verify are green on the complete remediation scope.
-- [ ] The branch is published, hosted checks and reviews are closed, and the PR
+- [x] Yeet repair and verify are green on the complete remediation scope.
+- [x] The branch is published, hosted checks and reviews are closed, and the PR
       is mergeable and merged.
-- [ ] All 13 captured Codex findings are resolved after merge and the live view
+- [x] All 13 captured Codex findings are resolved after merge and the live view
       shows zero packet-applicable open findings.
 
-These boxes record pre-merge evidence. Final local and hosted proof, the merge,
-and each exact-ID closure receipt are recorded on the PR that merges its fix. The canonical lifecycle
-remains active while any part of the completion gate is pending.
+These boxes reconcile the final completion receipt on PR #1037.
+`ops/closures.json` binds all thirteen captured identities to that evidence.
 
 ## Verification Matrix
 
@@ -105,5 +104,4 @@ The operator authorized a follow-up PR on September 9 because PR #1026 merged
 while the newly surfaced CSF-012 fix was being finalized. That authorization
 supersedes the original one-PR limit. Prior findings remain covered by #1026;
 CSF-012 merged in PR #1032 on September 9 and was closed as Already fixed.
-CSF-013 surfaced before that merge and is carried into the remaining follow-up
-under the same instruction to resolve every finding. Its closure remains post-merge.
+CSF-013 subsequently merged in PR #1037 and was closed after merge.

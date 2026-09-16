@@ -67,6 +67,7 @@ import {
   githubJobShapeEvidence,
 } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { writeYeetAckReceipt, YeetAckFixResolution, YeetAckReceipt } from "./Ack.ts";
@@ -89,14 +90,18 @@ import {
 } from "./MonitorPolicy.ts";
 import {
   deriveSettleVerdict,
+  readYeetChangedPaths,
   readYeetRulesetRequiredContexts,
+  rememberRegistered,
   renderYeetSettleDetail,
-  YEET_CENSUS_SUSPECT_MESSAGE,
-  YeetCensusRead,
+  YeetGatedContextFamily,
   YeetRulesetRequiredContexts,
   YeetSettleInput,
   YeetSettleVerdict,
-  yeetCensusReadIsSuspect,
+  yeetBaseConflictFor,
+  yeetGatedFamiliesFor,
+  yeetSettleCensusRequires,
+  yeetSettleClockReset,
 } from "./Settle.ts";
 import {
   collectRemoteWorkflowRuns,
@@ -116,7 +121,6 @@ import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorLoopPolicy } from "./MonitorPolicy.ts";
-import type { YeetSettleCheck } from "./Settle.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
 
@@ -998,17 +1002,41 @@ const renderMergeReadyGate = (snapshot: YeetStatusSnapshot): string =>
     })
   );
 
+// `settleClockMs` is the origin of `waitedMs`: the first observation of the
+// head, moved forward whenever the heavy admission verdict flips so time spent
+// held never counts toward the settle budget (ttc B8). `changedPaths` is the
+// merge-base diff read once per head; `families` are the gated families folded
+// from the ruleset; `admission` is re-decided every poll from the snapshot's
+// labels, the only admission input that changes without a push.
 class MonitorHeadState extends S.Class<MonitorHeadState>($I`MonitorHeadState`)(
   {
     timeline: YeetHeadTimeline,
     firstObservedMs: S.Finite,
-    registered: S.Boolean,
+    settleClockMs: S.Finite,
     expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    families: S.Array(YeetGatedContextFamily).pipe(SchemaUtils.withKeyDefaults(A.empty<YeetGatedContextFamily>())),
+    changedPaths: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    // Every check name ever reported for this head: an absent one later is pending, not missing.
+    registered: S.HashSet(S.String).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<string>())),
     announcedRow: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
-  $I.annote("MonitorHeadState", { description: "Cached ruleset and first observations for the current head." })
+  $I.annote("MonitorHeadState", {
+    description:
+      "Cached ruleset, gated families, merge-base diff, admission, and first observations for the current head.",
+  })
 ) {}
+
+const decideMonitorAdmission = (snapshot: YeetStatusSnapshot, changedPaths: ReadonlyArray<string>): HeavyAdmission =>
+  decideHeavyAdmission(
+    HeavyAdmissionEvent.make({
+      eventName: "pull_request",
+      labels: snapshot.remote.labels,
+      draft: snapshot.remote.isDraft ?? false,
+      changedPaths,
+    })
+  );
 
 const readPushedAt = Effect.fn("YeetMonitorLoop.readPushedAt")(function* (
   context: RepoRunContext,
@@ -1041,12 +1069,7 @@ class MonitorPoll extends S.Class<MonitorPoll>($I`MonitorPoll`)(
 
 const requiredName = (snapshot: YeetStatusSnapshot, verdict: O.Option<YeetSettleVerdict>, name: string): boolean =>
   A.some(snapshot.remote.checks, (check) => check.required && check.name === name) ||
-  O.exists(
-    verdict,
-    (value) =>
-      A.contains(value.census.matched, name) ||
-      A.some(value.census.unmatched, (parent) => Str.startsWith(`${parent} (`)(name))
-  );
+  yeetSettleCensusRequires(verdict, name);
 
 const bindRequiredCensus = (snapshot: YeetStatusSnapshot, verdict: YeetSettleVerdict): YeetStatusSnapshot => {
   if (
@@ -1100,17 +1123,47 @@ const observeMonitorHead = Effect.fn("YeetMonitorLoop.observeHead")(function* (
       })
     );
   }
+  const capture = options.capture ?? runRepoCommandCapture;
+  const expected = yield* (options.rulesetRead ?? readYeetRulesetRequiredContexts)(context);
   const head = MonitorHeadState.make({
     timeline: YeetHeadTimeline.make({
       headSha: headSha.value,
       firstObservedAt: at,
-      pushedAt: yield* readPushedAt(context, headSha.value, options.capture ?? runRepoCommandCapture),
+      pushedAt: yield* readPushedAt(context, headSha.value, capture),
     }),
     firstObservedMs: millis,
-    registered: false,
-    expected: yield* (options.rulesetRead ?? readYeetRulesetRequiredContexts)(context),
+    settleClockMs: millis,
+    expected,
+    families: O.match(expected, { onNone: () => A.empty<YeetGatedContextFamily>(), onSome: yeetGatedFamiliesFor }),
+    changedPaths: yield* readYeetChangedPaths(context, capture),
   });
   return MonitorObservation.make({ ...observation, poll: MonitorPoll.make({ ...poll, head: O.some(head) }) });
+});
+
+// Re-decide heavy admission from this poll's labels; a verdict flip is logged
+// and restarts the settle clock so time spent held never counts (ttc B8).
+const admitMonitorHead = Effect.fn("YeetMonitorLoop.admitHead")(function* (
+  observation: MonitorObservation,
+  current: MonitorHeadState
+) {
+  const admission = decideMonitorAdmission(observation.snapshot, current.changedPaths);
+  const previousVerdict = O.map(current.admission, (value) => value.verdict);
+  const flipped = O.exists(previousVerdict, (value) => value !== admission.verdict);
+  if (flipped) {
+    yield* Console.log(`[yeet] heavy admission: ${O.getOrThrow(previousVerdict)} → ${admission.verdict}`);
+  }
+  const recall = rememberRegistered(current.registered, observation.snapshot.remote.checks);
+  if (A.isReadonlyArrayNonEmpty(recall.recalled)) {
+    yield* Console.log(
+      `[yeet] rollup: ${A.length(recall.recalled)} registered context(s) absent this poll, kept pending`
+    );
+  }
+  return MonitorHeadState.make({
+    ...current,
+    admission: O.some(admission),
+    registered: recall.registered,
+    settleClockMs: flipped ? observation.millis : current.settleClockMs,
+  });
 });
 
 const settleMonitorHead = (
@@ -1121,12 +1174,33 @@ const settleMonitorHead = (
   deriveSettleVerdict(
     YeetSettleInput.make({
       expected: current.expected,
-      checks: observation.snapshot.remote.checks,
+      checks: rememberRegistered(current.registered, observation.snapshot.remote.checks).checks,
       closeoutBound: O.exists(observation.snapshot.mergeReady, (ready) => ready.criteria.closeoutRun),
-      waitedMs: observation.millis - current.firstObservedMs,
+      waitedMs: observation.millis - current.settleClockMs,
       timeoutMs: policy.settleTimeoutMs,
+      families: current.families,
+      admission: current.admission,
+      baseConflict: yeetBaseConflictFor(
+        O.fromUndefinedOr(observation.snapshot.remote.mergeable),
+        O.fromUndefinedOr(observation.snapshot.remote.mergeStateStatus)
+      ),
     })
   );
+
+// The budget resumed (held → admitted, conflict cleared, rollup flap): time
+// spent suspended must not expire the very next verdict, so the clock restarts
+// and the verdict is derived again from zero. An admission flip already reset
+// the clock this poll, in which case there is nothing further to resume.
+const resumeMonitorSettleClock = Effect.fn("YeetMonitorLoop.resumeSettleClock")(function* (
+  observation: MonitorObservation,
+  current: MonitorHeadState,
+  policy: YeetMonitorLoopPolicy
+) {
+  if (current.settleClockMs === observation.millis) return current;
+  if (!yeetSettleClockReset(current.verdict, settleMonitorHead(observation, current, policy))) return current;
+  yield* Console.log("[yeet] settle budget resumed; clock reset");
+  return MonitorHeadState.make({ ...current, settleClockMs: observation.millis });
+});
 
 const closeoutMonitorHead = Effect.fn("YeetMonitorLoop.closeoutHead")(function* (
   context: RepoRunContext,
@@ -1196,36 +1270,15 @@ const reportMonitorSettleTransition = Effect.fn("YeetMonitorLoop.reportSettleTra
   if (from !== to) yield* Console.log(`[yeet] settle: ${from ?? "settled"} → ${to ?? "settled"}`);
 });
 
-// Ruling 50: a head that has registered never re-enters the registration
-// window; an empty census afterwards is a bad read that spends the poll-error
-// budget, never the settle budget.
-const registerMonitorCensus = (
-  poll: MonitorPoll,
-  checks: ReadonlyArray<YeetSettleCheck>
-): Result.Result<MonitorHeadState, MonitorPoll> => {
-  const previous = O.getOrThrow(poll.head);
-  return yeetCensusReadIsSuspect(YeetCensusRead.make({ registered: previous.registered, checks }))
-    ? Result.fail(
-        MonitorPoll.make({
-          ...poll,
-          failure: O.some(YeetCommandError.make({ message: YEET_CENSUS_SUSPECT_MESSAGE })),
-        })
-      )
-    : Result.succeed(
-        MonitorHeadState.make({ ...previous, registered: previous.registered || A.isReadonlyArrayNonEmpty(checks) })
-      );
-};
-
 const settleAndCloseoutMonitorHead = Effect.fn("YeetMonitorLoop.settleAndCloseout")(function* (
   context: RepoRunContext,
   options: YeetMonitorUntilMergedOptions,
   observation: MonitorObservation
 ) {
   if (O.isNone(observation.snapshot.remote.headSha)) return Result.succeed(observation);
-  const registered = registerMonitorCensus(observation.poll, observation.snapshot.remote.checks);
-  if (Result.isFailure(registered)) return Result.fail(registered.failure);
-  const current = registered.success;
+  const admitted = yield* admitMonitorHead(observation, O.getOrThrow(observation.poll.head));
   const policy = options.policy ?? YeetUntilMergedPolicy.make({});
+  const current = yield* resumeMonitorSettleClock(observation, admitted, policy);
   let verdict = settleMonitorHead(observation, current, policy);
   const timeline = verdict.settled
     ? yeetHeadTimelineStamp(current.timeline, "settledAt", observation.at)
@@ -1430,6 +1483,8 @@ const stepMonitorFailureBudget = Effect.fn("YeetMonitorLoop.stepFailureBudget")(
 // queued past the budget (ruling 49) keeps the normal interval, never a 0 ms spin.
 const nextMonitorSleep = (next: MonitorPoll, interval: Duration.Duration): Duration.Duration => {
   if (O.isSome(next.failure)) return interval;
+  // A held head has no budget to race: it sleeps the full interval and
+  // re-reads the labels, since only the label can move it.
   const remaining = O.flatMap(next.head, (value) => value.verdict).pipe(
     O.filter((verdict) => !verdict.settled && verdict.budgetApplies),
     O.map((verdict) => Duration.millis(Math.max(0, verdict.timeoutMs - verdict.waitedMs)))

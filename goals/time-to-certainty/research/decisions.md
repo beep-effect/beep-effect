@@ -564,16 +564,77 @@ names the elapsed time without the budget in that state. `deriveSettleVerdict` s
 raising the default to cover the observed heavy queue (the queue depth is not a property of the
 head); counting queued checks against a second, longer budget (GitHub already owns that bound).
 
-**Ruling 50 (B7-5 amended again, PR2) — a head that has registered never re-enters the
-registration window.** Ruling 49 left one door open: `deriveSettleVerdict` reads zero reported
-checks as the registration window, so a single empty `gh pr checks` reply on a head whose census
-had been registered for twenty minutes re-applied the registration budget, and the second such
-reply on #1159 (at 30m 4s of a 30m budget) exited 1 with `settle-timeout` for a wait that was
-GitHub's. GitHub does not unregister checks, so an empty census after registration is a bad read,
-not an observation: the loop remembers that a head registered (`MonitorHeadState.registered`,
-`WatchSettleState.registered`), and a later empty census fails the poll (`YeetCensusRead`,
-`yeetCensusReadIsSuspect`) against the five-poll error budget instead of deriving a verdict; the
-watch stream keeps its last verdict for that tick. `deriveSettleVerdict` stays pure and unchanged.
-Rejected: a longer registration budget (the blip would still be a regression, just a rarer exit);
-treating an empty census as "all pending" (fabricates rows the read did not return); counting the
-blip in the settle budget with a grace window (a second budget for the same wait).
+## 2026-09-16 — B8 heavy-check admission, round 16 (eight rulings, proposed by the orchestrator, ratified by merge of the B8 PRs; numbered after B7's 41–49)
+
+**Ruling 50 (B8-1) — two tiers with three-valued admission.** Tier 1 (lint shards, unit
+shards, cheap gates) runs on every push. Tier 2 (the `Heavy / *` matrix) runs only under an
+admission verdict computed once per run by `bun run beep ci admission` from a typed event view:
+`run` (the matrix runs), `skip-satisfied` (the reusable workflow is called with
+`admitted: false`, every lane reports `skipped`, the ruleset is satisfied), `hold` (the caller
+job is skipped, the contexts stay "Expected", the PR is merge-blocked until admitted). The
+verdict, its sources and the docs-only flag are data (`HeavyAdmission`), never a scatter of
+`if:` strings.
+
+**Ruling 51 (B8-2) — the label `ready-for-heavy` is the only pull-request admission source.**
+`HeavyAdmissionSource = label | merge-group | main-push`. `draft == false` never admits (it is
+the status quo), `ready_for_review` is not a source (unobservable from `gh pr view`, so the
+monitor and CI would disagree), and no comment command exists. `check.yml` adds only `labeled`
+to the default `pull_request` types. A code PR without the label holds; the agent applies the
+label once tier 1 is green, and `--until-ready` prints the exact `gh pr edit` command.
+
+**Ruling 52 (B8-3) — docs-only is the `goals_only` precedent widened, decided before the
+call.** A diff is docs-only when every merge-base path matches the `ci-change-profile.sh`
+packet-prose pattern, `docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`, or
+`*.md` anywhere; executables, fixtures and data under `goals/**` remain code-bearing. Docs-only
+without the label yields `skip-satisfied`; the label always wins. The classification is one
+exported RegExp used by the `ci admission` step and by the monitor, so both see the same
+verdict for the same head.
+
+**Ruling 53 (B8-4) — two PRs, the input first.** PR A adds the `workflow_call` input
+`admitted` (default `true`) and `if: inputs.admitted` on the `verify` matrix job in
+`heavy.yml`, nothing else; it is proven only after it reaches `main` because the heavy runner
+group admits main-ref workflows only. PR B (after PR A merges) adds the `Heavy Admission` job,
+the `needs`/`if`/`with` wiring, the settle amendment, docs and the label. The docs-only
+acceptance probe is the first docs-only PR after PR B (the B9 capture); if skipped matrix legs
+do not carry the `Heavy / <lane>` names, the fallback is a `runs-on` switch to `ubuntu-24.04`
+with the step gate honouring `!inputs.admitted`, never a required-check change.
+
+**Ruling 54 (B8-5) — `heavy-not-admitted` is a named, non-terminal wait.** `YeetSettleReason`
+gains `heavy-not-admitted`; `YeetSettleInput` gains `families` (`YeetGatedContextFamily`:
+prefix, admitting label, members folded from the ruleset's expected contexts) and an optional
+`admission`. Under `hold`, gated contexts leave `missing`/`pending` for a `gated` census bucket;
+the reason order is `registration`, `required-pending` (non-gated work open),
+`heavy-not-admitted` (only gated work open). A head is held only when the verdict is `hold`,
+gated contexts are open, at least one check has registered, **and nothing non-gated is missing
+or pending** (review rounds 1–2): held ⇔ the reason would be `heavy-not-admitted`. With no
+`Heavy / *` context in the ruleset, after a failed ruleset read, with nothing registered, or
+with an unregistered required context, an unlabelled PR still times out as B7 does, so the label
+never masks an unrelated never-registering context. `settle-timeout` is unreachable while
+held and the loop resets its settle clock when the verdict changes. `run` restores B7 exactly;
+`skip-satisfied` settles on the reported `skip` outcomes. The gate line names the gated
+contexts and the admitting command. Exit codes are unchanged.
+
+**Ruling 55 (B8-6) — the monitor computes admission from the same function as CI.** The
+loop builds `HeavyAdmissionEvent` from `gh pr view` labels and draft plus a once-per-head
+merge-base `git diff --name-only`, re-evaluates it every poll (labels change without a push),
+and streams `settle-changed` on a verdict flip. `YeetStatusRemote` gains `labels`.
+
+**Ruling 56 (B8-7) — merge queue is B9, captured not scheduled.** GitHub merge queue
+(`merge_group`, `checks_requested`, a `merge_queue` ruleset rule) is the mechanism that moves
+Benjamin's authority from "merge" to "enqueue"; it needs the `merge_group` trigger on every
+required workflow, a flake budget (an ejected PR rebuilds the queue behind it), a merge-group
+tail in `--until-ready`, and an `/explore` grill first. B8 only reserves the `merge-group`
+admission source and never substitutes a global `concurrency` group (one pending slot, no FIFO).
+
+**Ruling 57 (B8-8) — capacity is the operator's lever.** Throughput is heavy duration times
+queue depth under any admission design; pool sizing (`runners_maximum_count`, spot vs
+on-demand, `docs/runbooks/ci-runner-reliability.md`) is recorded as an operator decision and is
+not changed by B8.
+
+Amendment, live acceptance (2026-09-16), rulings 54 and 55: a head whose base moved under it
+(`mergeable: CONFLICTING` / `mergeStateStatus: DIRTY`) reports `settle: base-conflict; merge
+origin/main and push` — unsettled, never terminal, never spending the budget — because GitHub
+empties the check rollup of a conflicting PR and the registration budget would otherwise turn
+that into `settle-timeout` (observed twice on #1155 when B7 merged). Both loops also remember
+every context seen registered for a head and keep an absent one `pending` rather than
+regressing it to `missing` on a single empty poll. Exit codes unchanged.

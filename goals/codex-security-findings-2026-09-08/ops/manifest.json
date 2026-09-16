@@ -3,13 +3,13 @@
   "initiative": {
     "id": "codex-security-findings-2026-09-08",
     "title": "Codex Security Findings (2026-09-08)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-08",
-    "updated": "2026-09-09",
+    "updated": "2026-09-16",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-09-08",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Remediate and close the 13 Codex Cloud security findings captured across September 8-9, 2026.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -18,7 +18,8 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 13 Codex findings are resolved with zero packet-applicable open findings.",
-    "grandfathered": false
+    "grandfathered": true,
+    "grandfatheredNote": "Historical remediation merged in PRs #1026, #1032, and #1037. The final completion receipt on #1037 establishes proof and exact-ID closure; this PR reconciles their retained packet lifecycle."
   },
   "branch": "codex/security-corpus-process-metadata",
   "currentSourceOfTruth": [
@@ -65,7 +66,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "Twelve findings merged in PRs #1026 and #1032 and were closed as Already fixed. CSF-013 is implemented for the remaining follow-up; full proof, hosted acceptance, merge, and exact-ID closure remain pending. Severity and codexStatus retain historical capture values; captures span September 8-9."
+    "note": "All 13 findings merged in PRs #1026, #1032, and #1037 and were closed as Already fixed. The final completion receipt on PR #1037 records local proof, hosted acceptance, and exact-ID closure; this PR reconciles the stale tracked lifecycle."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -116,27 +117,27 @@
     {
       "id": "P5",
       "name": "Repo proof",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Publish",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P9",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

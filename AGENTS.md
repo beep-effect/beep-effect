@@ -117,9 +117,12 @@ models and effort levels they actually recorded.
     rate limited.
 - PR closeout: run `bun run beep yeet monitor --until-ready --detach` and block on
   `bun run beep yeet job wait <jobId>` (attached `--until-ready` when the user
-  manager is unreachable) until it exits 0 with `merge-ready: yes`. Unanswered
-  review threads are a hard merge gate — answer every one and resolve every
-  actionable one via `bun run beep yeet reply`
+  manager is unreachable; re-submit after a reboot) until it exits 0 with
+  `merge-ready: yes`. A code PR must carry the `ready-for-heavy` label before the
+  `Heavy / *` matrix runs (docs-only PRs skip it); apply the label once tier 1 is
+  green — `--until-ready` prints the `gh pr edit` command while it holds.
+  Unanswered review threads are a hard merge gate — answer every one and resolve
+  every actionable one via `bun run beep yeet reply`
   (drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
   them.
 - Post-merge closeout is the agent's job, not the operator's. Once the PR is

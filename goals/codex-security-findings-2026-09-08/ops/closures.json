@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "schemaVersion": "codex-closure-ledger/v1",
+    "repository": "kriegcloud/beep-effect",
+    "packet": "goals/codex-security-findings-2026-09-08",
+    "capturedCount": 13,
+    "closureCount": 13,
+    "handoffCount": 0,
+    "verifiedAt": "2026-09-16"
+  },
+  "mergeEvidence": {
+    "pullRequest": 1037,
+    "headCommit": "53183d592df605af8051e68342ef8e8b1df9afff",
+    "mergeCommit": "22063e7b6dbb6e63adcf0b080b397fcb350712b7",
+    "mergedAt": "2026-09-09T06:53:08Z",
+    "completionReceipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+  },
+  "closures": [
+    {
+      "csfId": "CSF-001",
+      "codexId": "5903ea0d4b988191ba721f27272e4630",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-002",
+      "codexId": "c861107a1d90819189ce579ceb623428",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-003",
+      "codexId": "3d3beb1bfafc8191a47127db174583da",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-004",
+      "codexId": "49c0e4f6133c8191b82ea5761ee7ac16",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-005",
+      "codexId": "6f691d6083348191827f0299697d5e13",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-006",
+      "codexId": "98b558beb4008191a6023074991ed56e",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-007",
+      "codexId": "c87342aea8948191899d6b53b3ca1d8e",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-008",
+      "codexId": "d4377d755bd08191a28114af44a54589",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-009",
+      "codexId": "e8dd30d69e44819198846c9b8043d066",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-010",
+      "codexId": "87fa964ffcec81918d3518db0cc69a5d",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-011",
+      "codexId": "20b2517dcb34819191140b7e040cc595",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1026,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-012",
+      "codexId": "e525f4ad4e5c81919f86da335e5db7c8",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1032,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    },
+    {
+      "csfId": "CSF-013",
+      "codexId": "200befcd89048191b24d8f64114b58e9",
+      "status": "closed",
+      "reason": "Already fixed",
+      "evidence": {
+        "pullRequest": 1037,
+        "receipt": "https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010"
+      }
+    }
+  ]
+}
