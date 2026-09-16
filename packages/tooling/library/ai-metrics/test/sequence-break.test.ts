@@ -183,11 +183,23 @@ const runNotifier = Effect.fnUntraced(function* (
   store: NotifierStore,
   ntfyTopic = "",
   ntfyToken = "",
-  maxStage: SequenceBreakNotificationStage = "initial"
+  maxStage: SequenceBreakNotificationStage = "initial",
+  originCwd = "",
+  openUri = ""
 ) {
   const handle = yield* ChildProcess.make(
     notifierPath,
-    ["claude-code", SESSION_ID, REQUEST_TS, "tool-permission", "human-input", "AskUserQuestion", "desktop-ntfy-1"],
+    [
+      "claude-code",
+      SESSION_ID,
+      REQUEST_TS,
+      "tool-permission",
+      "human-input",
+      "AskUserQuestion",
+      "desktop-ntfy-1",
+      originCwd,
+      openUri,
+    ],
     {
       cwd: repoRoot,
       extendEnv: true,
@@ -328,7 +340,7 @@ const expectSilentSuccess = (run: { readonly exitCode: number; readonly stderr: 
   expect(run.stdout).toBe("");
 };
 
-layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
+layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notification contracts", (it) => {
   it("declares exactly the two content-free persisted surfaces", () => {
     expect(A.difference(R.keys(SequenceBreakNotificationV1.fields), canonicalNotificationKeys)).toEqual([]);
     expect(A.difference(canonicalNotificationKeys, R.keys(SequenceBreakNotificationV1.fields))).toEqual([]);
@@ -473,6 +485,107 @@ layer(NodeServices.layer)("sequence-break notification contracts", (it) => {
         expect(yield* fs.readFileString(store.dampingPath)).toBe(invalidState);
       })
     )
+  );
+
+  it.effect("labels the agent and escapes local origin without adding it to evidence or phone payloads", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+      yield* fs.writeFileString(
+        `${store.fakeBin}/notify-send`,
+        '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\n'
+      );
+      yield* fs.writeFileString(`${store.fakeBin}/curl`, '#!/usr/bin/env bash\ncat >>"$HOME/phone.txt"\n');
+      expectSilentSuccess(yield* runNotifier(store, "test-topic", "", "initial", "/missing/clone<&;\u001bname"));
+      const desktop = yield* fs.readFileString(`${store.stateHome}/desktop.txt`);
+      expect(desktop).toContain("Claude Code needs your input");
+      expect(desktop).toContain("Clone: clone&lt;&amp;  name");
+      expect(desktop).not.toContain("\u001b");
+      expect(yield* fs.readFileString(`${store.stateHome}/phone.txt`)).not.toContain("clone");
+      expect(A.every(yield* notificationRows(store), (row) => !row.includes("clone"))).toBe(true);
+      expect(yield* fs.readFileString(store.dampingPath)).not.toContain("clone");
+    })
+  );
+
+  it.effect("distinguishes the owning clone from a linked worktree", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+      yield* fs.writeFileString(
+        `${store.fakeBin}/git`,
+        `#!/usr/bin/env bash
+case "$*" in
+  *--git-common-dir*) printf '%s\\n' '/workspace/owning-clone/.git' ;;
+  *) printf '%s\\n' '/workspace/worktrees/feature-lane' ;;
+esac
+`
+      );
+      yield* fs.chmod(`${store.fakeBin}/git`, 0o755);
+      yield* fs.writeFileString(
+        `${store.fakeBin}/notify-send`,
+        '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\n'
+      );
+      expectSilentSuccess(yield* runNotifier(store, "", "", "initial", "/workspace/worktrees/feature-lane/src"));
+      expect(yield* fs.readFileString(`${store.stateHome}/desktop.txt`)).toContain(
+        "Clone: owning-clone · Worktree: feature-lane"
+      );
+    })
+  );
+
+  it.effect("opens only the exact desktop session after the default notification action", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const store = yield* makeNotifierStore();
+      const uri = "claude://code/continue?session=local_test-session";
+      yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+      yield* fs.writeFileString(
+        `${store.fakeBin}/notify-send`,
+        '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
+      );
+      yield* fs.writeFileString(
+        `${store.fakeBin}/xdg-open`,
+        '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt"\n'
+      );
+      yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
+      expectSilentSuccess(yield* runNotifier(store, "", "", "initial", "/workspace/clone", uri));
+      yield* waitForNotificationRows(store, 2);
+      const opened = yield* fs
+        .readFileString(`${store.stateHome}/opened.txt`)
+        .pipe(
+          Effect.retry(Schedule.recurs(200).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(10))))),
+          TestClock.withLive
+        );
+      expect(opened).toBe(`${uri}\n`);
+      expect(yield* fs.readFileString(`${store.stateHome}/desktop.txt`)).toContain("--action=default=Open task");
+      expect(A.every(yield* notificationRows(store), (row) => !row.includes(uri))).toBe(true);
+    })
+  );
+
+  it.effect("rejects arbitrary URLs and cross-agent routes without offering an action", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* Effect.forEach(
+        [
+          "https://example.com",
+          "claude://code/continue?session=last",
+          "claude://code/continue?session=local_valid&other=bad",
+          "codex://threads/12345678-1234-1234-1234-123456789abc",
+        ],
+        (uri) =>
+          Effect.gen(function* () {
+            const store = yield* makeNotifierStore();
+            yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+            yield* fs.writeFileString(
+              `${store.fakeBin}/notify-send`,
+              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\n'
+            );
+            expectSilentSuccess(yield* runNotifier(store, "", "", "initial", "/workspace/clone", uri));
+            expect(yield* fs.readFileString(`${store.stateHome}/desktop.txt`)).not.toContain("--action");
+          })
+      );
+    })
   );
 
   it.effect("launches the notifier from the durable PermissionRequest writer path", () =>
