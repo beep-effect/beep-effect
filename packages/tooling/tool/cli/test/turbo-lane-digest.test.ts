@@ -1,3 +1,4 @@
+import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
 import {
   appendTurboLaneLedger,
   closeTurboLaneLedger,
@@ -16,11 +17,12 @@ import {
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
-import { Effect, Exit, FileSystem, Path, Ref } from "effect";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import { Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const providePlatform = provideScopedLayer(NodeServices.layer);
@@ -40,6 +42,18 @@ const task = (taskId: string, hash: string, status: "HIT" | "MISS", exitCode: nu
 
 const summary = (id: string, startTime: number, tasks: ReadonlyArray<TurboSummaryTask>) =>
   TurboRunSummary.make({ id, execution: { startTime, endTime: startTime + 10, exitCode: 0 }, tasks });
+
+const labsLaneOptions = CiLaneRunOptions.make({
+  affected: false,
+  base: "origin/main",
+  head: "HEAD",
+  summarize: true,
+  mode: "affected",
+  to: "HEAD",
+  last: false,
+  changesetStatus: false,
+  validateEnvelopes: false,
+});
 
 describe("Turbo lane digests", () => {
   it("round-trips run summaries through JSON", () =>
@@ -272,6 +286,76 @@ describe("Turbo lane digests", () => {
       expect(yield* resolveLaneInputDigestForTesting(outcome(child), O.none())).toEqual(
         O.map(declared, (value) => value.digest)
       );
+    }, providePlatform)
+  );
+
+  // TTC ruling 58: the labs lane digest folds every check/lint/test task hash its own summary ran,
+  // which the labs filter makes exactly the lab tasks today. Upstream build/transit work reaches it
+  // only through Turbo's dependency hashing, and a run with zero labs declares nothing, so the lane
+  // stays green but non-reusable.
+  it.effect(
+    "folds the labs lane digest from lab task rows and leaves zero labs undeclared",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const startedAtIso = "2026-09-16T14:00:00.000Z";
+      // One fixture clock for the summary's start time and its file mtime, so the fresh-summary
+      // filter never depends on the host's wall clock being later than the fixed start.
+      const writtenAtMillis = Date.parse(startedAtIso) + 1_000;
+      const labsRun = Effect.fnUntraced(function* (prefix: string, tasks: ReadonlyArray<TurboSummaryTask>) {
+        const root = yield* fs.makeTempDirectoryScoped({ prefix });
+        const runs = path.join(root, ".turbo", "runs");
+        const summaryPath = path.join(runs, "labs.json");
+        yield* fs.makeDirectory(runs, { recursive: true });
+        yield* encodeSummary(summary("labs", writtenAtMillis, tasks)).pipe(
+          Effect.flatMap((text) => fs.writeFileString(summaryPath, text))
+        );
+        // `utimes` takes epoch seconds, as in the historical-summary case above.
+        yield* fs.utimes(summaryPath, writtenAtMillis / 1_000, writtenAtMillis / 1_000);
+        const step = pipe(ciLaneStepsForTesting(root, "labs", labsLaneOptions), A.head, O.getOrThrow);
+        const ledger = path.join(root, "lane-labs", "ledger.jsonl");
+        const declared = yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), {
+          durationMs: 1,
+          startedAt: startedAtIso,
+          endedAt: "2026-09-16T14:05:00.000Z",
+          failure: O.none(),
+          step,
+        });
+        yield* closeTurboLaneLedger(ledger, 1);
+        return { declared, digest: yield* readTurboLaneLedger(ledger) };
+      });
+      // Lab names in lexical order, so the rows are already in the digest's task-id order.
+      const labRows = A.flatMap(["api-docs", "ciops", "semantica"], (lab) =>
+        A.map(["check", "lint", "test"], (name) => task(`@beep/${lab}#${name}`, `${lab}:${name}`, "MISS"))
+      );
+      const upstream = [
+        task("@beep/schema#build", "schema:build", "HIT"),
+        task("@beep/schema#transit", "schema:transit", "MISS"),
+      ];
+
+      const populated = yield* labsRun("turbo-lane-labs-", [...upstream, ...labRows]);
+      assertSome(populated.declared, true);
+      assertSome(
+        O.map(populated.digest, (value) => A.map(value.tasks, (row) => row.taskId)),
+        A.map(labRows, (row) => row.taskId)
+      );
+
+      // The fold keys on what the invocation ran, not on package identity: a foreign check task the
+      // filter pulled in would gate the lane, so its hash must key the digest rather than be dropped.
+      const foreignCheck = task("@beep/schema#check", "schema:check", "MISS");
+      const widened = yield* labsRun("turbo-lane-labs-widened-", [...upstream, foreignCheck, ...labRows]);
+      assertSome(
+        O.map(widened.digest, (value) => A.map(value.tasks, (row) => row.taskId)),
+        pipe(
+          [...labRows, foreignCheck],
+          A.map((row) => row.taskId),
+          A.sort(Str.Order)
+        )
+      );
+
+      const zero = yield* labsRun("turbo-lane-zero-labs-", []);
+      assertSome(zero.declared, false);
+      assertNone(zero.digest);
     }, providePlatform)
   );
 });

@@ -2178,3 +2178,17 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   a job environment and asserts the recorded phase, not only that `--detach` reaches the submit.
   Fixed in the follow-up: `reportProofJobCommand` marks the job running and records the outcome
   `proofJobOutcomeForExit` derives from the loop's exit; an interrupt still reads `terminated`.
+
+## 2026-09-16 — C3 Labs: the local labs replay silently dropped the hosted `--summarize`
+
+- Doing: scoping the last C3 item (Labs) to see what "three task-hash sets" still blocked.
+- Evidence: `CiLane.ts` `ciLocalLaneFlags` returned no flags for `labs`, directly under a comment
+  saying check.yml gives every Turbo-backed lane `--summarize`; check.yml runs
+  `run_lane ci lane labs --summarize`. The existing test pinned the drift as intended
+  ("dispatches the labs lane bare"). Without a summary the lane-run collector never selects the
+  lab task rows, so every local labs run recorded no input digest, and nothing reported it: a
+  missing digest reads the same as an undeclared lane.
+- Prevention: derive local dispatch flags from the lane descriptor instead of a second hand-kept
+  table, or at least pin the law — this PR adds a test that every descriptor accepting
+  `--summarize` replays it locally. Longer term, the C4 shadow report should list lanes that ran
+  green without a digest, so a lost digest is visible rather than silent.
