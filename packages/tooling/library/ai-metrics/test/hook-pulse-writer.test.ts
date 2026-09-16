@@ -41,6 +41,10 @@ import { ChildProcess } from "effect/unstable/process";
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
 const codexWriterPath = `${repoRoot}.codex/hooks/hook-pulse.sh`;
+// The Cursor adapter renames camelCase events into the ledger vocabulary, tags rows
+// `cursor-cli`, and — unlike the Claude writer — MUST print a permission decision, because
+// Cursor treats an empty stdout on a permission hook as malformed JSON and blocks the tool.
+const cursorWriterPath = `${repoRoot}.cursor/hooks/hook-pulse.sh`;
 // The operator half of the same instrument: the switch writes the sentinel the
 // writer tests for, so the two scripts have to agree about where it lives.
 const switchPath = `${repoRoot}.claude/hooks/hook-pulse-switch.sh`;
@@ -535,6 +539,35 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["codex-cli"]);
+      })
+    )
+  );
+
+  it.effect("tags Cursor hook rows as cursor-cli and answers the permission protocol", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // Cursor's stdin: the same snake_case keys, a camelCase event name.
+        const cursorPayload = {
+          ...preToolUsePayload,
+          conversation_id: "cursor-conversation-writer-1",
+          cursor_version: "2026.09.10",
+          generation_id: "cursor-generation-writer-1",
+          hook_event_name: "preToolUse",
+          model: "composer-2.5",
+          workspace_roots: [baseFields.cwd],
+        };
+        const run = yield* runWriter(encodeJson(cursorPayload), { writerPath: cursorWriterPath });
+
+        expect(run.exitCode).toBe(0);
+        expect(run.stderr).toBe("");
+        expect(run.stdout).toBe('{"permission":"allow"}\n');
+        expect(run.rows).toHaveLength(1);
+        const [row] = run.rows;
+        expect(row).toBeDefined();
+        const decoded = yield* decodeHookPulseRow(`${row}`);
+
+        expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["cursor-cli"]);
+        expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PreToolUse);
       })
     )
   );

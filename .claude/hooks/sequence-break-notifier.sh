@@ -50,7 +50,7 @@ if [ -e "${disarm_sentinel}" ]; then
 fi
 
 case "${agent_kind}" in
-  claude-code | codex-cli) ;;
+  claude-code | codex-cli | cursor-cli) ;;
   *) exit 0 ;;
 esac
 case "${session_id}" in

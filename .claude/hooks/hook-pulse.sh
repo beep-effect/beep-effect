@@ -325,7 +325,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
 output="$(
   jq -c -r \
     --arg ts "${ts}" \
-    --arg agentKind "claude-code" \
+    --arg agentKind "${BEEP_HOOK_PULSE_AGENT_KIND:-claude-code}" \
     --arg notifierRev "${notifier_rev}" \
     --arg instrumentClass "${instrument_class}" \
     --arg sessionIdHash "${session_id_hash}" \
@@ -398,7 +398,7 @@ if [ "${notifier_rev}" != "log-only-0" ]; then
         notification_uri="codex://threads/${raw_session_id}"
       fi
       notifier_args=(
-        "claude-code"
+        "${BEEP_HOOK_PULSE_AGENT_KIND:-claude-code}"
         "${notification_session}"
         "${notification_ts}"
         "${notification_reason}"

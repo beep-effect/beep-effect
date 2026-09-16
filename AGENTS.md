@@ -5,10 +5,21 @@ Canonical rules for all coding agents. Claude Code loads this via the
 directly. Laws only — architecture lives in `standards/ARCHITECTURE.md`,
 workflows in skills.
 
-## Token-heavy Codex work
+## Volume pools
 
-Use `gpt-6-astra` with `medium` reasoning by default for all token-heavy
-Codex work, including implementation, exploration, review, and distillation.
+Three-step pool order (binding for orchestrators):
+
+1. **Codex pool** — when any admitted Codex account has more than 5% weekly
+   remaining, use the Codex lane (D2, D7, D8).
+2. **Cursor pool** — when Codex is at or below the floor, Cursor is fail-open:
+   launch a Cursor lane on the seat for the tier; hold Cursor lanes when the
+   target bucket shows less than 5% remaining (dashboard check, D7, D17).
+3. **Hold** — when both pools are below floor, queue the lane and notify the
+   operator. Fable children are never the fallback; `grok-4.6` proxy lanes stay
+   reserved for research-class work (D7).
+
+**Codex (pool 1).** Use `gpt-6-astra` with `medium` reasoning by default for
+all token-heavy Codex work, including implementation, exploration, review, and distillation.
 Pin both the model and reasoning effort when launching that work:
 
 - Native subagents: `model: "gpt-6-astra"`, `reasoning_effort: "medium"`.
@@ -25,6 +36,18 @@ to `medium` and supersedes earlier model and effort guidance for new
 token-heavy Codex work. Historical reports, captured user
 requests, completed-run provenance, and model-parsing fixtures retain the
 models and effort levels they actually recorded.
+
+**Cursor (pool 2).** Volume: `composer-2.5` → `cursor-grok-4.6-xhigh`;
+review: `claude-opus-5-thinking-high` → `gpt-5.6-sol-xhigh`; mechanical:
+`composer-2.5` → `gpt-5.6-luna-high`. Never: any `-fast` id, `auto`,
+`kimi-k3-*`, `claude-fable-5-1-*`. Lane: `cursor-agent -p --trust --force
+--sandbox enabled --workspace <abs> --model <seat> --output-format stream-json`
+under a host `timeout`, stdin from `/dev/null` (recipe in the runbook). Deny
+list in `.cursor/cli.json`: `Shell(git)`, `Shell(sudo)`, `Shell(pkexec)`.
+Nothing from the out-of-repo corpus, client documents, or secrets enters a
+Cursor lane (D11).
+
+Runbook: `docs/runbooks/agent-pools.md`.
 
 ## 1Password
 
