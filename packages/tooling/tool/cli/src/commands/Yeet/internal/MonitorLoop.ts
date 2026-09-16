@@ -67,6 +67,7 @@ import {
 } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
+import { YeetMonitorTerminalState } from "./MonitorPolicy.ts";
 import {
   collectRemoteWorkflowRuns,
   collectYeetStatus,
@@ -153,35 +154,6 @@ export const YeetMonitorFlakeClass = LiteralKit([
  * @since 0.0.0
  */
 export type YeetMonitorFlakeClass = typeof YeetMonitorFlakeClass.Type;
-
-/**
- * Terminal pull request states that end a merge loop.
- *
- * **Example** (List the terminal states)
- *
- * ```ts
- * import { YeetMonitorTerminalState } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(YeetMonitorTerminalState.Options)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const YeetMonitorTerminalState = LiteralKit(["merged", "closed"]).pipe(
-  $I.annoteSchema("YeetMonitorTerminalState", {
-    title: "Yeet Monitor Terminal State",
-    description: "Pull request state that ends the merge loop.",
-  })
-);
-
-/**
- * Terminal pull request states that end a merge loop.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type YeetMonitorTerminalState = typeof YeetMonitorTerminalState.Type;
 
 const GITHUB_LOG_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z ?/u;
 const GITHUB_LOG_COMMAND_MARKER_PATTERN = /^##\[[a-z]+\] ?/u;

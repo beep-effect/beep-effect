@@ -96,6 +96,50 @@ export const YeetCheckOutcome = LiteralKit(["pending", "pass", "fail", "skip"]).
  */
 export type YeetCheckOutcome = typeof YeetCheckOutcome.Type;
 
+/**
+ * Why a merge loop is still waiting on a head, as the gate line names it.
+ *
+ * **Details**
+ *
+ * `registration`: no checks have reported for the head yet (GitHub's
+ * post-push registration window). `required-pending`: expected required
+ * contexts are missing or still pending. `closeout-pending`: the required
+ * census settled and the read-first closeout has not yet bound this head.
+ * `settle-timeout`: the census never settled within `--settle-timeout`; the
+ * only terminal reason. The settle rule itself lives in `Settle.ts`; the
+ * reason lives here because `settle-changed` streams it.
+ *
+ * **Example** (Check a reason)
+ *
+ * ```ts
+ * import { YeetSettleReason } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetSettleReason.is["settle-timeout"]("settle-timeout")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetSettleReason = LiteralKit([
+  "registration",
+  "required-pending",
+  "closeout-pending",
+  "settle-timeout",
+]).pipe(
+  $I.annoteSchema("YeetSettleReason", {
+    title: "Yeet Settle Reason",
+    description: "Why a merge loop is still waiting on a pull request head.",
+  })
+);
+
+/**
+ * Why a merge loop is still waiting on a head.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetSettleReason = typeof YeetSettleReason.Type;
+
 // The contains-lists mirror yeet status's classifiers (Status.ts), which have
 // watched these strings in the field since the monitor existed. Order matters:
 // failure evidence wins over pending evidence, because a cancelled-while-queued
@@ -427,6 +471,53 @@ export class YeetHeadChanged extends S.Class<YeetHeadChanged>($I`YeetHeadChanged
 ) {}
 
 /**
+ * The settle wait reason changed between polls.
+ *
+ * **Details**
+ *
+ * `from`/`to` are `null` when the head was settled with the closeout bound —
+ * the state in which merge readiness is evaluated. `pending` and `missing`
+ * carry the open census at the moment of the change so a stream consumer sees
+ * which contexts hold the wait without re-reading the ruleset.
+ *
+ * **Example** (Registration ended, required contexts still pending)
+ *
+ * ```ts
+ * import { YeetSettleChanged } from "@beep/repo-cli/test/Yeet"
+ *
+ * const row = YeetSettleChanged.make({
+ *   at: "2026-09-16T00:01:00Z",
+ *   headSha: "abc123",
+ *   from: "registration",
+ *   to: "required-pending",
+ *   pending: ["Heavy / Check"],
+ *   missing: ["Heavy / Docgen"]
+ * })
+ * console.log(row.kind) // "settle-changed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetSettleChanged extends S.Class<YeetSettleChanged>($I`YeetSettleChanged`)(
+  {
+    kind: S.tag("settle-changed"),
+    schemaVersion: S.Literal(YEET_WATCH_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_WATCH_SCHEMA_VERSION))
+    ),
+    at: S.String,
+    headSha: S.NonEmptyString,
+    from: S.NullOr(YeetSettleReason),
+    to: S.NullOr(YeetSettleReason),
+    pending: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
+    missing: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
+  },
+  $I.annote("YeetSettleChanged", {
+    description: "The merge loop's settle wait reason moved between polls, with the open census.",
+  })
+) {}
+
+/**
  * A pull request comment arrived: one row per observed comment.
  *
  * **Details**
@@ -627,6 +718,7 @@ export const YeetWatchEvent = S.Union([
   YeetMergeabilityChanged,
   YeetMergeReadyCriterionChanged,
   YeetHeadChanged,
+  YeetSettleChanged,
   YeetCommentPosted,
   YeetWatchEnded,
 ]).pipe(

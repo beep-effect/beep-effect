@@ -66,6 +66,11 @@ orchestrator owns schemas, contracts, and judgment.
       `not-run-early-stop` facts, and the default-off `--no-fail-fast` escape hatch; awaiting
       hosted exact-head proof before completion.
 - [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
+- [ ] B7 `yeet monitor --until-ready` as the canonical PR babysit path (rulings 41–48): settle on
+      the base ruleset's expected contexts with tolerated matrix parents and `--settle-timeout`,
+      automatic read-first closeout on settle, an exit-0 `ready` terminal, required-only exit
+      codes in every monitor mode, one P1 `pr-merge-ready` inbox row per head, push→ready
+      measurement. PR1 attached loop (no B5 dependency); PR2 detach recipe + observed ack after B5.
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):
       rows landed in PR #964, emission was gated behind the unknown-row preservation rollout in PR
       #978, and PR #993 made each death a crash-recoverable per-sink claim. A disabled admission sink

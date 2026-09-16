@@ -1342,3 +1342,15 @@ was attempted under the marker-only amendment.
 - **Would have prevented it:** a settle rule keyed on the expected check census (a registered
   minimum plus zero pending) and on the head SHA, with empty or failed API reads treated as
   retryable — the per-head coalescing that `explorations/pr-event-awareness` now records.
+
+## 2026-09-16 — A fresh lane worktree has no Effect reference checkout
+
+- **Doing:** authoring the B7 settle schemas in a sibling lane created by
+  `bun run beep worktree new ttc-b7`.
+- **Evidence:** `ls <lane>/.repos/` → `No such file or directory`; the `.repos/effect` symlink is
+  provisioned per checkout by `scripts/setup-effect-ref.sh` and `worktree new` copies `.env` and
+  editor files but not it, so every "validate against the v4 source" read had to go through the
+  owning clone's absolute path, and the Codex lane brief has to say so explicitly.
+- **Would have prevented it:** `worktree new` re-creating the machine-local reference symlink
+  (or running the setup script) as part of bootstrap, so AGENTS.md's tool-routing rule holds in
+  every lane without a per-brief workaround.

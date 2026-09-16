@@ -58,10 +58,13 @@ import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import type { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";
 import type { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
-import type { YeetMonitorTerminalState } from "./MonitorLoop.ts";
+import type { runYeetAutomaticCloseout } from "./Closeout.ts";
+import type { YeetMonitorTerminalState } from "./MonitorPolicy.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 import type { ReplyReport } from "./Reply.schemas.ts";
 import type { YeetRetirePlan } from "./Retire.schemas.ts";
+import type { readYeetRulesetRequiredContexts } from "./Settle.ts";
+import type { collectYeetStatus } from "./Status.ts";
 import type { SweepPlan, SweepPlanStep, SweepReport } from "./Sweep.schemas.ts";
 import type { SweepGitState } from "./Sweep.ts";
 
@@ -75,11 +78,26 @@ interface YeetPorcelainOptions {
   readonly packetDir: string;
 }
 
+/**
+ * Injectable boundaries of the monitor routes, so every loop test runs against
+ * stubs instead of `gh`.
+ *
+ * **Details**
+ *
+ * `collectStatus`, `rulesetRead`, and `closeout` are the B7 seams the merge
+ * loop reads through on every poll: the status snapshot, the base branch's
+ * required contexts (read once per head), and the read-first closeout it runs
+ * itself when the required census settles for a head with no bound closeout
+ * artifact. Each defaults to the live implementation.
+ */
 interface YeetMonitorRouteDependencies {
   readonly capture?: typeof runRepoCommandCapture;
+  readonly closeout?: typeof runYeetAutomaticCloseout;
+  readonly collectStatus?: typeof collectYeetStatus;
   readonly hydrate?: typeof hydrateYeetReadOnlyContext;
   readonly mergeLoop?: typeof runYeetMonitorUntilMerged;
   readonly registry?: PrSessionRegistryShape;
+  readonly rulesetRead?: typeof readYeetRulesetRequiredContexts;
   readonly view?: typeof runGhPullRequestView;
   readonly watchStream?: typeof runYeetWatchStream;
 }

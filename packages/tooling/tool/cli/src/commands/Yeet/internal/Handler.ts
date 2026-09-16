@@ -66,7 +66,7 @@ import {
   YeetAttemptStarted,
   YeetAttemptTerminated,
 } from "./AttemptJournal.ts";
-import { PrCloseoutOptions, PrCloseoutReportJson, runPrCloseout } from "./Closeout.ts";
+import { PrCloseoutOptions, runPrCloseout, writePrCloseoutReport } from "./Closeout.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -146,7 +146,6 @@ import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../int
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
-import type { PrCloseoutReport } from "./Closeout.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdict.ts";
@@ -1254,20 +1253,6 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
     yield* Console.log(renderYeetStatusSummary(snapshot));
   }
   return yield* emptyPlanResult(context);
-});
-
-// Encoded through the artifact schema so Option fields (reviewedHeadSha) land
-// in the optional-key form `yeet status` decodes, not as raw Option objects.
-const writePrCloseoutReport = Effect.fn("Yeet.writePrCloseoutReport")(function* (
-  context: RepoRunContext,
-  report: PrCloseoutReport
-): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const reportPath = yield* runOutputPathForContext(context, "pr-closeout.json");
-  const json = yield* PrCloseoutReportJson.encode(report).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to encode yeet PR closeout report."))
-  );
-  yield* writeTextFile(reportPath, `${json}\n`);
-  return reportPath;
 });
 
 /**

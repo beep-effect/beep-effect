@@ -28,6 +28,7 @@ import {
   unprovenGateVerdicts,
 } from "./GateStaleness.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { YeetHeadTimeline } from "./MonitorPolicy.ts";
 import {
   mergeReadyCriterionHolds,
   YeetMergeReady,
@@ -302,6 +303,10 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
     mergeReady: YeetMergeReadyFromEncoded.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     staleGates: S.Array(GateStale).pipe(SchemaUtils.withKeyDefaults([])),
     unprovenGates: S.Array(GateUnproven).pipe(SchemaUtils.withKeyDefaults([])),
+    // Stamped by the merge loop (B7): push, settle, closeout, and ready
+    // instants for the head this snapshot describes. A one-shot `yeet status`
+    // read leaves it absent.
+    timeline: YeetHeadTimeline.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetStatusSnapshot", {
     description: "Machine-readable status snapshot emitted by yeet status.",
