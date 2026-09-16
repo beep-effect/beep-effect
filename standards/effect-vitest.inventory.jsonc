@@ -67776,15 +67776,15 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/turbo-lane-digest.test.ts:358:providePlatform@7#1",
+      "id": "EV002:packages/tooling/tool/cli/test/turbo-lane-digest.test.ts:359:providePlatform@7#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/turbo-lane-digest.test.ts",
-      "line": 358,
-      "endLine": 358,
+      "line": 359,
+      "endLine": 359,
       "symbol": "providePlatform",
-      "occurrence": "v2:f07a3905fcb59c03111d1dbc50819b9a3d1dc1c85ea707c0b6a55e8db754d39e",
+      "occurrence": "v2:50f71a81407e95e6c7256ea35f95deefcc33c7faddd86e2f6c62fb6550946f9d",
       "class": "unresolved-layer-provide",
       "evidence": "providePlatform",
       "replacement": {
