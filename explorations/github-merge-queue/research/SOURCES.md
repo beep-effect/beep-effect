@@ -28,9 +28,9 @@ RULES
 
 | Brick | Path | Disposition |
 | --- | --- | --- |
-| `HeavyAdmissionSource` (`"merge-group"` reserved), `HeavyAdmissionEventName` (`merge_group`), `decideHeavyAdmission` | `packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts` (B8 branch, `@beep/repo-cli`) | reuse |
-| `check.yml` `pull_request`/`push` triggers and per-ref `concurrency` group (main); the `Heavy Admission` job calling `heavy.yml@main` with `admitted` (B8 branch) | `.github/workflows/check.yml`, `.github/workflows/heavy.yml` | extend (add `merge_group`) |
-| `yeet monitor --until-ready` and the B7 settle loop (B7/B8 branches, not yet on main) | `packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts`, `.../Yeet/internal/MonitorPolicy.ts`, `.claude/skills/yeet/SKILL.md` | extend (merge-group tail) |
+| `HeavyAdmissionSource` (`"merge-group"` reserved), `HeavyAdmissionEventName` (`merge_group`), `decideHeavyAdmission` | `packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts` (`@beep/repo-cli`, on `main` via #1155) | reuse |
+| `check.yml` `pull_request`/`push` triggers and per-ref `concurrency` group (main); the `Heavy Admission` job calling `heavy.yml@main` with `admitted` (on `main` via #1155; hosted pass-without-work lanes via #1165) | `.github/workflows/check.yml`, `.github/workflows/heavy.yml` | extend (add `merge_group`) |
+| `yeet monitor --until-ready` and the B7 settle loop (on `main` via #1149 and #1155) | `packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts`, `.../Yeet/internal/MonitorPolicy.ts`, `.claude/skills/yeet/SKILL.md` | extend (merge-group tail) |
 | A5 attempt-journal fingerprints, M4 false-red proxies | `goals/time-to-certainty/research/baseline.md` | reuse (flake budget input) |
 | E8 flip-condition measurement query | `goals/ship-velocity/research/merge-queue-evaluation.md` | reuse (re-run) |
 

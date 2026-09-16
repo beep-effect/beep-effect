@@ -83,7 +83,9 @@ orchestrator owns schemas, contracts, and judgment.
       three-valued admission (`run`, `skip-satisfied`, `hold`) decided by `bun run beep ci admission`
       from the `ready-for-heavy` label and a docs-only merge-base diff; `heavy.yml` `admitted` input
       (PR A) then the `Heavy Admission` job and the `heavy-not-admitted` settle wait (PR B); the
-      docs-only probe is the B9 capture PR (`skip-satisfied` proven there).
+      docs-only probe is the B9 capture PR #1164; its first head failed the ruleset (one
+      `Heavy / matrix.name` context), fixed by #1165 (lanes pass without work on a hosted
+      runner); re-run evidence in `research/b8-implementation.md`.
 - [ ] B9 merge queue (`merge_group`, `checks_requested`, ruleset `merge_queue`): authority moves from
       "merge" to "enqueue"; `/explore` capture then grill before any implementation (ruling 56).
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):

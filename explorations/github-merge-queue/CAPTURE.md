@@ -15,8 +15,8 @@ dated heading at the bottom.
   admission brief (`goals/time-to-certainty/research/b8-brief.md`, "Rejected"
   and the PR C paragraph) promised this capture as a docs-only PR after PR B
   merged, doubling as the acceptance probe for the docs-only admission filter:
-  heavy lanes report `skipped`, the ruleset is satisfied, `--until-ready`
-  exits 0, no heavy runner spent on this head.
+  every `Heavy / <lane>` context passes without work, the ruleset is
+  satisfied, `--until-ready` exits 0, no heavy runner spent on this head.
 - Ruling 56 (B8-7) in `goals/time-to-certainty/research/decisions.md`:
   merge queue is B9, captured not scheduled. It needs the `merge_group`
   trigger on every required workflow, a flake budget, a merge-group tail in
@@ -36,8 +36,12 @@ dated heading at the bottom.
 - Heavy runner queue depth. Ruling 57 (B8-8) says throughput is heavy
   duration times queue depth under any admission design; B8 cut what is
   admitted, not how many admitted heads compete for `beep-ec2-heavy`. A merge
-  queue serializes required checks on merge-group commits, so the pool sees
-  one merge candidate at a time instead of every green PR racing to merge.
+  queue does not serialize by itself: it builds up to *build concurrency*
+  merge groups at once, and only a setting of 1 means one candidate at a
+  time. Whether a queue lowers pool pressure depends on that setting, on the
+  merge limits that batch several pull requests into one merge, and on
+  whether pull-request heads still run the heavy matrix before enqueue. That
+  is a grill question, not a given.
 - Authority moves from "merge" to "enqueue". Today the operator (or the
   agent, when asked) presses merge after `yeet monitor` reports
   `merge-ready: yes`. Under a queue the same green state buys an enqueue, and
@@ -54,9 +58,14 @@ dated heading at the bottom.
   `checks_requested` activity type.
 - Every workflow that provides a required status check must add that
   trigger, or a PR in the queue never reports and never merges.
-- Required checks run on the merge-group commit (the candidate merge of the
-  queued PRs onto `main`), serialized in queue order; the queue merges when
-  they are green.
+- Required checks run on the merge-group commit: the latest `main` plus the
+  changes from the pull requests ahead in the queue plus this one. The queue
+  merges in queue order when they are green.
+- *Build concurrency* caps how many `merge_group` webhooks are dispatched at
+  once (1 to 100), so several merge groups build concurrently. *Merge limits*
+  set the minimum and maximum number of pull requests merged into the base
+  branch at the same time (1 to 100), with a wait timeout after which the
+  queue merges fewer than the minimum.
 - A failing required check ejects the PR from the queue and the queue
   rebuilds the merge-group commits behind it.
 
@@ -70,10 +79,10 @@ dated heading at the bottom.
    need its own trigger or only its caller?
 2. The admission verdict for `merge_group` is `run`. `HeavyAdmissionSource`
    already reserves `"merge-group"` and `decideHeavyAdmission` maps
-   `merge_group` to it (B8 branch, `commands/Ci/HeavyAdmission.ts`), so a
+   `merge_group` to it (on `main`, `commands/Ci/HeavyAdmission.ts`), so a
    queued head always spends a heavy runner. Is that right for a docs-only
-   PR that skipped heavy on its own head, or does the queue entry inherit the
-   PR's docs-only verdict?
+   PR whose own head passed heavy without work, or does the queue entry
+   inherit the PR's docs-only verdict?
 3. What `--until-ready` means under a queue. Proposed: tier 1 green,
    review threads resolved, closeout bound (the current definition), then
    enqueue, then a merge-group tail via `gh api` for the queue entry's head
@@ -106,6 +115,9 @@ cancels older, no FIFO (B8 rejected list).
 ### Status
 
 Captured, not scheduled. Pending an `/explore` grill and the E8 flip
-condition. This capture PR is the B8 docs-only acceptance probe; if the
-heavy lanes do not report `skipped` for this head, that is a B8 finding, not
-a B9 one.
+condition. This capture PR is the B8 docs-only acceptance probe; a heavy
+lane that does not pass without work on this PR is a B8 finding, not a B9
+one. The first head (`434eed9762`) was such a finding: GitHub reported one
+skipped `Heavy / matrix.name` context instead of the lanes. #1165 fixed it,
+and the probe re-runs on `heavy.yml@main` after merging `main`; the result
+is recorded in `goals/time-to-certainty/research/b8-implementation.md`.

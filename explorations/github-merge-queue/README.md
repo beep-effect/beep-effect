@@ -12,8 +12,9 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Spark
 
 Time-to-certainty item B9. A GitHub merge queue moves the operator's authority
-from "merge" to "enqueue": required checks run on the merge-group commit,
-serialized, and the queue merges on green. B8 heavy-check admission (ruling
+from "merge" to "enqueue": required checks run on merge-group commits (up to
+the build-concurrency limit at once), and the queue merges them in queue
+order on green. B8 heavy-check admission (ruling
 56, B8-7) reserved the `merge-group` admission source and ruled the queue
 itself captured, not scheduled, pending an `/explore` grill.
 
