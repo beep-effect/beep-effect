@@ -29,7 +29,6 @@ import {
   YeetSettleChanged,
   YeetSettleCheck,
   YeetSettleInput,
-  YeetSettleVerdict,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusSnapshot,
@@ -60,6 +59,7 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import type { YeetSettleVerdict } from "@beep/repo-cli/test/Yeet";
 
 const at = "2026-09-16T00:00:00.000Z";
 const decodeBranchRules = S.decodeUnknownEffect(S.Array(GhBranchRule));
@@ -91,8 +91,12 @@ const expectSettledVerdict = (input: YeetSettleInput, result: YeetSettleVerdict)
   expect(reason === null || reason === "closeout-pending").toBe(true);
   expect(reason === null).toBe(input.closeoutBound);
 };
+// Held = hold AND gated open AND outside the registration window (a check has registered).
 const holdWithGatedOpen = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
-  O.exists(input.admission, (value) => value.verdict === "hold") && A.isReadonlyArrayNonEmpty(result.census.gated);
+  O.exists(input.admission, (value) => value.verdict === "hold") &&
+  A.isReadonlyArrayNonEmpty(result.census.gated) &&
+  A.isReadonlyArrayNonEmpty(input.checks) &&
+  !(O.isNone(input.expected) && A.isReadonlyArrayEmpty(result.census.matched));
 const settleBudgeted = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
   A.isReadonlyArrayEmpty(input.checks) ||
   A.isReadonlyArrayNonEmpty(result.census.missing) ||
@@ -428,10 +432,17 @@ describe("B7 settle contracts", () => {
     });
     assertSome(ungated.reason, "settle-timeout");
     expect(yeetSettleVerdictIsHeld(ungated)).toBe(false);
-    // Under hold the registration window still names registration, uncounted.
-    const registering = verdict({ ...gated, admission: admission("hold"), waitedMs: 5000 });
+    // Under hold with zero registered checks the head is NOT held: the reason stays
+    // registration, the registration budget applies, and past it the head times out
+    // (a broken CI that never registers must never hide behind the label).
+    const registering = verdict({ ...gated, admission: admission("hold"), waitedMs: 500 });
     assertSome(registering.reason, "registration");
-    expect(renderYeetSettleDetail(registering)).toContain("not counted toward");
+    expect(yeetSettleVerdictIsHeld(registering)).toBe(false);
+    expect(renderYeetSettleDetail(registering)).toContain("waited 500ms of 1s");
+    const neverRegistered = verdict({ ...gated, admission: admission("hold"), waitedMs: 1000 });
+    assertSome(neverRegistered.reason, "settle-timeout");
+    expect(yeetSettleVerdictIsTerminal(neverRegistered)).toBe(true);
+    expect(yeetSettleVerdictIsHeld(neverRegistered)).toBe(false);
     // Every heavy context reported green under hold: nothing gated, settled as B7.
     const green = verdict({
       ...gated,

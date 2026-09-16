@@ -710,6 +710,16 @@ const gateCensus = (
 const admissionIsHold = (admission: O.Option<HeavyAdmission>): boolean =>
   O.exists(admission, (value) => HeavyAdmissionVerdict.is.hold(value.verdict));
 
+// A head is held only outside the registration window: with nothing
+// registered, a held head and a broken CI that never registers look the same,
+// so B7's registration budget keeps applying there. Once any check has
+// registered and only gated contexts are open, the absence is by design.
+const heldOutsideRegistration = (
+  admission: O.Option<HeavyAdmission>,
+  census: YeetExpectedContextCensus,
+  registering: boolean
+): boolean => !registering && admissionIsHold(admission) && A.isReadonlyArrayNonEmpty(census.gated);
+
 // The settle budget is a registration budget: it counts only while nothing has
 // registered or an expected context is still missing. A registered check that
 // is queued or running is GitHub's to time out, not ours. Under `hold` the
@@ -740,11 +750,14 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
  * On expiry the verdict reports `settle-timeout` with the census that was
  * still open, so the operator sees which contexts never came (the B7 dogfood
  * amendment, after PR #1149's own babysit hit the budget with two heavy lanes
- * registered but queued). A held head (admission `hold` with gated contexts
- * open, ttc B8) is the other exception: its wait is named
- * `heavy-not-admitted` once nothing non-gated is open, and the timeout
- * comparison is skipped entirely, because the absent contexts are absent by
- * design until the label lands.
+ * registered but queued). A held head (ttc B8) is the other exception. A head
+ * is held exactly when admission is `hold`, gated contexts are open, and the
+ * head is outside the registration window (at least one check has
+ * registered): its wait is named `heavy-not-admitted` once nothing non-gated
+ * is open, and the timeout comparison is skipped entirely, because the absent
+ * contexts are absent by design until the label lands. With zero checks
+ * registered the reason stays `registration` and the registration budget still
+ * applies even under `hold` — a broken CI that never registers must time out.
  *
  * **Example** (Registration, then required-pending, then settled)
  *
@@ -775,7 +788,7 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
 export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict => {
   const open = censusFor(input);
   const census = admissionIsHold(input.admission) ? gateCensus(open, input.families) : open;
-  const held = admissionIsHold(input.admission) && A.isReadonlyArrayNonEmpty(census.gated);
+  const held = heldOutsideRegistration(input.admission, census, inRegistrationWindow(input, census));
   const unsettled = unsettledReason(input, census);
   const timedOut = !held && input.waitedMs >= input.timeoutMs && settleBudgetApplies(input, census);
   return O.match(unsettled, {
@@ -801,13 +814,17 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
 };
 
 /**
- * Whether a verdict is held: admission is `hold` and gated contexts are open.
+ * Whether a verdict is held: admission is `hold`, gated contexts are open, and
+ * the head is outside the registration window.
  *
  * **Details**
  *
  * A held head never reaches `settle-timeout` and the loop sleeps its full
  * interval instead of racing the budget; `waitedMs` is still reported so the
- * gate line can say how long the head has waited for the label.
+ * gate line can say how long the head has waited for the label. A `hold`
+ * verdict whose reason is `registration` (or a `settle-timeout` reached from
+ * that window) is not held: nothing has registered yet, so the registration
+ * budget still applies.
  *
  * **Example** (A held head)
  *
@@ -828,7 +845,14 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
  * @since 0.0.0
  */
 export const yeetSettleVerdictIsHeld = (verdict: YeetSettleVerdict): boolean =>
-  admissionIsHold(verdict.admission) && A.isReadonlyArrayNonEmpty(verdict.census.gated);
+  heldOutsideRegistration(
+    verdict.admission,
+    verdict.census,
+    O.exists(
+      verdict.reason,
+      (reason) => YeetSettleReason.is.registration(reason) || YeetSettleReason.is["settle-timeout"](reason)
+    )
+  );
 
 /**
  * Whether a settle verdict ends the loop: only `settle-timeout` is terminal.
