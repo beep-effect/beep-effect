@@ -427,6 +427,7 @@ describe("proof job launcher", () => {
         expect(A.length(Str.split(yield* fs.readFileString(journal), '"attempt-terminated"'))).toBe(2);
         yield* launcher.read(record.jobId);
         expect(yield* inbox(root)).toHaveLength(1);
+        expect(A.length(Str.split(yield* fs.readFileString(journal), '"attempt-terminated"'))).toBe(2);
       })
     )
   );
