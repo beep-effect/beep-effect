@@ -12,8 +12,11 @@
  * therefore see the same verdict for the same head. The verdict is
  * three-valued because the two GitHub skip mechanisms mean different things:
  * a job skipped by `if:` leaves its contexts "Expected" (merge-blocked), while
- * a reusable workflow called with `admitted: false` reports every lane
- * `skipped` (ruleset satisfied).
+ * a reusable workflow called with `admitted: false` runs every lane on a
+ * hosted runner with its steps skipped, so each context passes without work
+ * (ruleset satisfied). A job-level skip inside the reusable workflow is not
+ * an option either: a skipped matrix job never expands and reports one
+ * `Heavy / matrix.name` context.
  *
  * **Gotchas**
  *
@@ -104,8 +107,9 @@ export type HeavyAdmissionSource = typeof HeavyAdmissionSource.Type;
  * **Details**
  *
  * `run`: the matrix runs on the heavy pool. `skip-satisfied`: the reusable
- * workflow is called with `admitted: false`, every lane reports `skipped`, and
- * the ruleset is satisfied (docs-only diffs). `hold`: the caller job is
+ * workflow is called with `admitted: false`, so every lane runs on a
+ * GitHub-hosted runner, passes without work and reports success, and the
+ * ruleset is satisfied (docs-only diffs). `hold`: the caller job is
  * skipped by `if:`, the contexts stay "Expected", and the PR is merge-blocked
  * until the label lands.
  *
@@ -123,7 +127,7 @@ export type HeavyAdmissionSource = typeof HeavyAdmissionSource.Type;
 export const HeavyAdmissionVerdict = LiteralKit(["run", "skip-satisfied", "hold"]).pipe(
   $I.annoteSchema("HeavyAdmissionVerdict", {
     title: "Heavy Admission Verdict",
-    description: "Whether the heavy matrix runs, reports skipped, or is held pending the label.",
+    description: "Whether the heavy matrix runs, passes without work, or is held pending the label.",
   })
 );
 
