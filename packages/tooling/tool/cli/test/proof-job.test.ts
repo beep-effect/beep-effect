@@ -923,6 +923,24 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
       })
     );
   }
+  for (const route of ["--until-ready", "--until-merged", "--watch"]) {
+    it.effect(
+      `records the outcome of a detached monitor ${route} route`,
+      Effect.fnUntraced(function* () {
+        const { root, launcher } = yield* CommandCheckout;
+        const record = yield* launcher.submit(submission(root));
+        // The checkout is not a git repository, so the route fails while hydrating, before any
+        // GitHub read; the job must still record that end instead of reading as terminated.
+        yield* runJobCommand(["monitor", route]).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, jobEnvironment(root, record)),
+          Effect.exit
+        );
+        const reported = O.getOrThrow(yield* launcher.read(record.jobId));
+        expect(reported.phase).toBe("finished");
+        expect(O.map(reported.outcome, (outcome) => outcome.verdictOutcome)).toStrictEqual(O.some("failure"));
+      })
+    );
+  }
   it.effect(
     "leaves the job record untouched outside a job",
     Effect.fnUntraced(function* () {
