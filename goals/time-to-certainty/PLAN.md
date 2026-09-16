@@ -79,10 +79,14 @@ orchestrator owns schemas, contracts, and judgment.
       automatic read-first closeout on settle, an exit-0 `ready` terminal, required-only exit
       codes in every monitor mode, one P1 `pr-merge-ready` inbox row per head, push→ready
       measurement. PR1 carries the attached loop (this PR); PR2 after B5: detach recipe + observed ack.
-- [~] B8 heavy-check admission (rulings 50–57): three-valued admission (`run`, `skip-satisfied`,
-      `hold`) decided by `bun run beep ci admission` from the `ready-for-heavy` label and a docs-only
-      merge-base diff; `heavy.yml` `admitted` input (PR A) then the `Heavy Admission` job and the
-      `heavy-not-admitted` settle wait (PR B); docs-only probe = the B9 capture PR.
+- [x] B8 heavy-check admission (rulings 50–57) — merged 2026-09-16 (PR A #1151, PR B #1155):
+      three-valued admission (`run`, `skip-satisfied`, `hold`) decided by `bun run beep ci admission`
+      from the `ready-for-heavy` label and a docs-only merge-base diff; `heavy.yml` `admitted` input
+      (PR A) then the `Heavy Admission` job and the `heavy-not-admitted` settle wait (PR B); the
+      docs-only probe is the B9 capture PR #1164; its first head failed the ruleset (one
+      `Heavy / matrix.name` context), fixed by #1165 (lanes pass without work on a hosted
+      runner); the re-run on `c43cf7618a` passed (every `Heavy / <lane>` success on
+      `ubuntu-24.04`, `--until-ready` exit 0; evidence in `research/b8-implementation.md`).
 - [ ] B9 merge queue (`merge_group`, `checks_requested`, ruleset `merge_queue`): authority moves from
       "merge" to "enqueue"; `/explore` capture then grill before any implementation (ruling 56).
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):

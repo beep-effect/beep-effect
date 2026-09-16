@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "github-merge-queue",
+    "title": "GitHub Merge Queue",
+    "status": "active",
+    "stage": "capture",
+    "openQuestions": [
+      "Resume when the operator schedules this (time-to-certainty B9 is captured, not scheduled): open the /explore grill on the four design questions in CAPTURE.md — merge_group triggers on check.yml and heavy.yml@main, the merge-group admission verdict, what --until-ready means under a queue, and the flake budget — against the ship-velocity E8 flip condition (main full-gauntlet >= 80% over 14 days)."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-09-16",
+    "updated": "2026-09-16"
+  }
+}
