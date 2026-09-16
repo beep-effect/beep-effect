@@ -3,7 +3,8 @@ import { runCacheWarmForTesting, runCacheWarmLaneForTesting } from "@beep/repo-c
 import { NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, Layer, Order, Path } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
@@ -89,6 +90,34 @@ describe("cache command", () => {
     ));
 
   it(
+    "warms with a write-only cache spec instead of pairing --cache with --force",
+    () =>
+      Effect.runPromise(
+        provideNodeServices(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-cache-warm-command-" });
+            yield* initializeWarmRepository(root);
+            let observed: ReadonlyArray<string> = [];
+            const receipt = yield* withWarmEnvironment(
+              validWarmEnvironment,
+              runCacheWarmForTesting(root, O.none(), (command) => {
+                observed = command;
+                return Effect.succeed(CacheWarmLane.make({ command, durationMs: NonNegativeInt.make(0), exitCode: 0 }));
+              })
+            );
+
+            expect(observed).toContain("--cache=local:w,remote:w");
+            expect(observed).not.toContain("--force");
+            expect(A.filter(observed, Str.startsWith("--cache=")).length).toBe(1);
+            expect(receipt.lanes[0]?.command).toEqual(observed);
+          })
+        )
+      ),
+    15_000
+  );
+
+  it(
     "counts only the first remote-eligible touch and keeps correctness tripwires",
     () =>
       Effect.runPromise(
@@ -112,11 +141,17 @@ describe("cache command", () => {
               cache: { status: source === "MISS" ? "MISS" : "HIT", source },
               execution: { startTime: 0, endTime: 0 },
             });
+            const uncachedTask = (taskId: string, hash: string, directory: string) => ({
+              taskId,
+              hash,
+              directory,
+              execution: { startTime: 0, endTime: 0 },
+            });
             const run = (
               command: string,
               startTime: number,
               endTime: number,
-              tasks: ReadonlyArray<ReturnType<typeof task>>
+              tasks: ReadonlyArray<ReturnType<typeof task> | ReturnType<typeof uncachedTask>>
             ) => ({
               execution: { command, startTime, endTime },
               scm: { sha: "abc123" },
@@ -148,21 +183,42 @@ describe("cache command", () => {
                 run("turbo run lint --force", 600, 650, [task("@beep/baz#lint", "hash-c", "MISS", "packages/baz")])
               )
             );
+            yield* fs.writeFileString(
+              path.join(runs, "04.json"),
+              encodeJson(
+                run("turbo run lint --cache=local:w,remote:w", 700, 760, [
+                  task("@beep/qux#lint", "hash-d", "MISS", "packages/qux"),
+                ])
+              )
+            );
+            yield* fs.writeFileString(
+              path.join(runs, "05.json"),
+              encodeJson(
+                run("turbo run lint --cache=local:,remote:", 800, 830, [
+                  uncachedTask("@beep/quux#lint", "hash-e", "packages/quux"),
+                ])
+              )
+            );
             const logs = path.join(root, "lambda.ndjson");
             yield* fs.writeFileString(logs, '{"method":"GET","result":"HIT"}\n{"method":"PUT"}\n');
 
             const report = yield* buildCacheDashboard(runs, O.some(logs), ["packages/foo/src/index.ts"]);
 
-            expect(report.runFiles).toBe(3);
+            expect(report.runFiles).toBe(5);
             expect(report.eligibleFirstTouches).toBe(2);
             expect(report.remoteHits).toBe(1);
             expect(report.eligibleRemoteHitRate).toBe(0.5);
-            expect(report.excludedForcedOrDisabled).toBe(1);
+            expect(report.excludedForcedOrDisabled).toBe(3);
             expect(report.correctnessViolations).toEqual(["@beep/foo#lint"]);
             expect(report.lambda).toEqual({ rows: 2, reads: 1, hits: 1, puts: 1 });
-            expect(report.wallTimes.map(({ mode, p50Ms, p95Ms, runs }) => ({ mode, p50Ms, p95Ms, runs }))).toEqual([
+            const wallTimes = A.sort(
+              A.map(report.wallTimes, ({ mode, p50Ms, p95Ms, runs }) => ({ mode, p50Ms, p95Ms, runs })),
+              Order.mapInput(Order.String, (row: { readonly mode: string }) => row.mode)
+            );
+            expect(wallTimes).toEqual([
+              { mode: "disabled", runs: 1, p50Ms: 30, p95Ms: 30 },
+              { mode: "forced", runs: 2, p50Ms: 50, p95Ms: 60 },
               { mode: "remote-eligible", runs: 2, p50Ms: 100, p95Ms: 200 },
-              { mode: "forced", runs: 1, p50Ms: 50, p95Ms: 50 },
             ]);
             yield* fs.remove(root, { recursive: true });
           })

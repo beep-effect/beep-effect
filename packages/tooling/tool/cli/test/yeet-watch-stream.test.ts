@@ -10,6 +10,7 @@ import {
   YeetMergeReadyCriteria,
   YeetMonitorIssueComment,
   YeetMonitorReviewComment,
+  YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
   YeetWatchCheck,
@@ -19,6 +20,7 @@ import {
   YeetWatchSnapshot,
   YeetWatchStarted,
   YeetWatchThread,
+  yeetWatchCheckIsRequired,
   yeetWatchCommentEvent,
   yeetWatchEndReason,
 } from "@beep/repo-cli/test/Yeet";
@@ -230,6 +232,35 @@ describe("yeetWatchEndReason", () => {
 });
 
 describe("countYeetWatchFailures", () => {
+  it("counts a failed matrix child of a required parent as required, in the census and the transition row", () => {
+    const child = YeetWatchCheck.make({ name: "Test Unit (unit-a)", outcome: "fail", required: false });
+    const settle = deriveSettleVerdict(
+      YeetSettleInput.make({
+        expected: O.some(
+          YeetRulesetRequiredContexts.make({ base: "main", contexts: ["Test Unit"], rulesetIds: [1], readAt: AT })
+        ),
+        checks: [YeetSettleCheck.make({ name: child.name, outcome: child.outcome, required: false })],
+        closeoutBound: false,
+        waitedMs: 0,
+        timeoutMs: 1000,
+      })
+    );
+    const vercel = YeetWatchCheck.make({ name: "Vercel", outcome: "fail", required: false });
+    const red = snapshot({ checks: [child, vercel], settle: O.some(settle) });
+    expect(settle.census.unmatched).toEqual(["Test Unit"]);
+    expect(yeetWatchCheckIsRequired(red, child)).toBe(true);
+    expect(countYeetWatchFailures(red)).toBe(1);
+    expect(countYeetWatchOptionalFailures(red)).toBe(1);
+    // Before any settle verdict only GitHub's flag speaks.
+    expect(countYeetWatchFailures(snapshot({ checks: [child] }))).toBe(0);
+    expect(
+      diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: AT, prev: snapshot({ settle: O.some(settle) }), next: red }))
+    ).toMatchObject([
+      { kind: "check-transition", name: child.name, required: true, to: "fail" },
+      { kind: "check-transition", name: vercel.name, required: false, to: "fail" },
+    ]);
+  });
+
   it("counts required and optional failures separately", () => {
     const board = snapshot({
       checks: [

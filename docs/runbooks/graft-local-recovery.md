@@ -169,7 +169,7 @@ bun run beep graft cache sync --from ../beep-effect --to ../beep-effect2 --to ..
 
 Sibling discovery uses the source basename with trailing digits removed, so
 `beep-effect6` selects sibling `beep-effect*` directories containing `.git`.
-The source is excluded. Exactly one of `--to` or `--siblings` is required.
+The source and all symlink aliases are excluded. Exactly one of `--to` or `--siblings` is required.
 `--siblings` now plans all discovered clones in one process. The planner caches
 directory and path checks for each plan and deduplicates entries without
 quadratic comparisons.
@@ -234,10 +234,21 @@ than from nothing.
 The provider keys live in `$HOME/.config/beep-graft/env`, which systemd reads as
 the unit's `EnvironmentFile`. It holds the same keys as the deep-build
 environment files below (`GRAFT_PROVIDER`, `GRAFT_BASE_URL`, `GRAFT_API_KEY`,
-`GRAFT_MODEL`, `GRAFT_LLM_RETRIES`). Nothing reads or prints it except systemd;
-the CLI only checks that it exists, and the rendered unit references it without
+`GRAFT_MODEL`, `GRAFT_LLM_RETRIES`). The CLI only checks that the file exists;
+systemd loads its values into the refresh process and its build children.
+The rendered unit references it without
 a leading `-`, so a missing file fails the unit loudly instead of starting a
 build with no key.
+
+Both update/install pre-start commands clear the inherited environment with
+`env -i`, preserving only HOME, PATH, and CI. The in-process runner applies the
+same allowlist with environment inheritance disabled to the pull, the install,
+and the structural sibling rebuild; only the meaning-tier build sees the
+provider environment. Both installation paths use `--ignore-scripts`, so
+repository and dependency lifecycle hooks cannot run during nightly
+maintenance. The refresh entrypoint and Graft
+build remain trusted local code; this is credential isolation for maintenance,
+not an isolation boundary against a compromised desktop account.
 
 Copy an existing deep-build environment file rather than starting from an
 empty one, then set the model the nightly job should spend:

@@ -37839,14 +37839,14 @@ source_facts:
     value: yeet-verdict/v2
     source:
       file: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
-      line: 564
+      line: 570
       needle: 'schemaVersion: S.Literal("yeet-verdict/v2")'
       sha256: c05da661e2bb3c60bfbdc071b6e1eac0b25406a5b3ff693c158ffdd0569388d7
   verdict_writer:
     value: YeetVerdictJson.encode
     source:
       file: packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts
-      line: 1531
+      line: 1515
       needle: const verdictJson = yield* YeetVerdictJson.encode(verdict)
       sha256: c80a859974ba95a2fa7255a750bd4cac19f6be6a2cb8526eebfdc8d90929cd6b
   proof_provenance:
@@ -37860,35 +37860,35 @@ source_facts:
     value: failureKind + failedStepId; optional flakeQuarantine incidents retained
     source:
       file: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
-      line: 593
+      line: 599
       needle: 'failureKind: YeetFailureKind.pipe'
       sha256: c05da661e2bb3c60bfbdc071b6e1eac0b25406a5b3ff693c158ffdd0569388d7
   failed_step_serialization:
     value: failedStepId
     source:
       file: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
-      line: 592
+      line: 598
       needle: 'failedStepId: S.optionalKey(S.String)'
       sha256: c05da661e2bb3c60bfbdc071b6e1eac0b25406a5b3ff693c158ffdd0569388d7
   failure_signature_domain:
     value: step-exit, handler-error
     source:
       file: packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts
-      line: 188
+      line: 194
       needle: export const YeetFailureKind =
       sha256: c05da661e2bb3c60bfbdc071b6e1eac0b25406a5b3ff693c158ffdd0569388d7
   cache_plan_domain:
     value: caller-controlled, local-only, remote-read
     source:
       file: packages/tooling/tool/cli/src/internal/cli/TurboCache.ts
-      line: 355
+      line: 356
       needle: export const TurboCachePlanTag =
       sha256: 860e455bcd130e8325f3499085313da11732500836cf2272cb129331bdcccacc
   cache_plan_execution:
     value: resolver result feeds command args; verdict schema has no cache-plan field
     source:
       file: packages/tooling/tool/cli/src/commands/Quality/Tasks.ts
-      line: 852
+      line: 992
       needle: resolveTurboCachePlan(readTurboCacheEnvironmentSync()
       sha256: 0a23be1ba3b4956ed6e4a1a767e622d08da590650d39d6f62292186b986f6ab0
 rider_evidence:
@@ -43628,14 +43628,14 @@ known_loss_classes:
 - class: best-effort journal appends (lock-busy drops)
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts
-    line: 1685
+    line: 1705
     needle: stayed busy; dropping one
     sha256: 7c3fd36bcf64ba5ea8f2ab472a8d137911333737326370a2345f55313ab8c429
   current_source_assessment: current for best-effort callers; durable reap sinks retry
 - class: claim-race loser edge
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-    line: 965
+    line: 1094
     needle: const createReapClaim =
     sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   current_source_assessment: historical loss class; current durable claims and acknowledged sinks mitigate
@@ -43643,21 +43643,21 @@ known_loss_classes:
 - class: quarantined malformed state is journal-invisible
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-    line: 669
+    line: 798
     needle: quarantineEntry(directories, entryPath, "undecodable")
     sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   current_source_assessment: current; opportunistic quarantine capture excludes undecodable bytes
 - class: evictedAtMillis is reap time not death time
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-    line: 777
+    line: 906
     needle: 'evictedAtMillis: claimedAtMillis'
     sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   current_source_assessment: current
 - class: heartbeat instant dropped at reap until v3 lands
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-    line: 765
+    line: 894
     needle: const admissionEventForReapClaim =
     sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   current_source_assessment: current v2 event builder omits lease heartbeat
@@ -75530,4 +75530,4 @@ totals:
   files_emitted: 1927
   events: 7975
   payload_bytes: 16243246
-  bytes_emitted: 19054995
+  bytes_emitted: 19054996
