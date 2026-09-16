@@ -652,8 +652,11 @@ check.yml runs `ci lane labs --summarize`, so no local labs run wrote a summary 
 digest.
 
 **Ruling 58 (C3-Labs) — the labs lane keeps its one bundled Turbo invocation, and its input digest
-is the fold of the lab `check`, `lint` and `test` task hashes from its own summary.** Upstream
-build and transit work enters through Turbo's dependency hashing, never as digest rows. Local
+is the fold of every `check`, `lint` and `test` task hash its own summary ran, which the labs
+filter makes exactly the lab tasks today.** The fold keys on what ran, not on package identity: a
+foreign task the filter pulled in would gate the lane, so its hash belongs in the key rather than
+being dropped (a test plants one). Upstream build and transit work enters through Turbo's
+dependency hashing, never as digest rows. Local
 dispatch replays the hosted `--summarize`, and every descriptor that accepts `--summarize` replays
 it locally (a test over all descriptors pins this). The check.yml pull-request path gate, the
 push-runs-everything rule and the permanently non-required context are unchanged. A run with zero

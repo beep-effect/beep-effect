@@ -132,8 +132,8 @@ orchestrator owns schemas, contracts, and judgment.
           accounting for the five owed lanes (two main runs plus the 60-run census split at
           the merge) is recorded in research/c3-456-economics.md (2026-09-13); Lint Policy
           wall-clock and main's doctest misses are carried as C4 debt.
-  - [x] Labs — done 2026-09-16 (ruling 58): the C3.6 multi-task fold already covers three task-hash
-        sets, so the lane digest folds the lab `check`/`lint`/`test` hashes from its own summary;
+  - [x] Labs — done 2026-09-16 (PR #1166, ruling 58): the C3.6 multi-task fold already covers three
+        task-hash sets, so the lane digest folds the `check`/`lint`/`test` hashes its own summary ran;
         the local replay now passes the hosted `--summarize` it had dropped; PR path gate and
         zero-labs-is-green kept (zero labs declare no digest and report as non-reusable).
 - [ ] C4a retire both legacy proof stores with receipts, never migrate them: (1) `YeetLaneProofState`

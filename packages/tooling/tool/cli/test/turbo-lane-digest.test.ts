@@ -22,6 +22,7 @@ import { Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const providePlatform = provideScopedLayer(NodeServices.layer);
@@ -288,9 +289,10 @@ describe("Turbo lane digests", () => {
     }, providePlatform)
   );
 
-  // TTC ruling 58: the labs lane digest folds the lab check/lint/test task hashes of its own summary.
-  // Upstream build/transit work reaches it only through Turbo's dependency hashing, and a run with
-  // zero labs declares nothing, so the lane stays green but non-reusable.
+  // TTC ruling 58: the labs lane digest folds every check/lint/test task hash its own summary ran,
+  // which the labs filter makes exactly the lab tasks today. Upstream build/transit work reaches it
+  // only through Turbo's dependency hashing, and a run with zero labs declares nothing, so the lane
+  // stays green but non-reusable.
   it.effect(
     "folds the labs lane digest from lab task rows and leaves zero labs undeclared",
     Effect.fnUntraced(function* () {
@@ -330,6 +332,19 @@ describe("Turbo lane digests", () => {
       assertSome(
         O.map(populated.digest, (value) => A.map(value.tasks, (row) => row.taskId)),
         A.map(labRows, (row) => row.taskId)
+      );
+
+      // The fold keys on what the invocation ran, not on package identity: a foreign check task the
+      // filter pulled in would gate the lane, so its hash must key the digest rather than be dropped.
+      const foreignCheck = task("@beep/schema#check", "schema:check", "MISS");
+      const widened = yield* labsRun("turbo-lane-labs-widened-", [...upstream, foreignCheck, ...labRows]);
+      assertSome(
+        O.map(widened.digest, (value) => A.map(value.tasks, (row) => row.taskId)),
+        pipe(
+          [...labRows, foreignCheck],
+          A.map((row) => row.taskId),
+          A.sort(Str.Order)
+        )
       );
 
       const zero = yield* labsRun("turbo-lane-zero-labs-", []);
