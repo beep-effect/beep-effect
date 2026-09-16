@@ -152,6 +152,11 @@ ATTEMPT_TERMINATION_REASONS = frozenset(
         "success",
         "terminal-row-missing",
         "unrecorded-failure",
+        "oom-killed",
+        "timeout",
+        "job-start-failed",
+        "cancelled",
+        "finalizer-missing",
     }
 )
 ATTEMPT_COMPACTION_FIELDS = (
