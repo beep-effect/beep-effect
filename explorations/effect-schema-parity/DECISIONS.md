@@ -221,7 +221,7 @@ the same reasoning.
 Consequences to carry into the goal: rewrite the LiteralKit remediation string
 in `SchemaFirstPolicy.ts`; rewrite the AGENTS.md Code Laws line and the
 schema-first skill and agent text; the user's global rule
-(`~/.claude/rules/effect-coding-standards.md`) names LiteralKit and is the
+(`$HOME/.claude/rules/effect-coding-standards.md`) names LiteralKit and is the
 user's to edit, so the goal flags it rather than touching it.
 
 **Rationale:** The retirement rule is "same intent ⇒ retire, adapt consumers,

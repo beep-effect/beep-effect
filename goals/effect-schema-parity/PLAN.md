@@ -50,10 +50,11 @@ six-phase scheme; Yeet-to-mergeable is the exit of every phase, not a phase. -->
 
 - Move `explorations/effect-schema-parity/research/tools/schema-inventory.ts`
   and `verify-schema-inventory.ts` into `packages/tooling/tool/cli/src/commands/Lint/`
-  beside `EffectVitest.ts` as `bun run beep lint effect-schema-inventory`
+  beside `EffectVitest.ts` as `beep lint effect-schema-inventory` (a new `lint`
+  subcommand P1 adds, invoked through the beep CLI)
   with `--write` and `--check`; keep the `schema-inventory/v1` contract from
   `research/inventory/README.md`.
-- Fixture root `packages/tooling/tool/cli/test/fixtures/effect-schema-rc115/`
+- Fixture root `packages/tooling/tool/cli/test/fixtures/effect-schema-rc115/**`
   following the `effect-vitest-rc115` layout (LICENSE carried) plus a pin
   manifest (upstream sha, row digest). Extend the `verifyEffectVitestPin`
   pattern (`EffectVitestScan.ts:65`) from version-only to sha plus digest.
