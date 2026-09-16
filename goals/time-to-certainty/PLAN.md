@@ -101,8 +101,8 @@ orchestrator owns schemas, contracts, and judgment.
       expire / disagreements over an append-only per-checkout NDJSON ledger with a tolerant reader,
       key derivation and epoch collection, identity-field verification on lookup, undeclared-input
       facts never reused; not yet wired into any lane.
-- [~] C3 declared inputs per script lane; Turbo lanes adopt the task hash; undeclared lanes report
-      as non-reusable.
+- [x] C3 declared inputs per script lane; Turbo lanes adopt the task hash; undeclared lanes report
+      as non-reusable — complete 2026-09-16 with Labs (ruling 58).
   - [x] Coverage — done 2026-09-03 (PR #952 merged as 1ef10a6906: package-owned inputs replace the
         default glob, `cache: false` kept, a docs-only edit leaves the hash stable, and
         `tasks[].hash` in `.turbo/runs/<run-id>.json` is the ledger's input digest).
@@ -110,8 +110,9 @@ orchestrator owns schemas, contracts, and judgment.
         scan and synthetic tsconfigs, Turbo runs them serially with `cache: false`, the aggregate
         consumes versioned results with its prior rendering and exit semantics, and the run-summary
         `tasks[].hash` is the ledger input).
-  - [ ] Lint-policy — heterogeneous sublanes have root-wide inputs; one union glob would recreate a
+  - [x] Lint-policy — heterogeneous sublanes have root-wide inputs; one union glob would recreate a
         whole-tree hash. Grilled 2026-09-08 (rulings 19–25): one task per sublane, in two shapes.
+        Complete with C3.6 (2026-09-13); Lint Policy wall-clock is carried as C4 debt.
     - [x] C3.1 scripts-block schema, generator parity, `beep lint package-scripts` gate, codegen
           placeholder removal and root `codegen` split (ruling 23, 24).
     - [x] C3.2 `lint:deprecated-apis` and `lint:jsdoc` package tasks (eslint profiles); the 4-way
@@ -131,8 +132,10 @@ orchestrator owns schemas, contracts, and judgment.
           accounting for the five owed lanes (two main runs plus the 60-run census split at
           the merge) is recorded in research/c3-456-economics.md (2026-09-13); Lint Policy
           wall-clock and main's doctest misses are carried as C4 debt.
-  - [ ] Labs — three task-hash sets rather than one declared action; must keep the PR path gate and
-        zero-labs-is-green.
+  - [x] Labs — done 2026-09-16 (ruling 58): the C3.6 multi-task fold already covers three task-hash
+        sets, so the lane digest folds the lab `check`/`lint`/`test` hashes from its own summary;
+        the local replay now passes the hosted `--summarize` it had dropped; PR path gate and
+        zero-labs-is-green kept (zero labs declare no digest and report as non-reusable).
 - [ ] C4a retire both legacy proof stores with receipts, never migrate them: (1) `YeetLaneProofState`
       rows nested in `YeetRunState` and written to each run's `state.json` by `writeVerifiedState`
       in `ProofState.ts`; (2) `LaneProofRecord` rows (`yeet-lane-proofs/v2`) in

@@ -1,3 +1,4 @@
+import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
 import {
   appendTurboLaneLedger,
   closeTurboLaneLedger,
@@ -16,8 +17,8 @@ import {
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
-import { Effect, Exit, FileSystem, Path, Ref } from "effect";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import { Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -40,6 +41,18 @@ const task = (taskId: string, hash: string, status: "HIT" | "MISS", exitCode: nu
 
 const summary = (id: string, startTime: number, tasks: ReadonlyArray<TurboSummaryTask>) =>
   TurboRunSummary.make({ id, execution: { startTime, endTime: startTime + 10, exitCode: 0 }, tasks });
+
+const labsLaneOptions = CiLaneRunOptions.make({
+  affected: false,
+  base: "origin/main",
+  head: "HEAD",
+  summarize: true,
+  mode: "affected",
+  to: "HEAD",
+  last: false,
+  changesetStatus: false,
+  validateEnvelopes: false,
+});
 
 describe("Turbo lane digests", () => {
   it("round-trips run summaries through JSON", () =>
@@ -272,6 +285,56 @@ describe("Turbo lane digests", () => {
       expect(yield* resolveLaneInputDigestForTesting(outcome(child), O.none())).toEqual(
         O.map(declared, (value) => value.digest)
       );
+    }, providePlatform)
+  );
+
+  // TTC ruling 58: the labs lane digest folds the lab check/lint/test task hashes of its own summary.
+  // Upstream build/transit work reaches it only through Turbo's dependency hashing, and a run with
+  // zero labs declares nothing, so the lane stays green but non-reusable.
+  it.effect(
+    "folds the labs lane digest from lab task rows and leaves zero labs undeclared",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const startedAtIso = "2026-09-16T14:00:00.000Z";
+      const labsRun = Effect.fnUntraced(function* (prefix: string, tasks: ReadonlyArray<TurboSummaryTask>) {
+        const root = yield* fs.makeTempDirectoryScoped({ prefix });
+        const runs = path.join(root, ".turbo", "runs");
+        yield* fs.makeDirectory(runs, { recursive: true });
+        yield* encodeSummary(summary("labs", Date.parse(startedAtIso) + 1_000, tasks)).pipe(
+          Effect.flatMap((text) => fs.writeFileString(path.join(runs, "labs.json"), text))
+        );
+        const step = pipe(ciLaneStepsForTesting(root, "labs", labsLaneOptions), A.head, O.getOrThrow);
+        const ledger = path.join(root, "lane-labs", "ledger.jsonl");
+        const declared = yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), {
+          durationMs: 1,
+          startedAt: startedAtIso,
+          endedAt: "2026-09-16T14:05:00.000Z",
+          failure: O.none(),
+          step,
+        });
+        yield* closeTurboLaneLedger(ledger, 1);
+        return { declared, digest: yield* readTurboLaneLedger(ledger) };
+      });
+      // Lab names in lexical order, so the rows are already in the digest's task-id order.
+      const labRows = A.flatMap(["api-docs", "ciops", "semantica"], (lab) =>
+        A.map(["check", "lint", "test"], (name) => task(`@beep/${lab}#${name}`, `${lab}:${name}`, "MISS"))
+      );
+      const upstream = [
+        task("@beep/schema#build", "schema:build", "HIT"),
+        task("@beep/schema#transit", "schema:transit", "MISS"),
+      ];
+
+      const populated = yield* labsRun("turbo-lane-labs-", [...upstream, ...labRows]);
+      assertSome(populated.declared, true);
+      assertSome(
+        O.map(populated.digest, (value) => A.map(value.tasks, (row) => row.taskId)),
+        A.map(labRows, (row) => row.taskId)
+      );
+
+      const zero = yield* labsRun("turbo-lane-zero-labs-", []);
+      assertSome(zero.declared, false);
+      assertNone(zero.digest);
     }, providePlatform)
   );
 });
