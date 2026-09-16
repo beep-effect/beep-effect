@@ -101,6 +101,7 @@ import {
   yeetBaseConflictFor,
   yeetGatedFamiliesFor,
   yeetSettleCensusRequires,
+  yeetSettleClockReset,
 } from "./Settle.ts";
 import {
   collectRemoteWorkflowRuns,
@@ -1186,6 +1187,21 @@ const settleMonitorHead = (
     })
   );
 
+// The budget resumed (held → admitted, conflict cleared, rollup flap): time
+// spent suspended must not expire the very next verdict, so the clock restarts
+// and the verdict is derived again from zero. An admission flip already reset
+// the clock this poll, in which case there is nothing further to resume.
+const resumeMonitorSettleClock = Effect.fn("YeetMonitorLoop.resumeSettleClock")(function* (
+  observation: MonitorObservation,
+  current: MonitorHeadState,
+  policy: YeetMonitorLoopPolicy
+) {
+  if (current.settleClockMs === observation.millis) return current;
+  if (!yeetSettleClockReset(current.verdict, settleMonitorHead(observation, current, policy))) return current;
+  yield* Console.log("[yeet] settle budget resumed; clock reset");
+  return MonitorHeadState.make({ ...current, settleClockMs: observation.millis });
+});
+
 const closeoutMonitorHead = Effect.fn("YeetMonitorLoop.closeoutHead")(function* (
   context: RepoRunContext,
   options: YeetMonitorUntilMergedOptions,
@@ -1260,8 +1276,9 @@ const settleAndCloseoutMonitorHead = Effect.fn("YeetMonitorLoop.settleAndCloseou
   observation: MonitorObservation
 ) {
   if (O.isNone(observation.snapshot.remote.headSha)) return Result.succeed(observation);
-  const current = yield* admitMonitorHead(observation, O.getOrThrow(observation.poll.head));
+  const admitted = yield* admitMonitorHead(observation, O.getOrThrow(observation.poll.head));
   const policy = options.policy ?? YeetUntilMergedPolicy.make({});
+  const current = yield* resumeMonitorSettleClock(observation, admitted, policy);
   let verdict = settleMonitorHead(observation, current, policy);
   const timeline = verdict.settled
     ? yeetHeadTimelineStamp(current.timeline, "settledAt", observation.at)

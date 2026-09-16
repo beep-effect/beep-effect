@@ -16,6 +16,7 @@ import {
   renderYeetSettleDetail,
   rulesetRequiredContextsFromRules,
   runYeetMonitorUntilMerged,
+  YeetExpectedContextCensus,
   YeetExpectedContextInput,
   YeetGatedContextFamily,
   YeetHeadTimeline,
@@ -30,6 +31,7 @@ import {
   YeetSettleChanged,
   YeetSettleCheck,
   YeetSettleInput,
+  YeetSettleVerdict,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusSnapshot,
@@ -43,6 +45,7 @@ import {
   yeetMonitorDurationMillis,
   yeetMonitorPolicyTerminals,
   yeetPushToReadyMillis,
+  yeetSettleClockReset,
   yeetSettleSchemasForTesting,
   yeetSettleStampFor,
   yeetSettleVerdictIsHeld,
@@ -61,7 +64,6 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import type { YeetSettleVerdict } from "@beep/repo-cli/test/Yeet";
 
 const at = "2026-09-16T00:00:00.000Z";
 const decodeBranchRules = S.decodeUnknownEffect(S.Array(GhBranchRule));
@@ -371,6 +373,32 @@ describe("B7 settle contracts", () => {
     expect(yeetBaseConflictFor(O.some("mergeable"), O.some("dirty"))).toBe(true);
     expect(yeetBaseConflictFor(O.some("MERGEABLE"), O.some("CLEAN"))).toBe(false);
     expect(yeetBaseConflictFor(O.none(), O.none())).toBe(false);
+  });
+  it("restarts the settle clock only when the budget resumes", () => {
+    const withBudget = (budgetApplies: boolean) =>
+      YeetSettleVerdict.make({
+        settled: false,
+        reason: O.some(budgetApplies ? "registration" : "base-conflict"),
+        census: YeetExpectedContextCensus.make({ matched: [], unmatched: [], pending: [], missing: ["Lint"] }),
+        waitedMs: 9000,
+        timeoutMs: 1000,
+        budgetApplies,
+      });
+    expect(yeetSettleClockReset(O.some(withBudget(false)), withBudget(true))).toBe(true);
+    expect(yeetSettleClockReset(O.some(withBudget(true)), withBudget(true))).toBe(false);
+    expect(yeetSettleClockReset(O.some(withBudget(false)), withBudget(false))).toBe(false);
+    expect(yeetSettleClockReset(O.some(withBudget(true)), withBudget(false))).toBe(false);
+    expect(yeetSettleClockReset(O.none(), withBudget(true))).toBe(false);
+    // The budget also resumes out of a held wait and a registered-but-queued wait.
+    const heldVerdict = verdict({
+      expected: expected(heavyContexts),
+      families: heavyFamilies,
+      checks: [check("Lint")],
+      admission: admission("hold"),
+    });
+    const missingVerdict = verdict({ expected: expected(["Lint"]), checks: [check("Docs", "pass", false)] });
+    expect(yeetSettleClockReset(O.some(heldVerdict), missingVerdict)).toBe(true);
+    expect(yeetSettleClockReset(O.some(verdict({ checks: [check("Lint", "pending")] })), missingVerdict)).toBe(true);
   });
   it("remembers registered contexts and keeps an absent one pending, never missing", () => {
     const first = rememberRegistered(HashSet.empty(), [check("Lint", "pending"), check("Vercel", "pass", false)]);

@@ -1015,6 +1015,49 @@ export const yeetSettleVerdictIsHeld = (verdict: YeetSettleVerdict): boolean =>
   );
 
 /**
+ * Whether a head's settle clock restarts between two verdicts: the previous
+ * verdict's budget did not apply and the next one's does.
+ *
+ * **Details**
+ *
+ * `waitedMs` keeps accumulating while the budget is suspended (a held head, a
+ * base conflict, a registered check that is merely queued), so the first
+ * verdict whose budget applies again would otherwise inherit that time and
+ * expire at once. Restarting the clock on that transition covers every way the
+ * budget can resume: admission `hold` → `run`, a base conflict clearing on the
+ * same head, a rollup flap that moves a registered head back to `missing`. A
+ * first observation (`None`) never resets, and neither does a poll that keeps
+ * the budget in the same state.
+ *
+ * **Example** (Budget resumes after a base conflict)
+ *
+ * ```ts
+ * import { YeetExpectedContextCensus, YeetSettleVerdict, yeetSettleClockReset } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const census = YeetExpectedContextCensus.make({ matched: [], unmatched: [], pending: [], missing: ["Lint"] })
+ * const conflict = YeetSettleVerdict.make({ settled: false, reason: O.some("base-conflict"), census, waitedMs: 9_000, timeoutMs: 1_000, budgetApplies: false })
+ * const registering = YeetSettleVerdict.make({ settled: false, reason: O.some("registration"), census, waitedMs: 9_000, timeoutMs: 1_000, budgetApplies: true })
+ * console.log(yeetSettleClockReset(O.some(conflict), registering)) // true
+ * console.log(yeetSettleClockReset(O.none(), registering)) // false
+ * ```
+ *
+ * @param previous - The head's verdict from the last poll, when one exists.
+ * @param next - The verdict just derived with the current clock.
+ * @returns Whether the loop should restart the settle clock and re-derive.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetSettleClockReset: {
+  (next: YeetSettleVerdict): (previous: O.Option<YeetSettleVerdict>) => boolean;
+  (previous: O.Option<YeetSettleVerdict>, next: YeetSettleVerdict): boolean;
+} = dual(
+  2,
+  (previous: O.Option<YeetSettleVerdict>, next: YeetSettleVerdict): boolean =>
+    O.exists(previous, (value) => !value.budgetApplies) && next.budgetApplies
+);
+
+/**
  * Whether the settle census treats a reported check name as required: an
  * expected context matched by exact name, or a matrix child of a tolerated
  * expected parent (`Test Unit (unit-a)` under `Test Unit`).

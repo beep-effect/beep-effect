@@ -1643,6 +1643,63 @@ describe("B8 watch base conflict", () => {
   );
 });
 
+describe("B8 watch settle clock resumes with the budget", () => {
+  it.live("streams base-conflict → registration on the same head with the clock restarted, never settle-timeout", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ticks = yield* Ref.make(0);
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          settleTimeoutMs: 1000,
+          now: Ref.getAndUpdate(ticks, (value) => value + 1).pipe(
+            Effect.map((tick) => DateTime.makeUnsafe(tick * 5000))
+          ),
+        });
+        expect(ended.reason).toBe("pr-merged");
+        const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
+          decodeUnknownYeetWatchEventJson(line)
+        );
+        expect(A.filter(events, (event) => event.kind === "settle-changed")).toMatchObject([
+          { from: "base-conflict", to: "registration" },
+          { from: "registration", to: "required-pending", pending: ["Check"] },
+        ]);
+        const stderr = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+        expect(stderr).toContain("[yeet] settle budget resumed; clock reset");
+        expect(stderr).toContain("settle: registration; no checks reported for this head yet; waited 0 of 1s");
+        expect(stderr).not.toContain("settle-timeout");
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer([
+            {
+              ...greenScript("aaa111"),
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111", "DIRTY") },
+              checks: { exitCode: 0, output: checksJson([]) },
+            },
+            {
+              ...greenScript("aaa111"),
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111", "DIRTY") },
+              checks: { exitCode: 0, output: checksJson([]) },
+            },
+            { ...greenScript("aaa111"), checks: { exitCode: 0, output: checksJson([]) } },
+            {
+              ...greenScript("aaa111"),
+              checks: { exitCode: 0, output: checksJson([{ name: "Check", bucket: "pending", state: "QUEUED" }]) },
+            },
+            {
+              ...greenScript("aaa111"),
+              view: { exitCode: 0, output: viewJson("MERGED", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ name: "Check", bucket: "pending", state: "QUEUED" }]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+});
+
 describe("B8 watch heavy admission", () => {
   const heavyRuleset = () =>
     Effect.succeedSome(

@@ -79,8 +79,10 @@ import {
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
+  YeetSettleVerdict,
   yeetBaseConflictFor,
   yeetGatedFamiliesFor,
+  yeetSettleClockReset,
 } from "./Settle.ts";
 import { YeetMergeReadyCriteria } from "./Verdict.ts";
 import {
@@ -104,7 +106,6 @@ import type { Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorCommentWatermark } from "./MonitorComments.ts";
-import type { YeetSettleVerdict } from "./Settle.ts";
 import type { YeetWatchEvent } from "./WatchStream.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WatchMode");
@@ -397,6 +398,7 @@ class WatchSettleState extends S.Class<WatchSettleState>($I`WatchSettleState`)(
     admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     // Every check name ever reported for this head: an absent one later is pending, not missing.
     registered: S.HashSet(S.String).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<string>())),
+    verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("WatchSettleState", {
     description: "One head's cached ruleset, gated families, merge-base diff, admission, and settle clock origin.",
@@ -468,6 +470,21 @@ const advanceWatchSettleState = Effect.fn("Yeet.advanceWatchSettleState")(functi
     }),
     checks: recall.checks,
   });
+});
+
+// The budget resumed (held → admitted, conflict cleared, rollup flap): time
+// spent suspended must not expire the very next verdict, so the clock restarts
+// and the caller derives again from zero. An admission flip already reset the
+// clock this poll, in which case there is nothing further to resume.
+const resumeWatchSettleClock = Effect.fn("Yeet.resumeWatchSettleClock")(function* (
+  state: WatchSettleState,
+  verdict: YeetSettleVerdict,
+  millis: number
+) {
+  if (state.settleClockMs === millis) return state;
+  if (!yeetSettleClockReset(state.verdict, verdict)) return state;
+  yield* Console.error("[yeet] settle budget resumed; clock reset");
+  return WatchSettleState.make({ ...state, settleClockMs: millis });
 });
 
 const decideWatchAdmission = (snapshot: YeetWatchSnapshot, changedPaths: ReadonlyArray<string>): HeavyAdmission =>
@@ -866,20 +883,22 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
       head = O.some(yield* newWatchSettleState(context, config, snapshot, millis));
     }
     const step = yield* advanceWatchSettleState(O.getOrThrow(head), snapshot, millis);
-    const currentHead = step.head;
-    head = O.some(currentHead);
-    const verdict = deriveSettleVerdict(
-      YeetSettleInput.make({
-        expected: currentHead.expected,
-        checks: step.checks,
-        closeoutBound: snapshot.criteria.closeoutRun,
-        waitedMs: millis - currentHead.settleClockMs,
-        timeoutMs: config.settleTimeoutMs ?? YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS,
-        families: currentHead.families,
-        admission: currentHead.admission,
-        baseConflict: yeetBaseConflictFor(O.some(snapshot.mergeable), O.some(snapshot.mergeStateStatus)),
-      })
-    );
+    const settleAt = (state: WatchSettleState): YeetSettleVerdict =>
+      deriveSettleVerdict(
+        YeetSettleInput.make({
+          expected: state.expected,
+          checks: step.checks,
+          closeoutBound: snapshot.criteria.closeoutRun,
+          waitedMs: millis - state.settleClockMs,
+          timeoutMs: config.settleTimeoutMs ?? YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS,
+          families: state.families,
+          admission: state.admission,
+          baseConflict: yeetBaseConflictFor(O.some(snapshot.mergeable), O.some(snapshot.mergeStateStatus)),
+        })
+      );
+    const currentHead = yield* resumeWatchSettleClock(step.head, settleAt(step.head), millis);
+    const verdict = settleAt(currentHead);
+    head = O.some(WatchSettleState.make({ ...currentHead, verdict: O.some(verdict) }));
     yield* Console.error(`[yeet] ${renderYeetSettleDetail(verdict)}`);
     return YeetWatchSnapshot.make({ ...snapshot, settle: O.some(verdict) });
   });

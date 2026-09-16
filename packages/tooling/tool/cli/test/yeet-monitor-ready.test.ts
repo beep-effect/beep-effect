@@ -209,6 +209,44 @@ it.layer(platform)("B8 base conflict and registration memory", (test) => {
   );
 });
 
+it.layer(platform)("B8 settle clock resumes with the budget", (test) => {
+  test.effect("clears a base conflict on the same head into a fresh registration window, then reaches ready", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make(0);
+        const ticks = yield* Ref.make(0);
+        const closeouts = yield* Ref.make(0);
+        // Polls 0–1: empty rollup under DIRTY, 5s apart against a 1s budget. Poll 2: MERGEABLE,
+        // rollup still empty → registration with the clock restarted. Poll 3: Lint green →
+        // settled → closeout → reread (poll 4) binds it → ready. Same head throughout.
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 1000 }),
+          now: Ref.getAndUpdate(ticks, (n) => n + 1).pipe(Effect.map((n) => DateTime.makeUnsafe(n * 5000))),
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.map((n) => {
+                if (n <= 1) return snapshot(root, [], false, head, "OPEN", true, "DIRTY");
+                if (n === 2) return snapshot(root, [], false);
+                return snapshot(root, [check("Lint")], n >= 4);
+              })
+            ),
+          closeout: () => Ref.update(closeouts, (n) => n + 1).pipe(Effect.as(report())),
+        });
+        expect(terminal).toBe("ready");
+        expect(yield* Ref.get(calls)).toBe(5);
+        expect(yield* Ref.get(closeouts)).toBe(1);
+        const printed = yield* lines;
+        expect(printed).toContain("[yeet] settle: base-conflict → registration");
+        expect(printed).toContain("[yeet] settle budget resumed; clock reset");
+        expect(printed).toContain("settle: registration; no checks reported for this head yet; waited 0 of 1s");
+        expect(printed).not.toContain("settle-timeout");
+        expect(yield* rows(root)).toHaveLength(1);
+      })
+    )
+  );
+});
+
 it.layer(platform)("B7 readiness loop", (test) => {
   test.effect(
     "waits for registration and pending checks, closes out once, and emits a complete ready capsule despite optional red",
