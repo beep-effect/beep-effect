@@ -66,7 +66,7 @@ orchestrator owns schemas, contracts, and judgment.
       `not-run-early-stop` facts, and the default-off `--no-fail-fast` escape hatch; awaiting
       hosted exact-head proof before completion.
 - [ ] B5 detached durable proof jobs in their own systemd user scope with inbox completion.
-- [~] B7 `yeet monitor --until-ready` as the canonical PR babysit path (rulings 41–48): settle on
+- [~] B7 `yeet monitor --until-ready` as the canonical PR babysit path (rulings 35–42): settle on
       the base ruleset's expected contexts with tolerated matrix parents and `--settle-timeout`,
       automatic read-first closeout on settle, an exit-0 `ready` terminal, required-only exit
       codes in every monitor mode, one P1 `pr-merge-ready` inbox row per head, push→ready

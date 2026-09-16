@@ -58,4 +58,4 @@ unless stated; package `@beep/repo-cli`. Verified 2026-09-12.
 - This packet: [`../CAPTURE.md`](../CAPTURE.md).
 - [`goals/time-to-certainty` B7](../../../goals/time-to-certainty/research/b7-brief.md) —
   the polling half of this packet's gap, built 2026-09-16 as `yeet monitor --until-ready`
-  (settle rule, automatic closeout, ready terminal, `pr-merge-ready` row; rulings 41–48).
+  (settle rule, automatic closeout, ready terminal, `pr-merge-ready` row; rulings 35–42).

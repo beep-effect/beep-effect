@@ -42,7 +42,7 @@ Contract extensions / corrections:
 - `YeetStatusRemote.checks` defaults empty; `YeetWatchSnapshot.settle` defaults `None`;
   watch config gains `rulesetRead`, `settleTimeoutMs`, and `now`; end reasons gain `settle-timeout`.
 - `yeetMonitorPolicyTerminals(until-merged)` now includes `settle-timeout`: the existing table
-  omitted the terminal Stage A / ruling 45 explicitly requires for that policy.
+  omitted the terminal Stage A / ruling 39 explicitly requires for that policy.
 - Exported `yeetMonitorDurationMillis` through the test kit for parsing-table proof.
 
 Orchestrator fixes after the lane (2026-09-16, before the Stage A commit): the `Settle.ts` →
