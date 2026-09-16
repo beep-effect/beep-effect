@@ -11,6 +11,7 @@ import {
   PrCloseoutReport,
   RepoRunContext,
   readYeetRulesetRequiredContexts,
+  rememberRegistered,
   renderYeetHeadTimeline,
   renderYeetSettleDetail,
   rulesetRequiredContextsFromRules,
@@ -36,6 +37,7 @@ import {
   YeetStatusWorktree,
   YeetUntilMergedPolicy,
   YeetUntilReadyPolicy,
+  yeetBaseConflictFor,
   yeetGatedFamiliesFor,
   yeetHeadTimelineStamp,
   yeetMonitorDurationMillis,
@@ -101,6 +103,13 @@ const settleBudgeted = (input: YeetSettleInput, result: YeetSettleVerdict): bool
   A.isReadonlyArrayEmpty(input.checks) ||
   A.isReadonlyArrayNonEmpty(result.census.missing) ||
   (O.isNone(input.expected) && A.isReadonlyArrayEmpty(result.census.matched));
+// A base conflict is named first, never spends the budget, and is never terminal.
+const expectBaseConflict = (result: YeetSettleVerdict): void => {
+  assertSome(result.reason, "base-conflict");
+  expect(result.settled).toBe(false);
+  expect(result.budgetApplies).toBe(false);
+  expect(yeetSettleVerdictIsTerminal(result)).toBe(false);
+};
 const onlyGatedOpen = (input: YeetSettleInput, result: YeetSettleVerdict): boolean =>
   A.isReadonlyArrayEmpty(result.census.pending) &&
   A.isReadonlyArrayEmpty(result.census.missing) &&
@@ -337,6 +346,62 @@ describe("B7 settle contracts", () => {
     assertNone(O.some<"registration">("registration").pipe(yeetSettleStampFor));
     assertNone(O.some<"heavy-not-admitted">("heavy-not-admitted").pipe(yeetSettleStampFor));
   });
+  it("names a base conflict first, uncounted and never terminal, and clears on the repaired push", () => {
+    const dirty = { expected: expected(["Lint", "Test Unit"]), baseConflict: true, timeoutMs: 1000 };
+    // GitHub emptied the rollup: every context reads missing, yet the budget does not apply.
+    const conflict = verdict({ ...dirty, waitedMs: 5000 });
+    expectBaseConflict(conflict);
+    expect(conflict.census.missing).toEqual(["Lint", "Test Unit"]);
+    assertNone(yeetSettleStampFor(conflict.reason));
+    expect(renderYeetSettleDetail(conflict)).toBe(
+      "settle: base-conflict; merge origin/main and push; waited 5s (not counted toward the 1s settle timeout)"
+    );
+    // Precedence: a conflict explains an empty rollup better than the registration window.
+    assertSome(verdict({ ...dirty, checks: [] }).reason, "base-conflict");
+    assertSome(verdict({ ...dirty, checks: [check("Lint", "pending")] }).reason, "base-conflict");
+    assertSome(
+      verdict({ ...dirty, checks: [check("Lint"), check("Test Unit")], closeoutBound: true }).reason,
+      "base-conflict"
+    );
+    // The same observations with the conflict repaired follow the B7 rule again.
+    assertSome(verdict({ ...dirty, baseConflict: false, checks: [], waitedMs: 5000 }).reason, "settle-timeout");
+    expect(yeetBaseConflictFor(O.some("CONFLICTING"), O.none())).toBe(true);
+    expect(yeetBaseConflictFor(O.some("mergeable"), O.some("dirty"))).toBe(true);
+    expect(yeetBaseConflictFor(O.some("MERGEABLE"), O.some("CLEAN"))).toBe(false);
+    expect(yeetBaseConflictFor(O.none(), O.none())).toBe(false);
+  });
+  it("remembers registered contexts and keeps an absent one pending, never missing", () => {
+    const first = rememberRegistered(HashSet.empty(), [check("Lint", "pending"), check("Vercel", "pass", false)]);
+    expect(first.recalled).toEqual([]);
+    expect(first.checks).toEqual([check("Lint", "pending"), check("Vercel", "pass", false)]);
+    expect(HashSet.size(first.registered)).toBe(2);
+    expect(HashSet.has(first.registered, "Lint") && HashSet.has(first.registered, "Vercel")).toBe(true);
+    // The rollup came back empty: both names are recalled as pending, non-required rows.
+    const second = rememberRegistered(first.registered, []);
+    expect(second.recalled).toEqual(["Lint", "Vercel"]);
+    expect(second.checks).toEqual([check("Lint", "pending", false), check("Vercel", "pending", false)]);
+    expect(HashSet.size(second.registered)).toBe(2);
+    // Under the ruleset census the remembered expected context holds as pending, not missing;
+    // a never-registered context stays missing and keeps the budget.
+    const recalled = verdict({ expected: expected(["Lint", "Docs"]), checks: second.checks, waitedMs: 500 });
+    assertSome(recalled.reason, "required-pending");
+    expect(recalled.census.pending).toEqual(["Lint"]);
+    expect(recalled.census.missing).toEqual(["Docs"]);
+    expect(recalled.budgetApplies).toBe(true);
+    assertSome(
+      verdict({ expected: expected(["Lint", "Docs"]), checks: second.checks, waitedMs: 5000 }).reason,
+      "settle-timeout"
+    );
+    const onlyRecalled = verdict({ expected: expected(["Lint"]), checks: second.checks, waitedMs: 5000 });
+    assertSome(onlyRecalled.reason, "required-pending");
+    expect(onlyRecalled.census.missing).toEqual([]);
+    expect(onlyRecalled.budgetApplies).toBe(false);
+    expect(yeetSettleVerdictIsTerminal(onlyRecalled)).toBe(false);
+    // A reported name is never duplicated by its memory.
+    const third = rememberRegistered(second.registered, [check("Lint")]);
+    expect(third.recalled).toEqual(["Vercel"]);
+    expect(A.map(third.checks, (row) => row.name)).toEqual(["Lint", "Vercel"]);
+  });
   it("folds gated families out of the expected set", () => {
     expect(heavyFamilies).toEqual([
       YeetGatedContextFamily.make({
@@ -460,6 +525,10 @@ describe("B7 settle contracts", () => {
       const result = deriveSettleVerdict(input);
       expect(result.waitedMs).toBe(input.waitedMs);
       expect(result.timeoutMs).toBe(input.timeoutMs);
+      if (input.baseConflict) {
+        expectBaseConflict(result);
+        return;
+      }
       if (result.settled) {
         expectSettledVerdict(input, result);
         return;

@@ -38,6 +38,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { Console, DateTime, Duration, Effect, HashSet, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -444,6 +445,124 @@ export class YeetSettleCheck extends S.Class<YeetSettleCheck>($I`YeetSettleCheck
 ) {}
 
 /**
+ * Whether the pull request view says the head no longer merges into its base.
+ *
+ * **Details**
+ *
+ * GitHub reports `mergeable: CONFLICTING` and `mergeStateStatus: DIRTY` for a
+ * head whose base moved under it; either alone is taken as the conflict, since
+ * the two fields lag each other by a poll. The comparison is case-insensitive
+ * and an absent field never counts.
+ *
+ * **Example** (A dirty head)
+ *
+ * ```ts
+ * import { yeetBaseConflictFor } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(yeetBaseConflictFor(O.some("MERGEABLE"), O.some("DIRTY"))) // true
+ * console.log(yeetBaseConflictFor(O.none(), O.some("CLEAN"))) // false
+ * ```
+ *
+ * @param mergeable - The view's `mergeable` field, when reported.
+ * @param mergeStateStatus - The view's `mergeStateStatus` field, when reported.
+ * @returns Whether the base conflict explains an empty check rollup.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetBaseConflictFor: {
+  (mergeStateStatus: O.Option<string>): (mergeable: O.Option<string>) => boolean;
+  (mergeable: O.Option<string>, mergeStateStatus: O.Option<string>): boolean;
+} = dual(
+  2,
+  (mergeable: O.Option<string>, mergeStateStatus: O.Option<string>): boolean =>
+    O.exists(mergeable, (value) => Str.toUpperCase(value) === "CONFLICTING") ||
+    O.exists(mergeStateStatus, (value) => Str.toUpperCase(value) === "DIRTY")
+);
+
+/**
+ * What {@link rememberRegistered} hands back: the head's registration memory
+ * after this poll, the poll's checks with one synthetic pending row per
+ * remembered name the poll did not report, and those recalled names.
+ *
+ * **Example** (Construct a recall)
+ *
+ * ```ts
+ * import { YeetRegistrationRecall } from "@beep/repo-cli/test/Yeet"
+ * import { HashSet } from "effect"
+ *
+ * const recall = YeetRegistrationRecall.make({ registered: HashSet.make("Lint"), checks: [], recalled: [] })
+ * console.log(HashSet.size(recall.registered)) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetRegistrationRecall extends S.Class<YeetRegistrationRecall>($I`YeetRegistrationRecall`)(
+  {
+    registered: S.HashSet(S.String),
+    checks: S.Array(YeetSettleCheck),
+    recalled: S.Array(S.String),
+  },
+  $I.annote("YeetRegistrationRecall", {
+    description:
+      "Registration memory for one head plus the poll's checks with remembered-but-absent names kept pending.",
+  })
+) {}
+
+/**
+ * Remember which contexts have registered for a head, and keep a remembered
+ * context that a later poll omits as `pending` rather than `missing`.
+ *
+ * **Details**
+ *
+ * GitHub can empty or truncate a rollup between polls (a base conflict, a
+ * transient API gap) without any check having been withdrawn; a context that
+ * once reported is therefore still queued or running, not unregistered, and
+ * must not spend the registration budget. The synthetic rows are `pending`
+ * and not `--required`, so under the ruleset census a remembered expected
+ * context holds the settle by name while a remembered optional check does
+ * not; the fallback census (no ruleset) ignores them.
+ *
+ * **Example** (A registered context goes absent)
+ *
+ * ```ts
+ * import { rememberRegistered, YeetSettleCheck } from "@beep/repo-cli/test/Yeet"
+ * import { HashSet } from "effect"
+ *
+ * const first = rememberRegistered(HashSet.empty(), [YeetSettleCheck.make({ name: "Lint", outcome: "pending" })])
+ * const second = rememberRegistered(first.registered, [])
+ * console.log(second.recalled) // [ "Lint" ]
+ * console.log(second.checks[0]?.outcome) // "pending"
+ * ```
+ *
+ * @param previous - The names observed registered on earlier polls of this head.
+ * @param checks - This poll's reported checks.
+ * @returns The grown memory, the checks with recalled names kept pending, and the recalled names.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const rememberRegistered: {
+  (checks: ReadonlyArray<YeetSettleCheck>): (previous: HashSet.HashSet<string>) => YeetRegistrationRecall;
+  (previous: HashSet.HashSet<string>, checks: ReadonlyArray<YeetSettleCheck>): YeetRegistrationRecall;
+} = dual(2, (previous: HashSet.HashSet<string>, checks: ReadonlyArray<YeetSettleCheck>): YeetRegistrationRecall => {
+  const reported = HashSet.fromIterable(A.map(checks, (check) => check.name));
+  const recalled = pipe(
+    A.fromIterable(previous),
+    A.filter((name) => !HashSet.has(reported, name)),
+    A.sort(Order.String)
+  );
+  return YeetRegistrationRecall.make({
+    registered: HashSet.union(previous, reported),
+    checks: [
+      ...checks,
+      ...A.map(recalled, (name) => YeetSettleCheck.make({ name, outcome: "pending", required: false })),
+    ],
+    recalled,
+  });
+});
+
+/**
  * Input to {@link matchExpectedContexts}: the expected contexts and the
  * reported checks of one poll.
  *
@@ -590,7 +709,9 @@ const fallbackCensus = (checks: ReadonlyArray<YeetSettleCheck>): YeetExpectedCon
  * head (or from the last admission flip); `timeoutMs` is the
  * `--settle-timeout` budget. `families` are the gated families folded from
  * the expected set and `admission` the head's heavy admission verdict; `None`
- * (the default) is the B7 rule with no gating.
+ * (the default) is the B7 rule with no gating. `baseConflict` says the pull
+ * request no longer merges into its base (see {@link yeetBaseConflictFor}),
+ * the state in which GitHub empties the check rollup.
  *
  * **Example** (Construct an input)
  *
@@ -613,10 +734,11 @@ export class YeetSettleInput extends S.Class<YeetSettleInput>($I`YeetSettleInput
     timeoutMs: S.Finite,
     families: S.Array(YeetGatedContextFamily).pipe(SchemaUtils.withKeyDefaults(A.empty<YeetGatedContextFamily>())),
     admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    baseConflict: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
   },
   $I.annote("YeetSettleInput", {
     description:
-      "Expected contexts, reported checks, closeout binding, elapsed wait, gated families, and heavy admission for one settle evaluation.",
+      "Expected contexts, reported checks, closeout binding, elapsed wait, gated families, heavy admission, and base-conflict state for one settle evaluation.",
   })
 ) {}
 
@@ -746,7 +868,13 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
  *
  * **Details**
  *
- * The timeout bounds registration, never execution: it expires only while no
+ * A base conflict comes first: when the pull request no longer merges into
+ * its base, GitHub empties the check rollup, so every expected context would
+ * read as missing and the registration budget would expire on a head that is
+ * merely unmerged. The verdict is then unsettled with reason `base-conflict`,
+ * the budget never applies (never terminal), and the census is reported as
+ * observed; a push that merges the base clears it. Otherwise the timeout
+ * bounds registration, never execution: it expires only while no
  * check has registered for the head or at least one expected context is
  * missing (no exact name, no matrix child). A required check that has
  * registered and is queued or running is waited for however long GitHub takes
@@ -792,6 +920,17 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
 export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict => {
   const open = censusFor(input);
   const census = admissionIsHold(input.admission) ? gateCensus(open, input.families) : open;
+  if (input.baseConflict) {
+    return YeetSettleVerdict.make({
+      settled: false,
+      reason: O.some(YeetSettleReason.Enum["base-conflict"]),
+      census,
+      waitedMs: input.waitedMs,
+      timeoutMs: input.timeoutMs,
+      budgetApplies: false,
+      admission: input.admission,
+    });
+  }
   const held = heldOutsideRegistration(input.admission, census, inRegistrationWindow(input, census));
   const unsettled = unsettledReason(input, census);
   // A held head's budget never applies: it neither times out nor shortens a
@@ -894,7 +1033,7 @@ const renderNames = (label: string, names: ReadonlyArray<string>): ReadonlyArray
 // named only while it applies (registration or missing contexts), and a
 // registered-but-queued wait shows elapsed time alone.
 const renderWaited = (verdict: YeetSettleVerdict): string =>
-  yeetSettleVerdictIsHeld(verdict)
+  yeetSettleVerdictIsHeld(verdict) || O.exists(verdict.reason, YeetSettleReason.is["base-conflict"])
     ? `waited ${Duration.format(Duration.millis(verdict.waitedMs))} (not counted toward the ${Duration.format(Duration.millis(verdict.timeoutMs))} settle timeout)`
     : A.isReadonlyArrayNonEmpty(verdict.census.missing) || O.exists(verdict.reason, YeetSettleReason.is.registration)
       ? `waited ${Duration.format(Duration.millis(verdict.waitedMs))} of ${Duration.format(Duration.millis(verdict.timeoutMs))}`
@@ -937,6 +1076,24 @@ const renderCensusTail = (verdict: YeetSettleVerdict): ReadonlyArray<string> => 
  * // settle: required-pending; pending: Test Unit (unit-a); missing: Heavy / Check; tolerated matrix parents: Test Unit; waited 1m of 30m
  * ```
  *
+ * **Example** (Render a base conflict)
+ *
+ * ```ts
+ * import { renderYeetSettleDetail, YeetExpectedContextCensus, YeetSettleVerdict } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const verdict = YeetSettleVerdict.make({
+ *   settled: false,
+ *   reason: O.some("base-conflict"),
+ *   census: YeetExpectedContextCensus.make({ matched: [], unmatched: [], pending: [], missing: ["Lint", "Test Unit"] }),
+ *   waitedMs: 120_000,
+ *   timeoutMs: 1_800_000,
+ *   budgetApplies: false
+ * })
+ * console.log(renderYeetSettleDetail(verdict))
+ * // settle: base-conflict; merge origin/main and push; waited 2m (not counted toward the 30m settle timeout)
+ * ```
+ *
  * **Example** (Render a held wait)
  *
  * ```ts
@@ -974,6 +1131,7 @@ export const renderYeetSettleDetail = (verdict: YeetSettleVerdict): string =>
       ...renderNames("tolerated matrix parents", verdict.census.unmatched),
       ...renderDocsOnly(verdict),
     ]),
+    Match.when("base-conflict", () => ["settle: base-conflict", "merge origin/main and push", renderWaited(verdict)]),
     Match.when("registration", () => [
       "settle: registration; no checks reported for this head yet",
       renderWaited(verdict),
@@ -1011,6 +1169,7 @@ export const yeetSettleSchemasForTesting = {
   YeetExpectedContextCensus,
   YeetExpectedContextInput,
   YeetGatedContextFamily,
+  YeetRegistrationRecall,
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
@@ -1029,6 +1188,7 @@ export const yeetSettleSchemasForTesting = {
  * console.log(O.getOrNull(yeetSettleStampFor(O.some("closeout-pending")))) // "settledAt"
  * console.log(O.getOrNull(yeetSettleStampFor(O.some("registration")))) // null
  * console.log(O.getOrNull(yeetSettleStampFor(O.some("heavy-not-admitted")))) // null
+ * console.log(O.getOrNull(yeetSettleStampFor(O.some("base-conflict")))) // null
  * ```
  *
  * @param reason - The verdict's reason.

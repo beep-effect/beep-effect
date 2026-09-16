@@ -92,11 +92,13 @@ import {
   deriveSettleVerdict,
   readYeetChangedPaths,
   readYeetRulesetRequiredContexts,
+  rememberRegistered,
   renderYeetSettleDetail,
   YeetGatedContextFamily,
   YeetRulesetRequiredContexts,
   YeetSettleInput,
   YeetSettleVerdict,
+  yeetBaseConflictFor,
   yeetGatedFamiliesFor,
 } from "./Settle.ts";
 import {
@@ -1013,6 +1015,8 @@ class MonitorHeadState extends S.Class<MonitorHeadState>($I`MonitorHeadState`)(
     families: S.Array(YeetGatedContextFamily).pipe(SchemaUtils.withKeyDefaults(A.empty<YeetGatedContextFamily>())),
     changedPaths: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
     admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    // Every check name ever reported for this head: an absent one later is pending, not missing.
+    registered: S.HashSet(S.String).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<string>())),
     announcedRow: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
@@ -1151,9 +1155,16 @@ const admitMonitorHead = Effect.fn("YeetMonitorLoop.admitHead")(function* (
   if (flipped) {
     yield* Console.log(`[yeet] heavy admission: ${O.getOrThrow(previousVerdict)} → ${admission.verdict}`);
   }
+  const recall = rememberRegistered(current.registered, observation.snapshot.remote.checks);
+  if (A.isReadonlyArrayNonEmpty(recall.recalled)) {
+    yield* Console.log(
+      `[yeet] rollup: ${A.length(recall.recalled)} registered context(s) absent this poll, kept pending`
+    );
+  }
   return MonitorHeadState.make({
     ...current,
     admission: O.some(admission),
+    registered: recall.registered,
     settleClockMs: flipped ? observation.millis : current.settleClockMs,
   });
 });
@@ -1166,12 +1177,16 @@ const settleMonitorHead = (
   deriveSettleVerdict(
     YeetSettleInput.make({
       expected: current.expected,
-      checks: observation.snapshot.remote.checks,
+      checks: rememberRegistered(current.registered, observation.snapshot.remote.checks).checks,
       closeoutBound: O.exists(observation.snapshot.mergeReady, (ready) => ready.criteria.closeoutRun),
       waitedMs: observation.millis - current.settleClockMs,
       timeoutMs: policy.settleTimeoutMs,
       families: current.families,
       admission: current.admission,
+      baseConflict: yeetBaseConflictFor(
+        O.fromUndefinedOr(observation.snapshot.remote.mergeable),
+        O.fromUndefinedOr(observation.snapshot.remote.mergeStateStatus)
+      ),
     })
   );
 

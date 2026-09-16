@@ -57,8 +57,12 @@ export type YeetCheckOutcome = typeof YeetCheckOutcome.Type;
  *
  * **Details**
  *
- * `registration`: no checks have reported for the head yet (GitHub's
- * post-push registration window). `required-pending`: expected required
+ * `base-conflict`: the pull request no longer merges cleanly into its base
+ * (`mergeable: CONFLICTING` / `mergeStateStatus: DIRTY`); GitHub empties the
+ * check rollup in that state, so every context looks missing — the wait is
+ * named, never counted toward the settle budget, and clears when the operator
+ * merges the base and pushes. `registration`: no checks have reported for the
+ * head yet (GitHub's post-push registration window). `required-pending`: expected required
  * contexts are missing or still pending. `heavy-not-admitted`: the only open
  * contexts belong to a gated family (`Heavy / *`) whose admission verdict is
  * `hold` — absent by design until the admitting label lands, so the wait is
@@ -80,6 +84,7 @@ export type YeetCheckOutcome = typeof YeetCheckOutcome.Type;
  * @since 0.0.0
  */
 export const YeetSettleReason = LiteralKit([
+  "base-conflict",
   "registration",
   "required-pending",
   "heavy-not-admitted",

@@ -1548,6 +1548,54 @@ describe("B7 watch settle cache and timeout", () => {
   );
 });
 
+describe("B8 watch base conflict", () => {
+  it.live("streams required-pending → base-conflict → required-pending across an emptied rollup", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
+        expect(ended.reason).toBe("pr-merged");
+        const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
+          decodeUnknownYeetWatchEventJson(line)
+        );
+        expect(A.filter(events, (event) => event.kind === "settle-changed")).toMatchObject([
+          { from: "required-pending", to: "base-conflict" },
+          { from: "base-conflict", to: "required-pending", pending: ["Check"] },
+        ]);
+        const stderr = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+        expect(stderr).toContain("settle: base-conflict; merge origin/main and push");
+        expect(stderr).toContain("[yeet] rollup: 1 registered context(s) absent this poll, kept pending");
+        expect(stderr).not.toContain("settle-timeout");
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer([
+            {
+              ...greenScript("aaa111"),
+              checks: { exitCode: 0, output: checksJson([{ name: "Check", bucket: "pending", state: "QUEUED" }]) },
+            },
+            {
+              ...greenScript("aaa111"),
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111", "DIRTY") },
+              checks: { exitCode: 0, output: checksJson([]) },
+            },
+            {
+              ...greenScript("aaa111"),
+              checks: { exitCode: 0, output: checksJson([{ name: "Check", bucket: "pending", state: "QUEUED" }]) },
+            },
+            {
+              ...greenScript("aaa111"),
+              view: { exitCode: 0, output: viewJson("MERGED", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ name: "Check", bucket: "pending", state: "QUEUED" }]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+});
+
 describe("B8 watch heavy admission", () => {
   const heavyRuleset = () =>
     Effect.succeedSome(

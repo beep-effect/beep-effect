@@ -37,7 +37,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Console, DateTime, Duration, Effect, FileSystem, flow, Ref, Result } from "effect";
+import { Console, DateTime, Duration, Effect, FileSystem, flow, HashSet, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -73,11 +73,13 @@ import {
   deriveSettleVerdict,
   readYeetChangedPaths,
   readYeetRulesetRequiredContexts,
+  rememberRegistered,
   renderYeetSettleDetail,
   YeetGatedContextFamily,
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
+  yeetBaseConflictFor,
   yeetGatedFamiliesFor,
 } from "./Settle.ts";
 import { YeetMergeReadyCriteria } from "./Verdict.ts";
@@ -393,11 +395,80 @@ class WatchSettleState extends S.Class<WatchSettleState>($I`WatchSettleState`)(
     families: S.Array(YeetGatedContextFamily).pipe(SchemaUtils.withKeyDefaults(A.empty<YeetGatedContextFamily>())),
     changedPaths: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
     admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    // Every check name ever reported for this head: an absent one later is pending, not missing.
+    registered: S.HashSet(S.String).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<string>())),
   },
   $I.annote("WatchSettleState", {
     description: "One head's cached ruleset, gated families, merge-base diff, admission, and settle clock origin.",
   })
 ) {}
+
+class WatchSettleStep extends S.Class<WatchSettleStep>($I`WatchSettleStep`)(
+  {
+    head: WatchSettleState,
+    checks: S.Array(YeetSettleCheck),
+  },
+  $I.annote("WatchSettleStep", {
+    description: "One poll's advanced head state plus the checks the settle rule reads, recalled names included.",
+  })
+) {}
+
+// A new head: read the ruleset and the merge-base diff once, start both clocks.
+const newWatchSettleState = Effect.fn("Yeet.newWatchSettleState")(function* (
+  context: RepoRunContext,
+  config: {
+    readonly rulesetRead?: typeof readYeetRulesetRequiredContexts | undefined;
+    readonly changedPathsRead?: typeof readYeetChangedPaths | undefined;
+  },
+  snapshot: YeetWatchSnapshot,
+  millis: number
+) {
+  const expected = yield* (config.rulesetRead ?? readYeetRulesetRequiredContexts)(context);
+  return WatchSettleState.make({
+    headSha: snapshot.headSha,
+    firstObservedMs: millis,
+    settleClockMs: millis,
+    expected,
+    families: O.match(expected, { onNone: () => A.empty<YeetGatedContextFamily>(), onSome: yeetGatedFamiliesFor }),
+    changedPaths: yield* (config.changedPathsRead ?? readYeetChangedPaths)(context),
+  });
+});
+
+// Re-decide heavy admission from this poll's labels (a flip restarts the settle
+// clock) and grow the registration memory, keeping remembered-but-absent
+// contexts pending; both are reported on stderr, never in the event stream.
+const advanceWatchSettleState = Effect.fn("Yeet.advanceWatchSettleState")(function* (
+  observed: WatchSettleState,
+  snapshot: YeetWatchSnapshot,
+  millis: number
+) {
+  const admission = decideWatchAdmission(snapshot, observed.changedPaths);
+  const previousVerdict = O.map(observed.admission, (value) => value.verdict);
+  const flipped = O.exists(previousVerdict, (value) => value !== admission.verdict);
+  if (flipped) {
+    yield* Console.error(`[yeet] heavy admission: ${O.getOrThrow(previousVerdict)} → ${admission.verdict}`);
+  }
+  const recall = rememberRegistered(
+    observed.registered,
+    A.map(snapshot.checks, (check) =>
+      YeetSettleCheck.make({ name: check.name, outcome: check.outcome, required: check.required })
+    )
+  );
+  if (A.isReadonlyArrayNonEmpty(recall.recalled)) {
+    yield* Console.error(
+      `[yeet] rollup: ${A.length(recall.recalled)} registered context(s) absent this poll, kept pending`
+    );
+  }
+  return WatchSettleStep.make({
+    head: WatchSettleState.make({
+      ...observed,
+      admission: O.some(admission),
+      registered: recall.registered,
+      settleClockMs: flipped ? millis : observed.settleClockMs,
+    }),
+    checks: recall.checks,
+  });
+});
 
 const decideWatchAdmission = (snapshot: YeetWatchSnapshot, changedPaths: ReadonlyArray<string>): HeavyAdmission =>
   decideHeavyAdmission(
@@ -792,45 +863,21 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
     const now = yield* config.now ?? DateTime.now;
     const millis = DateTime.toEpochMillis(now);
     if (O.isNone(head) || head.value.headSha !== snapshot.headSha) {
-      const expected = yield* (config.rulesetRead ?? readYeetRulesetRequiredContexts)(context);
-      head = O.some(
-        WatchSettleState.make({
-          headSha: snapshot.headSha,
-          firstObservedMs: millis,
-          settleClockMs: millis,
-          expected,
-          families: O.match(expected, {
-            onNone: () => A.empty<YeetGatedContextFamily>(),
-            onSome: yeetGatedFamiliesFor,
-          }),
-          changedPaths: yield* (config.changedPathsRead ?? readYeetChangedPaths)(context),
-        })
-      );
+      head = O.some(yield* newWatchSettleState(context, config, snapshot, millis));
     }
-    const observed = O.getOrThrow(head);
-    const admission = decideWatchAdmission(snapshot, observed.changedPaths);
-    const previousVerdict = O.map(observed.admission, (value) => value.verdict);
-    const flipped = O.exists(previousVerdict, (value) => value !== admission.verdict);
-    if (flipped) {
-      yield* Console.error(`[yeet] heavy admission: ${O.getOrThrow(previousVerdict)} → ${admission.verdict}`);
-    }
-    const currentHead = WatchSettleState.make({
-      ...observed,
-      admission: O.some(admission),
-      settleClockMs: flipped ? millis : observed.settleClockMs,
-    });
+    const step = yield* advanceWatchSettleState(O.getOrThrow(head), snapshot, millis);
+    const currentHead = step.head;
     head = O.some(currentHead);
     const verdict = deriveSettleVerdict(
       YeetSettleInput.make({
         expected: currentHead.expected,
-        checks: A.map(snapshot.checks, (check) =>
-          YeetSettleCheck.make({ name: check.name, outcome: check.outcome, required: check.required })
-        ),
+        checks: step.checks,
         closeoutBound: snapshot.criteria.closeoutRun,
         waitedMs: millis - currentHead.settleClockMs,
         timeoutMs: config.settleTimeoutMs ?? YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS,
         families: currentHead.families,
         admission: currentHead.admission,
+        baseConflict: yeetBaseConflictFor(O.some(snapshot.mergeable), O.some(snapshot.mergeStateStatus)),
       })
     );
     yield* Console.error(`[yeet] ${renderYeetSettleDetail(verdict)}`);
