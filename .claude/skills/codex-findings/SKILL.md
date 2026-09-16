@@ -119,3 +119,22 @@ from a partial capture, so the command deliberately requires a full superset.
 Source-commit ancestry is checked by a packet verification command rather than
 the CLI, because this repository squash-merges and a valid finding's source
 commit is frequently absent from the branch.
+
+## Local sealed scan source
+
+Use `docs/runbooks/codex-security.md` for the supported local scanner. Run
+`beep codex security preflight` before an explicitly budgeted `scan`; both use
+the pinned external runtime and `docs/security/threat-model.md`.
+
+```sh
+bun run beep codex findings ingest --source security-bundle --from <sealed-scan-directory> --dry-run --json
+bun run beep codex findings ingest --source security-bundle --from <sealed-scan-directory>
+```
+
+Local imports require a completed, digest-bound committed-revision scan from
+the supported producer. Preserve `local:csf_…` identities and private occurrence,
+fingerprint, scope, and coverage evidence. Partial coverage never proves a clean
+repository. Follow the generated local GOAL.md: targeted fix verification and
+merged-revision receipts replace dashboard closure. Local IDs must never be
+submitted to cloud finding actions. Bundle imports do not support `--refresh`,
+`--force`, or `--date`; cloud CSV behavior above remains unchanged.

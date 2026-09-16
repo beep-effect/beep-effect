@@ -88,3 +88,24 @@ export * from "./Findings.triage.schemas.ts";
  * @since 0.0.0
  */
 export * from "./Findings.write.ts";
+/**
+ * Local Security CLI preflight and scan command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Security.command.ts";
+/**
+ * Local security scan and bundle import tagged error.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./Security.errors.ts";
+/**
+ * Consumed contract of the pinned Codex Security artifact bundle.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./Security.schemas.ts";

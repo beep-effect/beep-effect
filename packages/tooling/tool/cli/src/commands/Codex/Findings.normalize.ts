@@ -12,10 +12,14 @@
 import { A, O, Str } from "@beep/utils";
 import { Effect, HashMap, Order } from "effect";
 import { dual } from "effect/Function";
-import { CodexFindingSeverity as Severity } from "./Findings.capture.schemas.ts";
+import * as S from "effect/Schema";
+import { CodexCaptureSource, CodexFindingId, CodexFindingSeverity as Severity } from "./Findings.capture.schemas.ts";
 import { CodexFindingsIngestError } from "./Findings.errors.ts";
 import { CodexFindingRecord, CodexPacketPlan, CodexSeverityCounts } from "./Findings.schemas.ts";
 import type { Ordering } from "effect/Ordering";
+
+const isCloudFindingId = S.is(CodexFindingId);
+
 import type { CodexFindingSeverity, CodexFindingsCapturePayload } from "./Findings.capture.schemas.ts";
 
 /**
@@ -304,6 +308,14 @@ export const planPacket = Effect.fnUntraced(function* (
     readonly priorIds?: HashMap.HashMap<string, string> | undefined;
   }
 ) {
+  // Cloud captures carry only cloud IDs; sealed bundles carry only `local:` IDs.
+  const expectsCloudIds = CodexCaptureSource.is["cloud-csv"](payload.capture.source);
+  if (A.some(payload.findings, (finding) => isCloudFindingId(finding.codexId) !== expectsCloudIds)) {
+    return yield* CodexFindingsIngestError.make({
+      reason: "payload-invalid",
+      message: "Finding identities do not match the declared capture source.",
+    });
+  }
   if (payload.capture.authState === "expired") {
     return yield* CodexFindingsIngestError.make({
       reason: "auth-expired",
@@ -359,6 +371,7 @@ export const planPacket = Effect.fnUntraced(function* (
     branch: overrides.branch ?? defaultPacketBranch(capturedAt),
     capturedAt,
     repository: payload.capture.repository,
+    source: payload.capture.source,
     sourceUrl: payload.capture.sourceUrl,
     findingsView: payload.capture.findingsView,
     expectedCount,
