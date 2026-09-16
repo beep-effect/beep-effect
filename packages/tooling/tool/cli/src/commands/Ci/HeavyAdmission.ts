@@ -107,8 +107,9 @@ export type HeavyAdmissionSource = typeof HeavyAdmissionSource.Type;
  * **Details**
  *
  * `run`: the matrix runs on the heavy pool. `skip-satisfied`: the reusable
- * workflow is called with `admitted: false`, every lane reports `skipped`, and
- * the ruleset is satisfied (docs-only diffs). `hold`: the caller job is
+ * workflow is called with `admitted: false`, so every lane runs on a
+ * GitHub-hosted runner, passes without work and reports success, and the
+ * ruleset is satisfied (docs-only diffs). `hold`: the caller job is
  * skipped by `if:`, the contexts stay "Expected", and the PR is merge-blocked
  * until the label lands.
  *

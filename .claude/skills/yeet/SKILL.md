@@ -465,9 +465,11 @@ bucket and prints
 `settle: heavy-not-admitted; gated: …; admit: gh pr edit --add-label ready-for-heavy; waited …`.
 Held time never counts toward `--settle-timeout`; the settle clock resets when
 the verdict changes, and the label admits within one poll. `skip-satisfied`
-(docs-only) settles on the reported `skip` outcomes. A settled head does
-not time out while waiting for review closeout. The final readiness gate line
-includes the head timeline and push→ready wall clock when the push date is known.
+(docs-only) settles once every lane reports a terminal outcome: `pass` when it
+passed without work on a hosted runner, `skip` where a lane is still skipped.
+A settled head does not time out while waiting for review closeout. The final
+readiness gate line includes the head timeline and push→ready wall clock when
+the push date is known.
 
 ## Mergeable PR Workflow
 
