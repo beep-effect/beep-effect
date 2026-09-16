@@ -33,6 +33,7 @@ import type {
   Identifier,
   Node as MorphNode,
   ParameterDeclaration,
+  PropertyAccessExpression,
   SourceFile,
 } from "ts-morph";
 
@@ -364,6 +365,24 @@ const SurfaceNeutralCommandTransform = LiteralKit([
 );
 const isSurfaceNeutralCommandTransform = S.is(SurfaceNeutralCommandTransform);
 
+const SurfaceNeutralBareCommandTransform = LiteralKit(["unlisted"]).pipe(
+  $I.annoteSchema("SurfaceNeutralBareCommandTransform", {
+    description:
+      "Effect CLI transforms piped as bare references (no call) that hide a command from help without changing names, aliases, or descendants.",
+  })
+);
+const isSurfaceNeutralBareCommandTransform = S.is(SurfaceNeutralBareCommandTransform);
+
+const applyBareCommandTransform = (node: StaticCommandNode, transform: PropertyAccessExpression): StaticCommandNode => {
+  const memberName = transform.getName();
+  if (!Node.isIdentifier(transform.getExpression()) || !isCommandMember(transform, memberName)) {
+    return failStatic("a bare command transform lacks Effect CLI provenance");
+  }
+  return isSurfaceNeutralBareCommandTransform(memberName)
+    ? node
+    : failStatic("an unsupported bare Effect CLI command transform changes the command declaration");
+};
+
 const commandTransformCall = (transform: Expression): CallExpression =>
   Node.isCallExpression(transform) ? transform : failStatic("a command transform is not a call expression");
 
@@ -410,6 +429,9 @@ const applyCommandTransform = (
   bindings: LiteralBindings,
   seen: StaticTraversal
 ): StaticCommandNode => {
+  if (Node.isPropertyAccessExpression(transform)) {
+    return applyBareCommandTransform(node, transform);
+  }
   const call = commandTransformCall(transform);
   const memberName = commandTransformMember(call);
   if (Str.equivalence(memberName, "withSubcommands")) {

@@ -4610,18 +4610,20 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("stops a dead lease scope only when reap applies", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
+  // it.live: the reaper reads the real clock to age heartbeats, as every sibling test here does.
+  it.live.each(["agent-run-deadbeef.scope", "beep-proof-deadbeef.service"])(
+    "stops a dead lease unit %s only when reap applies",
+    (unitName) => {
+      const exercise = Effect.fnUntraced(function* () {
         const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
-          Effect.gen(function* () {
+        yield* withAdmissionTempRoot(
+          gibRef,
+          Effect.fnUntraced(function* (tempRoot) {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const runtimeDirectory = path.dirname(path.dirname(tempRoot.root));
             const binDirectory = path.join(runtimeDirectory, "bin");
             const capturePath = path.join(runtimeDirectory, "systemctl.argv");
-            const unitName = "agent-run-deadbeef.scope";
             yield* fs.makeDirectory(binDirectory, { recursive: true });
             yield* writeExecutable(
               path.join(binDirectory, "systemctl"),
@@ -4640,22 +4642,22 @@ describe("quality-scheduler", () => {
               }),
             });
 
-            yield* withPrependedPath(
-              binDirectory,
-              Effect.gen(function* () {
-                const dryRun = yield* reapAdmissionState({ apply: false });
-                expect(dryRun.dead).toStrictEqual([dead]);
-                expect(yield* fs.exists(capturePath)).toBe(false);
+            const verifyReap = Effect.fnUntraced(function* () {
+              const dryRun = yield* reapAdmissionState({ apply: false });
+              expect(dryRun.dead).toStrictEqual([dead]);
+              expect(yield* fs.exists(capturePath)).toBe(false);
 
-                const applied = yield* reapAdmissionState({ apply: true });
-                expect(applied.dead).toStrictEqual([dead]);
-                expect(yield* fs.readFileString(capturePath)).toBe(`--user\nstop\n${unitName}\n`);
-              })
-            );
+              const applied = yield* reapAdmissionState({ apply: true });
+              expect(applied.dead).toStrictEqual([dead]);
+              expect(yield* fs.readFileString(capturePath)).toBe(`--user\nstop\n${unitName}\n`);
+            });
+            yield* withPrependedPath(binDirectory, verifyReap());
           })
         );
-      })
-    ));
+      });
+      return exercise();
+    }
+  );
 
   it("stops the derived scope for a dead lease without a persisted record", () =>
     Effect.runPromise(

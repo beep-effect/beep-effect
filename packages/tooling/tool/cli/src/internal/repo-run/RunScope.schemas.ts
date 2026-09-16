@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("internal/repo-run/RunScope.schemas");
 
 const RunScopeUnitName = S.String.pipe(
-  S.check(S.isPattern(/^agent-run-[a-zA-Z0-9:_.-]+\.scope$/u)),
+  S.check(S.isPattern(/^(?:agent-run-[a-zA-Z0-9:_.-]+\.scope|beep-proof-[a-zA-Z0-9_-]+\.service)$/u)),
   $I.annoteSchema("RunScopeUnitName", {
     description: "Safe systemd scope unit name generated for one admitted repository run.",
   })
@@ -133,3 +133,28 @@ export class RunScopeRecord extends S.Class<RunScopeRecord>($I`RunScopeRecord`)(
     description: "Scope attachment and optional accounting state retained on an admission lease.",
   })
 ) {}
+
+const ProofJobUnitName = S.String.check(S.isPattern(/^beep-proof-[a-zA-Z0-9_-]+\.service$/u)).pipe(
+  $I.annoteSchema("ProofJobUnitName", { description: "Safe transient service name of a detached proof job." })
+);
+
+/**
+ * Recognize a job unit name so the scheduler reaper can treat it as stop
+ * authority on a dead lease and the run-scope short-circuit can accept it
+ * (ruling 35).
+ *
+ * **Example** (A job unit and a run scope)
+ *
+ * ```ts
+ * import { isProofJobUnitName } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(isProofJobUnitName("beep-proof-0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60.service")) // true
+ * console.log(isProofJobUnitName("agent-run-d0a7b0dc.scope")) // false
+ * ```
+ *
+ * @param unitName - A systemd unit name.
+ * @returns Whether it names a detached proof job.
+ * @category models
+ * @since 0.0.0
+ */
+export const isProofJobUnitName = S.is(ProofJobUnitName);

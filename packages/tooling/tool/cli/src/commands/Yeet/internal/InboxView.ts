@@ -140,7 +140,7 @@ export const yeetInboxRowLiveness: {
   (wave: O.Option<YeetRemediationWave>): (row: YeetInboxRow) => YeetInboxLiveness;
   (row: YeetInboxRow, wave: O.Option<YeetRemediationWave>): YeetInboxLiveness;
 } = dual(2, (row: YeetInboxRow, wave: O.Option<YeetRemediationWave>): YeetInboxLiveness => {
-  if (row.kind === "sibling-collision" || row.kind === "local-shard-failed") {
+  if (row.kind === "sibling-collision" || row.kind === "local-shard-failed" || row.kind === "proof-job-finished") {
     return "live";
   }
   return O.match(wave, {
