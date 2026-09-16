@@ -628,3 +628,11 @@ admission source and never substitutes a global `concurrency` group (one pending
 queue depth under any admission design; pool sizing (`runners_maximum_count`, spot vs
 on-demand, `docs/runbooks/ci-runner-reliability.md`) is recorded as an operator decision and is
 not changed by B8.
+
+Amendment, live acceptance (2026-09-16), rulings 54 and 55: a head whose base moved under it
+(`mergeable: CONFLICTING` / `mergeStateStatus: DIRTY`) reports `settle: base-conflict; merge
+origin/main and push` — unsettled, never terminal, never spending the budget — because GitHub
+empties the check rollup of a conflicting PR and the registration budget would otherwise turn
+that into `settle-timeout` (observed twice on #1155 when B7 merged). Both loops also remember
+every context seen registered for a head and keep an absent one `pending` rather than
+regressing it to `missing` on a single empty poll. Exit codes unchanged.

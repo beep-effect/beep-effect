@@ -453,8 +453,11 @@ it bounds registration only: the budget counts while no check has registered
 or an expected context is still missing, never while a registered required
 check is queued or running (that wait is GitHub's job timeout, not ours).
 Gate lines name `registration`, `required-pending`, `heavy-not-admitted`,
-`closeout-pending`, or `settle-timeout`, including missing and pending
-contexts. `heavy-not-admitted` is tier-2 admission (B8): the loop computes the
+`base-conflict`, `closeout-pending`, or `settle-timeout`, including missing and
+pending contexts. `base-conflict` means the base moved under the head (GitHub
+reports `CONFLICTING`/`DIRTY` and empties the check rollup): merge `origin/main`
+and push; the wait never spends the budget. A context once seen registered for
+a head stays `pending` when one poll omits it, never `missing`. `heavy-not-admitted` is tier-2 admission (B8): the loop computes the
 heavy verdict every poll from the same function CI runs (`ready-for-heavy`
 label, docs-only diff) and, while the verdict is `hold` with `Heavy / *`
 contexts still open, moves them from `missing`/`pending` into a `gated` census
