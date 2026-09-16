@@ -209,7 +209,7 @@ const ExpectedGeneratedQualityScripts = {
   audit: "bun run --if-present beep:audit",
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
   "beep:audit":
-    "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
+    "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
   "beep:build": "tsc -p tsconfig.json && bun run babel",
   "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
   "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
@@ -217,7 +217,6 @@ const ExpectedGeneratedQualityScripts = {
   docgen: "bun run beep:docgen",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
-  "beep:policy": expect.any(String),
   "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
   "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
   build: "bun run beep:build",
@@ -283,19 +282,12 @@ const ExpectedTauriAppScripts = {
 describe("create-package script writers", () => {
   it("renders the literal canonical block for library, tool and ecosystem packages", () => {
     for (const kind of ["library", "ecosystem"] as const) {
-      expect(CreatePackageScripts.package(kind, "../../", "packages/example", false)).toEqual({
-        ...ExpectedGeneratedQualityScripts,
-        "beep:policy": "bun --cwd ../../ run beep lint package-test-imports --include-root packages/example",
-      });
+      expect(CreatePackageScripts.package(kind, false)).toEqual(ExpectedGeneratedQualityScripts);
     }
-    expect(CreatePackageScripts.package("tool", "../../", "packages/example", false)).toEqual({
-      ...R.remove(ExpectedGeneratedQualityScripts, "test:integration"),
-      "beep:policy": "bun --cwd ../../ run beep lint package-test-imports --include-root packages/example",
-    });
-    expect(CreatePackageScripts.package("library", "../../", "packages/example", true)).toEqual({
-      ...ExpectedGeneratedStoriesQualityScripts,
-      "beep:policy": "bun --cwd ../../ run beep lint package-test-imports --include-root packages/example",
-    });
+    expect(CreatePackageScripts.package("tool", false)).toEqual(
+      R.remove(ExpectedGeneratedQualityScripts, "test:integration")
+    );
+    expect(CreatePackageScripts.package("library", true)).toEqual(ExpectedGeneratedStoriesQualityScripts);
   });
   it("renders application and lab blocks without codegen placeholders or unneeded derived tasks", () => {
     expect({
@@ -686,9 +678,7 @@ describe("create-package", { concurrent: false }, () => {
             const manifest = decodeToolPackageManifest(
               yield* readJsonFile(path.join(rootDir, "packages", "example-tool", "package.json"))
             );
-            expect(manifest.scripts).toEqual(
-              CreatePackageScripts.package("tool", "../../", "packages/example-tool", false)
-            );
+            expect(manifest.scripts).toEqual(CreatePackageScripts.package("tool", false));
             expect(manifest.dependencies["@effect/platform-node"]).toBe("catalog:");
           })
         )

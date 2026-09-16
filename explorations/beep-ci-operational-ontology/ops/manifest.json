@@ -6,8 +6,8 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Run-4 pre-work (run 3 COMPLETE 2026-09-10 as orun-2026-09-10T02:10:52Z at pin 1c7cd98289, PR #1078; S5 gate amendment + run-2/run-3 projection merged in PR #1089; do not rerun runs 1-3): (1) PR #1092 MERGED as e16e7a9297: auditor skill v15 (required per-seat `effort` on the run-manifest contract with a self-test family, the kind-level denotation-grain sentence with its empty-candidate clause); (2) the run-4 intake docket research/auditor-run4-intake.md is DRAFTED as a pre-pin draft, PR pending (84 unresolved + 54 carried rows with fresh evidence duties, TAXONOMY flags, eight withdrawals awaiting organic eviction evidence, the VerificationResultArtifact content-snapshot rival, CQ-019/CQ-020 leftovers, corpus_tree/corpus_base for S6 POLICY, engine follow-ups: NDJSON config support, historical archive-path handling, index rows referencing more than one proposal per observation); (3) run 4 proper only after time-to-certainty C4 (proof-ledger writer) so the Ruling-17 issuance/custody flags rat-047/048/051/052 can discharge; prior chain runs/orun-2026-09-10T02:10:52Z.index.yaml sha12 b9c140ccd31b; run-3 choreography (pin commit -> evidence tag -> frozen run in a detached worktree at the tag -> seats -> gate -> sittings -> one PR).",
-      "S8 IRI scheme: deferred per the standing pipeline (Ruling 15: emission v2 carries the SeatRequest nonce alongside positional node ids so identity criteria ratify semantically without IRI syntax); the ciops-prov: namespace re-proposal rides run 3 with the ordering cluster."
+      "Run-4 pre-work (run 3 COMPLETE 2026-09-10 as orun-2026-09-10T02:10:52Z at pin 1c7cd98289, PR #1078; S5 gate amendment + run-2/run-3 projection merged in PR #1089; do not rerun runs 1-3): (1) PR #1092 MERGED as e16e7a9297: auditor skill v15 (required per-seat `effort` on the run-manifest contract with a self-test family, the kind-level denotation-grain sentence with its empty-candidate clause); (2) the run-4 intake docket research/auditor-run4-intake.md merged in PR #1095 as 9292600368 and remains a pre-pin draft (84 unresolved + 54 carried rows with fresh evidence duties, TAXONOMY flags, eight withdrawals awaiting organic eviction evidence, the VerificationResultArtifact content-snapshot rival, CQ-019/CQ-020 leftovers, corpus_tree/corpus_base for S6 POLICY, engine follow-ups: NDJSON config support, historical archive-path handling, index rows referencing more than one proposal per observation); Verification on 2026-09-12 restored omitted evidence duties and recorded a dated live census; the corrections and the orchestrator's resolution of its three routing findings (J01 rebucketed, J02 reworded, J03 deferred to the run-4 sitting) landed with research/run4-lanes/run4-docket-verification-report.md. (3) run 4 proper only after time-to-certainty C4 (proof-ledger writer) so the Ruling-17 issuance/custody flags rat-047/048/051/052 can discharge; C3.3, C3.4, C3.5, C3.6, C4a, C4 and C5 are all unchecked in PLAN.md; prior chain runs/orun-2026-09-10T02:10:52Z.index.yaml sha12 b9c140ccd31b; run-3 choreography (pin commit -> evidence tag -> frozen run in a detached worktree at the tag -> seats -> gate -> sittings -> one PR).",
+      "S8 IRI scheme remains deferred under Ruling 15. The ciops-prov: namespace remains provisional with open closure and exclusion from negation/ratified typing; run-3 sitting 3 presented no separate namespace proposal, so joint ordering-cluster ratification did not decide namespace or IRI syntax."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -16,6 +16,6 @@
       "supersededBy": null
     },
     "created": "2026-08-27",
-    "updated": "2026-09-11"
+    "updated": "2026-09-12"
   }
 }

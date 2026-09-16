@@ -10,13 +10,22 @@
 // This file is typechecked by the root tsconfig.configs.json project
 // (repo-sanity:config-typecheck). It is a Node polyfill of Bun's
 // Promise-based API surface, so the Effect diagnostics below cannot hold here
-// by construction; every other rule stays enforced.
-// @effect-diagnostics nodeBuiltinImport:skip-file -- the shim implements Bun.spawn/file/serve over node:child_process, node:fs, node:http
-// @effect-diagnostics asyncFunction:skip-file -- Bun.file().text(), Bun.write, Bun.serve fetch handlers are async by contract
-// @effect-diagnostics newPromise:skip-file -- Bun.spawn().exited, Bun.sleep, and server.stop are Promises by contract
-// @effect-diagnostics processEnv:skip-file -- fast-check floor/seed env is read before any Effect runtime exists
-// @effect-diagnostics globalTimers:skip-file -- Bun.sleep is a plain setTimeout promise
-// @effect-diagnostics globalRandom:skip-file -- Bun.serve port selection has no Effect Random service at setup time
+// by construction; every other rule stays enforced. The six skip-file lines
+// are the declared exemption that `beep quality tsgo-rules` admits for this
+// path and nowhere else (goals/tsgo-045-effect-idiom-sweep, D1); the gate
+// compares them exactly, so the reasons live here:
+// - nodeBuiltinImport: the shim implements Bun.spawn/file/serve over node:child_process, node:fs, node:http
+// - asyncFunction: Bun.file().text(), Bun.write, Bun.serve fetch handlers are async by contract
+// - newPromise: Bun.spawn().exited, Bun.sleep, and server.stop are Promises by contract
+// - processEnv: fast-check floor/seed env is read before any Effect runtime exists
+// - globalTimers: Bun.sleep is a plain setTimeout promise
+// - globalRandom: Bun.serve port selection has no Effect Random service at setup time
+// @effect-diagnostics nodeBuiltinImport:skip-file
+// @effect-diagnostics asyncFunction:skip-file
+// @effect-diagnostics newPromise:skip-file
+// @effect-diagnostics processEnv:skip-file
+// @effect-diagnostics globalTimers:skip-file
+// @effect-diagnostics globalRandom:skip-file
 import { spawn as nodeSpawn, spawnSync as nodeSpawnSync } from "node:child_process";
 import { readdirSync, statSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";

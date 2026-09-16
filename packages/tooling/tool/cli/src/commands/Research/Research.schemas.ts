@@ -820,3 +820,34 @@ export class ResearchTimerOptions extends S.Class<ResearchTimerOptions>($I`Resea
       "Validated options used by research install-timers: the repo root the units run in, the Bun executable they invoke, and the optional Notion page the daily run pulls.",
   })
 ) {}
+
+/**
+ * What the installed daily unit recorded that `research install-timers --refresh` reuses.
+ *
+ * **Details**
+ *
+ * The repo root is the unit's `WorkingDirectory`; the page is the `--page`
+ * argument of its `ExecStart`, absent when the unit was installed without one.
+ *
+ * **Example** (Make a recorded timer)
+ *
+ * ```ts
+ * import { ResearchRecordedTimer } from "@beep/repo-cli/commands/Research"
+ * import * as O from "effect/Option"
+ *
+ * const recorded = ResearchRecordedTimer.make({ repoRoot: O.some("/clones/beep-effect7"), notionPage: O.none() })
+ * console.log(O.isNone(recorded.notionPage)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ResearchRecordedTimer extends S.Class<ResearchRecordedTimer>($I`ResearchRecordedTimer`)(
+  {
+    notionPage: S.Option(S.String),
+    repoRoot: S.Option(S.String),
+  },
+  $I.annote("ResearchRecordedTimer", {
+    description: "The repo root and Notion page an installed research daily unit runs with, read back for a refresh.",
+  })
+) {}

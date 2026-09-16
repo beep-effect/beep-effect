@@ -5,14 +5,16 @@
  * @since 0.0.0
  */
 
-import { Config, Effect } from "effect";
+import { Config, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
+import { constFalse } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
-import { installResearchTimers, uninstallResearchTimers } from "./internal/Timers.ts";
+import { resolveOperatorPath, resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
+import { installResearchTimers, readRecordedResearchTimer, uninstallResearchTimers } from "./internal/Timers.ts";
 import { resolveVaultRoot } from "./internal/Vault.ts";
 import { ResearchCommandError } from "./Research.errors.ts";
 import { printResearchIndex } from "./Research.render.ts";
@@ -38,6 +40,7 @@ import {
   writeResearchDigest,
   writeResearchRepoCards,
 } from "./Research.service.ts";
+import type { ResearchRecordedTimer } from "./Research.schemas.ts";
 
 const decodeUnknownResearchDailyOptions = S.decodeUnknownEffect(ResearchDailyOptions);
 const decodeUnknownResearchHistorySiftOptions = S.decodeUnknownEffect(ResearchHistorySiftOptions);
@@ -292,18 +295,73 @@ const bunPathFlag = Flag.String("bun-path").pipe(
   Flag.optional
 );
 
+/** @since 0.0.0 */
+const repoRootFlag = Flag.String("repo-root").pipe(
+  Flag.withDescription(
+    "Checkout the units run in (default: the current directory, or the installed unit's under --refresh); name the durable clone, never a disposable worktree"
+  ),
+  Flag.optional
+);
+/** @since 0.0.0 */
+const refreshFlag = Flag.Boolean("refresh").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "Re-render the installed units from their recorded repo root and page with the current Bun resolution"
+  )
+);
+
+const recordedResearchTimer = Effect.fn("ResearchCommand.recordedResearchTimer")(function* (home: string) {
+  const recorded = yield* readRecordedResearchTimer(home);
+  if (O.isNone(recorded)) {
+    return yield* ResearchCommandError.make({
+      message:
+        "--refresh found no installed beep-research-daily.service; install first with `research install-timers --repo-root <clone> [--page <id>]`.",
+    });
+  }
+  return recorded.value;
+});
+
 const installTimers = Effect.fn("ResearchCommand.installTimers")(function* (options: {
   readonly bunPath: O.Option<string>;
   readonly page: O.Option<string>;
+  readonly repoRoot?: O.Option<string>;
+  readonly refresh?: boolean;
 }) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const home = yield* Config.String("HOME").pipe(
     ResearchCommandError.mapError("HOME is not set; cannot locate systemd user directory.")
   );
+  // A refresh re-renders what is installed: the recorded repo root and page
+  // are reused unless a flag overrides them, and only the Bun is re-resolved.
+  const recorded =
+    options.refresh === true ? O.some(yield* recordedResearchTimer(home)) : O.none<ResearchRecordedTimer>();
   const bunPath = yield* resolveUnitBunPath({ home, pinned: options.bunPath });
+  const repoRoot = O.match(options.repoRoot ?? O.none<string>(), {
+    onNone: () =>
+      O.getOrElse(
+        O.flatMap(recorded, (unit) => unit.repoRoot),
+        () => process.cwd()
+      ),
+    onSome: (given) => resolveOperatorPath(given, home, path.resolve),
+  });
+  // A unit whose WorkingDirectory is gone fails silently on its first tick,
+  // which is how the pipeline went dead before; refuse it while the operator
+  // is still watching.
+  const isDirectory = yield* fs.stat(repoRoot).pipe(
+    Effect.map((info) => Eq.equals(info.type, "Directory")),
+    Effect.orElseSucceed(constFalse)
+  );
+  if (!isDirectory) {
+    return yield* ResearchCommandError.make({
+      message: `Repo root "${repoRoot}" is not an existing directory, so systemd could not start the units there; pass --repo-root <durable clone>.`,
+    });
+  }
+  const page = O.orElse(options.page, () => O.flatMap(recorded, (unit) => unit.notionPage));
   const decoded = yield* decodeUnknownResearchTimerOptions({
     bunPath,
-    repoRoot: process.cwd(),
-    ...(O.isNone(options.page) ? {} : { notionPage: options.page.value }),
+    repoRoot,
+    ...(O.isNone(page) ? {} : { notionPage: page.value }),
   }).pipe(
     ResearchCommandError.mapError(
       `Invalid install-timers options: --page must be a bare Notion page id ([A-Za-z0-9-]), and the repo root and Bun paths must be ${systemdUnitPathRule}.`
@@ -321,8 +379,12 @@ const installTimers = Effect.fn("ResearchCommand.installTimers")(function* (opti
  * `--bun-path` the units run the mise Bun shim when this user can execute one
  * under the home directory, then a standalone `$HOME/.bun` install, and only
  * then the Bun running this command, so a `mise.toml` bump is picked up the
- * next time a timer fires. A page id or path systemd would reinterpret inside
- * a unit is refused before anything is written.
+ * next time a timer fires. `--repo-root` names the checkout the units run in
+ * (the current directory otherwise), and it must exist. `--refresh` re-renders
+ * the installed units from the repo root and page they recorded, so an agent
+ * can bring them up to date after a merge without knowing the original flags.
+ * A page id or path systemd would reinterpret inside a unit is refused before
+ * anything is written.
  *
  * **Example** (Build an install program without running it)
  *
@@ -341,6 +403,8 @@ const installTimers = Effect.fn("ResearchCommand.installTimers")(function* (opti
 export const runResearchInstallTimers = Effect.fn("ResearchCommand.runResearchInstallTimers")(function* (options: {
   readonly bunPath: O.Option<string>;
   readonly page: O.Option<string>;
+  readonly repoRoot?: O.Option<string>;
+  readonly refresh?: boolean;
   readonly uninstall: boolean;
 }) {
   // An uninstall needs only HOME: the paths an install validates and probes
@@ -353,6 +417,8 @@ const researchInstallTimersCommand = Command.make(
   {
     bunPath: bunPathFlag,
     page: pageFlag,
+    refresh: refreshFlag,
+    repoRoot: repoRootFlag,
     uninstall: uninstallFlag,
   },
   runResearchInstallTimers

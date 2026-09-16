@@ -519,6 +519,43 @@ export class GraftDeepLock extends S.Class<GraftDeepLock>($I`GraftDeepLock`)(
 ) {}
 
 /**
+ * What the installed refresh units recorded that `graft deep install-timer --refresh` reuses.
+ *
+ * **Details**
+ *
+ * The owner is the service's `WorkingDirectory`, the environment file its
+ * `EnvironmentFile`, and the calendar the timer's `OnCalendar`; each is absent
+ * when the installed unit does not carry the directive.
+ *
+ * **Example** (Make a recorded timer)
+ *
+ * ```ts import.meta.vitest name="Make a recorded timer"
+ * import { GraftDeepRecordedTimer } from "@beep/repo-cli/commands/Graft"
+ * import * as O from "effect/Option"
+ * const recorded = GraftDeepRecordedTimer.make({
+ *   owner: O.some("/clones/beep-effect0"),
+ *   envFile: O.none(),
+ *   onCalendar: O.some("*-*-* 02:30:00"),
+ * })
+ * console.log(O.getOrNull(recorded.onCalendar)) // *-*-* 02:30:00
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraftDeepRecordedTimer extends S.Class<GraftDeepRecordedTimer>($I`GraftDeepRecordedTimer`)(
+  {
+    owner: S.Option(S.String),
+    envFile: S.Option(S.String),
+    onCalendar: S.Option(S.String),
+  },
+  $I.annote("GraftDeepRecordedTimer", {
+    description:
+      "Owner clone, environment file, and calendar an installed refresh unit runs with, read back for a refresh.",
+  })
+) {}
+
+/**
  * Inputs for installing the nightly refresh systemd user timer.
  *
  * **Details**

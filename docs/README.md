@@ -14,7 +14,7 @@ Tracked, authored documentation for the beep-effect monorepo.
 | `docs/_internal/` | **no** (gitignored) | Private working notes. This repository is public — never commit anything under `_internal/`. |
 
 Operational guidance includes [recovering from local Graft configuration
-drift](runbooks/graft-local-recovery.md).
+drift](runbooks/graft-local-recovery.md). Timer units, their refresh, and the agent-run post-merge closeout: [systemd timers](runbooks/systemd-timers.md).
 
 ## Rules
 

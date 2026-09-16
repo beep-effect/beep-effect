@@ -116,6 +116,33 @@ models and effort levels they actually recorded.
   every one and resolve every actionable one via `bun run beep yeet reply`
   (drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
   them.
+- Post-merge closeout is the agent's job, not the operator's. Once the PR is
+  MERGED, retire the lane and sweep its owning clone in one command, run from
+  inside the lane worktree as the last command of the session:
+  `CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"`
+  (archives residue, deletes the branch, sweeps the clone; it refuses until the
+  PR is MERGED and heads that branch, so running it early is safe). Run it from
+  the lane, never from the clone: `bun run beep` resolves the CLI from the
+  checkout it runs in, and the clone's `main` may still be behind the merge and
+  reject `--retire` as an unknown flag. The command steps its own process out
+  of the lane before removal; the fence exempts the invoking session's
+  ancestry and, under Claude Code (`CLAUDE_PID`), everything that session
+  spawned into the lane (its MCP servers, tool shells, background jobs), so a
+  desktop session retires its own lane. A desktop terminal panel, an editor,
+  or another session standing in the lane still refuses it and is named in
+  the error: close or `cd` it out, then rerun. A later session retires a
+  leftover lane with `bun run beep yeet sweep --retire --lane <lane>` from
+  any sibling lane of the same clone; when only the clone is at hand and its
+  checkout predates `--retire`, run the lane's own CLI:
+  `cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep --retire --lane <lane>`.
+  The trailing `cd` moves the shell to the swept clone. When the merged
+  change touched a systemd unit renderer, follow with
+  `bun run beep research install-timers --refresh` and/or
+  `bun run beep graft deep install-timer --refresh` (the latter is the only
+  agent-allowed form of that command) from the swept clone — the installed
+  units are snapshots and stay stale until re-rendered. These are granted Bash
+  permissions; do not hand them back to the operator. Runbook:
+  `docs/runbooks/systemd-timers.md`.
 - Package handoff: any agent or sub-agent that edits a workspace package runs
   `bun run beep quality package-verify <@beep/package>` before handing the work
   back. Use `--quick` only when the touched surface justifies the lint+check
@@ -124,7 +151,9 @@ models and effort levels they actually recorded.
 - Full git checkouts and tool clones never go under `/tmp` (tmpfs is zram-backed
   memory): agent worktrees belong in the sibling `-worktrees` root, disposable
   installs under `~/.cache/beep/`. `beep quality tmpfs-reap` is the janitor;
-  retire a lane with `bun run beep worktree remove <name> --archive [--delete-branch]`.
+  retire a lane with `bun run beep worktree remove <name> --archive [--delete-branch]`
+  (sibling root or the clone's `.claude/worktrees/<name>`), or from inside it after
+  the merge with `bun run beep yeet sweep --retire`.
 
 ## Touch → Skill / Command
 
@@ -223,5 +252,8 @@ memory layer; decision log 2026-09-08). Before grepping or opening source, run
 routing rules and caveats. Refresh with the exact `graft build` (structural,
 no key). Never run `graft init`, `uninstall`, `upgrade`, `build --deep`, `beep
 graft deep refresh`, or `beep graft deep install-timer` from an agent: they
-rewrite tracked wiring, spend model quota, or schedule a job that does.
+rewrite tracked wiring, spend model quota, or schedule a job that does. The one
+exception is `beep graft deep install-timer --refresh`, which re-renders a unit
+that is already installed and schedules nothing new; it is the only form the
+agent permission grant admits.
 <!-- graft:end -->

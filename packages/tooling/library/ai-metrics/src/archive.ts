@@ -32,8 +32,29 @@ const decodedBase64ByteLengthSatisfies = (predicate: (byteLength: number) => boo
     onSuccess: (bytes) => predicate(bytes.byteLength),
   });
 
+const STANDARD_BASE64_PATTERN = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+
+/**
+ * Validate standard Base64 with a linear decoder.
+ *
+ * **Gotchas**
+ *
+ * `S.isBase64` backtracks per four-character group, rejecting large ciphertext
+ * in Bun and overflowing Node's stack. The pattern here is generation metadata only.
+ *
+ * @param annotations - Filter annotations (identifier, title, description, message) merged over the defaults.
+ * @returns A string filter that passes only standard Base64 text.
+ */
+const isStandardBase64 = (annotations: S.Annotations.Filter) =>
+  S.makeFilter<string>((value) => Result.isSuccess(Encoding.decodeBase64(value)), {
+    expected: "a base64 encoded string",
+    arbitraryConstraint: { patterns: [{ source: STANDARD_BASE64_PATTERN.source, flags: "" }] },
+    toJsonSchema: () => ({ pattern: STANDARD_BASE64_PATTERN.source }),
+    ...annotations,
+  });
+
 const Aes256KeyBase64 = S.String.check(
-  S.isBase64({
+  isStandardBase64({
     identifier: $I`Aes256KeyBase64ShapeCheck`,
     title: "AES-256 Key Base64 Shape",
     description: "A standard Base64 string containing AES-256 key bytes.",
@@ -56,7 +77,7 @@ const Aes256KeyBase64 = S.String.check(
 );
 
 const AesGcmNonceBase64 = S.String.check(
-  S.isBase64({
+  isStandardBase64({
     identifier: $I`AesGcmNonceBase64ShapeCheck`,
     title: "AES-GCM Nonce Base64 Shape",
     description: "A standard Base64 string containing an AES-GCM nonce.",
@@ -79,7 +100,7 @@ const AesGcmNonceBase64 = S.String.check(
 );
 
 const AesGcmCiphertextBase64 = S.String.check(
-  S.isBase64({
+  isStandardBase64({
     identifier: $I`AesGcmCiphertextBase64ShapeCheck`,
     title: "AES-GCM Ciphertext Base64 Shape",
     description: "A standard Base64 string containing AES-GCM ciphertext and its authentication tag.",
@@ -466,7 +487,7 @@ export const writeEncryptedRawArchiveObject = Effect.fn("AiMetrics.writeEncrypte
       catch: (cause) => archiveFailure("Failed to encrypt raw archive object.", cause),
     });
     const encryptedAtEpochMillis = yield* Clock.currentTimeMillis;
-    const envelope = AiMetricsEncryptedRawArchiveEnvelope.make({
+    const envelope = yield* AiMetricsEncryptedRawArchiveEnvelope.makeEffect({
       algorithm: AiMetricsArchiveAlgorithm.Enum["AES-256-GCM"],
       archiveObjectId,
       ciphertextBase64: Encoding.encodeBase64(new Uint8Array(ciphertext)),
@@ -475,7 +496,7 @@ export const writeEncryptedRawArchiveObject = Effect.fn("AiMetrics.writeEncrypte
       plaintextContentHash,
       sourceKind,
       sourcePathHash,
-    });
+    }).pipe(Effect.mapError((cause) => archiveFailure("Failed to validate raw archive envelope.", cause)));
     const envelopeText = yield* AiMetricsEncryptedRawArchiveEnvelopeFromJsonString.encodeUnknownEffect(envelope).pipe(
       Effect.mapError((cause) => archiveFailure("Failed to encode raw archive envelope.", cause))
     );

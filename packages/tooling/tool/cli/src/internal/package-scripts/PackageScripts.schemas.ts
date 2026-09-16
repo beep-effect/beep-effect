@@ -1183,12 +1183,12 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     kind: "library",
     name: "beep:audit",
     value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
+      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
   }),
   ImplScriptDefault.make({
     kind: "library",
     name: "beep:doctest",
-    value: "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run",
+    value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
   }),
   ImplScriptDefault.make({ kind: "tool", name: "beep:build", value: "tsc -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
@@ -1213,9 +1213,9 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     kind: "tool",
     name: "beep:audit",
     value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
+      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
   }),
-  ImplScriptDefault.make({ kind: "tool", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run" }),
+  ImplScriptDefault.make({ kind: "tool", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
   ImplScriptDefault.make({ kind: "ecosystem", name: "beep:build", value: "tsc -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
     kind: "ecosystem",
@@ -1239,12 +1239,12 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     kind: "ecosystem",
     name: "beep:audit",
     value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
+      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
   }),
   ImplScriptDefault.make({
     kind: "ecosystem",
     name: "beep:doctest",
-    value: "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run",
+    value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
   }),
   ImplScriptDefault.make({ kind: "app", name: "beep:build", value: "tsgo -p tsconfig.check.json" }),
   ImplScriptDefault.make({
@@ -1266,7 +1266,7 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     name: "beep:audit",
     value: "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   }),
-  ImplScriptDefault.make({ kind: "app", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run" }),
+  ImplScriptDefault.make({ kind: "app", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:build", value: "tsgo -p tsconfig.check.json" }),
   ImplScriptDefault.make({
     kind: "lab",
@@ -1287,7 +1287,7 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     name: "beep:audit",
     value: "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   }),
-  ImplScriptDefault.make({ kind: "lab", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run" }),
+  ImplScriptDefault.make({ kind: "lab", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:build", value: "tsc -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
     kind: "infra",
@@ -1311,9 +1311,9 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     kind: "infra",
     name: "beep:audit",
     value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:policy && bun run beep:docgen && bun run beep:lint",
+      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
   }),
-  ImplScriptDefault.make({ kind: "infra", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx --bun vitest run" }),
+  ImplScriptDefault.make({ kind: "infra", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
 ];
 
 const scaffoldRule = (scripts: HashMap.HashMap<string, string>, rule: TaskScriptRule) => {

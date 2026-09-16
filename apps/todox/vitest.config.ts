@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig, mergeConfig } from "vitest/config";
-import shared from "../../vitest.shared.ts";
+import shared, { vitestDoctestActive } from "../../vitest.shared.ts";
 
 export default mergeConfig(
   shared,
@@ -12,7 +12,7 @@ export default mergeConfig(
     },
     test: {
       environment: "jsdom",
-      include: ["test/**/*.test.{ts,tsx}"],
+      include: vitestDoctestActive ? [] : ["test/**/*.test.{ts,tsx}"],
     },
   })
 );

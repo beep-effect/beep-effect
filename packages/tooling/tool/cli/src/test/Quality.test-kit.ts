@@ -83,6 +83,7 @@ export {
   tagsFromComment,
 } from "../commands/Quality/internal/QualityArtifactSupport.ts";
 export * from "../commands/Quality/internal/TurboConfigProof.ts";
+export * from "../commands/Quality/internal/TurboLaneDigest.ts";
 export {
   renderAdmissionSnapshotLinesForTesting,
   renderResidueReportLinesForTesting,

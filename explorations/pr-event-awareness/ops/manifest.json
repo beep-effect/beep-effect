@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "pr-event-awareness",
+    "title": "PR Event Awareness for Orchestrating Agents",
+    "status": "active",
+    "stage": "capture",
+    "openQuestions": [
+      "Resume when the operator schedules this: measure the end-to-end latency from a GitHub event to the owning session acting through `yeet monitor --watch` -> inbox -> hook, and name the binding gap (push source, idle wake, lane dispatch) before deciding whether webhooks are needed."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-09-12",
+    "updated": "2026-09-12"
+  }
+}

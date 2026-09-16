@@ -24,7 +24,6 @@ import { dual } from "effect/Function";
 import { fromUndefinedOr, match } from "effect/Option";
 import { hasProperty, isObject, isString } from "effect/Predicate";
 import { String as StringSchema, TaggedError } from "effect/Schema";
-import { declaredFieldsEquivalence } from "../core/declaredFieldsEquivalence.ts";
 import * as Meta from "../core/Meta.ts";
 import { assertSqlName } from "../core/names.ts";
 import type { SQLiteColumn, SQLiteTableExtraConfigValue } from "drizzle-orm/sqlite-core";
@@ -51,7 +50,6 @@ export class TableExtraError extends TaggedError<TableExtraError>("@beep/effect-
   },
   {
     description: "A SQLite table-extra declaration violates a database invariant.",
-    toEquivalence: (typeParameters) => declaredFieldsEquivalence<TableExtraError>(typeParameters),
   }
 ) {}
 

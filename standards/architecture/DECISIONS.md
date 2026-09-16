@@ -1414,9 +1414,44 @@ checklist. Keeping the CI lane non-required prevents a stale lab from blocking
 unrelated upstream work, while requiring the lab's own PR to pass preserves the
 claim that it is a faithful proving ground.
 
-## 2026-08-24: Tagged Errors Declare Diagnostic Equivalence
+## 2026-09-12: Schema Classes Derive Equivalence By Construction
 
 - **Status:** Active
+- **Supersedes:** 2026-08-24 Tagged Errors Declare Diagnostic Equivalence
+
+Decision:
+
+No Schema class (`S.Class`, `S.TaggedClass`, `S.Error`, `S.TaggedError`)
+declares a class-level `toEquivalence` annotation. Effect derives a class's
+equivalence from its declared field struct by construction
+(`effect@4.0.0-rc.113`, upstream `84864bc30c`, "Fix Schema class equivalence
+derivation"), so `S.toEquivalence(ErrorClass)` already compares declared
+fields only and ignores `Error` runtime metadata. `$I.annoteError` returns
+identity metadata and documentation extras and installs no hook; the
+`adoptDeclaredFieldsEquivalence` and `declaredFieldsEquivalence` helpers are
+deleted. A field that must not take part in identity declares an always-equal
+equivalence on its own schema (`Defect` from `@beep/schema`, or
+`S.Unknown.annotate({ toEquivalence: () => () => true })` for a local opaque
+payload); nothing is excluded at the class.
+
+The schema-first rule `SFV4-tagged-error-equivalence` is inverted: it now
+reports a `toEquivalence` key reached from the annotations argument of any
+Schema class factory call, including through a referenced annotation record.
+Intentional divergences enter `standards/schema-first.inventory.jsonc` through
+`bun run beep lint schema-first --write` with a justification.
+
+Rationale:
+
+The 2026-08-24 rule encoded a premise that upstream removed two RCs later. A
+lint that demands the hook teaches every new error class the wrong thing and
+hides the derived law behind a ritual. The 60-seed by 400-run measurement on
+`packages/drivers/doc-text` that motivated the hook (682/24,000 unequal on
+rc.109 without it) reports 0/24,000 on rc.113 with the hook deleted
+(`goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-annote-error-proof.md`).
+
+## 2026-08-24: Tagged Errors Declare Diagnostic Equivalence
+
+- **Status:** Superseded by 2026-09-12 (Schema classes derive equivalence by construction)
 
 Decision:
 
@@ -1926,6 +1961,29 @@ run — a push to `main`, a local run without `TURBO_SCM_BASE` — prints neithe
 the measured-row proposals nor the self-judge paragraphs: a dropped row there
 says to restore the coverage or open a pull request that lowers only those rows
 to the values the run printed, which is the runbook line for a red `main`.
+
+## 2026-09-12: Stale Ignored Projections Are Refreshed by Their Checks
+
+- **Status:** Active (amends 2026-08-27 "The Exploration Atlas Is an Untracked D3 Projection")
+
+Decision:
+
+`beep explore atlas --check` and `beep goals index --check` keep proving that every projection is
+derivable, and README-region drift still fails the Atlas check. A present `explorations/ATLAS.md`
+or `goals/INDEX.md` whose bytes differ from the projection is no longer rejected: the check rewrites
+the ignored file from the projection, logs the refresh, and succeeds. When README drift is refused,
+a stale Atlas beside it is named, not rewritten. `--check` never writes a tracked file; `--write`
+remains the only path that rewrites README status regions.
+
+Rationale:
+
+Both files are git-ignored workstation state, so no hosted lane ever carries one and the rejection
+could only fire locally: every fast-forward that landed a packet manifest change left the local
+copy stale and turned `bun run lint` red on a head CI had just proven green (acked as "stale local
+INDEX.md" three times in the Yeet inbox). Rejecting the bytes protected nothing that refreshing does
+not protect better: the projection may carry no authored doctrine, and overwriting an authored-into
+copy enforces that rule instead of leaving the copy in place behind a red. The whole-file projection
+contract is unchanged; only the remedy moved from the operator to the check.
 
 ## Known Unknowns
 

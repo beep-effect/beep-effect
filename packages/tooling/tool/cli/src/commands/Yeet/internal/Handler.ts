@@ -52,7 +52,6 @@ import {
   GithubCheckLaneRunStatus,
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
-  QualityTaskLaneRunReport,
 } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
@@ -84,6 +83,7 @@ import {
   validateStartPrEarlyPrGuard,
 } from "./Guards.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
+import { INNER_LANE_REPORT_FILE_NAME, readInnerLaneReports } from "./InnerLaneReports.ts";
 import {
   emptyPlanResult,
   executeStepWithArtifacts,
@@ -144,6 +144,7 @@ import { buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.t
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
+import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { PrCloseoutReport } from "./Closeout.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
@@ -1343,8 +1344,6 @@ type YeetVerdictExtras = {
 // verdict may read it only after a successful pre-push proof step in the same
 // run — anything else could attach a previous run's incidents.
 const PRE_PUSH_PROOF_STEP_ID = repoProofStepDefinition("pre-push").id;
-const INNER_LANE_REPORT_FILE_NAME = "inner-lanes.ndjson";
-const decodeInnerLaneReportOption = S.decodeUnknownOption(S.fromJsonString(QualityTaskLaneRunReport));
 
 type PrePushInnerLaneSummary = {
   readonly firstRed: string;
@@ -1387,21 +1386,6 @@ export const summarizePrePushInnerLanesForTesting = (
     }))
   );
 };
-
-const readInnerLaneReports = Effect.fn("Yeet.readInnerLaneReports")(function* (
-  context: RepoRunContext
-): Effect.fn.Return<ReadonlyArray<QualityTaskLaneRunReport>, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const reportPath = yield* runOutputPathForContext(context, INNER_LANE_REPORT_FILE_NAME);
-  if (!(yield* fs.exists(reportPath).pipe(Effect.orElseSucceed(() => false)))) {
-    return A.empty();
-  }
-  const text = yield* fs
-    .readFileString(reportPath)
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to read durable inner-lane report "${reportPath}".`)));
-  const lines = pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty));
-  return A.getSomes(A.map(lines, (line) => decodeInnerLaneReportOption(line)));
-});
 
 const readFlakeQuarantineIncidents = Effect.fn("Yeet.readFlakeQuarantineIncidents")(function* (
   repoRoot: string

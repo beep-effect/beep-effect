@@ -4,8 +4,13 @@
  * Renders service+timer unit pairs into `~/.config/systemd/user/` and
  * enables them. The daily unit runs `beep research daily`; a weekly unit
  * refreshes repo cards.
- * Secrets (FIRECRAWL_API_KEY, NOTION_API_KEY, COGNEE_*) load from an optional
- * `~/.config/beep-research/env` EnvironmentFile.
+ * Secrets (FIRECRAWL_API_KEY, NOTION_API_KEY, COGNEE_API_URL and the optional
+ * COGNEE_API_EMAIL / COGNEE_API_PASSWORD) load from an optional
+ * `$HOME/.config/beep-research/env` EnvironmentFile.
+ *
+ * Each service waits for NetworkManager through `nm-online` where that helper
+ * exists, because a `Persistent=` timer replays a missed run seconds after
+ * boot, before the network is up; the wait's exit status never fails the run.
  *
  * @internal
  * @packageDocumentation
@@ -16,7 +21,10 @@ import { Config, Console, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { runCaptured } from "../../../internal/process/StepExec.ts";
+import { readInstalledSystemdUnit, systemdUnitDirective, systemdUserUnitDir } from "../../../internal/systemd/index.ts";
 import { ResearchCommandError } from "../Research.errors.ts";
+import { ResearchRecordedTimer } from "../Research.schemas.ts";
+import { RESEARCH_ENV_FILE_RELATIVE } from "./ResearchEnv.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ResearchTimerOptions } from "../Research.schemas.ts";
 
@@ -27,8 +35,6 @@ import type { ResearchTimerOptions } from "../Research.schemas.ts";
  * @category utilities
  */
 export const RESEARCH_UNITS = ["beep-research-daily", "beep-research-repo-card"] as const;
-
-const ENV_FILE_RELATIVE = ".config/beep-research/env";
 
 type ResearchTimerRequirements = ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path;
 
@@ -62,6 +68,12 @@ const unitPairs = (notionPage: O.Option<string>): ReadonlyArray<UnitPair> => [
   },
 ];
 
+// The `-` prefix keeps a missing helper or a timed-out wait from failing the
+// unit; `/bin/sh` exists everywhere the units can run. The line carries no `$`
+// or `%`, so systemd renders it verbatim.
+const NETWORK_ONLINE_WAIT =
+  'ExecStartPre=-/bin/sh -c "command -v nm-online >/dev/null 2>&1 && exec nm-online -q --timeout=90"';
+
 const renderService = (unit: UnitPair, options: ResearchTimerOptions, home: string): string =>
   A.join(
     [
@@ -75,7 +87,8 @@ const renderService = (unit: UnitPair, options: ResearchTimerOptions, home: stri
       // involved, so the Bun path is quoted there and the page id is one
       // token by schema.
       `WorkingDirectory=${options.repoRoot}`,
-      `EnvironmentFile=-${home}/${ENV_FILE_RELATIVE}`,
+      `EnvironmentFile=-${home}/${RESEARCH_ENV_FILE_RELATIVE}`,
+      NETWORK_ONLINE_WAIT,
       `ExecStart="${options.bunPath}" run beep ${unit.execArgs}`,
       "TimeoutStartSec=1800",
       "",
@@ -111,7 +124,7 @@ const readHome = Config.String("HOME").pipe(
   ResearchCommandError.mapError("HOME is not set; cannot locate systemd user directory.")
 );
 
-const unitDirOf = (path: Path.Path, home: string): string => path.join(home, ".config", "systemd", "user");
+const unitDirOf = systemdUserUnitDir;
 
 const runSystemctl = Effect.fn("ResearchTimers.runSystemctl")(function* (
   args: ReadonlyArray<string>
@@ -126,6 +139,33 @@ const runSystemctl = Effect.fn("ResearchTimers.runSystemctl")(function* (
       message: `systemctl --user ${A.join(args, " ")} exited with ${result.exitCode}: ${result.output}`,
     });
   }
+});
+
+const PAGE_ARGUMENT_PATTERN = /--page (\S+)/;
+
+/**
+ * Read the repo root and Notion page the installed daily unit runs with.
+ *
+ * `None` when no daily unit is installed; the page is absent when the unit was
+ * installed without `--page`.
+ *
+ * @internal
+ * @category utilities
+ */
+export const readRecordedResearchTimer = Effect.fn("ResearchTimers.readRecordedResearchTimer")(function* (
+  home: string
+): Effect.fn.Return<O.Option<ResearchRecordedTimer>, ResearchCommandError, FileSystem.FileSystem | Path.Path> {
+  const unit = yield* readInstalledSystemdUnit({ home, fileName: `${RESEARCH_UNITS[0]}.service` }).pipe(
+    ResearchCommandError.mapError(`Failed reading the installed ${RESEARCH_UNITS[0]}.service unit.`)
+  );
+  return O.map(unit, (installed) =>
+    ResearchRecordedTimer.make({
+      repoRoot: systemdUnitDirective(installed, "WorkingDirectory"),
+      notionPage: O.flatMap(systemdUnitDirective(installed, "ExecStart"), (exec) =>
+        O.flatMap(O.fromNullishOr(PAGE_ARGUMENT_PATTERN.exec(exec)), (match) => O.fromNullishOr(match[1]))
+      ),
+    })
+  );
 });
 
 /**
@@ -190,5 +230,5 @@ export const installResearchTimers = Effect.fn("ResearchTimers.installResearchTi
       ", "
     )}.`
   );
-  yield* Console.log(`research install-timers: secrets load from ${home}/${ENV_FILE_RELATIVE} when present.`);
+  yield* Console.log(`research install-timers: secrets load from ${home}/${RESEARCH_ENV_FILE_RELATIVE} when present.`);
 });

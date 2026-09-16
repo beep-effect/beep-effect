@@ -685,7 +685,7 @@ export const renderAiMetricsForwarderTimerPlan = (input: AiMetricsForwarderTimer
       "Type=oneshot",
       `WorkingDirectory=${systemdUnitFieldValue(timerInput.workingDirectory)}`,
       `EnvironmentFile=${envFileUnitPath}`,
-      "# The command pins the Bun executable path captured when this timer was rendered; rerender after changing Bun install paths.",
+      "# The command uses the resolved Bun executable (preferring the mise shim) or the operator's --bun-path pin.",
       `ExecStart=/usr/bin/env bash -lc ${shellQuote(execCommand)}`,
       "Restart=on-failure",
       "RestartSec=5m",

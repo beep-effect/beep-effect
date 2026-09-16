@@ -6,6 +6,7 @@
     ".storybook/**/*.tsx",
     "vitest.storybook.config.ts",
     "vitest.storybook.setup.ts",
+    "../../packages/epistemic/ui/stories/**/*.tsx",
     "../../packages/foundation/ui-system/*/stories/**/*.ts",
     "../../packages/foundation/ui-system/*/stories/**/*.tsx",
     "../../packages/drivers/graph-3d/stories/**/*.ts",

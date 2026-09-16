@@ -73,6 +73,14 @@ the capability is not the same as the capability covering the fleet.
 
 ## Trail
 
+- 2026-09-12: friction receipt added to
+  [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) — **the worktree
+  remover assumed a live upstream.** `worktree remove --archive` refused a lane
+  whose merged head branch GitHub had deleted and `git fetch --prune` had
+  dropped, because branch configuration still named the pruned upstream and the
+  probe counted an unresolvable range. Fixed in PR #1114 (upstream classified
+  `unset` / `live` / `pruned`, default-branch fallback named on the receipt).
+  No stage or status change; the packet stays `graduated`.
 - 2026-08-10: **packet closed with no open questions.** Rung 1.5 added the
   positive-only Claude session-registry probe with the `/proc` `starttime`
   PID-reuse guard, ranked contested text output by live claimants, and flags a

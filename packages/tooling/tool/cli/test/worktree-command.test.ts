@@ -1,6 +1,7 @@
 import {
   addWorktree,
   branchDeleteCommand,
+  CLAUDE_WORKTREES_RELATIVE_ROOT,
   copyLocalFiles,
   defaultWorktreeBranch,
   parseWorktreePorcelain,
@@ -13,13 +14,19 @@ import {
   WorktreeDirtyError,
   WorktreeDoctorEntry,
   WorktreeExistsError,
+  WorktreeInvokerExemption,
+  WorktreeMergedPullRequestProbe,
+  WorktreeMergedPullRequestProbeLive,
   WorktreePreservationError,
   WorktreeRemovalReceipt,
   WorktreeRemovalRequest,
   WorktreeRemovalService,
+  WorktreeRemovalServiceLayer,
   WorktreeRemovalServiceLive,
   WorktreeRepositoryHash,
   WorktreeResidueManifest,
+  WorktreeSessionMarker,
+  WorktreeUnpushedInspection,
   worktreeAddArgs,
   worktreeArchivePlan,
   worktreeArchiveRefArgs,
@@ -30,18 +37,25 @@ import {
   worktreeRemoveArgs,
   worktreeResidueReason,
 } from "@beep/repo-cli/commands/Worktree";
-import { NonEmptyTrimmedStr } from "@beep/schema";
+import {
+  ProcessTable,
+  ProcessTableEntry,
+  processTableWithLineage,
+  procProcessTable,
+} from "@beep/repo-cli/test/RepoRun";
+import { NonEmptyTrimmedStr, PosInt } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, P, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, Path, Runtime, Stream } from "effect";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Runtime, Sink, Stream } from "effect";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -80,6 +94,7 @@ const residueManifest = (patchPath: O.Option<string>, untrackedFiles: ReadonlyAr
     untrackedFiles,
     residueRoot: "/cache/beep-effect-0123456789ab/feature-x-20260902-123456",
     reason: "dirty+unpushed",
+    upstream: { _tag: "live", ref: "refs/remotes/origin/feat/feature-x" },
   });
 
 const residueConfigProvider = (worktreesRoot: string) =>
@@ -148,6 +163,48 @@ const withScratchRepo = <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E,
       ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true }).pipe(Effect.ignore)
     ).pipe(provideScopedLayer(testLayer))
   );
+
+layer(WorktreeMergedPullRequestProbeLive, { timeout: "1 second" })("merged pull-request probe", (it) => {
+  it.effect("finds an older exact head when a branch name was reused", () => {
+    const head = GitObjectId.make("1111111111111111111111111111111111111111");
+    const output = new TextEncoder().encode(
+      '[{"number":1100,"headRefOid":"2222222222222222222222222222222222222222"},{"number":1098,"headRefOid":"1111111111111111111111111111111111111111"}]'
+    );
+    const spawner = ChildProcessSpawner.make((command) => {
+      expect(command._tag).toBe("StandardCommand");
+      if (command._tag === "StandardCommand") {
+        expect(command.args).toContain("100");
+        expect(command.args).toContain("reused-branch");
+      }
+      return Effect.succeed(
+        ChildProcessSpawner.makeHandle({
+          pid: ChildProcessSpawner.ProcessId(1),
+          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+          isRunning: Effect.succeed(false),
+          kill: () => Effect.void,
+          stdin: Sink.drain,
+          stdout: Stream.make(output),
+          stderr: Stream.empty,
+          all: Stream.make(output),
+          getInputFd: () => Sink.drain,
+          getOutputFd: () => Stream.empty,
+          unref: Effect.succeed(Effect.void),
+        })
+      );
+    });
+    return Effect.gen(function* () {
+      const probe = yield* WorktreeMergedPullRequestProbe;
+      expect(yield* probe.mergedAtHead("/repo", "reused-branch", head)).toEqual(O.some(PosInt.make(1098)));
+      expect(
+        yield* probe.mergedAtHead(
+          "/repo",
+          "reused-branch",
+          GitObjectId.make("3333333333333333333333333333333333333333")
+        )
+      ).toEqual(O.none());
+    }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+  });
+});
 
 describe("worktree argument builders", () => {
   it("builds a worktree add argv with a new branch", () => {
@@ -337,6 +394,28 @@ describe("parseWorktreePorcelain", () => {
 });
 
 describe("WorktreeResidueManifest", () => {
+  it.effect("decodes archived manifests written before upstream evidence was recorded", () =>
+    Effect.gen(function* () {
+      const manifest = yield* decodeResidueManifest(`{
+        "name": "feature-x",
+        "branch": "feat/feature-x",
+        "head": "1ed08f66df016a18c6d7d56bd97aa778912cb37b",
+        "archivedAt": "2026-09-02T12:34:56.000Z",
+        "archiveRef": "refs/archive/worktrees/feature-x/20260902-123456",
+        "repositoryHash": "0123456789ab",
+        "patchPath": null,
+        "untrackedFiles": ["notes.txt"],
+        "residueRoot": "/cache/beep-effect-0123456789ab/feature-x-20260902-123456",
+        "reason": "dirty+unpushed"
+      }`);
+      expect(manifest.upstream).toEqual({ _tag: "unset" });
+      expect(manifest.untrackedFiles).toEqual(["notes.txt"]);
+      expect(manifest.archiveRef).toBe("refs/archive/worktrees/feature-x/20260902-123456");
+      const decoded = yield* encodeResidueManifest(manifest).pipe(Effect.flatMap(decodeResidueManifest));
+      expect(decoded).toEqual(manifest);
+    })
+  );
+
   it.effect("round-trips through its JSON codec", () =>
     Effect.gen(function* () {
       const manifest = yield* decodeResidueManifestValue({
@@ -350,13 +429,38 @@ describe("WorktreeResidueManifest", () => {
         untrackedFiles: ["notes.txt"],
         residueRoot: "/cache/beep-effect-0123456789ab/feature-x-20260902-123456",
         reason: "dirty+unpushed",
+        upstream: {
+          _tag: "pruned",
+          ref: "refs/remotes/origin/feat/feature-x",
+          verdict: { _tag: "merged-pull-request", number: 1098 },
+        },
       });
       const decoded = yield* encodeResidueManifest(manifest).pipe(Effect.flatMap(decodeResidueManifest));
       expect(decoded).toEqual(manifest);
+      expect(decoded.upstream).toEqual({
+        _tag: "pruned",
+        ref: "refs/remotes/origin/feat/feature-x",
+        verdict: { _tag: "merged-pull-request", number: PosInt.make(1098) },
+      });
       expect(O.getOrThrow(decoded.branch)).toBe("feat/feature-x");
       expect(O.getOrThrow(decoded.patchPath)).toContain("tracked.patch");
     })
   );
+
+  it("decodes a legacy receipt that predates the unpushed inspection", () => {
+    const decoded = S.decodeSync(removalReceiptJson)(
+      JSON.stringify({
+        targetPath: "/repo-worktrees/feature-x",
+        branch: "feat/feature-x",
+        reason: "clean",
+        manifest: null,
+        branchDeleted: false,
+      })
+    );
+
+    expect(O.isNone(decoded.unpushedInspection)).toBe(true);
+    expect(O.getOrThrow(decoded.branch)).toBe("feat/feature-x");
+  });
 
   it("round-trips arbitrary archive models through their JSON codecs", () => {
     expect(
@@ -602,6 +706,54 @@ describe("worktree output rendering", () => {
       expect(detachedLines).toContain("  branch deleted: (detached HEAD)");
     }).pipe(provideScopedLayer(TestConsole.layer))
   );
+
+  it.effect("names the default-branch range that judged a pruned upstream", () =>
+    Effect.gen(function* () {
+      const base = WorktreeRemovalReceipt.make({
+        targetPath: "/repo-worktrees/feature-x",
+        branch: O.some("feat/feature-x"),
+        reason: "unpushed-commits",
+        manifest: O.some(residueManifest(O.none(), [])),
+        branchDeleted: true,
+      });
+      const inspected = (upstream: WorktreeUpstreamState) =>
+        WorktreeRemovalReceipt.make({
+          ...base,
+          unpushedInspection: O.some(
+            WorktreeUnpushedInspection.make({ unpushed: true, baseRange: "origin/main..HEAD", upstream })
+          ),
+        });
+      const isUpstreamLine = Str.startsWith("  upstream:");
+      const pruned = (verdict: WorktreeUpstreamVerdict) =>
+        collectRemovalReceiptLines(
+          inspected({ _tag: "pruned", ref: "refs/remotes/origin/feat/feature-x", verdict }),
+          true
+        );
+      const prunedLines = yield* pruned({ _tag: "unverified" });
+      const ancestorLines = yield* pruned({ _tag: "ancestor-of-base", base: "origin/main" });
+      const mergedLines = yield* pruned({ _tag: "merged-pull-request", number: PosInt.make(1098) });
+      const liveLines = yield* collectRemovalReceiptLines(
+        inspected({ _tag: "live", ref: "refs/remotes/origin/feat/feature-x" }),
+        true
+      );
+      const unsetLines = yield* collectRemovalReceiptLines(inspected({ _tag: "unset" }), true);
+      const legacyLines = yield* collectRemovalReceiptLines(base, true);
+
+      expect(O.isNone(base.unpushedInspection)).toBe(true);
+      expect(prunedLines).toContain(
+        "  upstream: refs/remotes/origin/feat/feature-x no longer resolves (pruned); unpushed commits were counted against origin/main..HEAD instead; tip not proven pushed"
+      );
+      expect(ancestorLines).toContain(
+        "  upstream: refs/remotes/origin/feat/feature-x no longer resolves (pruned); unpushed commits were counted against origin/main..HEAD instead; tip is already on origin/main"
+      );
+      expect(mergedLines).toContain(
+        "  upstream: refs/remotes/origin/feat/feature-x no longer resolves (pruned); unpushed commits were counted against origin/main..HEAD instead; merged as PR #1098 at this head"
+      );
+      expect(A.some(liveLines, isUpstreamLine)).toBe(false);
+      expect(A.some(unsetLines, isUpstreamLine)).toBe(false);
+      expect(A.some(legacyLines, isUpstreamLine)).toBe(false);
+    }).pipe(provideScopedLayer(TestConsole.layer))
+  );
 });
 
 describe("worktree git operations", () => {
@@ -796,6 +948,50 @@ describe("worktree git operations", () => {
         expect(spawnFailure.message).toBe("Failed to inspect the worktree.");
         expect(spawnFailure.command).toBe("git status --short");
         expect(spawnFailure.exitCode).toBeUndefined();
+      })
+    )
+  );
+
+  it.effect("refuses a name registered under both roots and never lets a stale nested directory shadow a sibling", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const sibling = yield* addWorktree(context, "dup", defaultWorktreeBranch("dup"));
+        const nested = path.join(repoRoot, CLAUDE_WORKTREES_RELATIVE_ROOT, "dup");
+        yield* fs.makeDirectory(path.dirname(nested), { recursive: true });
+        yield* runGit(repoRoot, ["worktree", "add", "-b", "claude/dup", nested]);
+        const previousCwd = process.cwd;
+        yield* Effect.acquireUseRelease(
+          Effect.sync(() => {
+            process.cwd = () => repoRoot;
+          }),
+          () =>
+            Effect.gen(function* () {
+              const before = A.length(yield* TestConsole.errorLines);
+              yield* Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", "dup", "--archive"]).pipe(
+                Effect.flip
+              );
+              expect(A.join(A.filter(A.drop(yield* TestConsole.errorLines, before), P.isString), "\n")).toContain(
+                "are registered worktrees named dup"
+              );
+              expect(yield* fs.exists(sibling)).toBe(true);
+              expect(yield* fs.exists(nested)).toBe(true);
+              // Unregister the nested lane but leave a stale directory behind:
+              // the registered sibling still wins and the stale one is untouched.
+              yield* runGit(repoRoot, ["worktree", "remove", "--force", nested]);
+              yield* runGit(repoRoot, ["branch", "-D", "claude/dup"]);
+              yield* fs.makeDirectory(nested, { recursive: true });
+              yield* Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", "dup", "--archive"]);
+              expect(yield* fs.exists(sibling)).toBe(false);
+              expect(yield* fs.exists(nested)).toBe(true);
+            }),
+          () =>
+            Effect.sync(() => {
+              process.cwd = previousCwd;
+            })
+        );
       })
     )
   );
@@ -1213,6 +1409,197 @@ describe("worktree git operations", () => {
     )
   );
 
+  it.effect("retires a lane whose upstream was pruned after merge and still preserves unpushed commits", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const removalService = yield* WorktreeRemovalService;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const configProvider = residueConfigProvider(context.worktreesRoot);
+        const removeArchived = (name: string, targetPath: string) =>
+          removalService
+            .remove(
+              WorktreeRemovalRequest.make({
+                name: NonEmptyTrimmedStr.make(name),
+                targetPath,
+                mainCheckout: context.mainCheckout,
+                branch: O.some(defaultWorktreeBranch(name)),
+                archive: true,
+                deleteBranch: false,
+                expectedHead: O.none(),
+              })
+            )
+            .pipe(Effect.provideService(ConfigProvider.ConfigProvider, configProvider));
+        const doctorUnpushed = (targetPath: string) =>
+          resolveWorktreeContext(repoRoot).pipe(
+            Effect.flatMap(worktreeDoctorReportForContext),
+            Effect.map(
+              (report) => O.getOrThrow(A.findFirst(report.entries, (entry) => entry.path === targetPath)).unpushed
+            )
+          );
+        // GitHub deletes the head branch after the merge; the next `git fetch --prune`
+        // drops the remote-tracking ref while branch configuration keeps naming it.
+        const pruneUpstream = Effect.fn(function* (targetPath: string, branch: string) {
+          yield* runGit(repoRoot, ["push", "origin", "--delete", branch]);
+          yield* runGit(repoRoot, ["fetch", "--prune", "origin"]);
+          expect(yield* runGitText(targetPath, ["for-each-ref", "--format=%(upstream)", `refs/heads/${branch}`])).toBe(
+            `refs/remotes/origin/${branch}`
+          );
+          expect(yield* runGitText(targetPath, ["for-each-ref", `refs/remotes/origin/${branch}`])).toBe("");
+        });
+
+        const mergedBranch = defaultWorktreeBranch("merged-lane");
+        const mergedPath = yield* addWorktree(context, "merged-lane", mergedBranch);
+        yield* runGit(mergedPath, ["push", "--set-upstream", "origin", mergedBranch]);
+        expect(yield* doctorUnpushed(mergedPath)).toBe(false);
+        yield* pruneUpstream(mergedPath, mergedBranch);
+        expect(yield* doctorUnpushed(mergedPath)).toBe(false);
+
+        const mergedReceipt = yield* removeArchived("merged-lane", mergedPath);
+
+        expect(mergedReceipt.reason).toBe("clean");
+        expect(O.isNone(mergedReceipt.manifest)).toBe(true);
+        expect(O.getOrThrow(mergedReceipt.unpushedInspection)).toEqual(
+          WorktreeUnpushedInspection.make({
+            unpushed: false,
+            baseRange: "origin/main..HEAD",
+            upstream: {
+              _tag: "pruned",
+              ref: `refs/remotes/origin/${mergedBranch}`,
+              verdict: { _tag: "ancestor-of-base", base: "origin/main" },
+            },
+          })
+        );
+        expect(yield* fs.exists(mergedPath)).toBe(false);
+
+        // The default branch comes from origin/HEAD, not a hardcoded main.
+        yield* runGit(repoRoot, ["branch", "trunk", "main"]);
+        yield* runGit(repoRoot, ["push", "origin", "trunk"]);
+        yield* runGit(repoRoot, ["remote", "set-head", "origin", "trunk"]);
+        const unpushedBranch = defaultWorktreeBranch("unpushed-lane");
+        const unpushedPath = yield* addWorktree(context, "unpushed-lane", unpushedBranch);
+        yield* runGit(unpushedPath, ["push", "--set-upstream", "origin", unpushedBranch]);
+        yield* fs.writeFileString(path.join(unpushedPath, "README.md"), "# unpushed lane change\n");
+        yield* runGit(unpushedPath, ["commit", "-am", "unpushed lane commit"]);
+        const unpushedHead = yield* runGitText(unpushedPath, ["rev-parse", "HEAD"]);
+        yield* pruneUpstream(unpushedPath, unpushedBranch);
+        expect(yield* doctorUnpushed(unpushedPath)).toBe(true);
+
+        const unpushedReceipt = yield* removeArchived("unpushed-lane", unpushedPath);
+        const manifest = O.getOrThrow(unpushedReceipt.manifest);
+
+        expect(unpushedReceipt.reason).toBe("unpushed-commits");
+        expect(yield* runGitText(repoRoot, ["rev-parse", manifest.archiveRef])).toBe(unpushedHead);
+        expect(O.getOrThrow(unpushedReceipt.unpushedInspection)).toEqual(
+          WorktreeUnpushedInspection.make({
+            unpushed: true,
+            baseRange: "origin/trunk..HEAD",
+            upstream: {
+              _tag: "pruned",
+              ref: `refs/remotes/origin/${unpushedBranch}`,
+              verdict: { _tag: "unverified" },
+            },
+          })
+        );
+        // The manifest records the same upstream state the residue decision was made under.
+        expect(manifest.upstream).toEqual(O.getOrThrow(unpushedReceipt.unpushedInspection).upstream);
+        const persistedManifest = yield* fs
+          .readFileString(path.join(manifest.residueRoot, "manifest.json"))
+          .pipe(Effect.flatMap(decodeResidueManifest));
+        expect(persistedManifest.upstream).toEqual(manifest.upstream);
+        expect(yield* collectRemovalReceiptLines(unpushedReceipt, true)).toContain(
+          `  upstream: refs/remotes/origin/${unpushedBranch} no longer resolves (pruned); unpushed commits were counted against origin/trunk..HEAD instead; tip not proven pushed`
+        );
+        expect(yield* fs.exists(unpushedPath)).toBe(false);
+
+        // A dangling origin/HEAD names no default branch, so the probe falls back to main
+        // instead of archiving a merged lane as unpushed.
+        yield* runGit(repoRoot, ["symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/gone"]);
+        const danglingBranch = defaultWorktreeBranch("dangling-lane");
+        const danglingPath = yield* addWorktree(context, "dangling-lane", danglingBranch);
+        yield* runGit(danglingPath, ["push", "--set-upstream", "origin", danglingBranch]);
+        yield* pruneUpstream(danglingPath, danglingBranch);
+
+        const danglingReceipt = yield* removeArchived("dangling-lane", danglingPath);
+
+        expect(danglingReceipt.reason).toBe("clean");
+        expect(O.isNone(danglingReceipt.manifest)).toBe(true);
+        expect(O.getOrThrow(danglingReceipt.unpushedInspection).baseRange).toBe("origin/main..HEAD");
+        expect(yield* fs.exists(danglingPath)).toBe(false);
+      })
+    )
+  );
+
+  it.effect("records the merged pull request that proves a pruned-upstream tip was pushed", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const branch = defaultWorktreeBranch("squash-merged-lane");
+        const targetPath = yield* addWorktree(context, "squash-merged-lane", branch);
+        yield* fs.writeFileString(path.join(targetPath, "README.md"), "# squash-merged lane\n");
+        yield* runGit(targetPath, ["commit", "-am", "squash-merged lane commit"]);
+        const head = yield* runGitText(targetPath, ["rev-parse", "HEAD"]);
+        // Branch configuration still names the upstream, but the ref was never fetched.
+        yield* runGit(targetPath, ["config", `branch.${branch}.remote`, "origin"]);
+        yield* runGit(targetPath, ["config", `branch.${branch}.merge`, `refs/heads/${branch}`]);
+
+        const probeCalls = yield* Ref.make(0);
+        // The probe answers only for the exact branch and head the service must ask about.
+        const probe = Layer.succeed(
+          WorktreeMergedPullRequestProbe,
+          WorktreeMergedPullRequestProbe.of({
+            mergedAtHead: Effect.fn("WorktreeMergedPullRequestProbe.mergedAtHead")((_cwd, askedBranch, askedHead) =>
+              Effect.succeed(
+                Str.Equivalence(askedBranch, branch) && Str.Equivalence(askedHead, head)
+                  ? O.some(PosInt.make(1098))
+                  : O.none()
+              ).pipe(Effect.tap(() => Ref.update(probeCalls, (count) => count + 1)))
+            ),
+          })
+        );
+        const receipt = yield* Effect.gen(function* () {
+          const removalService = yield* WorktreeRemovalService;
+          expect(yield* removalService.hasUnpushedCommits(targetPath, O.some(branch))).toBe(true);
+          expect(yield* Ref.get(probeCalls)).toBe(0);
+          return yield* removalService.remove(
+            WorktreeRemovalRequest.make({
+              name: NonEmptyTrimmedStr.make("squash-merged-lane"),
+              targetPath,
+              mainCheckout: context.mainCheckout,
+              branch: O.some(branch),
+              archive: true,
+              deleteBranch: true,
+              expectedHead: O.none(),
+            })
+          );
+        }).pipe(
+          // Layer.build forks the enclosing memo map, which already holds the live-probe
+          // build of this layer; a fresh build is the only way the stub probe is consulted.
+          provideScopedLayer(Layer.fresh(WorktreeRemovalServiceLayer).pipe(Layer.provide([NodeServices.layer, probe]))),
+          Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(context.worktreesRoot))
+        );
+
+        expect(yield* Ref.get(probeCalls)).toBe(1);
+        // A squash merge leaves the tip off origin/main, so the commits are still
+        // archived; the manifest and receipt record which pull request proved them pushed.
+        const expectedUpstream = {
+          _tag: "pruned",
+          ref: `refs/remotes/origin/${branch}`,
+          verdict: { _tag: "merged-pull-request", number: PosInt.make(1098) },
+        };
+        expect(receipt.reason).toBe("unpushed-commits");
+        expect(O.getOrThrow(receipt.manifest).upstream).toEqual(expectedUpstream);
+        expect(O.getOrThrow(receipt.unpushedInspection).upstream).toEqual(expectedUpstream);
+        expect(yield* runGitText(repoRoot, ["rev-parse", O.getOrThrow(receipt.manifest).archiveRef])).toBe(head);
+        expect(receipt.branchDeleted).toBe(true);
+        expect(yield* fs.exists(targetPath)).toBe(false);
+      })
+    )
+  );
+
   it.effect("refuses archive retirement while a process holds the checkout and restores it in place", () =>
     withScratchRepo((repoRoot) =>
       Effect.gen(function* () {
@@ -1255,7 +1642,10 @@ describe("worktree git operations", () => {
             return yield* outcome;
           })
         );
-        expect(refusal).toContain(`Refusing to retire ${targetPath}: pid ${process.pid} via descriptor`);
+        // The fence names each holder by its kernel command name, which is the
+        // runtime running this test (`bun` or `node`), so read it rather than guess.
+        const ownName = Str.trim(yield* fs.readFileString("/proc/self/comm"));
+        expect(refusal).toContain(`Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`);
         expect(yield* fs.exists(targetPath)).toBe(true);
         expect(A.filter(yield* fs.readDirectory(context.worktreesRoot), Str.includes(".retiring-"))).toEqual([]);
         expect(yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"])).toContain(`worktree ${targetPath}`);
@@ -1267,6 +1657,165 @@ describe("worktree git operations", () => {
         expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).toBe("");
       })
     )
+  );
+
+  it.effect.each(["claude", "ghostty"])(
+    "enforces ancestry boundaries and explicit marker precedence (%s)",
+    (rootCommand) =>
+      withScratchRepo((repoRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const removalService = yield* WorktreeRemovalService;
+          const context = yield* resolveWorktreeContext(repoRoot);
+          const branch = defaultWorktreeBranch("session-demo");
+          const targetPath = yield* addWorktree(context, "session-demo", branch);
+          const configProvider = ConfigProvider.fromEnv({
+            env: {
+              BEEP_WORKTREE_RESIDUE_ROOT: path.join(context.worktreesRoot, "test-residue"),
+              HOME: context.worktreesRoot,
+            },
+          });
+          // The scripted session: the user manager (50) runs the agent session
+          // (60), which owns the tool shell (70) running the CLI (100, the table's
+          // `self`); another session's shell (90) hangs off the manager directly.
+          // This test process holds an open descriptor in the checkout and is
+          // placed under one shell, then the other.
+          const session = [
+            ProcessTableEntry.make({ pid: 1, parent: 0, command: "systemd" }),
+            ProcessTableEntry.make({ pid: 50, parent: 1, command: "systemd" }),
+            ProcessTableEntry.make({ pid: 60, parent: 50, command: "claude" }),
+            ProcessTableEntry.make({ pid: 70, parent: 60, command: "zsh" }),
+            ProcessTableEntry.make({ pid: 100, parent: 70, command: "bun" }),
+            ProcessTableEntry.make({ pid: 90, parent: 50, command: "zsh" }),
+            ProcessTableEntry.make({ pid: 95, parent: 60, command: "zsh" }),
+          ];
+          const removeUnder = (parent: number, sessionCommand = "claude", self = 100) =>
+            removalService
+              .remove(
+                WorktreeRemovalRequest.make({
+                  name: NonEmptyTrimmedStr.make("session-demo"),
+                  targetPath,
+                  mainCheckout: context.mainCheckout,
+                  branch: O.some(branch),
+                  archive: true,
+                  deleteBranch: true,
+                  expectedHead: O.none(),
+                  exemptInvokerSession: true,
+                })
+              )
+              .pipe(
+                Effect.provideService(ConfigProvider.ConfigProvider, configProvider),
+                Effect.provideService(
+                  ProcessTable,
+                  processTableWithLineage({
+                    base: procProcessTable,
+                    self,
+                    entries: A.append(
+                      A.map(session, (entry) =>
+                        entry.pid === 60 ? ProcessTableEntry.make({ ...entry, command: sessionCommand }) : entry
+                      ),
+                      ProcessTableEntry.make({ pid: process.pid, parent, command: "vitest" })
+                    ),
+                  })
+                ),
+                Effect.map(() => "retired"),
+                Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
+              );
+
+          yield* Effect.scoped(
+            Effect.gen(function* () {
+              yield* fs.open(path.join(targetPath, "README.md"), { flag: "r" });
+              const ownName = Str.trim(yield* fs.readFileString("/proc/self/comm"));
+              // Under the other session's shell the descriptor is a foreign holder.
+              expect(yield* removeUnder(90)).toContain(
+                `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
+              );
+              expect(yield* fs.exists(targetPath)).toBe(true);
+              // A shared terminal is not a proven agent session: both a sibling
+              // pipeline and another tab below it must retain the archive fence.
+              expect(yield* removeUnder(70, "ghostty")).toContain(
+                `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
+              );
+              expect(yield* removeUnder(95, "ghostty")).toContain(
+                `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
+              );
+              expect(yield* fs.exists(targetPath)).toBe(true);
+              // A recognized session exempts its descendants. A terminal fallback
+              // must also permit the holder when it is the invoking process itself.
+              expect(yield* removeUnder(70, rootCommand, rootCommand === "ghostty" ? process.pid : 100)).toBe(
+                "retired"
+              );
+              {
+                const fs = yield* FileSystem.FileSystem;
+                const path = yield* Path.Path;
+                const removal = yield* WorktreeRemovalService;
+                const context = yield* resolveWorktreeContext(repoRoot);
+                const branch = defaultWorktreeBranch("marker-priority");
+                const targetPath = yield* addWorktree(context, "marker-priority", branch);
+                const holder = yield* ChildProcess.make("sleep", ["60"], {
+                  cwd: targetPath,
+                  stdin: "ignore",
+                  stdout: "ignore",
+                  stderr: "ignore",
+                });
+                const request = WorktreeRemovalRequest.make({
+                  name: NonEmptyTrimmedStr.make("marker-priority"),
+                  targetPath,
+                  mainCheckout: context.mainCheckout,
+                  branch: O.some(branch),
+                  archive: true,
+                  deleteBranch: true,
+                  expectedHead: O.none(),
+                  exemptInvokerSession: true,
+                });
+                const table = processTableWithLineage({
+                  base: procProcessTable,
+                  self: process.pid,
+                  entries: [
+                    ProcessTableEntry.make({ pid: 60, parent: 1, command: "claude" }),
+                    ProcessTableEntry.make({ pid: process.pid, parent: 60, command: "bun" }),
+                    ProcessTableEntry.make({ pid: holder.pid, parent: 60, command: "sleep" }),
+                  ],
+                });
+                const config = ConfigProvider.fromEnv({
+                  env: {
+                    BEEP_WORKTREE_RESIDUE_ROOT: path.join(context.worktreesRoot, "test-residue"),
+                    HOME: context.worktreesRoot,
+                  },
+                });
+                yield* Effect.gen(function* () {
+                  const error = yield* Effect.flip(
+                    removal.remove(
+                      WorktreeRemovalRequest.make({
+                        ...request,
+                        exemptInvoker: WorktreeInvokerExemption.make({
+                          sessionMarker: O.some(
+                            WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 1 })
+                          ),
+                        }),
+                      })
+                    )
+                  );
+                  expect(error.message).toContain("still hold it");
+                  expect(yield* fs.exists(targetPath)).toBe(true);
+                  // The same scripted topology permits retirement only when the caller
+                  // requests command-name inference without supplying an explicit proof.
+                  yield* removal.remove(request);
+                  expect(yield* fs.exists(targetPath)).toBe(false);
+                }).pipe(
+                  Effect.provideService(ProcessTable, table),
+                  Effect.provideService(ConfigProvider.ConfigProvider, config),
+                  Effect.ensuring(Effect.ignore(holder.kill()))
+                );
+              }
+            })
+          );
+          expect(yield* fs.exists(targetPath)).toBe(false);
+          expect(A.filter(yield* fs.readDirectory(context.worktreesRoot), Str.includes(".retiring-"))).toEqual([]);
+          expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).toBe("");
+        })
+      )
   );
 
   it.effect("removes a clean legacy worktree under its authorized head and refuses a dirty one", () =>
@@ -1406,6 +1955,42 @@ describe("worktree git operations", () => {
         // exists and the branch survives alongside the named fenced copy.
         expect(yield* runGitText(repoRoot, ["for-each-ref", "refs/archive/worktrees/sticky-demo/"])).not.toBe("");
         expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).not.toBe("");
+      })
+    )
+  );
+});
+
+describe("nested worktree removal", { concurrent: false }, () => {
+  it.effect("removes a nested lane and its branch while retaining the sibling context root", () =>
+    withScratchRepo((repoRoot) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const context = yield* resolveWorktreeContext(repoRoot);
+        const siblingRoot = path.join(path.dirname(repoRoot), `${path.basename(repoRoot)}-worktrees`);
+        expect(context.worktreesRoot).toBe(siblingRoot);
+        const targetPath = path.join(repoRoot, CLAUDE_WORKTREES_RELATIVE_ROOT, "nested-lane");
+        yield* runGit(repoRoot, ["worktree", "add", "-b", "feat/nested-lane", targetPath]);
+        const previousCwd = process.cwd;
+        yield* Effect.acquireUseRelease(
+          Effect.sync(() => {
+            process.cwd = () => repoRoot;
+          }),
+          () =>
+            Command.runWith(worktreeCommand, { version: "0.0.0" })([
+              "remove",
+              "nested-lane",
+              "--archive",
+              "--delete-branch",
+            ]).pipe(Effect.provideService(ConfigProvider.ConfigProvider, residueConfigProvider(siblingRoot))),
+          () =>
+            Effect.sync(() => {
+              process.cwd = previousCwd;
+            })
+        );
+        expect(yield* fs.exists(targetPath)).toBe(false);
+        expect(yield* runGitText(repoRoot, ["branch", "--list", "feat/nested-lane"])).toBe("");
+        expect((yield* resolveWorktreeContext(repoRoot)).worktreesRoot).toBe(siblingRoot);
       })
     )
   );

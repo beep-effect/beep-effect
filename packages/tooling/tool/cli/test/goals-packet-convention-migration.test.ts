@@ -673,16 +673,30 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
         applyPacketGenesisSeed(seed).pipe(
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
-            makeDirectory: (target, options) =>
-              target === eventsDirectory
-                ? Effect.fail(injectedFileSystemError("makeDirectory", target))
-                : fs.makeDirectory(target, options),
+            makeTempDirectory: () => Effect.fail(injectedFileSystemError("makeTempDirectory", eventsDirectory)),
           })
         )
       );
       expect(Exit.isFailure(directoryFailure) ? directoryFailure.cause.toString() : "").toContain(
         "genesis directory write failed"
       );
+
+      const publicationFailure = yield* applyPacketGenesisSeed(seed).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: Effect.fn("PacketMigrationTest.refuseGenesisPublication")((source, target) =>
+            target === eventsDirectory
+              ? Effect.fail(injectedFileSystemError("rename", target))
+              : fs.rename(source, target)
+          ),
+        }),
+        Effect.flip
+      );
+      expect(publicationFailure.message).toContain("genesis directory publication failed");
+      expect(yield* fs.exists(eventsDirectory)).toBe(false);
+      expect(yield* fs.exists(seed.tracePath)).toBe(false);
+      yield* applyPacketGenesisSeed(seed);
+      expect(yield* fs.readFileString(`${eventsDirectory}/${seed.eventFileName}`)).toBe(seed.eventText);
     })
   );
 
@@ -920,7 +934,10 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const writeLocator = yield* makeFixture("draft-write");
       const writeApplier = yield* makeApplier({
         ...fs,
-        writeFileString: (target) => Effect.fail(injectedFileSystemError("writeFileString", target)),
+        writeFileString: (target, content, options) =>
+          Str.endsWith(".json")(target)
+            ? Effect.fail(injectedFileSystemError("writeFileString", target))
+            : fs.writeFileString(target, content, options),
       });
       expect(failureMessage(yield* Effect.exit(writeApplier.apply(writeLocator)))).toContain(
         "rebased event write failed"
@@ -953,7 +970,8 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const stagedIntegrityLocator = yield* makeFixture("staged-integrity");
       const stagedIntegrityApplier = yield* makeApplier({
         ...fs,
-        writeFileString: (target, _content, options) => fs.writeFileString(target, "not json\n", options),
+        writeFileString: (target, content, options) =>
+          fs.writeFileString(target, Str.endsWith(".json")(target) ? "not json\n" : content, options),
       });
       expect(failureMessage(yield* Effect.exit(stagedIntegrityApplier.apply(stagedIntegrityLocator)))).toContain(
         "staged repair does not pass event integrity checks"
@@ -1418,6 +1436,66 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
   );
 
   it.effect(
+    "accepts a completed trace when recovery quarantine loses the rename race",
+    Effect.fnUntraced(function* () {
+      const { fs, retry } = yield* preparePartialTraceRecovery();
+      yield* applyPacketGenesisSeed(retry).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: Effect.fn("PacketMigrationTest.completeTraceBeforeQuarantine")((source, target) =>
+            source === retry.tracePath
+              ? fs
+                  .writeFileString(source, retry.traceText)
+                  .pipe(Effect.andThen(Effect.fail(injectedFileSystemError("rename", source))))
+              : fs.rename(source, target)
+          ),
+        })
+      );
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(retry.traceText);
+    })
+  );
+
+  it.effect(
+    "republishes a vanished trace when recovery quarantine loses the rename race",
+    Effect.fnUntraced(function* () {
+      const { fs, retry } = yield* preparePartialTraceRecovery();
+      yield* applyPacketGenesisSeed(retry).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: Effect.fn("PacketMigrationTest.removeTraceBeforeQuarantine")((source, target) =>
+            source === retry.tracePath
+              ? fs.remove(source).pipe(Effect.andThen(Effect.fail(injectedFileSystemError("rename", source))))
+              : fs.rename(source, target)
+          ),
+        })
+      );
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(retry.traceText);
+    })
+  );
+
+  it.effect(
+    "preserves an incomplete trace when quarantine cannot rename it",
+    Effect.fnUntraced(function* () {
+      const { fs, partialTrace, retry } = yield* preparePartialTraceRecovery();
+      const failure = yield* applyPacketGenesisSeed(retry).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          rename: Effect.fn("PacketMigrationTest.refuseTraceQuarantine")((source, target) =>
+            source === retry.tracePath
+              ? Effect.fail(injectedFileSystemError("rename", source))
+              : fs.rename(source, target)
+          ),
+        }),
+        Effect.flip
+      );
+      expect(failure.message).toContain("genesis trace quarantine failed");
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(partialTrace);
+      yield* applyPacketGenesisSeed(retry);
+      expect(yield* fs.readFileString(retry.tracePath)).toBe(retry.traceText);
+    })
+  );
+
+  it.effect(
     "repairs an owned trace prefix while preserving a foreign trace",
     Effect.fnUntraced(function* () {
       const { fs, packet, manifest, partialTrace, retry } = yield* preparePartialTraceRecovery();
@@ -1566,8 +1644,8 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
             makeTempDirectory: (options) =>
-              options?.directory === path.dirname(quarantineCreateSeed.eventsDirectory)
-                ? Effect.fail(injectedFileSystemError("makeTempDirectory", options.directory))
+              options?.prefix === ".genesis-rollback-"
+                ? Effect.fail(injectedFileSystemError("makeTempDirectory", root))
                 : fs.makeTempDirectory(options),
           })
         )
@@ -1600,17 +1678,15 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       );
 
       const rescanSeed = yield* makeGenesisRollbackSeed(root, "rescan-failure");
-      let rescanCalls = 0;
       const rescanFailure = yield* Effect.exit(
         applyPacketGenesisSeed(rescanSeed).pipe(
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
-            readDirectory: (target, options) => {
-              rescanCalls += 1;
-              return rescanCalls === 1
-                ? fs.readDirectory(target, options)
-                : Effect.fail(injectedFileSystemError("readDirectory", target));
-            },
+            readDirectory: Effect.fn("PacketMigrationTest.failQuarantineRescan")((target, options) =>
+              Str.includes(".genesis-rollback-")(target)
+                ? Effect.fail(injectedFileSystemError("readDirectory", target))
+                : fs.readDirectory(target, options)
+            ),
           })
         )
       );

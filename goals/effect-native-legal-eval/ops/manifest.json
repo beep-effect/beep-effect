@@ -3,13 +3,14 @@
   "initiative": {
     "id": "effect-native-legal-eval",
     "title": "Effect-Native Legal Eval",
-    "status": "active",
+    "status": "paused",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-09-12",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-native-legal-eval",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "2026-09-12: paused at the roadmap re-eval (graduated 2026-08-13, zero execution, flagged stale-active by goals doctor). Resumes when a Lane 2 slot pulls the C&H baseline; goals/tracked-changes-ingest-wedge is blockedBy this packet and waits with it; see the docs/ROADMAP.md parked table.",
   "mission": "Ship a schema-first Effect-native legal evaluation framework and record one externally comparable C&H baseline.",
   "executionCapable": true,
   "reflectionRequired": true,

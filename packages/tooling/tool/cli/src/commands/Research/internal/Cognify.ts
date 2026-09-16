@@ -15,9 +15,17 @@ import { ResearchCommandError } from "../Research.errors.ts";
 import { ResearchCognifySummary } from "../Research.schemas.ts";
 import { INSERT_CAPTURE_LOG, runWithResearchDb } from "./Catalog.ts";
 import { catalogDbPath } from "./CatalogOps.ts";
-import { cogneeAdd, cogneeCognify, cogneeLogin, datasetForSourceType } from "./CogneeClient.ts";
+import {
+  COGNEE_CREDENTIALS_MISSING,
+  cogneeAdd,
+  cogneeCognify,
+  cogneeLogin,
+  datasetForSourceType,
+  readCogneeSettings,
+} from "./CogneeClient.ts";
 import type { ResearchCognifyOptions } from "../Research.schemas.ts";
 import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
+import type { CogneeSettings } from "./CogneeClient.ts";
 
 const $I = $RepoCliId.create("commands/Research/internal/Cognify");
 
@@ -43,6 +51,15 @@ interface CognifyUpload {
   readonly id: string;
 }
 
+const requireCogneeSettings: Effect.Effect<O.Option<CogneeSettings>, ResearchCommandError> = readCogneeSettings.pipe(
+  Effect.flatMap(
+    O.match({
+      onNone: () => Effect.fail(ResearchCommandError.make({ message: COGNEE_CREDENTIALS_MISSING })),
+      onSome: Effect.succeedSome,
+    })
+  )
+);
+
 /**
  * Push pending research cards into Cognee datasets.
  *
@@ -65,6 +82,9 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
 ): Effect.fn.Return<ResearchCognifySummary, ResearchCommandError, ResearchCommandServiceRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  // An explicit cognify needs credentials even when nothing is pending, so an
+  // empty vault reports the same gate as a busy one; dry runs stay credential-free.
+  const settings = options.dryRun ? O.none<CogneeSettings>() : yield* requireCogneeSettings;
   const databasePath = yield* catalogDbPath(options.vaultRoot);
 
   const pendingRows = yield* runWithResearchDb(
@@ -117,7 +137,10 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
     );
   }
 
-  const connection = yield* cogneeLogin();
+  const connection = yield* O.match(settings, {
+    onNone: () => Effect.fail(ResearchCommandError.make({ message: COGNEE_CREDENTIALS_MISSING })),
+    onSome: cogneeLogin,
+  });
   for (const dataset of datasets) {
     const uploads = MutableHashMap.get(byDataset, dataset).pipe(O.getOrElse((): Array<CognifyUpload> => []));
     for (let index = 0; index < A.length(uploads); index += COGNEE_ADD_BATCH_SIZE) {

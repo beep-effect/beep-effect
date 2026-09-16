@@ -6,8 +6,9 @@ import { FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } fr
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
-import { Cause, Config, ConfigProvider, Effect, Exit, FileSystem, Layer } from "effect";
+import { Cause, Config, ConfigProvider, Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
@@ -165,7 +166,11 @@ describe("thin lint workers", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       const root = yield* findRepoRoot();
       yield* run(["deprecated-apis"]);
-      const expected = rootLintPolicyStepsForTesting(root, undefined, "origin/main")[0];
+      const expected = pipe(
+        rootLintPolicyStepsForTesting(root, undefined, "origin/main"),
+        A.findFirst((step) => step.label === "lint:deprecated-apis"),
+        O.getOrUndefined
+      );
       expect(execution).toHaveBeenCalledTimes(1);
       expect(execution.mock.calls[0]?.[0]).toMatchObject({
         command: expected?.command,

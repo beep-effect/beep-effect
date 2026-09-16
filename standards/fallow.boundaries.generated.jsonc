@@ -3459,11 +3459,13 @@
       {
         "from": "@beep/storybook",
         "allow": [
+          "@beep/epistemic-ui",
           "@beep/graph-3d",
           "@beep/storybook",
           "@beep/ui"
         ],
         "allowTypeOnly": [
+          "@beep/epistemic-ui",
           "@beep/graph-3d",
           "@beep/storybook",
           "@beep/ui"

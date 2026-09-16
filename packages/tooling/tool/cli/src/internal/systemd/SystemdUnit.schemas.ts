@@ -112,3 +112,54 @@ export const SystemdUnitPath = S.String.check(S.isPattern(SYSTEMD_UNIT_PATH_PATT
  * @since 0.0.0
  */
 export type SystemdUnitPath = typeof SystemdUnitPath.Type;
+
+/**
+ * One `Key=Value` directive read back from an installed unit file.
+ *
+ * **Example** (Make a directive)
+ *
+ * ```ts
+ * import { SystemdUnitDirective } from "@beep/repo-cli/test/Systemd"
+ *
+ * console.log(SystemdUnitDirective.make({ key: "WorkingDirectory", value: "/clones/beep-effect0" }).key) // WorkingDirectory
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SystemdUnitDirective extends S.Class<SystemdUnitDirective>($I`SystemdUnitDirective`)(
+  { key: S.NonEmptyString, value: S.String },
+  $I.annote("SystemdUnitDirective", {
+    description:
+      "One Key=Value directive of an installed systemd unit; section headers and comments are not directives.",
+  })
+) {}
+
+/**
+ * An installed unit file as the CLI reads it back: its name and directives in file order.
+ *
+ * **Details**
+ *
+ * A timer installer records everything a refresh needs (`WorkingDirectory`,
+ * `EnvironmentFile`, `ExecStart`, `OnCalendar`) in the unit it writes, so a
+ * later `--refresh` can re-render the unit without the operator repeating the
+ * original flags. This is that read-back model.
+ *
+ * **Example** (Make an installed unit)
+ *
+ * ```ts
+ * import { SystemdInstalledUnit } from "@beep/repo-cli/test/Systemd"
+ *
+ * const unit = SystemdInstalledUnit.make({ fileName: "beep-research-daily.service", directives: [] })
+ * console.log(unit.directives.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SystemdInstalledUnit extends S.Class<SystemdInstalledUnit>($I`SystemdInstalledUnit`)(
+  { fileName: S.NonEmptyString, directives: S.Array(SystemdUnitDirective) },
+  $I.annote("SystemdInstalledUnit", {
+    description: "An installed systemd user unit read back as its file name and ordered Key=Value directives.",
+  })
+) {}

@@ -69,8 +69,11 @@ decision; the duty is what run 4 must observe to lift it. Lifting a flag is a si
 sitting-1 Ruling-4 deferrals ride the cluster: token-charge repricing, rule-versus-application
 identity, demand continuity and episode unity. Routing: the Stage C capture (organic admission
 chains with repricing or resubmission), the emission-v2 fixture and Turtle sites for
-rule-versus-application identity, and the C4 proof facts for episode closure. The cluster lifts
-or re-flags together, as it ratified.
+rule-versus-application identity, and an observed attempt-membership and closure chain for
+episode unity (an instrumentation requirement; C4 is committed to issuance and custody
+provenance under Ruling 17 and is not asserted to supply it). Its initial ratification was joint
+(sitting-3 Ruling 1); whether its flags lift individually or only together is a run-4 sitting
+decision with no ruling yet.
 
 - **ScheduleProposal** (class, `rat-059`): with issuance-versus-content identity deferred to run 4 as flagged and its episode, governing-specification and request endpoint flags retained within the joint ordering cluster.
 - **SeatRequest** (class, `rat-061`): with demand-versus-description grain and handling/resubmission continuity deferred to run 4 as flagged.
@@ -98,6 +101,26 @@ copy/correction and issuance identity wait for C4 (Queue C(iii), Queue D).
 
 - **SeatGrant** (class, `rat-066`): with account-copy identity and effective authorization continuity deferred to run 4 as flagged.
 - **VerificationResultArtifact** (class, `rat-070`): with equal-content assessment, copy/correction and issuance identity deferred to run 4 as flagged.
+
+The reuse duties carried only through `later_ratifications` also remain explicit:
+
+`rat-067` (`otp:admb-seat-request:001`):
+
+> Accept otp:admb-seat-request:001 as the SeatRequest recorded-demand-account reuse under sitting-1
+> Ruling 2, with account-copy identity, effective queue participation and withdrawal/resubmission
+> continuity deferred to run 4 as flagged.
+
+`rat-068` (`otp:att-admission-allocation:001`):
+
+> Accept otp:att-admission-allocation:001 as the SeatGrant recorded-lease-value reuse under
+> sitting-1 Ruling 2, treating the two heartbeat reports as snapshots of one candidate subject, with
+> effective allocation continuity deferred to run 4 as flagged.
+
+`rat-069` (`otp:att-verification-attempt:001`):
+
+> Accept otp:att-verification-attempt:001 as the VerificationAttempt recorded-history reuse under
+> sitting-1 Ruling 2, with account-version identity and effective invocation continuity deferred to
+> run 4 as flagged.
 
 ### Queue B: flagged provenance items rat-047 through rat-052 (run 2)
 
@@ -178,13 +201,14 @@ The four buckets are disjoint and total 138: 84 live rows in C(i)–C(iii) and t
 run-2 rows in C(iv). Counts are observation rows, not proposals or terms. The id census is copied
 mechanically from `INDEX`; every `unresolved` id appears exactly once. Each bucket states what
 run 3 showed and what run 4 must add; the index-close lane writes that as fresh `needed_evidence`
-with the run-4 `since` date, never the run-3 text.
+with the run-4 `since` date, never the run-3 text. The verbatim requirements below preserve
+the prior obligations for review; they are not ready-made run-4 disposition text.
 
 | Bucket | Rows | Meaning |
 | --- | ---: | --- |
 | C(i) | 14 | Live corpus-addressable duties: the Stage C capture, a scripted checkout-cache experiment, a verdict consumer, or CQ work can decide them. |
-| C(ii) | 3 | Live decision-gated rows: a consuming decision or executable CQ must exist before evidence can be sought. |
-| C(iii) | 67 | Live identity-experiment rows: the journal-entry duplicate-payload trace, the allocation double-count trace, and the VerificationResultArtifact content-snapshot rival. |
+| C(ii) | 2 | Live decision-gated rows: a consuming decision or executable CQ must exist before evidence can be sought. |
+| C(iii) | 68 | Live identity-experiment rows: the journal-entry duplicate-payload trace, the allocation double-count trace, the VerificationResultArtifact content-snapshot rival, and the assessment-model selection experiment. |
 | C(iv) | 54 | Carried run-2 rows re-parked at run-3 sitting 2 (Rulings 2 and 3), grouped by the sitting's fifteen clusters. |
 | Total | 138 | Every unresolved observation id exactly once. |
 
@@ -192,56 +216,126 @@ with the run-4 `since` date, never the run-3 text.
 
 **ov-token-charge-removal** (3): three ov rows: the removed token charge needs the corresponding journal chain or a liveness/reaping event tying it to a particular active grant and instant (Stage C capture).
 
+Needed evidence retained from `INDEX` (3 rows):
+
+> Needed evidence is the corresponding journal chain or an observation-backed liveness/reaping event
+> tying the removed charge to a particular active grant and instant.
+
   - `po:sha256:519764a98f511e5f2137e8eb2d6b072d92d27b62a4417db97040359034bb3282`
   - `po:sha256:a3b740b147b88dd94b092bee660c397cabadbbed2f35ddd14b6347c6ccb2f3fe`
   - `po:sha256:f41f8934b51e0e14a0344efa0b46898ea051035f811e3cee5e8de69c1bf43e2a`
 
 **seat-grant-organic-chains** (1): the synthetic SeatGrant operational reading; organic lease-eviction/renewal/transfer chains joined to an independently identified holder (Stage C capture; mirrors Queue D).
 
+Needed evidence retained from `INDEX` (1 rows):
+
+> Synthetic operational SeatGrant allocation-relator reading; the recorded-value grain governs
+> SeatGrant reuse this run. Needed: organic lease-eviction/renewal/transfer chains in a fleet
+> capture showing effective allocation continuity, joined to an independently identified holder.
+
   - `so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f`
 
-**recovery-durations** (2): detection-and-recovery with standalone and lane-rerun components; needs independent execution boundaries before a complete duration can be derived (C4 proof facts).
+**recovery-durations** (2): detection-and-recovery with standalone and lane-rerun components; needs independent execution boundaries before a complete duration can be derived (an instrumentation requirement; not asserted to come from C4).
+
+Needed evidence retained from `INDEX` (2 rows):
+
+> A detection-and-recovery process with standalone and lane-rerun components; this changes the
+> referent to the reported activity and requires independent execution boundaries before deriving a
+> complete duration. Retain the detection, attempt, task, lane, and each measurement target
+> together. CQ-007 cannot be answered by adding these durations to the whole attempt or to each
+> other without interval/overlap evidence. CQ-013 requires an independently supported signature
+> mapping, attributed delay, and lane cost comparisons; this one label and two measurements do not
+> settle them.
 
   - `so:sha256:37968f126c464470a069ac2051cb358a0a29720dd49df7256625cb4d17bfa2c6`
   - `so:sha256:928e7ce7acb4292bbd03703746cd347b6fd0aeeb2c144ee33188512f3ff91939`
 
-**assertion-boundary** (2): the assertion's emission/recording boundary versus the attempt boundary and record retention; needs the missing starts and admission joins (Stage C capture plus C4).
+**assertion-boundary** (2): the assertion's emission/recording boundary versus the attempt boundary and record retention; needs the missing starts and admission joins (Stage C capture plus independent attempt-start instrumentation; not asserted to come from C4).
+
+Needed evidence retained from `INDEX` (2 rows):
+
+> The assertion has an emission/recording boundary and persists as information afterwards. The
+> modeled attempt's boundary, actual work's termination, and record retention are different
+> intervals or instants. Missing starts and admission boundaries prevent elapsed work or queue
+> duration from being computed from these notices alone. Preserve each notice's modeled attempt,
+> terminal reason, and recording instant together, and retain the synthetic qualification on
+> evidence use. CQ-007 and CQ-012 require known boundaries and complete time decomposition; neither
+> recorded notice warrants adding admitted execution time or treating unmeasured waiting time as
+> zero.
 
   - `so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98`
   - `so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f`
 
 **checkout-cache-binding** (2): the same-cache accessibility/transfer experiment at task-input-hash and epoch grain with two checkout identities and separate probe times (a scripted run-4 capture, `run4-checkout-cache-binding-identity-consumer`).
 
+Needed evidence retained from `INDEX` (2 rows):
+
+> run4-checkout-cache-binding-identity-consumer: Preserve a same-cache accessibility/transfer
+> experiment at task-input-hash and epoch grain, with the two checkout identities and separate probe
+> times, positive access and bounded local absence, and a binding-change or correction trace. Supply
+> an observed consumer and a Must/Should executable CQ that must address the binding information
+> object's identity rather than the existing qualified checkout/cache relation. If direct relations
+> suffice, keep the class withdrawn. Common Git administration, directory-entry counts and
+> environment flags do not establish common cache access or a skip authorization.
+
   - `so:sha256:a90c39610e4a49911ace23bfa329876914961182bc6fbf2b9e8049b49ad3e3b9`
   - `so:sha256:f4532e29f3f1752921effc1f49c1712e5662464ce09f553e1f81130927db3e6b`
 
 **comparison-operand-binding** (2): an explicit comparison-operand binding and an observed validity decision that depends on the result (yeet verdict consumer).
+
+Needed evidence retained from `INDEX` (2 rows):
+
+> Needed evidence is an explicit comparison-operand binding and an observed validity decision that
+> depends on the result.
 
   - `so:sha256:d8cf8154d2e1435f81698ec0c8d67ea4bce53283ef275029392ce1a2d2f2f03f`
   - `so:sha256:f353b053a061870ff15017fd51401ea9165d54f608052fa1ea8daea981cf5d73`
 
 **wall-time-evidence-class** (2): a Must/Should CQ requiring a separately identified wall-time evidence class plus an observed consumer (CQ work, not capture).
 
+Needed evidence retained from `INDEX` (2 rows):
+
+> A Must/Should CQ whose executable query requires a separately identified wall-time evidence class
+> (rather than the execution-bound actualWallMs/usedCostEstimate calibration tuples CQ-025 already
+> consumes), plus an observed consumer that selects or rejects a verdict on that class.
+
   - `so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30`
   - `so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446`
 
-#### C(ii): decision-gated rows (3 rows)
+#### C(ii): decision-gated rows (2 rows)
 
 **governing-specification-comparison** (1): a concrete decision consuming the comparison record or a demonstrated dependency under an existing question.
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Needed evidence is a concrete decision consuming this comparison record, or a demonstrated
+> dependency making it necessary to identify the governing specification under an existing question.
 
   - `po:sha256:2cc77ae5391bd35d736242a9fff5ee6d2e64ee35cc18a420060b5a541f947ca6`
 
 **deferred-tail** (1): a decision that requires identifying requests omitted from the prescribed sequence.
 
+Needed evidence retained from `INDEX` (1 rows):
+
+> Needed evidence is a concrete decision that requires identifying requests omitted from the
+> prescribed sequence, or an observed mapping that makes this assertion necessary for an existing
+> decision.
+
   - `po:sha256:f60ddfb04ede510a8ffe6a04a36eac20caeb92175e59245f6b436897c83907b8`
 
-**assessment-model-selection** (1): two assessments of one explicitly identified PR/head changing a single component (proof-ledger issuance, C4).
-
-  - `so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee`
-
-#### C(iii): identity-experiment rows (67 rows)
+#### C(iii): identity-experiment rows (68 rows)
 
 **journal-entry-duplicate-payload** (25): 25 admission-journal rows whose identity question needs a trace with two entries of identical semantic payload, independently distinguished emission occurrences, revision links and an observed consumer treatment; this is the AdmissionJournalEntry withdrawal's named evidence (Queue D).
+
+Needed evidence retained from `INDEX` (25 rows):
+
+> A journal append/copy/replay/correction trace containing two entries with identical semantic event
+> payloads, with independently distinguished emission occurrences and any revision links, plus an
+> observed consumer treatment of those entries as one repeated assertion or two separately
+> accountable assertions. This would discriminate content-object identity from assertion-token
+> identity and establish whether correction preserves an entry or produces a new one. The trace must
+> distinguish asserted event time from record creation time; another file hash or capture label
+> would not resolve the grain.
 
   - `so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a`
   - `so:sha256:0385cf6e12920c8a96c520a7238b522f923a7c0116cd603fbeff793a7d0e6058`
@@ -270,6 +364,16 @@ with the run-4 `since` date, never the run-3 text.
   - `so:sha256:f1e3e6b059c258e89fc802148a2976a93bd0ade9c8e5568b6052d81945140f7a`
 
 **allocation-double-count** (28): 28 lease/accounting rows that need a time-aligned lease-store and admission-accounting trace showing one allocation counted in two decisions for the same independently identified beneficiary (Stage C capture plus the capacity contract of the carried cluster).
+
+Needed evidence retained from `INDEX` (28 rows):
+
+> A time-aligned lease-store and admission-accounting trace between a matched admission and release
+> or eviction, showing the same allocation counted in at least two separate decisions for the same
+> independently identified beneficiary, requested work, and capacity pool. Include a heartbeat or
+> lease update and termination followed by reacquisition, so continuity versus a new grant can be
+> observed, together with a captured conferral/termination rule stating whether authorization or
+> only charged occupancy persists. This would discriminate a continuing authorization relator from
+> an allocation mode, an event-derived holding situation, and a journal-only account.
 
   - `so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6`
   - `so:sha256:05a0dfbb8f434d75b8be6d1bd7d396925b594cb0e9ceb6b72bda31e76e9685d3`
@@ -302,6 +406,13 @@ with the run-4 `since` date, never the run-3 text.
 
 **result-artifact-content-snapshot** (14): 14 verdict rows carrying the VerificationResultArtifact content-snapshot rival: two independent equal-content assessments of one attempt whose consumers treat them as distinct or as one, plus issuance/correction provenance (C4).
 
+Needed evidence retained from `INDEX` (14 rows):
+
+> Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+> assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content
+> assessments of one attempt whose consumers treat them as distinct or as one result, plus the
+> issuance/correction provenance the proof-ledger writer will carry (time-to-certainty C4).
+
   - `so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda`
   - `so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465`
   - `so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c`
@@ -317,6 +428,20 @@ with the run-4 `since` date, never the run-3 text.
   - `so:sha256:f19da17d5b8f8ff5107a9b96cf4ff9256ebf03da52491e0370413f941f085e5d`
   - `so:sha256:faeff009ed066ab59b310901f7f127fa174f0b0e2859613529a9ac69673c3230`
 
+**assessment-model-selection** (1): an identity experiment over verdict records: two assessments of one explicitly identified PR/head changing a single component, with the consumer's criteria preserved (no decision prerequisite and no C4 dependence asserted; rebucketed from C(ii) on verification finding J01).
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> To select among the remaining models, observe two assessments of the same explicitly identified
+> PR/head with their operational assessment instants and review/check states preserved, changing a
+> single component between them. Include the observed consumer's criteria and its distinction
+> between checksGreen and requiredChecksGreen, the connection to the CQ-006/CQ-017 obligations, and
+> whether it treats the second assessment as an update to one document or a distinct snapshot. A
+> retained copy after removal of the original record would additionally discriminate the
+> specific-bearer dependence claim.
+
+  - `so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee`
+
 #### C(iv): carried run-2 rows by sitting-2 cluster (54 rows)
 
 Clusters follow `ONT/work/sittings/carried-clusters.yaml` (ids and order). Every row keeps
@@ -325,22 +450,79 @@ cluster's posture is the fresh evidence run 4 must add.
 
 **checkout-binding** (0): Run 3 retired the fleet-checkout-identity row (sitting-2 Ruling 1); no unresolved rows remain here.
 
-**grant-resource-contention** (2): Lease snapshots share nonce, grant instant and charge but differ in heartbeat instant; run 3 supplies organic release/eviction reports and synthetic termination joins. Run 4 must add an organic contention episode: two requests competing for the same capacity with the losing side's wait and the winner's effective holding, joined through the Stage C capture.
+**grant-resource-contention** (2): Run 3 supplies admission histories and synthetic termination joins, but the fleet manifests exclude lock files and proof-locks directories. Run 4 must add the actual contended-resource or proof-lock ownership join, acquisition/release boundaries and waiting/winning/losing outcome, with the rule linking FleetContestedPath to contention; admission authorization does not establish proof-lock ownership.
+
+Needed evidence retained from `INDEX` (2 rows):
+
+> Run 3 now captures root/nonce-scoped enqueue, admission, withdrawal, release and eviction reports,
+> including synthetic attempt-termination joins. The run3-fleet and run3b-fleet manifests exclude
+> lock files and proof-locks directories, and dh:att-overlap-diagnostic:001 still establishes only a
+> logged overlapping path. To decide C2/C3, obtain the run-2 sitting-2 Ruling-3 join for the actual
+> contended resource or proof-lock path: grant/lease and lock ownership identifiers, acquisition and
+> release boundaries, and a waiting/winning/losing outcome in one provenance chain. Identify the
+> rule linking FleetContestedPath to that contention and distinguish admission authorization from
+> proof-lock ownership. Admission counts, a common origin key and worktree overlap cannot supply
+> that missing relation.
 
   - `so:sha256:b42503da37767cc741db6196fbf13e019bdc59f71166ad4d95318966ca7ae123`
   - `po:sha256:5fa0d40013f2f1bace37c166a14058909069e91de0f63b823bd0921c40f68278`
 
-**admission-lifecycles** (5): Run 3 supplies same-root/nonce enqueue-admit-release chains and explicitly synthetic withdrawal and eviction boundaries. Run 4 must add organic withdrawal, lease-eviction and ticket-eviction chains from the Stage C capture (the canonical root today holds 2 lease evictions, 1 ticket eviction and 20 withdrawals in 442 v3 rows), each with the causal continuity the pure lifecycle duty names.
+**admission-lifecycles** (5): Run 3 supplies same-root/nonce enqueue-admit-release chains and explicitly synthetic withdrawal and eviction boundaries. Run 4 must retain the causal/carrier continuity, separate lifecycle CQ and independent memory-rider duties quoted below. Queue D records the dated live journal census; row incidence alone discharges none of these duties.
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 supplies an organic same-root/nonce enqueue-admit-release history, plus synthetic withdrawal
+> and eviction reports with two attempt-termination joins. The pure lifecycle duty still needs
+> authoritative causal continuity from one request's submission through grant and
+> release/cancellation, and a Must/Should CQ requiring a lifecycle distinct from its request, grant
+> and boundary reports. The memory rider remains independently parked under Ruling 6: the release
+> now carries memoryPeakBytes, but the resource-using occurrence/process boundary, sampling method
+> and interval, metric/unit, measurement provenance and its relationship to peakRssKb are still
+> missing. Different capture-scoped ownerRef values and an administrative termination notice cannot
+> decide either missing identity.
 
   - `so:sha256:c627961a8fcde9dca01027cbf052494763b5e6895805c1c0c50d8bf51ba3a7bb`
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 now provides a same-root/nonce organic enqueue-admit-release chain and explicit synthetic
+> withdrawal, grant-eviction and ticket-eviction boundaries. Synthetic attempt-terminated records
+> match the two eviction attemptIds. What remains is authoritative causal-continuity evidence
+> connecting one submitted request to its grant and release/cancellation, together with a
+> Must/Should decision CQ requiring that composite lifecycle separately from SeatRequest, SeatGrant
+> and their boundary reports. The terminal-only synthetic eviction chains lack their own retained
+> starts, and recordedAt is a reconciliation time rather than proof of actual execution cessation.
+
   - `so:sha256:d94bf0420d3457158959e6188c50d5949dc4fae4a48d07e7077f8c81df36fcb6`
+
+Needed evidence retained from `INDEX` (3 rows):
+
+> Run 3 adds two live lease snapshots with the same nonce, grant instant and charge but different
+> heartbeat instants, organic release/eviction reports, and explicitly synthetic
+> eviction-to-attempt-termination joins. It still lacks one provenance chain that binds a grant's
+> creation, complete heartbeat-rewrite history, release/eviction, actual ledger decrement and
+> carrier lineage. Capture-scoped ownerRef values cannot prove cross-capture owner continuity; a
+> terminal lastHeartbeatAtMillis is not a rewrite history, and the synthetic evicted lease has no
+> retained admission start. A Must/Should CQ must also require this lifecycle separately from
+> SeatGrant. Keep both the provenance and separate-warrant duties open.
+
   - `po:sha256:3aadb9c8ae061d71b2e8386d9b8af518d49df5a66abaa0bb0391783833a6eef4`
   - `po:sha256:51fa8a9b8fcef0856134c3599ef68eabe588532203230c5b0ac8c892da47c95a`
   - `po:sha256:56d67898f9daaa0ff3c1fb34ff05745d9a1f94cf2703726f7721d1f586f89e5f`
 
 **failure-signature-occurrences** (0): Retired at sitting 2 (Ruling 1): the three failure-signature rows were re-identified against the captured failureKind/failedStepId tuples; signature identity stays open on the run-3 verdict chain, not on these rows. No unresolved rows remain here.
 
-**cache-plan-resolution** (1): The verdict-corpus search is complete within its captured fields: rider_evidence=absent with zero structured occurrences. Run 4 either observes a resolver-result-to-execution join in a new capture or retires the rider as unobservable at this corpus grain; a copied park is rejected.
+**cache-plan-resolution** (1): The verdict-corpus search is complete within its captured fields: rider_evidence=absent with zero structured occurrences. The promoted rider remains unresolved under sitting-2 Ruling 2; run 4 must obtain the governed resolver-result-to-execution join quoted below.
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3's verdict-corpus search is now complete within its captured fields: run3-fleet/MANIFEST.yaml
+> reports pa-cache-plan-resolution rider_evidence=absent with zero structured occurrences. Its
+> source_facts name the resolver domain and the resolver-to-command-arguments site, but the verdict
+> schema has no cache-plan field. Obtain an observed governed resolver result with its applicable
+> domain/version, joined to a particular Turbo execution and the cache posture actually applied.
+> Checkout cache topology, cacheStatus and enablement flags do not supply that execution join. This
+> promoted Ruling-6 rider remains open; the docket authorizes no new capture or runtime change.
 
   - `po:sha256:30be9d42308395a759ea42b1706c47b14bf2d995ff5d90eb85161cef24e27b61`
 
@@ -348,38 +530,159 @@ cluster's posture is the fresh evidence run 4 must add.
 
 **assessment-and-selector-governance** (9): Run 3 records verdict comparisons, greptileScore, proofTier and classified failure tuples, but no governing contract for freshness, review-score meaning, attribution or proof-tier selection. Run 4 must cite the authoritative contract (scale authority and version, selector scheme lineage, attribution conditions) or park each row with that contract named as the missing decision-maker.
 
+Needed evidence retained from `INDEX` (3 rows):
+
+> Run 3 adds verdict comparison values and timestamped checkout branch/head bindings;
+> dh:ver-git-comparison-context:001 still has no observed validity decision consuming those
+> comparisons. Under Ruling 6, obtain a versioned branch-freshness contract binding each assessment
+> to its branch and base operands, defining merge-base, behind-count and overlap meanings, and
+> showing assessment provenance, recomputation and the decision that changes with the result. A
+> recorded zero or a matching path is insufficient to establish equal trees or evidence validity.
+
   - `so:sha256:0a7f99ebe45f22164f484b539becf4d1d57384861db25b0c065fc67cca2574a7`
   - `so:sha256:a4fa5b4f6b8142d813d5867e01c92a245a9a7ee7d64b8841a3e27a068c88e764`
   - `so:sha256:c1e2fd7731b1efe855f70c75df8e7dd0bd99853668c551eca8fb80593a621d06`
+
+Needed evidence retained from `INDEX` (2 rows):
+
+> Run 3 now records greptileScore=5/5 in a verdict with proofTier=full, but a score spelling does
+> not supply its governed meaning. Under Ruling 6, obtain the scale authority and version, the exact
+> reviewed subject, score-production and revision provenance, and an observed assurance or closeout
+> decision governed by that score. Retain the distinction between a stored readiness assertion and a
+> current eligibility decision.
+
   - `so:sha256:12f0a017acb17063246f77ebb5c128271f9df67ea7bc1666268052f2d58873d1`
   - `so:sha256:258d88bf5d120ca46af4e7964a5c3a5674c5c4984b67c0f84fe8f706e979c3f6`
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 adds classified failure tuples and component results, which supply concrete reports but not
+> introduced/inherited/unrelated/environment attribution rules. Under Ruling 6, obtain necessary
+> conditions for every attribution member, overlap or precedence rules, and an assessment record
+> binding the change, baseline, environment, assessment provenance and revision history. failureKind
+> and failedStepId classify a report; they cannot by themselves assign responsibility or baseline
+> causation.
+
   - `po:sha256:a0460c0e2b60f310cb30b9c03ea0aa2e487e02aadaa0450c56bb04cff6b5c8c9`
+
+Needed evidence retained from `INDEX` (3 rows):
+
+> Run 3 adds proofTier=full in verdict and lease/request contexts, while result status and attained
+> assurance remain separate. Under Ruling 6, obtain planner authority and version/revision lineage
+> deciding a shared selector scheme versus copied domains or plan-borne classifications, together
+> with a Must/Should CQ whose decision consumes that selector. Repeated strings and the captured
+> priority domain cannot establish the proof-tier governance or its mapping to assurance tiers.
+
   - `po:sha256:8b0e7ebacbadd3d0a21df787d0070763c9151c438e5ad68ef69454c6bea0aca1`
   - `po:sha256:8d123d2b803018949aa079849fafabb4d38fbde7e7f77a5515d448cdc0a9f195`
   - `po:sha256:922212cafdb03daef5fb111352d661cfda30e1e9f3d3e8c3e6f45a19c6a82a50`
 
-**execution-boundaries-and-elapsed-scope** (2): Run 3 has attempts with startedAt/endedAt/elapsedMs and component statuses. Run 4 must obtain a passed-step execution record with its own boundary and the measured-extent authority (what an elapsed interval covers), which the proof-ledger writer (C4) is expected to carry.
+**execution-boundaries-and-elapsed-scope** (2): Run 3 has attempts with startedAt/endedAt/elapsedMs and component statuses. Run 4 must obtain a passed-step execution record with its own boundary and the measured-extent authority (what an elapsed interval covers), which no current writer supplies; C4 is committed to issuance and custody provenance (Ruling 17), not to these execution facts.
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 now has verdicts with a parent attemptId, passed component statuses and component durations,
+> and a separate failed attempt whose planned components are explicitly not-run. Under Ruling 6,
+> obtain a passed-step execution record preserving the authoritative parent-attempt join, each
+> repeated execution's identity and its own actual start/end boundaries. Whole-attempt bounds and a
+> repeated lane label do not supply the missing component occurrence boundaries; the passed-step
+> instrumentation was excluded from the v3 scope.
 
   - `so:sha256:3a8b51a1acc8602b1a583147d6d5e7e253481237fbf5806c9b13833698bc9090`
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 now supplies an identified attempt with startedAt, endedAt and elapsedMs, so the
+> missing-record part of the run-2 request has changed. Under Ruling 6, retain the measured-extent
+> question: establish authoritatively whether each value covers the entire attempt/command or a
+> particular WorkUnit occurrence, preserving target, interval and provenance.
+> fa:ver-wall-time-evidence:001 still asks for nested occurrence bindings, clock/precision
+> conventions and the explanation of a one-millisecond discrepancy. Parent-attempt timestamps cannot
+> be copied to each nested execution, and an assertion-content proposal does not settle what was
+> measured.
+
   - `po:sha256:2092736911a0c68e96ae8d9638b00ec4b6992b4da0677f325e4fd420fb41b2a7`
 
 **memory-measurement** (1): memoryPeakBytes now joins a release report through root and nonce. Run 4 must add the resource-using occurrence and process boundary, sampling method and interval; the Stage C capture rides the same admission histories.
 
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 now joins memoryPeakBytes=9904820224 to a particular admission release report through its
+> root and nonce. Under Ruling 6, obtain the measurement's resource-using occurrence and process
+> boundary, sampling method and interval, metric, unit and measurement provenance. Supply an
+> authoritative comparison with peakRssKb that decides whether the two fields measure one family. A
+> release-attached quantity, token charge or owner surrogate does not establish the measured process
+> or sampling semantics.
+
   - `so:sha256:78cf821b0771a1c60ef1f80746484a8da1df72bcf2b1eaa9ebed337144e5a245`
 
-**duration-and-comparison-issuance** (2): ExecutionDurationAssertion was withdrawn (Queue D). Run 4 must supply a Must/Should CQ whose executable query needs a separate wall-time evidence class plus an observed consumer, or keep the concession and retire the individuals.
+**duration-and-comparison-issuance** (2): ExecutionDurationAssertion was withdrawn (Queue D). The two carried rows retain separate duration-individual, equal-content carrier and diagnostic-comparison requirements under sitting-2 Ruling 2. Issuance remains open to run 4 under Ruling 17; the full duties follow.
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 adds attempt-scoped elapsedMs, nested durationMs and otp:ver-wall-time-evidence:001, whose
+> assertion-content, quality, token and scoped-literal models remain alternatives. Under Ruling 6,
+> the separate RecordedWallDurationMeasurement still needs a Must/Should executable CQ that must
+> traverse that individual instead of qualified values on an episode or execution. The carrier
+> alternative also needs authoritative issuance, custody, copy and correction lineage and a decision
+> CQ that distinguishes equal-content carrier tokens. Ruling 17 keeps the issuance duty open to run
+> 4: the fleet manifests observe zero proof ledgers, so captured verdicts cannot replace the missing
+> writer-issued provenance.
 
   - `so:sha256:2a207d4986630e8590f790457dabe07ffeecdb9b2bfa79cf254c6bce508a2998`
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 adds bounded attempt durations and a recovery diagnostic with distinct standaloneDurationMs
+> and laneRerunDurationMs inside a successful attempt. Under Ruling 6, retain both duration
+> concessions: a Must/Should CQ requiring a RecordedWallDurationMeasurement individual rather than
+> qualified episode/execution values, and an authoritative issuance/custody/copy/correction chain
+> plus a CQ distinguishing carrier tokens from equal content. The comparison concession additionally
+> needs identities for both compared executions, their measurement assertions, the comparison's
+> issuance, and a Must/Should decision CQ consuming a distinct comparison record. Ruling 17 keeps
+> issuance open to run 4 because zero proof ledgers were captured. Diagnostic timing alone supplies
+> neither the paired execution identities nor a separately warranted comparison.
+
   - `so:sha256:91988c625516a3fa1516b592a7dc4c6b197b56249390fde1fc1e116867ae1af3`
 
-**qa-and-conformance-evidence** (4): Run 3 has the admission projection fixture, the property-suite contract and the S7 replay result, none of which is a record/extract/judge QA run or an issued conformance package. Run 4 must join a beep-qa session (record, extract, judge) to an in-scope decision, or park with that chain named.
+**qa-and-conformance-evidence** (4): Run 3 has the admission projection fixture, the property-suite contract and the S7 replay result. The QA-stage chain and the three conformance/suite/replay-result chains remain distinct duties; the full requirements, including their issuance obligations, follow.
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 adds an admission projection fixture, property-suite contract and S7 replay result. Those
+> are not a record/extract/judge QA run. Under Ruling 6, obtain one provenance-bearing chain joining
+> all three QA stages to the in-scope Yeet or CI lane, its frozen tree and cache epoch, and the
+> assurance obligation that consumes the evidence. The captured replay's input digest and pass
+> assertion do not supply those QA-stage or assurance joins.
 
   - `po:sha256:3bf3cf7f37f4e3e046efb12751c4b9650dd3a2a16a0c99a1ec17563fa551048a`
+
+Needed evidence retained from `INDEX` (3 rows):
+
+> Run 3 adds emission-v2 contract and property-suite quotations and the bounded S7 differential
+> replay report of 41 matched admissions, but no independently issued conformance package. Under
+> Ruling 6, obtain all three remaining chains: a package manifest with independent authority/version
+> joining suite, implementation build, frozen inputs, replay execution, complete results,
+> limitations, issuance and custody; a separately governed/versioned suite specification, distinct
+> from its test-file carrier, and its Must/Should CQ; and identified replay execution/environment
+> plus result issuance, custody, retention/correction lineage and a Must/Should CQ for a separate
+> replay-result artifact. Ruling 17's zero-ledger census leaves issuance open to run 4; the passing
+> replay assertion is not that missing lineage.
+
   - `po:sha256:059c20e6b0972ff269acf52884fea9e75f4fc5144fac7728dbac333221866181`
   - `po:sha256:06dd8aab73f74fd680b9cf55a760da82d4a3420f91fc8ea9d8bdb27c4c000d57`
   - `po:sha256:2338c92205c5fc08e5e18d149e7aabca98b83589cf5984e6b83fa81b2401a98c`
 
 **workspace-package-identity** (7): Checkout bindings identify checkouts, not packages. Run 4 must obtain an authoritative package-continuity contract (workspace manifest identity across renames and moves) before any package-identity row can leave unresolved.
+
+Needed evidence retained from `INDEX` (7 rows):
+
+> Run 3 now has 107 checkout bindings with origin, branch/head, Git-directory and cache facts, plus
+> fleet attempt context. These identify checkout observations, not package continuity. Under Ruling
+> 6, obtain an authoritative package-identity policy and observed lineage deciding rename, move,
+> version change, fork and delete/recreate cases, including whether the candidate is a role or
+> immutable-content object. No new package identity policy was admitted with the binding corpus, and
+> a checkout token or package spelling cannot settle those cases.
 
   - `po:sha256:08a398bab03363136254e3e9c3ed49ebb16ffd18fb94b434111d4446cdf50d69`
   - `po:sha256:1189ec1eca4fb79695201186157334124e71372bbe906bb6119996f42b9fe842`
@@ -391,20 +694,68 @@ cluster's posture is the fresh evidence run 4 must add.
 
 **dependency-and-selection-contracts** (9): Step positions 0/1 describe an admission order, not a package graph; stored diff/head/tier context is not a governed affected-task selection run. Run 4 must obtain the package-report ordering contract, the docgen selection artifact with a dirty-tree pin, and the normative affected-task selection contract.
 
+Needed evidence retained from `INDEX` (6 rows):
+
+> Run 3 adds checkout bindings and an admission-order fixture whose step positions are 0 and 1;
+> those positions do not describe a package graph. Under Ruling 6, obtain the package-report
+> contract defining its numeric positions, ordering algorithm and dependency-edge semantics,
+> identify the producing graph/version, and show the operational verification decision consuming
+> that report. No new TS or package-graph observation was admitted with the journal/inventory
+> capture.
+
   - `po:sha256:5a59d414027abf00522737e1d86c7976c6837e7dcf88eb47112cc39709b2be1d`
   - `po:sha256:62ae30cfc28b391c7bf4a87534abeba849a8ca2ebd5f8ebe72cb5af81dcc50eb`
   - `po:sha256:64463ef1e1f2b77cb50713f8194bb055d35d02288f465e6902e337f9fc5f5edf`
   - `po:sha256:6e598d379ffd2f0565176b337833e4eedf0293941fa87936078ee572e63748a9`
   - `po:sha256:89165acdfec28c3a8692c411aead416ca1fd5f13333c0ea5c748e92aeab0cb98`
   - `po:sha256:90fa083c4887641658c0239762b509fd6c9bacc6f14cf29ee392ce08714572ff`
+
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 adds checkout branch/head snapshots and verdict applicability fields; it supplies no docgen
+> selection result with a dirty-tree pin. Under Ruling 6, retain both concessions: an observed
+> selection artifact binding base, head, dirty snapshot and selected members, a contract choosing
+> selected extension versus selection rule and a Must/Should specialization CQ; and an independently
+> versioned selection-rule authority, an observed pinned extension showing its application, a
+> rule-versus-result contract and a CQ requiring the specification. Checkout paths and stored diff
+> fingerprints do not supply those selected members or governance.
+
   - `po:sha256:795d76d79fdc3ad235d204aee98c96f70dcdb10704c927558f31012749553995`
+
+Needed evidence retained from `INDEX` (2 rows):
+
+> Run 3 adds stored diff/head/tier context and a deterministic admission-order contract, but neither
+> is a governed affected-task selection run. Under Ruling 6, obtain the normative selection contract
+> explaining how task inputs alter membership and whether failures open or close the selection, an
+> observed selected set under that contract, and the operational verification decision that trusts
+> it. The current applicability hypotheses still lack an observed accept/reject consumer.
+
   - `po:sha256:9cbd50f3655b7ae7102a1be9bfcfe939528b3eaebd0dc33257408365f9402062`
   - `po:sha256:a1f8202d5ff295e75dd7ad3f50f9454dad4bc2d53677e5936a6a0812250c5e43`
 
 **capacity-computation-and-snapshot** (7): Run 3 quotes the projection inequality and records requested/granted weightTokens but no pre-grant capacity stamp (Ruling 9). Run 4 must obtain the authoritative capacity computation and a Must/Should executable CQ traversing an AdmissionSnapshot, its capture act and instant.
 
+Needed evidence retained from `INDEX` (2 rows):
+
+> Run 3 now records requested/granted weightTokens and quotes the projection inequality
+> activeTokenTotal + weightTokens <= capacityMaxTokens. Ruling 9 deliberately omitted capacity
+> stamps. Under Ruling 6, obtain the authoritative capacity computation defining unit conversion,
+> reserve subtraction and hard-floor treatment, and a provenance-preserving join from its computed
+> value to capacityAtAdmissionTokens on an observed admission decision. A policy token charge and
+> reconstructed ledger total cannot stand for measured remaining capacity.
+
   - `po:sha256:3c757a7975b27b8597ccf8c6d886eb72ad2b8b51aaba8eb59cf21cc9a1a7a3c6`
   - `po:sha256:518aee86882c8b9092469203add3bc23c72acfed1d7139f136a96e8763f0c8c7`
+
+Needed evidence retained from `INDEX` (5 rows):
+
+> Run 3 now includes timestamped inventory and queue/lease reports, but Ruling 9 supplied no
+> pre-grant capacity stamps. Under Ruling 6, obtain a Must/Should executable CQ that traverses an
+> AdmissionSnapshot, its capture act and instant, machine and policy scope, and an authoritative
+> correlation to the immediately pre-grant decision that materializes capacityAtAdmissionTokens. A
+> later lease snapshot, a checkout inventory instant and the projection's capacity inequality do not
+> establish that missing pre-grant state.
+
   - `po:sha256:6b31f817391e66aab8fc9796fed0c0bbdbd8285c9e86438e9172d1ce6bbaef61`
   - `po:sha256:8a555d65d66a8d7f44336fdb4ce8816f5a033a6ce448e311dc29615bfd8f41f2`
   - `po:sha256:8af3333c97798f24aeecfa40f40faefcf152f96fffb6717f647eabf0f5250a92`
@@ -413,9 +764,39 @@ cluster's posture is the fresh evidence run 4 must add.
 
 **origin-and-heartbeat-policy** (5): blockedOnOriginAtMillis=0 and lastHeartbeatAtMillis are captured; their governed meaning is not. Run 4 must obtain the deployed threshold/policy source for origin blocking and heartbeat suspicion, and read the zero against it.
 
+Needed evidence retained from `INDEX` (1 rows):
+
+> Run 3 now captures a ticket's blockedOnOriginAtMillis=0 and separately records queue, withdrawal
+> and eviction boundaries. dh:att-origin-block-marker:001 leaves the zero's meaning unresolved.
+> Under Ruling 6, obtain the deployed threshold rule, its unit and both true/false consequences,
+> decide grace versus staleness versus retry semantics, and observe a specifically origin-blocked
+> case governed by that rule. A terminal eviction or zero marker does not establish a grace-window
+> application.
+
   - `po:sha256:79df3741e52f870a9c5d7ac0f3c76fc333a1341bf8f15c7a7720f2b6982e88b3`
+
+Needed evidence retained from `INDEX` (2 rows):
+
+> Run 3 adds live heartbeat observations and explicit lease eviction reports with
+> lastHeartbeatAtMillis, plus a synthetic termination join. The Stage B heartbeat census checks four
+> organic rows, reports one legacy row without heartbeat and finds no ordering violations; this
+> bounds observations, not owner death. Under Ruling 6, obtain the deployed suspicion threshold and
+> unit, the identified suspected holder, an observed stale-heartbeat case, its operational
+> consequence, and the authority rule separating suspicion from permission to terminate. An eviction
+> reason or last-seen heartbeat is not proof that suspicion alone authorized termination.
+
   - `po:sha256:cb78d031658bfe80535beb490352c2086b2b8f629e3819df4fba336fbeb37598`
   - `po:sha256:cb9064130b643be08d25e627bcfc5264739ac1397a236d353835b473c2df5734`
+
+Needed evidence retained from `INDEX` (2 rows):
+
+> Run 3 now supplies a persisted ticket observation containing blockedOnOriginAtMillis=0 with
+> enqueue and heartbeat context, and the current null analysis refuses to read zero as either an
+> epoch instant or evidence of no contention. Under Ruling 6, obtain a semantically interpreted
+> origin-block onset/time and unit, the same ticket's observed originBusy wait, the
+> starvation-policy decision using it, and issuance/revision provenance across the relevant ticket
+> transitions. The observed zero and unrelated terminal chains do not establish those joins.
+
   - `po:sha256:e362227f9f3d78e8fcb933ddf9f5523b1ef97776a2546ad12c7f702c33fc1cdd`
   - `po:sha256:edf38d10efe0552b7de770a0cc24a9596cc4b5141b693889e987465f4174b4bb`
 
@@ -428,32 +809,113 @@ Withdrawals are deferrals with named evidence, not rejections (sitting-3 Ruling 
 | Withdrawn proposal | Term | Named run-4 evidence |
 | --- | --- | --- |
 | `otp:admb-journal-entry:001` | AdmissionJournalEntry | An observed decision consumer independently addressing admission-assertion identity and a Must/Should executable CQ whose required answer needs the entry individual (`run4-admission-journal-entry-identity-consumer`); the C(iii) duplicate-payload trace is its evidence. |
-| `otp:bind-checkout-cache-binding:001` | CheckoutCacheBindingRecord | The same-cache accessibility/transfer experiment at task-input-hash and epoch grain, two checkout identities, separate probe times, positive access and bounded local absence, and a binding change (C(i) `checkout-cache-binding`). |
-| `otp:bind-grant-termination:001` | AdmissionGrantTermination | An organic lease's admission and effective holding before and after release or eviction, correlated by admission chain and attempt binding, with claim acknowledgement and the matching attempt-termination write. |
-| `otp:bind-request-termination:001` | AdmissionRequestTermination | An organically queued request followed from enqueue through withdrawal or ticket eviction, with before/after effective membership, claim acknowledgement and matching attempt termination. |
+| `otp:bind-checkout-cache-binding:001` | CheckoutCacheBindingRecord | The same-cache accessibility/transfer experiment at task-input-hash and epoch grain, two checkout identities, separate probe times, positive access and bounded local absence, and a binding-change or correction trace, plus the binding-identity consumer and executable CQ (C(i) `checkout-cache-binding`). |
+| `otp:bind-grant-termination:001` | AdmissionGrantTermination | An organic lease's admission and effective holding before and after release or eviction, correlated by admission chain and attempt binding, with claim acknowledgement and the matching attempt-termination write where applicable; the full receipt also requires a decision consumer and separate termination-identity CQ. |
+| `otp:bind-request-termination:001` | AdmissionRequestTermination | An organically queued request followed from enqueue through withdrawal or ticket eviction, with before/after effective membership, claim acknowledgement and matching attempt termination where applicable; the full receipt also requires a consumer and separate queue-exit identity CQ. |
 | `otp:ver-wall-time-evidence:001` | ExecutionDurationAssertion | A Must/Should CQ whose executable query requires a separately identified wall-time evidence class plus an observed consumer selecting or rejecting a verdict on it (C(i) `wall-time-evidence-class`). |
 | `otp:bind-admission-grant:001` | SeatGrant (synthetic operational reading) | Organic lease-eviction/renewal/transfer chains in a fleet capture showing effective allocation continuity, joined to an independently identified holder. |
 | `otp:bind-admission-request:001` | SeatRequest (synthetic operational reading) | An organic withdrawal/resubmission chain with an independently tracked demand referent and both ticket records. |
 | `otp:ver-attempt-verdict:001` | VerificationResultArtifact (content-snapshot rival) | Two independent equal-content assessments of one attempt whose consumers treat them as distinct or as one, plus the issuance/correction provenance the proof-ledger writer will carry (C4). |
 
-**Organic eviction census (2026-09-11, counts only, no capture).** The admission histories that
-`CORPUS/etl_run3b_fleet_corpus.py` enumerates through `admission_sources()` (the canonical
-runtime root, the system temp root and the session temp root) hold today: canonical root 3
-journal files, 202 `yeet-admission-journal/v1` rows and 442 `v3` rows with 220
-`admission-enqueued`, 200 `admission-admitted`, 199 `admission-released`, 20
-`admission-withdrawn`, 2 `admission-lease-evicted` and 1 `admission-ticket-evicted`; session
-temp root 2 rows (one admitted, one released); system temp root absent. These are organic writer
-rows, distinct from the labeled `run3b-synthetic` fixture output. Whether they are new relative
-to the `run3b-fleet` capture (which reported 5 lease and 2 ticket evictions across its retained
-chains) is decided by the **Stage C capture at the run-4 pin**: a new `run4-fleet` pin produced
-by the run3b ETL mechanics under Rulings 10, 19 and 22 (synthetic labels retained; refreshed
-pins carry `corpus_tree`/`corpus_base`; residue scans zero), not by editing any existing pin.
+The table is a routing summary. The complete receipt duties govern re-opening each proposal:
+
+`otp:admb-journal-entry:001`: `run4-admission-journal-entry-identity-consumer` in `ONT/work/sittings/ratification-docket.md`.
+
+> An observed decision consumer independently addressing admission-assertion identity and a
+> Must/Should executable CQ whose required answer is lost when generic qualified assertions replace
+> the class; append/copy/replay/correction cases must distinguish content from emission tokens. An
+> operational event reading additionally needs an effective-transition join.
+
+`otp:bind-checkout-cache-binding:001`: `run4-checkout-cache-binding-identity-consumer` in `ONT/work/sittings/withdrawals-bind-ver-r1.yaml`.
+
+> Preserve a same-cache accessibility/transfer experiment at task-input-hash and epoch grain, with
+> the two checkout identities and separate probe times, positive access and bounded local absence,
+> and a binding-change or correction trace. Supply an observed consumer and a Must/Should executable
+> CQ that must address the binding information object's identity rather than the existing qualified
+> checkout/cache relation. If direct relations suffice, keep the class withdrawn. Common Git
+> administration, directory-entry counts and environment flags do not establish common cache access
+> or a skip authorization.
+
+`otp:bind-grant-termination:001`: `run4-organic-grant-eviction-boundary-and-consumer` in `ONT/work/sittings/withdrawals-bind-ver-r1.yaml`.
+
+> Capture an organic lease's admission and effective holding before and after release or eviction,
+> correlated by its admission chain and attempt binding, with claim acknowledgement and the matching
+> attempt-termination write where applicable. Distinguish ending active capacity from later
+> stale-record cleanup; retain a duplicated terminal report as a control. Include an observed
+> decision consumer and a Must/Should executable CQ that must distinguish termination occurrences
+> independently of qualified standing/end values. Synthetic coverage remains writer evidence, not
+> organic incidence; do not invent an admission, charge or origin for the injected dead lease by
+> copying contender A's chain.
+
+`otp:bind-request-termination:001`: `run4-organic-request-eviction-boundary-and-consumer` in `ONT/work/sittings/withdrawals-bind-ver-r1.yaml`.
+
+> Follow an organically queued request from enqueue through withdrawal or ticket eviction, with
+> before/after effective membership, claim acknowledgement and the matching attempt termination
+> where applicable. Distinguish stale-ticket cleanup from the actual queue exit, duplicate reports
+> from distinct exits, and a later resubmission from the ended participation. Supply a consumer and
+> a Must/Should executable CQ requiring the exit occurrence's identity rather than pending
+> membership and qualified end values. Keep the synthetic dead ticket's missing historical enqueue
+> and full wait unknown; do not infer destruction of an enduring demand or successful work execution
+> from a terminal write.
+
+`otp:ver-wall-time-evidence:001`: `run4-duration-assertion-correction-consumer` in `ONT/work/sittings/withdrawals-bind-ver-r1.yaml`.
+
+> Observe repeated measurements or corrections for the same identified execution interval, keeping
+> occurrence, scope, unit, precision/clock convention, both claims and the actual immutable
+> used-estimate binding. Supply a consumer and a Must/Should executable CQ whose complete answer
+> requires independent assertion identity or correction lineage that qualified execution literals
+> cannot preserve. Missing durations are unknown, not zero; repeated lane labels and
+> whole-attempt/component values do not define an additive partition.
+
+`otp:ver-wall-time-evidence:001`: `final withdrawal requirement` in `ONT/work/sittings/withdrawals-ver-r2.yaml`.
+
+> A Must/Should CQ whose executable query requires a separately identified wall-time evidence class
+> (rather than the execution-bound actualWallMs/usedCostEstimate calibration tuples CQ-025 already
+> consumes), plus an observed consumer that selects or rejects a verdict on that class.
+
+`otp:bind-admission-grant:001`: `final withdrawal requirement` in `ONT/work/sittings/withdrawals-sitting-3.yaml`.
+
+> Synthetic operational SeatGrant allocation-relator reading; the recorded-value grain governs
+> SeatGrant reuse this run. Needed: organic lease-eviction/renewal/transfer chains in a fleet
+> capture showing effective allocation continuity, joined to an independently identified holder.
+
+`otp:bind-admission-request:001`: `final withdrawal requirement` in `ONT/work/sittings/withdrawals-sitting-3.yaml`.
+
+> Synthetic SeatRequest reuse with category unresolved; the recorded-value grain governs SeatRequest
+> reuse this run. Needed: an organic withdrawal/resubmission chain with an independently tracked
+> demand referent and both ticket records.
+
+`otp:ver-attempt-verdict:001`: `final withdrawal requirement` in `ONT/work/sittings/withdrawals-sitting-3.yaml`.
+
+> Content-snapshot identity for VerificationResultArtifact is the rival of the accepted
+> assessment-origin grain (otp:att-attempt-verdict:001). Needed: two independent equal-content
+> assessments of one attempt whose consumers treat them as distinct or as one result, plus the
+> issuance/correction provenance the proof-ledger writer will carry (time-to-certainty C4).
+
+**Organic eviction census (2026-09-12 at 10:08:27 UTC, counts only, no capture).**
+`CORPUS/etl_run3b_fleet_corpus.py` enumerates the canonical runtime, system temp and session
+temp roots through `admission_sources()`; `capture()` reads one `journal.ndjson` per present
+root. At this read, the canonical root has one ETL journal with 623 rows: 200
+`yeet-admission-journal/v1` rows (all `admission-admitted`) and 423 `v3` rows (212
+`admission-enqueued`, 195 `admission-released`, 12 `admission-withdrawn`, 4
+`admission-lease-evicted`, 0 `admission-ticket-evicted`). The session temp root has one ETL
+journal with 2 v1 rows (one admitted, one released); the system temp root is absent. All
+observed rows parse. These are bounded retained-window counts, not a complete event history;
+zero retained ticket evictions does not establish that none occurred. The earlier 2026-09-11
+census is historical; the current journal bytes do not reproduce it. These organic writer
+rows remain distinct from labeled `run3b-synthetic` output. Whether retained chains are new
+relative to `run3b-fleet` (5 lease and 2 ticket evictions in its manifest) is decided by the
+**Stage C capture at the run-4 pin**: a new `run4-fleet` pin produced by the run3b ETL mechanics
+under Rulings 10, 19 and 22 (synthetic labels retained; refreshed pins carry
+`corpus_tree`/`corpus_base`; residue scans zero), not by editing any existing pin.
 
 ### Queue E: CQ-019 / CQ-020 leftovers (Ruling 16, sitting-3 Ruling 4)
 
 1. Object-valued `hasScope` and `Scope` stay **PARKED with the no-punning record**; the run-3
-   fixtures exercise only the literal `hasScopeTag` (ratified, rat-064). They ratify only if a
-   run-4 emission exercises arm 2 with an object-valued scope individual.
+   fixtures exercise only the literal `hasScopeTag` (ratified, rat-064). Re-opening requires an
+   authorized run-4 emission exercising arm 2 with an independently identified object-valued
+   Scope and its provenance/identity, followed by analysis, proposal and review
+   (`ONT/work/sittings/ratification-docket.md`, Queue D).
 2. `schedulesWorkUnit` remains CQ-019 arm 3's historical carrier, unratified and unrewritten.
 3. The CQ-020 amendment is applied and its ordering rows are discharged; no CQ, seed or fixture
    edit is owed to run 4. Queue placement changes nothing in `ontology/docs/competency-questions.yaml`.
@@ -473,6 +935,10 @@ not edit POLICY.yaml.
   Stage C capture and verbatim emission/prose observations; no compiler-derived TS
   SourceObservations are needed.
 - **S8 IRI scheme stays deferred (Ruling 15).** Nonce literals carry identity evidence.
+  `ciops-prov:` remains the provisional emission namespace with open closure and exclusion
+  from negation/ratified typing. No separate namespace proposal was presented at sitting 3;
+  the joint cluster ruling did not ratify absent proposals or decide S8 IRI syntax
+  (`ONT/work/sittings/ratification-docket.md`, "Intake spellings and the actual proposal set").
 - **Seats follow the run-3 launch entry** unless the run-4 launch entry amends it: Codex seats
   `gpt-6-astra` at `max` (the packet's 2026-08-27 delegated-lane directive governs seats; the
   root routing note's `medium` governs ordinary token-heavy work), the adversary in an

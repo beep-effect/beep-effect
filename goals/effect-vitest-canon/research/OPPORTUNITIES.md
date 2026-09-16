@@ -1643,3 +1643,40 @@ fast-forward the report read `1 new finding(s)` attributed to that file (EV010, 
 `@effect/platform-node` import), and the refresh added exactly that content key with none
 gone. With the hosted seat in place, #1094's own Lint Policy run would have been the place
 that red surfaced instead of this branch.
+
+### Refresh PR proof: seed-dependent acp falsification and an inherited coverage red, 2026-09-11
+
+The inventory refresh itself (PR #1093, `chore/effect-vitest-inventory-cache` from
+origin/main 662823dd96) was a one-file change, yet its `yeet publish --start-pr-early`
+run produced three reds that all needed attribution before the PR could be called done.
+
+Local full proof: `quality:coverage` shard 4 exited 1 on `@beep/acp#coverage`.
+`test/protocol.test.ts:109` ("round-trips schema-derived JSON-RPC notifications and
+responses through JSON boundaries") reported `Property falsified after 15 run(s) and
+24 shrink(s)` with an `AssertionError` on a `result` payload. One rerun of
+`bun run coverage --fileParallelism=true --maxWorkers=1` inside `packages/drivers/acp`
+passed 3 files / 17 tests, so the red was attributed as a seed-dependent flake in an
+untouched package and the PR was left to hosted checks instead of a second full proof.
+The follow-up lane (PR #1096) found the cause was not the schema: Node 24's V8
+(12.8 through 13.7) `JSON.parse` resolves an escaped object key through an existing map
+transition when the raw source prefix matches, so some generated payloads decode to a
+different key than they encoded; Bun and Node 22 are clean. `@beep/acp` now reads wire
+frames through its own JSON text reader with pinned regression cases. What would have
+prevented the attribution cost: the first red carrying the shrunk counterexample and
+seed in the captured log, so a reader can classify "flake in an untouched package"
+without re-running the suite.
+
+Hosted: 34 checks green and `Heavy / Coverage Regression` red with six `@beep/repo-cli`
+rows (`Lint.command.ts` branches/lines/statements, `Planner.ts`
+functions/lines/statements). The rows were byte-identical to main's own red job at
+662823dd96, so the red was inherited from #1068's raised floors (repaired by #1090 and
+#1091, then #1104). Attribution recipe that worked: `gh run view --job <id> --log` on the
+PR job and on main tip's job, `grep -A8 'regression(s) detected'` on both, and a plain
+`diff`. A monitor that compared a red job's regression rows against main tip's job and
+labeled an identical set "inherited" would have made that a one-line read.
+
+Verdict noise: `verdict.json` listed `publish:03-pr-provenance-stamp: failed` with a
+manual `gh pr edit` repair while the PR body already carried the provenance footer; the
+log showed the stamp had preserved a concurrent body edit by Blacksmith. A stamp that
+lost a race but converged should record `passed` (or a distinct `raced` state), not a
+failure that invites an unnecessary repair.

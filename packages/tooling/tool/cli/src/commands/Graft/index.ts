@@ -45,6 +45,7 @@ export {
   GraftDeepRefreshProgress,
   GraftDeepRunner,
   GraftDeepRunnerLive,
+  readRecordedGraftDeepTimer,
   renderGraftDeepRefreshUnits,
 } from "./GraftDeep.service.ts";
 /**

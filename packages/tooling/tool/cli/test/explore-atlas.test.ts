@@ -13,6 +13,7 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
+import { strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -353,7 +354,7 @@ Does this fail closed?
       )
     ));
 
-  it("names every drifting projection and the git-ignored Atlas before the silent reported exit", () =>
+  it("refuses README drift, names a stale git-ignored Atlas beside it, and refreshes a stale Atlas alone", () =>
     Effect.runPromise(
       provideTestLayer(
         Effect.gen(function* () {
@@ -371,28 +372,40 @@ Does this fail closed?
           const driftHeader =
             "[explore:atlas] 1 generated projection(s) drift; run `bun run beep explore atlas --write`:";
 
+          const authoredReadme = yield* fs.readFileString(readmePath);
           const readmeDrift = yield* checkExplorationAtlas(root).pipe(Effect.flip);
-          yield* writeExplorationAtlas(root);
-          yield* fs.writeFileString(atlasPath, `${yield* fs.readFileString(atlasPath)}authored doctrine\n`);
-          const atlasDrift = yield* checkExplorationAtlas(root).pipe(Effect.flip);
+          const projected = yield* writeExplorationAtlas(root);
+          const staleAtlas = `${projected}authored doctrine\n`;
+          yield* fs.writeFileString(atlasPath, staleAtlas);
+          // A stale or authored-into Atlas alone is git-ignored workstation state that may carry no
+          // doctrine: the check rewrites it from the projection instead of failing.
+          yield* checkExplorationAtlas(root);
+          strictEqual(yield* fs.readFileString(atlasPath), projected);
+          // README drift still refuses; a stale Atlas beside it is named, not rewritten.
+          yield* fs.writeFileString(readmePath, authoredReadme);
+          yield* fs.writeFileString(atlasPath, staleAtlas);
+          const bothDrift = yield* checkExplorationAtlas(root).pipe(Effect.flip);
+          strictEqual(yield* fs.readFileString(atlasPath), staleAtlas);
           yield* writeExplorationAtlas(root);
           yield* checkExplorationAtlas(root);
 
-          const sentinel = {
+          const sentinel = (count: number) => ({
             _tag: "CliReportedExit",
             exitCode: 1,
-            message: "explore atlas: 1 generated projection(s) drift; run `bun run beep explore atlas --write`.",
-          };
-          expect(readmeDrift).toMatchObject(sentinel);
-          expect(atlasDrift).toMatchObject(sentinel);
+            message: `explore atlas: ${count} generated projection(s) drift; run \`bun run beep explore atlas --write\`.`,
+          });
+          expect(readmeDrift).toMatchObject(sentinel(1));
+          expect(bothDrift).toMatchObject(sentinel(2));
           expect(yield* errorLines()).toEqual([
             driftHeader,
             `- ${readmePath}`,
-            driftHeader,
+            "[explore:atlas] 2 generated projection(s) drift; run `bun run beep explore atlas --write`:",
+            `- ${readmePath}`,
             "- explorations/ATLAS.md",
-            "[explore:atlas] explorations/ATLAS.md is a git-ignored local projection: a stale copy fails only local checks, and the rewrite never appears in git diff.",
+            "[explore:atlas] explorations/ATLAS.md is a git-ignored local projection: it is rewritten with the README regions and never appears in git diff.",
           ]);
           expect(A.filter(yield* TestConsole.logLines, P.isString)).toEqual([
+            "[explore:atlas] refreshed stale git-ignored explorations/ATLAS.md from the D3 projection.",
             "[explore:atlas] OK: D3 Atlas and README projections are current.",
           ]);
           yield* fs.remove(root, { recursive: true });

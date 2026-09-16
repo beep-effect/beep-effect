@@ -36,29 +36,26 @@ from `@beep/schema` (see "Declared field equivalence" below).
 
 ### Declared field equivalence
 
-Every `S.TaggedError` declaration adopts its declared field struct as its
-equivalence by passing `$I.annoteError<Self>(identifier, extras?)` as its
-annotations. Effect calls a declaration's `toEquivalence` hook with the derived
-equivalence of its type parameters, and for a tagged error that single
-parameter is the declared `TaggedStruct`; the record returned by `annoteError`
-hands that equivalence back, so `S.toEquivalence(ErrorClass)` compares declared
+Every Schema class derives its equivalence from its declared field struct by
+construction: since `effect@4.0.0-rc.113` the class factories (`S.Class`,
+`S.TaggedClass`, `S.Error`, `S.TaggedError`) install the derived struct
+equivalence themselves, so `S.toEquivalence(ErrorClass)` compares declared
 diagnostic identity and ignores the `Error` runtime metadata the class
-inherits. Nothing is derived by hand at the class: no field constants, no
-comparator functions, no explicit schema type arguments. Packages that cannot
-depend on `@beep/identity` write the same hook through a module-level
-`declaredFieldsEquivalence<Self>` helper, passed as
-`toEquivalence: (typeParameters) => declaredFieldsEquivalence<X>(typeParameters)`
-on the annotation object
-(`packages/ecosystem/effect-drizzle/src/core/repository.ts`,
-`packages/_internal/db-admin/scripts/check-migrations-drift.ts`).
+inherits. Nothing is declared at the class: no `toEquivalence` hook, no field
+constants, no comparator functions, no explicit schema type arguments.
+`$I.annoteError<Self>(identifier, extras?)` supplies identity metadata and
+documentation extras only. The schema-first rule
+`SFV4-tagged-error-equivalence` reports a class-level `toEquivalence` hook as
+redundant (decision log, 2026-09-12).
 
 Opaque payloads declare their own identity rule at the schema layer: `Defect`
 from `@beep/schema` is Effect's `S.Defect(options)` annotated with an
 always-true equivalence, so a `cause` field stays payload and two errors that
-differ only in their defect compare equal. Excluding a field from equivalence at
-the class is not a pattern; the field's schema says whether it participates.
-Tests consume `S.toEquivalence(ErrorClass)` and never install test-local
-overrides.
+differ only in their defect compare equal. A local opaque field does the same
+with `S.Unknown.annotate({ toEquivalence: () => () => true })`. Excluding a
+field from equivalence at the class is not a pattern; the field's schema says
+whether it participates. Tests consume `S.toEquivalence(ErrorClass)` and never
+install test-local overrides.
 
 ## 2. Translation contract
 
