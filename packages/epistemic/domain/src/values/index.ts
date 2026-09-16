@@ -21,6 +21,13 @@
  */
 export * from "./ClaimDispositionStatus/index.ts";
 /**
+ * Exact claim evidence and human-review explanation models.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./ClaimEvidenceReview/index.ts";
+/**
  * Claim gate verdict value exports.
  *
  * **Example** (Decode gate severity value)

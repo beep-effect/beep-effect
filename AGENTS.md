@@ -128,10 +128,18 @@ models and effort levels they actually recorded.
   the lane, never from the clone: `bun run beep` resolves the CLI from the
   checkout it runs in, and the clone's `main` may still be behind the merge and
   reject `--retire` as an unknown flag. The command steps its own process out
-  of the lane before removal and the fence exempts the invoking session's
-  ancestry while still refusing any other holder; the trailing `cd` moves the
-  shell to the swept clone. When the merged change touched a systemd unit
-  renderer, follow with
+  of the lane before removal; the fence exempts the invoking session's
+  ancestry and, under Claude Code (`CLAUDE_PID`), everything that session
+  spawned into the lane (its MCP servers, tool shells, background jobs), so a
+  desktop session retires its own lane. A desktop terminal panel, an editor,
+  or another session standing in the lane still refuses it and is named in
+  the error: close or `cd` it out, then rerun. A later session retires a
+  leftover lane with `bun run beep yeet sweep --retire --lane <lane>` from
+  any sibling lane of the same clone; when only the clone is at hand and its
+  checkout predates `--retire`, run the lane's own CLI:
+  `cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep --retire --lane <lane>`.
+  The trailing `cd` moves the shell to the swept clone. When the merged
+  change touched a systemd unit renderer, follow with
   `bun run beep research install-timers --refresh` and/or
   `bun run beep graft deep install-timer --refresh` (the latter is the only
   agent-allowed form of that command) from the swept clone — the installed

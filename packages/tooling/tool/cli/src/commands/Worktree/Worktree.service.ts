@@ -31,13 +31,20 @@ import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { ghOutput } from "../../internal/github/index.ts";
 import {
+  ancestryPidsOf,
   collectUntrackedPaths,
+  descendsFromProcess,
   invokerAncestryPids,
+  invokerSessionRoot,
   ProcessAttachmentKind,
+  ProcessTable,
+  processLineage,
+  processName,
   resolveGitCommit,
   runGitOutput,
   runGitRawOutput,
   scanProcessAttachments,
+  sessionRootOf,
 } from "../../internal/repo-run/index.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
@@ -1230,15 +1237,90 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
 
 const MAX_REPORTED_HOLDERS = 8;
 
-const describeAttachedProcesses = (attachments: A.NonEmptyReadonlyArray<ProcessAttachment>): string => {
+// `comm` is the kernel's short executable name: enough to tell an operator
+// which holder (a `zsh` terminal panel, a `node` editor helper) to close.
+const describeHolder = Effect.fnUntraced(function* (
+  holder: ProcessAttachment
+): Effect.fn.Return<string, never, FileSystem.FileSystem> {
+  const name = yield* processName(holder.pid);
+  const named = O.match(name, { onNone: () => "", onSome: (comm) => ` (${comm})` });
+  return `pid ${holder.pid}${named} via ${holder.kind}`;
+});
+
+const describeAttachedProcesses = Effect.fnUntraced(function* (
+  attachments: A.NonEmptyReadonlyArray<ProcessAttachment>
+): Effect.fn.Return<string, never, FileSystem.FileSystem> {
   const holders = A.dedupeWith(attachments, (left, right) => left.pid === right.pid);
   const shown = A.take(holders, MAX_REPORTED_HOLDERS);
-  const listed = A.join(
-    A.map(shown, (holder) => `pid ${holder.pid} via ${holder.kind}`),
-    ", "
-  );
+  const listed = A.join(yield* Effect.forEach(shown, describeHolder), ", ");
   const hidden = A.length(holders) - A.length(shown);
   return hidden > 0 ? `${listed} and ${hidden} more` : listed;
+});
+
+// The party asking for the retirement is the invoker's own chain (CLI, shell,
+// agent session) and, when the request carries a session marker, everything
+// that session spawned: a holder whose ancestry reaches the session pid is one
+// of its helpers, not a writer the archive could lose. The marker is proven
+// against /proc first (the entry immediately before the named session in the
+// nearest-first chain, toward index 0 and the invoker, must carry it), so init,
+// the desktop host, or a pid copied from elsewhere can
+// never widen the fence.
+const blockingHolders = Effect.fnUntraced(function* (
+  request: WorktreeRemovalRequest,
+  attachments: ReadonlyArray<ProcessAttachment>
+): Effect.fn.Return<ReadonlyArray<ProcessAttachment>, never, FileSystem.FileSystem> {
+  if (request.exemptInvoker === undefined) {
+    const foreign = yield* foreignHolderPids(request, attachments);
+    return A.filter(attachments, (attachment) => HashSet.has(foreign, attachment.pid));
+  }
+  const chain = yield* invokerAncestryPids();
+  const session = yield* O.match(request.exemptInvoker.sessionMarker, {
+    onNone: () => Effect.succeed(O.none<number>()),
+    onSome: (marker) => sessionRootOf(process.pid, marker),
+  });
+  const isExempt = (holder: ProcessAttachment): Effect.Effect<boolean, never, FileSystem.FileSystem> =>
+    HashSet.has(chain, holder.pid)
+      ? Effect.succeed(true)
+      : O.match(session, {
+          onNone: () => Effect.succeed(false),
+          onSome: (pid) => Effect.map(ancestryPidsOf(holder.pid), HashSet.has(pid)),
+        });
+  return yield* Effect.filter(attachments, (holder) => Effect.map(isExempt(holder), Bool.not));
+});
+
+// The invoking session (its root process and everything running under it: the
+// CLI, its shell, the agent session, that session's MCP servers and tool
+// pipelines) is the party asking for the retirement, so a request that says so
+// exempts holders under a recognized session command. Without that proof,
+// only the invoking ancestry is exempt; terminal/worker siblings still block.
+const pidsOutsideInvokerSession = Effect.fnUntraced(function* (
+  pids: ReadonlyArray<number>
+): Effect.fn.Return<HashSet.HashSet<number>, never, FileSystem.FileSystem> {
+  const root = yield* invokerSessionRoot();
+  if (root.rule === "chain-top") {
+    const table = yield* ProcessTable;
+    const chain = A.takeWhile(yield* processLineage(table.self), (status) => status.pid !== root.pid);
+    const ancestry = HashSet.fromIterable(
+      A.prepend(
+        A.map(chain, (status) => status.pid),
+        root.pid
+      )
+    );
+    return HashSet.fromIterable(A.filter(pids, (pid) => !HashSet.has(ancestry, pid)));
+  }
+  const outside = yield* Effect.filter(pids, (pid) => Effect.map(descendsFromProcess(pid, root.pid), Bool.not));
+  return HashSet.fromIterable(outside);
+});
+
+const foreignHolderPids = (
+  request: WorktreeRemovalRequest,
+  attachments: ReadonlyArray<ProcessAttachment>
+): Effect.Effect<HashSet.HashSet<number>, never, FileSystem.FileSystem> => {
+  const pids = A.dedupe(A.map(attachments, (attachment) => attachment.pid));
+  return Bool.match(request.exemptInvokerSession === true, {
+    onFalse: () => Effect.succeed(HashSet.fromIterable(pids)),
+    onTrue: () => pidsOutsideInvokerSession(pids),
+  });
 };
 
 const assertQuiescentFence = Effect.fnUntraced(function* (
@@ -1251,13 +1333,11 @@ const assertQuiescentFence = Effect.fnUntraced(function* (
       message: `Refusing to retire ${request.targetPath}: the processes attached to it could not be enumerated, so the archive cannot be proven complete.`,
     });
   }
-  // The invoker's own chain (CLI, shell, agent session) is the party asking
-  // for the retirement, so a request that says so may exempt exactly it.
-  const exempt = request.exemptInvokerAncestry === true ? yield* invokerAncestryPids() : HashSet.empty<number>();
-  const holders = A.filter(scan.value, (attachment) => !HashSet.has(exempt, attachment.pid));
+  const holders = yield* blockingHolders(request, scan.value);
   if (A.isReadonlyArrayNonEmpty(holders)) {
+    const described = yield* describeAttachedProcesses(holders);
     return yield* WorktreeCommandError.make({
-      message: `Refusing to retire ${request.targetPath}: ${describeAttachedProcesses(holders)} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
+      message: `Refusing to retire ${request.targetPath}: ${described} still hold it, and any write they make after the archive is captured would be deleted with the fenced copy.`,
     });
   }
 });

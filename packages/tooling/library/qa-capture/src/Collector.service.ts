@@ -18,7 +18,7 @@ import { A, O, Str } from "@beep/utils";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import { Clock, Context, Deferred, Effect, Fiber, FileSystem, Layer, Match, Path, pipe, Queue, Ref } from "effect";
 import * as S from "effect/Schema";
-import { HttpMiddleware, HttpRouter, HttpServer } from "effect/unstable/http";
+import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
 import { decodeActionEventJson, encodeActionEventJson, MarkerEvent } from "./ActionEvent.models.ts";
 import { CollectorHealth, EventsAccepted, MarkAccepted, QaCollectorApi, StopAccepted } from "./Collector.api.ts";
@@ -420,15 +420,13 @@ const makeService = Effect.fnUntraced(function* () {
         )
     );
 
-    const cors = HttpRouter.middleware(
-      HttpMiddleware.cors({
-        allowedHeaders: ["*"],
-        allowedMethods: ["GET", "POST", "OPTIONS"],
-        allowedOrigins: options.allowedOrigins,
-      })
-    );
+    const cors = HttpRouter.cors({
+      allowedHeaders: ["*"],
+      allowedMethods: ["GET", "POST", "OPTIONS"],
+      allowedOrigins: options.allowedOrigins,
+    });
 
-    const app = Layer.mergeAll(HttpApiBuilder.layer(QaCollectorApi).pipe(Layer.provide(handlers)), cors.layer);
+    const app = Layer.mergeAll(HttpApiBuilder.layer(QaCollectorApi).pipe(Layer.provide(handlers)), cors);
     const serverLayer = HttpRouter.serve(app, { disableListenLog: true, disableLogger: true }).pipe(
       Layer.provideMerge(BunHttpServer.layer({ hostname: options.hostname, port: options.port }))
     );

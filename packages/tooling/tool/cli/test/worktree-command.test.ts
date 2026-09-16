@@ -14,6 +14,7 @@ import {
   WorktreeDirtyError,
   WorktreeDoctorEntry,
   WorktreeExistsError,
+  WorktreeInvokerExemption,
   WorktreeMergedPullRequestProbe,
   WorktreeMergedPullRequestProbeLive,
   WorktreePreservationError,
@@ -24,6 +25,7 @@ import {
   WorktreeRemovalServiceLive,
   WorktreeRepositoryHash,
   WorktreeResidueManifest,
+  WorktreeSessionMarker,
   WorktreeUnpushedInspection,
   worktreeAddArgs,
   worktreeArchivePlan,
@@ -35,6 +37,12 @@ import {
   worktreeRemoveArgs,
   worktreeResidueReason,
 } from "@beep/repo-cli/commands/Worktree";
+import {
+  ProcessTable,
+  ProcessTableEntry,
+  processTableWithLineage,
+  procProcessTable,
+} from "@beep/repo-cli/test/RepoRun";
 import { NonEmptyTrimmedStr, PosInt } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
@@ -1634,7 +1642,10 @@ describe("worktree git operations", () => {
             return yield* outcome;
           })
         );
-        expect(refusal).toContain(`Refusing to retire ${targetPath}: pid ${process.pid} via descriptor`);
+        // The fence names each holder by its kernel command name, which is the
+        // runtime running this test (`bun` or `node`), so read it rather than guess.
+        const ownName = Str.trim(yield* fs.readFileString("/proc/self/comm"));
+        expect(refusal).toContain(`Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`);
         expect(yield* fs.exists(targetPath)).toBe(true);
         expect(A.filter(yield* fs.readDirectory(context.worktreesRoot), Str.includes(".retiring-"))).toEqual([]);
         expect(yield* runGitText(repoRoot, ["worktree", "list", "--porcelain"])).toContain(`worktree ${targetPath}`);
@@ -1646,6 +1657,165 @@ describe("worktree git operations", () => {
         expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).toBe("");
       })
     )
+  );
+
+  it.effect.each(["claude", "ghostty"])(
+    "enforces ancestry boundaries and explicit marker precedence (%s)",
+    (rootCommand) =>
+      withScratchRepo((repoRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const removalService = yield* WorktreeRemovalService;
+          const context = yield* resolveWorktreeContext(repoRoot);
+          const branch = defaultWorktreeBranch("session-demo");
+          const targetPath = yield* addWorktree(context, "session-demo", branch);
+          const configProvider = ConfigProvider.fromEnv({
+            env: {
+              BEEP_WORKTREE_RESIDUE_ROOT: path.join(context.worktreesRoot, "test-residue"),
+              HOME: context.worktreesRoot,
+            },
+          });
+          // The scripted session: the user manager (50) runs the agent session
+          // (60), which owns the tool shell (70) running the CLI (100, the table's
+          // `self`); another session's shell (90) hangs off the manager directly.
+          // This test process holds an open descriptor in the checkout and is
+          // placed under one shell, then the other.
+          const session = [
+            ProcessTableEntry.make({ pid: 1, parent: 0, command: "systemd" }),
+            ProcessTableEntry.make({ pid: 50, parent: 1, command: "systemd" }),
+            ProcessTableEntry.make({ pid: 60, parent: 50, command: "claude" }),
+            ProcessTableEntry.make({ pid: 70, parent: 60, command: "zsh" }),
+            ProcessTableEntry.make({ pid: 100, parent: 70, command: "bun" }),
+            ProcessTableEntry.make({ pid: 90, parent: 50, command: "zsh" }),
+            ProcessTableEntry.make({ pid: 95, parent: 60, command: "zsh" }),
+          ];
+          const removeUnder = (parent: number, sessionCommand = "claude", self = 100) =>
+            removalService
+              .remove(
+                WorktreeRemovalRequest.make({
+                  name: NonEmptyTrimmedStr.make("session-demo"),
+                  targetPath,
+                  mainCheckout: context.mainCheckout,
+                  branch: O.some(branch),
+                  archive: true,
+                  deleteBranch: true,
+                  expectedHead: O.none(),
+                  exemptInvokerSession: true,
+                })
+              )
+              .pipe(
+                Effect.provideService(ConfigProvider.ConfigProvider, configProvider),
+                Effect.provideService(
+                  ProcessTable,
+                  processTableWithLineage({
+                    base: procProcessTable,
+                    self,
+                    entries: A.append(
+                      A.map(session, (entry) =>
+                        entry.pid === 60 ? ProcessTableEntry.make({ ...entry, command: sessionCommand }) : entry
+                      ),
+                      ProcessTableEntry.make({ pid: process.pid, parent, command: "vitest" })
+                    ),
+                  })
+                ),
+                Effect.map(() => "retired"),
+                Effect.catchTag("WorktreeCommandError", (error) => Effect.succeed(error.message))
+              );
+
+          yield* Effect.scoped(
+            Effect.gen(function* () {
+              yield* fs.open(path.join(targetPath, "README.md"), { flag: "r" });
+              const ownName = Str.trim(yield* fs.readFileString("/proc/self/comm"));
+              // Under the other session's shell the descriptor is a foreign holder.
+              expect(yield* removeUnder(90)).toContain(
+                `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
+              );
+              expect(yield* fs.exists(targetPath)).toBe(true);
+              // A shared terminal is not a proven agent session: both a sibling
+              // pipeline and another tab below it must retain the archive fence.
+              expect(yield* removeUnder(70, "ghostty")).toContain(
+                `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
+              );
+              expect(yield* removeUnder(95, "ghostty")).toContain(
+                `Refusing to retire ${targetPath}: pid ${process.pid} (${ownName}) via descriptor`
+              );
+              expect(yield* fs.exists(targetPath)).toBe(true);
+              // A recognized session exempts its descendants. A terminal fallback
+              // must also permit the holder when it is the invoking process itself.
+              expect(yield* removeUnder(70, rootCommand, rootCommand === "ghostty" ? process.pid : 100)).toBe(
+                "retired"
+              );
+              {
+                const fs = yield* FileSystem.FileSystem;
+                const path = yield* Path.Path;
+                const removal = yield* WorktreeRemovalService;
+                const context = yield* resolveWorktreeContext(repoRoot);
+                const branch = defaultWorktreeBranch("marker-priority");
+                const targetPath = yield* addWorktree(context, "marker-priority", branch);
+                const holder = yield* ChildProcess.make("sleep", ["60"], {
+                  cwd: targetPath,
+                  stdin: "ignore",
+                  stdout: "ignore",
+                  stderr: "ignore",
+                });
+                const request = WorktreeRemovalRequest.make({
+                  name: NonEmptyTrimmedStr.make("marker-priority"),
+                  targetPath,
+                  mainCheckout: context.mainCheckout,
+                  branch: O.some(branch),
+                  archive: true,
+                  deleteBranch: true,
+                  expectedHead: O.none(),
+                  exemptInvokerSession: true,
+                });
+                const table = processTableWithLineage({
+                  base: procProcessTable,
+                  self: process.pid,
+                  entries: [
+                    ProcessTableEntry.make({ pid: 60, parent: 1, command: "claude" }),
+                    ProcessTableEntry.make({ pid: process.pid, parent: 60, command: "bun" }),
+                    ProcessTableEntry.make({ pid: holder.pid, parent: 60, command: "sleep" }),
+                  ],
+                });
+                const config = ConfigProvider.fromEnv({
+                  env: {
+                    BEEP_WORKTREE_RESIDUE_ROOT: path.join(context.worktreesRoot, "test-residue"),
+                    HOME: context.worktreesRoot,
+                  },
+                });
+                yield* Effect.gen(function* () {
+                  const error = yield* Effect.flip(
+                    removal.remove(
+                      WorktreeRemovalRequest.make({
+                        ...request,
+                        exemptInvoker: WorktreeInvokerExemption.make({
+                          sessionMarker: O.some(
+                            WorktreeSessionMarker.make({ name: NonEmptyTrimmedStr.make("CLAUDE_PID"), pid: 1 })
+                          ),
+                        }),
+                      })
+                    )
+                  );
+                  expect(error.message).toContain("still hold it");
+                  expect(yield* fs.exists(targetPath)).toBe(true);
+                  // The same scripted topology permits retirement only when the caller
+                  // requests command-name inference without supplying an explicit proof.
+                  yield* removal.remove(request);
+                  expect(yield* fs.exists(targetPath)).toBe(false);
+                }).pipe(
+                  Effect.provideService(ProcessTable, table),
+                  Effect.provideService(ConfigProvider.ConfigProvider, config),
+                  Effect.ensuring(Effect.ignore(holder.kill()))
+                );
+              }
+            })
+          );
+          expect(yield* fs.exists(targetPath)).toBe(false);
+          expect(A.filter(yield* fs.readDirectory(context.worktreesRoot), Str.includes(".retiring-"))).toEqual([]);
+          expect(yield* runGitText(repoRoot, ["branch", "--list", branch])).toBe("");
+        })
+      )
   );
 
   it.effect("removes a clean legacy worktree under its authorized head and refuses a dirty one", () =>

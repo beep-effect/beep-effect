@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "agent-convention-trial/v1",
+  "runId": "synthetic-baseline",
+  "pairId": "synthetic-pair",
+  "controls": {
+    "task": {
+      "id": "synthetic-task",
+      "ruleIds": [],
+      "derivedFrom": [],
+      "prompt": "Synthetic comparison fixture; no model run occurred.",
+      "fixture": "fixture",
+      "entrypoint": "src/index.ts",
+      "completion": {
+        "requiredExports": ["Contact"],
+        "requiredPatterns": [],
+        "forbiddenPatterns": []
+      }
+    },
+    "repositorySnapshot": "1111111111111111111111111111111111111111111111111111111111111111",
+    "harnessDigest": "2222222222222222222222222222222222222222222222222222222222222222",
+    "environmentDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+    "safetyPolicyDigest": "4444444444444444444444444444444444444444444444444444444444444444",
+    "model": "synthetic-model",
+    "reasoningEffort": "medium",
+    "tokenBudget": 10000,
+    "timeBudgetMs": 120000,
+    "acceptanceChecks": ["check", "test"]
+  },
+  "variant": {
+    "guidance": "5555555555555555555555555555555555555555555555555555555555555555",
+    "navigation": "6666666666666666666666666666666666666666666666666666666666666666",
+    "handoff": "7777777777777777777777777777777777777777777777777777777777777777"
+  },
+  "evaluation": {
+    "taskId": "synthetic-task",
+    "score": 1,
+    "breakdown": {
+      "completion": 1,
+      "schemaFirst": 1,
+      "tsgo": 1,
+      "biome": 1
+    },
+    "violations": []
+  },
+  "measurements": {
+    "elapsedMs": 1000,
+    "inputTokens": 100,
+    "outputTokens": 50,
+    "introducedDefects": null,
+    "humanInterventions": 0,
+    "acceptance": {
+      "check": "passed",
+      "test": "passed"
+    }
+  }
+}
