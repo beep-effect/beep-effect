@@ -246,50 +246,58 @@ export const cacheTaskSelectionArgs = Effect.fn("Cache.taskSelectionArgs")(funct
   let selected: Array<string> = [];
   let cacheValuePending = false;
   let optionalBooleanPending = false;
-  let forwarded = false;
-  for (const arg of args) {
-    if (forwarded) {
-      selected = A.append(selected, arg);
-      continue;
-    }
-    if (cacheValuePending) {
-      if (Str.startsWith("-")(arg) || Str.isEmpty(arg)) {
-        return yield* CacheCommandError.new("Runtime selection received a missing cache option value.");
+  const [selectionArgs, forwardedArgs] = A.splitAt(
+    args,
+    O.getOrElse(
+      A.findFirstIndex(args, (arg) => arg === "--"),
+      () => A.length(args)
+    )
+  );
+  yield* Effect.forEach(
+    selectionArgs,
+    Effect.fn("Cache.selectTaskArgument")(function* (arg) {
+      if (cacheValuePending) {
+        cacheValuePending = false;
+        if (Str.startsWith("-")(arg) || Str.isEmpty(arg)) {
+          return yield* CacheCommandError.new("Runtime selection received a missing cache option value.");
+        }
+        return;
       }
-      cacheValuePending = false;
-      continue;
-    }
-    if (optionalBooleanPending) {
+      const skipBoolean = optionalBooleanPending && A.contains(["true", "false"], arg);
       optionalBooleanPending = false;
-      if (arg === "true" || arg === "false") continue;
-    }
-    if (arg === "--") {
-      selected = A.appendAll(selected, ["--dry=json", "--cache=local:", arg]);
-      forwarded = true;
-      continue;
-    }
-    if (
-      isCacheTaskInspectionArg(arg) ||
-      A.some(
-        ["--cwd", "--heap", "--profile", "--trace"],
-        (option) => arg === option || Str.startsWith(`${option}=`)(arg)
-      )
-    ) {
-      return yield* CacheCommandError.new("Runtime selection does not accept output modes or directory overrides.");
-    }
-    if (arg === "--cache") {
-      cacheValuePending = true;
-      continue;
-    }
-    if (isTurboCacheControlArg(arg)) {
-      optionalBooleanPending = arg === "--force" || arg === "--remote-only" || arg === "--remote-cache-read-only";
-      continue;
-    }
-    selected = A.append(selected, arg);
-  }
+      if (skipBoolean) return;
+      return yield* Match.value(arg).pipe(
+        Match.when(
+          (value) =>
+            isCacheTaskInspectionArg(value) ||
+            A.some(
+              ["--cwd", "--heap", "--profile", "--trace"],
+              (option) => value === option || Str.startsWith(`${option}=`)(value)
+            ),
+          () => CacheCommandError.new("Runtime selection does not accept output modes or directory overrides.")
+        ),
+        Match.when("--cache", () =>
+          Effect.sync(() => {
+            cacheValuePending = true;
+          })
+        ),
+        Match.when(isTurboCacheControlArg, (value) =>
+          Effect.sync(() => {
+            optionalBooleanPending = A.contains(["--force", "--remote-only", "--remote-cache-read-only"], value);
+          })
+        ),
+        Match.orElse((value) =>
+          Effect.sync(() => {
+            selected = A.append(selected, value);
+          })
+        )
+      );
+    }),
+    { discard: true }
+  );
   if (cacheValuePending)
     return yield* CacheCommandError.new("Runtime selection received a missing cache option value.");
-  return forwarded ? selected : A.appendAll(selected, ["--dry=json", "--cache=local:"]);
+  return A.appendAll(A.appendAll(selected, ["--dry=json", "--cache=local:"]), forwardedArgs);
 });
 
 /**

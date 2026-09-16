@@ -32,9 +32,10 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { LiteralKit, NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, expect, it, vi } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Crypto, Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
@@ -47,7 +48,6 @@ import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import { afterEach, vi } from "vitest";
 
 const platform = Layer.mergeAll(
   NodeServices.layer,
@@ -318,22 +318,95 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
               environmentVariables: { configured: fault === "missing-runtime-key" ? [] : [runtimeKey] },
               execution: { exitCode: code },
             });
+            const observeTask = Effect.fn("PilotOrchestrationTest.observeTask")(function* () {
+              calls.push(label);
+              if (Str.startsWith("non-execution-")(label)) {
+                if (label === "non-execution-absent-script")
+                  yield* write(directory, "run/runs/run.json", '{"tasks":[]}');
+                else {
+                  exitCode = 1;
+                  stderr =
+                    label === "non-execution-missing-root-config"
+                      ? "could not find turbo.json"
+                      : "failed to parse turbo.json";
+                }
+              } else {
+                const observeExecution = Effect.fn("PilotOrchestrationTest.observeExecution")(function* () {
+                  const number = O.getOrElse(MutableHashMap.get(counts, directory), () => 0);
+                  MutableHashMap.set(counts, directory, number + 1);
+                  const childExists = yield* fs.exists(path.join(identity, "turbo.json"));
+                  const child = childExists ? yield* fs.readFileString(path.join(identity, "turbo.json")) : "";
+                  const enabled = Str.includes('"cache":true')(child) || !childExists;
+                  const reuse = A.contains(invocation, "--cache=local:rw");
+                  const sourceText = yield* fs.readFileString(path.join(identity, "src/index.ts"));
+                  const readme = yield* fs.readFileString(path.join(identity, "README.md"));
+                  const added = yield* fs.exists(path.join(identity, "src/qualification-shadow.ts"));
+                  const env = command.options.env ?? {};
+                  const mutation = Str.startsWith("mutation-")(label);
+                  const mutationKey = () => (mutation ? label + (number === 0 ? "before" : "after") : "");
+                  const taskHash = Str.slice(
+                    0,
+                    16
+                  )(
+                    yield* hash(
+                      `${sourceText}:${readme}:${added}:${env.BEEP_ESLINT_PROFILE ?? "absent"}:${enabled}:${mutationKey()}`
+                    )
+                  );
+                  const cacheFile = `cache/${taskHash}`;
+                  const hit = reuse && (yield* fs.exists(path.join(directory, cacheFile)));
+                  const fixtureExitCode = () =>
+                    label === "failed-source" ||
+                    (number === 0 && A.contains(["mutation-root-lint-config", "mutation-dependency-source"], label))
+                      ? 1
+                      : 0;
+                  exitCode = fixtureExitCode();
+                  if (reuse && exitCode === 0) yield* write(directory, cacheFile, "fixture");
+                  const writeObservation = Effect.fn("PilotOrchestrationTest.writeObservation")(function* () {
+                    const selected = nativeTask(task, taskHash, hit, exitCode);
+                    const dependency = nativeTask(dependencyTask, "fedcba9876543210", fault === "dependency-hit");
+                    yield* write(
+                      directory,
+                      "run/runs/run.json",
+                      yield* encodeJson({
+                        tasks: fault === "missing-selected" ? [dependency] : [selected, dependency],
+                      })
+                    );
+                    if (fault === "extra-summary") yield* write(directory, "run/runs/extra.json", "{}");
+                    if (fault === "source-write") yield* write(identity, "src/index.ts", "unexpected write");
+                    const log = fault === "unsafe-log" ? "/fixture/private.ts\n" : "lint observation\n";
+                    if (fault !== "missing-log") yield* write(directory, "identity-log/turbo-lint.log", log);
+                    const progress = hit
+                      ? "cache hit, replaying logs"
+                      : enabled
+                        ? "cache miss, executing"
+                        : "cache bypass, force executing";
+                    stdout = `@beep/identity:lint: ${progress} ${taskHash}\n@beep/identity:lint: ${log}`;
+                  });
+                  yield* writeObservation();
+                  expect(yield* fs.exists(path.join(types, "src/index.ts"))).toBe(true);
+                });
+                yield* observeExecution();
+              }
+            });
+            const observeLinker = () => {
+              const resolution = A.contains(invocation, "/tools/turbo")
+                ? requestedLinker.executables.turbo
+                : linker.executables.bun;
+              stdout =
+                fault === "library-mismatch"
+                  ? "/usr/lib/other (0x123)"
+                  : CacheLinkerResolution.match(resolution, {
+                      Static: () => "statically linked",
+                      Dynamic: ({ files }) =>
+                        A.join(
+                          A.map(files, (file) => `${file.path} (0x123)`),
+                          "\n"
+                        ),
+                    });
+            };
             const observeInvocation = Effect.fn("PilotOrchestrationTest.observeInvocation")(function* () {
               if (invocation[0] === "/usr/bin/ldd") {
-                const resolution = A.contains(invocation, "/tools/turbo")
-                  ? requestedLinker.executables.turbo
-                  : linker.executables.bun;
-                stdout =
-                  fault === "library-mismatch"
-                    ? "/usr/lib/other (0x123)"
-                    : CacheLinkerResolution.match(resolution, {
-                        Static: () => "statically linked",
-                        Dynamic: ({ files }) =>
-                          A.join(
-                            A.map(files, (file) => `${file.path} (0x123)`),
-                            "\n"
-                          ),
-                      });
+                observeLinker();
                 return;
               }
               if (A.contains(invocation, "--version")) {
@@ -348,76 +421,6 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                 stdout = yield* encodeJson({ tasks: [nativeTask(task, "0123456789abcdef")] });
                 return;
               }
-              const observeTask = Effect.fn("PilotOrchestrationTest.observeTask")(function* () {
-                calls.push(label);
-                if (Str.startsWith("non-execution-")(label)) {
-                  if (label === "non-execution-absent-script")
-                    yield* write(directory, "run/runs/run.json", '{"tasks":[]}');
-                  else {
-                    exitCode = 1;
-                    stderr =
-                      label === "non-execution-missing-root-config"
-                        ? "could not find turbo.json"
-                        : "failed to parse turbo.json";
-                  }
-                } else {
-                  const observeExecution = Effect.fn("PilotOrchestrationTest.observeExecution")(function* () {
-                    const number = O.getOrElse(MutableHashMap.get(counts, directory), () => 0);
-                    MutableHashMap.set(counts, directory, number + 1);
-                    const childExists = yield* fs.exists(path.join(identity, "turbo.json"));
-                    const child = childExists ? yield* fs.readFileString(path.join(identity, "turbo.json")) : "";
-                    const enabled = Str.includes('"cache":true')(child) || !childExists;
-                    const reuse = A.contains(invocation, "--cache=local:rw");
-                    const sourceText = yield* fs.readFileString(path.join(identity, "src/index.ts"));
-                    const readme = yield* fs.readFileString(path.join(identity, "README.md"));
-                    const added = yield* fs.exists(path.join(identity, "src/qualification-shadow.ts"));
-                    const env = command.options.env ?? {};
-                    const mutation = Str.startsWith("mutation-")(label);
-                    const mutationKey = () => (mutation ? label + (number === 0 ? "before" : "after") : "");
-                    const taskHash = Str.slice(
-                      0,
-                      16
-                    )(
-                      yield* hash(
-                        `${sourceText}:${readme}:${added}:${env.BEEP_ESLINT_PROFILE ?? "absent"}:${enabled}:${mutationKey()}`
-                      )
-                    );
-                    const cacheFile = `cache/${taskHash}`;
-                    const hit = reuse && (yield* fs.exists(path.join(directory, cacheFile)));
-                    const fixtureExitCode = () =>
-                      label === "failed-source" ||
-                      (number === 0 && A.contains(["mutation-root-lint-config", "mutation-dependency-source"], label))
-                        ? 1
-                        : 0;
-                    exitCode = fixtureExitCode();
-                    if (reuse && exitCode === 0) yield* write(directory, cacheFile, "fixture");
-                    const writeObservation = Effect.fn("PilotOrchestrationTest.writeObservation")(function* () {
-                      const selected = nativeTask(task, taskHash, hit, exitCode);
-                      const dependency = nativeTask(dependencyTask, "fedcba9876543210", fault === "dependency-hit");
-                      yield* write(
-                        directory,
-                        "run/runs/run.json",
-                        yield* encodeJson({
-                          tasks: fault === "missing-selected" ? [dependency] : [selected, dependency],
-                        })
-                      );
-                      if (fault === "extra-summary") yield* write(directory, "run/runs/extra.json", "{}");
-                      if (fault === "source-write") yield* write(identity, "src/index.ts", "unexpected write");
-                      const log = fault === "unsafe-log" ? "/fixture/private.ts\n" : "lint observation\n";
-                      if (fault !== "missing-log") yield* write(directory, "identity-log/turbo-lint.log", log);
-                      const progress = hit
-                        ? "cache hit, replaying logs"
-                        : enabled
-                          ? "cache miss, executing"
-                          : "cache bypass, force executing";
-                      stdout = `@beep/identity:lint: ${progress} ${taskHash}\n@beep/identity:lint: ${log}`;
-                    });
-                    yield* writeObservation();
-                    expect(yield* fs.exists(path.join(types, "src/index.ts"))).toBe(true);
-                  });
-                  yield* observeExecution();
-                }
-              });
               yield* observeTask();
             });
             yield* observeInvocation();
@@ -461,7 +464,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("pilot orchestration process boundary", () => {
+it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process boundary", (it) => {
   it.effect(
     "retains the requested dynamic client linkage instead of the reviewed static client",
     Effect.fnUntraced(function* () {
@@ -474,11 +477,11 @@ describe("pilot orchestration process boundary", () => {
       });
       const { run, request } = yield* fixture("none", requestedLinker);
       const receipt = yield* run(CachePilotRequest.make({ ...request, selection: "controls" }));
-      expect(receipt.runtimeLinker).toEqual(O.some(requestedLinker));
+      assertSome(receipt.runtimeLinker, requestedLinker);
       const encoded = yield* S.encodeEffect(S.fromJsonString(CachePilotReceipt))(receipt);
       const decoded = yield* S.decodeEffect(S.fromJsonString(CachePilotReceipt))(encoded);
-      expect(decoded.runtimeLinker).toEqual(O.some(requestedLinker));
-    }, provideScopedLayer(platform))
+      assertSome(decoded.runtimeLinker, requestedLinker);
+    })
   );
 
   it.effect(
@@ -492,18 +495,18 @@ describe("pilot orchestration process boundary", () => {
       expect(receipt.nonExecutions).toHaveLength(4);
       expect(receipt.runs.length).toBeGreaterThan(60);
       expect(receipt.authority).toBe("local-observation-only");
-      expect(receipt.runtimeLinker).toEqual(O.some(linker));
+      assertSome(receipt.runtimeLinker, linker);
       const encoded = yield* S.encodeEffect(CachePilotReceipt)(receipt);
       const decoded = yield* S.decodeEffect(CachePilotReceipt)(encoded);
       expect(decoded.runtimeLinker).toEqual(receipt.runtimeLinker);
       const historical = yield* S.decodeEffect(CachePilotReceipt)(Struct.omit(encoded, ["runtimeLinker"]));
-      expect(historical.runtimeLinker).toEqual(O.none());
+      assertNone(historical.runtimeLinker);
       expect(yield* fs.readDirectory(path.join(root, ".beep/cache/experiments"))).toEqual(["owner"]);
       for (const source of sourceRoots)
         expect(yield* fs.readFileString(path.join(source, identityDirectory, "src/index.ts"))).toBe(
           "export const fixture = 1;\n"
         );
-    }, provideScopedLayer(platform))
+    })
   );
 
   it.effect(
@@ -520,7 +523,7 @@ describe("pilot orchestration process boundary", () => {
         fcRuns(40)
       );
       expect(result._tag).toBe("Passed");
-    }, provideScopedLayer(platform))
+    })
   );
 
   for (const fault of faultDomain.omitOptions(["none"])) {
@@ -530,7 +533,7 @@ describe("pilot orchestration process boundary", () => {
         const { root, fs, path, run } = yield* fixture(fault);
         expect(Result.isFailure(yield* run().pipe(Effect.result))).toBe(true);
         expect(yield* fs.readDirectory(path.join(root, ".beep/cache/experiments"))).toEqual(["owner"]);
-      }, provideScopedLayer(platform))
+      })
     );
   }
 });

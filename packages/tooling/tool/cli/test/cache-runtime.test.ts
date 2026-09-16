@@ -15,14 +15,13 @@ import { QualityTaskStep } from "@beep/repo-cli/test/Quality";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
-import { provideScopedLayer } from "@beep/test-utils";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { NodeCrypto } from "@effect/platform-node";
+import { afterEach, describe, expect, it, vi } from "@effect/vitest";
+import { Effect, FileSystem, Layer, Path } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
-import { afterEach, vi } from "vitest";
+import { ChildProcessSpawner } from "effect/unstable/process";
 
 describe("cache runtime identity input", () => {
   it.effect("rejects supplied values in either environment before planned Turbo execution", () =>
@@ -47,13 +46,11 @@ describe("cache runtime identity input", () => {
               environments.ambient,
               environments.step
             ).pipe(Effect.result);
-            expect(Result.isFailure(result)).toBe(true);
-            if (Result.isFailure(result)) {
-              expect(result.failure._tag).toBe("CacheCommandError");
-              expect(result.failure.message).toBe(
-                "BEEP_CACHE_TOOLCHAIN_DIGEST must be computed by the cache runtime; caller overrides are not accepted."
-              );
-            }
+            const failure = O.getOrThrow(Result.getFailure(result));
+            expect(failure._tag).toBe("CacheCommandError");
+            expect(failure.message).toBe(
+              "BEEP_CACHE_TOOLCHAIN_DIGEST must be computed by the cache runtime; caller overrides are not accepted."
+            );
           }
         }
       }
@@ -125,7 +122,7 @@ describe("native task selection arguments", () => {
         ["run", "lint", "--cache"],
         ["run", "lint", "--cache", "--filter=@qualification/c"],
       ]) {
-        expect(Result.isFailure(yield* cacheTaskSelectionArgs(args).pipe(Effect.result))).toBe(true);
+        yield* cacheTaskSelectionArgs(args).pipe(Effect.flip);
       }
     })
   );
@@ -165,9 +162,20 @@ const runtimeNode = CacheCensusNode.make({
   inputCount: NonNegativeInt.make(0),
   inputsDigest: runtimeDigest,
 });
-const provideRuntime = provideScopedLayer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
+const runtimeLayer = FsUtilsLive.pipe(
+  Layer.provideMerge(
+    Layer.mergeAll(
+      FileSystem.layerNoop({}),
+      Path.layer,
+      NodeCrypto.layer,
+      Layer.succeed(ChildProcessSpawner.ChildProcessSpawner)(
+        ChildProcessSpawner.make(() => Effect.die("Unexpected native spawn outside the mocked runtime boundary"))
+      )
+    )
+  )
+);
 
-describe("runtime native spawn", () => {
+it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) => {
   afterEach(() => vi.restoreAllMocks());
 
   it.effect("injects the observed canonical key into the final native spawn", () =>
@@ -193,7 +201,7 @@ describe("runtime native spawn", () => {
           extendEnv: true,
         })
       );
-    }).pipe(provideScopedLayer(FsUtilsLive), provideRuntime)
+    })
   );
 
   it.effect("rejects client drift before spawning an enabled cache task", () =>
@@ -207,9 +215,9 @@ describe("runtime native spawn", () => {
         )
       );
       const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
-      expect(Result.isFailure(yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]).pipe(Effect.result))).toBe(true);
+      yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]).pipe(Effect.flip);
       expect(spawn).not.toHaveBeenCalled();
-    }).pipe(provideScopedLayer(FsUtilsLive), provideRuntime)
+    })
   );
 });
 

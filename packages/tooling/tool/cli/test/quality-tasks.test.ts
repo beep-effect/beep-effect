@@ -1,3 +1,4 @@
+import { cacheRuntimeStep } from "@beep/repo-cli/commands/Cache";
 import {
   CiLaneRunOptions,
   CiLocalStepPlan,
@@ -574,7 +575,10 @@ const policyCommandKey = (text: string): string =>
 // A live 1Password session suffixes the resolved step label with " (op run)".
 const policyLabelKey = Str.replace(" (op run)", "");
 
-const policyStepCommand = (step: QualityTaskStep) => A.join([step.command, ...step.args], " ");
+const policyStepCommand = (step: QualityTaskStep) => {
+  const runtime = cacheRuntimeStep(step);
+  return A.join([runtime.command, ...runtime.args], " ");
+};
 
 // A red policy run fails as one group whose failures name exactly the red planned label.
 const expectPolicyGroupFailure = (exit: Exit.Exit<unknown, unknown>, failedLabel: string): void => {
@@ -1360,15 +1364,15 @@ describe("quality task adapter", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
-  it("declares a direct Turbo step's digest to the ledger the parent named", () =>
-    Effect.runPromise(
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("declares a direct Turbo step's digest to the ledger the parent named", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const tempDir = yield* fs.makeTempDirectory();
         const bin = path.join(tempDir, "bin");
         yield* fs.makeDirectory(bin, { recursive: true });
-        // A stand-in `bunx` that leaves the run summary `turbo run --summarize` would have written.
+        // A stand-in Cache launcher that leaves the summary its governed Turbo child would write.
         // The summary starts far enough in the future to count as this attempt's own.
         const summary = TurboRunSummary.make({
           id: "fixture",
@@ -1384,7 +1388,7 @@ describe("quality task adapter", () => {
           ],
         });
         yield* fs.writeFileString(path.join(bin, "summary.json"), yield* encodeTurboRunSummary(summary));
-        const fakeBunx = path.join(bin, "bunx");
+        const fakeBunx = path.join(bin, "bun");
         yield* fs.writeFileString(
           fakeBunx,
           A.join(
@@ -1425,8 +1429,9 @@ describe("quality task adapter", () => {
         const lane = yield* Effect.fromOption(A.head(report.lanes));
         expect(lane.status).toBe("passed");
         assertSome(lane.inputDigest, expected.digest);
-      }).pipe(provideScopedLayer(PlatformLayer))
-    ));
+      })
+    );
+  });
 
   it("appends schema-versioned lane rows and ignores malformed side-channel rows", () =>
     Effect.runPromise(
@@ -2536,16 +2541,20 @@ describe("quality task adapter", () => {
       )
     ));
 
-  it("runs every cheap gate through the collected runner when all lanes pass", () => {
+  describe("runs every cheap gate through the collected runner when all lanes pass", () => {
     const spawned: Array<string> = [];
     const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
-    const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
-    const changesetStatusCommand = A.join([changesetStatusLane.step.command, ...changesetStatusLane.step.args], " ");
-
-    return Effect.runPromise(
-      withEnvVarEffect(
-        "BEEP_YEET_LANE_PROOF_MODE",
-        undefined,
+    const changesetStatusCommand = policyStepCommand(githubCheckChangesetStatusLane(process.cwd()).step);
+    const proofMode = Layer.effectDiscard(
+      Effect.acquireRelease(
+        Effect.sync(() => vi.stubEnv("BEEP_YEET_LANE_PROOF_MODE", undefined)),
+        () => Effect.sync(() => vi.unstubAllEnvs())
+      )
+    );
+    it.layer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), PullRequestConfigLayer, proofMode), {
+      timeout: "10 seconds",
+    })((it) => {
+      it.effect("executes the governed plan", () =>
         runGithubChecks("cheap-gates").pipe(
           Effect.tap(
             Effect.fnUntraced(function* () {
@@ -2554,57 +2563,53 @@ describe("quality task adapter", () => {
               expect(logText).toContain('"failurePolicy":"collect-all"');
               expect(logText).toContain('"status":"passed"');
               expect(spawned).toContain(changesetStatusCommand);
-              expect(
-                A.every(cheapGateLanes, (lane) =>
-                  A.contains(spawned, A.join([lane.step.command, ...lane.step.args], " "))
-                )
-              ).toBe(true);
+              expect(A.every(cheapGateLanes, (lane) => A.contains(spawned, policyStepCommand(lane.step)))).toBe(true);
             })
-          ),
-          provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), PullRequestConfigLayer))
+          )
         )
-      )
-    );
+      );
+    });
   });
 
-  it("skips changeset status on a main push while running every cheap gate", () => {
+  describe("skips changeset status on a main push while running every cheap gate", () => {
     const spawned: Array<string> = [];
     const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
-    const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
-    const changesetStatusCommand = A.join([changesetStatusLane.step.command, ...changesetStatusLane.step.args], " ");
-
-    return Effect.runPromise(
-      withEnvVarEffect(
-        "BEEP_YEET_LANE_PROOF_MODE",
-        "off",
+    const changesetStatusCommand = policyStepCommand(githubCheckChangesetStatusLane(process.cwd()).step);
+    const proofMode = Layer.effectDiscard(
+      Effect.acquireRelease(
+        Effect.sync(() => vi.stubEnv("BEEP_YEET_LANE_PROOF_MODE", "off")),
+        () => Effect.sync(() => vi.unstubAllEnvs())
+      )
+    );
+    it.layer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), MainPushConfigLayer, proofMode), {
+      timeout: "10 seconds",
+    })((it) => {
+      it.effect("executes the governed plan", () =>
         runGithubChecks("cheap-gates").pipe(
           Effect.tap(
             Effect.fnUntraced(function* () {
               const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
               expect(logText).toContain("[github-checks] quality: skipped changeset status on main push");
               expect(spawned).not.toContain(changesetStatusCommand);
-              expect(
-                A.every(cheapGateLanes, (lane) =>
-                  A.contains(spawned, A.join([lane.step.command, ...lane.step.args], " "))
-                )
-              ).toBe(true);
+              expect(A.every(cheapGateLanes, (lane) => A.contains(spawned, policyStepCommand(lane.step)))).toBe(true);
             })
-          ),
-          provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), MainPushConfigLayer))
+          )
         )
-      )
-    );
+      );
+    });
   });
 
   it("collects multiple failures through the cheap-gates runner without stopping later lanes", () => {
     const spawned: Array<string> = [];
     const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
     const failedCommands = [
-      A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "repo-sanity:tsconfig-sync")], " "),
-      A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "lint:effect-imports")], " "),
+      policyStepCommand(
+        O.getOrThrow(A.findFirst(cheapGateLanes, (lane) => lane.id === "repo-sanity:tsconfig-sync")).step
+      ),
+      policyStepCommand(O.getOrThrow(A.findFirst(cheapGateLanes, (lane) => lane.id === "lint:effect-imports")).step),
     ];
     const lastLane = O.getOrThrow(A.last(cheapGateLanes));
-    const lastCommand = A.join([lastLane.step.command, ...lastLane.step.args], " ");
+    const lastCommand = policyStepCommand(lastLane.step);
 
     return Effect.runPromise(
       withEnvVarEffect(
@@ -7176,76 +7181,75 @@ describe("quality task adapter", () => {
       )
     ));
 
-  it("keeps running repo-wide root lint policy checks after aggregate lint fails", () =>
-    Effect.runPromise(
-      withTempRepo(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const tmpDir = process.cwd();
-          const binDir = path.join(tmpDir, "bin");
-          const commandLogPath = path.join(tmpDir, "quality-commands.log");
-          const fakeBunxPath = path.join(binDir, "bunx");
-          const fakeBunPath = path.join(binDir, "bun");
+  it.effect("keeps running repo-wide root lint policy checks after aggregate lint fails", () =>
+    withTempRepo(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = process.cwd();
+        const binDir = path.join(tmpDir, "bin");
+        const commandLogPath = path.join(tmpDir, "quality-commands.log");
+        const fakeBunxPath = path.join(binDir, "bunx");
+        const fakeBunPath = path.join(binDir, "bun");
 
-          yield* fs.makeDirectory(binDir, { recursive: true });
-          yield* fs.writeFileString(
-            fakeBunxPath,
-            [
-              "#!/usr/bin/env sh",
-              "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
-              'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
-              "  exit 7",
-              "fi",
-              "exit 0",
-              "",
-            ].join("\n")
-          );
-          yield* fs.writeFileString(
-            fakeBunPath,
-            [
-              "#!/usr/bin/env sh",
-              "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
-              'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
-              "exit 0",
-              "",
-            ].join("\n")
-          );
-          yield* fs.chmod(fakeBunxPath, 0o755);
-          yield* fs.chmod(fakeBunPath, 0o755);
+        yield* fs.makeDirectory(binDir, { recursive: true });
+        yield* fs.writeFileString(
+          fakeBunxPath,
+          [
+            "#!/usr/bin/env sh",
+            "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
+            'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
+            "  exit 7",
+            "fi",
+            "exit 0",
+            "",
+          ].join("\n")
+        );
+        yield* fs.writeFileString(
+          fakeBunPath,
+          [
+            "#!/usr/bin/env sh",
+            "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
+            'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
+            "exit 0",
+            "",
+          ].join("\n")
+        );
+        yield* fs.chmod(fakeBunxPath, 0o755);
+        yield* fs.chmod(fakeBunPath, 0o755);
 
-          const exit = yield* withEnvVarEffect(
-            "PATH",
-            `${binDir}:${Bun.env.PATH ?? ""}`,
-            Effect.exit(runQualityTask(getInvocation(["lint"])))
-          );
+        const exit = yield* withEnvVarEffect(
+          "PATH",
+          `${binDir}:${Bun.env.PATH ?? ""}`,
+          Effect.exit(runQualityTask(getInvocation(["lint"])))
+        );
 
-          expect(Exit.isFailure(exit)).toBe(true);
-          if (Exit.isFailure(exit)) {
-            const failure = Cause.squash(exit.cause);
-            expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
-            if (isQualityTaskGroupFailed(failure)) {
-              expect(failure.exitCode).toBe(7);
-              expect(A.map(failure.failures, (step) => step.label)).toEqual(["lint"]);
-            }
+        expect(Exit.isFailure(exit)).toBe(true);
+        if (Exit.isFailure(exit)) {
+          const failure = Cause.squash(exit.cause);
+          expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+          if (isQualityTaskGroupFailed(failure)) {
+            expect(failure.exitCode).toBe(7);
+            expect(A.map(failure.failures, (step) => step.label)).toEqual(["lint"]);
           }
+        }
 
-          const commandLog = yield* fs.readFileString(commandLogPath);
-          // The aggregate fails first; ordered policy diagnostics still execute.
-          expect(commandLog).toContain("cache execute -- run lint");
-          expect(commandLog).toContain("lint:effect-imports");
-          expect(commandLog).toContain("lint:roadmap-refs");
-          expect(commandLog).toContain("lint:typos");
+        const commandLog = yield* fs.readFileString(commandLogPath);
+        // The aggregate fails first; ordered policy diagnostics still execute.
+        expect(commandLog).toContain("cache execute -- run lint");
+        expect(commandLog).toContain("lint:effect-imports");
+        expect(commandLog).toContain("lint:roadmap-refs");
+        expect(commandLog).toContain("lint:typos");
 
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          // Derived from the same plan the runtime executes (aggregate lane plus
-          // every policy step), so a lint step added on another branch does not
-          // break this assertion when the two land together in a merge.
-          const lintStepCount = A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"])));
-          expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
-        })
-      )
-    ));
+        const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+        // Derived from the same plan the runtime executes (aggregate lane plus
+        // every policy step), so a lint step added on another branch does not
+        // break this assertion when the two land together in a merge.
+        const lintStepCount = A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"])));
+        expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
+      })
+    )
+  );
 
   it("leaves lint policy subcommands on the existing command tree", () => {
     expect(O.isNone(parseQualityTaskInvocation(["lint", "circular"]))).toBe(true);

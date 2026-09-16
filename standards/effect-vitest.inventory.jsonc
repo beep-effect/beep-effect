@@ -175967,6 +175967,28 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
+    },
+    {
+      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:197:withPartitionShim@26#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "line": 197,
+      "endLine": 261,
+      "symbol": "withPartitionShim",
+      "occurrence": "v2:b8adb67648de0ca9d5f3f436fe5a4c304f05cceab4d2cf9f7e85bd769adf77cc",
+      "class": "resource-wrapper",
+      "evidence": "<A, E, R>( options: PartitionShimOptions, use: (fixture: { readonly commandLogPath: string; readonly tempDir: string }) => Effect.Effect<A, E, R> ) => Effect.acquireUseRelease( Effect.gen(function* ()",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "withPartitionShim owns one native-process fixture: acquireUseRelease removes its temporary directory immediately after that invocation, including setup failures. Suite-layer teardown would extend this deliberately shorter lifetime; environment restoration stays within the use phase."
     }
   ]
 }
