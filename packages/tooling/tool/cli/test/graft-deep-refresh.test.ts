@@ -873,10 +873,10 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
   );
 
   it.effect(
-    "runs maintenance with only its allowlisted environment and keeps build overrides",
+    "runs pull, install, and sibling rebuild with only the allowlisted environment and keeps build overrides",
     Effect.fn(function* () {
       const { directory } = yield* fixture();
-      const phases: ReadonlyArray<GraftDeepRunnerStep["phase"]> = ["pull", "install"];
+      const phases: ReadonlyArray<GraftDeepRunnerStep["phase"]> = ["pull", "install", "rebuild"];
       yield* Effect.forEach(phases, (phase) =>
         Effect.gen(function* () {
           const result = yield* GraftDeepRunner.use((runner) =>

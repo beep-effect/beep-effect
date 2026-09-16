@@ -60,3 +60,9 @@ docgen already passed during repair and package docgen passed independently.
   ratchet zero introduced / zero resolved; sixteen stale rows dropped that
   main's own tree no longer produces), and the security regression suites plus
   fallow health pass on the merged tree.
+- PR #1160 review round 1 (L3 security review, confidence 4/5, one P2): the
+  maintenance allowlist did not cover the structural sibling rebuild, so
+  `graft build` children still inherited the unit's provider environment.
+  The allowlist now spans pull, install, and rebuild; the env regression test
+  runs all three phases against synthetic keys and keeps the meaning-tier
+  build override. Package check and the Graft deep refresh suite pass.

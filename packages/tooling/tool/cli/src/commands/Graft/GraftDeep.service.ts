@@ -13,6 +13,7 @@ import * as DateTime from "effect/DateTime";
 import * as Dur from "effect/Duration";
 import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -85,6 +86,8 @@ type RefreshContext = {
   readonly owner: string;
   readonly step: (input: GraftDeepRunnerStep) => Effect.Effect<CapturedStep, GraftDeepStepError | GraftCacheIoError>;
 };
+
+const maintenancePhases = HashSet.fromIterable<GraftDeepRunnerStep["phase"]>(["pull", "install", "rebuild"]);
 
 const revParseHeadStep = (owner: string) =>
   GraftDeepRunnerStep.make({
@@ -281,7 +284,10 @@ export class GraftDeepRunner extends Context.Service<GraftDeepRunner, GraftDeepR
 const makeGraftDeepRunner = Effect.fnUntraced(function* () {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const run: GraftDeepRunnerShape["run"] = Effect.fn("GraftDeepRunner.run")(function* (step) {
-    const maintenance = step.phase === "pull" || step.phase === "install";
+    // Only the meaning-tier build needs provider credentials; the owner
+    // pull, the dependency install, and the structural sibling rebuild run
+    // with the allowlisted environment alone.
+    const maintenance = HashSet.has(maintenancePhases, step.phase);
     const maintenanceEnv = maintenance
       ? yield* Config.all({
           PATH: Config.String("PATH").pipe(Config.withDefault("/usr/bin:/bin")),

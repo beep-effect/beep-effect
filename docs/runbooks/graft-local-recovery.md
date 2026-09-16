@@ -241,10 +241,12 @@ a leading `-`, so a missing file fails the unit loudly instead of starting a
 build with no key.
 
 Both update/install pre-start commands clear the inherited environment with
-`env -i`, preserving only HOME, PATH, and CI. The in-process pull and install
-runner applies the same allowlist with environment inheritance disabled. Both
-installation paths use `--ignore-scripts`, so repository and dependency lifecycle
-hooks cannot run during nightly maintenance. The refresh entrypoint and Graft
+`env -i`, preserving only HOME, PATH, and CI. The in-process runner applies the
+same allowlist with environment inheritance disabled to the pull, the install,
+and the structural sibling rebuild; only the meaning-tier build sees the
+provider environment. Both installation paths use `--ignore-scripts`, so
+repository and dependency lifecycle hooks cannot run during nightly
+maintenance. The refresh entrypoint and Graft
 build remain trusted local code; this is credential isolation for maintenance,
 not an isolation boundary against a compromised desktop account.
 
