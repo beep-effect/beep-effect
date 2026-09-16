@@ -16,6 +16,7 @@ import {
   writeYeetAckReceipt,
   YeetAckEnvironmentOnlyResolution,
   YeetAckFixResolution,
+  YeetAckObservedResolution,
   YeetAckReceipt,
   YeetAckState,
   YeetAckWaiveResolution,
@@ -26,7 +27,10 @@ import {
   YeetInboxRowJson,
   YeetInboxView,
   YeetInboxViewJson,
+  YeetPrMergeReadyCapsule,
+  YeetPrMergeReadyRow,
   yeetInboxRowId,
+  yeetPrMergeReadyRowId,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -523,5 +527,56 @@ describe("yeet inbox runners", () => {
         expect(failure.message).toBe("yeet inbox append requires --from-stdin.");
       })
     ).pipe(provideScopedLayer(RunnerLayer))
+  );
+});
+
+describe("observed acknowledgment of merge-ready rows (ruling 46)", () => {
+  const mergeReadyRow = () => {
+    const subject = YeetPrMergeReadyCapsule.make({
+      headSha: "abc123def456",
+      prNumber: 1149,
+      url: "https://github.com/o/r/pull/1149",
+      readyAt: AT,
+      pushedAt: null,
+      settledAt: null,
+      closeoutAt: null,
+      pushToReadyMs: null,
+    });
+    return YeetPrMergeReadyRow.make({
+      capsule: subject,
+      checkout: "/repo",
+      id: yeetPrMergeReadyRowId(subject),
+      severity: "P1",
+      ts: AT,
+    });
+  };
+  it.live("accepts --observed for a merge-ready row and records the inbox-ack route", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const subject = mergeReadyRow();
+        yield* appendYeetInboxRow(root, subject);
+        const report = yield* ackYeetInboxRow(
+          root,
+          subject.id,
+          YeetAckObservedResolution.make({ via: "inbox-ack" }),
+          AT
+        );
+        expect(report.receipt.id).toBe(subject.id);
+        const state = yield* readYeetAckState(root, subject.id);
+        expect(state.receipt?.resolution).toStrictEqual(YeetAckObservedResolution.make({ via: "inbox-ack" }));
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+  it.live("still refuses --observed for a check-failed row", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const subject = row(capsule());
+        yield* appendYeetInboxRow(root, subject);
+        const failure = yield* Effect.flip(
+          ackYeetInboxRow(root, subject.id, YeetAckObservedResolution.make({ via: "inbox-ack" }), AT)
+        );
+        expect(failure.message).toBe("--observed applies only to proof-job-finished and pr-merge-ready rows.");
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
   );
 });

@@ -140,7 +140,15 @@ export const yeetInboxRowLiveness: {
   (wave: O.Option<YeetRemediationWave>): (row: YeetInboxRow) => YeetInboxLiveness;
   (row: YeetInboxRow, wave: O.Option<YeetRemediationWave>): YeetInboxLiveness;
 } = dual(2, (row: YeetInboxRow, wave: O.Option<YeetRemediationWave>): YeetInboxLiveness => {
-  if (row.kind === "sibling-collision" || row.kind === "local-shard-failed" || row.kind === "proof-job-finished") {
+  // Rows the remediation wave never owns: collisions, local shards, job results,
+  // and merge-ready announcements (the merge loop supersedes those itself with a
+  // fix-sha receipt on push). Their liveness is not a wave question.
+  if (
+    row.kind === "sibling-collision" ||
+    row.kind === "local-shard-failed" ||
+    row.kind === "proof-job-finished" ||
+    row.kind === "pr-merge-ready"
+  ) {
     return "live";
   }
   return O.match(wave, {

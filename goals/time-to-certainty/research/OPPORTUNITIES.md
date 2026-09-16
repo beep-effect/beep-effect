@@ -1728,3 +1728,50 @@ in the law command's flag help to prevent a vacuous success from looking like pr
 - **Would have prevented it:** the orchestrator re-running the fallow pair on the final tree
   before committing (it now does, alongside oxlint, test-tsgo and effect-vitest), and a lane rule
   that the verification table is re-run after the last edit, not appended to.
+
+## 2026-09-16 — The Codex pool ran dry mid-train and the PR2 lane died before its first edit
+
+- **Doing:** launching the B7 PR2 implementation lane (`codex exec --model gpt-6-astra`) in a
+  fresh worktree right after PR1 #1149 merged.
+- **Evidence:** the lane read the brief and the results file, then exited with
+  `You've hit your usage limit … try again at Sep 19th, 2026 4:22 AM` after 31,642 tokens and no
+  edits; the same OAuth pool backs the `claudex` proxy route, so no Codex lane can run for three
+  days. Four B7 lanes (A–D) plus the day's other sessions consumed the window.
+- **Would have prevented it:** the quota meter in the routing doctrine (per-window burn per lane,
+  read before launching) and a smaller default lane budget once a window is past half; here the
+  orchestrator implements PR2's bounded items itself instead of waiting.
+
+## 2026-09-16 — Retired: the scratchpad PR watcher that stood in for yeet during the C3 train
+
+- **Doing:** closing B7 PR1 (#1149) and PR2; the 2026-09-12 and 2026-09-13 receipts above
+  describe the 25-line `pr-watch-generic.sh` (`~/data-home/beep-handoffs/2026-09-16-yeet-until-ready/`)
+  that polled `gh pr checks`, declared "settled" on a registered-minimum heuristic, and exited so a
+  session could act.
+- **Evidence:** everything it added was scheduling around yeet. B7 moved that into the loop:
+  ruleset-keyed settle with tolerated matrix parents, automatic read-first closeout, a `ready`
+  terminal with exit 0, required-only exit codes, one `pr-merge-ready` row per head. Measured on
+  #1149 itself: run 1 hit `settle-timeout` at 30 m with two heavy lanes registered but queued
+  (ruling 49 amended the budget to registration only); run 2 followed three heads across two pushes
+  and ended `merge-ready: yes`, exit 0, push→ready 1h 0m 7s with two optional Vercel reds. The
+  watcher is retired; `bun run beep yeet monitor --until-ready --detach` + `yeet job wait` is the
+  recipe (attached `--until-ready` when the user manager is unreachable).
+- **Would have prevented it:** this item, three weeks earlier; the receipts that opened it were the
+  right instrument.
+
+## 2026-09-16 — One empty `gh pr checks` reply sent a settled head back into the registration window
+
+- **Doing:** babysitting #1159 with `yeet monitor --until-ready` (the loop from #1149) while its
+  seven heavy lanes sat queued behind the runner pool.
+- **Evidence:** at 22m 38s the loop logged `settle: required-pending → registration` and
+  `no checks reported for this head yet … of 30m` on a head whose census had been registered for
+  twenty minutes and had not changed (`gh pr checks 1159` listed all eight rows throughout); the
+  next poll went `registration → required-pending` again. One transient empty reply from
+  `gh pr checks --json` reads as "nothing registered", so the registration budget re-applied with
+  7m 22s left. Had the blip lasted eight minutes, the loop would have exited 1 with
+  `settle-timeout` on a head with every required check queued — the ruling-49 false positive in
+  another coat. The poll-error budget (5) never saw it because the command exited 0.
+- **Would have prevented it:** a head that has left the registration window never re-enters it:
+  `MonitorHeadState` remembers that a census registered, and an empty census afterwards counts
+  against the poll-error budget as a bad read, not against the settle budget as a regression.
+  Candidate ruling for B7's next amendment; the settle schema already carries `budgetApplies`, so
+  the change is one predicate plus a TestClock test.

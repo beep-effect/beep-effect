@@ -609,3 +609,57 @@ is the shared pure rule for the watch. Two TestClock cases pin the dogfood shape
 queued check keeps the 30 s interval past a 1 s budget; a missing context still times out at
 exactly 1 s) and a unit table pins the watch helper. The ruling 49 body's stale "Ruling 39" is now
 "Ruling 45".
+
+## PR2 (orchestrator, 2026-09-16; Codex pool exhausted, implemented directly)
+
+Ruling 48's deferred half, now that B5 (#1143) is on main:
+
+- `yeet inbox ack <id> --observed` accepts `pr-merge-ready` rows (ruling 46) alongside
+  `proof-job-finished`; the admitting kinds are one `LiteralKit` in `InboxPorcelain.ts` and the
+  refusal names both. `yeet inbox list` treats merge-ready rows as live: the merge loop supersedes
+  them itself with a `fix-sha` receipt on push, so the remediation wave never owns them (the row
+  used to render `P1 unknown` because liveness was a wave question).
+- The yeet skill's step 6 and AGENTS.md's closeout bullet name the detached recipe first —
+  `yeet monitor --until-ready --detach`, then `yeet job wait <jobId>` from a background tool call
+  (0 green / 1 red / 2 terminated) — with attached `--until-ready` as the fallback when the user
+  manager is unreachable. A wiring test proves `--until-ready --detach` reaches the detached
+  submit before route legality.
+- The scratchpad watcher is retired with a receipt in `OPPORTUNITIES.md`; PLAN.md B7 is checked.
+
+### Idle-wake spike (proposed, unverified)
+
+Ruling 46 asks whether a Claude Code hook can wake an idle session when the inbox gains a row.
+From the hooks reference (code.claude.com/docs/en/hooks, read for the 2026-09-15 design tree):
+`FileChanged` runs a hook when a watched file changes on disk whatever wrote it; its matcher is
+a literal filename relative to the session cwd, dynamic paths go through `watchPaths`, and the
+event carries no decision control. Command hooks accept `asyncRewake: true`: the command runs in
+the background, and exit code 2 wakes Claude with the hook's stderr as a system reminder. The
+composition an operator would try, in `.claude/settings.local.json` (never the tracked
+`settings.json`):
+
+```json
+{
+  "hooks": {
+    "FileChanged": [
+      {
+        "matcher": ".beep/inbox/failures.ndjson",
+        "hooks": [
+          {
+            "type": "command",
+            "asyncRewake": true,
+            "command": "tail -n 1 .beep/inbox/failures.ndjson | jq -r 'select(.kind == \"pr-merge-ready\" or .severity == \"P0\") | \"[yeet] inbox: \" + .kind + \" \" + .id' 1>&2; test -s /dev/stdin || exit 0; exit 2"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The observable that proves a wake: a system reminder carrying that stderr line arriving while
+the session is idle (no tool call in flight), followed by the session acting on the row. Risks:
+every appended row re-fires the hook (filter to the kinds worth a wake, as above); the hook runs
+in the session cwd, so a lane worktree needs the session opened there or `watchPaths` pointed at
+it; and the `--detach` job writes the row from a systemd service, which is exactly the "whatever
+wrote it" case the docs describe. Status: proposed; not exercised in this session because the
+verification would require editing hook wiring the standing constraints reserve for the operator.

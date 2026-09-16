@@ -76,6 +76,7 @@ checkout inbox. An unavailable user manager is an error.
 ```bash
 bun run beep yeet verify --tier cheap-gates --detach
 bun run beep yeet publish --message "feat: describe change" --detach
+bun run beep yeet monitor --until-ready --detach
 bun run beep yeet job wait <jobId> --timeout "1 hour"
 bun run beep yeet job status <jobId> --ack
 bun run beep yeet job logs <jobId> --tail 100
@@ -468,12 +469,17 @@ includes the head timeline and push→ready wall clock when the push date is kno
 5. If no pull request exists for the pushed branch, prefer publishing with
    `--pr` so Yeet creates a ready PR from the commit log and local proof
    summary; `gh pr create --draft --fill` remains the manual fallback.
-6. Run `bun run beep yeet monitor --until-ready` as an attached command in a
-   background tool call with a generous timeout as soon as the PR exists.
-   Keep the tool call attached and wait for its result. Exit 0 with
-   `merge-ready: yes` means hand the PR to the operator; it does not merge it.
-   On exit 1, read the summary line, fix the named blocker, publish, and re-arm
-   the command. Act on unresolved review threads through the reply flow while
+6. As soon as the PR exists, submit the babysit loop as a detached job and block
+   on it from a background tool call:
+   `bun run beep yeet monitor --until-ready --detach`, then
+   `bun run beep yeet job wait <jobId>`. The job survives session restarts and
+   the ten-minute tool-call cap; `job wait` returns 0 for green (the loop ended
+   `ready`), 1 for red (`required-red`, `settle-timeout`, `closed`, or a spent
+   poll-error budget), 2 for a terminated job. When the user manager is
+   unreachable, run `bun run beep yeet monitor --until-ready` attached instead.
+   Exit 0 with `merge-ready: yes` means hand the PR to the operator; it does not
+   merge it. On exit 1, read the summary line, fix the named blocker, publish,
+   and re-arm the command. Act on unresolved review threads through the reply flow while
    the loop waits. The loop runs read-first closeout automatically after the
    required checks settle. `monitor --summary` remains a one-shot compact read.
 7. Run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`

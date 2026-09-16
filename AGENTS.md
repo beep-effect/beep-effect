@@ -115,9 +115,11 @@ models and effort levels they actually recorded.
     outdated, or have received a response; and
   - no failing CI jobs except Vercel deployments failing only because they were
     rate limited.
-- PR closeout: run `bun run beep yeet monitor --until-ready` until it exits 0
-  with `merge-ready: yes`. Unanswered review threads are a hard merge gate — answer
-  every one and resolve every actionable one via `bun run beep yeet reply`
+- PR closeout: run `bun run beep yeet monitor --until-ready --detach` and block on
+  `bun run beep yeet job wait <jobId>` (attached `--until-ready` when the user
+  manager is unreachable) until it exits 0 with `merge-ready: yes`. Unanswered
+  review threads are a hard merge gate — answer every one and resolve every
+  actionable one via `bun run beep yeet reply`
   (drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
   them.
 - Post-merge closeout is the agent's job, not the operator's. Once the PR is

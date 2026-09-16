@@ -25,6 +25,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
+import { LiteralKit } from "@beep/schema";
 import { Console, DateTime, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -54,6 +55,12 @@ import type { YeetInboxEntry } from "./InboxView.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/InboxPorcelain");
 
 const isoNow = DateTime.now.pipe(Effect.map(DateTime.formatIso));
+
+// Informational rows acknowledged by observation (ruling 37 for proof jobs, ruling 46 for
+// merge-ready announcements); every other kind needs an attributed closing move.
+const ObservedRowKind = LiteralKit(["proof-job-finished", "pr-merge-ready"]);
+const isObservedRowKind = S.is(ObservedRowKind);
+const yeetInboxRowAcceptsObserved = (row: YeetInboxRow): boolean => isObservedRowKind(row.kind);
 
 const locateRepoRoot = (): Effect.Effect<string, YeetCommandError, FileSystem.FileSystem> =>
   findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
@@ -276,7 +283,7 @@ export const parseYeetAckResolution = Effect.fn("Yeet.parseYeetAckResolution")(f
   if (!A.isReadonlyArrayNonEmpty(candidates) || A.length(candidates) !== 1) {
     return yield* YeetCommandError.make({
       message:
-        "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry, or --observed for a proof job.",
+        "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry, or --observed for a proof job or a merge-ready row.",
     });
   }
   return A.headNonEmpty(candidates);
@@ -407,8 +414,10 @@ export const ackYeetInboxRow = Effect.fn("Yeet.ackYeetInboxRow")(function* (
       message: `No inbox row with id "${id}". Run "bun run beep yeet inbox list" to see the known rows.`,
     });
   }
-  if (resolution.kind === "observed" && entry.value.row.kind !== "proof-job-finished") {
-    return yield* YeetCommandError.make({ message: "--observed applies only to proof-job-finished rows." });
+  if (resolution.kind === "observed" && !yeetInboxRowAcceptsObserved(entry.value.row)) {
+    return yield* YeetCommandError.make({
+      message: "--observed applies only to proof-job-finished and pr-merge-ready rows.",
+    });
   }
   const receipt = YeetAckReceipt.make({ ackedAt, id, resolution });
   const receiptPath = yield* writeYeetAckReceipt(repoRoot, receipt);

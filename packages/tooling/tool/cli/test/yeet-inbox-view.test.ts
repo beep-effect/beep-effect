@@ -10,6 +10,8 @@ import {
   YeetFailureCapsule,
   YeetInboxRowJson,
   YeetInboxViewJson,
+  YeetPrMergeReadyCapsule,
+  YeetPrMergeReadyRow,
   YeetRemediationWave,
   YeetRemediationWaveJson,
   yeetDispatchStatePath,
@@ -17,6 +19,7 @@ import {
   yeetInboxPaths,
   yeetInboxRowId,
   yeetInboxRowLiveness,
+  yeetPrMergeReadyRowId,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -341,4 +344,28 @@ describe("loadYeetInboxView", () => {
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
+});
+
+describe("merge-ready row liveness", () => {
+  it("is live regardless of the remediation wave: the merge loop supersedes it itself", () => {
+    const subject = YeetPrMergeReadyCapsule.make({
+      headSha: "abc123def456",
+      prNumber: 751,
+      url: null,
+      readyAt: AT,
+      pushedAt: null,
+      settledAt: null,
+      closeoutAt: null,
+      pushToReadyMs: null,
+    });
+    const ready = YeetPrMergeReadyRow.make({
+      capsule: subject,
+      checkout: "/repo",
+      id: yeetPrMergeReadyRowId(subject),
+      severity: "P1",
+      ts: AT,
+    });
+    expect(yeetInboxRowLiveness(ready, O.none())).toBe("live");
+    expect(yeetInboxRowLiveness(ready, O.some(wave({ headSha: "fff999" })))).toBe("live");
+  });
 });
