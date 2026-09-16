@@ -8,6 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import { Context, Effect, Layer } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
   VersionCategoryStatus,
@@ -20,7 +21,9 @@ import { BunVersionState, buildBunReport, resolveBunVersions } from "../resolver
 import { buildDockerReport, DockerImageState, resolveDockerImages } from "../resolvers/DockerResolver.ts";
 import { buildEffectReport, EffectCatalogState, resolveEffectCatalog } from "../resolvers/EffectResolver.ts";
 import { buildNodeReport, resolveNodeVersions } from "../resolvers/NodeResolver.ts";
+import { buildTurboReport, resolveTurboSchema, TurboSchemaState } from "../resolvers/TurboResolver.ts";
 import { CategorySelectionService } from "./CategorySelectionService.ts";
+import type { FsUtils } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
 import type { HttpClient } from "effect/unstable/http";
 import type { VersionCategoryReport, VersionSyncError, VersionSyncOptions } from "../../VersionSync.schemas.ts";
@@ -28,7 +31,12 @@ import type { VersionCategoryReport, VersionSyncError, VersionSyncOptions } from
 const $I = $RepoCliId.create("commands/VersionSync/internal/services/ResolverService");
 const versionCategoryStatusEquivalence = S.toEquivalence(VersionCategoryStatus);
 
-type ResolverEnvironment = FileSystem.FileSystem | Path.Path | HttpClient.HttpClient | CategorySelectionService;
+type ResolverEnvironment =
+  | FileSystem.FileSystem
+  | Path.Path
+  | HttpClient.HttpClient
+  | FsUtils
+  | CategorySelectionService;
 
 /**
  * Service contract for resolving version drift state.
@@ -51,83 +59,121 @@ export type ResolverServiceShape = {
  */
 export class ResolverService extends Context.Service<ResolverService, ResolverServiceShape>()($I`ResolverService`) {}
 
+/**
+ * Run a category resolver, degrading to its empty state with a warning when it fails.
+ *
+ * @param label - Category label used in the logged warning.
+ * @param resolution - The resolver effect for the category.
+ * @param empty - The empty state returned when resolution fails.
+ * @returns The resolved state, or `empty` after logging the failure.
+ * @category utilities
+ * @since 0.0.0
+ */
+const resolveOrEmpty = <State>(
+  label: string,
+  resolution: Effect.Effect<State, VersionSyncError, ResolverEnvironment>,
+  empty: State
+): Effect.Effect<State, never, ResolverEnvironment> =>
+  resolution.pipe(
+    Effect.catchTag(
+      "VersionSyncError",
+      Effect.fn(function* (error) {
+        yield* Effect.logWarning(`${label} resolution failed: ${error.message}`);
+        return empty;
+      })
+    )
+  );
+
+const resolveBunCategory = Effect.fn(function* (repoRoot: string, options: VersionSyncOptions) {
+  const bunState = yield* resolveOrEmpty(
+    "Bun",
+    resolveBunVersions(repoRoot, options.skipNetwork),
+    BunVersionState.make({})
+  );
+
+  return Str.isNonEmpty(bunState.bunVersionFile) ? O.some(buildBunReport(bunState)) : O.none<VersionCategoryReport>();
+});
+
+const resolveNodeCategory = Effect.fn(function* (repoRoot: string) {
+  const nodeState = yield* resolveNodeVersions(repoRoot);
+
+  const locations = A.map(
+    A.filter(nodeState.workflowLocations, (location) => !Str.equivalence(location.currentValue, nodeState.nvmrc)),
+    (location) =>
+      VersionSyncUpdateLocation.make({
+        file: location.file,
+        yamlPath: location.yamlPath,
+      })
+  );
+
+  return { report: buildNodeReport(nodeState), locations };
+});
+
+const resolveDockerCategory = Effect.fn(function* (repoRoot: string, options: VersionSyncOptions) {
+  const dockerState = yield* resolveOrEmpty(
+    "Docker",
+    resolveDockerImages(repoRoot, options.skipNetwork),
+    DockerImageState.make({})
+  );
+
+  return buildDockerReport(dockerState);
+});
+
+const resolveBiomeCategory = Effect.fn(function* (repoRoot: string) {
+  const biomeState = yield* resolveOrEmpty("Biome schema", resolveBiomeSchema(repoRoot), BiomeSchemaState.make({}));
+
+  return Str.isNonEmpty(biomeState.installedVersion)
+    ? O.some(buildBiomeReport(biomeState))
+    : O.none<VersionCategoryReport>();
+});
+
+const resolveEffectCategory = Effect.fn(function* (repoRoot: string) {
+  const effectState = yield* resolveOrEmpty(
+    "Effect catalog",
+    resolveEffectCatalog(repoRoot),
+    EffectCatalogState.make({})
+  );
+
+  return buildEffectReport(effectState);
+});
+
+const resolveTurboCategory = Effect.fn(function* (repoRoot: string) {
+  const turboState = yield* resolveOrEmpty("Turbo schema", resolveTurboSchema(repoRoot), TurboSchemaState.make({}));
+
+  return Str.isNonEmpty(turboState.installedVersion)
+    ? O.some(buildTurboReport(turboState))
+    : O.none<VersionCategoryReport>();
+});
+
 const resolve: ResolverServiceShape["resolve"] = Effect.fn(function* (repoRoot, options) {
   const categorySelection = yield* CategorySelectionService;
   let categories = A.empty<VersionCategoryReport>();
   let nodeLocations = A.empty<VersionSyncUpdateLocation>();
 
   if (categorySelection.shouldCheck(options, "bun")) {
-    const bunState = yield* resolveBunVersions(repoRoot, options.skipNetwork).pipe(
-      Effect.catchTag(
-        "VersionSyncError",
-        Effect.fn(function* (error) {
-          yield* Effect.logWarning(`Bun resolution failed: ${error.message}`);
-          return BunVersionState.make({});
-        })
-      )
-    );
-
-    if (Str.isNonEmpty(bunState.bunVersionFile)) {
-      categories = A.append(categories, buildBunReport(bunState));
-    }
+    categories = A.appendAll(categories, A.fromOption(yield* resolveBunCategory(repoRoot, options)));
   }
 
   if (categorySelection.shouldCheck(options, "node")) {
-    const nodeState = yield* resolveNodeVersions(repoRoot);
-    categories = A.append(categories, buildNodeReport(nodeState));
-
-    nodeLocations = A.map(
-      A.filter(nodeState.workflowLocations, (location) => !Str.equivalence(location.currentValue, nodeState.nvmrc)),
-      (location) =>
-        VersionSyncUpdateLocation.make({
-          file: location.file,
-          yamlPath: location.yamlPath,
-        })
-    );
+    const node = yield* resolveNodeCategory(repoRoot);
+    categories = A.append(categories, node.report);
+    nodeLocations = node.locations;
   }
 
   if (categorySelection.shouldCheck(options, "docker")) {
-    const dockerState = yield* resolveDockerImages(repoRoot, options.skipNetwork).pipe(
-      Effect.catchTag(
-        "VersionSyncError",
-        Effect.fn(function* (error) {
-          yield* Effect.logWarning(`Docker resolution failed: ${error.message}`);
-          return DockerImageState.make({});
-        })
-      )
-    );
-
-    categories = A.append(categories, buildDockerReport(dockerState));
+    categories = A.append(categories, yield* resolveDockerCategory(repoRoot, options));
   }
 
   if (categorySelection.shouldCheck(options, "biome")) {
-    const biomeState = yield* resolveBiomeSchema(repoRoot).pipe(
-      Effect.catchTag(
-        "VersionSyncError",
-        Effect.fn(function* (error) {
-          yield* Effect.logWarning(`Biome schema resolution failed: ${error.message}`);
-          return BiomeSchemaState.make({});
-        })
-      )
-    );
-
-    if (Str.isNonEmpty(biomeState.installedVersion)) {
-      categories = A.append(categories, buildBiomeReport(biomeState));
-    }
+    categories = A.appendAll(categories, A.fromOption(yield* resolveBiomeCategory(repoRoot)));
   }
 
   if (categorySelection.shouldCheck(options, "effect")) {
-    const effectState = yield* resolveEffectCatalog(repoRoot).pipe(
-      Effect.catchTag(
-        "VersionSyncError",
-        Effect.fn(function* (error) {
-          yield* Effect.logWarning(`Effect catalog resolution failed: ${error.message}`);
-          return EffectCatalogState.make({});
-        })
-      )
-    );
+    categories = A.append(categories, yield* resolveEffectCategory(repoRoot));
+  }
 
-    categories = A.append(categories, buildEffectReport(effectState));
+  if (categorySelection.shouldCheck(options, "turbo")) {
+    categories = A.appendAll(categories, A.fromOption(yield* resolveTurboCategory(repoRoot)));
   }
 
   const report = VersionSyncReport.make({

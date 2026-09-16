@@ -3,10 +3,14 @@ import {
   buildBunReport,
   buildEffectReport,
   buildNodeReport,
+  buildTurboReport,
   extractBunArchiveChecksum,
   resolveBunVersions,
   resolveEffectCatalog,
   resolveNodeVersions,
+  resolveTurboSchema,
+  TurboConfigFile,
+  TurboSchemaState,
   UpdateApplierService,
   UpdateApplierServiceLive,
   updateCatalogEntry,
@@ -14,6 +18,7 @@ import {
   VersionSyncReport,
   VersionSyncResolution,
 } from "@beep/repo-cli/test/VersionSync";
+import { FsUtilsLive } from "@beep/repo-utils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -32,7 +37,12 @@ const encodeBunVersionStateSync = S.encodeSync(BunVersionState);
 
 import { FetchHttpClient } from "effect/unstable/http";
 
-const VersionSyncTestLayer = Layer.mergeAll(NodeServices.layer, FetchHttpClient.layer, UpdateApplierServiceLive);
+const VersionSyncTestLayer = Layer.mergeAll(
+  NodeServices.layer,
+  FetchHttpClient.layer,
+  UpdateApplierServiceLive,
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+);
 
 layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
   describe("resolveEffectCatalog", () => {
@@ -542,6 +552,148 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         )) as Record<string, unknown>;
         expect(updatedVercel.installCommand).toBe("npx --yes bun@1.4.0 install --frozen-lockfile");
         expect(updatedVercel.buildCommand).toBe("npx --yes bun@1.4.0 run build:pwa");
+
+        yield* fs.remove(tmpDir, { recursive: true });
+      })
+    );
+  });
+});
+
+layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
+  const writeTurboWorkspace = Effect.fn(function* (tmpDir: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const appDir = path.join(tmpDir, "apps", "web");
+    const libDir = path.join(tmpDir, "packages", "lib");
+    const bareDir = path.join(tmpDir, "packages", "bare");
+
+    yield* fs.makeDirectory(appDir, { recursive: true });
+    yield* fs.makeDirectory(libDir, { recursive: true });
+    yield* fs.makeDirectory(bareDir, { recursive: true });
+    yield* fs.writeFileString(
+      path.join(tmpDir, "package.json"),
+      encodeJson({
+        name: "turbo-fixture",
+        workspaces: ["apps/*", "packages/*"],
+        catalog: { turbo: "^2.10.13" },
+        devDependencies: { turbo: "catalog:" },
+      })
+    );
+    yield* fs.writeFileString(path.join(appDir, "package.json"), encodeJson({ name: "@fixture/web" }));
+    yield* fs.writeFileString(path.join(libDir, "package.json"), encodeJson({ name: "@fixture/lib" }));
+    yield* fs.writeFileString(path.join(bareDir, "package.json"), encodeJson({ name: "@fixture/bare" }));
+    yield* fs.writeFileString(
+      path.join(tmpDir, "turbo.json"),
+      A.join(
+        [
+          "{",
+          "  // root pipeline",
+          '  "$schema": "https://v2-10-2.turborepo.dev/schema.json",',
+          '  "tasks": {}',
+          "}",
+          "",
+        ],
+        "\n"
+      )
+    );
+    yield* fs.writeFileString(
+      path.join(appDir, "turbo.json"),
+      encodeJson({ $schema: "https://turborepo.com/schema.json", extends: ["//"], tasks: {} })
+    );
+    yield* fs.writeFileString(
+      path.join(libDir, "turbo.json"),
+      encodeJson({ $schema: "https://v2-10-13.turborepo.dev/schema.json", extends: ["//"], tasks: {} })
+    );
+    yield* fs.writeFileString(path.join(bareDir, "turbo.json"), encodeJson({ extends: ["//"], tasks: {} }));
+  });
+
+  describe("resolveTurboSchema", () => {
+    it.effect(
+      "reports drift for every turbo.json whose $schema is not the installed turbo release URL",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectory();
+        yield* writeTurboWorkspace(tmpDir);
+
+        const state = yield* resolveTurboSchema(tmpDir);
+        const report = buildTurboReport(state);
+
+        expect(state.installedVersion).toBe("2.10.13");
+        expect(A.map(state.files, (file) => file.file)).toEqual([
+          "turbo.json",
+          "apps/web/turbo.json",
+          "packages/lib/turbo.json",
+        ]);
+        expect(report.category).toBe("turbo");
+        expect(report.status).toBe("drift");
+        expect(report.latest).toEqual(O.some("2.10.13"));
+        expect(A.map(report.items, (item) => [item.file, item.current, item.expected])).toEqual([
+          ["turbo.json", "2.10.2", "2.10.13"],
+          ["apps/web/turbo.json", "https://turborepo.com/schema.json", "2.10.13"],
+        ]);
+
+        yield* fs.remove(tmpDir, { recursive: true });
+      })
+    );
+
+    it.effect(
+      "refuses to synthesize a schema URL for a prerelease turbo version",
+      Effect.fn(function* () {
+        const report = buildTurboReport(
+          TurboSchemaState.make({
+            installedVersion: "2.11.0-canary.1",
+            files: [
+              TurboConfigFile.make({
+                file: "turbo.json",
+                schemaUrl: "https://v2-10-13.turborepo.dev/schema.json",
+                schemaVersion: O.some("2.10.13"),
+              }),
+            ],
+          })
+        );
+
+        expect(report.status).toBe("error");
+        expect(report.items).toHaveLength(0);
+        expect(report.error).toEqual(O.some("Unsupported turbo version specifier: 2.11.0-canary.1"));
+      })
+    );
+  });
+
+  describe("UpdateApplierService turbo", () => {
+    it.effect(
+      "rewrites drifted turbo.json $schema URLs in place and preserves comments",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectory();
+        yield* writeTurboWorkspace(tmpDir);
+
+        const report = buildTurboReport(yield* resolveTurboSchema(tmpDir));
+        const resolution = VersionSyncResolution.make({
+          report: VersionSyncReport.make({ categories: [report], hasDrift: true }),
+          nodeLocations: [],
+        });
+        const updater = yield* UpdateApplierService;
+        const applied = yield* updater.apply(tmpDir, resolution);
+
+        expect(applied).toBe(2);
+
+        const rootTurbo = yield* fs.readFileString(path.join(tmpDir, "turbo.json"));
+        expect(rootTurbo).toContain("// root pipeline");
+        expect(rootTurbo).toContain('"$schema": "https://v2-10-13.turborepo.dev/schema.json"');
+
+        const appTurbo = (yield* decodeUnknownJson(
+          yield* fs.readFileString(path.join(tmpDir, "apps", "web", "turbo.json"))
+        )) as Record<string, unknown>;
+        expect(appTurbo.$schema).toBe("https://v2-10-13.turborepo.dev/schema.json");
+
+        const bareTurbo = (yield* decodeUnknownJson(
+          yield* fs.readFileString(path.join(tmpDir, "packages", "bare", "turbo.json"))
+        )) as Record<string, unknown>;
+        expect(bareTurbo.$schema).toBeUndefined();
+
+        const rerun = buildTurboReport(yield* resolveTurboSchema(tmpDir));
+        expect(rerun.status).toBe("ok");
 
         yield* fs.remove(tmpDir, { recursive: true });
       })

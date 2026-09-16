@@ -1717,3 +1717,14 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   does (inherited findings advisory, introduced findings blocking), or B5's own publish catching
   the fixture before merge. Fixed here in test only with the permitted
   `fallow-ignore-next-line complexity -- <reason>` on that generator; no source suppression.
+## 2026-09-16 — A lane's green fallow verdict predated its last test edit
+
+- **Doing:** publishing the review-round-1 commit after the Codex lane reported `fallow audit
+  --check` and `fallow health --check` at exit 0.
+- **Evidence:** the fifth detached proof and hosted `Fallow Advisory Envelopes` both failed on
+  one introduced complexity finding: an anonymous test body in `proof-job.test.ts` (cognitive 10
+  over the limit of 8) whose nested ternaries chose the job id and expected outcome per case; the
+  lane's verification table recorded the fallow runs before that body reached its final shape.
+- **Would have prevented it:** the orchestrator re-running the fallow pair on the final tree
+  before committing (it now does, alongside oxlint, test-tsgo and effect-vitest), and a lane rule
+  that the verification table is re-run after the last edit, not appended to.
