@@ -10,6 +10,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { UUID } from "@beep/schema/String";
 import { ConfigProvider, Context, Crypto, DateTime, Duration, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
+import { constant } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -53,6 +54,9 @@ import type { RunScopeSupport } from "../../../internal/repo-run/RunScope.schema
 import type { ProofJobOutcome, ProofJobRunner, ProofJobSubmission, ProofJobWaitOptions } from "./ProofJob.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofJobLauncher");
+// A record transition holds its lock for one read-modify-write, so a contender waits a few
+// seconds at most before reporting the job busy; the journal's longer budget covers compaction.
+const PROOF_JOB_LOCK_RETRY_ATTEMPTS = 50;
 const decodeUUIDOption = S.decodeOption(UUID);
 const decodeUUID = S.decodeEffect(UUID);
 
@@ -112,7 +116,16 @@ const proofJobEnvironment = Effect.fn("ProofJob.environment")(function* () {
     const node = yield* provider
       .load(segments)
       .pipe(Effect.mapError(YeetCommandError.new("Failed to read job environment.")));
-    if (node === undefined) return [];
+    return yield* O.match(O.fromUndefinedOr(node), {
+      onNone: constant(Effect.succeed(A.empty<readonly [string, string]>())),
+      onSome: (loaded) => collectNode(name, segments, loaded),
+    });
+  });
+  const collectNode = Effect.fnUntraced(function* (
+    name: string,
+    segments: ReadonlyArray<string>,
+    node: ConfigProvider.Node
+  ): Effect.fn.Return<ReadonlyArray<readonly [string, string]>, YeetCommandError> {
     const own: ReadonlyArray<readonly [string, string]> = node.value === undefined ? [] : [[name, node.value]];
     if (node._tag !== "Record") return own;
     const children = yield* Effect.forEach(A.fromIterable(node.keys), (key) => collect([...segments, key]), {
@@ -177,9 +190,9 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     yield* fs.makeDirectory(jobsRoot, { recursive: true }).pipe(Effect.mapError(guardError));
     const start = yield* processStartIdentityForPid(process.pid).pipe(Effect.provide(context));
     const nonce = yield* crypto.randomUUIDv4.pipe(Effect.mapError(guardError));
-    const token = `${process.pid}:${O.getOrElse(start, () => "unknown")}:${nonce}`;
+    const token = `${process.pid}:${O.getOrElse(start, constant("unknown"))}:${nonce}`;
     return yield* Effect.acquireUseRelease(
-      acquireJournalFileLock(lockPath, token, 400).pipe(
+      acquireJournalFileLock(lockPath, token, PROOF_JOB_LOCK_RETRY_ATTEMPTS).pipe(
         Effect.provide(context),
         Effect.flatMap((owned) =>
           owned ? Effect.void : Effect.fail(YeetCommandError.make({ message: `Proof job ${id} stayed busy.` }))
@@ -191,10 +204,12 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
   });
   const command = Effect.fn("ProofJob.command")(function* (exe: string, args: ReadonlyArray<string>) {
     const PATH = yield* configStringOption("PATH");
-    return yield* runRepoCommandCapture(exe, args, repoRoot, O.isSome(PATH) ? { PATH: PATH.value } : undefined).pipe(
-      Effect.provide(context),
-      Effect.mapError(YeetCommandError.new("Proof job command failed."))
-    );
+    return yield* runRepoCommandCapture(
+      exe,
+      args,
+      repoRoot,
+      O.getOrUndefined(O.map(PATH, (value) => ({ PATH: value })))
+    ).pipe(Effect.provide(context), Effect.mapError(YeetCommandError.new("Proof job command failed.")));
   });
   const publish = Effect.fn("ProofJob.publishResult")(function* (record: ProofJobRecord) {
     const outcome = record.outcome;
@@ -207,7 +222,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       phase: record.phase,
       serviceResult: O.getOrElse(
         O.map(record.systemd, (result) => result.serviceResult),
-        () => "unknown"
+        constant("unknown")
       ),
       exitStatus: O.getOrNull(O.flatMap(record.systemd, (result) => result.exitStatus)),
       verdictOutcome: O.getOrNull(O.map(outcome, (result) => result.verdictOutcome)),

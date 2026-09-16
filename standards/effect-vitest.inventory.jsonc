@@ -63261,6 +63261,27 @@
       "status": "open"
     },
     {
+      "id": "EV002:packages/tooling/tool/cli/test/proof-job.test.ts:1258:provideScopedLayer@12#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
+      "line": 1258,
+      "endLine": 1258,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:0d86e74f0eed9d988c91ff62180bb64196ef779f7502c93e91e01aa133122231",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ PATH: root, BEEP: { NESTED: \"x\" } })))",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV002:packages/tooling/tool/cli/test/proof-ledger.test.ts:102:provideScopedLayer@11#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -86130,13 +86151,13 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/proof-job.test.ts:76:scoped@5#1",
+      "id": "EV004:packages/tooling/tool/cli/test/proof-job.test.ts:87:scoped@5#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
-      "line": 76,
-      "endLine": 76,
+      "line": 87,
+      "endLine": 87,
       "symbol": "scoped",
       "occurrence": "v2:13855f4b81c390831dd2440179c72369eb872629cef65a8ce064e0af6de9324c",
       "class": "inner-helper-scope-lifetime-review",
@@ -133779,27 +133800,6 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/tooling/tool/cli/test/proof-job.test.ts:524:assertTrue@8#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
-      "line": 524,
-      "endLine": 524,
-      "symbol": "assertTrue",
-      "occurrence": "v2:a21975d75819f3b4691ff8acd9788cd00720cb0d0ca9466ff90b152c057e5dd6",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "assertTrue(O.isSome(yield* launcher.read(active.jobId)))",
-      "replacement": {
-        "primitive": "utils.assertTrue",
-        "sketch": "Preserve this Option.isSome Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV006:packages/tooling/tool/cli/test/qa-command.test.ts:124:expect@4#1",
       "lens": "detector",
       "ruleId": "EV006",
@@ -158055,13 +158055,34 @@
       "status": "open"
     },
     {
-      "id": "EV009:packages/tooling/tool/cli/test/proof-job.test.ts:446:it.live@2#1",
+      "id": "EV009:packages/tooling/tool/cli/test/proof-job.test.ts:1268:it.live@0#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
-      "line": 446,
-      "endLine": 457,
+      "line": 1268,
+      "endLine": 1283,
+      "symbol": "it.live",
+      "occurrence": "v2:fea5d2df81f9015d019521ec352d18d45ef5661806a2b198c428a6b5af7dc7c2",
+      "class": "unjustified-live-test",
+      "evidence": "it.live(\"reports a record lock held by a live process as busy\", () => fixture( Effect.fnUntraced(function* (root) { const fs = yield* FileSystem.FileSystem; const launcher = yield* ProofJobLauncher.ma",
+      "replacement": {
+        "primitive": "it.effect",
+        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV009:packages/tooling/tool/cli/test/proof-job.test.ts:457:it.live@2#1",
+      "lens": "resource",
+      "ruleId": "EV009",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
+      "line": 457,
+      "endLine": 468,
       "symbol": "it.live",
       "occurrence": "v2:bfe342637b39002ed821fc2060b81b6ccb53880e17bad9606cae241acf8e1358",
       "class": "unjustified-live-test",
@@ -158076,13 +158097,13 @@
       "status": "open"
     },
     {
-      "id": "EV009:packages/tooling/tool/cli/test/proof-job.test.ts:530:it.live@2#1",
+      "id": "EV009:packages/tooling/tool/cli/test/proof-job.test.ts:540:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
-      "line": 530,
-      "endLine": 545,
+      "line": 540,
+      "endLine": 555,
       "symbol": "it.live",
       "occurrence": "v2:fba3f0570c55a23c7f082ce7dd113a734e6ae85c5cd6f3a8d1d587f15b83a025",
       "class": "unjustified-live-test",
@@ -164671,13 +164692,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/proof-job.test.ts:11:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/proof-job.test.ts:14:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
-      "line": 11,
-      "endLine": 11,
+      "line": 14,
+      "endLine": 14,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
