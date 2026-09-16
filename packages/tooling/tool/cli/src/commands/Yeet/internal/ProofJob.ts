@@ -874,6 +874,7 @@ export class ProofJobRecord extends S.Class<ProofJobRecord>($I`ProofJobRecord`)(
     systemd: ProofJobSystemdResult.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     terminationReason: ProofJobTerminationReason.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     cancelRequestedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    publishedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("ProofJobRecord", {
     description:
@@ -900,6 +901,30 @@ export class ProofJobRecord extends S.Class<ProofJobRecord>($I`ProofJobRecord`)(
  */
 export const isSettledProofJob = (record: Pick<ProofJobRecord, "phase" | "systemd">): boolean =>
   record.phase === "terminated" || O.isSome(record.systemd);
+
+/**
+ * Decide whether a settled record still owes its inbox row and journal row.
+ * Publication runs after the record lock, so a crash between the stamp and the
+ * publish leaves `publishedAt` empty; the next finalize, read, list, or wait
+ * republishes (idempotently) and then marks the record published.
+ *
+ * **Example** (A stamped record that never published)
+ *
+ * ```ts
+ * import { needsProofJobPublication } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(needsProofJobPublication({ phase: "terminated", systemd: O.none(), publishedAt: O.none() })) // true
+ * console.log(needsProofJobPublication({ phase: "running", systemd: O.none(), publishedAt: O.none() })) // false
+ * ```
+ *
+ * @param record - The record's phase, systemd stamp, and publication stamp.
+ * @returns Whether publication is still owed.
+ * @category models
+ * @since 0.0.0
+ */
+export const needsProofJobPublication = (record: Pick<ProofJobRecord, "phase" | "systemd" | "publishedAt">): boolean =>
+  isSettledProofJob(record) && O.isNone(record.publishedAt);
 
 /**
  * Decide the inbox severity of a job's row (ruling 37): `P2` only for a

@@ -34,6 +34,7 @@ import {
   isDeniedProofJobEnvName,
   isSettledProofJob,
   isTerminalProofJobPhase,
+  needsProofJobPublication,
   PROOF_JOB_RETENTION_BUDGET,
   PROOF_JOB_SLICE,
   ProofJobCancelOutcome,
@@ -296,19 +297,32 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       attemptTerminated: false,
     });
   });
-  // The stamp is decided and saved under the record lock; the idempotent inbox row and journal
-  // row are published after release so contenders never wait on journal or inbox I/O.
+  const markPublishedLocked = Effect.fn("ProofJob.markPublishedLocked")(function* (id: UUID) {
+    const record = yield* requireRecord(id);
+    if (O.isSome(record.publishedAt)) return record;
+    return yield* save(ProofJobRecord.make({ ...record, publishedAt: O.some(yield* now) }));
+  });
+  // Publication is idempotent (the inbox row is appended once by id; the journal row only when
+  // the attempt has no terminal row), so it always runs, and `publishedAt` is stamped afterwards
+  // under the lock: a crash between the stamp and the publish leaves a settled record without
+  // `publishedAt`, which the next finalize, read, list, or wait republishes.
+  const publishAndMark = Effect.fn("ProofJob.publishAndMark")(function* (record: ProofJobRecord) {
+    const published = yield* publish(record);
+    const marked = yield* withRecordLock(markPublishedLocked(record.jobId), record.jobId);
+    return { published, record: marked };
+  });
+  // The stamp is decided and saved under the record lock; the inbox row and journal row are
+  // published after release so contenders never wait on journal or inbox I/O.
   const finalizeAndPublish = Effect.fn("ProofJob.finalizeAndPublish")(function* (
     id: UUID,
     systemd: ProofJobSystemdResult,
     reason?: "finalizer-missing" | "job-start-failed"
   ) {
     const stamped = yield* withRecordLock(finalizeLocked(id, systemd, reason), id);
-    if (stamped.duplicate) return stamped;
-    const published = yield* publish(stamped.record);
+    const { published, record } = yield* publishAndMark(stamped.record);
     return ProofJobFinalization.make({
-      record: stamped.record,
-      duplicate: false,
+      record,
+      duplicate: stamped.duplicate,
       inboxRowId: O.some(published.id),
       attemptTerminated: published.attemptTerminated,
     });
@@ -318,7 +332,9 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
   );
   const readLocked = Effect.fn("ProofJob.readLocked")(function* (id: UUID) {
     const loaded = yield* rawRead(id);
-    if (O.isNone(loaded) || isSettledProofJob(loaded.value)) return { loaded, reconciled: O.none<ProofJobRecord>() };
+    if (O.isNone(loaded) || isSettledProofJob(loaded.value)) {
+      return { loaded, reconciled: O.filter(loaded, needsProofJobPublication) };
+    }
     const record = loaded.value;
     const shown = yield* command("systemctl", [
       "--user",
@@ -346,15 +362,14 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       }),
       "finalizer-missing"
     );
-    return {
-      loaded: O.some(stamped.record),
-      reconciled: O.filter(O.some(stamped.record), () => !stamped.duplicate),
-    };
+    return { loaded: O.some(stamped.record), reconciled: O.some(stamped.record) };
   }, withRecordLock);
   const read = Effect.fn("ProofJob.read")(function* (id: UUID) {
     const outcome = yield* readLocked(id);
-    yield* O.match(outcome.reconciled, { onNone: constant(Effect.void), onSome: publish });
-    return outcome.loaded;
+    return yield* O.match(outcome.reconciled, {
+      onNone: constant(Effect.succeed(outcome.loaded)),
+      onSome: (record) => publishAndMark(record).pipe(Effect.map((marked) => O.some(marked.record))),
+    });
   });
   const loadList = Effect.fn("ProofJob.list")(function* () {
     yield* readContainedFileStringNoFollow(repoRoot, path.join(jobsRoot, ".guard")).pipe(

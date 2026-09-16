@@ -400,6 +400,36 @@ describe("proof job launcher", () => {
       )
     );
   }
+  it.effect("republishes a settled record whose publication never landed", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const fs = yield* FileSystem.FileSystem;
+        const launcher = yield* ProofJobLauncher.make(root);
+        const record = yield* launcher.submit(submission(root));
+        const journal = yield* running(root, launcher, record.jobId);
+        const finalized = yield* launcher.finalize(
+          record.jobId,
+          Job.ProofJobSystemdResult.make({ serviceResult: "signal", finalizedAt: stamp })
+        );
+        expect(O.isSome(finalized.record.publishedAt)).toBe(true);
+        // Simulate a crash between the stamp and the publish: drop the publication stamp and
+        // the inbox row, then let an ordinary read repair both.
+        const recordPath = `${root}/.beep/yeet/jobs/${record.jobId}.json`;
+        yield* fs.writeFileString(
+          recordPath,
+          `${yield* encodeRecordJson(Job.ProofJobRecord.make({ ...finalized.record, publishedAt: O.none() }))}\n`
+        );
+        yield* fs.remove(`${root}/.beep/inbox/failures.ndjson`, { force: true });
+        yield* fs.remove(`${root}/.beep/inbox/active.ndjson`, { force: true });
+        const repaired = O.getOrThrow(yield* launcher.read(record.jobId));
+        expect(O.isSome(repaired.publishedAt)).toBe(true);
+        expect(yield* inbox(root)).toHaveLength(1);
+        expect(A.length(Str.split(yield* fs.readFileString(journal), '"attempt-terminated"'))).toBe(2);
+        yield* launcher.read(record.jobId);
+        expect(yield* inbox(root)).toHaveLength(1);
+      })
+    )
+  );
   it.effect("preserves a normal verdict, reports P2, and wait acknowledges observation", () =>
     fixture(
       Effect.fnUntraced(function* (root) {
