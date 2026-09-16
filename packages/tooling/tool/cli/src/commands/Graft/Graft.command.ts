@@ -22,6 +22,7 @@ import {
   GraftDeepRefreshOptions,
   GraftDeepRefreshStatus,
   GraftDeepTimerOptions,
+  GraftUpgradeReceipt,
 } from "./Graft.schemas.ts";
 import { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
 import {
@@ -135,6 +136,10 @@ const deepFlags = {
     Flag.withDefault(0.95),
     Flag.withDescription("Symbol coverage below which the run reports degraded instead of ok")
   ),
+  upgrade: Flag.Boolean("upgrade").pipe(
+    Flag.withDefault(true),
+    Flag.withDescription("Upgrade Graft after staged patch proof; --no-upgrade keeps the installed version")
+  ),
   seed: Flag.Boolean("seed").pipe(
     Flag.withDefault(true),
     Flag.withDescription("Seed the rebuilt meaning tier into sibling clones; --no-seed skips it")
@@ -234,6 +239,17 @@ const renderStatus = (status: GraftDeepRefreshStatus): string =>
         ),
         () => "Seeded: nothing applied"
       ),
+      ...O.toArray(
+        O.map(O.fromUndefinedOr(status.upgrade), (receipt) =>
+          GraftUpgradeReceipt.match(receipt, {
+            current: (value) => `Upgrade: current ${value.installed}`,
+            upgraded: (value) => `Upgrade: ${value.from} -> ${value.to} (patches from ${value.patchesFrom})`,
+            blocked: (value) =>
+              `Upgrade: blocked at ${value.installed} -> ${value.latest} (${value.reason}), rolled back: ${value.rolledBack ? "yes" : "no"}`,
+            skipped: (value) => `Upgrade: skipped at ${value.installed} (${value.reason})`,
+          })
+        )
+      ),
       `Rebuilt: ${A.length(status.rebuilt)} clone(s), ${A.length(A.filter(status.rebuilt, (entry) => entry.exitCode !== 0))} failing`,
       `Log: ${status.log}`,
       ...A.map(
@@ -264,6 +280,7 @@ const renderStatus = (status: GraftDeepRefreshStatus): string =>
  *   model: O.none(),
  *   jobs: 16,
  *   minCoverage: 0.95,
+ *   upgrade: true,
  *   seed: true,
  *   rebuild: true,
  *   rebuildConcurrency: 2,
@@ -283,6 +300,7 @@ export const runDeepRefresh = Effect.fn("GraftCommand.runDeepRefresh")(function*
   readonly model: O.Option<string>;
   readonly jobs: number;
   readonly minCoverage: number;
+  readonly upgrade: boolean;
   readonly seed: boolean;
   readonly rebuild: boolean;
   readonly rebuildConcurrency: number;
@@ -295,6 +313,7 @@ export const runDeepRefresh = Effect.fn("GraftCommand.runDeepRefresh")(function*
     owner: resolveOperatorPath(options.owner, home, path.resolve),
     jobs: options.jobs,
     minCoverage: options.minCoverage,
+    upgrade: options.upgrade,
     seed: options.seed,
     rebuild: options.rebuild,
     rebuildConcurrency: options.rebuildConcurrency,

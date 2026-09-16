@@ -9,18 +9,25 @@
 #   scripts/graft/apply-dist-patches.sh            # apply what is missing
 #   scripts/graft/apply-dist-patches.sh --check    # report only; exit 1 if any is missing
 #
+# --from <version> inherits patches only when the package version has no recorded directory.
 # GRAFT_PACKAGE_ROOT overrides the package location (the directory that holds
 # package.json and dist/); by default it is resolved from the `graft` on PATH.
 set -euo pipefail
 
-mode="${1:---apply}"
-case "$mode" in
-  --apply | --check) ;;
-  *)
-    echo "usage: $0 [--apply|--check]" >&2
-    exit 2
-    ;;
-esac
+mode="--apply"
+from=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --apply | --check) mode="$1"; shift ;;
+    --from)
+      if [ "$#" -lt 2 ] || [[ ! "$2" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+        echo "--from requires a stable major.minor.patch version" >&2
+        exit 2
+      fi
+      from="$2"; shift 2 ;;
+    *) echo "usage: $0 [--apply|--check] [--from <version>]" >&2; exit 2 ;;
+  esac
+done
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -43,8 +50,17 @@ fi
 
 version="$(sed -n 's/^[[:space:]]*"version":[[:space:]]*"\([^"]*\)".*/\1/p' "$pkg/package.json" | head -n 1)"
 patches="$here/patches/$version"
+if [ ! -d "$patches" ] && [ -n "$from" ]; then
+  patches="$here/patches/$from"
+fi
 if [ ! -d "$patches" ]; then
   echo "no dist patches recorded for graft $version under $here/patches/; port them before the next deep build" >&2
+  exit 1
+fi
+
+# An empty patch directory cannot prove compatibility.
+if ! compgen -G "$patches/*.patch" >/dev/null; then
+  echo "no dist patches in $patches" >&2
   exit 1
 fi
 

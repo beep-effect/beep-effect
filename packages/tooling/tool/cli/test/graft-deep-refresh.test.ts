@@ -11,6 +11,8 @@ import {
   GraftDeepRunnerLive,
   GraftDeepStepError,
   GraftDeepTimerOptions,
+  GraftUpgrade,
+  GraftUpgradeLayer,
   graftCommand,
   parseDeepCoverage,
   readRecordedGraftDeepTimer,
@@ -22,6 +24,7 @@ import {
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { CapturedStep, formatCommandLine } from "@beep/repo-cli/test/Process";
 import { resolveSystemdBunPath, SystemdUnitPath } from "@beep/repo-cli/test/Systemd";
+import { findRepoRoot } from "@beep/repo-utils/Root";
 import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -38,6 +41,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
+import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import type { GraftDeepRunnerStep } from "@beep/repo-cli/commands/Graft";
 
 const artifacts = [
@@ -181,6 +185,7 @@ const refreshOptions = (input: {
     stateDir: input.stateDir,
     jobs: PosInt.make(16),
     minCoverage: UnitInterval.make(input.minCoverage ?? 0.95),
+    upgrade: false,
     seed: input.seed ?? true,
     rebuild: input.rebuild ?? true,
     rebuildConcurrency: PosInt.make(2),
@@ -234,6 +239,7 @@ const refreshFlags = (input: {
   model: O.fromUndefinedOr(input.model),
   jobs: 16,
   minCoverage: 0.95,
+  upgrade: false,
   seed: true,
   rebuild: true,
   rebuildConcurrency: 2,
@@ -294,7 +300,18 @@ it.effect.prop(
 
 // The real clock, not the test clock: this suite drives filesystem work, a
 // bounded retry inside the lock steal, and an interrupt delivered by a timeout.
-layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })("Graft deep refresh", (it) => {
+layer(
+  Layer.merge(
+    NodeServices.layer,
+    Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make((request) =>
+        Effect.succeed(HttpClientResponse.fromWeb(request, new Response('{"version":"0.16.0"}')))
+      )
+    )
+  ),
+  { excludeTestServices: true, timeout: "30 seconds" }
+)("Graft deep refresh", (it) => {
   it.effect(
     "parses coverage from both summary lines, carriage-return progress, and reports none without a coverage line",
     Effect.fn(function* () {
@@ -560,7 +577,17 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         Effect.provideService(GraftDeepRefreshProgress, () => Effect.orDie(recordPhase())),
         refreshWith(runner)
       );
-      expect(phases).toEqual(["preflight", "pull", "install", "build", "seed", "rebuild", "done"]);
+      expect(phases).toEqual([
+        "preflight",
+        "upgrade",
+        "upgrade",
+        "pull",
+        "install",
+        "build",
+        "seed",
+        "rebuild",
+        "done",
+      ]);
       expect(status.outcome).toBe("ok");
       expect(status.head).toBe(OWNER_HEAD_AFTER);
       expect(status.model).toBe("(env default)");
@@ -1384,8 +1411,10 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       // The human refresh prints one line per phase, then the summary.
       const human = yield* captureOutput(runDeepRefresh(refreshFlags({ owner, stateDir })).pipe(refreshWith(runner)));
       assertSuccess(human.result, undefined);
-      expect(A.take(human.output, 7)).toEqual([
+      expect(A.take(human.output, 9)).toEqual([
         "graft deep refresh: preflight",
+        "graft deep refresh: upgrade",
+        "graft deep refresh: upgrade",
         "graft deep refresh: pull",
         "graft deep refresh: install",
         "graft deep refresh: build",
@@ -1393,8 +1422,8 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         "graft deep refresh: rebuild",
         "graft deep refresh: done",
       ]);
-      expect(human.output[7]).toEqual(expect.stringContaining("Graft deep refresh: done (ok)"));
-      expect(human.output[7]).toEqual(expect.stringContaining(`Rebuilt: ${A.length(siblings)} clone(s), 0 failing`));
+      expect(human.output[9]).toEqual(expect.stringContaining("Graft deep refresh: done (ok)"));
+      expect(human.output[9]).toEqual(expect.stringContaining(`Rebuilt: ${A.length(siblings)} clone(s), 0 failing`));
 
       // `--json` suppresses the phase lines and emits the encoded document.
       const encoded = yield* captureOutput(
@@ -1649,6 +1678,345 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
           expect(Str.split(timer, "\n")).toContain(`OnCalendar=${expected}`);
         })
       );
+    })
+  );
+  it.effect(
+    "resolves stable registry versions numerically, never downgrades, and records invalid responses",
+    Effect.fn(function* () {
+      for (const [installed, latest, expected] of [
+        ["0.18.0", "0.18.0", "current"],
+        ["0.18.0", "0.17.9", "current"],
+        ["0.9.0", "0.10.0", "upgrade"],
+        ["1.99.0", "2.0.0", "upgrade"],
+        ["0.18.0", "0.19.0-rc.1", "skip"],
+        ["0.18.0", "01.19.0", "skip"],
+        ["0.18.0", "0.19.0\n", "skip"],
+        ["garbage", "0.19.0", "skip"],
+      ]) {
+        const body = yield* S.encodeEffect(S.fromJsonString(S.Struct({ version: S.String })))({
+          version: latest ?? "",
+        });
+        const client = HttpClient.make((request) =>
+          Effect.succeed(HttpClientResponse.fromWeb(request, new Response(body)))
+        );
+        const plan = yield* GraftUpgrade.use((upgrade) => upgrade.resolve(installed ?? "")).pipe(
+          Effect.provide(GraftUpgradeLayer),
+          Effect.provideService(HttpClient.HttpClient, client)
+        );
+        expect(plan.action).toBe(expected);
+        if (expected === "skip") expect(plan.detail).toBeDefined();
+      }
+      for (const response of [new Response("not json"), new Response('{"version":"0.19.0"}', { status: 503 })]) {
+        const plan = yield* GraftUpgrade.use((upgrade) => upgrade.resolve("0.18.0")).pipe(
+          Effect.provide(GraftUpgradeLayer),
+          Effect.provideService(
+            HttpClient.HttpClient,
+            HttpClient.make((request) => Effect.succeed(HttpClientResponse.fromWeb(request, response)))
+          )
+        );
+        expect(plan.action).toBe("skip");
+        assertNone(plan.latest);
+      }
+    })
+  );
+
+  it.effect(
+    "proves upgrades through the runner, rolls back failures, and continues the refresh with a persisted receipt",
+    Effect.fn(function* () {
+      for (const scenario of [
+        "current",
+        "recorded",
+        "inherited",
+        "conflict",
+        "install",
+        "apply",
+        "check",
+        "version",
+        "rollback",
+        "registry",
+        "disabled",
+        "spawn",
+        "pack",
+        "staged-apply",
+        "no-patches",
+      ]) {
+        const { fs, path, directory, owner, stateDir } = yield* fixture();
+        const patchRoot = path.join(owner, "scripts", "graft", "patches");
+        yield* fs.makeDirectory(patchRoot, { recursive: true });
+        if (scenario !== "no-patches") {
+          // Numeric selection must ignore newer releases and non-version entries.
+          for (const version of ["0.9.0", "0.16.0", "0.15.0", "0.99.0", "notes"]) {
+            yield* fs.makeDirectory(path.join(patchRoot, version));
+          }
+        }
+        if (scenario === "recorded") yield* fs.makeDirectory(path.join(patchRoot, "0.18.0"));
+        const calls: Array<GraftDeepRunnerStep> = [];
+        let globalChecks = 0;
+        let installs = 0;
+        let stagedChecks = 0;
+        const runner = scriptedRunner({
+          alive: [],
+          calls,
+          replies: happyReplies(owner, FULL_COVERAGE),
+          intercept: (step) => {
+            if (step.phase !== "upgrade") return O.none();
+            if (step.command === "npm" && step.args[0] === "pack") {
+              return O.some(Effect.succeed(reply(scenario === "pack" ? 1 : 0, "packed")));
+            }
+            if (step.command === "npm" && step.args[0] === "install") {
+              installs += 1;
+              if (scenario === "spawn" && installs === 1)
+                return O.some(
+                  Effect.fail(
+                    GraftDeepStepError.make({
+                      step: "upgrade",
+                      exitCode: 1,
+                      log: "",
+                      message: "npm could not spawn",
+                    })
+                  )
+                );
+              return O.some(
+                Effect.succeed(
+                  reply(
+                    (scenario === "install" && installs === 1) || scenario === "rollback" ? 1 : 0,
+                    "npm install result"
+                  )
+                )
+              );
+            }
+            if (Str.endsWith("apply-dist-patches.sh")(step.command)) {
+              const staged = Str.includes("/upgrade/")(step.env?.GRAFT_PACKAGE_ROOT ?? "");
+              if (staged && step.args[0] === "--check") {
+                stagedChecks += 1;
+                return O.some(
+                  Effect.succeed(
+                    reply(
+                      scenario === "conflict" || stagedChecks === 1 ? 1 : 0,
+                      scenario === "conflict"
+                        ? "CONFLICT ai-crux"
+                        : stagedChecks === 1
+                          ? "missing  ai-crux"
+                          : "applied  ai-crux"
+                    )
+                  )
+                );
+              }
+              if (staged) return O.some(Effect.succeed(reply(scenario === "staged-apply" ? 1 : 0, "patched ai-crux")));
+              if (step.args[0] === "--check") {
+                globalChecks += 1;
+                return O.some(Effect.succeed(reply(scenario === "check" && globalChecks === 1 ? 1 : 0, "patch check")));
+              }
+              return O.some(Effect.succeed(reply(scenario === "apply" && installs === 1 ? 1 : 0, "patch apply")));
+            }
+            if (step.command === "graft")
+              return O.some(Effect.succeed(reply(0, installs > 1 || scenario === "version" ? "0.16.0" : "0.18.0")));
+            return O.none();
+          },
+        });
+        let lookups = 0;
+        const client = HttpClient.make((request) => {
+          lookups += 1;
+          expect(request.url).toBe("https://registry.npmjs.org/@nanonets/graft/latest");
+          return Effect.succeed(
+            HttpClientResponse.fromWeb(
+              request,
+              new Response(
+                scenario === "registry"
+                  ? "bad json"
+                  : scenario === "current"
+                    ? '{"version":"0.16.0"}'
+                    : '{"version":"0.18.0"}'
+              )
+            )
+          );
+        });
+        const options = GraftDeepRefreshOptions.make({
+          ...refreshOptions({ owner, stateDir }),
+          upgrade: scenario !== "disabled",
+        });
+        const status = yield* GraftDeepRefresh.use((refresh) => refresh.run(options)).pipe(
+          refreshWith(runner),
+          Effect.provideService(HttpClient.HttpClient, client),
+          withHome(path.join(directory, "home"))
+        );
+        expect(status.phase).toBe("done");
+        expect(status.upgrade).toBeDefined();
+        yield* assertJsonRoundTrip(GraftDeepRefreshStatus, status);
+        const persisted = yield* decodeStatusJson(yield* fs.readFileString(path.join(stateDir, "status.json")));
+        expect(persisted.upgrade).toEqual(status.upgrade);
+        expect(A.some(calls, (step) => step.phase === "build")).toBe(true);
+        if (scenario === "disabled" || scenario === "registry") {
+          expect(status.upgrade).toEqual(
+            expect.objectContaining({
+              kind: "skipped",
+              reason: scenario === "disabled" ? "disabled" : "registry-unreachable",
+            })
+          );
+          expect(lookups).toBe(scenario === "disabled" ? 0 : 1);
+          expect(installs).toBe(0);
+          expect(status.outcome).toBe("ok");
+        } else if (scenario === "current") {
+          expect(status.upgrade?.kind).toBe("current");
+          expect(A.some(calls, (step) => step.command === "npm")).toBe(false);
+          expect(status.outcome).toBe("ok");
+        } else if (scenario === "recorded" || scenario === "inherited") {
+          expect(status.upgrade).toEqual(
+            expect.objectContaining({
+              kind: "upgraded",
+              from: "0.16.0",
+              to: "0.18.0",
+              patchesFrom: scenario === "recorded" ? "0.18.0" : "0.16.0",
+            })
+          );
+          expect(installs).toBe(1);
+          expect(stagedChecks).toBe(2);
+          expect(status.outcome).toBe(scenario === "recorded" ? "ok" : "degraded");
+          if (scenario === "inherited")
+            expect(status.message).toContain("record scripts/graft/patches/0.18.0/ in a PR");
+          const proof = A.filter(calls, (step) => step.phase === "upgrade");
+          expect(A.map(A.take(proof, 5), (step) => [path.basename(step.command), step.args[0]])).toEqual([
+            ["npm", "pack"],
+            ["tar", "xzf"],
+            ["apply-dist-patches.sh", "--check"],
+            ["apply-dist-patches.sh", "--apply"],
+            ["apply-dist-patches.sh", "--check"],
+          ]);
+        } else {
+          const beforeInstall = A.contains(["conflict", "pack", "staged-apply", "no-patches"], scenario);
+          const installFailed = A.contains(["install", "spawn", "rollback"], scenario);
+          expect(status.upgrade).toEqual(
+            expect.objectContaining({
+              kind: "blocked",
+              reason: beforeInstall ? "patches-conflict" : installFailed ? "install-failed" : "verify-failed",
+              rolledBack: !beforeInstall && scenario !== "rollback",
+            })
+          );
+          expect(installs).toBe(beforeInstall ? 0 : 2);
+          expect(status.outcome).toBe("degraded");
+          expect(status.message).toContain(scenario === "rollback" ? "rollback not verified" : "built on 0.16.0");
+        }
+        for (const call of A.filter(calls, (step) => step.command === "npm" && step.args[0] === "install")) {
+          expect(A.take(call.args, 4)).toEqual(["install", "-g", "--prefix", path.join(directory, "home", ".local")]);
+          expect(call.args).not.toContain("--allow-scripts");
+        }
+        const rendered = yield* captureOutput(
+          runDeepStatus({ stateDir: O.some(stateDir), json: false }).pipe(refreshWith(runner))
+        );
+        expect(rendered.output[0]).toEqual(expect.stringContaining("Upgrade:"));
+        if (scenario === "recorded")
+          expect(rendered.output[0]).toEqual(
+            expect.stringContaining("Upgrade: 0.16.0 -> 0.18.0 (patches from 0.18.0)")
+          );
+        if (scenario === "install") expect(rendered.output[0]).toEqual(expect.stringContaining("rolled back: yes"));
+      }
+    }),
+    30_000
+  );
+
+  it.effect(
+    "checks inherited patches on the following night's preflight",
+    Effect.fn(function* () {
+      const { fs, path, owner, stateDir } = yield* fixture();
+      yield* fs.makeDirectory(path.join(owner, "scripts", "graft", "patches", "0.16.0"), { recursive: true });
+      const calls: Array<GraftDeepRunnerStep> = [];
+      const runner = scriptedRunner({
+        alive: [],
+        calls,
+        replies: repliesFor(owner, FULL_COVERAGE, [["graft --version", reply(0, "0.18.0")]]),
+      });
+      yield* GraftDeepRefresh.use((refresh) => refresh.run(refreshOptions({ owner, stateDir }))).pipe(
+        refreshWith(runner)
+      );
+      const patch = A.findFirst(calls, (step) => Str.endsWith("apply-dist-patches.sh")(step.command));
+      assertSome(
+        O.map(patch, (step) => step.args),
+        ["--check", "--from", "0.16.0"]
+      );
+    })
+  );
+
+  it.effect(
+    "preserves check exit semantics and applies --from idempotently in a disposable package",
+    Effect.fn(function* () {
+      const { fs, path, directory } = yield* fixture();
+      const script = path.join(directory, "kit", "apply-dist-patches.sh");
+      const patches = path.join(directory, "kit", "patches");
+      const root = path.join(directory, "package");
+      yield* fs.makeDirectory(path.join(patches, "0.16.0"), { recursive: true });
+      yield* fs.makeDirectory(path.join(root, "dist"), { recursive: true });
+      // The package test task runs from the package directory, so the kit is
+      // located from the repo root rather than the process cwd.
+      const repoRoot = yield* findRepoRoot();
+      yield* fs.copyFile(path.join(repoRoot, "scripts", "graft", "apply-dist-patches.sh"), script);
+      yield* fs.writeFileString(path.join(root, "package.json"), '{\n  "version": "0.18.0"\n}\n');
+      yield* fs.writeFileString(path.join(root, "dist", "file.js"), "before\n");
+      yield* fs.writeFileString(
+        path.join(patches, "0.16.0", "test.patch"),
+        "--- a/file.js\n+++ b/file.js\n@@ -1 +1 @@\n-before\n+after\n"
+      );
+      const run = (args: ReadonlyArray<string>) =>
+        GraftDeepRunner.use((runner) =>
+          runner.run({
+            command: "bash",
+            args: [script, ...args],
+            cwd: directory,
+            phase: "upgrade",
+            env: { GRAFT_PACKAGE_ROOT: root },
+          })
+        ).pipe(withLiveRunner());
+      expect((yield* run(["--check"])).exitCode).toBe(1);
+      expect((yield* run(["--check", "--from", "0.1.0"])).exitCode).toBe(1);
+      const clean = yield* run(["--check", "--from", "0.16.0"]);
+      expect(clean.exitCode).toBe(1);
+      expect(clean.output).toContain("missing  test");
+      expect(yield* fs.readFileString(path.join(root, "dist", "file.js"))).toBe("before\n");
+      expect((yield* run(["--apply", "--from", "0.16.0"])).exitCode).toBe(0);
+      expect((yield* run(["--from", "0.16.0", "--apply"])).exitCode).toBe(0);
+      expect((yield* run(["--check", "--from", "0.16.0"])).exitCode).toBe(0);
+      expect(yield* fs.readFileString(path.join(root, "dist", "file.js"))).toBe("after\n");
+      // Exact-version patches take precedence over --from.
+      yield* fs.makeDirectory(path.join(patches, "0.18.0"));
+      yield* fs.writeFileString(
+        path.join(patches, "0.18.0", "test.patch"),
+        "--- a/file.js\n+++ b/file.js\n@@ -1 +1 @@\n-unrelated\n+other\n"
+      );
+      const conflict = yield* run(["--check", "--from", "0.16.0"]);
+      expect(conflict.exitCode).toBe(1);
+      expect(conflict.output).toContain("CONFLICT");
+      expect((yield* run(["--from"])).exitCode).toBe(2);
+      expect((yield* run(["--from", "../../elsewhere"])).exitCode).toBe(2);
+    }),
+    30_000
+  );
+
+  it.effect(
+    "parses --no-upgrade and defaults upgrades on in the actual command definition",
+    Effect.fn(function* () {
+      const deep = A.findFirst(
+        A.flatMap(graftCommand.subcommands, (group) => group.commands),
+        (command) => command.name === "deep"
+      );
+      expect(O.isSome(deep)).toBe(true);
+      if (O.isNone(deep)) return;
+      const refresh = A.findFirst(
+        A.flatMap(deep.value.subcommands, (group) => group.commands),
+        (command) => command.name === "refresh"
+      );
+      expect(O.isSome(refresh)).toBe(true);
+      if (O.isNone(refresh)) return;
+      const enabled: Array<boolean> = [];
+      const command = refresh.value.pipe(
+        Command.withHandler(
+          Effect.fn(function* (input) {
+            const parsed = yield* S.decodeUnknownEffect(S.Struct({ upgrade: S.Boolean }))(input);
+            enabled.push(parsed.upgrade);
+          })
+        )
+      );
+      yield* Command.runWith(command, { version: "test" })(["--owner", "/fixture", "--no-upgrade"]);
+      yield* Command.runWith(command, { version: "test" })(["--owner", "/fixture"]);
+      expect(enabled).toEqual([false, true]);
     })
   );
 });

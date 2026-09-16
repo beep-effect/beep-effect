@@ -45,6 +45,8 @@ export {
   GraftDeepRefreshProgress,
   GraftDeepRunner,
   GraftDeepRunnerLive,
+  GraftUpgrade,
+  GraftUpgradeLayer,
   readRecordedGraftDeepTimer,
   renderGraftDeepRefreshUnits,
 } from "./GraftDeep.service.ts";
@@ -65,4 +67,5 @@ export type {
   GraftDeepRefreshFailure,
   GraftDeepRefreshShape,
   GraftDeepRunnerShape,
+  GraftUpgradeShape,
 } from "./GraftDeep.service.ts";

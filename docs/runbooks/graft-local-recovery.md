@@ -193,7 +193,9 @@ sibling entry is skipped by `--siblings` rather than aborting discovery.
 ## Refresh the meaning tier nightly (operator only)
 
 `beep graft deep refresh` is the scheduled form of the two sections above: it
-pins one owner clone to `origin/main`, rebuilds the meaning tier there, seeds
+runs `preflight` → `upgrade` → `pull` before rebuilding: it checks the installed
+patches, attempts a proved stable Graft upgrade, pins one owner clone to
+`origin/main`, rebuilds the meaning tier there, seeds
 the siblings, and runs a structural `graft build` in each seeded clone. It
 spends model quota, so it is an operator job like the build itself. Agents
 never run `refresh` or `install-timer`.
@@ -416,25 +418,60 @@ Rules learned from that run:
 
 ## After a Graft upgrade
 
-The installed package is pinned under the user-local prefix, off any Node
-version manager tree, and `graft telemetry disable` has been run once on the
-workstation:
+The nightly refresh checks npm's `latest` dist-tag for `@nanonets/graft` after
+preflight and before pull. Only a newer stable `major.minor.patch` release is
+eligible; it never downgrades. `--no-upgrade` keeps the installed version and
+skips the registry lookup. The timer leaves upgrades enabled by default.
+
+Before changing the installation, the upgrade phase packs and extracts the new
+release under `<stateDir>/upgrade/`, proves the dist patches there, and removes
+that disposable proof directory. It uses `scripts/graft/patches/<latest>/` when
+recorded, otherwise the highest recorded version at or below the installed
+version. The checker retains its original contract: `--check` exits `1` for
+clean-but-unapplied patches as well as conflicts. The upgrade distinguishes
+those reports, applies compatible patches in the staged package, and requires
+a successful second check before installation.
+
+The install always uses `npm install -g --prefix "$HOME/.local"`; nvm and mise
+Node installation trees are untouched. npm's install-script warning is expected:
+Graft's postinstall is telemetry-only, so the refresh does not pass
+`--allow-scripts`. The phase reapplies and checks the patches and verifies
+`graft --version` before the deep build starts. A failed install or verification
+triggers an install of the previous version plus patch and version verification.
+
+`beep graft deep status` renders an `Upgrade:` line from the optional `upgrade`
+receipt in `status.json`. Older status documents without a receipt still read.
+Receipts distinguish `current`, `upgraded`, `blocked`, and `skipped`:
+
+- Patch conflicts block installation and degrade the run; the deep build proceeds
+  on the installed version.
+- Install or verification failures record the reason and whether rollback was
+  verified. A failed rollback is explicitly reported; it does not claim that the
+  previous version was restored. The later build can still fail independently.
+- Registry errors, invalid versions, and a 30-second registry timeout skip the
+  upgrade with a note and do not themselves degrade the run.
+- An upgrade using inherited patches degrades the run with a follow-up request:
+  record `scripts/graft/patches/<new version>/` in a PR. The next preflight can
+  verify inherited patches until that PR lands.
+
+For manual recovery, the installed package belongs under the user-local prefix,
+off any Node version manager tree. Pin the intended version, apply its recorded
+patches, and verify (these are operator commands):
 
 ```sh
-npm install -g --prefix "$HOME/.local" @nanonets/graft@0.16.0
+npm install -g --prefix "$HOME/.local" @nanonets/graft@0.18.0
 graft --version
-```
-The deep build depends on three workstation-local patches to the installed
-`dist/` (`ai/crux.js`, `ai/llm/openai.js`, `context/build.js`), recorded as
-unified diffs under `scripts/graft/patches/<graft version>/`. A reinstall or
-upgrade removes them, and a new Graft version needs them ported into a new
-version directory first. After the install, apply and verify them, then run
-the two focused checks above:
-
-```sh
-scripts/graft/apply-dist-patches.sh          # applies what is missing, keeps *.orig-<version> backups
+scripts/graft/apply-dist-patches.sh          # applies missing patches; keeps *.orig-<version> backups
 scripts/graft/apply-dist-patches.sh --check  # exit 0 only when every recorded patch is present
 ```
+
+The three patched files are `ai/crux.js`, `ai/llm/openai.js`, and
+`context/build.js`. When no exact-version directory exists, an operator can
+explicitly select an inherited source with `--from <version>` on both `--apply`
+and `--check`. Exact-version patches always win. `GRAFT_PACKAGE_ROOT` selects a
+disposable or alternate package directory; it must contain `package.json` and
+`dist/`. Never treat a conflict as permission to install: port the patches and
+repeat the proof first, then run the focused checks above.
 
 The loader's stamp guard keeps upkeep quiet across upgrades, so an upgrade
 needs no `graft init`.

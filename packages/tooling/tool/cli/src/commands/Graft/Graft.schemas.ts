@@ -14,6 +14,7 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { SystemdUnitPath } from "../../internal/systemd/index.ts";
 
 const $I = $RepoCliId.create("commands/Graft/Graft.schemas");
@@ -199,6 +200,280 @@ export class GraftCacheSyncReport extends S.Class<GraftCacheSyncReport>($I`Graft
 ) {}
 
 /**
+ * Stable major.minor.patch version accepted by the upgrade planner.
+ *
+ * **Details**
+ *
+ * Rejects prereleases, build metadata, whitespace, and leading-zero segments.
+ * Comparison preserves decimal precision even for large version components.
+ *
+ * **Example** (Inspect GraftVersion)
+ *
+ * ```ts
+ * import { GraftVersion } from "@beep/repo-cli/commands/Graft"
+ * import * as S from "effect/Schema"
+ * S.is(GraftVersion)("0.18.0") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GraftVersion = S.Trimmed.check(
+  S.isPattern(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/, {
+    identifier: $I`GraftVersionPattern`,
+    title: "Stable Graft version",
+    description: "Three numeric segments without leading zeroes, prerelease, or build metadata.",
+  })
+).annotate($I.annote("GraftVersion", { description: "Stable Graft release version." }));
+/** Decoded GraftVersion value.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GraftVersion = typeof GraftVersion.Type;
+
+/**
+ * Reasons or actions recorded by the upgrade phase.
+ *
+ * **Details**
+ *
+ * A patch conflict leaves the installation untouched. Install and verification
+ * failures attempt rollback before a receipt is persisted.
+ *
+ * **Example** (Inspect GraftUpgradeBlockReason)
+ *
+ * ```ts
+ * import { GraftUpgradeBlockReason } from "@beep/repo-cli/commands/Graft"
+ * GraftUpgradeBlockReason.is["patches-conflict"]("patches-conflict") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GraftUpgradeBlockReason = LiteralKit(["patches-conflict", "install-failed", "verify-failed"]).pipe(
+  $I.annoteSchema("GraftUpgradeBlockReason", { description: "GraftUpgradeBlockReason domain for the nightly upgrade." })
+);
+/** Decoded GraftUpgradeBlockReason value.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GraftUpgradeBlockReason = typeof GraftUpgradeBlockReason.Type;
+
+/**
+ * Reasons or actions recorded by the upgrade phase.
+ *
+ * **Details**
+ *
+ * Disabled upgrades make no registry request. Unavailable or invalid registry
+ * responses leave the installed version in use without degrading the night.
+ *
+ * **Example** (Inspect GraftUpgradeSkipReason)
+ *
+ * ```ts
+ * import { GraftUpgradeSkipReason } from "@beep/repo-cli/commands/Graft"
+ * GraftUpgradeSkipReason.is["disabled"]("disabled") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GraftUpgradeSkipReason = LiteralKit(["disabled", "registry-unreachable"]).pipe(
+  $I.annoteSchema("GraftUpgradeSkipReason", { description: "GraftUpgradeSkipReason domain for the nightly upgrade." })
+);
+/** Decoded GraftUpgradeSkipReason value.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GraftUpgradeSkipReason = typeof GraftUpgradeSkipReason.Type;
+
+/**
+ * Reasons or actions recorded by the upgrade phase.
+ *
+ * **Details**
+ *
+ * Current includes a registry version older than the installation; upgrade
+ * requires a strictly newer stable release. Skip preserves lookup diagnostics.
+ *
+ * **Example** (Inspect GraftUpgradeAction)
+ *
+ * ```ts
+ * import { GraftUpgradeAction } from "@beep/repo-cli/commands/Graft"
+ * GraftUpgradeAction.is["current"]("current") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GraftUpgradeAction = LiteralKit(["current", "upgrade", "skip"]).pipe(
+  $I.annoteSchema("GraftUpgradeAction", { description: "GraftUpgradeAction domain for the nightly upgrade." })
+);
+/** Decoded GraftUpgradeAction value.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GraftUpgradeAction = typeof GraftUpgradeAction.Type;
+
+/**
+ * Receipt for a current Graft upgrade.
+ *
+ * **Details**
+ *
+ * No installation is needed when npm latest is equal to or older than the
+ * installed stable version.
+ *
+ * **Example** (Inspect GraftUpgradeCurrent)
+ *
+ * ```ts
+ * import { GraftUpgradeCurrent } from "@beep/repo-cli/commands/Graft"
+ * GraftUpgradeCurrent.make({ installed: "0.18.0" }).kind // => "current"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraftUpgradeCurrent extends S.Class<GraftUpgradeCurrent>($I`GraftUpgradeCurrent`)(
+  { kind: S.tag("current"), installed: S.String },
+  $I.annote("GraftUpgradeCurrent", { description: "A current upgrade receipt." })
+) {}
+
+/**
+ * Receipt for a successfully verified Graft upgrade.
+ *
+ * **Details**
+ *
+ * The destination version and patch source can differ when inherited patches
+ * passed staged proof. That difference requests a follow-up patch-recording PR.
+ *
+ * **Example** (Inspect GraftUpgradeUpgraded)
+ *
+ * ```ts
+ * import { GraftUpgradeUpgraded } from "@beep/repo-cli/commands/Graft"
+ * GraftUpgradeUpgraded.make({ from: "0.18.0", to: "0.19.0", patchesFrom: "0.18.0" }).kind // => "upgraded"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraftUpgradeUpgraded extends S.Class<GraftUpgradeUpgraded>($I`GraftUpgradeUpgraded`)(
+  { kind: S.tag("upgraded"), from: S.String, to: GraftVersion, patchesFrom: GraftVersion },
+  $I.annote("GraftUpgradeUpgraded", { description: "A verified upgrade with its applied patch source." })
+) {}
+
+/**
+ * Receipt for a blocked Graft upgrade.
+ *
+ * **Details**
+ *
+ * rolledBack is true only after reinstall, patch checks, and version verification
+ * succeeded. A conflict before installation records false without attempting rollback.
+ *
+ * **Example** (Inspect GraftUpgradeBlocked)
+ *
+ * ```ts
+ * import { GraftUpgradeBlocked } from "@beep/repo-cli/commands/Graft"
+ * GraftUpgradeBlocked.make({ installed: "0.18.0", latest: "0.19.0", reason: "patches-conflict", rolledBack: false }).kind // => "blocked"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraftUpgradeBlocked extends S.Class<GraftUpgradeBlocked>($I`GraftUpgradeBlocked`)(
+  {
+    kind: S.tag("blocked"),
+    installed: S.String,
+    latest: GraftVersion,
+    reason: GraftUpgradeBlockReason,
+    rolledBack: S.Boolean,
+    detail: S.optional(S.String),
+  },
+  $I.annote("GraftUpgradeBlocked", { description: "A blocked upgrade receipt." })
+) {}
+
+/**
+ * Receipt for a skipped Graft upgrade.
+ *
+ * **Details**
+ *
+ * Records the installed version even when upgrade lookup is disabled or fails.
+ * Registry failures can include diagnostic detail without failing the refresh.
+ *
+ * **Example** (Inspect GraftUpgradeSkipped)
+ *
+ * ```ts
+ * import { GraftUpgradeSkipped } from "@beep/repo-cli/commands/Graft"
+ * GraftUpgradeSkipped.make({ installed: "0.18.0", reason: "disabled" }).kind // => "skipped"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraftUpgradeSkipped extends S.Class<GraftUpgradeSkipped>($I`GraftUpgradeSkipped`)(
+  { kind: S.tag("skipped"), installed: S.String, reason: GraftUpgradeSkipReason, detail: S.optional(S.String) },
+  $I.annote("GraftUpgradeSkipped", { description: "A skipped upgrade receipt." })
+) {}
+
+/**
+ * Persisted verdict of the optional upgrade phase.
+ *
+ * **Details**
+ *
+ * The kind discriminator selects one receipt class. The optional status field
+ * keeps documents written before automatic upgrades readable.
+ *
+ * **Example** (Inspect GraftUpgradeReceipt)
+ *
+ * ```ts
+ * import { GraftUpgradeReceipt, GraftUpgradeCurrent } from "@beep/repo-cli/commands/Graft"
+ * import * as S from "effect/Schema"
+ * S.is(GraftUpgradeReceipt)(GraftUpgradeCurrent.make({ installed: "0.18.0" })) // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GraftUpgradeReceipt = LiteralKit(["current", "upgraded", "blocked", "skipped"])
+  .mapMembers(
+    Tuple.evolve([
+      () => GraftUpgradeCurrent,
+      () => GraftUpgradeUpgraded,
+      () => GraftUpgradeBlocked,
+      () => GraftUpgradeSkipped,
+    ])
+  )
+  .pipe(
+    S.toTaggedUnion("kind"),
+    $I.annoteSchema("GraftUpgradeReceipt", { description: "Upgrade verdict stored with the refresh status." })
+  );
+/** Decoded GraftUpgradeReceipt value.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GraftUpgradeReceipt = typeof GraftUpgradeReceipt.Type;
+
+/**
+ * Registry resolution before touching the installed package.
+ *
+ * **Details**
+ *
+ * latest is absent after failed registry resolution. detail preserves the
+ * diagnostic for the skipped receipt without introducing an error channel.
+ *
+ * **Example** (Inspect GraftUpgradePlan)
+ *
+ * ```ts
+ * import { GraftUpgradePlan } from "@beep/repo-cli/commands/Graft"
+ * import * as O from "effect/Option"
+ * GraftUpgradePlan.make({ installed: "0.18.0", action: "current", latest: O.some("0.18.0") }).action // => "current"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraftUpgradePlan extends S.Class<GraftUpgradePlan>($I`GraftUpgradePlan`)(
+  { installed: S.String, latest: S.Option(GraftVersion), action: GraftUpgradeAction, detail: S.optional(S.String) },
+  $I.annote("GraftUpgradePlan", { description: "Installed version, optional registry release, and upgrade decision." })
+) {}
+
+/**
  * Ordered stages of one nightly meaning-tier refresh.
  *
  * **Details**
@@ -211,7 +486,7 @@ export class GraftCacheSyncReport extends S.Class<GraftCacheSyncReport>($I`Graft
  * ```ts import.meta.vitest name="Inspect the refresh stages"
  * import { GraftDeepRefreshPhase } from "@beep/repo-cli/commands/Graft"
  * console.log(GraftDeepRefreshPhase.Options)
- * // ["preflight", "pull", "install", "build", "seed", "rebuild", "done"]
+ * // ["preflight", "upgrade", "pull", "install", "build", "seed", "rebuild", "done"]
  * ```
  *
  * @category schemas
@@ -219,6 +494,7 @@ export class GraftCacheSyncReport extends S.Class<GraftCacheSyncReport>($I`Graft
  */
 export const GraftDeepRefreshPhase = LiteralKit([
   "preflight",
+  "upgrade",
   "pull",
   "install",
   "build",
@@ -384,6 +660,7 @@ export const parseDeepCoverage = (text: string): O.Option<GraftDeepCoverage> => 
  *   owner: "/clones/beep-effect0",
  *   jobs: PosInt.make(16),
  *   minCoverage: UnitInterval.make(0.95),
+ *   upgrade: true,
  *   seed: true,
  *   rebuild: true,
  *   rebuildConcurrency: PosInt.make(2),
@@ -401,6 +678,7 @@ export class GraftDeepRefreshOptions extends S.Class<GraftDeepRefreshOptions>($I
     model: S.optional(S.String),
     jobs: PosInt,
     minCoverage: UnitInterval,
+    upgrade: S.Boolean,
     seed: S.Boolean,
     rebuild: S.Boolean,
     rebuildConcurrency: PosInt,
@@ -483,6 +761,7 @@ export class GraftDeepRefreshStatus extends S.Class<GraftDeepRefreshStatus>($I`G
     finishedAt: S.optional(S.String),
     phase: GraftDeepRefreshPhase,
     outcome: S.optional(GraftDeepRefreshOutcome),
+    upgrade: S.optional(GraftUpgradeReceipt),
     coverage: S.optional(GraftDeepCoverage),
     seed: S.optional(GraftCacheSyncReport),
     rebuilt: S.Array(GraftDeepSiblingRebuild),

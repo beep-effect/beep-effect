@@ -23,6 +23,7 @@ import * as Result from "effect/Result";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { ChildProcessSpawner } from "effect/unstable/process";
 import { ensureZeroExit, formatCommandLine, OutputBound, runCaptured } from "../../internal/process/StepExec.ts";
 import {
@@ -39,9 +40,17 @@ import {
   GraftDeepRefreshStatus,
   GraftDeepRunnerStep,
   GraftDeepSiblingRebuild,
+  GraftUpgradeBlocked,
+  GraftUpgradeCurrent,
+  GraftUpgradePlan,
+  GraftUpgradeReceipt,
+  GraftUpgradeSkipped,
+  GraftUpgradeUpgraded,
+  GraftVersion,
   parseDeepCoverage,
 } from "./Graft.schemas.ts";
 import { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
+import type * as R from "effect/Record";
 import type { CapturedStep } from "../../internal/process/StepExec.ts";
 import type { GraftCacheSourceError, GraftCacheTargetError } from "./Graft.errors.ts";
 import type {
@@ -76,7 +85,7 @@ const deepOutputBound = OutputBound.make({
 // reported an exit code is recorded under it rather than losing the run.
 const REBUILD_UNFINISHED_EXIT = 124;
 
-type RefreshContext = {
+interface RefreshContext {
   readonly appendLog: (text: string) => Effect.Effect<void, GraftCacheIoError>;
   readonly mustSucceed: (
     input: GraftDeepRunnerStep
@@ -84,7 +93,261 @@ type RefreshContext = {
   readonly options: GraftDeepRefreshOptions;
   readonly owner: string;
   readonly step: (input: GraftDeepRunnerStep) => Effect.Effect<CapturedStep, GraftDeepStepError | GraftCacheIoError>;
-};
+}
+
+/**
+ * Upgrade planning and application through the refresh's logged runner seam.
+ *
+ * **Details**
+ *
+ * Resolution never fails the night. Application returns a receipt after staged
+ * patch proof and, when necessary, a verified rollback.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface GraftUpgradeShape {
+  readonly apply: (
+    ctx: RefreshContext,
+    plan: GraftUpgradePlan
+  ) => Effect.Effect<GraftUpgradeReceipt, GraftDeepStepError | GraftCacheIoError>;
+  readonly resolve: (installed: string) => Effect.Effect<GraftUpgradePlan, never, HttpClient.HttpClient>;
+}
+
+/**
+ * Plans and applies a stable Graft release within a nightly refresh.
+ *
+ * **Details**
+ *
+ * Every subprocess uses the refresh context, preserving runner injection and logging.
+ *
+ * **Example** (Prepare registry resolution)
+ *
+ * ```ts
+ * import { GraftUpgrade } from "@beep/repo-cli/commands/Graft"
+ * import { Effect } from "effect"
+ * const program = GraftUpgrade.use((upgrade) => upgrade.resolve("0.18.0"))
+ * Effect.isEffect(program) // => true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class GraftUpgrade extends Context.Service<GraftUpgrade, GraftUpgradeShape>()($I`GraftUpgrade`) {}
+
+const readHome = (anchor: string) =>
+  Config.String("HOME").pipe(
+    Effect.mapError((cause) =>
+      GraftDeepPreflightError.make({
+        path: anchor,
+        message: "HOME is not set; cannot locate the user-local prefix or systemd units.",
+        cause,
+      })
+    )
+  );
+
+// Compare validated decimal segments without numeric precision loss.
+const versionOrder: Order.Order<GraftVersion> = Order.make((left, right) =>
+  O.getOrElse(
+    A.findFirst(
+      A.zipWith(Str.split(left, "."), Str.split(right, "."), (a, b) =>
+        Order.combine(Order.mapInput(Order.Number, Str.length), Order.String)(a, b)
+      ),
+      (compared) => compared !== 0
+    ),
+    () => 0
+  )
+);
+
+class GraftRegistryRelease extends S.Class<GraftRegistryRelease>($I`GraftRegistryRelease`)(
+  { version: GraftVersion },
+  $I.annote("GraftRegistryRelease", { description: "The stable version returned by the npm latest dist-tag." })
+) {}
+
+const recordedPatchSource = (fs: FileSystem.FileSystem, path: Path.Path) =>
+  Effect.fn("GraftUpgrade.patchSource")(function* (owner: string, version: string) {
+    const root = path.join(owner, "scripts", "graft", "patches");
+    const ioError = (cause: unknown) =>
+      GraftCacheIoError.make({ path: root, message: `Cannot read patch sources at ${root}.`, cause });
+    if (!(yield* fs.exists(root).pipe(Effect.mapError(ioError)))) return O.none<string>();
+    const entries = yield* fs.readDirectory(root).pipe(Effect.mapError(ioError));
+    const versions = A.sort(
+      A.filter(entries, (entry) => S.is(GraftVersion)(entry) && versionOrder(entry, version) <= 0),
+      Order.flip(versionOrder)
+    );
+    for (const candidate of versions) {
+      if ((yield* fs.stat(path.join(root, candidate)).pipe(Effect.mapError(ioError))).type === "Directory")
+        return O.some(candidate);
+    }
+    return O.none<string>();
+  });
+
+const makeGraftUpgrade = Effect.fn("GraftUpgrade.make")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const ioError = (file: string) => (cause: unknown) =>
+    GraftCacheIoError.make({ path: file, message: `Graft upgrade I/O failed at ${file}.`, cause });
+
+  const resolve: GraftUpgradeShape["resolve"] = Effect.fn("GraftUpgrade.resolve")(function* (installed) {
+    const lookup = Effect.gen(function* () {
+      const current = yield* S.decodeEffect(GraftVersion)(installed);
+      const client = yield* HttpClient.HttpClient;
+      const response = yield* HttpClient.filterStatusOk(client).get(
+        "https://registry.npmjs.org/@nanonets/graft/latest"
+      );
+      const release = yield* HttpClientResponse.schemaBodyJson(GraftRegistryRelease)(response);
+      return GraftUpgradePlan.make({
+        installed,
+        latest: O.some(release.version),
+        action: versionOrder(release.version, current) > 0 ? "upgrade" : "current",
+      });
+    });
+    return yield* lookup.pipe(
+      Effect.timeout(Dur.seconds(30)),
+      Effect.catchCause((cause) =>
+        Effect.succeed(
+          GraftUpgradePlan.make({
+            installed,
+            latest: O.none(),
+            action: "skip",
+            detail: Cause.pretty(cause),
+          })
+        )
+      )
+    );
+  });
+
+  const apply: GraftUpgradeShape["apply"] = Effect.fn("GraftUpgrade.apply")(function* (ctx, plan) {
+    if (plan.action === "skip")
+      return GraftUpgradeSkipped.make({
+        installed: plan.installed,
+        reason: "registry-unreachable",
+        detail: plan.detail,
+      });
+    if (plan.action === "current" || O.isNone(plan.latest))
+      return GraftUpgradeCurrent.make({ installed: plan.installed });
+    const latest = plan.latest.value;
+    const patchKit = path.join(ctx.owner, "scripts", "graft", "apply-dist-patches.sh");
+    const patchRoot = path.join(ctx.owner, "scripts", "graft", "patches");
+    const step = (command: string, args: ReadonlyArray<string>, env?: R.ReadonlyRecord<string, string>) =>
+      GraftDeepRunnerStep.make({ command, args, cwd: ctx.owner, phase: "upgrade", timeout: "15 minutes", env });
+    const patchStep = (mode: string, from: string, root: string) =>
+      step(patchKit, [mode, "--from", from], { GRAFT_PACKAGE_ROOT: root });
+    const blocked = (reason: GraftUpgradeBlocked["reason"], rolledBack: boolean, detail: string) =>
+      GraftUpgradeBlocked.make({ installed: plan.installed, latest, reason, rolledBack, detail });
+
+    const prepare = Effect.fnUntraced(function* () {
+      const home = yield* readHome(ctx.owner).pipe(Effect.mapError(ioError(ctx.owner)));
+      const exact = path.join(patchRoot, latest);
+      const isDirectory = Effect.fnUntraced(function* (dir: string) {
+        if (!(yield* fs.exists(dir).pipe(Effect.mapError(ioError(dir))))) return false;
+        return (yield* fs.stat(dir).pipe(Effect.mapError(ioError(dir)))).type === "Directory";
+      });
+      const inherited = yield* recordedPatchSource(fs, path)(ctx.owner, plan.installed);
+      const source = (yield* isDirectory(exact)) ? O.some(latest) : inherited;
+      if (O.isNone(source))
+        return yield* GraftDeepStepError.make({
+          step: "upgrade",
+          exitCode: 1,
+          log: "",
+          message: `No recorded patches at or below the installed Graft version in ${patchRoot}.`,
+        });
+      const patchesFrom = source.value;
+      const staging = path.join(path.resolve(ctx.options.stateDir), "upgrade", latest);
+      yield* fs.makeDirectory(staging, { recursive: true }).pipe(Effect.mapError(ioError(staging)));
+      // A new directory per attempt prevents a previous extraction from masking missing files.
+      yield* Effect.acquireUseRelease(
+        fs.makeTempDirectory({ directory: staging, prefix: "proof-" }).pipe(Effect.mapError(ioError(staging))),
+        Effect.fnUntraced(function* (work) {
+          yield* ctx.mustSucceed(step("npm", ["pack", `@nanonets/graft@${latest}`, "--pack-destination", work]));
+          yield* ctx.mustSucceed(step("tar", ["xzf", path.join(work, `nanonets-graft-${latest}.tgz`), "-C", work]));
+          const root = path.join(work, "package");
+          const checked = yield* ctx.step(patchStep("--check", patchesFrom, root));
+          // --check exits 1 for both clean-but-unapplied patches and conflicts.
+          // Only the former may proceed to an apply/check proof in the disposable dist.
+          const missing =
+            checked.exitCode === 1 &&
+            !checked.truncated &&
+            Str.includes("missing  ")(checked.output) &&
+            !Str.includes("CONFLICT")(checked.output);
+          if (checked.exitCode !== 0 && !missing)
+            return yield* GraftDeepStepError.make({
+              step: "upgrade",
+              exitCode: exitCodeOf(checked.exitCode),
+              log: "",
+              message: `Staged patch check failed: ${checked.output}`,
+            });
+          yield* ctx.mustSucceed(patchStep("--apply", patchesFrom, root));
+          yield* ctx.mustSucceed(patchStep("--check", patchesFrom, root));
+        }),
+        (work) => Effect.ignore(fs.remove(work, { recursive: true, force: true }))
+      );
+      return { home, patchesFrom, rollbackFrom: O.getOrElse(inherited, () => plan.installed) };
+    });
+    const prepared = yield* Effect.result(prepare());
+    if (Result.isFailure(prepared)) return blocked("patches-conflict", false, prepared.failure.message);
+    const { home, patchesFrom, rollbackFrom } = prepared.success;
+    const prefix = path.join(home, ".local");
+    const globalRoot = path.join(prefix, "lib", "node_modules", "@nanonets", "graft");
+    const install = Effect.fn("GraftUpgrade.install")((version: string) =>
+      ctx.mustSucceed(step("npm", ["install", "-g", "--prefix", prefix, `@nanonets/graft@${version}`]))
+    );
+    const verify = Effect.fnUntraced(function* (version: string, from: string) {
+      yield* ctx.mustSucceed(patchStep("--apply", from, globalRoot));
+      yield* ctx.mustSucceed(patchStep("--check", from, globalRoot));
+      const actual = yield* ctx.mustSucceed(
+        GraftDeepRunnerStep.make({ ...step("graft", ["--version"]), source: "stdout" })
+      );
+      if (Str.trim(actual.output) !== version)
+        return yield* GraftDeepStepError.make({
+          step: "upgrade",
+          exitCode: 1,
+          log: "",
+          message: `Expected graft ${version}, got ${actual.output}.`,
+        });
+    });
+    // Keep install + verification + rollback atomic with respect to refresh interruption.
+    return yield* Effect.uninterruptible(
+      Effect.gen(function* () {
+        const installed = yield* Effect.result(install(latest));
+        const verified = Result.isFailure(installed) ? installed : yield* Effect.result(verify(latest, patchesFrom));
+        if (Result.isSuccess(verified))
+          return GraftUpgradeUpgraded.make({ from: plan.installed, to: latest, patchesFrom });
+        const rollback = yield* Effect.result(
+          install(plan.installed).pipe(Effect.andThen(verify(plan.installed, rollbackFrom)))
+        );
+        const detail = `${verified.failure.message}${Result.isFailure(rollback) ? `; rollback failed: ${rollback.failure.message}` : ""}`;
+        yield* ctx.appendLog(`Graft upgrade blocked: ${detail}\n`);
+        return blocked(
+          Result.isFailure(installed) ? "install-failed" : "verify-failed",
+          Result.isSuccess(rollback),
+          detail
+        );
+      })
+    );
+  });
+  return GraftUpgrade.of({ resolve, apply });
+});
+
+/**
+ * Supplies upgrade planning and staged patch verification.
+ *
+ * **Details**
+ *
+ * Captures filesystem and path services; registry access is required only by resolve.
+ *
+ * **Example** (Inspect the upgrade layer)
+ *
+ * ```ts
+ * import { GraftUpgradeLayer } from "@beep/repo-cli/commands/Graft"
+ * import * as Layer from "effect/Layer"
+ * Layer.isLayer(GraftUpgradeLayer) // => true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const GraftUpgradeLayer = Layer.effect(GraftUpgrade, makeGraftUpgrade());
 
 const revParseHeadStep = (owner: string) =>
   GraftDeepRunnerStep.make({
@@ -202,7 +465,24 @@ const decideOutcome = (input: {
   readonly rebuilt: ReadonlyArray<GraftDeepSiblingRebuild>;
   readonly refusals: number;
   readonly truncated: boolean;
+  readonly upgrade: GraftUpgradeReceipt;
 }): { readonly message: O.Option<string>; readonly outcome: GraftDeepRefreshOutcome } => {
+  const upgradeNote = GraftUpgradeReceipt.match(input.upgrade, {
+    current: () => "",
+    skipped: (receipt) =>
+      receipt.reason === "disabled"
+        ? ""
+        : `graft upgrade skipped (registry-unreachable): ${receipt.detail ?? "registry unavailable"}`,
+    blocked: (receipt) =>
+      `graft upgrade to ${receipt.latest} blocked (${receipt.reason}); ${receipt.rolledBack || receipt.reason === "patches-conflict" ? `built on ${receipt.installed}` : "rollback not verified; installed version uncertain"}`,
+    upgraded: (receipt) =>
+      receipt.patchesFrom === receipt.to
+        ? ""
+        : `graft ${receipt.to} runs the ${receipt.patchesFrom} dist patches; record scripts/graft/patches/${receipt.to}/ in a PR`,
+  });
+  const upgradeDegraded =
+    GraftUpgradeReceipt.guards.blocked(input.upgrade) ||
+    (GraftUpgradeReceipt.guards.upgraded(input.upgrade) && input.upgrade.patchesFrom !== input.upgrade.to);
   const ratio = coverageRatio(input.coverage);
   const belowTarget = O.getOrElse(
     O.map(ratio, (value) => value < input.minCoverage),
@@ -214,10 +494,11 @@ const decideOutcome = (input: {
       coverageNote({ minCoverage: input.minCoverage, ratio, truncated: input.truncated }),
       refusalNote(input.refusals),
       rebuildNote(failures),
+      upgradeNote,
     ],
     Str.isNonEmpty
   );
-  const degraded = belowTarget || input.refusals > 0 || failures > 0;
+  const degraded = upgradeDegraded || belowTarget || input.refusals > 0 || failures > 0;
   return {
     message: A.isReadonlyArrayNonEmpty(notes) ? O.some(A.join(notes, "; ")) : O.none<string>(),
     outcome: degraded ? GraftDeepRefreshOutcome.Enum.degraded : GraftDeepRefreshOutcome.Enum.ok,
@@ -606,6 +887,7 @@ type StatusPatch = Partial<{
   readonly phase: GraftDeepRefreshPhase;
   readonly rebuilt: ReadonlyArray<GraftDeepSiblingRebuild>;
   readonly seed: GraftCacheSyncReport;
+  readonly upgrade: GraftUpgradeReceipt;
 }>;
 
 const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
@@ -613,6 +895,8 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
   const path = yield* Path.Path;
   const runner = yield* GraftDeepRunner;
   const sync = yield* GraftCacheSync;
+  const upgrade = yield* GraftUpgrade;
+  const http = yield* HttpClient.HttpClient;
 
   const ioError = (file: string) => (cause: unknown) =>
     GraftCacheIoError.make({ path: file, message: `Graft deep refresh failed at ${file}.`, cause });
@@ -778,6 +1062,7 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
           command: "graft",
           cwd: ctx.owner,
           phase: "preflight",
+          source: "stdout",
           timeout: "2 minutes",
         })
       )
@@ -797,14 +1082,23 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
       });
     }
     yield* ctx.appendLog(`$ graft --version\n${captured.output}\n`);
+    return Str.trim(captured.output);
   });
 
-  const assertPatchKit = Effect.fnUntraced(function* (ctx: RefreshContext) {
+  const assertPatchKit = Effect.fnUntraced(function* (ctx: RefreshContext, installed: string) {
     const patchKit = path.join(ctx.owner, "scripts", "graft", "apply-dist-patches.sh");
+    const from = yield* recordedPatchSource(fs, path)(ctx.owner, installed);
+    const args = [
+      "--check",
+      ...O.getOrElse(
+        O.map(from, (version) => ["--from", version]),
+        () => []
+      ),
+    ];
     const captured = yield* runner
       .run(
         GraftDeepRunnerStep.make({
-          args: ["--check"],
+          args,
           command: patchKit,
           cwd: ctx.owner,
           phase: "preflight",
@@ -814,7 +1108,7 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
       .pipe(
         Effect.mapError((cause) => GraftDeepPreflightError.make({ path: patchKit, message: cause.message, cause }))
       );
-    yield* ctx.appendLog(`$ ${formatCommandLine(patchKit, ["--check"])}\n${captured.output}\n`);
+    yield* ctx.appendLog(`$ ${formatCommandLine(patchKit, args)}\n${captured.output}\n`);
     if (!Eq.equals(exitCodeOf(captured.exitCode), 0)) {
       return yield* GraftDeepPreflightError.make({
         path: patchKit,
@@ -825,8 +1119,15 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
 
   const preflightPhase = Effect.fnUntraced(function* (ctx: RefreshContext) {
     yield* checkoutPreflight(ctx.owner, ctx.appendLog);
-    yield* assertGraftOnPath(ctx);
-    yield* assertPatchKit(ctx);
+    const installed = yield* assertGraftOnPath(ctx);
+    yield* assertPatchKit(ctx, installed);
+    return installed;
+  });
+
+  const upgradePhase = Effect.fnUntraced(function* (ctx: RefreshContext, installed: string) {
+    if (!ctx.options.upgrade) return GraftUpgradeSkipped.make({ installed, reason: "disabled" });
+    const plan = yield* upgrade.resolve(installed).pipe(Effect.provideService(HttpClient.HttpClient, http));
+    return yield* upgrade.apply(ctx, plan);
   });
 
   const pullPhase = Effect.fnUntraced(function* (ctx: RefreshContext) {
@@ -925,7 +1226,11 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
     const ctx: RefreshContext = { appendLog, mustSucceed, options, owner, step };
     const refresh = Effect.fnUntraced(function* () {
       yield* commit({ phase: "preflight" });
-      yield* preflightPhase(ctx);
+      const installed = yield* preflightPhase(ctx);
+
+      yield* commit({ phase: "upgrade" });
+      const receipt = yield* upgradePhase(ctx, installed);
+      yield* commit({ upgrade: receipt });
 
       yield* commit({ phase: "pull" });
       const pulled = yield* pullPhase(ctx);
@@ -961,6 +1266,7 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
         rebuilt,
         refusals: seed.refusals,
         truncated: build.truncated,
+        upgrade: receipt,
       });
       return yield* commit({
         finishedAt: DateTime.formatIso(yield* DateTime.now),
@@ -1050,17 +1356,6 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
       })
     );
   });
-
-  const readHome = (anchor: string) =>
-    Config.String("HOME").pipe(
-      Effect.mapError((cause) =>
-        GraftDeepPreflightError.make({
-          path: anchor,
-          message: "HOME is not set; cannot locate the systemd user unit directory.",
-          cause,
-        })
-      )
-    );
 
   const unitDirOf = (home: string) => path.join(home, ".config", "systemd", "user");
 
@@ -1191,8 +1486,8 @@ const makeGraftDeepRefresh = Effect.fn("GraftDeepRefresh.make")(function* () {
 export const GraftDeepRefreshLayer: Layer.Layer<
   GraftDeepRefresh,
   never,
-  FileSystem.FileSystem | Path.Path | GraftDeepRunner | GraftCacheSync
-> = Layer.effect(GraftDeepRefresh, makeGraftDeepRefresh());
+  FileSystem.FileSystem | Path.Path | GraftDeepRunner | GraftCacheSync | HttpClient.HttpClient
+> = Layer.effect(GraftDeepRefresh, makeGraftDeepRefresh()).pipe(Layer.provide(GraftUpgradeLayer));
 
 /**
  * Supplies the refresh service over the live runner and the cache sync service.
@@ -1200,7 +1495,7 @@ export const GraftDeepRefreshLayer: Layer.Layer<
  * **Details**
  *
  * The layer captures the filesystem and path services, so only the platform
- * child-process spawner remains a requirement of the composed layer.
+ * child-process spawner and HTTP client remain requirements of the composed layer.
  *
  * **Example** (Provide the refresh implementation)
  *
@@ -1216,5 +1511,5 @@ export const GraftDeepRefreshLayer: Layer.Layer<
 export const GraftDeepRefreshLive: Layer.Layer<
   GraftDeepRefresh,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | HttpClient.HttpClient
 > = GraftDeepRefreshLayer.pipe(Layer.provide(Layer.mergeAll(GraftDeepRunnerLive, GraftCacheSyncLive)));
