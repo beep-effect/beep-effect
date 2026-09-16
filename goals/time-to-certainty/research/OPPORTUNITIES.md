@@ -1772,3 +1772,19 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   the loop fiber's exit before poll counts; add a `TestConsole` line-cursor helper (or a canon
   note that `it.layer` shares the console); add TS377118 to the lane-brief trap list; make the
   local schema-first lane new-only like the hosted audit.
+
+## 2026-09-16 — B8 PR A default-path proof: main push runs all seven heavy lanes, two inherited reds
+
+- Doing: proving on `main` (push run 35066098614, head 5e520d997e = #1150 on top of #1151) that
+  the new `heavy.yml` `admitted` input defaulting to `true` changes nothing on the push path.
+- Evidence: every `Heavy / *` lane ran (Check, Test Integration, Docgen, Doctest, Build green),
+  so the default is proven. Two reds are inherited, not PR A's: `Heavy / Lint Policy` failed in
+  `knowledge:refs-check` on `broken-target … explorations/ATLAS.md` and `docs/solutions/…`
+  references inside untouched packets (the push path runs the policy unscoped; the PR-scoped
+  run on #1151 passed); `Heavy / Coverage Regression` reported `new file has N uncovered
+  unit(s) … (no baseline file identity)` for `Yeet/internal/ProofJob.ts` and
+  `ProofJobLauncher.ts`, B5's new files (#1143), already red on #1151 as an optional context.
+- Prevention: main-push-only policy reds are invisible to every PR because PR runs are
+  affected-scoped; a nightly or post-merge `knowledge:refs-check` inbox row (or the same scoped
+  view on main) would name the owning packet. B5's follow-up should add baseline rows for its two
+  files (`standards/coverage.regression-baseline.jsonc`) or cover the seven functions.
