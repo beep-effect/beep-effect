@@ -3,7 +3,7 @@ import { runCacheWarmForTesting, runCacheWarmLaneForTesting } from "@beep/repo-c
 import { NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -185,21 +185,34 @@ describe("cache command", () => {
                 ])
               )
             );
+            yield* fs.writeFileString(
+              path.join(runs, "05.json"),
+              encodeJson(
+                run("turbo run lint --cache=local:,remote:", 800, 830, [
+                  { ...task("@beep/quux#lint", "hash-e", "MISS", "packages/quux"), cache: undefined },
+                ])
+              )
+            );
             const logs = path.join(root, "lambda.ndjson");
             yield* fs.writeFileString(logs, '{"method":"GET","result":"HIT"}\n{"method":"PUT"}\n');
 
             const report = yield* buildCacheDashboard(runs, O.some(logs), ["packages/foo/src/index.ts"]);
 
-            expect(report.runFiles).toBe(4);
+            expect(report.runFiles).toBe(5);
             expect(report.eligibleFirstTouches).toBe(2);
             expect(report.remoteHits).toBe(1);
             expect(report.eligibleRemoteHitRate).toBe(0.5);
-            expect(report.excludedForcedOrDisabled).toBe(2);
+            expect(report.excludedForcedOrDisabled).toBe(3);
             expect(report.correctnessViolations).toEqual(["@beep/foo#lint"]);
             expect(report.lambda).toEqual({ rows: 2, reads: 1, hits: 1, puts: 1 });
-            expect(report.wallTimes.map(({ mode, p50Ms, p95Ms, runs }) => ({ mode, p50Ms, p95Ms, runs }))).toEqual([
-              { mode: "remote-eligible", runs: 2, p50Ms: 100, p95Ms: 200 },
+            const wallTimes = A.sort(
+              A.map(report.wallTimes, ({ mode, p50Ms, p95Ms, runs }) => ({ mode, p50Ms, p95Ms, runs })),
+              Order.mapInput(Order.String, (row: { readonly mode: string }) => row.mode)
+            );
+            expect(wallTimes).toEqual([
+              { mode: "disabled", runs: 1, p50Ms: 30, p95Ms: 30 },
               { mode: "forced", runs: 2, p50Ms: 50, p95Ms: 60 },
+              { mode: "remote-eligible", runs: 2, p50Ms: 100, p95Ms: 200 },
             ]);
             yield* fs.remove(root, { recursive: true });
           })
