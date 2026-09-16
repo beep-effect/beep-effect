@@ -991,7 +991,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
 );
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof verdict bookkeeping", (it) => {
-  for (const identity of ["valid", "failed", "invalid", "missing-record"]) {
+  for (const { identity, failed, jobId } of [
+    { identity: "valid", failed: false, jobId: O.none<string>() },
+    { identity: "failed", failed: true, jobId: O.none<string>() },
+    { identity: "invalid", failed: false, jobId: O.some("bad-id") },
+    { identity: "missing-record", failed: false, jobId: O.some(attemptId) },
+  ]) {
+    const outcome = failed ? "failure" : "success";
     it.effect(`records the verdict despite ${identity} job bookkeeping`, () =>
       fixture(
         Effect.fnUntraced(function* (root) {
@@ -1047,7 +1053,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof verdict bookkeepi
             0,
             recorder,
             extras,
-            identity === "failed" ? "failure" : "success",
+            outcome,
             "verified",
             O.none()
           ).pipe(
@@ -1055,21 +1061,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof verdict bookkeepi
               ConfigProvider.ConfigProvider,
               ConfigProvider.fromUnknown({
                 PATH: root,
-                BEEP_YEET_JOB_ID:
-                  identity === "valid" || identity === "failed"
-                    ? record.jobId
-                    : identity === "invalid"
-                      ? "bad-id"
-                      : attemptId,
+                BEEP_YEET_JOB_ID: O.getOrElse(jobId, () => record.jobId),
               })
             )
           );
           const fs = yield* FileSystem.FileSystem;
           expect(yield* fs.exists(yield* Job.runArtifactPathForContext(context, "verdict.json"))).toBe(true);
-          if (identity === "valid" || identity === "failed") {
+          if (O.isNone(jobId)) {
             const finished = O.getOrThrow(yield* launcher.read(record.jobId));
             expect(finished.phase).toBe("finished");
-            expect(O.getOrThrow(finished.outcome).verdictOutcome).toBe(identity === "failed" ? "failure" : "success");
+            expect(O.getOrThrow(finished.outcome).verdictOutcome).toBe(outcome);
           } else
             expect(A.join(A.filter(yield* TestConsole.errorLines, P.isString), "\n")).toContain(
               "job bookkeeping failed"

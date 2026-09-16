@@ -3140,48 +3140,48 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("serializes a same-checkout contender while allowing a sibling checkout", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const blocking = yield* writeFakeLease(tempRoot, {
-              checkoutRoot: "/repo/shared",
-              originKey: "origin-active",
-              weightTokens: 3,
-            });
-            const sameCheckout = yield* Effect.forkChild(
-              withQualityAdmission(
-                request({ checkoutRoot: "/repo/shared", originKey: "origin-contender" }),
-                noAdmissionOriginGate,
-                Effect.succeed("same-checkout"),
-                fastConfig
-              )
-            );
-
-            const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
-              until: A.isReadonlyArrayNonEmpty,
-              schedule: Schedule.spaced(Duration.millis(10)),
-            }).pipe(Effect.timeout(Duration.seconds(5)));
-            expect(queued).toHaveLength(1);
-            expect(sameCheckout.pollUnsafe()).toBeUndefined();
-
-            const sibling = yield* withQualityAdmission(
-              request({ checkoutRoot: "/repo/sibling", originKey: "origin-contender" }),
+  // Real filesystem admission and queue polling must share the live clock.
+  it.effect("serializes a same-checkout contender while allowing a sibling checkout", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const blocking = yield* writeFakeLease(tempRoot, {
+            checkoutRoot: "/repo/shared",
+            originKey: "origin-active",
+            weightTokens: 3,
+          });
+          const sameCheckout = yield* Effect.forkChild(
+            withQualityAdmission(
+              request({ checkoutRoot: "/repo/shared", originKey: "origin-contender" }),
               noAdmissionOriginGate,
-              Effect.succeed("sibling"),
+              Effect.succeed("same-checkout"),
               fastConfig
-            );
-            expect(sibling).toBe("sibling");
+            )
+          );
 
-            yield* fs.remove(blocking, { force: true });
-            expect(yield* Fiber.join(sameCheckout)).toBe("same-checkout");
-          })
-        );
-      })
-    ));
+          const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+            until: A.isReadonlyArrayNonEmpty,
+            schedule: Schedule.spaced(Duration.millis(10)),
+          }).pipe(Effect.timeout(Duration.seconds(5)));
+          expect(queued).toHaveLength(1);
+          expect(sameCheckout.pollUnsafe()).toBeUndefined();
+
+          const sibling = yield* withQualityAdmission(
+            request({ checkoutRoot: "/repo/sibling", originKey: "origin-contender" }),
+            noAdmissionOriginGate,
+            Effect.succeed("sibling"),
+            fastConfig
+          );
+          expect(sibling).toBe("sibling");
+
+          yield* fs.remove(blocking, { force: true });
+          expect(yield* Fiber.join(sameCheckout)).toBe("same-checkout");
+        })
+      );
+    }).pipe(TestClock.withLive)
+  );
 
   it("keeps a current contender queued until a same-origin legacy lease drains", () =>
     Effect.runPromise(
@@ -3440,38 +3440,38 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("stays queued while the origin gate is busy and releases it after use", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
-          Effect.gen(function* () {
-            const busy = yield* Ref.make(true);
-            const releases = yield* Ref.make(0);
-            const tryAcquire = Effect.gen(function* () {
-              return (yield* Ref.get(busy)) ? O.none<string>() : O.some("origin-lease");
-            });
-            const gate = {
-              tryAcquire,
-              tryAcquireFallback: tryAcquire,
-              release: (_: string) => Ref.update(releases, (count) => count + 1),
-            };
-            const fiber = yield* Effect.forkChild(
-              withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig)
-            );
-            const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
-              until: A.isReadonlyArrayNonEmpty,
-              schedule: Schedule.spaced(Duration.millis(10)),
-            }).pipe(Effect.timeout(Duration.seconds(5)));
-            expect(fiber.pollUnsafe()).toBeUndefined();
-            expect(queued).toHaveLength(1);
-            yield* Ref.set(busy, false);
-            expect(yield* Fiber.join(fiber)).toBe("ran");
-            expect(yield* Ref.get(releases)).toBe(1);
-          })
-        );
-      })
-    ));
+  // Real filesystem admission and queue polling must share the live clock.
+  it.effect("stays queued while the origin gate is busy and releases it after use", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+        Effect.gen(function* () {
+          const busy = yield* Ref.make(true);
+          const releases = yield* Ref.make(0);
+          const tryAcquire = Effect.gen(function* () {
+            return (yield* Ref.get(busy)) ? O.none<string>() : O.some("origin-lease");
+          });
+          const gate = {
+            tryAcquire,
+            tryAcquireFallback: tryAcquire,
+            release: (_: string) => Ref.update(releases, (count) => count + 1),
+          };
+          const fiber = yield* Effect.forkChild(
+            withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig)
+          );
+          const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+            until: A.isReadonlyArrayNonEmpty,
+            schedule: Schedule.spaced(Duration.millis(10)),
+          }).pipe(Effect.timeout(Duration.seconds(5)));
+          expect(fiber.pollUnsafe()).toBeUndefined();
+          expect(queued).toHaveLength(1);
+          yield* Ref.set(busy, false);
+          expect(yield* Fiber.join(fiber)).toBe("ran");
+          expect(yield* Ref.get(releases)).toBe(1);
+        })
+      );
+    }).pipe(TestClock.withLive)
+  );
 
   it("hard-floors admission below 15 GiB and recovers when memory frees", () =>
     Effect.runPromise(
