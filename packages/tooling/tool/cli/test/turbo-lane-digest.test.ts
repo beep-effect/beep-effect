@@ -299,13 +299,18 @@ describe("Turbo lane digests", () => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const startedAtIso = "2026-09-16T14:00:00.000Z";
+      // One fixture clock for the summary's start time and its file mtime, so the fresh-summary
+      // filter never depends on the host's wall clock being later than the fixed start.
+      const writtenAt = new Date(Date.parse(startedAtIso) + 1_000);
       const labsRun = Effect.fnUntraced(function* (prefix: string, tasks: ReadonlyArray<TurboSummaryTask>) {
         const root = yield* fs.makeTempDirectoryScoped({ prefix });
         const runs = path.join(root, ".turbo", "runs");
+        const summaryPath = path.join(runs, "labs.json");
         yield* fs.makeDirectory(runs, { recursive: true });
-        yield* encodeSummary(summary("labs", Date.parse(startedAtIso) + 1_000, tasks)).pipe(
-          Effect.flatMap((text) => fs.writeFileString(path.join(runs, "labs.json"), text))
+        yield* encodeSummary(summary("labs", writtenAt.getTime(), tasks)).pipe(
+          Effect.flatMap((text) => fs.writeFileString(summaryPath, text))
         );
+        yield* fs.utimes(summaryPath, writtenAt, writtenAt);
         const step = pipe(ciLaneStepsForTesting(root, "labs", labsLaneOptions), A.head, O.getOrThrow);
         const ledger = path.join(root, "lane-labs", "ledger.jsonl");
         const declared = yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), {
