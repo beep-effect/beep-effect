@@ -352,7 +352,7 @@ describe("B7 settle contracts", () => {
     const conflict = verdict({ ...dirty, waitedMs: 5000 });
     expectBaseConflict(conflict);
     expect(conflict.census.missing).toEqual(["Lint", "Test Unit"]);
-    assertNone(yeetSettleStampFor(conflict.reason));
+    assertNone(conflict.reason.pipe(yeetSettleStampFor));
     expect(renderYeetSettleDetail(conflict)).toBe(
       "settle: base-conflict; merge origin/main and push; waited 5s (not counted toward the 1s settle timeout)"
     );
