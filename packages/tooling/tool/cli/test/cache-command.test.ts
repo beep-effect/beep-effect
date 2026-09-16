@@ -141,11 +141,17 @@ describe("cache command", () => {
               cache: { status: source === "MISS" ? "MISS" : "HIT", source },
               execution: { startTime: 0, endTime: 0 },
             });
+            const uncachedTask = (taskId: string, hash: string, directory: string) => ({
+              taskId,
+              hash,
+              directory,
+              execution: { startTime: 0, endTime: 0 },
+            });
             const run = (
               command: string,
               startTime: number,
               endTime: number,
-              tasks: ReadonlyArray<ReturnType<typeof task>>
+              tasks: ReadonlyArray<ReturnType<typeof task> | ReturnType<typeof uncachedTask>>
             ) => ({
               execution: { command, startTime, endTime },
               scm: { sha: "abc123" },
@@ -189,7 +195,7 @@ describe("cache command", () => {
               path.join(runs, "05.json"),
               encodeJson(
                 run("turbo run lint --cache=local:,remote:", 800, 830, [
-                  { ...task("@beep/quux#lint", "hash-e", "MISS", "packages/quux"), cache: undefined },
+                  uncachedTask("@beep/quux#lint", "hash-e", "packages/quux"),
                 ])
               )
             );
