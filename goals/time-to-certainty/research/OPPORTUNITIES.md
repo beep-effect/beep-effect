@@ -1343,6 +1343,173 @@ was attempted under the marker-only amendment.
   minimum plus zero pending) and on the head SHA, with empty or failed API reads treated as
   retryable — the per-head coalescing that `explorations/pr-event-awareness` now records.
 
+## 2026-09-15 — A fresh worktree's package-local `check` script fails on unbuilt upstream dist
+
+- **Doing:** type-checking the orchestrator-written B5 schema and contract files in the new
+  `ttc-b5` worktree with the package's own `bun run beep:check` (`tsgo -p tsconfig.check.json`).
+- **Evidence:** dozens of `TS6305: Output file '<upstream>/dist/*.d.ts' has not been built from
+  source file` errors plus follow-on `any`/`unknown` diagnostics in files the change never touched;
+  `bunx turbo run check --filter=@beep/repo-cli` (32 upstream tasks, 30 s) reduced the output to
+  the three real diagnostics in the new file.
+- **Would have prevented it:** B1 already routes `package-verify` through the Turbo graph; the
+  same rule belongs on the quick edit-loop check (`beep quality package-verify --quick` or a
+  documented `turbo run check --filter=<pkg>` in the effect-first skill) so a stale worktree never
+  reads as a broken change.
+
+## 2026-09-15 — The pipeable-signature law is enforced by the type checker but written nowhere
+
+- **Doing:** exporting two two-argument pure helpers (`terminationReasonForServiceResult`,
+  `proofJobRowSeverityFor`) from the new `ProofJob.ts` schema module.
+- **Evidence:** `TS377101: Exported function ... has no pipeable overload corresponding to its
+  signature ... effect(missingPipeableSignature)` on both; the fix is the repo's `dual(2, ...)`
+  overload idiom, found only by reading a neighbouring module (`AttemptJournal.ts`).
+- **Would have prevented it:** one line in AGENTS.md Code Laws or the effect-first skill: exported
+  functions with two or more data arguments are `dual` with an explicit overload signature.
+
+## 2026-09-15 — B5 package exports fence test imports
+
+- Work: exercise the new detached-job launcher through PATH shims.
+- Evidence: `bunx --bun vitest run packages/tooling/tool/cli/test/proof-job.test.ts --pool=threads`
+  exited 1 during collection: `AttemptTerminationJournal is not exported`.
+- Attribution: introduced test import; the package deliberately fences internal paths.
+- Correction: use the existing `@beep/repo-cli/test/Yeet` surface and re-export the new
+  locked finalizer helper through the already exposed launcher module, within B5's file scope.
+- Prevention: inspect the exports fence before choosing imports, including docgen examples.
+
+## 2026-09-15 — B5 supplied UUID examples use an unavailable constructor
+
+- Work: execute the B5 schema/launcher tests against installed Effect v4.
+- Evidence: the proof-job test command exited 1 at collection: `UUID.makeUnsafe is not a function`.
+- Attribution: supplied schema examples used that constructor; the initial fixture copied it.
+- Correction: schema-decode UUIDs in the launcher, fixtures, and touched examples.
+- Prevention: executable examples for the orchestrator's schema handoff before implementation.
+
+## 2026-09-15 — B5 arbitrary API differs from the binding brief
+
+- Work: schema round-trip coverage for every supplied job class and literal domain.
+- Evidence: installed Effect `4.0.0-rc.113` and `.repos/effect` have neither
+  `FastCheck` in `effect/testing` nor `Schema.toArbitrary`; test execution reported an undefined export.
+- Decision: retain generated round-trip coverage using the current
+  `Arbitrary.schema` and `Arbitrary.sampleEffect` from `effect/unstable/arbitrary`.
+  Use `Order.flip`, confirmed in the same reference, for newest-first records.
+- Prevention: pin brief API spellings to the checkout's installed Effect version.
+
+## 2026-09-15 — B5 bookkeeping duplication caught by the audit
+
+- Work: connect runner start and verdict completion to the durable job record.
+- Evidence: `bun run beep quality fallow audit --check --base origin/main` exited 1;
+  one introduced clone in `Handler.ts` repeated job-id lookup and launcher construction.
+- Correction: share the optional-job bookkeeping boundary and retain distinct typed transitions.
+- Prevention: model the common configuration/error boundary before adding both hooks.
+
+## 2026-09-15 — Bun threads cannot feed hook subprocess stdin in this sandbox
+
+- Work: run the complete B5 verification test selection with `--pool=threads`.
+- Evidence: 281 tests passed; four hook-adapter tests failed with empty output and
+  `EPERM: operation not permitted, write` from Bun's stdin stream, including three
+  pre-existing tests. The same hook suite under Node/threads passed all five tests.
+- Attribution: sandbox/runtime-only for the hook stdin path; no hook regression reproduced under Node.
+- Prevention: retain a Node/threads supplemental run and have the orchestrator repeat the named
+  Bun/default-pool verification outside the sandbox.
+
+## 2026-09-15 — B5 supporting typecheck needs the test root override
+
+- Work: supplement sandbox-blocked canonical type gates with direct `tsc` evidence.
+- Evidence: direct test-config invocation exited 2 with `TS6059` because its inherited
+  `rootDir` points at `src` while its include selects `test` files. The first source
+  invocation with `--incremental false` also met `TS6379` on the composite project.
+- Attribution: supporting command construction, not a B5 source error.
+- Correction: source checking uses a temporary `--tsBuildInfoFile`; test checking uses
+  explicit `--rootDir . --composite false --incremental false` command-line overrides.
+- Prevention: use the canonical type-gate wrapper outside the sandbox for final proof.
+
+## 2026-09-15 — B5 verification closes schema, docs, and test-layer gaps
+
+- Work: validate the supplied schemas and new runner bookkeeping against repo gates.
+- Evidence: initial `lint schema-first` flagged the inline row-id contract and sample-only
+  codec coverage; `lint jsdoc --package packages/tooling/tool/cli` flagged terse return
+  descriptions and missing tag spacing. The supporting test typecheck found missing
+  Crypto/ChildProcessSpawner services in verdict-writer tests plus new test callback diagnostics.
+- Correction: derive the row-id input from the capsule, run schema-derived `it.effect.prop`
+  round trips, complete the JSDoc, and use NodeServices in verdict-writer tests.
+- Prevention: include the artifact-writer tests in the launcher integration handoff, alongside
+  source and test typechecks rather than runtime tests alone.
+
+## 2026-09-15 — B5 final reaper guard exceeded the complexity budget
+
+- Work: ensure a recorded proof service on a dead lease remains stop authority even
+  if a legacy lease has no nonce, while retaining the live-unit conflict fence.
+- Evidence: the final Fallow audit exited 1 with `deadLeaseScopePlan` cognitive
+  complexity 10 against threshold 8.
+- Correction: derive the selected unit through Option once and reuse the existing
+  legacy/mismatch/conflict flow instead of adding a second early-return branch.
+- Prevention: preserve the shared authority decision flow when adding a unit family.
+
+## 2026-09-15 — The static command-surface deriver rejected Effect's bare `Command.unlisted`
+
+- **Doing:** running `package-verify @beep/repo-cli` on the B5 branch after the lane hid
+  `yeet job finalize` with `.pipe(Command.unlisted)`.
+- **Evidence:** `knowledge-semantic-delta.test.ts` failed with `Failed to statically derive
+  command surface provenance: a command transform is not a call expression`; Effect v4 exposes
+  `unlisted` as a data-last function reference, not a `withX(...)` call, and the deriver's
+  surface-neutral list only knew call-shaped transforms (it even lists a `withUnlisted` that
+  does not exist).
+- **Would have prevented it:** the deriver accepting bare `Command.<member>` references from a
+  neutral list, which this branch adds (`SurfaceNeutralBareCommandTransform`); the first use of
+  any new Effect CLI combinator should run that test before the package audit does.
+
+## 2026-09-15 — A boolean CLI flag without a default became a required flag
+
+- **Doing:** the live smoke `bun run beep yeet job status <jobId>` after the first detached job.
+- **Evidence:** `Missing required flag: --ack`; the lane declared `Flag.Boolean("ack")` without
+  `Flag.withDefault(false)`, and the command-wiring tests exercise `job status` only through the
+  registered-subcommand list, never by parsing a call without the flag.
+- **Would have prevented it:** a wiring test that parses each new subcommand with its required
+  positional only, or a lint that requires a default on every `Flag.Boolean`.
+
+## 2026-09-15 — The first detached proof was red on the effect-vitest ratchet, not on the change
+
+- **Doing:** the live B5 smoke, `yeet verify --tier cheap-gates --detach` then `job wait`.
+- **Evidence:** the job finished red in 104 s; the only failing cheap gate was
+  `lint:effect-vitest` with 12 new findings across the lane's five test files (EV001/EV002/EV006
+  legacy idioms mirrored from neighbouring tests, EV009 live tests, EV010 platform imports); the
+  proof mechanics were all correct, and the lane had no way to run the ratchet in its sandbox.
+- **Would have prevented it:** the brief naming `bun run beep lint effect-vitest` beside the
+  schema-first and fallow gates for every lane that adds a test file (the 2026-09-12 checklist
+  already says so; it was not in this brief's verification list).
+
+## 2026-09-15 — oxlint is outside every quick gate, so eleven inline schema compiles reached the pre-push wave
+
+- **Doing:** publishing the B5 branch after biome, laws, schema-first, fallow, effect-vitest,
+  docgen and the package audit were all green.
+- **Evidence:** the pre-push wave's `lint:oxlint` root task reported eleven
+  `beep(no-inline-schema-compile)` errors across four of the lane's files; none of the gates run
+  before publish (pre-commit hooks, `package-verify`, the quick lints) execute oxlint, so the first
+  signal cost a full detached proof round (cancelled at minute 20).
+- **Would have prevented it:** oxlint on touched files in the pre-commit hook or in
+  `package-verify --quick`; the 2026-09-12 note already records the same class.
+
+## 2026-09-15 — review coverage needs an explicit producer-test list
+
+- **Doing:** restoring the six B5 coverage rows with Node/V8 coverage.
+- **Evidence:** the initial `test/yeet*.test.ts` selection also launched unrelated lane-retirement
+  integration tests, which failed under the restricted sandbox; the run was interrupted (130).
+  The next run names the command, inbox, artifact, phase, verdict, and journal producer tests.
+- **Would have prevented it:** a maintained per-file producer-test list beside the coverage
+  ratchet output, so a focused repair does not discover its scope by running unrelated suites.
+
+## 2026-09-15 — inherited proof-step integration stalls in the Node threads lane
+
+- **Doing:** reproducing the Handler coverage floor under Node/V8.
+- **Evidence:** `CI=true bunx vitest run --pool=threads --testTimeout=10000
+  --reporter=verbose test/yeet-review-fixes.test.ts -t 'stops the proof phase'`
+  produced no test result before interruption (130); the same test under
+  `bunx --bun vitest` passed (0). The coordinator-only selection passed on Node.
+- **Would have prevented it:** separate the real-runtime smoke from deterministic
+  Handler tests. Added a controlled child-process service test for fail-fast,
+  successful steps, RSS present/invalid/absent, and inbox failure-to-fix receipts;
+  the Node coverage proof uses those cases instead of the stalled subprocess case.
+
 ## 2026-09-16 — A fresh lane worktree has no Effect reference checkout
 
 - **Doing:** authoring the B7 settle schemas in a sibling lane created by

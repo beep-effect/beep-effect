@@ -42,7 +42,7 @@ Contract extensions / corrections:
 - `YeetStatusRemote.checks` defaults empty; `YeetWatchSnapshot.settle` defaults `None`;
   watch config gains `rulesetRead`, `settleTimeoutMs`, and `now`; end reasons gain `settle-timeout`.
 - `yeetMonitorPolicyTerminals(until-merged)` now includes `settle-timeout`: the existing table
-  omitted the terminal Stage A / ruling 39 explicitly requires for that policy.
+  omitted the terminal Stage A / ruling 45 explicitly requires for that policy.
 - Exported `yeetMonitorDurationMillis` through the test kit for parsing-table proof.
 
 Orchestrator fixes after the lane (2026-09-16, before the Stage A commit): the `Settle.ts` →
@@ -592,7 +592,7 @@ orchestration paths were not expanded merely to chase 100% coverage.
 
 The first `--until-ready` babysit of PR #1149 exited 1 at `settle-timeout after 30m; pending:
 Heavy / Lint Policy, Heavy / Test Integration` — both registered, both queued behind six other
-heavy runs. Ruling 43 amends ruling 39: `deriveSettleVerdict` applies the budget only while no
+heavy runs. Ruling 49 amends ruling 45: `deriveSettleVerdict` applies the budget only while no
 check has registered or an expected context is missing (`settleBudgetApplies`), and the
 `required-pending` gate line drops the `of 30m` suffix when the wait is a registered check's.
 Existing timeout tests (a never-registered context, a checkless PR) still time out; the settle

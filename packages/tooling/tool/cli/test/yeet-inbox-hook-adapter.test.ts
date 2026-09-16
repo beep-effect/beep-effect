@@ -458,3 +458,54 @@ itEffect("renders merge-ready as good news with a PR ack and no denial", () =>
     })
   ).pipe(provideTestLayer)
 );
+
+itEffect(
+  "surfaces P2 jobs at SessionStart and P1 jobs at PreToolUse without denial",
+  () =>
+    withInbox(
+      Effect.fnUntraced(function* ({ root }) {
+        const fs = yield* FileSystem.FileSystem;
+        const rows = [
+          {
+            schemaVersion: "yeet-inbox/v1",
+            kind: "proof-job-finished",
+            id: "proof-job-green",
+            severity: "P2",
+            checkout: root,
+            ts: "2026-09-15T00:00:00Z",
+            capsule: { jobId: "green" },
+          },
+          {
+            schemaVersion: "yeet-inbox/v1",
+            kind: "proof-job-finished",
+            id: "proof-job-red",
+            severity: "P1",
+            checkout: root,
+            ts: "2026-09-15T00:00:00Z",
+            capsule: { jobId: "red" },
+          },
+        ];
+        const encoded = yield* Effect.forEach(rows, (row) => encodeUnknown(row));
+        yield* fs.writeFileString(`${root}/.beep/inbox/failures.ndjson`, `${A.join(encoded, "\n")}\n`);
+        const start = yield* runHookUntil(
+          root,
+          "claude",
+          { cwd: root, hook_event_name: "SessionStart", session_id: "job-start" },
+          (result) => result.stdout !== ""
+        );
+        expect(start.stdout).toContain("P2 green [proof-job-green]");
+        expect(start.stdout).toContain("--observed");
+        const tool = yield* runHookUntil(
+          root,
+          "claude",
+          { cwd: root, hook_event_name: "PreToolUse", session_id: "job-tool", tool_name: "Read", tool_input: {} },
+          (result) => result.stdout !== ""
+        );
+        expect(tool.exitCode).toBe(0);
+        expect(tool.stdout).toContain("P1 red [proof-job-red]");
+        expect(tool.stdout).not.toContain("proof-job-green");
+        expect(tool.stdout).not.toContain('"deny"');
+      })
+    ).pipe(provideTestLayer),
+  15000
+);

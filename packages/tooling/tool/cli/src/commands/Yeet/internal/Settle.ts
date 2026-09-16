@@ -562,8 +562,8 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
  * registered and is queued or running is waited for however long GitHub takes
  * — its own job timeout is the bound there. A settled head never times out.
  * On expiry the verdict reports `settle-timeout` with the census that was
- * still open, so the operator sees which contexts never came (ruling 43,
- * amending ruling 39 after PR #1149's own babysit hit the budget with two
+ * still open, so the operator sees which contexts never came (ruling 49,
+ * amending ruling 45 after PR #1149's own babysit hit the budget with two
  * heavy lanes registered but queued).
  *
  * **Example** (Registration, then required-pending, then settled)

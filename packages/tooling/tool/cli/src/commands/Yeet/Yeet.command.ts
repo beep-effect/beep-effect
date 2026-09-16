@@ -6,22 +6,30 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils";
 import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
-import { ConfigProvider, Duration, Effect, Match, pipe } from "effect";
+import { UUID } from "@beep/schema/String";
+import { O } from "@beep/utils";
+import { ConfigProvider, Console, DateTime, Duration, Effect, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
+import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { yeetStateRootEnvVar, yeetStateRootFlag } from "../../internal/cli/Flags.ts";
+import { readContainedFileStringNoFollow } from "../../internal/cli/FsGuards.ts";
+import { processStartIdentityForPid } from "../../internal/repo-run/ProcessIdentity.ts";
+import { runRepoCommandCapture } from "../../internal/repo-run/RepoRun.executor.ts";
 import { WorktreeRemovalServiceLive } from "../Worktree/Worktree.service.ts";
+import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./internal/Ack.ts";
 import {
   runYeetFallowFeedback,
   runYeetFallowFixtureCheck,
   runYeetPlanContractCheck,
 } from "./internal/FallowFeedback.ts";
+import { validateProofJobDetach } from "./internal/Guards.ts";
 import { runYeet } from "./internal/Handler.ts";
-import { YeetInboxSeverity } from "./internal/Inbox.ts";
+import { YeetInboxSeverity, yeetProofJobRowId } from "./internal/Inbox.ts";
 import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS, YeetUntilReadyPolicy } from "./internal/MonitorPolicy.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
@@ -34,11 +42,26 @@ import {
   runYeetSweep,
   runYeetWatchLoop,
 } from "./internal/Porcelain.ts";
+import {
+  isSettledProofJob,
+  isTerminalProofJobPhase,
+  ProofJobExitCode,
+  ProofJobRecord,
+  ProofJobRequest,
+  ProofJobServiceResult,
+  ProofJobSubmission,
+  ProofJobSubmitter,
+  ProofJobSystemdResult,
+  ProofJobWaitOptions,
+  proofJobUnitName,
+} from "./internal/ProofJob.ts";
+import { ProofJobLauncher } from "./internal/ProofJobLauncher.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
 import { YeetCommandError } from "./Yeet.errors.ts";
 import { YeetRunOptions } from "./Yeet.schemas.ts";
 import type { YeetRunMode } from "./internal/Planner.ts";
+import type { ProofJobLauncherShape } from "./internal/ProofJobLauncher.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.command");
 const decodeOptionalPositiveInt = S.decodeEffect(S.Option(PositiveInt));
@@ -409,13 +432,26 @@ const sharedFlags = {
   tier: tierFlag,
 } as const;
 
+const detachedFlags = {
+  detach: Flag.Boolean("detach").pipe(
+    Flag.withDefault(false),
+    Flag.withDescription("Submit a durable systemd proof job")
+  ),
+  jobMaxRuntime: Flag.String("job-max-runtime").pipe(
+    Flag.withDefault(""),
+    Flag.withDescription("Detached job runtime ceiling, for example '1 hour'")
+  ),
+};
+
 const verifyFlags = {
+  ...detachedFlags,
   ...sharedFlags,
   ciParity: ciParityFlag,
   merged: mergedFlag,
 } as const;
 
 const publishFlags = {
+  ...detachedFlags,
   ...sharedFlags,
   allowStaleBase: allowStaleBaseFlag,
   amend: amendFlag,
@@ -495,6 +531,7 @@ export const yeetMonitorDurationMillis = Effect.fn("Yeet.monitorDurationMillis")
 );
 
 const monitorFlags = {
+  ...detachedFlags,
   ...sharedFlags,
   summary: summaryFlag,
   stateRoot: yeetStateRootFlag,
@@ -521,6 +558,7 @@ const sweepFlags = {
 } as const;
 
 const closeoutFlags = {
+  ...detachedFlags,
   ...sharedFlags,
   bots: botsFlag,
   replyBody: replyBodyFlag,
@@ -540,6 +578,8 @@ const statusFlags = {
 
 class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
   {
+    detach: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    jobMaxRuntime: S.String.pipe(SchemaUtils.withKeyDefaults("")),
     allowStaleBase: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     amend: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     base: S.String,
@@ -579,6 +619,9 @@ type SharedOptionsInput = (typeof SharedOptions)["~type.make.in"];
 
 const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly message?: string }) => {
   const sharedOptions = SharedOptions.make(options);
+  if (sharedOptions.detach) return submitDetachedProofJob(mode, sharedOptions);
+  if (Str.isNonEmpty(sharedOptions.jobMaxRuntime))
+    return Effect.fail(YeetCommandError.make({ message: "--job-max-runtime requires --detach." }));
 
   return runYeet(
     YeetRunOptions.make({
@@ -610,16 +653,255 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       summary: sharedOptions.summary,
       tier: sharedOptions.tier,
     })
-  );
+  ).pipe(Effect.asVoid);
 };
+
+const jobIdArgument = Argument.String("jobId").pipe(Argument.withSchema(UUID));
+const decodeDuration = S.decodeEffect(S.DurationFromString);
+const encodeProofJobRecordJson = S.encodeEffect(S.fromJsonString(ProofJobRecord));
+const encodeProofJobListJson = S.encodeEffect(ProofJobRecord.pipe(S.Array, S.fromJsonString));
+const encodeProofJobStatusJson = S.encodeEffect(
+  S.fromJsonString(S.Struct({ record: ProofJobRecord, telemetry: S.NullOr(S.String) }))
+);
+const isPositiveFiniteDuration = S.is(S.Finite.check(S.isGreaterThan(0)));
+const decodeServiceResultOption = S.decodeUnknownOption(ProofJobServiceResult);
+const decodeExitCodeOption = S.decodeUnknownOption(ProofJobExitCode);
+const durationMillis = Effect.fn("Yeet.jobDuration")(function* (text: string) {
+  const normalized = pipe(
+    text,
+    Str.replace(/^(\d+(?:\.\d+)?)\s*ms$/u, "$1 millis"),
+    Str.replace(/^(\d+(?:\.\d+)?)\s*s$/u, "$1 seconds"),
+    Str.replace(/^(\d+(?:\.\d+)?)\s*m$/u, "$1 minutes"),
+    Str.replace(/^(\d+(?:\.\d+)?)\s*h$/u, "$1 hours"),
+    Str.replace(/^(\d+(?:\.\d+)?)\s*d$/u, "$1 days")
+  );
+  const duration = yield* decodeDuration(normalized).pipe(
+    Effect.mapError(YeetCommandError.new("Expected a duration such as '30 seconds'."))
+  );
+  const millis = Duration.toMillis(duration);
+  if (!isPositiveFiniteDuration(millis))
+    return yield* YeetCommandError.make({ message: "Job duration must be positive and finite." });
+  return millis;
+});
+const jobRoot = () => findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate job checkout.")));
+const renderJob = Effect.fn("Yeet.renderJob")(function* (record: ProofJobRecord, json: boolean) {
+  if (json) {
+    yield* Console.log(
+      yield* encodeProofJobRecordJson(record).pipe(
+        Effect.mapError(YeetCommandError.new("Failed to encode job record."))
+      )
+    );
+    return;
+  }
+  yield* Console.log(
+    `job ${record.jobId}: ${record.phase}\nunit: ${record.unit.unitName}\nlog: ${record.unit.logPath}\nbun run beep yeet job wait ${record.jobId}`
+  );
+});
+const submitDetachedProofJob = Effect.fn("Yeet.submitDetached")(function* (mode: YeetRunMode, options: SharedOptions) {
+  yield* validateProofJobDetach(options.plan);
+  const root = yield* jobRoot();
+  const path = yield* Path.Path;
+  const git = Effect.fnUntraced(function* (args: ReadonlyArray<string>) {
+    const result = yield* runRepoCommandCapture(
+      "git",
+      args,
+      root,
+      O.getSomesStruct({ PATH: yield* configStringOption("PATH") })
+    ).pipe(Effect.mapError(YeetCommandError.new("Failed to read detached job git coordinates.")));
+    if (result.exitCode !== 0) return yield* YeetCommandError.make({ message: result.output });
+    return Str.trim(result.output);
+  });
+  const branch = yield* git(["rev-parse", "--abbrev-ref", "HEAD"]);
+  const head = yield* git(["rev-parse", "--verify", options.head]);
+  const entrypoint = O.fromUndefinedOr(process.argv[1]);
+  if (O.isNone(entrypoint)) return yield* YeetCommandError.make({ message: "Cannot detach without a CLI entrypoint." });
+  const words = A.dropWhile(A.drop(process.argv, 2), (word) => word === "--");
+  if (A.head(words).pipe(O.getOrElse(() => "")) !== "yeet")
+    return yield* YeetCommandError.make({ message: "Cannot detach: original argv must begin with yeet." });
+  const maxRuntimeSeconds = Str.isEmpty(options.jobMaxRuntime)
+    ? O.none<number>()
+    : O.some(Math.ceil((yield* durationMillis(options.jobMaxRuntime)) / 1000));
+  const launcher = yield* ProofJobLauncher.make(root);
+  const record = yield* launcher.submit(
+    ProofJobSubmission.make({
+      request: ProofJobRequest.make({
+        mode,
+        argv: A.drop(words, 1),
+        checkout: root,
+        branch,
+        base: options.base,
+        head,
+        forwardedEnvNames: [],
+      }),
+      submitter: ProofJobSubmitter.make({
+        pid: process.pid,
+        cwd: process.cwd(),
+        procStart: yield* processStartIdentityForPid(process.pid),
+      }),
+      execPath: process.execPath,
+      entrypoint: path.resolve(process.cwd(), entrypoint.value),
+      maxRuntimeSeconds,
+    })
+  );
+  yield* renderJob(record, options.json);
+});
+const requireJob = Effect.fn("Yeet.requireJob")(function* (launcher: ProofJobLauncherShape, id: UUID) {
+  const result = yield* launcher.read(id);
+  if (O.isNone(result)) return yield* YeetCommandError.make({ message: `Unknown proof job ${id}.` });
+  return result.value;
+});
+const jobListCommand = Command.make(
+  "list",
+  { json: jsonFlag },
+  Effect.fn("Yeet.jobList")(function* (options) {
+    const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
+    const records = yield* launcher.list;
+    if (options.json) {
+      yield* Console.log(
+        yield* encodeProofJobListJson(records).pipe(Effect.mapError(YeetCommandError.new("Failed to encode jobs.")))
+      );
+    } else for (const record of records) yield* renderJob(record, false);
+  })
+);
+const jobStatusCommand = Command.make(
+  "status",
+  { jobId: jobIdArgument, json: jsonFlag, ack: Flag.Boolean("ack").pipe(Flag.withDefault(false)) },
+  Effect.fn("Yeet.jobStatus")(function* (options) {
+    const root = yield* jobRoot();
+    const launcher = yield* ProofJobLauncher.make(root);
+    const record = yield* requireJob(launcher, options.jobId);
+    const live = isTerminalProofJobPhase(record.phase)
+      ? O.none<string>()
+      : yield* runRepoCommandCapture(
+          "systemctl",
+          ["--user", "show", record.unit.unitName, "-p", "ActiveState,SubState,MainPID,MemoryPeak"],
+          root,
+          O.getSomesStruct({ PATH: yield* configStringOption("PATH") })
+        ).pipe(
+          Effect.mapError(YeetCommandError.new("Failed to read job telemetry.")),
+          Effect.map((result) => (result.exitCode === 0 ? O.some(result.output) : O.none<string>()))
+        );
+    if (options.json) {
+      yield* Console.log(
+        yield* encodeProofJobStatusJson({ record, telemetry: O.getOrNull(live) }).pipe(
+          Effect.mapError(YeetCommandError.new("Failed to encode job status."))
+        )
+      );
+    } else {
+      yield* renderJob(record, false);
+      if (!isTerminalProofJobPhase(record.phase)) yield* Console.log(O.getOrElse(live, () => "unit not loaded"));
+    }
+    if (options.ack && isSettledProofJob(record)) {
+      yield* writeYeetAckReceipt(
+        root,
+        YeetAckReceipt.make({
+          id: yeetProofJobRowId(record),
+          ackedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
+          resolution: YeetAckObservedResolution.make({ via: "job-status" }),
+        })
+      );
+    }
+  })
+);
+const jobWaitCommand = Command.make(
+  "wait",
+  { jobId: jobIdArgument, json: jsonFlag, timeout: Flag.String("timeout").pipe(Flag.withDefault("")) },
+  Effect.fn("Yeet.jobWait")(function* (options) {
+    const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
+    const timeoutMs = Str.isEmpty(options.timeout) ? O.none<number>() : O.some(yield* durationMillis(options.timeout));
+    const record = yield* launcher.wait(options.jobId, ProofJobWaitOptions.make({ timeoutMs }));
+    yield* renderJob(record, options.json);
+    const exitCode =
+      record.phase === "terminated"
+        ? 2
+        : O.exists(record.outcome, (outcome) => outcome.verdictOutcome === "success")
+          ? 0
+          : 1;
+    if (exitCode !== 0)
+      return yield* YeetCommandError.make({ message: `Proof job ${record.jobId} ${record.phase}.`, exitCode });
+  })
+);
+const jobLogsCommand = Command.make(
+  "logs",
+  { jobId: jobIdArgument, tail: Flag.Int("tail").pipe(Flag.withDefault(100)) },
+  Effect.fn("Yeet.jobLogs")(function* (options) {
+    if (options.tail < 0) return yield* YeetCommandError.make({ message: "--tail must be nonnegative." });
+    const root = yield* jobRoot();
+    const record = yield* requireJob(yield* ProofJobLauncher.make(root), options.jobId);
+    const read = yield* readContainedFileStringNoFollow(root, record.unit.logPath).pipe(
+      Effect.mapError(YeetCommandError.new("Failed to read job log."))
+    );
+    const text = O.getOrElse(read.contents, () => "");
+    const lines = Str.endsWith("\n")(text) ? A.dropRight(Str.split(text, "\n"), 1) : Str.split(text, "\n");
+    yield* Console.log(A.join(A.takeRight(lines, options.tail), "\n"));
+  })
+);
+const jobCancelCommand = Command.make(
+  "cancel",
+  { jobId: jobIdArgument },
+  Effect.fn("Yeet.jobCancel")(function* (options) {
+    const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
+    const outcome = yield* launcher.cancel(options.jobId);
+    yield* Console.log(outcome);
+    if (outcome === "stop-failed")
+      return yield* YeetCommandError.make({ message: "systemctl could not stop the job." });
+  })
+);
+/**
+ * Fence accidental finalization by same-user processes; these environment
+ * checks are an accident fence, not an authorization boundary.
+ */
+const jobFinalizeCommand = Command.make(
+  "finalize",
+  { jobId: jobIdArgument },
+  Effect.fn("Yeet.jobFinalize")(function* (options) {
+    for (const [name, expected] of [
+      ["BEEP_YEET_JOB_ID", options.jobId],
+      ["BEEP_YEET_JOB_UNIT", proofJobUnitName(options.jobId)],
+    ]) {
+      if (!O.contains(yield* configStringOption(name), expected))
+        return yield* YeetCommandError.make({ message: `${name} does not match the proof job.` });
+    }
+    const launcher = yield* ProofJobLauncher.make(yield* jobRoot());
+    const record = yield* requireJob(launcher, options.jobId);
+    const invocationId = yield* configStringOption("INVOCATION_ID");
+    if (
+      O.isSome(record.unit.invocationId) &&
+      O.isSome(invocationId) &&
+      record.unit.invocationId.value !== invocationId.value
+    )
+      return yield* YeetCommandError.make({ message: "INVOCATION_ID does not match the proof job." });
+    const serviceResult = yield* configStringOption("SERVICE_RESULT");
+    const exitCode = yield* configStringOption("EXIT_CODE");
+    const result = ProofJobSystemdResult.make({
+      serviceResult: O.getOrElse(O.flatMap(serviceResult, decodeServiceResultOption), () => "unknown"),
+      exitCode: O.flatMap(exitCode, decodeExitCodeOption),
+      exitStatus: yield* configStringOption("EXIT_STATUS"),
+      invocationId,
+      finalizedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
+    });
+    yield* launcher.finalize(options.jobId, result);
+  })
+).pipe(Command.unlisted);
+const yeetJobCommand = Command.make("job").pipe(
+  Command.withDescription("Observe and manage durable detached proof jobs"),
+  Command.withSubcommands([
+    jobListCommand,
+    jobStatusCommand,
+    jobWaitCommand,
+    jobLogsCommand,
+    jobCancelCommand,
+    jobFinalizeCommand,
+  ])
+);
 
 const yeetVerifyCommand = Command.make("verify", verifyFlags, (options) => runYeetMode("verify", options)).pipe(
   Command.withDescription("Run the canonical pre-push proof without duplicate affected feedback")
 );
 
-const yeetRepairCommand = Command.make("repair", sharedFlags, (options) => runYeetMode("repair", options)).pipe(
-  Command.withDescription("Run deterministic fixers and artifact generators, then affected feedback")
-);
+const yeetRepairCommand = Command.make("repair", { ...sharedFlags, ...detachedFlags }, (options) =>
+  runYeetMode("repair", options)
+).pipe(Command.withDescription("Run deterministic fixers and artifact generators, then affected feedback"));
 
 const yeetPublishCommand = Command.make("publish", publishFlags, ({ stateRoot, ...options }) =>
   provideYeetStateRoot(runYeetMode("publish", options), stateRoot)
@@ -707,6 +989,7 @@ const yeetMonitorCommand = Command.make(
     watch,
     ...options
   }) {
+    if (options.detach) return yield* provideYeetStateRoot(runYeetMode("monitor", options), stateRoot);
     const route = yeetMonitorCommandRoute({
       plan: options.plan,
       settleTimeout,
@@ -727,8 +1010,10 @@ const yeetMonitorCommand = Command.make(
         classic: runYeetMode("monitor", options),
         "invalid-until-event": rejectYeetUntilEventPairing,
         "invalid-until-ready": rejectYeetUntilReadyPairing,
-        "ready-loop": runYeetMergeLoop(options, { policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }) }),
-        "merge-loop": runYeetMergeLoop(options, { settleTimeoutMs }),
+        "ready-loop": runYeetMergeLoop(options, { policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }) }).pipe(
+          Effect.asVoid
+        ),
+        "merge-loop": runYeetMergeLoop(options, { settleTimeoutMs }).pipe(Effect.asVoid),
         watch: runYeetWatchLoop(options, untilEvent, { settleTimeoutMs }),
       }[route],
       stateRoot
@@ -822,6 +1107,7 @@ const yeetInboxListCommand = Command.make("list", inboxListFlags, runYeetInboxLi
 const yeetInboxAckCommand = Command.make(
   "ack",
   {
+    observed: Flag.Boolean("observed").pipe(Flag.withDefault(false)),
     actor: inboxActorFlag,
     environmentOnly: inboxEnvironmentOnlyFlag,
     expiresAt: inboxExpiresAtFlag,
@@ -895,6 +1181,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetMergeCommand,
     yeetReplyCommand,
     yeetInboxCommand,
+    yeetJobCommand,
     yeetPrePushHookCommand,
     yeetFallowFeedbackCommand,
     yeetFallowFixtureCheckCommand,

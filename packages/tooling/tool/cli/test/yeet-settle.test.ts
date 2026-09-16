@@ -254,7 +254,7 @@ describe("B7 settle contracts", () => {
     assertNone(verdict({ checks: [check("Lint")], closeoutBound: true, waitedMs: 1000 }).reason);
     expect(verdict({ checks: [check("Lint")], waitedMs: 1000 }).settled).toBe(true);
     expect(yeetSettleVerdictIsTerminal(verdict({ waitedMs: 999 }))).toBe(false);
-    // Ruling 43: a registered required check that is still queued never trips the budget.
+    // Ruling 49: a registered required check that is still queued never trips the budget.
     const queued = verdict({ expected: expected(["Lint"]), checks: [check("Lint", "pending")], waitedMs: 5000 });
     assertSome(queued.reason, "required-pending");
     expect(yeetSettleVerdictIsTerminal(queued)).toBe(false);
