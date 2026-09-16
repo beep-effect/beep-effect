@@ -29,7 +29,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { Duration, Effect, FileSystem, Layer, Ref, Sink, Stream } from "effect";
+import { DateTime, Duration, Effect, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -62,7 +62,8 @@ const snapshot = (
   bound = true,
   sha = head,
   state = "OPEN",
-  threads = true
+  threads = true,
+  mergeStateStatus?: string
 ) => {
   const criteria = YeetMergeReadyCriteria.make({
     prOpen: state === "OPEN",
@@ -98,6 +99,7 @@ const snapshot = (
       checks,
       state,
       failingCheckCount: A.filter(checks, (value) => value.outcome === "fail").length,
+      ...(mergeStateStatus === undefined ? {} : { mergeStateStatus }),
     }),
     mergeReady: O.some(
       YeetMergeReady.make({
@@ -167,6 +169,83 @@ const rows = Effect.fn("readyTest.rows")(function* (root: string) {
   return A.flatMap(Str.split(text, "\n"), (line) => O.toArray(YeetInboxRowJson.decodeOption(line)));
 });
 const lines = TestConsole.logLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
+
+it.layer(platform)("B8 base conflict and registration memory", (test) => {
+  test.effect("names the emptied rollup base-conflict past the budget, then settles the repaired push to ready", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make(0);
+        const ticks = yield* Ref.make(0);
+        const closeouts = yield* Ref.make(0);
+        // Poll 0: Lint registered. Poll 1: base moved, rollup emptied, DIRTY. Poll 2: repaired
+        // push (new head) with Lint green. Poll 3: the closeout reread binds it → ready.
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 1000 }),
+          now: Ref.getAndUpdate(ticks, (n) => n + 1).pipe(Effect.map((n) => DateTime.makeUnsafe(n * 5000))),
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.map((n) => {
+                if (n === 0) return snapshot(root, [check("Lint", "pending")], false);
+                if (n === 1) return snapshot(root, [], false, head, "OPEN", true, "DIRTY");
+                return snapshot(root, [check("Lint")], n >= 3, nextHead);
+              })
+            ),
+          closeout: () => Ref.update(closeouts, (n) => n + 1).pipe(Effect.as(report(nextHead))),
+        });
+        expect(terminal).toBe("ready");
+        expect(yield* Ref.get(calls)).toBe(4);
+        expect(yield* Ref.get(closeouts)).toBe(1);
+        const printed = yield* lines;
+        expect(printed).toContain(
+          "settle: base-conflict; merge origin/main and push; waited 5s (not counted toward the 1s settle timeout)"
+        );
+        expect(printed).toContain("[yeet] rollup: 1 registered context(s) absent this poll, kept pending");
+        expect(printed).toContain("[yeet] settle: required-pending → base-conflict");
+        expect(printed).not.toContain("settle-timeout");
+        expect(yield* rows(root)).toHaveLength(1);
+      })
+    )
+  );
+});
+
+it.layer(platform)("B8 settle clock resumes with the budget", (test) => {
+  test.effect("clears a base conflict on the same head into a fresh registration window, then reaches ready", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make(0);
+        const ticks = yield* Ref.make(0);
+        const closeouts = yield* Ref.make(0);
+        // Polls 0–1: empty rollup under DIRTY, 5s apart against a 1s budget. Poll 2: MERGEABLE,
+        // rollup still empty → registration with the clock restarted. Poll 3: Lint green →
+        // settled → closeout → reread (poll 4) binds it → ready. Same head throughout.
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 1000 }),
+          now: Ref.getAndUpdate(ticks, (n) => n + 1).pipe(Effect.map((n) => DateTime.makeUnsafe(n * 5000))),
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.map((n) => {
+                if (n <= 1) return snapshot(root, [], false, head, "OPEN", true, "DIRTY");
+                if (n === 2) return snapshot(root, [], false);
+                return snapshot(root, [check("Lint")], n >= 4);
+              })
+            ),
+          closeout: () => Ref.update(closeouts, (n) => n + 1).pipe(Effect.as(report())),
+        });
+        expect(terminal).toBe("ready");
+        expect(yield* Ref.get(calls)).toBe(5);
+        expect(yield* Ref.get(closeouts)).toBe(1);
+        const printed = yield* lines;
+        expect(printed).toContain("[yeet] settle: base-conflict → registration");
+        expect(printed).toContain("[yeet] settle budget resumed; clock reset");
+        expect(printed).toContain("settle: registration; no checks reported for this head yet; waited 0 of 1s");
+        expect(printed).not.toContain("settle-timeout");
+        expect(yield* rows(root)).toHaveLength(1);
+      })
+    )
+  );
+});
 
 it.layer(platform)("B7 readiness loop", (test) => {
   test.effect(

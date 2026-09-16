@@ -236,6 +236,7 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     checkCount: S.optionalKey(S.Finite),
     failingCheckCount: S.optionalKey(S.Finite),
     isDraft: S.optionalKey(S.Boolean),
+    labels: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
     mergeStateStatus: S.optionalKey(S.String),
     mergeable: S.optionalKey(S.String),
     number: S.optionalKey(S.Finite),
@@ -339,11 +340,17 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
  */
 export const YeetStatusSnapshotJson = JsonStringCodec(YeetStatusSnapshot);
 
+class GhStatusLabel extends S.Class<GhStatusLabel>($I`GhStatusLabel`)(
+  { name: S.String },
+  $I.annote("GhStatusLabel", { description: "One label on the pull request as gh pr view reports it." })
+) {}
+
 class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRequest`)(
   {
     id: S.String,
     headRefOid: S.String,
     isDraft: S.Boolean,
+    labels: S.Array(GhStatusLabel).pipe(SchemaUtils.withKeyDefaults(A.empty<GhStatusLabel>())),
     mergeStateStatus: S.NullOr(S.String),
     mergeable: S.NullOr(S.String),
     number: S.Finite,
@@ -1023,7 +1030,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
   }
   const result = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "view", "--json", "id,number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision,headRefOid"],
+    ["pr", "view", "--json", "id,number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision,headRefOid,labels"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to inspect PR for yeet status.")));
   if (result.exitCode !== 0) {
@@ -1088,6 +1095,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
       })
     ),
     isDraft: view.isDraft,
+    labels: A.map(view.labels, (label) => label.name),
     number: view.number,
     state: view.state,
     url: view.url,
