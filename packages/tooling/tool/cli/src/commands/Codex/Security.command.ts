@@ -18,6 +18,7 @@ import { securityRepositoryFromRemote } from "./Security.bundle.ts";
 import { CodexSecurityError, toCodexSecurityError } from "./Security.errors.ts";
 import { runSecurityCli, securityRuntime } from "./Security.runtime.ts";
 import {
+  RepoRelativePath,
   SECURITY_PACKAGE_VERSION,
   SecurityScanMode,
   SecurityScanOptions,
@@ -26,6 +27,8 @@ import {
 
 const KNOWLEDGE_BASE = "docs/security/threat-model.md";
 const isValidMaxCost = S.is(SecurityScanOptions.fields.maxCost);
+const isValidTimeout = S.is(SecurityScanOptions.fields.timeoutMinutes);
+const isRepoRelativePath = S.is(RepoRelativePath);
 const TARGET_MESSAGE = "--path must name an existing path inside the repository.";
 const OUTPUT_SWAPPED_MESSAGE =
   "Scan output directory was replaced or linked into the repository; the scan is not usable.";
@@ -256,17 +259,47 @@ const flags = {
   target: Flag.String("path").pipe(Flag.optional),
 };
 
-const boundMessage = (values: { readonly maxCost: number }): string =>
-  isValidMaxCost(values.maxCost)
-    ? "--timeout-minutes must be a whole number from 1 to 120."
-    : "--max-cost must be greater than 0 and at most 100 USD.";
-
-const decodeScanOptions = Effect.fn("CodexSecurity.decodeScanOptions")(function* (values: {
+type RawScanOptions = {
   readonly output: string;
   readonly maxCost: number;
   readonly timeoutMinutes: number;
   readonly target: O.Option<string>;
-}) {
+};
+
+/** First failing flag wins, so the operator is pointed at the flag that actually needs changing. */
+const scanOptionFailures: ReadonlyArray<readonly [(values: RawScanOptions) => boolean, string]> = [
+  [(values) => !isValidMaxCost(values.maxCost), "--max-cost must be greater than 0 and at most 100 USD."],
+  [(values) => !isValidTimeout(values.timeoutMinutes), "--timeout-minutes must be a whole number from 1 to 120."],
+  [
+    (values) => O.exists(values.target, (target) => !isRepoRelativePath(target)),
+    "--path must be a repository-relative path: no leading slash, `..` segment, backslash, or control character.",
+  ],
+];
+
+const boundMessage = (values: RawScanOptions): string =>
+  O.getOrElse(
+    O.map(
+      A.findFirst(scanOptionFailures, ([failed]) => failed(values)),
+      ([, message]) => message
+    ),
+    () => "Scan options failed validation."
+  );
+
+/**
+ * Decodes raw CLI flags into bounded scan options, naming the offending flag on failure.
+ *
+ * **Example** (Naming an invalid path flag)
+ * ```ts
+ * import { decodeScanOptions } from "@beep/repo-cli/commands/Codex/Security.command"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * const decoded = decodeScanOptions({ output: "/tmp/out", maxCost: 5, timeoutMinutes: 30, target: O.some("/etc") })
+ * Effect.runSync(Effect.flip(decoded)).message.startsWith("--path") // => true
+ * ```
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeScanOptions = Effect.fn("CodexSecurity.decodeScanOptions")(function* (values: RawScanOptions) {
   return yield* S.decodeEffect(SecurityScanOptions)({
     outputDir: values.output,
     maxCost: values.maxCost,

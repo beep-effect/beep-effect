@@ -1,4 +1,9 @@
-import { assertPrivateOutputDirectory, resolveScanTarget, SecurityScanOptions } from "@beep/repo-cli/test/Codex";
+import {
+  assertPrivateOutputDirectory,
+  decodeScanOptions,
+  resolveScanTarget,
+  SecurityScanOptions,
+} from "@beep/repo-cli/test/Codex";
 import { expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
@@ -60,6 +65,20 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("security scan command guards
       const swapped = yield* assertPrivateOutputDirectory(repo, outputDir).pipe(Effect.result);
       expect(swapped._tag).toBe("Failure");
       if (swapped._tag === "Failure") expect(swapped.failure.message).toContain("replaced or linked");
+    })
+  );
+
+  it.effect(
+    "names the flag that failed validation",
+    Effect.fnUntraced(function* () {
+      const valid = { output: "/private/out", maxCost: 5, timeoutMinutes: 30, target: O.none<string>() };
+      const messageOf = (values: typeof valid) =>
+        Effect.map(Effect.flip(decodeScanOptions(values)), (error) => error.message);
+      expect(yield* messageOf({ ...valid, maxCost: 0 })).toContain("--max-cost");
+      expect(yield* messageOf({ ...valid, timeoutMinutes: 0 })).toContain("--timeout-minutes");
+      expect(yield* messageOf({ ...valid, target: O.some("/etc") })).toContain("--path");
+      expect(yield* messageOf({ ...valid, target: O.some("../sibling") })).toContain("--path");
+      expect((yield* decodeScanOptions({ ...valid, target: O.some("packages") })).maxCost).toBe(5);
     })
   );
 });

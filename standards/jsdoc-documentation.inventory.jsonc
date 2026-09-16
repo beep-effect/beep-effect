@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-09-16T08:53:31.681Z",
+  "generatedAt": "2026-09-16T09:01:52.335Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 117,
     "publicModules": 2850,
-    "publicExports": 20111,
+    "publicExports": 20112,
     "openModules": 377,
     "openExports": 3092,
     "missingExportExamples": 5,
@@ -42043,7 +42043,7 @@
         "srcDir": "src",
         "sourceFileCount": 259,
         "publicModuleCount": 257,
-        "publicExportCount": 2162
+        "publicExportCount": 2163
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -43365,7 +43365,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -56580,8 +56580,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 50,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-50-resolvescantarget",
+          "line": 53,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-53-resolvescantarget",
           "currentTags": [
             "@param",
             "@returns",
@@ -56604,10 +56604,32 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 83,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-83-assertprivateoutputdirectory",
+          "line": 86,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-86-assertprivateoutputdirectory",
           "currentTags": [
             "@param",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "decodeScanOptions",
+          "exportKind": "const",
+          "filePath": "src/commands/Codex/Security.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
+          "line": 302,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-302-decodescanoptions",
+          "currentTags": [
             "@category",
             "@since"
           ],
@@ -56627,8 +56649,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 294,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-294-securitycommand",
+          "line": 327,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-327-securitycommand",
           "currentTags": [
             "@category",
             "@since"
