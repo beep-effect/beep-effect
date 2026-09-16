@@ -202,6 +202,7 @@ export const yeetMonitorPolicyTerminals = (policy: YeetMonitorLoopPolicy): HashS
     Match.discriminator("kind")("until-ready", () =>
       HashSet.make<ReadonlyArray<YeetMonitorTerminalState>>(
         "ready",
+        "merged",
         "closed",
         "required-red",
         "settle-timeout",
@@ -260,7 +261,7 @@ export const yeetMonitorExitFor = (terminal: YeetMonitorTerminalState): YeetMoni
       YeetMonitorExit.make({
         terminal: "ready",
         exitCode: 0,
-        summary: "merge-ready: every hard criterion is green; hand the pull request to the operator",
+        summary: "merge-ready: yes; every hard criterion is green; hand the pull request to the operator",
       })
     ),
     Match.when("closed", () =>

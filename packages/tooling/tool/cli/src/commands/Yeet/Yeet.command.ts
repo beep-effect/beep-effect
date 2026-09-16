@@ -23,10 +23,11 @@ import {
 import { runYeet } from "./internal/Handler.ts";
 import { YeetInboxSeverity } from "./internal/Inbox.ts";
 import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
-import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./internal/MonitorPolicy.ts";
+import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS, YeetUntilReadyPolicy } from "./internal/MonitorPolicy.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
 import {
   rejectYeetUntilEventPairing,
+  rejectYeetUntilReadyPairing,
   runYeetMerge,
   runYeetMergeLoop,
   runYeetReplyPass,
@@ -136,6 +137,11 @@ const startPrEarlyFlag = Flag.Boolean("start-pr-early").pipe(
 const monitorFlag = Flag.Boolean("monitor").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Monitor hosted PR checks after publish instead of stopping at push")
+);
+
+const untilReadyFlag = Flag.Boolean("until-ready").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Settle required checks and run read-first closeout, then exit when merge-ready")
 );
 
 const untilMergedFlag = Flag.Boolean("until-merged").pipe(
@@ -495,6 +501,7 @@ const monitorFlags = {
   settleTimeout: settleTimeoutFlag,
   untilEvent: untilEventFlag,
   untilMerged: untilMergedFlag,
+  untilReady: untilReadyFlag,
   watch: watchFlag,
 } as const;
 
@@ -621,6 +628,8 @@ const yeetPublishCommand = Command.make("publish", publishFlags, ({ stateRoot, .
 const YeetMonitorCommandRoute = LiteralKit([
   "classic",
   "invalid-until-event",
+  "invalid-until-ready",
+  "ready-loop",
   "invalid-settle-timeout",
   "merge-loop",
   "watch",
@@ -632,6 +641,7 @@ const SelectYeetMonitorCommandRoute = Fn({
     settleTimeout: S.String.pipe(SchemaUtils.withKeyDefaults("")),
     untilEvent: S.Boolean,
     untilMerged: S.Boolean,
+    untilReady: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     watch: S.Boolean,
   }),
   output: YeetMonitorCommandRoute,
@@ -646,7 +656,8 @@ const SelectYeetMonitorCommandRoute = Fn({
  *
  * **Details**
  *
- * Plan mode always retains the classic planner. Outside plan mode,
+ * Legal plan-mode requests retain the classic planner. Readiness mode rejects
+ * every other loop mode before planning or remote work. Outside plan mode,
  * `untilEvent` is valid only with watch mode and never with the merge loop.
  * Keeping the precedence in one pure selector makes the CLI pairing contract
  * directly testable without executing a monitor.
@@ -654,12 +665,12 @@ const SelectYeetMonitorCommandRoute = Fn({
  * **Example** (Select event watch mode)
  *
  * ```ts
- * import { yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet"
+ * import { yeetMonitorCommandRoute } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(yeetMonitorCommandRoute({ plan: false, untilEvent: true, untilMerged: false, watch: true })) // "watch"
  * ```
  *
- * @param options - The four monitor mode switches parsed by the CLI.
+ * @param options - Parsed monitor mode switches and the optional settle duration.
  * @returns The monitor implementation the handler should construct.
  * @category utilities
  * @since 0.0.0
@@ -667,12 +678,17 @@ const SelectYeetMonitorCommandRoute = Fn({
 export const yeetMonitorCommandRoute = SelectYeetMonitorCommandRoute.implementSync((options) =>
   Match.value(options).pipe(
     Match.when(
-      (value) => Str.isNonEmpty(value.settleTimeout) && !value.untilMerged && !value.watch,
+      (value) => Str.isNonEmpty(value.settleTimeout) && !value.untilMerged && !value.untilReady && !value.watch,
       () => YeetMonitorCommandRoute.Enum["invalid-settle-timeout"]
+    ),
+    Match.when(
+      (value) => value.untilReady && (value.untilMerged || value.untilEvent || value.watch),
+      () => YeetMonitorCommandRoute.Enum["invalid-until-ready"]
     ),
     Match.when({ plan: true }, () => YeetMonitorCommandRoute.Enum.classic),
     Match.when({ untilEvent: true, untilMerged: true }, () => YeetMonitorCommandRoute.Enum["invalid-until-event"]),
     Match.when({ untilEvent: true, watch: false }, () => YeetMonitorCommandRoute.Enum["invalid-until-event"]),
+    Match.when({ untilReady: true }, () => YeetMonitorCommandRoute.Enum["ready-loop"]),
     Match.when({ untilMerged: true }, () => YeetMonitorCommandRoute.Enum["merge-loop"]),
     Match.when({ watch: true }, () => YeetMonitorCommandRoute.Enum.watch),
     Match.orElse(() => YeetMonitorCommandRoute.Enum.classic)
@@ -687,18 +703,31 @@ const yeetMonitorCommand = Command.make(
     settleTimeout,
     untilEvent,
     untilMerged,
+    untilReady,
     watch,
     ...options
   }) {
-    const route = yeetMonitorCommandRoute({ plan: options.plan, settleTimeout, untilEvent, untilMerged, watch });
+    const route = yeetMonitorCommandRoute({
+      plan: options.plan,
+      settleTimeout,
+      untilEvent,
+      untilMerged,
+      untilReady,
+      watch,
+    });
     const settleTimeoutMs = yield* yeetMonitorDurationMillis(settleTimeout);
     return yield* provideYeetStateRoot(
       {
         "invalid-settle-timeout": Effect.fail(
-          YeetCommandError.make({ message: "--settle-timeout requires --until-merged or --watch.", exitCode: 1 })
+          YeetCommandError.make({
+            message: "--settle-timeout requires --until-merged, --until-ready, or --watch.",
+            exitCode: 1,
+          })
         ),
         classic: runYeetMode("monitor", options),
         "invalid-until-event": rejectYeetUntilEventPairing,
+        "invalid-until-ready": rejectYeetUntilReadyPairing,
+        "ready-loop": runYeetMergeLoop(options, { policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }) }),
         "merge-loop": runYeetMergeLoop(options, { settleTimeoutMs }),
         watch: runYeetWatchLoop(options, untilEvent, { settleTimeoutMs }),
       }[route],

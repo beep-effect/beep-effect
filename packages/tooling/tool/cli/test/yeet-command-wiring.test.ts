@@ -188,7 +188,25 @@ describe("settle-timeout route legality", () => {
     Effect.gen(function* () {
       const result = yield* Effect.result(runYeetCommand(["monitor", "--settle-timeout", "30m"]));
       expect(result._tag).toBe("Failure");
-      if (result._tag === "Failure") expect(String(result.failure)).toContain("requires --until-merged or --watch");
+      if (result._tag === "Failure")
+        expect(String(result.failure)).toContain("requires --until-merged, --until-ready, or --watch");
+    }).pipe(provideScopedLayer(commandTestLayer))
+  );
+});
+
+describe("until-ready route legality", () => {
+  it.each([
+    { untilMerged: false, untilEvent: false, watch: false, expected: "ready-loop" },
+    { untilMerged: true, untilEvent: false, watch: false, expected: "invalid-until-ready" },
+    { untilMerged: false, untilEvent: true, watch: false, expected: "invalid-until-ready" },
+    { untilMerged: false, untilEvent: false, watch: true, expected: "invalid-until-ready" },
+  ])("routes $expected", ({ expected, ...flags }) => {
+    expect(yeetMonitorCommandRoute({ ...flags, untilReady: true, plan: false, settleTimeout: "30m" })).toBe(expected);
+  });
+  it.effect("rejects --until-ready --watch before hydration", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.result(runYeetCommand(["monitor", "--until-ready", "--watch"]));
+      expect(result).toMatchObject({ _tag: "Failure", failure: { _tag: "CliReportedExit", exitCode: 1 } });
     }).pipe(provideScopedLayer(commandTestLayer))
   );
 });

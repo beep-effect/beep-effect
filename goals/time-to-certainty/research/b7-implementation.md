@@ -136,3 +136,131 @@ Lcov: `/tmp/b7-stage-a-final-coverage/lcov.info`; log: `/tmp/b7-final-coverage3.
 3. Unmodified Bun launcher did not finish; the passing thread-pool run is explicitly supplemental.
 4. Full repo lint, canonical test-tsgo, docgen, Fallow, and live PR smoke were not completed here.
    No push-to-ready measurement. No Stage B/C work, commit, publication, or merge-readiness claim.
+
+## Stage B
+
+Stage B code and tests are implemented. **Acceptance remains incomplete**: full-file 100%
+coverage and the canonical package proof are not green; the Bun hook proof is blocked below.
+Stage C is not started. No worktree git/index writes, graft commands, publication, or merge.
+
+- One policy-driven loop performs automatic read-first closeout after settle, re-reads status,
+  stamps completion/readiness, and emits a P1 ready row once per head. A head change writes a
+  fix-sha receipt for the prior announced row and starts a fresh ruleset/timeline scope.
+- `until-ready` exits on readiness or a required non-rerunnable/spent red. Exact expected
+  contexts, tolerated matrix children, and GitHub required rows share one required-name predicate.
+  Optional reds still receive job decisions. Awaiting-log/run decisions keep polling.
+- Status and closeout failures share the five-consecutive-poll budget; a successful poll resets
+  it. Failed closeout/reread retains head state. A head change during closeout cannot lend its
+  prior census or timeline to the new head. Missing/pending names and required-red job names
+  are printed on terminal-specific summary lines before the porcelain exit-table summary.
+- `--until-ready` and `--settle-timeout` route to the same loop. Incompatible modes fail before
+  hydration. Porcelain prints `yeetMonitorExitFor` and returns `CliReportedExit` for nonzero rows.
+  Ready gate/summary explicitly prints `merge-ready: yes` and the final gate carries the timeline.
+- Hook labels readiness as `P1 merge-ready [id] PR #n`, injects good-news context with the PR URL
+  ack, and never treats it as a denial. Tests retain an unrelated stale remediation wave.
+
+Decisions / rejected alternatives:
+
+- Kept the existing loop name and seam; no duplicate ready-loop engine or thin wrapper needed.
+  The default closeout remains `runYeetAutomaticCloseout`, which passes only
+  `yeetAutomaticCloseoutOptions`. No new code calls merge, reply, resolve, or retrigger.
+- Monitor-route legality stays in `yeetMonitorCommandRoute`: `Guards.ts` sees YeetRunOptions,
+  which these monitor routes never construct. Rejected guard-layer duplication.
+- Required matrix reds must block the readiness criterion before a row is emitted, even when
+  GitHub omitted their required flag. Rejected trusting the narrower GitHub-required view for
+  readiness while using the larger ruleset census for failure terminals.
+- Tests cover registration/pending/closeout/ready with optional red; durable row dedup; fresh
+  heads, fix-sha supersession and once-per-head announcements; required exact/matrix/outside reds;
+  one rerun then spent; awaiting-log/run; closed and merged; exact timeout; error budget reset;
+  closeout failure, issues, reread failure and concurrent push; all exit rows and route rejection.
+  Existing Stage A red-loop fixture now supplies an explicitly head-bound closeout artifact.
+
+Contract extensions / corrections:
+
+- `yeetMonitorPolicyTerminals(until-ready)` includes `merged`: an operator merge during a
+  readiness wait must terminate successfully and run the existing sweep seam once.
+- `YeetMonitorRouteDependencies.policy` carries the chosen policy. Both touched loop runners
+  expose dual forms; the route's `mergeLoop` seam retains its data-first callable signature.
+  Porcelain's error channel now includes the required `CliReportedExit` sentinel.
+- Loop-local `MonitorPoll` and `MonitorHeadState.announcedRow` retain typed failures and the
+  receipt target. The loop binds census-backed red checks into `requiredChecksGreen` before
+  persisting/stamping readiness, using the existing criterion helper for coherent schema values.
+- Hook ready rows use monitor-owned ack receipts for supersession, independent of the remediation
+  dispatch head; that head belongs to a different producer and can remain stale after a push.
+- Test kit additionally exports `yeetMonitorCommandRoute` for the required JSDoc import surface.
+
+### Stage B — files
+
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts`
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorPolicy.ts`
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts`
+- `packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts`
+- `packages/tooling/tool/cli/src/test/Yeet.test-kit.ts`
+- `packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts` (new)
+- `packages/tooling/tool/cli/test/yeet-settle.test.ts`
+- `packages/tooling/tool/cli/test/yeet-command-wiring.test.ts`
+- `packages/tooling/tool/cli/test/yeet-provenance-footer.test.ts`
+- `packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts`
+- `.claude/hooks/yeet-inbox.sh`
+- `standards/effect-vitest.inventory.jsonc` (generated)
+- `goals/time-to-certainty/research/OPPORTUNITIES.md`
+- `goals/time-to-certainty/research/b7-implementation.md`
+
+### Stage B — verification
+
+Vitest cwd: `packages/tooling/tool/cli`. `SUITES` means these six explicit arguments:
+`test/yeet-monitor-ready.test.ts test/yeet-settle.test.ts test/yeet-command-wiring.test.ts
+ test/yeet-provenance-footer.test.ts test/yeet-inbox-hook-adapter.test.ts
+ test/yeet-monitor-loop.test.ts`. `NON_HOOK` omits only the hook adapter suite.
+`COMPILER` is root-relative `node_modules/@effect/tsgo-linux-x64/artifacts/typescript/7.0.2/tsc`.
+
+| Command | Runtime | Exit | Coverage / observed result |
+| --- | --- | ---: | --- |
+| `bunx vitest run $SUITES` | Node | 0 | 6 suites, 164 tests before final census-red strengthening; `/tmp/b7-b-node-final.log` |
+| Final scoped lcov command below | Node / V8 | 1 | All 6 suites / 164 tests pass; full-file 100% floor fails; `/tmp/b7-b-last-coverage.log` |
+| `timeout 90s bunx --bun vitest run $SUITES` | Bun default pool | 124 | Startup only; no passing proof; `/tmp/b7-b-bun.log` |
+| `timeout 90s bunx --bun vitest run $SUITES --pool=threads` | Bun threads | 1 | 5 suites pass, hook suite fails; 26 subprocess-pipe EPERM errors; `/tmp/b7-b-bun-threads.log` |
+| `timeout 90s bunx --bun vitest run $NON_HOOK --pool=threads` | Bun threads | 0 | Final 5 suites, 159 tests; `/tmp/b7-b-bun-last.log` |
+| `$COMPILER -p packages/tooling/tool/cli/tsconfig.check.json` | Effect native compiler | 0 | Final source check; `/tmp/b7-b-source-last.log` |
+| `$COMPILER -p packages/tooling/tool/cli/test/tsconfig.json --rootDir .` | Effect native compiler | 0 | Final test-source check; `/tmp/b7-b-tests-last.log` |
+| `bun run beep quality package-verify @beep/repo-cli` | Bun / Node shim | 1 | Dependency build passed, audit hit `spawnSync node EPERM`; `/tmp/b7-b-package-verify.log` |
+| `bun run beep lint effect-vitest --write` | Bun | 0 | Inventory regenerated; 8,403 repo-wide candidates; `/tmp/b7-b-effect-vitest-last.log` |
+| `bunx biome check` over the ten listed TS paths | Bun launcher | 0 | Final paths clean; `/tmp/b7-b-biome-last.log` |
+| `bash -n .claude/hooks/yeet-inbox.sh` | Bash | 0 | Syntax valid |
+| `git diff --check` | Git read-only | 0 | No whitespace errors |
+
+```sh
+bunx vitest run $SUITES --coverage \
+  --coverage.include='src/commands/Yeet/internal/{MonitorLoop,MonitorPolicy,Porcelain}.ts' \
+  --coverage.include='src/commands/Yeet/Yeet.command.ts' \
+  --coverage.include='src/test/Yeet.test-kit.ts' \
+  --coverage.reporter=lcov --coverage.reporter=text \
+  --coverage.reportsDirectory=/tmp/b7-b-last-coverage \
+  --coverage.thresholds.lines=100 --coverage.thresholds.branches=100 \
+  --coverage.thresholds.functions=100 --coverage.thresholds.statements=100 \
+  --coverage.thresholds.perFile
+```
+
+Lcov: `/tmp/b7-b-last-coverage/lcov.info`. MonitorPolicy is omitted from the text summary
+but its lcov section has 36/36 lines and 25/25 functions; no branch records.
+
+| Source | Lines % | Branches % | Functions % | Statements % |
+| --- | ---: | ---: | ---: | ---: |
+| `MonitorLoop.ts` | 97.69 | 94.66 | 95.83 | 97.89 |
+| `MonitorPolicy.ts` | 100 | N/A (0 branches) | 100 | N/A (lcov only) |
+| `Porcelain.ts` | 47.50 | 24.44 | 19.04 | 47.56 |
+| `Yeet.command.ts` | 94.40 | 100 | 62.16 | 90.72 |
+| `Yeet.test-kit.ts` | N/A | N/A | N/A | N/A — re-export only, zero executable lines |
+
+### Stage B — blockers
+
+1. The full-file 100% floor remains a required, unmet gate. Uncovered surfaces include existing
+   collector recovery/default seams, command handlers, and Porcelain sweep/merge/reply paths.
+   No exclusions, threshold relaxation, or deletion of those paths to claim a pass.
+2. Canonical package audit/check/docgen needs the orchestrator environment. The package audit P0
+   was acknowledged as environment-only with the shim evidence; direct compiler passes do not
+   replace canonical proof. Full repo lint, test-tsgo, docgen, and Fallow were not run here.
+3. Default-pool Bun timed out. Bun threads passes the non-hook suites; the hook adapter fails
+   in Node's subprocess stdin stream under Bun with EPERM, including three pre-existing tests.
+   The v4 Bun spawner re-exports that shared Node implementation, so changing the layer is not a fix.
+4. No live PR smoke or push-to-ready wall-clock measurement; no Stage C, commit, or hosted proof.

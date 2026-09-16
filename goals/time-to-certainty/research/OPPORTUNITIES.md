@@ -1384,3 +1384,62 @@ was attempted under the marker-only amendment.
 - **Doing:** focused Stage A suites with lcov and explicit 100% per-file line, branch, function, and statement thresholds.
 - **Evidence:** all 220 assertions passed; the coverage gate exited 1. `Settle.ts`, `MonitorPolicy.ts`, and `WatchStream.ts` reached 100%; larger existing command/status/porcelain files remained below the full-file floor. A broader `yeet*.test.ts` sweep was interrupted before completion and supplies no passing evidence.
 - **Would have prevented it:** establish per-file baseline coverage before assigning a small stage spanning large existing modules, or budget their unrelated coverage gaps explicitly. Retain the requested 100% gate as unpassed; do not relabel a partial measurement as complete.
+
+## 2026-09-16 — B7 Stage B — Effect helper signatures
+
+- During loop implementation, the direct source check caught `TS2554` on `String.slice` and
+  an invalid curried `HashSet.has` use. The v4 reference exposes data-last string helpers and
+  a value-first curried set lookup. Corrected against the reference before tests.
+- **Would have prevented it:** inspect the full overload/body at each helper call, not just its export index.
+
+## 2026-09-16 — B7 Stage B — contract-aware loop fixtures
+
+- The first Node run exposed fixtures that assumed monitor never invokes closeout, supplied
+  inconsistent merge-ready criteria, or hid the new hook row behind a different-head dispatch.
+  Evidence: `Schema validation failed`, an expected rerun count of 1 observed as 0, and empty
+  hook output. Updated fixtures to bind closeout, derive the first failing criterion, and remove
+  unrelated dispatch state. The next focused run passed all 59 tests.
+- **Would have prevented it:** reuse the schema's criterion helper and explicit per-head closeout state in loop
+  fixtures; make hook liveness setup part of each new row-kind test.
+
+## 2026-09-16 — B7 Stage B — stale remediation wave suppresses readiness
+
+- Hook review found that its head-liveness join treated every capsule as owned by the remediation
+  wave. A ready row for a newly pushed head would disappear while dispatch still named the old
+  failed head. Evidence: the ready-row adapter fixture produced empty output with the old wave.
+- Ready-row supersession now follows the loop's fix-sha ack receipts, not the unrelated dispatch
+  head; the regression deliberately retains that stale wave. Prevention: make row ownership
+  explicit in liveness joins rather than applying one producer's head to every row kind.
+
+## 2026-09-16 — B7 Stage B — sandbox verification limits
+
+- `bun run beep quality package-verify @beep/repo-cli` built its dependency closure, then its
+  audit stopped at the tsgo shim: `spawnSync node EPERM` (exit 1). This is the same environment
+  boundary as Stage A; the direct native compiler is supporting evidence only. The audit inbox
+  row is acknowledged as environment-only, not as a passing package proof.
+- The default-pool Bun run of the six B7 suites printed only the startup banner and reached
+  the 90-second bound (exit 124); a thread-pool run is tracked separately.
+- Scoped Node/V8 coverage ran all 162 tests successfully but failed the explicit full-file 100%
+  gate in MonitorLoop, Porcelain, and Yeet.command. Prevention: maintain full-file seam coverage
+  for the command/porcelain modules, and provide an orchestrator verification runner that can
+  execute the canonical shim inside this lane's sandbox.
+
+## 2026-09-16 — B7 Stage B — Bun hook subprocess stdin
+
+- The thread-pool fallback completed the five non-hook suites, but four hook-adapter tests
+  failed with empty payload output and 26 unhandled `EPERM: operation not permitted, write`
+  errors in Node's stream adapter under Bun. The failures include three pre-existing hook tests;
+  Node passes the same suite. The existing adapter uses NodeServices for both runtimes.
+- The v4 reference shows BunChildProcessSpawner re-exports the Node shared implementation, so
+  switching service layers cannot remove that pipe path. Prevention: run the canonical Bun
+  subprocess proof in the orchestrator environment and keep each runtime verdict separate.
+
+## 2026-09-16 — B7 Stage B — required matrix children and the readiness gate
+
+- Review found a second meaning of required: status readiness uses GitHub's required view,
+  while B7 terminal decisions also use exact ruleset contexts and tolerated matrix children.
+  A red matrix child omitted from the required view could emit a ready row before classification.
+- The loop now binds the same census-backed required set into its persisted readiness criterion
+  before stamping or announcing readiness. Tests exercise exact and matrix reds with GitHub's
+  required flag false and assert no ready line or inbox row. Prevention: derive readiness and
+  required-red decisions from the same required-set predicate.

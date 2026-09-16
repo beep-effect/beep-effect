@@ -602,7 +602,10 @@ it.effect("keeps following settled red heads, preserving the one-rerun budget", 
               return YeetStatusSnapshot.make({
                 ...value,
                 remote,
-                mergeReady: deriveYeetMergeReady(value.closeout, remote),
+                mergeReady: deriveYeetMergeReady(
+                  YeetStatusArtifact.make({ ...value.closeout, state: "present", reviewedHeadSha: O.some("aaa111") }),
+                  remote
+                ),
               });
             })
           ),

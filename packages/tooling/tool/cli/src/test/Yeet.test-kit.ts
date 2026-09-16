@@ -76,7 +76,7 @@ export * from "../commands/Yeet/internal/Verdict.ts";
 export * from "../commands/Yeet/internal/WatchMode.ts";
 export * from "../commands/Yeet/internal/WatchStream.ts";
 export * from "../commands/Yeet/internal/WaveOrder.ts";
-export { yeetMonitorDurationMillis } from "../commands/Yeet/Yeet.command.ts";
+export { yeetMonitorCommandRoute, yeetMonitorDurationMillis } from "../commands/Yeet/Yeet.command.ts";
 export * from "../commands/Yeet/Yeet.render.ts";
 export * from "../commands/Yeet/Yeet.schemas.ts";
 export { GhActor, GhPrView } from "../internal/github/GhSchema.ts";

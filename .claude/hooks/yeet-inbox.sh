@@ -123,6 +123,8 @@ fi
 
 # Decode complete NDJSON rows, keep the first observation for each id, join
 # receipt existence and current-head liveness, and drop superseded evidence.
+# Readiness rows use the monitor-owned fix-sha receipts; a remediation wave
+# from an older failed head must not suppress a newly ready head.
 entries='[]'
 if [ "$failures_present" = true ]; then
 entries="$(jq -Rsc --argjson acks "$ack_ids" --argjson wave "$wave" '
@@ -136,7 +138,8 @@ entries="$(jq -Rsc --argjson acks "$ack_ids" --argjson wave "$wave" '
   | map(. as $row | select(($acks | index($row.id)) == null))
   | map(. + {
       _liveness: (
-        if ($wave | type) != "object" then "unknown"
+        if .kind == "pr-merge-ready" then "unknown"
+        elif ($wave | type) != "object" then "unknown"
         elif (.capsule.headSha? == null or .capsule.prNumber? == null) then "unknown"
         elif (.capsule.headSha == $wave.headSha and .capsule.prNumber == $wave.prNumber) then "live"
         else "superseded"
@@ -166,7 +169,7 @@ write_state() {
 }
 
 entry_label='def row_label:
-  (.capsule.lane // .capsule.shard // .capsule.threadId // .capsule.base // .kind // "incident") as $label
+  (if .kind == "pr-merge-ready" then "merge-ready" else (.capsule.lane // .capsule.shard // .capsule.threadId // .capsule.base // .kind // "incident") end) as $label
   | "\(.severity) \($label) [\(.id)]";
 def detail:
   row_label +
@@ -176,8 +179,14 @@ def detail:
 render_context() {
   selected="$1"
   printf '%s' "$selected" | jq -r "$entry_label"'
-    "Fix this now. The checkout has unacknowledged Yeet inbox work:\n" +
-    (map("- " + detail) | join("\n")) +
+    (map(select(.kind == "pr-merge-ready")) | if length > 0 then
+      "Good news, not incident work:\n" +
+      (map("- " + detail + " — acknowledge with `bun run beep yeet inbox ack " + .id + " --thread-url " + (.capsule.url // "<pr url>") + "`.") | join("\n")) + "\n"
+    else "" end) +
+    (map(select(.kind != "pr-merge-ready")) | if length > 0 then
+      "Fix this now. The checkout has unacknowledged Yeet inbox work:\n" +
+      (map("- " + detail) | join("\n"))
+    else "" end) +
     "\nAcknowledge each row with exactly one form: " +
     "`bun run beep yeet inbox ack <id> --fix-sha <sha>`; " +
     "`bun run beep yeet inbox ack <id> --environment-only --reason \"<text>\"`; " +
