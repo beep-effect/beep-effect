@@ -1,6 +1,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { yeetCommand } from "@beep/repo-cli/commands/Yeet";
-import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { acquireJournalFileLock, MemoryStats, releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun";
 import * as Job from "@beep/repo-cli/test/Yeet";
 import {
   attemptJournalPathForCheckout,
@@ -400,6 +400,37 @@ describe("proof job launcher", () => {
       )
     );
   }
+  it.effect("republishes a settled record whose publication never landed", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const fs = yield* FileSystem.FileSystem;
+        const launcher = yield* ProofJobLauncher.make(root);
+        const record = yield* launcher.submit(submission(root));
+        const journal = yield* running(root, launcher, record.jobId);
+        const finalized = yield* launcher.finalize(
+          record.jobId,
+          Job.ProofJobSystemdResult.make({ serviceResult: "signal", finalizedAt: stamp })
+        );
+        expect(O.isSome(finalized.record.publishedAt)).toBe(true);
+        // Simulate a crash between the stamp and the publish: drop the publication stamp and
+        // the inbox row, then let an ordinary read repair both.
+        const recordPath = `${root}/.beep/yeet/jobs/${record.jobId}.json`;
+        yield* fs.writeFileString(
+          recordPath,
+          `${yield* encodeRecordJson(Job.ProofJobRecord.make({ ...finalized.record, publishedAt: O.none() }))}\n`
+        );
+        yield* fs.remove(`${root}/.beep/inbox/failures.ndjson`, { force: true });
+        yield* fs.remove(`${root}/.beep/inbox/active.ndjson`, { force: true });
+        const repaired = O.getOrThrow(yield* launcher.read(record.jobId));
+        expect(O.isSome(repaired.publishedAt)).toBe(true);
+        expect(yield* inbox(root)).toHaveLength(1);
+        expect(A.length(Str.split(yield* fs.readFileString(journal), '"attempt-terminated"'))).toBe(2);
+        yield* launcher.read(record.jobId);
+        expect(yield* inbox(root)).toHaveLength(1);
+        expect(A.length(Str.split(yield* fs.readFileString(journal), '"attempt-terminated"'))).toBe(2);
+      })
+    )
+  );
   it.effect("preserves a normal verdict, reports P2, and wait acknowledges observation", () =>
     fixture(
       Effect.fnUntraced(function* (root) {
@@ -1171,3 +1202,114 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof phase record inte
     );
   }
 });
+
+const reasonTable: ReadonlyArray<readonly [Job.ProofJobServiceResult, Job.ProofJobTerminationReason]> = [
+  ["success", "unrecorded-failure"],
+  ["exit-code", "unrecorded-failure"],
+  ["unknown", "unrecorded-failure"],
+  ["signal", "signal"],
+  ["core-dump", "signal"],
+  ["oom-kill", "oom-killed"],
+  ["timeout", "timeout"],
+  ["watchdog", "timeout"],
+  ["protocol", "job-start-failed"],
+  ["exec-condition", "job-start-failed"],
+  ["start-limit-hit", "job-start-failed"],
+  ["resources", "job-start-failed"],
+];
+
+describe("proof job termination reasons", () => {
+  it("maps every systemd result in both call forms and yields to a cancel request", () => {
+    for (const [result, reason] of reasonTable) {
+      expect(Job.terminationReasonForServiceResult(result, false)).toBe(reason);
+      expect(Job.terminationReasonForServiceResult(false)(result)).toBe(reason);
+      expect(Job.terminationReasonForServiceResult(true)(result)).toBe("cancelled");
+    }
+  });
+});
+
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof job record guards", (it) => {
+  it.effect("refuses a record path that is not a regular file", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const fs = yield* FileSystem.FileSystem;
+        const launcher = yield* ProofJobLauncher.make(root);
+        yield* fs.makeDirectory(`${root}/.beep/yeet/jobs/${attemptId}.json`, { recursive: true });
+        expect(yield* launcher.read(attemptId).pipe(Effect.flip)).toMatchObject({ _tag: "YeetCommandError" });
+      })
+    )
+  );
+  it.effect("refuses a record whose identity does not match its file", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const fs = yield* FileSystem.FileSystem;
+        const launcher = yield* ProofJobLauncher.make(root);
+        const record = yield* launcher.submit(submission(root));
+        const text = yield* fs.readFileString(`${root}/.beep/yeet/jobs/${record.jobId}.json`);
+        yield* fs.writeFileString(`${root}/.beep/yeet/jobs/${attemptId}.json`, text);
+        expect(yield* launcher.read(attemptId).pipe(Effect.flip)).toMatchObject({ _tag: "YeetCommandError" });
+      })
+    )
+  );
+  it.effect("refuses a submission for another checkout", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const launcher = yield* ProofJobLauncher.make(root);
+        const own = submission(root);
+        const elsewhere = Job.ProofJobSubmission.make({
+          ...own,
+          request: Job.ProofJobRequest.make({ ...own.request, checkout: `${root}-elsewhere` }),
+        });
+        expect(yield* launcher.submit(elsewhere).pipe(Effect.flip)).toMatchObject({
+          message: "Submission checkout does not match launcher root.",
+        });
+      })
+    )
+  );
+  it.effect("records a launch whose systemd-run could not be spawned", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const fs = yield* FileSystem.FileSystem;
+        const launcher = yield* ProofJobLauncher.make(root);
+        yield* fs.remove(`${root}/systemd-run`);
+        expect((yield* launcher.submit(submission(root)).pipe(Effect.flip))._tag).toBe("YeetCommandError");
+        const records = yield* launcher.list;
+        expect(A.map(records, (record) => record.phase)).toEqual(["terminated"]);
+        expect(A.map(records, (record) => O.getOrNull(record.terminationReason))).toEqual(["job-start-failed"]);
+      })
+    )
+  );
+  it.effect("forwards nested environment records that carry no value of their own", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const fs = yield* FileSystem.FileSystem;
+        const launcher = yield* ProofJobLauncher.make(root);
+        yield* launcher
+          .submit(submission(root))
+          .pipe(
+            provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ PATH: root, BEEP: { NESTED: "x" } })))
+          );
+        expect(yield* fs.readFileString(`${root}/launch.argv`)).toContain("--setenv=BEEP_NESTED=x");
+      })
+    )
+  );
+});
+
+// it.live: a contender on a held record lock sleeps 25 ms between attempts; under the TestClock
+// that sleep never advances and the busy verdict never arrives.
+it.live("reports a record lock held by a live process as busy", () =>
+  fixture(
+    Effect.fnUntraced(function* (root) {
+      const fs = yield* FileSystem.FileSystem;
+      const launcher = yield* ProofJobLauncher.make(root);
+      const record = yield* launcher.submit(submission(root));
+      const lockPath = `${root}/.beep/yeet/jobs/${record.jobId}.lock`;
+      const holder = `${process.pid}:test-holder`;
+      expect(yield* acquireJournalFileLock(lockPath, holder, 1)).toBe(true);
+      const busy = yield* launcher.cancel(record.jobId).pipe(Effect.flip);
+      yield* releaseJournalFileLock(lockPath, holder);
+      expect(busy).toMatchObject({ message: `Proof job ${record.jobId} stayed busy.` });
+      expect(yield* fs.exists(lockPath)).toBe(false);
+    })
+  )
+);
