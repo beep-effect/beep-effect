@@ -39,6 +39,7 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const AT = "2026-08-17T00:00:00Z";
 
@@ -486,4 +487,22 @@ describe("merge-ready and proof-job rows", () => {
       "proof job 0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60: finished; log /repo/.beep/yeet/jobs/x.log"
     );
   });
+});
+
+describe("row codec properties", () => {
+  it.effect.prop(
+    "every generated merge-ready row survives the inbox line codec",
+    { row: Arbitrary.schema(YeetPrMergeReadyRow) },
+    ({ row }) =>
+      Effect.gen(function* () {
+        const line = yield* renderYeetInboxRowLine(row);
+        expect(Str.includes("\n")(line)).toBe(false);
+        const decoded = yield* YeetInboxRowJson.decode(line);
+        expect(decoded.kind).toBe("pr-merge-ready");
+        expect(decoded.id).toBe(row.id);
+        // Encode-decode-encode is the codec law; comparing decoded numbers directly
+        // would fail on a generated -0, which JSON legitimately flattens to 0.
+        expect(yield* renderYeetInboxRowLine(decoded)).toBe(line);
+      })
+  );
 });
