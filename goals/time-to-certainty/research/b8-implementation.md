@@ -98,7 +98,7 @@ Settle rule under admission (`deriveSettleVerdict`):
 | admission        | gated family members            | census                                 | reason order                                                      | timeout   |
 | ---------------- | ------------------------------- | -------------------------------------- | ----------------------------------------------------------------- | --------- |
 | `None` / `run`   | ignored                         | B7 unchanged                           | registration → required-pending → settled                         | B7        |
-| `skip-satisfied` | ignored                         | B7 unchanged; `skip` outcomes settle   | as B7; gate line appends `heavy: docs-only, lanes report skipped` | B7        |
+| `skip-satisfied` | ignored                         | B7 unchanged; terminal `pass`/`skip` outcomes settle | as B7; gate line appends `heavy: docs-only, lanes pass without work` | B7        |
 | `hold`           | leave `missing`/`pending` → `gated` (members and their matrix children) | registration → required-pending (non-gated open) → heavy-not-admitted (only gated open) → settled | skipped while gated is non-empty; `waitedMs` still reported |
 
 Gate lines:
@@ -108,8 +108,8 @@ Gate lines:
   timeout)`
 - hold, non-gated still open: `settle: required-pending; pending: Lint; gated: …; admit: …;
   waited … (not counted toward …)`
-- skip-satisfied, settled: `settle: settled; closeout bound; heavy: docs-only, lanes report
-  skipped`
+- skip-satisfied, settled: `settle: settled; closeout bound; heavy: docs-only, lanes pass
+  without work`
 
 `yeetSettleStampFor(heavy-not-admitted)` is `None`; `yeetSettleVerdictIsTerminal` is unchanged
 (`settle-timeout` only).
@@ -253,7 +253,7 @@ Tests added (all `it.live`, scripted spawner, injected `now`):
    exit success.
 3. docs-only head: unlabelled, diff `docs/runbooks/ci.md` + `goals/…/PLAN.md`, `Heavy / Check`
    reported `SKIPPED` → settles on the first poll with the gate line ending
-   `heavy: docs-only, lanes report skipped`, end `all-terminal`.
+   `heavy: docs-only, lanes pass without work`, end `all-terminal`.
 
 Verification (`zsh -ic`, worktree root):
 
@@ -289,9 +289,26 @@ rework stayed small: the spawner branch is four lines and no poll index is consu
 - **`size/*` never triggers.** Head `8d87484c2f` received exactly one Check run although the
   pr-size job applied `size/L` mid-run (GITHUB_TOKEN events do not start workflows).
 - **Main pushes always admit.** Push run 35066098614 after PR A ran all seven heavy lanes.
-- **Docs-only skip.** Pending PR C (`explorations/github-merge-queue/`, branch pushed): expected
-  `Heavy Admission=success`, heavy called with `admitted: false`, every `Heavy / <lane>` reports
-  skipped, ruleset satisfied, `--until-ready` exit 0.
+- **Docs-only skip, first probe failed the ruleset.** PR C #1164 (`explorations/github-merge-queue/`,
+  head 434eed9762): `Heavy Admission=success` with `verdict=skip-satisfied`, heavy called with
+  `admitted: false`, but the job-level `if:` skipped the matrix before expansion and GitHub
+  reported one context, `Heavy / matrix.name: skipped`. The required `Heavy / Check`,
+  `Heavy / Lint Policy`, `Heavy / Test Integration`, `Heavy / Docgen`, `Heavy / Doctest` stayed
+  "Expected" and the PR was `BLOCKED`. Plan B (PR D): the verify job always runs, `runs-on`
+  switches to `ubuntu-24.04` when not admitted, and `lane-gate` skips every step, so each
+  context expands and passes without work. Proven only once PR D reaches `main` and #1164 is
+  re-run against it.
+- **Docs-only skip, re-run after PR D: passed.** #1165 merged as `1e5d570bfe`; #1164 merged
+  `main` and pushed head `c43cf7618a` (Check run 35121254821). `Heavy Admission` printed
+  `{"verdict":"skip-satisfied","admitted":false,"sources":[],"docsOnly":true,"changedPathCount":6}`.
+  All seven lanes (`Build`, `Check`, `Coverage Regression`, `Docgen`, `Doctest`,
+  `Lint Policy`, `Test Integration`) expanded under their own names on `ubuntu-24.04`, skipped
+  checkout and every work step (`heavy admission: not admitted; Check passes without work`), and
+  concluded `success` in 3 to 6 seconds each. No `Heavy / matrix.name` context, no
+  `beep-ec2-heavy` runner. `gh pr checks --required` passed every required `Heavy / *` context
+  and the PR left `BLOCKED` (`MERGEABLE`, unstable only on rate-limited Vercel deployments).
+  `yeet monitor --until-ready` printed `settle: settled; closeout bound; heavy: docs-only, lanes
+  pass without work` and `merge-ready: yes`, and exited 0 (push to ready 11m 26s).
 - **Gap found and closed the same day.** A push after the label admits the new head through
   `check.yml` while the previous head's `Heavy Admit` matrix keeps running (concurrency groups
   do not cross workflows); the admission job now cancels superseded `Heavy Admit` runs for the
