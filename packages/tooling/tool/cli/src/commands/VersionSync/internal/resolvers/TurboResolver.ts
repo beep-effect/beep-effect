@@ -1,9 +1,9 @@
 /**
  * Turborepo schema version resolver.
  *
- * Compares the `$schema` URL version in every `turbo.json` (root plus each
- * workspace package) against the installed `turbo` version from the root
- * `package.json` catalog. Turborepo publishes one schema per release at
+ * Compares the `$schema` URL in every `turbo.json` (root plus each workspace
+ * package) against the versioned URL for the installed `turbo` release
+ * (lockfile-resolved, falling back to the root `package.json` catalog). Turborepo publishes one schema per release at
  * `https://v<major>-<minor>-<patch>.turborepo.dev/schema.json`; the
  * `@turbo/codemod update` migration rewrites `$schema` to that URL, and this
  * resolver keeps the pins current when `turbo` is bumped without the codemod.
@@ -26,8 +26,7 @@ import {
   VersionDriftItem,
   VersionSyncError,
 } from "../../VersionSync.schemas.ts";
-import { updateJsoncSchemaUrl } from "../updaters/JsoncSchemaUpdater.ts";
-import { resolveRootCatalogVersion } from "./RootCatalog.ts";
+import { resolveInstalledToolVersion } from "./RootCatalog.ts";
 import type { FsUtils } from "@beep/repo-utils";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/TurboResolver");
@@ -51,6 +50,14 @@ const TURBO_SCHEMA_SUFFIX = ".turborepo.dev/schema.json";
  * @since 0.0.0
  */
 const TURBO_CONFIG_FILE = "turbo.json";
+
+/**
+ * Drift-item field name for a `turbo.json` `$schema` pin; the write path keys on it.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const TURBO_SCHEMA_FIELD = "$schema";
 
 const TURBO_SCHEMA_URL_PATTERN = /^https:\/\/v\d+-\d+-\d+\.turborepo\.dev\/schema\.json$/;
 const STABLE_VERSION_PATTERN = /^\d+\.\d+\.\d+$/;
@@ -200,7 +207,7 @@ const readTurboConfigFile = Effect.fn("readTurboConfigFile")(function* (
 export const resolveTurboSchema = Effect.fn("resolveTurboSchema")(function* (
   repoRoot: string
 ): Effect.fn.Return<TurboSchemaState, VersionSyncError, FileSystem.FileSystem | Path.Path | FsUtils> {
-  const installedVersion = yield* resolveRootCatalogVersion(repoRoot, "turbo");
+  const installedVersion = yield* resolveInstalledToolVersion(repoRoot, "turbo");
 
   const workspaceDirs = yield* resolveWorkspaceDirs(repoRoot).pipe(
     VersionSyncError.mapError("Failed to resolve workspace directories", "package.json")
@@ -220,8 +227,6 @@ export const resolveTurboSchema = Effect.fn("resolveTurboSchema")(function* (
     files,
   });
 });
-
-const currentSchemaVersion = (file: TurboConfigFile): string => O.getOrElse(file.schemaVersion, () => file.schemaUrl);
 
 /**
  * Build the Turborepo schema category report from resolved state.
@@ -251,15 +256,18 @@ export const buildTurboReport: (state: TurboSchemaState) => VersionCategoryRepor
   }
 
   const expectedVersion = state.installedVersion;
+  const expectedSchemaUrl = buildSchemaUrl(expectedVersion);
 
+  // Both columns are full URLs so a drift row reads as "this URL -> that URL";
+  // the write path rewrites `$schema` to `expected` verbatim.
   const items = A.map(
-    A.filter(state.files, (file) => !Str.equivalence(currentSchemaVersion(file), expectedVersion)),
+    A.filter(state.files, (file) => !Str.equivalence(file.schemaUrl, expectedSchemaUrl)),
     (file) =>
       VersionDriftItem.make({
         file: file.file,
-        field: "$schema version",
-        current: currentSchemaVersion(file),
-        expected: expectedVersion,
+        field: TURBO_SCHEMA_FIELD,
+        current: file.schemaUrl,
+        expected: expectedSchemaUrl,
         line: O.none(),
       })
   );
@@ -274,19 +282,3 @@ export const buildTurboReport: (state: TurboSchemaState) => VersionCategoryRepor
     error: O.none(),
   });
 };
-
-/**
- * Update the `$schema` field in a `turbo.json` to the versioned URL for `version`.
- *
- * @param filePath - Absolute path of the `turbo.json` to rewrite.
- * @param version - The installed turbo version (e.g. `2.10.13`).
- * @returns Whether the file content changed.
- * @category utilities
- * @since 0.0.0
- */
-export const updateTurboSchema = Effect.fn("updateTurboSchema")(function* (
-  filePath: string,
-  version: string
-): Effect.fn.Return<boolean, VersionSyncError, FileSystem.FileSystem> {
-  return yield* updateJsoncSchemaUrl(filePath, buildSchemaUrl(version));
-});

@@ -2,7 +2,8 @@
  * Biome schema version resolver.
  *
  * Compares the `$schema` URL version in `biome.jsonc` against the installed
- * `@biomejs/biome` version from the root `package.json` catalog.
+ * `@biomejs/biome` version (lockfile-resolved, falling back to the root
+ * `package.json` catalog).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -22,7 +23,7 @@ import {
   VersionSyncError,
 } from "../../VersionSync.schemas.ts";
 import { updateJsoncSchemaUrl } from "../updaters/JsoncSchemaUpdater.ts";
-import { resolveRootCatalogVersion } from "./RootCatalog.ts";
+import { resolveInstalledToolVersion } from "./RootCatalog.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/BiomeResolver");
 
@@ -138,7 +139,7 @@ export const resolveBiomeSchema = Effect.fn(function* (
   const schemaUrl = biomeJson.$schema;
   const schemaVersion = decodeSchemaVersion(schemaUrl);
 
-  const installedVersion = yield* resolveRootCatalogVersion(repoRoot, "@biomejs/biome");
+  const installedVersion = yield* resolveInstalledToolVersion(repoRoot, "@biomejs/biome");
 
   return BiomeSchemaState.make({
     schemaUrl,
