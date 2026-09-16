@@ -23,6 +23,7 @@ import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.sc
 
 export * from "../AgentEffectiveness.errors.ts";
 export * from "../AgentEffectiveness.schemas.ts";
+export * from "./EvalComparison.ts";
 export * from "./EvalFixture.ts";
 export * from "./EvalRecord.ts";
 export * from "./EvalScoring.ts";
