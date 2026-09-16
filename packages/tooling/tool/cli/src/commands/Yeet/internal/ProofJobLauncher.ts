@@ -8,7 +8,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { UUID } from "@beep/schema/String";
-import { ConfigProvider, Context, Crypto, DateTime, Duration, Effect, FileSystem, Order, Path } from "effect";
+import { ConfigProvider, Console, Context, Crypto, DateTime, Duration, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
 import { constant } from "effect/Function";
 import * as O from "effect/Option";
@@ -38,11 +38,14 @@ import {
   PROOF_JOB_RETENTION_BUDGET,
   PROOF_JOB_SLICE,
   ProofJobCancelOutcome,
+  ProofJobCommandEnd,
   ProofJobFinalization,
   ProofJobRecord,
   ProofJobRequest,
+  ProofJobRunner,
   ProofJobSystemdResult,
   ProofJobUnit,
+  proofJobOutcomeForExit,
   proofJobRowSeverityFor,
   proofJobSystemdRunArguments,
   proofJobUnitName,
@@ -52,7 +55,7 @@ import {
 } from "./ProofJob.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RunScopeSupport } from "../../../internal/repo-run/RunScope.schemas.ts";
-import type { ProofJobOutcome, ProofJobRunner, ProofJobSubmission, ProofJobWaitOptions } from "./ProofJob.ts";
+import type { ProofJobOutcome, ProofJobSubmission, ProofJobWaitOptions } from "./ProofJob.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofJobLauncher");
 // A record transition holds its lock for one read-modify-write of a small JSON file; inbox and
@@ -541,6 +544,108 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
 export class ProofJobLauncher extends Context.Service<ProofJobLauncher, ProofJobLauncherShape>()($I`ProofJobLauncher`, {
   make: makeProofJobLauncher,
 }) {}
+
+/**
+ * Apply one bookkeeping transition to the detached proof job this process runs inside.
+ *
+ * **Details**
+ *
+ * The job id comes from `BEEP_YEET_JOB_ID`, which only the job's unit sets, so
+ * outside a job this does nothing. A bookkeeping failure is logged and never
+ * fails the command: the command's own result stays authoritative, and the
+ * finalizer still settles the record.
+ *
+ * **Example** (Build a no-op transition)
+ *
+ * ```ts
+ * import { updateProofJobBookkeeping } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const program = updateProofJobBookkeeping("/repo", () => Effect.void)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - The checkout that owns the job record.
+ * @param update - The transition to apply to the job.
+ * @returns Nothing; a failed transition is reported on stderr.
+ * @category services
+ * @since 0.0.0
+ */
+export const updateProofJobBookkeeping = Effect.fn("Yeet.updateProofJobBookkeeping")(
+  function* (
+    repoRoot: string,
+    update: (launcher: ProofJobLauncherShape, id: UUID) => Effect.Effect<unknown, YeetCommandError>
+  ) {
+    const job = yield* configStringOption("BEEP_YEET_JOB_ID");
+    if (O.isNone(job)) return;
+    const jobId = yield* decodeUUID(job.value).pipe(Effect.mapError(YeetCommandError.new("Invalid proof job id.")));
+    yield* update(yield* ProofJobLauncher.make(repoRoot), jobId);
+  },
+  Effect.catch((error) => Console.error(`[yeet] job bookkeeping failed: ${error.message}`))
+);
+
+/**
+ * Run a command so the detached proof job it runs inside records its start and its outcome.
+ *
+ * **Details**
+ *
+ * The verify and repair paths record their outcome through the run verdict. The
+ * porcelain monitor loops (`--until-ready`, `--until-merged`, `--watch`) write no
+ * verdict, so without this the finalizer read a clean `ready` exit as
+ * `terminated` and `yeet job wait` exited 2 on a green loop. The wrapper marks
+ * the job running with this process's identity, runs the command, and records
+ * the outcome {@link proofJobOutcomeForExit} derives from its exit. Outside a job
+ * both transitions are no-ops.
+ *
+ * **Example** (Wrap a command)
+ *
+ * ```ts
+ * import { reportProofJobCommand } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const program = reportProofJobCommand("/repo", Effect.void)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - The checkout that owns the job record.
+ * @param self - The command to run.
+ * @returns The command's own result, with the job's running and outcome transitions recorded around it.
+ * @category services
+ * @since 0.0.0
+ */
+export const reportProofJobCommand = Effect.fn("ProofJob.reportCommand")(function* <A, E, R>(
+  repoRoot: string,
+  self: Effect.Effect<A, E, R>
+): Effect.fn.Return<
+  A,
+  E,
+  R | Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const startedAt = yield* DateTime.now;
+  const procStart = yield* processStartIdentityForPid(process.pid);
+  yield* updateProofJobBookkeeping(repoRoot, (launcher, jobId) =>
+    launcher.markRunning(
+      jobId,
+      ProofJobRunner.make({ pid: process.pid, procStart, startedAt: DateTime.formatIso(startedAt) })
+    )
+  );
+  return yield* self.pipe(
+    Effect.onExit(
+      Effect.fnUntraced(function* (exit) {
+        const endedAt = yield* DateTime.now;
+        const outcome = proofJobOutcomeForExit(
+          exit,
+          ProofJobCommandEnd.make({
+            endedAt: DateTime.formatIso(endedAt),
+            elapsedMs: DateTime.toEpochMillis(endedAt) - DateTime.toEpochMillis(startedAt),
+          })
+        );
+        if (O.isNone(outcome)) return;
+        yield* updateProofJobBookkeeping(repoRoot, (launcher, jobId) => launcher.markFinished(jobId, outcome.value));
+      })
+    )
+  );
+});
 
 export {
   appendProofJobAttemptTerminated,

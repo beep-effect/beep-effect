@@ -2163,3 +2163,18 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   admitted, steps skipped by `lane-gate`). The general lesson: any ruleset-satisfying "skip"
   must keep the job running and skip its steps; a workflow-file claim that can only be proven
   on `main` needs its probe PR planned before the claim merges, not after.
+
+## 2026-09-16 — `yeet job wait` called a green `--until-ready` job terminated
+
+- **Doing:** closing B7 PR2 (#1161) with the recipe it documents, `yeet monitor --until-ready
+  --detach` plus `yeet job wait <jobId>`.
+- **Evidence:** the loop printed `merge-ready: yes` (push→ready 28m 19s) and exited 0; the job
+  record carried `serviceResult: success`, `exitStatus: 0`, `outcome: null`, and `yeet job wait`
+  printed `Proof job … terminated.` with exit 2. Only the verify and repair paths call
+  `markFinished`, through the run verdict. The porcelain monitor loops write no verdict, so the
+  finalizer reads their clean exit as `terminated`. The PR2 docs promised "0 green, 1 red,
+  2 terminated", and no test had run a monitor loop inside a job.
+- **Would have prevented it:** a wiring test that runs each detachable route's command body under
+  a job environment and asserts the recorded phase, not only that `--detach` reaches the submit.
+  Fixed in the follow-up: `reportProofJobCommand` marks the job running and records the outcome
+  `proofJobOutcomeForExit` derives from the loop's exit; an interrupt still reads `terminated`.
