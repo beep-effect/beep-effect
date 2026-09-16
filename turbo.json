@@ -734,10 +734,7 @@
         "vitest.aliases.generated.json",
         "!**/node_modules/**",
         "!**/dist/**",
-        "!**/node_modules/**",
-        "!**/dist/**",
-        "!**/coverage/**",
-        "!**/tmp/**"
+        "!**/coverage/**"
       ]
     },
     "//#lint:oxlint": {
