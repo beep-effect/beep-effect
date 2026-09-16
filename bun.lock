@@ -3070,6 +3070,11 @@
       },
     },
   },
+  "patchedDependencies": {
+    "onnxruntime-node@1.30.0": "patches/onnxruntime-node@1.30.0.patch",
+    "knip@6.35.1": "patches/knip@6.35.1.patch",
+    "@effect/platform-node-shared@4.0.0-rc.115": "patches/@effect%2Fplatform-node-shared@4.0.0-rc.115.patch",
+  },
   "overrides": {
     "@effect/platform-node-shared": "catalog:",
     "@effect/tsgo-darwin-arm64": "catalog:",
@@ -3090,7 +3095,7 @@
     "js-yaml": "5.2.2",
     "minimatch": "10.2.5",
     "nanoid": "^3.3.18",
-    "onnxruntime-node@1.29.0": {
+    "onnxruntime-node@1.30.0": {
       "adm-zip": "npm:fflate@0.8.3",
     },
     "pdfjs-dist": "catalog:",
@@ -5805,7 +5810,7 @@
 
     "acorn-walk": ["acorn-walk@8.3.5", "", { "dependencies": { "acorn": "^8.11.0" } }, "sha512-HEHNfbars9v4pgpW6SO1KSPkfoS0xVOM/9UzkJltjlsHZmJasxg8aXkuZa7SMf8vKGIBhpUsPluQSqhJFCqebw=="],
 
-    "adm-zip": ["adm-zip@0.6.1", "", {}, "sha512-Xwrja8nx9e5o2N1my4DsKCeKpdrnACyr1wtbPxBDgGzKzKyE9kRtBFA8mWldI+RVlD7CBZNWY/wQ2+ydwOR6kQ=="],
+    "adm-zip": ["fflate@0.8.3", "", {}, "sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA=="],
 
     "agent-base": ["agent-base@7.1.4", "", {}, "sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ=="],
 
