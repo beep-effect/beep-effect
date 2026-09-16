@@ -3445,7 +3445,9 @@ describe("quality-scheduler", () => {
           Effect.gen(function* () {
             const busy = yield* Ref.make(true);
             const releases = yield* Ref.make(0);
+            const attempted = yield* Deferred.make<void>();
             const tryAcquire = Effect.gen(function* () {
+              yield* Deferred.succeed(attempted, undefined);
               return (yield* Ref.get(busy)) ? O.none<string>() : O.some("origin-lease");
             });
             const gate = {
@@ -3456,7 +3458,7 @@ describe("quality-scheduler", () => {
             const fiber = yield* Effect.forkChild(
               withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig)
             );
-            yield* Effect.sleep("100 millis");
+            yield* Deferred.await(attempted).pipe(Effect.timeout("5 seconds"));
             expect(fiber.pollUnsafe()).toBeUndefined();
             expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
             yield* Ref.set(busy, false);

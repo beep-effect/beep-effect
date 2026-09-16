@@ -425,6 +425,17 @@ it("reports introduced findings grouped by file in path order behind the stable 
   deepStrictEqual(formatEffectVitestIntroducedReport([]), []);
 });
 
+it("keeps control-bearing filenames inside one prefixed report line", () => {
+  const row = EffectVitestFinding.make({
+    ...finding(4, "Effect.runSync(program)"),
+    file: "packages/example/test/evil\n::error::forged\r\u001b[2J\u0085\u2028\u2029.test.ts",
+  });
+  deepStrictEqual(
+    formatEffectVitestIntroducedReport([row])[1],
+    "[effect-vitest]   packages/example/test/evil[control]::error::forged[control][control][2J[control][control][control].test.ts: 1 new finding(s)"
+  );
+});
+
 it("preserves a justified exception on the matching live row", () => {
   const live = EffectVitestFinding.make({
     ...finding(8, "Fx.runSync(program)"),

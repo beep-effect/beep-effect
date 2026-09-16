@@ -1,72 +1,70 @@
 {
   "schemaVersion": "initiative-manifest/v2",
   "initiative": {
-    "id": "codex-security-findings-2026-09-08",
-    "title": "Codex Security Findings (2026-09-08)",
-    "status": "completed-retained",
-    "created": "2026-09-08",
+    "id": "codex-security-findings-2026-09-16",
+    "title": "Codex Security Findings (2026-09-16)",
+    "status": "active",
+    "created": "2026-09-16",
     "updated": "2026-09-16",
     "packetAnchorDocument": "SPEC.md"
   },
-  "packetPath": "goals/codex-security-findings-2026-09-08",
-  "lifecycle": "completed-retained",
-  "mission": "Remediate and close the 13 Codex Cloud security findings captured across September 8-9, 2026.",
+  "packetPath": "goals/codex-security-findings-2026-09-16",
+  "lifecycle": "active",
+  "mission": "Remediate and close the 4 Codex Cloud security findings captured on 2026-09-16.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 13 Codex findings are resolved with zero packet-applicable open findings.",
-    "grandfathered": true,
-    "grandfatheredNote": "Historical remediation merged in PRs #1026, #1032, and #1037. The final completion receipt on #1037 establishes proof and exact-ID closure; this PR reconciles their retained packet lifecycle."
+    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 4 Codex findings are resolved with zero packet-applicable open findings.",
+    "grandfathered": false
   },
-  "branch": "codex/security-corpus-process-metadata",
+  "branch": "codex/security-findings-2026-09-16",
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
-    "goals/codex-security-findings-2026-09-08/README.md",
-    "goals/codex-security-findings-2026-09-08/SPEC.md",
-    "goals/codex-security-findings-2026-09-08/PLAN.md",
-    "goals/codex-security-findings-2026-09-08/GOAL.md",
-    "goals/codex-security-findings-2026-09-08/research/SOURCES.md"
+    "goals/codex-security-findings-2026-09-16/README.md",
+    "goals/codex-security-findings-2026-09-16/SPEC.md",
+    "goals/codex-security-findings-2026-09-16/PLAN.md",
+    "goals/codex-security-findings-2026-09-16/GOAL.md",
+    "goals/codex-security-findings-2026-09-16/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
       "path": "GOAL.md",
       "targetChars": 3500,
       "maxChars": 4000,
-      "command": "/goal follow the instructions in goals/codex-security-findings-2026-09-08/GOAL.md"
+      "command": "/goal follow the instructions in goals/codex-security-findings-2026-09-16/GOAL.md"
     }
   ],
   "source": {
     "provider": "Codex Cloud Security UI",
     "repository": "kriegcloud/beep-effect",
     "url": "https://chatgpt.com/codex/cloud/security/findings/",
-    "capturedAt": "2026-09-08",
+    "capturedAt": "2026-09-16",
     "captureMethodPolicy": "signed-in-csv-export",
-    "rawCaptureRoot": "goals/codex-security-findings-2026-09-08/raw",
+    "rawCaptureRoot": "goals/codex-security-findings-2026-09-16/raw",
     "rawCaptureTracked": false
   },
   "catalog": {
-    "expectedCount": 13,
-    "capturedCount": 13,
+    "expectedCount": 4,
+    "capturedCount": 4,
     "severityCountsKnown": true,
     "severityCounts": {
-      "Medium": 1,
-      "Low": 4,
-      "Informational": 8
+      "Low": 1,
+      "Informational": 3
     },
     "dispositionCounts": {
-      "remediate": 13,
+      "remediate": 4,
       "already-fixed": 0,
       "false-positive": 0,
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All 13 findings merged in PRs #1026, #1032, and #1037 and were closed as Already fixed. The final completion receipt on PR #1037 records local proof, hosted acceptance, and exact-ID closure; this PR reconciles the stale tracked lifecycle."
+    "note": "All four findings validated and implemented. Local full proof passed; committed publish proof, hosted review, merge, and dashboard closure remain pending."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -83,7 +81,7 @@
   },
   "sanitation": {
     "trackedRawFindingContent": false,
-    "rawCaptureLocation": "goals/codex-security-findings-2026-09-08/raw",
+    "rawCaptureLocation": "goals/codex-security-findings-2026-09-16/raw",
     "commitsOnlySanitizedMarkdown": true,
     "codexPatchTextTracked": false,
     "publicFindingPolicy": "Tracked records contain title, severity, Codex ID, source commit, public summary, decisions, changed files, and verification only."
@@ -122,35 +120,38 @@
     {
       "id": "P6",
       "name": "Publish",
-      "status": "complete"
+      "status": "in-progress"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "complete"
+      "status": "pending"
     },
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "complete"
+      "status": "pending"
     },
     {
       "id": "P9",
       "name": "Close",
-      "status": "complete"
+      "status": "pending"
     }
   ],
   "verificationCommands": [
-    "test \"$(wc -m < goals/codex-security-findings-2026-09-08/GOAL.md)\" -le 4000",
-    "jq . goals/codex-security-findings-2026-09-08/ops/manifest.json",
-    "jq . goals/codex-security-findings-2026-09-08/ops/triage.json",
-    "test \"$(find goals/codex-security-findings-2026-09-08/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 13",
-    "git diff --check -- goals/codex-security-findings-2026-09-08",
-    "jq -r '.findings[].commit' goals/codex-security-findings-2026-09-08/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",
+    "test \"$(wc -m < goals/codex-security-findings-2026-09-16/GOAL.md)\" -le 4000",
+    "jq . goals/codex-security-findings-2026-09-16/ops/manifest.json",
+    "jq . goals/codex-security-findings-2026-09-16/ops/triage.json",
+    "test \"$(find goals/codex-security-findings-2026-09-16/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 4",
+    "git diff --check -- goals/codex-security-findings-2026-09-16",
+    "jq -r '.findings[].commit' goals/codex-security-findings-2026-09-16/ops/triage.json | while read -r c; do git merge-base --is-ancestor \"$c\" HEAD || echo \"not-an-ancestor: $c\"; done",
     "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
     "The signed-in CSV export cannot be produced from the findings page.",
-    "Tracked evidence contains secrets, auth values, signed URLs, email addresses, or raw developer-local paths."
-  ]
+    "Tracked evidence contains secrets, auth values, signed URLs, email addresses, or raw developer-local paths.",
+    "A remediation requires an architecture or product decision outside packet scope.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Four findings implemented; package audit, repair, and full Yeet verification passed. Publishing one combined PR; merge and dashboard closure remain pending."
 }

@@ -125,7 +125,7 @@ const lockDiffStep = (owner: string, before: string, after: string) =>
 
 const bunInstallStep = (owner: string) =>
   GraftDeepRunnerStep.make({
-    args: ["install", "--frozen-lockfile"],
+    args: ["install", "--frozen-lockfile", "--ignore-scripts"],
     command: "bun",
     cwd: owner,
     phase: "install",
@@ -281,12 +281,19 @@ export class GraftDeepRunner extends Context.Service<GraftDeepRunner, GraftDeepR
 const makeGraftDeepRunner = Effect.fnUntraced(function* () {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const run: GraftDeepRunnerShape["run"] = Effect.fn("GraftDeepRunner.run")(function* (step) {
+    const maintenance = step.phase === "pull" || step.phase === "install";
+    const maintenanceEnv = maintenance
+      ? yield* Config.all({
+          PATH: Config.String("PATH").pipe(Config.withDefault("/usr/bin:/bin")),
+          HOME: Config.String("HOME").pipe(Config.withDefault("")),
+        }).pipe(Effect.orDie)
+      : undefined;
     return yield* runCaptured({
       args: step.args,
       bound: deepOutputBound,
       command: step.command,
       cwd: step.cwd,
-      extendEnv: true,
+      extendEnv: !maintenance,
       forceKillAfter: "30 seconds",
       // A step that is read for its value takes stdout alone: git writes
       // advisory warnings to stderr, and merging them would make
@@ -296,7 +303,7 @@ const makeGraftDeepRunner = Effect.fnUntraced(function* () {
       trim: true,
       // Both fields are declared `| undefined` by the runner, so an absent
       // bound or environment is passed as the value rather than spread in.
-      env: step.env,
+      env: maintenance ? { ...maintenanceEnv, CI: "true" } : step.env,
       timeout: step.timeout,
     }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
@@ -449,7 +456,8 @@ export class GraftDeepRefresh extends Context.Service<GraftDeepRefresh, GraftDee
  * unit needs. `EnvironmentFile` carries no leading dash on purpose: a missing
  * environment file must fail the unit loudly instead of starting a build with
  * no API key. The two `ExecStartPre` lines update the owner clone before the
- * CLI boots, so each night runs main's current `beep graft deep refresh`
+ * CLI boots. They clear the inherited environment before executing Git or Bun,
+ * and installation disables lifecycle scripts. Each night runs main's current `beep graft deep refresh`
  * rather than whatever the clone held when the timer was installed.
  * `KillMode=mixed` with `TimeoutStopSec=90` sends `SIGTERM` to the CLI alone
  * first, which `runMain` turns into a fiber interrupt, leaving time to record
@@ -496,8 +504,8 @@ export const renderGraftDeepRefreshUnits = (
         // systemd splits Exec* lines on whitespace with no shell involved, so
         // every path argument is quoted. WorkingDirectory and EnvironmentFile
         // take whole lines and must stay unquoted.
-        `ExecStartPre=/usr/bin/git -C "${options.owner}" pull --ff-only --quiet origin main`,
-        `ExecStartPre="${options.bunPath}" install --frozen-lockfile`,
+        `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=${REFRESH_UNIT_PATH}" CI=true /usr/bin/git -C "${options.owner}" pull --ff-only --quiet origin main`,
+        `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=${REFRESH_UNIT_PATH}" CI=true "${options.bunPath}" install --frozen-lockfile --ignore-scripts`,
         `ExecStart="${options.bunPath}" run beep graft deep refresh --owner "${options.owner}" --jobs 16`,
         "TimeoutStartSec=8h",
         "TimeoutStopSec=90",
