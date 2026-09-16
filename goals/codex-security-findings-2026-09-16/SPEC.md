@@ -1,10 +1,10 @@
-# Codex Security Findings (2026-09-08) Spec
+# Codex Security Findings (2026-09-16) Spec
 
 ## Objective
 
 Remediate every open Codex Cloud security finding visible at
 `https://chatgpt.com/codex/cloud/security/findings/` for
-`kriegcloud/beep-effect` in the 13-finding cumulative capture spanning September 8-9, 2026. Publish
+`kriegcloud/beep-effect` in the 4-finding batch captured on 2026-09-16. Publish
 the work through Yeet, reach mergeable hosted state, merge, then resolve the
 exact captured findings until no packet-applicable finding remains open.
 
@@ -30,8 +30,8 @@ exact captured findings until no packet-applicable finding remains open.
 
 ## Target Surfaces
 
-- `goals/codex-security-findings-2026-09-08/**`.
-- Gitignored raw evidence under `goals/codex-security-findings-2026-09-08/raw/**`.
+- `goals/codex-security-findings-2026-09-16/**`.
+- Gitignored raw evidence under `goals/codex-security-findings-2026-09-16/raw/**`.
 - Maintained repo paths named by `findings/INDEX.md` after current-HEAD validation.
 
 ## Constraints
@@ -45,36 +45,33 @@ exact captured findings until no packet-applicable finding remains open.
 - Security controls may not be simplified away for diff size.
 - Full reports stay in ignored `raw/`; tracked records contain only sanitized
   metadata, summaries, validation, decisions, changed files, and proof.
-- Browser closure happens after merge, against the exact 13-ID allowlist.
+- Browser closure happens after merge, against the exact 4-ID allowlist.
 - Preserve unrelated work and stage only reviewed packet intent.
 
 ## Acceptance Criteria
 
-- [x] All 13 findings have sanitized tracked CSF records with Codex ID, severity,
+- [ ] All 4 findings have sanitized tracked CSF records with Codex ID, severity,
       title, source commit, and public summary.
-- [x] Every finding has a current-HEAD verdict, disposition, lane, rationale,
+- [ ] Every finding has a current-HEAD verdict, disposition, lane, rationale,
       remediation state, changed-file set, and verification evidence.
-- [x] Every real finding is fixed at the shared root cause with a focused
+- [ ] Every real finding is fixed at the shared root cause with a focused
       regression check where executable behavior changes.
-- [x] Packet counts, manifest, triage ledger, launcher size, sanitation, and
+- [ ] Packet counts, manifest, triage ledger, launcher size, sanitation, and
       whitespace checks pass.
-- [x] Yeet repair and verify are green on the complete remediation scope.
-- [x] The branch is published, hosted checks and reviews are closed, and the PR
+- [ ] Yeet repair and verify are green on the complete remediation scope.
+- [ ] The branch is published, hosted checks and reviews are closed, and the PR
       is mergeable and merged.
-- [x] All 13 captured Codex findings are resolved after merge and the live view
+- [ ] All 4 captured Codex findings are resolved after merge and the live view
       shows zero packet-applicable open findings.
-
-These boxes reconcile the final completion receipt on PR #1037.
-`ops/closures.json` binds all thirteen captured identities to that evidence.
 
 ## Verification Matrix
 
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
-| Launcher size | `test "$(wc -m < goals/codex-security-findings-2026-09-08/GOAL.md)" -le 4000` | Pass |
+| Launcher size | `test "$(wc -m < goals/codex-security-findings-2026-09-16/GOAL.md)" -le 4000` | Pass |
 | JSON shape | `jq .` over both files in `ops/` | Pass |
-| Finding count | CSF file count equals 13 | Pass |
-| Severity count | 1 Medium, 4 Low, 8 Informational | Pass |
+| Finding count | CSF file count equals 4 | Pass |
+| Severity count | 1 Low, 3 Informational | Pass |
 | Raw ignored | `git status --short -- .../raw` | Only `.gitignore` tracked |
 | Sanitization | tracked packet secret/path pattern scan | No matches |
 | Per-finding proof | command recorded in finding and triage ledger | Pass |
@@ -82,26 +79,26 @@ These boxes reconcile the final completion receipt on PR #1037.
 | Hosted proof | Yeet monitor and review closeout | Green and mergeable |
 | Final closure | signed-in Chrome findings view | Zero packet-open |
 
-## Execution boundaries
+## Stop Conditions
 
 - The signed-in CSV export cannot be produced from the findings page.
 - Tracked evidence contains a secret, signed URL, auth value, email address, or
   raw local path.
+- A fix requires a product or architecture decision outside this packet.
 - A proposed security control would rely on a platform-specific fail-open path.
-
-The operator authorized all work necessary to resolve current findings in one
-PR. Resolve implementation and environment issues within that intent; stale
-archived-packet scope and approval gates do not constrain this batch. Refresh
-the current findings before publication and include any additions in this PR.
+- The same blocking condition repeats after reasonable investigation.
 
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| Post-merge receipt location | Packet bookkeeping only | Operator instruction | Resolve all findings in one PR; retain external closure evidence on PR #1026 without a second publication. Local and hosted proof, review, merge, and exact-ID closure remain required. | Actual completion gate satisfied |
+| None | N/A | N/A | N/A | N/A |
 
-The operator authorized a follow-up PR on September 9 because PR #1026 merged
-while the newly surfaced CSF-012 fix was being finalized. That authorization
-supersedes the original one-PR limit. Prior findings remain covered by #1026;
-CSF-012 merged in PR #1032 on September 9 and was closed as Already fixed.
-CSF-013 subsequently merged in PR #1037 and was closed after merge.
+## Combined closeout scope
+
+The operator requested one PR for this batch, the unfinished September 8
+security packet, and GitHub issues #1137 and #1086. Issue #1137 is a scheduler
+test synchronization failure; replace its fixed delay with an observed gate
+attempt. Issue #1086 was an empty publisher mailbox and was closed as not
+planned with operator authorization on September 16. All remaining code and
+packet closeout belongs to this branch.

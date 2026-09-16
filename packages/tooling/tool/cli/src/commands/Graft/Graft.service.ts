@@ -327,7 +327,12 @@ const makeGraftCacheSync = Effect.fn("GraftCacheSync.make")(function* () {
           );
           if (Result.isFailure(probe)) return false;
           const [info, canonical, hasGit] = probe.success;
-          return Eq.equals(info.type, "Directory") && !Eq.equals(canonical, source) && hasGit;
+          return (
+            Eq.equals(info.type, "Directory") &&
+            Eq.equals(canonical, candidate) &&
+            !Eq.equals(canonical, source) &&
+            hasGit
+          );
         })
       );
     }

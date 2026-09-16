@@ -8,7 +8,7 @@
     "capturedCount": 13,
     "capturedAt": "2026-09-08",
     "captureMethod": "signed-in-csv-export",
-    "note": "Twelve findings merged in PRs #1026 and #1032 and were closed as Already fixed. CSF-013 is implemented for the remaining follow-up; full proof, hosted acceptance, merge, and exact-ID closure remain pending. Severity and codexStatus retain historical capture values; captures span September 8-9."
+    "note": "All 13 findings merged in PRs #1026, #1032, and #1037 and were closed as Already fixed. The final completion receipt on PR #1037 records local proof, hosted acceptance, and exact-ID closure; this PR reconciles the stale tracked lifecycle."
   },
   "lanes": {
     "L1-permissions": {
