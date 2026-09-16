@@ -21,7 +21,8 @@ and terminal delimiters are removed, and notification markup is escaped.
 - **Ghostty:** when `TERM_PROGRAM=ghostty` and the hook has a controlling terminal,
   the hook retains a terminal descriptor before detaching. The worker emits an
   OSC 777 notification through that descriptor. Ghostty owns its click action and
-  selects the originating terminal surface. Hook stdout remains silent. If the
+  selects the originating terminal surface. A short pseudonymous session suffix
+  distinguishes simultaneous waits in the same checkout. Hook stdout remains silent. If the
   terminal is unavailable, the worker falls back to a labeled desktop notification.
 - **ChatGPT Desktop / Codex:** the hook automatically offers **Open task** when
   `CODEX_INTERNAL_ORIGINATOR_OVERRIDE=Codex Desktop` and `CODEX_THREAD_ID` equals

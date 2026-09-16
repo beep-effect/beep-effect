@@ -489,7 +489,9 @@ deliver_desktop() {
   # write terminal escapes to hook stdout or reopen a potentially recycled PTY.
   if [ -z "${open_uri}" ] && [ "${origin_terminal}" = "ghostty" ] && [ -t 8 ]; then
     local osc_body
-    osc_body="$(jq -nr --arg body "${body}" '$body | gsub("[\u0000-\u001f\u007f-\u009f;]"; " ")')"
+    # Ghostty uses the body as its notification ID. Distinguish simultaneous
+    # sessions in the same checkout so one cannot replace the other's action.
+    osc_body="$(jq -nr --arg body "${body} [${session_id:0:12}]" '$body | gsub("[\u0000-\u001f\u007f-\u009f;]"; " ")')"
     if [ ! -e "${disarm_sentinel}" ] &&
       timeout 2s bash -c 'printf "\\033]777;notify;%s;%s\\033\\\\" "$1" "$2" >&8' bash "${title}" "${osc_body}"; then
       append_delivery desktop "${stage}" sent "" "${measured_age}"
