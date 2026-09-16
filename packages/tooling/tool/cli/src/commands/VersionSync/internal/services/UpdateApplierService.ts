@@ -12,6 +12,7 @@ import { Context, Effect, Layer, Match, MutableHashMap, Number as Num, Path, pip
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { updateBiomeSchema } from "../resolvers/BiomeResolver.ts";
+import { updateTurboSchema } from "../resolvers/TurboResolver.ts";
 import { updateCatalogEntry, updatePackageManagerField } from "../updaters/PackageJsonUpdater.ts";
 import { updatePlainTextFile } from "../updaters/PlainTextUpdater.ts";
 import { updateVercelBunVersion } from "../updaters/VercelJsonUpdater.ts";
@@ -20,7 +21,7 @@ import type { FileSystem } from "effect";
 import type { VersionCategoryReport, VersionSyncError, VersionSyncResolution } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/services/UpdateApplierService");
-const VersionCategoryName = LiteralKit(["bun", "node", "docker", "biome", "effect"]).pipe(
+const VersionCategoryName = LiteralKit(["bun", "node", "docker", "biome", "effect", "turbo"]).pipe(
   $I.annoteSchema("VersionCategoryName", {
     description: "Supported update categories for write-mode version-sync application.",
   })
@@ -164,6 +165,24 @@ const applyBiomeUpdates = Effect.fn(function* (repoRoot: string, report: Version
   return filesChanged;
 });
 
+const TURBO_SCHEMA_FIELD = "$schema version";
+
+const applyTurboUpdates = Effect.fn(function* (repoRoot: string, report: VersionCategoryReport) {
+  const path = yield* Path.Path;
+  let filesChanged = 0;
+
+  for (const item of report.items) {
+    if (!Str.equivalence(item.field, TURBO_SCHEMA_FIELD)) {
+      continue;
+    }
+
+    const changed = yield* updateTurboSchema(path.join(repoRoot, item.file), item.expected);
+    filesChanged = countChangedFile(filesChanged, changed);
+  }
+
+  return filesChanged;
+});
+
 const EFFECT_CATALOG_FIELD_PREFIX = "catalog.";
 
 const applyEffectUpdates = Effect.fn(function* (repoRoot: string, report: VersionCategoryReport) {
@@ -219,6 +238,9 @@ const apply: UpdateApplierServiceShape["apply"] = Effect.fn(function* (repoRoot,
   const effectReport = A.findFirst(resolution.report.categories, (category) =>
     versionCategoryNameEquivalence(category.category, "effect")
   );
+  const turboReport = A.findFirst(resolution.report.categories, (category) =>
+    versionCategoryNameEquivalence(category.category, "turbo")
+  );
 
   const bunChanges = yield* applyReportUpdates(repoRoot, bunReport, applyBunUpdates);
 
@@ -234,8 +256,9 @@ const apply: UpdateApplierServiceShape["apply"] = Effect.fn(function* (repoRoot,
   const dockerChanges = yield* applyReportUpdates(repoRoot, dockerReport, applyDockerUpdates);
   const biomeChanges = yield* applyReportUpdates(repoRoot, biomeReport, applyBiomeUpdates);
   const effectChanges = yield* applyReportUpdates(repoRoot, effectReport, applyEffectUpdates);
+  const turboChanges = yield* applyReportUpdates(repoRoot, turboReport, applyTurboUpdates);
 
-  return Num.sumAll([bunChanges, nodeChanges, dockerChanges, biomeChanges, effectChanges]);
+  return Num.sumAll([bunChanges, nodeChanges, dockerChanges, biomeChanges, effectChanges, turboChanges]);
 });
 
 /**

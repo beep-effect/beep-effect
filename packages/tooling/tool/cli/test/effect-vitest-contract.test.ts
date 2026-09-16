@@ -45,7 +45,7 @@ const fixtureInventoryFileSystem = Effect.fnUntraced(function* () {
   const content = yield* encodeInventoryJson(
     EffectVitestInventoryDocument.make({
       schemaVersion: "effect-vitest-inventory/v1",
-      effectVitestVersion: "4.0.0-rc.113",
+      effectVitestVersion: "4.0.0-rc.115",
       scope: [],
       findings: [],
     })
@@ -171,7 +171,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
       );
       assertTrue(failure._tag === "EffectVitestLintError");
       assertTrue(
-        Str.includes("Baseline pin 4.0.0-rc.111 does not match graph pin 4.0.0-rc.113")(failure.message),
+        Str.includes("Baseline pin 4.0.0-rc.111 does not match graph pin 4.0.0-rc.115")(failure.message),
         failure.message
       );
     })
@@ -226,7 +226,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
       const missing = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
       assertTrue(Str.includes("Unable to read the installed @effect/vitest package metadata")(missing.message));
       yield* fs.makeDirectory(path.dirname(packagePath), { recursive: true });
-      for (const content of ["{broken", '{"name":"other-package","version":"4.0.0-rc.113"}']) {
+      for (const content of ["{broken", '{"name":"other-package","version":"4.0.0-rc.115"}']) {
         yield* fs.writeFileString(packagePath, content);
         const malformed = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
         assertTrue(Str.includes("Unable to decode installed @effect/vitest package metadata")(malformed.message));
@@ -339,7 +339,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
   );
 
   it.effect(
-    "rejects an installed Effect Vitest version outside the rc.113 pin",
+    "rejects an installed Effect Vitest version outside the rc.115 pin",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -351,7 +351,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
 
       const failure = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
       assertTrue(failure._tag === "EffectVitestLintError");
-      assertTrue(Str.includes("4.0.0-rc.113")(failure.message));
+      assertTrue(Str.includes("4.0.0-rc.115")(failure.message));
     })
   );
 });
@@ -439,7 +439,7 @@ it("preserves a justified exception on the matching live row", () => {
   });
   const document = EffectVitestInventoryDocument.make({
     schemaVersion: "effect-vitest-inventory/v1",
-    effectVitestVersion: "4.0.0-rc.113",
+    effectVitestVersion: "4.0.0-rc.115",
     scope: [],
     findings: [baselineFinding],
   });
@@ -471,7 +471,7 @@ const occurrences = (body: string) => {
 const withException = (rows: ReadonlyArray<EffectVitestFinding>) =>
   EffectVitestInventoryDocument.make({
     schemaVersion: "effect-vitest-inventory/v1",
-    effectVitestVersion: "4.0.0-rc.113",
+    effectVitestVersion: "4.0.0-rc.115",
     scope: [],
     findings: A.map(rows, (row, index) =>
       index === 0

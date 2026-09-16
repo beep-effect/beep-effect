@@ -79,8 +79,22 @@ export const versionSyncCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Only sync lockstep Effect catalog versions in the root package.json")
     ),
+    turboOnly: Flag.Boolean("turbo-only").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Only sync turbo.json $schema URLs to the installed turbo version")
+    ),
   },
-  Effect.fn(function* ({ write, dryRun, skipNetwork, bunOnly, nodeOnly, dockerOnly, biomeOnly, effectOnly }) {
+  Effect.fn(function* ({
+    write,
+    dryRun,
+    skipNetwork,
+    bunOnly,
+    nodeOnly,
+    dockerOnly,
+    biomeOnly,
+    effectOnly,
+    turboOnly,
+  }) {
     const mode = resolveMode(write, dryRun);
 
     yield* handleVersionSync({
@@ -91,6 +105,7 @@ export const versionSyncCommand = Command.make(
       dockerOnly,
       biomeOnly,
       effectOnly,
+      turboOnly,
     }).pipe(
       Effect.catchTags({
         VersionSyncDriftError: Effect.fn(function* (error) {
@@ -110,6 +125,6 @@ export const versionSyncCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Detect and fix version drift across Bun runtime pins and checksums, Node pins, CI workflows, Docker images, Biome, and the root Effect catalog"
+    "Detect and fix version drift across Bun runtime pins and checksums, Node pins, CI workflows, Docker images, Biome, the root Effect catalog, and turbo.json schema URLs"
   )
 );

@@ -88,7 +88,7 @@ it.layer(NodeServices.layer)("ONNX Runtime's patched NuGet installer", (it) => {
     Effect.fnUntraced(function* () {
       const { installerRequire } = yield* fixture;
       expect(installerRequire("adm-zip/package.json").name).toBe("fflate");
-      expect(installerRequire("onnxruntime-node/package.json").version).toBe("1.29.0");
+      expect(installerRequire("onnxruntime-node/package.json").version).toBe("1.30.0");
     })
   );
 
