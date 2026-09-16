@@ -3131,7 +3131,26 @@ const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
   const selection = parseRootAuditSelection(args);
 
   if (selection.mode === "packages") {
-    return [turboStep(repoRoot, "audit:packages", ["audit"], boundedRootTurboArgs(ciFreshTurboArgs(selection.args)))];
+    const step = turboStep(
+      repoRoot,
+      "audit:packages",
+      ["audit"],
+      boundedRootTurboArgs(ciFreshTurboArgs(selection.args))
+    );
+    // An unresolved reference is not an external test database. Keep an empty
+    // override so Bun cannot reload the reference from .env in child processes.
+    return [
+      QualityTaskStep.make({
+        ...step,
+        ...O.getSomesStruct({
+          env: pipe(
+            O.fromUndefinedOr(Bun.env.BEEP_TEST_DATABASE_URL),
+            O.filter(isUnresolvedSecretReference),
+            O.map(() => ({ ...step.env, BEEP_TEST_DATABASE_URL: "" }))
+          ),
+        }),
+      }),
+    ];
   }
 
   const auditArgs = selection.args;
