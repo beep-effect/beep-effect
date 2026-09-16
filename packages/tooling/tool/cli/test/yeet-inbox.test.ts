@@ -11,6 +11,8 @@ import {
   YeetInboxRowJson,
   YeetLocalShardFailedRow,
   YeetLocalShardFailureCapsule,
+  YeetPrMergeReadyCapsule,
+  YeetPrMergeReadyRow,
   YeetReviewThreadCapsule,
   YeetReviewThreadRow,
   YeetSiblingCollisionCapsule,
@@ -21,6 +23,7 @@ import {
   yeetInboxPaths,
   yeetInboxRowId,
   yeetLocalShardFailedRowId,
+  yeetPrMergeReadyRowId,
   yeetReviewThreadRowId,
   yeetSiblingCollisionRowId,
 } from "@beep/repo-cli/test/Yeet";
@@ -120,6 +123,26 @@ describe("yeetInboxRowId", () => {
       headSha: "abc123def456",
       shard: "Check",
     });
+    const mergeReadyCapsule = YeetPrMergeReadyCapsule.make({
+      closeoutAt: "2026-09-16T00:10:30.000Z",
+      headSha: "abc123def456",
+      prNumber: 751,
+      pushToReadyMs: 720000,
+      pushedAt: "2026-09-16T00:00:00.000Z",
+      readyAt: "2026-09-16T00:12:00.000Z",
+      settledAt: "2026-09-16T00:10:00.000Z",
+      url: "https://github.com/o/r/pull/751",
+    });
+    const unmeasuredMergeReadyCapsule = YeetPrMergeReadyCapsule.make({
+      closeoutAt: null,
+      headSha: "def456abc123",
+      prNumber: 751,
+      pushToReadyMs: null,
+      pushedAt: null,
+      readyAt: AT,
+      settledAt: null,
+      url: null,
+    });
     const rows = [
       YeetSiblingCollisionRow.make({
         capsule: siblingCapsule,
@@ -149,6 +172,20 @@ describe("yeetInboxRowId", () => {
         severity: "P0",
         ts: AT,
       }),
+      YeetPrMergeReadyRow.make({
+        capsule: mergeReadyCapsule,
+        checkout: "/repo",
+        id: yeetPrMergeReadyRowId(mergeReadyCapsule),
+        severity: "P1",
+        ts: AT,
+      }),
+      YeetPrMergeReadyRow.make({
+        capsule: unmeasuredMergeReadyCapsule,
+        checkout: "/repo",
+        id: yeetPrMergeReadyRowId(unmeasuredMergeReadyCapsule),
+        severity: "P1",
+        ts: AT,
+      }),
     ];
 
     expect(yeetSiblingCollisionRowId(siblingCapsule)).toBe(
@@ -157,11 +194,14 @@ describe("yeetInboxRowId", () => {
       )
     );
     expect(A.map(rows, yeetInboxExpectedRowId)).toStrictEqual(A.map(rows, (subject) => subject.id));
+    expect(yeetPrMergeReadyRowId(mergeReadyCapsule)).not.toBe(yeetPrMergeReadyRowId(unmeasuredMergeReadyCapsule));
     expect(A.map(rows, describeYeetInboxRow)).toStrictEqual([
       "sibling collision with /fleet/b (2 path(s))",
       "review thread PRRT_abc (pr #751 @ abc123d)",
       "base drift from origin/main (pr #751 @ abc123d)",
       "local shard Check exited 1 @ abc123d",
+      "merge-ready pr #751 @ abc123d (push→ready 720s)",
+      "merge-ready pr #751 @ def456a",
     ]);
   });
 });

@@ -163,6 +163,7 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/packet-control-plane-core" />
       <excludeFolder url="file://$MODULE_DIR$/goals/semantic-foundation" />
       <excludeFolder url="file://$MODULE_DIR$/goals/skill-contract-kernel" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/tooling/tool/cli/python/photo-face/.venv" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />

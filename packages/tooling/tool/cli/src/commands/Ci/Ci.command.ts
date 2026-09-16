@@ -16,6 +16,7 @@ import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.ts";
 import { CiCommandError } from "./Ci.errors.ts";
+import { ciAdmissionCommand } from "./CiAdmission.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 
@@ -340,6 +341,7 @@ const appendTurboSummaryCommand = Command.make(
 export const ciCommand = Command.make("ci", {}, () =>
   printLines([
     "CI commands:",
+    "- bun run beep ci admission [--event-name n] [--event-path p] [--base b] [--no-json] [--github-output]",
     "- bun run beep ci append-turbo-summary",
     "- bun run beep ci lane <id> [flags] (or --list)",
     "- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [filters]",
@@ -347,5 +349,11 @@ export const ciCommand = Command.make("ci", {}, () =>
   ])
 ).pipe(
   Command.withDescription("Continuous integration helper commands"),
-  Command.withSubcommands([appendTurboSummaryCommand, ciLaneCommand, ciLaneTimingsCommand, ciLocalCommand])
+  Command.withSubcommands([
+    ciAdmissionCommand,
+    appendTurboSummaryCommand,
+    ciLaneCommand,
+    ciLaneTimingsCommand,
+    ciLocalCommand,
+  ])
 );

@@ -163,6 +163,7 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import {
   Cause,
   ConfigProvider,
+  Console,
   Effect,
   Exit,
   Fiber,
@@ -212,12 +213,6 @@ const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   TestConsole.layer
-);
-const PullRequestConfigLayer = ConfigProvider.layer(
-  ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "pull_request", GITHUB_REF_NAME: "feature/cheap-gates" })
-);
-const MainPushConfigLayer = ConfigProvider.layer(
-  ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "push", GITHUB_REF_NAME: "main" })
 );
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
@@ -629,12 +624,6 @@ const cheapGatesSpawner = (
     return Effect.die("the cheap-gates test never spawns a piped command");
   });
 
-const cheapGatesSpawnerLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
-  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, failedCommands));
-
-const cheapGatesTestLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
-  Layer.mergeAll(FileSystemLayer, TestConsole.layer, cheapGatesSpawnerLayer(spawned, failedCommands));
-
 type FallowFeatureMatrixRowTuple = readonly [
   featureFamily: GithubChecksFallowFeatureMatrix["features"][number]["featureFamily"],
   ciMode: "advisory-artifact" | "blocking-check",
@@ -758,6 +747,26 @@ describe("quality task adapter", () => {
         cwd: "/repo",
       });
     }));
+
+  it.each(["op://vault/item/field", "postgres://user:op://vault/item/password@host/db"])(
+    "clears unresolved SQL test references for package audit: %s",
+    (value) =>
+      withEnvVar("BEEP_TEST_DATABASE_URL", value, () => {
+        const steps = rootQualityStepsForTesting("/repo", getInvocation(["audit", "packages"]));
+
+        expect(steps[0]?.env?.BEEP_TEST_DATABASE_URL).toBe("");
+      })
+  );
+
+  it.each([undefined, "", "postgres://localhost/beep_test", "postgresql://localhost/beep_test"])(
+    "preserves ordinary SQL test configuration for package audit: %s",
+    (value) =>
+      withEnvVar("BEEP_TEST_DATABASE_URL", value, () => {
+        const steps = rootQualityStepsForTesting("/repo", getInvocation(["audit", "packages"]));
+
+        expect(steps[0]?.env?.BEEP_TEST_DATABASE_URL).toBeUndefined();
+      })
+  );
 
   it("keeps package audit cacheable by default for local runs", () =>
     withEnvVar("CI", undefined, () => {
@@ -2536,104 +2545,150 @@ describe("quality task adapter", () => {
       )
     ));
 
-  it("runs every cheap gate through the collected runner when all lanes pass", () => {
-    const spawned: Array<string> = [];
-    const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
-    const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
-    const changesetStatusCommand = A.join([changesetStatusLane.step.command, ...changesetStatusLane.step.args], " ");
+  it.layer(FileSystemLayer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "runs every cheap gate through the collected runner when all lanes pass",
+      Effect.fnUntraced(function* () {
+        const testConsole = yield* TestConsole.make;
+        const spawned: Array<string> = [];
+        const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+        const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
+        const changesetStatusCommand = A.join(
+          [changesetStatusLane.step.command, ...changesetStatusLane.step.args],
+          " "
+        );
 
-    return Effect.runPromise(
-      withEnvVarEffect(
-        "BEEP_YEET_LANE_PROOF_MODE",
-        undefined,
-        runGithubChecks("cheap-gates").pipe(
-          Effect.tap(
-            Effect.fnUntraced(function* () {
-              const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-              expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
-              expect(logText).toContain('"failurePolicy":"collect-all"');
-              expect(logText).toContain('"status":"passed"');
-              expect(spawned).toContain(changesetStatusCommand);
-              expect(
-                A.every(cheapGateLanes, (lane) =>
-                  A.contains(spawned, A.join([lane.step.command, ...lane.step.args], " "))
-                )
-              ).toBe(true);
-            })
-          ),
-          provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), PullRequestConfigLayer))
-        )
-      )
+        yield* withEnvVarEffect(
+          "BEEP_YEET_LANE_PROOF_MODE",
+          undefined,
+          runGithubChecks("cheap-gates").pipe(
+            Effect.tap(
+              Effect.fnUntraced(function* () {
+                const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
+                expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
+                expect(logText).toContain('"failurePolicy":"collect-all"');
+                expect(logText).toContain('"status":"passed"');
+                expect(spawnedPolicyCommands(spawned)).toContain(policyCommandKey(changesetStatusCommand));
+                expect(
+                  A.filter(
+                    cheapGateLanes,
+                    (lane) =>
+                      !A.contains(spawnedPolicyCommands(spawned), policyCommandKey(policyStepCommand(lane.step)))
+                  )
+                ).toEqual([]);
+              })
+            ),
+            Effect.provideService(Console.Console, testConsole),
+            Effect.provideService(
+              ChildProcessSpawner.ChildProcessSpawner,
+              cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
+            ),
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "pull_request", GITHUB_REF_NAME: "feature/cheap-gates" })
+            )
+          )
+        );
+      })
     );
-  });
 
-  it("skips changeset status on a main push while running every cheap gate", () => {
-    const spawned: Array<string> = [];
-    const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
-    const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
-    const changesetStatusCommand = A.join([changesetStatusLane.step.command, ...changesetStatusLane.step.args], " ");
+    it.effect(
+      "skips changeset status on a main push while running every cheap gate",
+      Effect.fnUntraced(function* () {
+        const testConsole = yield* TestConsole.make;
+        const spawned: Array<string> = [];
+        const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+        const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
+        const changesetStatusCommand = A.join(
+          [changesetStatusLane.step.command, ...changesetStatusLane.step.args],
+          " "
+        );
 
-    return Effect.runPromise(
-      withEnvVarEffect(
-        "BEEP_YEET_LANE_PROOF_MODE",
-        "off",
-        runGithubChecks("cheap-gates").pipe(
-          Effect.tap(
-            Effect.fnUntraced(function* () {
-              const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-              expect(logText).toContain("[github-checks] quality: skipped changeset status on main push");
-              expect(spawned).not.toContain(changesetStatusCommand);
-              expect(
-                A.every(cheapGateLanes, (lane) =>
-                  A.contains(spawned, A.join([lane.step.command, ...lane.step.args], " "))
-                )
-              ).toBe(true);
-            })
-          ),
-          provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), MainPushConfigLayer))
-        )
-      )
+        yield* withEnvVarEffect(
+          "BEEP_YEET_LANE_PROOF_MODE",
+          "off",
+          runGithubChecks("cheap-gates").pipe(
+            Effect.tap(
+              Effect.fnUntraced(function* () {
+                const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
+                expect(logText).toContain("[github-checks] quality: skipped changeset status on main push");
+                expect(spawnedPolicyCommands(spawned)).not.toContain(policyCommandKey(changesetStatusCommand));
+                expect(
+                  A.filter(
+                    cheapGateLanes,
+                    (lane) =>
+                      !A.contains(spawnedPolicyCommands(spawned), policyCommandKey(policyStepCommand(lane.step)))
+                  )
+                ).toEqual([]);
+              })
+            ),
+            Effect.provideService(Console.Console, testConsole),
+            Effect.provideService(
+              ChildProcessSpawner.ChildProcessSpawner,
+              cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
+            ),
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "push", GITHUB_REF_NAME: "main" })
+            )
+          )
+        );
+      })
     );
-  });
 
-  it("collects multiple failures through the cheap-gates runner without stopping later lanes", () => {
-    const spawned: Array<string> = [];
-    const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
-    const failedCommands = [
-      A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "repo-sanity:tsconfig-sync")], " "),
-      A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "lint:effect-imports")], " "),
-    ];
-    const lastLane = O.getOrThrow(A.last(cheapGateLanes));
-    const lastCommand = A.join([lastLane.step.command, ...lastLane.step.args], " ");
+    it.effect(
+      "collects multiple failures through the cheap-gates runner without stopping later lanes",
+      Effect.fnUntraced(function* () {
+        const testConsole = yield* TestConsole.make;
+        const spawned: Array<string> = [];
+        const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+        const failedCommands = [
+          A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "repo-sanity:tsconfig-sync")], " "),
+          A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "lint:effect-imports")], " "),
+        ];
+        const lastLane = O.getOrThrow(A.last(cheapGateLanes));
+        const lastCommand = A.join([lastLane.step.command, ...lastLane.step.args], " ");
 
-    return Effect.runPromise(
-      withEnvVarEffect(
-        "BEEP_YEET_LANE_PROOF_MODE",
-        "off",
-        Effect.gen(function* () {
-          const exit = yield* Effect.exit(runGithubChecks("cheap-gates"));
+        yield* withEnvVarEffect(
+          "BEEP_YEET_LANE_PROOF_MODE",
+          "off",
+          Effect.gen(function* () {
+            const exit = yield* Effect.exit(runGithubChecks("cheap-gates"));
 
-          expect(Exit.isFailure(exit)).toBe(true);
-          if (Exit.isFailure(exit)) {
-            const failure = Cause.squash(exit.cause);
-            expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
-            if (isQualityTaskGroupFailed(failure)) {
-              expect(A.map(failure.failures, (step) => step.label)).toEqual([
-                "repo-sanity:tsconfig-sync",
-                "lint:effect-imports",
-              ]);
+            if (Exit.isSuccess(exit)) {
+              assert.fail("Expected cheap gates to report both configured failures");
             }
-          }
+            if (Exit.isFailure(exit)) {
+              const failure = Cause.squash(exit.cause);
+              expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+              if (isQualityTaskGroupFailed(failure)) {
+                expect(A.map(failure.failures, (step) => step.label)).toEqual([
+                  "repo-sanity:tsconfig-sync",
+                  "lint:effect-imports",
+                ]);
+              }
+            }
 
-          expect(spawned).toContain(lastCommand);
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
-          expect(logText).toContain('"failurePolicy":"collect-all"');
-          expect(logText).toContain('"id":"repo-sanity:tsconfig-sync","stage":"repo-sanity","status":"failed"');
-          expect(logText).toContain('"id":"lint:effect-imports","stage":"repo-quality","status":"failed"');
-          expect(logText).toContain('"status":"passed"');
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, failedCommands), PullRequestConfigLayer)))
+            expect(spawnedPolicyCommands(spawned)).toContain(policyCommandKey(lastCommand));
+            const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
+            expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
+            expect(logText).toContain('"failurePolicy":"collect-all"');
+            expect(logText).toContain('"id":"repo-sanity:tsconfig-sync","stage":"repo-sanity","status":"failed"');
+            expect(logText).toContain('"id":"lint:effect-imports","stage":"repo-quality","status":"failed"');
+            expect(logText).toContain('"status":"passed"');
+          })
+        ).pipe(
+          Effect.provideService(Console.Console, testConsole),
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            cheapGatesSpawner(spawned, failedCommands, policyCommandKey)
+          ),
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "pull_request", GITHUB_REF_NAME: "feature/cheap-gates" })
+          )
+        );
+      })
     );
   });
 
@@ -7443,6 +7498,34 @@ describe("labs turbo exclusion", () => {
       expect(shardFilterIndex).toBeGreaterThan(-1);
       expect(shardDelimiterIndex).toBeGreaterThan(shardFilterIndex);
       expect(A.some(shardArgs, Str.startsWith("--filter=@beep/"))).toBe(true);
+    }
+  });
+
+  it("keeps golden regeneration fresh in isolated native command plans", () => {
+    // ConfigProvider's default environment trie is process-scoped. Exercise
+    // both modes in fresh runtimes, as separate CLI invocations actually run.
+    for (const mode of ["0", "1"]) {
+      const script = `
+        import { rootQualityStepsForTesting } from "@beep/repo-cli/test/Quality";
+        const invocation = {
+          task: "check",
+          args: ["--filter=@beep/schema", "--cache=local:r", "--force=false", "--", "--force=false"]
+        };
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const [step] = rootQualityStepsForTesting("/repo", invocation);
+          console.log(step.args.join("\\n"));
+        }
+      `;
+      const child = Bun.spawnSync(["bun", "--eval", script], {
+        env: { ...Bun.env, CI: "false", REGEN_GOLDENS: mode },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      expect(child.exitCode, child.stderr.toString()).toBe(0);
+      const lines = Str.split(child.stdout.toString(), "\n");
+      expect(A.filter(lines, (line) => line === "--force")).toHaveLength(mode === "1" ? 2 : 0);
+      expect(A.filter(lines, (line) => line === "--force=false")).toHaveLength(mode === "1" ? 2 : 4);
+      expect(child.stdout.toString()).toContain("--\n--force=false");
     }
   });
 

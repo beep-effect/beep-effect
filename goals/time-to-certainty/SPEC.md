@@ -92,6 +92,11 @@ Each item is one small PR with its own receipt. All six were paid for on 2026-09
   runs in its own scope with a durable id, reports through the inbox, and outlives the submitter.
 - **B6 Journal every death.** Lease death and submitter death become events in the admission
   journal (the ontology packet's replay needs them; today it infers evictions from arithmetic).
+- **B7 Babysit to certainty, not to the first red.** `yeet monitor` exited 1 while printing
+  `merge-ready: yes` on optional reds, fired instantly on standing optional reds, and never ran the
+  closeout it required. `--until-ready` settles on the base ruleset's expected contexts, runs the
+  read-first closeout itself, and exits 0 on the first merge-ready poll; a session blocks on it and
+  learns push→ready as a number.
 
 ### C — Proof reuse (the multiplier)
 

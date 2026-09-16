@@ -61,6 +61,8 @@ export type BoxGeneratedOperations = {
     readonly createFileUploadSessionCommit: (payload: M.ChunkedUploadsCreateFileUploadSessionCommitPayload) => Effect.Effect<M.ChunkedUploadsCreateFileUploadSessionCommitSuccess, BoxError>;
     readonly createFileUploadSessionCommitByUrl: (payload: M.ChunkedUploadsCreateFileUploadSessionCommitByUrlPayload) => Effect.Effect<M.ChunkedUploadsCreateFileUploadSessionCommitByUrlSuccess, BoxError>;
     readonly createFileUploadSessionForExistingFile: (payload: M.ChunkedUploadsCreateFileUploadSessionForExistingFilePayload) => Effect.Effect<M.ChunkedUploadsCreateFileUploadSessionForExistingFileSuccess, BoxError>;
+    readonly createFileUploadSessionPlan: (payload: M.ChunkedUploadsCreateFileUploadSessionPlanPayload) => Effect.Effect<M.ChunkedUploadsCreateFileUploadSessionPlanSuccess, BoxError>;
+    readonly createFileUploadSessionPlanByUrl: (payload: M.ChunkedUploadsCreateFileUploadSessionPlanByUrlPayload) => Effect.Effect<M.ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess, BoxError>;
     readonly deleteFileUploadSessionById: (payload: M.ChunkedUploadsDeleteFileUploadSessionByIdPayload) => Effect.Effect<M.ChunkedUploadsDeleteFileUploadSessionByIdSuccess, BoxError>;
     readonly deleteFileUploadSessionByUrl: (payload: M.ChunkedUploadsDeleteFileUploadSessionByUrlPayload) => Effect.Effect<M.ChunkedUploadsDeleteFileUploadSessionByUrlSuccess, BoxError>;
     readonly getFileUploadSessionById: (payload: M.ChunkedUploadsGetFileUploadSessionByIdPayload) => Effect.Effect<M.ChunkedUploadsGetFileUploadSessionByIdSuccess, BoxError>;
@@ -315,6 +317,36 @@ export const makeGeneratedOperations: {
         (decoded, signal) =>
           invokeSdkMethod(client, "chunkedUploads", "createFileUploadSessionForExistingFile", [
             decoded.fileId,
+            decoded.requestBody,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    createFileUploadSessionPlan: (payload) =>
+      runSdkCall(
+        "chunkedUploads",
+        "createFileUploadSessionPlan",
+        "chunkedUploads.createFileUploadSessionPlan",
+        M.ChunkedUploadsCreateFileUploadSessionPlanPayload,
+        M.ChunkedUploadsCreateFileUploadSessionPlanSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "chunkedUploads", "createFileUploadSessionPlan", [
+            decoded.uploadSessionId,
+            decoded.requestBody,
+            mergeCancellation(decoded.optionalsInput, signal)
+          ])
+      ),
+    createFileUploadSessionPlanByUrl: (payload) =>
+      runSdkCall(
+        "chunkedUploads",
+        "createFileUploadSessionPlanByUrl",
+        "chunkedUploads.createFileUploadSessionPlanByUrl",
+        M.ChunkedUploadsCreateFileUploadSessionPlanByUrlPayload,
+        M.ChunkedUploadsCreateFileUploadSessionPlanByUrlSuccess,
+        payload,
+        (decoded, signal) =>
+          invokeSdkMethod(client, "chunkedUploads", "createFileUploadSessionPlanByUrl", [
+            decoded.url,
             decoded.requestBody,
             mergeCancellation(decoded.optionalsInput, signal)
           ])
