@@ -21,7 +21,7 @@ const $I = $RepoCliId.create("commands/Codex/Security.errors");
  * **Example** (Reporting incomplete coverage)
  * ```ts import.meta.vitest name="Reporting incomplete coverage"
  * import { CodexSecurityError } from "@beep/repo-cli/commands/Codex/Security.errors"
- * import { Runtime } from "effect"
+ * import * as Runtime from "effect/Runtime"
  * const error = CodexSecurityError.make({ message: "Scan coverage is partial." })
  * error.message // => "Scan coverage is partial."
  * error[Runtime.errorExitCode] // => 2

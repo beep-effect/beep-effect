@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-16T09:01:52.335Z
+Generated: 2026-09-16T09:56:36.752Z
 
 ## Scope
 
@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 17 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2850 |
-| publicExports | 20112 |
+| publicModules | 2859 |
+| publicExports | 20199 |
 | openModules | 377 |
-| openExports | 3092 |
+| openExports | 3100 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3330 |
+| exampleImportFindings | 3338 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3329 |
+| no-root-package-import | 3337 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 257 | 2163 | 47 | 289 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 257 | 2165 | 47 | 289 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -112,7 +112,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 54 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 7 | 126 | 4 | 62 |
 | 55 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 26 | 126 | 0 | 31 |
 | 56 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
-| 57 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 240 | 2468 | 4 | 318 |
+| 57 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 249 | 2539 | 4 | 326 |
 | 58 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 10 | 263 | 4 | 116 |
 | 59 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | needs-remediation | 7 | 14 | 0 | 3 |
 | 60 | `@beep/tailscale` | `packages/drivers/tailscale` | needs-remediation | 5 | 29 | 0 | 3 |
@@ -132,7 +132,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 74 | `@beep/drizzle` | `packages/drivers/drizzle` | needs-remediation | 3 | 11 | 0 | 3 |
 | 75 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 28 | 0 | 0 |
 | 76 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 4 | 11 | 2 | 7 |
-| 77 | `@beep/box` | `packages/drivers/box` | needs-remediation | 7 | 859 | 0 | 15 |
+| 77 | `@beep/box` | `packages/drivers/box` | needs-remediation | 7 | 873 | 0 | 15 |
 | 78 | `@beep/openai-compat` | `packages/drivers/openai-compat` | needs-remediation | 4 | 54 | 0 | 9 |
 | 79 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
 | 80 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 28 | 103 | 2 | 8 |
@@ -851,7 +851,6 @@ Export findings:
 - `src/commands/Codex/Findings.schemas.ts:415` `decodeCodexFindingsIngestOptions` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.triage.schemas.ts:495` `decodeCodexTriageLedger` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.write.ts:161` `assertPacketDocumentsClean` (const) - 1 example import violation(s)
-- `src/commands/Codex/Security.errors.ts:32` `CodexSecurityError` (class) - 1 example import violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:124` `PreservationCeilingExceededError` (class) - 1 example import violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:187` `PreservationVerificationFailure` (class) - 1 example import violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:219` `PreservationUnapprovedRowsError` (class) - 1 example import violation(s)
@@ -1109,6 +1108,7 @@ Export findings:
 - `src/commands/Worktree/Worktree.service.ts:472` `WorktreeRemovalService` (class) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:529` `runWorktreeGitCapture` (const) - 1 example import violation(s)
 - `src/commands/Worktree/Worktree.service.ts:1503` `WorktreeRemovalServiceLayer` (const) - 1 example import violation(s)
+- `src/commands/Yeet/Yeet.command.ts:516` `yeetMonitorDurationMillis` (const) - 1 example import violation(s)
 
 ### @beep/pglite
 
@@ -2032,6 +2032,14 @@ Export findings:
 - `beep-docs/api-reference/ApiReferenceDataset.ts:559` `loadApiReferenceDataset` (const) - 1 example import violation(s)
 - `beep-docs/api-reference/DatasetPath.ts:68` `resolveWithinDataset` (const) - 1 example import violation(s)
 - `beep-docs/api-reference/Reflection.ts:251` `loadReflection` (const) - 1 example import violation(s)
+- `bun-test/index.ts:222` `setDefaultTimeout` (const) - 1 example import violation(s)
+- `bun-test/index.ts:607` `effect` (const) - 1 example import violation(s)
+- `bun-test/index.ts:624` `live` (const) - 1 example import violation(s)
+- `bun-test/index.ts:644` `layer` (const) - 1 example import violation(s)
+- `bun-test/index.ts:671` `flakyTest` (const) - 1 example import violation(s)
+- `bun-test/index.ts:710` `it` (const) - 1 example import violation(s)
+- `bun-test/index.ts:728` `makeMethods` (const) - 1 example import violation(s)
+- `bun-test/index.ts:747` `describeWrapped` (const) - 1 example import violation(s)
 - `claudecode/Frontmatter/Command.ts:45` `CommandFrontmatter_` (class) - 1 example import violation(s)
 - `claudecode/Frontmatter/Command.ts:89` `CommandFrontmatter` (const) - 1 example import violation(s)
 - `claudecode/Frontmatter/OutputStyle.ts:38` `OutputStyleFrontmatter_` (class) - 1 example import violation(s)
