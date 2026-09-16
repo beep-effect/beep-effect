@@ -24,7 +24,9 @@
 
 import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -32,6 +34,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { mergePr } from "./Merge.ts";
 import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
+import { YeetUntilMergedPolicy, yeetMonitorExitFor } from "./MonitorPolicy.ts";
 import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
 import { runGhPullRequestView } from "./PullRequest.ts";
 import { renderYeetReplyFailureVerdict, replyReportPathForContext, runYeetReply } from "./Reply.ts";
@@ -58,10 +61,13 @@ import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import type { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";
 import type { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
-import type { YeetMonitorTerminalState } from "./MonitorLoop.ts";
+import type { runYeetAutomaticCloseout } from "./Closeout.ts";
+import type { YeetMonitorLoopPolicy, YeetMonitorTerminalState } from "./MonitorPolicy.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 import type { ReplyReport } from "./Reply.schemas.ts";
 import type { YeetRetirePlan } from "./Retire.schemas.ts";
+import type { readYeetRulesetRequiredContexts } from "./Settle.ts";
+import type { collectYeetStatus } from "./Status.ts";
 import type { SweepPlan, SweepPlanStep, SweepReport } from "./Sweep.schemas.ts";
 import type { SweepGitState } from "./Sweep.ts";
 
@@ -75,11 +81,31 @@ interface YeetPorcelainOptions {
   readonly packetDir: string;
 }
 
+/**
+ * Injectable boundaries of the monitor routes, so every loop test runs against
+ * stubs instead of `gh`.
+ *
+ * **Details**
+ *
+ * `collectStatus`, `rulesetRead`, and `closeout` are the B7 seams the merge
+ * loop reads through on every poll: the status snapshot, the base branch's
+ * required contexts (read once per head), and the read-first closeout it runs
+ * itself when the required census settles for a head with no bound closeout
+ * artifact. Each defaults to the live implementation.
+ */
 interface YeetMonitorRouteDependencies {
   readonly capture?: typeof runRepoCommandCapture;
+  readonly closeout?: typeof runYeetAutomaticCloseout;
+  readonly collectStatus?: typeof collectYeetStatus;
   readonly hydrate?: typeof hydrateYeetReadOnlyContext;
-  readonly mergeLoop?: typeof runYeetMonitorUntilMerged;
+  readonly mergeLoop?: (
+    context: RepoRunContext,
+    options: Parameters<typeof runYeetMonitorUntilMerged>[1]
+  ) => ReturnType<typeof runYeetMonitorUntilMerged>;
+  readonly policy?: YeetMonitorLoopPolicy;
   readonly registry?: PrSessionRegistryShape;
+  readonly rulesetRead?: typeof readYeetRulesetRequiredContexts;
+  readonly settleTimeoutMs?: number;
   readonly view?: typeof runGhPullRequestView;
   readonly watchStream?: typeof runYeetWatchStream;
 }
@@ -414,17 +440,52 @@ export const failYeetReplyOnFailedOutcomes = Effect.fn("Yeet.failReplyOnFailedOu
  * @category commands
  * @since 0.0.0
  */
-export const runYeetMergeLoop = Effect.fn("Yeet.runMergeLoopCommand")(function* (
-  options: YeetPorcelainOptions,
-  dependencies: YeetMonitorRouteDependencies = {}
-): Effect.fn.Return<
-  YeetMonitorTerminalState,
-  YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const context = yield* hydrateMonitoredContext(options, dependencies);
-  return yield* (dependencies.mergeLoop ?? runYeetMonitorUntilMerged)(context, {});
-});
+export const runYeetMergeLoop: {
+  (
+    dependencies?: YeetMonitorRouteDependencies
+  ): (
+    options: YeetPorcelainOptions
+  ) => Effect.Effect<
+    YeetMonitorTerminalState,
+    YeetCommandError | CliReportedExit,
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  >;
+  (
+    options: YeetPorcelainOptions,
+    dependencies?: YeetMonitorRouteDependencies
+  ): Effect.Effect<
+    YeetMonitorTerminalState,
+    YeetCommandError | CliReportedExit,
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  >;
+} = dual(
+  (args) => P.hasProperty(args[0], "base"),
+  Effect.fn("Yeet.runMergeLoopCommand")(function* (
+    options: YeetPorcelainOptions,
+    dependencies: YeetMonitorRouteDependencies = {}
+  ): Effect.fn.Return<
+    YeetMonitorTerminalState,
+    YeetCommandError | CliReportedExit,
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  > {
+    const context = yield* hydrateMonitoredContext(options, dependencies);
+    const terminal = yield* (dependencies.mergeLoop ?? runYeetMonitorUntilMerged)(context, {
+      collectStatus: dependencies.collectStatus,
+      rulesetRead: dependencies.rulesetRead,
+      closeout: dependencies.closeout,
+      capture: dependencies.capture,
+      policy:
+        dependencies.policy ??
+        YeetUntilMergedPolicy.make(
+          dependencies.settleTimeoutMs === undefined ? {} : { settleTimeoutMs: dependencies.settleTimeoutMs }
+        ),
+    });
+    const exit = yeetMonitorExitFor(terminal);
+    yield* Console.log(`[yeet] ${exit.summary}`);
+    if (exit.exitCode !== 0) return yield* failWithReportedExit(exit.summary, exit.exitCode);
+    return terminal;
+  })
+);
 
 /**
  * Default poll interval for `yeet monitor --watch`, matching the GitHub CLI's
@@ -492,6 +553,8 @@ export const runYeetWatchLoop = Effect.fn("Yeet.runWatchLoopCommand")(function* 
   const context = yield* hydrateMonitoredContext(options, dependencies);
   const ended = yield* (dependencies.watchStream ?? runYeetWatchStream)(context, {
     intervalMillis: YEET_WATCH_INTERVAL_MILLIS,
+    rulesetRead: dependencies.rulesetRead,
+    ...(dependencies.settleTimeoutMs === undefined ? {} : { settleTimeoutMs: dependencies.settleTimeoutMs }),
     untilEvent,
   });
   const verdict = `yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`;
@@ -531,3 +594,25 @@ const YEET_UNTIL_EVENT_PAIRING_MESSAGE =
 export const rejectYeetUntilEventPairing: Effect.Effect<never, CliReportedExit> = Console.error(
   YEET_UNTIL_EVENT_PAIRING_MESSAGE
 ).pipe(Effect.andThen(failWithReportedExit(YEET_UNTIL_EVENT_PAIRING_MESSAGE)));
+
+/**
+ * Reject conflicting readiness monitor modes before any remote work.
+ *
+ * **Details**
+ *
+ * The monitor route selector owns legality because these routes never construct YeetRunOptions.
+ *
+ * **Example** (Reference the rejection)
+ *
+ * ```ts
+ * import { rejectYeetUntilReadyPairing } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ * console.log(Effect.isEffect(rejectYeetUntilReadyPairing))
+ * ```
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export const rejectYeetUntilReadyPairing = Console.error(
+  "--until-ready cannot be combined with --until-merged, --until-event, or --watch."
+).pipe(Effect.andThen(failWithReportedExit("Invalid --until-ready pairing.")));

@@ -471,3 +471,95 @@ log path and the `yeet job wait` command (`--json` prints the record). `--job-ma
 <duration>` maps to `RuntimeMaxSec=` so the `timeout` reason is reachable in a live test.
 Agent guidance (yeet skill, AGENTS.md): a proof expected to outlive the repair loop is submitted
 with `--detach` and followed with `yeet job wait`.
+
+**Ruling 41 (B7-1) — B7 is a ttc goal item next to B5; the pr-event-awareness packet stays at
+capture.** `yeet monitor --until-ready` lands as ttc item B7 (`PLAN.md` after B6) with its
+settle rulings recorded here. `explorations/pr-event-awareness` receives one Trail line and a
+`research/SOURCES.md` cross-link saying the polling half is being built as B7; webhooks, push
+sources, and lane dispatch stay out of scope. Rejected: advancing the packet first (its spark is
+wider than this fix); a standalone PR train (no durable home for the settle rulings).
+
+**Ruling 42 (B7-2) — `--until-ready` is a third loop policy with an exit-0 terminal; exit codes
+in every mode follow the required-only census.** `--until-ready` shares the `--until-merged`
+poll loop, snapshot, and flake budget. It exits 0 on the first poll where merge-ready is `yes`;
+exits 1 when a required check is red and matched no flake class (or its rerun is spent), when the
+PR closes, when the settle timeout expires, or when the consecutive poll-error budget (5) is
+spent. Optional checks never affect the exit code in any mode. Plain `yeet monitor` and `--watch`
+move to the required-only census (`--until-event` triggers on required reds only; optional
+transitions are still emitted, and the `watch-ended` row carries an `optionalFailing` count).
+`--until-merged` announces readiness once per head (event + row) and keeps looping. Terminal
+states are one `LiteralKit` (`merged`, `closed`, `ready`, `required-red`, `settle-timeout`,
+`poll-error-budget`) and the exit-code table is one schema-backed table (`yeetMonitorExitFor`).
+Rejected: changing plain monitor's fail-fast default (breaks `publish --monitor`); readiness as an
+event on `--until-merged` only (no exit-0 terminal to block on).
+
+**Ruling 43 (B7-3) — the loop composes the read-first closeout itself.** When the required
+census settles for a head that has no closeout artifact bound to that head, the loop runs the
+same code path as `yeet closeout` with the default bot lineup, no gates, and never a reply,
+resolve, or retrigger flag (`runYeetAutomaticCloseout`). The artifact binds `reviewedHeadSha`,
+so a push invalidates it and the next settle re-runs it; closeout issues are readiness blockers,
+never loop failures. Rejected: an opt-in `--closeout` flag (one more flag every recipe must
+remember); dropping the `closeout-run` criterion (loses the durable per-head record other
+commands read).
+
+**Ruling 44 (B7-4) — settle = the base ruleset's expected contexts have reported and are
+terminal.** The required contexts are read once per head from
+`gh api repos/{owner}/{repo}/rules/branches/<base>` (`required_status_checks[].context`,
+deduplicated and sorted, with the contributing ruleset ids). Settled means every matchable
+expected context has reported a terminal outcome and no required check is pending. An expected
+context with no exact reported name but at least one matrix child (`<context> (<variant>)`
+reported — `Test Unit` on this repo, whose jobs register as `Test Unit (unit-a|unit-b|repo-cli)`)
+is tolerated by name, listed in the gate line, and its children are waited for; an expected
+context with neither an exact name nor a child is missing and holds the wait. When the ruleset
+read fails the rule degrades to the `--required` rows alone (the pre-B7 registration patience)
+after one stderr line. Precedent: bors-ng prerun waits for every configured status; GitHub merge
+queue waits for required checks on the merge group with a status-check timeout. Live evidence
+2026-09-16 (#1143): the `main` ruleset (10240248) lists 17 contexts, `gh pr checks --required`
+lists 16. Rejected: patience only (accepts the late-registration race cli/cli #7401 and #8855
+left open); a fixed census count (breaks when the workflow set changes); fuzzy or prefix matching
+beyond the matrix-child form (counts unrelated jobs as required).
+
+**Ruling 45 (B7-5) — `--settle-timeout <duration>`, default 30 minutes.** On expiry while
+unsettled the loop exits 1 with wait reason `settle-timeout`, names the missing and pending
+contexts, and the exit summary carries them. A settled head never times out. Rejected: keep
+polling and report (a never-registering path-filtered workflow holds the wait forever); treat
+unreported as failed (merge-queue semantics, but it lies about what was observed).
+
+**Ruling 46 (B7-6) — delivery is the attached loop now, the detached job after B5, plus one
+P1 informational inbox row per head.** Canonical recipe after B5: `yeet monitor --until-ready
+--detach`, then `yeet job wait <id>` from a background tool call. The loop appends one
+`pr-merge-ready` row per head (id from PR number + head SHA; a push supersedes the prior head's
+row with a `fix-sha` receipt naming the new head), severity P1: injected at the next tool
+boundary through the existing hook, never a denial, acknowledged by observation (`observed`) once
+B5's ack resolution lands (PR1 acks with the existing attributed forms; `--thread-url <pr>` is the
+natural one). A bounded spike in PR2 verifies whether a Claude Code `FileChanged` hook with
+`asyncRewake: true` on the inbox file can wake an idle session. Desktop PR-bar auto-fix stays
+optional. No webhooks. Rejected: row + hook only (rests on the unverified composition); desktop
+PR bar as canonical (no green event, needs the app open); P2 (session-start only) and P0 (a gate
+on good news).
+
+**Ruling 47 (B7-7) — naming.** Flag `--until-ready`; row kind `pr-merge-ready`; settle wait
+reasons as one `LiteralKit` (`registration`, `required-pending`, `closeout-pending`,
+`settle-timeout`); the gate line always names the current reason; the head timeline stamps
+`pushedAt`, `settledAt`, `closeoutAt`, `readyAt` and the final gate line prints the push→ready
+wall clock. Rejected: `--until-mergeable` (AGENTS.md already uses "mergeable" for the complete PR
+state, and the verdict line is `merge-ready:`).
+
+**Ruling 48 (B7-8) — two PRs.** PR1 (no B5 dependency): settle rule, automatic closeout,
+`--until-ready`, exit-code fixes in all modes, `pr-merge-ready` row and hook label, skill and
+AGENTS.md recipe, PLAN/rulings/receipts, measurement. PR2 (after B5 merges): the detach recipe in
+the skill, `pr-merge-ready` observed-ack wiring with `yeet job wait`, the FileChanged/asyncRewake
+spike result, and the scratchpad watcher's retirement receipt. Whoever lands second renumbers
+rulings via a divergence merge, never a force-push.
+
+**Ruling 49 (B7-5 amended) — the settle timeout bounds registration, not execution.** Ruling 45
+expired the budget "while unsettled", which included required checks that had registered and were
+queued or running. PR #1149's own babysit hit that at 30 minutes with `Heavy / Lint Policy` and
+`Heavy / Test Integration` registered but still queued behind six other heavy runs, and exited 1
+for a wait that was GitHub's, not a settle failure. The budget now counts only while no check has
+registered for the head or at least one expected context is missing (no exact name, no matrix
+child); a registered required check is waited for until its own job timeout, and the gate line
+names the elapsed time without the budget in that state. `deriveSettleVerdict` stays pure; the
+`settle-timeout` terminal, its exit code, and the missing-context naming are unchanged. Rejected:
+raising the default to cover the observed heavy queue (the queue depth is not a property of the
+head); counting queued checks against a second, longer budget (GitHub already owns that bound).

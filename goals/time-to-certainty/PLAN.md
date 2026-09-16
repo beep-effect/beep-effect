@@ -74,6 +74,11 @@ orchestrator owns schemas, contracts, and judgment.
       `cancelled`, `unrecorded-failure`); a start failure has a terminal job record but no runner attempt. It reports one `proof-job-finished` inbox row (P2 green /
       P1 otherwise) acknowledged by the new `observed` resolution; `yeet job list|status|wait|logs|cancel`.
       Brief and evidence: `research/b5-brief.md`, `research/b5-implementation.md`.
+- [~] B7 `yeet monitor --until-ready` as the canonical PR babysit path (rulings 41–49): settle on
+      the base ruleset's expected contexts with tolerated matrix parents and `--settle-timeout`,
+      automatic read-first closeout on settle, an exit-0 `ready` terminal, required-only exit
+      codes in every monitor mode, one P1 `pr-merge-ready` inbox row per head, push→ready
+      measurement. PR1 carries the attached loop (this PR); PR2 after B5: detach recipe + observed ack.
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):
       rows landed in PR #964, emission was gated behind the unknown-row preservation rollout in PR
       #978, and PR #993 made each death a crash-recoverable per-sink claim. A disabled admission sink

@@ -415,6 +415,50 @@ esac
   );
 });
 
+itEffect("renders merge-ready as good news with a PR ack and no denial", () =>
+  withInbox(({ root }) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const row = yield* encodeUnknown({
+        schemaVersion: "yeet-inbox/v1",
+        kind: "pr-merge-ready",
+        id: "ready-7-head",
+        severity: "P1",
+        checkout: root,
+        ts: "2026-09-16T00:00:00Z",
+        capsule: {
+          prNumber: 7,
+          headSha: "head",
+          url: "https://github.com/beep/repo/pull/7",
+          readyAt: "2026-09-16T00:00:00Z",
+          pushedAt: null,
+          settledAt: null,
+          closeoutAt: null,
+          pushToReadyMs: null,
+        },
+      });
+      yield* fs.writeFileString(`${root}/.beep/inbox/failures.ndjson`, `${row}\n`);
+      yield* fs.remove(`${root}/.beep/inbox/dispatch.json`);
+      const result = yield* runHook(root, "codex", {
+        cwd: root,
+        hook_event_name: "PreToolUse",
+        session_id: "ready-test",
+        tool_name: "Read",
+        tool_input: {},
+      });
+      expect(result.exitCode).toBe(0);
+      const output = decodeObject(result.stdout);
+      expect(output).toMatchObject({
+        hookSpecificOutput: { additionalContext: expect.stringContaining("Good news, not incident work:") },
+      });
+      expect(result.stdout).toContain("P1 merge-ready [ready-7-head] PR #7");
+      expect(result.stdout).toContain("--thread-url https://github.com/beep/repo/pull/7");
+      expect(result.stdout).not.toContain("Fix this now");
+      expect(output).not.toHaveProperty("hookSpecificOutput.permissionDecision");
+    })
+  ).pipe(provideTestLayer)
+);
+
 itEffect(
   "surfaces P2 jobs at SessionStart and P1 jobs at PreToolUse without denial",
   () =>

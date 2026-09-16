@@ -26679,6 +26679,30 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJob.ts": {
+          "lines": 89.06,
+          "statements": 89.39,
+          "branches": 95.45,
+          "functions": 72,
+          "uncovered": {
+            "lines": 7,
+            "statements": 7,
+            "branches": 1,
+            "functions": 7
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofJobLauncher.ts": {
+          "lines": 97.48,
+          "statements": 96.7,
+          "branches": 91.56,
+          "functions": 95.12,
+          "uncovered": {
+            "lines": 4,
+            "statements": 6,
+            "branches": 7,
+            "functions": 2
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofLedger.ts": {
           "lines": 100,
           "statements": 100,

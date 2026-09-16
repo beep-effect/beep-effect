@@ -722,7 +722,7 @@ const inspectUnpushed = Effect.fn("WorktreeRemovalService.inspectUnpushed")(func
   });
   const baseCount = yield* countCommits(targetPath, baseRange, "inspect-origin-main");
   const base = Bool.match(baseExists, {
-    onFalse: () => O.none<string>(),
+    onFalse: O.none<string>,
     onTrue: () => O.some(`origin/${defaultBranch}`),
   });
   const upstream = yield* inspectUpstreamState(targetPath, branch, (branchName) =>
