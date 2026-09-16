@@ -101,7 +101,37 @@ export const GitHubRepoSlugFromRemote = S.String.check(
  */
 export type GitHubRepoSlugFromRemote = typeof GitHubRepoSlugFromRemote.Type;
 
-const ArtifactPath = S.String.check(S.isPattern(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*\\)[^\p{Cc}\p{Cf}]+$/u));
+/**
+ * Repository-relative path rule shared by sealed artifacts and the `--path`
+ * scan target: non-empty, no leading `/`, no `..` segment, no backslash, no
+ * control or format characters.
+ *
+ * **Example** (Refusing traversal and absolute paths)
+ * ```ts import.meta.vitest name="Refusing traversal and absolute paths"
+ * import { RepoRelativePath } from "@beep/repo-cli/commands/Codex/Security.schemas"
+ * import * as S from "effect/Schema"
+ * S.is(RepoRelativePath)("packages/tooling") // => true
+ * S.is(RepoRelativePath)("/etc") // => false
+ * S.is(RepoRelativePath)("../sibling") // => false
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RepoRelativePath = S.String.check(
+  S.isPattern(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*\\)[^\p{Cc}\p{Cf}]+$/u, {
+    identifier: $I`RepoRelativePathCheck`,
+    title: "Repository-Relative Path",
+    description: "A non-empty relative path with no `..` segment, backslash, or control character.",
+    message: "Expected a repository-relative path without traversal",
+  })
+).pipe($I.annoteSchema("RepoRelativePath", { description: "Bounded relative path beneath a repository root." }));
+/**
+ * Repository-relative path string.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RepoRelativePath = typeof RepoRelativePath.Type;
+const ArtifactPath = RepoRelativePath;
 const Digest = S.String.check(S.isPattern(/^[a-f0-9]{64}$/));
 const FindingId = S.String.check(S.isPattern(/^csf_[a-f0-9]{24}$/));
 const OccurrenceId = S.String.check(S.isPattern(/^occ_[a-f0-9]{24}$/));
@@ -352,7 +382,7 @@ export class SecurityScanOptions extends S.Class<SecurityScanOptions>($I`Securit
     outputDir: S.String,
     maxCost: S.Finite.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(100)),
     timeoutMinutes: S.Int.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(120)),
-    target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    target: S.OptionFromOptionalKey(RepoRelativePath).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("SecurityScanOptions", { description: "Bounded operator inputs for a local Security CLI run." })
 ) {}

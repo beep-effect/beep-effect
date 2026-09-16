@@ -26,6 +26,73 @@ import {
 
 const KNOWLEDGE_BASE = "docs/security/threat-model.md";
 const isValidMaxCost = S.is(SecurityScanOptions.fields.maxCost);
+const TARGET_MESSAGE = "--path must name an existing path inside the repository.";
+const OUTPUT_SWAPPED_MESSAGE =
+  "Scan output directory was replaced or linked into the repository; the scan is not usable.";
+
+/**
+ * Proves a `--path` target names an existing entry inside the repository once
+ * symlinks are followed, then returns the validated relative string.
+ *
+ * **Example** (Composing the target check)
+ * ```ts
+ * import { resolveScanTarget } from "@beep/repo-cli/commands/Codex/Security.command"
+ * import { Effect } from "effect"
+ * const program = resolveScanTarget("/srv/repo", "packages/tooling")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ * @param repoRealPath - Canonical repository root.
+ * @param target - Repository-relative path supplied by the operator.
+ * @returns The same relative target once proven contained.
+ * @category validation
+ * @since 0.0.0
+ */
+export const resolveScanTarget = Effect.fn("CodexSecurity.resolveScanTarget")(function* (
+  repoRealPath: string,
+  target: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const resolved = yield* fs
+    .realPath(path.resolve(repoRealPath, target))
+    .pipe(Effect.mapError((cause) => CodexSecurityError.make({ message: TARGET_MESSAGE, cause })));
+  if (!isResolvedPathWithinRoot(path, { root: repoRealPath, candidate: resolved })) {
+    return yield* CodexSecurityError.make({ message: TARGET_MESSAGE });
+  }
+  return target;
+});
+
+/**
+ * Re-proves that the scan output directory is still the unlinked private
+ * directory the adapter created: its real path is itself and it lies outside
+ * the repository. Run before spawning and again after the scanner exits so a
+ * directory swapped mid-scan fails closed.
+ *
+ * **Example** (Composing the output-directory check)
+ * ```ts
+ * import { assertPrivateOutputDirectory } from "@beep/repo-cli/commands/Codex/Security.command"
+ * import { Effect } from "effect"
+ * const program = assertPrivateOutputDirectory("/srv/repo", "/private/scan-2026-09-16")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ * @param repoRealPath - Canonical repository root.
+ * @param outputDir - Canonical output directory the adapter created.
+ * @category validation
+ * @since 0.0.0
+ */
+export const assertPrivateOutputDirectory = Effect.fn("CodexSecurity.assertPrivateOutputDirectory")(function* (
+  repoRealPath: string,
+  outputDir: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const resolved = yield* fs
+    .realPath(outputDir)
+    .pipe(Effect.mapError((cause) => CodexSecurityError.make({ message: OUTPUT_SWAPPED_MESSAGE, cause })));
+  if (resolved !== outputDir || isResolvedPathWithinRoot(path, { root: repoRealPath, candidate: resolved })) {
+    return yield* CodexSecurityError.make({ message: OUTPUT_SWAPPED_MESSAGE });
+  }
+});
 
 /** Trimmed stdout of one git invocation inside the repository. */
 const gitOutput = Effect.fn("CodexSecurity.gitOutput")(function* (repo: string, args: ReadonlyArray<string>) {
@@ -67,15 +134,14 @@ const requireCleanWorktree = Effect.fn("CodexSecurity.requireCleanWorktree")(fun
 
 /** Canonical output path whose parent exists, lies outside the repository, and is not yet taken. */
 const resolveOutputDirectory = Effect.fn("CodexSecurity.resolveOutputDirectory")(function* (
-  repo: string,
+  repoRealPath: string,
   output: string
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const outputPath = path.resolve(output);
   const parent = yield* fs.realPath(path.dirname(outputPath));
-  const resolvedRepo = yield* fs.realPath(repo);
-  if (isResolvedPathWithinRoot(path, { root: resolvedRepo, candidate: parent })) {
+  if (isResolvedPathWithinRoot(path, { root: repoRealPath, candidate: parent })) {
     return yield* CodexSecurityError.make({
       message: "Choose an output directory outside the repository; its parent must already exist.",
     });
@@ -122,16 +188,13 @@ const scanArguments = (input: {
 ];
 
 const writeSourceReceipt = Effect.fn("CodexSecurity.writeSourceReceipt")(function* (
+  repoRealPath: string,
   outputDir: string,
   source: SecuritySourceReceipt
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  if ((yield* fs.realPath(outputDir)) !== outputDir) {
-    return yield* CodexSecurityError.make({
-      message: "Scan output changed into a linked directory; source receipt was not written.",
-    });
-  }
+  yield* assertPrivateOutputDirectory(repoRealPath, outputDir);
   yield* fs.writeFileString(
     path.join(outputDir, "beep-source.json"),
     yield* S.encodeEffect(S.fromJsonString(SecuritySourceReceipt))(source),
@@ -147,10 +210,18 @@ const run = Effect.fn("CodexSecurity.run")(
     // Verify the pin before touching the filesystem or spawning git.
     yield* securityRuntime;
     const preflight = SecurityScanMode.is.preflight(mode);
+    const repoRealPath = yield* fs.realPath(repo);
     const source = yield* resolveSourceReceipt(repo);
     yield* requireCleanWorktree(repo, preflight);
-    const outputDir = yield* resolveOutputDirectory(repo, options.outputDir);
-    if (!preflight) yield* fs.makeDirectory(outputDir, { mode: 0o700 });
+    yield* O.match(options.target, {
+      onNone: () => Effect.void,
+      onSome: (target) => resolveScanTarget(repoRealPath, target),
+    });
+    const outputDir = yield* resolveOutputDirectory(repoRealPath, options.outputDir);
+    if (!preflight) {
+      yield* fs.makeDirectory(outputDir, { mode: 0o700 });
+      yield* assertPrivateOutputDirectory(repoRealPath, outputDir);
+    }
     yield* printLines([
       `Codex Security ${SECURITY_PACKAGE_VERSION}; stored ChatGPT authentication; ${preflight ? "preflight only" : `estimated cost limit $${options.maxCost}, timeout ${options.timeoutMinutes} minutes`}.`,
     ]);
@@ -162,7 +233,8 @@ const run = Effect.fn("CodexSecurity.run")(
       timeout: Duration.minutes(preflight ? 1 : options.timeoutMinutes),
       timeoutMessage: "Security process timed out. Retained artifacts may be incomplete and are not a passing scan.",
     });
-    if (!preflight) yield* writeSourceReceipt(outputDir, source);
+    // Fail closed on a swapped directory before any verdict, even a non-zero exit.
+    if (!preflight) yield* writeSourceReceipt(repoRealPath, outputDir, source);
     if (exitCode !== 0) {
       return yield* CodexSecurityError.make({
         message: `Security CLI exited ${exitCode}. Findings or incomplete coverage require review; this is not a passing scan.`,

@@ -4,6 +4,7 @@ import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { NodeTestLayer } from "./support/CommandTest.ts";
@@ -213,6 +214,36 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       for (const document of A.filter(docs, (document) => document.tracked)) {
         expect(document.contents).not.toContain(token);
       }
+    })
+  );
+
+  it.effect(
+    "ingests critical findings as the top packet severity, ordered before High",
+    Effect.fnUntraced(function* () {
+      const { root, manifest, findings } = yield* fixture();
+      const base = A.head(findings.findings);
+      yield* replaceArtifact(root, manifest, "findings.json", {
+        ...findings,
+        findings: [
+          {
+            ...O.getOrUndefined(base),
+            findingId: "csf_111111111111111111111111",
+            occurrenceId: "occ_111111111111111111111111",
+            severity: { level: "high" },
+          },
+          {
+            ...O.getOrUndefined(base),
+            findingId: "csf_222222222222222222222222",
+            occurrenceId: "occ_222222222222222222222222",
+            severity: { level: "critical" },
+          },
+        ],
+      });
+      const imported = yield* readSecurityBundle(root);
+      expect(A.map(imported.payload.findings, (finding) => finding.severity)).toEqual(["High", "Critical"]);
+      const plan = yield* planPacket(imported.payload, {});
+      expect(plan.severityCounts.Critical).toBe(1);
+      expect(A.map(plan.records, (record) => record.severity)).toEqual(["Critical", "High"]);
     })
   );
 

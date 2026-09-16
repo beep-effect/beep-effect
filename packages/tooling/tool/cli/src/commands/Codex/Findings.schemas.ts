@@ -245,6 +245,7 @@ export class CodexFindingRecord extends S.Class<CodexFindingRecord>($I`CodexFind
  */
 export class CodexSeverityCounts extends S.Class<CodexSeverityCounts>($I`CodexSeverityCounts`)(
   {
+    Critical: S.optionalKey(S.Int),
     High: S.optionalKey(S.Int),
     Medium: S.optionalKey(S.Int),
     Low: S.optionalKey(S.Int),

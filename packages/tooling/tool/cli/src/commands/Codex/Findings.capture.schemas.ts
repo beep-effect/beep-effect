@@ -36,16 +36,17 @@ const $I = $RepoCliId.create("commands/Codex/Findings.capture.schemas");
  * ```ts
  * import { CodexFindingSeverity } from "@beep/repo-cli/commands/Codex/Findings.capture.schemas"
  *
- * console.log(CodexFindingSeverity.Options.indexOf("Medium")) // 1
- * console.log(CodexFindingSeverity.is.Informational("Informational")) // true
+ * console.log(CodexFindingSeverity.Options.indexOf("Medium")) // 2
+ * console.log(CodexFindingSeverity.is.Critical("Critical")) // true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const CodexFindingSeverity = LiteralKit(["High", "Medium", "Low", "Informational"]).pipe(
+export const CodexFindingSeverity = LiteralKit(["Critical", "High", "Medium", "Low", "Informational"]).pipe(
   $I.annoteSchema("CodexFindingSeverity", {
-    description: "Severity domain of a Codex Cloud security finding, ordered most severe first.",
+    description:
+      "Severity domain of a Codex security finding, ordered most severe first. Cloud exports never carry Critical; sealed local scans can.",
   })
 );
 

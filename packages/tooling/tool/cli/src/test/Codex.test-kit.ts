@@ -15,6 +15,7 @@ export * from "@beep/repo-cli/commands/Codex/Findings.schemas";
 export * from "@beep/repo-cli/commands/Codex/Findings.triage.schemas";
 export * from "@beep/repo-cli/commands/Codex/Findings.write";
 export * from "@beep/repo-cli/commands/Codex/Security.bundle";
+export * from "@beep/repo-cli/commands/Codex/Security.command";
 export * from "@beep/repo-cli/commands/Codex/Security.errors";
 export * from "@beep/repo-cli/commands/Codex/Security.packet";
 export * from "@beep/repo-cli/commands/Codex/Security.runtime";

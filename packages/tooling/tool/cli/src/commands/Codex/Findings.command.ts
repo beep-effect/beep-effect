@@ -506,7 +506,9 @@ const findingsIngestCommand = Command.make(
       json: flags.json,
     });
   })
-).pipe(Command.withDescription("Capture or refresh a goal packet from a signed-in Codex findings CSV export"));
+).pipe(
+  Command.withDescription("Capture or refresh a goal packet from a cloud CSV export or a sealed local scan bundle")
+);
 
 /**
  * `beep codex findings` — capture-to-packet commands.
@@ -527,6 +529,7 @@ export const findingsCommand = Command.make("findings", {}, () =>
     "Codex findings commands:",
     "- bun run beep codex findings ingest --from <export.csv>",
     "- bun run beep codex findings ingest --refresh --from <full-export.csv>",
+    "- bun run beep codex findings ingest --source security-bundle --from <sealed-scan-directory>",
     "",
     "Export the CSV from the signed-in findings view first:",
     `  ${SOURCE_URL}`,

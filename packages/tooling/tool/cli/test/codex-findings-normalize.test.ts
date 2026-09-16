@@ -234,7 +234,7 @@ describe("codex findings payload rejection", () => {
 
   it.effect("rejects an unknown severity", () =>
     Effect.gen(function* () {
-      expect(yield* rejects(payloadOf([captureFinding({ codexId: hex("aa", 32), severity: "Critical" })]))).toBe(
+      expect(yield* rejects(payloadOf([captureFinding({ codexId: hex("aa", 32), severity: "Blocker" })]))).toBe(
         "rejected"
       );
     })

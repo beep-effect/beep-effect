@@ -20,12 +20,12 @@ import {
 } from "@beep/repo-cli/test/Codex";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
+import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Order, PlatformError } from "effect";
+import { Effect, FileSystem, Layer, Order, PlatformError } from "effect";
 import * as S from "effect/Schema";
 import { NodeTestLayer, withTempWorkingDirectory } from "./support/CommandTest.ts";
 import type { CodexRefreshLedgerSource } from "@beep/repo-cli/test/Codex";
-import type { Path } from "effect";
 
 const SLUG = "codex-security-findings-2026-08-04";
 const SOURCE_URL = "https://chatgpt.com/codex/cloud/security/findings/";
@@ -67,8 +67,12 @@ const arrivingInfo: CaptureFinding = {
   commit: "dddddddddddddddddddddddddddddddddddddddd",
 };
 
-const testEffect = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>
-  withTempWorkingDirectory(effect).pipe(provideScopedLayer(NodeTestLayer));
+// Bundle ingest spawns the upstream exporter and hashes artifacts, so the
+// command now needs the spawner and crypto services even on the CSV path.
+const testLayer = Layer.mergeAll(NodeTestLayer, NodeCrypto.layer, NodeChildProcessSpawner.layer);
+
+const testEffect = <A, E>(effect: Effect.Effect<A, E, Layer.Success<typeof testLayer>>) =>
+  withTempWorkingDirectory(effect).pipe(provideScopedLayer(testLayer));
 
 const planFor = (findings: ReadonlyArray<CaptureFinding>, source?: CodexRefreshLedgerSource, expectedCount?: number) =>
   decodeCodexFindingsCapturePayload({
