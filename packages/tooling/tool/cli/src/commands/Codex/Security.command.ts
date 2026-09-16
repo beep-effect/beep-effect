@@ -37,7 +37,7 @@ const OUTPUT_SWAPPED_MESSAGE =
  * **Example** (Composing the target check)
  * ```ts
  * import { resolveScanTarget } from "@beep/repo-cli/commands/Codex/Security.command"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const program = resolveScanTarget("/srv/repo", "packages/tooling")
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -71,7 +71,7 @@ export const resolveScanTarget = Effect.fn("CodexSecurity.resolveScanTarget")(fu
  * **Example** (Composing the output-directory check)
  * ```ts
  * import { assertPrivateOutputDirectory } from "@beep/repo-cli/commands/Codex/Security.command"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const program = assertPrivateOutputDirectory("/srv/repo", "/private/scan-2026-09-16")
  * console.log(Effect.isEffect(program)) // true
  * ```

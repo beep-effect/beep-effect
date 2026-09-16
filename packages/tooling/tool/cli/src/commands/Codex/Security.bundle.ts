@@ -56,7 +56,7 @@ const remoteSlugOption = S.decodeOption(GitHubRepoSlugFromRemote);
  * **Example** (Normalizing an scp-style remote)
  * ```ts import.meta.vitest name="Normalizing an scp-style remote"
  * import { securityRepositoryFromRemote } from "@beep/repo-cli/commands/Codex/Security.bundle"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const program = securityRepositoryFromRemote("git@github.com:example/project.git")
  * Effect.runSync(program) // => "example/project"
  * ```
@@ -330,7 +330,7 @@ const projectCapture = Effect.fn("CodexSecurity.projectCapture")(function* (inpu
  * **Example** (Composing a bundle import)
  * ```ts
  * import { readSecurityBundle } from "@beep/repo-cli/commands/Codex/Security.bundle"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const program = readSecurityBundle("/private/scan").pipe(Effect.map(result => result.payload.capture.repository))
  * console.log(Effect.isEffect(program)) // true
  * ```

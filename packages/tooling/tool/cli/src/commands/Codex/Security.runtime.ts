@@ -29,7 +29,7 @@ const PluginMetadata = S.fromJsonString(
  * **Example** (Composing runtime discovery)
  * ```ts
  * import { securityRuntime } from "@beep/repo-cli/commands/Codex/Security.runtime"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const program = securityRuntime.pipe(Effect.map(runtime => runtime.cli))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -82,7 +82,7 @@ export const securityRuntime = Effect.gen(function* () {
  * **Example** (Composing a bounded export)
  * ```ts
  * import { runSecurityCli } from "@beep/repo-cli/commands/Codex/Security.runtime"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Duration from "effect/Duration"
  * const program = runSecurityCli({
  *   args: ["export", "/private/scan", "--export-format", "json", "--output", "-"],
@@ -142,7 +142,7 @@ export const runSecurityCli = Effect.fn("CodexSecurity.runCli")(function* (optio
  * **Example** (Composing upstream validation)
  * ```ts
  * import { verifySecurityBundleContract } from "@beep/repo-cli/commands/Codex/Security.runtime"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * const verification = verifySecurityBundleContract("/private/scan")
  * console.log(Effect.isEffect(verification)) // true
  * ```

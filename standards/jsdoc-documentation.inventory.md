@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-16T07:25:10.643Z
+Generated: 2026-09-16T08:53:31.681Z
 
 ## Scope
 
@@ -15,15 +15,15 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 117 |
 | publicModules | 2850 |
-| publicExports | 20107 |
+| publicExports | 20111 |
 | openModules | 377 |
-| openExports | 3097 |
+| openExports | 3092 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3335 |
+| exampleImportFindings | 3330 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3334 |
+| no-root-package-import | 3329 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 257 | 2158 | 47 | 294 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 257 | 2162 | 47 | 289 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -841,22 +841,17 @@ Export findings:
 - `src/commands/Ci/Ci.command.ts:269` `appendTurboSummary` (const) - 1 example import violation(s)
 - `src/commands/Ci/CiLane.ts:358` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:1295` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
-- `src/commands/Codex/Findings.capture.schemas.ts:621` `CodexFindingsCapturePayload` (class) - 1 example import violation(s)
-- `src/commands/Codex/Findings.capture.schemas.ts:680` `decodeCodexFindingsCapturePayload` (const) - 1 example import violation(s)
+- `src/commands/Codex/Findings.capture.schemas.ts:622` `CodexFindingsCapturePayload` (class) - 1 example import violation(s)
+- `src/commands/Codex/Findings.capture.schemas.ts:681` `decodeCodexFindingsCapturePayload` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.csv.ts:329` `decodeCodexFindingsCsv` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.normalize.ts:244` `priorIdsOfEntries` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.normalize.ts:300` `planPacket` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.refresh.ts:243` `validateCodexFindingsIngestModes` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.refresh.ts:314` `loadCodexRefreshLedgerSource` (const) - 1 example import violation(s)
-- `src/commands/Codex/Findings.schemas.ts:414` `decodeCodexFindingsIngestOptions` (const) - 1 example import violation(s)
+- `src/commands/Codex/Findings.schemas.ts:415` `decodeCodexFindingsIngestOptions` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.triage.schemas.ts:495` `decodeCodexTriageLedger` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.write.ts:161` `assertPacketDocumentsClean` (const) - 1 example import violation(s)
-- `src/commands/Codex/Security.bundle.ts:66` `securityRepositoryFromRemote` (const) - 1 example import violation(s)
-- `src/commands/Codex/Security.bundle.ts:340` `readSecurityBundle` (const) - 1 example import violation(s)
 - `src/commands/Codex/Security.errors.ts:32` `CodexSecurityError` (class) - 1 example import violation(s)
-- `src/commands/Codex/Security.runtime.ts:39` `securityRuntime` (const) - 1 example import violation(s)
-- `src/commands/Codex/Security.runtime.ts:101` `runSecurityCli` (const) - 1 example import violation(s)
-- `src/commands/Codex/Security.runtime.ts:152` `verifySecurityBundleContract` (const) - 1 example import violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:124` `PreservationCeilingExceededError` (class) - 1 example import violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:187` `PreservationVerificationFailure` (class) - 1 example import violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:219` `PreservationUnapprovedRowsError` (class) - 1 example import violation(s)

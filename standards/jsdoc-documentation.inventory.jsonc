@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-09-16T07:25:10.643Z",
+  "generatedAt": "2026-09-16T08:53:31.681Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,15 +66,15 @@
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 117,
     "publicModules": 2850,
-    "publicExports": 20107,
+    "publicExports": 20111,
     "openModules": 377,
-    "openExports": 3097,
+    "openExports": 3092,
     "missingExportExamples": 5,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 3335,
+    "exampleImportFindings": 3330,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 3334,
+    "no-root-package-import": 3329,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -42043,7 +42043,7 @@
         "srcDir": "src",
         "sourceFileCount": 259,
         "publicModuleCount": 257,
-        "publicExportCount": 2158
+        "publicExportCount": 2162
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -42053,14 +42053,14 @@
       },
       "counts": {
         "openModules": 47,
-        "openExports": 294,
+        "openExports": 289,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 295,
+        "exampleImportFindings": 290,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -42078,7 +42078,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 294
+          "no-root-package-import": 289
         }
       },
       "modules": [
@@ -43365,7 +43365,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 1,
+          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -43453,7 +43453,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 13,
+          "exportCount": 15,
           "remediationStatus": "resolved"
         },
         {
@@ -54215,8 +54215,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 58,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-58-codexfindingseverity",
+          "line": 59,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-59-codexfindingseverity",
           "currentTags": [
             "@category",
             "@since"
@@ -54237,8 +54237,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 74,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-74-codexfindingstatus",
+          "line": 75,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-75-codexfindingstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -54259,8 +54259,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 86,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-86-codexfindingstatus",
+          "line": 87,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-87-codexfindingstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -54281,8 +54281,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 110,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-110-codexcaptureauthstate",
+          "line": 111,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-111-codexcaptureauthstate",
           "currentTags": [
             "@category",
             "@since"
@@ -54303,8 +54303,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 122,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-122-codexcaptureauthstate",
+          "line": 123,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-123-codexcaptureauthstate",
           "currentTags": [
             "@category",
             "@since"
@@ -54325,8 +54325,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 161,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-161-codexfindingid",
+          "line": 162,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-162-codexfindingid",
           "currentTags": [
             "@category",
             "@since"
@@ -54347,8 +54347,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 173,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-173-codexfindingid",
+          "line": 174,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-174-codexfindingid",
           "currentTags": [
             "@category",
             "@since"
@@ -54369,8 +54369,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 187,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-187-capturedfindingid",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-188-capturedfindingid",
           "currentTags": [
             "@category",
             "@since"
@@ -54391,8 +54391,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 197,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-197-capturedfindingid",
+          "line": 198,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-198-capturedfindingid",
           "currentTags": [
             "@category",
             "@since"
@@ -54413,8 +54413,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 210,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-210-codexcapturesource",
+          "line": 211,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-211-codexcapturesource",
           "currentTags": [
             "@category",
             "@since"
@@ -54435,8 +54435,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 217,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-217-codexcapturesource",
+          "line": 218,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-218-codexcapturesource",
           "currentTags": [
             "@category",
             "@since"
@@ -54457,8 +54457,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 256,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-256-gitcommitsha",
+          "line": 257,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-257-gitcommitsha",
           "currentTags": [
             "@category",
             "@since"
@@ -54479,8 +54479,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 268,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-268-gitcommitsha",
+          "line": 269,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-269-gitcommitsha",
           "currentTags": [
             "@category",
             "@since"
@@ -54501,8 +54501,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 292,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-292-capturedate",
+          "line": 293,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-293-capturedate",
           "currentTags": [
             "@category",
             "@since"
@@ -54523,8 +54523,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 311,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-311-capturedate",
+          "line": 312,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-312-capturedate",
           "currentTags": [
             "@category",
             "@since"
@@ -54545,8 +54545,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 329,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-329-githubreposlug",
+          "line": 330,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-330-githubreposlug",
           "currentTags": [
             "@category",
             "@since"
@@ -54567,8 +54567,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 348,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-348-githubreposlug",
+          "line": 349,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-349-githubreposlug",
           "currentTags": [
             "@category",
             "@since"
@@ -54589,8 +54589,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 405,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-405-codexfindingtitle",
+          "line": 406,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-406-codexfindingtitle",
           "currentTags": [
             "@category",
             "@since"
@@ -54611,8 +54611,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 417,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-417-codexfindingtitle",
+          "line": 418,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-418-codexfindingtitle",
           "currentTags": [
             "@category",
             "@since"
@@ -54633,8 +54633,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 448,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-448-codexcapturefinding",
+          "line": 449,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-449-codexcapturefinding",
           "currentTags": [
             "@category",
             "@since"
@@ -54655,8 +54655,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 511,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-511-codexcapturemeta",
+          "line": 512,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-512-codexcapturemeta",
           "currentTags": [
             "@category",
             "@since"
@@ -54677,8 +54677,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 621,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-621-codexfindingscapturepayload",
+          "line": 622,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-622-codexfindingscapturepayload",
           "currentTags": [
             "@category",
             "@since"
@@ -54705,8 +54705,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.capture.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
-          "line": 680,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-680-decodecodexfindingscapturepayload",
+          "line": 681,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-capture-schemas-ts-681-decodecodexfindingscapturepayload",
           "currentTags": [
             "@category",
             "@since"
@@ -54781,8 +54781,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
-          "line": 525,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-command-ts-525-findingscommand",
+          "line": 527,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-command-ts-527-findingscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -55902,8 +55902,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Findings.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts",
-          "line": 289,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-schemas-ts-289-codexpacketplan",
+          "line": 290,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-schemas-ts-290-codexpacketplan",
           "currentTags": [
             "@category",
             "@since"
@@ -55924,8 +55924,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Findings.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts",
-          "line": 376,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-schemas-ts-376-codexfindingsingestoptions",
+          "line": 377,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-schemas-ts-377-codexfindingsingestoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -55946,8 +55946,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts",
-          "line": 414,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-schemas-ts-414-decodecodexfindingsingestoptions",
+          "line": 415,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-schemas-ts-415-decodecodexfindingsingestoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -56546,18 +56546,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "readSecurityBundle",
@@ -56574,26 +56568,67 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "resolveScanTarget",
+          "exportKind": "const",
+          "filePath": "src/commands/Codex/Security.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
+          "line": 50,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-50-resolvescantarget",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "assertPrivateOutputDirectory",
+          "exportKind": "const",
+          "filePath": "src/commands/Codex/Security.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
+          "line": 83,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-83-assertprivateoutputdirectory",
+          "currentTags": [
+            "@param",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "securityCommand",
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 222,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-222-securitycommand",
+          "line": 294,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-294-securitycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -56698,18 +56733,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "runSecurityCli",
@@ -56728,18 +56757,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "verifySecurityBundleContract",
@@ -56756,18 +56779,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "SECURITY_PACKAGE_VERSION",
@@ -56858,12 +56875,56 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "RepoRelativePath",
+          "exportKind": "const",
+          "filePath": "src/commands/Codex/Security.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
+          "line": 120,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-120-reporelativepath",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RepoRelativePath",
+          "exportKind": "type",
+          "filePath": "src/commands/Codex/Security.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
+          "line": 133,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-133-reporelativepath",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "SecuritySourceReceipt",
           "exportKind": "class",
           "filePath": "src/commands/Codex/Security.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
-          "line": 146,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-146-securitysourcereceipt",
+          "line": 176,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-176-securitysourcereceipt",
           "currentTags": [
             "@category",
             "@since"
@@ -56884,8 +56945,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Security.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
-          "line": 198,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-198-securitymanifest",
+          "line": 228,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-228-securitymanifest",
           "currentTags": [
             "@category",
             "@since"
@@ -56906,8 +56967,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
-          "line": 214,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-214-securityseveritytopacket",
+          "line": 244,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-244-securityseveritytopacket",
           "currentTags": [
             "@category",
             "@since"
@@ -56928,8 +56989,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Security.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
-          "line": 230,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-230-securityseveritytopacket",
+          "line": 260,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-260-securityseveritytopacket",
           "currentTags": [
             "@category",
             "@since"
@@ -56950,8 +57011,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Security.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
-          "line": 275,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-275-securityfindings",
+          "line": 305,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-305-securityfindings",
           "currentTags": [
             "@category",
             "@since"
@@ -56972,8 +57033,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Security.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
-          "line": 297,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-297-securitycoverage",
+          "line": 327,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-327-securitycoverage",
           "currentTags": [
             "@category",
             "@since"
@@ -56994,8 +57055,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
-          "line": 322,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-322-securityscanmode",
+          "line": 352,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-352-securityscanmode",
           "currentTags": [
             "@category",
             "@since"
@@ -57016,8 +57077,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Security.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
-          "line": 330,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-330-securityscanmode",
+          "line": 360,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-360-securityscanmode",
           "currentTags": [
             "@category",
             "@since"
@@ -57038,8 +57099,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Security.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
-          "line": 350,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-350-securityscanoptions",
+          "line": 380,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-schemas-ts-380-securityscanoptions",
           "currentTags": [
             "@category",
             "@since"
