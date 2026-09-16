@@ -119,5 +119,6 @@ condition. This capture PR is the B8 docs-only acceptance probe; a heavy
 lane that does not pass without work on this PR is a B8 finding, not a B9
 one. The first head (`434eed9762`) was such a finding: GitHub reported one
 skipped `Heavy / matrix.name` context instead of the lanes. #1165 fixed it,
-and the probe re-runs on `heavy.yml@main` after merging `main`; the result
-is recorded in `goals/time-to-certainty/research/b8-implementation.md`.
+and the re-run on `heavy.yml@main` (head `c43cf7618a`) passed: every lane
+passed without work on a hosted runner and `--until-ready` exited 0. The
+evidence is in `goals/time-to-certainty/research/b8-implementation.md`.

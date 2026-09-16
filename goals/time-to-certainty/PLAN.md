@@ -85,7 +85,8 @@ orchestrator owns schemas, contracts, and judgment.
       (PR A) then the `Heavy Admission` job and the `heavy-not-admitted` settle wait (PR B); the
       docs-only probe is the B9 capture PR #1164; its first head failed the ruleset (one
       `Heavy / matrix.name` context), fixed by #1165 (lanes pass without work on a hosted
-      runner); re-run evidence in `research/b8-implementation.md`.
+      runner); the re-run on `c43cf7618a` passed (every `Heavy / <lane>` success on
+      `ubuntu-24.04`, `--until-ready` exit 0; evidence in `research/b8-implementation.md`).
 - [ ] B9 merge queue (`merge_group`, `checks_requested`, ruleset `merge_queue`): authority moves from
       "merge" to "enqueue"; `/explore` capture then grill before any implementation (ruling 56).
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):

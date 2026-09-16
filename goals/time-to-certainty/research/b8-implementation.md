@@ -298,6 +298,17 @@ rework stayed small: the spawner branch is four lines and no poll index is consu
   switches to `ubuntu-24.04` when not admitted, and `lane-gate` skips every step, so each
   context expands and passes without work. Proven only once PR D reaches `main` and #1164 is
   re-run against it.
+- **Docs-only skip, re-run after PR D: passed.** #1165 merged as `1e5d570bfe`; #1164 merged
+  `main` and pushed head `c43cf7618a` (Check run 35121254821). `Heavy Admission` printed
+  `{"verdict":"skip-satisfied","admitted":false,"sources":[],"docsOnly":true,"changedPathCount":6}`.
+  All seven lanes (`Build`, `Check`, `Coverage Regression`, `Docgen`, `Doctest`,
+  `Lint Policy`, `Test Integration`) expanded under their own names on `ubuntu-24.04`, skipped
+  checkout and every work step (`heavy admission: not admitted; Check passes without work`), and
+  concluded `success` in 3 to 6 seconds each. No `Heavy / matrix.name` context, no
+  `beep-ec2-heavy` runner. `gh pr checks --required` passed every required `Heavy / *` context
+  and the PR left `BLOCKED` (`MERGEABLE`, unstable only on rate-limited Vercel deployments).
+  `yeet monitor --until-ready` printed `settle: settled; closeout bound; heavy: docs-only, lanes
+  pass without work` and `merge-ready: yes`, and exited 0 (push to ready 11m 26s).
 - **Gap found and closed the same day.** A push after the label admits the new head through
   `check.yml` while the previous head's `Heavy Admit` matrix keeps running (concurrency groups
   do not cross workflows); the admission job now cancels superseded `Heavy Admit` runs for the
