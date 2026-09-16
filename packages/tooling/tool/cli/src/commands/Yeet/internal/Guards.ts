@@ -8,6 +8,7 @@
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { resolveLocalRepoBinary, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { optionFromNonEmpty } from "./GitExec.ts";
@@ -329,4 +330,23 @@ export const validateCommitMessage = Effect.fn("Yeet.validateCommitMessage")(fun
       exitCode: result.exitCode,
     });
   }
+});
+
+/**
+ * Reject plan-only and recursively detached proof submissions.
+ *
+ * **Example** (Reject a detached plan)
+ * ```ts
+ * import { validateProofJobDetach } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ * console.log(Effect.isEffect(validateProofJobDetach(true))) // true
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const validateProofJobDetach = Effect.fn("Yeet.validateProofJobDetach")(function* (plan: boolean) {
+  if (plan) return yield* YeetCommandError.make({ message: "--detach cannot be combined with --plan." });
+  if (O.isSome(yield* configStringOption("BEEP_YEET_JOB_ID")))
+    return yield* YeetCommandError.make({ message: "Cannot recursively --detach inside a proof job." });
 });
