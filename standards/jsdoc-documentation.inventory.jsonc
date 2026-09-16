@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-09-16T09:56:36.752Z",
+  "generatedAt": "2026-09-16T14:09:43.269Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,16 +65,16 @@
     "cleanPackages": 17,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 117,
-    "publicModules": 2859,
-    "publicExports": 20199,
+    "publicModules": 2861,
+    "publicExports": 20225,
     "openModules": 377,
-    "openExports": 3100,
+    "openExports": 3104,
     "missingExportExamples": 5,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 3338,
+    "exampleImportFindings": 3342,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 3337,
+    "no-root-package-import": 3341,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -42041,9 +42041,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 259,
-        "publicModuleCount": 257,
-        "publicExportCount": 2165
+        "sourceFileCount": 261,
+        "publicModuleCount": 259,
+        "publicExportCount": 2191
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -42053,14 +42053,14 @@
       },
       "counts": {
         "openModules": 47,
-        "openExports": 289,
+        "openExports": 293,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 290,
+        "exampleImportFindings": 294,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -42078,7 +42078,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 289
+          "no-root-package-import": 293
         }
       },
       "modules": [
@@ -42859,6 +42859,27 @@
           "remediationStatus": "resolved"
         },
         {
+          "docKind": "jsdoc",
+          "filePath": "src/commands/Ci/CiAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ciadmission-ts-1-module",
+          "currentTags": [
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
           "docKind": "packageDocumentation",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
@@ -42907,6 +42928,27 @@
           "remediationStatus": "resolved"
         },
         {
+          "docKind": "jsdoc",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-1-module",
+          "currentTags": [
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 20,
+          "remediationStatus": "resolved"
+        },
+        {
           "docKind": "packageDocumentation",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
@@ -42947,7 +42989,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 5,
+          "exportCount": 7,
           "remediationStatus": "resolved"
         },
         {
@@ -49852,8 +49894,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 247,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-247-runcachewarm",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-251-runcachewarm",
           "currentTags": [
             "@category",
             "@since"
@@ -49880,8 +49922,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 273,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-273-runcachewarmfortesting",
+          "line": 277,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-277-runcachewarmfortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -49909,8 +49951,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 295,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-295-runcachewarmlanefortesting",
+          "line": 299,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-299-runcachewarmlanefortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -49932,8 +49974,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 432,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-432-buildcachedashboard",
+          "line": 451,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-451-buildcachedashboard",
           "currentTags": [
             "@category",
             "@since"
@@ -49960,8 +50002,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 487,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-487-runcacherestorationprobe",
+          "line": 506,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-506-runcacherestorationprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -49988,8 +50030,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 603,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-603-runcachepolicyaudit",
+          "line": 622,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-622-runcachepolicyaudit",
           "currentTags": [
             "@category",
             "@since"
@@ -50010,8 +50052,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 813,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-813-cachecommand",
+          "line": 832,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-832-cachecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -50032,8 +50074,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
-          "line": 833,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-833-makecachecommandfortesting",
+          "line": 852,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-command-ts-852-makecachecommandfortesting",
           "currentTags": [
             "@internal",
             "@param",
@@ -52212,8 +52254,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Ci.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
-          "line": 269,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-269-appendturbosummary",
+          "line": 270,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-270-appendturbosummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -52243,8 +52285,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Ci.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
-          "line": 340,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-340-cicommand",
+          "line": 341,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-341-cicommand",
           "currentTags": [
             "@category",
             "@since"
@@ -52333,6 +52375,108 @@
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
           "line": 122,
           "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-errors-ts-122-cilanepartitionerror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HeavyAdmissionJson",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+          "line": 57,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ciadmission-ts-57-heavyadmissionjson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the effect package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "CiAdmissionInput",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+          "line": 81,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ciadmission-ts-81-ciadmissioninput",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runCiAdmission",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+          "line": 118,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ciadmission-ts-118-runciadmission",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the effect package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "ciAdmissionCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+          "line": 209,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ciadmission-ts-209-ciadmissioncommand",
           "currentTags": [
             "@category",
             "@since"
@@ -53151,6 +53295,470 @@
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
           "line": 154,
           "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-154-ci-lane-partitions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HEAVY_ADMISSION_LABEL",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 53,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-53-heavy-admission-label",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HEAVY_CONTEXT_PREFIX",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 69,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-69-heavy-context-prefix",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HeavyAdmissionSource",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 86,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-86-heavyadmissionsource",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HeavyAdmissionSource",
+          "exportKind": "type",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 99,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-99-heavyadmissionsource",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HeavyAdmissionVerdict",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 123,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-123-heavyadmissionverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HeavyAdmissionVerdict",
+          "exportKind": "type",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 136,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-136-heavyadmissionverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HeavyAdmissionEventName",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 152,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-152-heavyadmissioneventname",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HeavyAdmissionEventName",
+          "exportKind": "type",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 165,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-165-heavyadmissioneventname",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HeavyAdmissionEvent",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 194,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-194-heavyadmissionevent",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HeavyAdmission",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 228,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-228-heavyadmission",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "heavyDocsOnlyPattern",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 264,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-264-heavydocsonlypattern",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isHeavyDocsOnlyPath",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 284,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-284-isheavydocsonlypath",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "decideHeavyAdmission",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 339,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-339-decideheavyadmission",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GhPullRequestEventPayload",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 392,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-392-ghpullrequesteventpayload",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HeavyAdmissionReadInput",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 422,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-422-heavyadmissionreadinput",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "readHeavyAdmissionChangedPaths",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 471,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-471-readheavyadmissionchangedpaths",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the effect package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "readHeavyAdmissionEvent",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 519,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-519-readheavyadmissionevent",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the effect package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "renderHeavyAdmissionGithubOutput",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 575,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-575-renderheavyadmissiongithuboutput",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderHeavyAdmissionSummary",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 604,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-604-renderheavyadmissionsummary",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "heavyAdmissionSchemasForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 637,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-637-heavyadmissionschemasfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -54011,12 +54619,34 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./CiLane.ts\";",
+          "symbolName": "export * from \"./CiAdmission.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
           "line": 27,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-27-export-from-cilane-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-27-export-from-ciadmission-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./CiLane.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Ci/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
+          "line": 34,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-34-export-from-cilane-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -54037,8 +54667,30 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 34,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-34-export-from-cilanepartitions-ts",
+          "line": 41,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-41-export-from-cilanepartitions-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./HeavyAdmission.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Ci/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
+          "line": 48,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-48-export-from-heavyadmission-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -54059,8 +54711,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 41,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-41-export-from-lanetimings-ts",
+          "line": 55,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-55-export-from-lanetimings-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -56536,8 +57188,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.bundle.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.bundle.ts",
-          "line": 66,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-bundle-ts-66-securityrepositoryfromremote",
+          "line": 68,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-bundle-ts-68-securityrepositoryfromremote",
           "currentTags": [
             "@category",
             "@since"
@@ -56558,8 +57210,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.bundle.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.bundle.ts",
-          "line": 340,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-bundle-ts-340-readsecuritybundle",
+          "line": 342,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-bundle-ts-342-readsecuritybundle",
           "currentTags": [
             "@category",
             "@since"
@@ -56580,8 +57232,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 53,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-53-resolvescantarget",
+          "line": 56,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-56-resolvescantarget",
           "currentTags": [
             "@param",
             "@returns",
@@ -56604,8 +57256,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 86,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-86-assertprivateoutputdirectory",
+          "line": 89,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-89-assertprivateoutputdirectory",
           "currentTags": [
             "@param",
             "@category",
@@ -56627,8 +57279,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 302,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-302-decodescanoptions",
+          "line": 304,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-304-decodescanoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -56649,8 +57301,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 327,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-327-securitycommand",
+          "line": 329,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-329-securitycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -56739,8 +57391,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.runtime.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.runtime.ts",
-          "line": 39,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-runtime-ts-39-securityruntime",
+          "line": 42,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-runtime-ts-42-securityruntime",
           "currentTags": [
             "@category",
             "@since"
@@ -56761,8 +57413,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.runtime.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.runtime.ts",
-          "line": 101,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-runtime-ts-101-runsecuritycli",
+          "line": 104,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-runtime-ts-104-runsecuritycli",
           "currentTags": [
             "@param",
             "@returns",
@@ -56785,8 +57437,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.runtime.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.runtime.ts",
-          "line": 152,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-runtime-ts-152-verifysecuritybundlecontract",
+          "line": 155,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-runtime-ts-155-verifysecuritybundlecontract",
           "currentTags": [
             "@category",
             "@since"
@@ -70531,8 +71183,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Graft/Graft.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
-          "line": 433,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-service-ts-433-graftcachesynclive",
+          "line": 438,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graft-service-ts-438-graftcachesynclive",
           "currentTags": [
             "@category",
             "@since"
@@ -70553,8 +71205,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 254,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-254-graftdeeprunnershape",
+          "line": 257,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-257-graftdeeprunnershape",
           "currentTags": [
             "@category",
             "@since"
@@ -70575,8 +71227,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 279,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-279-graftdeeprunner",
+          "line": 282,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-282-graftdeeprunner",
           "currentTags": [
             "@category",
             "@since"
@@ -70597,8 +71249,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 349,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-349-graftdeeprunnerlive",
+          "line": 362,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-362-graftdeeprunnerlive",
           "currentTags": [
             "@category",
             "@since"
@@ -70619,8 +71271,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 373,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-373-graftdeeprefreshprogress",
+          "line": 386,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-386-graftdeeprefreshprogress",
           "currentTags": [
             "@category",
             "@since"
@@ -70641,8 +71293,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 384,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-384-graftdeeprefreshfailure",
+          "line": 397,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-397-graftdeeprefreshfailure",
           "currentTags": [
             "@category",
             "@since"
@@ -70663,8 +71315,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 404,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-404-graftdeeprefreshshape",
+          "line": 417,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-417-graftdeeprefreshshape",
           "currentTags": [
             "@category",
             "@since"
@@ -70685,8 +71337,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 438,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-438-graftdeeprefresh",
+          "line": 451,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-451-graftdeeprefresh",
           "currentTags": [
             "@category",
             "@since"
@@ -70707,8 +71359,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 480,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-480-rendergraftdeeprefreshunits",
+          "line": 494,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-494-rendergraftdeeprefreshunits",
           "currentTags": [
             "@param",
             "@returns",
@@ -70731,8 +71383,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 556,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-556-readrecordedgraftdeeptimer",
+          "line": 570,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-570-readrecordedgraftdeeptimer",
           "currentTags": [
             "@param",
             "@returns",
@@ -70755,8 +71407,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 1191,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-1191-graftdeeprefreshlayer",
+          "line": 1205,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-1205-graftdeeprefreshlayer",
           "currentTags": [
             "@category",
             "@since"
@@ -70777,8 +71429,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Graft/GraftDeep.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
-          "line": 1216,
-          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-1216-graftdeeprefreshlive",
+          "line": 1230,
+          "anchor": "packages-tooling-tool-cli-src-commands-graft-graftdeep-service-ts-1230-graftdeeprefreshlive",
           "currentTags": [
             "@category",
             "@since"

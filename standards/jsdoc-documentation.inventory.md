@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-16T09:56:36.752Z
+Generated: 2026-09-16T14:09:43.269Z
 
 ## Scope
 
@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 17 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2859 |
-| publicExports | 20199 |
+| publicModules | 2861 |
+| publicExports | 20225 |
 | openModules | 377 |
-| openExports | 3100 |
+| openExports | 3104 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3338 |
+| exampleImportFindings | 3342 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3337 |
+| no-root-package-import | 3341 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -74,7 +74,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 17 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | needs-remediation | 20 | 212 | 0 | 189 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 257 | 2165 | 47 | 289 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 259 | 2191 | 47 | 293 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
@@ -832,15 +832,19 @@ Export findings:
 - `src/commands/Architecture/OperationPlanExecution.ts:183` `checkCanonicalSliceOperationPlan` (const) - 1 example import violation(s)
 - `src/commands/Architecture/OperationPlanExecution.ts:281` `applyCanonicalSliceOperationPlan` (const) - 1 example import violation(s)
 - `src/commands/Architecture/OperationPlanPackageJson.ts:93` `renderPackageJsonOperation` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:247` `runCacheWarm` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:273` `runCacheWarmForTesting` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:432` `buildCacheDashboard` (const) - 1 example import violation(s)
-- `src/commands/Cache/Cache.command.ts:487` `runCacheRestorationProbe` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:251` `runCacheWarm` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:277` `runCacheWarmForTesting` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:451` `buildCacheDashboard` (const) - 1 example import violation(s)
+- `src/commands/Cache/Cache.command.ts:506` `runCacheRestorationProbe` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.schemas.ts:244` `CacheDashboardReportJson` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.schemas.ts:261` `CacheWarmReceiptJson` (const) - 1 example import violation(s)
-- `src/commands/Ci/Ci.command.ts:269` `appendTurboSummary` (const) - 1 example import violation(s)
+- `src/commands/Ci/Ci.command.ts:270` `appendTurboSummary` (const) - 1 example import violation(s)
+- `src/commands/Ci/CiAdmission.ts:57` `HeavyAdmissionJson` (const) - 1 example import violation(s)
+- `src/commands/Ci/CiAdmission.ts:118` `runCiAdmission` (const) - 1 example import violation(s)
 - `src/commands/Ci/CiLane.ts:358` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
 - `src/commands/Ci/CiLane.ts:1295` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/HeavyAdmission.ts:471` `readHeavyAdmissionChangedPaths` (const) - 1 example import violation(s)
+- `src/commands/Ci/HeavyAdmission.ts:519` `readHeavyAdmissionEvent` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.capture.schemas.ts:622` `CodexFindingsCapturePayload` (class) - 1 example import violation(s)
 - `src/commands/Codex/Findings.capture.schemas.ts:681` `decodeCodexFindingsCapturePayload` (const) - 1 example import violation(s)
 - `src/commands/Codex/Findings.csv.ts:329` `decodeCodexFindingsCsv` (const) - 1 example import violation(s)
