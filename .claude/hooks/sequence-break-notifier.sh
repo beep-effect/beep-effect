@@ -473,7 +473,7 @@ deliver_desktop() {
     return 0
   }
   case "${stage}" in initial) urgency=normal ;; reminder | urgent) urgency=critical ;; esac
-  case "${agent_kind}" in claude-code) title="Claude Code" ;; codex-cli) title="Codex" ;; esac
+  case "${agent_kind}" in claude-code) title="Claude Code" ;; codex-cli) title="Codex" ;; cursor-cli) title="Cursor" ;; esac
   case "${target}" in
     human-input) title="${title} needs your input" ;;
     plan-approval) title="${title} plan is awaiting approval" ;;

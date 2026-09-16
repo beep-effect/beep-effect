@@ -45,6 +45,7 @@ const codexWriterPath = `${repoRoot}.codex/hooks/hook-pulse.sh`;
 // `cursor-cli`, and — unlike the Claude writer — MUST print a permission decision, because
 // Cursor treats an empty stdout on a permission hook as malformed JSON and blocks the tool.
 const cursorWriterPath = `${repoRoot}.cursor/hooks/hook-pulse.sh`;
+const notifierPath = `${repoRoot}.claude/hooks/sequence-break-notifier.sh`;
 // The operator half of the same instrument: the switch writes the sentinel the
 // writer tests for, so the two scripts have to agree about where it lives.
 const switchPath = `${repoRoot}.claude/hooks/hook-pulse-switch.sh`;
@@ -570,6 +571,39 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PreToolUse);
       })
     )
+  );
+
+  it.effect("keeps the sequence-break notifier agent-kind allowlist and title map in lockstep", () =>
+    Effect.gen(function* () {
+      // `HookPulseAgentKind` is the schema; the notifier hand-duplicates it twice — the
+      // admission `case` arm and the desktop title map. Without this check a new kind
+      // (as `cursor-cli` was) reaches the ledger but is silently dropped by the notifier,
+      // or is admitted with an empty title (" needs your input"). Same drift class the
+      // `hook_events` allowlist sync above protects against, so the same set-equality.
+      const fs = yield* FileSystem.FileSystem;
+      const source = yield* fs.readFileString(notifierPath);
+      const arm = O.fromNullishOr(/case "\$\{agent_kind\}" in\s*\n\s*([^)\n]+)\)\s*;;/.exec(source)?.[1]);
+      const admitted = O.match(arm, {
+        onNone: () => A.empty<string>(),
+        onSome: (body) => A.map(body.split("|"), (kind) => kind.trim()),
+      });
+      // Anchored to the agent-kind title `case`: the target `case` below it also has
+      // `<name>) title="..." ;;` arms (human-input, plan-approval, tool-permission).
+      const titleArm = O.fromNullishOr(
+        /case "\$\{agent_kind\}" in((?:\s*[a-z-]+\) title="[^"]+" ;;)+)\s*esac/.exec(source)?.[1]
+      );
+      const titled = O.match(titleArm, {
+        onNone: () => A.empty<string>(),
+        onSome: (body) =>
+          A.getSomes(A.map(A.fromIterable(body.matchAll(/([a-z-]+)\) title=/g)), (match) => O.fromNullishOr(match[1]))),
+      });
+      const schemaKinds = HookPulseAgentKind.Options;
+
+      expect(A.difference(admitted, schemaKinds)).toEqual([]);
+      expect(A.difference(schemaKinds, admitted)).toEqual([]);
+      expect(A.difference(titled, schemaKinds)).toEqual([]);
+      expect(A.difference(schemaKinds, titled)).toEqual([]);
+    })
   );
 
   A.forEach(measuredPayloads, ({ label, payload, permissionMode, waitReason }) => {

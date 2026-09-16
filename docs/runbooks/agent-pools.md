@@ -198,6 +198,15 @@ The sandbox does not block the `git` binary; only protected git metadata paths a
 (https://cursor.com/docs/reference/sandbox). Deny beats `--force`, making the no-git rule
 structural. `sudo`/`pkexec` denial prevents YubiKey prompts that hang headless runs.
 
+`Shell(commandBase)` matches only the **first token** of a command line
+(https://cursor.com/docs/cli/reference/permissions), so `/usr/bin/git`, `env git`, and
+`bash -lc "git ..."` slip past `cli.json`. The second layer is `.cursor/hooks/deny-shell.sh` on
+`beforeShellExecution` with `failClosed: true`: it denies when **any** token's basename is `git`,
+`sudo`, or `pkexec` after splitting on whitespace, quotes, and shell operators, and a crash or
+timeout blocks the command. Smoke (goal history `2026-09-16-deny-shell-proof.md`): the eight
+fixtures `git status`, `/usr/bin/git status`, `env git status`, `bash -lc "git commit -m x"`,
+`sudo systemctl restart x`, `FOO=1 pkexec ls` deny; `echo hello`, `bun run beep --help` allow.
+
 ### Transcript verification (tsgo-045 D13)
 
 After a Cursor lane, the orchestrator verifies no git commands ran:
@@ -212,8 +221,10 @@ run `git status --porcelain` from the orchestrator (not the lane) to confirm the
 ## Hooks and metrics
 
 Native `.cursor/hooks.json` (schema `version: 1`) routes six events to the D14 adapter at
-`.cursor/hooks/hook-pulse.sh` — camelCase event names map to PascalCase, `agentKind cursor-cli`,
-then the shared writer body (D9, D14, D19).
+`.cursor/hooks/hook-pulse.sh` — it answers Cursor's protocol first, then maps camelCase event names
+to PascalCase and runs the shared writer body as `agentKind cursor-cli` under a 3 s cap so metrics
+never sit on the allow/continue critical path (D9, D14, D19). A seventh entry,
+`beforeShellExecution` → `deny-shell.sh` (`failClosed`), is the D21 second layer (Structural guards).
 
 **Registered in `.cursor/hooks.json`:**
 

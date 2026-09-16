@@ -28,7 +28,9 @@ copied).
 
 - `AGENTS.md` — replace "Token-heavy Codex work" with "Volume pools" (≤ 45 lines).
 - `docs/runbooks/agent-pools.md` — new.
-- `.cursor/cli.json` — deny `Shell(git)`, `Shell(sudo)`, `Shell(pkexec)` (D21).
+- `.cursor/cli.json` — deny `Shell(git)`, `Shell(sudo)`, `Shell(pkexec)` (D21, first-token match); plus
+  `.cursor/hooks/deny-shell.sh` on `beforeShellExecution` with `failClosed` denying any token whose
+  basename is git/sudo/pkexec (review finding, PR #1162).
 - `.cursor/hooks.json`, `.cursor/hooks/hook-pulse.sh` — camelCase→PascalCase adapter over the shared
   writer, `agentKind cursor-cli` (D14, D19); `.claude/hooks/hook-pulse.sh` gains one env knob for the
   agent kind.
@@ -46,7 +48,8 @@ copied).
   check; both dry → hold and notify; Fable children never a fallback; grok-4.6 lanes research-only.
 - Hooks (D9, D13): pulse rows must flow for preToolUse, postToolUse, postToolUseFailure, sessionEnd;
   `stop`/`beforeSubmitPrompt` are registered but recorded as headless GAPs; Notification is a GAP.
-- Permission hooks must answer `{"permission":"allow"}` (empty stdout on a permission event blocks).
+- Permission hooks must answer `{"permission":"allow"}` (empty stdout on a permission event blocks), and
+  the answer is written before any metrics work, which is capped at 3 s.
 - Only events with a `HookPulseEvent` literal are wired to the pulse adapter (no `sessionStart`).
 - Corpus rule (D11): nothing from the out-of-repo corpus, client documents, or secrets in a lane.
 - Runbook and AGENTS.md wrap at 100 columns; AGENTS.md is the prompt-cache prefix — keep it lean.

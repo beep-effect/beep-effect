@@ -1,6 +1,13 @@
 {
   "version": 1,
   "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/deny-shell.sh",
+        "timeout": 5,
+        "failClosed": true
+      }
+    ],
     "preToolUse": [{ "command": ".cursor/hooks/hook-pulse.sh", "timeout": 5 }],
     "postToolUse": [{ "command": ".cursor/hooks/hook-pulse.sh", "timeout": 5 }],
     "postToolUseFailure": [

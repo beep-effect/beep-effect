@@ -274,6 +274,11 @@ YubiKey prompts cannot hang headless runs; the orchestrator stages by name, as t
 **Rationale.** Structural beats prompt-only; the interactive cost (no git from Cursor in this repo) is
 accepted. Rejected: sudo/pkexec only; no committed list.
 
+**Amended 2026-09-16 (PR #1162 review, P1).** `Shell(commandBase)` matches only the first token, so
+`/usr/bin/git`, `env git`, and `bash -lc "git ..."` bypass `cli.json`. Added a second layer:
+`.cursor/hooks/deny-shell.sh` on `beforeShellExecution` with `failClosed: true`, denying any token
+whose basename is git/sudo/pkexec. `cli.json` stays as the documented first line.
+
 ## Align closed 2026-09-16
 
 Frontier empty after six rounds (D1–D21). Carried into shape: D7's 5% Cursor floor is a human
