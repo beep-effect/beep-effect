@@ -4,7 +4,7 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
+import { Config, ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -126,7 +126,8 @@ const pinnedRuntime = Effect.fn("BundleIngestTest.pinnedRuntime")(function* (exi
     `{"name":"codex-security","version":"${SECURITY_PLUGIN_VERSION}"}`
   );
   yield* fs.writeFileString(path.join(packageRoot, "bin/codex-security.mjs"), `process.exit(${exitCode})\n`);
-  return ConfigProvider.fromEnv({ env: { HOME: home, PATH: process.env.PATH ?? "" } });
+  const searchPath = yield* Config.String("PATH").pipe(Config.withDefault(""));
+  return ConfigProvider.fromEnv({ env: { HOME: home, PATH: searchPath } });
 });
 
 /** A repository-shaped working directory the packet can be written into. */
