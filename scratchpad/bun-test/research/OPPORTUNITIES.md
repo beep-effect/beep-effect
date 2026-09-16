@@ -138,3 +138,21 @@
   Preserve existing internal visibility and the committed ratchet baseline.
 - Prevention: regenerate the ignored CI inventory and run the actual JSDoc
   ratchet alongside package docgen when adding scratch modules or configurations.
+
+## 2026-09-16: scratchpad policy checks exceed package lint coverage
+
+- Work: completing the full proof for PR #1145 after package checks passed.
+- Evidence: hosted Lint Policy reported four `no-inline-schema-compile` errors
+  in `pilot/Trial.ts` and 19 native-runtime findings in the adapter internals
+  and assertion utilities. Both checks scan scratchpad roots independently of
+  the package lint task.
+- Recovery: stop the superseded local proof, hoist the pilot codecs, and check
+  equivalent Effect helper replacements at each adapter boundary before
+  rerunning the focused policy commands and the full proof. Document narrow
+  exceptions for weak context keys and callable function augmentation, and
+  regenerate the policy snapshot through `@beep/repo-configs` codegen: the CLI
+  reads that snapshot rather than the authoring JSONC file. The focused oxlint
+  and native-runtime checks then pass without changing any gate's enforcement.
+- Prevention: include the root oxlint and native-runtime checks in the initial
+  qualification of new scratchpad modules; package lint is supporting evidence,
+  not the complete policy contract.

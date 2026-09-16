@@ -11,11 +11,12 @@
  *
  * @since 0.0.0
  */
+import * as A from "effect/Array"
 import type * as Cause from "effect/Cause"
 import * as Equal from "effect/Equal"
 import * as Exit from "effect/Exit"
 import * as O from "effect/Option"
-import * as Predicate from "effect/Predicate"
+import * as P from "effect/Predicate"
 import * as Result from "effect/Result"
 import * as assert from "node:assert"
 
@@ -223,13 +224,13 @@ export function assertInclude(
   expected: unknown,
   ..._: Array<never>
 ) {
-  if (typeof actual === "string") {
-    if (typeof expected !== "string" || !actual.includes(expected)) {
+  if (P.isString(actual)) {
+    if (!P.isString(expected) || !actual.includes(expected)) {
       fail(`Expected\n\n${actual}\n\nto include\n\n${expected}`)
     }
     return
   }
-  if (Array.isArray(actual)) {
+  if (A.isArray(actual)) {
     if (!actual.includes(expected)) {
       fail(`Expected\n\n${JSON.stringify(actual)}\n\nto include\n\n${JSON.stringify(expected)}`)
     }
@@ -277,7 +278,7 @@ export function throws(thunk: () => void, error?: Error | ((u: unknown) => undef
     thunk()
   } catch (e) {
     if (error !== undefined) {
-      if (Predicate.isFunction(error)) {
+      if (P.isFunction(error)) {
         error(e)
       } else if (error) {
         deepStrictEqual(e, error)
@@ -313,7 +314,7 @@ export async function throwsAsync(
     await thunk()
   } catch (e) {
     if (error !== undefined) {
-      if (Predicate.isFunction(error)) {
+      if (P.isFunction(error)) {
         error(e)
       } else {
         deepStrictEqual(e, error)

@@ -1,6 +1,6 @@
 # Quality runtime inventory
 
-Initially inspected 2026-09-15 at base `d142324fe0`. The task inventory and manifest counts below describe that source and installed-launcher snapshot; the coverage row and recommendations incorporate the subsequent [coverage runtime follow-up](COVERAGE-RUNTIME-RESULTS.md). This inventory is not an execution benchmark. No hosted jobs, dependency installs, or quality suites ran for this report.
+Initially inspected 2026-09-15 at base `d142324fe0`. The task inventory and manifest counts below describe that source and installed-launcher snapshot; the coverage row and recommendations incorporate the subsequent [coverage runtime follow-up](COVERAGE-RUNTIME-RESULTS.md). This inventory is not an execution benchmark. No hosted jobs, dependency installs, or quality suites ran for the initial inventory. The later local package-verification witness below qualifies the docgen compiler attribution.
 
 Coverage and doctests are concrete remaining Node-hosted Vitest workloads. Coverage now has a demonstrated provider-compatibility blocker; doctests still need separate qualification. Most ordinary tests, integration tests, property tests, docgen, Knip, and repository CLI logic already request Bun. Compiler and formatter workloads often execute native binaries; changing their JavaScript launcher cannot move the substantive work to Bun.
 
@@ -20,9 +20,9 @@ Paths below are relative to the repository root. `CiLane.ts` means `packages/too
 | Doctest | `CiLane.ts:1185` schedules Turbo `doctest`. Generator lines 1191, 1218, 1247, 1269, 1290, 1316 prescribe `BEEP_VITEST_DOCTEST=1 bunx vitest run`. | Still a Node-hosted Vitest candidate. Requires a separate doctest-plugin, example-isolation, timeout and TSX qualification. Ordinary-test success does not cover this task. |
 | Unit and property | `CiLane.ts:1497` selects unit tasks; lines 1435–1445 schedule `test:property`. Generator lines 1174, 1204, 1230 prescribe `bunx --bun vitest run ...`; property scripts delegate to `beep:test`. | Already Bun-hosted Vitest in almost every inspected package. Native Bun test is a runner migration, not a Node-to-Bun runtime switch. |
 | Integration | `CiLane.ts:1496` selects integration tasks. Generator lines 1179, 1209, 1235 prescribe `bunx --bun vitest run test/integration ...`. | Already Bun-hosted. Containers, PGlite/WASM, databases, network and external tools retain their own costs. |
-| Docgen | Package implementation defaults use `bunx --bun --no-install docgen` (generator 1181, 1211, 1237). Docgen's own package uses `bun run src/bin.ts` (`packages/tooling/tool/docgen/package.json:35`). Root `package.json:367–368` enters the Bun CLI. | Already Bun at the docgen entrypoint. Typechecking or other children still need separate attribution; do not claim every child is Bun merely because the entrypoint is. |
+| Docgen | Package implementation defaults use `bunx --bun --no-install docgen` (generator 1181, 1211, 1237). Docgen's own package uses `bun run src/bin.ts` (`packages/tooling/tool/docgen/package.json:35`). Root `package.json:367–368` enters the Bun CLI. | Already Bun at the docgen entrypoint. The later scratchpad verification witnessed native TypeScript 7.0.2 as its compiler child; other child processes still require their own attribution. |
 | Check and test typechecking | Generator 1167 and 1197 uses `tsgo -p tsconfig.check.json` followed by test checks. `Quality/Tasks.ts:2740–2755` also owns aggregate test-tsgo/smoke checks. | `.bin/tsgo` resolves to `tools/tsgo-shim/tsgo.js`. Its Node launcher resolves the installed Effect compiler artifact and execs it (lines 1–21). The compiler is TypeScript-Go, confirmed by installed `@effect/tsgo/README.md:1–3,215–217`. Bun can only alter launcher overhead here. |
-| Library build | Generator 1163, 1193, 1219 uses `tsc -p tsconfig.json && bun run babel`; some packages use only `tsc`. Installed `typescript/bin/tsc:1` and `@babel/cli/bin/babel.js:1` have Node shebangs. | Actual JavaScript compiler/emitter work is a possible later Node-to-Bun study. Require emitted-file/declaration/source-map equivalence and total build measurement. Do not conflate this with native `tsgo` checking. |
+| Library build | Generator 1163, 1193, 1219 uses `tsc -p tsconfig.json && bun run babel`; some packages use only `tsc`. Installed `@babel/cli/bin/babel.js:1` has a Node shebang. The current lane's `.bin/tsc` resolves through `@typescript/native`, whose launcher delegates to a native compiler; the presence of `typescript/bin/tsc` does not establish that it is selected. | Babel remains a possible JavaScript emitter study. Verify each actual compiler executable before labeling it Node work. Require emitted-file/declaration/source-map equivalence and total build measurement; native compiler work does not migrate to Bun. |
 | Application build | Current manifests use Next/Turbopack, Vite, Storybook, or `tsgo`; examples include `apps/todox/package.json`, `apps/professional-desktop/package.json`, `apps/storybook/package.json`. | Mixed JavaScript launchers and native/browser/compiler work. Needs application-specific child-runtime evidence; no blanket Bun speedup claim. |
 | Package lint | Generator 1169, 1199, 1225 uses `biome check .`. Installed `@biomejs/biome/bin/biome:39–48` resolves and spawns the platform binary. | Biome's substantive work is native. Its Node bootstrap is not the lint engine. Root oxlint and typos are likewise native-tool work, not JavaScript runtime migration targets. |
 | Lint policy and repository checks | `CiLane.ts:1420` executes `bun run beep lint policy --full`. Root scripts `package.json:416–449` route many laws/inventory checks through the Bun CLI, alongside typos and compiler checks. | Mostly already Bun orchestration plus native children. Optimize the slow constituent task rather than changing the job's setup runtime. |
@@ -44,7 +44,24 @@ Workspace scripts are governed by the canonical package-script generator. Covera
 
 1. Keep canonical coverage on Node/V8. Any further coverage adoption work must resolve the 260 Bun/Istanbul ratchet findings: 252 vanished-file findings from 63 omitted zero-unit files and eight executable-source metric findings. Shared-config controls establish correct provider selection, expected unreachable-code counters, and threshold rejection; they do not establish per-file baseline compatibility. The one-worker pair still fails that compatibility gate. Do not reset baselines to conceal the difference, and do not use the rejected Bun/V8 observations to justify adoption or a memory conclusion.
 2. Prioritize a separate doctest qualification, then the identity test exception, for further Node-to-Bun candidate work. Their remaining Node invocation is concrete, but benefit has not been measured. Neither requires resolving the coverage-provider migration first.
-3. Consider JavaScript `tsc`/Babel build children only as a separate artifact-equivalence experiment. Storybook needs separate browser/addon qualification.
+3. Consider Babel, and any separately witnessed JavaScript compiler children, only as an artifact-equivalence experiment. The observed native TypeScript compiler is not such a candidate. Storybook needs separate browser/addon qualification.
 4. Do not sell native compiler, Biome, oxlint, Fallow, scanner, or already-Bun work as Node migration savings. Setup, cache misses, queue time, retries and external services remain separate contributors.
+
+## Local docgen compiler witness, 2026-09-16
+
+The final `bun run beep quality package-verify @beep/scratchpad` passed after the
+adapter policy repairs. Its default package audit was absent; docgen passed.
+A process sampler read each compiler's `/proc/<pid>/exe`, identifying installed
+`@typescript/typescript-linux-x64/lib/tsc` version 7.0.2. The runner and docgen
+processes used Bun 1.4.2. This is direct executable evidence for that local run,
+not a claim about every hosted compiler or every workspace build.
+
+Within the admitted four-CPU, 8 GiB, no-swap verification scope, the command took
+12.804 seconds, used 29.465 seconds of CPU, and peaked at 5,239,721,984 bytes
+(about 4.88 GiB), with zero memory-limit or OOM events. These are quality-check
+resource observations, not benchmark samples or a paired runtime comparison.
+The peak exceeds the earlier 4 GiB verification ceiling and supports resource
+pressure as the cause of that bounded probe's timeout. Changing the JavaScript
+launcher would not replace the witnessed native compiler engine.
 
 No duration, memory, or billed saving is inferred from this inventory. The [coverage follow-up](COVERAGE-RUNTIME-RESULTS.md) separates the shared-config worker witnesses from the single diagnostic schema measurements and documents their distinct resource limits. The other rows remain source-defined launch behavior pending execution witnesses where needed.
