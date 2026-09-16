@@ -242,7 +242,7 @@ export const buildTurboReport: (state: TurboSchemaState) => VersionCategoryRepor
       status: VersionCategoryStatusEnum.ok,
       items: A.empty<VersionDriftItem>(),
       latest: O.none(),
-      error: O.some("turbo not found in catalog or devDependencies"),
+      error: O.some("turbo not found in bun.lock, the root catalog, or devDependencies"),
     });
   }
 

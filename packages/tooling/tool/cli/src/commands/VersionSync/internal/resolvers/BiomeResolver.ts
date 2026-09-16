@@ -115,7 +115,8 @@ export class BiomeSchemaState extends S.Class<BiomeSchemaState>($I`BiomeSchemaSt
 ) {}
 
 /**
- * Resolve current Biome schema version from `biome.jsonc` and installed version from `package.json` catalog.
+ * Resolve the current Biome schema version from `biome.jsonc` and the installed
+ * `@biomejs/biome` version (lockfile-resolved, falling back to the root `package.json` catalog).
  *
  * @category utilities
  * @since 0.0.0
@@ -164,7 +165,7 @@ export const buildBiomeReport: (state: BiomeSchemaState) => VersionCategoryRepor
       status: VersionCategoryStatusEnum.ok,
       items,
       latest: O.none(),
-      error: O.some("@biomejs/biome not found in catalog or devDependencies"),
+      error: O.some("@biomejs/biome not found in bun.lock, the root catalog, or devDependencies"),
     });
   }
 
