@@ -8,14 +8,17 @@ import {
   runArtifactPathForContext,
   runYeetWatchStream,
   YeetCommandError,
+  YeetExpectedContextCensus,
   YeetInboxRowJson,
   YeetMonitorCommentStateJson,
   YeetRulesetRequiredContexts,
+  YeetSettleVerdict,
   YeetWatchEnded,
   YeetWatchEvent,
   yeetInboxPaths,
   yeetMonitorCommentStatePath,
   yeetWatchExitFailure,
+  yeetWatchSettleSleepMillis,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -1641,5 +1644,31 @@ describe("required-only watch exits", () => {
       ).toBe(false);
     }
     expect(yeetWatchExitFailure({ failing: 0, reason: "settle-timeout" })).toBe(true);
+  });
+});
+
+describe("yeetWatchSettleSleepMillis", () => {
+  const census = (missing: ReadonlyArray<string>, pending: ReadonlyArray<string>) =>
+    YeetExpectedContextCensus.make({ matched: [], unmatched: [], pending, missing });
+  const verdict = (values: Partial<YeetSettleVerdict>) =>
+    YeetSettleVerdict.make({
+      settled: false,
+      reason: O.some("required-pending"),
+      census: census([], ["Lint"]),
+      waitedMs: 5_000,
+      timeoutMs: 1_000,
+      budgetApplies: false,
+      ...values,
+    });
+  it("sleeps the full interval for a settled head or a queued registered check, and clamps only while the budget applies", () => {
+    expect(yeetWatchSettleSleepMillis(verdict({ settled: true, reason: O.none() }), 10_000)).toBe(10_000);
+    expect(yeetWatchSettleSleepMillis(verdict({}), 10_000)).toBe(10_000);
+    expect(
+      yeetWatchSettleSleepMillis(
+        verdict({ census: census(["Heavy / Check"], []), waitedMs: 400, budgetApplies: true }),
+        10_000
+      )
+    ).toBe(600);
+    expect(yeetWatchSettleSleepMillis(verdict({ waitedMs: 1_000, budgetApplies: true }), 10_000)).toBe(0);
   });
 });

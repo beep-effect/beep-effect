@@ -629,3 +629,54 @@ it.effect("keeps following settled red heads, preserving the one-rerun budget", 
     })
   ).pipe(provideScopedLayer(platform))
 );
+
+it.layer(platform)("B7 sleep after a spent registration budget (ruling 49)", (layerIt) => {
+  layerIt.effect("keeps the full poll interval while registered required checks are merely queued", () =>
+    temporary((root) =>
+      Effect.gen(function* () {
+        yield* TestClock.setTime(0);
+        const calls = yield* Ref.make(0);
+        const program = runYeetMonitorUntilMerged(contextFor(root), {
+          collectStatus: () =>
+            Ref.update(calls, (n) => n + 1).pipe(Effect.as(snapshot(root, "aaa111", [check("Lint", "pending")]))),
+          rulesetRead: () => Effect.succeed(expected(["Lint"])),
+          capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
+          policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 1000 }),
+          pollInterval: Duration.seconds(30),
+        });
+        const fiber = yield* Effect.forkChild(program);
+        yield* TestClock.adjust("1000 millis");
+        expect(yield* Ref.get(calls)).toBe(1);
+        yield* TestClock.adjust("28999 millis");
+        expect(yield* Ref.get(calls)).toBe(1);
+        yield* TestClock.adjust("1 millis");
+        expect(yield* Ref.get(calls)).toBe(2);
+        yield* TestClock.adjust("30 seconds");
+        expect(yield* Ref.get(calls)).toBe(3);
+        yield* Fiber.interrupt(fiber);
+      })
+    )
+  );
+  layerIt.effect("still clamps the sleep to the remaining budget while a context is missing", () =>
+    temporary((root) =>
+      Effect.gen(function* () {
+        yield* TestClock.setTime(0);
+        const calls = yield* Ref.make(0);
+        const program = runYeetMonitorUntilMerged(contextFor(root), {
+          collectStatus: () =>
+            Ref.update(calls, (n) => n + 1).pipe(Effect.as(snapshot(root, "aaa111", [check("Lint")]))),
+          rulesetRead: () => Effect.succeed(expected(["Lint", "Heavy / Check"])),
+          capture: () => Effect.succeed({ exitCode: 0, output: at, truncated: false }),
+          policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 1000 }),
+          pollInterval: Duration.seconds(30),
+        });
+        const fiber = yield* Effect.forkChild(program);
+        yield* TestClock.adjust("999 millis");
+        expect(yield* Ref.get(calls)).toBe(1);
+        yield* TestClock.adjust("1 millis");
+        expect(yield* Fiber.join(fiber)).toBe("settle-timeout");
+        expect(yield* Ref.get(calls)).toBe(2);
+      })
+    )
+  );
+});

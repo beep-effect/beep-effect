@@ -520,9 +520,14 @@ export class YeetSettleVerdict extends S.Class<YeetSettleVerdict>($I`YeetSettleV
     census: YeetExpectedContextCensus,
     waitedMs: S.Finite,
     timeoutMs: S.Finite,
+    budgetApplies: S.Boolean.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true))
+    ),
   },
   $I.annote("YeetSettleVerdict", {
-    description: "Whether the required census settled, the wait reason the gate line names, and the census behind it.",
+    description:
+      "Whether the required census settled, the wait reason the gate line names, the census behind it, and whether the registration budget still applies.",
   })
 ) {}
 
@@ -595,7 +600,8 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
 export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict => {
   const census = censusFor(input);
   const unsettled = unsettledReason(input, census);
-  const timedOut = input.waitedMs >= input.timeoutMs && settleBudgetApplies(input, census);
+  const budgetApplies = settleBudgetApplies(input, census);
+  const timedOut = input.waitedMs >= input.timeoutMs && budgetApplies;
   return O.match(unsettled, {
     onSome: (reason) =>
       YeetSettleVerdict.make({
@@ -604,6 +610,7 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
         census,
         waitedMs: input.waitedMs,
         timeoutMs: input.timeoutMs,
+        budgetApplies,
       }),
     onNone: () =>
       YeetSettleVerdict.make({
@@ -612,6 +619,7 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
         census,
         waitedMs: input.waitedMs,
         timeoutMs: input.timeoutMs,
+        budgetApplies: false,
       }),
   });
 };

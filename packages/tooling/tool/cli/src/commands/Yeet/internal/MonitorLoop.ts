@@ -1398,10 +1398,12 @@ const stepMonitorFailureBudget = Effect.fn("YeetMonitorLoop.stepFailureBudget")(
   return count;
 });
 
+// Only the registration budget shortens a sleep: a registered check that is
+// queued past the budget (ruling 49) keeps the normal interval, never a 0 ms spin.
 const nextMonitorSleep = (next: MonitorPoll, interval: Duration.Duration): Duration.Duration => {
   if (O.isSome(next.failure)) return interval;
   const remaining = O.flatMap(next.head, (value) => value.verdict).pipe(
-    O.filter((verdict) => !verdict.settled),
+    O.filter((verdict) => !verdict.settled && verdict.budgetApplies),
     O.map((verdict) => Duration.millis(Math.max(0, verdict.timeoutMs - verdict.waitedMs)))
   );
   return O.match(remaining, { onNone: () => interval, onSome: Duration.min(interval) });
