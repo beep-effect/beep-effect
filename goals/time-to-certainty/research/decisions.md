@@ -647,3 +647,36 @@ empties the check rollup of a conflicting PR and the registration budget would o
 that into `settle-timeout` (observed twice on #1155 when B7 merged). Both loops also remember
 every context seen registered for a head and keep an absent one `pending` rather than
 regressing it to `missing` on a single empty poll. Exit codes unchanged.
+
+## 2026-09-16 — C3 Labs lane digest, round 17 (one ruling, proposed by the orchestrator, ratified by merge of the C3 Labs PR; numbered after B8's 50–57)
+
+Context: the PLAN Labs note (2026-09-03, PR #989) recorded the blocker "three task-hash sets rather
+than one declared action". C3.6 (PR #1102) has since folded any set of bare task names from a
+lane's own run summaries into one `TurboLaneDigest`, and hands a wrapper lane's digest to its
+parent through `BEEP_TURBO_LANE_LEDGER`. A dry run of the labs invocation (`turbo run check lint
+test --filter=./apps/labs/**`) plans 91 tasks: the 15 lab tasks (five labs times `check`, `lint`
+and `test`) and 76 upstream `build` and `transit` tasks. No upstream package contributes a
+`check`, `lint` or `test` row. The local battery dispatched `ci lane labs` with no flags while
+check.yml runs `ci lane labs --summarize`, so no local labs run wrote a summary or declared a
+digest.
+
+**Ruling 58 (C3-Labs) — the labs lane keeps its one bundled Turbo invocation, and its input digest
+is the fold of every `check`, `lint` and `test` task hash its own summary ran, which the labs
+filter makes exactly the lab tasks today.** The fold keys on what ran, not on package identity: a
+foreign task the filter pulled in would gate the lane, so its hash belongs in the key rather than
+being dropped (a test plants one). Upstream build and transit work enters through Turbo's
+dependency hashing, never as digest rows. Local
+dispatch replays the hosted `--summarize`, and every descriptor that accepts `--summarize` replays
+it locally (a test over all descriptors pins this). The check.yml pull-request path gate, the
+push-runs-everything rule and the permanently non-required context are unchanged. A run with zero
+labs selects no rows, declares no digest, stays green and reports as non-reusable. Labs stays
+outside the pre-push wave, so the digest has no reuse consumer until C4 shadow mode or a
+separately recorded hosted-reuse decision. Rejected: three labs lanes (three hosted setups for a
+non-required lane whose single context lab-apps-lifecycle row 10 ratified); an empty-set digest
+for zero labs (a reusable proof of nothing).
+
+Live acceptance (2026-09-16), ruling 58: `bun run beep ci local --lanes labs` dispatched
+`bun run beep ci lane labs --summarize`, ran 53 Turbo tasks green in 35 s, and recorded lane run
+`labs` with input digest `de139ae3…`. Recomputing SHA-256 over the sorted `taskId=hash` lines of
+the 15 `check`/`lint`/`test` rows in that run's summary reproduces the same digest; the 38
+upstream rows are absent from it.
