@@ -1065,166 +1065,270 @@ const bindRequiredCensus = (snapshot: YeetStatusSnapshot, verdict: YeetSettleVer
   });
 };
 
-const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
+class MonitorObservation extends S.Class<MonitorObservation>($I`MonitorObservation`)(
+  {
+    snapshot: YeetStatusSnapshot,
+    poll: MonitorPoll,
+    at: S.String,
+    millis: S.Finite,
+  },
+  $I.annote("MonitorObservation", { description: "Status, head state, and clock at one monitor observation." })
+) {}
+
+const observeMonitorHead = Effect.fn("YeetMonitorLoop.observeHead")(function* (
   context: RepoRunContext,
   options: YeetMonitorUntilMergedOptions,
-  budget: YeetMonitorRerunBudget,
-  previous: O.Option<MonitorHeadState>
+  observation: MonitorObservation
 ) {
-  const collected = yield* (options.collectStatus ?? collectYeetStatus)(context, true).pipe(Effect.result);
-  if (Result.isFailure(collected)) {
-    return MonitorPoll.make({ budget, head: previous, failure: O.some(collected.failure) });
-  }
-  let snapshot = collected.success;
-  let now = yield* options.now ?? DateTime.now;
-  let at = DateTime.formatIso(now);
-  let millis = DateTime.toEpochMillis(now);
-  const policy = options.policy ?? YeetUntilMergedPolicy.make({});
-  const terminals = yeetMonitorPolicyTerminals(policy);
-  let head = previous;
+  const { snapshot, poll, at, millis } = observation;
   const headSha = snapshot.remote.headSha;
-  const prTerminal = yeetMonitorTerminalState(O.fromUndefinedOr(snapshot.remote.state));
-  if (O.isSome(headSha)) {
-    if (O.isNone(head) || head.value.timeline.headSha !== headSha.value) {
-      const oldRow = O.flatMap(head, (value) => value.announcedRow);
-      if (O.isSome(oldRow)) {
-        yield* writeYeetAckReceipt(
-          context.repoRoot,
-          YeetAckReceipt.make({
-            id: oldRow.value,
-            ackedAt: at,
-            resolution: YeetAckFixResolution.make({ sha: headSha.value }),
-          })
-        );
-      }
-      head = O.some(
-        MonitorHeadState.make({
-          timeline: YeetHeadTimeline.make({
-            headSha: headSha.value,
-            firstObservedAt: at,
-            pushedAt: yield* readPushedAt(context, headSha.value, options.capture ?? runRepoCommandCapture),
-          }),
-          firstObservedMs: millis,
-          expected: yield* (options.rulesetRead ?? readYeetRulesetRequiredContexts)(context),
-        })
-      );
-    }
-    const current = O.getOrThrow(head);
-    const settle = (value: YeetStatusSnapshot) =>
-      deriveSettleVerdict(
-        YeetSettleInput.make({
-          expected: current.expected,
-          checks: value.remote.checks,
-          closeoutBound: O.exists(value.mergeReady, (ready) => ready.criteria.closeoutRun),
-          waitedMs: millis - current.firstObservedMs,
-          timeoutMs: policy.settleTimeoutMs,
-        })
-      );
-    let verdict = settle(snapshot);
-    let timeline = current.timeline;
-    if (verdict.settled) timeline = yeetHeadTimelineStamp(timeline, "settledAt", at);
-    head = O.some(MonitorHeadState.make({ ...current, timeline, verdict: O.some(verdict) }));
-    if (O.isNone(prTerminal) && O.contains(verdict.reason, "closeout-pending")) {
-      const closedOut = yield* (options.closeout ?? runYeetAutomaticCloseout)(context).pipe(Effect.result);
-      if (Result.isFailure(closedOut)) {
-        return MonitorPoll.make({ budget, head, failure: O.some(closedOut.failure) });
-      }
-      now = yield* options.now ?? DateTime.now;
-      at = DateTime.formatIso(now);
-      timeline = yeetHeadTimelineStamp(timeline, "closeoutAt", at);
-      head = O.some(MonitorHeadState.make({ ...current, timeline }));
-      yield* Console.log(
-        `[yeet] closeout: ${closedOut.success.report.issueCount} issue(s) for head ${Str.slice(0, 7)(headSha.value)}`
-      );
-      const reread = yield* (options.collectStatus ?? collectYeetStatus)(context, true).pipe(Effect.result);
-      if (Result.isFailure(reread)) {
-        return MonitorPoll.make({ budget, head, failure: O.some(reread.failure) });
-      }
-      // A push during closeout must never lend the old head's census or stamps to the new head.
-      if (!O.contains(reread.success.remote.headSha, headSha.value)) {
-        return MonitorPoll.make({ budget, head });
-      }
-      snapshot = reread.success;
-      now = yield* options.now ?? DateTime.now;
-      at = DateTime.formatIso(now);
-      millis = DateTime.toEpochMillis(now);
-      verdict = settle(snapshot);
-    }
-    snapshot = bindRequiredCensus(snapshot, verdict);
-    if (O.exists(snapshot.mergeReady, (ready) => ready.criteria.closeoutRun)) {
-      timeline = yeetHeadTimelineStamp(timeline, "closeoutAt", at);
-    }
-    if (O.isNone(verdict.reason) && O.exists(snapshot.mergeReady, (ready) => ready.ready)) {
-      timeline = yeetHeadTimelineStamp(timeline, "readyAt", at);
-    }
-    const from = O.getOrNull(O.flatMap(current.verdict, (value) => value.reason));
-    const to = O.getOrNull(verdict.reason);
-    if (from !== to) yield* Console.log(`[yeet] settle: ${from ?? "settled"} → ${to ?? "settled"}`);
-    head = O.some(MonitorHeadState.make({ ...current, timeline, verdict: O.some(verdict) }));
-    snapshot = YeetStatusSnapshot.make({ ...snapshot, timeline: O.some(timeline) });
+  if (O.isNone(headSha)) return observation;
+  if (O.exists(poll.head, (head) => head.timeline.headSha === headSha.value)) return observation;
+  const oldRow = O.flatMap(poll.head, (head) => head.announcedRow);
+  if (O.isSome(oldRow)) {
+    yield* writeYeetAckReceipt(
+      context.repoRoot,
+      YeetAckReceipt.make({
+        id: oldRow.value,
+        ackedAt: at,
+        resolution: YeetAckFixResolution.make({ sha: headSha.value }),
+      })
+    );
   }
-  yield* writeYeetStatusSnapshot(snapshot);
-  yield* Console.log(renderYeetStatusSummary(snapshot));
-  const verdict = O.flatMap(head, (value) => value.verdict);
+  const head = MonitorHeadState.make({
+    timeline: YeetHeadTimeline.make({
+      headSha: headSha.value,
+      firstObservedAt: at,
+      pushedAt: yield* readPushedAt(context, headSha.value, options.capture ?? runRepoCommandCapture),
+    }),
+    firstObservedMs: millis,
+    expected: yield* (options.rulesetRead ?? readYeetRulesetRequiredContexts)(context),
+  });
+  return MonitorObservation.make({ ...observation, poll: MonitorPoll.make({ ...poll, head: O.some(head) }) });
+});
+
+const settleMonitorHead = (
+  observation: MonitorObservation,
+  current: MonitorHeadState,
+  policy: YeetMonitorLoopPolicy
+): YeetSettleVerdict =>
+  deriveSettleVerdict(
+    YeetSettleInput.make({
+      expected: current.expected,
+      checks: observation.snapshot.remote.checks,
+      closeoutBound: O.exists(observation.snapshot.mergeReady, (ready) => ready.criteria.closeoutRun),
+      waitedMs: observation.millis - current.firstObservedMs,
+      timeoutMs: policy.settleTimeoutMs,
+    })
+  );
+
+const closeoutMonitorHead = Effect.fn("YeetMonitorLoop.closeoutHead")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  observation: MonitorObservation,
+  current: MonitorHeadState
+) {
+  const { poll } = observation;
+  const closedOut = yield* (options.closeout ?? runYeetAutomaticCloseout)(context).pipe(Effect.result);
+  if (Result.isFailure(closedOut)) {
+    return Result.fail(MonitorPoll.make({ ...poll, failure: O.some(closedOut.failure) }));
+  }
+  const at = DateTime.formatIso(yield* options.now ?? DateTime.now);
+  const timeline = yeetHeadTimelineStamp(O.getOrThrow(poll.head).timeline, "closeoutAt", at);
+  const head = O.some(MonitorHeadState.make({ ...current, timeline }));
+  const nextPoll = MonitorPoll.make({ ...poll, head });
+  yield* Console.log(
+    `[yeet] closeout: ${closedOut.success.report.issueCount} issue(s) for head ${Str.slice(0, 7)(current.timeline.headSha)}`
+  );
+  const reread = yield* (options.collectStatus ?? collectYeetStatus)(context, true).pipe(Effect.result);
+  if (Result.isFailure(reread)) {
+    return Result.fail(MonitorPoll.make({ ...nextPoll, failure: O.some(reread.failure) }));
+  }
+  // A push during closeout must never lend the old head's census or stamps to the new head.
+  if (!O.contains(reread.success.remote.headSha, current.timeline.headSha)) return Result.fail(nextPoll);
+  const now = yield* options.now ?? DateTime.now;
+  return Result.succeed(
+    MonitorObservation.make({
+      snapshot: reread.success,
+      poll: nextPoll,
+      at: DateTime.formatIso(now),
+      millis: DateTime.toEpochMillis(now),
+    })
+  );
+});
+
+const stampMonitorReadiness = Effect.fn("YeetMonitorLoop.stampReadiness")(function* (
+  observation: MonitorObservation,
+  current: MonitorHeadState,
+  verdict: YeetSettleVerdict
+) {
+  const { at, poll } = observation;
+  let snapshot = bindRequiredCensus(observation.snapshot, verdict);
+  let timeline = O.getOrThrow(poll.head).timeline;
+  if (O.exists(snapshot.mergeReady, (ready) => ready.criteria.closeoutRun)) {
+    timeline = yeetHeadTimelineStamp(timeline, "closeoutAt", at);
+  }
+  if (O.isNone(verdict.reason) && O.exists(snapshot.mergeReady, (ready) => ready.ready)) {
+    timeline = yeetHeadTimelineStamp(timeline, "readyAt", at);
+  }
+  yield* reportMonitorSettleTransition(current.verdict, verdict);
+  const head = O.some(MonitorHeadState.make({ ...current, timeline, verdict: O.some(verdict) }));
+  snapshot = YeetStatusSnapshot.make({ ...snapshot, timeline: O.some(timeline) });
+  return MonitorObservation.make({ ...observation, snapshot, poll: MonitorPoll.make({ ...poll, head }) });
+});
+
+const reportMonitorSettleTransition = Effect.fn("YeetMonitorLoop.reportSettleTransition")(function* (
+  previous: O.Option<YeetSettleVerdict>,
+  verdict: YeetSettleVerdict
+) {
+  const to = O.getOrNull(verdict.reason);
+  if (O.isNone(previous)) {
+    if (to !== null) yield* Console.log(`[yeet] settle: ${to}`);
+    return;
+  }
+  const from = O.getOrNull(previous.value.reason);
+  if (from !== to) yield* Console.log(`[yeet] settle: ${from ?? "settled"} → ${to ?? "settled"}`);
+});
+
+const settleAndCloseoutMonitorHead = Effect.fn("YeetMonitorLoop.settleAndCloseout")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  observation: MonitorObservation
+) {
+  if (O.isNone(observation.snapshot.remote.headSha)) return Result.succeed(observation);
+  const current = O.getOrThrow(observation.poll.head);
+  const policy = options.policy ?? YeetUntilMergedPolicy.make({});
+  let verdict = settleMonitorHead(observation, current, policy);
+  const timeline = verdict.settled
+    ? yeetHeadTimelineStamp(current.timeline, "settledAt", observation.at)
+    : current.timeline;
+  let next = MonitorObservation.make({
+    ...observation,
+    poll: MonitorPoll.make({
+      ...observation.poll,
+      head: O.some(MonitorHeadState.make({ ...current, timeline, verdict: O.some(verdict) })),
+    }),
+  });
+  const terminal = yeetMonitorTerminalState(O.fromUndefinedOr(observation.snapshot.remote.state));
+  if (O.isNone(terminal) && O.contains(verdict.reason, "closeout-pending")) {
+    const closedOut = yield* closeoutMonitorHead(context, options, next, current);
+    if (Result.isFailure(closedOut)) return closedOut;
+    next = closedOut.success;
+    verdict = settleMonitorHead(next, current, policy);
+  }
+  return Result.succeed(yield* stampMonitorReadiness(next, current, verdict));
+});
+
+const reportMonitorObservation = Effect.fn("YeetMonitorLoop.reportObservation")(function* (
+  observation: MonitorObservation
+) {
+  yield* writeYeetStatusSnapshot(observation.snapshot);
+  yield* Console.log(renderYeetStatusSummary(observation.snapshot));
+  const verdict = O.flatMap(observation.poll.head, (head) => head.verdict);
   const detail = O.match(verdict, { onNone: () => "", onSome: (value) => `; ${renderYeetSettleDetail(value)}` });
-  yield* Console.log(`${renderMergeReadyGate(snapshot)}${detail}`);
+  yield* Console.log(`${renderMergeReadyGate(observation.snapshot)}${detail}`);
+  return detail;
+});
+
+const decideMonitorTerminal = Effect.fn("YeetMonitorLoop.decideTerminal")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  observation: MonitorObservation,
+  detail: string
+) {
+  const { poll, snapshot } = observation;
+  const terminals = yeetMonitorPolicyTerminals(options.policy ?? YeetUntilMergedPolicy.make({}));
   const terminal = yeetMonitorTerminalState(O.fromUndefinedOr(snapshot.remote.state));
   if (O.isSome(terminal)) {
-    if (terminal.value === "merged") {
-      yield* Console.log("[yeet] pull request is MERGED; running the post-merge workspace sweep");
-      yield* (options.onMerged ?? executeSweep)(context);
-    } else {
-      yield* Console.log("[yeet] pull request is CLOSED without merging; ending the merge loop");
-    }
-    return MonitorPoll.make({ budget, terminal: O.filter(terminal, (value) => HashSet.has(terminals, value)), head });
+    yield* Match.value(terminal.value).pipe(
+      Match.when(
+        "merged",
+        Effect.fnUntraced(function* () {
+          yield* Console.log("[yeet] pull request is MERGED; running the post-merge workspace sweep");
+          yield* (options.onMerged ?? executeSweep)(context);
+        })
+      ),
+      Match.orElse(() => Console.log("[yeet] pull request is CLOSED without merging; ending the merge loop"))
+    );
+    return O.some(
+      MonitorPoll.make({ ...poll, terminal: O.filter(terminal, (value) => HashSet.has(terminals, value)) })
+    );
   }
+  const verdict = O.flatMap(poll.head, (head) => head.verdict);
   if (O.exists(verdict, (value) => O.contains(value.reason, "settle-timeout"))) {
     yield* Console.log(`[yeet] settle-timeout${detail}`);
-    return MonitorPoll.make({ budget, terminal: O.some("settle-timeout"), head });
+    return O.some(MonitorPoll.make({ ...poll, terminal: O.some("settle-timeout") }));
   }
-  if (
-    O.isSome(head) &&
-    O.exists(verdict, (value) => O.isNone(value.reason)) &&
-    O.exists(snapshot.mergeReady, (ready) => ready.ready)
-  ) {
-    const current = head.value;
-    if (O.isNone(current.announcedRow) && snapshot.remote.number !== undefined) {
-      const capsule = YeetPrMergeReadyCapsule.make({
-        headSha: current.timeline.headSha,
-        prNumber: snapshot.remote.number,
-        url: snapshot.remote.url ?? null,
-        readyAt: O.getOrThrow(current.timeline.readyAt),
-        pushedAt: O.getOrNull(current.timeline.pushedAt),
-        settledAt: O.getOrNull(current.timeline.settledAt),
-        closeoutAt: O.getOrNull(current.timeline.closeoutAt),
-        pushToReadyMs: O.getOrNull(yeetPushToReadyMillis(current.timeline)),
-      });
-      const id = yeetPrMergeReadyRowId(capsule);
-      yield* appendYeetInboxRowOnce(
-        context.repoRoot,
-        YeetPrMergeReadyRow.make({
-          capsule,
-          checkout: context.repoRoot,
-          id,
-          severity: "P1",
-          ts: at,
-        })
-      );
-      head = O.some(MonitorHeadState.make({ ...current, announcedRow: O.some(id) }));
-      yield* Console.log(`${renderMergeReadyGate(snapshot)}; ${renderYeetHeadTimeline(current.timeline)}`);
-      if (!HashSet.has(terminals, "ready")) {
-        yield* Console.log(`[yeet] merge-ready announced for head ${Str.slice(0, 7)(current.timeline.headSha)}`);
-      }
-    }
+  return O.none<MonitorPoll>();
+});
+
+const announceMonitorReadiness = Effect.fn("YeetMonitorLoop.announceReadiness")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  observation: MonitorObservation
+) {
+  const { snapshot, poll, at } = observation;
+  const { head } = poll;
+  const verdict = O.flatMap(head, (value) => value.verdict);
+  if (O.isNone(head)) return poll;
+  if (!O.exists(verdict, (value) => O.isNone(value.reason))) return poll;
+  if (!O.exists(snapshot.mergeReady, (ready) => ready.ready)) return poll;
+  const current = head.value;
+  if (O.isSome(current.announcedRow) || snapshot.remote.number === undefined) return poll;
+  const capsule = YeetPrMergeReadyCapsule.make({
+    headSha: current.timeline.headSha,
+    prNumber: snapshot.remote.number,
+    url: snapshot.remote.url ?? null,
+    readyAt: O.getOrThrow(current.timeline.readyAt),
+    pushedAt: O.getOrNull(current.timeline.pushedAt),
+    settledAt: O.getOrNull(current.timeline.settledAt),
+    closeoutAt: O.getOrNull(current.timeline.closeoutAt),
+    pushToReadyMs: O.getOrNull(yeetPushToReadyMillis(current.timeline)),
+  });
+  const id = yeetPrMergeReadyRowId(capsule);
+  yield* appendYeetInboxRowOnce(
+    context.repoRoot,
+    YeetPrMergeReadyRow.make({
+      capsule,
+      checkout: context.repoRoot,
+      id,
+      severity: "P1",
+      ts: at,
+    })
+  );
+  yield* Console.log(`${renderMergeReadyGate(snapshot)}; ${renderYeetHeadTimeline(current.timeline)}`);
+  const terminals = yeetMonitorPolicyTerminals(options.policy ?? YeetUntilMergedPolicy.make({}));
+  if (!HashSet.has(terminals, "ready")) {
+    yield* Console.log(`[yeet] merge-ready announced for head ${Str.slice(0, 7)(current.timeline.headSha)}`);
   }
-  const readyTerminal = O.filter(
+  return MonitorPoll.make({ ...poll, head: O.some(MonitorHeadState.make({ ...current, announcedRow: O.some(id) })) });
+});
+
+const monitorReadyTerminal = (observation: MonitorObservation, policy: YeetMonitorLoopPolicy) =>
+  O.filter(
     O.some(YeetMonitorTerminalState.Enum.ready),
     () =>
-      HashSet.has(terminals, "ready") &&
-      O.isSome(headSha) &&
-      O.exists(verdict, (value) => O.isNone(value.reason)) &&
-      O.exists(snapshot.mergeReady, (value) => value.ready)
+      HashSet.has(yeetMonitorPolicyTerminals(policy), "ready") &&
+      O.isSome(observation.snapshot.remote.headSha) &&
+      O.exists(
+        O.flatMap(observation.poll.head, (head) => head.verdict),
+        (verdict) => O.isNone(verdict.reason)
+      ) &&
+      O.exists(observation.snapshot.mergeReady, (ready) => ready.ready)
   );
+
+const triageMonitorReds = Effect.fn("YeetMonitorLoop.triageReds")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  observation: MonitorObservation
+) {
+  const { snapshot, poll } = observation;
+  const { budget, head } = poll;
+  const headSha = snapshot.remote.headSha;
+  const policy = options.policy ?? YeetUntilMergedPolicy.make({});
+  const terminals = yeetMonitorPolicyTerminals(policy);
+  const readyTerminal = monitorReadyTerminal(observation, policy);
+  const verdict = O.flatMap(head, (value) => value.verdict);
   if ((snapshot.remote.failingCheckCount ?? 0) === 0 || O.isNone(headSha)) {
     return MonitorPoll.make({ budget, head, terminal: readyTerminal });
   }
@@ -1250,6 +1354,58 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   }
   return MonitorPoll.make({ budget: plan.budget, head, terminal: readyTerminal });
 });
+
+const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
+  context: RepoRunContext,
+  options: YeetMonitorUntilMergedOptions,
+  budget: YeetMonitorRerunBudget,
+  previous: O.Option<MonitorHeadState>
+) {
+  const collected = yield* (options.collectStatus ?? collectYeetStatus)(context, true).pipe(Effect.result);
+  if (Result.isFailure(collected)) {
+    return MonitorPoll.make({ budget, head: previous, failure: O.some(collected.failure) });
+  }
+  const now = yield* options.now ?? DateTime.now;
+  const observed = yield* observeMonitorHead(
+    context,
+    options,
+    MonitorObservation.make({
+      snapshot: collected.success,
+      poll: MonitorPoll.make({ budget, head: previous }),
+      at: DateTime.formatIso(now),
+      millis: DateTime.toEpochMillis(now),
+    })
+  );
+  const settled = yield* settleAndCloseoutMonitorHead(context, options, observed);
+  if (Result.isFailure(settled)) return settled.failure;
+  const observation = settled.success;
+  const detail = yield* reportMonitorObservation(observation);
+  const terminal = yield* decideMonitorTerminal(context, options, observation, detail);
+  if (O.isSome(terminal)) return terminal.value;
+  const poll = yield* announceMonitorReadiness(context, options, observation);
+  return yield* triageMonitorReds(context, options, MonitorObservation.make({ ...observation, poll }));
+});
+
+const stepMonitorFailureBudget = Effect.fn("YeetMonitorLoop.stepFailureBudget")(function* (
+  next: MonitorPoll,
+  failures: number
+) {
+  if (O.isNone(next.failure)) return 0;
+  const count = failures + 1;
+  yield* Console.error(
+    `[yeet] poll failed (${count}/${YEET_MONITOR_POLL_ERROR_BUDGET}): ${next.failure.value.message}`
+  );
+  return count;
+});
+
+const nextMonitorSleep = (next: MonitorPoll, interval: Duration.Duration): Duration.Duration => {
+  if (O.isSome(next.failure)) return interval;
+  const remaining = O.flatMap(next.head, (value) => value.verdict).pipe(
+    O.filter((verdict) => !verdict.settled),
+    O.map((verdict) => Duration.millis(Math.max(0, verdict.timeoutMs - verdict.waitedMs)))
+  );
+  return O.match(remaining, { onNone: () => interval, onSome: Duration.min(interval) });
+};
 
 /**
  * Follow a pull request until its selected readiness or merge policy terminates.
@@ -1321,25 +1477,10 @@ export const runYeetMonitorUntilMerged: {
       const next = yield* pollUntilMerged(context, options, budget, head);
       budget = next.budget;
       head = next.head;
-      if (O.isSome(next.failure)) {
-        failures += 1;
-        yield* Console.error(
-          `[yeet] poll failed (${failures}/${YEET_MONITOR_POLL_ERROR_BUDGET}): ${next.failure.value.message}`
-        );
-        if (failures === YEET_MONITOR_POLL_ERROR_BUDGET) return "poll-error-budget";
-      } else {
-        failures = 0;
-        if (O.isSome(next.terminal)) return next.terminal.value;
-      }
-      const remaining = O.flatMap(head, (value) => value.verdict).pipe(
-        O.filter((verdict) => !verdict.settled),
-        O.map((verdict) => Duration.millis(Math.max(0, verdict.timeoutMs - verdict.waitedMs)))
-      );
-      yield* Effect.sleep(
-        O.isSome(next.failure)
-          ? interval
-          : O.match(remaining, { onNone: () => interval, onSome: Duration.min(interval) })
-      );
+      failures = yield* stepMonitorFailureBudget(next, failures);
+      if (failures === YEET_MONITOR_POLL_ERROR_BUDGET) return "poll-error-budget";
+      if (failures === 0 && O.isSome(next.terminal)) return next.terminal.value;
+      yield* Effect.sleep(nextMonitorSleep(next, interval));
     }
   })
 );

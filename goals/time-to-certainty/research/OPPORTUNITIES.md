@@ -1475,3 +1475,65 @@ invocation from the worktree root was also interrupted; rerun from the CLI packa
 The corrected scoped Node run passed 123 tests but failed the full-file 100% floor for
 `Handler.ts` and `Status.ts`. Preserve that unmet gate in the handoff; narrow regression
 coverage does not prove the unrelated publish and status paths in those large modules.
+
+## 2026-09-16 — B7 Stage D matcher inference
+
+The direct source compiler rejected the new reconciliation fold: `TS7031` on the
+`tagsExhaustive` timeout payload and `TS377117` on wrapped Option success values.
+Use individually inferred `Match.tag` arms and the v4 `Effect.succeedSome` helper.
+The initial log-tail command also used an unsupported shorthand; `tail -n 30` works.
+
+## 2026-09-16 — B7 Stage D Bun pool startup
+
+`timeout 60s bunx --bun vitest run` over the nine-suite oracle emitted only the
+Vitest banner and exited 124. Retrying the same oracle with `--pool=threads`, as
+allowed by the remediation contract. Node's default pool passed all 257 tests.
+The raw Fallow file contains trailing output after its JSON document; read the first
+JSON value when extracting metrics instead of treating the whole file as one JSON value.
+
+## 2026-09-16 — B7 Stage D Bun subprocess restriction
+
+The nine-suite Bun threads oracle exited 1: eight suites passed; four hook-adapter
+cases failed with 26 uncaught `EPERM: operation not permitted, write` errors in
+`internal:fs/streams`. This reproduces the Stage B Bun subprocess-pipe blocker,
+including untouched hook tests. Node passed all nine suites. Preserve the hook
+assertions and report the Bun runtime limitation rather than weakening the oracle.
+
+## 2026-09-16 — B7 Stage D canonical package gate
+
+`bun run beep quality package-verify @beep/repo-cli` exited 1 at the audit's
+`tools/tsgo-shim/tsgo.js` invocation: `spawnSync node EPERM`. Direct native source
+and test compiler checks both exited 0. Acknowledge the package-audit P0 as
+environment-only; the orchestrator must rerun the canonical gate with working
+process-spawn permissions. No shim or package-script workaround was introduced.
+
+## 2026-09-16 — B7 Stage D diagnostic attribution overhead
+
+An auxiliary Fallow audit with a zero CRAP reporting threshold exited 2:
+`could not create a temporary worktree for base ref 'origin/main'`. This diagnostic
+would invoke the base-attribution path even though both required gates already pass.
+Use `--gate all` for raw per-function diagnostic metrics so no base worktree is requested;
+retain the canonical new-only audit for the actual acceptance result.
+
+## 2026-09-16 — B7 Stage D law-check scope
+
+`beep lint laws --package @beep/repo-cli` exited 0 but scanned zero source files;
+this command expects a directory, unlike `quality package-verify`. The corrected
+`--package packages/tooling/tool/cli` scanned 819 files and passed, with eight
+advisory terse-effect findings in untouched code. Prefer explicit directory wording
+in the law command's flag help to prevent a vacuous success from looking like proof.
+
+## 2026-09-16 — The Fallow complexity gate fired at publish, not at the stage commits
+
+- **Doing:** publishing B7 PR1 (#1149) after three stage commits that each passed type check,
+  full lint, docgen, test-tsgo, and both test runtimes.
+- **Evidence:** `yeet publish --start-pr-early` pushed, then its cheap-gates wave failed
+  `fallow:audit` and `fallow:health` on five introduced complexity findings, the largest being
+  `pollUntilMerged` at cyclomatic 43 over 185 lines (threshold 20 / 60). The kickoff listed the
+  Fallow audit among the per-commit gates; the orchestrator ran every other gate per commit and
+  left Fallow to the publish proof, so the monolith rode through two commits and a merge before
+  a lane had to decompose it (Stage D: 43 → 6, no suppression).
+- **Would have prevented it:** `bun run beep quality fallow audit --check --base origin/main`
+  in the same per-commit gate batch as `lint circular` and `lint schema-first`; it runs in about
+  a minute and the sandboxed Codex lane can run it too, so the lane brief can require it before
+  the results file is written.

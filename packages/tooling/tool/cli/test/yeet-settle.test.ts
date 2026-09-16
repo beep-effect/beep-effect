@@ -254,6 +254,12 @@ describe("B7 settle contracts", () => {
     assertNone(verdict({ checks: [check("Lint")], closeoutBound: true, waitedMs: 1000 }).reason);
     expect(verdict({ checks: [check("Lint")], waitedMs: 1000 }).settled).toBe(true);
     expect(yeetSettleVerdictIsTerminal(verdict({ waitedMs: 999 }))).toBe(false);
+    // Ruling 43: a registered required check that is still queued never trips the budget.
+    const queued = verdict({ expected: expected(["Lint"]), checks: [check("Lint", "pending")], waitedMs: 5000 });
+    assertSome(queued.reason, "required-pending");
+    expect(yeetSettleVerdictIsTerminal(queued)).toBe(false);
+    expect(renderYeetSettleDetail(queued)).toContain("registered checks are GitHub's to time out");
+    expect(renderYeetSettleDetail(queued)).not.toContain("of 1s");
     const timeout = verdict({
       expected: expected(["Heavy / Check"]),
       checks: [check("Outside", "pending")],
@@ -296,7 +302,11 @@ describe("B7 settle contracts", () => {
         return;
       }
       expect(["registration", "required-pending", "settle-timeout"]).toContain(reason);
-      expect(reason === "settle-timeout").toBe(input.waitedMs >= input.timeoutMs);
+      const budgeted =
+        A.isReadonlyArrayEmpty(input.checks) ||
+        A.isReadonlyArrayNonEmpty(result.census.missing) ||
+        (O.isNone(input.expected) && A.isReadonlyArrayEmpty(result.census.matched));
+      expect(reason === "settle-timeout").toBe(input.waitedMs >= input.timeoutMs && budgeted);
     },
     { arbitrary: fcRuns(40) }
   );
@@ -485,6 +495,7 @@ it.effect("status retains classified checks from the existing two gh views", () 
   temporary((root) =>
     Effect.gen(function* () {
       const checkReads = yield* Ref.make(0);
+      // fallow-ignore-next-line complexity -- Fixture routes git and GitHub command families to fixed census responses.
       const runner = ChildProcessSpawner.make((command) => {
         if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
         const [first, second] = command.args;

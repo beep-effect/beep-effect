@@ -424,7 +424,10 @@ is absent but `<context> (<variant>)` children report, the parent is tolerated
 and those children must finish. A missing parent with no children keeps waiting.
 If the ruleset read fails, one warning precedes fallback to the `--required`
 view. Optional reds do not affect exit codes. `--settle-timeout` defaults to
-30 minutes; it applies to `--until-ready`, `--until-merged`, and `--watch`.
+30 minutes; it applies to `--until-ready`, `--until-merged`, and `--watch`, and
+it bounds registration only: the budget counts while no check has registered
+or an expected context is still missing, never while a registered required
+check is queued or running (that wait is GitHub's job timeout, not ours).
 Gate lines name `registration`, `required-pending`, `closeout-pending`, or
 `settle-timeout`, including missing and pending contexts. A settled head does
 not time out while waiting for review closeout. The final readiness gate line

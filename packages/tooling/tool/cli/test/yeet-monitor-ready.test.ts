@@ -211,6 +211,7 @@ it.layer(platform)("B7 readiness loop", (test) => {
               pushToReadyMs: 0,
             },
           });
+          expect(yield* lines).toMatch(/\[yeet\] settle: registration(?:\n|$)/);
           expect(yield* lines).toContain("closeout: 0 issue(s) for head aaaaaaa");
           expect(yield* lines).toContain("push→ready");
           yield* runYeetMonitorUntilMerged(contextFor(root), {

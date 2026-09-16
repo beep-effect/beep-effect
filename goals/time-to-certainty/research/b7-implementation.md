@@ -410,3 +410,191 @@ Paste the actual command's exit code and these emitted lines into the PR descrip
 Keep `push→ready unknown` if the commit date could not be read. Do not invent timestamps or
 paste a reason that never appeared. The measured transcript, plus the orchestrator's canonical
 verification results, must come from the combined PR1 head.
+
+## Stage D
+
+The five introduced complexity findings are cleared. The canonical Fallow audit and
+health gates both exit 0, and the audit reports `complexity_introduced: 0`. Node passes
+all nine oracle suites (257 tests), including the single new first-observation assertion.
+Full dual-runtime acceptance remains blocked by the Bun hook-adapter subprocess failure;
+canonical package verification also remains blocked by the tsgo shim's sandbox spawn error.
+
+### Decisions
+
+- `pollUntilMerged` coordinates module-private phases using the schema-backed
+  `MonitorObservation`, existing `MonitorHeadState` and `MonitorPoll`, and typed `Result`
+  values for early poll returns. No new exported symbol or test-kit export was needed.
+- Head observation preserves the prior ready-row supersession receipt, ruleset read once
+  per head, push-time read, and first-observation clock. Settle/closeout preserves the
+  exact clock-read sequence, settled/closeout stamps, failure-state retention, reread,
+  and guard against lending the old head's census or stamps to a concurrent push.
+- Reporting still precedes PR terminal handling. Terminal PR states still precede readiness
+  announcements and red-job triage. Readiness keeps the census-backed required criterion,
+  durable row, timeline gate line, and once-per-head announcement. Red triage retains
+  job-level rerun allowances and required-red precedence over readiness.
+- The loop's consecutive-failure step and next-sleep calculation are separate named helpers.
+  Successful polls reset the error count; failures sleep the normal interval, while pending
+  settle verdicts shorten the next sleep to the remaining deadline.
+- Plain-watch census reconciliation returns the schema-derived tags `retry`, `optional-only`,
+  `required-red`, `timeout`, and `unreadable`. A `Match` fold consumes completed decisions.
+  The original pre-attempt recorder snapshot is still restored before retries; timed-out
+  retries restore the last completed recorder snapshot. Optional-only recovery updates only
+  the selected check-step exit codes. Every existing watch log line remains byte-identical.
+- First observation now prints `[yeet] settle: registration` or the observed pending reason,
+  without a fictitious `settled →` prefix. Later transitions retain their old arrow form.
+  Exactly one assertion was added to `yeet-monitor-ready.test.ts`; all existing assertions
+  across the oracle are unchanged.
+- The two test helpers are inherently command routers. Used the expressly permitted
+  `fallow-ignore-next-line complexity` comments with one-line reasons, preserving their
+  response selection and independent poll cursors. Their raw metrics are unchanged;
+  these are test-only exceptions, not numerical reductions. No production suppression,
+  Fallow config change, or gate-threshold change was introduced.
+- Ran the required effect-vitest inventory writer. Its generated line/occurrence updates
+  remain in the handoff for staging by name. No git staging, commit, stash, or checkout
+  command was run. The original cheap-gates P0 was acknowledged against PR #1149;
+  the package-audit P0 was acknowledged environment-only with the spawn evidence.
+
+### Complexity
+
+Fallow 3.23.0; values are cyclomatic / cognitive / unit lines / CRAP. The before values
+come from the original `.beep/fallow/raw/audit.check.combined.txt`. After values come
+from the diagnostic commands below. CRAP is Fallow's **estimated** score, not the measured
+lcov coverage. A dash means the original finding did not include that field.
+
+| Function | Before | After | Disposition |
+| --- | --- | --- | --- |
+| `MonitorLoop.pollUntilMerged` | 43 / 60 / 185 / 442.4 | 6 / 5 / 30 / 13.8 | Refactored; no suppression |
+| `MonitorLoop.runYeetMonitorUntilMerged` | 6 / 12 / 37 / — | 5 / 6 / 22 / 5.1 | Refactored; no suppression |
+| `Handler.runMonitorCheckWatch` | 12 / 21 / 90 / 43.1 | 6 / 7 / 54 / 13.8 | Refactored; no suppression |
+| Watch-mode anonymous spawner router (formerly line 152) | 10 / 10 / 25 / 31.6 | 10 / 10 / 25 / 31.6 | Permitted test-router suppression |
+| Settle `runner` (formerly line 488) | 9 / 9 / 52 / — | 9 / 9 / 52 / — | Permitted test-router suppression |
+
+All new production helpers are within cyclomatic 20, cognitive 8, CRAP 30, and 60 unit lines:
+
+| Helper | Cyclomatic | Cognitive | Unit lines | Estimated CRAP |
+| --- | ---: | ---: | ---: | ---: |
+| `observeMonitorHead` | 6 | 5 | 31 | 13.8 |
+| `settleMonitorHead` | 1 | 0 | 14 | 1.2 |
+| `closeoutMonitorHead` | 8 | 7 | 34 | 21.8 |
+| `stampMonitorReadiness` | 4 | 3 | 19 | 7.5 |
+| `reportMonitorSettleTransition` | 6 | 6 | 12 | 13.8 |
+| `settleAndCloseoutMonitorHead` | 7 | 7 | 28 | 17.6 |
+| `reportMonitorObservation` | 1 | 0 | 10 | 1.2 |
+| `decideMonitorTerminal` | 4 | 3 | 31 | 7.5 |
+| `announceMonitorReadiness` | 9 | 8 | 41 | 26.5 |
+| `monitorReadyTerminal` | 1 | 0 | 12 | 1.2 |
+| `triageMonitorReds` | 7 | 6 | 37 | 17.6 |
+| `stepMonitorFailureBudget` | 2 | 1 | 11 | 2.9 |
+| `nextMonitorSleep` | 2 | 1 | 8 | 2.9 |
+| `retryPendingMonitorChecks` | 3 | 2 | 28 | 4.9 |
+| `reconcileMonitorCheckCensus` | 7 | 6 | 45 | 17.6 |
+| `acceptOptionalMonitorReds` | 1 | 0 | 13 | 1.2 |
+
+Diagnostic-only metric extraction, from the worktree root:
+
+```sh
+node_modules/.bin/fallow health --complexity --max-cyclomatic 0 --max-cognitive 0 \
+  --report-only --changed-since origin/main --format json
+node_modules/.bin/fallow audit --base origin/main --gate all --max-crap 1 --format json
+```
+
+The first exits 0 and exposes below-threshold function metrics. The second intentionally
+exits 1 because its reporting threshold is one; it supplies estimated CRAP values without
+requesting a base worktree. Neither diagnostic replaces or changes the canonical gates.
+Artifacts: `/tmp/b7d-complexity.json` and `/tmp/b7d-crap-all.json`.
+
+### Files for the orchestrator to stage by name
+
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts`
+- `packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts`
+- `packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts`
+- `packages/tooling/tool/cli/test/yeet-watch-mode.test.ts`
+- `packages/tooling/tool/cli/test/yeet-settle.test.ts`
+- `standards/effect-vitest.inventory.jsonc` (generated)
+- `goals/time-to-certainty/research/b7-implementation.md`
+- `goals/time-to-certainty/research/OPPORTUNITIES.md`
+
+### Verification
+
+Root means `~/YeeBois/projects/beep-effect8-worktrees/ttc-b7`; package means its
+`packages/tooling/tool/cli` directory. `SUITES` denotes these exact nine arguments:
+
+```text
+test/yeet-monitor-ready.test.ts
+test/yeet-settle.test.ts
+test/yeet-monitor-loop.test.ts
+test/yeet-monitor-check-registration.test.ts
+test/yeet-watch-mode.test.ts
+test/yeet-watch-stream.test.ts
+test/yeet-command-wiring.test.ts
+test/yeet-provenance-footer.test.ts
+test/yeet-inbox-hook-adapter.test.ts
+```
+
+`COMPILER` is root-relative
+`node_modules/@effect/tsgo-linux-x64/artifacts/typescript/7.0.2/tsc`.
+`TOUCHED_TS` denotes the five TypeScript paths in the staging list above.
+
+| Cwd | Command | Exit | Result / evidence |
+| --- | --- | ---: | --- |
+| Root | `bun run beep quality fallow audit --check --base origin/main --out .beep/fallow/audit.check.json` | 0 | Final run: `complexity_introduced: 0`, no findings; `/tmp/b7d-fallow-audit.log` |
+| Root | `bun run beep quality fallow health --check` | 0 | Final run: no findings; `/tmp/b7d-fallow-health.log` |
+| Package | `bunx vitest run $SUITES` | 0 | 9 suites, 257 tests; `/tmp/b7d-node.log` |
+| Package | `timeout 60s bunx --bun vitest run $SUITES` | 124 | Default pool printed only banner; `/tmp/b7d-bun-default.log` |
+| Package | `bunx --bun vitest run $SUITES --pool=threads` | 1 | 8 suites pass; hook suite has 4 failures, 26 uncaught pipe-write EPERM errors; 253/257 tests pass; `/tmp/b7d-bun-threads.log` |
+| Package | Scoped coverage command below | 0 | Final source: 9 suites, 257 tests pass; `/tmp/b7d-coverage.log` |
+| Root | `bunx biome check --write $TOUCHED_TS` | 0 | Final run: 5 files, no remaining fixes; `/tmp/b7d-biome.log` |
+| Root | `bun run beep lint effect-vitest --write` | 0 | Generated inventory refreshed; `/tmp/b7d-effect-vitest.log` |
+| Root | `$COMPILER -p packages/tooling/tool/cli/tsconfig.check.json` | 0 | Final source compiler clean; `/tmp/b7d-source-check.log` |
+| Root | `$COMPILER -p packages/tooling/tool/cli/test/tsconfig.json --rootDir .` | 0 | Test compiler clean; `/tmp/b7d-test-check.log` |
+| Root | `bun run beep lint laws --package packages/tooling/tool/cli` | 0 | 819 source files; blocking laws clean, 8 advisory findings in untouched files; `/tmp/b7d-laws-path.log` |
+| Root | `bun run beep quality package-verify @beep/repo-cli` | 1 | Audit/check blocked by tsgo shim `spawnSync node EPERM`; `/tmp/b7d-package-verify.log` |
+| Root | `git diff --check` | 0 | Read-only whitespace check |
+
+The first direct source check exited 1 on newly introduced matcher inference and
+Option-helper diagnostics; those were repaired before the final clean check and scoped
+coverage run. The law invocation with a package name scanned zero files and is not proof;
+the table records the corrected path-scoped invocation. See friction receipts for details.
+
+```sh
+# cwd: packages/tooling/tool/cli
+bunx vitest run $SUITES --coverage \
+  --coverage.include='src/commands/Yeet/internal/{MonitorLoop,Handler}.ts' \
+  --coverage.reporter=lcov --coverage.reporter=text \
+  --coverage.reportsDirectory=/tmp/b7d-coverage
+```
+
+Scoped lcov: `/tmp/b7d-coverage/lcov.info`. Handler's pre-existing publishing and other
+orchestration paths were not expanded merely to chase 100% coverage.
+
+| Source | Lines | Branches | Functions | Statements |
+| --- | --- | --- | --- | ---: |
+| `MonitorLoop.ts` | 259/264 (98.10%) | 156/167 (93.41%) | 87/90 (96.66%) | 98.01% |
+| `Handler.ts` | 194/533 (36.39%) | 49/223 (21.97%) | 35/175 (20.00%) | 35.83% |
+
+### Blockers and remaining orchestrator proof
+
+1. Bun threads reproduces the earlier Stage B hook-adapter subprocess-pipe restriction:
+   `EPERM: operation not permitted, write` in `internal:fs/streams`. Four hook tests fail,
+   including untouched existing tests. No hook assertion or subprocess implementation was
+   weakened. Rerun the full nine-suite Bun oracle in the orchestrator environment; this lane
+   does not claim the requested dual-runtime oracle is fully green.
+2. Canonical package verification fails at the tsgo shim's Node spawn. Direct native source
+   and test compiler passes support the refactor but do not replace package audit/check/docgen
+   or repo-wide lint. Those canonical gates still belong to the orchestrator environment.
+3. An auxiliary metric-only audit attempted base attribution and was refused temporary
+   worktree creation (exit 2). The corrected metric command uses `--gate all` and requests
+   no base worktree. The required new-only gate itself passes with no introduced findings.
+4. No git staging/commit/push or hosted-check/merge-ready claim. PR #1149 publication and
+   the existing Stage C live push-to-ready measurement remain orchestrator work.
+
+## Dogfood amendment (orchestrator, 2026-09-16)
+
+The first `--until-ready` babysit of PR #1149 exited 1 at `settle-timeout after 30m; pending:
+Heavy / Lint Policy, Heavy / Test Integration` — both registered, both queued behind six other
+heavy runs. Ruling 43 amends ruling 39: `deriveSettleVerdict` applies the budget only while no
+check has registered or an expected context is missing (`settleBudgetApplies`), and the
+`required-pending` gate line drops the `of 30m` suffix when the wait is a registered check's.
+Existing timeout tests (a never-registered context, a checkless PR) still time out; the settle
+property test and one new assertion pin the queued-check case. The transcript below the amendment
+is the second babysit, against the head that carries it.

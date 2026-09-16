@@ -468,3 +468,15 @@ AGENTS.md recipe, PLAN/rulings/receipts, measurement. PR2 (after B5 merges): the
 the skill, `pr-merge-ready` observed-ack wiring with `yeet job wait`, the FileChanged/asyncRewake
 spike result, and the scratchpad watcher's retirement receipt. Whoever lands second renumbers
 rulings via a divergence merge, never a force-push.
+
+**Ruling 43 (B7-5 amended) — the settle timeout bounds registration, not execution.** Ruling 39
+expired the budget "while unsettled", which included required checks that had registered and were
+queued or running. PR #1149's own babysit hit that at 30 minutes with `Heavy / Lint Policy` and
+`Heavy / Test Integration` registered but still queued behind six other heavy runs, and exited 1
+for a wait that was GitHub's, not a settle failure. The budget now counts only while no check has
+registered for the head or at least one expected context is missing (no exact name, no matrix
+child); a registered required check is waited for until its own job timeout, and the gate line
+names the elapsed time without the budget in that state. `deriveSettleVerdict` stays pure; the
+`settle-timeout` terminal, its exit code, and the missing-context naming are unchanged. Rejected:
+raising the default to cover the observed heavy queue (the queue depth is not a property of the
+head); counting queued checks against a second, longer budget (GitHub already owns that bound).
