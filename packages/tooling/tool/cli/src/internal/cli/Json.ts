@@ -14,7 +14,7 @@ import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
-import { noteProcessStreamWriteFailure } from "./Stdout.ts";
+import { noteProcessStreamWriteFailure, writeChunkOnce } from "./Stdout.ts";
 
 const $I = $RepoCliId.create("internal/cli/Json");
 const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
@@ -38,14 +38,12 @@ const writeCommandJsonStdout = (text: string): Effect.Effect<void> =>
       noteProcessStreamWriteFailure("stdout", message);
       complete();
     };
-    const causeMessage = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
-    const writeNext = (error?: Error | null): void => {
+    const writeNext = (failure: O.Option<string>): void => {
       if (MutableRef.get(settled)) {
         return;
       }
-      const cause = O.fromNullishOr(error);
-      if (O.isSome(cause)) {
-        fail(cause.value.message);
+      if (O.isSome(failure)) {
+        fail(failure.value);
         return;
       }
       if (offset >= bytes.byteLength) {
@@ -56,22 +54,10 @@ const writeCommandJsonStdout = (text: string): Effect.Effect<void> =>
       const nextOffset = offset + COMMAND_JSON_STDOUT_CHUNK_SIZE_BYTES;
       const chunk = bytes.subarray(offset, nextOffset);
       offset = nextOffset;
-      const called = MutableRef.make(false);
-      const onWritten = (error?: Error | null): void => {
-        if (MutableRef.get(called)) {
-          return;
-        }
-        MutableRef.set(called, true);
-        writeNext(error);
-      };
-      try {
-        process.stdout.write(chunk, onWritten);
-      } catch (cause) {
-        fail(causeMessage(cause));
-      }
+      writeChunkOnce(process.stdout, chunk, writeNext);
     };
 
-    writeNext();
+    writeNext(O.none());
   });
 
 /**

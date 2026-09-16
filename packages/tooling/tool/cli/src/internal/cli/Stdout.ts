@@ -85,6 +85,49 @@ const formatArgs = (args: ReadonlyArray<unknown>): string =>
 
 const causeMessage = (cause: unknown): string => (cause instanceof Error ? cause.message : String(cause));
 
+/**
+ * Writes one chunk and reports its completion exactly once, as an optional error message.
+ *
+ * **Details**
+ *
+ * The stream callback may fire more than once or not at all, and `write` may throw synchronously
+ * before the callback is registered. This helper collapses all of those into a single `onDone`
+ * call: a duplicate callback is ignored, and a synchronous throw is reported as `O.some(message)`.
+ * Both the console line writers and the JSON stdout writer chunk through it.
+ *
+ * **Example** (Write one chunk and observe its completion)
+ *
+ * ```ts
+ * import { writeChunkOnce } from "@beep/repo-cli/test/Cli"
+ * import * as O from "effect/Option"
+ *
+ * writeChunkOnce(process.stdout, new TextEncoder().encode("hello\n"), (failure) => {
+ *   console.log(O.isNone(failure))
+ * })
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const writeChunkOnce: {
+  (chunk: Uint8Array, onDone: (failure: O.Option<string>) => void): (stream: NodeJS.WriteStream) => void;
+  (stream: NodeJS.WriteStream, chunk: Uint8Array, onDone: (failure: O.Option<string>) => void): void;
+} = dual(3, (stream: NodeJS.WriteStream, chunk: Uint8Array, onDone: (failure: O.Option<string>) => void): void => {
+  const called = MutableRef.make(false);
+  const settle = (failure: O.Option<string>): void => {
+    if (MutableRef.get(called)) {
+      return;
+    }
+    MutableRef.set(called, true);
+    onDone(failure);
+  };
+  try {
+    stream.write(chunk, (error?: Error | null) => settle(O.map(O.fromNullishOr(error), (cause) => cause.message)));
+  } catch (cause) {
+    settle(O.some(causeMessage(cause)));
+  }
+});
+
 // Count queued lines, including the active line until its final chunk callback fires.
 const inflightWrites = MutableRef.make(0);
 const drainWaiters = MutableRef.make<ReadonlyArray<() => void>>(A.empty());
@@ -138,33 +181,24 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
     }
     const bytes = utf8Encoder.encode(`${formatArgs(args)}\n`);
     const offset = MutableRef.make(0);
-    const done = MutableRef.make(false);
-    // Every caller (fail, drop, end-of-bytes) is behind a done check.
-    // Each chunk callback fires at most once, so complete needs no done guard.
+    // writeChunkOnce reports each chunk exactly once, so a line reaches fail or
+    // complete at most once; a done flag here would never be read.
     const complete = (): void => {
-      MutableRef.set(done, true);
       // Drop this line only if it is the head, without a separate branch.
       MutableRef.update(
         queue,
-        A.dropWhile((line) => line === writeNext)
+        A.dropWhile((line) => line === start)
       );
       startNext();
       settleWrite();
     };
     const fail = (message: string): void => {
-      if (MutableRef.get(done)) {
-        return;
-      }
       recordFailure(message);
       complete();
     };
-    const writeNext = (error?: Error | null): void => {
-      if (MutableRef.get(done)) {
-        return;
-      }
-      const cause = O.fromNullishOr(error);
-      if (O.isSome(cause)) {
-        fail(cause.value.message);
+    const writeNext = (failure: O.Option<string>): void => {
+      if (O.isSome(failure)) {
+        fail(failure.value);
         return;
       }
       if (failed()) {
@@ -178,23 +212,12 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
         return;
       }
       MutableRef.set(offset, start + STREAM_CHUNK_SIZE_BYTES);
-      // Each chunk also owns its callback: duplicate callbacks must not advance a later chunk.
-      const called = MutableRef.make(false);
-      const onWritten = (error?: Error | null): void => {
-        if (MutableRef.get(called)) {
-          return;
-        }
-        MutableRef.set(called, true);
-        writeNext(error);
-      };
-      try {
-        stream().write(bytes.subarray(start, start + STREAM_CHUNK_SIZE_BYTES), onWritten);
-      } catch (cause) {
-        fail(causeMessage(cause));
-      }
+      // Each chunk owns its once-only completion; a duplicate callback must not advance a later chunk.
+      writeChunkOnce(stream(), bytes.subarray(start, start + STREAM_CHUNK_SIZE_BYTES), writeNext);
     };
     const idle = A.isReadonlyArrayEmpty(MutableRef.get(queue));
-    MutableRef.update(queue, A.append(writeNext));
+    const start = (): void => writeNext(O.none());
+    MutableRef.update(queue, A.append(start));
     if (idle) {
       startNext();
     }
