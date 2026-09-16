@@ -1,14 +1,13 @@
 /**
  * Pinned external runtime: discovery of the installed package and bounded
  * execution of its CLI.
- *
- * This role file deliberately owns both runtime discovery (the config-provider
- * concern a `.config.ts` role would normally hold) and child-process execution.
- * A Security process is only ever spawned against a verified pin, so the two
- * concerns share one module rather than one reaching into the other.
  * @packageDocumentation
  * @since 0.0.0
  */
+// This role file deliberately owns both runtime discovery (the config-provider
+// concern a `.config.ts` role would normally hold) and child-process execution:
+// a Security process is only ever spawned against a verified pin, so the two
+// concerns share one module rather than one reaching into the other.
 import { Config, Effect, FileSystem, Path } from "effect";
 import * as Duration from "effect/Duration";
 import * as S from "effect/Schema";
