@@ -1,5 +1,5 @@
 // Exact declaration excerpts from packages/effect/src/unstable/arbitrary/Arbitrary.ts at
-// @effect/vitest@4.0.0-rc.113 (MIT; see ../LICENSE).
+// @effect/vitest@4.0.0-rc.115 (MIT; see ../LICENSE).
 // Pinned full-file SHA-256: 98a910a672ac3f1978978af8154754577342e174a21c36a59f7d8b424b55a252
 
 // @effect-vitest-anchor Arbitrary.CheckOptions 166 173
