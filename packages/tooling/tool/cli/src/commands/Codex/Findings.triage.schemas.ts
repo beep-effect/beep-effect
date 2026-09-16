@@ -20,7 +20,7 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   CaptureDate,
-  CodexFindingId,
+  CapturedFindingId,
   CodexFindingSeverity,
   CodexFindingStatus,
   GitCommitSha,
@@ -187,6 +187,7 @@ export type CodexConfidence = typeof CodexConfidence.Type;
  * @since 0.0.0
  */
 export const CodexCaptureMethod = LiteralKit([
+  "security-bundle",
   "signed-in-csv-export",
   "signed-in-chrome-control",
   "signed-in-chrome-control-and-csv-export",
@@ -340,7 +341,7 @@ export class CodexTriageRemediation extends S.Class<CodexTriageRemediation>($I`C
 export class CodexTriageFinding extends S.Class<CodexTriageFinding>($I`CodexTriageFinding`)(
   {
     id: CodexRecordId,
-    codexId: CodexFindingId,
+    codexId: CapturedFindingId,
     title: S.String,
     severity: CodexFindingSeverity,
     codexStatus: CodexFindingStatus,

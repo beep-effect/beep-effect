@@ -18,7 +18,8 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
   CaptureDate,
-  CodexFindingId,
+  CapturedFindingId,
+  CodexCaptureSource,
   CodexFindingSeverity,
   CodexFindingStatus,
   CodexFindingTitle,
@@ -190,9 +191,9 @@ export class CodexFindingRecord extends S.Class<CodexFindingRecord>($I`CodexFind
         description: "Stable CSF-NNN identity used for filenames and cross-references.",
       })
     ),
-    codexId: CodexFindingId.pipe(
+    codexId: CapturedFindingId.pipe(
       $I.annoteKey("CodexFindingRecord.codexId", {
-        description: "Codex Cloud identifier used to reconcile reruns and post-merge closure.",
+        description: "Cloud identifier or namespaced local identity used to reconcile reruns and closure.",
       })
     ),
     title: CodexFindingTitle.pipe(
@@ -244,6 +245,7 @@ export class CodexFindingRecord extends S.Class<CodexFindingRecord>($I`CodexFind
  */
 export class CodexSeverityCounts extends S.Class<CodexSeverityCounts>($I`CodexSeverityCounts`)(
   {
+    Critical: S.optionalKey(S.Int),
     High: S.optionalKey(S.Int),
     Medium: S.optionalKey(S.Int),
     Low: S.optionalKey(S.Int),
@@ -307,6 +309,7 @@ export class CodexPacketPlan extends S.Class<CodexPacketPlan>($I`CodexPacketPlan
         description: "Repository the findings view was scoped to.",
       })
     ),
+    source: CodexCaptureSource.pipe(SchemaUtils.withKeyDefaults("cloud-csv")),
     sourceUrl: S.String.pipe(
       $I.annoteKey("CodexPacketPlan.sourceUrl", {
         description: "Dashboard URL recorded as packet provenance.",
@@ -373,6 +376,7 @@ export class CodexPacketPlan extends S.Class<CodexPacketPlan>($I`CodexPacketPlan
  */
 export class CodexFindingsIngestOptions extends S.Class<CodexFindingsIngestOptions>($I`CodexFindingsIngestOptions`)(
   {
+    source: CodexCaptureSource.pipe(SchemaUtils.withKeyDefaults("cloud-csv")),
     from: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     slug: S.OptionFromOptionalKey(CodexPacketSlug).pipe(SchemaUtils.withNoneDefault),
     date: S.OptionFromOptionalKey(CaptureDate).pipe(SchemaUtils.withNoneDefault),
