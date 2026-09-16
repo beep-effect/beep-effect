@@ -196,6 +196,9 @@ const assertWarmIdentityUnchanged = Effect.fn("Cache.assertWarmIdentityUnchanged
   }
 });
 
+const turboCacheFlagPrefix = "--cache=";
+const turboWriteOnlyCacheFlag = `${turboCacheFlagPrefix}local:w,remote:w`;
+
 const runCacheWarmWith = Effect.fn("Cache.runCacheWarmWith")(function* (
   repoRoot: string,
   output: O.Option<string>,
@@ -212,8 +215,9 @@ const runCacheWarmWith = Effect.fn("Cache.runCacheWarmWith")(function* (
       "check",
       "lint",
       "test",
-      "--cache=local:rw,remote:rw",
-      "--force",
+      // Turbo rejects `--cache` together with `--force`; write-only access is Turbo's own
+      // definition of `--force`, so this alone re-executes every task and writes both caches.
+      turboWriteOnlyCacheFlag,
       "--summarize",
     ],
     repoRoot
@@ -306,9 +310,24 @@ const unknownStrings = (value: unknown): ReadonlyArray<string> => {
   return A.empty();
 };
 
+const isWriteOnlyCacheSpec = (spec: string): boolean =>
+  A.every(Str.split(spec, ","), (entry) => O.exists(A.get(Str.split(entry, ":"), 1), (mode) => mode === "w"));
+
+// Turbo defines `--force` as `--cache=local:w,remote:w`, so a spec whose every source is exactly `w`
+// is a forced run. An empty mode such as `local:` disables that source instead, so it never counts.
+const isWriteOnlyCacheCommand = (command: string): boolean =>
+  A.findFirst(Str.split(command, " "), Str.startsWith(turboCacheFlagPrefix)).pipe(
+    O.map(Str.slice(turboCacheFlagPrefix.length)),
+    O.exists(isWriteOnlyCacheSpec)
+  );
+
 const classifyRun = (run: TurboRunSummary): CacheRunMode => {
   const strings = unknownStrings(run.globalCacheInputs);
-  if (Str.includes("--force")(run.execution.command) || A.some(strings, Str.includes("TURBO_FORCE=true"))) {
+  if (
+    Str.includes("--force")(run.execution.command) ||
+    isWriteOnlyCacheCommand(run.execution.command) ||
+    A.some(strings, Str.includes("TURBO_FORCE=true"))
+  ) {
     return CacheRunMode.Enum.forced;
   }
   if (A.every(run.tasks, (task) => task.cache === undefined)) return CacheRunMode.Enum.disabled;

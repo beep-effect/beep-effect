@@ -19,7 +19,9 @@ import {
   runYeetWatchLoop,
   splicePrProvenanceFooter,
   toPublicPrProvenance,
+  YeetUntilReadyPolicy,
   YeetWatchEnded,
+  yeetMonitorExitTable,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
@@ -778,30 +780,41 @@ describe("Yeet provenance footer splice", () => {
     }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory)))
   );
 
-  it.effect("records and stamps monitored provenance once before the until-merged route polls", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const root = yield* fs.makeTempDirectory();
-      yield* configureRepo(root);
-      const registry = yield* PrSessionRegistry;
-      const runner = yield* makeGhRunner(fs, "Body", "Body");
-      const routeContext = context(root);
-      const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
-      const terminal = yield* runYeetMergeLoop(
-        { base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" },
-        {
-          capture: runner.capture,
-          hydrate: () => Effect.succeed(routeContext),
-          mergeLoop: () => Effect.succeed("closed"),
-          registry,
-          view: () => Effect.succeed(GhPrView.make({ headRefName: routeContext.branch, number: 42, state: "OPEN" })),
-        }
-      ).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider));
-      expect(terminal).toBe("closed");
-      expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
-      expect(yield* Ref.get(runner.writes)).toBe(1);
-    }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory)))
-  );
+  for (const exit of yeetMonitorExitTable)
+    it.effect(`records provenance and maps ${exit.terminal} through the exit table`, () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectory();
+        yield* configureRepo(root);
+        const registry = yield* PrSessionRegistry;
+        const runner = yield* makeGhRunner(fs, "Body", "Body");
+        const routeContext = context(root);
+        const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
+        const policy = YeetUntilReadyPolicy.make({ settleTimeoutMs: 42 });
+        const terminal = yield* runYeetMergeLoop(
+          { base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" },
+          {
+            capture: runner.capture,
+            hydrate: () => Effect.succeed(routeContext),
+            mergeLoop: (_context, options) => {
+              expect(options.policy).toEqual(policy);
+              return Effect.succeed(exit.terminal);
+            },
+            policy,
+            registry,
+            view: () => Effect.succeed(GhPrView.make({ headRefName: routeContext.branch, number: 42, state: "OPEN" })),
+          }
+        ).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider), Effect.result);
+        if (exit.exitCode === 0) expect(terminal).toMatchObject({ _tag: "Success", success: exit.terminal });
+        else
+          expect(terminal).toMatchObject({
+            _tag: "Failure",
+            failure: { _tag: "CliReportedExit", exitCode: exit.exitCode, message: exit.summary },
+          });
+        expect(yield* registry.lookup(repository, 42)).toHaveLength(1);
+        expect(yield* Ref.get(runner.writes)).toBe(1);
+      }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, layerPrSessionRegistryMemory)))
+    );
 
   it.effect("lowercases a mixed-case origin so URL and origin lookups share one registry partition", () =>
     Effect.gen(function* () {

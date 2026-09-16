@@ -1,3 +1,4 @@
+import { HEAVY_ADMISSION_LABEL } from "@beep/repo-cli/commands/Ci";
 import {
   collectYeetWatchSnapshot,
   GreptileSummary,
@@ -8,19 +9,24 @@ import {
   runArtifactPathForContext,
   runYeetWatchStream,
   YeetCommandError,
+  YeetExpectedContextCensus,
   YeetInboxRowJson,
   YeetMonitorCommentStateJson,
+  YeetRulesetRequiredContexts,
+  YeetSettleVerdict,
+  YeetWatchEnded,
   YeetWatchEvent,
   yeetInboxPaths,
   yeetMonitorCommentStatePath,
   yeetWatchExitFailure,
+  yeetWatchSettleSleepMillis,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Ref, Sink, Stream } from "effect";
+import { DateTime, Effect, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -76,6 +82,7 @@ interface ScriptedAnswer {
 interface PollScript {
   readonly checks: ScriptedAnswer;
   readonly issueComments?: ScriptedAnswer;
+  readonly requiredChecks?: ScriptedAnswer;
   readonly reviewComments?: ScriptedAnswer;
   readonly threads: ScriptedAnswer;
   readonly view: ScriptedAnswer;
@@ -85,18 +92,22 @@ const viewJson = (
   state: string,
   headSha: string,
   mergeStateStatus = "CLEAN",
-  reviewDecision: string | null = null
+  reviewDecision: string | null = null,
+  labels: ReadonlyArray<string> = []
 ): string =>
   JSON.stringify({
     headRefOid: headSha,
     id: "PR_watch",
     isDraft: false,
+    labels: A.map(labels, (name) => ({ name, color: "0e8a16" })),
     mergeable: "MERGEABLE",
     mergeStateStatus,
     number: 751,
     reviewDecision,
     state,
   });
+// The merge-base diff the scripted git answers; code-bearing unless a test says otherwise.
+const codeDiff = "packages/a/src/index.ts\n";
 
 interface CheckRowFixture {
   readonly bucket: string;
@@ -131,7 +142,7 @@ const emptyCollection: ScriptedAnswer = { exitCode: 0, output: "[]" };
 // count, because the comment polls run *after* the tick's GraphQL thread read:
 // a single shared cursor advanced by the thread read would hand the comment
 // polls the NEXT tick's script.
-const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>) =>
+const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>, diff: string = codeDiff) =>
   Layer.mergeAll(
     PlatformLayer,
     Layer.effect(
@@ -146,7 +157,12 @@ const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>) =>
             return Effect.die("the watch never spawns a piped command");
           }
           const line = A.join([command.command, ...command.args], " ");
+          // fallow-ignore-next-line complexity -- Scripted command router preserves independent per-family poll cursors.
           return Effect.gen(function* () {
+            if (Str.includes("rules/branches/")(line)) return stubHandle(1, "rules unavailable");
+            // The once-per-head merge-base diff owns no poll index: it answers by argv prefix.
+            if (command.command === "git" && command.args[0] === "diff" && command.args[1] === "--name-only")
+              return stubHandle(0, diff);
             if (Str.includes("pulls/751/comments")(line)) {
               const answer = scriptAt(yield* Ref.getAndUpdate(reviewServed, (value) => value + 1));
               const review = answer.reviewComments ?? emptyCollection;
@@ -162,7 +178,10 @@ const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>) =>
               return stubHandle(script.view.exitCode, script.view.output);
             }
             if (Str.includes("pr checks")(line)) {
-              return stubHandle(script.checks.exitCode, script.checks.output);
+              const checks = A.contains(command.args, "--required")
+                ? (script.requiredChecks ?? script.checks)
+                : script.checks;
+              return stubHandle(checks.exitCode, checks.output);
             }
             yield* Ref.update(threadsServed, (value) => value + 1);
             return stubHandle(script.threads.exitCode, script.threads.output);
@@ -172,8 +191,8 @@ const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>) =>
     )
   );
 
-const greenScript = (headSha: string): PollScript => ({
-  view: { exitCode: 0, output: viewJson("OPEN", headSha) },
+const greenScript = (headSha: string, labels: ReadonlyArray<string> = []): PollScript => ({
+  view: { exitCode: 0, output: viewJson("OPEN", headSha, "CLEAN", null, labels) },
   checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Check", state: "SUCCESS" }]) },
   threads: { exitCode: 0, output: threadsJson([]) },
 });
@@ -489,7 +508,12 @@ describe("runYeetWatchStream", () => {
 
         const lines = A.map(yield* TestConsole.logLines, String);
         const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
-        expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "check-transition", "watch-ended"]);
+        expect(A.map(events, (event) => event.kind)).toEqual([
+          "watch-started",
+          "check-transition",
+          "settle-changed",
+          "watch-ended",
+        ]);
         const transition = events[1] as Extract<YeetWatchEvent, { readonly kind: "check-transition" }>;
         expect(transition.from).toBe("pending");
         expect(transition.to).toBe("fail");
@@ -978,18 +1002,18 @@ describe("registration patience", () => {
     )
   );
 
-  it.live("believes a genuinely checkless PR once the patience bound is spent", () =>
+  it.live("times out a checkless PR instead of declaring a green settle", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0, settleTimeoutMs: 0 });
 
-        expect(ended.reason).toBe("all-terminal");
+        expect(ended.reason).toBe("settle-timeout");
         expect(ended.failing).toBe(0);
         const errors = A.filter(A.map(yield* TestConsole.errorLines, String), (line) =>
           Str.includes("no checks registered")(line)
         );
-        // One patience line per empty observation, then the bound is spent.
-        expect(A.length(errors)).toBe(10);
+        // An expired settle budget is a failure even when no check registered.
+        expect(A.length(errors)).toBe(0);
       })
     ).pipe(
       provideScopedLayer(
@@ -1141,6 +1165,53 @@ describe("comment rows and --until-event", () => {
             {
               view: { exitCode: 0, output: viewJson("MERGED", "aaa111") },
               checks: { exitCode: 0, output: pendingChecks },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  // A required matrix parent's child reports with required=false from GitHub; the
+  // settle census still requires it, so its red wakes the supervisor.
+  it.live("exits with reason event on a failed matrix child of a required parent", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          untilEvent: true,
+          rulesetRead: () =>
+            Effect.succeedSome(
+              YeetRulesetRequiredContexts.make({
+                base: "main",
+                contexts: ["Test Unit"],
+                rulesetIds: [10240248],
+                readAt: "2026-09-16T00:00:00Z",
+              })
+            ),
+        });
+        expect(ended.reason).toBe("event");
+        expect(ended.failing).toBe(1);
+        expect(ended.optionalFailing).toBe(0);
+        expect(yeetWatchExitFailure(ended)).toBe(true);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: {
+                exitCode: 0,
+                output: checksJson([
+                  { bucket: "fail", name: "Test Unit (unit-a)", state: "FAILURE" },
+                  { bucket: "pending", name: "Test Unit (unit-b)", state: "QUEUED" },
+                ]),
+              },
+              requiredChecks: { exitCode: 0, output: checksJson([]) },
               threads: { exitCode: 0, output: threadsJson([]) },
             },
           ])
@@ -1353,6 +1424,7 @@ describe("comment rows and --until-event", () => {
           "comment-posted",
           "check-transition",
           "merge-ready-criterion-changed",
+          "settle-changed",
           "watch-ended",
         ]);
       })
@@ -1466,5 +1538,440 @@ describe("yeetWatchExitFailure", () => {
     // An event exit is only a failure when the event was a red.
     expect(yeetWatchExitFailure({ failing: 1, reason: "event" })).toBe(true);
     expect(yeetWatchExitFailure({ failing: 0, reason: "event" })).toBe(false);
+  });
+});
+
+describe("B7 watch settle cache and timeout", () => {
+  it.live("waits for missing contexts, resets on a push, and ends with a typed settle-timeout", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const reads = yield* Ref.make(0);
+        const ticks = yield* Ref.make(0);
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          settleTimeoutMs: 1000,
+          now: Ref.getAndUpdate(ticks, (value) => value + 1).pipe(
+            Effect.map((tick) => DateTime.makeUnsafe(tick * 500))
+          ),
+          rulesetRead: () =>
+            Ref.update(reads, (value) => value + 1).pipe(
+              Effect.as(
+                O.some(
+                  YeetRulesetRequiredContexts.make({
+                    base: "main",
+                    contexts: ["Check", "Heavy / Check"],
+                    rulesetIds: [10240248],
+                    readAt: "2026-09-16T00:00:00Z",
+                  })
+                )
+              )
+            ),
+        });
+        expect(ended.reason).toBe("settle-timeout");
+        expect(yeetWatchExitFailure(ended)).toBe(true);
+        expect(yield* Ref.get(reads)).toBe(2);
+        expect(yield* Ref.get(ticks)).toBe(4);
+        const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
+          decodeUnknownYeetWatchEventJson(line)
+        );
+        expect(A.filter(events, (event) => event.kind === "head-changed")).toHaveLength(1);
+        expect(A.filter(events, (event) => event.kind === "settle-changed")).toMatchObject([
+          { from: "required-pending", to: "settle-timeout", missing: ["Heavy / Check"] },
+        ]);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer([
+            greenScript("aaa111", [HEAVY_ADMISSION_LABEL]),
+            greenScript("bbb222", [HEAVY_ADMISSION_LABEL]),
+            greenScript("bbb222", [HEAVY_ADMISSION_LABEL]),
+            greenScript("bbb222", [HEAVY_ADMISSION_LABEL]),
+          ])
+        )
+      )
+    )
+  );
+});
+
+describe("B8 watch base conflict", () => {
+  it.live("streams required-pending → base-conflict → required-pending across an emptied rollup", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
+        expect(ended.reason).toBe("pr-merged");
+        const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
+          decodeUnknownYeetWatchEventJson(line)
+        );
+        expect(A.filter(events, (event) => event.kind === "settle-changed")).toMatchObject([
+          { from: "required-pending", to: "base-conflict" },
+          { from: "base-conflict", to: "required-pending", pending: ["Check"] },
+        ]);
+        const stderr = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+        expect(stderr).toContain("settle: base-conflict; merge origin/main and push");
+        expect(stderr).toContain("[yeet] rollup: 1 registered context(s) absent this poll, kept pending");
+        expect(stderr).not.toContain("settle-timeout");
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer([
+            {
+              ...greenScript("aaa111"),
+              checks: { exitCode: 0, output: checksJson([{ name: "Check", bucket: "pending", state: "QUEUED" }]) },
+            },
+            {
+              ...greenScript("aaa111"),
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111", "DIRTY") },
+              checks: { exitCode: 0, output: checksJson([]) },
+            },
+            {
+              ...greenScript("aaa111"),
+              checks: { exitCode: 0, output: checksJson([{ name: "Check", bucket: "pending", state: "QUEUED" }]) },
+            },
+            {
+              ...greenScript("aaa111"),
+              view: { exitCode: 0, output: viewJson("MERGED", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ name: "Check", bucket: "pending", state: "QUEUED" }]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+});
+
+describe("B8 watch settle clock resumes with the budget", () => {
+  it.live("streams base-conflict → registration on the same head with the clock restarted, never settle-timeout", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ticks = yield* Ref.make(0);
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          settleTimeoutMs: 1000,
+          now: Ref.getAndUpdate(ticks, (value) => value + 1).pipe(
+            Effect.map((tick) => DateTime.makeUnsafe(tick * 5000))
+          ),
+        });
+        expect(ended.reason).toBe("pr-merged");
+        const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
+          decodeUnknownYeetWatchEventJson(line)
+        );
+        expect(A.filter(events, (event) => event.kind === "settle-changed")).toMatchObject([
+          { from: "base-conflict", to: "registration" },
+          { from: "registration", to: "required-pending", pending: ["Check"] },
+        ]);
+        const stderr = A.join(A.map(yield* TestConsole.errorLines, String), "\n");
+        expect(stderr).toContain("[yeet] settle budget resumed; clock reset");
+        expect(stderr).toContain("settle: registration; no checks reported for this head yet; waited 0 of 1s");
+        expect(stderr).not.toContain("settle-timeout");
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer([
+            {
+              ...greenScript("aaa111"),
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111", "DIRTY") },
+              checks: { exitCode: 0, output: checksJson([]) },
+            },
+            {
+              ...greenScript("aaa111"),
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111", "DIRTY") },
+              checks: { exitCode: 0, output: checksJson([]) },
+            },
+            { ...greenScript("aaa111"), checks: { exitCode: 0, output: checksJson([]) } },
+            {
+              ...greenScript("aaa111"),
+              checks: { exitCode: 0, output: checksJson([{ name: "Check", bucket: "pending", state: "QUEUED" }]) },
+            },
+            {
+              ...greenScript("aaa111"),
+              view: { exitCode: 0, output: viewJson("MERGED", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ name: "Check", bucket: "pending", state: "QUEUED" }]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+});
+
+describe("B8 watch heavy admission", () => {
+  const heavyRuleset = () =>
+    Effect.succeedSome(
+      YeetRulesetRequiredContexts.make({
+        base: "main",
+        contexts: ["Check", "Heavy / Check"],
+        rulesetIds: [10240248],
+        readAt: "2026-09-16T00:00:00Z",
+      })
+    );
+  const settleRows = Effect.fn("watchAdmissionTest.settleRows")(function* () {
+    const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
+      decodeUnknownYeetWatchEventJson(line)
+    );
+    return A.filter(events, (event) => event.kind === "settle-changed");
+  });
+  const stderr = TestConsole.errorLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
+
+  it.live("holds an unlabelled code head past the budget and never reaches settle-timeout", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ticks = yield* Ref.make(0);
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          settleTimeoutMs: 1000,
+          now: Ref.getAndUpdate(ticks, (value) => value + 1).pipe(
+            Effect.map((tick) => DateTime.makeUnsafe(tick * 500))
+          ),
+          rulesetRead: heavyRuleset,
+        });
+        // Four held ticks span 1.5s against a 1s budget; the merged view ends the stream.
+        expect(ended.reason).toBe("pr-merged");
+        expect(yield* Ref.get(ticks)).toBe(5);
+        expect(yield* settleRows()).toEqual([]);
+        const lines = yield* stderr;
+        expect(lines).toContain(
+          "settle: heavy-not-admitted; gated: Heavy / Check; admit: gh pr edit --add-label ready-for-heavy; waited 1s 500ms (not counted toward the 1s settle timeout)"
+        );
+        expect(lines).not.toContain("settle-timeout");
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer([
+            greenScript("aaa111"),
+            greenScript("aaa111"),
+            greenScript("aaa111"),
+            greenScript("aaa111"),
+            { ...greenScript("aaa111"), view: { exitCode: 0, output: viewJson("MERGED", "aaa111") } },
+          ])
+        )
+      )
+    )
+  );
+
+  it.live("streams one settle-changed row when the label lands and the heavy lane reports", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ticks = yield* Ref.make(0);
+        const diffs = yield* Ref.make(0);
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          settleTimeoutMs: 1000,
+          now: Ref.getAndUpdate(ticks, (value) => value + 1).pipe(
+            Effect.map((tick) => DateTime.makeUnsafe(tick * 2000))
+          ),
+          rulesetRead: heavyRuleset,
+          changedPathsRead: () => Ref.update(diffs, (value) => value + 1).pipe(Effect.as(["packages/a/src/index.ts"])),
+        });
+        expect(ended.reason).toBe("all-terminal");
+        expect(yeetWatchExitFailure(ended)).toBe(false);
+        expect(yield* Ref.get(diffs)).toBe(1);
+        expect(yield* settleRows()).toMatchObject([
+          { from: "heavy-not-admitted", to: "closeout-pending", pending: [], missing: [], gated: [] },
+        ]);
+        const lines = yield* stderr;
+        expect(lines).toContain("[yeet] heavy admission: hold → run");
+        expect(lines).not.toContain("settle-timeout");
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer([
+            // Held: 2s of wall clock pass before the label, more than the budget.
+            greenScript("aaa111"),
+            greenScript("aaa111"),
+            {
+              ...greenScript("aaa111", [HEAVY_ADMISSION_LABEL]),
+              checks: {
+                exitCode: 0,
+                output: checksJson([
+                  { name: "Check", bucket: "pass", state: "SUCCESS" },
+                  { name: "Heavy / Check", bucket: "pass", state: "SUCCESS" },
+                ]),
+              },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  it.live("settles a docs-only head on the skipped heavy outcomes without the label", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          settleTimeoutMs: 1000,
+          rulesetRead: heavyRuleset,
+        });
+        expect(ended.reason).toBe("all-terminal");
+        expect(yeetWatchExitFailure(ended)).toBe(false);
+        expect(yield* stderr).toContain(
+          "settle: closeout-pending; required census settled, running the read-first closeout; heavy: docs-only, lanes report skipped"
+        );
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer(
+            [
+              {
+                ...greenScript("aaa111"),
+                checks: {
+                  exitCode: 0,
+                  output: checksJson([
+                    { name: "Check", bucket: "pass", state: "SUCCESS" },
+                    { name: "Heavy / Check", bucket: "skipping", state: "SKIPPED" },
+                  ]),
+                },
+              },
+            ],
+            "docs/runbooks/ci.md\ngoals/time-to-certainty/PLAN.md\n"
+          )
+        )
+      )
+    )
+  );
+});
+
+it.live("a settled watch head never times out while optional checks are pending", () =>
+  inTempRepo((root) =>
+    Effect.gen(function* () {
+      const ticks = yield* Ref.make(0);
+      const ended = yield* runYeetWatchStream(contextFor(root), {
+        intervalMillis: 0,
+        settleTimeoutMs: 10,
+        now: Ref.getAndUpdate(ticks, (n) => n + 1).pipe(Effect.map((n) => DateTime.makeUnsafe(n * 1000))),
+        rulesetRead: () => Effect.succeedNone,
+      });
+      expect(ended.reason).toBe("all-terminal");
+      expect(yield* Ref.get(ticks)).toBe(2);
+    })
+  ).pipe(
+    provideScopedLayer(
+      Layer.mergeAll(
+        TestConsole.layer,
+        scriptedSpawnerLayer([
+          {
+            ...greenScript("aaa111"),
+            requiredChecks: greenScript("aaa111").checks,
+            checks: {
+              exitCode: 0,
+              output: checksJson([
+                { name: "Check", bucket: "pass", state: "SUCCESS" },
+                { name: "Optional", bucket: "pending", state: "QUEUED" },
+              ]),
+            },
+          },
+          greenScript("aaa111"),
+        ])
+      )
+    )
+  )
+);
+
+describe("required-only watch exits", () => {
+  for (const untilEvent of [false, true]) {
+    it.live(`keeps a standing optional red visible without failing (untilEvent=${untilEvent})`, () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0, untilEvent });
+          expect(ended.reason).toBe("all-terminal");
+          expect(ended.failing).toBe(0);
+          expect(ended.optionalFailing).toBe(1);
+          expect(yeetWatchExitFailure(ended)).toBe(false);
+          const lines = A.map(yield* TestConsole.logLines, String);
+          const rows = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
+          expect(A.filter(rows, (row) => row.kind === "watch-ended")).toEqual([ended]);
+          expect(A.some(rows, (row) => row.kind === "check-transition")).toBe(true);
+        })
+      ).pipe(
+        provideScopedLayer(
+          Layer.mergeAll(
+            PlatformLayer,
+            TestConsole.layer,
+            scriptedSpawnerLayer([
+              {
+                ...greenScript("aaa111"),
+                checks: {
+                  exitCode: 0,
+                  output: checksJson([
+                    { bucket: "fail", name: "Vercel", state: "FAILURE" },
+                    { bucket: "pending", name: "Check", state: "QUEUED" },
+                  ]),
+                },
+                requiredChecks: {
+                  exitCode: 0,
+                  output: checksJson([{ bucket: "pending", name: "Check", state: "QUEUED" }]),
+                },
+              },
+              {
+                ...greenScript("aaa111"),
+                checks: {
+                  exitCode: 0,
+                  output: checksJson([
+                    { bucket: "fail", name: "Vercel", state: "FAILURE" },
+                    { bucket: "pass", name: "Check", state: "SUCCESS" },
+                  ]),
+                },
+                requiredChecks: greenScript("aaa111").checks,
+              },
+            ])
+          )
+        )
+      )
+    );
+  }
+
+  it("ignores optional failures for every successful watch ending", () => {
+    for (const reason of ["all-terminal", "pr-merged", "event"] as const) {
+      expect(
+        yeetWatchExitFailure(
+          YeetWatchEnded.make({
+            at: "now",
+            headSha: "abc",
+            failing: 0,
+            optionalFailing: 2,
+            reason,
+          })
+        )
+      ).toBe(false);
+    }
+    expect(yeetWatchExitFailure({ failing: 0, reason: "settle-timeout" })).toBe(true);
+  });
+});
+
+describe("yeetWatchSettleSleepMillis", () => {
+  const census = (missing: ReadonlyArray<string>, pending: ReadonlyArray<string>) =>
+    YeetExpectedContextCensus.make({ matched: [], unmatched: [], pending, missing });
+  const verdict = (values: Partial<YeetSettleVerdict>) =>
+    YeetSettleVerdict.make({
+      settled: false,
+      reason: O.some("required-pending"),
+      census: census([], ["Lint"]),
+      waitedMs: 5_000,
+      timeoutMs: 1_000,
+      budgetApplies: false,
+      ...values,
+    });
+  it("sleeps the full interval for a settled head or a queued registered check, and clamps only while the budget applies", () => {
+    expect(yeetWatchSettleSleepMillis(verdict({ settled: true, reason: O.none() }), 10_000)).toBe(10_000);
+    expect(yeetWatchSettleSleepMillis(verdict({}), 10_000)).toBe(10_000);
+    expect(
+      yeetWatchSettleSleepMillis(
+        verdict({ census: census(["Heavy / Check"], []), waitedMs: 400, budgetApplies: true }),
+        10_000
+      )
+    ).toBe(600);
+    expect(yeetWatchSettleSleepMillis(verdict({ waitedMs: 1_000, budgetApplies: true }), 10_000)).toBe(0);
   });
 });

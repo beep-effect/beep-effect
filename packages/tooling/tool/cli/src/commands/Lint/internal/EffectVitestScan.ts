@@ -352,7 +352,11 @@ export const formatEffectVitestIntroducedReport = (
   const entries: ReadonlyArray<EffectVitestFileCount> = A.sort(HashMap.toEntries(countsByFile), fileCountOrder);
   return [
     `[effect-vitest] ${introduced.length} new finding(s)`,
-    ...A.map(entries, ([file, count]) => `[effect-vitest]   ${file}: ${count} new finding(s)`),
+    ...A.map(
+      entries,
+      ([file, count]) =>
+        `[effect-vitest]   ${Str.replaceAll(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/gu, "[control]")(file)}: ${count} new finding(s)`
+    ),
     `[effect-vitest] total: ${introduced.length} new finding(s) in ${entries.length} file(s); refresh with \`bun run beep lint effect-vitest --write\` after reviewing them`,
   ];
 };
