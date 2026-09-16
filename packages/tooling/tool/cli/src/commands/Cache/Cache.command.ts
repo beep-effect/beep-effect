@@ -313,10 +313,8 @@ const unknownStrings = (value: unknown): ReadonlyArray<string> => {
 const isWriteOnlyCacheSpec = (spec: string): boolean =>
   A.every(Str.split(spec, ","), (entry) => O.exists(A.get(Str.split(entry, ":"), 1), (mode) => mode === "w"));
 
-/**
- * Turbo defines `--force` as `--cache=local:w,remote:w`, so a spec whose every source is exactly `w`
- * is a forced run. An empty mode such as `local:` disables that source instead, so it never counts.
- */
+// Turbo defines `--force` as `--cache=local:w,remote:w`, so a spec whose every source is exactly `w`
+// is a forced run. An empty mode such as `local:` disables that source instead, so it never counts.
 const isWriteOnlyCacheCommand = (command: string): boolean =>
   A.findFirst(Str.split(command, " "), Str.startsWith(turboCacheFlagPrefix)).pipe(
     O.map(Str.slice(turboCacheFlagPrefix.length)),
