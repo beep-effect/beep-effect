@@ -101,6 +101,7 @@ import {
   YEET_CHECK_REGISTRATION_BACKOFF,
 } from "./MonitorChecks.ts";
 import { runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
+import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
 import {
   buildYeetRunPlanWithMode,
   CI_PARITY_STEP_ID,
@@ -138,9 +139,10 @@ import {
 } from "./PublishScope.ts";
 import { ensurePullRequest } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
-import { collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
+import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
+import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
@@ -1118,7 +1120,8 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
   checkSteps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   failureMessage: string,
-  delays: ReadonlyArray<Duration.Duration> = YEET_CHECK_REGISTRATION_BACKOFF
+  delays: ReadonlyArray<Duration.Duration> = YEET_CHECK_REGISTRATION_BACKOFF,
+  settleTimeoutMs: number = YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS
 ): Effect.fn.Return<
   void,
   YeetCommandError,
@@ -1133,13 +1136,66 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
   // the pre-attempt snapshot before each try makes the last attempt the only
   // one that survives.
   const beforeAttempts = yield* Ref.get(recorder);
-  const results = yield* Ref.set(recorder, beforeAttempts).pipe(
+  const attempt = Ref.set(recorder, beforeAttempts).pipe(
     Effect.andThen(runPhase(context, checkSteps, recorder)),
     awaitYeetCheckRegistration(delays)
   );
-  if (A.every(results, (result) => result.exitCode === 0)) {
+  let results = yield* attempt;
+  const deadline = (yield* Clock.currentTimeMillis) + settleTimeoutMs;
+  while (!A.every(results, (result) => result.exitCode === 0)) {
+    if (isAwaitingYeetCheckRegistration(results)) break;
+    const required = yield* collectRemoteChecks(context, true);
+    if (O.isNone(required)) break;
+    const outcome = flow(YeetCheckSignal.make, classifyYeetCheckOutcome);
+    if (A.some(required.value, (check) => outcome(check) === "fail")) break;
+    const pending = A.filter(required.value, (check) => outcome(check) === "pending");
+    if (A.isReadonlyArrayNonEmpty(pending)) {
+      const remaining = deadline - (yield* Clock.currentTimeMillis);
+      const names = A.join(
+        A.map(pending, (check) => check.name),
+        ", "
+      );
+      if (remaining <= 0) {
+        failureMessage = `${failureMessage} settle-timeout; pending: ${names}`;
+        break;
+      }
+      yield* Console.log(`[yeet] required checks pending: ${names}; retrying check watch`);
+      const lastAttempt = yield* Ref.get(recorder);
+      const retried = yield* Effect.sleep(Math.min(10_000, remaining)).pipe(
+        Effect.andThen(attempt),
+        Effect.timeoutOption(remaining)
+      );
+      if (O.isNone(retried)) {
+        yield* Ref.set(recorder, lastAttempt);
+        failureMessage = `${failureMessage} settle-timeout; pending: ${names}`;
+        break;
+      }
+      results = retried.value;
+      continue;
+    }
+    const all = yield* collectRemoteChecks(context, false);
+    if (O.isNone(all)) break;
+    const optionalRed = A.filter(
+      all.value,
+      (check) => outcome(check) === "fail" && !A.some(required.value, (row) => row.name === check.name)
+    );
+    if (A.isReadonlyArrayEmpty(optionalRed)) break;
+    yield* Console.log(
+      `[yeet] optional check(s) red: ${A.join(
+        A.map(optionalRed, (check) => check.name),
+        ", "
+      )}; required census green`
+    );
+    yield* Ref.update(recorder, (entries) =>
+      A.map(entries, (entry) =>
+        A.some(checkSteps, (step) => step.id === entry.step.id)
+          ? YeetExecutedStep.make({ ...entry, result: RepoStepRunResult.make({ ...entry.result, exitCode: 0 }) })
+          : entry
+      )
+    );
     return;
   }
+  if (A.every(results, (result) => result.exitCode === 0)) return;
   return yield* failWithIssueArtifacts(
     context,
     checkSteps,
@@ -1151,7 +1207,16 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
 });
 
 /**
- * Run the monitor check watch in isolation, with an injectable backoff.
+ * Run the monitor check watch in isolation, with injectable registration and settle bounds.
+ *
+ * **Example** (Prepare a bounded monitor test)
+ *
+ * ```ts
+ * import { runMonitorCheckWatchForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * const runWatch = runMonitorCheckWatchForTesting
+ * console.log(typeof runWatch) // "function"
+ * ```
  *
  * @category testing
  * @since 0.0.0

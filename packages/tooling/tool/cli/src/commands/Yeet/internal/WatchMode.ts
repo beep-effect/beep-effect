@@ -79,6 +79,7 @@ import { YeetMergeReadyCriteria } from "./Verdict.ts";
 import {
   classifyYeetCheckOutcome,
   countYeetWatchFailures,
+  countYeetWatchOptionalFailures,
   diffYeetWatchSnapshots,
   renderYeetWatchEventLine,
   YeetCheckSignal,
@@ -556,6 +557,7 @@ const emitWatchEnded = Effect.fn("Yeet.emitWatchEnded")(function* (
   const ended = YeetWatchEnded.make({
     at: yield* isoNow,
     failing: countYeetWatchFailures(snapshot),
+    optionalFailing: countYeetWatchOptionalFailures(snapshot),
     headSha: snapshot.headSha,
     reason,
   });
@@ -700,7 +702,7 @@ const reportWatchRegistrationWait = (snapshot: YeetWatchSnapshot, emptyPolls: nu
  * failures are softer still: they degrade the comment surface alone, on the
  * classic monitor's consecutive-failure budget, and never end the watch.
  *
- * An `untilEvent` exit on a failing check keys on the snapshot, not the
+ * An `untilEvent` exit on a failing required check keys on the snapshot, not the
  * transition: a relaunched session over a still-red head exits again
  * immediately. That is deliberate — the ritual relaunches the watch after
  * acting (a push moves the head and starts a fresh wave), and a supervisor
@@ -841,7 +843,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
  * console.log(yeetWatchExitFailure({ failing: 0, reason: "pr-closed" })) // true
  * ```
  *
- * @param ended - The end reason and the final failure census.
+ * @param ended - The end reason and required failure count; optional failures do not affect the exit.
  * @returns Whether the command should exit non-zero.
  * @category predicates
  * @since 0.0.0

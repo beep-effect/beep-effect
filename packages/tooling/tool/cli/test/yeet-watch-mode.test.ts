@@ -11,6 +11,7 @@ import {
   YeetInboxRowJson,
   YeetMonitorCommentStateJson,
   YeetRulesetRequiredContexts,
+  YeetWatchEnded,
   YeetWatchEvent,
   yeetInboxPaths,
   yeetMonitorCommentStatePath,
@@ -1570,3 +1571,74 @@ it.live("a settled watch head never times out while optional checks are pending"
     )
   )
 );
+
+describe("required-only watch exits", () => {
+  for (const untilEvent of [false, true]) {
+    it.live(`keeps a standing optional red visible without failing (untilEvent=${untilEvent})`, () =>
+      inTempRepo((root) =>
+        Effect.gen(function* () {
+          const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0, untilEvent });
+          expect(ended.reason).toBe("all-terminal");
+          expect(ended.failing).toBe(0);
+          expect(ended.optionalFailing).toBe(1);
+          expect(yeetWatchExitFailure(ended)).toBe(false);
+          const lines = A.map(yield* TestConsole.logLines, String);
+          const rows = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
+          expect(A.filter(rows, (row) => row.kind === "watch-ended")).toEqual([ended]);
+          expect(A.some(rows, (row) => row.kind === "check-transition")).toBe(true);
+        })
+      ).pipe(
+        provideScopedLayer(
+          Layer.mergeAll(
+            PlatformLayer,
+            TestConsole.layer,
+            scriptedSpawnerLayer([
+              {
+                ...greenScript("aaa111"),
+                checks: {
+                  exitCode: 0,
+                  output: checksJson([
+                    { bucket: "fail", name: "Vercel", state: "FAILURE" },
+                    { bucket: "pending", name: "Check", state: "QUEUED" },
+                  ]),
+                },
+                requiredChecks: {
+                  exitCode: 0,
+                  output: checksJson([{ bucket: "pending", name: "Check", state: "QUEUED" }]),
+                },
+              },
+              {
+                ...greenScript("aaa111"),
+                checks: {
+                  exitCode: 0,
+                  output: checksJson([
+                    { bucket: "fail", name: "Vercel", state: "FAILURE" },
+                    { bucket: "pass", name: "Check", state: "SUCCESS" },
+                  ]),
+                },
+                requiredChecks: greenScript("aaa111").checks,
+              },
+            ])
+          )
+        )
+      )
+    );
+  }
+
+  it("ignores optional failures for every successful watch ending", () => {
+    for (const reason of ["all-terminal", "pr-merged", "event"] as const) {
+      expect(
+        yeetWatchExitFailure(
+          YeetWatchEnded.make({
+            at: "now",
+            headSha: "abc",
+            failing: 0,
+            optionalFailing: 2,
+            reason,
+          })
+        )
+      ).toBe(false);
+    }
+    expect(yeetWatchExitFailure({ failing: 0, reason: "settle-timeout" })).toBe(true);
+  });
+});

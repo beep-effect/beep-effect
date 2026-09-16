@@ -608,7 +608,19 @@ export const YeetWatchEndReason = LiteralKit([
 export type YeetWatchEndReason = typeof YeetWatchEndReason.Type;
 
 /**
- * The watch ended, with the reason and the final failure census.
+ * The watch ended, with separate required and optional failure counts.
+ *
+ * **Example** (Optional failures do not fail the watch)
+ *
+ * ```ts
+ * import { YeetWatchEnded } from "@beep/repo-cli/test/Yeet"
+ *
+ * const ended = YeetWatchEnded.make({
+ *   at: "2026-09-16T00:00:00Z", headSha: "abc", reason: "all-terminal",
+ *   failing: 0, optionalFailing: 1
+ * })
+ * console.log(ended.failing) // 0
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -623,6 +635,10 @@ export class YeetWatchEnded extends S.Class<YeetWatchEnded>($I`YeetWatchEnded`)(
     headSha: S.NonEmptyString,
     reason: YeetWatchEndReason,
     failing: S.Finite,
+    optionalFailing: S.Finite.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(0)),
+      S.withConstructorDefault(Effect.succeed(0))
+    ),
   },
   $I.annote("YeetWatchEnded", {
     description: "Last row of a watch stream: why it ended and how many checks were failing.",
@@ -755,7 +771,7 @@ export class YeetWatchDiffInput extends S.Class<YeetWatchDiffInput>($I`YeetWatch
  *   threads: []
  * })
  * const next = YeetWatchSnapshot.make({
- *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "fail" })],
+ *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "fail", required: true })],
  *   headSha: "abc",
  *   mergeable: "MERGEABLE",
  *   prNumber: 751,
@@ -901,7 +917,7 @@ export const yeetWatchEndReason = (snapshot: YeetWatchSnapshot): O.Option<YeetWa
 };
 
 /**
- * Count the failing checks in a snapshot.
+ * Count the failing required checks in a snapshot.
  *
  * **Example** (Count a red snapshot)
  *
@@ -909,7 +925,7 @@ export const yeetWatchEndReason = (snapshot: YeetWatchSnapshot): O.Option<YeetWa
  * import { countYeetWatchFailures, YeetWatchCheck, YeetWatchSnapshot } from "@beep/repo-cli/test/Yeet"
  *
  * const snapshot = YeetWatchSnapshot.make({
- *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "fail" })],
+ *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "fail", required: true })],
  *   headSha: "abc",
  *   mergeable: "MERGEABLE",
  *   prNumber: 751,
@@ -921,9 +937,34 @@ export const yeetWatchEndReason = (snapshot: YeetWatchSnapshot): O.Option<YeetWa
  * ```
  *
  * @param snapshot - The snapshot to count within.
- * @returns How many checks classify as `fail`.
+ * @returns How many required checks classify as `fail`.
  * @category getters
  * @since 0.0.0
  */
 export const countYeetWatchFailures = (snapshot: YeetWatchSnapshot): number =>
-  A.length(A.filter(snapshot.checks, (check) => YeetCheckOutcome.is.fail(check.outcome)));
+  A.length(A.filter(snapshot.checks, (check) => check.required && YeetCheckOutcome.is.fail(check.outcome)));
+
+/**
+ * Count optional failures for stream consumers without changing the exit code.
+ *
+ * **Example** (Count an optional red)
+ *
+ * ```ts
+ * import {
+ *   countYeetWatchOptionalFailures, YeetWatchCheck, YeetWatchSnapshot
+ * } from "@beep/repo-cli/test/Yeet"
+ *
+ * const snapshot = YeetWatchSnapshot.make({
+ *   checks: [YeetWatchCheck.make({ name: "Vercel", outcome: "fail", required: false })],
+ *   headSha: "abc", mergeable: "MERGEABLE", prNumber: 751, state: "OPEN", threads: []
+ * })
+ * console.log(countYeetWatchOptionalFailures(snapshot)) // 1
+ * ```
+ *
+ * @param snapshot - The observed check board, including each check's required flag.
+ * @returns The number of optional checks with a failing outcome.
+ * @category getters
+ * @since 0.0.0
+ */
+export const countYeetWatchOptionalFailures = (snapshot: YeetWatchSnapshot): number =>
+  A.length(A.filter(snapshot.checks, (check) => !check.required && YeetCheckOutcome.is.fail(check.outcome)));
