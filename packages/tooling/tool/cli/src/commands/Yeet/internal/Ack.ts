@@ -197,7 +197,13 @@ export class YeetAckWaiveResolution extends S.Class<YeetAckWaiveResolution>($I`Y
 ) {}
 
 /**
- * Acknowledge an informational job result by observation.
+ * Acknowledge an informational row by observation: a proof-job result or a merge-ready announcement.
+ *
+ * **Details**
+ *
+ * `yeet inbox ack --observed` accepts only the kinds in `YeetInboxObservedRowKind`
+ * (`proof-job-finished`, `pr-merge-ready`); every other row needs a fix SHA, a
+ * reason, a thread URL, or a waiver.
  *
  * **Example** (Observe a job)
  * ```ts
@@ -210,7 +216,9 @@ export class YeetAckWaiveResolution extends S.Class<YeetAckWaiveResolution>($I`Y
  */
 export class YeetAckObservedResolution extends S.Class<YeetAckObservedResolution>($I`YeetAckObservedResolution`)(
   { kind: S.tag("observed"), via: ProofJobObservedVia },
-  $I.annote("YeetAckObservedResolution", { description: "Observation of an informational proof job result." })
+  $I.annote("YeetAckObservedResolution", {
+    description: "Observation of an informational row: a proof-job result or a merge-ready announcement.",
+  })
 ) {}
 
 /**
@@ -220,8 +228,9 @@ export class YeetAckObservedResolution extends S.Class<YeetAckObservedResolution
  *
  * The original SPEC A2 members remain unchanged — fix SHA, wontfix plus reason,
  * or thread URL — while `environment-only` adds a reasoned attribution without
- * changing the `yeet-ack/v1` wire shape. The observed member applies only to informational proof-job rows; gate rows
- * still require a resolution or an attributed waiver.
+ * changing the `yeet-ack/v1` wire shape. The observed member applies only to the informational
+ * `proof-job-finished` and `pr-merge-ready` rows; gate rows still require a resolution or an
+ * attributed waiver.
  *
  * **Example** (Decode an environment-only resolution)
  *

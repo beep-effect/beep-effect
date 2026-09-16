@@ -2012,6 +2012,127 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   spends the budget (exit codes unchanged), and a context once seen registered for a head
   should not regress to `missing` on one empty poll. Both are B8 follow-ups on this branch.
 
+## 2026-09-16 — The Codex pool ran dry mid-train and the PR2 lane died before its first edit
+
+- **Doing:** launching the B7 PR2 implementation lane (`codex exec --model gpt-6-astra`) in a
+  fresh worktree right after PR1 #1149 merged.
+- **Evidence:** the lane read the brief and the results file, then exited with
+  `You've hit your usage limit … try again at Sep 19th, 2026 4:22 AM` after 31,642 tokens and no
+  edits; the same OAuth pool backs the `claudex` proxy route, so no Codex lane can run for three
+  days. Four B7 lanes (A–D) plus the day's other sessions consumed the window.
+- **Would have prevented it:** the quota meter in the routing doctrine (per-window burn per lane,
+  read before launching) and a smaller default lane budget once a window is past half; here the
+  orchestrator implements PR2's bounded items itself instead of waiting.
+
+## 2026-09-16 — Retired: the scratchpad PR watcher that stood in for yeet during the C3 train
+
+- **Doing:** closing B7 PR1 (#1149) and PR2; the 2026-09-12 and 2026-09-13 receipts above
+  describe the 25-line `pr-watch-generic.sh` (`~/data-home/beep-handoffs/2026-09-16-yeet-until-ready/`)
+  that polled `gh pr checks`, declared "settled" on a registered-minimum heuristic, and exited so a
+  session could act.
+- **Evidence:** everything it added was scheduling around yeet. B7 moved that into the loop:
+  ruleset-keyed settle with tolerated matrix parents, automatic read-first closeout, a `ready`
+  terminal with exit 0, required-only exit codes, one `pr-merge-ready` row per head. Measured on
+  #1149 itself: run 1 hit `settle-timeout` at 30 m with two heavy lanes registered but queued
+  (ruling 49 amended the budget to registration only); run 2 followed three heads across two pushes
+  and ended `merge-ready: yes`, exit 0, push→ready 1h 0m 7s with two optional Vercel reds. The
+  watcher is retired; `bun run beep yeet monitor --until-ready --detach` + `yeet job wait` is the
+  recipe (attached `--until-ready` when the user manager is unreachable).
+- **Would have prevented it:** this item, three weeks earlier; the receipts that opened it were the
+  right instrument.
+
+## 2026-09-16 — One empty `gh pr checks` reply sent a settled head back into the registration window
+
+- **Doing:** babysitting #1159 with `yeet monitor --until-ready` (the loop from #1149) while its
+  seven heavy lanes sat queued behind the runner pool.
+- **Evidence:** at 22m 38s the loop logged `settle: required-pending → registration` and
+  `no checks reported for this head yet … of 30m` on a head whose census had been registered for
+  twenty minutes and had not changed (`gh pr checks 1159` listed all eight rows throughout); the
+  next poll went `registration → required-pending` again. One transient empty reply from
+  `gh pr checks --json` reads as "nothing registered", so the registration budget re-applied with
+  7m 22s left. Had the blip lasted eight minutes, the loop would have exited 1 with
+  `settle-timeout` on a head with every required check queued — the ruling-49 false positive in
+  another coat. The poll-error budget (5) never saw it because the command exited 0.
+- **Would have prevented it:** a head that has left the registration window never re-enters it:
+  `MonitorHeadState` remembers that a census registered, and an empty census afterwards counts
+  against the poll-error budget as a bad read, not against the settle budget as a regression.
+  Candidate ruling for B7's next amendment; the settle schema already carries `budgetApplies`, so
+  the change is one predicate plus a TestClock test.
+- **Outcome:** it did bite: the second blip landed at 30m 4s and the #1159 loop exited 1 with
+  `settle-timeout`. PR2 carried a fix (a per-head `registered` flag failing the poll), but B8's
+  live-acceptance amendment to rulings 54–55 (#1155) landed first with a stronger one: both loops
+  remember every context seen registered and keep an absent one `pending`, and a conflicting head
+  reads `base-conflict`. PR2 dropped its version at the merge with `main`.
+
+## 2026-09-16 — A hand push raced yeet's early push and killed the publish at the ref lock
+
+- **Doing:** publishing B7 PR2 with `yeet publish --start-pr-early --monitor --pr` while, per the
+  operator's standing "push up if you have changes" instruction, pushing the same head by hand
+  with `git push --no-verify -u origin <branch>` seconds later.
+- **Evidence:** the hand push created the remote branch; yeet's `early-publish:git:push` landed
+  in the same second and GitHub answered `cannot lock ref 'refs/heads/<branch>': reference
+  already exists`; yeet reported `start-pr-early push phase failed`, wrote a verdict with no
+  steps, and exited 1 before opening the PR. The head was identical on both sides, so nothing
+  was lost; the publish had to be relaunched.
+- **Would have prevented it:** the early push should treat "remote ref already at this head" as
+  done (a `git ls-remote` compare before `git push`, or retrying once on the ref-lock error);
+  and the recipe for "push now" should be one command, `yeet publish --start-pr-early`, never a
+  hand push beside it.
+
+## 2026-09-16 — A reboot stopped both detached babysit jobs and nothing re-armed them
+
+- **Doing:** babysitting #1161 and #1159 with `yeet monitor --until-ready --detach` while their
+  heavy lanes sat queued.
+- **Evidence:** the user manager stopped both `beep-proof-<jobId>.service` units in the same second
+  (main process exit 130) during a logout, 1h 40m into the wait; the machine came back two hours
+  later with no unit loaded, and the `yeet job wait` callers had died with them. The job logs end
+  on `settle: required-pending … registered checks are GitHub's to time out`. Linger was on, so
+  only a reboot or manager stop explains it. Meanwhile `main` moved three merges and both PRs went
+  `DIRTY`; nobody was told.
+- **Would have prevented it:** a finalizer row for a job stopped by the manager (the inbox has none
+  for exit 130 under a stop), and a boot-time resume that re-submits `--until-ready` jobs whose
+  PR is still open. B5's "survives session restarts" does not extend to a reboot; the recipe says
+  so now.
+- **Outcome:** it happened again the same afternoon: a second reboot (~15:58Z) stopped the
+  re-submitted #1161 job 59 minutes into its heavy wait, and `main` moved again (#1165) under it.
+
+## 2026-09-16 — Two branches fixed the same settle regression and both called it ruling 50
+
+- **Doing:** merging `origin/main` into B7 PR2 (#1161) after B8 (#1155) landed.
+- **Evidence:** PR2 added ruling 50 (a per-head `registered` flag; an empty census fails the poll)
+  for the empty-rollup false `settle-timeout` seen on #1159. B8 had already numbered its own
+  rulings 50–57 and, from the same symptom on #1155, amended rulings 54–55 with per-context
+  registration memory (`rememberRegistered`) plus a `base-conflict` wait. Both branches were open
+  the same afternoon and neither's receipt named the other. The merge conflicted in `Settle.ts`,
+  `WatchMode.ts`, the settle tests and `decisions.md`.
+- **Would have prevented it:** reserving a ruling number and naming the fix in the shared ledger
+  before implementing (the B8 "ruling numbers collide across stacked branches" receipt already
+  asked for this), and reading open sibling branches' receipts before designing a fix for a
+  symptom another lane was babysitting. Resolved by keeping `main`'s memory and dropping PR2's.
+
+## 2026-09-16 — The coverage ratchet judged main's new files on the first PR to touch the package
+
+- **Doing:** the full local proof of B7 PR1 (#1149) on the head that merged `origin/main` twice.
+- **Evidence:** `ci:coverage` failed on `@beep/repo-cli` with eleven rows: three introduced
+  (`Yeet/internal/Inbox.ts` functions/lines/statements below its 100 baseline after the
+  `pr-merge-ready` row kind landed without a describe/id test) and eight inherited from files this
+  PR never touched — `VersionSync/*` from #1148 and `ProofJob*.ts` from B5 #1143 — reported as
+  "new file has uncovered unit(s) (no baseline file identity)" because rows for a package the PR
+  changes are judged at the base floor, and those PRs merged without recording their rows. The
+  hosted `Heavy / Coverage Regression` (optional) was red on the same head for the same reasons.
+- **Would have prevented it:** the PRs that add files recording their baseline rows before merge
+  (the hosted check being optional let them land red), or the ratchet holding rows for files a
+  PR did not author. Here: covered the new row kinds in `yeet-inbox.test.ts` (Inbox.ts back to
+  100) and recorded the inherited rows with `bun run coverage -- --filter=@beep/repo-cli
+  --write-baseline`, called out in the PR description for the reviewer.
+- **Outcome:** the local `--write-baseline` rows did not satisfy the hosted lane on #1159:
+  `VersionSync.render.ts` and `CategorySelectionService.ts` measured below their base floors
+  hosted ("row lowered by this pull request … judged at the base floor"), and the locally raised
+  `Quality/Tasks.ts` and package-total rows were "raised beyond hosted reach". A local regen is not
+  hosted evidence; paste the lane's printed `measured rows` instead, and the VersionSync floors need
+  tests from the branch that owns those files (#1156). #1163 covered the merge-ready row on `main`
+  first, so #1159 was closed as superseded and this receipt moved to B7 PR2.
+
 ## 2026-09-16 — B8: a rollup flap on a `MERGEABLE` head also read as `settle-timeout`
 
 - Doing: babysitting #1155 (head `715993591d`) with the pre-fix loop while the heavy matrix

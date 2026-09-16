@@ -74,11 +74,13 @@ orchestrator owns schemas, contracts, and judgment.
       `cancelled`, `unrecorded-failure`); a start failure has a terminal job record but no runner attempt. It reports one `proof-job-finished` inbox row (P2 green /
       P1 otherwise) acknowledged by the new `observed` resolution; `yeet job list|status|wait|logs|cancel`.
       Brief and evidence: `research/b5-brief.md`, `research/b5-implementation.md`.
-- [~] B7 `yeet monitor --until-ready` as the canonical PR babysit path (rulings 41–49): settle on
+- [x] B7 `yeet monitor --until-ready` as the canonical PR babysit path (rulings 41–49): settle on
       the base ruleset's expected contexts with tolerated matrix parents and `--settle-timeout`,
       automatic read-first closeout on settle, an exit-0 `ready` terminal, required-only exit
       codes in every monitor mode, one P1 `pr-merge-ready` inbox row per head, push→ready
-      measurement. PR1 carries the attached loop (this PR); PR2 after B5: detach recipe + observed ack.
+      measurement. PR1 #1149 merged 2026-09-16 (push→ready 1h 0m 7s on its own babysit, exit 0 with
+      two optional reds); PR2 #1161: detach recipe, `--observed` for merge-ready rows, inbox-list
+      liveness, idle-wake spike, watcher retirement.
 - [x] B8 heavy-check admission (rulings 50–57) — merged 2026-09-16 (PR A #1151, PR B #1155):
       three-valued admission (`run`, `skip-satisfied`, `hold`) decided by `bun run beep ci admission`
       from the `ready-for-heavy` label and a docs-only merge-base diff; `heavy.yml` `admitted` input

@@ -44,7 +44,13 @@ import {
   YeetAckWaiveResolution,
   YeetAckWontfixResolution,
 } from "./Ack.ts";
-import { appendYeetInboxRow, describeYeetInboxRow, YeetInboxRowJson, yeetInboxExpectedRowId } from "./Inbox.ts";
+import {
+  appendYeetInboxRow,
+  describeYeetInboxRow,
+  YeetInboxRowJson,
+  yeetInboxExpectedRowId,
+  yeetInboxRowIsObserved,
+} from "./Inbox.ts";
 import { loadYeetInboxView, YeetInboxView, YeetInboxViewJson } from "./InboxView.ts";
 import type { FileSystem, Path } from "effect";
 import type { YeetAckResolution, YeetAckState } from "./Ack.ts";
@@ -276,7 +282,7 @@ export const parseYeetAckResolution = Effect.fn("Yeet.parseYeetAckResolution")(f
   if (!A.isReadonlyArrayNonEmpty(candidates) || A.length(candidates) !== 1) {
     return yield* YeetCommandError.make({
       message:
-        "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry, or --observed for a proof job.",
+        "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry, or --observed for a proof job or a merge-ready row.",
     });
   }
   return A.headNonEmpty(candidates);
@@ -407,8 +413,10 @@ export const ackYeetInboxRow = Effect.fn("Yeet.ackYeetInboxRow")(function* (
       message: `No inbox row with id "${id}". Run "bun run beep yeet inbox list" to see the known rows.`,
     });
   }
-  if (resolution.kind === "observed" && entry.value.row.kind !== "proof-job-finished") {
-    return yield* YeetCommandError.make({ message: "--observed applies only to proof-job-finished rows." });
+  if (resolution.kind === "observed" && !yeetInboxRowIsObserved(entry.value.row)) {
+    return yield* YeetCommandError.make({
+      message: "--observed applies only to proof-job-finished and pr-merge-ready rows.",
+    });
   }
   const receipt = YeetAckReceipt.make({ ackedAt, id, resolution });
   const receiptPath = yield* writeYeetAckReceipt(repoRoot, receipt);
