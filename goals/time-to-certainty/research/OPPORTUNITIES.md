@@ -1510,6 +1510,18 @@ was attempted under the marker-only amendment.
   successful steps, RSS present/invalid/absent, and inbox failure-to-fix receipts;
   the Node coverage proof uses those cases instead of the stalled subprocess case.
 
+## 2026-09-16 — A lane's green fallow verdict predated its last test edit
+
+- **Doing:** publishing the review-round-1 commit after the Codex lane reported `fallow audit
+  --check` and `fallow health --check` at exit 0.
+- **Evidence:** the fifth detached proof and hosted `Fallow Advisory Envelopes` both failed on
+  one introduced complexity finding: an anonymous test body in `proof-job.test.ts` (cognitive 10
+  over the limit of 8) whose nested ternaries chose the job id and expected outcome per case; the
+  lane's verification table recorded the fallow runs before that body reached its final shape.
+- **Would have prevented it:** the orchestrator re-running the fallow pair on the final tree
+  before committing (it now does, alongside oxlint, test-tsgo and effect-vitest), and a lane rule
+  that the verification table is re-run after the last edit, not appended to.
+
 ## 2026-09-16 — A fresh lane worktree has no Effect reference checkout
 
 - **Doing:** authoring the B7 settle schemas in a sibling lane created by
