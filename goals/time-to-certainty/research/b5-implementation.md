@@ -178,7 +178,7 @@ and test tsc checks pass but do not substitute for those gates. Package docgen a
 the live detached-systemd smoke still require Fable. No live job, git commit, push,
 PR, merge, network change, privilege request, or secret operation was performed.
 
-## Orchestrator verification (Fable, 2026-09-15)
+## Orchestrator verification (Fable, 2026-09-15, PR #1143)
 
 Run outside the Codex sandbox in the same worktree, after the lane's handoff.
 
@@ -190,6 +190,8 @@ Run outside the Codex sandbox in the same worktree, after the lane's handoff.
 | `bun run beep lint effect-vitest` | 0 new findings after canon fixes plus `--write` for reviewed residuals |
 | Live smoke 1 — `yeet verify --tier cheap-gates --detach`, then `yeet job wait` | job `71105fde-34e0-4698-913f-7cec6c037d08` ran as `beep-proof-<id>.service` under `agent-runs.slice`; record moved `submitted → running → finished`; systemd stamp `exit-code / exited / 1` with the invocation id; `attempt-started` (owner pid = the job) and `attempt-finished` in the branch journal; one `proof-job-finished` P1 row, acknowledged `observed/job-wait`; unit `LoadState=not-found` afterwards. The verdict was red on `lint:effect-vitest` only (12 ratchet findings in the lane's tests, fixed below), which is the correct signal. |
 | Live smoke 2 — submit, `kill -KILL <MainPID>` at phase `running` | job `5be4c779-4238-43ad-b642-c50f95c0ab5e`: record `terminated / signal` with `signal / killed / KILL`; the finalizer appended `attempt-terminated reason=signal` for the runner's attempt (M5 by construction); P1 row, later acknowledged `observed/job-status` through `yeet job status --ack`; unit collected. |
+| Live smoke 3 — `yeet job cancel` on the running publish job | job `01e3a3ba-a7a0-4a4f-b1f6-ad79743f7422`: `stop-requested`; the job's own CLI handled SIGTERM and wrote `attempt-terminated reason=interrupted` (exit 130); the finalizer recorded `terminated / cancelled` from the durable cancel request without a second journal row; P1 row acknowledged through `yeet inbox ack --observed`; unit collected. |
+| `lint:oxlint` inside that publish job | 11 `beep(no-inline-schema-compile)` errors in the lane's files (inline `S.encodeEffect`/`decodeUnknownEffect`/`decodeOption`/`S.is` compiles); hoisted to module scope, verified with `bunx oxlint --disable-nested-config` on the touched files (the rule still fires on the pre-fix file). |
 | `bun run beep quality package-verify @beep/repo-cli` (first run) | exit 1: `knowledge-semantic-delta.test.ts` (static command-surface deriver rejected the bare `Command.unlisted` transform; fixed below) and three `quality-tasks.test.ts` "cheap gate" tests; the two that fail regardless of `op` on `PATH` fail identically on the untouched main checkout at 1969de85bf, so they are environment-only, not this branch. |
 | `bun run beep quality package-verify @beep/repo-cli` (rerun after the fixes) | exit 1 on the same `quality-tasks.test.ts` "cheap gate" tests only (3 failed, 3,992 passed, 203 of 204 files green); the semantic-delta failure is gone. Attribution: environment-only (identical failures on the untouched main checkout), acknowledged as such in the checkout inbox. |
 
@@ -206,3 +208,9 @@ Fixes applied by the orchestrator after the handoff:
 - `Knowledge.command-surface.ts` accepts bare `Command.<member>` transforms from a
   `SurfaceNeutralBareCommandTransform` domain (`unlisted`), so the static surface derivation
   matches the live command tree that carries the hidden finalizer.
+
+The branch itself was published by a detached job (`yeet publish --start-pr-early --monitor --pr
+--detach`, job `01e3a3ba-a7a0-4a4f-b1f6-ad79743f7422`): the early push and PR creation ran inside
+`beep-proof-<id>.service` with the forwarded `SSH_AUTH_SOCK`, and the full pre-push wave ran under
+the job unit as its admission run scope. The PR provenance footer records the agent as `unknown`
+because ruling 39 forwards no harness environment into the job.

@@ -243,7 +243,7 @@ const DeniedEnvName = S.String.check(S.isPattern(/^(?:OP_)|TOKEN|SECRET|KEY|PASS
  * @category environment
  * @since 0.0.0
  */
-export const isDeniedProofJobEnvName = (name: string): boolean => S.is(DeniedEnvName)(name);
+export const isDeniedProofJobEnvName: (name: string) => boolean = S.is(DeniedEnvName);
 
 /**
  * Lifecycle phase of one job record (ruling 36).

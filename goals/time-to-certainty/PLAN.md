@@ -65,8 +65,8 @@ orchestrator owns schemas, contracts, and judgment.
       A1/A4 seed, policy/preflight-first `WaveOrder` service, early stop for every red not
       explicitly classified as imprecise, durable `not-run-early-stop` facts, and the default-off
       `--no-fail-fast` escape hatch.
-- [x] B5 detached durable proof jobs — done 2026-09-15 (branch `ttc/b5-detached-proof-jobs`, rulings
-      35–40): `--detach` on verify/publish/closeout/monitor/repair starts `beep-proof-<jobId>.service`
+- [x] B5 detached durable proof jobs — done 2026-09-15 (PR #1143 on `ttc/b5-detached-proof-jobs`,
+      rulings 35–40): `--detach` on verify/publish/closeout/monitor/repair starts `beep-proof-<jobId>.service`
       through `systemd-run --user` under `agent-runs.slice` (transient service, not scope, so the job
       outlives the submitter and is the lease's accounting unit); one durable record per job under
       `.beep/yeet/jobs/`; the `ExecStopPost` finalizer stamps systemd's result, appends

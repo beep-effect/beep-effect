@@ -51,6 +51,8 @@ import type { RunScopeSupport } from "../../../internal/repo-run/RunScope.schema
 import type { ProofJobOutcome, ProofJobRunner, ProofJobSubmission, ProofJobWaitOptions } from "./ProofJob.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofJobLauncher");
+const decodeUUIDOption = S.decodeOption(UUID);
+const decodeUUID = S.decodeEffect(UUID);
 
 /**
  * Operations over one checkout's detached proof jobs.
@@ -284,7 +286,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     if (!(yield* fs.exists(jobsRoot).pipe(Effect.mapError(guardError)))) return A.empty<ProofJobRecord>();
     const entries = yield* fs.readDirectory(jobsRoot).pipe(Effect.mapError(guardError));
     const ids = A.getSomes(
-      A.map(A.filter(entries, Str.endsWith(".json")), (entry) => S.decodeOption(UUID)(Str.slice(0, -5)(entry)))
+      A.map(A.filter(entries, Str.endsWith(".json")), (entry) => decodeUUIDOption(Str.slice(0, -5)(entry)))
     );
     const records = A.getSomes(yield* Effect.forEach(ids, read, { concurrency: 1 }));
     return A.sortWith(records, (record) => record.submittedAt, Order.flip(Order.String));
@@ -324,7 +326,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       if (submission.request.checkout !== repoRoot)
         return yield* YeetCommandError.make({ message: "Submission checkout does not match launcher root." });
       yield* prune(PROOF_JOB_RETENTION_BUDGET);
-      const jobId = yield* S.decodeEffect(UUID)(yield* crypto.randomUUIDv4.pipe(Effect.mapError(guardError))).pipe(
+      const jobId = yield* decodeUUID(yield* crypto.randomUUIDv4.pipe(Effect.mapError(guardError))).pipe(
         Effect.mapError(guardError)
       );
       const env = yield* proofJobEnvironment();

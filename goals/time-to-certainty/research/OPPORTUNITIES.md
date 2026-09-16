@@ -1477,3 +1477,14 @@ was attempted under the marker-only amendment.
 - **Would have prevented it:** the brief naming `bun run beep lint effect-vitest` beside the
   schema-first and fallow gates for every lane that adds a test file (the 2026-09-12 checklist
   already says so; it was not in this brief's verification list).
+
+## 2026-09-15 — oxlint is outside every quick gate, so eleven inline schema compiles reached the pre-push wave
+
+- **Doing:** publishing the B5 branch after biome, laws, schema-first, fallow, effect-vitest,
+  docgen and the package audit were all green.
+- **Evidence:** the pre-push wave's `lint:oxlint` root task reported eleven
+  `beep(no-inline-schema-compile)` errors across four of the lane's files; none of the gates run
+  before publish (pre-commit hooks, `package-verify`, the quick lints) execute oxlint, so the first
+  signal cost a full detached proof round (cancelled at minute 20).
+- **Would have prevented it:** oxlint on touched files in the pre-commit hook or in
+  `package-verify --quick`; the 2026-09-12 note already records the same class.

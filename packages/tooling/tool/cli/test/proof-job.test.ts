@@ -19,6 +19,9 @@ import * as Str from "effect/String";
 import { Arbitrary } from "effect/unstable/arbitrary";
 
 const stamp = "2026-09-15T00:00:00.000Z";
+const encodeJsonLine = S.encodeEffect(S.fromJsonString(S.Unknown));
+const encodeRecordJson = S.encodeEffect(S.fromJsonString(Job.ProofJobRecord));
+const decodeServiceResult = S.decodeUnknownEffect(Job.ProofJobServiceResult);
 const attemptId = Effect.runSync(S.decodeEffect(UUID)("0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60"));
 const submission = (root: string) =>
   Job.ProofJobSubmission.make({
@@ -79,7 +82,7 @@ const running = Effect.fnUntraced(function* (root: string, launcher: Job.ProofJo
   const path = yield* Path.Path;
   const journal = yield* attemptJournalPathForCheckout(root, "feat/job");
   yield* fs.makeDirectory(path.dirname(journal), { recursive: true });
-  const start = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+  const start = yield* encodeJsonLine({
     schemaVersion: "yeet-attempt-journal/v1",
     _tag: "attempt-started",
     attemptId,
@@ -369,7 +372,7 @@ describe("proof job launcher", () => {
           const launcher = yield* ProofJobLauncher.make(root);
           const record = yield* launcher.submit(submission(root));
           const journal = yield* running(root, launcher, record.jobId);
-          const serviceResult = yield* S.decodeUnknownEffect(Job.ProofJobServiceResult)(result);
+          const serviceResult = yield* decodeServiceResult(result);
           const systemd = Job.ProofJobSystemdResult.make({
             serviceResult,
             exitCode: O.some("killed"),
@@ -465,7 +468,7 @@ describe("proof job recovery boundaries", () => {
         const launcher = yield* ProofJobLauncher.make(root);
         const record = yield* launcher.submit(submission(root));
         const journal = yield* running(root, launcher, record.jobId);
-        const terminal = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+        const terminal = yield* encodeJsonLine({
           schemaVersion: "yeet-attempt-journal/v1",
           _tag: "attempt-finished",
           attemptId,
@@ -512,9 +515,7 @@ describe("proof job recovery boundaries", () => {
           const finished = O.getOrThrow(yield* launcher.read(record.jobId));
           yield* fs.writeFileString(
             `${root}/.beep/yeet/jobs/${record.jobId}.json`,
-            yield* S.encodeEffect(S.fromJsonString(Job.ProofJobRecord))(
-              Job.ProofJobRecord.make({ ...finished, submittedAt })
-            )
+            yield* encodeRecordJson(Job.ProofJobRecord.make({ ...finished, submittedAt }))
           );
         }
         expect(A.map(yield* launcher.list, (record) => record.jobId)).toContain(active.jobId);

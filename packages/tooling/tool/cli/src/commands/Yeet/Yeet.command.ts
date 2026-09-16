@@ -598,9 +598,13 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
 };
 
 const jobIdArgument = Argument.String("jobId").pipe(Argument.withSchema(UUID));
+const decodeDuration = S.decodeEffect(S.DurationFromString);
+const encodeProofJobRecordJson = S.encodeEffect(S.fromJsonString(ProofJobRecord));
+const decodeServiceResultOption = S.decodeUnknownOption(ProofJobServiceResult);
+const decodeExitCodeOption = S.decodeUnknownOption(ProofJobExitCode);
 const durationMillis = Effect.fn("Yeet.jobDuration")(function* (text: string) {
   const normalized = Str.replace(/^(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)$/u, "$1 $2")(text);
-  const duration = yield* S.decodeEffect(S.DurationFromString)(normalized).pipe(
+  const duration = yield* decodeDuration(normalized).pipe(
     Effect.mapError(YeetCommandError.new("Expected a duration such as '30 seconds'."))
   );
   const millis = Duration.toMillis(duration);
@@ -612,7 +616,7 @@ const jobRoot = () => findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("
 const renderJob = Effect.fn("Yeet.renderJob")(function* (record: ProofJobRecord, json: boolean) {
   if (json) {
     yield* Console.log(
-      yield* S.encodeEffect(S.fromJsonString(ProofJobRecord))(record).pipe(
+      yield* encodeProofJobRecordJson(record).pipe(
         Effect.mapError(YeetCommandError.new("Failed to encode job record."))
       )
     );
@@ -777,11 +781,8 @@ const jobFinalizeCommand = Command.make(
     const serviceResult = yield* configStringOption("SERVICE_RESULT");
     const exitCode = yield* configStringOption("EXIT_CODE");
     const result = ProofJobSystemdResult.make({
-      serviceResult: O.getOrElse(
-        O.flatMap(serviceResult, S.decodeUnknownOption(ProofJobServiceResult)),
-        () => "unknown"
-      ),
-      exitCode: O.flatMap(exitCode, S.decodeUnknownOption(ProofJobExitCode)),
+      serviceResult: O.getOrElse(O.flatMap(serviceResult, decodeServiceResultOption), () => "unknown"),
+      exitCode: O.flatMap(exitCode, decodeExitCodeOption),
       exitStatus: yield* configStringOption("EXIT_STATUS"),
       invocationId: yield* configStringOption("INVOCATION_ID"),
       finalizedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
