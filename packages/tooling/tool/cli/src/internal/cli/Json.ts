@@ -10,8 +10,10 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { P } from "@beep/utils";
 import { Context, Effect, Result } from "effect";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
+import { noteProcessStreamWriteFailure, writeChunkOnce } from "./Stdout.ts";
 
 const $I = $RepoCliId.create("internal/cli/Json");
 const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
@@ -23,20 +25,32 @@ const writeCommandJsonStdout = (text: string): Effect.Effect<void> =>
   Effect.callback<void>((resume) => {
     const bytes = utf8Encoder.encode(text);
     let offset = 0;
-
-    const writeNext = (): void => {
+    // writeChunkOnce reports each chunk exactly once and a failed chunk starts
+    // no successor, so the callback settles at most once without its own latch.
+    const complete = (): void => {
+      resume(Effect.void);
+    };
+    const fail = (message: string): void => {
+      noteProcessStreamWriteFailure("stdout", message);
+      complete();
+    };
+    const writeNext = (failure: O.Option<string>): void => {
+      if (O.isSome(failure)) {
+        fail(failure.value);
+        return;
+      }
       if (offset >= bytes.byteLength) {
-        resume(Effect.void);
+        complete();
         return;
       }
 
       const nextOffset = offset + COMMAND_JSON_STDOUT_CHUNK_SIZE_BYTES;
       const chunk = bytes.subarray(offset, nextOffset);
       offset = nextOffset;
-      process.stdout.write(chunk, writeNext);
+      writeChunkOnce(process.stdout, chunk, writeNext);
     };
 
-    writeNext();
+    writeNext(O.none());
   });
 
 /**
