@@ -232,8 +232,9 @@ elif Cursor Models pool available (dashboard / fail-open):
     # escalate long-horizon / self-test to cursor-grok-4.6-xhigh
     # never default to claude-fable-5-1-* or gpt-5.6-sol-* on Cursor
 else:
-    Claude Fable direct (Anthropic pool) or wait for Codex reset
+    hold and notify until a pool resets
 ```
+Superseded: this research draft fell back to Claude Fable; D7 replaced that with hold and notify.
 
 Catch Cursor limit errors as process failure + stderr (no usage event in stream-json). Hermes-cursor-agent's "retry once with `auto`" is the only public in-process fallback found.
 
@@ -511,7 +512,7 @@ ToS last updated **2026-09-03** (`https://cursor.com/terms-of-service`): §1.5(i
    - Probe Codex: `codex app-server` + `account/rateLimits/read`; if weekly remaining **>5%**, Astra xhigh (existing `claudex` path).
    - Else Cursor Composer 2.5 (Cursor Models). Escalate to `cursor-grok-4.6-xhigh` only for long-horizon self-test jobs.
    - Never default Cursor overflow to `claude-fable-5-1-*`, `gpt-5.6-sol-*`, or `kimi-k3-*` (Other Models; Fable $10/$50; Kimi loops).
-   - If Cursor Models **and** Other Models are dry and on-demand is off: wait or use Anthropic-direct Fable (separate pool).
+   - If Cursor Models **and** Other Models are dry and on-demand is off: hold and notify until a pool resets (D7; the draft's Anthropic-direct Fable fallback is superseded).
 
 3. **Do not build a CLIProxyAPI/LiteLLM Cursor provider.** Staff ToS ban 2026-08-10. Keep Cursor as a sibling CLI. Hermes-style local stream-json shim is optional and should stay on-box.
 

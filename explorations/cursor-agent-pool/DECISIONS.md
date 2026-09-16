@@ -281,7 +281,9 @@ whose basename is git/sudo/pkexec. `cli.json` stays as the documented first line
 round (P2): the hook now deletes backslashes and quotes before splitting and treats `$`, `=`, and
 backticks as separators, which closes `\git`, `g"i"t`, and `var=git`; argument mentions deny on
 purpose; runtime expansion stays out of static reach, so the runbook adds a post-lane git state
-diff as the backstop.
+diff as the backstop. Third round (CodeRabbit, CWE-284): `a=su; ${a}do` showed expansion builds
+denied names, so the hook now refuses every shell expansion and any unreadable payload; only
+interpreter-level construction remains, covered by the git state diff and the sudo YubiKey touch.
 
 ## Align closed 2026-09-16
 

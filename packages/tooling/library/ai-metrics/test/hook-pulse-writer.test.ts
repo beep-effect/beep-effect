@@ -161,6 +161,7 @@ interface WriterRun {
 const runWriter = Effect.fnUntraced(function* (
   stdin: string,
   options: {
+    readonly agentKind?: string;
     readonly aiMetricsHashSalt?: string;
     readonly disarmSentinel?: string;
     readonly hashSalt?: string;
@@ -234,6 +235,12 @@ const runWriter = Effect.fnUntraced(function* (
       // about projection semantics rather than the current intervention state.
       BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
       BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
+      // Cleared unless a case sets it, so an ambient adapter value cannot retag rows;
+      // empty falls through to the writer's `claude-code` default.
+      BEEP_HOOK_PULSE_AGENT_KIND: options.agentKind ?? "",
+      // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
+      // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
+      BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
       // Both salt rungs are cleared unless a case sets one, so a developer who
       // exports a real ai-metrics salt cannot change what these digests are.
       // Cleared, they exercise the insecure-default fallback that keeps an
@@ -571,6 +578,31 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PreToolUse);
       })
     )
+  );
+
+  it.effect("writes nothing for an agent kind outside HookPulseAgentKind", () =>
+    Effect.gen(function* () {
+      const run = yield* runWriter(encodeJson(preToolUsePayload), { agentKind: "other" });
+
+      expectSilentRefusal(run);
+    })
+  );
+
+  it.effect("keeps the writer's agent-kind guard set-equal to HookPulseAgentKind", () =>
+    Effect.gen(function* () {
+      // The writer copies `BEEP_HOOK_PULSE_AGENT_KIND` into every row, so its guard `case`
+      // is the only thing keeping an undecodable kind out of the ledger.
+      const fs = yield* FileSystem.FileSystem;
+      const source = yield* fs.readFileString(writerPath);
+      const arm = O.fromNullishOr(/case "\$\{agent_kind\}" in\s*\n\s*([^)\n]+)\)\s*;;/.exec(source)?.[1]);
+      const admitted = O.match(arm, {
+        onNone: () => A.empty<string>(),
+        onSome: (body) => A.map(body.split("|"), (kind) => kind.trim()),
+      });
+
+      expect(A.difference(admitted, HookPulseAgentKind.Options)).toEqual([]);
+      expect(A.difference(HookPulseAgentKind.Options, admitted)).toEqual([]);
+    })
   );
 
   it.effect("keeps the sequence-break notifier agent-kind allowlist and title map in lockstep", () =>

@@ -201,16 +201,21 @@ structural. `sudo`/`pkexec` denial prevents YubiKey prompts that hang headless r
 `Shell(commandBase)` matches only the **first token** of a command line
 (https://cursor.com/docs/cli/reference/permissions), so `/usr/bin/git`, `env git`, and
 `bash -lc "git ..."` slip past `cli.json`. The second layer is `.cursor/hooks/deny-shell.sh` on
-`beforeShellExecution` with `failClosed: true`: it denies when **any** token's basename is `git`,
-`sudo`, or `pkexec`, and a crash or timeout blocks the command. Before splitting it deletes
-backslashes and quotes, so `\git`, `g"i"t`, and `git\ status` rejoin into the real word, then
-treats shell operators, backticks, `$`, and `=` as separators, so `$(git ...)` and `var=git` expose
-the name. Arguments count: `echo git` and `rg sudo` are denied on purpose, so lanes search with the
-agent's file tools instead of shell. Smoke (goal history `2026-09-16-deny-shell-proof.md`): 18
-fixtures, including the escape, quote-splice, and substitution evasions.
+`beforeShellExecution` with `failClosed: true`. It denies in two cases, and a crash, a timeout, or
+an unreadable payload also blocks the command:
 
-A static scan cannot follow runtime expansion: `a=gi; ${a}t status` still passes the hook. The
-post-lane git state check below is the backstop for anything that slips through.
+- **A denied name in any token.** Before splitting it deletes backslashes and quotes, so `\git`,
+  `g"i"t`, and `git\ status` rejoin into the real word, then treats shell operators, backticks, `$`,
+  and `=` as separators. Arguments count: `echo git` and `rg sudo` are denied on purpose.
+- **Any shell expansion.** `$name`, `${...}`, `$(...)`, `$'...'`, positional parameters, and
+  backticks are refused, because a static scan cannot know what `a=su; ${a}do` produces. A regex
+  anchor such as `grep -E 'end$'` is denied too, since the guard cannot tell it from `$'...'`.
+
+Lanes therefore pass literal values and search with the agent's file tools instead of shell. Smoke
+(goal history `2026-09-16-deny-shell-proof.md`): 27 command fixtures plus five payload fixtures.
+An interpreter that assembles a name at runtime (a Python or Node string) stays out of static
+reach. The post-lane git state check below catches git writes from that route. `sudo` still needs a
+YubiKey touch on a per-terminal ticket, which a headless lane cannot supply.
 
 ### Transcript verification (tsgo-045 D13)
 
@@ -228,13 +233,14 @@ state captured before and after the lane:
 git_state() {
   git rev-parse HEAD
   git for-each-ref --format='%(refname) %(objectname)' refs/heads refs/stash
-  git diff --cached --name-only
+  git ls-files --stage | sha256sum
 }
 git_state > "$LANE.git-before"   # before launching the lane
 git_state | diff "$LANE.git-before" - && git status --porcelain   # after the lane exits
 ```
 
-Any diff line means a git write happened inside the lane: stop and inspect before staging.
+The index digest covers staged content, not just staged paths, so re-staging a changed file also
+shows up. Any diff line means a git write happened inside the lane: stop and inspect before staging.
 
 ## Hooks and metrics
 

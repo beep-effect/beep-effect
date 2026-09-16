@@ -9,7 +9,10 @@
 # hook has a 5 s budget in `.cursor/hooks.json`. `allow` is the lowest priority, so a deny
 # from another hook (deny-shell.sh, yeet-inbox P0) still wins.
 # Only events with a `HookPulseEvent` literal are registered for this adapter;
-# `sessionStart` has none and must not be wired here. Always exits 0.
+# `sessionStart` has none and must not be wired here. Without `timeout` the writer would run
+# uncapped against the 5 s hook budget, so the row is skipped instead.
+# `BEEP_CURSOR_HOOK_PULSE_WRITER_CAP` overrides the 3 s cap for conformance tests on a loaded
+# host; a live hook leaves it unset. Always exits 0.
 set -u
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 shared="${here}/../../.claude/hooks/hook-pulse.sh"
@@ -23,8 +26,7 @@ case "${event}" in
   *)
     printf '{}\n' ;;
 esac
-if [ -x "${shared}" ] && command -v jq >/dev/null 2>&1; then
-  bound=(); command -v timeout >/dev/null 2>&1 && bound=(timeout 3s)
+if [ -x "${shared}" ] && command -v jq >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
   printf '%s' "${input}" | jq -c '
     .hook_event_name as $e
     | .hook_event_name = ({
@@ -35,6 +37,6 @@ if [ -x "${shared}" ] && command -v jq >/dev/null 2>&1; then
         "stop": "Stop",
         "beforeSubmitPrompt": "UserPromptSubmit"
       }[$e] // $e)' 2>/dev/null \
-    | BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli "${bound[@]}" "${shared}" >/dev/null 2>&1 || true
+    | BEEP_HOOK_PULSE_AGENT_KIND=cursor-cli timeout "${BEEP_CURSOR_HOOK_PULSE_WRITER_CAP:-3s}" "${shared}" >/dev/null 2>&1 || true
 fi
 exit 0
