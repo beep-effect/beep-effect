@@ -299,7 +299,7 @@ const topDocuments = (report: KnowledgeRefsReport): ReadonlyArray<string> =>
  * console.log(renderKnowledgeRefsReport(report, "all", { verbose: false }))
  * ```
  *
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderKnowledgeRefsReport: {
