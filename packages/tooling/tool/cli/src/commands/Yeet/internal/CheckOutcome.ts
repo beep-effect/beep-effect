@@ -59,11 +59,14 @@ export type YeetCheckOutcome = typeof YeetCheckOutcome.Type;
  *
  * `registration`: no checks have reported for the head yet (GitHub's
  * post-push registration window). `required-pending`: expected required
- * contexts are missing or still pending. `closeout-pending`: the required
- * census settled and the read-first closeout has not yet bound this head.
- * `settle-timeout`: the census never settled within `--settle-timeout`; the
- * only terminal reason. The settle rule itself lives in `Settle.ts`; the
- * `settle-changed` watch event streams the reason.
+ * contexts are missing or still pending. `heavy-not-admitted`: the only open
+ * contexts belong to a gated family (`Heavy / *`) whose admission verdict is
+ * `hold` — absent by design until the admitting label lands, so the wait is
+ * named and never counted toward the settle timeout (ttc B8).
+ * `closeout-pending`: the required census settled and the read-first closeout
+ * has not yet bound this head. `settle-timeout`: the census never settled
+ * within `--settle-timeout`; the only terminal reason. The settle rule itself
+ * lives in `Settle.ts`; the `settle-changed` watch event streams the reason.
  *
  * **Example** (Check a reason)
  *
@@ -79,6 +82,7 @@ export type YeetCheckOutcome = typeof YeetCheckOutcome.Type;
 export const YeetSettleReason = LiteralKit([
   "registration",
   "required-pending",
+  "heavy-not-admitted",
   "closeout-pending",
   "settle-timeout",
 ]).pipe(

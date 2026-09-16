@@ -44,6 +44,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetCheckOutcome } from "./CheckOutcome.ts";
@@ -69,11 +70,15 @@ import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
 import { dispatchYeetCheckFailure, supersedeYeetDispatchState } from "./Remediation.ts";
 import {
   deriveSettleVerdict,
+  readYeetChangedPaths,
   readYeetRulesetRequiredContexts,
   renderYeetSettleDetail,
+  YeetGatedContextFamily,
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
+  yeetGatedFamiliesFor,
+  yeetSettleVerdictIsHeld,
 } from "./Settle.ts";
 import { YeetMergeReadyCriteria } from "./Verdict.ts";
 import {
@@ -101,11 +106,17 @@ import type { YeetWatchEvent } from "./WatchStream.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WatchMode");
 
+class WatchPullRequestLabel extends S.Class<WatchPullRequestLabel>($I`WatchPullRequestLabel`)(
+  { name: S.String },
+  $I.annote("WatchPullRequestLabel", { description: "One label on the pull request as gh pr view reports it." })
+) {}
+
 class WatchPullRequestView extends S.Class<WatchPullRequestView>($I`WatchPullRequestView`)(
   {
     headRefOid: S.NonEmptyString,
     id: S.NonEmptyString,
     isDraft: S.Boolean,
+    labels: S.Array(WatchPullRequestLabel).pipe(SchemaUtils.withKeyDefaults(A.empty<WatchPullRequestLabel>())),
     mergeable: S.NullOr(S.String),
     mergeStateStatus: S.NullOr(S.String),
     number: S.Finite,
@@ -295,7 +306,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 > {
   const viewResult = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "view", "--json", "id,number,state,isDraft,mergeable,mergeStateStatus,reviewDecision,headRefOid"],
+    ["pr", "view", "--json", "id,number,state,isDraft,mergeable,mergeStateStatus,reviewDecision,headRefOid,labels"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read the pull request for yeet watch.")));
   if (viewResult.exitCode !== 0) {
@@ -361,19 +372,41 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
     mergeStateStatus,
     prNumber: view.number,
     state: view.state,
+    labels: A.map(view.labels, (label) => label.name),
     threads: A.map(threadNodes, (node) => YeetWatchThread.make({ id: node.id, isResolved: node.isResolved })),
     criteria,
   });
 });
 
+// `settleClockMs` is the origin of `waitedMs`: the first observation of the
+// head, moved forward whenever the heavy admission verdict flips so time spent
+// held never counts toward the settle budget (ttc B8). `changedPaths` is read
+// once per head; `admission` is re-decided every poll from the snapshot's
+// labels, the only admission input that changes without a push.
 class WatchSettleState extends S.Class<WatchSettleState>($I`WatchSettleState`)(
   {
     headSha: S.NonEmptyString,
     firstObservedMs: S.Finite,
+    settleClockMs: S.Finite,
     expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    families: S.Array(YeetGatedContextFamily).pipe(SchemaUtils.withKeyDefaults(A.empty<YeetGatedContextFamily>())),
+    changedPaths: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
-  $I.annote("WatchSettleState", { description: "One head's cached ruleset and settle clock origin." })
+  $I.annote("WatchSettleState", {
+    description: "One head's cached ruleset, gated families, merge-base diff, admission, and settle clock origin.",
+  })
 ) {}
+
+const decideWatchAdmission = (snapshot: YeetWatchSnapshot, changedPaths: ReadonlyArray<string>): HeavyAdmission =>
+  decideHeavyAdmission(
+    HeavyAdmissionEvent.make({
+      eventName: "pull_request",
+      labels: snapshot.labels,
+      draft: !snapshot.criteria.notDraft,
+      changedPaths,
+    })
+  );
 
 const isoNow = DateTime.now.pipe(Effect.map(DateTime.formatIso));
 
@@ -729,8 +762,9 @@ const reportWatchRegistrationWait = (snapshot: YeetWatchSnapshot, emptyPolls: nu
  * ```
  *
  * @param context - Repo context naming the checkout to watch from.
- * @param config - Poll interval in milliseconds, plus the `untilEvent` exit
- * contract switch.
+ * @param config - Poll interval in milliseconds, the `untilEvent` exit
+ * contract switch, the settle budget, and the injectable ruleset, merge-base
+ * diff, and clock reads.
  * @returns The final `watch-ended` row: the end reason plus the failure census.
  * @category services
  * @since 0.0.0
@@ -743,6 +777,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
     readonly untilEvent?: boolean;
     readonly settleTimeoutMs?: number;
     readonly rulesetRead?: typeof readYeetRulesetRequiredContexts | undefined;
+    readonly changedPathsRead?: typeof readYeetChangedPaths | undefined;
     readonly now?: Effect.Effect<DateTime.Utc>;
   }
 ): Effect.fn.Return<
@@ -756,15 +791,34 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
     const now = yield* config.now ?? DateTime.now;
     const millis = DateTime.toEpochMillis(now);
     if (O.isNone(head) || head.value.headSha !== snapshot.headSha) {
+      const expected = yield* (config.rulesetRead ?? readYeetRulesetRequiredContexts)(context);
       head = O.some(
         WatchSettleState.make({
           headSha: snapshot.headSha,
           firstObservedMs: millis,
-          expected: yield* (config.rulesetRead ?? readYeetRulesetRequiredContexts)(context),
+          settleClockMs: millis,
+          expected,
+          families: O.match(expected, {
+            onNone: () => A.empty<YeetGatedContextFamily>(),
+            onSome: yeetGatedFamiliesFor,
+          }),
+          changedPaths: yield* (config.changedPathsRead ?? readYeetChangedPaths)(context),
         })
       );
     }
-    const currentHead = O.getOrThrow(head);
+    const observed = O.getOrThrow(head);
+    const admission = decideWatchAdmission(snapshot, observed.changedPaths);
+    const previousVerdict = O.map(observed.admission, (value) => value.verdict);
+    const flipped = O.exists(previousVerdict, (value) => value !== admission.verdict);
+    if (flipped) {
+      yield* Console.error(`[yeet] heavy admission: ${O.getOrThrow(previousVerdict)} → ${admission.verdict}`);
+    }
+    const currentHead = WatchSettleState.make({
+      ...observed,
+      admission: O.some(admission),
+      settleClockMs: flipped ? millis : observed.settleClockMs,
+    });
+    head = O.some(currentHead);
     const verdict = deriveSettleVerdict(
       YeetSettleInput.make({
         expected: currentHead.expected,
@@ -772,8 +826,10 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
           YeetSettleCheck.make({ name: check.name, outcome: check.outcome, required: check.required })
         ),
         closeoutBound: snapshot.criteria.closeoutRun,
-        waitedMs: millis - currentHead.firstObservedMs,
+        waitedMs: millis - currentHead.settleClockMs,
         timeoutMs: config.settleTimeoutMs ?? YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS,
+        families: currentHead.families,
+        admission: currentHead.admission,
       })
     );
     yield* Console.error(`[yeet] ${renderYeetSettleDetail(verdict)}`);
@@ -816,10 +872,13 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
     }
     yield* reportWatchRegistrationWait(current, emptyPolls);
     // Every successful collection passes through settle before entering this loop.
+    // A held head has no budget to race: it sleeps the full interval and
+    // re-reads the labels, since only the label can move it.
     const verdict = O.getOrThrow(current.settle);
-    const sleepMillis = verdict.settled
-      ? config.intervalMillis
-      : Math.min(config.intervalMillis, Math.max(0, verdict.timeoutMs - verdict.waitedMs));
+    const sleepMillis =
+      verdict.settled || yeetSettleVerdictIsHeld(verdict)
+        ? config.intervalMillis
+        : Math.min(config.intervalMillis, Math.max(0, verdict.timeoutMs - verdict.waitedMs));
     yield* Effect.sleep(Duration.millis(sleepMillis));
     const advanced = yield* advanceYeetWatchTick(context, current, emptyPolls, settle);
     if (O.isNone(advanced)) {

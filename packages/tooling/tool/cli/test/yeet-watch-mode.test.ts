@@ -1,3 +1,4 @@
+import { HEAVY_ADMISSION_LABEL } from "@beep/repo-cli/commands/Ci";
 import {
   collectYeetWatchSnapshot,
   GreptileSummary,
@@ -88,18 +89,22 @@ const viewJson = (
   state: string,
   headSha: string,
   mergeStateStatus = "CLEAN",
-  reviewDecision: string | null = null
+  reviewDecision: string | null = null,
+  labels: ReadonlyArray<string> = []
 ): string =>
   JSON.stringify({
     headRefOid: headSha,
     id: "PR_watch",
     isDraft: false,
+    labels: A.map(labels, (name) => ({ name, color: "0e8a16" })),
     mergeable: "MERGEABLE",
     mergeStateStatus,
     number: 751,
     reviewDecision,
     state,
   });
+// The merge-base diff the scripted git answers; code-bearing unless a test says otherwise.
+const codeDiff = "packages/a/src/index.ts\n";
 
 interface CheckRowFixture {
   readonly bucket: string;
@@ -134,7 +139,7 @@ const emptyCollection: ScriptedAnswer = { exitCode: 0, output: "[]" };
 // count, because the comment polls run *after* the tick's GraphQL thread read:
 // a single shared cursor advanced by the thread read would hand the comment
 // polls the NEXT tick's script.
-const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>) =>
+const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>, diff: string = codeDiff) =>
   Layer.mergeAll(
     PlatformLayer,
     Layer.effect(
@@ -151,6 +156,9 @@ const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>) =>
           const line = A.join([command.command, ...command.args], " ");
           return Effect.gen(function* () {
             if (Str.includes("rules/branches/")(line)) return stubHandle(1, "rules unavailable");
+            // The once-per-head merge-base diff owns no poll index: it answers by argv prefix.
+            if (command.command === "git" && command.args[0] === "diff" && command.args[1] === "--name-only")
+              return stubHandle(0, diff);
             if (Str.includes("pulls/751/comments")(line)) {
               const answer = scriptAt(yield* Ref.getAndUpdate(reviewServed, (value) => value + 1));
               const review = answer.reviewComments ?? emptyCollection;
@@ -179,8 +187,8 @@ const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>) =>
     )
   );
 
-const greenScript = (headSha: string): PollScript => ({
-  view: { exitCode: 0, output: viewJson("OPEN", headSha) },
+const greenScript = (headSha: string, labels: ReadonlyArray<string> = []): PollScript => ({
+  view: { exitCode: 0, output: viewJson("OPEN", headSha, "CLEAN", null, labels) },
   checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Check", state: "SUCCESS" }]) },
   threads: { exitCode: 0, output: threadsJson([]) },
 });
@@ -1525,11 +1533,154 @@ describe("B7 watch settle cache and timeout", () => {
         Layer.mergeAll(
           TestConsole.layer,
           scriptedSpawnerLayer([
-            greenScript("aaa111"),
-            greenScript("bbb222"),
-            greenScript("bbb222"),
-            greenScript("bbb222"),
+            greenScript("aaa111", [HEAVY_ADMISSION_LABEL]),
+            greenScript("bbb222", [HEAVY_ADMISSION_LABEL]),
+            greenScript("bbb222", [HEAVY_ADMISSION_LABEL]),
+            greenScript("bbb222", [HEAVY_ADMISSION_LABEL]),
           ])
+        )
+      )
+    )
+  );
+});
+
+describe("B8 watch heavy admission", () => {
+  const heavyRuleset = () =>
+    Effect.succeedSome(
+      YeetRulesetRequiredContexts.make({
+        base: "main",
+        contexts: ["Check", "Heavy / Check"],
+        rulesetIds: [10240248],
+        readAt: "2026-09-16T00:00:00Z",
+      })
+    );
+  const settleRows = Effect.fn("watchAdmissionTest.settleRows")(function* () {
+    const events = yield* Effect.forEach(A.map(yield* TestConsole.logLines, String), (line) =>
+      decodeUnknownYeetWatchEventJson(line)
+    );
+    return A.filter(events, (event) => event.kind === "settle-changed");
+  });
+  const stderr = TestConsole.errorLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
+
+  it.live("holds an unlabelled code head past the budget and never reaches settle-timeout", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ticks = yield* Ref.make(0);
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          settleTimeoutMs: 1000,
+          now: Ref.getAndUpdate(ticks, (value) => value + 1).pipe(
+            Effect.map((tick) => DateTime.makeUnsafe(tick * 500))
+          ),
+          rulesetRead: heavyRuleset,
+        });
+        // Four held ticks span 1.5s against a 1s budget; the merged view ends the stream.
+        expect(ended.reason).toBe("pr-merged");
+        expect(yield* Ref.get(ticks)).toBe(5);
+        expect(yield* settleRows()).toEqual([]);
+        const lines = yield* stderr;
+        expect(lines).toContain(
+          "settle: heavy-not-admitted; gated: Heavy / Check; admit: gh pr edit --add-label ready-for-heavy; waited 1s 500ms (not counted toward the 1s settle timeout)"
+        );
+        expect(lines).not.toContain("settle-timeout");
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer([
+            greenScript("aaa111"),
+            greenScript("aaa111"),
+            greenScript("aaa111"),
+            greenScript("aaa111"),
+            { ...greenScript("aaa111"), view: { exitCode: 0, output: viewJson("MERGED", "aaa111") } },
+          ])
+        )
+      )
+    )
+  );
+
+  it.live("streams one settle-changed row when the label lands and the heavy lane reports", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ticks = yield* Ref.make(0);
+        const diffs = yield* Ref.make(0);
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          settleTimeoutMs: 1000,
+          now: Ref.getAndUpdate(ticks, (value) => value + 1).pipe(
+            Effect.map((tick) => DateTime.makeUnsafe(tick * 2000))
+          ),
+          rulesetRead: heavyRuleset,
+          changedPathsRead: () => Ref.update(diffs, (value) => value + 1).pipe(Effect.as(["packages/a/src/index.ts"])),
+        });
+        expect(ended.reason).toBe("all-terminal");
+        expect(yeetWatchExitFailure(ended)).toBe(false);
+        expect(yield* Ref.get(diffs)).toBe(1);
+        expect(yield* settleRows()).toMatchObject([
+          { from: "heavy-not-admitted", to: "closeout-pending", pending: [], missing: [], gated: [] },
+        ]);
+        const lines = yield* stderr;
+        expect(lines).toContain("[yeet] heavy admission: hold → run");
+        expect(lines).not.toContain("settle-timeout");
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer([
+            // Held: 2s of wall clock pass before the label, more than the budget.
+            greenScript("aaa111"),
+            greenScript("aaa111"),
+            {
+              ...greenScript("aaa111", [HEAVY_ADMISSION_LABEL]),
+              checks: {
+                exitCode: 0,
+                output: checksJson([
+                  { name: "Check", bucket: "pass", state: "SUCCESS" },
+                  { name: "Heavy / Check", bucket: "pass", state: "SUCCESS" },
+                ]),
+              },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  it.live("settles a docs-only head on the skipped heavy outcomes without the label", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), {
+          intervalMillis: 0,
+          settleTimeoutMs: 1000,
+          rulesetRead: heavyRuleset,
+        });
+        expect(ended.reason).toBe("all-terminal");
+        expect(yeetWatchExitFailure(ended)).toBe(false);
+        expect(yield* stderr).toContain(
+          "settle: closeout-pending; required census settled, running the read-first closeout; heavy: docs-only, lanes report skipped"
+        );
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer(
+            [
+              {
+                ...greenScript("aaa111"),
+                checks: {
+                  exitCode: 0,
+                  output: checksJson([
+                    { name: "Check", bucket: "pass", state: "SUCCESS" },
+                    { name: "Heavy / Check", bucket: "skipping", state: "SKIPPED" },
+                  ]),
+                },
+              },
+            ],
+            "docs/runbooks/ci.md\ngoals/time-to-certainty/PLAN.md\n"
+          )
         )
       )
     )

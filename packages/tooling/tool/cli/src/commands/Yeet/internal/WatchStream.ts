@@ -216,6 +216,7 @@ export class YeetWatchSnapshot extends S.Class<YeetWatchSnapshot>($I`YeetWatchSn
     mergeStateStatus: S.String.pipe(S.withConstructorDefault(Effect.succeed("UNKNOWN"))),
     prNumber: S.Finite,
     state: S.String,
+    labels: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
     threads: S.Array(YeetWatchThread),
     criteria: YeetMergeReadyCriteria.pipe(
       S.withConstructorDefault(
@@ -399,9 +400,10 @@ export class YeetHeadChanged extends S.Class<YeetHeadChanged>($I`YeetHeadChanged
  * **Details**
  *
  * `from`/`to` are `null` when the head was settled with the closeout bound —
- * the state in which merge readiness is evaluated. `pending` and `missing`
- * carry the open census at the moment of the change so a stream consumer sees
- * which contexts hold the wait without re-reading the ruleset.
+ * the state in which merge readiness is evaluated. `pending`, `missing` and
+ * `gated` carry the open census at the moment of the change so a stream
+ * consumer sees which contexts hold the wait — and which wait only for the
+ * heavy admission label — without re-reading the ruleset.
  *
  * **Example** (Registration ended, required contexts still pending)
  *
@@ -434,6 +436,7 @@ export class YeetSettleChanged extends S.Class<YeetSettleChanged>($I`YeetSettleC
     to: S.NullOr(YeetSettleReason),
     pending: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
     missing: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
+    gated: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
   },
   $I.annote("YeetSettleChanged", {
     description: "The merge loop's settle wait reason moved between polls, with the open census.",
@@ -803,6 +806,7 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
             to,
             pending: next.settle.value.census.pending,
             missing: next.settle.value.census.missing,
+            gated: next.settle.value.census.gated,
           }),
         ];
   if (prev.headSha !== next.headSha) {

@@ -67,6 +67,7 @@ import {
   githubJobShapeEvidence,
 } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { writeYeetAckReceipt, YeetAckFixResolution, YeetAckReceipt } from "./Ack.ts";
@@ -89,11 +90,15 @@ import {
 } from "./MonitorPolicy.ts";
 import {
   deriveSettleVerdict,
+  readYeetChangedPaths,
   readYeetRulesetRequiredContexts,
   renderYeetSettleDetail,
+  YeetGatedContextFamily,
   YeetRulesetRequiredContexts,
   YeetSettleInput,
   YeetSettleVerdict,
+  yeetGatedFamiliesFor,
+  yeetSettleVerdictIsHeld,
 } from "./Settle.ts";
 import {
   collectRemoteWorkflowRuns,
@@ -994,16 +999,39 @@ const renderMergeReadyGate = (snapshot: YeetStatusSnapshot): string =>
     })
   );
 
+// `settleClockMs` is the origin of `waitedMs`: the first observation of the
+// head, moved forward whenever the heavy admission verdict flips so time spent
+// held never counts toward the settle budget (ttc B8). `changedPaths` is the
+// merge-base diff read once per head; `families` are the gated families folded
+// from the ruleset; `admission` is re-decided every poll from the snapshot's
+// labels, the only admission input that changes without a push.
 class MonitorHeadState extends S.Class<MonitorHeadState>($I`MonitorHeadState`)(
   {
     timeline: YeetHeadTimeline,
     firstObservedMs: S.Finite,
+    settleClockMs: S.Finite,
     expected: YeetRulesetRequiredContexts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    families: S.Array(YeetGatedContextFamily).pipe(SchemaUtils.withKeyDefaults(A.empty<YeetGatedContextFamily>())),
+    changedPaths: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     announcedRow: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     verdict: YeetSettleVerdict.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
-  $I.annote("MonitorHeadState", { description: "Cached ruleset and first observations for the current head." })
+  $I.annote("MonitorHeadState", {
+    description:
+      "Cached ruleset, gated families, merge-base diff, admission, and first observations for the current head.",
+  })
 ) {}
+
+const decideMonitorAdmission = (snapshot: YeetStatusSnapshot, changedPaths: ReadonlyArray<string>): HeavyAdmission =>
+  decideHeavyAdmission(
+    HeavyAdmissionEvent.make({
+      eventName: "pull_request",
+      labels: snapshot.remote.labels,
+      draft: snapshot.remote.isDraft ?? false,
+      changedPaths,
+    })
+  );
 
 const readPushedAt = Effect.fn("YeetMonitorLoop.readPushedAt")(function* (
   context: RepoRunContext,
@@ -1097,27 +1125,49 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
           })
         );
       }
+      const capture = options.capture ?? runRepoCommandCapture;
+      const expected = yield* (options.rulesetRead ?? readYeetRulesetRequiredContexts)(context);
       head = O.some(
         MonitorHeadState.make({
           timeline: YeetHeadTimeline.make({
             headSha: headSha.value,
             firstObservedAt: at,
-            pushedAt: yield* readPushedAt(context, headSha.value, options.capture ?? runRepoCommandCapture),
+            pushedAt: yield* readPushedAt(context, headSha.value, capture),
           }),
           firstObservedMs: millis,
-          expected: yield* (options.rulesetRead ?? readYeetRulesetRequiredContexts)(context),
+          settleClockMs: millis,
+          expected,
+          families: O.match(expected, {
+            onNone: () => A.empty<YeetGatedContextFamily>(),
+            onSome: yeetGatedFamiliesFor,
+          }),
+          changedPaths: yield* readYeetChangedPaths(context, capture),
         })
       );
     }
-    const current = O.getOrThrow(head);
+    const observed = O.getOrThrow(head);
+    const admission = decideMonitorAdmission(snapshot, observed.changedPaths);
+    const previousVerdict = O.map(observed.admission, (value) => value.verdict);
+    const flipped = O.exists(previousVerdict, (value) => value !== admission.verdict);
+    if (flipped) {
+      yield* Console.log(`[yeet] heavy admission: ${O.getOrThrow(previousVerdict)} → ${admission.verdict}`);
+    }
+    const current = MonitorHeadState.make({
+      ...observed,
+      admission: O.some(admission),
+      settleClockMs: flipped ? millis : observed.settleClockMs,
+    });
+    head = O.some(current);
     const settle = (value: YeetStatusSnapshot) =>
       deriveSettleVerdict(
         YeetSettleInput.make({
           expected: current.expected,
           checks: value.remote.checks,
           closeoutBound: O.exists(value.mergeReady, (ready) => ready.criteria.closeoutRun),
-          waitedMs: millis - current.firstObservedMs,
+          waitedMs: millis - current.settleClockMs,
           timeoutMs: policy.settleTimeoutMs,
+          families: current.families,
+          admission: current.admission,
         })
       );
     let verdict = settle(snapshot);
@@ -1331,8 +1381,10 @@ export const runYeetMonitorUntilMerged: {
         failures = 0;
         if (O.isSome(next.terminal)) return next.terminal.value;
       }
+      // A held head has no budget to race: it sleeps the full interval and
+      // re-reads the labels, since only the label can move it.
       const remaining = O.flatMap(head, (value) => value.verdict).pipe(
-        O.filter((verdict) => !verdict.settled),
+        O.filter((verdict) => !verdict.settled && !yeetSettleVerdictIsHeld(verdict)),
         O.map((verdict) => Duration.millis(Math.max(0, verdict.timeoutMs - verdict.waitedMs)))
       );
       yield* Effect.sleep(

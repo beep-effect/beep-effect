@@ -16,6 +16,14 @@
  * match nor a child is missing, and missing holds the wait until the settle
  * timeout expires.
  *
+ * One exception (ttc B8): contexts of a gated family — today `Heavy / *`,
+ * admitted by the `ready-for-heavy` label — are absent by design while the
+ * head's admission verdict is `hold`. Under `hold` they leave `missing` and
+ * `pending` for the `gated` bucket, the wait reason becomes
+ * `heavy-not-admitted` once nothing else is open, and the settle timeout is
+ * not compared. `run` restores the B7 rule exactly; `skip-satisfied` settles
+ * on the lanes' reported `skip` outcomes.
+ *
  * **Gotchas**
  *
  * The verdict is pure: the loop owns the clock, the ruleset read, and the
@@ -34,6 +42,12 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import {
+  HEAVY_ADMISSION_LABEL,
+  HEAVY_CONTEXT_PREFIX,
+  HeavyAdmission,
+  HeavyAdmissionVerdict,
+} from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -131,6 +145,69 @@ export class YeetRulesetRequiredContexts extends S.Class<YeetRulesetRequiredCont
     description: "Required status-check contexts the base branch ruleset expects for a pull request head.",
   })
 ) {}
+
+/**
+ * A family of expected contexts one label admits: every expected context
+ * sharing `prefix`, held back from the census while admission is `hold`.
+ *
+ * **Example** (The heavy family)
+ *
+ * ```ts
+ * import { YeetGatedContextFamily } from "@beep/repo-cli/test/Yeet"
+ *
+ * const family = YeetGatedContextFamily.make({
+ *   prefix: "Heavy / ",
+ *   admittedBy: "ready-for-heavy",
+ *   members: ["Heavy / Check", "Heavy / Lint Policy"]
+ * })
+ * console.log(family.members.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetGatedContextFamily extends S.Class<YeetGatedContextFamily>($I`YeetGatedContextFamily`)(
+  {
+    prefix: S.NonEmptyString,
+    admittedBy: S.NonEmptyString,
+    members: S.Array(S.NonEmptyString),
+  },
+  $I.annote("YeetGatedContextFamily", {
+    description: "Expected contexts sharing a prefix that a single label admits, with the admitting label.",
+  })
+) {}
+
+/**
+ * Fold the expected set into its gated families: one family per distinct
+ * gated prefix found among the contexts — today exactly `Heavy / `, admitted
+ * by {@link HEAVY_ADMISSION_LABEL}. An expected set with no such context
+ * yields no family.
+ *
+ * **Example** (Fold the heavy family out of a ruleset)
+ *
+ * ```ts
+ * import { YeetRulesetRequiredContexts, yeetGatedFamiliesFor } from "@beep/repo-cli/test/Yeet"
+ *
+ * const families = yeetGatedFamiliesFor(YeetRulesetRequiredContexts.make({
+ *   base: "main",
+ *   contexts: ["Heavy / Check", "Heavy / Docgen", "Lint"],
+ *   rulesetIds: [1],
+ *   readAt: "2026-09-16T00:00:00.000Z"
+ * }))
+ * console.log(families.length, families[0]?.members) // 1 [ "Heavy / Check", "Heavy / Docgen" ]
+ * ```
+ *
+ * @param expected - The folded expected set.
+ * @returns The gated families among the expected contexts, possibly empty.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetGatedFamiliesFor = (expected: YeetRulesetRequiredContexts): ReadonlyArray<YeetGatedContextFamily> => {
+  const members = A.filter(expected.contexts, Str.startsWith(HEAVY_CONTEXT_PREFIX));
+  return A.isReadonlyArrayEmpty(members)
+    ? A.empty<YeetGatedContextFamily>()
+    : [YeetGatedContextFamily.make({ prefix: HEAVY_CONTEXT_PREFIX, admittedBy: HEAVY_ADMISSION_LABEL, members })];
+};
 
 const isRequiredStatusChecksRule = (rule: GhBranchRule): boolean => rule.type === "required_status_checks";
 
@@ -289,6 +366,57 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
 });
 
 /**
+ * Read the head's merge-base diff against the base ref, once per head, for the
+ * heavy admission decision.
+ *
+ * **Details**
+ *
+ * `git diff --name-only <base>...HEAD` on the local remote-tracking ref is a
+ * merge-base diff, so a stale ref still yields the head's own changes and no
+ * fetch is needed. A failed or truncated read yields no paths, which can never
+ * classify the head docs-only: the failure direction is `hold`, never a silent
+ * `skip-satisfied`.
+ *
+ * **Example** (Build the reader effect)
+ *
+ * ```ts
+ * import { readYeetChangedPaths, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/settle",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(Effect.isEffect(readYeetChangedPaths(context))) // true
+ * ```
+ *
+ * @param context - Repo context naming the checkout and its base ref.
+ * @param capture - The command capture to run `git` through; the repo capture by default.
+ * @returns The changed paths, trimmed and non-empty; empty when the diff could not be read.
+ * @category services
+ * @since 0.0.0
+ */
+export const readYeetChangedPaths = Effect.fn("Yeet.readYeetChangedPaths")(function* (
+  context: RepoRunContext,
+  capture: typeof runRepoCommandCapture = runRepoCommandCapture
+): Effect.fn.Return<ReadonlyArray<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* capture("git", ["diff", "--name-only", `${context.base}...HEAD`], context.repoRoot).pipe(
+    Effect.map((result) =>
+      result.exitCode === 0 && !result.truncated
+        ? pipe(Str.split(result.output, "\n"), A.map(Str.trim), A.filter(Str.isNonEmpty))
+        : A.empty<string>()
+    ),
+    Effect.orElseSucceed(A.empty<string>)
+  );
+});
+
+/**
  * One reported check as the settle rule sees it: name, classified outcome, and
  * whether `gh pr checks --required` listed it.
  *
@@ -344,6 +472,9 @@ export class YeetExpectedContextInput extends S.Class<YeetExpectedContextInput>(
  * - `missing`: expected contexts with neither an exact match nor a child.
  * - `pending`: reported checks still pending that hold the settle: matched
  *   contexts, matrix children of unmatched contexts, and every `--required` row.
+ * - `gated`: expected contexts of a gated family moved out of `missing` and
+ *   `pending` while the head's admission verdict is `hold` (ttc B8); empty
+ *   otherwise.
  *
  * Every list is sorted so equal censuses render identically.
  *
@@ -365,6 +496,7 @@ export class YeetExpectedContextCensus extends S.Class<YeetExpectedContextCensus
     unmatched: S.Array(S.String),
     pending: S.Array(S.String),
     missing: S.Array(S.String),
+    gated: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
   },
   $I.annote("YeetExpectedContextCensus", {
     description:
@@ -455,7 +587,10 @@ const fallbackCensus = (checks: ReadonlyArray<YeetSettleCheck>): YeetExpectedCon
  * `expected` is `None` when the ruleset read failed (fallback census).
  * `closeoutBound` is the `closeout-run` criterion: a closeout artifact bound to
  * this head exists. `waitedMs` counts from the first poll that observed this
- * head; `timeoutMs` is the `--settle-timeout` budget.
+ * head (or from the last admission flip); `timeoutMs` is the
+ * `--settle-timeout` budget. `families` are the gated families folded from
+ * the expected set and `admission` the head's heavy admission verdict; `None`
+ * (the default) is the B7 rule with no gating.
  *
  * **Example** (Construct an input)
  *
@@ -476,9 +611,12 @@ export class YeetSettleInput extends S.Class<YeetSettleInput>($I`YeetSettleInput
     closeoutBound: S.Boolean,
     waitedMs: S.Finite,
     timeoutMs: S.Finite,
+    families: S.Array(YeetGatedContextFamily).pipe(SchemaUtils.withKeyDefaults(A.empty<YeetGatedContextFamily>())),
+    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetSettleInput", {
-    description: "Expected contexts, reported checks, closeout binding, and elapsed wait for one settle evaluation.",
+    description:
+      "Expected contexts, reported checks, closeout binding, elapsed wait, gated families, and heavy admission for one settle evaluation.",
   })
 ) {}
 
@@ -488,8 +626,9 @@ export class YeetSettleInput extends S.Class<YeetSettleInput>($I`YeetSettleInput
  * **Details**
  *
  * `settled` says the required census is complete for this head. `reason` is
- * the wait reason the gate line names: `registration` or `required-pending`
- * while unsettled, `settle-timeout` when the budget expired unsettled,
+ * the wait reason the gate line names: `registration`, `required-pending` or
+ * `heavy-not-admitted` while unsettled, `settle-timeout` when the budget
+ * expired unsettled (never while held, see {@link yeetSettleVerdictIsHeld}),
  * `closeout-pending` when settled but no closeout artifact binds the head, and
  * `None` when settled with the closeout bound — the state in which merge
  * readiness is evaluated.
@@ -520,9 +659,11 @@ export class YeetSettleVerdict extends S.Class<YeetSettleVerdict>($I`YeetSettleV
     census: YeetExpectedContextCensus,
     waitedMs: S.Finite,
     timeoutMs: S.Finite,
+    admission: HeavyAdmission.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetSettleVerdict", {
-    description: "Whether the required census settled, the wait reason the gate line names, and the census behind it.",
+    description:
+      "Whether the required census settled, the wait reason the gate line names, the census behind it, and the heavy admission it was judged under.",
   })
 ) {}
 
@@ -538,12 +679,45 @@ const censusFor = (input: YeetSettleInput): YeetExpectedContextCensus =>
 const inRegistrationWindow = (input: YeetSettleInput, census: YeetExpectedContextCensus): boolean =>
   A.isReadonlyArrayEmpty(input.checks) || (O.isNone(input.expected) && A.isReadonlyArrayEmpty(census.matched));
 
+// Under `hold`, every family member leaves `missing`, and every pending check
+// that is a member or a member's matrix child leaves `pending`; the member
+// names land in `gated`. Everything else in the census is untouched.
+const gateCensus = (
+  census: YeetExpectedContextCensus,
+  families: ReadonlyArray<YeetGatedContextFamily>
+): YeetExpectedContextCensus => {
+  const members = A.flatMap(families, (family) => family.members);
+  const memberNames = HashSet.fromIterable(members);
+  const memberFor = (name: string): O.Option<string> =>
+    HashSet.has(memberNames, name) ? O.some(name) : A.findFirst(members, (member) => isMatrixChildOf(member, name));
+  const gated = pipe(
+    [
+      ...A.filter(census.missing, (context) => HashSet.has(memberNames, context)),
+      ...A.flatMap(census.pending, (name) => O.toArray(memberFor(name))),
+    ],
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  return YeetExpectedContextCensus.make({
+    matched: census.matched,
+    unmatched: census.unmatched,
+    pending: A.filter(census.pending, (name) => O.isNone(memberFor(name))),
+    missing: A.filter(census.missing, (context) => !HashSet.has(memberNames, context)),
+    gated,
+  });
+};
+
+const admissionIsHold = (admission: O.Option<HeavyAdmission>): boolean =>
+  O.exists(admission, (value) => HeavyAdmissionVerdict.is.hold(value.verdict));
+
 const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCensus): O.Option<YeetSettleReason> =>
   inRegistrationWindow(input, census)
     ? O.some(YeetSettleReason.Enum.registration)
     : A.isReadonlyArrayNonEmpty(census.missing) || A.isReadonlyArrayNonEmpty(census.pending)
       ? O.some(YeetSettleReason.Enum["required-pending"])
-      : O.none();
+      : A.isReadonlyArrayNonEmpty(census.gated)
+        ? O.some(YeetSettleReason.Enum["heavy-not-admitted"])
+        : O.none();
 
 /**
  * Decide whether one poll's observations settle the head.
@@ -553,7 +727,10 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
  * The timeout applies only while unsettled: a settled head never times out, and
  * an unsettled head whose `waitedMs` reached `timeoutMs` reports
  * `settle-timeout` with the census that was still open, so the operator sees
- * which contexts never came.
+ * which contexts never came. A held head (admission `hold` with gated contexts
+ * open) is the exception: its wait is named `heavy-not-admitted` once nothing
+ * non-gated is open, and the timeout comparison is skipped entirely, because
+ * the absent contexts are absent by design until the label lands.
  *
  * **Example** (Registration, then required-pending, then settled)
  *
@@ -582,9 +759,11 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
  * @since 0.0.0
  */
 export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict => {
-  const census = censusFor(input);
+  const open = censusFor(input);
+  const census = admissionIsHold(input.admission) ? gateCensus(open, input.families) : open;
+  const held = admissionIsHold(input.admission) && A.isReadonlyArrayNonEmpty(census.gated);
   const unsettled = unsettledReason(input, census);
-  const timedOut = input.waitedMs >= input.timeoutMs;
+  const timedOut = !held && input.waitedMs >= input.timeoutMs;
   return O.match(unsettled, {
     onSome: (reason) =>
       YeetSettleVerdict.make({
@@ -593,6 +772,7 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
         census,
         waitedMs: input.waitedMs,
         timeoutMs: input.timeoutMs,
+        admission: input.admission,
       }),
     onNone: () =>
       YeetSettleVerdict.make({
@@ -601,9 +781,40 @@ export const deriveSettleVerdict = (input: YeetSettleInput): YeetSettleVerdict =
         census,
         waitedMs: input.waitedMs,
         timeoutMs: input.timeoutMs,
+        admission: input.admission,
       }),
   });
 };
+
+/**
+ * Whether a verdict is held: admission is `hold` and gated contexts are open.
+ *
+ * **Details**
+ *
+ * A held head never reaches `settle-timeout` and the loop sleeps its full
+ * interval instead of racing the budget; `waitedMs` is still reported so the
+ * gate line can say how long the head has waited for the label.
+ *
+ * **Example** (A held head)
+ *
+ * ```ts
+ * import { HeavyAdmission } from "@beep/repo-cli/commands/Ci"
+ * import { YeetExpectedContextCensus, YeetSettleVerdict, yeetSettleVerdictIsHeld } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const census = YeetExpectedContextCensus.make({ matched: ["Lint"], unmatched: [], pending: [], missing: [], gated: ["Heavy / Check"] })
+ * const hold = HeavyAdmission.make({ verdict: "hold", admitted: false, sources: [], docsOnly: false, changedPathCount: 1 })
+ * const verdict = YeetSettleVerdict.make({ settled: false, reason: O.some("heavy-not-admitted"), census, waitedMs: 1, timeoutMs: 1, admission: O.some(hold) })
+ * console.log(yeetSettleVerdictIsHeld(verdict)) // true
+ * ```
+ *
+ * @param verdict - The verdict to inspect.
+ * @returns Whether the wait is held by heavy admission rather than by the census.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetSettleVerdictIsHeld = (verdict: YeetSettleVerdict): boolean =>
+  admissionIsHold(verdict.admission) && A.isReadonlyArrayNonEmpty(verdict.census.gated);
 
 /**
  * Whether a settle verdict ends the loop: only `settle-timeout` is terminal.
@@ -631,7 +842,19 @@ const renderNames = (label: string, names: ReadonlyArray<string>): ReadonlyArray
   A.isReadonlyArrayEmpty(names) ? [] : [`${label}: ${A.join(names, ", ")}`];
 
 const renderWaited = (verdict: YeetSettleVerdict): string =>
-  `waited ${Duration.format(Duration.millis(verdict.waitedMs))} of ${Duration.format(Duration.millis(verdict.timeoutMs))}`;
+  yeetSettleVerdictIsHeld(verdict)
+    ? `waited ${Duration.format(Duration.millis(verdict.waitedMs))} (not counted toward the ${Duration.format(Duration.millis(verdict.timeoutMs))} settle timeout)`
+    : `waited ${Duration.format(Duration.millis(verdict.waitedMs))} of ${Duration.format(Duration.millis(verdict.timeoutMs))}`;
+
+const renderGated = (verdict: YeetSettleVerdict): ReadonlyArray<string> =>
+  A.isReadonlyArrayEmpty(verdict.census.gated)
+    ? []
+    : [...renderNames("gated", verdict.census.gated), `admit: gh pr edit --add-label ${HEAVY_ADMISSION_LABEL}`];
+
+const renderDocsOnly = (verdict: YeetSettleVerdict): ReadonlyArray<string> =>
+  O.exists(verdict.admission, (admission) => HeavyAdmissionVerdict.is["skip-satisfied"](admission.verdict))
+    ? ["heavy: docs-only, lanes report skipped"]
+    : [];
 
 const renderCensusTail = (verdict: YeetSettleVerdict): ReadonlyArray<string> => [
   ...renderNames("pending", verdict.census.pending),
@@ -660,6 +883,25 @@ const renderCensusTail = (verdict: YeetSettleVerdict): ReadonlyArray<string> => 
  * // settle: required-pending; pending: Test Unit (unit-a); missing: Heavy / Check; tolerated matrix parents: Test Unit; waited 1m of 30m
  * ```
  *
+ * **Example** (Render a held wait)
+ *
+ * ```ts
+ * import { HeavyAdmission } from "@beep/repo-cli/commands/Ci"
+ * import { renderYeetSettleDetail, YeetExpectedContextCensus, YeetSettleVerdict } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const verdict = YeetSettleVerdict.make({
+ *   settled: false,
+ *   reason: O.some("heavy-not-admitted"),
+ *   census: YeetExpectedContextCensus.make({ matched: ["Lint"], unmatched: [], pending: [], missing: [], gated: ["Heavy / Check", "Heavy / Lint Policy"] }),
+ *   waitedMs: 180_000,
+ *   timeoutMs: 1_800_000,
+ *   admission: O.some(HeavyAdmission.make({ verdict: "hold", admitted: false, sources: [], docsOnly: false, changedPathCount: 2 }))
+ * })
+ * console.log(renderYeetSettleDetail(verdict))
+ * // settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Lint Policy; admit: gh pr edit --add-label ready-for-heavy; waited 3m (not counted toward the 30m settle timeout)
+ * ```
+ *
  * @param verdict - The verdict to render.
  * @returns One line naming the reason and the open census.
  * @category formatting
@@ -671,10 +913,12 @@ export const renderYeetSettleDetail = (verdict: YeetSettleVerdict): string =>
     Match.when(null, () => [
       "settle: settled; closeout bound",
       ...renderNames("tolerated matrix parents", verdict.census.unmatched),
+      ...renderDocsOnly(verdict),
     ]),
     Match.when("closeout-pending", () => [
       "settle: closeout-pending; required census settled, running the read-first closeout",
       ...renderNames("tolerated matrix parents", verdict.census.unmatched),
+      ...renderDocsOnly(verdict),
     ]),
     Match.when("registration", () => [
       "settle: registration; no checks reported for this head yet",
@@ -683,6 +927,14 @@ export const renderYeetSettleDetail = (verdict: YeetSettleVerdict): string =>
     Match.when("required-pending", () => [
       "settle: required-pending",
       ...renderCensusTail(verdict),
+      ...renderGated(verdict),
+      ...renderDocsOnly(verdict),
+      renderWaited(verdict),
+    ]),
+    Match.when("heavy-not-admitted", () => [
+      "settle: heavy-not-admitted",
+      ...renderGated(verdict),
+      ...renderNames("tolerated matrix parents", verdict.census.unmatched),
       renderWaited(verdict),
     ]),
     Match.when("settle-timeout", () => [
@@ -704,6 +956,7 @@ export const yeetSettleSchemasForTesting = {
   GhRulesetRequiredStatusCheck,
   YeetExpectedContextCensus,
   YeetExpectedContextInput,
+  YeetGatedContextFamily,
   YeetRulesetRequiredContexts,
   YeetSettleCheck,
   YeetSettleInput,
@@ -721,6 +974,7 @@ export const yeetSettleSchemasForTesting = {
  *
  * console.log(O.getOrNull(yeetSettleStampFor(O.some("closeout-pending")))) // "settledAt"
  * console.log(O.getOrNull(yeetSettleStampFor(O.some("registration")))) // null
+ * console.log(O.getOrNull(yeetSettleStampFor(O.some("heavy-not-admitted")))) // null
  * ```
  *
  * @param reason - The verdict's reason.

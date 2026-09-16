@@ -1475,3 +1475,46 @@ invocation from the worktree root was also interrupted; rerun from the CLI packa
 The corrected scoped Node run passed 123 tests but failed the full-file 100% floor for
 `Handler.ts` and `Status.ts`. Preserve that unmet gate in the handoff; narrow regression
 coverage does not prove the unrelated publish and status paths in those large modules.
+
+## 2026-09-16 — B8 ruling numbers collide across stacked branches
+
+- Doing: numbering B8 rulings while stacked on B7 (PR #1149), whose branch still carries
+  rulings 35–42 although `main` (B5, PR #1143) already used 35–40.
+- Evidence: `grep -oE 'Ruling [0-9]+' research/decisions.md | tail -1` prints `40` on
+  `origin/main` and `42` on `origin/ttc/b7-until-ready`; `git merge-tree` lists
+  `research/decisions.md` among seven conflicting paths.
+- Prevention: number rulings at publish time from `origin/main` only (the kickoff rule) and
+  make `beep goals ... --check` flag duplicate ruling numbers across `origin/main` and the
+  branch, so a stacked packet learns the collision before review instead of at the
+  divergence merge. B8 takes 49–56 assuming B7 renumbers to 41–48.
+
+## 2026-09-16 — B8 PR A local proof red on an inherited fallow health finding
+
+- Doing: `yeet publish --start-pr-early --monitor --pr` for a YAML-only change
+  (`.github/workflows/heavy.yml` + one changeset), PR #1151.
+- Evidence: the cheap-gates tier failed `fallow:health` with "Fallow health failed with
+  status ok", envelope `findingAttributionSummary` `introduced 0 / notApplicable 1`, raw
+  finding `packages/tooling/tool/cli/test/proof-job.test.ts:997` (cognitive 10 > 8, landed
+  with B5 #1143). `bun run beep quality fallow health --check --quiet` on the `main` clone
+  exits 1 with the same finding; hosted "Fallow Advisory Envelopes" is red on #1149 and
+  #1151 alike and is not a required context.
+- Prevention: the local cheap-gates tier should run `fallow health` with the same
+  new-only attribution the hosted audit uses (a `notApplicable`-only envelope is green), or
+  the B5 follow-up should clear the finding on `main`; until then every publish from every
+  branch pays one attribution + ack.
+
+## 2026-09-16 — B8 Stage A lane receipts (detail in `research/b8-implementation.md`)
+
+- Doing: Stage A (admission schemas, `ci admission`, `heavy-not-admitted` settle wait) as a
+  Fable subagent lane in the stacked `ttc-b8` worktree.
+- Evidence (five receipts, verbatim detail in the report's "Friction receipts"): a schema
+  defect inside the forked monitor loop surfaces only as a wrong poll count (`expected 1 to be
+  3`), five runs to find `YeetMergeReady.make … Schema validation failed`; `TestConsole` is
+  shared across `it.layer` tests so a `not.toContain("settle-timeout")` assertion sees the
+  previous test's line; `Fiber.poll` is not yieldable in v4; tsgo TS377118 prefers
+  `Effect.fromOption` over `O.match` + `Effect.fail`; `lint tooling-schema-first` is red on
+  `main` (289 inherited findings) and cannot gate a lane.
+- Prevention: export a `mergeReadyFor(criteria)` fixture from the Yeet test-kit and assert on
+  the loop fiber's exit before poll counts; add a `TestConsole` line-cursor helper (or a canon
+  note that `it.layer` shares the console); add TS377118 to the lane-brief trap list; make the
+  local schema-first lane new-only like the hosted audit.
