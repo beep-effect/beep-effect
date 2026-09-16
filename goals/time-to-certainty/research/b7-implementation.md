@@ -654,7 +654,7 @@ composition an operator would try, in `.claude/settings.local.json` (never the t
           {
             "type": "command",
             "asyncRewake": true,
-            "command": "tail -n 1 .beep/inbox/failures.ndjson | jq -r 'select(.kind == \"pr-merge-ready\" or .severity == \"P0\") | \"[yeet] inbox: \" + .kind + \" \" + .id' 1>&2; test -s /dev/stdin || exit 0; exit 2"
+            "command": "message=$(tail -n 1 .beep/inbox/failures.ndjson | jq -r 'select(.kind == \"pr-merge-ready\" or .severity == \"P0\") | \"[yeet] inbox: \" + .kind + \" \" + .id'); if [ -n \"$message\" ]; then printf '%s\\n' \"$message\" >&2; exit 2; fi; exit 0"
           }
         ]
       }

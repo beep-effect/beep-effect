@@ -8,6 +8,7 @@ import {
   YeetAckReceiptJson,
   YeetCheckFailedRow,
   YeetFailureCapsule,
+  YeetInboxObservedRowKind,
   YeetInboxRowJson,
   YeetInboxViewJson,
   YeetPrMergeReadyCapsule,
@@ -18,6 +19,7 @@ import {
   yeetInboxAckPath,
   yeetInboxPaths,
   yeetInboxRowId,
+  yeetInboxRowIsObserved,
   yeetInboxRowLiveness,
   yeetPrMergeReadyRowId,
 } from "@beep/repo-cli/test/Yeet";
@@ -367,5 +369,33 @@ describe("merge-ready row liveness", () => {
     });
     expect(yeetInboxRowLiveness(ready, O.none())).toBe("live");
     expect(yeetInboxRowLiveness(ready, O.some(wave({ headSha: "fff999" })))).toBe("live");
+  });
+
+  it("shares one observed-kind kit with --observed admission", () => {
+    const subject = YeetPrMergeReadyCapsule.make({
+      headSha: "abc123def456",
+      prNumber: 751,
+      url: null,
+      readyAt: AT,
+      pushedAt: null,
+      settledAt: null,
+      closeoutAt: null,
+      pushToReadyMs: null,
+    });
+    const ready = YeetPrMergeReadyRow.make({
+      capsule: subject,
+      checkout: "/repo",
+      id: yeetPrMergeReadyRowId(subject),
+      severity: "P1",
+      ts: AT,
+    });
+    const failed = row(capsule());
+    expect(YeetInboxObservedRowKind.Options).toStrictEqual(["proof-job-finished", "pr-merge-ready"]);
+    expect(yeetInboxRowIsObserved(ready)).toBe(true);
+    expect(yeetInboxRowIsObserved(failed)).toBe(false);
+    // An observed row is live under a moved wave; a gate row on the same wave is superseded.
+    const moved = O.some(wave({ headSha: "fff999" }));
+    expect(yeetInboxRowLiveness(ready, moved)).toBe("live");
+    expect(yeetInboxRowLiveness(failed, moved)).toBe("superseded");
   });
 });

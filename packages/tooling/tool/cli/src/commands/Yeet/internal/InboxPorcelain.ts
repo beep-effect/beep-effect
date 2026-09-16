@@ -25,7 +25,6 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { LiteralKit } from "@beep/schema";
 import { Console, DateTime, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -45,7 +44,13 @@ import {
   YeetAckWaiveResolution,
   YeetAckWontfixResolution,
 } from "./Ack.ts";
-import { appendYeetInboxRow, describeYeetInboxRow, YeetInboxRowJson, yeetInboxExpectedRowId } from "./Inbox.ts";
+import {
+  appendYeetInboxRow,
+  describeYeetInboxRow,
+  YeetInboxRowJson,
+  yeetInboxExpectedRowId,
+  yeetInboxRowIsObserved,
+} from "./Inbox.ts";
 import { loadYeetInboxView, YeetInboxView, YeetInboxViewJson } from "./InboxView.ts";
 import type { FileSystem, Path } from "effect";
 import type { YeetAckResolution, YeetAckState } from "./Ack.ts";
@@ -55,12 +60,6 @@ import type { YeetInboxEntry } from "./InboxView.ts";
 const $I = $RepoCliId.create("commands/Yeet/internal/InboxPorcelain");
 
 const isoNow = DateTime.now.pipe(Effect.map(DateTime.formatIso));
-
-// Informational rows acknowledged by observation (ruling 37 for proof jobs, ruling 46 for
-// merge-ready announcements); every other kind needs an attributed closing move.
-const ObservedRowKind = LiteralKit(["proof-job-finished", "pr-merge-ready"]);
-const isObservedRowKind = S.is(ObservedRowKind);
-const yeetInboxRowAcceptsObserved = (row: YeetInboxRow): boolean => isObservedRowKind(row.kind);
 
 const locateRepoRoot = (): Effect.Effect<string, YeetCommandError, FileSystem.FileSystem> =>
   findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
@@ -414,7 +413,7 @@ export const ackYeetInboxRow = Effect.fn("Yeet.ackYeetInboxRow")(function* (
       message: `No inbox row with id "${id}". Run "bun run beep yeet inbox list" to see the known rows.`,
     });
   }
-  if (resolution.kind === "observed" && !yeetInboxRowAcceptsObserved(entry.value.row)) {
+  if (resolution.kind === "observed" && !yeetInboxRowIsObserved(entry.value.row)) {
     return yield* YeetCommandError.make({
       message: "--observed applies only to proof-job-finished and pr-merge-ready rows.",
     });
