@@ -51,3 +51,20 @@ inventory has no workspace owner. A reviewed fingerprint-only inventory update
 therefore expands this CLI remediation to ten repository-wide coverage shards.
 An ownership-aware inventory impact rule could retain proof coverage with less
 repeated work; the current gate was left unchanged and run as selected.
+
+## 2026-09-16: publish blocked twice by main movement
+
+The first publish proof passed every lane and then failed its merge preview:
+`origin/main` had refreshed `standards/effect-vitest.inventory.jsonc` (#1143)
+and the branch's fingerprint-only rows conflicted. The documented recipe
+(merge main, take main's copy, regenerate with `bun run beep lint effect-vitest
+--write`) resolved it with zero introduced findings; the regenerated copy also
+dropped three rows whose source lines no longer exist on main. A regenerate-
+on-conflict merge driver for that file would remove this whole class.
+
+The second proof failed `fallow:health` on a test loop body that arrived
+through the same merge (`proof-job.test.ts`, cognitive 10 against the ceiling
+of 8). Main's own `Fallow Advisory Envelopes` check is red on the same tree, so
+the finding is inherited. It was repaired here with a table-driven case list
+rather than a baseline refresh; the remediation branch did not touch that file
+before the merge.
