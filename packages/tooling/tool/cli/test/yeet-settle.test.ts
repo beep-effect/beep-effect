@@ -472,10 +472,11 @@ describe("B7 settle contracts", () => {
     expect(yeetSettleVerdictIsTerminal(timedOut)).toBe(true);
     // No admission at all is the B7 rule too.
     assertSome(verdict({ ...gated, checks: [check("Lint")], waitedMs: 1000 }).reason, "settle-timeout");
-    // (3) skip-satisfied: the lanes report skip and the head settles; the line says why.
+    // (3) skip-satisfied: the lanes pass without work on a hosted runner and the head
+    // settles; the line says why.
     const skippedInput = {
       ...gated,
-      checks: [check("Lint"), check("Heavy / Check", "skip"), check("Heavy / Docgen", "skip")],
+      checks: [check("Lint"), check("Heavy / Check"), check("Heavy / Docgen")],
       admission: admission("skip-satisfied", true),
       waitedMs: 5000,
     };
@@ -483,6 +484,13 @@ describe("B7 settle contracts", () => {
     expect(skipped.settled).toBe(true);
     assertSome(skipped.reason, "closeout-pending");
     expect(renderYeetSettleDetail(skipped)).toContain("heavy: docs-only, lanes pass without work");
+    // A lane that is still skipped rather than passed settles the same way.
+    const skippedLanes = verdict({
+      ...skippedInput,
+      checks: [check("Lint"), check("Heavy / Check", "skip"), check("Heavy / Docgen", "skip")],
+    });
+    expect(skippedLanes.settled).toBe(true);
+    assertSome(skippedLanes.reason, "closeout-pending");
     const bound = verdict({ ...skippedInput, closeoutBound: true });
     assertNone(bound.reason);
     expect(renderYeetSettleDetail(bound)).toBe(
@@ -490,7 +498,7 @@ describe("B7 settle contracts", () => {
     );
     const skippedPending = verdict({
       ...gated,
-      checks: [check("Lint", "pending"), check("Heavy / Check", "skip")],
+      checks: [check("Lint", "pending"), check("Heavy / Check")],
       admission: admission("skip-satisfied", true),
     });
     assertSome(skippedPending.reason, "required-pending");

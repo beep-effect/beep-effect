@@ -98,7 +98,7 @@ Settle rule under admission (`deriveSettleVerdict`):
 | admission        | gated family members            | census                                 | reason order                                                      | timeout   |
 | ---------------- | ------------------------------- | -------------------------------------- | ----------------------------------------------------------------- | --------- |
 | `None` / `run`   | ignored                         | B7 unchanged                           | registration → required-pending → settled                         | B7        |
-| `skip-satisfied` | ignored                         | B7 unchanged; `skip` outcomes settle   | as B7; gate line appends `heavy: docs-only, lanes pass without work` | B7        |
+| `skip-satisfied` | ignored                         | B7 unchanged; terminal `pass`/`skip` outcomes settle | as B7; gate line appends `heavy: docs-only, lanes pass without work` | B7        |
 | `hold`           | leave `missing`/`pending` → `gated` (members and their matrix children) | registration → required-pending (non-gated open) → heavy-not-admitted (only gated open) → settled | skipped while gated is non-empty; `waitedMs` still reported |
 
 Gate lines:

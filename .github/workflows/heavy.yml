@@ -23,9 +23,10 @@ permissions:
 jobs:
   verify:
     name: ${{ matrix.name }}
-    # Not admitted: run the matrix on a GitHub-hosted runner with every lane
-    # step skipped (`lane-gate` says `should_run=false`), so each context
-    # reports success without touching the heavy pool. Never skip this job
+    # Not admitted: run the matrix on a GitHub-hosted runner with every step
+    # but `lane-gate` skipped (no checkout; `lane-gate` says
+    # `should_run=false`), so each context reports success without touching
+    # the heavy pool. Never skip this job
     # with `if:`: a skipped matrix job is never expanded and reports a single
     # `Heavy / matrix.name` context, which leaves the required contexts
     # "Expected". Never gate the caller job for this either: a skipped caller
@@ -89,6 +90,7 @@ jobs:
       BEEP_DOCGEN_CONCURRENCY: ${{ matrix.docgen_concurrency || 3 }}
     steps:
       - name: Checkout repository
+        if: inputs.admitted
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
@@ -96,7 +98,7 @@ jobs:
           persist-credentials: false
 
       - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
+        if: inputs.admitted && github.event_name == 'pull_request'
         shell: bash
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
@@ -109,15 +111,16 @@ jobs:
           LANE_NAME: ${{ matrix.name }}
         run: |
           set -euo pipefail
-          should_run=true
           if [[ "${ADMITTED}" != "true" ]]; then
             echo "heavy admission: not admitted; ${LANE_NAME} passes without work"
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          should_run=true
+          eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
+          if [[ "$goals_only" == "true" ]]; then
             should_run=false
-          else
-            eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
-            if [[ "$goals_only" == "true" ]]; then
-              should_run=false
-            fi
           fi
 
           if [[ "${{ matrix.id }}" == "docgen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -280,4 +283,4 @@ jobs:
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
-        run: echo "Skipping ${{ matrix.name }} for this change set."
+        run: echo "${{ matrix.name }} passes without work for this change set."

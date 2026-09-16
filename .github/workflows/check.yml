@@ -123,7 +123,7 @@ jobs:
     needs: [admission]
     # `hold` skips the caller so no `Heavy / *` check run exists and the
     # ruleset keeps the PR blocked; never pass `hold` through as
-    # `admitted: false`, which would report the lanes as skipped-green.
+    # `admitted: false`, which would report every lane as passing without work.
     if: ${{ needs.admission.outputs.verdict != 'hold' }}
     permissions:
       contents: read

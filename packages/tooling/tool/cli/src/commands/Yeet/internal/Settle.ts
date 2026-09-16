@@ -22,7 +22,8 @@
  * `pending` for the `gated` bucket, the wait reason becomes
  * `heavy-not-admitted` once nothing else is open, and the settle timeout is
  * not compared. `run` restores the B7 rule exactly; `skip-satisfied` settles
- * on the lanes' reported `skip` outcomes.
+ * once every lane reports a terminal outcome: `pass` for a lane that passed
+ * without work on a hosted runner, or `skip` where a lane is still skipped.
  *
  * **Gotchas**
  *

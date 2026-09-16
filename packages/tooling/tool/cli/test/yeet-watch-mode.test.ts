@@ -1804,7 +1804,7 @@ describe("B8 watch heavy admission", () => {
     )
   );
 
-  it.live("settles a docs-only head on the skipped heavy outcomes without the label", () =>
+  it.live("settles a docs-only head on heavy lanes that pass without work, without the label", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
         const ended = yield* runYeetWatchStream(contextFor(root), {
@@ -1830,7 +1830,7 @@ describe("B8 watch heavy admission", () => {
                   exitCode: 0,
                   output: checksJson([
                     { name: "Check", bucket: "pass", state: "SUCCESS" },
-                    { name: "Heavy / Check", bucket: "skipping", state: "SKIPPED" },
+                    { name: "Heavy / Check", bucket: "pass", state: "SUCCESS" },
                   ]),
                 },
               },
