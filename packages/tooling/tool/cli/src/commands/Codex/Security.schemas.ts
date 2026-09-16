@@ -1,5 +1,6 @@
 /**
  * Consumed fields of the pinned Codex Security artifact contract.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -25,6 +26,7 @@ const $I = $RepoCliId.create("commands/Codex/Security.schemas");
  * import { SECURITY_PACKAGE_VERSION } from "@beep/repo-cli/commands/Codex/Security.schemas"
  * `~/.cache/beep/codex-security/${SECURITY_PACKAGE_VERSION}` // => "~/.cache/beep/codex-security/0.1.27"
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -38,6 +40,7 @@ export const SECURITY_PACKAGE_VERSION = "0.1.27";
  * import { SECURITY_PLUGIN_VERSION } from "@beep/repo-cli/commands/Codex/Security.schemas"
  * SECURITY_PLUGIN_VERSION // => "0.1.95"
  * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -50,7 +53,7 @@ export const SECURITY_PLUGIN_VERSION = "0.1.95";
  */
 const GITHUB_REMOTE = /^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|git@)github\.com[:/]([^?#]+?)(?:\.git)?\/?$/i;
 
-/** Total on inputs that pass {@link GITHUB_REMOTE}; falls back to the input so the slug checks report the failure. */
+// Total on inputs that pass GITHUB_REMOTE; falls back to the input so the slug checks report the failure.
 const remoteSlug = (remote: string): string =>
   O.getOrElse(
     O.flatMap(Str.match(GITHUB_REMOTE)(remote), (found) => O.fromNullishOr(found[1])),
@@ -75,6 +78,7 @@ const remoteSlug = (remote: string): string =>
  * S.decodeOption(GitHubRepoSlugFromRemote)("GIT@GitHub.com:example/project/") // => O.some("example/project")
  * O.isNone(S.decodeOption(GitHubRepoSlugFromRemote)("https://example.com/other.git")) // => true
  * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -96,6 +100,7 @@ export const GitHubRepoSlugFromRemote = S.String.check(
 );
 /**
  * Repository slug decoded from a remote URL.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -114,6 +119,7 @@ export type GitHubRepoSlugFromRemote = typeof GitHubRepoSlugFromRemote.Type;
  * S.is(RepoRelativePath)("/etc") // => false
  * S.is(RepoRelativePath)("../sibling") // => false
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -127,6 +133,7 @@ export const RepoRelativePath = S.String.check(
 ).pipe($I.annoteSchema("RepoRelativePath", { description: "Bounded relative path beneath a repository root." }));
 /**
  * Repository-relative path string.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -170,6 +177,7 @@ class Target extends S.Class<Target>($I`Target`)(
  * const source = SecuritySourceReceipt.make({ schemaVersion: "beep-security-source/v1", repository: "example/project", revision: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" })
  * source.repository // => "example/project"
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -222,6 +230,7 @@ class Scan extends S.Class<Scan>($I`Scan`)(
  * import * as S from "effect/Schema"
  * S.is(SecurityManifest)({ documentType: "other" }) // => false
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -238,6 +247,7 @@ export class SecurityManifest extends S.Class<SecurityManifest>($I`SecurityManif
  * import { SecuritySeverityToPacket } from "@beep/repo-cli/commands/Codex/Security.schemas"
  * SecuritySeverityToPacket.Enum.critical // => "Critical"
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -254,6 +264,7 @@ export const SecuritySeverityToPacket = MappedLiteralKit([
 );
 /**
  * Packet-domain severity decoded from a scanner level.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -299,6 +310,7 @@ class Finding extends S.Class<Finding>($I`Finding`)(
  * const result = SecurityFindings.make({ documentType: "codex-security.findings", schemaVersion: "1.0", scanId: "scan-1", findings: [] })
  * result.findings.length // => 0
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -321,6 +333,7 @@ export class SecurityFindings extends S.Class<SecurityFindings>($I`SecurityFindi
  * import * as S from "effect/Schema"
  * S.is(SecurityCoverage)({}) // => false
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -346,6 +359,7 @@ export class SecurityCoverage extends S.Class<SecurityCoverage>($I`SecurityCover
  * import { SecurityScanMode } from "@beep/repo-cli/commands/Codex/Security.schemas"
  * SecurityScanMode.is.preflight("preflight") // => true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -354,6 +368,7 @@ export const SecurityScanMode = LiteralKit(["preflight", "scan"]).pipe(
 );
 /**
  * Scan mode literal.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -374,6 +389,7 @@ export type SecurityScanMode = typeof SecurityScanMode.Type;
  * const decoded = S.decodeUnknownOption(SecurityScanOptions)({ outputDir: "/private/scan", maxCost: 500, timeoutMinutes: 30 })
  * O.isNone(decoded) // => true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */

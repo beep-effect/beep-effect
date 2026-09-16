@@ -182,6 +182,7 @@ export type CodexFindingId = typeof CodexFindingId.Type;
  * import * as S from "effect/Schema"
  * console.log(S.is(CapturedFindingId)("local:csf_aaaaaaaaaaaaaaaaaaaaaaaa")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -191,7 +192,9 @@ export const CapturedFindingId = S.Union([
 ]).pipe(
   $I.annoteSchema("CapturedFindingId", { description: "Cloud ID or explicitly namespaced local stable finding ID." })
 );
-/** Source identity used for stable packet numbering.
+/**
+ * Source identity used for stable packet numbering.
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -205,13 +208,16 @@ export type CapturedFindingId = typeof CapturedFindingId.Type;
  * import { CodexCaptureSource } from "@beep/repo-cli/commands/Codex/Findings.capture.schemas"
  * console.log(CodexCaptureSource.is["security-bundle"]("security-bundle")) // true
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
 export const CodexCaptureSource = LiteralKit(["cloud-csv", "security-bundle"]).pipe(
   $I.annoteSchema("CodexCaptureSource", { description: "Discriminates cloud exports from local sealed bundles." })
 );
-/** Capture source contract.
+/**
+ * Capture source contract.
+ *
  * @category type-level
  * @since 0.0.0
  */

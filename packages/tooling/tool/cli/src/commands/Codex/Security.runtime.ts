@@ -1,6 +1,7 @@
 /**
  * Pinned external runtime: discovery of the installed package and bounded
  * execution of its CLI.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -36,6 +37,7 @@ const decodePluginMetadata = S.decodeEffect(PluginMetadata);
  * const program = securityRuntime.pipe(Effect.map(runtime => runtime.cli))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -96,6 +98,7 @@ export const securityRuntime = Effect.gen(function* () {
  * })
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @param options - CLI arguments, optional working directory, stdout and stderr policies, and deadline.
  * @returns The child's exit code.
  * @category processes
@@ -149,6 +152,7 @@ export const runSecurityCli = Effect.fn("CodexSecurity.runCli")(function* (optio
  * const verification = verifySecurityBundleContract("/private/scan")
  * console.log(Effect.isEffect(verification)) // true
  * ```
+ *
  * @category validation
  * @since 0.0.0
  */

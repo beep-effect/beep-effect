@@ -1,5 +1,6 @@
 /**
  * Pinned, bounded local Security CLI execution with explicit authentication.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -47,6 +48,7 @@ const OUTPUT_SWAPPED_MESSAGE =
  * const program = resolveScanTarget("/srv/repo", "packages/tooling")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @param repoRealPath - Canonical repository root.
  * @param target - Repository-relative path supplied by the operator.
  * @returns The same relative target once proven contained.
@@ -81,6 +83,7 @@ export const resolveScanTarget = Effect.fn("CodexSecurity.resolveScanTarget")(fu
  * const program = assertPrivateOutputDirectory("/srv/repo", "/private/scan-2026-09-16")
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @param repoRealPath - Canonical repository root.
  * @param outputDir - Canonical output directory the adapter created.
  * @category validation
@@ -268,7 +271,7 @@ type RawScanOptions = {
   readonly target: O.Option<string>;
 };
 
-/** First failing flag wins, so the operator is pointed at the flag that actually needs changing. */
+// First failing flag wins, so the operator is pointed at the flag that actually needs changing.
 const scanOptionFailures: ReadonlyArray<readonly [(values: RawScanOptions) => boolean, string]> = [
   [(values) => !isValidMaxCost(values.maxCost), "--max-cost must be greater than 0 and at most 100 USD."],
   [(values) => !isValidTimeout(values.timeoutMinutes), "--timeout-minutes must be a whole number from 1 to 120."],
@@ -298,6 +301,7 @@ const boundMessage = (values: RawScanOptions): string =>
  * const decoded = decodeScanOptions({ output: "/tmp/out", maxCost: 5, timeoutMinutes: 30, target: O.some("/etc") })
  * Effect.runSync(Effect.flip(decoded)).message.startsWith("--path") // => true
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -323,6 +327,7 @@ const securitySubcommand = (mode: SecurityScanMode) =>
  * const root = Command.make("example").pipe(Command.withSubcommands([securityCommand]))
  * console.log(securityCommand.name) // "security"
  * ```
+ *
  * @category cli-commands
  * @since 0.0.0
  */

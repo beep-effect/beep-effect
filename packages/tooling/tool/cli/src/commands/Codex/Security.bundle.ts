@@ -1,5 +1,6 @@
 /**
  * Integrity-checked import of local scan artifacts into the findings pipeline.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -62,6 +63,7 @@ const encodeManifest = S.encodeEffect(SecurityManifest);
  * const program = securityRepositoryFromRemote("git@github.com:example/project.git")
  * Effect.runSync(program) // => "example/project"
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -336,6 +338,7 @@ const projectCapture = Effect.fn("CodexSecurity.projectCapture")(function* (inpu
  * const program = readSecurityBundle("/private/scan").pipe(Effect.map(result => result.payload.capture.repository))
  * console.log(Effect.isEffect(program)) // true
  * ```
+ *
  * @category decoding
  * @since 0.0.0
  */

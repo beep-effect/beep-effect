@@ -1,5 +1,6 @@
 /**
  * Local-scan packet guidance that never directs an agent to close cloud IDs.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -35,6 +36,9 @@ import type { CodexPacketPlan } from "./Findings.schemas.ts";
  * })
  * A.length(renderSecurityPacketGuidance(plan)) // => 5
  * ```
+ *
+ * @param plan - The packet plan captured from a sealed local scan.
+ * @returns The five guidance documents (README, GOAL, SPEC, PLAN, research/SOURCES) for the packet.
  * @category formatting
  * @since 0.0.0
  */
