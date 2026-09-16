@@ -64,6 +64,7 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+      actions: write
     outputs:
       verdict: ${{ steps.decide.outputs.verdict }}
       admitted: ${{ steps.decide.outputs.admitted }}
@@ -93,6 +94,29 @@ jobs:
         id: decide
         shell: bash
         run: bun run beep ci admission --github-output
+
+      # A push after the label admits the new head here, while the previous
+      # head's label-triggered `Heavy Admit` matrix may still be queued or
+      # running: concurrency groups never cross workflows, so cancel those
+      # superseded runs explicitly instead of paying seven heavy lanes twice.
+      - name: Cancel superseded Heavy Admit runs
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          for status in queued in_progress; do
+            gh run list --workflow heavy-admit.yml --branch "$HEAD_REF" --status "$status" \
+              --json databaseId,headSha --jq ".[] | select(.headSha != \"$HEAD_SHA\") | .databaseId" \
+              | while read -r run_id; do
+                  [[ -n "$run_id" ]] || continue
+                  echo "cancelling superseded Heavy Admit run $run_id"
+                  gh run cancel "$run_id" || true
+                done
+          done
 
   heavy:
     name: Heavy
