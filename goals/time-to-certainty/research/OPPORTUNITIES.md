@@ -1775,3 +1775,18 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   against the poll-error budget as a bad read, not against the settle budget as a regression.
   Candidate ruling for B7's next amendment; the settle schema already carries `budgetApplies`, so
   the change is one predicate plus a TestClock test.
+
+## 2026-09-16 — A hand push raced yeet's early push and killed the publish at the ref lock
+
+- **Doing:** publishing B7 PR2 with `yeet publish --start-pr-early --monitor --pr` while, per the
+  operator's standing "push up if you have changes" instruction, pushing the same head by hand
+  with `git push --no-verify -u origin <branch>` seconds later.
+- **Evidence:** the hand push created the remote branch; yeet's `early-publish:git:push` landed
+  in the same second and GitHub answered `cannot lock ref 'refs/heads/<branch>': reference
+  already exists`; yeet reported `start-pr-early push phase failed`, wrote a verdict with no
+  steps, and exited 1 before opening the PR. The head was identical on both sides, so nothing
+  was lost; the publish had to be relaunched.
+- **Would have prevented it:** the early push should treat "remote ref already at this head" as
+  done (a `git ls-remote` compare before `git push`, or retrying once on the ref-lock error);
+  and the recipe for "push now" should be one command, `yeet publish --start-pr-early`, never a
+  hand push beside it.
