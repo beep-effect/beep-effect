@@ -30,14 +30,13 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { UUID } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import * as NodePath from "@effect/platform-node/NodePath";
-import { Effect, Exit, FileSystem, Layer, Path, pipe, Ref } from "effect";
+import { NodeServices } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { describe, expect, it } from "vitest";
 import type { YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const encodeQualityTaskLaneRunReportJson = S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
@@ -45,7 +44,7 @@ const encodeQualityTaskLaneRunReportJson = S.encodeEffect(S.fromJsonString(Quali
 const itEffect = <E>(name: string, program: () => Effect.Effect<unknown, E>): void =>
   it(name, () => Effect.runPromise(program()));
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = NodeServices.layer;
 
 const withTempDirectory = <Result, Error, Requirements>(
   use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>

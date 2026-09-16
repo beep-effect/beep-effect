@@ -51,6 +51,7 @@ import { appendContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { safeArtifactName } from "./ArtifactPaths.ts";
+import { ProofJobRowSeverity, YeetProofJobCapsule } from "./ProofJob.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Inbox");
 
@@ -481,6 +482,53 @@ export class YeetLocalShardFailedRow extends S.Class<YeetLocalShardFailedRow>($I
 ) {}
 
 /**
+ * One informational result from a detached proof job.
+ *
+ * **Example** (Reference the row schema)
+ * ```ts
+ * import { YeetProofJobFinishedRow } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof YeetProofJobFinishedRow.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetProofJobFinishedRow extends S.Class<YeetProofJobFinishedRow>($I`YeetProofJobFinishedRow`)(
+  {
+    kind: S.tag("proof-job-finished"),
+    schemaVersion: S.Literal(YEET_INBOX_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_INBOX_SCHEMA_VERSION))
+    ),
+    id: S.NonEmptyString,
+    severity: ProofJobRowSeverity,
+    checkout: S.NonEmptyString,
+    ts: S.String,
+    capsule: YeetProofJobCapsule,
+  },
+  $I.annote("YeetProofJobFinishedRow", { description: "Informational completion or death of one detached proof job." })
+) {}
+
+/**
+ * Derive the stable inbox id for a proof job.
+ *
+ * **Example** (Derive an id)
+ * ```ts
+ * import { yeetProofJobRowId } from "@beep/repo-cli/test/Yeet"
+ * import { UUID } from "@beep/schema/String"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * const jobId = Effect.runSync(S.decodeEffect(UUID)("0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60"))
+ * console.log(yeetProofJobRowId({ jobId }).startsWith("proof-job-")) // true
+ * ```
+ *
+ * @param capsule - Job identity shared by the record and completion capsule.
+ * @returns The deterministic inbox acknowledgment key.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetProofJobRowId = (capsule: Pick<YeetProofJobCapsule, "jobId">): string => `proof-job-${capsule.jobId}`;
+
+/**
  * One row of the checkout inbox.
  *
  * **Details**
@@ -499,6 +547,7 @@ export const YeetInboxRow = S.Union([
   YeetReviewThreadRow,
   YeetBaseDriftRow,
   YeetLocalShardFailedRow,
+  YeetProofJobFinishedRow,
 ]).pipe(
   $I.annoteSchema("YeetInboxRow", {
     title: "Yeet Inbox Row",
@@ -669,6 +718,7 @@ export const yeetLocalShardFailedRowId = (
  */
 export const yeetInboxExpectedRowId = (row: YeetInboxRow): string =>
   Match.value(row).pipe(
+    Match.discriminator("kind")("proof-job-finished", ({ capsule }) => yeetProofJobRowId(capsule)),
     Match.discriminator("kind")("check-failed", (subject) => yeetInboxRowId(subject.capsule)),
     Match.discriminator("kind")("sibling-collision", (subject) => yeetSiblingCollisionRowId(subject.capsule)),
     Match.discriminator("kind")("review-thread", (subject) => yeetReviewThreadRowId(subject.capsule)),
@@ -702,6 +752,10 @@ export const yeetInboxExpectedRowId = (row: YeetInboxRow): string =>
  */
 export const describeYeetInboxRow = (row: YeetInboxRow): string =>
   Match.value(row).pipe(
+    Match.discriminator("kind")(
+      "proof-job-finished",
+      ({ capsule }) => `proof job ${capsule.jobId}: ${capsule.phase}; log ${capsule.logPath}`
+    ),
     Match.discriminator("kind")(
       "check-failed",
       ({ capsule }) => `${capsule.lane} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`

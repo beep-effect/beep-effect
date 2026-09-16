@@ -50,6 +50,8 @@ export * from "../commands/Yeet/internal/Porcelain.ts";
 export * from "../commands/Yeet/internal/PortfolioIndexGuard.ts";
 export * from "../commands/Yeet/internal/ProofDigest.ts";
 export * from "../commands/Yeet/internal/ProofFact.ts";
+export * from "../commands/Yeet/internal/ProofJob.ts";
+export * from "../commands/Yeet/internal/ProofJobLauncher.ts";
 export * from "../commands/Yeet/internal/ProofLedger.ts";
 export * from "../commands/Yeet/internal/ProofState.ts";
 export * from "../commands/Yeet/internal/Provenance.ts";

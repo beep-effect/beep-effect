@@ -388,3 +388,86 @@ which ran `vitest run --config vitest.docs.ts` on Node.
 `BEEP_VITEST_DOCTEST=1 bunx vitest run` (no `--bun`), the shared doctest branch carries no pool
 override, and `beep:test` keeps the Bun launcher. Amends P10 of the table (revision 8); D7 and
 ruling 22 unchanged.
+
+## 2026-09-15 — B5 detached durable proof jobs, round 14 (six rulings, proposed by the orchestrator, ratified by merge of the B5 PR)
+
+Inputs: SPEC B5 and the 2026-09-03 receipts in `research/OPPORTUNITIES.md` ("Three
+agent-launched processes died with no journal entry anywhere"; "Noninteractive shells omitted
+the systemd user-bus environment"); the existing run-scope adoption in
+`internal/repo-run/RunScope.ts` (a scope that adopts the CLI pid stays a child of the agent's
+shell and dies with it); two live probes on the workstation (systemd 261): a transient user
+service started with `systemd-run --user --collect --service-type=exec` under
+`agent-runs.slice` runs its `ExecStopPost` line with `$SERVICE_RESULT`, `$EXIT_CODE` and
+`$EXIT_STATUS` both on a non-zero exit (`exit-code / exited / 3`) and after `SIGKILL` of the
+main pid (`signal / killed / KILL`), and the unit is garbage-collected afterwards
+(`LoadState=not-found`); `-p StandardOutput=append:<file>` captures both streams; a bad
+`ExecStart` binary fails `systemd-run` loudly (exit 1) under `Type=exec`.
+
+**Ruling 35 — a detached proof is a transient systemd user *service*, and that service is the
+lease's accounting unit.** `--detach` on `yeet verify|publish|closeout|monitor|repair` starts
+`beep-proof-<jobId>.service` through `systemd-run --user` with `--slice=agent-runs.slice`,
+`--collect`, `--service-type=exec`, `--working-directory=<checkout>`, `TimeoutStopSec=60`,
+`StandardOutput`/`StandardError` appended to the job log, and an `ExecStopPost` line that runs
+`yeet job finalize <jobId>`; the ExecStart words are the submitter's own `process.execPath`,
+`process.argv[1]` and the `yeet` words it was called with minus the submit-only flags, replayed
+verbatim (no re-serialization of parsed options). Inside a job (`BEEP_YEET_JOB_UNIT` set) the
+admission lease's `runScope` records the service unit as `active` without calling `busctl`, so one
+proof owns exactly one cgroup, oomd's slice guard and the telemetry readers apply unchanged, and the
+reaper treats a recorded `beep-proof-*.service` on a verified dead lease as stop authority (today a
+recorded unit that is not `agent-run-<nonce>.scope` is retained as `recorded-unit-mismatch`).
+Rejected: a scope (dies with the submitter's process group); `nohup`/`setsid` (no accounting unit,
+no termination authority); an installed template unit (`systemd-run` needs no unit files and the
+existing `agent-runs.slice` install path stays the only prerequisite). Admission is unchanged: the
+job runs the same `withQualityAdmission` path as an attached run; no lock, lease or scheduler is
+added.
+
+**Ruling 36 — one durable record per job, one finalizer.** `.beep/yeet/jobs/<jobId>.json`
+(`yeet-proof-job/v1`, `jobId` a UUID, also the unit name and log name) is written before
+`systemd-run`, moves `submitted → running` when the job's CLI boots (pid, process-start identity,
+attempt id), `running → finished` when that CLI records its verdict, and is stamped with the
+systemd result triple by `yeet job finalize`, which is the single writer of the terminal phase: a
+record still `submitted` or `running` when the finalizer runs becomes `terminated` with a reason
+derived from `$SERVICE_RESULT` (ruling 38); a record already `finished` only gains the stamp.
+Finalize is idempotent. A `submitted`/`running` record whose unit is `not-found` and whose runner
+pid is dead is reconciled to `terminated / finalizer-missing` by the next `job` read. Retention
+keeps the newest 50 terminal records and their logs; pruning runs at submit.
+
+Amendment, review round 1 (2026-09-15): The CLI writes `finished`; finalization alone writes `terminated` and the systemd stamp, including launch-failure and missing-finalizer recovery. Settled means terminated or stamped for wait, prune, and inbox publication. Each transition uses a per-record file mutex for consistency, not an admission lock; unstamped finished records with dead owners and missing units gain an unknown stamp.
+
+**Ruling 37 — the job reports through the inbox as one row, acknowledged by observation.** The
+finalizer appends exactly one `proof-job-finished` row per job (id derived from the job id):
+severity `P2` when the verdict is green (session-start surfacing only), `P1` when the verdict is
+red or the phase is `terminated` (injected at the next tool boundary, never a denial — a red proof's
+own `local-shard-failed` P0 rows already deny). Job rows are informational, so the ack ledger
+gains an `observed` resolution (`via`: `job-wait`, `job-status`, `inbox-ack`) written by
+`yeet job wait` on return, `yeet job status --ack`, and `yeet inbox ack <id> --observed`;
+`observed` acks are not gate resolutions and the M4 precision computation excludes them.
+
+**Ruling 38 — every job death is an attempt-journal fact written by the finalizer.** When the
+record is not `finished`, the finalizer appends `attempt-terminated` for the runner's attempt id
+(when no terminal row exists for it, under the journal lock) with reason: `signal` (existing) for
+`signal`/`core-dump`; `oom-killed` for `oom-kill`; `timeout` for `timeout`/`watchdog`;
+`job-start-failed` for `protocol`/`exec-condition`/`start-limit-hit`/`resources`; `cancelled`
+when `yeet job cancel` recorded the request before the stop; `unrecorded-failure` (existing) for
+`exit-code` with no terminal row. `YeetAttemptTerminationReason` gains `oom-killed`, `timeout`,
+`job-start-failed` and `cancelled`; the economics loader's reason set grows in step. M5 counts a
+job death as journaled only through this row, never through the job record alone.
+
+Amendment, review round 1 (2026-09-15): Journal coverage is every dead runner (`signal`, `oom-killed`, `timeout`, `cancelled`, `unrecorded-failure`); `job-start-failed` precedes a runner attempt and is a job-record reason with an inbox row, not an attempt-journal fact.
+
+**Ruling 39 — the job environment is an allowlist of names; values are never recorded.** The
+unit receives, by `--setenv`, exact names `PATH HOME USER LOGNAME SHELL LANG LC_ALL TMPDIR
+SSH_AUTH_SOCK XDG_RUNTIME_DIR DBUS_SESSION_BUS_ADDRESS NODE_OPTIONS GIT_SSH_COMMAND
+GIT_CONFIG_GLOBAL GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL` and
+prefixes `BEEP_` and `TURBO_`, minus any name matching `/TOKEN|SECRET|KEY|PASSWORD|CREDENTIAL/i`
+and never `OP_*`; plus `TERM=dumb`, `NO_COLOR=1`, `BEEP_YEET_JOB_ID`, `BEEP_YEET_JOB_UNIT`,
+`BEEP_YEET_JOB_LOG`. The record stores the forwarded names only. The 1Password shim on `PATH`
+loads its own credential; `gh` and the SSH signer use their own stores.
+
+**Ruling 40 — detaching is opt-in and fails loud.** `--detach` refuses with a `YeetCommandError`
+when the user manager is unreachable (`detectRunScopeSupport` not `active`) and never falls back
+to an attached run; it is a submit-only flag, illegal with `--plan`, and prints the job id, unit,
+log path and the `yeet job wait` command (`--json` prints the record). `--job-max-runtime
+<duration>` maps to `RuntimeMaxSec=` so the `timeout` reason is reachable in a live test.
+Agent guidance (yeet skill, AGENTS.md): a proof expected to outlive the repair loop is submitted
+with `--detach` and followed with `yeet job wait`.
