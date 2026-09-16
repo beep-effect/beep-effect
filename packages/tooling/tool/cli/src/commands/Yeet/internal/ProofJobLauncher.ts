@@ -54,9 +54,11 @@ import type { RunScopeSupport } from "../../../internal/repo-run/RunScope.schema
 import type { ProofJobOutcome, ProofJobRunner, ProofJobSubmission, ProofJobWaitOptions } from "./ProofJob.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofJobLauncher");
-// A record transition holds its lock for one read-modify-write, so a contender waits a few
-// seconds at most before reporting the job busy; the journal's longer budget covers compaction.
-const PROOF_JOB_LOCK_RETRY_ATTEMPTS = 50;
+// A record transition holds its lock for one read-modify-write of a small JSON file; inbox and
+// journal publication happen after the lock is released. A contender retries 200 times at the
+// journal helper's 25 ms pause (about 5 s) before failing with a retryable "stayed busy" error, so a
+// brief stall never loses a transition: the caller reruns cancel, finalize, or the bookkeeping.
+const PROOF_JOB_LOCK_RETRY_ATTEMPTS = 200;
 const decodeUUIDOption = S.decodeOption(UUID);
 const decodeUUID = S.decodeEffect(UUID);
 
@@ -286,22 +288,37 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
                 : (reason ?? terminationReasonForServiceResult(systemd.serviceResult, false))
             ),
     });
-    // Publish idempotent side effects before the stamp so a retry repairs partial finalization.
-    const published = yield* publish(record);
     yield* save(record);
     return ProofJobFinalization.make({
       record,
       duplicate,
+      inboxRowId: O.some(yeetProofJobRowId(record)),
+      attemptTerminated: false,
+    });
+  });
+  // The stamp is decided and saved under the record lock; the idempotent inbox row and journal
+  // row are published after release so contenders never wait on journal or inbox I/O.
+  const finalizeAndPublish = Effect.fn("ProofJob.finalizeAndPublish")(function* (
+    id: UUID,
+    systemd: ProofJobSystemdResult,
+    reason?: "finalizer-missing" | "job-start-failed"
+  ) {
+    const stamped = yield* withRecordLock(finalizeLocked(id, systemd, reason), id);
+    if (stamped.duplicate) return stamped;
+    const published = yield* publish(stamped.record);
+    return ProofJobFinalization.make({
+      record: stamped.record,
+      duplicate: false,
       inboxRowId: O.some(published.id),
       attemptTerminated: published.attemptTerminated,
     });
   });
   const finalize = Effect.fn("ProofJob.finalize")((id: UUID, systemd: ProofJobSystemdResult) =>
-    withRecordLock(finalizeLocked(id, systemd), id)
+    finalizeAndPublish(id, systemd)
   );
-  const read = Effect.fn("ProofJob.read")(function* (id: UUID) {
+  const readLocked = Effect.fn("ProofJob.readLocked")(function* (id: UUID) {
     const loaded = yield* rawRead(id);
-    if (O.isNone(loaded) || isSettledProofJob(loaded.value)) return loaded;
+    if (O.isNone(loaded) || isSettledProofJob(loaded.value)) return { loaded, reconciled: O.none<ProofJobRecord>() };
     const record = loaded.value;
     const shown = yield* command("systemctl", [
       "--user",
@@ -311,15 +328,16 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       "LoadState",
       "--value",
     ]).pipe(Effect.option);
-    if (!O.exists(shown, (result) => Str.trim(result.output) === "not-found")) return loaded;
+    if (!O.exists(shown, (result) => Str.trim(result.output) === "not-found"))
+      return { loaded, reconciled: O.none<ProofJobRecord>() };
     // Without a runner, fence the submitter to avoid racing the initial systemd-run call.
     const owner = O.getOrElse(record.runner, () => record.submitter);
     const status = yield* processIdentityStatus({
       pid: owner.pid,
       procStart: O.getOrElse(owner.procStart, () => ""),
     }).pipe(Effect.provide(context));
-    if (status !== "dead") return loaded;
-    const reconciled = yield* finalizeLocked(
+    if (status !== "dead") return { loaded, reconciled: O.none<ProofJobRecord>() };
+    const stamped = yield* finalizeLocked(
       id,
       ProofJobSystemdResult.make({
         serviceResult: "unknown",
@@ -328,8 +346,16 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       }),
       "finalizer-missing"
     );
-    return O.some(reconciled.record);
+    return {
+      loaded: O.some(stamped.record),
+      reconciled: O.filter(O.some(stamped.record), () => !stamped.duplicate),
+    };
   }, withRecordLock);
+  const read = Effect.fn("ProofJob.read")(function* (id: UUID) {
+    const outcome = yield* readLocked(id);
+    yield* O.match(outcome.reconciled, { onNone: constant(Effect.void), onSome: publish });
+    return outcome.loaded;
+  });
   const loadList = Effect.fn("ProofJob.list")(function* () {
     yield* readContainedFileStringNoFollow(repoRoot, path.join(jobsRoot, ".guard")).pipe(
       Effect.provide(context),
@@ -400,13 +426,10 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       );
       const launched = yield* command("systemd-run", proofJobSystemdRunArguments(record, env)).pipe(Effect.result);
       if (launched._tag === "Failure" || launched.success.exitCode !== 0) {
-        yield* withRecordLock(
-          finalizeLocked(
-            jobId,
-            ProofJobSystemdResult.make({ serviceResult: "unknown", finalizedAt: yield* now }),
-            "job-start-failed"
-          ),
-          jobId
+        yield* finalizeAndPublish(
+          jobId,
+          ProofJobSystemdResult.make({ serviceResult: "unknown", finalizedAt: yield* now }),
+          "job-start-failed"
         );
         return yield* YeetCommandError.make({
           message:

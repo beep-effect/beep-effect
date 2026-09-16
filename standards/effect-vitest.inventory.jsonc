@@ -63261,6 +63261,27 @@
       "status": "open"
     },
     {
+      "id": "EV002:packages/tooling/tool/cli/test/proof-job.test.ts:1259:provideScopedLayer@12#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
+      "line": 1259,
+      "endLine": 1259,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:0d86e74f0eed9d988c91ff62180bb64196ef779f7502c93e91e01aa133122231",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ PATH: root, BEEP: { NESTED: \"x\" } })))",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV002:packages/tooling/tool/cli/test/proof-ledger.test.ts:102:provideScopedLayer@11#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -158612,6 +158633,27 @@
       "occurrence": "v2:643d40b4ea745e67466a20d24fdf4b906c91360d7629af8522042368d5e5fad2",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"collects the epoch from fixture files and pins its combined digest\", () => Effect.gen(function* () { const path = yield* Path.Path; const fixtureRoot = path.join(import.meta.dirname, \"fixture",
+      "replacement": {
+        "primitive": "it.effect",
+        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV009:packages/tooling/tool/cli/test/proof-job.test.ts:1269:it.live@0#1",
+      "lens": "resource",
+      "ruleId": "EV009",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
+      "line": 1269,
+      "endLine": 1284,
+      "symbol": "it.live",
+      "occurrence": "v2:fea5d2df81f9015d019521ec352d18d45ef5661806a2b198c428a6b5af7dc7c2",
+      "class": "unjustified-live-test",
+      "evidence": "it.live(\"reports a record lock held by a live process as busy\", () => fixture( Effect.fnUntraced(function* (root) { const fs = yield* FileSystem.FileSystem; const launcher = yield* ProofJobLauncher.ma",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
