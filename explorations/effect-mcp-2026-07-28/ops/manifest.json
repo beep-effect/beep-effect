@@ -6,10 +6,14 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Align: reopen G4 (2026-07-28 only)? A 2026-only protocol list rejects `initialize` from every in-repo wire client, and no server-minted stable identity exists for GovernedTierGate; upstream supports mixed lists with one stateless adapter.",
-      "Align: which stateless identity anchor (authenticated principal, requestState, MRTR per-call approval) replaces mcp-session-id for GovernedTierGate grants and hash chains?",
-      "Align: fix or rewrite the in-repo MCP HTTP clients (sidecar integration harness, live-mcp-client) that break on SSE-converted responses at the snapshot?",
-      "Synthesis: RESEARCH.md, impact matrix, PR train sizing from the verified claims (Gate C review pending)."
+      "D-posture: keep G4 (2026-07-28 only everywhere), relax to a mixed list repo-wide, stage mixed then cut over per host, or a per-transport G4 exception? A mixed list mints a 2025 session even for clients offering 2026-07-28, so either way the proving host needs a client that never sends initialize.",
+      "D-run-key: what mints the GovernedTierGate run key over HTTP once initialize and mcp-session-id are gone (per-launch bearer, shell-minted run token, requestState with HMAC/AEAD, MRTR approval, or a stateful adapter on the sidecar only), owned in epistemic/server?",
+      "D-cli-contract: does G6 make vendor CLI opt-in flags operator notes only, or is a live first-message capture (Gate A 25) an entrance criterion before nlp-mcp flips?",
+      "D-client-home: where does the in-repo 2026 client (ClientRpcs with server/discover, header and _meta injection, stdio helper, SSE-aware decode) live, given Effect's 2026 client group is internal?",
+      "D-conformance: must a 2026-only host pass conformance --requirements 2026-07-28, and who owns the 404/-32601 waiver or the error-shape change?",
+      "D-projection: does api_key_required stay a non-error CallToolResult envelope and do invalid arguments stay a canned result or become InvalidParams, declared as error-translation at the kit protocol adapter?",
+      "D-origin: Origin allow-list home (OntologyMcpServerConfig, app literal with exception, or Effect allowedOrigins only), keep or drop the sidecar Origin middleware, OPTIONS 204 vs 403, Origin-less POST, and whether any browser-origin /mcp client is in scope?",
+      "D-pin-sha: which upstream SHA does the snapshot PR pin, and is the blast-radius census re-run if it is newer than a7a71921de?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

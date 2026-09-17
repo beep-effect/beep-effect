@@ -103,7 +103,7 @@ first MCP PR.
 
 ## 2026-09-16 — G8 upstream documentation
 
-**Question:** `packages/effect/MCP.md` does not cover 2026-07-28. Contribute docs upstream?
+**Question:** `effect:packages/effect/MCP.md` does not cover 2026-07-28. Contribute docs upstream?
 
 **Answer:** Research records the doc gaps with evidence; the goal carries an optional, non-blocking
 lane for a docs PR from the `beep-effect/effect` fork, using examples proven on in-repo hosts.

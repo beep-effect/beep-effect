@@ -7,7 +7,7 @@
 `a7a71921de`, and which changes break a consumer like beep-effect at compile time or at runtime?
 
 **Start with:**
-`git -C ${EFFECT_REF} log --oneline effect@4.0.0-rc.115..a7a71921de -- packages/effect/src/unstable/ai packages/effect/src/unstable/rpc`
+`git -C ${EFFECT_REF} log --oneline effect@4.0.0-rc.115..a7a71921de -- effect:packages/effect/src/unstable/ai effect:packages/effect/src/unstable/rpc`
 and `git diff` of the modules below over the same range.
 
 **Report sections:**
@@ -26,6 +26,6 @@ and `git diff` of the modules below over the same range.
    `Toolkit.FailureOrigin`/`Tool.FailureOrigin`; declared-failure projection.
 4. `Tool.Strict` dual use: separate its provider structured-output meaning from MCP's reuse of
    `Tool.getStrictMode` for excess-property rejection (`effect:.../McpServer.ts` call sites).
-5. Type-level evidence: `packages/effect/typetest/unstable/ai/McpServer.tst.ts`, `Tool.tst.ts`.
+5. Type-level evidence: `effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts`, `Tool.tst.ts`.
 6. Cross-check: do `.changeset/*.md` and `migration/annotations/effect__ai__McpServer.yaml`,
    `effect__ai__McpSchema.yaml` match the code? List every mismatch.
