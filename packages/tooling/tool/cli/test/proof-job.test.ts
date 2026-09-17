@@ -894,6 +894,64 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
       })
     );
   }
+  for (const [ending, command, exitCode] of [
+    ["a clean loop exit", Effect.void, 0],
+    ["a red loop exit", Effect.fail("required-red"), 1],
+    ["a stopped loop", Effect.interrupt, 2],
+  ] as const) {
+    it.effect(
+      `records ${ending} from a porcelain command inside the job so wait exits ${exitCode}`,
+      Effect.fnUntraced(function* () {
+        const { root, launcher } = yield* CommandCheckout;
+        const record = yield* launcher.submit(submission(root));
+        const environment = jobEnvironment(root, record);
+        yield* Job.reportProofJobCommand(root, command).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, environment),
+          Effect.exit
+        );
+        const reported = O.getOrThrow(yield* launcher.read(record.jobId));
+        expect(O.map(reported.runner, (runner) => runner.pid)).toStrictEqual(O.some(process.pid));
+        yield* runJobCommand(["job", "finalize", record.jobId]).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            jobEnvironment(root, record, { SERVICE_RESULT: "success", EXIT_CODE: "exited", EXIT_STATUS: "0" })
+          )
+        );
+        const wait = runJobCommand(["job", "wait", record.jobId, "--timeout", "30s"]);
+        if (exitCode === 0) yield* wait;
+        else expect(yield* wait.pipe(Effect.flip)).toMatchObject({ exitCode });
+      })
+    );
+  }
+  for (const route of ["--until-ready", "--until-merged", "--watch"]) {
+    it.effect(
+      `records the outcome of a detached monitor ${route} route`,
+      Effect.fnUntraced(function* () {
+        const { root, launcher } = yield* CommandCheckout;
+        const record = yield* launcher.submit(submission(root));
+        // The checkout is not a git repository, so the route fails while hydrating, before any
+        // GitHub read; the job must still record that end instead of reading as terminated.
+        yield* runJobCommand(["monitor", route]).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, jobEnvironment(root, record)),
+          Effect.exit
+        );
+        const reported = O.getOrThrow(yield* launcher.read(record.jobId));
+        expect(reported.phase).toBe("finished");
+        expect(O.map(reported.outcome, (outcome) => outcome.verdictOutcome)).toStrictEqual(O.some("failure"));
+      })
+    );
+  }
+  it.effect(
+    "leaves the job record untouched outside a job",
+    Effect.fnUntraced(function* () {
+      const { root, launcher } = yield* CommandCheckout;
+      const record = yield* launcher.submit(submission(root));
+      yield* Job.reportProofJobCommand(root, Effect.void);
+      const untouched = O.getOrThrow(yield* launcher.read(record.jobId));
+      expect(untouched.phase).toBe(record.phase);
+      expect(O.isNone(untouched.outcome)).toBe(true);
+    })
+  );
   it.effect(
     "binds finalization to job, unit, and any recorded invocation",
     Effect.fnUntraced(function* () {

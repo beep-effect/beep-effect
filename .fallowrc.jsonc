@@ -137,6 +137,13 @@
     // LeJeune Bolt exploration ops script is packet tooling (machine-local corpus
     // miner run ad hoc via `bun run`), not a package/app entrypoint.
     "explorations/lejeune-bolt-agentic-demo/ops/**",
+    // effect-schema-parity exploration research scripts are packet evidence
+    // regenerators (rg censuses, TS-compiler-API retirement audits, and the
+    // upstream-inventory prototype that reads the machine-local .repos/effect
+    // checkout), run ad hoc via `bun run` or `node` — packet tooling, not
+    // package/app entrypoints. The inventory tool graduates into repo-cli under
+    // goals/effect-schema-parity P1, where the production rules apply to it.
+    "explorations/effect-schema-parity/research/**",
     // beep-ci-operational-ontology §4b: the ontology-foundational-auditor
     // SourceObservation adapter (TS compiler API extractor) and its golden
     // fixture input are digest-locked run evidence (script_sha256_12 in the

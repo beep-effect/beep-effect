@@ -12,7 +12,8 @@ import { Context, Effect, Layer, Match, MutableHashMap, Number as Num, Path, pip
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { updateBiomeSchema } from "../resolvers/BiomeResolver.ts";
-import { updateTurboSchema } from "../resolvers/TurboResolver.ts";
+import { TURBO_SCHEMA_FIELD } from "../resolvers/TurboResolver.ts";
+import { updateJsoncSchemaUrl } from "../updaters/JsoncSchemaUpdater.ts";
 import { updateCatalogEntry, updatePackageManagerField } from "../updaters/PackageJsonUpdater.ts";
 import { updatePlainTextFile } from "../updaters/PlainTextUpdater.ts";
 import { updateVercelBunVersion } from "../updaters/VercelJsonUpdater.ts";
@@ -165,8 +166,6 @@ const applyBiomeUpdates = Effect.fn(function* (repoRoot: string, report: Version
   return filesChanged;
 });
 
-const TURBO_SCHEMA_FIELD = "$schema version";
-
 const applyTurboUpdates = Effect.fn(function* (repoRoot: string, report: VersionCategoryReport) {
   const path = yield* Path.Path;
   let filesChanged = 0;
@@ -176,7 +175,7 @@ const applyTurboUpdates = Effect.fn(function* (repoRoot: string, report: Version
       continue;
     }
 
-    const changed = yield* updateTurboSchema(path.join(repoRoot, item.file), item.expected);
+    const changed = yield* updateJsoncSchemaUrl(path.join(repoRoot, item.file), item.expected);
     filesChanged = countChangedFile(filesChanged, changed);
   }
 

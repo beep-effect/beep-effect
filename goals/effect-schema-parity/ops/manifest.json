@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "effect-schema-parity",
+    "packetId": "goal-packet/v1:aaba078d01d3a09a3d1f8664b73b681bde37502f21d5ce9c0af125d5d230e9cb",
+    "title": "Effect Schema Parity",
+    "status": "active",
+    "created": "2026-09-15",
+    "updated": "2026-09-15",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/effect-schema-parity",
+  "lifecycle": "active",
+  "mission": "Retire or trim every @beep/schema concept upstream rc.115 covers, migrate consumers by codemod, and leave an rc-pinned inventory plus a schema-first gate that hold parity on every effect bump.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/effect-schema-parity",
+    "graduated": "2026-09-15",
+    "note": "Graduated at decompose from explorations/effect-schema-parity (MAP.md, 2026-09-15) after 25 DECISIONS.md rulings. The 2026-09-15 'LiteralKit reopened' entry is normative for P2 and for the P3 facet census gate."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/effect-schema-parity/README.md",
+    "goals/effect-schema-parity/SPEC.md",
+    "goals/effect-schema-parity/PLAN.md",
+    "goals/effect-schema-parity/GOAL.md",
+    "goals/effect-schema-parity/research/SOURCES.md",
+    "goals/effect-schema-parity/research/OPPORTUNITIES.md",
+    "explorations/effect-schema-parity/DECISIONS.md",
+    "explorations/effect-schema-parity/BRIEF.md",
+    "explorations/effect-schema-parity/MAP.md"
+  ],
+  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/effect-schema-parity/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Doctrine PR", "status": "pending" },
+    { "id": "P1", "name": "Knowledge layer", "status": "pending" },
+    { "id": "P2", "name": "LiteralKit trim", "status": "pending" },
+    { "id": "P3", "name": "Retirement train", "status": "pending" },
+    { "id": "P4", "name": "Gate cut", "status": "pending" },
+    { "id": "P5", "name": "Statics and performance close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/effect-schema-parity/GOAL.md)\" -le 4000",
+    "jq . goals/effect-schema-parity/ops/manifest.json",
+    "rg -n \"effect-schema-parity|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/effect-schema-parity",
+    "git diff --check -- goals/effect-schema-parity",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep lint schema-first",
+    "bun run beep quality package-verify @beep/schema",
+    "bun run beep quality package-verify @beep/repo-cli"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation.",
+    "A retirement PR would change a persisted or externally served encoding; that is a migration goal, not this one.",
+    "A facet census flips a RETIRE row to ADAPT and no decision-log entry records the flip.",
+    "P5 would open before goals/schema-utils-selective-codec-statics has merged its Yeet PR."
+  ]
+}

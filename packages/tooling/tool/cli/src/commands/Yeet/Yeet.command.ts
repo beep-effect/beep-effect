@@ -55,7 +55,7 @@ import {
   ProofJobWaitOptions,
   proofJobUnitName,
 } from "./internal/ProofJob.ts";
-import { ProofJobLauncher } from "./internal/ProofJobLauncher.ts";
+import { ProofJobLauncher, reportProofJobCommand } from "./internal/ProofJobLauncher.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
 import { YeetCommandError } from "./Yeet.errors.ts";
@@ -977,6 +977,13 @@ export const yeetMonitorCommandRoute = SelectYeetMonitorCommandRoute.implementSy
   )
 );
 
+// The porcelain monitor loops write no run verdict, so inside a detached job they record their
+// own outcome; the classic monitor records it through the run verdict like verify does.
+const reportDetachedMonitor = Effect.fnUntraced(function* <A, E, R>(self: Effect.Effect<A, E, R>) {
+  if (O.isNone(yield* configStringOption("BEEP_YEET_JOB_ID"))) return yield* self;
+  return yield* reportProofJobCommand(yield* jobRoot(), self);
+});
+
 const yeetMonitorCommand = Command.make(
   "monitor",
   monitorFlags,
@@ -1010,11 +1017,11 @@ const yeetMonitorCommand = Command.make(
         classic: runYeetMode("monitor", options),
         "invalid-until-event": rejectYeetUntilEventPairing,
         "invalid-until-ready": rejectYeetUntilReadyPairing,
-        "ready-loop": runYeetMergeLoop(options, { policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }) }).pipe(
-          Effect.asVoid
+        "ready-loop": reportDetachedMonitor(
+          runYeetMergeLoop(options, { policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }) }).pipe(Effect.asVoid)
         ),
-        "merge-loop": runYeetMergeLoop(options, { settleTimeoutMs }).pipe(Effect.asVoid),
-        watch: runYeetWatchLoop(options, untilEvent, { settleTimeoutMs }),
+        "merge-loop": reportDetachedMonitor(runYeetMergeLoop(options, { settleTimeoutMs }).pipe(Effect.asVoid)),
+        watch: reportDetachedMonitor(runYeetWatchLoop(options, untilEvent, { settleTimeoutMs })),
       }[route],
       stateRoot
     );

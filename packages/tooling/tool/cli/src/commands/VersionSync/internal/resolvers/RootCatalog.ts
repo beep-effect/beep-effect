@@ -1,9 +1,11 @@
 /**
- * Root `package.json` catalog version lookup shared by the schema-URL resolvers.
+ * Installed tool version lookup shared by the schema-URL resolvers.
  *
- * Biome and Turbo both pin a `$schema` URL to the installed tool version, and
- * both read that version from the root `package.json` catalog (falling back to
- * `devDependencies`). This module owns that lookup once.
+ * Biome and Turbo both pin a `$schema` URL to the installed tool version. The
+ * version that is actually installed is the one `bun.lock` resolved, so this
+ * module reads the lockfile first and only falls back to the range-stripped
+ * root `package.json` catalog (then `devDependencies`) when the lockfile has no
+ * entry for the tool.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -11,9 +13,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { Str, thunkEmptyStr } from "@beep/utils";
+import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Effect, FileSystem, identity, Path, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { VersionSyncError } from "../../VersionSync.schemas.ts";
@@ -125,23 +128,94 @@ export const readRootPackageJson = Effect.fn("readRootPackageJson")(function* (
   );
 });
 
+class BunLockDocument extends S.Class<BunLockDocument>($I`BunLockDocument`)(
+  {
+    packages: S.Record(S.String, S.Array(S.Unknown)).pipe(
+      S.withConstructorDefault(Effect.succeed(R.empty<string, ReadonlyArray<unknown>>())),
+      S.withDecodingDefault(Effect.succeed(R.empty<string, ReadonlyArray<unknown>>()))
+    ),
+  },
+  $I.annote("BunLockDocument", {
+    description: "Subset of bun.lock: the resolved package map whose entries start with `<name>@<version>`.",
+  })
+) {}
+
 /**
- * Resolve the exact installed version of a root catalog dependency.
+ * Read the version `bun.lock` resolved for a dependency.
  *
  * **Details**
  *
- * Reads the root `package.json`, prefers the `catalog` entry, falls back to
- * `devDependencies`, and strips the semver range prefix. Returns the empty
- * string when the dependency is pinned in neither place so callers can report
- * the absence instead of failing.
+ * Each `packages` entry in `bun.lock` is a tuple whose first element is the
+ * resolved `<name>@<version>` specifier. A missing lockfile or a missing entry
+ * yields `None` so the caller can fall back to the catalog.
+ *
+ * **Example** (Read the resolved turbo version)
+ *
+ * ```ts
+ * import { readLockfileResolvedVersion } from "@beep/repo-cli/commands/VersionSync/internal/resolvers/RootCatalog"
+ * import { Effect } from "effect"
+ *
+ * const program = readLockfileResolvedVersion("/repo", "turbo")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root.
+ * @param dependencyName - The dependency to look up (e.g. `turbo`).
+ * @returns The lockfile-resolved version, or `None` when unavailable.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readLockfileResolvedVersion = Effect.fn("readLockfileResolvedVersion")(function* (
+  repoRoot: string,
+  dependencyName: string
+): Effect.fn.Return<O.Option<string>, VersionSyncError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  const lockPath = path.join(repoRoot, "bun.lock");
+  const present = yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(() => false));
+  if (!present) {
+    return O.none();
+  }
+
+  const lockContent = yield* fs
+    .readFileString(lockPath)
+    .pipe(VersionSyncError.mapError("Failed to read bun.lock", "bun.lock"));
+
+  const lock = yield* decodeJsoncTextAs(BunLockDocument)(lockContent).pipe(
+    VersionSyncError.mapError("Failed to parse bun.lock", "bun.lock")
+  );
+
+  const resolvedPrefix = `${dependencyName}@`;
+
+  return O.flatMap(
+    O.flatMap(R.get(lock.packages, dependencyName), A.head),
+    (specifier): O.Option<string> =>
+      P.isString(specifier) && Str.startsWith(resolvedPrefix)(specifier)
+        ? O.some(Str.slice(resolvedPrefix.length)(specifier))
+        : O.none()
+  );
+});
+
+/**
+ * Resolve the exact installed version of a tool pinned through the root catalog.
+ *
+ * **Details**
+ *
+ * Prefers the version `bun.lock` resolved, because that is the binary that is
+ * installed; a caret or tilde catalog range can float above its floor. Without
+ * a lockfile entry it falls back to the root `package.json` `catalog` entry,
+ * then `devDependencies`, with the semver range prefix stripped. Returns the
+ * empty string when the tool is pinned nowhere so callers can report the
+ * absence instead of failing.
  *
  * **Example** (Resolve the installed Turbo version)
  *
  * ```ts
- * import { resolveRootCatalogVersion } from "@beep/repo-cli/commands/VersionSync/internal/resolvers/RootCatalog"
+ * import { resolveInstalledToolVersion } from "@beep/repo-cli/commands/VersionSync/internal/resolvers/RootCatalog"
  * import { Effect } from "effect"
  *
- * const program = resolveRootCatalogVersion("/repo", "turbo")
+ * const program = resolveInstalledToolVersion("/repo", "turbo")
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -151,10 +225,15 @@ export const readRootPackageJson = Effect.fn("readRootPackageJson")(function* (
  * @category utilities
  * @since 0.0.0
  */
-export const resolveRootCatalogVersion = Effect.fn("resolveRootCatalogVersion")(function* (
+export const resolveInstalledToolVersion = Effect.fn("resolveInstalledToolVersion")(function* (
   repoRoot: string,
   dependencyName: string
 ): Effect.fn.Return<string, VersionSyncError, FileSystem.FileSystem | Path.Path> {
+  const lockfileVersion = yield* readLockfileResolvedVersion(repoRoot, dependencyName);
+  if (O.isSome(lockfileVersion)) {
+    return lockfileVersion.value;
+  }
+
   const pkgJson = yield* readRootPackageJson(repoRoot);
 
   const rawVersion = O.getOrElse(
