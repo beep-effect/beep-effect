@@ -1206,7 +1206,7 @@ describe("yeet planner", () => {
       )
     ));
 
-  it("loads reusable proof state from the legacy sanitized run directory", () =>
+  it("loads reusable proof state from the legacy sanitized run directory, dropping retired laneProofs rows", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
         Effect.gen(function* () {
@@ -1227,7 +1227,17 @@ describe("yeet planner", () => {
             proofTier: "full",
             runId: "repo-cli-yeet",
             verifiedAt: "2026-06-12T00:00:00.000Z",
-            laneProofs: [],
+            // TTC ruling 59: state files written before the retirement still carry these rows.
+            laneProofs: [
+              {
+                commandHash: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                commandText: "bun run beep quality github-checks pre-push",
+                diffFingerprint: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                stepId: "full:pre-push",
+                label: "full pre-push",
+                verifiedAt: "2026-06-12T00:00:00.000Z",
+              },
+            ],
           });
           yield* fs.writeFileString(legacyStatePath, `${legacyStateJson}\n`);
 
@@ -1235,6 +1245,7 @@ describe("yeet planner", () => {
 
           expect(state.runId).toBe("repo-cli-yeet");
           expect(state.branch).toBe(tempContext.branch);
+          expect(state).not.toHaveProperty("laneProofs");
         })
       )
     ));
