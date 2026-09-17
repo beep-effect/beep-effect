@@ -1,0 +1,28 @@
+{
+  "lane": "14-s2-ecosystem",
+  "path": "research/14-s2-ecosystem.md",
+  "claimCount": 38,
+  "topRisks": [
+    "Default stdio of Claude Code, Codex, and grok sends initialize. G4-only on every in-repo stdio host (nlp-mcp .mcp.json included) fails those sessions. grok has no stdio modern opt-in at all.",
+    "Official conformance --requirements 2026-07-28 is a modern-only referee: initialize MUST be HTTP 404/-32601. Effect G4 HTTP today is 400/-32020 (stdio -32022 without data.supported). Dual-era mixed list fails the same check because initialize succeeds. Stdio hosts cannot be scored without an HTTP shim.",
+    "A browser Inspector or TS v2 2026 client fails CORS preflight against a host whose allow-list omits mcp-method/mcp-name (ontology /mcp as of 21-r2), even if the handshake is right. Inspector web still skips Mcp-Param-* mirroring.",
+    "HTTP 400 is era-ambiguous unless the body is a recognized modern error. Clients that treat any 400 as legacy will send initialize and fail again against a G4 HTTP host; spec-compliant clients that recognize -32020 stay modern.",
+    "Live first-message capture of local Claude Code 2.1.273 / Codex 0.154.0 / grok 1.0.34 is UNVERIFIED (Gate A 25). Matrix cells are documented behavior, not a packet capture."
+  ],
+  "decisionChallenges": [
+    "G4-on-stdio is not a free pin: the spec Legacy×Modern cell plus all three agent CLIs defaulting to initialize. grok cannot be opted in until rmcp stdio probe is safe.",
+    "Dual-era mixed list is what TS/Python servers ship (legacy: 'reject' is the G4 analogue, non-default) and matches Effect's at-most-one-stateless adapter. Pinning only v2026_07_28 is their reject setting.",
+    "Keeping G4 requires rewriting 21-r2 harnesses, operator env flags for Claude (MCP_PROTOCOL_NEGOTIATION=auto) and Codex (CODEX_MCP_PROTOCOL_VERSION plus features.mcp_2026_07_28), and dropping grok for those servers — or staging mixed-list first.",
+    "G4 HTTP-only / mixed stdio splits G9. Ontology still needs CORS mcp-method/mcp-name and Codex HTTP feature flag; hosted Apps stays Legacy unless its separate flag is on.",
+    "Conformance 2026 freeze cannot certify dual-era and cannot score stdio. Inspector --protocol-era legacy versus modern is the G4 decision distilled."
+  ],
+  "grillQuestions": [
+    "Keep G4 (v2026_07_28 only) on stdio hosts knowing default Claude Code, Codex, and grok stdio fail, and grok has no opt-in?",
+    "Relax G4 to a mixed list (v2025_06_18 + v2026_07_28) matching the spec dual-era server, TS/Python server defaults, and Effect's mixed-list cap?",
+    "Stage mixed list in the snapshot PR and G4-only later, gated on grok stdio modern support, Claude Code stdio default or a repo-owned .mcp.json/docs note, Codex feature flag on by default, 21-r2 harness rewrite, and Gate A 25 live capture?",
+    "G4 on HTTP only (ontology /mcp) and mixed on stdio hosts, accepting a G9 split plus CORS mcp-method/mcp-name?",
+    "If keep G4, is the operator contract MCP_PROTOCOL_NEGOTIATION=auto, CODEX_MCP_PROTOCOL_VERSION=2026-07-28 plus features.mcp_2026_07_28, and stop using grok for those servers?",
+    "Waive sep-2575-http-server-method-not-found-404-initialize, or change initialize rejection to HTTP 404/-32601 so conformance --requirements 2026-07-28 can pass?",
+    "Who owns Gate A 25 live stdio/HTTP capture of Claude Code 2.1.273, Codex 0.154.0, and grok 1.0.34 against nlp-mcp?"
+  ]
+}

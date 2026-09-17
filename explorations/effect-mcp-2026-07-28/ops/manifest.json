@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "effect-mcp-2026-07-28",
+    "title": "Effect MCP 2026-07-28 Stateless Protocol Adoption",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Align: reopen G4 (2026-07-28 only)? A 2026-only protocol list rejects `initialize` from every in-repo wire client, and no server-minted stable identity exists for GovernedTierGate; upstream supports mixed lists with one stateless adapter.",
+      "Align: which stateless identity anchor (authenticated principal, requestState, MRTR per-call approval) replaces mcp-session-id for GovernedTierGate grants and hash chains?",
+      "Align: fix or rewrite the in-repo MCP HTTP clients (sidecar integration harness, live-mcp-client) that break on SSE-converted responses at the snapshot?",
+      "Synthesis: RESEARCH.md, impact matrix, PR train sizing from the verified claims (Gate C review pending)."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-09-16",
+    "updated": "2026-09-17"
+  }
+}

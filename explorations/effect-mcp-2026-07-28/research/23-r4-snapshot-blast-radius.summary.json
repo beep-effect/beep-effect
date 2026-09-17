@@ -1,0 +1,21 @@
+{
+  "lane": "23-r4-snapshot-blast-radius",
+  "path": "research/23-r4-snapshot-blast-radius.md",
+  "claimCount": 30,
+  "topRisks": [
+    "Native @effect/sql-pg timestamp/timestamptz decode is now Date (was epoch ms); drizzle defaults to string mode; default PGlite tests will miss it.",
+    "Unregistered sql-pg OIDs decode as UTF-8 text (was Uint8Array); invalid UTF-8 closes the connection; enum arrays may garble.",
+    "Stream.scan(\"\", ...) at source-discovery.ts:338 is a type error and would throw at runtime without the LazyArg wrap; source-discovery tests never run that stream.",
+    "platform-node-shared write patch still matches source but is keyed to 4.0.0-rc.115; dist apply to the pkg.pr.new tarball is unverified — a failed patch silently restores the write-offset bug.",
+    "Effect.orElseSucceed now passes the error (369 call sites); 0-arity thunks are fine, but this is a failure-path behavior change typecheck already accepted."
+  ],
+  "decisionChallenges": [
+    "G7 pin-only first PR still typechecks (spike) but ships native sql-pg Date/OID decode changes that turbo check and in-process PGlite tests will not catch. Decide whether the pin PR must include a native-wire timestamp/enum proof, or accept that risk until a later RC."
+  ],
+  "grillQuestions": [
+    "Does any production path use native @effect/sql-pg (PostgresClient.make / pg-external) against timestamp or enum columns, or is everything in-process PGlite?",
+    "If native sql-pg is in play, should drizzle timestamp columns stay mode string (and we convert Date), switch to mode date, or re-register numeric codecs?",
+    "Must the first snapshot PR re-roll and re-key the platform-node-shared patch the way #1060 did, or is 'bun install applies the rc.115-keyed patch' enough?",
+    "Should Stream.scan / EffectSchema type fixes land in the pin PR (spike already needed them for check) even though they are not MCP?"
+  ]
+}
