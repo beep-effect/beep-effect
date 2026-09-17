@@ -407,6 +407,7 @@ describe("CI runner security", () => {
       git(["init"]);
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
+      git(["config", "commit.gpgsign", "false"]);
       yield* fs.makeDirectory(path.join(tempRoot, "goals", "example"), { recursive: true });
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# baseline\n");
       git(["add", "."]);
@@ -491,6 +492,7 @@ describe("CI runner security", () => {
       git(["init"]);
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
+      git(["config", "commit.gpgsign", "false"]);
       yield* writeAndCommit("README.md", "# baseline\n", "baseline");
       git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
       const baseline = git(["rev-parse", "HEAD"]);
@@ -617,6 +619,7 @@ describe("CI runner security", () => {
       git(["init"]);
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
+      git(["config", "commit.gpgsign", "false"]);
       yield* fs.writeFileString(path.join(tempRoot, "README.md"), "# baseline\n");
       git(["add", "."]);
       git(["commit", "-m", "baseline"]);
