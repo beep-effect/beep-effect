@@ -2221,3 +2221,17 @@ in the law command's flag help to prevent a vacuous success from looking like pr
 - Prevention: when fetch-prune fails, `ff-main` should retry the fetch or refuse. The step should
   also print the commit it reached and whether that commit contains the retired PR's merge commit.
 
+## 2026-09-16 — a detached publish lost its PR to one transient DNS failure
+
+- Doing: `yeet publish --start-pr-early --monitor --pr --detach` for the C4a branch, minutes after
+  a workstation reboot.
+- Evidence: the job's first push died with `ssh: Could not resolve hostname github.com: No address
+  associated with hostname`, then `yeet start-pr-early push phase failed` and the job ended before
+  proving anything. `getent hosts github.com` and `git ls-remote` succeeded moments later from the
+  same checkout, so the name resolution was momentarily unavailable rather than misconfigured.
+  Because `--start-pr-early` pushes first, the whole publish was lost to one failed DNS lookup, and
+  no PR existed to carry the proof.
+- Prevention: the early push should retry a transient network failure (unresolvable host, refused
+  connection, broken transport) a few times before failing the publish, and say which attempt
+  failed. Distinguish it from a rejected push, which must still fail immediately.
+
