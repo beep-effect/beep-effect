@@ -4,9 +4,17 @@ import {
   buildEffectReport,
   buildNodeReport,
   buildTurboReport,
+  CategorySelectionService,
+  CategorySelectionServiceLive,
+  exactVersionFromSpecifier,
   extractBunArchiveChecksum,
+  ReportRendererService,
+  ReportRendererServiceLive,
+  RootPackageJsonDocument,
+  readLockfileResolvedVersion,
   resolveBunVersions,
   resolveEffectCatalog,
+  resolveInstalledToolVersion,
   resolveNodeVersions,
   resolveTurboSchema,
   TurboConfigFile,
@@ -14,7 +22,11 @@ import {
   UpdateApplierService,
   UpdateApplierServiceLive,
   updateCatalogEntry,
+  updateJsoncSchemaUrl,
   updateVercelBunVersion,
+  VersionCategoryReport,
+  VersionDriftItem,
+  VersionSyncOptions,
   VersionSyncReport,
   VersionSyncResolution,
 } from "@beep/repo-cli/test/VersionSync";
@@ -23,7 +35,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -41,6 +53,8 @@ const VersionSyncTestLayer = Layer.mergeAll(
   NodeServices.layer,
   FetchHttpClient.layer,
   UpdateApplierServiceLive,
+  CategorySelectionServiceLive,
+  ReportRendererServiceLive,
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
 );
 
@@ -560,7 +574,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 });
 
 layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
-  const writeTurboWorkspace = Effect.fn(function* (tmpDir: string) {
+  const writeTurboWorkspace = Effect.fn(function* (tmpDir: string, options: { readonly lockfile: boolean }) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const appDir = path.join(tmpDir, "apps", "web");
@@ -579,6 +593,26 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
         devDependencies: { turbo: "catalog:" },
       })
     );
+    if (options.lockfile) {
+      // The lockfile resolves a newer patch than the catalog floor; the
+      // installed binary is 2.10.14, so the schema pin must follow it.
+      yield* fs.writeFileString(
+        path.join(tmpDir, "bun.lock"),
+        A.join(
+          [
+            "{",
+            '  "lockfileVersion": 1,',
+            '  "workspaces": { "": { "name": "turbo-fixture" } },',
+            '  "packages": {',
+            '    "turbo": ["turbo@2.10.14", "", { "bin": { "turbo": "bin/turbo" } }, "sha512-fixture"],',
+            "  }",
+            "}",
+            "",
+          ],
+          "\n"
+        )
+      );
+    }
     yield* fs.writeFileString(path.join(appDir, "package.json"), encodeJson({ name: "@fixture/web" }));
     yield* fs.writeFileString(path.join(libDir, "package.json"), encodeJson({ name: "@fixture/lib" }));
     yield* fs.writeFileString(path.join(bareDir, "package.json"), encodeJson({ name: "@fixture/bare" }));
@@ -609,16 +643,16 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
 
   describe("resolveTurboSchema", () => {
     it.effect(
-      "reports drift for every turbo.json whose $schema is not the installed turbo release URL",
+      "reports drift as URL pairs for every turbo.json whose $schema is not the lockfile-resolved turbo release URL",
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const tmpDir = yield* fs.makeTempDirectory();
-        yield* writeTurboWorkspace(tmpDir);
+        yield* writeTurboWorkspace(tmpDir, { lockfile: true });
 
         const state = yield* resolveTurboSchema(tmpDir);
         const report = buildTurboReport(state);
 
-        expect(state.installedVersion).toBe("2.10.13");
+        expect(state.installedVersion).toBe("2.10.14");
         expect(A.map(state.files, (file) => file.file)).toEqual([
           "turbo.json",
           "apps/web/turbo.json",
@@ -626,11 +660,45 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
         ]);
         expect(report.category).toBe("turbo");
         expect(report.status).toBe("drift");
-        expect(report.latest).toEqual(O.some("2.10.13"));
-        expect(A.map(report.items, (item) => [item.file, item.current, item.expected])).toEqual([
-          ["turbo.json", "2.10.2", "2.10.13"],
-          ["apps/web/turbo.json", "https://turborepo.com/schema.json", "2.10.13"],
+        expect(report.latest).toEqual(O.some("2.10.14"));
+        expect(A.map(report.items, (item) => [item.file, item.field, item.current, item.expected])).toEqual([
+          [
+            "turbo.json",
+            "$schema",
+            "https://v2-10-2.turborepo.dev/schema.json",
+            "https://v2-10-14.turborepo.dev/schema.json",
+          ],
+          [
+            "apps/web/turbo.json",
+            "$schema",
+            "https://turborepo.com/schema.json",
+            "https://v2-10-14.turborepo.dev/schema.json",
+          ],
+          [
+            "packages/lib/turbo.json",
+            "$schema",
+            "https://v2-10-13.turborepo.dev/schema.json",
+            "https://v2-10-14.turborepo.dev/schema.json",
+          ],
         ]);
+
+        yield* fs.remove(tmpDir, { recursive: true });
+      })
+    );
+
+    it.effect(
+      "falls back to the range-stripped catalog pin when bun.lock has no turbo entry",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectory();
+        yield* writeTurboWorkspace(tmpDir, { lockfile: false });
+
+        const state = yield* resolveTurboSchema(tmpDir);
+        const report = buildTurboReport(state);
+
+        expect(state.installedVersion).toBe("2.10.13");
+        expect(report.status).toBe("drift");
+        expect(A.map(report.items, (item) => item.file)).toEqual(["turbo.json", "apps/web/turbo.json"]);
 
         yield* fs.remove(tmpDir, { recursive: true });
       })
@@ -666,7 +734,7 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const tmpDir = yield* fs.makeTempDirectory();
-        yield* writeTurboWorkspace(tmpDir);
+        yield* writeTurboWorkspace(tmpDir, { lockfile: true });
 
         const report = buildTurboReport(yield* resolveTurboSchema(tmpDir));
         const resolution = VersionSyncResolution.make({
@@ -676,16 +744,21 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
         const updater = yield* UpdateApplierService;
         const applied = yield* updater.apply(tmpDir, resolution);
 
-        expect(applied).toBe(2);
+        expect(applied).toBe(3);
 
         const rootTurbo = yield* fs.readFileString(path.join(tmpDir, "turbo.json"));
         expect(rootTurbo).toContain("// root pipeline");
-        expect(rootTurbo).toContain('"$schema": "https://v2-10-13.turborepo.dev/schema.json"');
+        expect(rootTurbo).toContain('"$schema": "https://v2-10-14.turborepo.dev/schema.json"');
 
         const appTurbo = (yield* decodeUnknownJson(
           yield* fs.readFileString(path.join(tmpDir, "apps", "web", "turbo.json"))
         )) as Record<string, unknown>;
-        expect(appTurbo.$schema).toBe("https://v2-10-13.turborepo.dev/schema.json");
+        expect(appTurbo.$schema).toBe("https://v2-10-14.turborepo.dev/schema.json");
+
+        const libTurbo = (yield* decodeUnknownJson(
+          yield* fs.readFileString(path.join(tmpDir, "packages", "lib", "turbo.json"))
+        )) as Record<string, unknown>;
+        expect(libTurbo.$schema).toBe("https://v2-10-14.turborepo.dev/schema.json");
 
         const bareTurbo = (yield* decodeUnknownJson(
           yield* fs.readFileString(path.join(tmpDir, "packages", "bare", "turbo.json"))
@@ -694,6 +767,222 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
 
         const rerun = buildTurboReport(yield* resolveTurboSchema(tmpDir));
         expect(rerun.status).toBe("ok");
+
+        yield* fs.remove(tmpDir, { recursive: true });
+      })
+    );
+  });
+});
+
+layer(VersionSyncTestLayer)("VersionSync report surface", (it) => {
+  const driftItem = VersionDriftItem.make({
+    file: "turbo.json",
+    field: "$schema",
+    current: "https://turborepo.com/schema.json",
+    expected: "https://v2-10-14.turborepo.dev/schema.json",
+    line: O.none(),
+  });
+
+  const allCategories: ReadonlyArray<VersionCategoryReport> = [
+    VersionCategoryReport.cases.bun.make({ status: "ok", items: [], latest: O.some("1.4.2"), error: O.none() }),
+    VersionCategoryReport.cases.node.make({ status: "unpinned", items: [], latest: O.none(), error: O.none() }),
+    VersionCategoryReport.cases.docker.make({
+      status: "error",
+      items: [],
+      latest: O.none(),
+      error: O.some("registry unreachable"),
+    }),
+    VersionCategoryReport.cases.biome.make({ status: "ok", items: [], latest: O.some("2.5.6"), error: O.none() }),
+    VersionCategoryReport.cases.effect.make({ status: "ok", items: [], latest: O.none(), error: O.none() }),
+    VersionCategoryReport.cases.turbo.make({
+      status: "drift",
+      items: [driftItem],
+      latest: O.some("2.10.14"),
+      error: O.none(),
+    }),
+  ];
+
+  const captureConsole = Effect.fnUntraced(function* <A, E, R>(program: Effect.Effect<A, E, R>) {
+    const lines: Array<string> = [];
+    const current = yield* Console.Console;
+    const recording: Console.Console = {
+      ...current,
+      log: (...args: ReadonlyArray<unknown>) => {
+        lines.push(A.join(A.map(args, String), " ").replace(/^\n+/, ""));
+      },
+    };
+    yield* program.pipe(Effect.provideService(Console.Console, recording));
+    return lines;
+  });
+
+  describe("ReportRendererService", () => {
+    it.effect(
+      "labels every category, prints drift rows as URL pairs, and tailors the footer to the mode",
+      Effect.fn(function* () {
+        const renderer = yield* ReportRendererService;
+        const report = VersionSyncReport.make({ categories: allCategories, hasDrift: true });
+
+        const check = yield* captureConsole(renderer.renderReport(report, "check"));
+        expect(check).toContain("Turbo Schema:");
+        expect(check).toContain("Bun Runtime:");
+        expect(check).toContain("Node.js Runtime:");
+        expect(check).toContain("Docker Images:");
+        expect(check).toContain("Biome Schema:");
+        expect(check).toContain("Effect Catalog:");
+        expect(check).toContain(
+          "  turbo.json $schema: https://turborepo.com/schema.json -> https://v2-10-14.turborepo.dev/schema.json"
+        );
+        expect(check).toContain("  Status: DRIFT");
+        expect(check).toContain("  Status: UNPINNED");
+        expect(check).toContain("  Error: registry unreachable");
+        expect(check).toContain("Run `beep version-sync --write` to apply fixes.");
+
+        const dryRun = yield* captureConsole(renderer.renderReport(report, "dry-run"));
+        expect(dryRun).toContain("Run `beep version-sync --write` to apply these changes.");
+
+        const write = yield* captureConsole(renderer.renderReport(report, "write"));
+        expect(A.some(write, (line) => line.startsWith("Run `beep version-sync"))).toBe(false);
+
+        const clean = yield* captureConsole(
+          renderer.renderReport(VersionSyncReport.make({ categories: [allCategories[0]!], hasDrift: false }), "check")
+        );
+        expect(clean).toContain("  Status: OK (no drift)");
+        expect(clean).toContain("All versions are in sync.");
+      })
+    );
+  });
+
+  describe("CategorySelectionService", () => {
+    const options = (overrides: Partial<Omit<VersionSyncOptions, "mode">>) =>
+      VersionSyncOptions.cases.check.make({ ...overrides });
+
+    it.effect(
+      "checks every category without a filter and only the flagged category with one",
+      Effect.fn(function* () {
+        const selection = yield* CategorySelectionService;
+
+        expect(selection.selectedCategories(options({}))).toEqual([
+          "bun",
+          "node",
+          "docker",
+          "biome",
+          "effect",
+          "turbo",
+        ]);
+        expect(selection.selectedCategories(options({ turboOnly: true }))).toEqual(["turbo"]);
+        expect(selection.selectedCategories(options({ bunOnly: true, biomeOnly: true }))).toEqual(["bun", "biome"]);
+        expect(selection.shouldCheck(options({ nodeOnly: true }), "docker")).toBe(false);
+        expect(selection.shouldCheck(options({ dockerOnly: true }), "docker")).toBe(true);
+        expect(selection.shouldCheck(options({ effectOnly: true }), "effect")).toBe(true);
+      })
+    );
+  });
+});
+
+layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
+  describe("exactVersionFromSpecifier", () => {
+    it("strips range prefixes and stringifies non-string specifiers", () => {
+      expect(exactVersionFromSpecifier("^2.10.13")).toBe("2.10.13");
+      expect(exactVersionFromSpecifier("~2.5.6")).toBe("2.5.6");
+      expect(exactVersionFromSpecifier(">=1.0.0")).toBe("1.0.0");
+      expect(exactVersionFromSpecifier(42)).toBe("42");
+      expect(Object.keys(RootPackageJsonDocument.make({}).catalog)).toHaveLength(0);
+    });
+  });
+
+  describe("resolveInstalledToolVersion", () => {
+    it.effect(
+      "ignores a lockfile entry that is not a <name>@<version> specifier and falls back to devDependencies",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectory();
+
+        yield* fs.writeFileString(
+          path.join(tmpDir, "package.json"),
+          encodeJson({ name: "fixture", devDependencies: { turbo: "~2.10.13" } })
+        );
+        yield* fs.writeFileString(
+          path.join(tmpDir, "bun.lock"),
+          encodeJson({ lockfileVersion: 1, packages: { turbo: [{ unexpected: true }, ""] } })
+        );
+
+        expect(yield* readLockfileResolvedVersion(tmpDir, "turbo")).toEqual(O.none());
+        expect(yield* readLockfileResolvedVersion(tmpDir, "@biomejs/biome")).toEqual(O.none());
+        expect(yield* resolveInstalledToolVersion(tmpDir, "turbo")).toBe("2.10.13");
+        expect(yield* resolveInstalledToolVersion(tmpDir, "@biomejs/biome")).toBe("");
+
+        yield* fs.remove(tmpDir, { recursive: true });
+      })
+    );
+
+    it.effect(
+      "fails with a typed error when bun.lock is not JSONC",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectory();
+
+        yield* fs.writeFileString(path.join(tmpDir, "bun.lock"), "not json");
+
+        const failure = yield* readLockfileResolvedVersion(tmpDir, "turbo").pipe(Effect.flip);
+        expect(failure._tag).toBe("VersionSyncError");
+        expect(failure.file).toBe("bun.lock");
+
+        yield* fs.remove(tmpDir, { recursive: true });
+      })
+    );
+  });
+
+  describe("turbo error paths", () => {
+    it("reports an unpinned turbo as a category error naming the lockfile first", () => {
+      const report = buildTurboReport(TurboSchemaState.make({}));
+
+      expect(report.status).toBe("ok");
+      expect(report.items).toHaveLength(0);
+      expect(report.error).toEqual(O.some("turbo not found in bun.lock, the root catalog, or devDependencies"));
+    });
+
+    it.effect(
+      "fails with a typed error when a workspace turbo.json is not JSONC",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectory();
+        const appDir = path.join(tmpDir, "apps", "web");
+
+        yield* fs.makeDirectory(appDir, { recursive: true });
+        yield* fs.writeFileString(
+          path.join(tmpDir, "package.json"),
+          encodeJson({ name: "fixture", workspaces: ["apps/*"], catalog: { turbo: "2.10.13" } })
+        );
+        yield* fs.writeFileString(path.join(appDir, "package.json"), encodeJson({ name: "@fixture/web" }));
+        yield* fs.writeFileString(path.join(appDir, "turbo.json"), "{ not: valid");
+
+        const failure = yield* resolveTurboSchema(tmpDir).pipe(Effect.flip);
+        expect(failure._tag).toBe("VersionSyncError");
+        expect(failure.file).toBe("apps/web/turbo.json");
+
+        yield* fs.remove(tmpDir, { recursive: true });
+      })
+    );
+  });
+
+  describe("updateJsoncSchemaUrl", () => {
+    it.effect(
+      "rewrites once and reports no change when the URL is already pinned",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectory();
+        const file = path.join(tmpDir, "turbo.json");
+        const url = "https://v2-10-14.turborepo.dev/schema.json";
+
+        yield* fs.writeFileString(file, '{\n  // pinned\n  "$schema": "https://turborepo.com/schema.json"\n}\n');
+
+        expect(yield* updateJsoncSchemaUrl(file, url)).toBe(true);
+        expect(yield* updateJsoncSchemaUrl(file, url)).toBe(false);
+        expect(yield* fs.readFileString(file)).toContain("// pinned");
 
         yield* fs.remove(tmpDir, { recursive: true });
       })
