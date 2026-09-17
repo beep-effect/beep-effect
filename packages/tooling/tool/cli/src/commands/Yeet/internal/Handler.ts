@@ -29,7 +29,6 @@ import {
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { printCommandJson } from "../../../internal/cli/Json.ts";
 import { GhPrView } from "../../../internal/github/index.ts";
 import {
@@ -114,7 +113,7 @@ import {
 } from "./Planner.ts";
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
 import { ProofJobOutcome, ProofJobRunner } from "./ProofJob.ts";
-import { ProofJobLauncher } from "./ProofJobLauncher.ts";
+import { updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
 import {
   acquireFullProofFallbackLockOrObserveAtPath,
   assertReusableVerifiedState,
@@ -153,7 +152,6 @@ import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuaran
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
-import type { ProofJobLauncherShape } from "./ProofJobLauncher.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdict.ts";
 
@@ -1520,19 +1518,6 @@ const readFlakeQuarantineIncidents = Effect.fn("Yeet.readFlakeQuarantineIncident
     Effect.orElseSucceed(A.empty<FlakeQuarantineIncident>)
   );
 });
-
-const updateProofJobBookkeeping = Effect.fn("Yeet.updateProofJobBookkeeping")(
-  function* (
-    repoRoot: string,
-    update: (launcher: ProofJobLauncherShape, id: UUID) => Effect.Effect<unknown, YeetCommandError>
-  ) {
-    const job = yield* configStringOption("BEEP_YEET_JOB_ID");
-    if (O.isNone(job)) return;
-    const jobId = yield* decodeUUID(job.value).pipe(Effect.mapError(YeetCommandError.new("Invalid proof job id.")));
-    yield* update(yield* ProofJobLauncher.make(repoRoot), jobId);
-  },
-  Effect.catch((error) => Console.error(`[yeet] job bookkeeping failed: ${error.message}`))
-);
 
 const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   plan: RepoRunPlan,
