@@ -2235,3 +2235,18 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   connection, broken transport) a few times before failing the publish, and say which attempt
   failed. Distinguish it from a rejected push, which must still fail immediately.
 
+## 2026-09-17 — a local proof is hostage to the desktop 1Password agent
+
+- Doing: the C4a full proof as a detached job, shortly after a workstation reboot.
+- Evidence: `quality:coverage` failed with 29 red tests across suites the branch never touched
+  (package-verify, tmpfs-reap, yeet-portfolio-index-guard, yeet-review-fixes, the warm-cache
+  test). Every one carried the same cause: `error: 1Password: Could not connect to socket. Is the
+  agent running?` then `fatal: failed to write commit object`. Those fixtures create a temporary
+  git repository and commit, inheriting the operator's global `commit.gpgsign=true` with the
+  1Password SSH signer, so a brief agent outage reads as a repo-wide test failure. Hosted CI never
+  sees this because no signing config exists there.
+- Prevention: fixtures that commit should disable signing, the way several already do
+  (`git config commit.gpgsign false` after `git init`, or `-c commit.gpgsign=false` on the
+  commit). Tracked as separate work; this packet only records the attribution cost, which was one
+  eleven-minute coverage lane plus the read to prove the failures were environmental.
+
