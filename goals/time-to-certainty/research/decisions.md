@@ -680,3 +680,36 @@ Live acceptance (2026-09-16), ruling 58: `bun run beep ci local --lanes labs` di
 `labs` with input digest `de139ae3…`. Recomputing SHA-256 over the sorted `taskId=hash` lines of
 the 15 `check`/`lint`/`test` rows in that run's summary reproduces the same digest; the 38
 upstream rows are absent from it.
+
+## 2026-09-16 — C4a legacy proof stores, round 18 (two rulings, proposed by the orchestrator, ratified by merge of the C4a PR; numbered after C3 Labs' 58)
+
+Context: PLAN C4a names two legacy proof stores that must never become ProofFact sources. A read
+of main at `f6b40bb8e0` found them in different states. Store 1, the `YeetLaneProofState` rows in
+`YeetRunState.laneProofs`, is written to each run's `state.json` by `writeVerifiedState` at three
+Handler call sites and has no reader: `loadVerifiedState` decodes the state, and nothing reads the
+`laneProofs` field. Store 2, the `LaneProofRecord` rows in `.beep/yeet/lane-proofs.json`, is a live
+exact-match reuse path. `Quality/Tasks.ts` prepares a session, checks `hasReusableLaneProof` and
+persists records, and the Yeet planner sets `BEEP_YEET_LANE_PROOF_MODE=active` for every Yeet run.
+`ProofLedger` has no production consumer yet, and neither `ProofLedger.ts` nor `ProofFact.ts`
+imports either store. SPEC's C1 paragraph still called store 1 "the migration source", which the
+PLAN C4a wording ("never migrate them") had already overruled.
+
+**Ruling 59 (C4a-1) — store 1 retires now, with no migration.** `YeetLaneProofState`, the
+`laneProofs` field and its per-step builder are deleted, and `writeVerifiedState` keeps writing
+only the run-level proof state its readers use. State files written before this change still
+decode, because Effect Schema ignores excess keys by default; a test loads a legacy file carrying a
+`laneProofs` row and asserts the decoded state has no such property. The receipt lives in
+`research/OPPORTUNITIES.md`. Rejected: waiting for C4 (a store with no reader has no reader to keep
+working) and migrating the rows into the ledger (they carry no per-lane input digest, env profile,
+epoch or provenance).
+
+**Ruling 60 (C4a-2) — store 2 keeps serving exact-match reuse until C4 enforcement replaces it,
+and it is never a fact source.** `LaneProofReuse` and `lane-proofs.json` stay live, because
+removing them now would regress the pre-push wave with nothing to take their place. C4 enforcement
+removes them in the same PR that turns ledger reuse on, with a retirement receipt; the PLAN C4 item
+carries that obligation. A test keeps `ProofLedger.ts` and `ProofFact.ts` free of imports from
+`ProofState.ts` and `LaneProofReuse.ts`, so C4's shadow wiring can only read the ledger. SPEC's C1
+paragraph now says the legacy stores are retired, not migrated. Rejected: deleting store 2 before
+C4 (it drops a working reuse path) and a shadow comparison against store 2 (its whole-tree identity
+is not the per-lane key that C4 must prove).
+

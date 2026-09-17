@@ -338,4 +338,22 @@ describe("ProofLedger", () => {
       )
     ).pipe(provideScopedLayer(PlatformLayer))
   );
+
+  // TTC rulings 59–60: the ledger and its fact schema never read a legacy proof store, so no
+  // ProofFact can be built from rows that lack per-lane input digests, env profiles, or epochs.
+  it.live("keeps the ledger and fact modules free of legacy proof-store imports", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const internal = path.join(import.meta.dirname, "..", "src", "commands", "Yeet", "internal");
+      const sources = yield* Effect.forEach(["ProofLedger.ts", "ProofFact.ts"], (file) =>
+        fs.readFileString(path.join(internal, file))
+      );
+      const legacyImports = A.filter(sources, (source) =>
+        A.some(["ProofState.ts", "LaneProofReuse.ts"], (legacy) => Str.includes(`/${legacy}"`)(source))
+      );
+      expect(A.length(sources)).toBe(2);
+      expect(legacyImports).toStrictEqual([]);
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
 });

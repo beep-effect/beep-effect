@@ -2177,3 +2177,32 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   table, or at least pin the law — this PR adds a test that every descriptor accepting
   `--summarize` replays it locally. Longer term, the C4 shadow report should list lanes that ran
   green without a digest, so a lost digest is visible rather than silent.
+
+## 2026-09-16 — C4a retirement receipt: `YeetRunState.laneProofs` was a write-only store
+
+- Doing: scoping C4a on `main` at `f6b40bb8e0`.
+- Evidence: `writeVerifiedState` hashed every proof step's command into `YeetLaneProofState` rows
+  and wrote them to each run's `state.json` on every verified proof (three Handler call sites).
+  `rg '\.laneProofs'` over the CLI source had no hits, and `loadVerifiedState` never read the
+  field. The rows cost one SHA-256 per proof step per proof, and SPEC still named them a migration
+  source for a ledger they could never correctly feed.
+- Retired (ruling 59): class, field and builder deleted, with no migration. Legacy state files
+  still decode (excess keys ignored), which a test pins. Store 2 (`lane-proofs.json`) stays live
+  until C4 enforcement removes it (ruling 60).
+- Prevention: a store should name its reader when it is added. A write-only persisted field is
+  only visible to a grep for readers, so the C4 PR should repeat that grep for `lane-proofs.json`
+  before deleting it.
+
+## 2026-09-16 — `yeet sweep --retire` fast-forwarded to a stale `origin/main` after its fetch failed
+
+- Doing: post-merge closeout of #1166 (C3 Labs) with `bun run beep yeet sweep --retire` from
+  inside the lane.
+- Evidence: the sweep reported `fetch-prune: skipped: git fetch --prune origin failed (exit 128)`
+  (transport corruption; a manual fetch minutes earlier died with `fetch-pack: invalid index-pack
+  output`), then `ff-main: executed: Updating 3a91c3f5e2..ca7362278c`. That target was the stale
+  remote-tracking ref (#1164), not the merge the sweep was closing out (#1166, `f6b40bb8e0`). The
+  clone reported success while missing the change it had just retired. A manual refetch then
+  fast-forwarded correctly.
+- Prevention: when fetch-prune fails, `ff-main` should retry the fetch or refuse. The step should
+  also print the commit it reached and whether that commit contains the retired PR's merge commit.
+
