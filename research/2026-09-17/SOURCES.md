@@ -82,7 +82,20 @@ typescript-sdk#2818 still draft OPEN (phase-1 /ext/skills).
 https://github.com/modelcontextprotocol/typescript-sdk/pull/2818
 ```
 ```
-go-sdk#1238 / python-sdk#3485 still OPEN; #3306 frozen Sep 1; #3004 not Final.
+go-sdk#1238 still OPEN; no Sep 16–17 Tier-1 merge.
+https://github.com/modelcontextprotocol/go-sdk/pull/1238
+```
+```
+python-sdk#3485 still OPEN; mergeable_state=blocked.
+https://github.com/modelcontextprotocol/python-sdk/pull/3485
+```
+```
+#3306 frozen Sep 1; still OPEN.
+https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3306
+```
+```
+SEP-3004 still OPEN/proposal; not Final.
+https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3004
 ```
 ```
 arXiv 2609.17274 After the Party; 2609.14780 Stochastic Deputy; 2609.15779 EvoOntology.

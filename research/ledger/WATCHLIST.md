@@ -27,12 +27,12 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-harvey-everlaw-mcp | Harvey-Everlaw MCP evidence bridge | still expected fall 2026; not GA | harvey.ai blog live Sep 17 | keep |
 | w-everlaw-first-party-mcp | Everlaw hosted MCP | api.everlaw.com/v1/mcp OAuth read-only | Everlaw MCP KB | keep |
 | w-mcp-enterprise-ig | MCP Enterprise IG | #3306 still OPEN (last 2026-09-01) | mcp#3306 | keep |
-| w-jazz-wire-v1 | Jazz sync wire | **alpha.55 cut; wire protocol v2** — rename watch mentally to wire-v2; v1 peers incompatible | jazz-tools@2.0.0-alpha.55 | keep |
+| w-jazz-wire-v1 | Jazz sync wire | **alpha.55 cut; wire protocol v2** — rename watch mentally to wire-v2; v1 peers incompatible | jazz-tools@2.0.0-alpha.55 | retire-after-admit |
 | w-uspto-oed-ai | USPTO OED AI discipline | first generative-AI-predicated order | IPWatchdog D2026-16 | keep |
 | w-rayrun-sep2640 | Rayrun SEP-2640 host | host implements draft skills/list+get | ray.run/docs/skills | keep |
-| w-effect-rc115 | effect@4.0.0-rc.115 tip | tip unchanged Sep 16; watch #8201 → rc.116 | effect@4.0.0-rc.115 | keep |
+| w-effect-rc115 | effect@4.0.0-rc.115 tip | tip unchanged Sep 17; watch #8201 → rc.116 | effect@4.0.0-rc.115 | keep |
 | w-effect-mcp-adapter | Effect MCP 2026-07-28 adapter | #7265 MERGED; #8228/#8242 on main; npm pending #8201 / rc.116 | Effect#7265; #8228; #8242; #8201 | keep |
-| w-effect-rc116 | effect@4.0.0-rc.116 staged | #8201 OPEN updated Sep 16; still unpublished | Effect#8201 | keep |
+| w-effect-rc116 | effect@4.0.0-rc.116 staged | #8201 OPEN updated Sep 17; still unpublished | Effect#8201 | keep |
 | w-skillscan | agent-skill-security-scanner | offline fail-closed static scanner | harness-eval 2609.07360 | keep |
 | w-agent-plugins-coevo | Agent Plugins co-evolution | HookPry + Scanning the Harness | arXiv 2609.03884, 2609.07360 | keep |
 | w-public-law-mcp | Public-law jurisdiction MCP | Iceland PoC + german-legal-mcp | metaneutrons/german-legal-mcp | keep |
@@ -48,7 +48,7 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-mcp-registry-draw | MCP registry unrepaired sample | 48.8% initialize; 37.5% never start | arXiv 2609.10962 | keep |
 | w-cobra-skills | COBRA-Skills bandit skill evolution | budgeted skill optimization | arXiv 2609.11682 | keep |
 | w-nobox-mcp | No-Box MCP prompt-injection scan | description-only IPI detection | arXiv 2609.10854 | keep |
-| w-schema-jit | SchemaJIT/AOT compilers | #7908 draft OPEN; updated Sep 16 | Effect#7908 | keep |
+| w-schema-jit | SchemaJIT/AOT compilers | #7908 draft OPEN; updated Sep 17 | Effect#7908 | keep |
 | w-sep2640-final-unmerged | SEP-2640 Final≠merged | **SETTLED merged** — retire after admit; replace with SDK-ship watch | mcp#2640 merged 2026-09-13 | retire-after-admit |
 | w-zero-canary | Rocicorp Zero canary channel | tip now 1.10.0-canary.22 (Sep 16); latest 1.9.0 | npm zero canary.22 | keep |
 | w-patent-kb-connect | patent-kb-connect hosted MCP | 727k US patent MCP created Sep 12 | blazingbunny/patent-kb-connect | keep |

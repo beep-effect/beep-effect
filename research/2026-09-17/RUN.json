@@ -37,6 +37,13 @@
     ],
     "note": "Hard collision is intentional SEP-2640 re-cite after settle; soft-exclusion absorbs from orphaned 09-16. Gate <40% pass."
   },
+  "quotaPools": {
+    "search": "web+github-mcp+arxiv+npm",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
   "frictions": [
     {
       "source": "user-X",
