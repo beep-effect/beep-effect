@@ -43,20 +43,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/ProofState");
 const textEncoder = new TextEncoder();
 const fingerprintSeparator = new Uint8Array([0]);
 
-class YeetLaneProofState extends S.Class<YeetLaneProofState>($I`YeetLaneProofState`)(
-  {
-    commandHash: S.String,
-    commandText: S.String,
-    diffFingerprint: S.String,
-    stepId: S.String,
-    label: S.String,
-    verifiedAt: S.String,
-  },
-  $I.annote("YeetLaneProofState", {
-    description: "One durable per-lane proof record keyed by command and tree fingerprint.",
-  })
-) {}
-
 class YeetRunState extends S.Class<YeetRunState>($I`YeetRunState`)(
   {
     schemaVersion: S.Literal("yeet-run-state/v1"),
@@ -70,11 +56,9 @@ class YeetRunState extends S.Class<YeetRunState>($I`YeetRunState`)(
     proofTier: YeetProofTier,
     runId: S.String,
     verifiedAt: S.String,
-    laneProofs: S.Array(YeetLaneProofState).pipe(
-      S.withConstructorDefault(Effect.succeed(A.empty<YeetLaneProofState>())),
-      S.withDecodingDefault(Effect.succeed(A.empty<YeetLaneProofState>()))
-    ),
   },
+  // TTC ruling 59: the per-lane `laneProofs` rows this state once carried had no reader and are
+  // retired, never migrated. Older state files still decode because excess keys are ignored.
   $I.annote("YeetRunState", {
     description: "Durable exact-match proof state for Yeet retry and closeout loops.",
   })
@@ -412,22 +396,6 @@ const ensureProofCoordinatorDirectory = Effect.fn("Yeet.ensureProofCoordinatorDi
     .makeDirectory(directory, { recursive: true, mode: 0o700 })
     .pipe(Effect.mapError(YeetCommandError.new(`Failed to create Yeet proof lock directory ${directory}.`)));
   yield* validateProofCoordinatorDirectory(directory, currentEffectiveUserIdOption());
-});
-
-const laneProofStateForStep = Effect.fn("Yeet.laneProofStateForStep")(function* (
-  step: RepoPlanStep,
-  diffFingerprint: string,
-  verifiedAt: string
-) {
-  const commandText = commandTextForStep(step);
-  return YeetLaneProofState.make({
-    commandHash: yield* hashText(commandText),
-    commandText,
-    diffFingerprint,
-    label: step.label,
-    stepId: step.id,
-    verifiedAt,
-  });
 });
 
 /**
@@ -1537,7 +1505,7 @@ export const releaseProofLock = Effect.fn("releaseProofLock")(function* (lease: 
  * @param context - Repo context whose branch, base, head, and artifact paths
  * are recorded.
  * @param tier - Proof tier that produced the reusable state.
- * @param proofSteps - Proof steps whose command hashes are persisted.
+ * @param proofSteps - Proof steps whose joined command text is persisted as the proof command.
  * @returns An Effect that completes after the state file is written.
  * @category diagnostics
  * @since 0.0.0
@@ -1555,11 +1523,6 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
   const statePath = yield* runStatePathForContext(context);
   const diffFingerprint = yield* collectDiffFingerprint(context);
   const verifiedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const laneProofs = yield* Effect.forEach(
-    proofSteps,
-    (step) => laneProofStateForStep(step, diffFingerprint, verifiedAt),
-    { concurrency: "unbounded" }
-  );
   const state = YeetRunState.make({
     schemaVersion: "yeet-run-state/v1",
     artifactDir,
@@ -1568,7 +1531,6 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
     commitSha: yield* currentCommitSha(context),
     diffFingerprint,
     head: context.head,
-    laneProofs,
     proofCommand: proofCommandForSteps(proofSteps),
     proofTier: tier,
     runId: runIdForContext(context),
