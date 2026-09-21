@@ -38,12 +38,19 @@ import {
   writeYeetAckReceipt,
   YeetAckEnvironmentOnlyResolution,
   YeetAckFixResolution,
+  YeetAckObservedResolution,
   YeetAckReceipt,
   YeetAckThreadResolution,
   YeetAckWaiveResolution,
   YeetAckWontfixResolution,
 } from "./Ack.ts";
-import { appendYeetInboxRow, describeYeetInboxRow, YeetInboxRowJson, yeetInboxExpectedRowId } from "./Inbox.ts";
+import {
+  appendYeetInboxRow,
+  describeYeetInboxRow,
+  YeetInboxRowJson,
+  yeetInboxExpectedRowId,
+  yeetInboxRowIsObserved,
+} from "./Inbox.ts";
 import { loadYeetInboxView, YeetInboxView, YeetInboxViewJson } from "./InboxView.ts";
 import type { FileSystem, Path } from "effect";
 import type { YeetAckResolution, YeetAckState } from "./Ack.ts";
@@ -86,6 +93,7 @@ interface YeetAckResolutionFlags {
   readonly environmentOnly: boolean;
   readonly expiresAt: string;
   readonly fixSha: string;
+  readonly observed?: boolean;
   readonly reason: string;
   readonly shard: string;
   readonly threadUrl: string;
@@ -274,7 +282,7 @@ export const parseYeetAckResolution = Effect.fn("Yeet.parseYeetAckResolution")(f
   if (!A.isReadonlyArrayNonEmpty(candidates) || A.length(candidates) !== 1) {
     return yield* YeetCommandError.make({
       message:
-        "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry.",
+        "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry, or --observed for a proof job or a merge-ready row.",
     });
   }
   return A.headNonEmpty(candidates);
@@ -311,6 +319,7 @@ const yeetAckReasonRuleViolation = (flags: YeetAckResolutionFlags): O.Option<str
 // empty reason here.
 const yeetAckResolutionCandidates = (flags: YeetAckResolutionFlags): ReadonlyArray<YeetAckResolution> =>
   A.getSomes([
+    flags.observed === true ? O.some(YeetAckObservedResolution.make({ via: "inbox-ack" })) : O.none(),
     Str.isNonEmpty(flags.fixSha) ? O.some(YeetAckFixResolution.make({ sha: flags.fixSha })) : O.none(),
     flags.environmentOnly ? O.some(YeetAckEnvironmentOnlyResolution.make({ reason: flags.reason })) : O.none(),
     flags.wontfix ? O.some(YeetAckWontfixResolution.make({ reason: flags.reason })) : O.none(),
@@ -402,6 +411,11 @@ export const ackYeetInboxRow = Effect.fn("Yeet.ackYeetInboxRow")(function* (
   if (O.isNone(entry)) {
     return yield* YeetCommandError.make({
       message: `No inbox row with id "${id}". Run "bun run beep yeet inbox list" to see the known rows.`,
+    });
+  }
+  if (resolution.kind === "observed" && !yeetInboxRowIsObserved(entry.value.row)) {
+    return yield* YeetCommandError.make({
+      message: "--observed applies only to proof-job-finished and pr-merge-ready rows.",
     });
   }
   const receipt = YeetAckReceipt.make({ ackedAt, id, resolution });

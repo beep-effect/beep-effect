@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "agent-pool-doctrine",
+    "title": "Agent Pool Doctrine",
+    "status": "active",
+    "created": "2026-09-16",
+    "updated": "2026-09-16",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/agent-pool-doctrine",
+  "lifecycle": "active",
+  "mission": "Make the volume-pool order (Codex Astra above 5%, then the Cursor agent, then hold) binding in AGENTS.md and a runbook, and make the Cursor lane a measurable, structurally guarded pool.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/cursor-agent-pool",
+    "graduated": "2026-09-16"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-pool-doctrine/README.md",
+    "goals/agent-pool-doctrine/SPEC.md",
+    "goals/agent-pool-doctrine/PLAN.md",
+    "goals/agent-pool-doctrine/GOAL.md",
+    "goals/agent-pool-doctrine/research/SOURCES.md",
+    "explorations/cursor-agent-pool/BRIEF.md",
+    "explorations/cursor-agent-pool/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agent-pool-doctrine/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete",
+      "exit": "Done in the exploration: four grok-4.6 lanes, hooks smoke test, Codex meter probe."
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/agent-pool-doctrine/GOAL.md)\" -le 4000",
+    "jq . goals/agent-pool-doctrine/ops/manifest.json",
+    "rg -n \"agent-pool-doctrine|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/agent-pool-doctrine",
+    "git diff --check -- goals/agent-pool-doctrine",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep quality package-verify @beep/repo-ai-metrics --quick",
+    "jq . .cursor/hooks.json .cursor/cli.json"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

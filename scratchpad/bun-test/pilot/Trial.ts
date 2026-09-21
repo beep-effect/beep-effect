@@ -60,6 +60,11 @@ class TrialFailure extends S.TaggedError<TrialFailure>($I`TrialFailure`)(
   $I.annote("TrialFailure", { description: "A qualification, accounting, budget, or command result failed." })
 ) {}
 
+const decodeRequest = S.decodeEffect(S.fromJsonString(Request));
+const decodeReceipt = S.decodeEffect(S.fromJsonString(Receipt));
+const encodeRequest = S.encodeEffect(S.fromJsonString(Request));
+const encodeReceipt = S.encodeEffect(S.fromJsonString(Receipt));
+
 const main = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -67,7 +72,7 @@ const main = Effect.gen(function* () {
   const requestPath = yield* Effect.fromOption(A.get(process.argv, 2)).pipe(
     Effect.mapError(() => TrialFailure.make({ message: "Usage: bun Trial.ts <request.json>" }))
   );
-  const request = yield* S.decodeEffect(S.fromJsonString(Request))(yield* fs.readFileString(requestPath));
+  const request = yield* decodeRequest(yield* fs.readFileString(requestPath));
   const artifacts = path.join(request.root, ".beep", "bun-test-pilot");
   yield* fs.makeDirectory(artifacts, { recursive: true });
   const lock = path.join(artifacts, "active-trial.lock");
@@ -87,9 +92,7 @@ const main = Effect.gen(function* () {
       return yield* TrialFailure.make({ message: `Unaccounted interrupted attempt: ${name}` });
     }
     if (Str.endsWith(".receipt.json")(name)) {
-      const prior = yield* S.decodeEffect(S.fromJsonString(Receipt))(
-        yield* fs.readFileString(path.join(artifacts, name))
-      );
+      const prior = yield* decodeReceipt(yield* fs.readFileString(path.join(artifacts, name)));
       consumedMillis += prior.elapsedMillis;
     }
   }
@@ -121,7 +124,7 @@ const main = Effect.gen(function* () {
     const cgroup = path.join("/sys/fs/cgroup", relative);
     const cpuBefore = yield* fs.readFileString(path.join(cgroup, "cpu.stat"));
     const startedAtMillis = yield* Clock.currentTimeMillis;
-    yield* fs.writeFileString(pending, yield* S.encodeEffect(S.fromJsonString(Request))(request));
+    yield* fs.writeFileString(pending, yield* encodeRequest(request));
     const exitCode = yield* spawner.exitCode(ChildProcess.make("timeout", [
       "--signal=TERM", "--kill-after=5s", `${request.maxSeconds}s`, request.executable, ...request.args,
     ], {
@@ -139,7 +142,7 @@ const main = Effect.gen(function* () {
       memoryPeak: yield* fs.readFileString(path.join(cgroup, "memory.peak")),
       memoryEvents: yield* fs.readFileString(path.join(cgroup, "memory.events")),
     });
-    yield* fs.writeFileString(output, yield* S.encodeEffect(S.fromJsonString(Receipt))(receipt));
+    yield* fs.writeFileString(output, yield* encodeReceipt(receipt));
     yield* fs.remove(pending);
     yield* Console.log(`TRIAL ${request.id}: exit=${exitCode}, expected=${receipt.expected}, elapsedMs=${elapsedMillis}, budgetMs=${consumedMillis + elapsedMillis}`);
     if (!receipt.expected) return yield* TrialFailure.make({ message: `Unexpected child exit for ${request.id}; receipt retained.` });

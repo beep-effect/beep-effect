@@ -41,7 +41,7 @@ const textEncoder = new TextEncoder();
  * **Example** (Recognize an interruption)
  *
  * ```ts
- * import { YeetAttemptTerminationReason } from "@beep/repo-cli/commands/Yeet/internal/AttemptJournal"
+ * import { YeetAttemptTerminationReason } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(YeetAttemptTerminationReason.is.interrupted("interrupted")) // true
  * ```
@@ -61,6 +61,11 @@ export const YeetAttemptTerminationReason = LiteralKit([
   "stale-unverifiable-owner",
   "terminal-row-missing",
   "unrecorded-failure",
+  "oom-killed",
+  "timeout",
+  "job-start-failed",
+  "cancelled",
+  "finalizer-missing",
 ]).pipe(
   $I.annoteSchema("YeetAttemptTerminationReason", {
     description: "Abnormal reason a Yeet attempt ended without an ordinary finished row.",
@@ -73,7 +78,7 @@ export const YeetAttemptTerminationReason = LiteralKit([
  * **Example** (Name a terminal reason)
  *
  * ```ts
- * import type { YeetAttemptTerminationReason } from "@beep/repo-cli/commands/Yeet/internal/AttemptJournal"
+ * import type { YeetAttemptTerminationReason } from "@beep/repo-cli/test/Yeet"
  *
  * const reason: YeetAttemptTerminationReason = "interrupted"
  * console.log(reason) // "interrupted"
@@ -91,7 +96,7 @@ export type YeetAttemptTerminationReason = typeof YeetAttemptTerminationReason.T
  * **Example** (Reference a compaction receipt)
  *
  * ```ts
- * import { YeetAttemptJournalCompacted } from "@beep/repo-cli/commands/Yeet/internal/AttemptJournal"
+ * import { YeetAttemptJournalCompacted } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(typeof YeetAttemptJournalCompacted) // "function"
  * ```
@@ -714,3 +719,55 @@ export const appendSchedulerAttemptTerminated = Effect.fn("AttemptTerminationJou
     yield* appendEncodedAttemptJournalEvent(journalPath, line, "attempt-terminated");
   }
 );
+
+/**
+ * Append a job death once under the existing attempt-journal lock.
+ *
+ * **Example** (Reference the locked finalizer writer)
+ * ```ts
+ * import { appendProofJobAttemptTerminated } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof appendProofJobAttemptTerminated) // "function"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const appendProofJobAttemptTerminated = Effect.fn("AttemptTerminationJournal.finalizeJob")(function* (
+  journalPath: string,
+  attemptId: UUID,
+  reason: YeetAttemptTerminationReason
+): Effect.fn.Return<boolean, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  if (
+    !(yield* fs.exists(journalPath).pipe(Effect.mapError(QualitySchedulerError.new("Failed to inspect job journal."))))
+  )
+    return false;
+  const lockPath = `${journalPath}.lock`;
+  const lockToken = `${process.pid}:${randomUUID()}`;
+  if (!(yield* acquireJournalFileLock(lockPath, lockToken, LOCK_RETRY_ATTEMPTS))) {
+    return yield* QualitySchedulerError.make({ message: "Attempt journal stayed busy during proof-job finalization." });
+  }
+  const appendLocked = Effect.fnUntraced(function* () {
+    yield* repairTornJournal(journalPath);
+    const text = yield* fs
+      .readFileString(journalPath)
+      .pipe(Effect.mapError(QualitySchedulerError.new("Failed to read job attempt journal.")));
+    const events = knownJournalEvents(yield* decodeJournalLines(A.filter(Str.split(text, "\n"), Str.isNonEmpty)));
+    if (A.contains(terminalAttemptIds(events), attemptId)) return false;
+    const started = A.findFirst(
+      A.filter(events, AttemptJournalRetentionEvent.guards["attempt-started"]),
+      (event) => event.attemptId === attemptId
+    );
+    if (O.isNone(started)) return false;
+    const line = yield* encodeSchedulerTermination({
+      ...started.value,
+      _tag: "attempt-terminated",
+      reason,
+      recordedAt: yield* DateTime.now.pipe(Effect.map(DateTime.formatIso)),
+    }).pipe(Effect.mapError(QualitySchedulerError.new("Failed to encode job death.")));
+    yield* appendLinesLocked(journalPath, [line]);
+    yield* compactJournal(journalPath, [attemptId]);
+    return true;
+  });
+  return yield* Effect.ensuring(appendLocked(), releaseJournalFileLock(lockPath, lockToken));
+});

@@ -51,6 +51,7 @@ import { appendContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { safeArtifactName } from "./ArtifactPaths.ts";
+import { ProofJobRowSeverity, YeetProofJobCapsule } from "./ProofJob.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Inbox");
 
@@ -481,6 +482,147 @@ export class YeetLocalShardFailedRow extends S.Class<YeetLocalShardFailedRow>($I
 ) {}
 
 /**
+ * One merge-ready observation of a pull request head, as the merge loop
+ * recorded it.
+ *
+ * **Details**
+ *
+ * `readyAt` is the poll that first saw `merge-ready: yes` for `headSha`. The
+ * push, settle, and closeout instants and the push-to-ready wall clock are the
+ * head timeline's measurements, carried so the row alone answers "how long did
+ * certainty take" without the status artifact.
+ *
+ * **Example** (Construct a capsule)
+ *
+ * ```ts
+ * import { YeetPrMergeReadyCapsule } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetPrMergeReadyCapsule.make({
+ *   headSha: "abc123",
+ *   prNumber: 1144,
+ *   url: "https://github.com/o/r/pull/1144",
+ *   readyAt: "2026-09-16T00:12:00.000Z",
+ *   pushedAt: "2026-09-16T00:00:00.000Z",
+ *   settledAt: "2026-09-16T00:10:00.000Z",
+ *   closeoutAt: "2026-09-16T00:10:30.000Z",
+ *   pushToReadyMs: 720000
+ * })
+ * console.log(capsule.prNumber) // 1144
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetPrMergeReadyCapsule extends S.Class<YeetPrMergeReadyCapsule>($I`YeetPrMergeReadyCapsule`)(
+  {
+    headSha: S.NonEmptyString,
+    prNumber: S.Finite,
+    url: S.NullOr(S.String),
+    readyAt: S.String,
+    pushedAt: S.NullOr(S.String),
+    settledAt: S.NullOr(S.String),
+    closeoutAt: S.NullOr(S.String),
+    pushToReadyMs: S.NullOr(S.Finite),
+  },
+  $I.annote("YeetPrMergeReadyCapsule", {
+    description: "One pull request head observed merge-ready, with its push-to-ready timeline.",
+  })
+) {}
+
+/**
+ * The P1 informational row the merge loop appends once per head when merge
+ * readiness first reads `yes`.
+ *
+ * **Details**
+ *
+ * P1 means the hook injects it at the next tool boundary and never denies a
+ * tool; it is good news, not incident work. A push moves the head, so the
+ * loop supersedes the prior head's row with a `fix-sha` receipt naming the
+ * new head and appends a fresh row when the new head is ready.
+ *
+ * **Example** (Construct a merge-ready row)
+ *
+ * ```ts
+ * import { YeetPrMergeReadyCapsule, YeetPrMergeReadyRow, yeetPrMergeReadyRowId } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetPrMergeReadyCapsule.make({
+ *   headSha: "abc123", prNumber: 1144, url: null, readyAt: "2026-09-16T00:12:00.000Z",
+ *   pushedAt: null, settledAt: null, closeoutAt: null, pushToReadyMs: null
+ * })
+ * const row = YeetPrMergeReadyRow.make({
+ *   capsule, checkout: "/repo", id: yeetPrMergeReadyRowId(capsule), severity: "P1", ts: "2026-09-16T00:12:00.000Z"
+ * })
+ * console.log(row.kind) // "pr-merge-ready"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetPrMergeReadyRow extends S.Class<YeetPrMergeReadyRow>($I`YeetPrMergeReadyRow`)(
+  {
+    kind: S.tag("pr-merge-ready"),
+    schemaVersion: S.Literal(YEET_INBOX_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_INBOX_SCHEMA_VERSION))
+    ),
+    id: S.NonEmptyString,
+    severity: S.Literal("P1"),
+    checkout: S.NonEmptyString,
+    ts: S.String,
+    capsule: YeetPrMergeReadyCapsule,
+  },
+  $I.annote("YeetPrMergeReadyRow", {
+    description: "One P1 informational row: a pull request head is merge-ready for the operator.",
+  })
+) {}
+
+/**
+ * One informational result from a detached proof job.
+ *
+ * **Example** (Reference the row schema)
+ * ```ts
+ * import { YeetProofJobFinishedRow } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof YeetProofJobFinishedRow.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetProofJobFinishedRow extends S.Class<YeetProofJobFinishedRow>($I`YeetProofJobFinishedRow`)(
+  {
+    kind: S.tag("proof-job-finished"),
+    schemaVersion: S.Literal(YEET_INBOX_SCHEMA_VERSION).pipe(
+      S.withConstructorDefault(Effect.succeed(YEET_INBOX_SCHEMA_VERSION))
+    ),
+    id: S.NonEmptyString,
+    severity: ProofJobRowSeverity,
+    checkout: S.NonEmptyString,
+    ts: S.String,
+    capsule: YeetProofJobCapsule,
+  },
+  $I.annote("YeetProofJobFinishedRow", { description: "Informational completion or death of one detached proof job." })
+) {}
+
+/**
+ * Derive the stable inbox id for a proof job.
+ *
+ * **Example** (Derive an id)
+ * ```ts
+ * import { yeetProofJobRowId } from "@beep/repo-cli/test/Yeet"
+ * import { UUID } from "@beep/schema/String"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * const jobId = Effect.runSync(S.decodeEffect(UUID)("0f5c9a3e-6d3b-4c1e-9a8f-2b7d1c4e5a60"))
+ * console.log(yeetProofJobRowId({ jobId }).startsWith("proof-job-")) // true
+ * ```
+ *
+ * @param capsule - Job identity shared by the record and completion capsule.
+ * @returns The deterministic inbox acknowledgment key.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetProofJobRowId = (capsule: Pick<YeetProofJobCapsule, "jobId">): string => `proof-job-${capsule.jobId}`;
+
+/**
  * One row of the checkout inbox.
  *
  * **Details**
@@ -499,6 +641,8 @@ export const YeetInboxRow = S.Union([
   YeetReviewThreadRow,
   YeetBaseDriftRow,
   YeetLocalShardFailedRow,
+  YeetPrMergeReadyRow,
+  YeetProofJobFinishedRow,
 ]).pipe(
   $I.annoteSchema("YeetInboxRow", {
     title: "Yeet Inbox Row",
@@ -513,6 +657,87 @@ export const YeetInboxRow = S.Union([
  * @since 0.0.0
  */
 export type YeetInboxRow = typeof YeetInboxRow.Type;
+
+/**
+ * The inbox row kinds acknowledged by observation instead of an attributed closing move.
+ *
+ * **Details**
+ *
+ * Proof-job results (ruling 37) and merge-ready announcements (ruling 46) are
+ * informational. `yeet inbox ack --observed` admits exactly these kinds, and the
+ * remediation wave never owns them, so `yeet inbox list` always treats them as
+ * live. Both call sites read this one kit, so adding a kind here changes both.
+ *
+ * **Example** (Check a row kind)
+ *
+ * ```ts
+ * import { YeetInboxObservedRowKind } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetInboxObservedRowKind.is["pr-merge-ready"]("pr-merge-ready")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetInboxObservedRowKind = LiteralKit(["proof-job-finished", "pr-merge-ready"]).pipe(
+  $I.annoteSchema("YeetInboxObservedRowKind", {
+    title: "Yeet Inbox Observed Row Kind",
+    description: "Inbox row kinds acknowledged by observation: proof-job results and merge-ready announcements.",
+  })
+);
+
+/**
+ * The inbox row kinds acknowledged by observation.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetInboxObservedRowKind = typeof YeetInboxObservedRowKind.Type;
+
+const isYeetInboxObservedRowKind = S.is(YeetInboxObservedRowKind);
+
+/**
+ * Whether an inbox row is acknowledged by observation rather than an attributed closing move.
+ *
+ * **Example** (A merge-ready row is observed; a check failure is not)
+ *
+ * ```ts
+ * import {
+ *   YeetCheckFailedRow,
+ *   YeetFailureCapsule,
+ *   yeetInboxRowId,
+ *   yeetInboxRowIsObserved
+ * } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetFailureCapsule.make({
+ *   bucket: "fail",
+ *   headSha: "abc123",
+ *   lane: "Check",
+ *   link: null,
+ *   observedAt: "2026-08-17T00:00:00Z",
+ *   prNumber: 754,
+ *   state: "FAILURE",
+ *   workflow: null
+ * })
+ * const row = YeetCheckFailedRow.make({
+ *   capsule,
+ *   checkout: "/repo",
+ *   id: yeetInboxRowId(capsule),
+ *   severity: "P0",
+ *   ts: "2026-08-17T00:00:00Z"
+ * })
+ *
+ * console.log(yeetInboxRowIsObserved(row)) // false
+ * ```
+ *
+ * @param row - The inbox row to classify.
+ * @returns Whether `--observed` acknowledges the row and the list treats it as always live, narrowing the row to those kinds.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const yeetInboxRowIsObserved = (
+  row: YeetInboxRow
+): row is Extract<YeetInboxRow, { readonly kind: YeetInboxObservedRowKind }> => isYeetInboxObservedRowKind(row.kind);
 
 const yeetInboxIdentityId = (label: string, parts: ReadonlyArray<string>): string => {
   const digest = createHash("sha256").update(A.join(parts, ":")).digest("hex").slice(0, 12);
@@ -645,6 +870,31 @@ export const yeetLocalShardFailedRowId = (
 ): string => yeetInboxIdentityId("local-shard", [capsule.headSha, capsule.shard, capsule.command]);
 
 /**
+ * Derive the stable merge-ready row id for one pull request head.
+ *
+ * **Details**
+ *
+ * PR number plus head SHA: one row per head, so re-observing readiness on the
+ * same head appends nothing, and a push (new head) gets a new id.
+ *
+ * **Example** (Build a merge-ready id)
+ *
+ * ```ts
+ * import { yeetPrMergeReadyRowId } from "@beep/repo-cli/test/Yeet"
+ *
+ * const id = yeetPrMergeReadyRowId({ headSha: "abc123", prNumber: 1144 })
+ * console.log(id.startsWith("pr-merge-ready-")) // true
+ * ```
+ *
+ * @param capsule - Pull request number and head SHA.
+ * @returns A stable merge-ready receipt id.
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const yeetPrMergeReadyRowId = (capsule: Pick<YeetPrMergeReadyCapsule, "headSha" | "prNumber">): string =>
+  yeetInboxIdentityId("pr-merge-ready", [`${capsule.prNumber}`, capsule.headSha]);
+
+/**
  * Recompute the deterministic receipt id for any inbox row variant.
  *
  * **Example** (Validate a check row id)
@@ -669,11 +919,13 @@ export const yeetLocalShardFailedRowId = (
  */
 export const yeetInboxExpectedRowId = (row: YeetInboxRow): string =>
   Match.value(row).pipe(
+    Match.discriminator("kind")("proof-job-finished", ({ capsule }) => yeetProofJobRowId(capsule)),
     Match.discriminator("kind")("check-failed", (subject) => yeetInboxRowId(subject.capsule)),
     Match.discriminator("kind")("sibling-collision", (subject) => yeetSiblingCollisionRowId(subject.capsule)),
     Match.discriminator("kind")("review-thread", (subject) => yeetReviewThreadRowId(subject.capsule)),
     Match.discriminator("kind")("base-drift", (subject) => yeetBaseDriftRowId(subject.capsule)),
     Match.discriminator("kind")("local-shard-failed", (subject) => yeetLocalShardFailedRowId(subject.capsule)),
+    Match.discriminator("kind")("pr-merge-ready", (subject) => yeetPrMergeReadyRowId(subject.capsule)),
     Match.exhaustive
   );
 
@@ -703,6 +955,10 @@ export const yeetInboxExpectedRowId = (row: YeetInboxRow): string =>
 export const describeYeetInboxRow = (row: YeetInboxRow): string =>
   Match.value(row).pipe(
     Match.discriminator("kind")(
+      "proof-job-finished",
+      ({ capsule }) => `proof job ${capsule.jobId}: ${capsule.phase}; log ${capsule.logPath}`
+    ),
+    Match.discriminator("kind")(
       "check-failed",
       ({ capsule }) => `${capsule.lane} (pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)})`
     ),
@@ -722,6 +978,14 @@ export const describeYeetInboxRow = (row: YeetInboxRow): string =>
     Match.discriminator("kind")(
       "local-shard-failed",
       ({ capsule }) => `local shard ${capsule.shard} exited ${capsule.exitCode} @ ${Str.slice(0, 7)(capsule.headSha)}`
+    ),
+    Match.discriminator("kind")(
+      "pr-merge-ready",
+      ({ capsule }) =>
+        `merge-ready pr #${capsule.prNumber} @ ${Str.slice(0, 7)(capsule.headSha)}${O.match(
+          O.fromNullishOr(capsule.pushToReadyMs),
+          { onNone: () => Str.empty, onSome: (millis) => ` (push→ready ${Math.round(millis / 1000)}s)` }
+        )}`
     ),
     Match.exhaustive
   );

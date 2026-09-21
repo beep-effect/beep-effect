@@ -3140,45 +3140,48 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("serializes a same-checkout contender while allowing a sibling checkout", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const blocking = yield* writeFakeLease(tempRoot, {
-              checkoutRoot: "/repo/shared",
-              originKey: "origin-active",
-              weightTokens: 3,
-            });
-            const sameCheckout = yield* Effect.forkChild(
-              withQualityAdmission(
-                request({ checkoutRoot: "/repo/shared", originKey: "origin-contender" }),
-                noAdmissionOriginGate,
-                Effect.succeed("same-checkout"),
-                fastConfig
-              )
-            );
-
-            yield* Effect.sleep("120 millis");
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
-            expect(sameCheckout.pollUnsafe()).toBeUndefined();
-
-            const sibling = yield* withQualityAdmission(
-              request({ checkoutRoot: "/repo/sibling", originKey: "origin-contender" }),
+  // Real filesystem admission and queue polling must share the live clock.
+  it.effect("serializes a same-checkout contender while allowing a sibling checkout", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const blocking = yield* writeFakeLease(tempRoot, {
+            checkoutRoot: "/repo/shared",
+            originKey: "origin-active",
+            weightTokens: 3,
+          });
+          const sameCheckout = yield* Effect.forkChild(
+            withQualityAdmission(
+              request({ checkoutRoot: "/repo/shared", originKey: "origin-contender" }),
               noAdmissionOriginGate,
-              Effect.succeed("sibling"),
+              Effect.succeed("same-checkout"),
               fastConfig
-            );
-            expect(sibling).toBe("sibling");
+            )
+          );
 
-            yield* fs.remove(blocking, { force: true });
-            expect(yield* Fiber.join(sameCheckout)).toBe("same-checkout");
-          })
-        );
-      })
-    ));
+          const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+            until: A.isReadonlyArrayNonEmpty,
+            schedule: Schedule.spaced(Duration.millis(10)),
+          }).pipe(Effect.timeout(Duration.seconds(5)));
+          expect(queued).toHaveLength(1);
+          expect(sameCheckout.pollUnsafe()).toBeUndefined();
+
+          const sibling = yield* withQualityAdmission(
+            request({ checkoutRoot: "/repo/sibling", originKey: "origin-contender" }),
+            noAdmissionOriginGate,
+            Effect.succeed("sibling"),
+            fastConfig
+          );
+          expect(sibling).toBe("sibling");
+
+          yield* fs.remove(blocking, { force: true });
+          expect(yield* Fiber.join(sameCheckout)).toBe("same-checkout");
+        })
+      );
+    }).pipe(TestClock.withLive)
+  );
 
   it("keeps a current contender queued until a same-origin legacy lease drains", () =>
     Effect.runPromise(
@@ -3437,35 +3440,38 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("stays queued while the origin gate is busy and releases it after use", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
-          Effect.gen(function* () {
-            const busy = yield* Ref.make(true);
-            const releases = yield* Ref.make(0);
-            const tryAcquire = Effect.gen(function* () {
-              return (yield* Ref.get(busy)) ? O.none<string>() : O.some("origin-lease");
-            });
-            const gate = {
-              tryAcquire,
-              tryAcquireFallback: tryAcquire,
-              release: (_: string) => Ref.update(releases, (count) => count + 1),
-            };
-            const fiber = yield* Effect.forkChild(
-              withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig)
-            );
-            yield* Effect.sleep("100 millis");
-            expect(fiber.pollUnsafe()).toBeUndefined();
-            expect(A.length(yield* listDirectory(tempRoot.queue))).toBe(1);
-            yield* Ref.set(busy, false);
-            expect(yield* Fiber.join(fiber)).toBe("ran");
-            expect(yield* Ref.get(releases)).toBe(1);
-          })
-        );
-      })
-    ));
+  // Real filesystem admission and queue polling must share the live clock.
+  it.effect("stays queued while the origin gate is busy and releases it after use", () =>
+    Effect.gen(function* () {
+      const gibRef = yield* Ref.make(50);
+      yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
+        Effect.gen(function* () {
+          const busy = yield* Ref.make(true);
+          const releases = yield* Ref.make(0);
+          const tryAcquire = Effect.gen(function* () {
+            return (yield* Ref.get(busy)) ? O.none<string>() : O.some("origin-lease");
+          });
+          const gate = {
+            tryAcquire,
+            tryAcquireFallback: tryAcquire,
+            release: (_: string) => Ref.update(releases, (count) => count + 1),
+          };
+          const fiber = yield* Effect.forkChild(
+            withQualityAdmission(request(), gate, Effect.succeed("ran"), fastConfig)
+          );
+          const queued = yield* Effect.repeat(listDirectory(tempRoot.queue), {
+            until: A.isReadonlyArrayNonEmpty,
+            schedule: Schedule.spaced(Duration.millis(10)),
+          }).pipe(Effect.timeout(Duration.seconds(5)));
+          expect(fiber.pollUnsafe()).toBeUndefined();
+          expect(queued).toHaveLength(1);
+          yield* Ref.set(busy, false);
+          expect(yield* Fiber.join(fiber)).toBe("ran");
+          expect(yield* Ref.get(releases)).toBe(1);
+        })
+      );
+    }).pipe(TestClock.withLive)
+  );
 
   it("hard-floors admission below 15 GiB and recovers when memory frees", () =>
     Effect.runPromise(
@@ -4610,18 +4616,20 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("stops a dead lease scope only when reap applies", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
+  // it.live: the reaper reads the real clock to age heartbeats, as every sibling test here does.
+  it.live.each(["agent-run-deadbeef.scope", "beep-proof-deadbeef.service"])(
+    "stops a dead lease unit %s only when reap applies",
+    (unitName) => {
+      const exercise = Effect.fnUntraced(function* () {
         const gibRef = yield* Ref.make(50);
-        yield* withAdmissionTempRoot(gibRef, (tempRoot) =>
-          Effect.gen(function* () {
+        yield* withAdmissionTempRoot(
+          gibRef,
+          Effect.fnUntraced(function* (tempRoot) {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const runtimeDirectory = path.dirname(path.dirname(tempRoot.root));
             const binDirectory = path.join(runtimeDirectory, "bin");
             const capturePath = path.join(runtimeDirectory, "systemctl.argv");
-            const unitName = "agent-run-deadbeef.scope";
             yield* fs.makeDirectory(binDirectory, { recursive: true });
             yield* writeExecutable(
               path.join(binDirectory, "systemctl"),
@@ -4640,22 +4648,22 @@ describe("quality-scheduler", () => {
               }),
             });
 
-            yield* withPrependedPath(
-              binDirectory,
-              Effect.gen(function* () {
-                const dryRun = yield* reapAdmissionState({ apply: false });
-                expect(dryRun.dead).toStrictEqual([dead]);
-                expect(yield* fs.exists(capturePath)).toBe(false);
+            const verifyReap = Effect.fnUntraced(function* () {
+              const dryRun = yield* reapAdmissionState({ apply: false });
+              expect(dryRun.dead).toStrictEqual([dead]);
+              expect(yield* fs.exists(capturePath)).toBe(false);
 
-                const applied = yield* reapAdmissionState({ apply: true });
-                expect(applied.dead).toStrictEqual([dead]);
-                expect(yield* fs.readFileString(capturePath)).toBe(`--user\nstop\n${unitName}\n`);
-              })
-            );
+              const applied = yield* reapAdmissionState({ apply: true });
+              expect(applied.dead).toStrictEqual([dead]);
+              expect(yield* fs.readFileString(capturePath)).toBe(`--user\nstop\n${unitName}\n`);
+            });
+            yield* withPrependedPath(binDirectory, verifyReap());
           })
         );
-      })
-    ));
+      });
+      return exercise();
+    }
+  );
 
   it("stops the derived scope for a dead lease without a persisted record", () =>
     Effect.runPromise(

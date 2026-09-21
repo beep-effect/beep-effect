@@ -9,7 +9,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, pipe } from "effect";
+import { ConfigProvider, Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { Command } from "effect/unstable/cli";
@@ -171,5 +171,112 @@ describe("yeet inbox command wiring", () => {
         ? A.flatMap(inbox.value.subcommands, (group) => A.map(group.commands, (command) => command.name))
         : [];
     expect(children).toEqual(expect.arrayContaining(["list", "ack", "append"]));
+  });
+});
+
+describe("settle-timeout route legality", () => {
+  it.each([
+    { watch: false, untilMerged: false, expected: "invalid-settle-timeout" },
+    { watch: true, untilMerged: false, expected: "watch" },
+    { watch: false, untilMerged: true, expected: "merge-loop" },
+  ])("routes $expected", ({ watch, untilMerged, expected }) => {
+    expect(yeetMonitorCommandRoute({ plan: false, untilEvent: false, settleTimeout: "30m", watch, untilMerged })).toBe(
+      expected
+    );
+  });
+  it.effect("rejects a timeout on plain monitor before hydration", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.result(runYeetCommand(["monitor", "--settle-timeout", "30m"]));
+      expect(result._tag).toBe("Failure");
+      if (result._tag === "Failure")
+        expect(String(result.failure)).toContain("requires --until-merged, --until-ready, or --watch");
+    }).pipe(provideScopedLayer(commandTestLayer))
+  );
+});
+
+describe("until-ready route legality", () => {
+  it.each([
+    { untilMerged: false, untilEvent: false, watch: false, expected: "ready-loop" },
+    { untilMerged: true, untilEvent: false, watch: false, expected: "invalid-until-ready" },
+    { untilMerged: false, untilEvent: true, watch: false, expected: "invalid-until-ready" },
+    { untilMerged: false, untilEvent: false, watch: true, expected: "invalid-until-ready" },
+  ])("routes $expected", ({ expected, ...flags }) => {
+    expect(yeetMonitorCommandRoute({ ...flags, untilReady: true, plan: false, settleTimeout: "30m" })).toBe(expected);
+  });
+  it.effect("rejects --until-ready --watch before hydration", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.result(runYeetCommand(["monitor", "--until-ready", "--watch"]));
+      expect(result).toMatchObject({ _tag: "Failure", failure: { _tag: "CliReportedExit", exitCode: 1 } });
+    }).pipe(provideScopedLayer(commandTestLayer))
+  );
+});
+
+it.layer(commandTestLayer, { timeout: "30 seconds" })("detached proof job command wiring", (it) => {
+  it.effect(
+    "rejects a runtime ceiling without detachment and malformed resume coordinates",
+    Effect.fnUntraced(function* () {
+      expect(yield* runYeetCommand(["verify", "--job-max-runtime", "30 seconds"]).pipe(Effect.flip)).toMatchObject({
+        message: "--job-max-runtime requires --detach.",
+      });
+      expect((yield* runYeetCommand(["resume", "invalid"]).pipe(Effect.flip))._tag).toBe("YeetCommandError");
+    })
+  );
+  it("registers the complete job group and hides its finalizer", () => {
+    const job = O.getOrThrow(findSubcommand("job"));
+    const children = A.flatMap(job.subcommands, (group) => group.commands);
+    expect(A.map(children, (command) => command.name)).toEqual([
+      "list",
+      "status",
+      "wait",
+      "logs",
+      "cancel",
+      "finalize",
+    ]);
+    expect(O.getOrThrow(A.findFirst(children, (command) => command.name === "finalize")).unlisted).toBe(true);
+  });
+  for (const name of ["verify", "publish", "closeout", "monitor", "repair"]) {
+    it.effect(`registers --detach on ${name} and rejects --plan before planning`, () =>
+      runYeetCommand([name, "--detach", "--plan"]).pipe(
+        Effect.flip,
+        Effect.tap((error) =>
+          Effect.sync(() =>
+            expect(error).toMatchObject({
+              _tag: "YeetCommandError",
+              message: "--detach cannot be combined with --plan.",
+            })
+          )
+        )
+      )
+    );
+  }
+  it.effect("reaches the detached submit for --until-ready before any route legality", () =>
+    runYeetCommand(["monitor", "--until-ready", "--detach", "--plan"]).pipe(
+      Effect.flip,
+      Effect.tap((error) =>
+        Effect.sync(() =>
+          expect(error).toMatchObject({ _tag: "YeetCommandError", message: "--detach cannot be combined with --plan." })
+        )
+      )
+    )
+  );
+  for (const name of ["status", "pre-push-hook"]) {
+    it.effect(`does not accept --detach on ${name}`, () =>
+      runYeetCommand([name, "--detach"]).pipe(
+        Effect.flip,
+        Effect.tap((error) => Effect.sync(() => expect(error._tag).not.toBe("YeetCommandError")))
+      )
+    );
+  }
+  it.layer(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_YEET_JOB_ID: "parent" })), {
+    timeout: "30 seconds",
+  })("inside a job", (it) => {
+    it.effect("rejects recursive detachment before reading git", () =>
+      runYeetCommand(["verify", "--detach"]).pipe(
+        Effect.flip,
+        Effect.tap((error) =>
+          Effect.sync(() => expect(error).toMatchObject({ message: "Cannot recursively --detach inside a proof job." }))
+        )
+      )
+    );
   });
 });

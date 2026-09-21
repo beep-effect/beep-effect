@@ -10,14 +10,14 @@ runners. The tuple and unnamed-layer controls deliberately inspect sequential
 registration/lifetime behavior; they are not concurrent scheduling benchmarks.
 Use no retries and do not enable bail or filter individual tests within a file.
 
-| File | Qualified exit | Semantic requirement |
+| File | Exit required for qualification | Semantic requirement |
 | --- | --- | --- |
 | `finished-hook-throws.test.ts` | Nonzero | Passing body becomes a failure when its completion hook assertion throws. The failure must identify the intentional completion-hook mismatch, not collection/setup failure. |
 | `finished-hook-continues-cleanup.test.ts` | Nonzero | The middle completion hook fails intentionally, but both surrounding cleanup callbacks still execute. Require the intentional mismatch and no `afterAll` cleanup-count failure. Works as a sentinel for either forward or reverse hook order. |
 | `synchronous-throw-cleanup.test.ts` | Zero | Expected synchronous assertion failure still invokes its registered completion callback exactly once; `afterAll` enforces it. |
 | `property-completion-once.test.ts` | Zero | One generated pure-property input and one completion callback invocation. No duplicate flush. |
 | `default-timeout-finalizer.test.ts` | Zero | Expected timeout aborts the context signal and completes resource release before `afterAll`. |
-| `inherited-suite-timeout.test.ts` | Zero | With a 100 ms file default, a nested live test sleeping 200 ms inherits its outer suite's 1,000 ms timeout and completes normally. Configure the file default before collection, exactly as for the default-timeout control. |
+| `inherited-suite-timeout.test.ts` | Zero required; current native candidate fails | With a 100 ms file default, a nested live test sleeping 200 ms must inherit its outer suite's 1,000 ms timeout and complete normally. Configure the file default before collection, exactly as for the default-timeout control. Vitest passes this control; the current adapter interrupts at the file default and remains unqualified for inherited suite timeouts. See [pilot results](../../../bun-test/PILOT-RESULTS.md). |
 | `tuple-each.test.ts` | Zero | Two tuple cases reach Effect callbacks intact, rather than being spread and truncated to their first elements. |
 | `each-title-values.test.ts` | Zero | A BigInt-containing object does not fail title interpolation during collection; exactly one body completes and observes amount `1n`. |
 | `unnamed-layer-lifetime.test.ts` | Zero | Each unnamed layer acquires for its own block and releases before the subsequent test/block. |

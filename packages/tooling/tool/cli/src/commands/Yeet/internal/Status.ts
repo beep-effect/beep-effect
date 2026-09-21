@@ -28,6 +28,8 @@ import {
   unprovenGateVerdicts,
 } from "./GateStaleness.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { YeetHeadTimeline } from "./MonitorPolicy.ts";
+import { YeetSettleCheck } from "./Settle.ts";
 import {
   mergeReadyCriterionHolds,
   YeetMergeReady,
@@ -36,6 +38,7 @@ import {
   YeetMergeReadyFromEncoded,
   YeetVerdict,
 } from "./Verdict.ts";
+import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutReport } from "./Closeout.ts";
@@ -229,9 +232,11 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     available: S.Boolean,
     checked: S.Boolean,
     detail: S.String,
+    checks: YeetSettleCheck.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<YeetSettleCheck>())),
     checkCount: S.optionalKey(S.Finite),
     failingCheckCount: S.optionalKey(S.Finite),
     isDraft: S.optionalKey(S.Boolean),
+    labels: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
     mergeStateStatus: S.optionalKey(S.String),
     mergeable: S.optionalKey(S.String),
     number: S.optionalKey(S.Finite),
@@ -302,6 +307,10 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
     mergeReady: YeetMergeReadyFromEncoded.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     staleGates: S.Array(GateStale).pipe(SchemaUtils.withKeyDefaults([])),
     unprovenGates: S.Array(GateUnproven).pipe(SchemaUtils.withKeyDefaults([])),
+    // Stamped by the merge loop (B7): push, settle, closeout, and ready
+    // instants for the head this snapshot describes. A one-shot `yeet status`
+    // read leaves it absent.
+    timeline: YeetHeadTimeline.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetStatusSnapshot", {
     description: "Machine-readable status snapshot emitted by yeet status.",
@@ -331,11 +340,17 @@ export class YeetStatusSnapshot extends S.Class<YeetStatusSnapshot>($I`YeetStatu
  */
 export const YeetStatusSnapshotJson = JsonStringCodec(YeetStatusSnapshot);
 
+class GhStatusLabel extends S.Class<GhStatusLabel>($I`GhStatusLabel`)(
+  { name: S.String },
+  $I.annote("GhStatusLabel", { description: "One label on the pull request as gh pr view reports it." })
+) {}
+
 class GhStatusPullRequest extends S.Class<GhStatusPullRequest>($I`GhStatusPullRequest`)(
   {
     id: S.String,
     headRefOid: S.String,
     isDraft: S.Boolean,
+    labels: S.Array(GhStatusLabel).pipe(SchemaUtils.withKeyDefaults(A.empty<GhStatusLabel>())),
     mergeStateStatus: S.NullOr(S.String),
     mergeable: S.NullOr(S.String),
     number: S.Finite,
@@ -777,19 +792,53 @@ export const summarizeRemoteChecksForTesting: {
   }
 );
 
-const collectRemoteChecks = Effect.fn("YeetStatus.collectRemoteChecks")(function* (
-  context: RepoRunContext,
-  required: boolean
-): Effect.fn.Return<O.Option<ReadonlyArray<GhStatusCheck>>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket"];
-  const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to inspect PR checks for yeet status."))
-  );
-  if (result.truncated) {
-    return O.none();
-  }
-  return yield* decodeGhStatusChecks(result.output).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
-});
+/**
+ * Read either check census, retaining an unreadable response as None.
+ *
+ * **Example** (Prepare a required census read)
+ *
+ * ```ts
+ * import { collectRemoteChecksForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * const readRequired = collectRemoteChecksForTesting(true)
+ * ```
+ *
+ * @param context - Repository context whose current branch identifies the pull request.
+ * @param required - Restrict the read to required checks when true; otherwise read all checks.
+ * @returns Decoded rows, or None when the response is unreadable or truncated.
+ * @category getters
+ * @since 0.0.0
+ */
+export const collectRemoteChecks: {
+  (
+    required: boolean
+  ): (
+    context: RepoRunContext
+  ) => Effect.Effect<O.Option<ReadonlyArray<GhStatusCheck>>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner>;
+  (
+    context: RepoRunContext,
+    required: boolean
+  ): Effect.Effect<O.Option<ReadonlyArray<GhStatusCheck>>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner>;
+} = dual(
+  2,
+  Effect.fn("YeetStatus.collectRemoteChecks")(function* (
+    context: RepoRunContext,
+    required: boolean
+  ): Effect.fn.Return<
+    O.Option<ReadonlyArray<GhStatusCheck>>,
+    YeetCommandError,
+    ChildProcessSpawner.ChildProcessSpawner
+  > {
+    const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket"];
+    const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
+      Effect.mapError(YeetCommandError.new("Failed to inspect PR checks for yeet status."))
+    );
+    if (result.truncated) {
+      return O.none();
+    }
+    return yield* decodeGhStatusChecks(result.output).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
+  })
+);
 
 const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThreads")(function* (
   context: RepoRunContext,
@@ -981,7 +1030,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
   }
   const result = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "view", "--json", "id,number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision,headRefOid"],
+    ["pr", "view", "--json", "id,number,url,state,mergeable,mergeStateStatus,isDraft,reviewDecision,headRefOid,labels"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to inspect PR for yeet status.")));
   if (result.exitCode !== 0) {
@@ -1035,7 +1084,18 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     available: true,
     checked: true,
     detail: `PR #${view.number} ${view.state}`,
+    checks: A.map(O.getOrElse(checks, A.empty), (row) =>
+      YeetSettleCheck.make({
+        name: row.name,
+        outcome: classifyYeetCheckOutcome(YeetCheckSignal.make({ bucket: row.bucket, state: row.state })),
+        required: O.exists(
+          requiredChecks,
+          A.some((required) => required.name === row.name)
+        ),
+      })
+    ),
     isDraft: view.isDraft,
+    labels: A.map(view.labels, (label) => label.name),
     number: view.number,
     state: view.state,
     url: view.url,

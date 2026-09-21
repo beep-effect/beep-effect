@@ -1,4 +1,4 @@
-# @effect/bun-test
+# Experimental Effect helpers for Bun
 
 A set of helpers for testing [Effect](https://effect.website) programs with
 Bun's native [`bun:test`](https://bun.sh/docs/cli/test) runner.
@@ -9,13 +9,13 @@ The experimental API follows
 It is not a qualified drop-in replacement. The local schema pilot found missing
 within-test module reset and inherited suite-timeout behavior. See
 [PILOT-RESULTS.md](PILOT-RESULTS.md) before using it for comparisons or migration.
-The package name below is illustrative; this scratchpad has not been promoted
-to a canonical workspace package.
+This adapter remains local to the scratchpad; the example uses its existing
+workspace export.
 
 ## Usage
 
 ```ts
-import { assert, describe, expect, it, layer } from "@beep/effect-bun-test";
+import { assert, describe, expect, it, layer } from "@beep/scratchpad/bun-test/index";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -57,7 +57,7 @@ timeout as a backstop.
 
 - **`addEqualityTesters`** is a no-op — `bun:test`'s `expect` does not expose
   `addEqualityTesters`. Compare `Equal` values with `Equal.equals` or the
-  helpers in `@effect/bun-test/utils`.
+  helpers in `@beep/scratchpad/bun-test/utils`.
 - **`TestContext`** — Bun doesn't pass a context object to test functions, so
   the wrapper synthesises one (`signal`, `onTestFinished`, `onTestFailed`).
 - **`assert`** — Vitest re-exports chai's `assert`; this package ships a small

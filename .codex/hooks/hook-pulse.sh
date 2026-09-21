@@ -383,6 +383,23 @@ if [ "${notifier_rev}" != "log-only-0" ]; then
       <<<"${notification_fields}"
     notifier_path="${BASH_SOURCE[0]%/*}/sequence-break-notifier.sh"
     if [ -x "${notifier_path}" ]; then
+      # Local display/navigation context stays out of the evidence and ntfy
+      # ledgers. Preserve the controlling terminal before setsid detaches us.
+      notification_terminal=""
+      if [ "${TERM_PROGRAM:-}" = "ghostty" ]; then
+        if { exec 7>/dev/tty; } 2>/dev/null && [ -t 7 ]; then
+          notification_terminal="ghostty"
+        fi
+      fi
+      notification_uri="${BEEP_SEQUENCE_BREAK_OPEN_URI:-}"
+      if [ "${notification_uri}" != "codex://threads/${raw_session_id}" ]; then
+        notification_uri=""
+      fi
+      if [ -z "${notification_uri}" ] &&
+        [ "${CODEX_INTERNAL_ORIGINATOR_OVERRIDE:-}" = "Codex Desktop" ] &&
+        [ -n "${CODEX_THREAD_ID:-}" ] && [ "${CODEX_THREAD_ID}" = "${raw_session_id}" ]; then
+        notification_uri="codex://threads/${raw_session_id}"
+      fi
       notifier_args=(
         "codex-cli"
         "${notification_session}"
@@ -391,6 +408,9 @@ if [ "${notifier_rev}" != "log-only-0" ]; then
         "${notification_target}"
         "${notification_tool}"
         "${notifier_rev}"
+        "${raw_cwd}"
+        "${notification_uri}"
+        "${notification_terminal}"
       )
       if [ "${BEEP_SEQUENCE_BREAK_FOREGROUND:-0}" = "1" ]; then
         "${notifier_path}" "${notifier_args[@]}" </dev/null >/dev/null 2>&1 || true

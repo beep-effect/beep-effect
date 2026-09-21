@@ -1,0 +1,23 @@
+{
+  "lane": "20-r1-mcp-kit",
+  "path": "research/20-r1-mcp-kit.md",
+  "claimCount": 23,
+  "topRisks": [
+    "sanitizedToolkit is a drifted fork of registerToolkit: still required because Toolkit.handle annotates raw parameters and upstream still has no wrap seam, but it currently excludes the wrong service (McpServerClient vs McpRequestContext), omits outputSchema and strict decodeOptions, and uses a different isError/param-error mapping.",
+    "server.callTool plus McpServerClient.of({ protocolVersion: \"2025-06-18\" }) cannot represent a 2026-07-28 client (StatefulProtocolVersion excludes that revision). Kit and host SanitizedSpan proofs never exercise the G4 production path.",
+    "Keeping the rc.115-era fork on the snapshot silently drops wire output schemas, strict input validation, FailureOrigin classification, and 2026-07-28 caller identity while tests still pass via stateful stubs.",
+    "Coverage ratchet hottest file is SanitizedSpan.ts (86.36% lines, 9 uncovered); rebasing the registration loop will move those lines."
+  ],
+  "decisionChallenges": [
+    "G4 (v2026_07_28 only) contradicts kit identity: 2026-07-28 tools/call does not provide McpServerClient, does not mint mcp-session-id, and has no initialize. CurrentMcpCaller would be None on every real HTTP dispatch unless minted from McpRequestContext.",
+    "api_key_required is tested as isError:false with structured content; snapshot registerToolkit sets isError from result.isFailure and drops structuredContent on failure.",
+    "Invalid tool arguments are a canned CallToolResult in the kit and InvalidParams in snapshot registerToolkit."
+  ],
+  "grillQuestions": [
+    "Under G4, is CurrentMcpCaller.sessionId retired, or is some other stable key required for GovernedTierGate / per-session grants?",
+    "Must api_key_required remain isError:false with structuredContent, or is snapshot isError:true plus encoded content acceptable?",
+    "Should invalid tool arguments stay a stack-free CallToolResult (kit) or become protocol InvalidParams (snapshot)?",
+    "Is server.callTool plus stateful stubs an acceptable kit test seam after the flip, or must kit tests speak 2026-07-28 HTTP headers?",
+    "Keep sanitizedToolkit as a full registerToolkit fork, or wait for an upstream dispatch-wrap seam (currently unavailable)?"
+  ]
+}

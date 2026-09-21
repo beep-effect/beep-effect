@@ -2,7 +2,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -17,7 +17,7 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 const $I = $RepoCliId.create("test/root-tasks-turbo-inputs");
 const fingerprintId = "//#lint:policy-fingerprint";
 const nonInput = ".beep/c3-fixture-excluded.bin";
-const providePlatform = provideScopedLayer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 const isProofTaskName = S.is(TurboConfigProofTaskName);
 const Strings = S.Array(S.String).pipe(S.withDecodingDefaultKey(Effect.succeed([])));
 
@@ -79,7 +79,7 @@ const nonReusableTasks: ReadonlyArray<string> = [
 
 const directInputs: Readonly<Record<string, string>> = {
   "lint:policy-fingerprint": "standards/policy-tools.fingerprint.json",
-  "lint:jsdoc:root": "scripts/c3-probe.ts",
+  "lint:jsdoc:root": "infra/standalone/c3-probe.ts",
   "lint:native-runtime:roots": "scratchpad/c3-probe.ts",
   "lint:package-scripts": "packages/fixture/vitest.config.ts",
   "knowledge:semantic-delta": "docs/c3-probe.md",
@@ -97,7 +97,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "goals:doctor": "goals/fixture/GOAL.md",
   "goals:index-check": "goals/fixture/GOAL.md",
   "lint:reflection-artifacts": "goals/fixture/history/reflections/c3-probe.md",
-  "lint:roadmap-refs": "assets/c3-probe.bin",
+  "lint:roadmap-refs": "docs/ROADMAP.md",
   "lint:judge-rubric": ".claude/skills/browser-qa-loop/resources/judge-prompt.md",
   "lint:typos": "docs/c3-probe.md",
   "knip:check": "standards/knip.regression-baseline.jsonc",
@@ -299,173 +299,272 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
       )._tag
     ).toBe("Passed"));
 
-  it.effect(
-    "hashes declared inputs and excludes non-inputs for every registered root task",
-    Effect.fnUntraced(function* () {
-      const { root, tasks, binary } = yield* fixture();
-      const ids = R.keys(tasks);
-      const baseline = yield* dryRun(root, binary, ids, false);
-      expect(A.length(baseline)).toBe(A.length(ids));
-      for (const [name, file] of R.toEntries(directInputs)) {
-        const id = `//#${name}`;
-        expect(R.has(rowFor(baseline, id).inputs, file), `${id}: ${file}`).toBe(true);
-        yield* mutate(
-          root,
-          file,
-          Effect.gen(function* () {
-            const changed = yield* dryRun(root, binary, ids, false);
-            expect(rowFor(changed, id).hash, `${id}: ${file}`).not.toBe(rowFor(baseline, id).hash);
-          })
-        );
-      }
-      yield* mutate(
-        root,
-        nonInput,
-        Effect.gen(function* () {
-          const changed = yield* dryRun(root, binary, ids, false);
-          for (const id of ids) {
-            expect(R.has(rowFor(baseline, id).inputs, nonInput), id).toBe(false);
-            expect(rowFor(changed, id).hash, id).toBe(rowFor(baseline, id).hash);
-          }
-        })
-      );
-      expect(yield* dryRun(root, binary, ids, false)).toEqual(baseline);
-    }, providePlatform),
-    { timeout: 180_000 }
-  );
-
-  it.effect(
-    "closes tool reads through the fingerprint for every CLI-backed task",
-    Effect.fnUntraced(function* () {
-      const { root, tasks, binary } = yield* fixture();
-      const ids = R.keys(tasks);
-      const baseline = yield* dryRun(root, binary, ids, false);
-      for (const [id, task] of R.toEntries(tasks)) {
-        if (!A.contains(task.dependsOn, fingerprintId)) continue;
-        const outside = A.findFirst(closureInputs, (file) => !R.has(rowFor(baseline, id).inputs, file));
-        // Roadmap's whole-tree contract already includes every candidate tool read.
-        if (O.isNone(outside)) expect(id).toBe("//#lint:roadmap-refs");
-        const candidate = O.getOrElse(outside, () => "packages/tooling/tool/cli/src/c3-probe.ts");
-        expect(R.has(rowFor(baseline, fingerprintId).inputs, candidate), candidate).toBe(true);
-        expect(rowFor(baseline, id).dependencies, id).toContain(fingerprintId);
-        yield* mutate(
-          root,
-          candidate,
-          Effect.gen(function* () {
-            const changed = yield* dryRun(root, binary, ids, false);
-            expect(rowFor(changed, fingerprintId).hash).not.toBe(rowFor(baseline, fingerprintId).hash);
-            expect(rowFor(changed, id).hash, `${id}: ${candidate}`).not.toBe(rowFor(baseline, id).hash);
-          })
-        );
-      }
-    }, providePlatform),
-    { timeout: 180_000 }
-  );
-
-  it.effect(
-    "selects root tasks under --affected from declared inputs only (Git fixture)",
-    Effect.fnUntraced(function* () {
-      const { root, tasks, binary } = yield* fixture();
-      yield* initializeGit(root);
-      const ids = R.keys(tasks);
-      const baseline = yield* dryRun(root, binary, ids, false);
-      const readmeIds = A.map(
-        A.filter(baseline, (row) => R.has(row.inputs, "README.md")),
-        (row) => row.taskId
-      );
-      expect(readmeIds).toEqual(expect.arrayContaining(["//#lint:roadmap-refs", "//#lint:typos"]));
-      expect(selectedIds(yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true))).toEqual(
-        withDependencies(readmeIds, baseline)
-      );
-      // Scope each independent row probe to that row and the whole-tree walkers.
-      // Other production rows intentionally share source/config globs.
-      const wholeTreeIds = A.map(
-        A.filter(R.toEntries(tasks), ([, task]) => A.contains(task.inputs, "**/*")),
-        ([id]) => id
-      );
-      for (const [name, file] of R.toEntries(directInputs)) {
-        const requested = A.dedupe([`//#${name}`, ...wholeTreeIds]);
-        yield* mutate(
-          root,
-          file,
-          Effect.gen(function* () {
-            const isolated = yield* dryRun(root, binary, [name], true);
-            expect(selectedIds(isolated), `${name}: isolated ${file}`).toEqual(
-              withDependencies([`//#${name}`], baseline)
-            );
-            const selected = yield* dryRun(root, binary, A.map(requested, Str.slice(3)), true);
-            expect(selectedIds(selected), `${name}: ${file}`).toEqual(withDependencies(requested, baseline));
-          })
-        );
-      }
-      // README is an input of the two whole-tree walkers. A non-input edit adds
-      // no selection to that committed baseline; all other requested rows stay absent.
-      yield* mutate(
-        root,
-        nonInput,
-        Effect.gen(function* () {
-          expect(selectedIds(yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true))).toEqual(
-            withDependencies(readmeIds, baseline)
+  it.layer(PlatformLayer, { timeout: "30 seconds" })("native Turbo fixtures", (it) => {
+    it.effect(
+      "hashes declared inputs and excludes non-inputs for every registered root task",
+      Effect.fnUntraced(function* () {
+        const { root, tasks, binary } = yield* fixture();
+        const ids = R.keys(tasks);
+        const baseline = yield* dryRun(root, binary, ids, false);
+        expect(A.length(baseline)).toBe(A.length(ids));
+        for (const [name, file] of R.toEntries(directInputs)) {
+          const id = `//#${name}`;
+          expect(R.has(rowFor(baseline, id).inputs, file), `${id}: ${file}`).toBe(true);
+          yield* mutate(
+            root,
+            file,
+            Effect.gen(function* () {
+              const changed = yield* dryRun(root, binary, ids, false);
+              expect(rowFor(changed, id).hash, `${id}: ${file}`).not.toBe(rowFor(baseline, id).hash);
+            })
           );
-          const narrow = A.filter(ids, (id) => !A.contains(readmeIds, id));
-          expect(yield* dryRun(root, binary, A.map(narrow, Str.slice(3)), true)).toEqual([]);
-        })
-      );
-    }, providePlatform),
-    { timeout: 180_000 }
-  );
+        }
+        yield* mutate(
+          root,
+          nonInput,
+          Effect.gen(function* () {
+            const changed = yield* dryRun(root, binary, ids, false);
+            for (const id of ids) {
+              expect(R.has(rowFor(baseline, id).inputs, nonInput), id).toBe(false);
+              expect(rowFor(changed, id).hash, id).toBe(rowFor(baseline, id).hash);
+            }
+          })
+        );
+        expect(yield* dryRun(root, binary, ids, false)).toEqual(baseline);
+      }),
+      { timeout: 180_000 }
+    );
 
-  it.effect(
-    "explicit root selectors bypass --affected for the same non-input edit",
-    Effect.fnUntraced(function* () {
-      const { root, tasks, binary } = yield* fixture();
-      yield* initializeGit(root);
-      const ids = R.keys(tasks);
-      yield* mutate(
-        root,
-        nonInput,
-        Effect.gen(function* () {
-          expect(selectedIds(yield* dryRun(root, binary, ids, true))).toEqual(A.sort(ids, Str.Order));
-          const bare = yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true);
-          expect(selectedIds(bare)).not.toEqual(A.sort(ids, Str.Order));
-        })
-      );
-    }, providePlatform),
-    { timeout: 180_000 }
-  );
+    it.effect(
+      "ignores generated job artifacts in qualified root input boundaries",
+      Effect.fnUntraced(function* () {
+        const { root, tasks, binary } = yield* fixture();
+        const scannerOwnedInputs = [
+          "//#lint:allowlist",
+          "//#lint:schema-first",
+          "//#lint:effect-imports",
+          "//#lint:tsgo-rules",
+        ];
+        const ids = A.map(
+          A.filter(R.toEntries(tasks), ([id, task]) => task.cache && !A.contains(scannerOwnedInputs, id)),
+          ([id]) => id
+        );
+        const baseline = yield* dryRun(root, binary, ids, false);
+        const artifacts = [
+          "packages/fixture/node_modules/dependency/package.json",
+          "packages/fixture/.beep/docgen/proof.json",
+          "packages/fixture/.turbo/run.json",
+          "packages/fixture/dist/package.json",
+          "packages/fixture/coverage/report.ts",
+          "apps/fixture/.next/package.json",
+          "apps/fixture/storybook-static/preview.js",
+        ];
+        yield* Effect.forEach(artifacts, (file) => writeFile(root, file, "{}\n"));
+        const changed = yield* dryRun(root, binary, ids, false);
+        for (const id of ids) {
+          expect(rowFor(changed, id).hash, id).toBe(rowFor(baseline, id).hash);
+          for (const file of artifacts) {
+            expect(R.has(rowFor(changed, id).inputs, file), `${id}: ${file}`).toBe(false);
+          }
+        }
+      }),
+      { timeout: 60_000 }
+    );
 
-  it.effect(
-    "excludes loose Git objects from every registered root task hash",
-    Effect.fnUntraced(function* () {
-      const { root, tasks, binary } = yield* fixture();
-      yield* initializeGit(root);
-      const ids = R.keys(tasks);
-      const baseline = yield* dryRun(root, binary, ids, false);
-      // Non-input bytes are absent from the initial commit, so this creates a new object.
-      yield* writeFile(root, nonInput, "untracked object payload\n");
-      const candidate = yield* git(root, ["hash-object", "--", nonInput]);
-      const fs = yield* FileSystem.FileSystem;
-      const candidateHash = Str.trim(candidate.output);
-      expect(
-        yield* fs.exists(`${root}/.git/objects/${Str.slice(0, 2)(candidateHash)}/${Str.slice(2)(candidateHash)}`)
-      ).toBe(false);
-      // Hash a new blob without adding any working-tree input or updating refs.
-      const object = yield* git(root, ["hash-object", "-w", "--", nonInput]);
-      const hash = Str.trim(object.output);
-      expect(yield* fs.exists(`${root}/.git/objects/${Str.slice(0, 2)(hash)}/${Str.slice(2)(hash)}`)).toBe(true);
-      yield* writeFile(root, "nested/.git/objects/ab/c3-probe", "nested git metadata");
-      const changed = yield* dryRun(root, binary, ids, false);
-      for (const id of ids) {
-        expect(rowFor(changed, id).hash, id).toBe(rowFor(baseline, id).hash);
-        expect(
-          A.filter(
-            R.keys(rowFor(changed, id).inputs),
-            (file) => Str.startsWith(".git/")(file) || Str.includes("/.git/")(file)
+    it.effect(
+      "ignores sources outside root JSDoc scan scope while retaining lab manifest discovery",
+      Effect.fnUntraced(function* () {
+        const { root, binary } = yield* fixture();
+        const id = "//#lint:jsdoc:root";
+        const baseline = yield* dryRun(root, binary, [id], false);
+        const excludedSources = [
+          "scripts/check.ts",
+          "tools/check.ts",
+          "scratchpad/check.ts",
+          "apps/labs/probe/check.ts",
+          "packages/probe/.context/check.ts",
+          "infra/standalone/check.tsx",
+          "apps/probe/check.js",
+        ];
+        yield* Effect.forEach(excludedSources, (file) => writeFile(root, file, "export const value = 1;\n"));
+        const changed = yield* dryRun(root, binary, [id], false);
+        expect(rowFor(changed, id).hash).toBe(rowFor(baseline, id).hash);
+        for (const file of excludedSources) {
+          expect(R.has(rowFor(changed, id).inputs, file), file).toBe(false);
+        }
+        const manifest = "apps/labs/probe/package.json";
+        yield* writeFile(root, manifest, "{}\n");
+        const discovered = yield* dryRun(root, binary, [id], false);
+        expect(R.has(rowFor(discovered, id).inputs, manifest)).toBe(true);
+        expect(rowFor(discovered, id).hash).not.toBe(rowFor(baseline, id).hash);
+      }),
+      { timeout: 60_000 }
+    );
+
+    it.effect(
+      "retains nested authored source directories consumed by root scanners",
+      Effect.fnUntraced(function* () {
+        const { root, binary } = yield* fixture();
+        const probes = [
+          Tuple.make("//#lint:circular", "packages/tooling/tool/cli/src/build/cycle.ts"),
+          Tuple.make("//#lint:jsdoc:root", "packages/tooling/fixture/unit/src/build/check.ts"),
+          Tuple.make("//#lint:jsdoc:root", "packages/tooling/fixture/unit/src/.beep/check.ts"),
+          Tuple.make("//#lint:jsdoc:root", "infra/standalone/src-tauri/gen/check.ts"),
+          Tuple.make(
+            "//#lint:effect-imports-markdown",
+            "packages/foundation/primitive/fixture/src/generated/bindings.ts"
           ),
-          id
-        ).toEqual([]);
-      }
-    }, providePlatform),
-    { timeout: 180_000 }
-  );
+          Tuple.make(
+            "//#lint:effect-imports-markdown",
+            "packages/foundation/primitive/fixture/src/_generated/bindings.ts"
+          ),
+          Tuple.make("//#lint:ecosystem-polarity", "packages/ecosystem/fixture/src/docs/consumer.ts"),
+          Tuple.make("//#lint:effect-imports-markdown", "docs/_internal/cache-contract.md"),
+        ];
+        for (const [taskId, input] of probes) {
+          const baseline = yield* dryRun(root, binary, [taskId], false);
+          yield* writeFile(root, input, "authored source\n");
+          const changed = yield* dryRun(root, binary, [taskId], false);
+          expect(R.has(rowFor(changed, taskId).inputs, input), input).toBe(true);
+          expect(rowFor(changed, taskId).hash, input).not.toBe(rowFor(baseline, taskId).hash);
+        }
+      }),
+      { timeout: 60_000 }
+    );
+
+    it.effect(
+      "closes tool reads through the fingerprint for every CLI-backed task",
+      Effect.fnUntraced(function* () {
+        const { root, tasks, binary } = yield* fixture();
+        const ids = R.keys(tasks);
+        const baseline = yield* dryRun(root, binary, ids, false);
+        for (const [id, task] of R.toEntries(tasks)) {
+          if (!A.contains(task.dependsOn, fingerprintId)) continue;
+          const outside = A.findFirst(closureInputs, (file) => !R.has(rowFor(baseline, id).inputs, file));
+          // Roadmap's whole-tree contract already includes every candidate tool read.
+          if (O.isNone(outside)) expect(id).toBe("//#lint:roadmap-refs");
+          const candidate = O.getOrElse(outside, () => "packages/tooling/tool/cli/src/c3-probe.ts");
+          expect(R.has(rowFor(baseline, fingerprintId).inputs, candidate), candidate).toBe(true);
+          expect(rowFor(baseline, id).dependencies, id).toContain(fingerprintId);
+          yield* mutate(
+            root,
+            candidate,
+            Effect.gen(function* () {
+              const changed = yield* dryRun(root, binary, ids, false);
+              expect(rowFor(changed, fingerprintId).hash).not.toBe(rowFor(baseline, fingerprintId).hash);
+              expect(rowFor(changed, id).hash, `${id}: ${candidate}`).not.toBe(rowFor(baseline, id).hash);
+            })
+          );
+        }
+      }),
+      { timeout: 180_000 }
+    );
+
+    it.effect(
+      "selects root tasks under --affected from declared inputs only (Git fixture)",
+      Effect.fnUntraced(function* () {
+        const { root, tasks, binary } = yield* fixture();
+        yield* initializeGit(root);
+        const ids = R.keys(tasks);
+        const baseline = yield* dryRun(root, binary, ids, false);
+        const readmeIds = A.map(
+          A.filter(baseline, (row) => R.has(row.inputs, "README.md")),
+          (row) => row.taskId
+        );
+        expect(readmeIds).toEqual(expect.arrayContaining(["//#lint:typos"]));
+        expect(selectedIds(yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true))).toEqual(
+          withDependencies(readmeIds, baseline)
+        );
+        // Scope each independent row probe to that row and the whole-tree walkers.
+        // Other production rows intentionally share source/config globs.
+        const wholeTreeIds = A.map(
+          A.filter(R.toEntries(tasks), ([, task]) => A.contains(task.inputs, "**/*")),
+          ([id]) => id
+        );
+        for (const [name, file] of R.toEntries(directInputs)) {
+          const requested = A.dedupe([`//#${name}`, ...wholeTreeIds]);
+          yield* mutate(
+            root,
+            file,
+            Effect.gen(function* () {
+              const isolated = yield* dryRun(root, binary, [name], true);
+              expect(selectedIds(isolated), `${name}: isolated ${file}`).toEqual(
+                withDependencies([`//#${name}`], baseline)
+              );
+              const selected = yield* dryRun(root, binary, A.map(requested, Str.slice(3)), true);
+              expect(selectedIds(selected), `${name}: ${file}`).toEqual(withDependencies(requested, baseline));
+            })
+          );
+        }
+        // README is an input of the two whole-tree walkers. A non-input edit adds
+        // no selection to that committed baseline; all other requested rows stay absent.
+        yield* mutate(
+          root,
+          nonInput,
+          Effect.gen(function* () {
+            expect(selectedIds(yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true))).toEqual(
+              withDependencies(readmeIds, baseline)
+            );
+            const narrow = A.filter(ids, (id) => !A.contains(readmeIds, id));
+            expect(yield* dryRun(root, binary, A.map(narrow, Str.slice(3)), true)).toEqual([]);
+          })
+        );
+      }),
+      { timeout: 180_000 }
+    );
+
+    it.effect(
+      "explicit root selectors bypass --affected for the same non-input edit",
+      Effect.fnUntraced(function* () {
+        const { root, tasks, binary } = yield* fixture();
+        yield* initializeGit(root);
+        const ids = R.keys(tasks);
+        yield* mutate(
+          root,
+          nonInput,
+          Effect.gen(function* () {
+            expect(selectedIds(yield* dryRun(root, binary, ids, true))).toEqual(A.sort(ids, Str.Order));
+            const bare = yield* dryRun(root, binary, A.map(ids, Str.slice(3)), true);
+            expect(selectedIds(bare)).not.toEqual(A.sort(ids, Str.Order));
+          })
+        );
+      }),
+      { timeout: 180_000 }
+    );
+
+    it.effect(
+      "excludes loose Git objects from every registered root task hash",
+      Effect.fnUntraced(function* () {
+        const { root, tasks, binary } = yield* fixture();
+        yield* initializeGit(root);
+        const ids = R.keys(tasks);
+        const baseline = yield* dryRun(root, binary, ids, false);
+        // Non-input bytes are absent from the initial commit, so this creates a new object.
+        yield* writeFile(root, nonInput, "untracked object payload\n");
+        const candidate = yield* git(root, ["hash-object", "--", nonInput]);
+        const fs = yield* FileSystem.FileSystem;
+        const candidateHash = Str.trim(candidate.output);
+        expect(
+          yield* fs.exists(`${root}/.git/objects/${Str.slice(0, 2)(candidateHash)}/${Str.slice(2)(candidateHash)}`)
+        ).toBe(false);
+        // Hash a new blob without adding any working-tree input or updating refs.
+        const object = yield* git(root, ["hash-object", "-w", "--", nonInput]);
+        const hash = Str.trim(object.output);
+        expect(yield* fs.exists(`${root}/.git/objects/${Str.slice(0, 2)(hash)}/${Str.slice(2)(hash)}`)).toBe(true);
+        yield* writeFile(root, "nested/.git/objects/ab/c3-probe", "nested git metadata");
+        const changed = yield* dryRun(root, binary, ids, false);
+        for (const id of ids) {
+          expect(rowFor(changed, id).hash, id).toBe(rowFor(baseline, id).hash);
+          expect(
+            A.filter(
+              R.keys(rowFor(changed, id).inputs),
+              (file) => Str.startsWith(".git/")(file) || Str.includes("/.git/")(file)
+            ),
+            id
+          ).toEqual([]);
+        }
+      }),
+      { timeout: 180_000 }
+    );
+  });
 });

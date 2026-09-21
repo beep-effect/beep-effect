@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,15 +33,12 @@ leave no packet-applicable finding open.
 ## Current Phase
 
 <!-- codex-findings-refresh:start -->
-All 13 captured findings are validated and assigned. Twelve are merged and closed; CSF-013 is implemented and awaiting final proof and publication.
+All 13 findings merged in PRs #1026, #1032, and #1037 and were closed as Already fixed. The final completion receipt on PR #1037 records local proof, hosted acceptance, and exact-ID closure; this PR reconciles the stale tracked lifecycle.
 <!-- codex-findings-refresh:end -->
 
-Twelve findings have merged and been closed: eleven in
-[PR #1026](https://github.com/beep-effect/beep-effect/pull/1026), and CSF-012 in
-[PR #1032](https://github.com/beep-effect/beep-effect/pull/1032). CSF-013 is
-implemented on `codex/security-corpus-process-metadata`. Full local proof,
-hosted checks, review, merge, and its exact-ID closure remain required.
-The lifecycle stays active until every completion gate is satisfied.
+All 13 findings merged in PRs #1026, #1032, and #1037 and were closed as Already fixed. The final completion receipt on PR #1037 records local proof, hosted acceptance, and exact-ID closure; this PR reconciles the stale tracked lifecycle.
+
+[Final completion receipt](https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010).
 
 The operator's September 8 instruction authorizes all work necessary to resolve
 the current findings in one PR. Earlier archived-packet scope and approval gates
@@ -63,5 +60,13 @@ The operator authorized a follow-up PR on September 9 because PR #1026 merged
 while the newly surfaced CSF-012 fix was being finalized. That authorization
 supersedes the original one-PR limit. Prior findings remain covered by #1026;
 CSF-012 merged in PR #1032 on September 9 and was closed as Already fixed.
-CSF-013 surfaced before that merge and is carried into the remaining follow-up
-under the same instruction to resolve every finding. Its closure remains post-merge.
+CSF-013 subsequently merged in PR #1037 and was closed after merge.
+The current closeout records that historical result without repeating the repair.
+
+## Retained closeout evidence (2026-09-16)
+
+All 13 findings merged in PRs #1026, #1032, and #1037 and were closed as Already fixed. The final completion receipt on PR #1037 records local proof, hosted acceptance, and exact-ID closure; this PR reconciles the stale tracked lifecycle.
+
+[Completion receipt](https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010).
+The citation refresh receipt preserves historical capture hashes while moving
+only current-tree citation line references after unrelated source edits.

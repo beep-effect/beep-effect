@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`. Twelve findings merged in PRs #1026 and #1032 and were closed as Already fixed. CSF-013 is implemented for the remaining follow-up; full proof, hosted acceptance, merge, and exact-ID closure remain pending. Severity and codexStatus retain historical capture values; captures span September 8-9.
+Status: `completed-retained`. All 13 findings merged in PRs #1026, #1032, and #1037 and were closed as Already fixed. The final completion receipt on PR #1037 records local proof, hosted acceptance, and exact-ID closure; this PR reconciles the stale tracked lifecycle.
 
 ## Phases
 
@@ -13,11 +13,11 @@ Status: `active`. Twelve findings merged in PRs #1026 and #1032 and were closed 
 | P2 validate | complete | Validate all reports against current source. | All 13 have verdicts and dispositions. |
 | P3 lane-partition | complete | Assign root-cause lanes. | All 13 are assigned; CSF-012 and CSF-013 share L9. |
 | P4 remediate | complete | Fix all real findings with focused checks. | Changed files and passing targeted proof recorded per finding. |
-| P5 repo-proof | in-progress | Run packet validation and Yeet repair/verify. | No packet drift; local proof green. |
-| P6 publish | in-progress | Publish the remaining fix through Yeet. | CSF-013 branch pushed and PR opened. |
-| P7 monitor | in-progress | Close hosted checks and actionable reviews. | PR green and mergeable. |
-| P8 merge-and-close | in-progress | Merge and close captured findings. | PR merged; all 13 IDs resolved. |
-| P9 close | in-progress | Record evidence, reflection, and lifecycle. | Reflection accompanies the fixes; merge and exact-ID closure evidence is retained on the PR that merges each fix. |
+| P5 repo-proof | complete | Run packet validation and Yeet repair/verify. | No packet drift; local proof green. |
+| P6 publish | complete | Publish the remaining fix through Yeet. | CSF-013 branch pushed and PR opened. |
+| P7 monitor | complete | Close hosted checks and actionable reviews. | PR green and mergeable. |
+| P8 merge-and-close | complete | Merge and close captured findings. | PR merged; all 13 IDs resolved. |
+| P9 close | complete | Record evidence, reflection, and lifecycle. | Reflection accompanies the fixes; merge and exact-ID closure evidence is retained on the PR that merges each fix. |
 
 ## Execution Rules
 
@@ -37,3 +37,11 @@ jq . goals/codex-security-findings-2026-09-08/ops/triage.json
 test "$(find goals/codex-security-findings-2026-09-08/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 13
 git diff --check -- goals/codex-security-findings-2026-09-08
 ```
+
+## Retained closeout evidence (2026-09-16)
+
+All 13 findings merged in PRs #1026, #1032, and #1037 and were closed as Already fixed. The final completion receipt on PR #1037 records local proof, hosted acceptance, and exact-ID closure; this PR reconciles the stale tracked lifecycle.
+
+[Completion receipt](https://github.com/beep-effect/beep-effect/pull/1037#issuecomment-5598051010).
+The citation refresh receipt preserves historical capture hashes while moving
+only current-tree citation line references after unrelated source edits.

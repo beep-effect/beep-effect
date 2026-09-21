@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/deny-shell.sh",
+        "timeout": 5,
+        "failClosed": true
+      }
+    ],
+    "preToolUse": [{ "command": ".cursor/hooks/hook-pulse.sh", "timeout": 5 }],
+    "postToolUse": [{ "command": ".cursor/hooks/hook-pulse.sh", "timeout": 5 }],
+    "postToolUseFailure": [
+      { "command": ".cursor/hooks/hook-pulse.sh", "timeout": 5 }
+    ],
+    "beforeSubmitPrompt": [
+      { "command": ".cursor/hooks/hook-pulse.sh", "timeout": 5 }
+    ],
+    "stop": [{ "command": ".cursor/hooks/hook-pulse.sh", "timeout": 5 }],
+    "sessionEnd": [{ "command": ".cursor/hooks/hook-pulse.sh", "timeout": 5 }]
+  }
+}

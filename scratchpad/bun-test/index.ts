@@ -1,6 +1,8 @@
 /**
  * Effect testing helpers for Bun's native `bun:test` runner.
  *
+ * **Details**
+ *
  * The experimental API follows `@effect/vitest` (`it.effect`, `it.live`,
  * `layer`, `it.prop`, `flakyTest`, …). See PILOT-RESULTS.md
  * for known unsupported contracts before attempting migration.
@@ -20,58 +22,252 @@ import * as bt from "bun:test"
 import { assert as chaiAssert } from "chai"
 
 /**
- * Re-exported primitives from Bun's built-in test runner.
+ * Register cleanup after all tests in the current suite finish.
  *
- * Bun does not currently support `export ... from "bun:test"`, so each symbol
- * is re-exported via a const binding.
+ * **Example** (Use afterAll in a test)
  *
+ * ```ts
+ * import { afterAll, expect, it } from "@beep/scratchpad/bun-test/index"
+ *
+ * let calls = 0
+ * afterAll(() => expect(calls).toBe(1))
+ * it("counts a call", () => { calls += 1 })
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const afterAll = bt.afterAll
-/** @since 0.0.0 */
-export const afterEach = bt.afterEach
-/** @since 0.0.0 */
-export const beforeAll = bt.beforeAll
-/** @since 0.0.0 */
-export const beforeEach = bt.beforeEach
-/** @since 0.0.0 */
-export const describe = bt.describe
-/** @since 0.0.0 */
-export const expect = bt.expect
-/** @since 0.0.0 */
-export const expectTypeOf: typeof bt.expectTypeOf = bt.expectTypeOf
-/** @since 0.0.0 */
-export const vi = bt.vi
-/** @since 0.0.0 */
-export const jest = bt.jest
-/** @since 0.0.0 */
-export const mock = bt.mock
-/** @since 0.0.0 */
-export const setSystemTime = bt.setSystemTime
 /**
- * Set the file's default timeout for Bun and the adapter's interruptible tests.
+ * Register cleanup after each test in the current suite.
  *
- * **Example** (Configure a preload)
+ * **Example** (Use afterEach in a test)
  *
  * ```ts
- * import { setDefaultTimeout } from "@beep/effect-bun-test"
- * setDefaultTimeout(30_000)
+ * import { afterEach, expect, it } from "@beep/scratchpad/bun-test/index"
+ *
+ * let value = 0
+ * afterEach(() => { value = 0 })
+ * it("changes a value", () => { value = 1; expect(value).toBe(1) })
  * ```
  *
- * @category configuration
+ * @category testing
+ * @since 0.0.0
+ */
+export const afterEach = bt.afterEach
+/**
+ * Initialize shared state before the current suite runs.
+ *
+ * **Example** (Use beforeAll in a test)
+ *
+ * ```ts
+ * import { beforeAll, expect, it } from "@beep/scratchpad/bun-test/index"
+ *
+ * let ready = false
+ * beforeAll(() => { ready = true })
+ * it("sees initialized state", () => expect(ready).toBe(true))
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const beforeAll = bt.beforeAll
+/**
+ * Initialize fresh state before each test in the current suite.
+ *
+ * **Example** (Use beforeEach in a test)
+ *
+ * ```ts
+ * import { beforeEach, expect, it } from "@beep/scratchpad/bun-test/index"
+ *
+ * let value = 0
+ * beforeEach(() => { value = 1 })
+ * it("sees fresh state", () => expect(value).toBe(1))
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const beforeEach = bt.beforeEach
+/**
+ * Group native Bun tests under a suite name.
+ *
+ * **Example** (Use describe in a test)
+ *
+ * ```ts
+ * import { describe, expect, it } from "@beep/scratchpad/bun-test/index"
+ *
+ * describe("arithmetic", () => {
+ *   it("adds", () => expect(1 + 1).toBe(2))
+ * })
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const describe = bt.describe
+/**
+ * Assert runtime values with Bun's native matchers.
+ *
+ * **Example** (Use expect in a test)
+ *
+ * ```ts
+ * import { expect } from "@beep/scratchpad/bun-test/index"
+ *
+ * expect({ count: 2 }).toEqual({ count: 2 })
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const expect = bt.expect
+/**
+ * Express type-level expectations using the installed Bun testing API.
+ *
+ * **Example** (Use expectTypeOf in a test)
+ *
+ * ```ts
+ * import { expectTypeOf } from "@beep/scratchpad/bun-test/index"
+ *
+ * expectTypeOf<number>().toEqualTypeOf<number>()
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const expectTypeOf: typeof bt.expectTypeOf = bt.expectTypeOf
+/**
+ * Expose Bun's available Vitest-style mock utilities; unsupported Vitest methods remain unavailable.
+ *
+ * **Example** (Use vi in a test)
+ *
+ * ```ts
+ * import { vi, expect } from "@beep/scratchpad/bun-test/index"
+ *
+ * const read = vi.fn(() => 42)
+ * expect(read()).toBe(42)
+ * expect(read).toHaveBeenCalledTimes(1)
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const vi = bt.vi
+/**
+ * Expose Bun's Jest-style mock and timer utilities.
+ *
+ * **Example** (Use jest in a test)
+ *
+ * ```ts
+ * import { jest, expect } from "@beep/scratchpad/bun-test/index"
+ *
+ * const read = jest.fn(() => "ready")
+ * expect(read()).toBe("ready")
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const jest = bt.jest
+/**
+ * Create native Bun mock functions with observable call histories.
+ *
+ * **Example** (Use mock in a test)
+ *
+ * ```ts
+ * import { mock, expect } from "@beep/scratchpad/bun-test/index"
+ *
+ * const read = mock(() => 42)
+ * expect(read()).toBe(42)
+ * expect(read).toHaveBeenCalledTimes(1)
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const mock = bt.mock
+/**
+ * Override the native clock for deterministic date assertions.
+ *
+ * **Example** (Use setSystemTime in a test)
+ *
+ * ```ts
+ * import { setSystemTime, expect } from "@beep/scratchpad/bun-test/index"
+ *
+ * setSystemTime(new Date("2020-01-01T00:00:00Z"))
+ * expect(new Date().getUTCFullYear()).toBe(2020)
+ * setSystemTime()
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const setSystemTime = bt.setSystemTime
+/**
+ * Configure Bun and the adapter's interruptible default before collecting tests.
+ *
+ * **Example** (Use setDefaultTimeout in a test)
+ *
+ * ```ts
+ * import { setDefaultTimeout, it } from "@beep/scratchpad/bun-test/index"
+ * import { Effect } from "effect"
+ *
+ * setDefaultTimeout(30_000)
+ * it.effect("uses the configured deadline", () => Effect.succeed(42))
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const setDefaultTimeout = internal.setDefaultTimeout
-/** @since 0.0.0 */
+/**
+ * Observe a method with a native Bun spy and restore it after the assertion.
+ *
+ * **Example** (Use spyOn in a test)
+ *
+ * ```ts
+ * import { spyOn, expect } from "@beep/scratchpad/bun-test/index"
+ *
+ * const source = { read: () => 42 }
+ * const spy = spyOn(source, "read")
+ * expect(source.read()).toBe(42)
+ * expect(spy).toHaveBeenCalledTimes(1)
+ * spy.mockRestore()
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
 export const spyOn = bt.spyOn
-/** @since 0.0.0 */
+/**
+ * Register a native Bun test without the adapter's Effect helpers.
+ *
+ * **Example** (Use test in a test)
+ *
+ * ```ts
+ * import { test, expect } from "@beep/scratchpad/bun-test/index"
+ *
+ * test("adds two numbers", () => expect(1 + 1).toBe(2))
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
 export const test = bt.test
 
 /**
- * A chai-flavoured `assert` covering the surface `@effect/vitest` re-exports
- * from Vitest, so suites using `assert.strictEqual`, `assert.include`, … port
- * unchanged.
+ * Provide basic assertion helpers plus Chai deep-inclusion checks for shared test helpers.
  *
+ * **Example** (Use assert in a test)
+ *
+ * ```ts
+ * import { assert } from "@beep/scratchpad/bun-test/index"
+ *
+ * assert.strictEqual(2 + 2, 4)
+ * assert.deepInclude({ status: "ready", count: 1 }, { status: "ready" })
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const assert: {
@@ -112,10 +308,13 @@ export const assert: {
  * A stand-in for Vitest's `TestContext`. Bun's test runner doesn't pass a
  * context object to the test function, so the test wrapper synthesises one.
  *
+ * **Details**
+ *
  * The `signal` aborts when the wrapper-managed timeout fires, interrupting the
  * test's Effect fiber so its finalizers run — something Bun's own timeout
  * cannot do.
  *
+ * @category models
  * @since 0.0.0
  */
 export interface TestContext {
@@ -127,6 +326,7 @@ export interface TestContext {
 /**
  * Options accepted by every test registrar in this package.
  *
+ * @category models
  * @since 0.0.0
  */
 export interface TestOptions {
@@ -140,11 +340,17 @@ export interface TestOptions {
 }
 
 /**
+ * Callable registration surface shared by plain test collectors.
+ *
+ * @category models
  * @since 0.0.0
  */
 export type API = TestCollectorCallable
 
 /**
+ * Register a test with either callback-first or options-first arguments.
+ *
+ * @category models
  * @since 0.0.0
  */
 export interface TestCollectorCallable {
@@ -163,6 +369,7 @@ export interface TestCollectorCallable {
 /**
  * A parameterized test registrar, mirroring `test.each`.
  *
+ * @category models
  * @since 0.0.0
  */
 export interface TestEach {
@@ -177,6 +384,7 @@ export interface TestEach {
  * The full test collector surface: the callable registrar plus the chained
  * helpers (`skip`, `only`, `each`, `describe`, ...).
  *
+ * @category models
  * @since 0.0.0
  */
 export interface Collector extends TestCollectorCallable {
@@ -191,10 +399,16 @@ export interface Collector extends TestCollectorCallable {
 }
 
 /**
+ * Type contracts for scoped Effect, live-clock, and property-test collectors.
+ *
+ * @category models
  * @since 0.0.0
  */
 export namespace BunTest {
   /**
+   * Effect-producing test callback parameterized by its arguments and required services.
+   *
+   * @category models
    * @since 0.0.0
    */
   export interface TestFunction<A, E, R, TestArgs extends Array<any>> {
@@ -202,6 +416,9 @@ export namespace BunTest {
   }
 
   /**
+   * Register an Effect-producing callback with a name and optional execution settings.
+   *
+   * @category models
    * @since 0.0.0
    */
   export interface Test<R> {
@@ -213,6 +430,9 @@ export namespace BunTest {
   }
 
   /**
+   * Tuple or record of schemas and native arbitraries used to generate property inputs.
+   *
+   * @category models
    * @since 0.0.0
    */
   export type Arbitraries =
@@ -224,6 +444,9 @@ export namespace BunTest {
     : never
 
   /**
+   * Effect test registrar with conditional, parameterized, and property-test variants.
+   *
+   * @category models
    * @since 0.0.0
    */
   export interface Tester<R> extends BunTest.Test<R> {
@@ -277,6 +500,9 @@ export namespace BunTest {
   }
 
   /**
+   * Collector methods available inside a shared Layer block, with its services in scope.
+   *
+   * @category models
    * @since 0.0.0
    */
   export interface MethodsNonLive<R = never> extends Collector {
@@ -323,6 +549,9 @@ export namespace BunTest {
   }
 
   /**
+   * Top-level collector including live-clock tests and shared Layer construction.
+   *
+   * @category models
    * @since 0.0.0
    */
   export interface Methods<R = never> extends MethodsNonLive<R> {
@@ -342,47 +571,75 @@ export namespace BunTest {
 }
 
 /**
- * `bun:test`'s `expect` does not currently expose `addEqualityTesters`, so
- * this is a no-op kept for API parity with `@effect/vitest`. Compare values
- * that implement the `Equal` trait with `Equal.equals` (or the helpers in
- * `@effect/bun-test/utils`) instead.
+ * Keep the upstream setup entrypoint available without registering custom equality testers.
  *
+ * **Example** (Use addEqualityTesters in a test)
+ *
+ * ```ts
+ * import { addEqualityTesters, expect } from "@beep/scratchpad/bun-test/index"
+ * import * as Equal from "effect/Equal"
+ * import * as O from "effect/Option"
+ *
+ * addEqualityTesters()
+ * expect(Equal.equals(O.some(1), O.some(1))).toBe(true)
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const addEqualityTesters: () => void = internal.addEqualityTesters
 
 /**
+ * Register a scoped Effect test with TestClock and TestConsole services.
+ *
+ * **Example** (Use effect in a test)
+ *
+ * ```ts
+ * import { effect, expect } from "@beep/scratchpad/bun-test/index"
+ * import { Effect } from "effect"
+ *
+ * effect("asserts inside an Effect", () => Effect.sync(() => expect(2 + 2).toBe(4)))
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const effect: BunTest.Tester<Scope.Scope> = internal.effect
 
 /**
+ * Register a scoped Effect test using the live runtime clock.
+ *
+ * **Example** (Use live in a test)
+ *
+ * ```ts
+ * import { live } from "@beep/scratchpad/bun-test/index"
+ * import { Effect } from "effect"
+ *
+ * live("waits on the live clock", () => Effect.sleep("1 millis"))
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const live: BunTest.Tester<Scope.Scope> = internal.live
 
 /**
- * Share a `Layer` between multiple tests, optionally wrapping the tests in a
- * `describe` block if a name is provided.
+ * Share a Layer across tests in a block, closing its resources when the block finishes.
  *
- * @since 0.0.0
+ * **Example** (Use layer in a test)
  *
  * ```ts
- * import { assert, layer } from "@effect/bun-test"
- * import { Effect, Layer, Context } from "effect"
+ * import { layer, expect } from "@beep/scratchpad/bun-test/index"
+ * import { Effect } from "effect"
+ * import * as Layer from "effect/Layer"
  *
- * class Foo extends Context.Service<Foo, "foo">()("Foo") {
- *   static layer = Layer.succeed(Foo, "foo")
- * }
- *
- * layer(Foo.layer)("layer", (it) => {
- *   it.effect("adds context", () =>
- *     Effect.gen(function*() {
- *       const foo = yield* Foo
- *       assert.strictEqual(foo, "foo")
- *     }))
+ * layer(Layer.empty)("shared layer", (tests) => {
+ *   tests.effect("runs in scope", () => Effect.sync(() => expect(true).toBe(true)))
  * })
  * ```
+ *
+ * @category testing
+ * @since 0.0.0
  */
 export const layer: <R, E>(
   layer_: Layer.Layer<R, E>,
@@ -397,6 +654,18 @@ export const layer: <R, E>(
 } = internal.layer
 
 /**
+ * Retry a scoped Effect failure within the helper's bounded retry policy.
+ *
+ * **Example** (Use flakyTest in a test)
+ *
+ * ```ts
+ * import { flakyTest, effect } from "@beep/scratchpad/bun-test/index"
+ * import { Effect } from "effect"
+ *
+ * effect("retries transient work", () => flakyTest(Effect.succeed(42)))
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const flakyTest: <A, E, R>(
@@ -405,21 +674,74 @@ export const flakyTest: <A, E, R>(
 ) => Effect.Effect<A, never, R> = internal.flakyTest
 
 /**
+ * Check a synchronous property with schema-derived inputs and explicit run options.
+ *
+ * **Example** (Use prop in a test)
+ *
+ * ```ts
+ * import { prop, expect } from "@beep/scratchpad/bun-test/index"
+ * import * as S from "effect/Schema"
+ *
+ * prop("generates integers", [S.Int], ([value]) => {
+ *   expect(Number.isInteger(value)).toBe(true)
+ * }, { arbitrary: { runs: 5, seed: 42 } })
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const prop: BunTest.Methods["prop"] = internal.prop
 
 /**
+ * Register plain, scoped Effect, live-clock, and property tests through one collector.
+ *
+ * **Example** (Use it in a test)
+ *
+ * ```ts
+ * import { it, expect } from "@beep/scratchpad/bun-test/index"
+ * import { Effect } from "effect"
+ *
+ * it.effect("checks a value", () => Effect.sync(() => expect(42).toBe(42)))
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const it: BunTest.Methods = internal.makeMethods(internal.defaultApi)
 
 /**
+ * Extend a compatible collector with scoped Effect and property-test methods.
+ *
+ * **Example** (Use makeMethods in a test)
+ *
+ * ```ts
+ * import { makeMethods, expect, it } from "@beep/scratchpad/bun-test/index"
+ * import { Effect } from "effect"
+ *
+ * const tests = makeMethods(it)
+ * tests.effect("uses an extended collector", () => Effect.sync(() => expect(true).toBe(true)))
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const makeMethods: (it: Collector) => BunTest.Methods = internal.makeMethods
 
 /**
+ * Create a named suite whose callback receives the Effect-aware collector.
+ *
+ * **Example** (Use describeWrapped in a test)
+ *
+ * ```ts
+ * import { describeWrapped, expect } from "@beep/scratchpad/bun-test/index"
+ * import { Effect } from "effect"
+ *
+ * describeWrapped("Effect examples", (tests) => {
+ *   tests.effect("asserts a result", () => Effect.sync(() => expect(1).toBe(1)))
+ * })
+ * ```
+ *
+ * @category testing
  * @since 0.0.0
  */
 export const describeWrapped: (name: string, f: (it: BunTest.Methods) => void) => void = internal.describeWrapped

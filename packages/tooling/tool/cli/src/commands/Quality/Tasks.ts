@@ -1084,12 +1084,17 @@ const turboCacheArgsFor = (tasks: ReadonlyArray<string>, args: ReadonlyArray<str
 
 const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> => {
   const [optionArgs, passthroughArgs] = splitAtTurboPassthrough(args);
+  // Golden regeneration writes fixtures, so even a second identical invocation
+  // must execute instead of replaying a successful cached regeneration.
+  const executionArgs = configStringEqualsSync("REGEN_GOLDENS", "1")
+    ? ["--force", ...A.filter(optionArgs, (arg) => arg !== "--force" && !Str.startsWith(arg, "--force="))]
+    : optionArgs;
   return [
     "turbo",
     "run",
     ...tasks,
     ...turboCacheArgsFor(tasks, args),
-    ...optionArgs,
+    ...executionArgs,
     ...labsExcludeFilterArgs(tasks, optionArgs),
     ...passthroughArgs,
   ];
@@ -3131,7 +3136,26 @@ const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
   const selection = parseRootAuditSelection(args);
 
   if (selection.mode === "packages") {
-    return [turboStep(repoRoot, "audit:packages", ["audit"], boundedRootTurboArgs(ciFreshTurboArgs(selection.args)))];
+    const step = turboStep(
+      repoRoot,
+      "audit:packages",
+      ["audit"],
+      boundedRootTurboArgs(ciFreshTurboArgs(selection.args))
+    );
+    // An unresolved reference is not an external test database. Keep an empty
+    // override so Bun cannot reload the reference from .env in child processes.
+    return [
+      QualityTaskStep.make({
+        ...step,
+        ...O.getSomesStruct({
+          env: pipe(
+            O.fromUndefinedOr(Bun.env.BEEP_TEST_DATABASE_URL),
+            O.filter(isUnresolvedSecretReference),
+            O.map(() => ({ ...step.env, BEEP_TEST_DATABASE_URL: "" }))
+          ),
+        }),
+      }),
+    ];
   }
 
   const auditArgs = selection.args;

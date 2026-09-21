@@ -1,0 +1,12 @@
+{
+  "inconclusive": 0,
+  "killed": 4,
+  "killedIds": [
+    "14-s2-ecosystem-04",
+    "14-s2-ecosystem-14",
+    "14-s2-ecosystem-26",
+    "14-s2-ecosystem-36"
+  ],
+  "survives": 22,
+  "total": 26
+}

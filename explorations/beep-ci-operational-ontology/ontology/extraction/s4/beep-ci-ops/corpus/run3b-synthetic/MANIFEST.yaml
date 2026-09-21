@@ -426,7 +426,7 @@ source_facts:
     value: acknowledge attempt and admission sinks before deleting claim
     source:
       file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-      line: 894
+      line: 1023
       needle: const processReapClaim =
       sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   attempt_schema:
@@ -606,14 +606,14 @@ known_loss_classes:
 - class: best-effort journal appends (lock-busy drops)
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts
-    line: 1685
+    line: 1705
     needle: stayed busy; dropping one
     sha256: 7c3fd36bcf64ba5ea8f2ab472a8d137911333737326370a2345f55313ab8c429
   current_source_assessment: best-effort callers can drop; durable reap sinks retry
 - class: claim-race loser edge
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-    line: 965
+    line: 1094
     needle: const createReapClaim =
     sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   current_source_assessment: historical loss class mitigated by durable claims and acknowledged sinks;
@@ -621,21 +621,21 @@ known_loss_classes:
 - class: quarantined malformed state is journal-invisible
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-    line: 669
+    line: 798
     needle: quarantineEntry(directories, entryPath, "undecodable")
     sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   current_source_assessment: malformed bytes are excluded and tallied, never emitted raw
 - class: evictedAtMillis is reap time not death time
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-    line: 777
+    line: 906
     needle: 'evictedAtMillis: claimedAtMillis'
     sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   current_source_assessment: original claim instant, including a later protocol-enabled replay
 - class: heartbeat carried on v3 lease-evicted rows; still absent on v1/v2 rows
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-    line: 776
+    line: 905
     needle: 'lastHeartbeatAtMillis: lease.heartbeatAtMillis'
     sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   current_source_assessment: v3 last heartbeat is an observation, not the owner death instant
@@ -665,7 +665,7 @@ known_loss_classes:
 - class: eviction rows deferred while the protocol marker was off
   source:
     file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-    line: 726
+    line: 855
     needle: const PROTOCOL_DEFERRED_REAP_CLAIM_SUFFIX =
     sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   current_source_assessment: claims replayed on the first enabled pass; evictedAtMillis is the original
@@ -691,14 +691,14 @@ join_keys:
       redacted
     source:
       file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-      line: 765
+      line: 894
       needle: const admissionEventForReapClaim =
       sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   claim_filename:
     value: <nonce>-<process>.lease.json or .ticket.json; nonce and suffix retained
     source:
       file: packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts
-      line: 1678
+      line: 1810
       needle: const leasePath = path.join(directories.leases,
       sha256: 6728255c5437e7129de4f19a5d293dcd9b5d23f891bae545cd6b051aaad7390f
   runId:
@@ -920,4 +920,4 @@ totals:
   files_emitted: 9
   events: 10
   payload_bytes: 6953
-  bytes_emitted: 43001
+  bytes_emitted: 43003

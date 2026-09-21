@@ -123,3 +123,36 @@
   then rerun its quick verification; both lint and check passed.
 - Prevention: build referenced projects before selecting the quick verification
   subset in a fresh dependency installation.
+
+## 2026-09-15: docgen success did not prove inventory compliance
+
+- Work: document the new experimental adapter and coverage pilot for PR #1145.
+- Evidence: hosted JSDoc Ratchet rejected growth in six metrics after package
+  docgen passed. The regenerated inventory attributed all growth to the new
+  scratch adapter: 11 internal exports, four default configuration exports,
+  the internal module header, and three multi-paragraph lead descriptions.
+- Impact: docgen omits internal and default-export surfaces that the inventory
+  still scores; passing example compilation alone missed those obligations.
+- Recovery: add descriptions, titled examples, categories, and versions to the
+  owning exports; give module headers a lead and put secondary prose in Details.
+  Preserve existing internal visibility and the committed ratchet baseline.
+- Prevention: regenerate the ignored CI inventory and run the actual JSDoc
+  ratchet alongside package docgen when adding scratch modules or configurations.
+
+## 2026-09-16: scratchpad policy checks exceed package lint coverage
+
+- Work: completing the full proof for PR #1145 after package checks passed.
+- Evidence: hosted Lint Policy reported four `no-inline-schema-compile` errors
+  in `pilot/Trial.ts` and 19 native-runtime findings in the adapter internals
+  and assertion utilities. Both checks scan scratchpad roots independently of
+  the package lint task.
+- Recovery: stop the superseded local proof, hoist the pilot codecs, and check
+  equivalent Effect helper replacements at each adapter boundary before
+  rerunning the focused policy commands and the full proof. Document narrow
+  exceptions for weak context keys and callable function augmentation, and
+  regenerate the policy snapshot through `@beep/repo-configs` codegen: the CLI
+  reads that snapshot rather than the authoring JSONC file. The focused oxlint
+  and native-runtime checks then pass without changing any gate's enforcement.
+- Prevention: include the root oxlint and native-runtime checks in the initial
+  qualification of new scratchpad modules; package lint is supporting evidence,
+  not the complete policy contract.

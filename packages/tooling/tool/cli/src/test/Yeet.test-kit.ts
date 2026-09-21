@@ -9,6 +9,7 @@ export * from "@beep/repo-cli/commands/Yeet/index";
 export * from "../commands/Yeet/internal/Ack.ts";
 export * from "../commands/Yeet/internal/ArtifactPaths.ts";
 export * from "../commands/Yeet/internal/AttemptJournal.ts";
+export * from "../commands/Yeet/internal/CheckOutcome.ts";
 export * from "../commands/Yeet/internal/Closeout.ts";
 export * from "../commands/Yeet/internal/closeout/Closeout.schemas.ts";
 export * from "../commands/Yeet/internal/closeout/Gates.ts";
@@ -45,11 +46,14 @@ export * from "../commands/Yeet/internal/MergedPreview.ts";
 export * from "../commands/Yeet/internal/MonitorChecks.ts";
 export * from "../commands/Yeet/internal/MonitorComments.ts";
 export * from "../commands/Yeet/internal/MonitorLoop.ts";
+export * from "../commands/Yeet/internal/MonitorPolicy.ts";
 export * from "../commands/Yeet/internal/Planner.ts";
 export * from "../commands/Yeet/internal/Porcelain.ts";
 export * from "../commands/Yeet/internal/PortfolioIndexGuard.ts";
 export * from "../commands/Yeet/internal/ProofDigest.ts";
 export * from "../commands/Yeet/internal/ProofFact.ts";
+export * from "../commands/Yeet/internal/ProofJob.ts";
+export * from "../commands/Yeet/internal/ProofJobLauncher.ts";
 export * from "../commands/Yeet/internal/ProofLedger.ts";
 export * from "../commands/Yeet/internal/ProofState.ts";
 export * from "../commands/Yeet/internal/Provenance.ts";
@@ -65,7 +69,12 @@ export * from "../commands/Yeet/internal/Resume.schemas.ts";
 export * from "../commands/Yeet/internal/Resume.ts";
 export * from "../commands/Yeet/internal/Retire.schemas.ts";
 export * from "../commands/Yeet/internal/Retire.ts";
-export { GhStatusCheck, summarizeRemoteChecksForTesting } from "../commands/Yeet/internal/Status.ts";
+export * from "../commands/Yeet/internal/Settle.ts";
+export {
+  collectRemoteChecks as collectRemoteChecksForTesting,
+  GhStatusCheck,
+  summarizeRemoteChecksForTesting,
+} from "../commands/Yeet/internal/Status.ts";
 export * from "../commands/Yeet/internal/Sweep.schemas.ts";
 export * from "../commands/Yeet/internal/Sweep.ts";
 export * from "../commands/Yeet/internal/TurboQuery.ts";
@@ -73,6 +82,7 @@ export * from "../commands/Yeet/internal/Verdict.ts";
 export * from "../commands/Yeet/internal/WatchMode.ts";
 export * from "../commands/Yeet/internal/WatchStream.ts";
 export * from "../commands/Yeet/internal/WaveOrder.ts";
+export { yeetMonitorCommandRoute, yeetMonitorDurationMillis } from "../commands/Yeet/Yeet.command.ts";
 export * from "../commands/Yeet/Yeet.render.ts";
 export * from "../commands/Yeet/Yeet.schemas.ts";
 export { GhActor, GhPrView } from "../internal/github/GhSchema.ts";
