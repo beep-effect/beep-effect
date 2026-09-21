@@ -491,7 +491,10 @@ describe("plain monitor required census", () => {
     );
   }
 
-  for (const timeout of [0, 20]) {
+  for (const { timeout, maxAttempts } of [
+    { timeout: 0, maxAttempts: 1 },
+    { timeout: 20, maxAttempts: 2 },
+  ]) {
     it.live(`bounds pending retries and preserves their failure record (${timeout}ms)`, () =>
       withTempDirectory((root) =>
         Effect.gen(function* () {
@@ -508,7 +511,12 @@ describe("plain monitor required census", () => {
             ).pipe(provideScopedLayer(censusSpawnerLayer(calls, [requiredPending])))
           );
           expect(error.message).toContain("settle-timeout; pending: Check");
-          expect(yield* Ref.get(calls)).toBe(1);
+          // The retry sleep and timeout share the remaining deadline. Either
+          // timer can win: one retry may start before the timeout interrupts it.
+          // A zero budget must still stop after the initial attempt.
+          const attempts = yield* Ref.get(calls);
+          expect(attempts).toBeGreaterThanOrEqual(1);
+          expect(attempts).toBeLessThanOrEqual(maxAttempts);
           expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
         })
       ).pipe(provideScopedLayer(PlatformLayer))

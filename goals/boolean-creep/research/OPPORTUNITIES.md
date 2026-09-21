@@ -1368,3 +1368,15 @@ before reboot; termination was requested for this task's validators only.
 Receipt/archive hashes and all 3,114 frozen source hashes passed, but the last
 754-record inventory and six-design revision still need their final command
 checks after reboot. Earlier 753-record passes do not cover those later edits.
+
+## 2026-09-21 — Monitor timeout assertion blocked merged-main verification
+
+After merging main, full `bun run beep yeet verify` passed every lane except
+coverage. The inherited `yeet-monitor-check-registration.test.ts` 20 ms pending
+timeout case reported `expected 2 to be 1`; 4,299 other tests passed. Its retry
+sleep and timeout use the same remaining deadline, so the retry can start before
+the timeout interrupts it. The test now bounds attempts to one initial attempt
+plus at most one deadline-racing retry, while retaining the exact timeout message
+and single failed recorder entry assertions. Zero-budget behavior still requires
+exactly one attempt. Testing the bounded outcome instead of timer ordering would
+have prevented this false failure after the roughly 40-minute full proof.
