@@ -200,10 +200,15 @@ const mcpSessionClientLayer = Layer.effect(
 const unwrapServerSentEvents = (response: HttpClientResponse.HttpClientResponse) =>
   Str.startsWith("text/event-stream")(response.headers["content-type"] ?? "")
     ? Effect.map(Effect.orDie(response.text), (text) => {
-        const messages = A.map(
-          A.map(A.filter(Str.split("\n")(text), Str.startsWith("data: ")), Str.slice(6)),
-          (frame): unknown => JSON.parse(frame)
+        // Events are delimited by a blank line and may spread one payload over
+        // several `data:` fields, which join with a newline.
+        const payloads = A.filter(
+          A.map(Str.split("\n\n")(text), (event) =>
+            A.join(A.map(A.filter(Str.split("\n")(event), Str.startsWith("data: ")), Str.slice(6)), "\n")
+          ),
+          Str.isNonEmpty
         );
+        const messages = A.map(payloads, (payload): unknown => JSON.parse(payload));
         const responses = A.filter(messages, P.hasProperty("id"));
         return HttpClientResponse.fromWeb(
           response.request,
