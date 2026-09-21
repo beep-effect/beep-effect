@@ -350,7 +350,6 @@
         "@types/react-dom": "catalog:",
         "@vitejs/plugin-react": "catalog:",
         "decode-named-character-reference": "catalog:",
-        "gl-bench": "catalog:",
         "jsdom": "catalog:",
         "lexical": "catalog:",
         "react-grab": "catalog:",
@@ -2490,7 +2489,6 @@
         "@types/node": "catalog:",
         "@vitest/browser": "catalog:",
         "@vitest/browser-playwright": "catalog:",
-        "gl-bench": "catalog:",
       },
     },
     "packages/ontology/config": {
