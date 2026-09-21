@@ -85,7 +85,10 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
 export const EffectSchema = <Success, Failure, Dependencies>(): AnnotatedSchema<
   S.declare<Effect.Effect<Success, Failure, Dependencies>, Effect.Effect<Success, Failure, Dependencies>>
 > =>
-  S.declare<Effect.Effect<Success, Failure, Dependencies>>(isEffect, effectAnnotations).pipe(
+  S.declare<Effect.Effect<Success, Failure, Dependencies>>(
+    (input): input is Effect.Effect<Success, Failure, Dependencies> => isEffect(input),
+    effectAnnotations
+  ).pipe(
     $I.annoteSchema("EffectSchema", {
       description: "A schema that validates Effect runtime values.",
     })

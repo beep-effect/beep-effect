@@ -2712,7 +2712,6 @@ export class OpenClawStack extends pulumi.ComponentResource {
       `${name}-preflight`,
       {
         create: preflightScript,
-        logging: command.types.enums.local.Logging.StdoutAndStderr,
         triggers: [
           identity.machineId,
           identity.hostname,
@@ -2730,7 +2729,6 @@ export class OpenClawStack extends pulumi.ComponentResource {
       `${name}-stage`,
       {
         create: stageScript,
-        logging: command.types.enums.local.Logging.StdoutAndStderr,
         triggers: [...generationTriggers, stageScript],
         update: stageScript,
       },
@@ -2740,7 +2738,6 @@ export class OpenClawStack extends pulumi.ComponentResource {
       `${name}-apply`,
       {
         create: applyScript,
-        logging: command.types.enums.local.Logging.StdoutAndStderr,
         triggers: [...generationTriggers, applyScript],
         update: applyScript,
       },
@@ -2750,7 +2747,6 @@ export class OpenClawStack extends pulumi.ComponentResource {
       `${name}-probe`,
       {
         create: probeScript,
-        logging: command.types.enums.local.Logging.StdoutAndStderr,
         triggers: [...generationTriggers, probeScript],
         update: probeScript,
       },
@@ -2764,7 +2760,6 @@ export class OpenClawStack extends pulumi.ComponentResource {
           `${name}-backup-ship`,
           {
             create: backupScript,
-            logging: command.types.enums.local.Logging.StdoutAndStderr,
             triggers: [
               ...generationTriggers,
               backup.host,

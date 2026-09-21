@@ -142,9 +142,16 @@ const config = {
       // behind `beep tsconfig-sync` for docgen.json/tsconfig.json — emits
       // compact JSON instead of formatted. Pinned exactly (no caret) because a
       // range would resolve straight back to the broken release.
+      // lexical 0.51 deprecates `LexicalComposer` (Biome `noDeprecatedImports`
+      // fails every composer in @beep/editor and @beep/ui) in favour of
+      // `LexicalExtensionComposer`, whose extension-based config is a
+      // gesture-bearing editor migration with its own browser-QA campaign;
+      // the whole lockstep `@lexical/*` family stays at 0.50 until it lands.
       label: "Held back — do not auto-update (see changeset portless-default-react-grab-storybook)",
       dependencies: [
         "typescript",
+        "lexical",
+        "@lexical/**",
         "fast-xml-validator",
         "detailed-xml-validator",
         "@biomejs/biome",

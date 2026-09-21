@@ -1,8 +1,8 @@
 // Exact declaration excerpts from packages/effect/src/unstable/arbitrary/Arbitrary.ts at
-// @effect/vitest@4.0.0-rc.115 (MIT; see ../LICENSE).
-// Pinned full-file SHA-256: 98a910a672ac3f1978978af8154754577342e174a21c36a59f7d8b424b55a252
+// @effect/vitest@4.0.0-rc.117 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: cbca0b7788692dfdcb8204c512d42af2416c75975975a01cb025ce3f73adf742
 
-// @effect-vitest-anchor Arbitrary.CheckOptions 166 173
+// @effect-vitest-anchor Arbitrary.CheckOptions 182 189
 export interface CheckOptions {
   readonly runs?: number | undefined
   readonly size?: number | undefined
@@ -12,29 +12,28 @@ export interface CheckOptions {
   readonly replay?: Replay | undefined
 }
 
-// @effect-vitest-anchor Arbitrary.CheckOptions.option.runs 167 167
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.runs 183 183
   readonly runs?: number | undefined
 
-// @effect-vitest-anchor Arbitrary.CheckOptions.option.size 168 168
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.size 184 184
   readonly size?: number | undefined
 
-// @effect-vitest-anchor Arbitrary.CheckOptions.option.maxDiscards 169 169
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.maxDiscards 185 185
   readonly maxDiscards?: number | undefined
 
-// @effect-vitest-anchor Arbitrary.CheckOptions.option.maxShrinks 170 170
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.maxShrinks 186 186
   readonly maxShrinks?: number | undefined
 
-// @effect-vitest-anchor Arbitrary.CheckOptions.option.seed 171 171
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.seed 187 187
   readonly seed?: string | number | undefined
 
-// @effect-vitest-anchor Arbitrary.CheckOptions.option.replay 172 172
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.replay 188 188
   readonly replay?: Replay | undefined
 
-// @effect-vitest-anchor Arbitrary.schema 346 351
+// @effect-vitest-anchor Arbitrary.schema 362 367
 export function schema<S extends Schema_.Constraint>(
   schema: S,
   options?: SchemaOptions<S["Type"]>
 ): Arbitrary<S["Type"]> {
   return Internal.schema(schema, options)
 }
-

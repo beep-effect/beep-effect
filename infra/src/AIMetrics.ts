@@ -623,7 +623,6 @@ export class AIMetricsStack extends pulumi.ComponentResource {
           {
             connection,
             create: renderRemotePreflightCommand(args.remote),
-            logging: command.types.enums.remote.Logging.StdoutAndStderr,
             triggers: [
               args.remote.ssh.host,
               args.remote.ssh.user,
@@ -641,7 +640,6 @@ export class AIMetricsStack extends pulumi.ComponentResource {
           {
             connection,
             create: renderRemoteApplyCommand(args.remote, remoteDefaultService),
-            logging: command.types.enums.remote.Logging.StdoutAndStderr,
             triggers: remoteDeploymentTriggers,
             update: renderRemoteApplyCommand(args.remote, remoteDefaultService),
           },
@@ -655,7 +653,6 @@ export class AIMetricsStack extends pulumi.ComponentResource {
           {
             connection,
             create: renderRemoteHealthCommand(args.remote, remoteDefaultService),
-            logging: command.types.enums.remote.Logging.StdoutAndStderr,
             triggers: remoteDeploymentTriggers,
             update: renderRemoteHealthCommand(args.remote, remoteDefaultService),
           },

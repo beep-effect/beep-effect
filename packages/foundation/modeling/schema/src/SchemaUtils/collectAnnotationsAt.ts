@@ -59,11 +59,6 @@ const collect = (schema: S.Top, key: string): ReadonlyArray<unknown> => {
 
     visitStructuralChildren(ast, visit);
 
-    const constructorDefault = ast.context?.constructorDefault;
-    if (constructorDefault !== undefined) {
-      visit(constructorDefault.to);
-    }
-
     if (ast.encoding !== undefined) {
       A.forEach(ast.encoding, (link) => visit(link.to));
     }
