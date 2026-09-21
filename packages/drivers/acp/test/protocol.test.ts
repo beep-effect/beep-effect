@@ -930,3 +930,36 @@ it.layer(NodeServices.layer)("effect-acp frame decoder edge cases", (it) => {
     );
   }
 });
+
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("effect-acp untagged error decoding", (it) => {
+  it.effect(
+    "surfaces an untagged JSON-RPC error response as a Fail cause entry, never a Die defect",
+    Effect.fnUntraced(function* () {
+      const { stdio, input } = yield* makeInMemoryStdio();
+      const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
+        stdio,
+        serverRequestMethods: HashSet.empty(),
+      });
+      const clientSeen = yield* Queue.unbounded<unknown>();
+      yield* transport.clientProtocol
+        .run(0, (message) => Queue.offer(clientSeen, message).pipe(Effect.asVoid))
+        .pipe(Effect.forkScoped);
+
+      yield* Queue.offer(
+        input,
+        encoder.encode('{"jsonrpc":"2.0","id":8,"error":{"code":-32000,"message":"boom","data":{"k":1}}}\n')
+      );
+
+      // effect rc.117 parity: RpcSerialization maps a plain error object to `Fail`, so ACP
+      // consumers receive a typed error on the Cause channel rather than a `Die` defect.
+      assert.deepEqual(yield* Queue.take(clientSeen), {
+        _tag: "Exit",
+        requestId: "8",
+        exit: {
+          _tag: "Failure",
+          cause: [{ _tag: "Fail", error: { code: -32000, message: "boom", data: { k: 1 } } }],
+        },
+      });
+    })
+  );
+});

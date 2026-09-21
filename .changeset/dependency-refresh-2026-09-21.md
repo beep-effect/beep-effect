@@ -28,6 +28,9 @@ releases require:
   fails every composer in `@beep/editor` and `@beep/ui`) in favour of the
   extension-based `LexicalExtensionComposer`, an editor migration that needs
   its own browser-QA campaign.
+- `jsdom` joins the held-back group pinned at 30.0.1: 30.1.0 breaks every vitest 5
+  jsdom-environment file at worker start (`'addEventListener' called on an object that
+  is not a valid instance of EventTarget` from vitest's `catchWindowErrors`).
 - `@pulumi/command` 4.x drops the `logging` argument (its default already
   logged stdout and stderr), `@cosmos.gl/graph` 3.4.2 imports gl-bench's ESM
   build directly so the `gl-bench` Vite and Vitest aliases go away, and
