@@ -50,6 +50,9 @@ const notifierPath = `${repoRoot}.claude/hooks/sequence-break-notifier.sh`;
 // writer tests for, so the two scripts have to agree about where it lives.
 const switchPath = `${repoRoot}.claude/hooks/hook-pulse-switch.sh`;
 
+// Module scope: the compiled guard is built once, as the oxlint hoist rule requires.
+const isHookPulseAgentKind = S.is(HookPulseAgentKind);
+
 // A distinctive marker planted in every content-bearing raw key measured by the
 // P1 spike. Amendment 6 is only actually enforced if this never reaches disk —
 // in the clear *or* hashed. A raw leak is the obvious failure, but a writer that
@@ -182,12 +185,19 @@ const runWriter = Effect.fnUntraced(function* (
     yield* fs.writeFileString(hookPulseDisarmSentinelPath(evidenceRoot), `${options.disarmSentinel}\n`);
   }
 
-  const childStdin = O.match(O.fromUndefinedOr(options.disarmSentinel), {
-    // The kill-switch guard exits before the writer reads stdin. Ignoring the pipe in
-    // that case avoids racing a payload write against the child's intentional exit.
-    onSome: () => "ignore" as const,
-    onNone: () => ({ stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true }) as const,
-  });
+  // Two guards exit before the writer reads stdin: the kill switch and an agent kind
+  // outside `HookPulseAgentKind`. Ignoring the pipe in those cases avoids racing a
+  // payload write against the child's intentional exit. With the pipe attached, the
+  // parent's write can land on a reader that has already gone, and Bun's fs-backed
+  // stdin stream reports that EPIPE from its post-`finish` destroy — after the sink has
+  // released its error listener — as an unhandled error that fails the run with every
+  // test passing (hosted Property Laws on this branch; main's nightly sweep of 2026-09-20).
+  const writerReadsStdin =
+    O.isNone(O.fromUndefinedOr(options.disarmSentinel)) &&
+    isHookPulseAgentKind(options.agentKind ?? HookPulseAgentKind.Enum["claude-code"]);
+  const childStdin = writerReadsStdin
+    ? ({ stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true } as const)
+    : ("ignore" as const);
 
   // Effect's `ChildProcess`, deliberately, and neither `Bun.spawn*` nor
   // `node:child_process`. Measured: inside a vitest worker under the coverage script
