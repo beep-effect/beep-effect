@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "cursor-agent-pool",
+    "title": "Cursor Agent Pool",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/agent-pool-doctrine", "goals/agent-pool-picker"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-09-16",
+    "updated": "2026-09-16"
+  }
+}

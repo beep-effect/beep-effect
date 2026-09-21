@@ -56,3 +56,6 @@ unless stated; package `@beep/repo-cli`. Verified 2026-09-12.
 - [`explorations/fleet-coordination`](../../fleet-coordination/README.md) —
   routing and lease laws for sibling checkouts.
 - This packet: [`../CAPTURE.md`](../CAPTURE.md).
+- [`goals/time-to-certainty` B7](../../../goals/time-to-certainty/research/b7-brief.md) —
+  the polling half of this packet's gap, built 2026-09-16 as `yeet monitor --until-ready`
+  (settle rule, automatic closeout, ready terminal, `pr-merge-ready` row; rulings 41–49).

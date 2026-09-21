@@ -31,9 +31,11 @@ import { validateProofJobDetach } from "./internal/Guards.ts";
 import { runYeet } from "./internal/Handler.ts";
 import { YeetInboxSeverity, yeetProofJobRowId } from "./internal/Inbox.ts";
 import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
+import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS, YeetUntilReadyPolicy } from "./internal/MonitorPolicy.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
 import {
   rejectYeetUntilEventPairing,
+  rejectYeetUntilReadyPairing,
   runYeetMerge,
   runYeetMergeLoop,
   runYeetReplyPass,
@@ -53,7 +55,7 @@ import {
   ProofJobWaitOptions,
   proofJobUnitName,
 } from "./internal/ProofJob.ts";
-import { ProofJobLauncher } from "./internal/ProofJobLauncher.ts";
+import { ProofJobLauncher, reportProofJobCommand } from "./internal/ProofJobLauncher.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
 import { YeetCommandError } from "./Yeet.errors.ts";
@@ -158,6 +160,11 @@ const startPrEarlyFlag = Flag.Boolean("start-pr-early").pipe(
 const monitorFlag = Flag.Boolean("monitor").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Monitor hosted PR checks after publish instead of stopping at push")
+);
+
+const untilReadyFlag = Flag.Boolean("until-ready").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Settle required checks and run read-first closeout, then exit when merge-ready")
 );
 
 const untilMergedFlag = Flag.Boolean("until-merged").pipe(
@@ -475,13 +482,63 @@ const untilEventFlag = Flag.Boolean("until-event").pipe(
   )
 );
 
+const settleTimeoutFlag = Flag.String("settle-timeout").pipe(
+  Flag.withDefault(""),
+  Flag.withDescription("Maximum wait for required checks to register and settle (default 30 minutes; loop modes only)")
+);
+
+const decodeDurationFromString = S.decodeEffect(S.DurationFromString);
+const decodePositiveMillis = S.decodeEffect(S.Finite.pipe(S.check(S.isGreaterThan(0))));
+
+/**
+ * Decode a positive finite monitor duration, accepting compact units.
+ *
+ * **Details**
+ *
+ * An empty flag selects the thirty-minute default. Compact seconds, minutes,
+ * and hours normalize before the Effect duration codec decodes them.
+ *
+ * **Example** (Decode thirty minutes)
+ *
+ * ```ts
+ * import { yeetMonitorDurationMillis } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const program = yeetMonitorDurationMillis("30m")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param value - Duration flag text.
+ * @returns Positive finite milliseconds, or a typed command error.
+ * @category codecs
+ * @since 0.0.0
+ */
+export const yeetMonitorDurationMillis = Effect.fn("Yeet.monitorDurationMillis")(
+  function* (value: string) {
+    const text = Str.trim(value);
+    if (Str.isEmpty(text)) return YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS;
+    const normalized = pipe(
+      text,
+      Str.replace(/^([0-9]+(?:\.[0-9]+)?)s$/u, "$1 seconds"),
+      Str.replace(/^([0-9]+(?:\.[0-9]+)?)m$/u, "$1 minutes"),
+      Str.replace(/^([0-9]+(?:\.[0-9]+)?)h$/u, "$1 hours")
+    );
+    const duration = yield* decodeDurationFromString(normalized);
+    const millis = Duration.toMillis(duration);
+    return yield* decodePositiveMillis(millis);
+  },
+  Effect.mapError(YeetCommandError.new("--settle-timeout requires a positive finite duration."))
+);
+
 const monitorFlags = {
   ...detachedFlags,
   ...sharedFlags,
   summary: summaryFlag,
   stateRoot: yeetStateRootFlag,
+  settleTimeout: settleTimeoutFlag,
   untilEvent: untilEventFlag,
   untilMerged: untilMergedFlag,
+  untilReady: untilReadyFlag,
   watch: watchFlag,
 } as const;
 
@@ -850,13 +907,23 @@ const yeetPublishCommand = Command.make("publish", publishFlags, ({ stateRoot, .
   provideYeetStateRoot(runYeetMode("publish", options), stateRoot)
 ).pipe(Command.withDescription("Commit reviewed staged changes, prove the commit, then push"));
 
-const YeetMonitorCommandRoute = LiteralKit(["classic", "invalid-until-event", "merge-loop", "watch"]);
+const YeetMonitorCommandRoute = LiteralKit([
+  "classic",
+  "invalid-until-event",
+  "invalid-until-ready",
+  "ready-loop",
+  "invalid-settle-timeout",
+  "merge-loop",
+  "watch",
+]);
 
 const SelectYeetMonitorCommandRoute = Fn({
   input: S.Struct({
     plan: S.Boolean,
+    settleTimeout: S.String.pipe(SchemaUtils.withKeyDefaults("")),
     untilEvent: S.Boolean,
     untilMerged: S.Boolean,
+    untilReady: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     watch: S.Boolean,
   }),
   output: YeetMonitorCommandRoute,
@@ -871,7 +938,8 @@ const SelectYeetMonitorCommandRoute = Fn({
  *
  * **Details**
  *
- * Plan mode always retains the classic planner. Outside plan mode,
+ * Legal plan-mode requests retain the classic planner. Readiness mode rejects
+ * every other loop mode before planning or remote work. Outside plan mode,
  * `untilEvent` is valid only with watch mode and never with the merge loop.
  * Keeping the precedence in one pure selector makes the CLI pairing contract
  * directly testable without executing a monitor.
@@ -879,43 +947,85 @@ const SelectYeetMonitorCommandRoute = Fn({
  * **Example** (Select event watch mode)
  *
  * ```ts
- * import { yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet"
+ * import { yeetMonitorCommandRoute } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(yeetMonitorCommandRoute({ plan: false, untilEvent: true, untilMerged: false, watch: true })) // "watch"
  * ```
  *
- * @param options - The four monitor mode switches parsed by the CLI.
+ * @param options - Parsed monitor mode switches and the optional settle duration.
  * @returns The monitor implementation the handler should construct.
  * @category utilities
  * @since 0.0.0
  */
 export const yeetMonitorCommandRoute = SelectYeetMonitorCommandRoute.implementSync((options) =>
   Match.value(options).pipe(
+    Match.when(
+      (value) => Str.isNonEmpty(value.settleTimeout) && !value.untilMerged && !value.untilReady && !value.watch,
+      () => YeetMonitorCommandRoute.Enum["invalid-settle-timeout"]
+    ),
+    Match.when(
+      (value) => value.untilReady && (value.untilMerged || value.untilEvent || value.watch),
+      () => YeetMonitorCommandRoute.Enum["invalid-until-ready"]
+    ),
     Match.when({ plan: true }, () => YeetMonitorCommandRoute.Enum.classic),
     Match.when({ untilEvent: true, untilMerged: true }, () => YeetMonitorCommandRoute.Enum["invalid-until-event"]),
     Match.when({ untilEvent: true, watch: false }, () => YeetMonitorCommandRoute.Enum["invalid-until-event"]),
+    Match.when({ untilReady: true }, () => YeetMonitorCommandRoute.Enum["ready-loop"]),
     Match.when({ untilMerged: true }, () => YeetMonitorCommandRoute.Enum["merge-loop"]),
     Match.when({ watch: true }, () => YeetMonitorCommandRoute.Enum.watch),
     Match.orElse(() => YeetMonitorCommandRoute.Enum.classic)
   )
 );
 
+// The porcelain monitor loops write no run verdict, so inside a detached job they record their
+// own outcome; the classic monitor records it through the run verdict like verify does.
+const reportDetachedMonitor = Effect.fnUntraced(function* <A, E, R>(self: Effect.Effect<A, E, R>) {
+  if (O.isNone(yield* configStringOption("BEEP_YEET_JOB_ID"))) return yield* self;
+  return yield* reportProofJobCommand(yield* jobRoot(), self);
+});
+
 const yeetMonitorCommand = Command.make(
   "monitor",
   monitorFlags,
-  ({ stateRoot, untilEvent, untilMerged, watch, ...options }) => {
-    if (options.detach) return provideYeetStateRoot(runYeetMode("monitor", options), stateRoot);
-    const route = yeetMonitorCommandRoute({ plan: options.plan, untilEvent, untilMerged, watch });
-    return provideYeetStateRoot(
+  Effect.fn("Yeet.monitorCommand")(function* ({
+    stateRoot,
+    settleTimeout,
+    untilEvent,
+    untilMerged,
+    untilReady,
+    watch,
+    ...options
+  }) {
+    if (options.detach) return yield* provideYeetStateRoot(runYeetMode("monitor", options), stateRoot);
+    const route = yeetMonitorCommandRoute({
+      plan: options.plan,
+      settleTimeout,
+      untilEvent,
+      untilMerged,
+      untilReady,
+      watch,
+    });
+    const settleTimeoutMs = yield* yeetMonitorDurationMillis(settleTimeout);
+    return yield* provideYeetStateRoot(
       {
+        "invalid-settle-timeout": Effect.fail(
+          YeetCommandError.make({
+            message: "--settle-timeout requires --until-merged, --until-ready, or --watch.",
+            exitCode: 1,
+          })
+        ),
         classic: runYeetMode("monitor", options),
         "invalid-until-event": rejectYeetUntilEventPairing,
-        "merge-loop": runYeetMergeLoop(options).pipe(Effect.asVoid),
-        watch: runYeetWatchLoop(options, untilEvent),
+        "invalid-until-ready": rejectYeetUntilReadyPairing,
+        "ready-loop": reportDetachedMonitor(
+          runYeetMergeLoop(options, { policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }) }).pipe(Effect.asVoid)
+        ),
+        "merge-loop": reportDetachedMonitor(runYeetMergeLoop(options, { settleTimeoutMs }).pipe(Effect.asVoid)),
+        watch: reportDetachedMonitor(runYeetWatchLoop(options, untilEvent, { settleTimeoutMs })),
       }[route],
       stateRoot
     );
-  }
+  })
 ).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
 
 const yeetSweepCommand = Command.make("sweep", sweepFlags, (options) => runYeetSweep(options)).pipe(

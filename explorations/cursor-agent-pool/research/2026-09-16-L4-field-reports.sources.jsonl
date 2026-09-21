@@ -1,0 +1,80 @@
+{"url":"https://cursor.com/docs/cli/headless","title":"Using Headless CLI","accessed":"2026-09-16","supports":"Official -p/--force/stream-json/CURSOR_API_KEY examples"}
+{"url":"https://cursor.com/docs/cli/overview","title":"CLI overview","accessed":"2026-09-16","supports":"Install, modes, sandbox, resume, Cloud handoff"}
+{"url":"https://cursor.com/docs/cli/using","title":"Using CLI","accessed":"2026-09-16","supports":"MCP, AGENTS.md/CLAUDE.md, worktrees, print/CI"}
+{"url":"https://cursor.com/docs/cli/reference/parameters","title":"CLI parameters","accessed":"2026-09-16","supports":"Full flag/subcommand list including worker, --trust, --plugin-dir"}
+{"url":"https://cursor.com/docs/cli/reference/output-format","title":"CLI output formats","accessed":"2026-09-16","supports":"stream-json event schema; no usage events"}
+{"url":"https://cursor.com/docs/cli/github-actions","title":"Cursor CLI GitHub Actions","accessed":"2026-09-16","supports":"GHA YAML and restricted-autonomy CI recipe"}
+{"url":"https://cursor.com/docs/cli/acp","title":"ACP mode","accessed":"2026-09-16","supports":"agent acp JSON-RPC dialect vs -p"}
+{"url":"https://cursor.com/docs/cli/reference/authentication","title":"CLI authentication","accessed":"2026-09-16","supports":"agent login vs CURSOR_API_KEY"}
+{"url":"https://cursor.com/docs/hooks","title":"Hooks","accessed":"2026-09-16","supports":".cursor/hooks.json events and stdin JSON"}
+{"url":"https://cursor.com/docs/reference/third-party-hooks","title":"Third-party hooks","accessed":"2026-09-16","supports":"Loads .claude/settings.json; Notification/PermissionRequest unsupported"}
+{"url":"https://cursor.com/docs/skills","title":"Skills","accessed":"2026-09-16","supports":"Loads .claude/skills and .agents/skills"}
+{"url":"https://cursor.com/docs/plugins","title":"Plugins","accessed":"2026-09-16","supports":"Agent Plugin vs Cursor Plugin formats"}
+{"url":"https://cursor.com/docs/cloud-agent","title":"Cloud Agents","accessed":"2026-09-16","supports":"Cloud Agents overview, billing at model API rates"}
+{"url":"https://cursor.com/docs/cloud-agent/self-hosted","title":"Self-Hosted Machines","accessed":"2026-09-16","supports":"My Machines/Team Pools; inference stays in Cursor cloud; agent worker start"}
+{"url":"https://cursor.com/docs/cloud-agent/api/endpoints","title":"Cloud Agents API endpoints","accessed":"2026-09-16","supports":"api.cursor.com v1 agents and v0 private-workers"}
+{"url":"https://cursor.com/docs/models","title":"Models catalog","accessed":"2026-09-16","supports":"Pool membership and $/M prices for Composer, Grok 4.6, Kimi K3, GLM 5.2, Fable 5, Sol"}
+{"url":"https://cursor.com/docs/models-and-pricing","title":"Models and pricing","accessed":"2026-09-16","supports":"Plan Included language; Composer vs Claude/GPT prices"}
+{"url":"https://cursor.com/docs/account/pricing","title":"Account pricing","accessed":"2026-09-16","supports":"Ultra $200; unlimited tab completions only"}
+{"url":"https://cursor.com/help/models-and-usage/usage-limits","title":"Usage limits","accessed":"2026-09-16","supports":"Two pools; no rollover; on-demand after included"}
+{"url":"https://cursor.com/help/grok-bot/plans","title":"Grok Bot plans","accessed":"2026-09-16","supports":"Ultra highest Grok Bot weekly usage"}
+{"url":"https://cursor.com/docs/grok-bot/teams","title":"Grok Bot teams","accessed":"2026-09-16","supports":"Grok Bot can delegate to Cloud Agents"}
+{"url":"https://cursor.com/docs/models/cursor-composer-2-5","title":"Composer 2.5 model page","accessed":"2026-09-16","supports":"Composer positioning; Fast is default variant"}
+{"url":"https://cursor.com/composer","title":"Composer marketing / CursorBench","accessed":"2026-09-16","supports":"CursorBench 4.0 27.7 percent and $0.68/task"}
+{"url":"https://cursor.com/changelog/composer-2-5","title":"Composer 2.5 changelog","accessed":"2026-09-16","supports":"2026-05-18 pricing and quality claims"}
+{"url":"https://cursor.com/terms-of-service","title":"Cursor Terms of Service","accessed":"2026-09-16","supports":"Updated 2026-09-03; §1.5 reverse-engineer/scrape/probe"}
+{"url":"https://forum.cursor.com/t/cursor-agent-p-print-headless-mode-hangs-indefinitely-and-never-returns/150246","title":"Headless -p hangs indefinitely","accessed":"2026-09-16","supports":"Jan-Mar 2026 hang; staff later said fixed"}
+{"url":"https://forum.cursor.com/t/cursor-agent-print-doesnt-exit-after-completing/150296","title":"--print doesn't exit","accessed":"2026-09-16","supports":"No-exit worker; CI silent --plan; git-diff workaround"}
+{"url":"https://forum.cursor.com/t/cursor-agent-p-hangs-with-zero-output-on-2026-07-01-41b2de7-macos-intel-all-output-formats-even-trivial-prompts/164841","title":"Zero-output hang 2026.07.01","accessed":"2026-09-16","supports":"July 2026 macOS Intel zero-byte hang"}
+{"url":"https://forum.cursor.com/t/hooks-afteragentresponse-afteragentthought-not-firing-in-headless-cli/156220","title":"Headless hooks gap","accessed":"2026-09-16","supports":"Staff: afterAgentResponse/Thought known gap in --print"}
+{"url":"https://forum.cursor.com/t/cursor-agent-cli-never-invokes-hooks-json-on-linux-2026-08-11-same-version-works-on-macos/168326","title":"Linux hooks not firing","accessed":"2026-09-16","supports":"Linux hook spawn exit 127; works on macOS"}
+{"url":"https://forum.cursor.com/t/disable-permissions-ask-in-sandbox/157243","title":"Sandbox permission prompts","accessed":"2026-09-16","supports":"Headless --print --trust --sandbox enabled recipe"}
+{"url":"https://forum.cursor.com/t/agent-cli-linux-sandbox-preflight-fails-unshare-eperm-unless-run-under-strace-apparmor-restrict-unprivileged-userns-1/160039","title":"Linux sandbox unshare EPERM","accessed":"2026-09-16","supports":"AppArmor missing userns rule; staff Dean Rie"}
+{"url":"https://forum.cursor.com/t/cursor-cli-not-updating-sandboxing-doesnt-work/152649","title":"Sandbox uid_map EPERM","accessed":"2026-09-16","supports":"uid_map EPERM; chmod 4755 is a bad idea"}
+{"url":"https://forum.cursor.com/t/gpt-5-2-sandbox-issues/147855","title":"Sandbox empty success","accessed":"2026-09-16","supports":"Sandbox cmds exit 0 with empty output"}
+{"url":"https://forum.cursor.com/t/linux-sandbox-error-failed-to-apply-sandbox-io-error-step-4-7-mount-denies-failed-mount-count-limit-reached-1000/150926","title":"Sandbox mount-count limit","accessed":"2026-09-16","supports":"Linux sandbox mount-count 1000"}
+{"url":"https://forum.cursor.com/t/composer-2-5-is-now-live/160934","title":"Composer 2.5 is now live","accessed":"2026-09-16","supports":"Composer 2.5 based on Kimi K2.5 plus CPT"}
+{"url":"https://forum.cursor.com/t/share-your-thoughts-on-composer-2-5/160935","title":"Thoughts on Composer 2.5","accessed":"2026-09-16","supports":"Quality mixed; Ultra exhausted in 5-6 days"}
+{"url":"https://forum.cursor.com/t/can-anyone-tell-me-how-good-composer-2-5-is/161218","title":"How good is Composer 2.5","accessed":"2026-09-16","supports":"Worker bees not thinkers; Claude plans Composer implements"}
+{"url":"https://forum.cursor.com/t/praise-for-cursor-composer-2-5/162448","title":"Praise for Composer 2.5","accessed":"2026-09-16","supports":"Frontier plans, Composer executes; staff agrees"}
+{"url":"https://forum.cursor.com/t/grok-4-6-is-now-live/168189","title":"Grok 4.6 is now live","accessed":"2026-09-16","supports":"Long-running agents plus Extra High; 2x first week"}
+{"url":"https://forum.cursor.com/t/share-your-thoughts-on-grok-4-6/168190","title":"Thoughts on Grok 4.6","accessed":"2026-09-16","supports":"Mixed quality; XHigh fills context; post 91 vs Composer"}
+{"url":"https://forum.cursor.com/t/possible-bug-in-cursor-token-statistics-other-models-disabled-after-grok-quota-exhausted/169032","title":"Other Models disabled after Grok quota","accessed":"2026-09-16","supports":"Staff: Cursor Models spill into Other Models"}
+{"url":"https://forum.cursor.com/t/grok-bot-spend-cursor-usage-i-cant-accept-it/169796","title":"Grok Bot spend vs Cursor usage","accessed":"2026-09-16","supports":"Grok Bot is a separate weekly included pool"}
+{"url":"https://forum.cursor.com/t/kimi-k3-disoriented-and-expensive-in-cursor/168699","title":"Kimi K3 disoriented and expensive","accessed":"2026-09-16","supports":"$20 in 5 minutes looping reads; staff loop not intentional"}
+{"url":"https://forum.cursor.com/t/kimi-k3-completely-broken-multimodal-capabilities/167295","title":"Kimi K3 multimodal broken","accessed":"2026-09-16","supports":"Cursor-served Kimi K3 is text-only"}
+{"url":"https://forum.cursor.com/t/glm-5-2-support/163533","title":"GLM 5.2 support","accessed":"2026-09-16","supports":"BYOK; OpenRouter unsupported; 200K context display"}
+{"url":"https://forum.cursor.com/t/custom-openai-compatible-model-shows-200k-context-limit-for-glm-5-2-even-though-it-supports-1m-context/163360","title":"GLM 5.2 200K context cap","accessed":"2026-09-16","supports":"Custom OpenAI-compatible models capped at 200K in UI"}
+{"url":"https://forum.cursor.com/t/does-using-oh-my-pi-s-cursor-provider-or-an-openai-compatible-proxy-to-the-same-endpoints-violate-cursor-s-tos/167778","title":"Oh My Pi / OpenAI proxy ToS","accessed":"2026-09-16","supports":"Staff: unofficial proxy of private endpoints can ban accounts"}
+{"url":"https://forum.cursor.com/t/running-out-of-ultra-plan-credits-before-renewal/150012","title":"Running out of Ultra credits","accessed":"2026-09-16","supports":"Community $400 Other Models figure; 20-day exhaustion"}
+{"url":"https://forum.cursor.com/t/subagents-not-working-in-cursor-cli/151046","title":"Subagents not working in CLI","accessed":"2026-09-16","supports":"CLI Task tool missing Feb 2026; staff working now Mar 5"}
+{"url":"https://forum.cursor.com/t/cloud-agents-freeze-mid-run-and-never-reach-a-terminal-state-60-consecutive-account-wide-since-18-aug/168957","title":"Cloud Agents freeze ACTIVE","accessed":"2026-09-16","supports":"v1 status is lifecycle; execution state on runs"}
+{"url":"https://forum.cursor.com/t/cloud-agents-api-sdk-stream-delivers-intermediate-messages-steps-20-40s-later-than-cursor-com-agents-ui-on-the-same-run/170833","title":"Cloud Agents API stream lag","accessed":"2026-09-16","supports":"20-40s SSE lag vs UI; stream_unavailable race"}
+{"url":"https://forum.cursor.com/t/cloud-agent-runs-fail-immediately-with-stream-unavailable-run-stream-is-no-longer-available-agent-often-deleted-404-after-first-failed-bootstrap/171407","title":"stream_unavailable bootstrap 404","accessed":"2026-09-16","supports":"Sep 2026 Docker Hub / stream_unavailable failures"}
+{"url":"https://forum.cursor.com/t/cloud-agents-api-follow-up-runs-accepted-but-end-in-error-with-no-error-payload/165610","title":"Follow-up runs ERROR no payload","accessed":"2026-09-16","supports":"Follow-up 409/ERROR empty payload"}
+{"url":"https://forum.cursor.com/t/cloud-agent-time-to-live/163040","title":"Cloud Agent TTL billing","accessed":"2026-09-16","supports":"Billed tokens plus env setup, not idle"}
+{"url":"https://forum.cursor.com/t/api-error-we-encountered-an-unexpected-error-repeatedly-when-calling-cloud-agent/165792","title":"Cloud Agent unexpected API error","accessed":"2026-09-16","supports":"Startup failures used no tokens"}
+{"url":"https://github.com/awslabs/cli-agent-orchestrator/blob/main/docs/cursor-cli.md","title":"CAO Cursor CLI provider","accessed":"2026-09-16","supports":"Interactive flags; deliberately omits -p and --trust"}
+{"url":"https://github.com/SinanTufekci/agent-intern/blob/main/cursor_bridge.py","title":"agent-intern cursor_bridge.py","accessed":"2026-09-16","supports":"create-chat, --resume, stream-json parser, stdin disabled"}
+{"url":"https://github.com/moosl/cursor-auto-pilot","title":"cursor-auto-pilot","accessed":"2026-09-16","supports":"agent -p --output-format=stream-json orchestration"}
+{"url":"https://github.com/StrawCoding/hermes-cursor-agent","title":"hermes-cursor-agent","accessed":"2026-09-16","supports":"stream-json OpenAI shim; retry once with auto"}
+{"url":"https://github.com/yinguangyao/coding-agent-runner","title":"coding-agent-runner","accessed":"2026-09-16","supports":"Cursor via ACP not -p; Codex app-server; Claude stream-json"}
+{"url":"https://github.com/taberoajorge/ralph","title":"taberoajorge/ralph","accessed":"2026-09-16","supports":"Ralph loop agent -p --force stream-json sandbox disabled"}
+{"url":"https://github.com/LarsCowe/bmalph","title":"LarsCowe/bmalph","accessed":"2026-09-16","supports":"cursor-agent -p --force --output-format json --resume"}
+{"url":"https://github.com/raiyanyahya/loop","title":"raiyanyahya/loop","accessed":"2026-09-16","supports":"cursor-agent -p --force; ralph template"}
+{"url":"https://github.com/danielsinewe/ralph-cursor","title":"ralph-cursor","accessed":"2026-09-16","supports":"agent --print --force; 20 min timeout; circuit breaker"}
+{"url":"https://github.com/lockstride/ralph-wiggum-plugin","title":"ralph-wiggum-plugin","accessed":"2026-09-16","supports":"stream-json token rotate 150k; DEFER on rate limit"}
+{"url":"https://github.com/BloopAI/vibe-kanban","title":"Vibe Kanban","accessed":"2026-09-16","supports":"Sunsetting; Cursor listed among agents"}
+{"url":"https://github.com/router-for-me/CLIProxyAPI/issues/573","title":"CLIProxyAPI issue 573","accessed":"2026-09-16","supports":"No Cursor provider; issue closed unresolved"}
+{"url":"https://github.com/openai/codex/blob/main/codex-rs/app-server/README.md","title":"Codex app-server README","accessed":"2026-09-16","supports":"account/rateLimits/read JSON-RPC"}
+{"url":"https://github.com/cnwinds/cursor-pulse/blob/master/docs/cursor-usage-api.md","title":"cursor-pulse usage API","accessed":"2026-09-16","supports":"Unofficial DashboardService usage endpoints"}
+{"url":"https://github.com/robinebers/openusage/blob/main/docs/providers/cursor.md","title":"openusage Cursor provider","accessed":"2026-09-16","supports":"Session-token Cursor meter; Cursor vs Other vs Grok Bot"}
+{"url":"https://ianlpaterson.com/blog/tracking-claude-codex-gemini-quotas-from-one-script/","title":"Tracking Claude Codex Gemini quotas","accessed":"2026-09-16","supports":"Unified quota script; Codex rateLimits; no Cursor collector"}
+{"url":"https://www.learncursor.dev/learn/cursor-for-teams/cursor-usage-limits","title":"learncursor Ultra usage limits","accessed":"2026-09-16","supports":"Secondary source: Ultra Other Models $400"}
+{"url":"https://tovren.com/cursor-composer-2-5-daily-coding-default/","title":"Composer 2.5 daily coding default","accessed":"2026-09-16","supports":"Composer as daily driver; keep Claude/Codex/Gemini"}
+{"url":"https://deepakness.com/raw/composer-2-5-worker/","title":"Composer 2.5 worker","accessed":"2026-09-16","supports":"Jul 2026 Composer-as-worker vs Grok/GPT planner"}
+{"url":"https://www.conductor.build/docs/concepts/agent-modes","title":"Conductor agent modes","accessed":"2026-09-16","supports":"Conductor launches Cursor with CURSOR_API_KEY"}
+{"url":"https://x.com/codedibia/status/2072358774757556499","title":"@codedibia stream-json plugin","accessed":"2026-09-16","supports":"2026-07-01 cursor-agent -p stream-json --stream-partial-output gotchas"}
+{"url":"https://x.com/GitTrend0x/status/2088436058602238084","title":"@GitTrend0x Hermes Cursor plugins","accessed":"2026-09-16","supports":"2026-08-15 hermes-cursor-agent and cursor-hermes-plugin"}
+{"url":"https://x.com/nearygy/status/2077603830645293062","title":"@nearygy coding-agent-runner","accessed":"2026-09-16","supports":"2026-07-16 Cursor via ACP; Codex app-server; Claude stream-json"}
+{"url":"https://x.com/grok/status/2086484877860339853","title":"@grok session resume dialect","accessed":"2026-09-16","supports":"2026-08-09 session_id preserved for Cursor/Grok backends"}

@@ -9,6 +9,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+// vitest 5: `resolveConfig` returns Vite's ResolvedConfig; the `test` key is a module augmentation from "vitest/config".
+import "vitest/config";
 import { resolveConfig } from "vitest/node";
 
 const providePlatform = provideScopedLayer(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)));
@@ -58,7 +60,7 @@ const resolvedConfig = Effect.fn("DoctestTest.resolvedConfig")(function* (root: 
       import { resolveConfig } from "vitest/node";
       import { jsonStringifyPretty } from "@beep/repo-utils/JsonUtils";
       import { Effect } from "effect";
-      const { vitestConfig: c } = await resolveConfig({ root: process.argv[1], config: process.argv[1] + "/vitest.config.ts", watch: false });
+      const { test: c } = await resolveConfig({ root: process.argv[1], config: process.argv[1] + "/vitest.config.ts", watch: false });
       console.log(await Effect.runPromise(jsonStringifyPretty({
         pool: c.pool, include: c.include, includeSource: c.includeSource ?? [], exclude: c.exclude,
         passWithNoTests: c.passWithNoTests, setupFiles: c.setupFiles, globalSetup: c.globalSetup,
@@ -196,7 +198,7 @@ describe("doctest lane fixture", { concurrent: false }, () => {
           "export const sum = 2;",
         ].join("\n")
       );
-      const { vitestConfig: config } = yield* Effect.promise(() =>
+      const { test: config } = yield* Effect.promise(() =>
         resolveConfig({
           root,
           config: false,

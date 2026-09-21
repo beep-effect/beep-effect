@@ -471,3 +471,245 @@ log path and the `yeet job wait` command (`--json` prints the record). `--job-ma
 <duration>` maps to `RuntimeMaxSec=` so the `timeout` reason is reachable in a live test.
 Agent guidance (yeet skill, AGENTS.md): a proof expected to outlive the repair loop is submitted
 with `--detach` and followed with `yeet job wait`.
+
+**Ruling 41 (B7-1) — B7 is a ttc goal item next to B5; the pr-event-awareness packet stays at
+capture.** `yeet monitor --until-ready` lands as ttc item B7 (`PLAN.md` after B6) with its
+settle rulings recorded here. `explorations/pr-event-awareness` receives one Trail line and a
+`research/SOURCES.md` cross-link saying the polling half is being built as B7; webhooks, push
+sources, and lane dispatch stay out of scope. Rejected: advancing the packet first (its spark is
+wider than this fix); a standalone PR train (no durable home for the settle rulings).
+
+**Ruling 42 (B7-2) — `--until-ready` is a third loop policy with an exit-0 terminal; exit codes
+in every mode follow the required-only census.** `--until-ready` shares the `--until-merged`
+poll loop, snapshot, and flake budget. It exits 0 on the first poll where merge-ready is `yes`;
+exits 1 when a required check is red and matched no flake class (or its rerun is spent), when the
+PR closes, when the settle timeout expires, or when the consecutive poll-error budget (5) is
+spent. Optional checks never affect the exit code in any mode. Plain `yeet monitor` and `--watch`
+move to the required-only census (`--until-event` triggers on required reds only; optional
+transitions are still emitted, and the `watch-ended` row carries an `optionalFailing` count).
+`--until-merged` announces readiness once per head (event + row) and keeps looping. Terminal
+states are one `LiteralKit` (`merged`, `closed`, `ready`, `required-red`, `settle-timeout`,
+`poll-error-budget`) and the exit-code table is one schema-backed table (`yeetMonitorExitFor`).
+Rejected: changing plain monitor's fail-fast default (breaks `publish --monitor`); readiness as an
+event on `--until-merged` only (no exit-0 terminal to block on).
+
+**Ruling 43 (B7-3) — the loop composes the read-first closeout itself.** When the required
+census settles for a head that has no closeout artifact bound to that head, the loop runs the
+same code path as `yeet closeout` with the default bot lineup, no gates, and never a reply,
+resolve, or retrigger flag (`runYeetAutomaticCloseout`). The artifact binds `reviewedHeadSha`,
+so a push invalidates it and the next settle re-runs it; closeout issues are readiness blockers,
+never loop failures. Rejected: an opt-in `--closeout` flag (one more flag every recipe must
+remember); dropping the `closeout-run` criterion (loses the durable per-head record other
+commands read).
+
+**Ruling 44 (B7-4) — settle = the base ruleset's expected contexts have reported and are
+terminal.** The required contexts are read once per head from
+`gh api repos/{owner}/{repo}/rules/branches/<base>` (`required_status_checks[].context`,
+deduplicated and sorted, with the contributing ruleset ids). Settled means every matchable
+expected context has reported a terminal outcome and no required check is pending. An expected
+context with no exact reported name but at least one matrix child (`<context> (<variant>)`
+reported — `Test Unit` on this repo, whose jobs register as `Test Unit (unit-a|unit-b|repo-cli)`)
+is tolerated by name, listed in the gate line, and its children are waited for; an expected
+context with neither an exact name nor a child is missing and holds the wait. When the ruleset
+read fails the rule degrades to the `--required` rows alone (the pre-B7 registration patience)
+after one stderr line. Precedent: bors-ng prerun waits for every configured status; GitHub merge
+queue waits for required checks on the merge group with a status-check timeout. Live evidence
+2026-09-16 (#1143): the `main` ruleset (10240248) lists 17 contexts, `gh pr checks --required`
+lists 16. Rejected: patience only (accepts the late-registration race cli/cli #7401 and #8855
+left open); a fixed census count (breaks when the workflow set changes); fuzzy or prefix matching
+beyond the matrix-child form (counts unrelated jobs as required).
+
+**Ruling 45 (B7-5) — `--settle-timeout <duration>`, default 30 minutes.** On expiry while
+unsettled the loop exits 1 with wait reason `settle-timeout`, names the missing and pending
+contexts, and the exit summary carries them. A settled head never times out. Rejected: keep
+polling and report (a never-registering path-filtered workflow holds the wait forever); treat
+unreported as failed (merge-queue semantics, but it lies about what was observed).
+
+**Ruling 46 (B7-6) — delivery is the attached loop now, the detached job after B5, plus one
+P1 informational inbox row per head.** Canonical recipe after B5: `yeet monitor --until-ready
+--detach`, then `yeet job wait <id>` from a background tool call. The loop appends one
+`pr-merge-ready` row per head (id from PR number + head SHA; a push supersedes the prior head's
+row with a `fix-sha` receipt naming the new head), severity P1: injected at the next tool
+boundary through the existing hook, never a denial, acknowledged by observation (`observed`) once
+B5's ack resolution lands (PR1 acks with the existing attributed forms; `--thread-url <pr>` is the
+natural one). A bounded spike in PR2 verifies whether a Claude Code `FileChanged` hook with
+`asyncRewake: true` on the inbox file can wake an idle session. Desktop PR-bar auto-fix stays
+optional. No webhooks. Rejected: row + hook only (rests on the unverified composition); desktop
+PR bar as canonical (no green event, needs the app open); P2 (session-start only) and P0 (a gate
+on good news).
+
+**Ruling 47 (B7-7) — naming.** Flag `--until-ready`; row kind `pr-merge-ready`; settle wait
+reasons as one `LiteralKit` (`registration`, `required-pending`, `closeout-pending`,
+`settle-timeout`); the gate line always names the current reason; the head timeline stamps
+`pushedAt`, `settledAt`, `closeoutAt`, `readyAt` and the final gate line prints the push→ready
+wall clock. Rejected: `--until-mergeable` (AGENTS.md already uses "mergeable" for the complete PR
+state, and the verdict line is `merge-ready:`).
+
+**Ruling 48 (B7-8) — two PRs.** PR1 (no B5 dependency): settle rule, automatic closeout,
+`--until-ready`, exit-code fixes in all modes, `pr-merge-ready` row and hook label, skill and
+AGENTS.md recipe, PLAN/rulings/receipts, measurement. PR2 (after B5 merges): the detach recipe in
+the skill, `pr-merge-ready` observed-ack wiring with `yeet job wait`, the FileChanged/asyncRewake
+spike result, and the scratchpad watcher's retirement receipt. Whoever lands second renumbers
+rulings via a divergence merge, never a force-push.
+
+**Ruling 49 (B7-5 amended) — the settle timeout bounds registration, not execution.** Ruling 45
+expired the budget "while unsettled", which included required checks that had registered and were
+queued or running. PR #1149's own babysit hit that at 30 minutes with `Heavy / Lint Policy` and
+`Heavy / Test Integration` registered but still queued behind six other heavy runs, and exited 1
+for a wait that was GitHub's, not a settle failure. The budget now counts only while no check has
+registered for the head or at least one expected context is missing (no exact name, no matrix
+child); a registered required check is waited for until its own job timeout, and the gate line
+names the elapsed time without the budget in that state. `deriveSettleVerdict` stays pure; the
+`settle-timeout` terminal, its exit code, and the missing-context naming are unchanged. Rejected:
+raising the default to cover the observed heavy queue (the queue depth is not a property of the
+head); counting queued checks against a second, longer budget (GitHub already owns that bound).
+
+## 2026-09-16 — B8 heavy-check admission, round 16 (eight rulings, proposed by the orchestrator, ratified by merge of the B8 PRs; numbered after B7's 41–49)
+
+**Ruling 50 (B8-1) — two tiers with three-valued admission.** Tier 1 (lint shards, unit
+shards, cheap gates) runs on every push. Tier 2 (the `Heavy / *` matrix) runs only under an
+admission verdict computed once per run by `bun run beep ci admission` from a typed event view:
+`run` (the matrix runs), `skip-satisfied` (the reusable workflow is called with
+`admitted: false`, every lane reports `skipped`, the ruleset is satisfied), `hold` (the caller
+job is skipped, the contexts stay "Expected", the PR is merge-blocked until admitted). The
+verdict, its sources and the docs-only flag are data (`HeavyAdmission`), never a scatter of
+`if:` strings.
+
+*Amendment (2026-09-16, probe #1164):* `skip-satisfied` is not a job-level skip. A matrix job
+skipped by `if:` is never expanded; GitHub reports a single `Heavy / matrix.name: skipped`
+context and the required per-lane contexts stay "Expected", so the docs-only PR was `BLOCKED`.
+The mechanism is instead: the verify job always runs, `runs-on` switches to `ubuntu-24.04` when
+`admitted` is false, and `lane-gate` skips every lane step, so each `Heavy / <lane>` context
+expands and passes without work. `hold` is unchanged (the caller job is skipped on purpose so
+no context exists). Every "lanes report skipped" phrase in the packet, skill, runbook and the
+settle detail now reads "lanes pass without work".
+
+**Ruling 51 (B8-2) — the label `ready-for-heavy` is the only pull-request admission source.**
+`HeavyAdmissionSource = label | merge-group | main-push`. `draft == false` never admits (it is
+the status quo), `ready_for_review` is not a source (unobservable from `gh pr view`, so the
+monitor and CI would disagree), and no comment command exists. `check.yml` adds only `labeled`
+to the default `pull_request` types. A code PR without the label holds; the agent applies the
+label once tier 1 is green, and `--until-ready` prints the exact `gh pr edit` command.
+
+**Ruling 52 (B8-3) — docs-only is the `goals_only` precedent widened, decided before the
+call.** A diff is docs-only when every merge-base path matches the `ci-change-profile.sh`
+packet-prose pattern, `docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`, or
+`*.md` anywhere; executables, fixtures and data under `goals/**` remain code-bearing. Docs-only
+without the label yields `skip-satisfied`; the label always wins. The classification is one
+exported RegExp used by the `ci admission` step and by the monitor, so both see the same
+verdict for the same head.
+
+**Ruling 53 (B8-4) — two PRs, the input first.** PR A adds the `workflow_call` input
+`admitted` (default `true`) and `if: inputs.admitted` on the `verify` matrix job in
+`heavy.yml`, nothing else; it is proven only after it reaches `main` because the heavy runner
+group admits main-ref workflows only. PR B (after PR A merges) adds the `Heavy Admission` job,
+the `needs`/`if`/`with` wiring, the settle amendment, docs and the label. The docs-only
+acceptance probe is the first docs-only PR after PR B (the B9 capture); if skipped matrix legs
+do not carry the `Heavy / <lane>` names, the fallback is a `runs-on` switch to `ubuntu-24.04`
+with the step gate honouring `!inputs.admitted`, never a required-check change.
+
+**Ruling 54 (B8-5) — `heavy-not-admitted` is a named, non-terminal wait.** `YeetSettleReason`
+gains `heavy-not-admitted`; `YeetSettleInput` gains `families` (`YeetGatedContextFamily`:
+prefix, admitting label, members folded from the ruleset's expected contexts) and an optional
+`admission`. Under `hold`, gated contexts leave `missing`/`pending` for a `gated` census bucket;
+the reason order is `registration`, `required-pending` (non-gated work open),
+`heavy-not-admitted` (only gated work open). A head is held only when the verdict is `hold`,
+gated contexts are open, at least one check has registered, **and nothing non-gated is missing
+or pending** (review rounds 1–2): held ⇔ the reason would be `heavy-not-admitted`. With no
+`Heavy / *` context in the ruleset, after a failed ruleset read, with nothing registered, or
+with an unregistered required context, an unlabelled PR still times out as B7 does, so the label
+never masks an unrelated never-registering context. `settle-timeout` is unreachable while
+held and the loop resets its settle clock when the verdict changes. `run` restores B7 exactly;
+`skip-satisfied` settles on the reported `skip` outcomes. The gate line names the gated
+contexts and the admitting command. Exit codes are unchanged.
+
+**Ruling 55 (B8-6) — the monitor computes admission from the same function as CI.** The
+loop builds `HeavyAdmissionEvent` from `gh pr view` labels and draft plus a once-per-head
+merge-base `git diff --name-only`, re-evaluates it every poll (labels change without a push),
+and streams `settle-changed` on a verdict flip. `YeetStatusRemote` gains `labels`.
+
+**Ruling 56 (B8-7) — merge queue is B9, captured not scheduled.** GitHub merge queue
+(`merge_group`, `checks_requested`, a `merge_queue` ruleset rule) is the mechanism that moves
+Benjamin's authority from "merge" to "enqueue"; it needs the `merge_group` trigger on every
+required workflow, a flake budget (an ejected PR rebuilds the queue behind it), a merge-group
+tail in `--until-ready`, and an `/explore` grill first. B8 only reserves the `merge-group`
+admission source and never substitutes a global `concurrency` group (one pending slot, no FIFO).
+
+**Ruling 57 (B8-8) — capacity is the operator's lever.** Throughput is heavy duration times
+queue depth under any admission design; pool sizing (`runners_maximum_count`, spot vs
+on-demand, `docs/runbooks/ci-runner-reliability.md`) is recorded as an operator decision and is
+not changed by B8.
+
+Amendment, live acceptance (2026-09-16), rulings 54 and 55: a head whose base moved under it
+(`mergeable: CONFLICTING` / `mergeStateStatus: DIRTY`) reports `settle: base-conflict; merge
+origin/main and push` — unsettled, never terminal, never spending the budget — because GitHub
+empties the check rollup of a conflicting PR and the registration budget would otherwise turn
+that into `settle-timeout` (observed twice on #1155 when B7 merged). Both loops also remember
+every context seen registered for a head and keep an absent one `pending` rather than
+regressing it to `missing` on a single empty poll. Exit codes unchanged.
+
+## 2026-09-16 — C3 Labs lane digest, round 17 (one ruling, proposed by the orchestrator, ratified by merge of the C3 Labs PR; numbered after B8's 50–57)
+
+Context: the PLAN Labs note (2026-09-03, PR #989) recorded the blocker "three task-hash sets rather
+than one declared action". C3.6 (PR #1102) has since folded any set of bare task names from a
+lane's own run summaries into one `TurboLaneDigest`, and hands a wrapper lane's digest to its
+parent through `BEEP_TURBO_LANE_LEDGER`. A dry run of the labs invocation (`turbo run check lint
+test --filter=./apps/labs/**`) plans 91 tasks: the 15 lab tasks (five labs times `check`, `lint`
+and `test`) and 76 upstream `build` and `transit` tasks. No upstream package contributes a
+`check`, `lint` or `test` row. The local battery dispatched `ci lane labs` with no flags while
+check.yml runs `ci lane labs --summarize`, so no local labs run wrote a summary or declared a
+digest.
+
+**Ruling 58 (C3-Labs) — the labs lane keeps its one bundled Turbo invocation, and its input digest
+is the fold of every `check`, `lint` and `test` task hash its own summary ran, which the labs
+filter makes exactly the lab tasks today.** The fold keys on what ran, not on package identity: a
+foreign task the filter pulled in would gate the lane, so its hash belongs in the key rather than
+being dropped (a test plants one). Upstream build and transit work enters through Turbo's
+dependency hashing, never as digest rows. Local
+dispatch replays the hosted `--summarize`, and every descriptor that accepts `--summarize` replays
+it locally (a test over all descriptors pins this). The check.yml pull-request path gate, the
+push-runs-everything rule and the permanently non-required context are unchanged. A run with zero
+labs selects no rows, declares no digest, stays green and reports as non-reusable. Labs stays
+outside the pre-push wave, so the digest has no reuse consumer until C4 shadow mode or a
+separately recorded hosted-reuse decision. Rejected: three labs lanes (three hosted setups for a
+non-required lane whose single context lab-apps-lifecycle row 10 ratified); an empty-set digest
+for zero labs (a reusable proof of nothing).
+
+Live acceptance (2026-09-16), ruling 58: `bun run beep ci local --lanes labs` dispatched
+`bun run beep ci lane labs --summarize`, ran 53 Turbo tasks green in 35 s, and recorded lane run
+`labs` with input digest `de139ae3…`. Recomputing SHA-256 over the sorted `taskId=hash` lines of
+the 15 `check`/`lint`/`test` rows in that run's summary reproduces the same digest; the 38
+upstream rows are absent from it.
+
+## 2026-09-16 — C4a legacy proof stores, round 18 (two rulings, proposed by the orchestrator, ratified by merge of the C4a PR; numbered after C3 Labs' 58)
+
+Context: PLAN C4a names two legacy proof stores that must never become ProofFact sources. A read
+of main at `f6b40bb8e0` found them in different states. Store 1, the `YeetLaneProofState` rows in
+`YeetRunState.laneProofs`, is written to each run's `state.json` by `writeVerifiedState` at three
+Handler call sites and has no reader: `loadVerifiedState` decodes the state, and nothing reads the
+`laneProofs` field. Store 2, the `LaneProofRecord` rows in `.beep/yeet/lane-proofs.json`, is a live
+exact-match reuse path. `Quality/Tasks.ts` prepares a session, checks `hasReusableLaneProof` and
+persists records, and the Yeet planner sets `BEEP_YEET_LANE_PROOF_MODE=active` for every Yeet run.
+`ProofLedger` has no production consumer yet, and neither `ProofLedger.ts` nor `ProofFact.ts`
+imports either store. SPEC's C1 paragraph still called store 1 "the migration source", which the
+PLAN C4a wording ("never migrate them") had already overruled.
+
+**Ruling 59 (C4a-1) — store 1 retires now, with no migration.** `YeetLaneProofState`, the
+`laneProofs` field and its per-step builder are deleted, and `writeVerifiedState` keeps writing
+only the run-level proof state its readers use. State files written before this change still
+decode, because Effect Schema ignores excess keys by default; a test loads a legacy file carrying a
+`laneProofs` row and asserts the decoded state has no such property. The receipt lives in
+`research/OPPORTUNITIES.md`. Rejected: waiting for C4 (a store with no reader has no reader to keep
+working) and migrating the rows into the ledger (they carry no per-lane input digest, env profile,
+epoch or provenance).
+
+**Ruling 60 (C4a-2) — store 2 keeps serving exact-match reuse until C4 enforcement replaces it,
+and it is never a fact source.** `LaneProofReuse` and `lane-proofs.json` stay live, because
+removing them now would regress the pre-push wave with nothing to take their place. C4 enforcement
+removes them in the same PR that turns ledger reuse on, with a retirement receipt; the PLAN C4 item
+carries that obligation. A test keeps `ProofLedger.ts` and `ProofFact.ts` free of imports from
+`ProofState.ts` and `LaneProofReuse.ts`, so C4's shadow wiring can only read the ledger. SPEC's C1
+paragraph now says the legacy stores are retired, not migrated. Rejected: deleting store 2 before
+C4 (it drops a working reuse path) and a shadow comparison against store 2 (its whole-tree identity
+is not the per-lane key that C4 must prove).
+

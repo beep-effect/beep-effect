@@ -76,6 +76,7 @@ import {
 } from "@beep/repo-cli/commands/Worktree/Worktree.errors";
 import { YeetCommandError } from "@beep/repo-cli/commands/Yeet/Yeet.errors";
 import { CliJsonError, CliReportedExit, FsGuardError, StdinDocumentError } from "@beep/repo-cli/test/Cli";
+import { CodexSecurityError } from "@beep/repo-cli/test/Codex";
 import { RegistrationGeometryError } from "@beep/repo-cli/test/DeletePackage";
 import { PacketCasConflictError, PacketStreamError } from "@beep/repo-cli/test/Goals";
 import { CaptureCommandTimedOutError, CapturePipeWedgedError } from "@beep/repo-cli/test/Process";
@@ -188,6 +189,25 @@ describe("repo-cli tagged-error declared equivalence", () => {
     });
 
     expectDeclaredEquivalence(CodexFindingsIngestError, first, second, different);
+  });
+  it("compares CodexSecurityError by declared fields", () => {
+    const first = CodexSecurityError.make({
+      message: "same",
+      exitCode: 2,
+      cause: "cause-a",
+    });
+    const second = CodexSecurityError.make({
+      message: "same",
+      exitCode: 2,
+      cause: "cause-b",
+    });
+    const different = CodexSecurityError.make({
+      message: "different",
+      exitCode: 2,
+      cause: "cause-a",
+    });
+
+    expectDeclaredEquivalence(CodexSecurityError, first, second, different);
   });
   it("compares CodexFindingsRedactionError by declared fields", () => {
     const first = CodexFindingsRedactionError.make({

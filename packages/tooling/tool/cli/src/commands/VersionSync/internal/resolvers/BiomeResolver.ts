@@ -2,7 +2,8 @@
  * Biome schema version resolver.
  *
  * Compares the `$schema` URL version in `biome.jsonc` against the installed
- * `@biomejs/biome` version from the root `package.json` catalog.
+ * `@biomejs/biome` version (lockfile-resolved, falling back to the root
+ * `package.json` catalog).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -10,12 +11,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Effect, FileSystem, identity, Path, SchemaTransformation } from "effect";
+import { A, Str } from "@beep/utils";
+import { Effect, FileSystem, Path, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as jsonc from "jsonc-parser";
 import {
   VersionCategoryReport,
   VersionCategoryStatusEnum,
@@ -23,6 +22,8 @@ import {
   VersionDriftItem,
   VersionSyncError,
 } from "../../VersionSync.schemas.ts";
+import { updateJsoncSchemaUrl } from "../updaters/JsoncSchemaUpdater.ts";
+import { resolveInstalledToolVersion } from "./RootCatalog.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/BiomeResolver");
 
@@ -72,27 +73,6 @@ const BiomeSchemaUrlToVersion = BiomeSchemaUrl.pipe(
 );
 
 /**
- * Extract exact version from a catalog version specifier (strip `^`, `~`, etc.).
- *
- * @param version - The version specifier (e.g. `^2.4.4`).
- * @returns The bare version string without range prefix.
- * @category utilities
- * @since 0.0.0
- */
-const VersionSpecifierToExactVersion = S.String.pipe(
-  S.decodeTo(
-    S.String,
-    SchemaTransformation.transform({
-      decode: Str.replace(/^[~^>=<]+/, ""),
-      encode: identity,
-    })
-  ),
-  $I.annoteSchema("VersionSpecifierToExactVersion", {
-    description: "Schema transformation that strips semver range prefixes from dependency version specifiers.",
-  })
-);
-
-/**
  * Build a schema URL from a version string.
  *
  * @param version - The Biome version (e.g. `2.4.4`).
@@ -102,8 +82,6 @@ const VersionSpecifierToExactVersion = S.String.pipe(
  */
 const buildSchemaUrl = (version: string): string => `${BIOME_SCHEMA_PREFIX}${version}${BIOME_SCHEMA_SUFFIX}`;
 const decodeSchemaVersion = S.decodeUnknownOption(BiomeSchemaUrlToVersion);
-const decodeExactVersion = S.decodeUnknownOption(VersionSpecifierToExactVersion);
-const exactVersionFromSpecifier = (value: unknown): string => O.getOrElse(decodeExactVersion(value), () => `${value}`);
 
 class BiomeJsoncDocument extends S.Class<BiomeJsoncDocument>($I`BiomeJsoncDocument`)(
   {
@@ -111,22 +89,6 @@ class BiomeJsoncDocument extends S.Class<BiomeJsoncDocument>($I`BiomeJsoncDocume
   },
   $I.annote("BiomeJsoncDocument", {
     description: "Subset of biome.jsonc used to resolve current schema URL.",
-  })
-) {}
-
-class RootPackageJsonDocument extends S.Class<RootPackageJsonDocument>($I`RootPackageJsonDocument`)(
-  {
-    catalog: S.Record(S.String, S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(R.empty<string, string>())),
-      S.withDecodingDefault(Effect.succeed(R.empty<string, string>()))
-    ),
-    devDependencies: S.Record(S.String, S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(R.empty<string, string>())),
-      S.withDecodingDefault(Effect.succeed(R.empty<string, string>()))
-    ),
-  },
-  $I.annote("RootPackageJsonDocument", {
-    description: "Subset of root package.json fields required for Biome version resolution.",
   })
 ) {}
 
@@ -153,7 +115,8 @@ export class BiomeSchemaState extends S.Class<BiomeSchemaState>($I`BiomeSchemaSt
 ) {}
 
 /**
- * Resolve current Biome schema version from `biome.jsonc` and installed version from `package.json` catalog.
+ * Resolve the current Biome schema version from `biome.jsonc` and the installed
+ * `@biomejs/biome` version (lockfile-resolved, falling back to the root `package.json` catalog).
  *
  * @category utilities
  * @since 0.0.0
@@ -177,22 +140,7 @@ export const resolveBiomeSchema = Effect.fn(function* (
   const schemaUrl = biomeJson.$schema;
   const schemaVersion = decodeSchemaVersion(schemaUrl);
 
-  // Read installed version from root package.json catalog
-  const pkgJsonPath = path.join(repoRoot, "package.json");
-  const pkgJsonContent = yield* fs
-    .readFileString(pkgJsonPath)
-    .pipe(VersionSyncError.mapError("Failed to read package.json", "package.json"));
-
-  const pkgJson = yield* decodeJsoncTextAs(RootPackageJsonDocument)(pkgJsonContent).pipe(
-    VersionSyncError.mapError("Failed to parse package.json", "package.json")
-  );
-
-  const rawVersion = O.getOrElse(
-    O.orElse(R.get(pkgJson.catalog, "@biomejs/biome"), () => R.get(pkgJson.devDependencies, "@biomejs/biome")),
-    thunkEmptyStr
-  );
-
-  const installedVersion = exactVersionFromSpecifier(rawVersion);
+  const installedVersion = yield* resolveInstalledToolVersion(repoRoot, "@biomejs/biome");
 
   return BiomeSchemaState.make({
     schemaUrl,
@@ -217,7 +165,7 @@ export const buildBiomeReport: (state: BiomeSchemaState) => VersionCategoryRepor
       status: VersionCategoryStatusEnum.ok,
       items,
       latest: O.none(),
-      error: O.some("@biomejs/biome not found in catalog or devDependencies"),
+      error: O.some("@biomejs/biome not found in bun.lock, the root catalog, or devDependencies"),
     });
   }
 
@@ -258,32 +206,5 @@ export const updateBiomeSchema = Effect.fn("updateBiomeSchema")(function* (
   filePath: string,
   version: string
 ): Effect.fn.Return<boolean, VersionSyncError, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-
-  const original = yield* fs
-    .readFileString(filePath)
-    .pipe(VersionSyncError.mapError(`Failed to read ${filePath}`, filePath));
-
-  const newSchemaUrl = buildSchemaUrl(version);
-
-  const edits = jsonc.modify(original, ["$schema"], newSchemaUrl, {
-    formattingOptions: {
-      tabSize: 2,
-      insertSpaces: true,
-    },
-  });
-
-  if (A.isReadonlyArrayEmpty(edits)) {
-    return false;
-  }
-
-  const updated = jsonc.applyEdits(original, edits);
-
-  if (updated === original) {
-    return false;
-  }
-
-  yield* fs.writeFileString(filePath, updated).pipe(VersionSyncError.mapError(`Failed to write ${filePath}`, filePath));
-
-  return true;
+  return yield* updateJsoncSchemaUrl(filePath, buildSchemaUrl(version));
 });

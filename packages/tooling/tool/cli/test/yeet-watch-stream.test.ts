@@ -1,6 +1,8 @@
 import {
   classifyYeetCheckOutcome,
   countYeetWatchFailures,
+  countYeetWatchOptionalFailures,
+  deriveSettleVerdict,
   diffYeetWatchSnapshots,
   renderYeetWatchEventLine,
   YEET_WATCH_SCHEMA_VERSION,
@@ -8,6 +10,9 @@ import {
   YeetMergeReadyCriteria,
   YeetMonitorIssueComment,
   YeetMonitorReviewComment,
+  YeetRulesetRequiredContexts,
+  YeetSettleCheck,
+  YeetSettleInput,
   YeetWatchCheck,
   YeetWatchDiffInput,
   YeetWatchEnded,
@@ -15,6 +20,7 @@ import {
   YeetWatchSnapshot,
   YeetWatchStarted,
   YeetWatchThread,
+  yeetWatchCheckIsRequired,
   yeetWatchCommentEvent,
   yeetWatchEndReason,
 } from "@beep/repo-cli/test/Yeet";
@@ -226,11 +232,46 @@ describe("yeetWatchEndReason", () => {
 });
 
 describe("countYeetWatchFailures", () => {
-  it("counts only failing checks", () => {
-    const counted = countYeetWatchFailures(
-      snapshot({ checks: [check("A", "fail"), check("B", "pass"), check("C", "fail"), check("D", "skip")] })
+  it("counts a failed matrix child of a required parent as required, in the census and the transition row", () => {
+    const child = YeetWatchCheck.make({ name: "Test Unit (unit-a)", outcome: "fail", required: false });
+    const settle = deriveSettleVerdict(
+      YeetSettleInput.make({
+        expected: O.some(
+          YeetRulesetRequiredContexts.make({ base: "main", contexts: ["Test Unit"], rulesetIds: [1], readAt: AT })
+        ),
+        checks: [YeetSettleCheck.make({ name: child.name, outcome: child.outcome, required: false })],
+        closeoutBound: false,
+        waitedMs: 0,
+        timeoutMs: 1000,
+      })
     );
-    expect(counted).toBe(2);
+    const vercel = YeetWatchCheck.make({ name: "Vercel", outcome: "fail", required: false });
+    const red = snapshot({ checks: [child, vercel], settle: O.some(settle) });
+    expect(settle.census.unmatched).toEqual(["Test Unit"]);
+    expect(yeetWatchCheckIsRequired(red, child)).toBe(true);
+    expect(countYeetWatchFailures(red)).toBe(1);
+    expect(countYeetWatchOptionalFailures(red)).toBe(1);
+    // Before any settle verdict only GitHub's flag speaks.
+    expect(countYeetWatchFailures(snapshot({ checks: [child] }))).toBe(0);
+    expect(
+      diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: AT, prev: snapshot({ settle: O.some(settle) }), next: red }))
+    ).toMatchObject([
+      { kind: "check-transition", name: child.name, required: true, to: "fail" },
+      { kind: "check-transition", name: vercel.name, required: false, to: "fail" },
+    ]);
+  });
+
+  it("counts required and optional failures separately", () => {
+    const board = snapshot({
+      checks: [
+        YeetWatchCheck.make({ name: "Required", outcome: "fail", required: true }),
+        YeetWatchCheck.make({ name: "Optional", outcome: "fail", required: false }),
+        check("Green", "pass"),
+        check("Skipped", "skip"),
+      ],
+    });
+    expect(countYeetWatchFailures(board)).toBe(1);
+    expect(countYeetWatchOptionalFailures(board)).toBe(1);
   });
 });
 
@@ -337,3 +378,48 @@ describe("yeetWatchCommentEvent", () => {
     })
   );
 });
+
+describe("settle-changed events", () => {
+  it("emits reason changes with the open census and suppresses elapsed-only changes", () => {
+    const registering = deriveSettleVerdict(
+      YeetSettleInput.make({ checks: [], closeoutBound: false, waitedMs: 0, timeoutMs: 1000 })
+    );
+    const pending = deriveSettleVerdict(
+      YeetSettleInput.make({
+        checks: [YeetSettleCheck.make({ name: "Lint", outcome: "pending" })],
+        closeoutBound: false,
+        waitedMs: 1,
+        timeoutMs: 1000,
+      })
+    );
+    const prev = snapshot({ settle: O.some(registering) });
+    const next = snapshot({ settle: O.some(pending) });
+    expect(diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: AT, prev, next }))).toMatchObject([
+      { kind: "settle-changed", from: "registration", to: "required-pending", pending: ["Lint"], missing: [] },
+    ]);
+    expect(diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: AT, prev: next, next }))).toEqual([]);
+    const settled = deriveSettleVerdict(
+      YeetSettleInput.make({
+        checks: [YeetSettleCheck.make({ name: "Lint", outcome: "pass" })],
+        closeoutBound: true,
+        waitedMs: 2,
+        timeoutMs: 1000,
+      })
+    );
+    expect(
+      diffYeetWatchSnapshots(
+        YeetWatchDiffInput.make({ at: AT, prev: next, next: snapshot({ settle: O.some(settled) }) })
+      )
+    ).toMatchObject([{ kind: "settle-changed", from: "required-pending", to: null }]);
+    expect(diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: AT, prev: next, next: snapshot() }))).toEqual([]);
+  });
+});
+
+it.effect("decodes legacy watch-ended rows with zero optional failures", () =>
+  Effect.gen(function* () {
+    const row = yield* decodeUnknownYeetWatchEventJson(
+      '{"kind":"watch-ended","schemaVersion":"yeet-watch/v1","at":"now","headSha":"abc","reason":"all-terminal","failing":0}'
+    );
+    expect(row).toEqual(YeetWatchEnded.make({ at: "now", headSha: "abc", reason: "all-terminal", failing: 0 }));
+  })
+);

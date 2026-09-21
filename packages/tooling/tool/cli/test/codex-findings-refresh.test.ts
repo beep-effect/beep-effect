@@ -20,12 +20,12 @@ import {
 } from "@beep/repo-cli/test/Codex";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
+import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect, FileSystem, Order, PlatformError } from "effect";
+import { Effect, FileSystem, Layer, Order, PlatformError } from "effect";
 import * as S from "effect/Schema";
 import { NodeTestLayer, withTempWorkingDirectory } from "./support/CommandTest.ts";
 import type { CodexRefreshLedgerSource } from "@beep/repo-cli/test/Codex";
-import type { Path } from "effect";
 
 const SLUG = "codex-security-findings-2026-08-04";
 const SOURCE_URL = "https://chatgpt.com/codex/cloud/security/findings/";
@@ -67,8 +67,14 @@ const arrivingInfo: CaptureFinding = {
   commit: "dddddddddddddddddddddddddddddddddddddddd",
 };
 
-const testEffect = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>
-  withTempWorkingDirectory(effect).pipe(provideScopedLayer(NodeTestLayer));
+// Bundle ingest spawns the upstream exporter and hashes artifacts, so the
+// command now needs the spawner and crypto services even on the CSV path.
+const testLayer = Layer.mergeAll(NodeCrypto.layer, NodeChildProcessSpawner.layer).pipe(
+  Layer.provideMerge(NodeTestLayer)
+);
+
+const testEffect = <A, E>(effect: Effect.Effect<A, E, Layer.Success<typeof testLayer>>) =>
+  withTempWorkingDirectory(effect).pipe(provideScopedLayer(testLayer));
 
 const planFor = (findings: ReadonlyArray<CaptureFinding>, source?: CodexRefreshLedgerSource, expectedCount?: number) =>
   decodeCodexFindingsCapturePayload({
@@ -584,6 +590,44 @@ describe("codex findings preservation-safe refresh", () => {
           A.filter(yield* fs.readDirectory("goals"), (entry) => Str.includes("-previous")(entry)),
           []
         );
+      })
+    )
+  );
+});
+
+describe("codex findings first-capture ingest", () => {
+  const csvPath = "codex-security-findings-2026-08-04T16-06-15.518Z.csv";
+  const ingestOptions = {
+    from: csvPath,
+    slug: O.none<string>(),
+    date: O.none<string>(),
+    branch: O.none<string>(),
+    expectedCount: O.none<number>(),
+    refresh: false,
+    force: false,
+    dryRun: false,
+    json: false,
+  };
+
+  it.effect("bootstraps a packet from a cloud export, then refuses to renumber over an unreadable ledger", () =>
+    testEffect(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory(".git", { recursive: true });
+        yield* fs.makeDirectory("goals", { recursive: true });
+        yield* fs.writeFileString(csvPath, csvSnapshot([alpha, beta]));
+
+        yield* runCodexFindingsIngest(ingestOptions);
+        assert.strictEqual(yield* fs.exists(`goals/${SLUG}/ops/triage.json`), true);
+
+        // A ledger that exists but does not decode must stop the ingest rather
+        // than reassign every CSF-NNN from the current sort order.
+        yield* fs.writeFileString(`goals/${SLUG}/ops/triage.json`, "{ malformed");
+        const reason = yield* runCodexFindingsIngest(ingestOptions).pipe(
+          Effect.map(() => "accepted"),
+          Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
+        );
+        assert.strictEqual(reason, "ledger-unreadable");
       })
     )
   );

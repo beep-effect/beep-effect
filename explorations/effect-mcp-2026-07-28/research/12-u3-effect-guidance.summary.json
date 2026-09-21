@@ -1,0 +1,23 @@
+{
+  "lane": "12-u3-effect-guidance",
+  "path": "research/12-u3-effect-guidance.md",
+  "claimCount": 25,
+  "topRisks": [
+    "MCP.md last typechecked 2026-09-07 still pins v2025_06_18 and lists three protocols; v2026_07_28 (2026-09-11) and instructions/titles/strict (2026-09-14) never landed in the page.",
+    "Copying MCP.md elicitation (McpServer.elicit) onto a v2026_07_28-only server cannot run: the helper requires McpServerClient and July reverse elicit is McpReverseOperationUnsupported.",
+    "MCP.md teaches initialize; a July-only server answers initialize with method-not-found. In-repo launchers that still handshake will fail under G4 even if types are green.",
+    "McpServer.ts / McpSchema.ts / McpProtocol.ts have no JSDoc **Example** blocks. Executable docs are the test suite. Tool.Strict's example is the provider flag, not MCP excess-property rejection.",
+    "Stale written guidance on the wire: migration says parameter validation is always InvalidParams; pre changeset says structuredContent is always a JSON object. Both are false for 2026-07-28."
+  ],
+  "decisionChallenges": [
+    "G4 (v2026_07_28 only) contradicts Effect's published getting-started recipe (June pin, initialize, McpServer.elicit). The capability exists in tests (server/discover, InputRequired, subscriptions/listen) but not in MCP.md.",
+    "An upstream MCP.md update must choose a pin: July-only (G4, breaks initialize clients and the elicit helper), mixed list (matches Effect runtime, contradicts G4), or keep June as hello-world (lowest churn, G4 readers still copy the wrong server).",
+    "Resource titles are on McpSchema.Resource but omitted from McpServer.resource option types. A docs PR that shows resource title without adding the typed option creates a new contradiction."
+  ],
+  "grillQuestions": [
+    "Should the beep-effect/effect fork MCP.md pin v2026_07_28 only, a mixed list, or keep v2025_06_18 as hello-world with a separate 2026 section?",
+    "Is McpServer.elicit going to grow an MRTR/InputRequired path upstream, or should beep-effect document InputRequired as the July elicitation API and treat elicit as stateful-only?",
+    "Should McpServer.resource/registerResource gain title (and icons) in the same docs PR, or should the page say those fields are low-level addResource only?",
+    "Do we wait for Effect to consume .changeset/modern-mice-discover.md as-is (one sentence) or expand it in the fork before the next rc?"
+  ]
+}

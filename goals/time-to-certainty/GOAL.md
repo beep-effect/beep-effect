@@ -37,10 +37,10 @@ orchestrator writes schemas and contracts and judges evidence. Record friction r
 `research/OPPORTUNITIES.md` at the moment they happen, redacted for a public repo. Update PLAN
 checkmarks as items land; the status flip and closeout reflection ride the final PR.
 
-Status (2026-09-15): P0 complete; P1 hygiene complete. `research/baseline.md` is ratified (ruling 8: M1 P50
+Status (2026-09-16): P0 complete; P1 hygiene complete. `research/baseline.md` is ratified (ruling 8: M1 P50
 43.3 min / P95 3.95 h; pre-push wave 65.9% of local wrapper time; M3/M4 unmeasurable until journals
-carry fingerprints and inner lanes). `research/decisions.md` holds forty rulings: C1 schema, baseline,
-A5 journal facts and compaction, C3 package-task migration (19–34), and B5 detached proof jobs
-(35–40: transient user service under `agent-runs.slice`, one durable job record, ExecStopPost
-finalizer that journals every death and reports through the inbox). Landed: A4, A5/A5b/A5c, B1–B6,
-C1/C2, C3 coverage, tsgo tests and lint-policy (C3.1–C3.6). Next: C3 labs, C4a, A3.
+carry fingerprints and inner lanes). `research/decisions.md` holds sixty rulings: C1 schema,
+baseline, A5 journal facts and compaction, C3 package-task migration (19–34), B5 detached proof
+jobs (35–40), B7 until-ready monitoring (41–49), B8 heavy-check admission (50–57), the labs
+lane digest (58), and legacy proof-store retirement (59–60). Landed: A4, A5/A5b/A5c, B1–B6, C1/C2, and C3 complete (coverage, tsgo tests,
+lint-policy C3.1–C3.6, labs), and C4a (legacy proof stores never migrate). Next: C4, A3.

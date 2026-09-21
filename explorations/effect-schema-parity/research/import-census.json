@@ -1,0 +1,868 @@
+{
+  "pattern": "(?m)^[ \\t]*import[ \\t]+(?:type[ \\t]+)?(?:\\{[^}]*\\}|\\*[ \\t]+as[ \\t]+\\w+|\\w+)[ \\t\\r\\n]+from[ \\t\\r\\n]+[\"']@beep/schema(?:/[^\"']*)?[\"']",
+  "command": [
+    "rg",
+    "-U",
+    "--json",
+    "(?m)^[ \\t]*import[ \\t]+(?:type[ \\t]+)?(?:\\{[^}]*\\}|\\*[ \\t]+as[ \\t]+\\w+|\\w+)[ \\t\\r\\n]+from[ \\t\\r\\n]+[\"']@beep/schema(?:/[^\"']*)?[\"']",
+    "packages/",
+    "apps/",
+    "-g",
+    "*.ts",
+    "-g",
+    "*.tsx",
+    "-g",
+    "*.mts",
+    "-g",
+    "*.cts"
+  ],
+  "packages": [
+    {
+      "path": "packages/tooling/tool/cli",
+      "name": "@beep/repo-cli",
+      "imports": 411,
+      "files": 322,
+      "src_imports": 322
+    },
+    {
+      "path": "packages/foundation/modeling/schema",
+      "name": "@beep/schema",
+      "imports": 145,
+      "files": 79,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/law-practice/domain",
+      "name": "@beep/law-practice-domain",
+      "imports": 102,
+      "files": 100,
+      "src_imports": 99
+    },
+    {
+      "path": "apps/labs/semantica",
+      "name": "@beep/semantica",
+      "imports": 75,
+      "files": 53,
+      "src_imports": 53
+    },
+    {
+      "path": "apps/professional-desktop",
+      "name": "@beep/professional-desktop",
+      "imports": 46,
+      "files": 26,
+      "src_imports": 31
+    },
+    {
+      "path": "packages/foundation/capability/nlp-processing",
+      "name": "@beep/nlp-processing",
+      "imports": 37,
+      "files": 35,
+      "src_imports": 35
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics",
+      "name": "@beep/repo-ai-metrics",
+      "imports": 35,
+      "files": 31,
+      "src_imports": 28
+    },
+    {
+      "path": "packages/foundation/modeling/skill-contract",
+      "name": "@beep/skill-contract",
+      "imports": 35,
+      "files": 15,
+      "src_imports": 18
+    },
+    {
+      "path": "packages/foundation/modeling/html",
+      "name": "@beep/html",
+      "imports": 31,
+      "files": 25,
+      "src_imports": 26
+    },
+    {
+      "path": "packages/foundation/capability/langextract",
+      "name": "@beep/langextract",
+      "imports": 31,
+      "files": 20,
+      "src_imports": 24
+    },
+    {
+      "path": "packages/epistemic/domain",
+      "name": "@beep/epistemic-domain",
+      "imports": 29,
+      "files": 20,
+      "src_imports": 25
+    },
+    {
+      "path": "packages/tooling/library/repo-utils",
+      "name": "@beep/repo-utils",
+      "imports": 26,
+      "files": 23,
+      "src_imports": 25
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs",
+      "name": "@beep/repo-configs",
+      "imports": 23,
+      "files": 21,
+      "src_imports": 20
+    },
+    {
+      "path": "packages/foundation/capability/observability",
+      "name": "@beep/observability",
+      "imports": 23,
+      "files": 19,
+      "src_imports": 20
+    },
+    {
+      "path": "packages/foundation/capability/file-processing",
+      "name": "@beep/file-processing",
+      "imports": 23,
+      "files": 15,
+      "src_imports": 19
+    },
+    {
+      "path": "packages/shared/domain",
+      "name": "@beep/shared-domain",
+      "imports": 21,
+      "files": 15,
+      "src_imports": 20
+    },
+    {
+      "path": "apps/labs/lejeune-bolt-workbench",
+      "name": "@beep/lejeune-bolt-workbench",
+      "imports": 20,
+      "files": 13,
+      "src_imports": 16
+    },
+    {
+      "path": "packages/foundation/ui-system/dock",
+      "name": "@beep/dock",
+      "imports": 20,
+      "files": 19,
+      "src_imports": 13
+    },
+    {
+      "path": "packages/foundation/modeling/md",
+      "name": "@beep/md",
+      "imports": 20,
+      "files": 13,
+      "src_imports": 16
+    },
+    {
+      "path": "packages/foundation/modeling/rdf",
+      "name": "@beep/rdf",
+      "imports": 20,
+      "files": 14,
+      "src_imports": 16
+    },
+    {
+      "path": "packages/ontology/use-cases",
+      "name": "@beep/ontology-use-cases",
+      "imports": 18,
+      "files": 13,
+      "src_imports": 16
+    },
+    {
+      "path": "packages/epistemic/use-cases",
+      "name": "@beep/epistemic-use-cases",
+      "imports": 18,
+      "files": 11,
+      "src_imports": 17
+    },
+    {
+      "path": "packages/foundation/modeling/nlp",
+      "name": "@beep/nlp",
+      "imports": 17,
+      "files": 16,
+      "src_imports": 14
+    },
+    {
+      "path": "packages/drivers/tika",
+      "name": "@beep/tika",
+      "imports": 16,
+      "files": 12,
+      "src_imports": 6
+    },
+    {
+      "path": "packages/law-practice/use-cases",
+      "name": "@beep/law-practice-use-cases",
+      "imports": 15,
+      "files": 15,
+      "src_imports": 13
+    },
+    {
+      "path": "packages/law-practice/server",
+      "name": "@beep/law-practice-server",
+      "imports": 14,
+      "files": 10,
+      "src_imports": 11
+    },
+    {
+      "path": "packages/drivers/openai-compat",
+      "name": "@beep/openai-compat",
+      "imports": 14,
+      "files": 4,
+      "src_imports": 11
+    },
+    {
+      "path": "packages/documents/domain",
+      "name": "@beep/documents-domain",
+      "imports": 14,
+      "files": 12,
+      "src_imports": 14
+    },
+    {
+      "path": "packages/documents/server",
+      "name": "@beep/documents-server",
+      "imports": 14,
+      "files": 13,
+      "src_imports": 8
+    },
+    {
+      "path": "packages/drivers/libpff",
+      "name": "@beep/libpff",
+      "imports": 13,
+      "files": 7,
+      "src_imports": 7
+    },
+    {
+      "path": "packages/drivers/venice-ai",
+      "name": "@beep/venice-ai",
+      "imports": 13,
+      "files": 4,
+      "src_imports": 6
+    },
+    {
+      "path": "packages/epistemic/server",
+      "name": "@beep/epistemic-server",
+      "imports": 13,
+      "files": 11,
+      "src_imports": 5
+    },
+    {
+      "path": "packages/workspace/domain",
+      "name": "@beep/workspace-domain",
+      "imports": 13,
+      "files": 13,
+      "src_imports": 13
+    },
+    {
+      "path": "packages/drivers/box-provisioning",
+      "name": "@beep/box-provisioning",
+      "imports": 12,
+      "files": 12,
+      "src_imports": 9
+    },
+    {
+      "path": "packages/drivers/pacer",
+      "name": "@beep/pacer",
+      "imports": 11,
+      "files": 8,
+      "src_imports": 9
+    },
+    {
+      "path": "packages/drivers/wink",
+      "name": "@beep/wink",
+      "imports": 11,
+      "files": 9,
+      "src_imports": 11
+    },
+    {
+      "path": "packages/documents/use-cases",
+      "name": "@beep/documents-use-cases",
+      "imports": 11,
+      "files": 11,
+      "src_imports": 9
+    },
+    {
+      "path": "packages/foundation/ui-system/ui",
+      "name": "@beep/ui",
+      "imports": 11,
+      "files": 11,
+      "src_imports": 10
+    },
+    {
+      "path": "packages/workspace/server",
+      "name": "@beep/workspace-server",
+      "imports": 11,
+      "files": 8,
+      "src_imports": 6
+    },
+    {
+      "path": "packages/foundation/modeling/pandoc-ast",
+      "name": "@beep/pandoc-ast",
+      "imports": 11,
+      "files": 9,
+      "src_imports": 9
+    },
+    {
+      "path": "apps/oip-web",
+      "name": "@beep/oip-web",
+      "imports": 10,
+      "files": 10,
+      "src_imports": 9
+    },
+    {
+      "path": "packages/tooling/test-kit/test-utils",
+      "name": "@beep/test-utils",
+      "imports": 10,
+      "files": 7,
+      "src_imports": 9
+    },
+    {
+      "path": "packages/drivers/runpod",
+      "name": "@beep/runpod",
+      "imports": 9,
+      "files": 7,
+      "src_imports": 5
+    },
+    {
+      "path": "packages/drivers/govinfo",
+      "name": "@beep/govinfo",
+      "imports": 9,
+      "files": 8,
+      "src_imports": 8
+    },
+    {
+      "path": "packages/drivers/openclaw",
+      "name": "@beep/openclaw",
+      "imports": 9,
+      "files": 8,
+      "src_imports": 6
+    },
+    {
+      "path": "packages/foundation/ui-system/editor",
+      "name": "@beep/editor",
+      "imports": 9,
+      "files": 7,
+      "src_imports": 9
+    },
+    {
+      "path": "packages/foundation/modeling/lexical",
+      "name": "@beep/lexical-schema",
+      "imports": 9,
+      "files": 8,
+      "src_imports": 5
+    },
+    {
+      "path": "packages/drivers/xai",
+      "name": "@beep/xai",
+      "imports": 8,
+      "files": 7,
+      "src_imports": 7
+    },
+    {
+      "path": "packages/drivers/box",
+      "name": "@beep/box",
+      "imports": 8,
+      "files": 6,
+      "src_imports": 4
+    },
+    {
+      "path": "packages/drivers/obs",
+      "name": "@beep/obs",
+      "imports": 8,
+      "files": 7,
+      "src_imports": 6
+    },
+    {
+      "path": "packages/drivers/ffmpeg",
+      "name": "@beep/ffmpeg",
+      "imports": 8,
+      "files": 7,
+      "src_imports": 5
+    },
+    {
+      "path": "packages/agents/server",
+      "name": "@beep/agents-server",
+      "imports": 8,
+      "files": 6,
+      "src_imports": 7
+    },
+    {
+      "path": "packages/agents/use-cases",
+      "name": "@beep/agents-use-cases",
+      "imports": 8,
+      "files": 7,
+      "src_imports": 7
+    },
+    {
+      "path": "apps/labs/ciops",
+      "name": "@beep/ciops",
+      "imports": 7,
+      "files": 5,
+      "src_imports": 6
+    },
+    {
+      "path": "packages/drivers/nlp-mcp",
+      "name": "@beep/nlp-mcp",
+      "imports": 7,
+      "files": 5,
+      "src_imports": 7
+    },
+    {
+      "path": "packages/drivers/m365",
+      "name": "@beep/m365",
+      "imports": 7,
+      "files": 5,
+      "src_imports": 5
+    },
+    {
+      "path": "packages/tooling/library/qa-capture",
+      "name": "@beep/qa-capture",
+      "imports": 7,
+      "files": 7,
+      "src_imports": 7
+    },
+    {
+      "path": "packages/tooling/library/ai-sync",
+      "name": "@beep/ai-sync",
+      "imports": 7,
+      "files": 5,
+      "src_imports": 6
+    },
+    {
+      "path": "packages/foundation/capability/mcp-kit",
+      "name": "@beep/mcp-kit",
+      "imports": 7,
+      "files": 6,
+      "src_imports": 6
+    },
+    {
+      "path": "packages/drivers/uspto",
+      "name": "@beep/uspto",
+      "imports": 6,
+      "files": 6,
+      "src_imports": 4
+    },
+    {
+      "path": "packages/drivers/exiftool",
+      "name": "@beep/exiftool",
+      "imports": 6,
+      "files": 5,
+      "src_imports": 5
+    },
+    {
+      "path": "packages/drivers/firecrawl",
+      "name": "@beep/firecrawl",
+      "imports": 6,
+      "files": 3,
+      "src_imports": 6
+    },
+    {
+      "path": "packages/architecture-lab/use-cases",
+      "name": "@beep/architecture-lab-use-cases",
+      "imports": 6,
+      "files": 6,
+      "src_imports": 6
+    },
+    {
+      "path": "packages/drivers/openai",
+      "name": "@beep/openai",
+      "imports": 5,
+      "files": 5,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/ai-provider-cli",
+      "name": "@beep/ai-provider-cli",
+      "imports": 5,
+      "files": 5,
+      "src_imports": 5
+    },
+    {
+      "path": "packages/tooling/tool/docgen",
+      "name": "@beep/repo-docgen",
+      "imports": 5,
+      "files": 4,
+      "src_imports": 3
+    },
+    {
+      "path": "packages/agents/domain",
+      "name": "@beep/agents-domain",
+      "imports": 5,
+      "files": 5,
+      "src_imports": 5
+    },
+    {
+      "path": "packages/foundation/modeling/ontology",
+      "name": "@beep/ontology",
+      "imports": 5,
+      "files": 5,
+      "src_imports": 5
+    },
+    {
+      "path": "packages/foundation/capability/semantic-web",
+      "name": "@beep/semantic-web",
+      "imports": 5,
+      "files": 5,
+      "src_imports": 5
+    },
+    {
+      "path": "packages/drivers/onepassword-cli",
+      "name": "@beep/onepassword-cli",
+      "imports": 4,
+      "files": 4,
+      "src_imports": 3
+    },
+    {
+      "path": "packages/drivers/cosmos",
+      "name": "@beep/cosmos",
+      "imports": 4,
+      "files": 4,
+      "src_imports": 4
+    },
+    {
+      "path": "packages/drivers/discord",
+      "name": "@beep/discord",
+      "imports": 4,
+      "files": 4,
+      "src_imports": 3
+    },
+    {
+      "path": "packages/drivers/ecfr",
+      "name": "@beep/ecfr",
+      "imports": 4,
+      "files": 4,
+      "src_imports": 3
+    },
+    {
+      "path": "packages/ontology/domain",
+      "name": "@beep/ontology-domain",
+      "imports": 4,
+      "files": 3,
+      "src_imports": 4
+    },
+    {
+      "path": "packages/drivers/phoenix",
+      "name": "@beep/phoenix",
+      "imports": 4,
+      "files": 4,
+      "src_imports": 4
+    },
+    {
+      "path": "packages/drivers/pretext",
+      "name": "@beep/pretext",
+      "imports": 4,
+      "files": 3,
+      "src_imports": 4
+    },
+    {
+      "path": "packages/architecture-lab/domain",
+      "name": "@beep/architecture-lab-domain",
+      "imports": 4,
+      "files": 4,
+      "src_imports": 4
+    },
+    {
+      "path": "packages/foundation/ui-system/brand",
+      "name": "@beep/brand",
+      "imports": 4,
+      "files": 3,
+      "src_imports": 4
+    },
+    {
+      "path": "packages/epistemic/tables",
+      "name": "@beep/epistemic-tables",
+      "imports": 4,
+      "files": 3,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/workspace/use-cases",
+      "name": "@beep/workspace-use-cases",
+      "imports": 4,
+      "files": 4,
+      "src_imports": 4
+    },
+    {
+      "path": "packages/foundation/capability/chalk",
+      "name": "@beep/chalk",
+      "imports": 4,
+      "files": 3,
+      "src_imports": 4
+    },
+    {
+      "path": "packages/foundation/modeling/provenance",
+      "name": "@beep/provenance",
+      "imports": 4,
+      "files": 4,
+      "src_imports": 3
+    },
+    {
+      "path": "packages/law-practice/tables",
+      "name": "@beep/law-practice-tables",
+      "imports": 3,
+      "files": 3,
+      "src_imports": 2
+    },
+    {
+      "path": "apps/practice-kg-mcp",
+      "name": "@beep/practice-kg-mcp",
+      "imports": 3,
+      "files": 3,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/anthropic",
+      "name": "@beep/anthropic",
+      "imports": 3,
+      "files": 3,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/sanity",
+      "name": "@beep/sanity",
+      "imports": 3,
+      "files": 3,
+      "src_imports": 3
+    },
+    {
+      "path": "packages/drivers/gov-legal-mcp",
+      "name": "@beep/gov-legal-mcp",
+      "imports": 3,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/uspto-mcp",
+      "name": "@beep/uspto-mcp",
+      "imports": 3,
+      "files": 3,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/acp",
+      "name": "@beep/acp",
+      "imports": 3,
+      "files": 3,
+      "src_imports": 3
+    },
+    {
+      "path": "packages/drivers/doc-text",
+      "name": "@beep/doc-text",
+      "imports": 3,
+      "files": 2,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/drivers/graph-3d",
+      "name": "@beep/graph-3d",
+      "imports": 3,
+      "files": 3,
+      "src_imports": 3
+    },
+    {
+      "path": "packages/epistemic/ui",
+      "name": "@beep/epistemic-ui",
+      "imports": 3,
+      "files": 2,
+      "src_imports": 3
+    },
+    {
+      "path": "packages/agents/client",
+      "name": "@beep/agents-client",
+      "imports": 3,
+      "files": 3,
+      "src_imports": 2
+    },
+    {
+      "path": "apps/todox",
+      "name": "@beep/todox",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/freshbooks",
+      "name": "@beep/freshbooks",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "apps/labs/api-docs",
+      "name": "@beep/api-docs",
+      "imports": 2,
+      "files": 1,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/duckdb",
+      "name": "@beep/duckdb",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/drizzle",
+      "name": "@beep/drizzle",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/n3",
+      "name": "@beep/n3",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/ontology/client",
+      "name": "@beep/ontology-client",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/drivers/hubspot",
+      "name": "@beep/hubspot",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/postgres",
+      "name": "@beep/postgres",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/drivers/face-detection",
+      "name": "@beep/face-detection",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/tooling/library/codegen-kit",
+      "name": "@beep/codegen-kit",
+      "imports": 2,
+      "files": 1,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/epistemic/client",
+      "name": "@beep/epistemic-client",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/foundation/ui-system/dock-react",
+      "name": "@beep/dock-react",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/foundation/capability/colors",
+      "name": "@beep/colors",
+      "imports": 2,
+      "files": 2,
+      "src_imports": 2
+    },
+    {
+      "path": "packages/_internal/db-admin",
+      "name": "@beep/db-admin",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 0
+    },
+    {
+      "path": "packages/drivers/pglite",
+      "name": "@beep/pglite",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/drivers/oxigraph",
+      "name": "@beep/oxigraph",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/drivers/rdf-canonize",
+      "name": "@beep/rdf-canonize",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/drivers/tailscale",
+      "name": "@beep/tailscale",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/ontology/server",
+      "name": "@beep/ontology-server",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/drivers/m365-mcp",
+      "name": "@beep/m365-mcp",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/drivers/shacl",
+      "name": "@beep/shacl",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/architecture-lab/config",
+      "name": "@beep/architecture-lab-config",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/architecture-lab/ui",
+      "name": "@beep/architecture-lab-ui",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/architecture-lab/server",
+      "name": "@beep/architecture-lab-server",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/tooling/policy-pack/lint-rules",
+      "name": "@beep/lint-rules",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 0
+    },
+    {
+      "path": "packages/shared/use-cases",
+      "name": "@beep/shared-use-cases",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    },
+    {
+      "path": "packages/foundation/capability/api-transport",
+      "name": "@beep/api-transport",
+      "imports": 1,
+      "files": 1,
+      "src_imports": 1
+    }
+  ]
+}

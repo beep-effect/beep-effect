@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh sessionStart",
+        "timeout": 10
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh sessionEnd",
+        "timeout": 10
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh beforeSubmitPrompt",
+        "timeout": 10
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh preToolUse",
+        "timeout": 10
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh postToolUse",
+        "timeout": 10
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh postToolUseFailure",
+        "timeout": 10
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh beforeShellExecution",
+        "timeout": 10
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh afterShellExecution",
+        "timeout": 10
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh afterFileEdit",
+        "timeout": 10
+      }
+    ],
+    "beforeReadFile": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh beforeReadFile",
+        "timeout": 10
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh beforeMCPExecution",
+        "timeout": 10
+      }
+    ],
+    "subagentStart": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh subagentStart",
+        "timeout": 10
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh subagentStop",
+        "timeout": 10
+      }
+    ],
+    "stop": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh stop",
+        "timeout": 10
+      }
+    ],
+    "afterAgentResponse": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh afterAgentResponse",
+        "timeout": 10
+      }
+    ],
+    "preCompact": [
+      {
+        "command": ".cursor/hooks/beep-probe.sh preCompact",
+        "timeout": 10
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "effect-schema-parity",
+    "title": "Effect Schema Parity",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/effect-schema-parity"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-09-12",
+    "updated": "2026-09-15"
+  }
+}

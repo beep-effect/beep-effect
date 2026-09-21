@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "schemaVersion": "codex-triage/v1",
+    "repository": "kriegcloud/beep-effect",
+    "findingsView": "repo-scoped, status=new",
+    "branch": "codex/security-findings-2026-09-16",
+    "expectedCount": 4,
+    "capturedCount": 4,
+    "capturedAt": "2026-09-16",
+    "captureMethod": "signed-in-csv-export",
+    "note": "All four findings validated and implemented; full proof, publication, merge, and dashboard closure pending."
+  },
+  "lanes": {
+    "L1": {
+      "status": "implemented",
+      "findings": ["CSF-001"]
+    },
+    "L2": {
+      "status": "implemented",
+      "findings": ["CSF-002"]
+    },
+    "L3": {
+      "status": "implemented",
+      "findings": ["CSF-003"]
+    },
+    "L4": {
+      "status": "implemented",
+      "findings": ["CSF-004"]
+    }
+  },
+  "findings": [
+    {
+      "id": "CSF-001",
+      "codexId": "d9e6e3c0d4148191926a695c786fadb7",
+      "title": "Unsanitized filenames allow CI log-command injection",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "dde5a31837e48d961509cbe03d26497c89a5277a",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Replace C0, C1, and Unicode line separators in displayed paths before the CI report is emitted; retain grouping on the original path."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestScan.ts",
+          "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run test/effect-vitest-contract.test.ts"
+        ],
+        "summary": "Replace C0, C1, and Unicode line separators in displayed paths before the CI report is emitted; retain grouping on the original path."
+      },
+      "verdict": "confirmed-vulnerable",
+      "ownerArea": "CI report rendering",
+      "lane": "L1"
+    },
+    {
+      "id": "CSF-002",
+      "codexId": "2748e39c82fc8191ab009681b9075b39",
+      "title": "Nightly updater exposes provider keys to install scripts",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "89ff8c179525f3c0adf92ddf87d8527965c856c2",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Clear inherited environments for Git and Bun pre-start commands, allowlist HOME/PATH/CI for in-process maintenance, and disable lifecycle scripts on both install paths."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
+          "packages/tooling/tool/cli/test/graft-deep-refresh.test.ts",
+          "docs/runbooks/graft-local-recovery.md"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run test/graft-deep-refresh.test.ts"
+        ],
+        "summary": "Clear inherited environments for Git and Bun pre-start commands, allowlist HOME/PATH/CI for in-process maintenance, and disable lifecycle scripts on both install paths."
+      },
+      "verdict": "confirmed-vulnerable",
+      "ownerArea": "Nightly maintenance credentials",
+      "lane": "L2"
+    },
+    {
+      "id": "CSF-003",
+      "codexId": "67bd93be8cd48191b25314938c2d1af5",
+      "title": "Sibling discovery follows symlinks into unrelated Git clones",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "284294ee24177f13f6d3a763c5d987206d351c51",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Require each discovered sibling to have the same canonical and lexical path, excluding aliases to both source and unrelated clones."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
+          "packages/tooling/tool/cli/test/graft-cache-sync.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run test/graft-cache-sync.test.ts"
+        ],
+        "summary": "Require each discovered sibling to have the same canonical and lexical path, excluding aliases to both source and unrelated clones."
+      },
+      "verdict": "confirmed-vulnerable",
+      "ownerArea": "Sibling clone discovery",
+      "lane": "L3"
+    },
+    {
+      "id": "CSF-004",
+      "codexId": "f1999a504e288191b37ad6ab8b1b4120",
+      "title": "Continuation lanes use attacker-controlled shared scratch files",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "65c29e5177293cfdacc47d3b33c64596a512e6a4",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Let continuation lanes use the private user-cache default; validate ownership, permissions, and ancestors, reserve a unique mode-0700 run directory, and refuse output-file clobbering."
+      },
+      "remediation": {
+        "status": "implemented",
+        "changedFiles": [
+          "goals/boolean-creep/ops/run-sweep-lane.sh",
+          "goals/boolean-creep/ops/run-sweep-refresh-continuations.sh",
+          "goals/boolean-creep/ops/test_sweep_scratch.py"
+        ],
+        "verificationCommands": [
+          "python goals/boolean-creep/ops/test_sweep_scratch.py"
+        ],
+        "summary": "Let continuation lanes use the private user-cache default; validate ownership, permissions, and ancestors, reserve a unique mode-0700 run directory, and refuse output-file clobbering."
+      },
+      "verdict": "confirmed-vulnerable",
+      "ownerArea": "Continuation scratch isolation",
+      "lane": "L4"
+    }
+  ]
+}

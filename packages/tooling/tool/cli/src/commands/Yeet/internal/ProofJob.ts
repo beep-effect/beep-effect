@@ -12,7 +12,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { Effect } from "effect";
+import { Cause, Effect, Exit } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -783,6 +783,76 @@ export class ProofJobOutcome extends S.Class<ProofJobOutcome>($I`ProofJobOutcome
 ) {}
 
 /**
+ * When a command running inside a detached proof job ended, and how long it ran.
+ *
+ * **Example** (Describe a one-second command)
+ *
+ * ```ts
+ * import { ProofJobCommandEnd } from "@beep/repo-cli/test/Yeet"
+ *
+ * const end = ProofJobCommandEnd.make({ endedAt: "2026-09-16T00:00:01.000Z", elapsedMs: 1000 })
+ * console.log(end.elapsedMs) // 1000
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProofJobCommandEnd extends S.Class<ProofJobCommandEnd>($I`ProofJobCommandEnd`)(
+  {
+    endedAt: S.String,
+    elapsedMs: S.Finite,
+  },
+  $I.annote("ProofJobCommandEnd", {
+    description: "The end time and elapsed milliseconds of a command that ran inside a detached proof job.",
+  })
+) {}
+
+/**
+ * The outcome a command running inside a detached proof job records for its own exit.
+ *
+ * **Details**
+ *
+ * A clean exit records `success` and any other failure records `failure`, so
+ * `yeet job wait` exits 0 or 1. An interrupt-only exit records nothing: the job
+ * was stopped, and the finalizer's `terminated` reading (exit 2) is the truth.
+ *
+ * **Example** (A clean exit records success; a stop records nothing)
+ *
+ * ```ts
+ * import { ProofJobCommandEnd, proofJobOutcomeForExit } from "@beep/repo-cli/test/Yeet"
+ * import { Exit } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const end = ProofJobCommandEnd.make({ endedAt: "2026-09-16T00:00:01.000Z", elapsedMs: 1000 })
+ * const clean = proofJobOutcomeForExit(Exit.void, end)
+ * console.log(O.getOrNull(O.map(clean, (outcome) => outcome.verdictOutcome))) // "success"
+ * console.log(O.isNone(proofJobOutcomeForExit(Exit.interrupt(), end))) // true
+ * ```
+ *
+ * @param exit - How the command ended.
+ * @param end - When it ended and how long it ran.
+ * @returns The outcome to record, or none when the command was interrupted.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const proofJobOutcomeForExit: {
+  (end: ProofJobCommandEnd): (exit: Exit.Exit<unknown, unknown>) => O.Option<ProofJobOutcome>;
+  (exit: Exit.Exit<unknown, unknown>, end: ProofJobCommandEnd): O.Option<ProofJobOutcome>;
+} = dual(
+  2,
+  (exit: Exit.Exit<unknown, unknown>, end: ProofJobCommandEnd): O.Option<ProofJobOutcome> =>
+    Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)
+      ? O.none()
+      : O.some(
+          ProofJobOutcome.make({
+            verdictOutcome: Exit.isSuccess(exit) ? "success" : "failure",
+            elapsedMs: O.some(end.elapsedMs),
+            endedAt: end.endedAt,
+          })
+        )
+);
+
+/**
  * The systemd result triple stamped by the finalizer (ruling 36).
  *
  * **Example** (A SIGKILLed job)
@@ -874,6 +944,7 @@ export class ProofJobRecord extends S.Class<ProofJobRecord>($I`ProofJobRecord`)(
     systemd: ProofJobSystemdResult.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     terminationReason: ProofJobTerminationReason.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     cancelRequestedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    publishedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("ProofJobRecord", {
     description:
@@ -900,6 +971,30 @@ export class ProofJobRecord extends S.Class<ProofJobRecord>($I`ProofJobRecord`)(
  */
 export const isSettledProofJob = (record: Pick<ProofJobRecord, "phase" | "systemd">): boolean =>
   record.phase === "terminated" || O.isSome(record.systemd);
+
+/**
+ * Decide whether a settled record still owes its inbox row and journal row.
+ * Publication runs after the record lock, so a crash between the stamp and the
+ * publish leaves `publishedAt` empty; the next finalize, read, list, or wait
+ * republishes (idempotently) and then marks the record published.
+ *
+ * **Example** (A stamped record that never published)
+ *
+ * ```ts
+ * import { needsProofJobPublication } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(needsProofJobPublication({ phase: "terminated", systemd: O.none(), publishedAt: O.none() })) // true
+ * console.log(needsProofJobPublication({ phase: "running", systemd: O.none(), publishedAt: O.none() })) // false
+ * ```
+ *
+ * @param record - The record's phase, systemd stamp, and publication stamp.
+ * @returns Whether publication is still owed.
+ * @category models
+ * @since 0.0.0
+ */
+export const needsProofJobPublication = (record: Pick<ProofJobRecord, "phase" | "systemd" | "publishedAt">): boolean =>
+  isSettledProofJob(record) && O.isNone(record.publishedAt);
 
 /**
  * Decide the inbox severity of a job's row (ruling 37): `P2` only for a

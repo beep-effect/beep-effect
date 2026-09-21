@@ -137,8 +137,10 @@ const cssComment = /\/\*[\s\S]*?\*\//gu;
 const cssEscape = /\\(?:([0-9a-f]{1,6})(?:\r\n|[\t\n\f\r ])?|([^\n\f\r0-9a-f]))/giu;
 const cssUrl = /url\s*\(/iu;
 const localFragmentUrl = /url\s*\(\s*(?:#([^"'()\s]+)|(["'])#([^"'()\s]+)\2)\s*\)/giu;
+// Stylesheets may only reference local fragments (`url(#id)`); every rule then
+// proves each target resolves to exactly one element inside the diagram root.
 const unsafeStylesheetToken =
-  /@|expression\s*\(|(?:data|javascript|vbscript)\s*:|(?:-webkit-)?image-set\s*\(|image\s*\(|src\s*\(|url\s*\(/iu;
+  /@|expression\s*\(|(?:data|javascript|vbscript)\s*:|(?:-webkit-)?image-set\s*\(|image\s*\(|src\s*\(|url\s*\(\s*(?!#|["']#)/iu;
 const layoutOffsetProperties = HashSet.make(
   "bottom",
   "inset",
@@ -355,8 +357,8 @@ const hasUnsafeStyleRule = (rule: CSSStyleRule): boolean =>
   unsafeStylesheetToken.test(normalizeCssTokens(rule.style.cssText)) ||
   hasUnsafeLayoutStyle(rule.style);
 
-const isSafeStyleRule = (rule: CSSStyleRule, rootSelector: string): boolean => {
-  if (hasUnsafeStyleRule(rule)) return false;
+const isSafeStyleRule = (rule: CSSStyleRule, root: Element, rootSelector: string): boolean => {
+  if (hasUnsafeStyleRule(rule) || !hasSafeLocalFragmentUrls(root, normalizeCssTokens(rule.style.cssText))) return false;
   const selectors = splitSelectorList(rule.selectorText);
   if (selectors === undefined) return false;
   if (A.some(selectors, (selector) => Str.includes("#")(Str.slice(Str.length(rootSelector))(selector)))) return false;
@@ -365,7 +367,7 @@ const isSafeStyleRule = (rule: CSSStyleRule, rootSelector: string): boolean => {
   return !targetsRoot || isSafeMermaidRootStyle(rule.style);
 };
 
-const isSafeMermaidStyles = (styles: string, renderId: string): boolean => {
+const isSafeMermaidStyles = (styles: string, root: Element, renderId: string): boolean => {
   if (unsafeStylesheetToken.test(normalizeCssTokens(styles))) return false;
 
   let style: HTMLStyleElement | undefined;
@@ -380,7 +382,7 @@ const isSafeMermaidStyles = (styles: string, renderId: string): boolean => {
     if (rules === undefined) return false;
 
     for (const rule of rules) {
-      if (!(rule instanceof CSSStyleRule) || !isSafeStyleRule(rule, `#${renderId}`)) return false;
+      if (!(rule instanceof CSSStyleRule) || !isSafeStyleRule(rule, root, `#${renderId}`)) return false;
     }
     return true;
   } catch {
@@ -501,6 +503,12 @@ const rewriteMermaidTreeAttributeReferences = (
   for (const attribute of root.attributes) rewriteMermaidAttributeReferences(attribute, ids);
   for (const element of root.querySelectorAll("*")) {
     for (const attribute of element.attributes) rewriteMermaidAttributeReferences(attribute, ids);
+  }
+  // Theme stylesheets reference `<defs>` filters by fragment (mermaid 12's neo
+  // look), so their `url(#id)` targets must follow the namespaced ids too.
+  for (const style of root.querySelectorAll("style")) {
+    const styles = normalizeCssTokens(style.textContent ?? "");
+    if (cssUrl.test(styles)) style.textContent = rewriteLocalFragmentUrls(ids, styles);
   }
 };
 
@@ -632,7 +640,7 @@ const isSafeMermaidAttribute = (element: Element, root: Element, attribute: Attr
 const isSafeMermaidElement = (element: Element, root: Element, renderId: string): boolean => {
   if (element.namespaceURI !== svgNamespace || HashSet.has(forbiddenSvgElements, element.localName.toLowerCase()))
     return false;
-  if (element.localName === "style" && !isSafeMermaidStyles(element.textContent ?? "", renderId)) return false;
+  if (element.localName === "style" && !isSafeMermaidStyles(element.textContent ?? "", root, renderId)) return false;
 
   for (const attribute of element.attributes) {
     if (!isSafeMermaidAttribute(element, root, attribute, element === root)) return false;

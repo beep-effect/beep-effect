@@ -74,6 +74,23 @@ orchestrator owns schemas, contracts, and judgment.
       `cancelled`, `unrecorded-failure`); a start failure has a terminal job record but no runner attempt. It reports one `proof-job-finished` inbox row (P2 green /
       P1 otherwise) acknowledged by the new `observed` resolution; `yeet job list|status|wait|logs|cancel`.
       Brief and evidence: `research/b5-brief.md`, `research/b5-implementation.md`.
+- [x] B7 `yeet monitor --until-ready` as the canonical PR babysit path (rulings 41–49): settle on
+      the base ruleset's expected contexts with tolerated matrix parents and `--settle-timeout`,
+      automatic read-first closeout on settle, an exit-0 `ready` terminal, required-only exit
+      codes in every monitor mode, one P1 `pr-merge-ready` inbox row per head, push→ready
+      measurement. PR1 #1149 merged 2026-09-16 (push→ready 1h 0m 7s on its own babysit, exit 0 with
+      two optional reds); PR2 #1161: detach recipe, `--observed` for merge-ready rows, inbox-list
+      liveness, idle-wake spike, watcher retirement.
+- [x] B8 heavy-check admission (rulings 50–57) — merged 2026-09-16 (PR A #1151, PR B #1155):
+      three-valued admission (`run`, `skip-satisfied`, `hold`) decided by `bun run beep ci admission`
+      from the `ready-for-heavy` label and a docs-only merge-base diff; `heavy.yml` `admitted` input
+      (PR A) then the `Heavy Admission` job and the `heavy-not-admitted` settle wait (PR B); the
+      docs-only probe is the B9 capture PR #1164; its first head failed the ruleset (one
+      `Heavy / matrix.name` context), fixed by #1165 (lanes pass without work on a hosted
+      runner); the re-run on `c43cf7618a` passed (every `Heavy / <lane>` success on
+      `ubuntu-24.04`, `--until-ready` exit 0; evidence in `research/b8-implementation.md`).
+- [ ] B9 merge queue (`merge_group`, `checks_requested`, ruleset `merge_queue`): authority moves from
+      "merge" to "enqueue"; `/explore` capture then grill before any implementation (ruling 56).
 - [x] B6 lease and submitter death journaled as admission events — completed 2026-09-03 (PR #1005):
       rows landed in PR #964, emission was gated behind the unknown-row preservation rollout in PR
       #978, and PR #993 made each death a crash-recoverable per-sink claim. A disabled admission sink
@@ -90,8 +107,8 @@ orchestrator owns schemas, contracts, and judgment.
       expire / disagreements over an append-only per-checkout NDJSON ledger with a tolerant reader,
       key derivation and epoch collection, identity-field verification on lookup, undeclared-input
       facts never reused; not yet wired into any lane.
-- [~] C3 declared inputs per script lane; Turbo lanes adopt the task hash; undeclared lanes report
-      as non-reusable.
+- [x] C3 declared inputs per script lane; Turbo lanes adopt the task hash; undeclared lanes report
+      as non-reusable — complete 2026-09-16 with Labs (ruling 58).
   - [x] Coverage — done 2026-09-03 (PR #952 merged as 1ef10a6906: package-owned inputs replace the
         default glob, `cache: false` kept, a docs-only edit leaves the hash stable, and
         `tasks[].hash` in `.turbo/runs/<run-id>.json` is the ledger's input digest).
@@ -99,8 +116,9 @@ orchestrator owns schemas, contracts, and judgment.
         scan and synthetic tsconfigs, Turbo runs them serially with `cache: false`, the aggregate
         consumes versioned results with its prior rendering and exit semantics, and the run-summary
         `tasks[].hash` is the ledger input).
-  - [ ] Lint-policy — heterogeneous sublanes have root-wide inputs; one union glob would recreate a
+  - [x] Lint-policy — heterogeneous sublanes have root-wide inputs; one union glob would recreate a
         whole-tree hash. Grilled 2026-09-08 (rulings 19–25): one task per sublane, in two shapes.
+        Complete with C3.6 (2026-09-13); Lint Policy wall-clock is carried as C4 debt.
     - [x] C3.1 scripts-block schema, generator parity, `beep lint package-scripts` gate, codegen
           placeholder removal and root `codegen` split (ruling 23, 24).
     - [x] C3.2 `lint:deprecated-apis` and `lint:jsdoc` package tasks (eslint profiles); the 4-way
@@ -120,9 +138,11 @@ orchestrator owns schemas, contracts, and judgment.
           accounting for the five owed lanes (two main runs plus the 60-run census split at
           the merge) is recorded in research/c3-456-economics.md (2026-09-13); Lint Policy
           wall-clock and main's doctest misses are carried as C4 debt.
-  - [ ] Labs — three task-hash sets rather than one declared action; must keep the PR path gate and
-        zero-labs-is-green.
-- [ ] C4a retire both legacy proof stores with receipts, never migrate them: (1) `YeetLaneProofState`
+  - [x] Labs — done 2026-09-16 (PR #1166, ruling 58): the C3.6 multi-task fold already covers three
+        task-hash sets, so the lane digest folds the `check`/`lint`/`test` hashes its own summary ran;
+        the local replay now passes the hosted `--summarize` it had dropped; PR path gate and
+        zero-labs-is-green kept (zero labs declare no digest and report as non-reusable).
+- [x] C4a retire both legacy proof stores with receipts, never migrate them: (1) `YeetLaneProofState`
       rows nested in `YeetRunState` and written to each run's `state.json` by `writeVerifiedState`
       in `ProofState.ts`; (2) `LaneProofRecord` rows (`yeet-lane-proofs/v2`) in
       `.beep/yeet/lane-proofs.json`, owned by `Quality/internal/LaneProofReuse.ts`. Neither carries a
@@ -132,9 +152,13 @@ orchestrator owns schemas, contracts, and judgment.
       store shadow wiring reads; legacy readers keep working until C4 lands, then are removed with
       a retirement receipt in `research/OPPORTUNITIES.md`; ProofFacts come only from lane runs
       recorded after A5 journal facts exist. Deferred from C1 (PR #954); owed before C4.
+      Done 2026-09-16 (rulings 59–60): store 1 had no reader and is deleted now (legacy state files
+      still decode); store 2 stays live for exact-match reuse until C4 enforcement removes it;
+      a test keeps `ProofLedger.ts`/`ProofFact.ts` free of legacy-store imports.
 - [ ] C4 shadow mode with a disagreement report; enforcement between pre-push and merged preview
       only after zero disagreements over a ratified sample; hosted reuse recorded as a separate
-      decision.
+      decision. The PR that turns ledger reuse on also deletes `LaneProofReuse` and
+      `.beep/yeet/lane-proofs.json`, with a retirement receipt (ruling 60).
 - [ ] C5 must-fail fixtures: changed package, epoch change, cross-profile reuse.
 
 ## P3 — Ordering handoff

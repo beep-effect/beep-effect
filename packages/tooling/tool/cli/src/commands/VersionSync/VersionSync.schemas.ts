@@ -61,7 +61,7 @@ export class VersionDriftItem extends S.Class<VersionDriftItem>($I`VersionDriftI
  * @category models
  * @since 0.0.0
  */
-const VersionCategoryKit = LiteralKit(["bun", "node", "docker", "biome", "effect"]);
+const VersionCategoryKit = LiteralKit(["bun", "node", "docker", "biome", "effect", "turbo"]);
 /**
  * Version category for grouping drift items.
  *
@@ -282,8 +282,24 @@ class VersionCategoryReportEffect extends S.Class<VersionCategoryReportEffect>($
   })
 ) {}
 
+class VersionCategoryReportTurbo extends S.Class<VersionCategoryReportTurbo>($I`VersionCategoryReportTurbo`)(
+  {
+    category: S.tag("turbo"),
+    status: VersionCategoryStatus,
+    items: S.Array(VersionDriftItem).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<VersionDriftItem>())),
+      S.withDecodingDefault(Effect.succeed(A.empty<VersionDriftItem>()))
+    ),
+    error: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
+    latest: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
+  },
+  $I.annote("VersionCategoryReportTurbo", {
+    description: "Version report entry for Turborepo turbo.json schema pins.",
+  })
+) {}
+
 /**
- * Report for a single version category (bun, node, docker, biome, or effect).
+ * Report for a single version category (bun, node, docker, biome, effect, or turbo).
  *
  * **Example** (Annotate category report type)
  *
@@ -305,6 +321,7 @@ export const VersionCategoryReport = VersionCategory.mapMembers(
     () => VersionCategoryReportDocker,
     () => VersionCategoryReportBiome,
     () => VersionCategoryReportEffect,
+    () => VersionCategoryReportTurbo,
   ])
 ).pipe(
   $I.annoteSchema("VersionCategoryReport", {
@@ -313,7 +330,7 @@ export const VersionCategoryReport = VersionCategory.mapMembers(
   S.toTaggedUnion("category")
 );
 /**
- * Report for a single version category (bun, node, docker, or biome).
+ * Report for a single version category (bun, node, docker, biome, effect, or turbo).
  *
  * **Example** (Annotate category report type)
  *
@@ -417,6 +434,7 @@ class VersionSyncOptionsCheck extends S.Class<VersionSyncOptionsCheck>($I`Versio
     dockerOnly: DefaultedVersionSyncFlag,
     biomeOnly: DefaultedVersionSyncFlag,
     effectOnly: DefaultedVersionSyncFlag,
+    turboOnly: DefaultedVersionSyncFlag,
   },
   $I.annote("VersionSyncOptionsCheck", {
     description: "Resolved option set for check mode.",
@@ -432,6 +450,7 @@ class VersionSyncOptionsWrite extends S.Class<VersionSyncOptionsWrite>($I`Versio
     dockerOnly: DefaultedVersionSyncFlag,
     biomeOnly: DefaultedVersionSyncFlag,
     effectOnly: DefaultedVersionSyncFlag,
+    turboOnly: DefaultedVersionSyncFlag,
   },
   $I.annote("VersionSyncOptionsWrite", {
     description: "Resolved option set for write mode.",
@@ -447,6 +466,7 @@ class VersionSyncOptionsDryRun extends S.Class<VersionSyncOptionsDryRun>($I`Vers
     dockerOnly: DefaultedVersionSyncFlag,
     biomeOnly: DefaultedVersionSyncFlag,
     effectOnly: DefaultedVersionSyncFlag,
+    turboOnly: DefaultedVersionSyncFlag,
   },
   $I.annote("VersionSyncOptionsDryRun", {
     description: "Resolved option set for dry-run mode.",
