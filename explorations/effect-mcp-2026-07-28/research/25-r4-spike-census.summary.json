@@ -1,0 +1,12 @@
+{
+  "lane": "25-r4-spike-census",
+  "path": "research/25-r4-spike-census.md",
+  "claimCount": 4,
+  "topRisks": [
+    "In-repo MCP HTTP clients built on RpcClient.layerProtocolHttp + JSON-RPC codec cannot decode SSE-framed responses from a snapshot server (8 professional-desktop integration tests fail on the snapshot, pass on main)"
+  ],
+  "decisionChallenges": [],
+  "grillQuestions": [
+    "Should the snapshot PR rewrite the in-repo MCP HTTP harness and live client onto an SSE-aware transport, or defer that to the protocol-flip PR?"
+  ]
+}

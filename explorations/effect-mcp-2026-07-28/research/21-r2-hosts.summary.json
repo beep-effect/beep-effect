@@ -1,0 +1,23 @@
+{
+  "lane": "21-r2-hosts",
+  "path": "research/21-r2-hosts.md",
+  "claimCount": 24,
+  "topRisks": [
+    "Every in-repo wire client sends initialize protocolVersion 2025-06-18; a v2026_07_28-only server rejects that on stdio (-32022) and on HTTP (400 missing MCP-Protocol-Version) before any tool runs.",
+    "Public McpSchema.ClientRpcs has Initialize not server/discover, and RpcClient.layerProtocolHttp does not set Mcp-Method/Mcp-Name; there is no public Effect 2026 client group to point in-repo harnesses at.",
+    "Ontology CORS allowedHeaders omit mcp-method and mcp-name, so even a rewritten browser client would fail preflight against the desktop /mcp mount.",
+    "uspto_search_applications success is S.Array (non-object); 2026 structuredContent projection for arrays is an 11-u2 risk on that host.",
+    "nlp-mcp is the only .mcp.json in-repo server and has no stdio wire test, so a G4 flip can keep unit tests green while editor-launched sessions break."
+  ],
+  "decisionChallenges": [
+    "G4 (v2026_07_28 only) plus G6 (in-repo launchers/harnesses/RpcClient in scope) are jointly unimplementable without rewriting every wire client in this lane, or relaxing G4 to Effect's mixed list (v2025_06_18 + v2026_07_28). Mixed list is an upstream feature (mcpRuntime.ts:193-209), not a beep invention.",
+    "Ontology GovernedTierGate freezes per-session grants; if 11-u2 finds no stable HTTP clientId on 2026, G4 on this host also changes the authority identity model (22-r3), not just the handshake."
+  ],
+  "grillQuestions": [
+    "Relax G4 to a mixed protocol list on hosts that have in-repo initialize clients, or rewrite those clients first and keep G4?",
+    "Where should a 2026 RpcClient group live, given that Effect's v2026 ClientRpcs is @internal and public McpSchema.ClientRpcs still has initialize?",
+    "Is ontology CORS expansion (mcp-method, mcp-name) in the protocol-flip PR or a separate host PR?",
+    "Should nlp-mcp gain a stdio wire canary before any protocol pin changes, given it is the .mcp.json launcher and currently has none?",
+    "Who owns a live handshake probe of Claude Code/Cursor/Codex against a 2026-only nlp-mcp (Gate A finding 25), since .mcp.json cannot record what those binaries send?"
+  ]
+}
