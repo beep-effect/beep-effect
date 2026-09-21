@@ -2192,3 +2192,61 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   table, or at least pin the law — this PR adds a test that every descriptor accepting
   `--summarize` replays it locally. Longer term, the C4 shadow report should list lanes that ran
   green without a digest, so a lost digest is visible rather than silent.
+
+## 2026-09-16 — C4a retirement receipt: `YeetRunState.laneProofs` was a write-only store
+
+- Doing: scoping C4a on `main` at `f6b40bb8e0`.
+- Evidence: `writeVerifiedState` hashed every proof step's command into `YeetLaneProofState` rows
+  and wrote them to each run's `state.json` on every verified proof (three Handler call sites).
+  `rg '\.laneProofs'` over the CLI source had no hits, and `loadVerifiedState` never read the
+  field. The rows cost one SHA-256 per proof step per proof, and SPEC still named them a migration
+  source for a ledger they could never correctly feed.
+- Retired (ruling 59): class, field and builder deleted, with no migration. Legacy state files
+  still decode (excess keys ignored), which a test pins. Store 2 (`lane-proofs.json`) stays live
+  until C4 enforcement removes it (ruling 60).
+- Prevention: a store should name its reader when it is added. A write-only persisted field is
+  only visible to a grep for readers, so the C4 PR should repeat that grep for `lane-proofs.json`
+  before deleting it.
+
+## 2026-09-16 — `yeet sweep --retire` fast-forwarded to a stale `origin/main` after its fetch failed
+
+- Doing: post-merge closeout of #1166 (C3 Labs) with `bun run beep yeet sweep --retire` from
+  inside the lane.
+- Evidence: the sweep reported `fetch-prune: skipped: git fetch --prune origin failed (exit 128)`
+  (transport corruption; a manual fetch minutes earlier died with `fetch-pack: invalid index-pack
+  output`), then `ff-main: executed: Updating 3a91c3f5e2..ca7362278c`. That target was the stale
+  remote-tracking ref (#1164), not the merge the sweep was closing out (#1166, `f6b40bb8e0`). The
+  clone reported success while missing the change it had just retired. A manual refetch then
+  fast-forwarded correctly.
+- Prevention: when fetch-prune fails, `ff-main` should retry the fetch or refuse. The step should
+  also print the commit it reached and whether that commit contains the retired PR's merge commit.
+
+## 2026-09-16 — a detached publish lost its PR to one transient DNS failure
+
+- Doing: `yeet publish --start-pr-early --monitor --pr --detach` for the C4a branch, minutes after
+  a workstation reboot.
+- Evidence: the job's first push died with `ssh: Could not resolve hostname github.com: No address
+  associated with hostname`, then `yeet start-pr-early push phase failed` and the job ended before
+  proving anything. `getent hosts github.com` and `git ls-remote` succeeded moments later from the
+  same checkout, so the name resolution was momentarily unavailable rather than misconfigured.
+  Because `--start-pr-early` pushes first, the whole publish was lost to one failed DNS lookup, and
+  no PR existed to carry the proof.
+- Prevention: the early push should retry a transient network failure (unresolvable host, refused
+  connection, broken transport) a few times before failing the publish, and say which attempt
+  failed. Distinguish it from a rejected push, which must still fail immediately.
+
+## 2026-09-17 — a local proof is hostage to the desktop 1Password agent
+
+- Doing: the C4a full proof as a detached job, shortly after a workstation reboot.
+- Evidence: `quality:coverage` failed with 29 red tests across suites the branch never touched
+  (package-verify, tmpfs-reap, yeet-portfolio-index-guard, yeet-review-fixes, the warm-cache
+  test). Every one carried the same cause: `error: 1Password: Could not connect to socket. Is the
+  agent running?` then `fatal: failed to write commit object`. Those fixtures create a temporary
+  git repository and commit, inheriting the operator's global `commit.gpgsign=true` with the
+  1Password SSH signer, so a brief agent outage reads as a repo-wide test failure. Hosted CI never
+  sees this because no signing config exists there.
+- Prevention: fixtures that commit should disable signing, the way several already do
+  (`git config commit.gpgsign false` after `git init`, or `-c commit.gpgsign=false` on the
+  commit). Tracked as separate work; this packet only records the attribution cost, which was one
+  eleven-minute coverage lane plus the read to prove the failures were environmental.
+

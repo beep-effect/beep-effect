@@ -1,0 +1,22 @@
+{
+  "lane": "10-u1-api-delta",
+  "path": "research/10-u1-api-delta.md",
+  "claimCount": 35,
+  "topRisks": [
+    "Tool.Strict default diverges: OpenAI treats undefined as strict:true via config fallback; MCP treats only literal true as excess-property rejection and dies if a strict tool is Tool.dynamic with raw JSON Schema.",
+    "mcp-kit sanitizedToolkit still Exclude<..., McpServerClient> and still yield*s serviceOption(McpServerClient) while upstream toolkit excludes McpRequestContext.",
+    "McpServer.layer is still typed as providing McpServerClient via as any; callTool still requires McpServerClient; RPC middleware dies when protocolVersion is 2026-07-28.",
+    "AnyProtocolAdapter.transport is gone (now runtime.transport); compile break only for structural readers — beep-effect hosts pass adapters, they do not read transport.",
+    "ToolJsonSchema and elicitation *Schema names were removed with no aliases; beep-effect has no current references, but any out-of-tree import would fail at compile time."
+  ],
+  "decisionChallenges": [
+    "G4 (v2026_07_28-only) is type-legal but not a drop-in flip: stdio initialize still goes through selectStatefulProtocol, and the McpServerClient middleware Effect.dies on protocolVersion === \"2026-07-28\".",
+    "McpServer.elicit still requires McpServerClient, so a G4-only server cannot use reverse-client elicitation. Mixed lists remain what the adapter types (Stateful vs Stateless RuntimeDescriptor) are designed for."
+  ],
+  "grillQuestions": [
+    "Keep v2025_06_18 after the snapshot pin, honor G4 (v2026_07_28 only), or use a mixed list? Types allow all three; G4-only refuses initialize-shaped stdio traffic and dies on the McpServerClient middleware path.",
+    "Should mcp-kit sanitizedToolkit flip its Exclude target to McpRequestContext in the same PR as the pin, matching upstream toolkit?",
+    "Is elicit/reverse-client a required in-repo capability after the protocol flip? The public API still ties it to McpServerClient.",
+    "Should beep-effect MCP tools annotate Tool.Strict at all, given MCP's === true excess-property meaning vs the OpenAI default-true provider meaning?"
+  ]
+}

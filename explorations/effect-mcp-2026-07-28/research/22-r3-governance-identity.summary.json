@@ -1,0 +1,29 @@
+{
+  "lane": "22-r3-governance-identity",
+  "path": "research/22-r3-governance-identity.md",
+  "claimCount": 25,
+  "topRisks": [
+    "G4-only ontology sidecar with today's sanitizedToolkit: McpServerClient is absent, CurrentMcpCaller is None, GovernedTierGate fail-closed-refuses every mutation (dead mutation surface).",
+    "If mcp-kit keeps reading mcp-session-id after Effect stops minting/validating it, the grant-run key becomes a client-supplied string: new id resets freeze and TTL; a leaked id joins another chain.",
+    "OntologyChangeActor already attributes HTTP mutations by per-request clientId, so provenance does not match the session-keyed ledger run even before the protocol flip.",
+    "Grant-expired permanence is untested at the gate; never-evict is comment-enforced. Any new key that a client can rotate reintroduces the TTL-reset defect PR 5 already hit.",
+    "GovernedEgress remains process-scoped and time-joined; concurrent conversations make that audit join weaker, and a new identity object is the recorded seam to close it."
+  ],
+  "decisionChallenges": [
+    "G4 (v2026_07_28-only on every in-repo server) removes initialize, so Effect never mints mcp-session-id; Decision 10's 'transport-assigned session identifier' ceases to exist unless beep-effect mints a replacement.",
+    "G4 plus current mcp-kit is fail-closed: no McpServerClient (middleware dies on 2026-07-28) means no CurrentMcpCaller means no governed dispatch.",
+    "Keeping a stateful protocol on the ontology sidecar, or a mixed stateful+stateless list, preserves today's session machine and contradicts G4; Effect supports mixed lists with at most one stateless adapter.",
+    "Keying on the verified per-launch bearer is G4-compatible but changes Decision 10's substance from 'a run is an MCP session' to 'a run is a sidecar launch'."
+  ],
+  "grillQuestions": [
+    "Is 'a run is an MCP conversation' still the invariant once 2026-07-28 has no conversation, and if yes who mints the conversation id without initialize?",
+    "Does G4 apply to the ontology sidecar or only to driver MCP servers? Mixed lists and sidecar-stateful-only are implementable Effect options.",
+    "Who is allowed to reset grant TTL: any client that can initialize (today), whoever obtains a newly minted token, or only process restart / token rotation?",
+    "Must two concurrent conversations on one sidecar have isolated chains, given the gate lock is already process-global because 'the desktop surface has one interactive caller'?",
+    "Should OntologyChangeActor stop using clientId so provenance matches the ledger run key?",
+    "Is this the moment to give GovernedEgress a session seam, or does it stay process-scoped?",
+    "Are driver MCP servers expected to grow GovernedTierGate, or is session identity sidecar-only?",
+    "If a signed run token is minted, is the minting event first tools/call, first authenticated HTTP request, or an explicit open-run tool?",
+    "Is 'mutations unavailable until identity is replaced' an acceptable ship gate for the protocol flip, or must identity land in the same PR?"
+  ]
+}

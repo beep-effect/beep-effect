@@ -1,0 +1,28 @@
+{
+  "lane": "13-s1-spec-delta",
+  "path": "research/13-s1-spec-delta.md",
+  "claimCount": 38,
+  "topRisks": [
+    "A 2026-07-28-only server is a hard cut: legacy clients have no fall-forward. stdio initialize is an implementation-defined JSON-RPC error; HTTP missing headers is 400; HTTP+SSE fails at the opening GET.",
+    "Implementing from the SEP-2575 body would be wrong: clientInfo is SHOULD not MUST after PR #3002, and a recognized modern error including UnsupportedProtocolVersionError must not trigger initialize fallback.",
+    "requestState is attacker-controlled. Integrity (HMAC/AEAD, principal/TTL binding, single-use) is a server-application duty the protocol library cannot fully own.",
+    "Origin allowlists, token audience (RFC 8707), handle-is-not-auth, tool rate limits, and JSON Schema network-$ref policy are spec MUST/SHOULD items a protocol SDK typically leaves to the application. The spec defines no rate-limit algorithm or error code.",
+    "Leftover initialize, Mcp-Session-Id, GET SSE, ping, logging/setLevel, resources/subscribe, and server-initiated JSON-RPC traffic fail or are ignored. Dual-era clients that get any non-modern error or a timeout will fall back to initialize."
+  ],
+  "decisionChallenges": [
+    "G4 (v2026_07_28 only, no mixed lists) is spec-permitted, not required. Dual-era on the same endpoint is MAY. The cost is the Legacy×Modern failure row, not an unimplementable protocol state.",
+    "A G4 initialize diagnostic SHOULD name supported versions; a bare -32601 with no supported list is spec-legal but against the SHOULD.",
+    "G4 HTTP SHOULD 405 GET/DELETE and ignore leftover Mcp-Session-Id / Last-Event-ID, and MUST advertise supportedVersions [\"2026-07-28\"] only. Missing server/discover would look legacy to a probing dual-era client and would also violate the 2026 MUST.",
+    "In-repo clients that stay dual-era SHOULD probe server/discover on stdio (MAY on HTTP) and will not fall back if discover succeeds. If they also flip to modern-only they SHOULD NOT implement initialize fallback.",
+    "A still-legacy external client cannot talk to a G4 server. G6 is consistent with the spec matrix only if those clients are already modern or dual-era."
+  ],
+  "grillQuestions": [
+    "Confirm G4: every in-repo server is 2026-07-28 only, accepting that legacy clients fail with no fall-forward and that mixed-protocol lists are a forbidden product choice even though the spec MAY them?",
+    "Should G4 initialize errors include the supported list (spec SHOULD) rather than a bare method-not-found, so a legacy client has some diagnostic?",
+    "Are in-repo launchers/harnesses/RpcClient flipping to modern-only (no initialize fallback; probe only as a deterministic-failure aid) or remaining dual-era (SHOULD probe server/discover on stdio)?",
+    "Who owns Origin allowlist, RFC 8707 audience validation, requestState HMAC/AEAD, tool rate limits, and handle-authorization — the Effect protocol layer or each in-repo server application?",
+    "Confirm implementations follow current spec pages, not the SEP-2575 body: clientInfo optional, DiscoverResult.serverInfo gone, and UnsupportedProtocolVersionError must not trigger initialize fallback?",
+    "Does any in-repo server still need Roots, Sampling, Logging, or OAuth DCR given the twelve-month deprecation floor (earliest removal first revision on or after 2027-07-28)?",
+    "For leftover Streamable HTTP GET/DELETE/Mcp-Session-Id/Last-Event-ID, do we follow the modern-only SHOULD (405 and ignore) rather than minting or echoing session IDs?"
+  ]
+}

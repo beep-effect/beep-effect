@@ -1,0 +1,26 @@
+{
+  "lane": "11-u2-stateless-runtime",
+  "path": "research/11-u2-stateless-runtime.md",
+  "claimCount": 40,
+  "topRisks": [
+    "A v2026-only HTTP server rejects initialize as 404 method-not-found (with 2026 headers) or 400 header-mismatch (bare legacy initialize); stdio initialize without _meta is JSON-RPC -32022. Any in-repo launcher still sending initialize will fail.",
+    "HTTP clientId is per-POST and is not stable; no Mcp-Session-Id is minted; no McpRequestContext field is server-minted and stable across HTTP requests. Auth, rate limits, or MRTR keyed on clientId/session will not survive G4 over HTTP.",
+    "HTTP notifications/cancelled is 202-acked but does not interrupt another POST's in-flight 2026 tool call (session === undefined). Interrupt is proven on stdio only.",
+    "Default allowedOrigins is empty: any Origin header is 403. Browser-facing in-repo HTTP MCP servers must pass an allowlist.",
+    "ping, logging/setLevel, resources/subscribe, and JSON-RPC batches are gone on 2026 (404 / 400). Completions and logging capabilities are still advertised as empty objects."
+  ],
+  "decisionChallenges": [
+    "G4 (v2026_07_28 only) is implementable and is the only configuration that removes initialize. Mixed lists are a supported runtime feature (at most one stateless) and keep initialize alive via the first stateful adapter, even when the client offered protocolVersion 2026-07-28.",
+    "No server-minted stable HTTP identity exists on 2026. Adopting G4 over Streamable HTTP means identity, cancellation of other POSTs, and session log levels cannot be transported the legacy way.",
+    "HTTP cancellation of in-flight 2026 work is not implemented. If beep-effect HTTP MCP servers need spec cancellation without sessions, that is a gap in Effect at a7a71921de, not a wiring bug.",
+    "In-repo HTTP launchers that omit allowedOrigins will 403 browser Origins. In-repo clients that probe ping or send initialize will fail against a v2026-only server (G6 in-scope)."
+  ],
+  "grillQuestions": [
+    "Confirm G4: every in-repo server protocols: [McpProtocol.v2026_07_28] only, accepting that initialize dies and mixed-list fallback is forbidden?",
+    "For HTTP MCP servers, is per-request identity (client-supplied _meta / requestState) enough, given clientId is not stable and Mcp-Session-Id is not minted?",
+    "Is it acceptable that HTTP cannot cancel a different POST's in-flight 2026 tool call, with cancellation working only on stdio?",
+    "Who owns setting allowedOrigins on each in-repo layerHttp (nlp/m365/uspto/gov-legal/practice-kg/OntologyMcpTransport), given the production default denies all Origins?",
+    "Must in-repo clients and harnesses stop sending ping and initialize, and start sending server/discover plus MCP-Protocol-Version, Mcp-Method, Mcp-Name, and _meta clientCapabilities on every request?",
+    "Should resources/read MRTR (schema allows InputRequiredResult, handler never returns it) be treated as out of scope or as an Effect gap to track?"
+  ]
+}

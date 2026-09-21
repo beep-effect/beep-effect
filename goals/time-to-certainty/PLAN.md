@@ -142,7 +142,7 @@ orchestrator owns schemas, contracts, and judgment.
         task-hash sets, so the lane digest folds the `check`/`lint`/`test` hashes its own summary ran;
         the local replay now passes the hosted `--summarize` it had dropped; PR path gate and
         zero-labs-is-green kept (zero labs declare no digest and report as non-reusable).
-- [ ] C4a retire both legacy proof stores with receipts, never migrate them: (1) `YeetLaneProofState`
+- [x] C4a retire both legacy proof stores with receipts, never migrate them: (1) `YeetLaneProofState`
       rows nested in `YeetRunState` and written to each run's `state.json` by `writeVerifiedState`
       in `ProofState.ts`; (2) `LaneProofRecord` rows (`yeet-lane-proofs/v2`) in
       `.beep/yeet/lane-proofs.json`, owned by `Quality/internal/LaneProofReuse.ts`. Neither carries a
@@ -152,9 +152,13 @@ orchestrator owns schemas, contracts, and judgment.
       store shadow wiring reads; legacy readers keep working until C4 lands, then are removed with
       a retirement receipt in `research/OPPORTUNITIES.md`; ProofFacts come only from lane runs
       recorded after A5 journal facts exist. Deferred from C1 (PR #954); owed before C4.
+      Done 2026-09-16 (rulings 59–60): store 1 had no reader and is deleted now (legacy state files
+      still decode); store 2 stays live for exact-match reuse until C4 enforcement removes it;
+      a test keeps `ProofLedger.ts`/`ProofFact.ts` free of legacy-store imports.
 - [ ] C4 shadow mode with a disagreement report; enforcement between pre-push and merged preview
       only after zero disagreements over a ratified sample; hosted reuse recorded as a separate
-      decision.
+      decision. The PR that turns ledger reuse on also deletes `LaneProofReuse` and
+      `.beep/yeet/lane-proofs.json`, with a retirement receipt (ruling 60).
 - [ ] C5 must-fail fixtures: changed package, epoch change, cross-profile reuse.
 
 ## P3 — Ordering handoff
