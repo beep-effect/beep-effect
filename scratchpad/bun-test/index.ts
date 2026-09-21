@@ -1,9 +1,9 @@
 /**
  * Effect testing helpers for Bun's native `bun:test` runner.
  *
- * The API mirrors `@effect/vitest` (`it.effect`, `it.live`, `layer`,
- * `it.prop`, `flakyTest`, …) so Effect test suites can move between the two
- * runners without rewrites.
+ * The experimental API follows `@effect/vitest` (`it.effect`, `it.live`,
+ * `layer`, `it.prop`, `flakyTest`, …). See PILOT-RESULTS.md
+ * for known unsupported contracts before attempting migration.
  *
  * @since 0.0.0
  */
@@ -17,6 +17,7 @@ import * as internal from "./internal/internal.ts"
 import * as utils from "./utils.ts"
 
 import * as bt from "bun:test"
+import { assert as chaiAssert } from "chai"
 
 /**
  * Re-exported primitives from Bun's built-in test runner.
@@ -38,11 +39,29 @@ export const describe = bt.describe
 /** @since 0.0.0 */
 export const expect = bt.expect
 /** @since 0.0.0 */
+export const expectTypeOf: typeof bt.expectTypeOf = bt.expectTypeOf
+/** @since 0.0.0 */
+export const vi = bt.vi
+/** @since 0.0.0 */
 export const jest = bt.jest
 /** @since 0.0.0 */
 export const mock = bt.mock
 /** @since 0.0.0 */
 export const setSystemTime = bt.setSystemTime
+/**
+ * Set the file's default timeout for Bun and the adapter's interruptible tests.
+ *
+ * **Example** (Configure a preload)
+ *
+ * ```ts
+ * import { setDefaultTimeout } from "@beep/effect-bun-test"
+ * setDefaultTimeout(30_000)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const setDefaultTimeout = internal.setDefaultTimeout
 /** @since 0.0.0 */
 export const spyOn = bt.spyOn
 /** @since 0.0.0 */
@@ -59,6 +78,7 @@ export const assert: {
   readonly fail: (message: string) => void
   readonly strictEqual: <A>(actual: A, expected: A, message?: string) => void
   readonly deepStrictEqual: <A>(actual: A, expected: A, message?: string) => void
+  readonly deepInclude: typeof chaiAssert.deepInclude
   readonly notDeepStrictEqual: <A>(actual: A, expected: A, message?: string) => void
   readonly isTrue: (self: unknown, message?: string) => void
   readonly isFalse: (self: boolean, message?: string) => void
@@ -74,6 +94,7 @@ export const assert: {
   fail: utils.fail,
   strictEqual: utils.strictEqual,
   deepStrictEqual: utils.deepStrictEqual,
+  deepInclude: chaiAssert.deepInclude,
   notDeepStrictEqual: utils.notDeepStrictEqual,
   isTrue: utils.assertTrue,
   isFalse: utils.assertFalse,

@@ -2,16 +2,19 @@
  * @since 0.0.0
  */
 
-import {afterAll, beforeAll, describe, test} from "bun:test";
+import {afterAll, beforeAll, describe, setDefaultTimeout as bunSetDefaultTimeout, test} from "bun:test";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import {flow, pipe} from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import {isObject} from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
-import type * as S from "effect/Schema";
+import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -56,7 +59,7 @@ const formatEachName = (name: string, value: unknown, index: number): string => 
     if (token === "%%") return "%"
     if (token === "%#") return String(index)
     const current = i < values.length ? values[i++] : undefined
-    return typeof current === "object" && current !== null ? JSON.stringify(current) : String(current)
+    return Inspectable.toStringUnknown(current, 0)
   })
 }
 
@@ -71,6 +74,20 @@ interface ContextState {
 }
 
 const contextState = new WeakMap<BunTest.TestContext, ContextState>()
+let defaultTimeoutMillis = 5_000
+const $I = $ScratchpadId.create("bun-test/internal")
+
+class CompletionFailure extends S.TaggedError<CompletionFailure>($I`CompletionFailure`)(
+  "CompletionFailure",
+  { causes: S.Array(S.Defect({ includeStack: true })) },
+  $I.annote("CompletionFailure", { description: "Test body and completion hook failures retained during cleanup." })
+) {}
+
+/** @internal */
+export const setDefaultTimeout = (millis: number): void => {
+  bunSetDefaultTimeout(millis)
+  defaultTimeoutMillis = millis
+}
 
 /** @internal */
 const makeContext = (): BunTest.TestContext => {
@@ -95,23 +112,22 @@ const makeContext = (): BunTest.TestContext => {
 const flush = async (ctx: BunTest.TestContext, failed: boolean): Promise<void> => {
   const state = contextState.get(ctx)
   if (state === undefined) return
-  if (failed) {
-    for (const callback of state.failed) {
-      try {
-        await callback()
-      } catch {
-        // a failing failure hook must not mask the test's own failure
-      }
-    }
-  }
-  for (const callback of state.finished) {
-    try {
-      await callback()
-    } catch {
-      // a failing finished hook must not mask the test's own outcome
-    }
-  }
+  contextState.delete(ctx)
+  const callbacks = failed ? A.appendAll(state.failed, state.finished) : state.finished
+  await Effect.runPromise(Effect.validate(callbacks, (callback) =>
+    Effect.tryPromise({
+      try: () => Promise.resolve().then(callback),
+      catch: (cause) => CompletionFailure.make({ causes: [cause] })
+    }), { concurrency: 1 }).pipe(Effect.asVoid))
 }
+
+const finish = <A>(ctx: BunTest.TestContext, promise: Promise<A>): Promise<A> => promise.then(
+  (value) => flush(ctx, false).then(() => value),
+  (body) => flush(ctx, true).then(
+    () => Promise.reject(body),
+    (completion) => Promise.reject(CompletionFailure.make({ causes: [body, completion] }))
+  )
+)
 
 // ----------------------------------------------------------------------------
 // Default API
@@ -142,16 +158,7 @@ const splitArgs = (
 
 const withContext = (fn: AnyTestFn): BunTestFn => () => {
   const ctx = makeContext()
-  return Promise.resolve(fn(ctx)).then(
-    async (value) => {
-      await flush(ctx, false)
-      return value as void
-    },
-    async (error) => {
-      await flush(ctx, true)
-      throw error
-    }
-  )
+  return finish(ctx, Promise.resolve().then(() => fn(ctx))).then(() => undefined)
 }
 
 const registerWith = (registrar: BunRegistrar) =>
@@ -213,11 +220,9 @@ export const defaultApi: BunTest.Collector = Object.assign(baseCollector, {
     fn: (value: T, ctx: BunTest.TestContext) => unknown | Promise<unknown>,
     options?: number | BunTest.TestOptions
   ) => {
-    bunTest.each(cases as Array<T>)(
-      name,
-      (value) => withContext((ctx) => fn(value, ctx))(),
-      toBunOptions(options)
-    )
+    A.forEach(cases, (value, index) => {
+      bunTest(formatEachName(name, value, index), withContext((ctx) => fn(value, ctx)), toBunOptions(options))
+    })
   },
   describe
 })
@@ -241,16 +246,9 @@ const runPromise: <E, A>(
     return yield* exit
   },
   (effect, _, ctx) =>
-    Effect.runPromise(effect, { signal: ctx?.signal }).then(
-      async (value) => {
-        if (ctx !== undefined) await flush(ctx, false)
-        return value
-      },
-      async (error) => {
-        if (ctx !== undefined) await flush(ctx, true)
-        throw error
-      }
-    )
+    ctx === undefined
+      ? Effect.runPromise(effect)
+      : finish(ctx, Effect.runPromise(effect, { signal: ctx.signal }))
 )
 
 /** @internal */
@@ -337,8 +335,8 @@ const runCheck = <A, E>(
  */
 const makeTestContext = (timeout?: number | BunTest.TestOptions): BunTest.TestContext => {
   const ctx = makeContext()
-  const millis = timeoutMillis(timeout)
-  if (millis !== undefined) {
+  const millis = timeoutMillis(timeout) ?? defaultTimeoutMillis
+  {
     const state = contextState.get(ctx)!
     const timer = setTimeout(() => {
       state.controller.abort(new Error(`Test timed out after ${millis}ms`))
@@ -351,8 +349,7 @@ const makeTestContext = (timeout?: number | BunTest.TestOptions): BunTest.TestCo
 const withBackstopTimeout = (
   timeout: number | BunTest.TestOptions | undefined
 ): number | BunTest.TestOptions | undefined => {
-  const millis = timeoutMillis(timeout)
-  if (millis === undefined) return timeout
+  const millis = timeoutMillis(timeout) ?? defaultTimeoutMillis
   const backstop = millis + 1_000
   return typeof timeout === "number" ? { timeout: backstop } : { ...timeout, timeout: backstop }
 }
@@ -444,14 +441,16 @@ export const prop: BunTest.BunTest.Methods["prop"] = (name, arbitraries, self, t
   const arbitrary = makeArbitrary(arbitraries)
   return defaultApi(
     name,
-    (ctx) =>
-      runCheck(
+    () => {
+      const ctx = makeTestContext(timeout)
+      return runCheck(
         ctx,
         arbitrary,
         (values) => (self(values as any, ctx) as unknown) !== false,
         checkOptions(timeout)
-      ),
-    timeout
+      )
+    },
+    withBackstopTimeout(timeout)
   )
 }
 
@@ -536,8 +535,10 @@ export const layer = <R, E>(
   }
 
   if (args.length === 1) {
-    registerHooks()
-    return args[0](makeIt(defaultApi))
+    return describe("", () => {
+      registerHooks()
+      return args[0](makeIt(defaultApi))
+    })
   }
 
   return describe(args[0], () => {
