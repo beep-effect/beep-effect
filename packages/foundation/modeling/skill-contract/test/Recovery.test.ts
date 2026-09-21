@@ -24,6 +24,7 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBudgetDuration = S.decodeEffect(BudgetDuration);
+const isBudgetDuration = S.is(BudgetDuration);
 const decodeFailureReceipt = S.decodeEffect(FailureReceipt);
 const decodeRecoveryPolicyResult = S.decodeResult(RecoveryPolicy);
 const decodeUnknownFailureReceiptPredicate = S.decodeUnknownEffect(FailureReceiptPredicate);
@@ -219,8 +220,6 @@ describe("@beep/skill-contract Recovery", () => {
   );
 
   it("accepts only budget durations that the millisecond encoding carries exactly", () => {
-    const isBudgetDuration = S.is(BudgetDuration);
-
     expect(isBudgetDuration(Duration.zero)).toBe(true);
     expect(isBudgetDuration(Duration.nanos(5_000_000n))).toBe(true);
     expect(isBudgetDuration(Duration.millis(Number.MAX_SAFE_INTEGER))).toBe(true);
