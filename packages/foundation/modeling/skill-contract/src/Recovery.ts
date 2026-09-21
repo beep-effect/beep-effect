@@ -18,18 +18,32 @@ import { EvidencePredicateType } from "./Gate.ts";
 
 const $I = $SkillContractId.create("Recovery");
 
-const BudgetDurationCheck = S.makeFilter(
-  (duration: Duration.Duration) => Duration.isFinite(duration) && !Duration.isNegative(duration),
-  {
-    identifier: $I`BudgetDurationCheck`,
-    title: "Recovery budget duration",
-    description: "Recovery budget durations must be finite and greater than or equal to zero.",
-    message: "Recovery budget durations must be finite and non-negative",
-  }
-);
+// A budget duration travels as a JSON number of whole milliseconds. The check
+// pins that representation on the Duration itself: infinities and negative
+// values aside, a sub-millisecond nanosecond value or a magnitude past the
+// safe-integer range encodes to a number that decodes to a different Duration
+// (or to no JSON number at all), so such values never round-trip.
+const isWholeMillisDuration = (duration: Duration.Duration): boolean => {
+  const millis = Duration.toMillis(duration);
+  return Number.isSafeInteger(millis) && millis >= 0 && Duration.Equivalence(Duration.millis(millis), duration);
+};
+
+const BudgetDurationCheck = S.makeFilter(isWholeMillisDuration, {
+  identifier: $I`BudgetDurationCheck`,
+  title: "Recovery budget duration",
+  description: "Recovery budget durations must be whole non-negative milliseconds within the safe-integer range.",
+  message: "Recovery budget durations must be whole non-negative milliseconds",
+});
 
 /**
- * Finite non-negative duration encoded as milliseconds.
+ * Whole non-negative millisecond duration encoded as a JSON number.
+ *
+ * **Details**
+ *
+ * The encoded form is the millisecond count, so the decoded `Duration` is
+ * restricted to values that count survives: finite, non-negative, a whole
+ * number of milliseconds, and within the safe-integer range. Nanosecond
+ * precision and larger magnitudes are rejected rather than silently rounded.
  *
  * **Example** (Construct a budget duration)
  *
@@ -45,7 +59,7 @@ const BudgetDurationCheck = S.makeFilter(
  */
 export const BudgetDuration = S.DurationFromMillis.check(BudgetDurationCheck).pipe(
   $I.annoteSchema("BudgetDuration", {
-    description: "Finite non-negative recovery budget duration encoded as milliseconds.",
+    description: "Whole non-negative millisecond recovery budget duration encoded as a JSON number.",
   })
 );
 

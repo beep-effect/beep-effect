@@ -218,6 +218,20 @@ describe("@beep/skill-contract Recovery", () => {
     })
   );
 
+  it("accepts only budget durations that the millisecond encoding carries exactly", () => {
+    const isBudgetDuration = S.is(BudgetDuration);
+
+    expect(isBudgetDuration(Duration.zero)).toBe(true);
+    expect(isBudgetDuration(Duration.nanos(5_000_000n))).toBe(true);
+    expect(isBudgetDuration(Duration.millis(Number.MAX_SAFE_INTEGER))).toBe(true);
+    expect(isBudgetDuration(Duration.nanos(1_500n))).toBe(false);
+    expect(isBudgetDuration(Duration.nanos(10n ** 400n))).toBe(false);
+    expect(isBudgetDuration(Duration.millis(Number.MAX_SAFE_INTEGER + 1))).toBe(false);
+    expect(isBudgetDuration(Duration.millis(1.5))).toBe(false);
+    expect(isBudgetDuration(Duration.millis(-1))).toBe(false);
+    expect(isBudgetDuration(Duration.infinity)).toBe(false);
+  });
+
   it("models explicit no-recovery and bounded policies without an engine", () => {
     const none = NoRecoveryPolicy.make({});
     const bounded = BoundedRecoveryPolicy.make({ budget });
