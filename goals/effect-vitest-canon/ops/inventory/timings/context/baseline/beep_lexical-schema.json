@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/lexical-schema",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "a1b780f40f1b4f0f4989eb9383b4210dc6a35188245538d3f8e68e8d8a834182",
+  "rawLogSha256": "a3601770e9a8f17c6663345df2885bc533a5d18a16878ad58b4a69ed263cc751",
+  "rawReceiptSha256": "707345a9430e849c9f47ac71c48bb7e243b3ad536a8db7bf2e8cb79aa9afbb31",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 21.964580316000138,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 71
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 6,
+  "maxLoad1": 104.4208984375,
+  "minimumMemAvailableGiB": 46.80699920654297,
+  "maxPressureAvg10": {
+    "cpu": 38.36,
+    "memory": 0.03,
+    "io": 0.36
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.codec.test.ts",
+      "ms": 673.755615234375,
+      "tests": 30
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.model.test.ts",
+      "ms": 331.901611328125,
+      "tests": 27
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/ConformanceLedger.test.ts",
+      "ms": 15.296630859375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.conformance-annotation.test.ts",
+      "ms": 14.326904296875,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.strict-invariants.test.ts",
+      "ms": 9.955322265625,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/Lexical.conformance.test.ts",
+      "ms": 8.86669921875,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/test/TaggedError.equivalence.test.ts",
+      "ms": 1.899658203125,
+      "tests": 1
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

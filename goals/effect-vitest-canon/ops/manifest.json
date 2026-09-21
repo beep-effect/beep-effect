@@ -5,7 +5,7 @@
     "title": "Canonical Effect Vitest idioms",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-10",
+    "updated": "2026-09-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-vitest-canon",
@@ -85,12 +85,12 @@
     {
       "id": "P0g",
       "name": "Initial PR and ratification",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Inventory",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -117,5 +117,5 @@
     "Never merge without explicit user authorization.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "Main through 8cb18e6 is integrated. All three adversarial rounds are closed; all four R3 findings are fixed. The 288-case focused checkpoint, full CLI package audit/docgen (420.944 seconds), compiler, lint, Fallow and aggregate cheap gates pass. All 8,138 finding payloads and 1,110 census paths are reconciled. Final normal commands pass in 9.563, 9.630 and 9.926 seconds; failed cohorts remain recorded. Final scoped Node 22 coverage passes 3,656 tests across 181 files and fixes both prior metric regressions without changing the baseline. P0g exact-head full Yeet, hosted checks and review closeout evidence are tracked on PR #1067. Benjamin ratification and merge remain. Leave PR #1067 open; P1/P2 remain gated."
+  "statusNote": "Progress-save integration requested 2026-09-21: main integrated at 3367c008d9 with Effect rc.115/Vitest5.0.1. Existing P1 inventory and timings describe the frozen rc.113 snapshot, not current-main audit completeness. The frozen diagnostic consistency draft covers all 147 candidates; root review, corrections and main delta refresh remain. Continue goal after progress PR merges; Benjamin acknowledgement still required before P2."
 }

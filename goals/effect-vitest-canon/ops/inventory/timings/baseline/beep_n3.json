@@ -1,0 +1,51 @@
+{
+  "package": "@beep/n3",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:25:32.985174+00:00",
+  "totalMs": 3546.874755859375,
+  "testCount": 6,
+  "files": [
+    {
+      "file": "packages/drivers/n3/test/N3.equivalence.test.ts",
+      "ms": 0.9892578125,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "ms": 12.874755859375,
+      "tests": 5
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "testName": "N3TurtleCodec parses and serializes Turtle over @beep/rdf values",
+      "ms": 12.874664999999823
+    },
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "testName": "N3TurtleCodec round-trips the default Turtle prefix",
+      "ms": 12.627136000000064
+    },
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "testName": "N3TurtleCodec serializes standard RDF reification datasets",
+      "ms": 12.607266000000436
+    },
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "testName": "N3TurtleCodec rejects named graph quads for Turtle serialization",
+      "ms": 12.59461599999986
+    },
+    {
+      "file": "packages/drivers/n3/test/N3TurtleCodec.test.ts",
+      "testName": "N3TurtleCodec propagates writer callback errors",
+      "ms": 12.58491099999992
+    },
+    {
+      "file": "packages/drivers/n3/test/N3.equivalence.test.ts",
+      "testName": "N3 declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+      "ms": 0.9892350000000079
+    }
+  ]
+}

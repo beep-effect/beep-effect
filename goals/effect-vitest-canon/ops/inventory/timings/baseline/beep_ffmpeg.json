@@ -1,0 +1,91 @@
+{
+  "package": "@beep/ffmpeg",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:27:24.225822+00:00",
+  "totalMs": 17746.7158203125,
+  "testCount": 45,
+  "files": [
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
+      "ms": 119.670166015625,
+      "tests": 11
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "ms": 187.63427734375,
+      "tests": 17
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.equivalence.test.ts",
+      "ms": 1.619384765625,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.extract-args.test.ts",
+      "ms": 4.45556640625,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "ms": 153.43798828125,
+      "tests": 7
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "ms": 2421.7158203125,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "testName": "@beep/ffmpeg live capture cuts clips and round-trips BEEP_QA_SESSION_ID container metadata via ffprobe",
+      "ms": 2421.7157879999977
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "testName": "@beep/ffmpeg live capture renders gif and contact sheet artifacts with real byte sizes",
+      "ms": 2395.132598000002
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/integration/FFmpeg.capture.integration.test.ts",
+      "testName": "@beep/ffmpeg live capture extracts pts-accurate timestamped frames from the luma-ramp golden clip",
+      "ms": 1077.6537450000014
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.service.test.ts",
+      "testName": "@beep/ffmpeg extracts frames into final names and writes the default manifest",
+      "ms": 152.92573000000084
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
+      "testName": "@beep/ffmpeg capture failures extracts frames from a container that reports no duration",
+      "ms": 102.67023999999947
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "testName": "@beep/ffmpeg capture round-trips schema-modeled capture payloads",
+      "ms": 101.9541330000011
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "testName": "@beep/ffmpeg capture rejects unsafe metadata keys",
+      "ms": 101.3527920000015
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "testName": "@beep/ffmpeg capture builds single-frame timestamp extraction arguments",
+      "ms": 101.30473800000073
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "testName": "@beep/ffmpeg capture builds clip extraction arguments per codec preset",
+      "ms": 101.28086199999962
+    },
+    {
+      "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.test.ts",
+      "testName": "@beep/ffmpeg capture builds palette-optimized GIF arguments with dither routing",
+      "ms": 101.26115199999913
+    }
+  ]
+}

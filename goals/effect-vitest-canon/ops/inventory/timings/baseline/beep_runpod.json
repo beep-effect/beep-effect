@@ -1,0 +1,76 @@
+{
+  "package": "@beep/runpod",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:22.468133+00:00",
+  "totalMs": 4993.433349609375,
+  "testCount": 11,
+  "files": [
+    {
+      "file": "packages/drivers/runpod/test/Runpod.equivalence.test.ts",
+      "ms": 1.31689453125,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "ms": 60.433349609375,
+      "tests": 7
+    },
+    {
+      "file": "packages/drivers/runpod/test/integration/Runpod.live.test.ts",
+      "ms": 5.5703125,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "testName": "@beep/runpod parses and fetches the Runpod llms.txt documentation index",
+      "ms": 44.43327600000066
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "testName": "@beep/runpod round-trips schema-derived config, error, raw, and docs models",
+      "ms": 44.35167100000035
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "testName": "@beep/runpod sends typed operations with expected auth, query, path, and JSON body encoding",
+      "ms": 16.043775000000096
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "testName": "@beep/runpod keeps the generated operation surface complete",
+      "ms": 15.9602160000004
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "testName": "@beep/runpod supports raw requests for ahead-of-spec endpoints",
+      "ms": 15.787640999999894
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "testName": "@beep/runpod enforces generated OpenAPI enum schemas while leaving dynamic ids flexible",
+      "ms": 15.765927999999803
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+      "testName": "@beep/runpod maps status and transport failures into typed errors",
+      "ms": 15.755772999999863
+    },
+    {
+      "file": "packages/drivers/runpod/test/integration/Runpod.live.test.ts",
+      "testName": "@beep/runpod live lists pods when RUNPOD_API_KEY is configured",
+      "ms": 5.570415999999568
+    },
+    {
+      "file": "packages/drivers/runpod/test/integration/Runpod.live.test.ts",
+      "testName": "@beep/runpod live fetches the unauthenticated OpenAPI document",
+      "ms": 5.384351000000606
+    },
+    {
+      "file": "packages/drivers/runpod/test/Runpod.equivalence.test.ts",
+      "testName": "Runpod declared-field equivalence treats field-equal errors as equivalent and field-different ones as distinct",
+      "ms": 1.316968000000088
+    }
+  ]
+}

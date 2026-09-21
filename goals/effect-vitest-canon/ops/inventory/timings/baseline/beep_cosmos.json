@@ -1,0 +1,56 @@
+{
+  "package": "@beep/cosmos",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:17:42.915746+00:00",
+  "totalMs": 3655.6064453125,
+  "testCount": 7,
+  "files": [
+    {
+      "file": "packages/drivers/cosmos/test/Cosmos.equivalence.test.ts",
+      "ms": 1.02392578125,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "ms": 8.6064453125,
+      "tests": 6
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection selects cosmos only when WebGL2 is available",
+      "ms": 5.956309000000147
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection generates deterministic typed-array graph projections",
+      "ms": 5.733067000000119
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection normalizes synthetic graph counts without a parallel defaults object",
+      "ms": 5.713015999999698
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection models an omitted WebGL canvas as Option none",
+      "ms": 5.701066999999966
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection probes explicit canvases without depending on the host WebGL runtime",
+      "ms": 5.691391999999723
+    },
+    {
+      "file": "packages/drivers/cosmos/test/CosmosProjection.test.ts",
+      "testName": "cosmos driver projection and capability detection rebuilds the sigma graphology graph from the incoming update projection",
+      "ms": 2.6064790000000357
+    },
+    {
+      "file": "packages/drivers/cosmos/test/Cosmos.equivalence.test.ts",
+      "testName": "Cosmos declared-field equivalence treats field-equal CosmosDriverError instances as equivalent and field-different ones as distinct",
+      "ms": 1.0239709999996194
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/libpff",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "747cb0f58502817a13e3263c4435caeb925ae18a246127639ef96040e62f76e0",
+  "rawLogSha256": "73403a98b1b216ab87c45033169bfad2d9ea34c1c9a2d5a512c81eb24fd1f0a6",
+  "rawReceiptSha256": "27165c634f30a5384bc27e22d8624194f5c5216191f4f1fe81baa0cdda944f5a",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 23.730146048999814,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 69
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 6,
+  "maxLoad1": 106.27734375,
+  "minimumMemAvailableGiB": 48.23968505859375,
+  "maxPressureAvg10": {
+    "cpu": 43.58,
+    "memory": 0.0,
+    "io": 0.07
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
+      "ms": 3818.5537109375,
+      "tests": 36
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.service.test.ts",
+      "ms": 189.44287109375,
+      "tests": 5
+    },
+    {
+      "file": "packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts",
+      "ms": 116.3447265625,
+      "tests": 3
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.eml.test.ts",
+      "ms": 10.436767578125,
+      "tests": 24
+    },
+    {
+      "file": "packages/drivers/libpff/test/Libpff.equivalence.test.ts",
+      "ms": 1.530517578125,
+      "tests": 1
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

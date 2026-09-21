@@ -1,0 +1,71 @@
+{
+  "package": "@beep/workspace-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:33:44.070029+00:00",
+  "totalMs": 4026.918212890625,
+  "testCount": 13,
+  "files": [
+    {
+      "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 2.19189453125,
+      "tests": 6
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "ms": 28.918212890625,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline decodes a thread timeline with resolved message and tool-call items",
+      "ms": 28.298269999999775
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline keeps thread input and timeline encoded shapes stable",
+      "ms": 28.08106799999996
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline schema-derived arbitraries round-trip through exported schemas",
+      "ms": 28.044922999999926
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline drops the replaced turn and everything after it from the active branch",
+      "ms": 28.043832000000293
+    },
+    {
+      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
+      "testName": "ThreadTimeline union-derived guards discriminate timeline items by kind",
+      "ms": 28.032873999999993
+    },
+    {
+      "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
+      "testName": "workspace use-case tagged-error declared equivalence compares ThreadStoreNotFound by declared fields",
+      "ms": 1.6972889999997278
+    },
+    {
+      "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
+      "testName": "workspace use-case tagged-error declared equivalence compares ThreadStoreConflict by declared fields",
+      "ms": 1.503512000000228
+    },
+    {
+      "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
+      "testName": "workspace use-case tagged-error declared equivalence compares ThreadStoreUnavailable by declared fields",
+      "ms": 1.4850339999998141
+    },
+    {
+      "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
+      "testName": "workspace use-case tagged-error declared equivalence compares WorkspaceVaultStoreUnavailable by declared fields",
+      "ms": 1.473645999999917
+    },
+    {
+      "file": "packages/workspace/use-cases/test/TaggedError.equivalence.test.ts",
+      "testName": "workspace use-case tagged-error declared equivalence compares WorkspaceVaultRootInvalid by declared fields",
+      "ms": 1.464621999999963
+    }
+  ]
+}

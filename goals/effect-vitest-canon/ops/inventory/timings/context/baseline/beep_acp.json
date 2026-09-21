@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/acp",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "4a7db5c81989f784b377c30c183cc99fe9e4292f8366c5b9fa31af6036bf1ef3",
+  "rawLogSha256": "65d517c06f13f8e0f51fcb93e5e9aa32d3eec46bffed75a4502301013878e02f",
+  "rawReceiptSha256": "1314d357e3b1df9fa969cc1fb66157d2bf2626ebc50db89f161a3fba762b15fb",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 5.866663674999927,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 22
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 20.380859375,
+  "minimumMemAvailableGiB": 68.82362747192383,
+  "maxPressureAvg10": {
+    "cpu": 10.32,
+    "memory": 0.0,
+    "io": 0.0
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "ms": 967.481689453125,
+      "tests": 12
+    },
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "ms": 960.01513671875,
+      "tests": 5
+    },
+    {
+      "file": "packages/drivers/acp/test/agent.test.ts",
+      "ms": 40.5,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/acp/test/Acp.equivalence.test.ts",
+      "ms": 1.145263671875,
+      "tests": 1
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

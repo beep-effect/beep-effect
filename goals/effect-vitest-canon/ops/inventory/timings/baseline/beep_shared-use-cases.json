@@ -1,0 +1,31 @@
+{
+  "package": "@beep/shared-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:33.887175+00:00",
+  "totalMs": 4064.688720703125,
+  "testCount": 3,
+  "files": [
+    {
+      "file": "packages/shared/use-cases/test/PromotionGate.test.ts",
+      "ms": 12.688720703125,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/shared/use-cases/test/PromotionGate.test.ts",
+      "testName": "PromotionGate carries only an opaque subject across the contract",
+      "ms": 11.928306999999677
+    },
+    {
+      "file": "packages/shared/use-cases/test/PromotionGate.test.ts",
+      "testName": "PromotionGate round-trips the shared boundary schemas",
+      "ms": 11.688599999999951
+    },
+    {
+      "file": "packages/shared/use-cases/test/PromotionGate.test.ts",
+      "testName": "PromotionGate rejects prose, whitespace, uppercase, and unbounded refusal reasons",
+      "ms": 11.681779000000006
+    }
+  ]
+}

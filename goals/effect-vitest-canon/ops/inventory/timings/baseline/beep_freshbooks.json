@@ -1,0 +1,71 @@
+{
+  "package": "@beep/freshbooks",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:21:45.645052+00:00",
+  "totalMs": 6855.630859375,
+  "testCount": 12,
+  "files": [
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "ms": 14.39013671875,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "ms": 14.630859375,
+      "tests": 6
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "testName": "@beep/freshbooks token rotation persists a consumed refresh token before honoring caller cancellation",
+      "ms": 14.6308769999996
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "testName": "@beep/freshbooks read service lists and fetches payments with page selection",
+      "ms": 13.78162599999996
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "testName": "@beep/freshbooks read service fetches a single client and a single invoice by id",
+      "ms": 13.736557000000175
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "testName": "@beep/freshbooks read service resolves the identity with distinct account and business namespaces",
+      "ms": 13.311925999999403
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "testName": "@beep/freshbooks read service lists clients and reshapes the pagination envelope",
+      "ms": 13.295800999999301
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "testName": "@beep/freshbooks token rotation reuses a still-fresh token without a network refresh",
+      "ms": 12.885371999999734
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "testName": "@beep/freshbooks token rotation serializes concurrent refreshes to a single owner (one network refresh)",
+      "ms": 12.869628000000375
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "testName": "@beep/freshbooks token rotation persists the rotated single-use token before releasing",
+      "ms": 12.851560000000063
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "testName": "@beep/freshbooks models decodes wire keys into annotated S.Class models and re-encodes to the wire shape",
+      "ms": 11.504946000000018
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "testName": "@beep/freshbooks token rotation fails with a token-refresh error when no token has been granted",
+      "ms": 9.828666999999768
+    }
+  ]
+}

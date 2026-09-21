@@ -1,0 +1,81 @@
+{
+  "package": "@beep/ontology",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:25:49.556273+00:00",
+  "totalMs": 4989.216552734375,
+  "testCount": 70,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/ontology/test/Fold.test.ts",
+      "ms": 50.216552734375,
+      "tests": 31
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
+      "ms": 73.762451171875,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/SemanticFoundation.test.ts",
+      "ms": 26.728759765625,
+      "tests": 22
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/TaggedError.equivalence.test.ts",
+      "ms": 3.319091796875,
+      "tests": 11
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
+      "testName": "@beep/ontology models owns constructive HTTP URL metadata and codec statics",
+      "ms": 72.7408830000004
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
+      "testName": "@beep/ontology models accepts only HTTP and HTTPS URL schemes",
+      "ms": 72.55856399999993
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
+      "testName": "@beep/ontology models preserves representative OpenAPI encoded wire shapes",
+      "ms": 72.54064599999947
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
+      "testName": "@beep/ontology models round-trips schema-derived ontology payloads",
+      "ms": 72.52884799999993
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts",
+      "testName": "@beep/ontology models round-trips schema-derived URL and search-score primitives",
+      "ms": 72.51926400000048
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Fold.test.ts",
+      "testName": "Ontology.fold resolves class IRIs and tuple facts through schema identity annotations",
+      "ms": 13.79463399999986
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Fold.test.ts",
+      "testName": "Ontology.fold defaults field predicate names to struct keys and infers datatype/object kinds",
+      "ms": 13.592674999999872
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Fold.test.ts",
+      "testName": "Ontology.fold fails with a typed unresolvedHandle when a field references a schema outside the fold",
+      "ms": 13.575248000000101
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Fold.test.ts",
+      "testName": "Ontology.fold fails with a typed unknownTerm for unknown CURIE prefixes",
+      "ms": 13.564280999999937
+    },
+    {
+      "file": "packages/foundation/modeling/ontology/test/Fold.test.ts",
+      "testName": "Ontology.fold projections projects JSON-LD context terms from class and predicate annotations",
+      "ms": 13.550629999999728
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "package": "@beep/openai-compat",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:23:18.428979+00:00",
+  "totalMs": 6419.58642578125,
+  "testCount": 19,
+  "files": [
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "ms": 339.58642578125,
+      "tests": 19
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "testName": "OpenAiCompat language model supports data-last codecs and model construction",
+      "ms": 282.5879080000004
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "testName": "OpenAiCompat language model round-trips schema-derived OpenAI-compatible payloads through encoded form",
+      "ms": 282.1962990000002
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "testName": "OpenAiCompat language model translates Effect prompts into chat completion requests",
+      "ms": 282.1758669999999
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "testName": "OpenAiCompat language model declares tool_choice alongside declared tools",
+      "ms": 282.1579900000006
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "testName": "OpenAiCompat language model keeps encoded OpenAI-compatible schema wire shapes byte-identical",
+      "ms": 282.1010430000006
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "testName": "OpenAiCompat language model sets operation-specific Accept headers and allows configured overrides",
+      "ms": 43.586357999999564
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "testName": "OpenAiCompat language model maps SSE retry directives to typed AiError",
+      "ms": 43.55828500000007
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "testName": "OpenAiCompat language model maps SSE decoding failures to typed AiError",
+      "ms": 43.55337700000018
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "testName": "OpenAiCompat language model rejects stream responses whose leading content type is not text/event-stream",
+      "ms": 43.370646999999735
+    },
+    {
+      "file": "packages/drivers/openai-compat/test/OpenAiCompat.language-model.test.ts",
+      "testName": "OpenAiCompat language model rejects non-image file parts before provider calls",
+      "ms": 7.049574000000575
+    }
+  ]
+}

@@ -25,7 +25,7 @@ import { FsUtils, FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
 import { NodePath, NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
-import { assertFalse, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { Console, Context, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -732,3 +732,132 @@ it.layer(NodeServices.layer)("round 2 contextual graph routing", (it) => {
     })
   );
 });
+
+const encodeP1FindingFixture = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+it.effect(
+  "decodes charter NONE coverage and numeric findings for each exact lens",
+  Effect.fnUntraced(function* () {
+    for (const [lens, prefix] of [
+      ["resource", "RES"],
+      ["flake", "FLAKE"],
+      ["property", "PROP"],
+      ["observability", "OBS"],
+    ]) {
+      const coverage = {
+        id: `coverage:${lens}`,
+        lens,
+        ruleId: `L-${prefix}-NONE`,
+        package: "@beep/example",
+        file: "packages/example/test/a.test.ts",
+        line: 1,
+        endLine: 1,
+        class: "no-findings",
+        evidence: "The complete file has no finding for this lens.",
+        replacement: {
+          primitive: "module.@effect/vitest",
+          sketch: "No change required: this lens found no actionable issue.",
+        },
+        severity: "info",
+        confidence: 1,
+        mechanization: "judgment",
+        status: "open",
+      };
+      const coverageJson = yield* encodeP1FindingFixture(coverage);
+      assertSome(
+        O.map(decodeEffectVitestFindingJson(coverageJson, { onExcessProperty: "error" }), (row) => row.ruleId),
+        coverage.ruleId
+      );
+      const actionableJson = yield* encodeP1FindingFixture({
+        ...coverage,
+        ruleId: `L-${prefix}-01`,
+        class: "review-needed",
+        severity: "major",
+      });
+      assertSome(
+        O.map(decodeEffectVitestFindingJson(actionableJson, { onExcessProperty: "error" }), (row) => row.ruleId),
+        `L-${prefix}-01`
+      );
+      const mismatchedJson = yield* encodeP1FindingFixture({
+        ...coverage,
+        lens: lens === "resource" ? "flake" : "resource",
+      });
+      assertNone(decodeEffectVitestFindingJson(mismatchedJson, { onExcessProperty: "error" }));
+    }
+  })
+);
+
+it.effect(
+  "rejects misleading NONE/actionable relationships without weakening boundary checks",
+  Effect.fnUntraced(function* () {
+    const coverage = {
+      id: "coverage:resource",
+      lens: "resource",
+      ruleId: "L-RES-NONE",
+      package: "@beep/example",
+      file: "packages/example/test/a.test.ts",
+      line: 1,
+      endLine: 1,
+      class: "no-findings",
+      evidence: "No shared effectful resources.",
+      replacement: { primitive: "module.@effect/vitest", sketch: "No change required." },
+      severity: "info",
+      confidence: 1,
+      mechanization: "judgment",
+      status: "open",
+    };
+    for (const change of [
+      { ruleId: "L-RES-01" },
+      { class: "resource-leak" },
+      { lens: "detector" },
+      { ruleId: "EV001" },
+      { ruleId: "L-RES-None" },
+      { ruleId: "L-RES-001" },
+      { severity: "major" },
+      { confidence: 0.5 },
+      { mechanization: "detector" },
+      { status: "fixed" },
+      { fixSha: "fabricated" },
+      { endLine: 0 },
+      { replacement: { primitive: "it.layer", sketch: "Rebuild it." } },
+      { extra: true },
+      { replacement: { ...coverage.replacement, extra: true } },
+    ]) {
+      const json = yield* encodeP1FindingFixture({ ...coverage, ...change });
+      assertNone(decodeEffectVitestFindingJson(json, { onExcessProperty: "error" }));
+    }
+    const actionable = { ...coverage, ruleId: "L-RES-01", class: "flaky-test-wrap", status: "exception" };
+    const missingReason = yield* encodeP1FindingFixture(actionable);
+    assertNone(decodeEffectVitestFindingJson(missingReason, { onExcessProperty: "error" }));
+    const withReason = yield* encodeP1FindingFixture({ ...actionable, reason: "Documented external boundary." });
+    assertSome(
+      O.map(decodeEffectVitestFindingJson(withReason, { onExcessProperty: "error" }), (row) => row.ruleId),
+      "L-RES-01"
+    );
+  })
+);
+
+it.effect(
+  "preserves detector-origin resource judgments alongside human lens rules",
+  Effect.fnUntraced(function* () {
+    const json = yield* encodeP1FindingFixture({
+      id: "EV010:resource",
+      lens: "resource",
+      ruleId: "EV010",
+      package: "@beep/example",
+      file: "packages/example/test/a.test.ts",
+      line: 1,
+      class: "platform-resource-provenance-review",
+      evidence: "NodeServices.layer",
+      replacement: { primitive: "it.layer", sketch: "Review the actual resource boundary." },
+      severity: "info",
+      confidence: 0.55,
+      mechanization: "judgment",
+      status: "open",
+    });
+    assertSome(
+      O.map(decodeEffectVitestFindingJson(json, { onExcessProperty: "error" }), (row) => row.ruleId),
+      "EV010"
+    );
+  })
+);

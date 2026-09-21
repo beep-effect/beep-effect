@@ -1,0 +1,76 @@
+{
+  "package": "@beep/law-practice-tables",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:32:55.123277+00:00",
+  "totalMs": 4900.3505859375,
+  "testCount": 45,
+  "files": [
+    {
+      "file": "packages/law-practice/tables/test/CandorConverters.test.ts",
+      "ms": 9.315673828125,
+      "tests": 9
+    },
+    {
+      "file": "packages/law-practice/tables/test/LawPracticeTables.test.ts",
+      "ms": 4.26806640625,
+      "tests": 12
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "ms": 63.3505859375,
+      "tests": 24
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "testName": "converter round trips over the whole schema round-trips arbitrary recorded frames",
+      "ms": 33.350618999999824
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "testName": "converter round trips over the whole schema round-trips arbitrary attempted exercises",
+      "ms": 33.326451999999335
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "testName": "LegalOppositionCandidate converters rejects a row naming no pair, and one naming a single relation",
+      "ms": 15.986489000000802
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "testName": "set-valued fields across the storage boundary stores every scope axis as a JSON array and reads it back as a HashSet",
+      "ms": 15.978216999999859
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "testName": "set-valued fields across the storage boundary stores the screened pair as a JSON array, so no row shape can order it",
+      "ms": 15.040842000000339
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "testName": "set-valued fields across the storage boundary stores the derivation kinds as a JSON array so an act can create and extinguish at once",
+      "ms": 15.028232000000571
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "testName": "converter round trips over the whole schema round-trips arbitrary stored relations",
+      "ms": 14.995492000000013
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "testName": "converter round trips over the whole schema round-trips arbitrary appended corrections",
+      "ms": 13.816445999999814
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "testName": "converter round trips over the whole schema round-trips arbitrary screened candidates",
+      "ms": 9.070379000000685
+    },
+    {
+      "file": "packages/law-practice/tables/test/LegalPositionConverters.test.ts",
+      "testName": "LegalPositionRelator converters encodes a decoded relation into an insert that omits the database-assigned id",
+      "ms": 7.391920000000027
+    }
+  ]
+}

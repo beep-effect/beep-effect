@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/documents-server",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "8f87f18408b61462c32619df3e266e540c8d1bb1646a1dfc962b6d113cdc27e0",
+  "rawLogSha256": "f0e2ec088d970f29d0b020918699ded1fddf3df9cd40e2b873751016ceb19843",
+  "rawReceiptSha256": "ccecb7b83c006cbe276ceed5b7397f99cf4d64945ff63af47eee030c738ab231",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 7.020790881999801,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 94
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 36.5830078125,
+  "minimumMemAvailableGiB": 67.4153938293457,
+  "maxPressureAvg10": {
+    "cpu": 2.4,
+    "memory": 0.0,
+    "io": 0.25
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/documents/server/test/integration/SyncRepositoriesDrizzle.pglite.test.ts",
+      "ms": 1510.717529296875,
+      "tests": 6
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "ms": 154.315673828125,
+      "tests": 15
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "ms": 141.960205078125,
+      "tests": 8
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "ms": 96.47265625,
+      "tests": 6
+    },
+    {
+      "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
+      "ms": 46.290283203125,
+      "tests": 24
+    },
+    {
+      "file": "packages/documents/server/test/DocumentIntake.test.ts",
+      "ms": 37.1845703125,
+      "tests": 6
+    },
+    {
+      "file": "packages/documents/server/test/FilingDecisionLlm.test.ts",
+      "ms": 27.510986328125,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/server/test/SyncConflictServer.test.ts",
+      "ms": 27.46337890625,
+      "tests": 7
+    },
+    {
+      "file": "packages/documents/server/test/SyncOperationServer.test.ts",
+      "ms": 27.024169921875,
+      "tests": 7
+    },
+    {
+      "file": "packages/documents/server/test/SyncItemServer.test.ts",
+      "ms": 25.2587890625,
+      "tests": 6
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

@@ -76,7 +76,9 @@ Every file's coverage and every claim must be traceable to its rows.
 All Effect APIs are pinned to @effect/vitest@4.0.0-rc.113,
 commit d3b837aee836f35d625d55205f7d6e61305fc198. Use the graph's source anchors
 and the supplied verified reference snapshot, never upstream HEAD.
-Bun is command-scoped 1.4.2 and Node is 24.20.0. Confirm the accepted Vitest
+P1 timing uses command-scoped Bun 1.4.2 and Node 22.22.3, matching hosted
+coverage. Node 24.20.0 has a verified inherited escaped-JSON-key failure; retain
+its historical receipts rather than treating them as comparable timing. Confirm the accepted Vitest
 version in the current integration receipt; rc.113 declares a Vitest 5 peer
 requirement. A successful typecheck does not establish runtime behavior.
 

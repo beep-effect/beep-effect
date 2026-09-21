@@ -1,0 +1,71 @@
+{
+  "package": "@beep/duckdb",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:21:04.629393+00:00",
+  "totalMs": 7965.80810546875,
+  "testCount": 29,
+  "files": [
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.equivalence.test.ts",
+      "ms": 2.216552734375,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "ms": 1734.80810546875,
+      "tests": 28
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "testName": "DuckDbSqlClient keeps raw permits held until interrupted native operations settle",
+      "ms": 349.93528499999957
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "testName": "DuckDbSqlClient keeps read permits held until interrupted native operations settle",
+      "ms": 268.8810519999997
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "testName": "@beep/duckdb keeps legacy query permits held until interrupted native operations settle",
+      "ms": 129.35842100000082
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "testName": "@beep/duckdb keeps legacy parquet export permits held until interrupted native operations settle",
+      "ms": 128.92407399999956
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "testName": "@beep/duckdb keeps legacy run permits held until interrupted native operations settle",
+      "ms": 128.56411200000002
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "testName": "@beep/duckdb rolls back legacy transactions interrupted after delayed begin",
+      "ms": 107.06035400000019
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "testName": "DuckDbSqlClient normalizes Date and Uint8Array bind values for generic SQL callers",
+      "ms": 96.73948099999961
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "testName": "DuckDbSqlClient serializes normal statements on the shared connection",
+      "ms": 93.21870399999989
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "testName": "DuckDbSqlClient streams rows through DuckDB streaming results",
+      "ms": 90.05090800000016
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "testName": "DuckDbSqlClient provides the generic SqlClient tag and executes core statement paths",
+      "ms": 54.598425000000134
+    }
+  ]
+}

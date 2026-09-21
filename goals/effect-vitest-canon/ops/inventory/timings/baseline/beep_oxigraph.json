@@ -1,0 +1,36 @@
+{
+  "package": "@beep/oxigraph",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:29:36.443339+00:00",
+  "totalMs": 16694.6083984375,
+  "testCount": 3,
+  "files": [
+    {
+      "file": "packages/drivers/oxigraph/test/Oxigraph.equivalence.test.ts",
+      "ms": 20.363037109375,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/oxigraph/test/OxigraphLazyImport.test.ts",
+      "ms": 145.6083984375,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/oxigraph/test/OxigraphLazyImport.test.ts",
+      "testName": "@beep/oxigraph lazy service surface reuses the loaded store for repeated queries over one dataset instance",
+      "ms": 145.60839399999895
+    },
+    {
+      "file": "packages/drivers/oxigraph/test/Oxigraph.equivalence.test.ts",
+      "testName": "Oxigraph declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+      "ms": 20.363036000002467
+    },
+    {
+      "file": "packages/drivers/oxigraph/test/OxigraphLazyImport.test.ts",
+      "testName": "@beep/oxigraph lazy service surface imports the live layer without constructing an Oxigraph store",
+      "ms": 10.410824999999022
+    }
+  ]
+}

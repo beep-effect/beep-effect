@@ -1,0 +1,151 @@
+{
+  "package": "@beep/html",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:21:53.169332+00:00",
+  "totalMs": 13524.767333984375,
+  "testCount": 190,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/html/test/ConformanceLedger.test.ts",
+      "ms": 21.79345703125,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.browser-conformance.test.ts",
+      "ms": 292.0751953125,
+      "tests": 11
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.browser-import.test.ts",
+      "ms": 4884.48046875,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.conformance-annotation.test.ts",
+      "ms": 13.28759765625,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts",
+      "ms": 450.38037109375,
+      "tests": 42
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.coverage-matrix.test.ts",
+      "ms": 91.318359375,
+      "tests": 16
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.entrypoints.test.ts",
+      "ms": 4699.767333984375,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.form-control.test.ts",
+      "ms": 33.70703125,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.generator.test.ts",
+      "ms": 17.242919921875,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.heading-conformance.test.ts",
+      "ms": 20.886474609375,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.microsyntax.test.ts",
+      "ms": 43.905517578125,
+      "tests": 14
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.responsive-image-conformance.test.ts",
+      "ms": 53.037109375,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.script.test.ts",
+      "ms": 36.185791015625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.security.test.ts",
+      "ms": 107.302490234375,
+      "tests": 16
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.source-size.test.ts",
+      "ms": 72.686279296875,
+      "tests": 15
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.srcset.test.ts",
+      "ms": 47.99658203125,
+      "tests": 11
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.test.ts",
+      "ms": 389.48876953125,
+      "tests": 15
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/TaggedError.equivalence.test.ts",
+      "ms": 6.134521484375,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/html/test/Html.browser-import.test.ts",
+      "testName": "@beep/html browser import boundary loads production conformance when SharedArrayBuffer is absent",
+      "ms": 4884.480513
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.entrypoints.test.ts",
+      "testName": "@beep/html per-module entry points resolves the explicit subpaths through the package export map",
+      "ms": 4699.7672200000015
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.test.ts",
+      "testName": "HtmlNode AST \u2014 attributes enforces enumerated attribute values (input[type])",
+      "ms": 361.853916
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.test.ts",
+      "testName": "HtmlNode AST \u2014 attributes accepts global, ARIA, event-handler, and data-* attributes on any element",
+      "ms": 361.8093080000017
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.test.ts",
+      "testName": "HtmlNode AST \u2014 schema laws keeps option-defaulted fields byte-identical on the encoded wire",
+      "ms": 361.7897979999998
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.test.ts",
+      "testName": "HtmlNode AST \u2014 schema laws round-trips schema-derived HTML AST schemas",
+      "ms": 361.779622
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.test.ts",
+      "testName": "ELEMENT_META covers every WHATWG element from the pinned dataset (conforming + obsolete)",
+      "ms": 361.7305469999992
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts",
+      "testName": "@beep/html generated special-child grammars evaluates contextual area, link, and meta placement from generated rules",
+      "ms": 166.79264299999886
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts",
+      "testName": "@beep/html generated special-child grammars enforces link addresses and the meta charset mode",
+      "ms": 166.75313199999982
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts",
+      "testName": "@beep/html generated special-child grammars keeps browser-safe production URL validation aligned with the WHATWG oracle",
+      "ms": 166.74198500000057
+    }
+  ]
+}

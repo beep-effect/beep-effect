@@ -1,0 +1,76 @@
+{
+  "package": "@beep/box",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:20:14.899144+00:00",
+  "totalMs": 7116.447509765625,
+  "testCount": 28,
+  "files": [
+    {
+      "file": "packages/drivers/box/test/Box.equivalence.test.ts",
+      "ms": 1.644775390625,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "ms": 88.447509765625,
+      "tests": 26
+    },
+    {
+      "file": "packages/drivers/box/test/integration/Box.live.test.ts",
+      "ms": 0.8408203125,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box accepts future Box enum values generated as open unions",
+      "ms": 58.543318
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box decodes generated collection fields through their suspended schemas",
+      "ms": 58.30662500000017
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box keeps only the strict conflict projection from API failure context",
+      "ms": 58.2660020000003
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box retains only the schema error class without issue text",
+      "ms": 58.257258999999976
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box round-trips handwritten schema values without encoded-shape drift",
+      "ms": 58.23207000000002
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box aborts byte download setup when interrupted before the SDK returns",
+      "ms": 14.031435000000783
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box bridges SDK byte downloads into Effect streams",
+      "ms": 12.063167999999678
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box excludes confidential sentinels from encoded and rendered Box errors",
+      "ms": 9.314823000000615
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box drops invalid SDK status codes from sanitized errors",
+      "ms": 9.249262000000272
+    },
+    {
+      "file": "packages/drivers/box/test/Box.service.test.ts",
+      "testName": "@beep/box sanitizes raw string SDK throws",
+      "ms": 9.225496000000021
+    }
+  ]
+}

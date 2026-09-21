@@ -1,0 +1,101 @@
+{
+  "package": "@beep/openclaw",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:23:25.461193+00:00",
+  "totalMs": 9610.607666015625,
+  "testCount": 65,
+  "files": [
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.equivalence.test.ts",
+      "ms": 1.25537109375,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.models.test.ts",
+      "ms": 51.848876953125,
+      "tests": 14
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawCli.service.test.ts",
+      "ms": 28.0185546875,
+      "tests": 20
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawIntent.models.test.ts",
+      "ms": 58.94482421875,
+      "tests": 7
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawProbe.service.test.ts",
+      "ms": 8.650634765625,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawRender.test.ts",
+      "ms": 46.68798828125,
+      "tests": 10
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawSystemd.service.test.ts",
+      "ms": 8.59814453125,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/openclaw/test/integration/OpenclawBinary.acceptance.test.ts",
+      "ms": 4361.607666015625,
+      "tests": 4
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/openclaw/test/integration/OpenclawBinary.acceptance.test.ts",
+      "testName": "@beep/openclaw pinned-binary acceptance rejects every negative fixture with config validate",
+      "ms": 4360.6075949999995
+    },
+    {
+      "file": "packages/drivers/openclaw/test/integration/OpenclawBinary.acceptance.test.ts",
+      "testName": "@beep/openclaw pinned-binary acceptance exports a config schema without lossy placeholders for declared surfaces",
+      "ms": 1772.454197
+    },
+    {
+      "file": "packages/drivers/openclaw/test/integration/OpenclawBinary.acceptance.test.ts",
+      "testName": "@beep/openclaw pinned-binary acceptance accepts the rendered golden intent with plugin-aware config validate",
+      "ms": 1634.4578339999998
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawIntent.models.test.ts",
+      "testName": "@beep/openclaw intent models requires HTTPS for secret-backed hosted providers while preserving loopback placeholders",
+      "ms": 55.94483700000001
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawIntent.models.test.ts",
+      "testName": "@beep/openclaw intent models round-trips schema-derived intent payloads",
+      "ms": 55.92283299999963
+    },
+    {
+      "file": "packages/drivers/openclaw/test/integration/OpenclawBinary.acceptance.test.ts",
+      "testName": "@beep/openclaw pinned-binary acceptance verifies the staged binary --version against the pinned compatibility set",
+      "ms": 52.08702400000038
+    },
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.models.test.ts",
+      "testName": "@beep/openclaw models pins the compatibility set and technical constants",
+      "ms": 46.84879700000056
+    },
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.models.test.ts",
+      "testName": "@beep/openclaw models builds hermetic environments with extraEnv winning last",
+      "ms": 46.82885600000009
+    },
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.models.test.ts",
+      "testName": "@beep/openclaw models round-trips schema-derived process and CLI output payloads",
+      "ms": 46.82601100000011
+    },
+    {
+      "file": "packages/drivers/openclaw/test/Openclaw.models.test.ts",
+      "testName": "@beep/openclaw models round-trips schema-derived status and probe payloads",
+      "ms": 46.8208539999996
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "package": "@beep/architecture-lab-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:34:02.994583+00:00",
+  "totalMs": 5992.9658203125,
+  "testCount": 8,
+  "files": [
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "ms": 13.1171875,
+      "tests": 4
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkerServer.test.ts",
+      "ms": 5.697265625,
+      "tests": 1
+    },
+    {
+      "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+      "ms": 1136.9658203125,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+      "testName": "ArchitectureLab Drizzle repository PgLite integration persists WorkItem lifecycle changes through Drizzle",
+      "ms": 1093.2578300000005
+    },
+    {
+      "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+      "testName": "ArchitectureLab Drizzle repository PgLite integration persists Worker entities through Drizzle",
+      "ms": 39.965775000000576
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "testName": "WorkItem server keeps HTTP schema encoded shapes byte-identical",
+      "ms": 13.11719499999981
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "testName": "WorkItem server redacts unavailable details from HTTP failure bodies",
+      "ms": 12.873521999999866
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "testName": "WorkItem server round-trips schema-derived HTTP values",
+      "ms": 12.867371999999705
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+      "testName": "WorkItem server provides a configured WorkItem use-case facade",
+      "ms": 12.860482000000047
+    },
+    {
+      "file": "packages/architecture-lab/server/test/WorkerServer.test.ts",
+      "testName": "Worker server provides a configured Worker use-case facade",
+      "ms": 5.697223000000122
+    },
+    {
+      "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+      "testName": "round-trips schema-derived repository identity values through domain schemas",
+      "ms": 3.784415000000081
+    }
+  ]
+}

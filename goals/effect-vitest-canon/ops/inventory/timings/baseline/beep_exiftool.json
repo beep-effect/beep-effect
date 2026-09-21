@@ -1,0 +1,81 @@
+{
+  "package": "@beep/exiftool",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:21:22.883259+00:00",
+  "totalMs": 6532.050537109375,
+  "testCount": 17,
+  "files": [
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.equivalence.test.ts",
+      "ms": 1.62646484375,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
+      "ms": 36.9609375,
+      "tests": 7
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+      "ms": 22.88330078125,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts",
+      "ms": 244.050537109375,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts",
+      "testName": "@beep/exiftool live round-trips XMP-beepQA provenance through a real PNG",
+      "ms": 244.05057400000078
+    },
+    {
+      "file": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts",
+      "testName": "@beep/exiftool live round-trips XMP-beepQA provenance through a real GIF",
+      "ms": 238.3912479999999
+    },
+    {
+      "file": "packages/drivers/exiftool/test/integration/Exiftool.live.test.ts",
+      "testName": "@beep/exiftool live refuses video containers with a pointer at FFmpeg.writeContainerMetadata",
+      "ms": 77.69464799999969
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
+      "testName": "@beep/exiftool models round-trips schema-modeled public payloads",
+      "ms": 36.075614000000314
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
+      "testName": "@beep/exiftool models keeps Option-modeled optional metadata encoded as omitted keys",
+      "ms": 35.81727799999953
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
+      "testName": "@beep/exiftool models rejects tag names that could smuggle extra arguments",
+      "ms": 35.79426400000011
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
+      "testName": "@beep/exiftool models builds read, write, and version arguments with -config first",
+      "ms": 35.78174399999989
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.models.test.ts",
+      "testName": "@beep/exiftool models renders the XMP-beepQA exiftool config template",
+      "ms": 35.77165799999966
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+      "testName": "@beep/exiftool service writes tags temp-then-commit without leaving staging behind",
+      "ms": 21.883347000000867
+    },
+    {
+      "file": "packages/drivers/exiftool/test/Exiftool.service.test.ts",
+      "testName": "@beep/exiftool service embeds provenance packets through the write-tags path",
+      "ms": 21.68509399999948
+    }
+  ]
+}

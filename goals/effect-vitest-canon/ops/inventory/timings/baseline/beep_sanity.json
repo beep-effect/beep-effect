@@ -1,0 +1,51 @@
+{
+  "package": "@beep/sanity",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:28.376033+00:00",
+  "totalMs": 4940.884765625,
+  "testCount": 6,
+  "files": [
+    {
+      "file": "packages/drivers/sanity/test/Sanity.equivalence.test.ts",
+      "ms": 1.625244140625,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
+      "ms": 44.884765625,
+      "tests": 4
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
+      "testName": "@beep/sanity round-trips schema-derived Sanity payloads through encoded form",
+      "ms": 44.8848680000001
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
+      "testName": "@beep/sanity submits a GROQ query and decodes the result envelope",
+      "ms": 40.082688999999846
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
+      "testName": "@beep/sanity maps non-success responses to typed driver errors",
+      "ms": 40.05829199999971
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
+      "testName": "@beep/sanity keeps encoded Sanity schema wire shapes byte-identical",
+      "ms": 39.836120999999366
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.equivalence.test.ts",
+      "testName": "Sanity declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+      "ms": 1.6252400000003036
+    },
+    {
+      "file": "packages/drivers/sanity/test/Sanity.equivalence.test.ts",
+      "testName": "Sanity declared-field equivalence treats defect-only differences as equivalent",
+      "ms": 1.3742350000002261
+    }
+  ]
+}
