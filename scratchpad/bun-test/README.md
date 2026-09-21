@@ -3,9 +3,14 @@
 A set of helpers for testing [Effect](https://effect.website) programs with
 Bun's native [`bun:test`](https://bun.sh/docs/cli/test) runner.
 
-The API mirrors [`@effect/vitest`](https://www.npmjs.com/package/@effect/vitest)
-(`it.effect`, `it.live`, `layer`, `it.prop`, `flakyTest`, …) so Effect test
-suites move between the two runners without rewrites.
+The experimental API follows
+[`@effect/vitest`](https://www.npmjs.com/package/@effect/vitest)
+(`it.effect`, `it.live`, `layer`, `it.prop`, `flakyTest`, …).
+It is not a qualified drop-in replacement. The local schema pilot found missing
+within-test module reset and inherited suite-timeout behavior. See
+[PILOT-RESULTS.md](PILOT-RESULTS.md) before using it for comparisons or migration.
+The package name below is illustrative; this scratchpad has not been promoted
+to a canonical workspace package.
 
 ## Usage
 
@@ -30,11 +35,15 @@ layer(Foo.layer)("with a shared layer", (it) => {
 })
 ```
 
-Run with:
+Run the adapter smoke suite from the repository root:
 
 ```sh
-bun test
+bun test scratchpad/test/bun-test/index.test.ts
 ```
+
+The qualification fixtures are isolated subprocess controls, including deliberate
+failures. Run them individually using their [expected outcomes](../test/bun-test/qualification/README.md),
+not as an ordinary all-green suite.
 
 ## Timeouts interrupt fibers
 
@@ -52,4 +61,14 @@ timeout as a backstop.
 - **`TestContext`** — Bun doesn't pass a context object to test functions, so
   the wrapper synthesises one (`signal`, `onTestFinished`, `onTestFailed`).
 - **`assert`** — Vitest re-exports chai's `assert`; this package ships a small
-  compatible subset built on `node:assert`.
+  subset built on `node:assert`, with `deepInclude` delegated to the installed
+  standalone Chai implementation. A future package must declare that dependency.
+- **Default timeout** — configure `setDefaultTimeout` from this adapter before
+  collection so its abort timer and Bun's timeout agree. Inherited suite
+  timeouts are not yet preserved.
+- **Module reset** — the exported native `vi` has no `resetModules` method.
+- **Completion callbacks** — errors now fail the test and later cleanup still
+  runs. Callback ordering is not yet equivalent to Vitest. A completion-hook
+  failure after a passing body does not invoke registered failure observers.
+- **Unnamed layers** — the lifetime wrapper adds an anonymous suite; full suite
+  hierarchy and concurrency parity have not been qualified.
