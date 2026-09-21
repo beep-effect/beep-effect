@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-09-15",
+  "generatedOn": "2026-09-21",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -41,7 +41,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 34,
+      "line": 43,
       "owner": "@beep/professional-desktop",
       "reason": "Shared test harness module rather than a test: it defines the MCP request/response codecs both professional-desktop integration suites consume. Round-trip property coverage for those schemas lives with the suite that owns them, in ontology-mcp-http.test.ts via assertSchemaRoundTrip."
     },
