@@ -201,10 +201,19 @@ const unwrapServerSentEvents = (response: HttpClientResponse.HttpClientResponse)
   Str.startsWith("text/event-stream")(response.headers["content-type"] ?? "")
     ? Effect.map(Effect.orDie(response.text), (text) => {
         // Events are delimited by a blank line and may spread one payload over
-        // several `data:` fields, which join with a newline.
+        // several `data:` fields, which join with a newline. Lines may end with
+        // CRLF, LF, or CR, and a `data:` field drops at most one leading space
+        // from its value, so the endings are normalised before framing and that
+        // one space is stripped rather than required.
         const payloads = A.filter(
-          A.map(Str.split("\n\n")(text), (event) =>
-            A.join(A.map(A.filter(Str.split("\n")(event), Str.startsWith("data: ")), Str.slice(6)), "\n")
+          A.map(Str.split("\n\n")(Str.replaceAll(/\r\n?/g, "\n")(text)), (event) =>
+            A.join(
+              A.map(
+                A.filter(Str.split("\n")(event), Str.startsWith("data:")),
+                flow(Str.slice(5), Str.replace(/^ /, ""))
+              ),
+              "\n"
+            )
           ),
           Str.isNonEmpty
         );
