@@ -8,7 +8,7 @@
 +// become 0 or NaN, which would recreate the truncated-answer failure this knob fixes.
 +const synthMaxTokens = () => {
 +    const n = Number(process.env.GRAFT_SYNTH_MAX_TOKENS);
-+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 8192;
++    return Number.isFinite(n) && n >= 1 ? Math.floor(n) : 8192;
 +};
  /** Synthesizer backed by any {@link ChatModel} via forced tool calling. */
  export class ChatSynthesizer {
