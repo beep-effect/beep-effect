@@ -69,11 +69,11 @@
       "file": "packages/_internal/db-admin/test/integration/EpistemicEdgeMigration.pglite.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
       "line": 37,
       "owner": "@beep/db-admin",
-      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Migration regression decodes fixed fixture rows to prove the epistemic-edge target SQL, the constraint/index name catalog, and the open-head backstop; schema-derived arbitrary round-trips for the EdgeVersion entity live with the domain model tests."
     },
     {
       "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
@@ -211,11 +211,11 @@
       "file": "packages/epistemic/config/test/Config.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
       "line": 100,
       "owner": "@beep/epistemic-config",
-      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Audience-routing regression over fixed loopback and external URL cases; schema-derived URL property coverage lives with the owning @beep/schema URL models, while arbitrary destinations would not prove these named security classifications."
     },
     {
       "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
@@ -263,11 +263,11 @@
       "file": "packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
       "line": 109,
       "owner": "@beep/epistemic-server",
-      "reason": "Schema-heavy test file has 6 Schema codec assertions but no schema-derived property coverage."
+      "reason": "P0 persistence spike decodes fixed commands and rows to prove duplicate suppression, visibility, ordering, and transactional boundaries against PGlite; schema law coverage lives in domain and use-case tests."
     },
     {
       "file": "packages/epistemic/server/test/integration/ContradictionTriage.pg.test.ts",
@@ -283,11 +283,11 @@
       "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
       "line": 79,
       "owner": "@beep/epistemic-server",
-      "reason": "Schema-heavy test file has 11 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
     },
     {
       "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",
@@ -427,41 +427,41 @@
       "file": "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
       "line": 7,
       "owner": "@beep/schema",
-      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Exception: CurrencyCode/CurrencyName are LiteralKit unions over the generated ISO 4217 enumeration; example-based assertions cover representative decode/reject and `.Options` membership, and S.toArbitrary over a finite literal union only re-samples already-enumerated members, so schema-derived property coverage would be vacuous."
     },
     {
       "file": "packages/foundation/modeling/schema/test/Fn.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
       "line": 10,
       "owner": "@beep/schema",
-      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Exception: meta-test of the Fn/ThunkOf/AnyFn schema combinator over function values (declareConstructor with self-identity equivalence); no structural data for S.toArbitrary to generate or round-trip."
     },
     {
       "file": "packages/foundation/modeling/schema/test/TerritoryCode.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
       "line": 9,
       "owner": "@beep/schema",
-      "reason": "Schema-heavy test file has 16 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Exception: TerritoryCode/TerritoryName and their code<->name MappedLiteralKit codecs are finite literal-union schemas over the generated CLDR enumeration; representative decode/encode and reversible-mapping cases are covered by example assertions, and S.toArbitrary over the finite enumeration adds no coverage beyond the enumerated members."
     },
     {
       "file": "packages/foundation/modeling/schema/test/Transformations.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
       "line": 13,
       "owner": "@beep/schema",
-      "reason": "Schema-heavy test file has 6 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Exception: meta-test of the destructiveTransform combinator using test-local illustrative schemas; lossy decode + passthrough encode has no round-trip law and no domain source schema."
     },
     {
       "file": "packages/foundation/modeling/schema/test/Unknown.test.ts",
@@ -651,11 +651,11 @@
       "file": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
       "line": 14,
       "owner": "@beep/repo-utils",
-      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Golden fingerprint test replays captured wire values from its __golden__ fixture; native Arbitrary seeds cannot reproduce the recorded fast-check samples, so schema-derived generation would invalidate the goldens."
     },
     {
       "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
@@ -767,11 +767,11 @@
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts",
       "symbol": "computeJSDocMigrateBinding",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 180,
       "owner": "@beep/repo-cli",
-      "reason": "Exported function \"computeJSDocMigrateBinding\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Pure comparison over already schema-decoded record sets; the inline input trio groups arrays of S.Class rows at the call site rather than modeling an IO boundary, and the output is the annotated JSDocMigrateBindingReport class."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts",
