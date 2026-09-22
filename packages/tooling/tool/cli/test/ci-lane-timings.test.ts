@@ -684,7 +684,7 @@ describe("ci lane timing admission window", () => {
             completed_at: "2026-09-04T00:09:00Z",
             created_at: "2026-09-04T00:00:00Z",
             id: 8,
-            name: "Test Unit (repo-cli)",
+            name: "Test Unit (repo-cli-1)",
             run_id: run.id,
             started_at: "2026-09-04T00:01:00Z",
           }),
@@ -830,9 +830,16 @@ describe("ci lane timing admission window", () => {
           job({
             completed_at: "2026-09-04T00:12:00Z",
             id: 21,
-            name: "Test Unit (repo-cli)",
+            name: "Test Unit (repo-cli-1)",
             run_id: run.id,
             started_at: "2026-09-04T00:02:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:11:30Z",
+            id: 25,
+            name: "Test Unit (repo-cli-2)",
+            run_id: run.id,
+            started_at: "2026-09-04T00:02:30Z",
           }),
           job({
             completed_at: "2026-09-04T00:10:00Z",

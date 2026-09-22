@@ -1,0 +1,43 @@
+{
+  "sourceRevision": "3f1d2a8a087d845ff53b17498270b8086d7fc40a",
+  "authority": "Focused runtime stack attribution and exact installed-binary symbol resolution; no submission-entry bytes decoded.",
+  "exitCode": 0,
+  "nodeSha256": "89af8424dd53e560b1933f87ba650d8bf57c83ca5a04600eefb31f416aabbae7",
+  "elfLoadBase": "0x400000",
+  "counts": {
+    "io_uring_setup": 5,
+    "io_uring_enter": 5
+  },
+  "allFiveEntersHaveEpollFlushFrame": true,
+  "stdoutAndStderrMatchFullCapture": true,
+  "trace": {
+    "compressedTraceBytes": 4161,
+    "compressedTraceSha256": "4ea037ddb3b1bacef6bc794abda7136ac140c634a7d5aaa5bfce15a4b48ab9fb",
+    "expandedTraceBytes": 47688,
+    "expandedTraceSha256": "55ad90f111c8dba01f99e9079022acf11b1bc8fae755d1088fb3af7b24d95faa"
+  },
+  "reproduction": {
+    "status": "retained-stack-review-reproduced",
+    "scriptSha256": "38d6901e0501cc68ce6e10d60ce9011eea8cf64e8f0526122843d5920dcb6afa",
+    "stackReviewSha256": "f73a7bef43e0d53d057c8c7ac6844af547e8ff119fbc11495475b9c64be5dce8",
+    "counts": {
+      "io_uring_setup": 5,
+      "io_uring_enter": 5
+    },
+    "matchedEvents": 10,
+    "allFiveEntersHaveEpollFlushFrame": true,
+    "stdoutAndStderrMatchFullCapture": true,
+    "limits": "No submission-entry bytes decoded; separate execution; early resolved frames only."
+  },
+  "retention": {
+    "directory": "~/.cache/beep/turbo-qualification/evidence/ring-review-reproducible-zxpy2bxx",
+    "manifestSha256": "60fbc426f8e54db25b4a6a91ecdd20086b8bf7b30c5543b24ac1078b75774088",
+    "runFromBackupExitCode": 0
+  },
+  "limitations": [
+    "Separate execution; does not retroactively decode the full capture",
+    "No SQE or CQE contents decoded",
+    "Only resolved early frames support attribution; deeper unwind failures are not evidence",
+    "Epoll caller attribution does not establish all semantic inputs or signed replay"
+  ]
+}
