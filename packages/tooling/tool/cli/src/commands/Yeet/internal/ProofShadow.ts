@@ -676,7 +676,7 @@ export class ProofShadowReportInput extends S.Class<ProofShadowReportInput>($I`P
  * **Example** (An empty ledger is not ready)
  *
  * ```ts
- * import { buildProofShadowReport } from "@beep/repo-cli/test/Yeet"
+ * import { buildProofShadowReport, ProofShadowReportInput } from "@beep/repo-cli/test/Yeet"
  *
  * const report = buildProofShadowReport(
  *   ProofShadowReportInput.make({
@@ -757,7 +757,7 @@ const formatMinutes = (ms: number): string => `${(ms / 60_000).toFixed(1)} min`;
  * **Example** (Render an empty report)
  *
  * ```ts
- * import { buildProofShadowReport, renderProofShadowReport } from "@beep/repo-cli/test/Yeet"
+ * import { buildProofShadowReport, ProofShadowReportInput, renderProofShadowReport } from "@beep/repo-cli/test/Yeet"
  *
  * const text = renderProofShadowReport(
  *   buildProofShadowReport(
@@ -898,7 +898,7 @@ export const loadProofShadowReport = Effect.fn("Yeet.loadProofShadowReport")(fun
  * **Example** (Build the runner effect)
  *
  * ```ts
- * import { runYeetProofReport } from "@beep/repo-cli/test/Yeet"
+ * import { runYeetProofReport, YeetProofReportOptions } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
  *
  * console.log(Effect.isEffect(runYeetProofReport(YeetProofReportOptions.make({ json: false })))) // true
