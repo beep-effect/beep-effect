@@ -12,8 +12,7 @@
       "D-client-home: where does the in-repo 2026 client (ClientRpcs with server/discover, header and _meta injection, stdio helper, SSE-aware decode) live, given Effect's 2026 client group is internal?",
       "D-conformance: must a 2026-only host pass conformance --requirements 2026-07-28, and who owns the 404/-32601 waiver or the error-shape change?",
       "D-projection: does api_key_required stay a non-error CallToolResult envelope and do invalid arguments stay a canned result or become InvalidParams, declared as error-translation at the kit protocol adapter?",
-      "D-origin: Origin allow-list home (OntologyMcpServerConfig, app literal with exception, or Effect allowedOrigins only), keep or drop the sidecar Origin middleware, OPTIONS 204 vs 403, Origin-less POST, and whether any browser-origin /mcp client is in scope?",
-      "D-pin-sha: which upstream SHA does the snapshot PR pin, and is the blast-radius census re-run if it is newer than a7a71921de?"
+      "D-origin: Origin allow-list home (OntologyMcpServerConfig, app literal with exception, or Effect allowedOrigins only), keep or drop the sidecar Origin middleware, OPTIONS 204 vs 403, Origin-less POST, and whether any browser-origin /mcp client is in scope?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -22,6 +21,6 @@
       "supersededBy": null
     },
     "created": "2026-09-16",
-    "updated": "2026-09-17"
+    "updated": "2026-09-21"
   }
 }

@@ -11,6 +11,17 @@ Sources were frozen on 2026-09-16: Effect clone at `a7a71921de` (diff base tag
 `effect@4.0.0-rc.115`, 32 commits), MCP specification pages dated `2026-07-28`, and the repo at
 `ca7362278c`. Dates below are the dates the facts were read.
 
+**Release update (2026-09-21).** `effect@4.0.0-rc.116` (2026-09-18) and `rc.117` (2026-09-21)
+shipped after the freeze, and #1173 moved the repo catalog to rc.117 the same day. The frozen
+snapshot `a7a71921de` is an ancestor of the rc.117 tag; the only MCP-surface commit between them
+is Effect-TS/effect#8326 (identified output schemas normalised to object roots across protocol
+revisions; identified object schemas accepted in elicitation), which is not re-researched here.
+The installed rc.117 carries `McpProtocol.v2026_07_28`, `McpRequestContext`, and the stateless
+runtime, while every host still pins `v2025_06_18` and compiles. G1 (pkg.pr.new pin) and G7
+(snapshot bump as its own first PR) are therefore closed by events, not by a grill
+(`DECISIONS.md`, 2026-09-21); the S0 stage in `research/sizing.md` is done and D-pin-sha is
+withdrawn. Snapshot-era wording below is kept as the record of what was read.
+
 ## 1. External landscape (2026-09-16)
 
 ### 1.1 What the specification changed (lane 13-s1)
@@ -81,7 +92,7 @@ Sources were frozen on 2026-09-16: Effect clone at `a7a71921de` (diff base tag
 ### 2.2 Stateless runtime semantics (lane 11-u2)
 
 - Protocol selection: HTTP requires `MCP-Protocol-Version`, `_meta` protocol version and client
-  capabilities, `Mcp-Method` matching the JSON-RPC method, and `Mcp-Name` on `tools/call`.
+  capabilities, `Mcp-Method` matching the JSON-RPC method, and `Mcp-Name` on tool calls (`method: tools/call`).
   `selectStatefulProtocol` considers only stateful adapters, so a list of only
   `v2026_07_28` rejects `initialize`: HTTP 404 / `-32601` with 2026 headers, HTTP 400 /
   `-32020` (header mismatch) on a bare legacy `initialize`, and stdio `-32022` with no
@@ -146,7 +157,7 @@ Sources were frozen on 2026-09-16: Effect clone at `a7a71921de` (diff base tag
 - Tests: every fixture is `McpServerClient.of({ protocolVersion: "2025-06-18" })` with
   `getClient: Effect.die(...)`; `server.callTool` cannot represent a 2026 client, so the
   production path has no kit proof. `SanitizedSpan.ts` is the coverage ratchet's hottest file.
-- Kit-only value that upstream still lacks: `TierGate` enforcement on `tools/call` with audit
+- Kit-only value that upstream still lacks: `TierGate` enforcement on tool calls (`method: tools/call`) with audit
   and outcome settlement, `SourceAuth` credential-gated composition, `FieldTier` projection,
   `annotateFourHints` presets, and the sanitized-span wrapper itself. Redundant at the snapshot:
   `instructions`, strict validation, failure classification, output schemas, Origin checks.
@@ -187,8 +198,8 @@ client group is internal, so there is no public client to point harnesses at. Th
   the kit kept reading `mcp-session-id` after Effect stops minting it, the run key becomes a
   client-supplied string (freeze and TTL reset on rotation, a leaked id joins another chain).
 - Candidate anchors, none decided: the verified per-launch bearer (G4-compatible; changes the
-  invariant to "a run is a sidecar launch"), a shell-minted run token (minted at first
-  `tools/call`, first authenticated request, or an explicit open-run tool), `requestState` with
+  invariant to "a run is a sidecar launch"), a shell-minted run token (minted at the first
+  `method: tools/call` request, first authenticated request, or an explicit open-run tool), `requestState` with
   HMAC/AEAD integrity, MRTR per-call approval, OTLP trace correlation, or a stateful adapter on
   the sidecar only (contradicts G4; mixed lists are upstream-supported).
 
@@ -231,12 +242,18 @@ client group is internal, so there is no public client to point harnesses at. Th
   sql-adjacent packages pass; the sidecar HTTP integration harness fails 8 tests because the
   server now emits SSE for multi-message responses and the JSON-RPC codec cannot decode
   `data:` frames. This is the first runtime break and it precedes any protocol flip.
+- Status 2026-09-21: #1173 (catalog to rc.117) is the snapshot PR this section sized. It re-keyed
+  the platform-node-shared patch to rc.117, added the SSE-unwrapping response transform to the
+  sidecar harness (`apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts`),
+  and merged hosted-green, so the patch application and the harness break above are resolved on
+  `main`. The sql-pg call-site question stays open because #1173 did not touch it.
 
 ## 4. NOT FOUND and UNVERIFIED
 
 - Live first-message capture of Claude Code, Codex, and grok stdio against a 2026-only nlp-mcp
   (Gate A finding 25). Behaviour above is from documentation and source.
-- Application of the platform-node-shared patch to the pkg.pr.new tarball.
+- Application of the platform-node-shared patch to the pkg.pr.new tarball (moot since
+  2026-09-21: #1173 re-keyed it to the published rc.117 tarball and merged hosted-green).
 - Whether any production path uses native `@effect/sql-pg` against timestamp or enum columns
   (professional-desktop is in-process PGlite; `pg-external` is a harness path).
 - Whether the snapshot's `$ref` inliner always yields a top-level `type: "object"` for
@@ -272,20 +289,20 @@ The decisions the grill must name (referenced by these names in `research/sizing
 | Decision | Question | Evidence |
 | --- | --- | --- |
 | **D-posture** | Keep G4 (2026-only everywhere), relax to a mixed list repo-wide, stage mixed then cut over per host, or a G4 exception per transport (2026-only on HTTP, mixed on stdio). The last is a G4 exception, not a G9 change; G9 stays host membership. Any leftover stateful host keeps both identity machines in the kit permanently. | §1.2, §2.2, §3.2, 22-r3, 14-s2 |
-| **D-run-key** | What mints the `GovernedTierGate` run key on HTTP once `initialize` and `mcp-session-id` are gone: verified per-launch bearer, shell-minted run token (at first `tools/call`, first authenticated request, or an explicit open-run tool), `requestState` with HMAC/AEAD, MRTR per-call approval, or a stateful adapter on the sidecar only. Owned by `epistemic/server` and app composition, never by a kit schema field. Which existing test ("keys the run on the session, not the per-request client id") is deleted. | 22-r3 Q1/Q2/Q4/Q8/Q9, 24-r5 |
+| **D-run-key** | What mints the `GovernedTierGate` run key on HTTP once `initialize` and `mcp-session-id` are gone: verified per-launch bearer, shell-minted run token (at the first `method: tools/call` request, first authenticated request, or an explicit open-run tool), `requestState` with HMAC/AEAD, MRTR per-call approval, or a stateful adapter on the sidecar only. Owned by `epistemic/server` and app composition, never by a kit schema field. Which existing test ("keys the run on the session, not the per-request client id") is deleted. | 22-r3 Q1/Q2/Q4/Q8/Q9, 24-r5 |
 | **D-cli-contract** | Whether G6 stands for the proving host: vendor CLI opt-in flags (`MCP_PROTOCOL_NEGOTIATION=auto`, Codex flag, grok unsupported) are operator notes only, or a live first-message capture (Gate A finding 25) is an entrance criterion before nlp-mcp flips. The doctrine review reads G6 as "notes only"; the pre-mortem reads a proving host nobody's CLI can speak as a failed proof. | 14-s2, 21-r2 |
 | **D-client-home** | Where the in-repo 2026 client lives (a `ClientRpcs` group with `server/discover`, HTTP header and `_meta` injection, stdio NDJSON helper, SSE-aware decode), given Effect's 2026 client group is internal. | 21-r2, 25-r4 |
 | **D-conformance** | Whether a 2026-only host must pass `conformance --requirements 2026-07-28`; if so, who owns the waiver for the 404/`-32601` expectation or a host-side error-shape change so stdio `-32022` carries `supported: ["2026-07-28"]`. | 14-s2, 11-u2 |
 | **D-projection** | The kit's protocol error projection, split from the mechanical rebase: does `api_key_required` stay a non-error `CallToolResult` envelope (kit-only value, a named translator), and do invalid arguments stay a canned result or become `InvalidParams`. Declared as error-translation at the kit protocol adapter (architecture 09), not in host tools. | 20-r1 |
 | **D-origin** | Origin allow-list home (`OntologyMcpServerConfig` field, an app-local literal with a written exception, or Effect `allowedOrigins` only), keep or drop the sidecar Origin middleware, 204-without-ACAO vs 403 on attacker `OPTIONS`, Origin-less POST denied vs allowed, and whether any browser-origin `/mcp` client is in scope (decides CORS `mcp-method`/`mcp-name`). | 24-r5 Q1–Q4, Q8 |
-| **D-pin-sha** | Which upstream SHA the snapshot PR pins; if newer than `a7a71921de`, the blast-radius census is re-run on it before merge. | 23-r4, 25-r4 |
+| ~~**D-pin-sha**~~ | Withdrawn 2026-09-21: rc.117 is on `main` (#1173) and `a7a71921de` is its ancestor, so there is no SHA to pin and no census to re-run; the one post-freeze MCP commit is noted in the header. | 23-r4, 25-r4 |
 
 ## 6. Sizing constraints
 
 This is a research-stage packet; the PR train belongs in `MAP.md` after the align grill. What the
 evidence fixes now, independent of the decisions above:
 
-- The snapshot pin cannot be a small PR. Type level is two edits, but hosted proof requires the
+- Superseded 2026-09-21 by #1173 (kept for the record): the snapshot pin cannot be a small PR. Type level is two edits, but hosted proof requires the
   sidecar integration harness green (8 tests break on SSE framing at the snapshot alone), the
   platform-node-shared patch applied and asserted rather than silently skipped, a native
   `@effect/sql-pg` timestamp and enum proof (or a call-site census showing no native `PgClient` in
@@ -301,8 +318,8 @@ evidence fixes now, independent of the decisions above:
   with the grant-expired and never-evict tests, `OntologyChangeActor` keyed to the new run id,
   the gate span renamed to an architectural action, and the correlation attribute on that gate
   span, not on the kit's technical `mcp.tool.call.*` spans.
-- The RC swap is a second snapshot campaign (patch re-roll, lockstep re-pin), not a closeout
-  line; it is off the critical path until a published RC exists.
+- Superseded 2026-09-21: the RC swap was to be a second snapshot campaign (patch re-roll,
+  lockstep re-pin); the published RC arrived first, so no swap stage exists.
 - Identity language stays in the agent-execution-authority SPEC and the epistemic package docs; a
   change to architecture-wide doctrine goes through `standards/architecture/DECISIONS.md`, not
   edits to the numbered driver, error, or observability files. mcp-kit needs no shared-kernel

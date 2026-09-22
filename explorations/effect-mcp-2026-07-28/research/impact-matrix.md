@@ -2,6 +2,8 @@
 
 Revised after Gate C (`reviews/gate-c-doctrine.md`). Decision names (D-posture, D-run-key, D-cli-contract,
 D-client-home, D-conformance, D-projection, D-origin, D-pin-sha) are defined in `RESEARCH.md` §5.
+D-pin-sha was withdrawn on 2026-09-21: rc.117 carries the adapter and is on `main` (#1173), so
+"at the snapshot" below now reads "at rc.117" (`a7a71921de` is an ancestor of the rc.117 tag).
 
 Tags: **forced** (breaks at the snapshot or on the protocol flip; must change), **natural** (the
 protocol makes it the obvious shape; G5 says wire it here), **optional** (no pull; record and
