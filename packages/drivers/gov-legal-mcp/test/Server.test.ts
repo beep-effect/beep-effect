@@ -22,10 +22,12 @@ import {
   EcfrSourceAuthRegistration,
   EcfrToolkit,
   EcfrToolkitHandlersLive,
+  GOV_LEGAL_MCP_INSTRUCTIONS,
   GovinfoSearchFailure,
   GovinfoSourceAuthRegistration,
   GovinfoToolkit,
   GovinfoToolkitHandlersLive,
+  GovLegalMcpRegistrationsLive,
   ProductionToolNameCollisionReport,
   projectToolNameCandidate,
   renderToolNameCollisionReport,
@@ -38,6 +40,7 @@ import {
 } from "@beep/gov-legal-mcp";
 import { Govinfo, GovinfoConfigInput, GovinfoError, GovinfoErrorOptions, Search } from "@beep/govinfo";
 import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
+import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
@@ -719,4 +722,22 @@ describe("tool-name report determinism", () => {
       })
     );
   });
+});
+
+// The host as the kit conformance runner sees it: the exported registrations
+// with fixture eCFR and GovInfo clients and a resolvable GOVINFO_API_KEY, so
+// both sources mount and the keyless eCFR search answers with fixture data.
+conformance2026({
+  name: "beep-gov-legal-test",
+  version: "0.0.0",
+  instructions: GOV_LEGAL_MCP_INSTRUCTIONS,
+  registrations: GovLegalMcpRegistrationsLive.pipe(
+    Layer.provide(Layer.merge(FixtureEcfr, FixtureGovinfo)),
+    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ GOVINFO_API_KEY: "fixture-secret" })))
+  ),
+  tool: {
+    name: "ecfr_search_results",
+    arguments: ecfrSearchArguments,
+    invalidArguments: { query: 1 },
+  },
 });
