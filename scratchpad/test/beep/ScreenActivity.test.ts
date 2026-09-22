@@ -1,0 +1,65 @@
+import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import { ScreenActivityCoverage, ScreenActivitySource } from "../../beep/ScreenActivity.ts";
+
+const decode = <A, I>(schema: S.Codec<A, I>, input: unknown): A =>
+  Effect.runSync(S.decodeUnknownEffect(schema)(input));
+
+describe("ScreenActivity", () => {
+  it("fills the source and completeness defaults at construction", () => {
+    const coverage = ScreenActivityCoverage.make({ rowLimit: 1, truncated: false });
+    expect(coverage.source).toBe("synced_screen_activity");
+    expect(coverage.captureCompleteness).toBe("unknown");
+    expect(O.isNone(coverage.firstObservedAt)).toBe(true);
+    expect(S.is(ScreenActivitySource)("memory")).toBe(false);
+  });
+
+  it("treats missing and null observed-at strings as absent and keeps present strings", () => {
+    const missing = decode(ScreenActivityCoverage, {
+      source: "synced_screen_activity",
+      rowLimit: 1,
+      truncated: false,
+      captureCompleteness: "unknown",
+    });
+    const nulled = decode(ScreenActivityCoverage, {
+      source: "synced_screen_activity",
+      rowLimit: 2,
+      truncated: true,
+      firstObservedAt: null,
+      lastObservedAt: null,
+      captureCompleteness: "unknown",
+    });
+    const present = decode(ScreenActivityCoverage, {
+      source: "synced_screen_activity",
+      rowLimit: 3,
+      truncated: false,
+      firstObservedAt: "2020-01-02 03:04:05",
+      lastObservedAt: "later",
+      captureCompleteness: "unknown",
+    });
+    expect(O.isNone(missing.firstObservedAt)).toBe(true);
+    expect(O.isNone(nulled.lastObservedAt)).toBe(true);
+    expect(O.isSome(present.firstObservedAt) && present.firstObservedAt.value).toBe("2020-01-02 03:04:05");
+    expect(Effect.runSyncExit(S.decodeUnknownEffect(ScreenActivityCoverage)({
+      source: "synced_screen_activity",
+      rowLimit: 0,
+      truncated: false,
+      captureCompleteness: "unknown",
+    }))._tag).toBe("Failure");
+  });
+
+  it("encodes an absent timestamp as null and builds an arbitrary", () => {
+    const decoded = decode(ScreenActivityCoverage, {
+      source: "synced_screen_activity",
+      rowLimit: 1,
+      truncated: false,
+      captureCompleteness: "unknown",
+    });
+    const encoded = Effect.runSync(S.encodeEffect(ScreenActivityCoverage)(decoded));
+    expect(encoded.firstObservedAt).toBeNull();
+    expect(Arbitrary.isArbitrary(ScreenActivityCoverage.pipe(Arbitrary.schema))).toBe(true);
+  });
+});

@@ -3665,10 +3665,11 @@ describe("yeet attempt journal", () => {
           );
           const receipts = A.filter(secondEvents, YeetAttemptJournalEvent.guards["journal-compacted"]);
           expect(receipts).toHaveLength(1);
-          expect(receipts[0]?.evictedAttemptIds).toStrictEqual(A.take(firstBatch.attemptIds, 11));
-          expect(receipts[0]?.evictedCount).toBe(24);
-          expect(receipts[0]?.oldestEvictedRecordedAt).toBe("2026-09-03T00:00:00.000Z");
-          expect(pipe(receipts[0]?.terminalEvictionCutoffRecordedAt, O.getOrThrow)).toBe("2026-09-03T00:00:01.010Z");
+          const receipt = O.getOrThrow(A.head(receipts));
+          expect(receipt.evictedAttemptIds).toStrictEqual(A.take(firstBatch.attemptIds, 11));
+          expect(receipt.evictedCount).toBe(24);
+          expect(receipt.oldestEvictedRecordedAt).toBe("2026-09-03T00:00:00.000Z");
+          expect(O.getOrThrow(receipt.terminalEvictionCutoffRecordedAt)).toBe("2026-09-03T00:00:01.010Z");
         })
       )
     ));

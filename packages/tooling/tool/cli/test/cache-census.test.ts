@@ -246,13 +246,14 @@ describe("executable cache census", () => {
   it.effect(
     "joins root tasks only against the explicit root manifest and preserves their dependencies",
     Effect.fnUntraced(function* () {
+      const rootScript = "bun run beep lint policy-fingerprint --check";
       const rootWorkspace = CacheCensusWorkspace.make({
         name: "//",
         directory: ".",
-        scripts: { "lint:policy-fingerprint": "bun run beep lint policy-fingerprint --check" },
+        scripts: { "lint:policy-fingerprint": rootScript },
       });
       const rootTask = {
-        ...node("lint:policy-fingerprint", rootWorkspace.scripts["lint:policy-fingerprint"]),
+        ...node("lint:policy-fingerprint", rootScript),
         taskId: "//#lint:policy-fingerprint",
         package: "//",
       };

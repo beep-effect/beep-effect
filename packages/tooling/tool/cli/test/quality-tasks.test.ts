@@ -1475,7 +1475,8 @@ describe("quality task adapter", () => {
         );
         const lines = pipe(yield* fs.readFileString(artifactPath), Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(lines).toHaveLength(2);
-        const report = yield* decodeQualityTaskLaneRunReportJson(lines[1]);
+        const reportLine = O.getOrThrow(A.get(lines, 1));
+        const report = yield* decodeQualityTaskLaneRunReportJson(reportLine);
         expect(report.schemaVersion).toBe("quality-task-lane-run/v1");
         expect(report.parentLaneId).toStrictEqual(O.some("full:02-ci-parity"));
         expect(A.map(report.lanes, (lane) => lane.id)).toEqual(["check"]);

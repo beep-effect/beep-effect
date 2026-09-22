@@ -2171,6 +2171,13 @@
       "@beep/repo-cli/commands/Models": [
         "./packages/tooling/tool/cli/src/commands/Models/index.ts"
       ]
-    }
+    },
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "inlays": true,
+        "noExternal": true
+      }
+    ]
   }
 }

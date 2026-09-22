@@ -14,7 +14,7 @@ describe("oxlint rules", () => {
   it("runs the global process rule in-process", () => {
     const reports: Array<unknown> = [];
     const rule = plugin.rules["no-global-process-runtime"];
-    if (!("createOnce" in rule)) {
+    if (rule === undefined || !("createOnce" in rule)) {
       throw new Error("Expected the global process rule to use createOnce");
     }
     const visitors = rule.createOnce({
@@ -44,7 +44,7 @@ describe("oxlint rules", () => {
   it("classifies static and runtime schema compiler inputs in-process", () => {
     const reports: Array<unknown> = [];
     const rule = plugin.rules["no-inline-schema-compile"];
-    if (!("createOnce" in rule)) {
+    if (rule === undefined || !("createOnce" in rule)) {
       throw new Error("Expected the inline schema compile rule to use createOnce");
     }
     const visitors = rule.createOnce({

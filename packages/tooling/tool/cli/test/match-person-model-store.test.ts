@@ -54,7 +54,7 @@ const makeRecordingClient = Effect.fnUntraced(function* (respond: TestResponder)
 
 const makeResponse = (
   request: HttpClientRequest.HttpClientRequest,
-  body: BodyInit,
+  body: ConstructorParameters<typeof Response>[0],
   status: number,
   contentRange: string,
   contentLength?: string,

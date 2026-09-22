@@ -19,14 +19,20 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import type { PackageKind } from "@beep/repo-cli/test/PackageScripts";
 
 const platform = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
-const codecs = R.fromEntries(
-  A.map(["app", "infra", "library", "lab", "tool"] as const, (kind) => {
-    const codec = scriptsBlockFromRecord(kind);
-    return [kind, { decode: S.decodeEffect(codec), encode: S.encodeEffect(codec) }] as const;
-  })
-);
+const codecFor = (kind: PackageKind) => {
+  const codec = scriptsBlockFromRecord(kind);
+  return { decode: S.decodeEffect(codec), encode: S.encodeEffect(codec) };
+};
+const codecs = {
+  app: codecFor("app"),
+  infra: codecFor("infra"),
+  library: codecFor("library"),
+  lab: codecFor("lab"),
+  tool: codecFor("tool"),
+};
 const decodeManifest = S.decodeEffect(S.fromJsonString(S.Struct({ scripts: S.Record(S.String, S.String) })));
 const scriptsArbitrary = Arbitrary.schema(ScriptsRecord);
 const decodeAppResult = S.decodeResult(scriptsBlockFromRecord("app"));
