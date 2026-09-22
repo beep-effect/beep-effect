@@ -71,9 +71,9 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@effect/platform-node-shared": "catalog:",
     "@beep/test-utils": "workspace:^",
     "@effect/platform-node": "catalog:",
+    "@effect/platform-node-shared": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"
   }

@@ -14,58 +14,55 @@ import { CrashProjectionInput } from "@/schema/Reasoning";
 import { Ledger } from "@/services/Ledger";
 import { RdfProjection } from "@/services/RdfProjection";
 
-const decodeRunId = S.decodeEffect(RunId);
-const decodeUnknownRuntimeMode = S.decodeUnknownEffect(RuntimeMode);
 const decodeCrashProjectionInput = S.decodeEffect(S.fromJsonString(CrashProjectionInput));
 
-const probe = Effect.gen(function* () {
-  const [probeMode, ledgerRoot, encodedRunId, encodedRuntimeMode, inputPath] = A.drop(process.argv, 2);
+const ProbeArgs = S.Union([
+  S.Tuple([S.Literal("bundle")]),
+  S.Tuple([S.Literal("crash"), S.String, RunId, RuntimeMode, S.String]),
+  S.Tuple([S.Literal("recover"), S.String, RunId, RuntimeMode]),
+]);
 
-  if (probeMode === "bundle") {
-    yield* Effect.scoped(Layer.build(RuntimeLayer));
-    process.stdout.write("bundle-ready\n");
-    return;
-  }
+const decodeUnknownProbeArgs = S.decodeUnknownEffect(ProbeArgs);
 
-  if (
-    (probeMode !== "crash" && probeMode !== "recover") ||
-    ledgerRoot === undefined ||
-    encodedRunId === undefined ||
-    encodedRuntimeMode === undefined
-  ) {
-    process.stderr.write("Expected bundle or crash/recover with a ledger root, run id, and runtime mode.\n");
-    process.exit(2);
-  }
+const usageExit = (): never => {
+  process.stderr.write(
+    "Expected bundle, crash <ledger-root> <run-id> <runtime-mode> <input-path>, or recover <ledger-root> <run-id> <runtime-mode>.\n"
+  );
+  return process.exit(2);
+};
 
-  const runId = yield* decodeRunId(encodedRunId);
-  const runtimeMode = yield* decodeUnknownRuntimeMode(encodedRuntimeMode);
+const bundleProbe = Effect.gen(function* () {
+  yield* Effect.scoped(Layer.build(RuntimeLayer));
+  process.stdout.write("bundle-ready\n");
+});
+
+const makeProvideServices = (ledgerRoot: string, runtimeMode: typeof RuntimeMode.Type, runId: RunId) => {
   const ledgerLayer = LedgerLive({ ledgerRoot, mode: runtimeMode, runId }).pipe(Layer.provide(BunServices.layer));
   const rdfLayer = RdfProjectionLive.pipe(Layer.provide(OxigraphSparqlQueryServiceLive), Layer.provide(LabConfigLive));
   const services = Layer.merge(ledgerLayer, rdfLayer).pipe(Layer.provide(BunServices.layer));
-  const provideServices = <A2, E, R>(effect: Effect.Effect<A2, E, R>) =>
+  return <A2, E, R>(effect: Effect.Effect<A2, E, R>) =>
     Effect.scoped(Layer.build(services).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+};
 
-  if (probeMode === "crash") {
-    if (inputPath === undefined) {
-      process.stderr.write("Crash mode requires a projection input path.\n");
-      process.exit(2);
-    }
-    const input = yield* decodeCrashProjectionInput(yield* Effect.promise(() => Bun.file(inputPath).text()));
-    yield* provideServices(
-      Ledger.pipe(
-        Effect.flatMap((ledger) =>
-          Effect.forEach(input.outcomes, (outcome) => ledger.appendBatch(outcome, input.events), {
-            concurrency: 1,
-            discard: true,
-          })
-        )
+type ProvideServices = ReturnType<typeof makeProvideServices>;
+
+const crashProbe = Effect.fn("crashProbe")(function* (provideServices: ProvideServices, inputPath: string) {
+  const input = yield* decodeCrashProjectionInput(yield* Effect.promise(() => Bun.file(inputPath).text()));
+  yield* provideServices(
+    Ledger.pipe(
+      Effect.flatMap((ledger) =>
+        Effect.forEach(input.outcomes, (outcome) => ledger.appendBatch(outcome, input.events), {
+          concurrency: 1,
+          discard: true,
+        })
       )
-    );
-    yield* Effect.promise(() => Bun.write(Bun.stdout, "projection-state-committed\n"));
-    process.kill(process.pid, "SIGKILL");
-    return;
-  }
+    )
+  );
+  yield* Effect.promise(() => Bun.write(Bun.stdout, "projection-state-committed\n"));
+  process.kill(process.pid, "SIGKILL");
+});
 
+const recoverProbe = Effect.fn("recoverProbe")(function* (provideServices: ProvideServices, runId: RunId) {
   const digest = yield* provideServices(
     Effect.gen(function* () {
       const ledger = yield* Ledger;
@@ -77,5 +74,26 @@ const probe = Effect.gen(function* () {
   );
   process.stdout.write(`${digest}\n`);
 });
+
+type ProbeFailure =
+  | Effect.Error<typeof bundleProbe>
+  | Effect.Error<ReturnType<typeof crashProbe>>
+  | Effect.Error<ReturnType<typeof recoverProbe>>;
+
+const runProbe = (args: typeof ProbeArgs.Type): Effect.Effect<void, ProbeFailure> => {
+  switch (args[0]) {
+    case "bundle":
+      return bundleProbe;
+    case "crash":
+      return crashProbe(makeProvideServices(args[1], args[3], args[2]), args[4]);
+    case "recover":
+      return recoverProbe(makeProvideServices(args[1], args[3], args[2]), args[2]);
+  }
+};
+
+const probe = decodeUnknownProbeArgs(A.drop(process.argv, 2)).pipe(
+  Effect.catchTag("SchemaError", () => Effect.sync(usageExit)),
+  Effect.flatMap(runProbe)
+);
 
 await Effect.runPromise(probe);

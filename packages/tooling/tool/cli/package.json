@@ -214,8 +214,8 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
-    "@effect/platform-node-shared": "catalog:",
     "@commitlint/is-ignored": "catalog:",
+    "@effect/platform-node-shared": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"
   }
