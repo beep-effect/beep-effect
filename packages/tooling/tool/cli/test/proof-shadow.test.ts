@@ -28,12 +28,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
-const decodeUuid = S.decodeSync(UUID);
 
 const facts = (overrides: Partial<ProofShadowAttemptFacts> = {}): ProofShadowAttemptFacts =>
   ProofShadowAttemptFacts.make({
@@ -51,7 +49,7 @@ const attemptStarted = (overrides: Partial<Parameters<typeof YeetAttemptStarted.
   YeetAttemptStarted.make({
     schemaVersion: "yeet-attempt-journal/v1",
     _tag: "attempt-started",
-    attemptId: decodeUuid("7c9f5b1e-2d4a-4f6b-9a8c-1e2d3f4a5b6c"),
+    attemptId: UUID.make("7c9f5b1e-2d4a-4f6b-9a8c-1e2d3f4a5b6c"),
     runId: "run-9",
     branch: "feat/facts",
     base: "main",
