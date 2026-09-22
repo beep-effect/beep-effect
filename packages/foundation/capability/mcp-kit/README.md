@@ -45,7 +45,9 @@ kit never interprets it.
 3. **`ApiKeyRequired`** — the typed `failureMode: "return"` envelope for
    `soft`/`none`-gated tools whose credential is absent at call time, and
    `translateApiKeyRequired`, the named error translator that keeps it a
-   non-error `CallToolResult` at the kit protocol adapter. Every other
+   non-error `CallToolResult` at the kit protocol adapter (the envelope
+   travels in `content[].text`; `structuredContent` is reserved for values
+   that match the advertised `outputSchema`). Every other
    failure follows rc.117 upstream: declared failures are tool errors,
    invalid arguments are JSON-RPC `InvalidParams`.
 4. **`TierGate`** — the fail-closed, refusal-as-value `tools/call` dispatch
@@ -124,6 +126,33 @@ const hostLayer = registrations.pipe(
 
 void hostLayer
 ```
+
+Talking to a `2026-07-28` host with the kit client. Build the protocol layer into a scope you
+control and keep it open while you hold the connection: the layer owns the response router, so
+`Effect.provide`-ing it around `connect` alone would drop every later call's response.
+
+```ts
+import { connect, layerProtocolHttp, McpHttpProtocolOptions } from "@beep/mcp-kit/client"
+import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
+import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient"
+
+const program = Effect.scoped(
+  Effect.gen(function* () {
+    const protocol = yield* Layer.build(
+      layerProtocolHttp(McpHttpProtocolOptions.make({ url: "http://localhost/mcp" })).pipe(
+        Layer.provide(FetchHttpClient.layer)
+      )
+    )
+    const { discovery, rpc } = yield* connect.pipe(Effect.provideContext(protocol))
+    const result = yield* rpc["tools/call"]({ name: "example_tool", arguments: {} })
+    return { versions: discovery.supportedVersions, isError: result.isError }
+  })
+)
+```
+
+Over stdio, `@beep/mcp-kit/client.node` exposes `layerProtocolStdioCommand` for a spawned host
+(you supply the `ChildProcessSpawner`), and `layerProtocolNdjson` takes any line transport.
 
 Proving a host from a test:
 

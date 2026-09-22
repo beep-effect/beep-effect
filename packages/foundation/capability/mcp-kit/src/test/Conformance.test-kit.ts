@@ -287,320 +287,267 @@ const legacyInitialize = (id: number) =>
  * @internal
  * @since 0.0.0
  */
-/**
- * Every arm runs in its own scope so client connections close with the test.
- */
-const scoped =
-  <A, E, R>(body: () => Effect.Effect<A, E, R | Scope.Scope>) =>
-  (): Effect.Effect<A, E, Exclude<R, Scope.Scope>> =>
-    Effect.scoped(body());
-
 export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
   const metadata = requestMetadata(McpClientOptions.make({}));
 
   describe(`conformance 2026-07-28: ${host.name}`, () => {
     layer(layerConformanceHttp(host))("over streamable HTTP", (it) => {
-      it.effect(
-        "discovers the server without initialize or a session",
-        scoped(() =>
-          Effect.gen(function* () {
-            const { discovery } = yield* connectHttp();
-            assert.include(discovery.supportedVersions, MCP_PROTOCOL_VERSION);
-            assert.isDefined(discovery.capabilities.tools);
-            assert.strictEqual(discovery.instructions, host.instructions);
-            assert.deepStrictEqual(
-              O.map(discovery.serverInfo, (info) => ({ name: info.name, version: info.version })),
-              O.some({ name: host.name, version: host.version })
-            );
-          })
-        )
+      it.effect("discovers the server without initialize or a session", () =>
+        Effect.gen(function* () {
+          const { discovery } = yield* connectHttp();
+          assert.include(discovery.supportedVersions, MCP_PROTOCOL_VERSION);
+          assert.isDefined(discovery.capabilities.tools);
+          assert.strictEqual(discovery.instructions, host.instructions);
+          assert.deepStrictEqual(
+            O.map(discovery.serverInfo, (info) => ({ name: info.name, version: info.version })),
+            O.some({ name: host.name, version: host.version })
+          );
+        })
       );
 
-      it.effect(
-        "lists tools with object-rooted input schemas",
-        scoped(() =>
-          Effect.gen(function* () {
-            const { rpc } = yield* connectHttp();
-            const listed = yield* rpc["tools/list"]({});
-            assert.include(
-              A.map(listed.tools, (tool) => tool.name),
-              host.tool.name
-            );
-            for (const tool of listed.tools) {
-              assert.strictEqual(tool.inputSchema.type, "object", `${tool.name} inputSchema root`);
-            }
-          })
-        )
+      it.effect("lists tools with object-rooted input schemas", () =>
+        Effect.gen(function* () {
+          const { rpc } = yield* connectHttp();
+          const listed = yield* rpc["tools/list"]({});
+          assert.include(
+            A.map(listed.tools, (tool) => tool.name),
+            host.tool.name
+          );
+          for (const tool of listed.tools) {
+            assert.strictEqual(tool.inputSchema.type, "object", `${tool.name} inputSchema root`);
+          }
+        })
       );
 
-      it.effect(
-        "calls a tool and returns a non-error result",
-        scoped(() =>
-          Effect.gen(function* () {
-            const { rpc } = yield* connectHttp();
-            const result = yield* rpc["tools/call"]({ name: host.tool.name, arguments: host.tool.arguments });
-            assert.notStrictEqual(result.isError, true);
-            assert.isAtLeast(result.content.length, 1);
-          })
-        )
+      it.effect("calls a tool and returns a non-error result", () =>
+        Effect.gen(function* () {
+          const { rpc } = yield* connectHttp();
+          const result = yield* rpc["tools/call"]({ name: host.tool.name, arguments: host.tool.arguments });
+          assert.notStrictEqual(result.isError, true);
+          assert.isAtLeast(result.content.length, 1);
+        })
       );
 
-      it.effect(
-        "projects invalid arguments as a tool error and malformed arguments as InvalidParams",
-        scoped(() =>
-          Effect.gen(function* () {
-            // rc.117's 2026-07-28 adapter projects a tool validation failure as
-            // `isError: true` with a scrubbed message (upstream ToolsTest
-            // "distinguishes malformed requests from tool validation errors by
-            // protocol revision"); the kit adapter still classifies it as
-            // `InvalidParams` underneath, which the direct-dispatch test proves.
-            const { rpc } = yield* connectHttp();
-            const result = yield* rpc["tools/call"]({ name: host.tool.name, arguments: host.tool.invalidArguments });
-            assert.isTrue(result.isError);
-            assert.isUndefined(result.structuredContent);
-            const [first] = result.content;
-            const text = first?.type === "text" ? first.text : "";
-            assert.include(text, `Invalid parameters for tool '${host.tool.name}'`);
-            assert.notMatch(text, /AiError|ToolParameterValidationError|Toolkit/);
+      it.effect("projects invalid arguments as a tool error and malformed arguments as InvalidParams", () =>
+        Effect.gen(function* () {
+          // rc.117's 2026-07-28 adapter projects a tool validation failure as
+          // `isError: true` with a scrubbed message (upstream ToolsTest
+          // "distinguishes malformed requests from tool validation errors by
+          // protocol revision"); the kit adapter still classifies it as
+          // `InvalidParams` underneath, which the direct-dispatch test proves.
+          const { rpc } = yield* connectHttp();
+          const result = yield* rpc["tools/call"]({ name: host.tool.name, arguments: host.tool.invalidArguments });
+          assert.isTrue(result.isError);
+          assert.isUndefined(result.structuredContent);
+          const [first] = result.content;
+          const text = first?.type === "text" ? first.text : "";
+          assert.include(text, `Invalid parameters for tool '${host.tool.name}'`);
+          assert.notMatch(text, /AiError|ToolParameterValidationError|Toolkit/);
 
-            const http = yield* ConformanceHttp;
-            const malformed = JsonRpcMessage.make({
-              id: 11,
-              method: "tools/call",
-              params: withRequestMetadata({ name: host.tool.name, arguments: "invalid" }, metadata),
-            });
-            const exchange = yield* http.post(malformed, routingHeaders(malformed));
+          const http = yield* ConformanceHttp;
+          const malformed = JsonRpcMessage.make({
+            id: 11,
+            method: "tools/call",
+            params: withRequestMetadata({ name: host.tool.name, arguments: "invalid" }, metadata),
+          });
+          const exchange = yield* http.post(malformed, routingHeaders(malformed));
+          assert.deepStrictEqual(
+            O.map(errorOf(exchange), (error) => error.code),
+            O.some(McpSchema.INVALID_PARAMS_ERROR_CODE)
+          );
+        })
+      );
+
+      it.effect("answers a legacy initialize with a 400 header mismatch", () =>
+        Effect.gen(function* () {
+          const http = yield* ConformanceHttp;
+          const exchange = yield* http.post(legacyInitialize(1), {});
+          assert.strictEqual(exchange.status, 400);
+          assert.deepStrictEqual(
+            O.map(errorOf(exchange), (error) => error.code),
+            O.some(McpSchema.HEADER_MISMATCH_ERROR_CODE)
+          );
+        })
+      );
+
+      it.effect("answers a 2026-framed initialize and ping with method not found", () =>
+        Effect.gen(function* () {
+          const http = yield* ConformanceHttp;
+          for (const method of ["initialize", "ping"]) {
+            const message = JsonRpcMessage.make({ id: 2, method, params: withRequestMetadata({}, metadata) });
+            const exchange = yield* http.post(message, routingHeaders(message));
             assert.deepStrictEqual(
               O.map(errorOf(exchange), (error) => error.code),
-              O.some(McpSchema.INVALID_PARAMS_ERROR_CODE)
+              O.some(McpSchema.METHOD_NOT_FOUND_ERROR_CODE),
+              method
             );
-          })
-        )
+          }
+        })
       );
 
-      it.effect(
-        "answers a legacy initialize with a 400 header mismatch",
-        scoped(() =>
-          Effect.gen(function* () {
-            const http = yield* ConformanceHttp;
-            const exchange = yield* http.post(legacyInitialize(1), {});
-            assert.strictEqual(exchange.status, 400);
-            assert.deepStrictEqual(
-              O.map(errorOf(exchange), (error) => error.code),
-              O.some(McpSchema.HEADER_MISMATCH_ERROR_CODE)
-            );
-          })
-        )
-      );
-
-      it.effect(
-        "answers a 2026-framed initialize and ping with method not found",
-        scoped(() =>
-          Effect.gen(function* () {
-            const http = yield* ConformanceHttp;
-            for (const method of ["initialize", "ping"]) {
-              const message = JsonRpcMessage.make({ id: 2, method, params: withRequestMetadata({}, metadata) });
-              const exchange = yield* http.post(message, routingHeaders(message));
-              assert.deepStrictEqual(
-                O.map(errorOf(exchange), (error) => error.code),
-                O.some(McpSchema.METHOD_NOT_FOUND_ERROR_CODE),
-                method
-              );
-            }
-          })
-        )
-      );
-
-      it.effect(
-        "rejects a POST missing request metadata with 400",
-        scoped(() =>
-          Effect.gen(function* () {
-            const http = yield* ConformanceHttp;
-            const withoutMeta = JsonRpcMessage.make({ id: 3, method: "tools/list", params: {} });
-            const missingCapabilities = JsonRpcMessage.make({
-              id: 4,
-              method: "tools/list",
-              params: {
-                _meta: {
-                  [PROTOCOL_VERSION_META_KEY]: MCP_PROTOCOL_VERSION,
-                  [CLIENT_INFO_META_KEY]: metadata[CLIENT_INFO_META_KEY],
-                },
+      it.effect("rejects a POST missing request metadata with 400", () =>
+        Effect.gen(function* () {
+          const http = yield* ConformanceHttp;
+          const withoutMeta = JsonRpcMessage.make({ id: 3, method: "tools/list", params: {} });
+          const missingCapabilities = JsonRpcMessage.make({
+            id: 4,
+            method: "tools/list",
+            params: {
+              _meta: {
+                [PROTOCOL_VERSION_META_KEY]: MCP_PROTOCOL_VERSION,
+                [CLIENT_INFO_META_KEY]: metadata[CLIENT_INFO_META_KEY],
               },
-            });
-            const missingVersion = JsonRpcMessage.make({
-              id: 5,
-              method: "tools/list",
-              params: { _meta: { [CLIENT_CAPABILITIES_META_KEY]: {} } },
-            });
-            for (const message of [withoutMeta, missingCapabilities, missingVersion]) {
-              const exchange = yield* http.post(message, routingHeaders(message));
-              assert.strictEqual(exchange.status, 400, String(message.id));
-              assert.deepStrictEqual(
-                O.map(errorOf(exchange), (error) => error.code),
-                O.some(McpSchema.INVALID_PARAMS_ERROR_CODE),
-                String(message.id)
-              );
-            }
-          })
-        )
-      );
-
-      it.effect(
-        "rejects an unsupported protocol version with -32022 and the supported list",
-        scoped(() =>
-          Effect.gen(function* () {
-            const http = yield* ConformanceHttp;
-            const message = JsonRpcMessage.make({
-              id: 6,
-              method: "tools/list",
-              params: withRequestMetadata({}, { ...metadata, [PROTOCOL_VERSION_META_KEY]: "2025-11-25" }),
-            });
-            const exchange = yield* http.post(message, {
-              ...routingHeaders(message),
-              [MCP_PROTOCOL_VERSION_HEADER]: "2025-11-25",
-            });
-            assert.strictEqual(exchange.status, 400);
-            const error = errorOf(exchange);
-            assert.deepStrictEqual(
-              O.map(error, (value) => value.code),
-              O.some(UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE)
-            );
-            const supported = O.flatMap(error, (value) =>
-              P.hasProperty(value.data, "supported") && A.isArray(value.data.supported)
-                ? O.some(value.data.supported)
-                : O.none()
-            );
-            assert.deepStrictEqual(supported, O.some([MCP_PROTOCOL_VERSION]));
-          })
-        )
-      );
-
-      it.effect(
-        "rejects a method header that does not match the request",
-        scoped(() =>
-          Effect.gen(function* () {
-            const http = yield* ConformanceHttp;
-            const message = JsonRpcMessage.make({
-              id: 7,
-              method: "tools/list",
-              params: withRequestMetadata({}, metadata),
-            });
-            const exchange = yield* http.post(message, {
-              ...routingHeaders(JsonRpcMessage.make({ id: 7, method: "prompts/list", params: message.params })),
-            });
-            assert.strictEqual(exchange.status, 400);
+            },
+          });
+          const missingVersion = JsonRpcMessage.make({
+            id: 5,
+            method: "tools/list",
+            params: { _meta: { [CLIENT_CAPABILITIES_META_KEY]: {} } },
+          });
+          for (const message of [withoutMeta, missingCapabilities, missingVersion]) {
+            const exchange = yield* http.post(message, routingHeaders(message));
+            assert.strictEqual(exchange.status, 400, String(message.id));
             assert.deepStrictEqual(
               O.map(errorOf(exchange), (error) => error.code),
-              O.some(McpSchema.HEADER_MISMATCH_ERROR_CODE)
+              O.some(McpSchema.INVALID_PARAMS_ERROR_CODE),
+              String(message.id)
             );
-          })
-        )
+          }
+        })
+      );
+
+      it.effect("rejects an unsupported protocol version with -32022 and the supported list", () =>
+        Effect.gen(function* () {
+          const http = yield* ConformanceHttp;
+          const message = JsonRpcMessage.make({
+            id: 6,
+            method: "tools/list",
+            params: withRequestMetadata({}, { ...metadata, [PROTOCOL_VERSION_META_KEY]: "2025-11-25" }),
+          });
+          const exchange = yield* http.post(message, {
+            ...routingHeaders(message),
+            [MCP_PROTOCOL_VERSION_HEADER]: "2025-11-25",
+          });
+          assert.strictEqual(exchange.status, 400);
+          const error = errorOf(exchange);
+          assert.deepStrictEqual(
+            O.map(error, (value) => value.code),
+            O.some(UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE)
+          );
+          const supported = O.flatMap(error, (value) =>
+            P.hasProperty(value.data, "supported") && A.isArray(value.data.supported)
+              ? O.some(value.data.supported)
+              : O.none()
+          );
+          assert.deepStrictEqual(supported, O.some([MCP_PROTOCOL_VERSION]));
+        })
+      );
+
+      it.effect("rejects a method header that does not match the request", () =>
+        Effect.gen(function* () {
+          const http = yield* ConformanceHttp;
+          const message = JsonRpcMessage.make({
+            id: 7,
+            method: "tools/list",
+            params: withRequestMetadata({}, metadata),
+          });
+          const exchange = yield* http.post(message, {
+            ...routingHeaders(JsonRpcMessage.make({ id: 7, method: "prompts/list", params: message.params })),
+          });
+          assert.strictEqual(exchange.status, 400);
+          assert.deepStrictEqual(
+            O.map(errorOf(exchange), (error) => error.code),
+            O.some(McpSchema.HEADER_MISMATCH_ERROR_CODE)
+          );
+        })
       );
 
       if (host.prompt !== undefined) {
         const prompt = host.prompt;
-        it.effect(
-          "advertises prompt titles and serves prompts/get",
-          scoped(() =>
-            Effect.gen(function* () {
-              const { rpc } = yield* connectHttp();
-              const listed = yield* rpc["prompts/list"]({});
-              const entry = A.findFirst(listed.prompts, (candidate) => candidate.name === prompt.name);
-              assert.deepStrictEqual(
-                O.map(entry, (candidate) => candidate.title),
-                O.some(prompt.title)
-              );
-              const served = yield* rpc["prompts/get"]({ name: prompt.name, arguments: prompt.arguments ?? {} });
-              assert.isAtLeast(served.messages.length, 1);
-            })
-          )
+        it.effect("advertises prompt titles and serves prompts/get", () =>
+          Effect.gen(function* () {
+            const { rpc } = yield* connectHttp();
+            const listed = yield* rpc["prompts/list"]({});
+            const entry = A.findFirst(listed.prompts, (candidate) => candidate.name === prompt.name);
+            assert.deepStrictEqual(
+              O.map(entry, (candidate) => candidate.title),
+              O.some(prompt.title)
+            );
+            const served = yield* rpc["prompts/get"]({ name: prompt.name, arguments: prompt.arguments ?? {} });
+            assert.isAtLeast(served.messages.length, 1);
+          })
         );
       }
     });
 
     describe("over newline-delimited stdio", () => {
-      it.effect(
-        "sends server/discover then tools/call over stdio",
-        scoped(() =>
-          withStdioHost(host)((io) =>
-            Effect.gen(function* () {
-              const { discovery, rpc } = yield* connectStdio(io);
-              assert.include(discovery.supportedVersions, MCP_PROTOCOL_VERSION);
-              const result = yield* rpc["tools/call"]({ name: host.tool.name, arguments: host.tool.arguments });
-              assert.notStrictEqual(result.isError, true);
-            })
-          )
+      it.effect("sends server/discover then tools/call over stdio", () =>
+        withStdioHost(host)((io) =>
+          Effect.gen(function* () {
+            const { discovery, rpc } = yield* connectStdio(io);
+            assert.include(discovery.supportedVersions, MCP_PROTOCOL_VERSION);
+            const result = yield* rpc["tools/call"]({ name: host.tool.name, arguments: host.tool.arguments });
+            assert.notStrictEqual(result.isError, true);
+          })
         )
       );
 
-      it.effect(
-        "answers a legacy initialize with -32022 over stdio",
-        scoped(() =>
-          withStdioHost(host)((io) =>
-            Effect.gen(function* () {
-              yield* io.sendMessage(legacyInitialize(1));
-              const response = yield* io.nextMessage;
-              assert.strictEqual(response.id, 1);
-              assert.strictEqual(response.error?.code, UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE);
-            })
-          )
+      it.effect("answers a legacy initialize with -32022 over stdio", () =>
+        withStdioHost(host)((io) =>
+          Effect.gen(function* () {
+            yield* io.sendMessage(legacyInitialize(1));
+            const response = yield* io.nextMessage;
+            assert.strictEqual(response.id, 1);
+            assert.strictEqual(response.error?.code, UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE);
+          })
         )
       );
 
-      it.effect(
-        "reconstructs a request whose bytes arrive in separate chunks",
-        scoped(() =>
-          withStdioHost(host)((io) =>
-            Effect.gen(function* () {
-              const line = `${encodeLine(JsonRpcMessage.make({ id: 8, method: "server/discover", params: withRequestMetadata({}, io.metadata) }))}\n`;
-              const bytes = encoder.encode(line);
-              const split = Math.floor(bytes.length / 2);
-              yield* io.sendChunk(bytes.slice(0, split));
-              yield* io.sendChunk(bytes.slice(split));
-              const response = yield* io.nextMessage;
-              assert.strictEqual(response.id, 8);
-              assert.isDefined(response.result);
-            })
-          )
+      it.effect("reconstructs a request whose bytes arrive in separate chunks", () =>
+        withStdioHost(host)((io) =>
+          Effect.gen(function* () {
+            const line = `${encodeLine(JsonRpcMessage.make({ id: 8, method: "server/discover", params: withRequestMetadata({}, io.metadata) }))}\n`;
+            const bytes = encoder.encode(line);
+            const split = Math.floor(bytes.length / 2);
+            yield* io.sendChunk(bytes.slice(0, split));
+            yield* io.sendChunk(bytes.slice(split));
+            const response = yield* io.nextMessage;
+            assert.strictEqual(response.id, 8);
+            assert.isDefined(response.result);
+          })
         )
       );
 
-      it.effect(
-        "emits one compact JSON-RPC message per line and processes requests independently",
-        scoped(() =>
-          withStdioHost(host)((io) =>
-            Effect.gen(function* () {
-              yield* io.sendMessage(
-                JsonRpcMessage.make({ id: 9, method: "tools/list", params: withRequestMetadata({}, io.metadata) })
-              );
-              const first = yield* io.nextLine;
-              assert.strictEqual(decodeLine(first).id, 9);
-              assert.isFalse(first.includes("\n"));
-              yield* io.sendMessage(
-                JsonRpcMessage.make({
-                  id: 10,
-                  method: "tools/call",
-                  params: withRequestMetadata({ name: host.tool.name, arguments: host.tool.arguments }, io.metadata),
-                })
-              );
-              const second = yield* io.nextMessage;
-              assert.strictEqual(second.id, 10);
-              assert.isDefined(second.result);
-            })
-          )
+      it.effect("emits one compact JSON-RPC message per line and processes requests independently", () =>
+        withStdioHost(host)((io) =>
+          Effect.gen(function* () {
+            yield* io.sendMessage(
+              JsonRpcMessage.make({ id: 9, method: "tools/list", params: withRequestMetadata({}, io.metadata) })
+            );
+            const first = yield* io.nextLine;
+            assert.strictEqual(decodeLine(first).id, 9);
+            assert.isFalse(first.includes("\n"));
+            yield* io.sendMessage(
+              JsonRpcMessage.make({
+                id: 10,
+                method: "tools/call",
+                params: withRequestMetadata({ name: host.tool.name, arguments: host.tool.arguments }, io.metadata),
+              })
+            );
+            const second = yield* io.nextMessage;
+            assert.strictEqual(second.id, 10);
+            assert.isDefined(second.result);
+          })
         )
       );
 
-      it.effect(
-        "shuts down when the client closes stdin",
-        scoped(() =>
-          withStdioHost(host)((io) =>
-            Effect.gen(function* () {
-              yield* io.close;
-              const exit = yield* io.serverExit;
-              assert.isTrue(Exit.isSuccess(exit) || (Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)));
-            })
-          )
+      it.effect("shuts down when the client closes stdin", () =>
+        withStdioHost(host)((io) =>
+          Effect.gen(function* () {
+            yield* io.close;
+            const exit = yield* io.serverExit;
+            assert.isTrue(Exit.isSuccess(exit) || (Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)));
+          })
         )
       );
     });

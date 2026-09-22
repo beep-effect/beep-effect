@@ -744,10 +744,16 @@ export class McpHttpExchange extends S.Class<McpHttpExchange>($I`McpHttpExchange
  * **Example** (Post a hand-built frame)
  *
  * ```ts
- * import { JsonRpcMessage, postJsonRpc } from "@beep/mcp-kit/client"
+ * import { JsonRpcMessage, postJsonRpc, routingHeaders } from "@beep/mcp-kit/client"
+ * import * as Effect from "effect/Effect"
+ * import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient"
  *
- * const exchange = postJsonRpc("http://localhost/mcp", JsonRpcMessage.make({ id: 1, method: "server/discover", params: {} }), {})
- * console.log(typeof exchange)
+ * const frame = JsonRpcMessage.make({ id: 1, method: "server/discover", params: {} })
+ * const program = Effect.gen(function* () {
+ *   const exchange = yield* postJsonRpc("http://localhost/mcp", frame, routingHeaders(frame))
+ *   return { status: exchange.status, messages: exchange.messages.length }
+ * }).pipe(Effect.provide(FetchHttpClient.layer))
+ * console.log(typeof program)
  * // "object"
  * ```
  *
@@ -763,11 +769,12 @@ export const postJsonRpc = Effect.fn("McpKit.client.postJsonRpc")(function* (
   const response = yield* client.execute(
     HttpClientRequest.post(url).pipe(
       HttpClientRequest.setHeaders({
-        // The streamable HTTP transport answers 406 unless the client accepts
-        // both media types, since any response may upgrade to an SSE stream.
+        ...headers,
+        // Content negotiation is not caller-tunable: the streamable HTTP
+        // transport answers 406 unless the client accepts both media types
+        // (any response may upgrade to an SSE stream) and 415 without JSON.
         accept: "application/json, text/event-stream",
         "content-type": "application/json",
-        ...headers,
       }),
       HttpClientRequest.bodyJsonUnsafe(body)
     )
@@ -858,7 +865,9 @@ export const layerProtocolHttp = (
       const httpClient = yield* HttpClient.HttpClient;
       const metadata = requestMetadata(options.client ?? McpClientOptions.make({}));
       const post = (message: JsonRpcMessage) =>
-        postJsonRpc(options.url, message, { ...routingHeaders(message), ...options.headers }).pipe(
+        // Routing mirrors always describe the frame being sent: caller headers
+        // (origin, authorization) go first so they can never shadow them.
+        postJsonRpc(options.url, message, { ...options.headers, ...routingHeaders(message) }).pipe(
           Effect.provideService(HttpClient.HttpClient, httpClient)
         );
       return yield* RpcClient.Protocol.make((writeResponse) =>

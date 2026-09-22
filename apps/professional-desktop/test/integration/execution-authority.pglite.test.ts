@@ -60,7 +60,15 @@ const encodeSparqlQueryRequest = S.encodeUnknownEffect(OntologySparqlQueryReques
 const decodeSparqlQueryResponse = S.decodeUnknownEffect(OntologySparqlQueryResponse);
 const encodeExportProvenanceRequest = S.encodeUnknownEffect(ExportProvenanceRequest);
 const encodePublishProvenanceRequest = S.encodeUnknownEffect(PublishProvenanceRequest);
-const decodeOntologyToolFailure = S.decodeUnknownEffect(OntologyToolFailure);
+// rc.117 projects declared tool failures as tool errors whose encoded payload
+// travels in `content[].text`; `structuredContent` describes successes only.
+const decodeOntologyToolFailureFromText = S.decodeEffect(S.fromJsonString(OntologyToolFailure));
+const firstTextContent = (call: {
+  readonly content: ReadonlyArray<{ readonly type: string; readonly text?: string }>;
+}): string => {
+  const [first] = call.content;
+  return first?.type === "text" && first.text !== undefined ? first.text : "";
+};
 
 const makeInProcessPgliteLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
@@ -249,8 +257,8 @@ SELECT ?destination WHERE {
 
               expect(firstDeniedCall.isError).toBe(true);
               expect(secondDeniedCall.isError).toBe(true);
-              const firstRefusal = yield* decodeOntologyToolFailure(firstDeniedCall.structuredContent);
-              const secondRefusal = yield* decodeOntologyToolFailure(secondDeniedCall.structuredContent);
+              const firstRefusal = yield* decodeOntologyToolFailureFromText(firstTextContent(firstDeniedCall));
+              const secondRefusal = yield* decodeOntologyToolFailureFromText(firstTextContent(secondDeniedCall));
               expect(firstRefusal._tag).toBe("OntologyTierGateRefusal");
               expect(secondRefusal._tag).toBe("OntologyTierGateRefusal");
               expect(firstRefusal._tag === "OntologyTierGateRefusal" && firstRefusal.guidance).toBe(refusalGuidance);

@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-09-22T11:52:37.829Z",
+  "generatedAt": "2026-09-22T13:15:43.805Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -13220,8 +13220,8 @@
           "exportKind": "const",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 757,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-757-postjsonrpc",
+          "line": 763,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-763-postjsonrpc",
           "currentTags": [
             "@category",
             "@since"
@@ -13242,8 +13242,8 @@
           "exportKind": "class",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 821,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-821-mcphttpprotocoloptions",
+          "line": 828,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-828-mcphttpprotocoloptions",
           "currentTags": [
             "@category",
             "@since"
@@ -13264,8 +13264,8 @@
           "exportKind": "const",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 853,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-853-layerprotocolhttp",
+          "line": 860,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-860-layerprotocolhttp",
           "currentTags": [
             "@category",
             "@since"
@@ -13286,8 +13286,8 @@
           "exportKind": "interface",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 931,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-931-mcpndjsontransport",
+          "line": 940,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-940-mcpndjsontransport",
           "currentTags": [
             "@category",
             "@since"
@@ -13308,8 +13308,8 @@
           "exportKind": "const",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 967,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-967-decodelines",
+          "line": 976,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-976-decodelines",
           "currentTags": [
             "@category",
             "@since"
@@ -13330,8 +13330,8 @@
           "exportKind": "const",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 991,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-991-layerprotocolndjson",
+          "line": 1000,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1000-layerprotocolndjson",
           "currentTags": [
             "@category",
             "@since"
@@ -13352,8 +13352,8 @@
           "exportKind": "type",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 1081,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1081-mcprpcclient",
+          "line": 1090,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1090-mcprpcclient",
           "currentTags": [
             "@category",
             "@since"
@@ -13374,8 +13374,8 @@
           "exportKind": "interface",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 1100,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1100-mcpclientconnection",
+          "line": 1109,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1109-mcpclientconnection",
           "currentTags": [
             "@category",
             "@since"
@@ -13396,8 +13396,8 @@
           "exportKind": "const",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 1152,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1152-connect",
+          "line": 1161,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1161-connect",
           "currentTags": [
             "@category",
             "@since"
@@ -13418,8 +13418,8 @@
           "exportKind": "type",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 1178,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1178-mcphttperror",
+          "line": 1187,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1187-mcphttperror",
           "currentTags": [
             "@category",
             "@since"

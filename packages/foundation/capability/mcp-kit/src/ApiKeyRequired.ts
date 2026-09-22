@@ -10,7 +10,8 @@
  * routes this one envelope through {@link translateApiKeyRequired}, the named
  * error translator at the kit protocol adapter (architecture 09): the
  * envelope stays a **non-error** `CallToolResult` with the encoded failure in
- * `structuredContent` and mirrored into `content[].text`, so the calling
+ * `content[].text` (never `structuredContent`, which must conform to the
+ * tool's advertised `outputSchema`), so the calling
  * model sees the structured `api_key_required` reason and self-corrects
  * instead of treating the call as a hard failure. Every other failure keeps
  * upstream semantics (declared failures are tool errors, invalid arguments
@@ -22,7 +23,6 @@
 
 import { $McpKitId } from "@beep/identity/packages";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { CallToolResult } from "effect/unstable/ai/McpSchema";
 import { SourceAuthRegistration } from "./SourceAuth.ts";
@@ -211,9 +211,11 @@ export class ToolHandlerPayload extends S.Class<ToolHandlerPayload>($I`ToolHandl
 export const translateApiKeyRequired = (payload: ToolHandlerPayload): O.Option<CallToolResult> =>
   isApiKeyRequiredFailure(payload.result)
     ? O.some(
+        // The envelope travels in `content[].text` only: `structuredContent`
+        // must conform to the tool's advertised `outputSchema`, which describes
+        // the success value, not this failure.
         CallToolResult.make({
           isError: false,
-          ...(P.isObject(payload.encodedResult) ? { structuredContent: payload.encodedResult } : {}),
           content: [{ type: "text", text: JSON.stringify(payload.encodedResult) }],
         })
       )

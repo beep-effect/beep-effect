@@ -149,33 +149,29 @@ describe("layerProtocolHttp", () => {
   );
 
   it.effect("unwraps a text/event-stream tools/call response", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        // Built into the test scope (not `Effect.provide`d) so the protocol
-        // outlives `connect` for the follow-up call.
-        const protocol = yield* Layer.build(
-          layerProtocolHttp(McpHttpProtocolOptions.make({ url: "http://stub/mcp" })).pipe(
-            Layer.provide(Layer.succeed(HttpClient.HttpClient, streamingClient))
-          )
-        );
-        const { rpc } = yield* connect.pipe(Effect.provideContext(protocol));
-        const result = yield* rpc["tools/call"]({ name: "echo", arguments: { text: "hi" } });
-        assert.notStrictEqual(result.isError, true);
-        assert.deepStrictEqual(result.content, [{ type: "text", text: "streamed" }]);
-      })
-    )
+    Effect.gen(function* () {
+      // Built into the test scope (not `Effect.provide`d) so the protocol
+      // outlives `connect` for the follow-up call.
+      const protocol = yield* Layer.build(
+        layerProtocolHttp(McpHttpProtocolOptions.make({ url: "http://stub/mcp" })).pipe(
+          Layer.provide(Layer.succeed(HttpClient.HttpClient, streamingClient))
+        )
+      );
+      const { rpc } = yield* connect.pipe(Effect.provideContext(protocol));
+      const result = yield* rpc["tools/call"]({ name: "echo", arguments: { text: "hi" } });
+      assert.notStrictEqual(result.isError, true);
+      assert.deepStrictEqual(result.content, [{ type: "text", text: "streamed" }]);
+    })
   );
 
   layer(layerConformanceHttp(fixtureHost))("against the fixture host", (it) => {
     it.effect("discovers, calls a tool, and reads structured content", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const { discovery, rpc } = yield* connectHttp();
-          assert.strictEqual(discovery.instructions, fixtureHost.instructions);
-          const result = yield* rpc["tools/call"]({ name: "echo", arguments: { text: "round-trip" } });
-          assert.deepStrictEqual(result.structuredContent, { echoed: "round-trip" });
-        })
-      )
+      Effect.gen(function* () {
+        const { discovery, rpc } = yield* connectHttp();
+        assert.strictEqual(discovery.instructions, fixtureHost.instructions);
+        const result = yield* rpc["tools/call"]({ name: "echo", arguments: { text: "round-trip" } });
+        assert.deepStrictEqual(result.structuredContent, { echoed: "round-trip" });
+      })
     );
 
     it.effect("rejects a POST missing request metadata with 400", () =>
@@ -202,32 +198,72 @@ describe("layerProtocolNdjson", () => {
   );
 
   it.effect("releases the pending waiter and sends notifications/cancelled when a request is interrupted", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        // A host that never answers: the only way the call ends is interruption.
-        const written = yield* Queue.unbounded<string>();
-        const protocol = yield* Layer.build(
-          layerProtocolNdjson({ write: (line) => Effect.asVoid(Queue.offer(written, line)), lines: Stream.never })
+    Effect.gen(function* () {
+      // A host that never answers: the only way the call ends is interruption.
+      const written = yield* Queue.unbounded<string>();
+      const protocol = yield* Layer.build(
+        layerProtocolNdjson({ write: (line) => Effect.asVoid(Queue.offer(written, line)), lines: Stream.never })
+      );
+      const rpc = yield* RpcClient.make(McpClientRpcs).pipe(Effect.provideContext(protocol));
+      const fiber = yield* Effect.forkScoped(rpc["tools/list"]({}));
+      const request = yield* Queue.take(written);
+      assert.include(request, '"method":"tools/list"');
+      yield* Fiber.interrupt(fiber);
+      const cancelled = yield* Queue.take(written);
+      assert.include(cancelled, '"method":"notifications/cancelled"');
+      // A second request after the interrupt still round-trips through the
+      // same protocol: the interrupted waiter left no residue that could
+      // shadow the new id, and the router keeps running.
+      const answered = yield* Deferred.make<void>();
+      const echo = yield* Effect.forkScoped(
+        rpc["tools/list"]({}).pipe(Effect.tap(() => Deferred.succeed(answered, undefined)))
+      );
+      const second = yield* Queue.take(written);
+      assert.include(second, '"method":"tools/list"');
+      yield* Fiber.interrupt(echo);
+      assert.isFalse(yield* Deferred.isDone(answered));
+    })
+  );
+});
+
+describe("layerProtocolHttp headers", () => {
+  it.effect("keeps the routing mirrors above caller headers and content negotiation fixed", () =>
+    Effect.gen(function* () {
+      const seen: Array<Readonly<Record<string, string>>> = [];
+      // Echoes the request id so the reply routes back to whichever id the
+      // RpcClient allocated for this call.
+      const recordingClient = HttpClient.make((request) => {
+        seen.push(request.headers);
+        const sent = request.body._tag === "Uint8Array" ? JSON.parse(new TextDecoder().decode(request.body.body)) : {};
+        const frame = JsonRpcMessage.make({
+          id: (sent as { readonly id: number }).id,
+          result: { supportedVersions: ["2026-07-28"], capabilities: {} },
+        });
+        return Effect.succeed(
+          HttpClientResponse.fromWeb(
+            request,
+            new Response(JSON.stringify(frame), { status: 200, headers: { "content-type": "application/json" } })
+          )
         );
-        const rpc = yield* RpcClient.make(McpClientRpcs).pipe(Effect.provideContext(protocol));
-        const fiber = yield* Effect.forkScoped(rpc["tools/list"]({}));
-        const request = yield* Queue.take(written);
-        assert.include(request, '"method":"tools/list"');
-        yield* Fiber.interrupt(fiber);
-        const cancelled = yield* Queue.take(written);
-        assert.include(cancelled, '"method":"notifications/cancelled"');
-        // A second request after the interrupt still round-trips through the
-        // same protocol: the interrupted waiter left no residue that could
-        // shadow the new id, and the router keeps running.
-        const answered = yield* Deferred.make<void>();
-        const echo = yield* Effect.forkScoped(
-          rpc["tools/list"]({}).pipe(Effect.tap(() => Deferred.succeed(answered, undefined)))
-        );
-        const second = yield* Queue.take(written);
-        assert.include(second, '"method":"tools/list"');
-        yield* Fiber.interrupt(echo);
-        assert.isFalse(yield* Deferred.isDone(answered));
-      })
-    )
+      });
+      const protocol = yield* Layer.build(
+        layerProtocolHttp(
+          McpHttpProtocolOptions.make({
+            url: "http://stub/mcp",
+            headers: {
+              authorization: "Bearer test-token",
+              [MCP_METHOD_HEADER]: "tools/call",
+              accept: "text/plain",
+            },
+          })
+        ).pipe(Layer.provide(Layer.succeed(HttpClient.HttpClient, recordingClient)))
+      );
+      yield* connect.pipe(Effect.provideContext(protocol));
+      const [headers] = seen;
+      assert.strictEqual(headers?.authorization, "Bearer test-token");
+      assert.strictEqual(headers?.[MCP_METHOD_HEADER.toLowerCase()], "server/discover");
+      assert.strictEqual(headers?.[MCP_PROTOCOL_VERSION_HEADER.toLowerCase()], "2026-07-28");
+      assert.strictEqual(headers?.accept, "application/json, text/event-stream");
+    })
   );
 });

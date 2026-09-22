@@ -312,18 +312,16 @@ describe("sanitizedToolkit", () => {
 
   layer(layerConformanceHttp(fixtureHost))("on a 2026-only host over streamable HTTP", (it) => {
     it.effect("dispatches tools/call on a 2026-only host with McpRequestContext and no McpServerClient", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          // The stateless transport provides `McpRequestContext` only; the
-          // dual-read still yields a caller (the per-POST client id) and never a
-          // session, whatever headers the POST carried.
-          const { rpc } = yield* connectHttp();
-          const result = yield* rpc["tools/call"]({ name: "caller_report", arguments: {} });
+      Effect.gen(function* () {
+        // The stateless transport provides `McpRequestContext` only; the
+        // dual-read still yields a caller (the per-POST client id) and never a
+        // session, whatever headers the POST carried.
+        const { rpc } = yield* connectHttp();
+        const result = yield* rpc["tools/call"]({ name: "caller_report", arguments: {} });
 
-          assert.notStrictEqual(result.isError, true);
-          assert.match(callerReport(result), /^client=\d+;session=none$/);
-        })
-      )
+        assert.notStrictEqual(result.isError, true);
+        assert.match(callerReport(result), /^client=\d+;session=none$/);
+      })
     );
   });
 });

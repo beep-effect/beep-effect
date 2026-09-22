@@ -58,8 +58,9 @@ Status: `in-progress` (P1 started 2026-09-22 with PR 1; graduated 2026-09-22).
   validation errors by protocol revision"). The conformance port asserts the upstream wire
   shape.
 - Declared failures drop `structuredContent` (it must conform to the advertised
-  `outputSchema`); the encoded failure travels in `content[].text`. `api_key_required` keeps
-  `structuredContent` because the envelope is the tool's `failureMode: "return"` value. The
+  `outputSchema`); the encoded failure travels in `content[].text`. `api_key_required` follows the
+  same rule (review round 2): a non-error result whose envelope is in `content[].text` only,
+  since the tool's `outputSchema` describes its success value. The
   one host test that asserted the old shape (`gov-legal-mcp` "returns only the package-local
   sanitized failure envelope") now decodes the envelope from `content[].text`; host sources
   are untouched in PR 1.
