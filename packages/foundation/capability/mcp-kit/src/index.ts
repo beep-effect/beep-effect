@@ -15,7 +15,8 @@
 
 /**
  * The `api_key_required` envelope: a typed `failureMode: "return"` tool
- * failure for sources whose credential is absent at call time.
+ * failure for sources whose credential is absent at call time, and the named
+ * translator that keeps it a non-error `CallToolResult`.
  *
  * @since 0.0.0
  * @category errors
@@ -31,7 +32,8 @@ export * from "./ApiKeyRequired.ts";
  */
 export * from "./FieldTier.ts";
 /**
- * Request-local initialized MCP caller identity populated during toolkit dispatch.
+ * Request-local MCP caller identity (transport facts) and the product-neutral
+ * dispatch anchor, both propagated during toolkit dispatch.
  *
  * @since 0.0.0
  * @category services
@@ -80,9 +82,11 @@ export * from "./ToolAnnotations.ts";
  */
 export * from "./ToolkitComposition.ts";
 /**
- * Current `@beep/mcp-kit` package version.
+ * Kit pins: the package version, the MCP protocol revision every kit host
+ * serves, and the protocol list hosts pass to `McpServer.layerStdio` /
+ * `McpServer.layerHttp`.
  *
  * @category constants
  * @since 0.0.0
  */
-export { VERSION } from "./Version.ts";
+export { MCP_PROTOCOL_VERSION, statelessMcpProtocols, VERSION } from "./Version.ts";

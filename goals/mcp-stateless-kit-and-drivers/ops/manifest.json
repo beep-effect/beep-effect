@@ -60,7 +60,8 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress",
+      "exit": "PR 1 (kit rebase, @beep/mcp-kit/client, conformance port) published 2026-09-22; PR 2-4 pending."
     },
     {
       "id": "P2",

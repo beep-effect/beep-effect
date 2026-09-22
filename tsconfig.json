@@ -2152,6 +2152,15 @@
       "@beep/epistemic-use-cases/ClaimEvidenceReview": [
         "./packages/epistemic/use-cases/src/ClaimEvidenceReview/index.ts"
       ],
+      "@beep/mcp-kit/client": [
+        "./packages/foundation/capability/mcp-kit/src/client.ts"
+      ],
+      "@beep/mcp-kit/client.node": [
+        "./packages/foundation/capability/mcp-kit/src/client.node.ts"
+      ],
+      "@beep/mcp-kit/test/Conformance": [
+        "./packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts"
+      ],
       "@beep/test-runner": [
         "./packages/tooling/test-kit/test-runner/src/index.ts"
       ],

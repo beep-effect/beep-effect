@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-09-22T16:36:45.165Z",
+  "generatedAt": "2026-09-22T17:52:23.043Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 18,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 117,
-    "publicModules": 2867,
-    "publicExports": 20250,
+    "publicModules": 2869,
+    "publicExports": 20298,
     "openModules": 377,
     "openExports": 3103,
     "missingExportExamples": 5,
@@ -127600,9 +127600,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 10,
-        "publicModuleCount": 10,
-        "publicExportCount": 64
+        "sourceFileCount": 12,
+        "publicModuleCount": 12,
+        "publicExportCount": 112
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -127664,7 +127664,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 2,
+          "exportCount": 5,
           "remediationStatus": "open"
         },
         {
@@ -127712,7 +127712,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 2,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -127846,13 +127846,35 @@
           "remediationStatus": "open"
         },
         {
-          "docKind": "jsdoc",
+          "docKind": "packageDocumentation",
           "filePath": "src/Version.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/Version.ts",
           "line": 1,
           "anchor": "packages-foundation-capability-mcp-kit-src-version-ts-1-module",
           "currentTags": [
-            "@category",
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/client.node.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.node.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-node-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
             "@since"
           ],
           "missingRequiredTags": [],
@@ -127865,6 +127887,28 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 1,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 39,
           "remediationStatus": "resolved"
         },
         {
@@ -127900,8 +127944,8 @@
           "exportKind": "class",
           "filePath": "src/ApiKeyRequired.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
-          "line": 68,
-          "anchor": "packages-foundation-capability-mcp-kit-src-apikeyrequired-ts-68-apikeyrequiredfailure",
+          "line": 75,
+          "anchor": "packages-foundation-capability-mcp-kit-src-apikeyrequired-ts-75-apikeyrequiredfailure",
           "currentTags": [
             "@category",
             "@since"
@@ -127928,8 +127972,8 @@
           "exportKind": "const",
           "filePath": "src/ApiKeyRequired.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
-          "line": 124,
-          "anchor": "packages-foundation-capability-mcp-kit-src-apikeyrequired-ts-124-apikeyrequiredfailure",
+          "line": 131,
+          "anchor": "packages-foundation-capability-mcp-kit-src-apikeyrequired-ts-131-apikeyrequiredfailure",
           "currentTags": [
             "@category",
             "@since"
@@ -127955,6 +127999,72 @@
             }
           ],
           "remediationStatus": "open"
+        },
+        {
+          "symbolName": "isApiKeyRequiredFailure",
+          "exportKind": "const",
+          "filePath": "src/ApiKeyRequired.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+          "line": 149,
+          "anchor": "packages-foundation-capability-mcp-kit-src-apikeyrequired-ts-149-isapikeyrequiredfailure",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolHandlerPayload",
+          "exportKind": "class",
+          "filePath": "src/ApiKeyRequired.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+          "line": 169,
+          "anchor": "packages-foundation-capability-mcp-kit-src-apikeyrequired-ts-169-toolhandlerpayload",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "translateApiKeyRequired",
+          "exportKind": "const",
+          "filePath": "src/ApiKeyRequired.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+          "line": 211,
+          "anchor": "packages-foundation-capability-mcp-kit-src-apikeyrequired-ts-211-translateapikeyrequired",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "FieldTierName",
@@ -128373,8 +128483,8 @@
           "exportKind": "class",
           "filePath": "src/McpCaller.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
-          "line": 42,
-          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-42-mcpcalleridentity",
+          "line": 44,
+          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-44-mcpcalleridentity",
           "currentTags": [
             "@category",
             "@since"
@@ -128406,8 +128516,8 @@
           "exportKind": "const",
           "filePath": "src/McpCaller.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
-          "line": 71,
-          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-71-currentmcpcaller",
+          "line": 76,
+          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-76-currentmcpcaller",
           "currentTags": [
             "@category",
             "@since"
@@ -128435,12 +128545,78 @@
           "remediationStatus": "open"
         },
         {
+          "symbolName": "McpDispatchAnchor",
+          "exportKind": "const",
+          "filePath": "src/McpCaller.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
+          "line": 99,
+          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-99-mcpdispatchanchor",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "McpDispatchAnchor",
+          "exportKind": "type",
+          "filePath": "src/McpCaller.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
+          "line": 122,
+          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-122-mcpdispatchanchor",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CurrentMcpDispatchAnchor",
+          "exportKind": "const",
+          "filePath": "src/McpCaller.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
+          "line": 141,
+          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-141-currentmcpdispatchanchor",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "defaultSanitizedSpanKeys",
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 58,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-58-defaultsanitizedspankeys",
+          "line": 70,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-70-defaultsanitizedspankeys",
           "currentTags": [
             "@category",
             "@since"
@@ -128467,8 +128643,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 83,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-83-sanitizetracerattributes",
+          "line": 95,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-95-sanitizetracerattributes",
           "currentTags": [
             "@category",
             "@since"
@@ -128500,8 +128676,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 172,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-172-withsanitizedtoolspan",
+          "line": 184,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-184-withsanitizedtoolspan",
           "currentTags": [
             "@category",
             "@since"
@@ -128538,8 +128714,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 260,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-260-withtoplevelobjectinputschemafortesting",
+          "line": 263,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-263-withtoplevelobjectinputschemafortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -128560,8 +128736,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 410,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-410-sanitizedtoolkit",
+          "line": 599,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-599-sanitizedtoolkit",
           "currentTags": [
             "@category",
             "@since"
@@ -129536,8 +129712,932 @@
           "exportKind": "const",
           "filePath": "src/Version.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/Version.ts",
-          "line": 15,
-          "anchor": "packages-foundation-capability-mcp-kit-src-version-ts-15-version",
+          "line": 26,
+          "anchor": "packages-foundation-capability-mcp-kit-src-version-ts-26-version",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MCP_PROTOCOL_VERSION",
+          "exportKind": "const",
+          "filePath": "src/Version.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/Version.ts",
+          "line": 44,
+          "anchor": "packages-foundation-capability-mcp-kit-src-version-ts-44-mcp-protocol-version",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "statelessMcpProtocols",
+          "exportKind": "const",
+          "filePath": "src/Version.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/Version.ts",
+          "line": 69,
+          "anchor": "packages-foundation-capability-mcp-kit-src-version-ts-69-statelessmcpprotocols",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerProtocolStdioCommand",
+          "exportKind": "const",
+          "filePath": "src/client.node.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.node.ts",
+          "line": 43,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-node-ts-43-layerprotocolstdiocommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MCP_PROTOCOL_VERSION_HEADER",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 59,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-59-mcp-protocol-version-header",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MCP_METHOD_HEADER",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 76,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-76-mcp-method-header",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MCP_NAME_HEADER",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 94,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-94-mcp-name-header",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PROTOCOL_VERSION_META_KEY",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 112,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-112-protocol-version-meta-key",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CLIENT_CAPABILITIES_META_KEY",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 129,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-129-client-capabilities-meta-key",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CLIENT_INFO_META_KEY",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 146,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-146-client-info-meta-key",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 166,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-166-unsupported-protocol-version-error-code",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SERVER_INFO_META_KEY",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 184,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-184-server-info-meta-key",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "McpClientOptions",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 213,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-213-mcpclientoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "JsonRpcError",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 250,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-250-jsonrpcerror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "JsonRpcId",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 275,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-275-jsonrpcid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "JsonRpcId",
+          "exportKind": "type",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 285,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-285-jsonrpcid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "JsonRpcMessage",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 305,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-305-jsonrpcmessage",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "JsonRpcMessageFromLine",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 334,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-334-jsonrpcmessagefromline",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "McpDiscoverResult",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 352,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-352-mcpdiscoverresult",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ServerDiscover",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 388,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-388-serverdiscover",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolsList",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 408,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-408-toolslist",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ToolsCall",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 429,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-429-toolscall",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PromptsList",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 450,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-450-promptslist",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PromptsGet",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 471,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-471-promptsget",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ResourcesRead",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 492,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-492-resourcesread",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "McpClientRpcs",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 517,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-517-mcpclientrpcs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "requestMetadata",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 545,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-545-requestmetadata",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "withRequestMetadata",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 568,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-568-withrequestmetadata",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "routingName",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 594,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-594-routingname",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "routingHeaders",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 632,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-632-routingheaders",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "parseServerSentEvents",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 659,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-659-parseserversentevents",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "decodeHttpMessages",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 697,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-697-decodehttpmessages",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "McpHttpExchange",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 730,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-730-mcphttpexchange",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "postJsonRpc",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 764,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-764-postjsonrpc",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "McpHttpProtocolOptions",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 829,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-829-mcphttpprotocoloptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerProtocolHttp",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 861,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-861-layerprotocolhttp",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "McpNdjsonTransport",
+          "exportKind": "interface",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 939,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-939-mcpndjsontransport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "decodeLines",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 975,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-975-decodelines",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerProtocolNdjson",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 999,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-999-layerprotocolndjson",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "McpRpcClient",
+          "exportKind": "type",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 1087,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1087-mcprpcclient",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "McpClientConnection",
+          "exportKind": "interface",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 1106,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1106-mcpclientconnection",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "connect",
+          "exportKind": "const",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 1158,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1158-connect",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "McpHttpError",
+          "exportKind": "type",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 1184,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1184-mcphttperror",
           "currentTags": [
             "@category",
             "@since"
@@ -129558,8 +130658,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/index.ts",
-          "line": 23,
-          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-23-export-from-apikeyrequired-ts",
+          "line": 24,
+          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-24-export-from-apikeyrequired-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -129580,8 +130680,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/index.ts",
-          "line": 32,
-          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-32-export-from-fieldtier-ts",
+          "line": 33,
+          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-33-export-from-fieldtier-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -129602,8 +130702,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/index.ts",
-          "line": 39,
-          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-39-export-from-mcpcaller-ts",
+          "line": 41,
+          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-41-export-from-mcpcaller-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -129624,8 +130724,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/index.ts",
-          "line": 47,
-          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-47-export-from-sanitizedspan-ts",
+          "line": 49,
+          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-49-export-from-sanitizedspan-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -129646,8 +130746,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/index.ts",
-          "line": 56,
-          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-56-export-from-sourceauth-ts",
+          "line": 58,
+          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-58-export-from-sourceauth-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -129668,8 +130768,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/index.ts",
-          "line": 65,
-          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-65-export-from-tiergate-ts",
+          "line": 67,
+          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-67-export-from-tiergate-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -129690,8 +130790,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/index.ts",
-          "line": 73,
-          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-73-export-from-toolannotations-ts",
+          "line": 75,
+          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-75-export-from-toolannotations-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -129712,8 +130812,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/index.ts",
-          "line": 81,
-          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-81-export-from-toolkitcomposition-ts",
+          "line": 83,
+          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-83-export-from-toolkitcomposition-ts",
           "currentTags": [
             "@since",
             "@category"
@@ -129730,12 +130830,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export { VERSION } from \"./Version.ts\";",
+          "symbolName": "export { MCP_PROTOCOL_VERSION, statelessMcpProtocols, VERSION } from \"./Version.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/index.ts",
-          "line": 88,
-          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-88-export-version-from-version-ts",
+          "line": 92,
+          "anchor": "packages-foundation-capability-mcp-kit-src-index-ts-92-export-mcp-protocol-version-statelessmcpprotocols-version-from-version-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -429646,8 +430746,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 367,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-367-tsconfigsyncmode",
+          "line": 375,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-375-tsconfigsyncmode",
           "currentTags": [
             "@category",
             "@since"
@@ -429668,8 +430768,8 @@
           "exportKind": "type",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 407,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-407-tsconfigsyncmode",
+          "line": 415,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-415-tsconfigsyncmode",
           "currentTags": [
             "@category",
             "@since"
@@ -429690,8 +430790,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 391,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-391-tsconfigsyncmodematch",
+          "line": 399,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-399-tsconfigsyncmodematch",
           "currentTags": [
             "@category",
             "@since"
@@ -429712,8 +430812,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 423,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-423-tsconfigsyncmodeequivalence",
+          "line": 431,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-431-tsconfigsyncmodeequivalence",
           "currentTags": [
             "@category",
             "@since"
@@ -429734,8 +430834,8 @@
           "exportKind": "type",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 441,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-441-tsconfigsyncmodeflags",
+          "line": 449,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-449-tsconfigsyncmodeflags",
           "currentTags": [
             "@category",
             "@since"
@@ -429756,8 +430856,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 459,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-459-ischeckmodeflags",
+          "line": 467,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-467-ischeckmodeflags",
           "currentTags": [
             "@category",
             "@since"
@@ -429778,8 +430878,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 476,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-476-isdryrunmodeflags",
+          "line": 484,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-484-isdryrunmodeflags",
           "currentTags": [
             "@category",
             "@since"
@@ -429800,8 +430900,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 493,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-493-iswritemodeflags",
+          "line": 501,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-501-iswritemodeflags",
           "currentTags": [
             "@category",
             "@since"
@@ -429822,8 +430922,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 545,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-545-tsconfigsyncrunoptions",
+          "line": 553,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-553-tsconfigsyncrunoptions",
           "currentTags": [
             "@returns",
             "@category",
@@ -429845,8 +430945,8 @@
           "exportKind": "type",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 572,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-572-tsconfigsyncrunoptions",
+          "line": 580,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-580-tsconfigsyncrunoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -429867,8 +430967,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 590,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-590-tsconfigsyncsection",
+          "line": 598,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-598-tsconfigsyncsection",
           "currentTags": [
             "@category",
             "@since"
@@ -429889,8 +430989,8 @@
           "exportKind": "type",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 618,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-618-tsconfigsyncsection",
+          "line": 626,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-626-tsconfigsyncsection",
           "currentTags": [
             "@category",
             "@since"
@@ -429911,8 +431011,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 703,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-703-tsconfigsyncchange",
+          "line": 711,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-711-tsconfigsyncchange",
           "currentTags": [
             "@returns",
             "@category",
@@ -429934,8 +431034,8 @@
           "exportKind": "type",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 734,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-734-tsconfigsyncchange",
+          "line": 742,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-742-tsconfigsyncchange",
           "currentTags": [
             "@category",
             "@since"
@@ -429956,8 +431056,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 833,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-833-plannedfilechange",
+          "line": 841,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-841-plannedfilechange",
           "currentTags": [
             "@returns",
             "@category",
@@ -429979,8 +431079,8 @@
           "exportKind": "type",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 864,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-864-plannedfilechange",
+          "line": 872,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-872-plannedfilechange",
           "currentTags": [
             "@category",
             "@since"
@@ -430001,8 +431101,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 916,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-916-tsconfigsyncresult",
+          "line": 924,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-924-tsconfigsyncresult",
           "currentTags": [
             "@returns",
             "@category",
@@ -430024,8 +431124,8 @@
           "exportKind": "type",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 940,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-940-tsconfigsyncresult",
+          "line": 948,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-948-tsconfigsyncresult",
           "currentTags": [
             "@category",
             "@since"
@@ -430046,8 +431146,8 @@
           "exportKind": "class",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 958,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-958-workspacedescriptor",
+          "line": 966,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-966-workspacedescriptor",
           "currentTags": [
             "@category",
             "@since"
@@ -430068,8 +431168,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 992,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-992-jsonobject",
+          "line": 1000,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1000-jsonobject",
           "currentTags": [
             "@category",
             "@since"
@@ -430090,8 +431190,8 @@
           "exportKind": "type",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1013,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1013-jsonobject",
+          "line": 1021,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1021-jsonobject",
           "currentTags": [
             "@category",
             "@since"
@@ -430112,8 +431212,8 @@
           "exportKind": "class",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1049,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1049-tsconfigwithreferences",
+          "line": 1057,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1057-tsconfigwithreferences",
           "currentTags": [
             "@category",
             "@since"
@@ -430134,8 +431234,8 @@
           "exportKind": "class",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1074,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1074-tsconfigwithpaths",
+          "line": 1082,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1082-tsconfigwithpaths",
           "currentTags": [
             "@category",
             "@since"
@@ -430156,8 +431256,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1106,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1106-byworkspacerelativedirascending",
+          "line": 1114,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1114-byworkspacerelativedirascending",
           "currentTags": [
             "@category",
             "@since"
@@ -430178,8 +431278,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1143,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1143-byplannedchangefileascending",
+          "line": 1151,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1151-byplannedchangefileascending",
           "currentTags": [
             "@category",
             "@since"
@@ -430200,8 +431300,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1168,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1168-byplannedchangesectionascending",
+          "line": 1176,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1176-byplannedchangesectionascending",
           "currentTags": [
             "@category",
             "@since"
@@ -430222,8 +431322,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1193,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1193-byplannedchangeascending",
+          "line": 1201,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1201-byplannedchangeascending",
           "currentTags": [
             "@category",
             "@since"
@@ -430244,8 +431344,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1212,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1212-tsconfigsyncschemainternals",
+          "line": 1220,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1220-tsconfigsyncschemainternals",
           "currentTags": [
             "@category",
             "@since"
