@@ -97,6 +97,9 @@ const decodeToolErrorJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToo
 const decodeToolResultJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToolResult));
 const decodeCandidateClaimsJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgCandidateClaimsResult));
 const decodeCandidateClaimRows = S.decodeUnknownEffect(S.Array(PracticeKgCandidateClaimToolRow));
+const decodePracticeKgOptions = S.decodeEffect(PracticeKgOptions);
+const decodePracticeKgToolResult = S.decodeEffect(PracticeKgToolResult);
+const decodeUnknownPracticeKgToolResult = S.decodeUnknownEffect(PracticeKgToolResult);
 const declaredColumnNames = (columns: Readonly<Record<string, { readonly name: string }>>): ReadonlyArray<string> =>
   A.sort(
     A.map(R.values(columns), (column) => column.name),
@@ -468,14 +471,14 @@ describe("practice KG projections", () => {
       });
       expect(options.maxTextBytes).toBe(2_097_152);
       expect(options.bundleOut).toBeUndefined();
-      const decoded = yield* S.decodeEffect(PracticeKgOptions)({
+      const decoded = yield* decodePracticeKgOptions({
         corpusRoot: "/corpus",
         includeRefresh: false,
         overwrite: false,
         skipEmails: true,
       });
       expect(decoded.maxTextBytes).toBe(2_097_152);
-      const spineRow = yield* S.decodeEffect(PracticeKgToolResult)({
+      const spineRow = yield* decodePracticeKgToolResult({
         bundle_version: "2026-07-27-01",
         data: { columns: ["family"], rows: [["10008"]] },
         epistemic_status: "derived-from-official-records",
@@ -485,7 +488,7 @@ describe("practice KG projections", () => {
       });
       expect(spineRow.epistemic_status).toBe("derived-from-official-records");
       const rejected = yield* Effect.exit(
-        S.decodeUnknownEffect(PracticeKgToolResult)({
+        decodeUnknownPracticeKgToolResult({
           bundle_version: "2026-07-27-01",
           data: { columns: [], rows: [] },
           epistemic_status: "settled-fact",

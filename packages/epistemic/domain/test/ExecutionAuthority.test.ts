@@ -51,6 +51,13 @@ import type {
   ExecutionVerdict,
 } from "@beep/epistemic-domain";
 
+const decodeFrozenGrantSet = S.decodeEffect(FrozenGrantSet);
+const encodeFrozenGrantSet = S.encodeEffect(FrozenGrantSet);
+const decodeExecutionDecisionRecord = S.decodeEffect(ExecutionDecisionRecord);
+const encodeExecutionDecisionRecord = S.encodeEffect(ExecutionDecisionRecord);
+const decodeExecutionOutcomeRecord = S.decodeEffect(ExecutionOutcomeRecord);
+const encodeExecutionOutcomeRecord = S.encodeEffect(ExecutionOutcomeRecord);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: {
@@ -170,8 +177,8 @@ describe("ExecutionAuthority", () => {
 
     it.effect("reaches every evaluator denial reason distinctly, one axis per case", () =>
       Effect.gen(function* () {
-        const tamperedFrozen = yield* S.decodeEffect(FrozenGrantSet)({
-          ...(yield* S.encodeEffect(FrozenGrantSet)(frozen)),
+        const tamperedFrozen = yield* decodeFrozenGrantSet({
+          ...(yield* encodeFrozenGrantSet(frozen)),
           grants: [],
         });
         const verdictsByReason: Record<(typeof evaluatorDenialReasons)[number], ExecutionVerdict> = {
@@ -235,8 +242,8 @@ describe("ExecutionAuthority", () => {
         // The tampered set's grants would otherwise produce operation-not-granted;
         // the broken seal must win because a set that fails its own digest cannot
         // be trusted to answer any narrower question.
-        const tampered = yield* S.decodeEffect(FrozenGrantSet)({
-          ...(yield* S.encodeEffect(FrozenGrantSet)(frozen)),
+        const tampered = yield* decodeFrozenGrantSet({
+          ...(yield* encodeFrozenGrantSet(frozen)),
           grants: [],
         });
 
@@ -282,8 +289,8 @@ describe("ExecutionAuthority", () => {
       Effect.gen(function* () {
         expect(verifyFrozenGrantSetDigest(frozen)).toBe(true);
 
-        const tampered = yield* S.decodeEffect(FrozenGrantSet)({
-          ...(yield* S.encodeEffect(FrozenGrantSet)(frozen)),
+        const tampered = yield* decodeFrozenGrantSet({
+          ...(yield* encodeFrozenGrantSet(frozen)),
           policyRevision: "2.0.0",
         });
         expect(verifyFrozenGrantSetDigest(tampered)).toBe(false);
@@ -302,8 +309,8 @@ describe("ExecutionAuthority", () => {
     it.effect("rejects a tampered decision record keeping its old hash", () =>
       Effect.gen(function* () {
         const record = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
-        const tampered = yield* S.decodeEffect(ExecutionDecisionRecord)({
-          ...(yield* S.encodeEffect(ExecutionDecisionRecord)(record)),
+        const tampered = yield* decodeExecutionDecisionRecord({
+          ...(yield* encodeExecutionDecisionRecord(record)),
           audience: "local-workspace",
         });
 
@@ -325,8 +332,8 @@ describe("ExecutionAuthority", () => {
         const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
         const second = sealExecutionDecision(decisionContent({ seq: 1, prevHash: O.some(first.hash) }));
         const third = sealExecutionDecision(decisionContent({ seq: 2, prevHash: O.some(second.hash) }));
-        const tamperedSecond = yield* S.decodeEffect(ExecutionDecisionRecord)({
-          ...(yield* S.encodeEffect(ExecutionDecisionRecord)(second)),
+        const tamperedSecond = yield* decodeExecutionDecisionRecord({
+          ...(yield* encodeExecutionDecisionRecord(second)),
           destinationDigest: "0".repeat(64),
         });
 
@@ -391,8 +398,8 @@ describe("ExecutionAuthority", () => {
           runKey: ExecutionRunKey.make("b".repeat(64)),
           settlement: "completed",
         });
-        const tampered = yield* S.decodeEffect(ExecutionOutcomeRecord)({
-          ...(yield* S.encodeEffect(ExecutionOutcomeRecord)(outcome)),
+        const tampered = yield* decodeExecutionOutcomeRecord({
+          ...(yield* encodeExecutionOutcomeRecord(outcome)),
           settlement: "failed",
         });
 

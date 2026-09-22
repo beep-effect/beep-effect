@@ -23,6 +23,8 @@ import type { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Wor
 const WORKSPACE_TABLE_NAME = "workspace_workspace" as const;
 
 const encodeWorkspaceId = S.encodeEffect(WorkspaceIdentity.WorkspaceId);
+const decodeWorkspace = S.decodeEffect(Workspace);
+const decodeUnknownPosInt = S.decodeUnknownEffect(PosInt);
 
 const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
 
@@ -30,7 +32,7 @@ const publicIdFor = (id: PosInt): string => `${WORKSPACE_TABLE_NAME}_a${id}`;
 
 const baseWorkspaceEntity = Effect.fn("Workspace.WorkspaceVaultStore.baseWorkspaceEntity")(
   (id: PosInt, vaultRootPath: O.Option<WorkspaceVaultRootPath>) =>
-    S.decodeEffect(Workspace)({
+    decodeWorkspace({
       createdAt: id,
       createdByPrincipal: SYSTEM_PRINCIPAL,
       entityType: "WorkspaceWorkspace",
@@ -53,7 +55,7 @@ const baseWorkspaceEntity = Effect.fn("Workspace.WorkspaceVaultStore.baseWorkspa
 const workspaceIdToNumber = Effect.fn("Workspace.WorkspaceVaultStore.workspaceIdToNumber")(
   (workspaceId: WorkspaceIdentity.WorkspaceId) =>
     encodeWorkspaceId(workspaceId).pipe(
-      Effect.flatMap(S.decodeUnknownEffect(PosInt)),
+      Effect.flatMap(decodeUnknownPosInt),
       repositoryUnavailable("encode Workspace id")
     )
 );

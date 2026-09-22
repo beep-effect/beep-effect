@@ -13,6 +13,9 @@ import { Cause, ConfigProvider, Effect, Exit, Layer } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const decodeSinkDestination = S.decodeEffect(SinkDestination);
+const decodeExecutionGrant = S.decodeEffect(ExecutionGrant);
+
 const configLayer = (configuration: Readonly<Record<string, string>>) =>
   EpistemicConfigLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(configuration))));
 
@@ -97,7 +100,7 @@ describe("resolveSinkAudience", () => {
       ];
 
       for (const destination of loopback) {
-        expect(resolveSinkAudience(yield* S.decodeEffect(SinkDestination)(destination))).toBe("local-workspace");
+        expect(resolveSinkAudience(yield* decodeSinkDestination(destination))).toBe("local-workspace");
       }
     })
   );
@@ -108,7 +111,7 @@ describe("resolveSinkAudience", () => {
       const external = ["https://registry.example", "http://192.168.1.10/api", "https://localhost.attacker.example"];
 
       for (const destination of external) {
-        expect(resolveSinkAudience(yield* S.decodeEffect(SinkDestination)(destination))).toBe("external-network");
+        expect(resolveSinkAudience(yield* decodeSinkDestination(destination))).toBe("external-network");
       }
     })
   );
@@ -116,7 +119,7 @@ describe("resolveSinkAudience", () => {
   it.effect(
     "takes the stricter branch for unparseable destinations",
     Effect.fnUntraced(function* () {
-      expect(resolveSinkAudience(yield* S.decodeEffect(SinkDestination)("not a url"))).toBe("external-network");
+      expect(resolveSinkAudience(yield* decodeSinkDestination("not a url"))).toBe("external-network");
     })
   );
 });
@@ -131,7 +134,7 @@ describe("grant fixtures", () => {
     Effect.fnUntraced(function* () {
       // The acceptance test chains ledger rows against this digest, so a fixture
       // that drifts between runs would make the chain unreproducible.
-      const grant = yield* S.decodeEffect(ExecutionGrant)({
+      const grant = yield* decodeExecutionGrant({
         budget: { maxToolCalls: null },
         expiresAt: 86_400_000,
         operation: "ontology_publish_provenance",

@@ -22,6 +22,11 @@ const decodeWorkspaceIdentityThreadId = S.decodeEffect(WorkspaceIdentity.ThreadI
 
 const { InMemoryState, MessageEntityInput, ThreadEntityInput, TurnEntityInput } = ThreadStoreRepoTestSchemas;
 
+const encodeThreadEntityInput = S.encodeEffect(ThreadEntityInput);
+const encodeTurnEntityInput = S.encodeEffect(TurnEntityInput);
+const encodeMessageEntityInput = S.encodeEffect(MessageEntityInput);
+const encodeInMemoryState = S.encodeEffect(InMemoryState);
+
 const docOf = (value: string) => Document.make({ children: [P.make({ children: [Text.make({ value })] })] });
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(BunCrypto.layer));
 const makeTestThreadStore = makeInMemoryThreadStore().pipe(provideScopedLayer(CuidTestLayer));
@@ -291,7 +296,7 @@ describe("ThreadStore in-memory", () => {
 
   it.effect("keeps crispened construction schema encoded shapes stable", () =>
     Effect.gen(function* () {
-      const encodedThread = yield* S.encodeEffect(ThreadEntityInput)(
+      const encodedThread = yield* encodeThreadEntityInput(
         ThreadEntityInput.make({
           id: PosInt.make(1),
           title: "Matter intake",
@@ -300,7 +305,7 @@ describe("ThreadStore in-memory", () => {
       );
       expect(encodedThread).toEqual({ id: 1, title: "Matter intake", workspaceId: 2 });
 
-      const encodedTurn = yield* S.encodeEffect(TurnEntityInput)(
+      const encodedTurn = yield* encodeTurnEntityInput(
         TurnEntityInput.make({
           id: PosInt.make(3),
           messageId: PosInt.make(4),
@@ -311,7 +316,7 @@ describe("ThreadStore in-memory", () => {
       );
       expect(encodedTurn).toEqual({ id: 3, messageId: 4, parentTurnId: null, threadId: 1, turnIndex: 0 });
 
-      const encodedMessage = yield* S.encodeEffect(MessageEntityInput)(
+      const encodedMessage = yield* encodeMessageEntityInput(
         MessageEntityInput.make({
           content: docOf("Hello"),
           id: PosInt.make(4),
@@ -331,7 +336,7 @@ describe("ThreadStore in-memory", () => {
         turnId: 3,
       });
 
-      const encodedState = yield* S.encodeEffect(InMemoryState)(InMemoryState.make({}));
+      const encodedState = yield* encodeInMemoryState(InMemoryState.make({}));
       expect(encodedState.nextId).toBe(1);
       expect(HashMap.size(encodedState.messages)).toBe(0);
       expect(HashMap.size(encodedState.threads)).toBe(0);

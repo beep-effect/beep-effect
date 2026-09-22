@@ -29,6 +29,19 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
 
+const decodeMessageRole = S.decodeEffect(MessageRole);
+const encodeMessageRole = S.encodeEffect(MessageRole);
+const decodeUnknownWorkspaceEntity = S.decodeUnknownEffect(WorkspaceEntity);
+const encodeWorkspaceEntity = S.encodeEffect(WorkspaceEntity);
+const decodeWorkspaceVaultRootPath = S.decodeEffect(WorkspaceVaultRootPath);
+const decodeUnknownEmailArtifact = S.decodeUnknownEffect(EmailArtifact);
+const encodeEmailArtifact = S.encodeEffect(EmailArtifact);
+const decodeUnknownThread = S.decodeUnknownEffect(Thread);
+const decodeUnknownMessage = S.decodeUnknownEffect(Message);
+const decodeUnknownTurn = S.decodeUnknownEffect(Turn);
+const encodeTurn = S.encodeEffect(Turn);
+const decodeUnknownTurnItems = S.decodeUnknownEffect(TurnItems);
+
 const publicIdFor = (entityType: string, id: number) =>
   `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
 const schemaLawCases: ReadonlyArray<readonly [string, S.Codec<unknown>]> = [
@@ -92,8 +105,8 @@ describe("@beep/workspace-domain", () => {
     [MessageRole],
     ([role]) =>
       Effect.gen(function* () {
-        const decoded = yield* S.decodeEffect(MessageRole)(role);
-        const encoded = yield* S.encodeEffect(MessageRole)(decoded);
+        const decoded = yield* decodeMessageRole(role);
+        const encoded = yield* encodeMessageRole(decoded);
 
         expect(encoded).toBe(role);
         expect(["system", "user", "assistant", "agent", "tool"].includes(decoded)).toBe(true);
@@ -117,7 +130,7 @@ describe("@beep/workspace-domain", () => {
 
   it.effect("decodes and constructs a Workspace row", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(WorkspaceEntity)({
+      const decoded = yield* decodeUnknownWorkspaceEntity({
         ...baseEntityInput("WorkspaceWorkspace", 2),
         fixtureKey: "workspace.acme",
         name: "Acme Workspace",
@@ -137,28 +150,26 @@ describe("@beep/workspace-domain", () => {
 
   it.effect("rejects relative, tilde, and blank workspace vault roots", () =>
     Effect.gen(function* () {
-      const vaultExit = yield* Effect.exit(S.decodeEffect(WorkspaceVaultRootPath)("vault"));
-      const relativeExit = yield* Effect.exit(S.decodeEffect(WorkspaceVaultRootPath)("C:relative-vault"));
-      const tildeExit = yield* Effect.exit(S.decodeEffect(WorkspaceVaultRootPath)("~/Vault"));
-      const blankExit = yield* Effect.exit(S.decodeEffect(WorkspaceVaultRootPath)(" "));
+      const vaultExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("vault"));
+      const relativeExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("C:relative-vault"));
+      const tildeExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("~/Vault"));
+      const blankExit = yield* Effect.exit(decodeWorkspaceVaultRootPath(" "));
       expect(Exit.isFailure(vaultExit)).toBe(true);
       expect(Exit.isFailure(relativeExit)).toBe(true);
       expect(Exit.isFailure(tildeExit)).toBe(true);
       expect(Exit.isFailure(blankExit)).toBe(true);
-      expect(yield* S.decodeEffect(WorkspaceVaultRootPath)("C:\\Vault")).toBe("C:\\Vault");
+      expect(yield* decodeWorkspaceVaultRootPath("C:\\Vault")).toBe("C:\\Vault");
     })
   );
 
   it.effect("normalizes trailing separators on workspace vault roots but still rejects bare roots", () =>
     Effect.gen(function* () {
-      expect(yield* S.decodeEffect(WorkspaceVaultRootPath)("/home/user/vault1/")).toBe("/home/user/vault1");
-      expect(yield* S.decodeEffect(WorkspaceVaultRootPath)("/home/user/vault1///")).toBe("/home/user/vault1");
-      expect(yield* S.decodeEffect(WorkspaceVaultRootPath)("C:\\Vault\\")).toBe("C:\\Vault");
-      expect(yield* S.decodeEffect(WorkspaceVaultRootPath)("\\\\server\\share\\vault\\")).toBe(
-        "\\\\server\\share\\vault"
-      );
-      const rootExit = yield* Effect.exit(S.decodeEffect(WorkspaceVaultRootPath)("/"));
-      const driveExit = yield* Effect.exit(S.decodeEffect(WorkspaceVaultRootPath)("C:\\"));
+      expect(yield* decodeWorkspaceVaultRootPath("/home/user/vault1/")).toBe("/home/user/vault1");
+      expect(yield* decodeWorkspaceVaultRootPath("/home/user/vault1///")).toBe("/home/user/vault1");
+      expect(yield* decodeWorkspaceVaultRootPath("C:\\Vault\\")).toBe("C:\\Vault");
+      expect(yield* decodeWorkspaceVaultRootPath("\\\\server\\share\\vault\\")).toBe("\\\\server\\share\\vault");
+      const rootExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("/"));
+      const driveExit = yield* Effect.exit(decodeWorkspaceVaultRootPath("C:\\"));
       expect(Exit.isFailure(rootExit)).toBe(true);
       expect(Exit.isFailure(driveExit)).toBe(true);
     })
@@ -186,10 +197,8 @@ describe("@beep/workspace-domain", () => {
         to: [{ address: "agent@example.com" }],
       };
 
-      const encodedWorkspace = yield* S.encodeEffect(WorkspaceEntity)(
-        yield* S.decodeUnknownEffect(WorkspaceEntity)(workspaceWire)
-      );
-      const encodedEmail = yield* S.encodeEffect(EmailArtifact)(yield* S.decodeUnknownEffect(EmailArtifact)(emailWire));
+      const encodedWorkspace = yield* encodeWorkspaceEntity(yield* decodeUnknownWorkspaceEntity(workspaceWire));
+      const encodedEmail = yield* encodeEmailArtifact(yield* decodeUnknownEmailArtifact(emailWire));
       expect(encodedWorkspace).toStrictEqual(workspaceWire);
       expect(encodedEmail).toStrictEqual(emailWire);
     })
@@ -210,26 +219,26 @@ describe("@beep/workspace-domain", () => {
         _tag: "document",
         children: [{ _tag: "p", children: [{ _tag: "text", value: "Hello thread" }] }],
       };
-      const thread = yield* S.decodeUnknownEffect(Thread)({
+      const thread = yield* decodeUnknownThread({
         ...baseEntityInput("WorkspaceThread", 10),
         title: "Matter intake",
         workspaceId: 2,
       });
-      const message = yield* S.decodeUnknownEffect(Message)({
+      const message = yield* decodeUnknownMessage({
         ...baseEntityInput("WorkspaceMessage", 11),
         content: messageContent,
         role: "assistant",
         threadId: 10,
         turnId: 12,
       });
-      const rootTurn = yield* S.decodeUnknownEffect(Turn)({
+      const rootTurn = yield* decodeUnknownTurn({
         ...baseEntityInput("WorkspaceTurn", 12),
         items: [{ itemType: "message", messageId: 11 }],
         parentTurnId: null,
         threadId: 10,
         turnIndex: 0,
       });
-      const branchTurn = yield* S.decodeUnknownEffect(Turn)({
+      const branchTurn = yield* decodeUnknownTurn({
         ...baseEntityInput("WorkspaceTurn", 13),
         items: [{ itemType: "message", messageId: 11 }],
         parentTurnId: 12,
@@ -257,13 +266,13 @@ describe("@beep/workspace-domain", () => {
         threadId: 10,
         turnIndex: 0,
       };
-      const decoded = yield* S.decodeUnknownEffect(Turn)(turnWire);
+      const decoded = yield* decodeUnknownTurn(turnWire);
       const { parentTurnId: _parentTurnId, ...turnInput } = decoded;
       const constructed = Turn.make(turnInput);
 
       expect(constructed.parentTurnId).toEqual(O.none());
-      expect(yield* S.encodeEffect(Turn)(constructed)).toStrictEqual(turnWire);
-      const emptyItemsExit = yield* Effect.exit(S.decodeUnknownEffect(TurnItems)([]));
+      expect(yield* encodeTurn(constructed)).toStrictEqual(turnWire);
+      const emptyItemsExit = yield* Effect.exit(decodeUnknownTurnItems([]));
       expect(Exit.isFailure(emptyItemsExit)).toBe(true);
     })
   );

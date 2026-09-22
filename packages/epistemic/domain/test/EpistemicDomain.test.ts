@@ -30,6 +30,8 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEvidenceSpanResult = S.decodeResult(EvidenceSpan);
 const decodeTextAnchorResult = S.decodeResult(TextAnchor);
+const decodeUnknownCandidateClaim = S.decodeUnknownEffect(CandidateClaim);
+const decodeUnknownTurnFinalizationUsageAppend = S.decodeUnknownEffect(TurnFinalizationUsageAppend);
 
 const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, encoded: Schema["Encoded"]): void => {
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
@@ -175,7 +177,7 @@ describe("@beep/epistemic-domain", () => {
 
   it.effect("decodes and constructs a CandidateClaim row", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(CandidateClaim)({
+      const decoded = yield* decodeUnknownCandidateClaim({
         ...productEntityFixtureInput("EpistemicCandidateClaim", 3),
         fixtureKey: "claim.patentability",
         lifecycle: "candidate",
@@ -193,7 +195,7 @@ describe("@beep/epistemic-domain", () => {
 
   it.effect("appends a UsageRecord from turn-finalization activity", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(TurnFinalizationUsageAppend)({
+      const decoded = yield* decodeUnknownTurnFinalizationUsageAppend({
         ...productEntityFixtureInput("EpistemicUsageRecord", 7),
         activityId: 5,
         actor: systemPrincipal,

@@ -46,6 +46,8 @@ const encodeAssistantContentResult = S.encodeResult(AssistantContent);
 const encodeSkillResult = S.encodeResult(Skill);
 const encodeSkillFrontmatterResult = S.encodeResult(SkillFrontmatter);
 const encodeAgentMode = S.encodeEffect(AgentMode);
+const decodeUnknownAssistantBlockResult = S.decodeUnknownResult(AssistantBlock);
+const decodeInlineNodeResult = S.decodeResult(InlineNode);
 const TaggedAgent = Agent.toTagged();
 const decodeUnknownTaggedAgentResult = S.decodeUnknownResult(TaggedAgent);
 
@@ -262,8 +264,8 @@ describe("@beep/agents-domain", () => {
     const decoded = Result.getOrThrow(decodeUnknownAssistantContentResult(encoded));
 
     expect(Result.getOrThrow(encodeAssistantContentResult(decoded))).toStrictEqual(encoded);
-    const decodedBlock = S.decodeUnknownResult(AssistantBlock)(encoded.blocks[0]);
-    const decodedInline = S.decodeResult(InlineNode)({ type: "text", text: "Install" });
+    const decodedBlock = decodeUnknownAssistantBlockResult(encoded.blocks[0]);
+    const decodedInline = decodeInlineNodeResult({ type: "text", text: "Install" });
     expect(Result.isSuccess(decodedBlock) && AssistantBlock.is(decodedBlock.success)).toBe(true);
     expect(Result.isSuccess(decodedInline) && InlineNode.is(decodedInline.success)).toBe(true);
   });

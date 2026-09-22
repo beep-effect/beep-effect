@@ -27,6 +27,11 @@ const TurnEquivalence = S.toEquivalence(TurnModel);
 
 const WorkspaceEquivalence = S.toEquivalence(WorkspaceModel);
 
+const decodeUnknownThreadModel = S.decodeUnknownEffect(ThreadModel);
+const decodeUnknownMessageModel = S.decodeUnknownEffect(MessageModel);
+const decodeUnknownTurnModel = S.decodeUnknownEffect(TurnModel);
+const decodeUnknownWorkspaceModel = S.decodeUnknownEffect(WorkspaceModel);
+
 const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
 
 const expectBaseProjectionColumns = (table: typeof CandidateDraft.Table | typeof CandidateProject.Table) => {
@@ -109,7 +114,7 @@ describe("WorkspaceTables", () => {
   it.effect(
     "round-trips Thread, Turn, and Message rows through the converters",
     Effect.fnUntraced(function* () {
-      const thread = yield* S.decodeUnknownEffect(ThreadModel)({
+      const thread = yield* decodeUnknownThreadModel({
         ...productEntityFixtureInput("WorkspaceThread", 10),
         title: "Matter intake",
         workspaceId: 2,
@@ -122,7 +127,7 @@ describe("WorkspaceTables", () => {
       const roundTrippedThread = yield* Effect.fromResult(Thread.fromThreadRow({ ...threadInsert, id: 10 }));
       expect(roundTrippedThread.title).toBe("Matter intake");
 
-      const message = yield* S.decodeUnknownEffect(MessageModel)({
+      const message = yield* decodeUnknownMessageModel({
         ...productEntityFixtureInput("WorkspaceMessage", 20),
         content: { _tag: "document", children: [] },
         role: "user",
@@ -136,7 +141,7 @@ describe("WorkspaceTables", () => {
       const roundTrippedMessage = yield* Effect.fromResult(Message.fromMessageRow({ ...messageInsert, id: 20 }));
       expect(roundTrippedMessage.role).toBe("user");
 
-      const turn = yield* S.decodeUnknownEffect(TurnModel)({
+      const turn = yield* decodeUnknownTurnModel({
         ...productEntityFixtureInput("WorkspaceTurn", 30),
         items: [{ itemType: "message", messageId: 20 }],
         parentTurnId: null,
@@ -166,7 +171,7 @@ describe("WorkspaceTables", () => {
   it.effect(
     "round-trips Workspace rows through the converters",
     Effect.fnUntraced(function* () {
-      const workspace = yield* S.decodeUnknownEffect(WorkspaceModel)({
+      const workspace = yield* decodeUnknownWorkspaceModel({
         ...productEntityFixtureInput("WorkspaceWorkspace", 40),
         fixtureKey: "workspace.default",
         name: "Default Workspace",

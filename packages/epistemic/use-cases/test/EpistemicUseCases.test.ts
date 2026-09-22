@@ -15,9 +15,12 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const sameClaimProjectionView = S.toEquivalence(ClaimProjectionView);
+const decodeUnknownCandidateClaim = S.decodeUnknownEffect(CandidateClaim);
+const encodeClaimProjectionOutput = S.encodeEffect(ClaimProjection.outputSchema);
+const decodeClaimProjectionOutput = S.decodeEffect(ClaimProjection.outputSchema);
 
 const makeCandidate = (id: number, fixtureKey: string, lifecycle: string) =>
-  S.decodeUnknownEffect(CandidateClaim)({
+  decodeUnknownCandidateClaim({
     ...productEntityFixtureInput("EpistemicCandidateClaim", id),
     fixtureKey,
     lifecycle,
@@ -126,7 +129,7 @@ describe("@beep/epistemic-use-cases", () => {
 
       const view1 = projectClaims(authority);
       const view2 = projectClaims(authority);
-      const encoded = yield* S.encodeEffect(ClaimProjection.outputSchema)(view1);
+      const encoded = yield* encodeClaimProjectionOutput(view1);
 
       expect(view1.total).toBe(3);
       expect(view1.counts.candidate).toBe(1);
@@ -152,8 +155,8 @@ describe("@beep/epistemic-use-cases", () => {
     { authority: ClaimProjection.inputSchema },
     Effect.fnUntraced(function* ({ authority }) {
       const view = projectClaims(authority);
-      const encoded = yield* S.encodeEffect(ClaimProjection.outputSchema)(view);
-      const decoded = yield* S.decodeEffect(ClaimProjection.outputSchema)(encoded);
+      const encoded = yield* encodeClaimProjectionOutput(view);
+      const decoded = yield* decodeClaimProjectionOutput(encoded);
 
       expect(encoded.total).toBe(A.length(authority));
       for (const state of ClaimLifecycle.Options) {

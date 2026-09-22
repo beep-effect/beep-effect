@@ -9,6 +9,12 @@ import * as S from "effect/Schema";
 
 const decodeUnknownRecordEdgeFactOption = S.decodeUnknownOption(RecordEdgeFact);
 const decodeUnknownSupersedeEdgeFactOption = S.decodeUnknownOption(SupersedeEdgeFact);
+const decodeUnknownRecordEdgeFact = S.decodeUnknownEffect(RecordEdgeFact);
+const encodeRecordEdgeFact = S.encodeEffect(RecordEdgeFact);
+const decodeUnknownSupersedeEdgeFact = S.decodeUnknownEffect(SupersedeEdgeFact);
+const encodeSupersedeEdgeFact = S.encodeEffect(SupersedeEdgeFact);
+const decodeEdgeAsOfQuery = S.decodeEffect(EdgeAsOfQuery);
+const encodeEdgeAsOfQuery = S.encodeEffect(EdgeAsOfQuery);
 
 const identity = {
   evidenceScope: null,
@@ -65,29 +71,29 @@ const expectOrgScopeFailure = (exit: Exit.Exit<unknown, S.SchemaError>) => {
 describe("@beep/epistemic-use-cases edge authority commands", () => {
   it.effect("round-trips RecordEdgeFact through its epoch-millis encoding", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(RecordEdgeFact)(recordEncoded);
+      const decoded = yield* decodeUnknownRecordEdgeFact(recordEncoded);
 
       expect(O.isNone(decoded.validTo)).toBe(true);
       expect(decoded.identity.relation).toBe("supports");
-      expect(yield* S.encodeEffect(RecordEdgeFact)(decoded)).toStrictEqual(recordEncoded);
+      expect(yield* encodeRecordEdgeFact(decoded)).toStrictEqual(recordEncoded);
     })
   );
 
   it.effect("round-trips SupersedeEdgeFact including the closed valid interval", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(SupersedeEdgeFact)(supersedeEncoded);
+      const decoded = yield* decodeUnknownSupersedeEdgeFact(supersedeEncoded);
 
       expect(decoded.expectedVersion).toBe(1);
       expect(O.isSome(decoded.validTo)).toBe(true);
-      expect(yield* S.encodeEffect(SupersedeEdgeFact)(decoded)).toStrictEqual(supersedeEncoded);
+      expect(yield* encodeSupersedeEdgeFact(decoded)).toStrictEqual(supersedeEncoded);
     })
   );
 
   it.effect("round-trips EdgeAsOfQuery on both axes", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(EdgeAsOfQuery)(asOfEncoded);
+      const decoded = yield* decodeEdgeAsOfQuery(asOfEncoded);
 
-      expect(yield* S.encodeEffect(EdgeAsOfQuery)(decoded)).toStrictEqual(asOfEncoded);
+      expect(yield* encodeEdgeAsOfQuery(decoded)).toStrictEqual(asOfEncoded);
     })
   );
 
@@ -106,11 +112,11 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
     "round-trips schema-derived as-of queries without changing the encoded shape",
     { query: EdgeAsOfQuery },
     Effect.fnUntraced(function* ({ query }) {
-      const encoded = yield* S.encodeEffect(EdgeAsOfQuery)(query);
-      const decoded = yield* S.decodeEffect(EdgeAsOfQuery)(encoded);
+      const encoded = yield* encodeEdgeAsOfQuery(query);
+      const decoded = yield* decodeEdgeAsOfQuery(encoded);
 
       // Both axes survive the millis boundary for every generated instant, not just the fixture.
-      expect(yield* S.encodeEffect(EdgeAsOfQuery)(decoded)).toStrictEqual(encoded);
+      expect(yield* encodeEdgeAsOfQuery(decoded)).toStrictEqual(encoded);
       expect(typeof encoded.knownAt).toBe("number");
       expect(typeof encoded.validAt).toBe("number");
 
@@ -124,7 +130,7 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
       const mismatched = { ...recordEncoded, identity: { ...identity, orgScope: "2" } };
 
       expect(O.isNone(decodeUnknownRecordEdgeFactOption(mismatched))).toBe(true);
-      expectOrgScopeFailure(yield* Effect.exit(S.decodeUnknownEffect(RecordEdgeFact)(mismatched)));
+      expectOrgScopeFailure(yield* Effect.exit(decodeUnknownRecordEdgeFact(mismatched)));
     })
   );
 
@@ -133,7 +139,7 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
       const mismatched = { ...supersedeEncoded, identity: { ...identity, orgScope: "2" } };
 
       expect(O.isNone(decodeUnknownSupersedeEdgeFactOption(mismatched))).toBe(true);
-      expectOrgScopeFailure(yield* Effect.exit(S.decodeUnknownEffect(SupersedeEdgeFact)(mismatched)));
+      expectOrgScopeFailure(yield* Effect.exit(decodeUnknownSupersedeEdgeFact(mismatched)));
     })
   );
 

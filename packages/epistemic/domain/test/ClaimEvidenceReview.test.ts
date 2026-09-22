@@ -20,6 +20,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const encodeClaimEvidenceReview = S.encodeEffect(ClaimEvidenceReview);
+const decodeUnknownClaimEvidenceReview = S.decodeUnknownEffect(ClaimEvidenceReview);
+
 const sourceDigest = SourceTextDigest.make("sha256:1e7dc6d6c16565406afd121a89164b990879f5f47695e03b9c3fd0f07395a4ca");
 const basis = ClaimEvidenceBasis.make({
   claimRef: "claim:fact",
@@ -137,9 +140,9 @@ describe("claim evidence review applicability", () => {
   );
   it.effect("refuses an agent principal as a human reviewer", () =>
     Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(ClaimEvidenceReview)(review);
+      const encoded = yield* encodeClaimEvidenceReview(review);
       const exit = yield* Effect.exit(
-        S.decodeUnknownEffect(ClaimEvidenceReview)({
+        decodeUnknownClaimEvidenceReview({
           ...encoded,
           reviewedBy: { kind: "Agent", agentId: 1 },
         })

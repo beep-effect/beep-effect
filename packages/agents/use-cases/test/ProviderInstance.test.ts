@@ -25,9 +25,10 @@ const missingId = Agents.ProviderInstanceId.make(99);
 const probedAt = DateTime.makeUnsafe("2026-07-12T00:00:00.000Z");
 const isProviderInstanceNotFound = S.is(ProviderInstanceNotFound);
 const isProviderUnauthenticated = S.is(ProviderUnauthenticated);
+const decodeUnknownProviderInstance = S.decodeUnknownEffect(Domain.ProviderInstance);
 
 const makeInstance = (kind: Domain.ProviderKind = "claude") =>
-  S.decodeUnknownEffect(Domain.ProviderInstance)({
+  decodeUnknownProviderInstance({
     ...productEntityFixtureInput("AgentsProviderInstance", 1),
     binaryPath: kind === "claude" ? "/usr/bin/claude" : "/usr/bin/codex",
     envVars: {},
