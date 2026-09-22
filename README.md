@@ -2,7 +2,6 @@
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/beep-effect/beep-effect)
 [![Greptile: The War on Bugs](https://www.greptile.com/badge.svg)](https://www.greptile.com/?utm_source=oss_badge&utm_medium=readme&utm_campaign=greptile_for_open_source)
-![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/beep-effect/beep-effect?utm_source=oss&utm_medium=github&utm_campaign=beep-effect%2Fbeep-effect&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 This repository is a trauma response with dependency injection.
 
