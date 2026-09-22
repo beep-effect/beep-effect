@@ -1,5 +1,23 @@
 # r30-cli-commands-l-q-github-check-lane-outcome
 
+## Reused-run payload correction, 2026-09-21
+
+A bounded source audit at `6db45e9d9182bc5d8f0fbae07b6fbe7727179559`
+found that the current reused-run constructor at `Tasks.ts:1983–2012` also
+supplies `commandText: O.some(commandText(lane.step.command, lane.step.args))`.
+Preserve that field when constructing the migrated result and when encoding its
+`QualityTaskLaneRun`. Keep the actual lane command and arguments. The report
+schema declares `commandText: OptionalLaneRunString` at
+`Quality.schemas.ts:1304`. Yeet reads this field as a repair-command fallback
+at `IssueParser.ts:370` and `Verdict.ts:743`.
+
+Add an assertion that active reuse retains the command text in the returned
+lane report and journal. Keep the existing absent timing and exit-code fields
+and `inputDigest: None`. This correction changes no qualification, target
+shape, or status. The rest of the design retains its historical source binding
+until its remaining consumers and policy references are audited. This is P2
+evidence, with no independent-review or implementation credit.
+
 **Current source-forward binding (P2 only)**
 
 Revalidated against HEAD `4509872869eb87071250c67717769260f850bcf5` and merged main
@@ -90,7 +108,7 @@ setter, mutable Ref, or durable storage for these bits. `runGithubCheckLane`
 returns the carrier and the wave folds its results once in declaration order.
 
 The active-reuse writer at1722–1737 returns the original lane and session,
-`Some(QualityTaskLaneRun.make({ id, label, status: "reused", inputDigest: None }))`,
+`Some(QualityTaskLaneRun.make({ id, label, status: "reused", inputDigest: None, commandText: Some(actual lane command) }))`,
 empty failures, and `true/false`. The execution writer at1740–1757 runs one
 lane through `collectQualityTaskLaneRuns`, takes `A.head(result.report.lanes)`,
 retains all failures, and returns `false` plus the conjunction of nonempty
@@ -240,11 +258,11 @@ The view adds no I/O and never recomputes the session or report payload.
 | --- | --- |
 | `Quality.schemas.ts:8–24,954–967,1108–1233` | Define/document the one new contribution kit and type in the existing role. Reuse the current lane, run-status, red-decision, and lane-run schemas. No existing literal values or schema fields change. |
 | `Tasks.ts:8–29,87–120,1697–1709` | Add the Tasks identity composer and the existing schema runtime imports. Replace only the private result declaration with the complete four-field class. Add the pure derived view beside it. No new carrier export. |
-| `Tasks.ts:1723–1737` | Return the class with the exact original lane/session, reused run construction, inputDigest None, and empty failure array. Delete only the two flag writes; preserve preparation, R27 decision, logging, and active bypass. |
+| `Tasks.ts:1723–1737` | Return the class with the exact original lane/session, reused run construction, inputDigest None, commandText Some(actual lane command), and empty failure array. Delete only the two flag writes; preserve preparation, R27 decision, logging, and active bypass. |
 | `Tasks.ts:1740–1757` | Retain execution log, singleton collector input and observer, optional first run, original result failures, and original session/lane. Construct the four-field carrier; delete flag writes. The former stop predicate moves into the one derived view, with identical Option/nonempty semantics. |
 | `Tasks.ts:1760–1779` | Helper becomes the executed non-stopping contribution's proof attempt. Delete the reused side of its OR guard. Retain the independent nonempty-failure return (imprecise failures), complete session matching, duration Option fallback0, persist call, and caught warning. Its only caller dispatches via the contribution literal after journaling/stop accumulation. |
 | `Tasks.ts:1816–1822` | Keep concurrent `Effect.forEach` and returned declaration order. For each result derive contribution once. Replace reused-bit bookkeeping with exhaustive contribution matching: reused appends its lane id; ran/stop retain the existing array. No I/O moves into this mapping. |
-| `Tasks.ts:1823–1829` | Keep optional run append/await before laneRuns append; keep failure append next. Set the stop latch by exhaustive matching: stop uses existing `stoppedAfterRed || failFast`; reused/ran retain latch. Last, match contribution to no-op for reused/stop and existing proof helper for ran. Never return/continue early before the common journal and failure work. |
+| `Tasks.ts:1823–1829` | Keep optional run append/await before laneRuns append; keep failure append next. Set the stop latch by exhaustive matching: stop uses existing `stoppedAfterRed \|\| failFast`; reused/ran retain latch. Last, match contribution to no-op for reused/stop and existing proof helper for ran. Never return/continue early before the common journal and failure work. |
 | `Tasks.ts:1794–1815,1832–1851,1888–1965` | Preserve chunk width `Math.max(1, concurrency)`, stopped-tail journal, accumulated result fields, skipped/reused/failed/passed report precedence, inter-wave stopping, firstRed and skipped counts, and both report codecs. |
 | `Tasks.ts:1600–1695,1968–1995,2059–2074,3428` | Preserve lane run construction and timestamps/status/exitCode/red-decision projection, ignored concurrent observer versus default journaling observer, exact durable journal behavior, runner signature and default1, and existing test collector alias. |
 | `Quality.command.ts:667–687,898–915`; `internal/GithubChecks.ts` | Preserve actual CLI callers, evidence ordering, cheap-gates concurrency versus pre-push default, canonical lane IDs/step labels, required tier metadata and all gate policies. No planned source edits. |
@@ -271,7 +289,7 @@ change to R27's 4/3 qualification. The private bundle does not edit that documen
 | Existing check / invariant | Accounting |
 | --- | --- |
 | Two Boolean declarations1707–1708 and paired assignments1735–1736/1753–1756 | Remove two carrier bits and their four assignment slots. The E1 exclusion becomes the three-literal domain. No compatibility bit object survives. |
-| `outcome.reused || nonempty(outcome.failures)` at1763 | Delete the compound reused-or-failed check. Literal dispatch at the existing call position excludes reused/stop contributions; the helper retains its failure-only exclusion for ran. This removes Boolean reconstruction while preserving two separate proof safety reasons. |
+| `outcome.reused \|\| nonempty(outcome.failures)` at1763 | Delete the compound reused-or-failed check. Literal dispatch at the existing call position excludes reused/stop contributions; the helper retains its failure-only exclusion for ran. This removes Boolean reconstruction while preserving two separate proof safety reasons. |
 | `if (outcome.reused)` at1820 | Remove the Boolean gate and use the exhaustive contribution match for attribution. Bookkeeping remains; the branch is not claimed as eliminated work. |
 | `failFast && outcome.stopAfterRed` at1828 | Remove the outcome Boolean read and its independent state channel; one literal stop case updates the existing policy latch. Keep failure policy and prior-latch behavior. |
 | Nonempty failures plus optional red decision at1755–1756 | Relocate once into the derived view; do not claim this legitimate domain classification disappeared. No new correlation checker is added. |
@@ -291,7 +309,7 @@ The carrier and contribution stay inside the executor. No JSON codec sees the
 new literal or carrier. Keep `github-check-run/v1`, `quality-task-lane-run/v1`,
 and `yeet-lane-proofs/v2` byte contracts and accepted legitimate payloads intact.
 The four payload fields pass through unchanged; all nested run status, timing,
-exitCode, inputDigest, scheduling decision, session records/identities/path/mode,
+exitCode, inputDigest, commandText, scheduling decision, session records/identities/path/mode,
 and failure label/command/exitCode remain exact. Do not map stop to a new report
 status, turn ran into passed, or strip fields to obtain a cleaner union.
 

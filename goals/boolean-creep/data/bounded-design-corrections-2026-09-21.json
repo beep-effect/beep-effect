@@ -1,0 +1,215 @@
+{
+  "schemaVersion": "boolean-creep-bounded-corrections/v1",
+  "sourceSha": "6db45e9d9182bc5d8f0fbae07b6fbe7727179559",
+  "date": "2026-09-21",
+  "scope": "Five bounded design corrections and one supported inventory note/citation correction; not five completed design refreshes.",
+  "inventory": {
+    "beforeArchive": "history/inventory/2026-09-21-pre-bounded-corrections.jsonl",
+    "beforeSha256": "03a787218e9baf186e71cdfc00474b46df49b338281764f10d13fa43b2c0bbbe",
+    "afterSha256": "3b2fff6e2b08502cdae05d92242a8493a7e70735f6c246c16c2aa10bac84012b",
+    "changedIds": ["r3-tooling-version-sync-category-filter-gates"],
+    "unchangedRows": 753,
+    "records": 754,
+    "qualified": 145,
+    "statusChanges": 0,
+    "afterSnapshot": "history/inventory/2026-09-21-pre-ack-boundary.jsonl"
+  },
+  "designs": [
+    {
+      "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "beforeArchive": "history/designs/2026-09-21-pre-bounded-corrections/r27-cli-commands-l-q-github-check-lane-proof-reuse.md",
+      "beforeSha256": "ff3ffee6a11f78f1a8e0d5e60a489298f5ea52ce02f2d0879ed434190f9cfc9c",
+      "afterSha256": "aee73c370e51703cf5e34071359a4e36d25b71d259a0b388810f117bff881f58"
+    },
+    {
+      "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+      "beforeArchive": "history/designs/2026-09-21-pre-bounded-corrections/r30-cli-commands-l-q-github-check-lane-outcome.md",
+      "beforeSha256": "4efd05b35eeb45f5d3e224f2c8783dcc6171d0f3fa306ea9048b08ce75dfbb59",
+      "afterSha256": "0bb888a9375f940437f1513ea357488125ff76697be0a625bc8c947e5326f837"
+    },
+    {
+      "id": "scheduler-admission-attempt-origin",
+      "beforeArchive": "history/designs/2026-09-21-pre-bounded-corrections/scheduler-admission-attempt-origin.md",
+      "beforeSha256": "b6a101a9c03b4a17795cc784c6420fd386dfeab7e25b5311c6708fa9b33ae1a4",
+      "afterSha256": "444d12dd3ed8bc58c9b651a541cb27eb173984de9904381432c6d9edf036eb48"
+    },
+    {
+      "id": "scheduler-promotion-tick-origin",
+      "beforeArchive": "history/designs/2026-09-21-pre-bounded-corrections/scheduler-promotion-tick-origin.md",
+      "beforeSha256": "ecac2137798dbc2f84892dd88c9e610f1a1abf497cb34f86af165f90142d6bee",
+      "afterSha256": "a4f114899dca8baf37fba062f245d0cab31dddd37e864dfb2e013bdf23ced46b"
+    },
+    {
+      "id": "r3-tooling-version-sync-category-filter-gates",
+      "beforeArchive": "history/designs/2026-09-21-pre-bounded-corrections/r3-tooling-version-sync-category-filter-gates.md",
+      "beforeSha256": "f0c2e60236361fd3db3561ca29eefe2fa104c6dc3060aeb2dbfb8c9b91824396",
+      "afterSha256": "2d35e6abda1cc1e3f8c8d1a5348af4d77be106bd66a4463d320f44645f46674a",
+      "afterSnapshot": "history/designs/2026-09-21-before-version-sync-refresh-r3-tooling-version-sync-category-filter-gates.md"
+    }
+  ],
+  "findings": [
+    {
+      "observedAt": "2026-09-22T00:26:42.840985+00:00",
+      "sourceSha": "6db45e9d9182bc5d8f0fbae07b6fbe7727179559",
+      "designBindingCompared": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+      "affectedDesignIds": [
+        "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+        "r30-cli-commands-l-q-github-check-lane-outcome"
+      ],
+      "finding": "Both retained reused-run constructor descriptions omit the now-present commandText payload. Preserve this payload in either migration.",
+      "evidence": {
+        "Tasks.ts": "The entire GithubCheckLaneOutcome through collector block differs from d68 only by commandText: O.some(commandText(lane.step.command, lane.step.args)) in reused run construction. The public wave runner is byte-identical.",
+        "Quality.schemas.ts": "QualityTaskLaneRun at1293-1309 includes commandText: OptionalLaneRunString; report carrier remains schema-backed.",
+        "LaneProofReuse.ts": "Whole file byte-identical to d68; proof identity, reuse and persistence policy unchanged.",
+        "Quality.test-kit.ts": "Only change since d68 is added TurboLaneDigest wildcard export; existing quality test exports retained.",
+        "consumers": [
+          "IssueParser.ts:370 uses lane.commandText as repair-command fallback.",
+          "Verdict.ts:743 uses lane.commandText as repair-command fallback."
+        ]
+      },
+      "requiredCorrection": "Add commandText: Some(commandText(lane.step.command, lane.step.args)) to both reused-run construction descriptions, preserve the existing report field and optional encoding, and include it in migration assertions. Do not drop it or replace it with a wrapper command.",
+      "sourceHashes": {
+        "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": "e813f6de7fde4bb1588dd8b87dce37e7d0bac03f5b9eafa84cd974df4b33320b",
+        "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts": "7497057f3ee31a4d069f415e5aaa9407b29a5594ad2bdf2f2f1bcd376210d293",
+        "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts": "db1cd299540d7f14cb4d4cdcbc35827da7506c84f78e4ef356626220334be785",
+        "packages/tooling/tool/cli/src/test/Quality.test-kit.ts": "5f1b6dad7ae20d94f7002db5834bee869019d933fe8bb48cc747299e2cf2dc81",
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueParser.ts": "f29bce08dd7001c49f806f9b79cdcea4f1acaa94c621e5b497f29aedc1f15523",
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts": "15a433e966df6aa8a1be309d3437173c1cc39d9eb48257a9af2b6a8304db6987"
+      },
+      "limits": [
+        "No tracked design edits while exact-head verification runs.",
+        "No new independent-review credit or completed full design audit.",
+        "No product implementation or new test execution."
+      ]
+    },
+    {
+      "sourceSha": "6db45e9d9182bc5d8f0fbae07b6fbe7727179559",
+      "observedAt": "2026-09-22T00:30:38.889765+00:00",
+      "designBindingCompared": "d68f1a11dd41579660a6c72f3d3e060d6b61352d",
+      "ids": [
+        "scheduler-admission-attempt-origin",
+        "scheduler-promotion-tick-origin"
+      ],
+      "ownerComparisons": [
+        {
+          "start": "interface AdmissionAttempt<",
+          "priorLine": 1732,
+          "currentLine": 1738,
+          "sha256": "8f7a5065543138d379b9b891a2e81b8e004da6174ee915e3c99bdc320766aa3e",
+          "byteIdentical": true
+        },
+        {
+          "start": "interface PromotionTickInfo {",
+          "priorLine": 1876,
+          "currentLine": 1882,
+          "sha256": "bc39d1aaa7223298dd653d3704040ebe20fde4f68de6ac8ab59c4c7db3f97555",
+          "byteIdentical": true
+        },
+        {
+          "start": "const waitForAdmission =",
+          "priorLine": 1990,
+          "currentLine": 1996,
+          "sha256": "3d966f413f8b8bdc2e851c4d321782cabb07aa3189331e59f29cbbc290c24f08",
+          "byteIdentical": true
+        }
+      ],
+      "qualification": "Both 4/3 retained; no Boolean/presence producer or reader changed.",
+      "sourceDelta": "Only the RunScope import and deadLeaseScopePlan change in QualityScheduler.ts since the design binding. Preserve recognized recorded proof-service names, ordinary scope derivation, live-unit conflict retention, recorded-unit mismatch retention, and the proof-service exception to disabled/unsupported scope handling.",
+      "fixture": "quality-scheduler.test.ts:4620 parameterizes existing apply-only stop test over agent-run-deadbeef.scope and beep-proof-deadbeef.service. Dry-run does not invoke systemctl; apply stops the exact unit for a dead lease.",
+      "sourceHashes": {
+        "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts": "7d928f0ea39eece5f7ecdffe7e0b00e2b86d55ba3c16c4f3b236da6b56e53930",
+        "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts": "c20ffb173ef94011dcdd5f3d286b4ced3fbc978d31f3d3ea24f0dd5e2470726e",
+        "packages/tooling/tool/cli/test/quality-scheduler.test.ts": "f09b9d7a532c75e29a87c6d54c03be660ca5f44fe7c0298b95d5aefcf057038c"
+      },
+      "limits": [
+        "No source implementation or independent P3 review.",
+        "Generic opaque OriginLease schema construction and current Effect-reference audit remain open.",
+        "Full fixture-location refresh remains open; targeted journal/runtime dependency deltas were inspected.",
+        "No separate tests executed; live full proof remains authoritative for execution results."
+      ],
+      "dependencyComparison": {
+        "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts": {
+          "sha256": "d1b9b413e4f7af5204fdf7643e36798f32eae85ba50cccafb17b78b1dc86631a",
+          "unchangedSinceDesignBinding": false
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts": {
+          "sha256": "88cc300876a7169ae905ad357fd645461b1acdfaf282114cbcd247c4fdea0e81",
+          "unchangedSinceDesignBinding": true
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/ProcessIdentity.ts": {
+          "sha256": "521d4f4c52e24ed9077222eabc45ba61767257285df42dcd959b8f4956dda356",
+          "unchangedSinceDesignBinding": true
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/RunScope.ts": {
+          "sha256": "e1627dbf986aaac7aa773819e879912d4f6cea391f29f36908c02ee48b631ce3",
+          "unchangedSinceDesignBinding": false
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts": {
+          "sha256": "c20ffb173ef94011dcdd5f3d286b4ced3fbc978d31f3d3ea24f0dd5e2470726e",
+          "unchangedSinceDesignBinding": false
+        },
+        "packages/tooling/tool/cli/src/internal/repo-run/index.ts": {
+          "sha256": "ca4decfbea6ae8723de13b4c1b5a28ab49d7d4a4ddf3dbd860eb2e0f11664c0e",
+          "unchangedSinceDesignBinding": false
+        },
+        "packages/tooling/tool/cli/src/test/RepoRun.test-kit.ts": {
+          "sha256": "88affd301f15a26a60bc1aa7d9fc6bb6a43dab0fcfb35a437ab6d28a6e5f5f8f",
+          "unchangedSinceDesignBinding": true
+        }
+      },
+      "dependencyFindings": [
+        "AdmissionJournal: repeat adoption election after claim creation prevents a stale snapshot from introducing a second adopter.",
+        "AdmissionJournal: nested Results distinguish caller Failure from own QualitySchedulerError; only own journal-lock-lost retries. acquireUseRelease protects acquisition/release from interruption.",
+        "RunScope: recognized BEEP_YEET_JOB_UNIT short-circuits attachment with an active record; preserve schema recognition and distinct service cleanup hint.",
+        "repo-run barrel adds ProcessTable export; existing scheduler exports retained.",
+        "QualityScheduler.schemas, ProcessIdentity and RepoRun.test-kit are unchanged since d68.",
+        "goals-packet-concurrency.test.ts:116-170 witnesses scheduler-shaped callback non-replay, own-generation retry, interrupted-operation cleanup and reacquisition; source inspected only."
+      ]
+    },
+    {
+      "observedAt": "2026-09-22T00:33:42.829749+00:00",
+      "sourceSha": "6db45e9d9182bc5d8f0fbae07b6fbe7727179559",
+      "id": "r3-tooling-version-sync-category-filter-gates",
+      "finding": "Retain 4/3 derived pair qualification, but replace obsolete five-category/32-subset preservation contract with six-category/64-subset contract including turbo. Each raw mode has six category flags plus independent skipNetwork, all default false.",
+      "locators": {
+        "CategorySelectionService.ts": "38-58 producer/reader; selectedCategories60-61",
+        "VersionSync.schemas.ts": "64 six literals; 423-426 default; 428-474 three mode classes",
+        "VersionSync.command.ts": "82 turboOnly CLI flag;108 forwarding",
+        "ResolverService.ts": "153-177 ordered six checks; turbo appended last",
+        "version-sync-effect.test.ts": "855-876 category selection fixture includes turbo-only"
+      },
+      "requiredDesignUpdates": [
+        "Preserve bun,node,docker,biome,effect,turbo declaration order.",
+        "Use existing VersionCategoryOptions for single collection derivation; keep service signatures.",
+        "Preserve 64 category subsets, 6 queried categories, 3 modes, both skipNetwork values: 2304 combinations.",
+        "Replace five-way OR deletion accounting with six-way OR.",
+        "Preserve Turbo resolver selection and all refactored resolver failure/report/network behavior.",
+        "Refresh canonical row note and E4 citation from48 to49 after integration; qualification and status unchanged."
+      ],
+      "sourceHashes": {
+        "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts": "92fa7e2021b055059e4a5b51d3f77b272d9b3af2c0e107550d24b5d3690ef7aa",
+        "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts": "403c1c089a7f763aaf590221984448fbd10c1394fc39c5fb1cbc2f8946c7c97a",
+        "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.command.ts": "7d2c4371cd691cb4aba8c5b548acfecd7cc31745a8995446cbb3a9a56b4d9354",
+        "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/ResolverService.ts": "76ebdb572714c5808590444826344b1869049ac51c900e6b8ffdc487f8c5d96d",
+        "packages/tooling/tool/cli/test/version-sync-effect.test.ts": "4e85a7466b2389841e4ede5b6a2e8aabfd66ef2a0b7199e48e62f5412e987a6b"
+      },
+      "limits": [
+        "No implementation or independent P3 review.",
+        "RootCatalog, TurboResolver, updater and full consumer/encoded-contract audit remain to complete the full design refresh.",
+        "No tracked edits while full proof runs."
+      ]
+    }
+  ],
+  "implementationStarted": false,
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "completedFullDesignRefreshes": [],
+  "fullProof": "Existing proof at sourceSha failed in unrelated @beep/ui prebuild TS2589 before coverage shards ran. Structural validation is separate.",
+  "verification": {
+    "inventory": "passed: 754 records, 754 unique ids",
+    "designCoverage": "passed: 145 qualified ids",
+    "packetDiffCheck": "passed",
+    "fullProof": "failed; not rerun for these edits",
+    "reflectionArtifacts": "passed: 0 blocking, 0 advisory"
+  }
+}
