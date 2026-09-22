@@ -85,6 +85,7 @@ const TurboRunSummary = S.Struct({
 
 type TurboRunSummary = typeof TurboRunSummary.Type;
 const decodeUnknownTurboRunSummary = S.decodeUnknownEffect(TurboRunSummary);
+const decodeRuntimeArguments = S.decodeUnknownEffect(S.Array(S.String));
 
 const runText = (command: ReadonlyArray<string>, cwd: string): Effect.Effect<string, CacheCommandError> =>
   Effect.try({
@@ -811,7 +812,7 @@ const cacheExecuteCommand = Command.make(
   "execute",
   { args: Argument.String("args").pipe(Argument.variadic) },
   ({ args }) =>
-    S.decodeUnknownEffect(S.Array(S.String))(args).pipe(
+    decodeRuntimeArguments(args).pipe(
       CacheCommandError.mapError("Runtime execution arguments must be strings."),
       Effect.flatMap((values) => runCacheRuntimeTasks(process.cwd(), values)),
       renderCacheFailure,

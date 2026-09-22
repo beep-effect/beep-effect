@@ -103,8 +103,9 @@ Command and wrapper exited zero; dependency/toolchain parity passed before
 and after. The retained trace is 13,542,137 compressed bytes and 246,818,555
 expanded bytes, within the existing bounds. Its 1,055,794 parsed syscall
 events have no unfinished calls. Direct write effects match the earlier
-observation: one device sink, four failed terminal opens, one `/tmp/biome`
-creation and nine already-existing results. Five 256-entry non-SQPOLL rings
+observation: one device sink, four failed terminal opens, one creation of the
+`biome` directory in the experiment's temporary root and nine already-existing
+results. Five 256-entry non-SQPOLL rings
 and AF_UNIX socket families preserve the prior source-correlated interpretation;
 SQEs remain undecoded and complete input closure is not claimed.
 
@@ -1272,7 +1273,8 @@ The compressed I/O attempt reached process exit but failed its 256 MiB expanded
 bound (275,653,259 bytes). Its rejected trace was reviewed with bounded streaming:
 the installed launcher invokes Node and `ldd --version`, then the installed Biome
 binary. Node submits io_uring operations that this trace does not decode. Biome
-creates `/tmp/biome`; repeated creation attempts return EEXIST. These are diagnostic
+creates a `biome` directory in the experiment's temporary root; repeated creation
+attempts return EEXIST. These are diagnostic
 observations, not complete input or side-effect evidence. The runtime boundary
 receipt binds the private diagnostics. A replacement admitted run uses a measured
 384 MiB expanded bound, preserving the 32 MiB compressed and 90-second limits.
@@ -1323,8 +1325,8 @@ experiment prerequisites are required before continuing current-code pilots.
 
 At `9480eaf486`, the refreshed dependency copy and activation preview completed.
 Three installed-lint temporary-state controls then exited zero with identical
-stdout/stderr bytes: `/tmp/biome` absent, an existing empty directory, and an
-existing sentinel file. Independent review verified stream hashes and retained
+stdout/stderr bytes: the temporary-root `biome` directory absent, an existing
+empty directory, and an existing sentinel file. Independent review verified stream hashes and retained
 state. The absent case creates an empty directory; the sentinel remains intact.
 The wrapper verified dependencies and toolchain before and after execution.
 This bounds three inputs only; shared-state concurrency and the relevance of the
@@ -1350,9 +1352,9 @@ The runtime boundary receipt retains this repeat separately from scheduling-only
 results. Indirect I/O and the replay side-effect contract remain open.
 
 
-Temporary-state contract review records `/tmp/biome` creation as an observed
-write. Within the experiment boundary, the temporary tree is private, disposable
-and discarded; the empty directory is not a retained consumer result or declared
+Temporary-state contract review records creation of the temporary-root `biome`
+directory as an observed write. Within the experiment boundary, the temporary
+tree is private, disposable and discarded; the empty directory is not a retained consumer result or declared
 task output. Its omission on a hypothetical hit is therefore non-semantic for
 that boundary. The three-state and overlapping-pair observations support this
 narrow disposition. They do not qualify persistent shared host temporary storage

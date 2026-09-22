@@ -127101,13 +127101,13 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:588:expect@8#1",
+      "id": "EV006:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:593:expect@8#1",
       "lens": "resource",
       "ruleId": "EV006",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
-      "line": 588,
-      "endLine": 588,
+      "line": 593,
+      "endLine": 593,
       "symbol": "expect",
       "occurrence": "v2:851e017fbea649c4f9ab8d271eed70739f048ceed3f4aed55c93674693f6f33d",
       "class": "hand-rolled-data-assertion",
@@ -155934,13 +155934,13 @@
       "status": "open"
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:570:checkEffect@28#1",
+      "id": "EV007:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:575:checkEffect@28#1",
       "lens": "detector",
       "ruleId": "EV007",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
-      "line": 570,
-      "endLine": 578,
+      "line": 575,
+      "endLine": 583,
       "symbol": "checkEffect",
       "occurrence": "v2:b4676505188054835da45cb79999d264d600b62cc8a1604d2d06951ca251a662",
       "class": "direct-arbitrary-check",

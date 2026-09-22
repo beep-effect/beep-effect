@@ -1580,3 +1580,20 @@ The generated Fallow check scripts require a populated base-ref environment.
 An unwrapped local invocation expanded an empty base and failed before analysis.
 For focused local diagnosis use `beep quality fallow audit --base origin/main`
 and the corresponding health command with explicit base, check and output flags.
+
+### 2026-09-22: root policy checks found inline schema compilation
+
+The full checkpoint proof reported six `beep(no-inline-schema-compile)` findings
+in the cache execute command and pilot receipt round-trip tests. Package lint and
+type checks had passed without exercising this root Oxlint policy. Hoisted the
+compiled argument decoder and receipt codecs to module scope, preserving their
+schemas and assertions. Run root Oxlint before queuing the next full proof.
+
+Main advanced during proof and conflicted only in the generated Effect/Vitest
+inventory. Stopped the superseded proof, merged main, regenerated the inventory
+with `bun run beep lint effect-vitest --write`, and pushed the merge before
+waiting for fresh proof. The prior run also reported a knowledge-reference
+failure. On the merged revision, its four live gates were absolute temporary-path
+literals in this packet's historical trace descriptions. Reworded them as
+experiment temporary-root observations, retaining their meaning and evidence
+limits without prescribing a host path.

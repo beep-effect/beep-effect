@@ -59,6 +59,11 @@ const platform = Layer.mergeAll(
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
 );
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+const PilotReceiptJson = S.fromJsonString(CachePilotReceipt);
+const encodePilotReceiptJson = S.encodeEffect(PilotReceiptJson);
+const decodePilotReceiptJson = S.decodeEffect(PilotReceiptJson);
+const encodePilotReceipt = S.encodeEffect(CachePilotReceipt);
+const decodePilotReceipt = S.decodeEffect(CachePilotReceipt);
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const hash = (text: string) => hashBytes(new TextEncoder().encode(text));
 const digest = Sha256Hex.make(Str.repeat(64)("a"));
@@ -532,8 +537,8 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       const { run, request } = yield* fixture("none", requestedLinker);
       const receipt = yield* run(CachePilotRequest.make({ ...request, selection: "controls" }));
       assertSome(receipt.runtimeLinker, requestedLinker);
-      const encoded = yield* S.encodeEffect(S.fromJsonString(CachePilotReceipt))(receipt);
-      const decoded = yield* S.decodeEffect(S.fromJsonString(CachePilotReceipt))(encoded);
+      const encoded = yield* encodePilotReceiptJson(receipt);
+      const decoded = yield* decodePilotReceiptJson(encoded);
       assertSome(decoded.runtimeLinker, requestedLinker);
     })
   );
@@ -550,10 +555,10 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
       expect(receipt.runs.length).toBeGreaterThan(60);
       expect(receipt.authority).toBe("local-observation-only");
       assertSome(receipt.runtimeLinker, linker);
-      const encoded = yield* S.encodeEffect(CachePilotReceipt)(receipt);
-      const decoded = yield* S.decodeEffect(CachePilotReceipt)(encoded);
+      const encoded = yield* encodePilotReceipt(receipt);
+      const decoded = yield* decodePilotReceipt(encoded);
       expect(decoded.runtimeLinker).toEqual(receipt.runtimeLinker);
-      const historical = yield* S.decodeEffect(CachePilotReceipt)(Struct.omit(encoded, ["runtimeLinker"]));
+      const historical = yield* decodePilotReceipt(Struct.omit(encoded, ["runtimeLinker"]));
       assertNone(historical.runtimeLinker);
       expect(yield* fs.readDirectory(path.join(root, ".beep/cache/experiments"))).toEqual(["owner"]);
       for (const source of sourceRoots)
