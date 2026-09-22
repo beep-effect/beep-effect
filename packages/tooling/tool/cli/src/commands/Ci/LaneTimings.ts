@@ -796,7 +796,7 @@ const ghApiTransientRetrySchedule: Schedule.Schedule<Duration.Duration, CiComman
   Schedule.fromStepWithMetadata(
     Effect.succeed((meta: Schedule.InputMetadata<CiCommandError | CiGhApiTransientExit>) => {
       const delay = Duration.millis(Duration.toMillis(ghApiTransientBaseDelay(meta.input)) * 2 ** (meta.attempt - 1));
-      return Effect.succeed([delay, delay] as const);
+      return Effect.succeed<[Duration.Duration, Duration.Duration]>([delay, delay]);
     })
   ).pipe(Schedule.jittered);
 
