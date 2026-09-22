@@ -260,6 +260,21 @@ export {
   lintCommand,
 } from "./commands/Lint/index.ts";
 /**
+ * Model routing sync command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  /**
+   * Model routing sync command group.
+   *
+   * @category cli-commands
+   * @since 0.0.0
+   */
+  modelsCommand,
+} from "./commands/Models/index.ts";
+/**
  * Purge command for removing root/workspace build artifacts.
  *
  * @category cli-commands
