@@ -893,6 +893,53 @@ it.layer(platform)("B7 merge-loop timing", (layerIt) => {
   });
 });
 
+describe("closeout follow-up gate", () => {
+  // The closeout collector now raises a blocking pr-review issue for a thread
+  // the author resolved that a reviewer has spoken on since, and the live
+  // remote counts it as a follow-up. Either one alone keeps merge readiness
+  // blocked on threads-resolved, so a follow-up can never be merged over.
+  const remoteWith = (followUpThreadCount: number) =>
+    YeetStatusRemote.make({
+      available: true,
+      checked: true,
+      detail: "PR",
+      headSha: O.some("aaa111"),
+      checks: [check("Lint")],
+      state: "OPEN",
+      isDraft: false,
+      requiredCheckCount: 1,
+      failingRequiredCheckCount: 0,
+      pendingRequiredCheckCount: 0,
+      mergeable: "MERGEABLE",
+      mergeStateStatus: "CLEAN",
+      unresolvedReviewThreadCount: 0,
+      followUpThreadCount,
+      acknowledgedThreadCount: 1,
+    });
+  const closeoutWith = (issueCount: number) =>
+    YeetStatusArtifact.make({
+      detail: "PR #1184",
+      issueCount,
+      path: "pr-closeout.json",
+      state: "present",
+      reviewedHeadSha: O.some("aaa111"),
+    });
+
+  it("blocks threads-resolved on a reviewer follow-up and clears once it is answered", () => {
+    const blocked = deriveYeetMergeReady(closeoutWith(1), remoteWith(1));
+    expect(O.flatMap(blocked, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+
+    // The closeout artifact's own issue count still blocks on its own.
+    const artifactOnly = deriveYeetMergeReady(closeoutWith(1), remoteWith(0));
+    expect(O.flatMap(artifactOnly, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+
+    // Answered: no follow-up left, no closeout issues, and the bot
+    // acknowledgement never counted against the merge.
+    const answered = deriveYeetMergeReady(closeoutWith(0), remoteWith(0));
+    expect(O.flatMap(answered, (value) => value.failing)).toStrictEqual(O.none());
+  });
+});
+
 describe("settle policy boundaries", () => {
   it("admits settle timeout under either policy", () => {
     expect(HashSet.has(yeetMonitorPolicyTerminals(YeetUntilMergedPolicy.make({})), "settle-timeout")).toBe(true);

@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { GhActor, GhComment, GhPageInfo, GhPrView } from "../../../../internal/github/index.ts";
@@ -169,7 +170,80 @@ export class GhReviewThreadCommentConnection extends S.Class<GhReviewThreadComme
 ) {}
 
 /**
+ * One review-thread comment reduced to its author and timestamp.
+ *
+ * **Details**
+ *
+ * What a `comments(last: 1)` selection returns: no body, no identifiers, only
+ * the two structural facts the thread-state rule reads about whoever spoke
+ * last. Both fields are optional because GitHub omits an author it no longer
+ * knows, and because a payload captured before the selection existed must keep
+ * decoding.
+ *
+ * **Example** (Name the last speaker)
+ *
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { GhReviewThreadLatestComment } from "@beep/repo-cli/test/Yeet"
+ *
+ * const comment = GhReviewThreadLatestComment.make({
+ *   author: { __typename: "Bot", login: "coderabbitai" },
+ *   createdAt: "2026-09-22T06:11:28Z"
+ * })
+ *
+ * strictEqual(comment.createdAt, "2026-09-22T06:11:28Z")
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GhReviewThreadLatestComment extends S.Class<GhReviewThreadLatestComment>($I`GhReviewThreadLatestComment`)(
+  {
+    author: GhActor.pipe(S.NullOr, S.optionalKey),
+    createdAt: S.optionalKey(S.String),
+  },
+  $I.annote("GhReviewThreadLatestComment", {
+    description: "One review-thread comment reduced to the author and timestamp the thread-state rule reads.",
+  })
+) {}
+
+/**
+ * The newest-comment connection of one review thread.
+ *
+ * **Example** (Empty newest-comment connection)
+ *
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { GhReviewThreadLatestConnection } from "@beep/repo-cli/test/Yeet"
+ *
+ * strictEqual(GhReviewThreadLatestConnection.make({ nodes: [] }).nodes.length, 0)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GhReviewThreadLatestConnection extends S.Class<GhReviewThreadLatestConnection>(
+  $I`GhReviewThreadLatestConnection`
+)(
+  {
+    nodes: S.Array(GhReviewThreadLatestComment).pipe(
+      SchemaUtils.withKeyDefaults(A.empty<GhReviewThreadLatestComment>())
+    ),
+  },
+  $I.annote("GhReviewThreadLatestConnection", {
+    description: "The `comments(last: 1)` connection naming a review thread's newest comment.",
+  })
+) {}
+
+/**
  * Pull request review thread returned by GitHub GraphQL.
+ *
+ * **Details**
+ *
+ * `resolvedBy` is optional because only the queries that classify thread state
+ * ask for it. It is the login the pull request author is compared against: a
+ * thread the author resolved with a reviewer speaking after them owes a reply,
+ * and a thread a reviewer closed themselves owes nothing.
  *
  * **Example** (Make unresolved review thread)
  *
@@ -201,11 +275,16 @@ export class GhReviewThread extends S.Class<GhReviewThread>($I`GhReviewThread`)(
     id: S.String,
     isOutdated: S.Boolean,
     isResolved: S.Boolean,
+    // The thread's newest comment whatever page it sits on, selected as
+    // `comments(last: 1)`. Optional so a payload recorded before the selection
+    // existed keeps decoding; the first page is the fallback.
+    latest: S.optionalKey(GhReviewThreadLatestConnection),
     line: S.NullOr(S.Finite),
     path: S.NullOr(S.String),
+    resolvedBy: GhActor.pipe(S.NullOr, S.optionalKey),
   },
   $I.annote("GhReviewThread", {
-    description: "Pull request review thread returned by GitHub GraphQL.",
+    description: "Pull request review thread returned by GitHub GraphQL, optionally naming who resolved it.",
   })
 ) {}
 
@@ -1003,10 +1082,12 @@ query YeetPrCloseoutReviewThreads($owner: String!, $name: String!, $number: Int!
           isOutdated
           path
           line
+          resolvedBy { login }
           comments(first: 100) {
             pageInfo { hasNextPage endCursor }
-            nodes { id body url createdAt author { login } }
+            nodes { id body url createdAt author { __typename login } }
           }
+          latest: comments(last: 1) { nodes { author { __typename login } createdAt } }
         }
       }
     }

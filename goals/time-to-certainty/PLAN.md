@@ -177,6 +177,16 @@ orchestrator owns schemas, contracts, and judgment.
 
 - [ ] D1 pre-push wave ordered by (cost, red probability, precision) from A1; inputs handed to the
       ontology packet's planner seam with a receipt.
+- [x] D2 reviewer follow-ups are a merge gate and the comment stream is durable — done 2026-09-22
+      (rulings 65–67): one pure four-state thread union (`unresolved`, `resolved-answered`,
+      `resolved-follow-up`, `resolved-acknowledged`) derived from structure alone drives
+      `merge-ready`'s widened `threads-resolved` criterion, the closeout `review-follow-ups` gate
+      and its `pr-review` issues, the watch transitions, the handler assert and `yeet reply`'s
+      routing; the status thread read is paginated and its omission sentinel is gone;
+      `replayYeetMonitorComments` replays review comments, issue comments and review bodies on
+      every read-first surface against a monotone `yeet-monitor-comments/v2` watermark that
+      migrates v1, so a reboot no longer loses what arrived while nothing was watching; review-body
+      markers are parsed structurally and reported as advisories that never block.
 
 ## P4 — Close
 

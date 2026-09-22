@@ -21,6 +21,13 @@ const $I = $RepoCliId.create("internal/github/GhSchema");
 /**
  * GitHub actor (author) metadata returned by `gh`.
  *
+ * **Details**
+ *
+ * `__typename` is present only when the GraphQL selection asked for it. It is
+ * what separates a review bot (`"Bot"`) from a person on a review thread's
+ * newest comment, and it is optional rather than a separate class so the many
+ * queries that never select it keep decoding unchanged.
+ *
  * **Example** (Make actor from login)
  *
  * ```ts
@@ -34,10 +41,11 @@ const $I = $RepoCliId.create("internal/github/GhSchema");
  */
 export class GhActor extends S.Class<GhActor>($I`GhActor`)(
   {
+    __typename: S.optionalKey(S.String),
     login: S.String,
   },
   $I.annote("GhActor", {
-    description: "GitHub actor metadata returned by gh.",
+    description: "GitHub actor metadata returned by gh, optionally carrying the GraphQL actor typename.",
   })
 ) {}
 
@@ -109,6 +117,11 @@ export class GhComment extends S.Class<GhComment>($I`GhComment`)(
  * and `url` are optional so the narrower monitor payload also decodes; callers
  * that request the wider `--json` set always receive them.
  *
+ * `author` is optional for the same reason and nullable besides: `gh pr view`
+ * reports a null author for a pull request opened by a deleted account. It is
+ * the login every review thread's `resolvedBy` is compared against, so a
+ * caller that needs the thread gate must add `author` to its `--json` list.
+ *
  * **Example** (Make narrow monitor view)
  *
  * ```ts
@@ -123,6 +136,7 @@ export class GhComment extends S.Class<GhComment>($I`GhComment`)(
  */
 export class GhPrView extends S.Class<GhPrView>($I`GhPrView`)(
   {
+    author: GhActor.pipe(S.NullOr, S.optionalKey),
     headRefName: S.String,
     headRefOid: S.optionalKey(S.String),
     isDraft: S.optionalKey(S.Boolean),

@@ -78,6 +78,7 @@ import {
   YeetPrMergeReadyRow,
   yeetPrMergeReadyRowId,
 } from "./Inbox.ts";
+import { replayYeetMonitorComments } from "./MonitorComments.ts";
 import {
   renderYeetHeadTimeline,
   YEET_MONITOR_POLL_ERROR_BUDGET,
@@ -984,6 +985,11 @@ interface YeetMonitorUntilMergedOptions {
     | undefined;
   readonly policy?: YeetMonitorLoopPolicy | undefined;
   readonly pollInterval?: Duration.Duration | undefined;
+  // Runs once, on the first cycle only: the durable comment stream is replayed
+  // where the session starts, not on every poll, because after that this loop
+  // is attached and nothing can be missed. The seam exists so a test can prove
+  // the call without a GitHub read.
+  readonly replayComments?: typeof replayYeetMonitorComments | undefined;
   readonly rulesetRead?: typeof readYeetRulesetRequiredContexts | undefined;
 }
 
@@ -1440,11 +1446,18 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   context: RepoRunContext,
   options: YeetMonitorUntilMergedOptions,
   budget: YeetMonitorRerunBudget,
-  previous: O.Option<MonitorHeadState>
+  previous: O.Option<MonitorHeadState>,
+  firstCycle: boolean
 ) {
   const collected = yield* (options.collectStatus ?? collectYeetStatus)(context, true).pipe(Effect.result);
   if (Result.isFailure(collected)) {
     return MonitorPoll.make({ budget, head: previous, failure: O.some(collected.failure) });
+  }
+  // The first poll is the first time this session knows the pull request
+  // number, and the last moment before it starts reporting state the operator
+  // will act on, so the comments they missed are printed here.
+  if (firstCycle && collected.success.remote.number !== undefined) {
+    yield* (options.replayComments ?? replayYeetMonitorComments)(context, collected.success.remote.number);
   }
   const now = yield* options.now ?? DateTime.now;
   const observed = yield* observeMonitorHead(
@@ -1558,8 +1571,10 @@ export const runYeetMonitorUntilMerged: {
     let budget = emptyYeetMonitorRerunBudget;
     let head = O.none<MonitorHeadState>();
     let failures = 0;
+    let firstCycle = true;
     while (true) {
-      const next = yield* pollUntilMerged(context, options, budget, head);
+      const next = yield* pollUntilMerged(context, options, budget, head, firstCycle);
+      firstCycle = false;
       budget = next.budget;
       head = next.head;
       failures = yield* stepMonitorFailureBudget(next, failures);

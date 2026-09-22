@@ -134,8 +134,11 @@ Runbook: `docs/runbooks/agent-pools.md`.
   not blind rerun.
 - “Mergeable” describes the complete PR state, not GitHub's structural
   `MERGEABLE` field alone. It requires both of the following:
-  - no outstanding PR comments or nits unless they are marked resolved, marked
-    outdated, or have received a response; and
+  - no outstanding review thread — one that is unresolved, or one the author
+    resolved that carries a later human reviewer comment the author has not
+    answered; a bot acknowledgement after the author resolved the thread and
+    review-body nitpicks are advisory, and outdated threads still count until
+    they are explicitly resolved; and
   - no failing CI jobs except Vercel deployments failing only because they were
     rate limited.
 - PR closeout: run `bun run beep yeet monitor --until-ready --detach` and block on

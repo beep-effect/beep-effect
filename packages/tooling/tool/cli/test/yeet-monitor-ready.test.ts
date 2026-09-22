@@ -144,6 +144,10 @@ const options = {
   pollInterval: Duration.zero,
   closeout: () => Effect.die("unexpected closeout"),
   onMerged: () => Effect.die("unexpected sweep"),
+  // The loop replays the durable comment stream on its first cycle; these
+  // cases are about readiness, so the replay is stubbed out and proven once,
+  // on its own, below.
+  replayComments: () => Effect.void,
 };
 const platform = Layer.mergeAll(
   NodeFileSystem.layer,
@@ -614,3 +618,30 @@ for (const waiting of ["awaiting-log", "awaiting-run"])
       })
     ).pipe(provideScopedLayer(platform))
   );
+
+// R7 (reviewer follow-ups): a `--until-merged` session that starts after a gap
+// has to print what was said in that gap before it starts reporting merge
+// readiness the operator will act on — and exactly once, because after the
+// first cycle the session is attached and nothing can be missed.
+it.layer(platform)("R7 durable comment replay", (test) => {
+  test.effect("replays the comment stream on the first cycle only, naming the pull request", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const polls = yield* Ref.make(0);
+        const replayed = yield* Ref.make<ReadonlyArray<number>>(A.empty());
+
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          collectStatus: () =>
+            Ref.getAndUpdate(polls, (n) => n + 1).pipe(Effect.map((n) => snapshot(root, [check("Lint")], n >= 1))),
+          closeout: () => Effect.succeed(report()),
+          replayComments: (_context, prNumber) => Ref.update(replayed, A.append(prNumber)),
+        });
+
+        expect(terminal).toBe("ready");
+        expect(yield* Ref.get(replayed)).toStrictEqual([7]);
+        expect(yield* Ref.get(polls)).toBeGreaterThan(1);
+      })
+    )
+  );
+});

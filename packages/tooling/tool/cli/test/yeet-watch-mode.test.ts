@@ -128,15 +128,51 @@ const checksJson = (rows: ReadonlyArray<CheckRowFixture>) =>
     }))
   );
 
+interface ThreadNodeFixture {
+  readonly id: string;
+  readonly isResolved: boolean;
+  // The newest comment's author login and GraphQL typename, which is what
+  // separates a reviewer follow-up from a bot acknowledgement.
+  readonly latestAuthor?: { readonly login: string; readonly __typename?: string };
+  readonly resolvedBy?: string;
+}
+
 const threadsJson = (
-  nodes: ReadonlyArray<{ readonly id: string; readonly isResolved: boolean }>,
+  nodes: ReadonlyArray<ThreadNodeFixture>,
   pageInfo: { readonly endCursor: string | null; readonly hasNextPage: boolean } = {
     endCursor: null,
     hasNextPage: false,
-  }
-) => JSON.stringify({ data: { node: { reviewThreads: { nodes, pageInfo } } } });
+  },
+  author = "author"
+) =>
+  JSON.stringify({
+    data: {
+      node: {
+        author: { login: author },
+        reviewThreads: {
+          nodes: A.map(nodes, (node) => ({
+            id: node.id,
+            isResolved: node.isResolved,
+            isOutdated: false,
+            path: null,
+            line: null,
+            resolvedBy: node.resolvedBy === undefined ? null : { login: node.resolvedBy },
+            latest: {
+              nodes:
+                node.latestAuthor === undefined
+                  ? []
+                  : [{ author: node.latestAuthor, createdAt: "2026-09-22T00:00:00.000Z" }],
+            },
+          })),
+          pageInfo,
+        },
+      },
+    },
+  });
 
-const emptyCollection: ScriptedAnswer = { exitCode: 0, output: "[]" };
+// `gh api --paginate --slurp` answers with an array OF PAGES, so an empty
+// collection is one empty page, not one empty array.
+const emptyCollection: ScriptedAnswer = { exitCode: 0, output: "[[]]" };
 
 // One scripted answer set per poll. Each command family keeps its own served
 // count, because the comment polls run *after* the tick's GraphQL thread read:
@@ -163,6 +199,10 @@ const scriptedSpawnerLayer = (scripts: ReadonlyArray<PollScript>, diff: string =
             // The once-per-head merge-base diff owns no poll index: it answers by argv prefix.
             if (command.command === "git" && command.args[0] === "diff" && command.args[1] === "--name-only")
               return stubHandle(0, diff);
+            // The review-body collection rides the same poll; this watch has
+            // no use for it, so it answers with an empty page rather than
+            // falling through to the thread reader.
+            if (Str.includes("pulls/751/reviews")(line)) return stubHandle(0, "[[]]");
             if (Str.includes("pulls/751/comments")(line)) {
               const answer = scriptAt(yield* Ref.getAndUpdate(reviewServed, (value) => value + 1));
               const review = answer.reviewComments ?? emptyCollection;
@@ -234,7 +274,7 @@ describe("collectYeetWatchSnapshot", () => {
       expect(snapshot.state).toBe("OPEN");
       expect(snapshot.prNumber).toBe(751);
       expect(A.map(snapshot.checks, (check) => check.outcome)).toEqual(["pending", "fail"]);
-      expect(A.map(snapshot.threads, (thread) => thread.isResolved)).toEqual([false]);
+      expect(A.map(snapshot.threads, (thread) => thread.state)).toEqual(["unresolved"]);
 
       // The failing check keeps its own record for capsule derivation; a
       // plain commit status's empty link/workflow read as null, not "".
@@ -294,7 +334,7 @@ describe("collectYeetWatchSnapshot", () => {
 
       expect(snapshot.threads).toHaveLength(101);
       expect(snapshot.criteria.threadsResolved).toBe(false);
-      expect(snapshot.threads[100]).toMatchObject({ id: "T101", isResolved: false });
+      expect(snapshot.threads[100]).toMatchObject({ id: "T101", state: "unresolved" });
     }).pipe(
       provideScopedLayer(
         scriptedSpawnerLayer([
@@ -313,6 +353,61 @@ describe("collectYeetWatchSnapshot", () => {
             view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
             checks: { exitCode: 0, output: checksJson([]) },
             threads: { exitCode: 0, output: threadsJson([{ id: "T101", isResolved: false }]) },
+          },
+        ])
+      )
+    )
+  );
+
+  it.effect("holds threads-resolved open for a resolved thread a human reviewer spoke on last", () =>
+    Effect.gen(function* () {
+      const snapshot = yield* collectYeetWatchSnapshot(context);
+
+      // GitHub calls this thread resolved. The watch agrees with the status
+      // gate that it still owes an answer, so the merge criterion stays false.
+      expect(A.map(snapshot.threads, (thread) => thread.state)).toEqual(["resolved-follow-up"]);
+      expect(snapshot.criteria.threadsResolved).toBe(false);
+    }).pipe(
+      provideScopedLayer(
+        scriptedSpawnerLayer([
+          {
+            view: { exitCode: 0, output: viewJson("OPEN", "aaa111", "CLEAN", "APPROVED") },
+            checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Check", state: "SUCCESS" }]) },
+            threads: {
+              exitCode: 0,
+              output: threadsJson([
+                { id: "T1", isResolved: true, resolvedBy: "author", latestAuthor: { login: "reviewer" } },
+              ]),
+            },
+          },
+        ])
+      )
+    )
+  );
+
+  it.effect("treats a review bot's last word on a resolved thread as an acknowledgement", () =>
+    Effect.gen(function* () {
+      const snapshot = yield* collectYeetWatchSnapshot(context);
+
+      expect(A.map(snapshot.threads, (thread) => thread.state)).toEqual(["resolved-acknowledged"]);
+      expect(snapshot.criteria.threadsResolved).toBe(true);
+    }).pipe(
+      provideScopedLayer(
+        scriptedSpawnerLayer([
+          {
+            view: { exitCode: 0, output: viewJson("OPEN", "aaa111", "CLEAN", "APPROVED") },
+            checks: { exitCode: 0, output: checksJson([{ bucket: "pass", name: "Check", state: "SUCCESS" }]) },
+            threads: {
+              exitCode: 0,
+              output: threadsJson([
+                {
+                  id: "T1",
+                  isResolved: true,
+                  resolvedBy: "author",
+                  latestAuthor: { login: "coderabbitai", __typename: "Bot" },
+                },
+              ]),
+            },
           },
         ])
       )
@@ -1133,15 +1228,15 @@ describe("registration patience", () => {
 
 describe("comment rows and --until-event", () => {
   const issueCommentsJson = (comments: ReadonlyArray<{ readonly id: number; readonly createdAt: string }>) =>
-    JSON.stringify(
+    JSON.stringify([
       A.map(comments, (comment) => ({
         body: `comment ${comment.id}`,
         created_at: comment.createdAt,
         html_url: `https://github.com/beep/beep/pull/751#issuecomment-${comment.id}`,
         id: comment.id,
         user: { login: "greptile-apps[bot]" },
-      }))
-    );
+      })),
+    ]);
 
   const pendingChecks = checksJson([{ bucket: "pending", name: "Coverage", state: "QUEUED" }]);
 

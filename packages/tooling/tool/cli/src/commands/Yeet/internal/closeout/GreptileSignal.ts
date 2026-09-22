@@ -90,7 +90,30 @@ const scorePattern = /(?:confidence\s+)?score\s*[:=-]\s*(?<score>\d+(?:\.\d+)?)\
 const leadingIssueCountPattern = /^\s*(?<count>\d+)\s+(?:open\s+)?issues?\b/imu;
 const labeledIssueCountPattern = /^\s*(?:open\s+)?issues?\s*[:=-]\s*(?<count>\d+)\b/imu;
 
-const parseScore = (body: string): O.Option<string> =>
+/**
+ * Parse a `Score: n/5` confidence fraction out of a review body.
+ *
+ * **Details**
+ *
+ * Matches the labelled form a Greptile summary comment prints (`Score: 5/5`,
+ * `Confidence score = 4/5`). Shared with the review-body signal parser so the
+ * two surfaces read one notation rather than drifting apart.
+ *
+ * **Example** (Read a labelled score)
+ *
+ * ```ts
+ * import { parseScore } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.getOrNull(parseScore("Score: 5/5"))) // "5/5"
+ * ```
+ *
+ * @param body - A review or comment body.
+ * @returns The parsed `n/5` fraction, or `None` when the body prints no labelled score.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseScore = (body: string): O.Option<string> =>
   pipe(
     O.fromUndefinedOr(scorePattern.exec(body)?.groups?.score),
     O.map((score) => `${score}/5`)
