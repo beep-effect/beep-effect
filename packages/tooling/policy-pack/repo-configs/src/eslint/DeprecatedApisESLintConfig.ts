@@ -27,6 +27,11 @@ const generatedAndBuildOutputIgnores = [
   "dist/**",
   "**/dist/**",
   "**/docs/**",
+  // `storybook-static/**` is the gitignored Storybook build bundle; its vendored
+  // UMD output carries inline eslint-disable comments for rules this profile does
+  // not register, which eslint reports as unknown-rule errors.
+  "storybook-static/**",
+  "**/storybook-static/**",
   "node_modules/**",
   "**/node_modules/**",
   "apps/*/src/app/sw.ts",

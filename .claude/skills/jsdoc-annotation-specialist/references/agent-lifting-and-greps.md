@@ -58,7 +58,7 @@ searches for a mass migration of untouched files.
 
 ```bash
 rg -n '^\s*\* \*\*(When to use|Details|Gotchas|Example)\*\*' --type ts
-rg -n '^\s*\* ```ts\s*$' --type ts
+rg -n '^\s*\* `{3}ts\s*$' --type ts
 ```
 
 Review each matched block for canonical order, non-empty content, unique Example

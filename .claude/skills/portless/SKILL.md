@@ -1,6 +1,6 @@
 ---
 name: portless
-description: Set up and use portless for named local dev server URLs (e.g. http://myapp.beep.localhost:1355 instead of http://localhost:3000). Use when integrating portless into a project, configuring dev server names, setting up the local proxy, working with .localhost domains, or troubleshooting port/proxy issues.
+description: Set up and use portless for named local dev server URLs (e.g. https://myapp.localhost instead of http://localhost:3000). Use when integrating portless into a project, configuring dev server names, setting up the local proxy, working with .localhost domains, or troubleshooting port/proxy issues.
 ---
 
 # Portless
@@ -35,19 +35,20 @@ When installed per-project, invoke via package.json scripts or `npx portless` (s
 
 ## Quick Start
 
-In this repository, package scripts are authoritative: they provide the app
-name, framework flags, and the shared portless configuration. Do not replace
-them with a raw framework command or start the default privileged HTTPS proxy.
-
 ```bash
-# Run the selected app through its checked-in package script
-bun --cwd apps/oip-web run dev
-# -> http://oip-web.beep.localhost:1355
+# Install globally (or add -D to a project)
+npm install -g portless
+
+# Run your app (auto-starts the HTTPS proxy on port 443)
+portless run next dev
+# -> https://<project>.localhost
+
+# Or with an explicit name
+portless myapp next dev
+# -> https://myapp.localhost
 ```
 
-For another app, use that app package's `dev` script and navigate to
-`http://<name>.beep.localhost:1355`. The proxy auto-starts with the repository
-configuration when the script runs.
+The proxy auto-starts when you run an app. You can also start it explicitly with `portless proxy start`. Auto-start reuses the configuration (port, TLS, TLDs) from the most recent proxy run, so a restart or reboot does not silently revert to defaults. Explicit env vars always take priority.
 
 In non-interactive environments (no TTY, or `CI=1`), portless exits with a descriptive error instead of prompting. Task runners like turborepo should pre-start the proxy.
 
@@ -108,6 +109,8 @@ For turborepo projects, use portless as the `dev` script with the real command i
 
 `pnpm dev` runs turbo, which runs `portless` in each package. Portless detects the package manager and runs `pnpm run dev:app` through the proxy.
 
+When `portless` runs from a workspace root, it uses the existing Turbo integration to preserve task ordering when either `turbo.json` or `turbo.jsonc` is readable. Set `"turbo": false` in the root portless configuration to use direct spawning instead.
+
 ### package.json scripts
 
 You can still use portless directly in scripts:
@@ -154,6 +157,10 @@ Set `PORTLESS=0` to run the command directly without the proxy:
 PORTLESS=0 pnpm dev   # Bypasses proxy, uses default port
 ```
 
+When a proxied command is stopped with Ctrl+C, portless waits for its process tree to exit. A second
+Ctrl+C forwards another interrupt, and remaining descendants are terminated after a short grace
+period.
+
 ## How It Works
 
 1. `portless proxy start` starts an HTTPS reverse proxy on port 443 as a background daemon. Auto-elevates with sudo on macOS/Linux; falls back to port 1355 if sudo is unavailable. Use `--no-tls` for plain HTTP on port 80. Configurable with `-p` / `--port` or the `PORTLESS_PORT` env var. The proxy also auto-starts when you run an app.
@@ -168,7 +175,7 @@ Use `portless proxy start --tld localhost --tld test` to serve the same app name
 
 TLDs can be multi-segment DNS names such as `dev.example.com`, so local URLs can mirror production structure (`myapp.dev.example.com`). Each label follows DNS rules: lowercase letters, digits, interior hyphens, 63 characters per label, 253 total. Strict OAuth providers that reject `.localhost` redirect URIs accept a real domain like `https://myapp.dev.example.com/api/auth/callback/google`.
 
-Most frameworks (Next.js, Express, Nuxt, etc.) respect the `PORT` env var automatically. For frameworks that ignore `PORT` (Vite, VitePlus, Astro, React Router, Angular, Expo, React Native), portless auto-injects the correct `--port` flag and, when needed, a matching `--host` CLI flag.
+Most frameworks (Next.js, Express, Nuxt, etc.) respect the `PORT` env var automatically. For frameworks that ignore `PORT` (Vite, VitePlus, Astro, React Router, Angular, Expo, React Native), portless auto-injects the correct `--port` flag and, when needed, a matching `--host` CLI flag. Injection reaches through a package script whose command starts with the framework or a known runner (`"dev": "vite"`, `"dev": "bunx vite"`). Only the framework's server commands get the flags (`dev`, `serve`, `preview`, `start`, a bare `vite`, or `vite [root]`); a command that does not serve, such as `vite build`, `vite optimize`, `vp test` or `astro check`, rejects them and is left alone. Expo connection modes (`--localhost`, `--lan`, `--tunnel`) are preserved while the assigned port is still injected. A script portless cannot classify is left alone too: a flag before the subcommand on a CLI whose flag grammar it does not track (`vp --mode dev build`). Portless also leaves a script alone when appending flags to it would not work: a compound command (`&&`, `|`, `;`), a trailing `#` comment, its own `--` option terminator, an env prefix (`NODE_ENV=production vite`), delegation to another script (`"dev": "npm run dev:vite"`), or runner flags before the script name (`bun run --bun dev`). Those keep their own port, so set it in the script yourself.
 
 ### State directory
 
@@ -267,7 +274,7 @@ Use the service command when users want the proxy to start automatically after r
 portless service install
 portless service install --lan
 portless service install --wildcard
-PORTLESS_LAN=1 portless service install --state-dir ~/.portless-lan
+PORTLESS_STATE_DIR=~/.portless-lan PORTLESS_LAN=1 portless service install
 portless service status
 portless service uninstall
 ```
@@ -360,13 +367,6 @@ Precedence (closest wins): CLI flags > package.json `"portless"` key > portless.
 
 ## Troubleshooting
 
-### Repository preview URLs
-
-The preview harness's auto-assigned `http://localhost:<port>` URL is not the
-canonical route for portless-wrapped apps in this repository. After starting
-the package's checked-in `dev` script, navigate to
-`http://<name>.beep.localhost:1355`.
-
 ### Run diagnostics
 
 Use `portless doctor` first when local routing or HTTPS behavior looks wrong. It is read-only and checks Node.js, state directory permissions, proxy liveness, route entries, hostname resolution, local CA trust, and LAN mode prerequisites.
@@ -389,7 +389,7 @@ portless proxy start -p 8080
 
 ### Framework not respecting PORT
 
-Portless auto-injects the right `--port` flag and, when needed, a matching `--host` flag for frameworks that ignore the `PORT` env var: **Vite**, **VitePlus** (`vp`), **Astro**, **React Router**, **Angular**, **Expo**, and **React Native**. SvelteKit uses Vite internally and is handled automatically.
+Portless auto-injects the right `--port` flag and, when needed, a matching `--host` flag for frameworks that ignore the `PORT` env var: **Vite**, **VitePlus** (`vp`), **Astro**, **React Router**, **Angular**, **Expo**, and **React Native**. SvelteKit uses Vite internally and is handled automatically. Injection reaches through a package script whose command starts with the framework or a known runner, and only for the framework's server commands (`dev`, `serve`, `preview`, `start`, or a bare `vite`) — `vite build`, `vite optimize`, `vp test` and other non-serving commands reject the flags, so they are left untouched, as is any invocation portless cannot classify (`vp --mode dev build`). It is also skipped for a compound command (`&&`, `|`, `;`), a trailing `#` comment, its own `--` option terminator, an env prefix (`NODE_ENV=production vite`), delegation to another script, and runner flags before the script name (`bun run --bun dev`) — each of those keeps its own port and the app returns 502, so set the port in the script yourself.
 
 For other frameworks that don't read `PORT`, pass the port manually:
 
@@ -417,7 +417,7 @@ portless hosts sync    # Adds current routes to /etc/hosts
 portless hosts clean   # Remove entries later
 ```
 
-Auto-syncs `/etc/hosts` for route hostnames by default. Set `PORTLESS_SYNC_HOSTS=0` to disable.
+Auto-syncs `/etc/hosts` for route hostnames by default. Set `PORTLESS_SYNC_HOSTS=0` to disable. If a route hostname will not resolve, the command that registered it warns and points you to `portless hosts sync`.
 
 ### Browser shows certificate warning with --https
 
@@ -454,7 +454,7 @@ proxy: {
 }
 ```
 
-Portless automatically sets `NODE_EXTRA_CA_CERTS` in child processes so Node.js trusts the portless CA. If you run a separate Node.js process outside portless, point it at the CA manually by setting `NODE_EXTRA_CA_CERTS` to `~/.portless/ca.pem`. Alternatively, use `--no-tls` for plain HTTP.
+Portless automatically sets `NODE_EXTRA_CA_CERTS` in child processes so Node.js trusts the portless CA. If you run a separate Node.js process outside portless, point it at the CA manually: `NODE_EXTRA_CA_CERTS=~/.portless/ca.pem`. Alternatively, use `--no-tls` for plain HTTP.
 
 ### Tailscale not working
 
