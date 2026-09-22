@@ -489,6 +489,24 @@ const sweepTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
   Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs));
 
 describe("executeSweep", () => {
+  it.layer(sweepTestLayer([["git merge-base --is-ancestor", ok("")], ...mergedSweepStubs]), { timeout: "30 seconds" })(
+    "ancestor cleanup",
+    (it) => {
+      it.effect(
+        "uses ordinary deletion for a branch already contained in the base",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const root = yield* fs.makeTempDirectoryScoped();
+          const report = yield* executeSweep(sweepContext(root));
+          const deletion = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-local-branch"));
+          expect(deletion.outcome.status).toBe("executed");
+          expect(
+            O.getOrThrow(A.findFirst(report.plan.steps, (step) => step.id === "delete-local-branch")).action
+          ).toContain("branch -d");
+        })
+      );
+    }
+  );
   it.effect("writes a sweep-report.json that decodes back through SweepReportJson", () =>
     withTempDirectory((root) =>
       Effect.gen(function* () {

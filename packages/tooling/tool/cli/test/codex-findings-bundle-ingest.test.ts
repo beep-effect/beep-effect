@@ -1,14 +1,23 @@
 import { findingsCommand, runCodexFindingsIngest } from "@beep/repo-cli/commands/Codex";
-import { SECURITY_PACKAGE_VERSION, SECURITY_PLUGIN_VERSION } from "@beep/repo-cli/test/Codex";
+import {
+  runSecurityCli,
+  SECURITY_PACKAGE_VERSION,
+  SECURITY_PLUGIN_VERSION,
+  securityCommand,
+  securityRuntime,
+} from "@beep/repo-cli/test/Codex";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { Config, ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
+import * as Duration from "effect/Duration";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { NodeTestLayer, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -105,7 +114,10 @@ const sealedBundle = Effect.fn("BundleIngestTest.sealedBundle")(function* () {
  * `HOME`. The stub never scans and never opens a socket: it only reports the
  * exit code the upstream contract check would have reported.
  */
-const pinnedRuntime = Effect.fn("BundleIngestTest.pinnedRuntime")(function* (exitCode: number) {
+const pinnedRuntime = Effect.fn("BundleIngestTest.pinnedRuntime")(function* (
+  exitCode: number,
+  script = `process.exit(${exitCode})\n`
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const home = yield* fs.makeTempDirectoryScoped();
@@ -125,7 +137,7 @@ const pinnedRuntime = Effect.fn("BundleIngestTest.pinnedRuntime")(function* (exi
     path.join(packageRoot, "_bundled_plugin/.codex-plugin/plugin.json"),
     `{"name":"codex-security","version":"${SECURITY_PLUGIN_VERSION}"}`
   );
-  yield* fs.writeFileString(path.join(packageRoot, "bin/codex-security.mjs"), `process.exit(${exitCode})\n`);
+  yield* fs.writeFileString(path.join(packageRoot, "bin/codex-security.mjs"), script);
   const searchPath = yield* Config.String("PATH").pipe(Config.withDefault(""));
   return ConfigProvider.fromEnv({ env: { HOME: home, PATH: searchPath } });
 });
@@ -272,6 +284,173 @@ it.layer(testLayer, { timeout: "60 seconds" })("codex findings sealed bundle ing
 
       const lines = yield* printedLines;
       expect(A.some(lines, Str.includes("--source security-bundle --from <sealed-scan-directory>"))).toBe(true);
+    })
+  );
+});
+
+const runScanCommand = Command.runWith(securityCommand, { version: "0.0.0" });
+
+const initializeScanRepository = Effect.fn("SecurityScanTest.initializeRepository")(function* () {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  for (const args of [
+    ["init", "--quiet"],
+    ["remote", "add", "origin", "https://github.com/example/project.git"],
+    [
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "--allow-empty",
+      "--quiet",
+      "-m",
+      "fixture",
+    ],
+  ]) {
+    expect(yield* spawner.exitCode(ChildProcess.make("git", args))).toBe(0);
+  }
+});
+
+it.layer(testLayer, { timeout: "60 seconds" })("security scan orchestration", (it) => {
+  it.effect(
+    "lists the supported commands without discovering a runtime",
+    Effect.fnUntraced(function* () {
+      yield* runScanCommand([]);
+      expect(A.join(yield* printedLines, "\n")).toContain("security-bundle");
+    })
+  );
+  it.effect(
+    "passes bounded scan arguments and writes an exclusive source receipt",
+    Effect.fnUntraced(function* () {
+      const provider = yield* pinnedRuntime(
+        0,
+        `
+import { writeFileSync } from "node:fs";
+const args = process.argv.slice(2);
+const output = args[args.indexOf("--output-dir") + 1];
+writeFileSync(output + "/arguments.txt", args.join("\\n"));
+`
+      );
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const output = path.join(yield* fs.makeTempDirectoryScoped(), "scan");
+      yield* withRepository(
+        Effect.gen(function* () {
+          yield* initializeScanRepository();
+          yield* runScanCommand(["scan", "--output-dir", output, "--max-cost", "5"]).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          );
+          const args = yield* fs.readFileString(path.join(output, "arguments.txt"));
+          expect(args).toContain("--auth\nchatgpt");
+          expect(args).toContain("--max-cost\n5");
+          expect(args).not.toContain("--dry-run");
+          const receipt = yield* fs.readFileString(path.join(output, "beep-source.json"));
+          expect(receipt).toContain("example/project");
+          expect(receipt).toContain("beep-security-source/v1");
+          const repeated = yield* runScanCommand(["scan", "--output-dir", output, "--max-cost", "5"]).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, provider),
+            Effect.result
+          );
+          expect(repeated._tag).toBe("Failure");
+          expect(yield* fs.readFileString(path.join(output, "beep-source.json"))).toBe(receipt);
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "preflights dirty target paths without creating output and refuses dirty scans",
+    Effect.fnUntraced(function* () {
+      const provider = yield* pinnedRuntime(
+        0,
+        `
+const args = process.argv.slice(2);
+process.exit(args.includes("--dry-run") && args.includes("--path") ? 0 : 17);
+`
+      );
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const output = path.join(yield* fs.makeTempDirectoryScoped(), "scan");
+      yield* withRepository(
+        Effect.gen(function* () {
+          yield* initializeScanRepository();
+          yield* fs.makeDirectory("src");
+          yield* fs.writeFileString("src/dirty.txt", "fixture");
+          const args = ["--output-dir", output, "--max-cost", "5", "--path", "src"];
+          yield* runScanCommand(["preflight", ...args]).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          );
+          expect(yield* fs.exists(output)).toBe(false);
+          expect(A.join(yield* printedLines, "\n")).toContain("uncommitted changes");
+          const rejected = yield* runScanCommand(["scan", ...args]).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, provider),
+            Effect.result
+          );
+          expect(rejected._tag).toBe("Failure");
+          expect(yield* fs.exists(output)).toBe(false);
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "preserves nonzero scanner status and rejects an in-repository output",
+    Effect.fnUntraced(function* () {
+      const provider = yield* pinnedRuntime(23);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const output = path.join(yield* fs.makeTempDirectoryScoped(), "scan");
+      yield* withRepository(
+        Effect.gen(function* () {
+          yield* initializeScanRepository();
+          const failed = yield* runScanCommand(["scan", "--output-dir", output, "--max-cost", "5"]).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, provider),
+            Effect.result
+          );
+          expect(failed._tag).toBe("Failure");
+          if (failed._tag === "Failure") expect(failed.failure).toMatchObject({ exitCode: 23 });
+          expect(yield* fs.exists(path.join(output, "beep-source.json"))).toBe(true);
+          const inside = yield* runScanCommand([
+            "preflight",
+            "--output-dir",
+            path.join(process.cwd(), "scan"),
+            "--max-cost",
+            "5",
+          ]).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider), Effect.result);
+          expect(inside._tag).toBe("Failure");
+          expect(yield* fs.exists("scan")).toBe(false);
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "reports a missing pin and terminates a stalled subprocess at its deadline",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const home = yield* fs.makeTempDirectoryScoped();
+      const searchPath = yield* Config.String("PATH");
+      const missing = yield* securityRuntime.pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { HOME: home, PATH: searchPath } })
+        ),
+        Effect.result
+      );
+      expect(missing._tag).toBe("Failure");
+      if (missing._tag === "Failure") expect(missing.failure.message).toContain("Install the pinned runtime");
+      const provider = yield* pinnedRuntime(0, "setInterval(() => {}, 1000);\n");
+      const stalled = yield* runSecurityCli({
+        args: [],
+        stdout: "ignore",
+        stderr: "ignore",
+        timeout: Duration.millis(100),
+        timeoutMessage: "fixture deadline",
+      }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider), TestClock.withLive, Effect.result);
+      expect(stalled._tag).toBe("Failure");
+      if (stalled._tag === "Failure") expect(stalled.failure.message).toBe("fixture deadline");
     })
   );
 });

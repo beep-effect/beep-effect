@@ -59,6 +59,8 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("security scan command guards
       const path = yield* Path.Path;
       const repo = yield* repoFixture();
       const outputDir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const absent = yield* assertPrivateOutputDirectory(repo, path.join(outputDir, "absent")).pipe(Effect.result);
+      expect(absent._tag).toBe("Failure");
       yield* assertPrivateOutputDirectory(repo, outputDir);
       yield* fs.remove(outputDir, { recursive: true });
       yield* fs.symlink(path.join(repo, "src"), outputDir);

@@ -182,6 +182,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
@@ -2562,6 +2563,7 @@ describe("quality task adapter", () => {
           "BEEP_YEET_LANE_PROOF_MODE",
           undefined,
           runGithubChecks("cheap-gates").pipe(
+            TestClock.withLive,
             Effect.tap(
               Effect.fnUntraced(function* () {
                 const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
@@ -2608,6 +2610,7 @@ describe("quality task adapter", () => {
           "BEEP_YEET_LANE_PROOF_MODE",
           "off",
           runGithubChecks("cheap-gates").pipe(
+            TestClock.withLive,
             Effect.tap(
               Effect.fnUntraced(function* () {
                 const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
@@ -2653,7 +2656,7 @@ describe("quality task adapter", () => {
           "BEEP_YEET_LANE_PROOF_MODE",
           "off",
           Effect.gen(function* () {
-            const exit = yield* Effect.exit(runGithubChecks("cheap-gates"));
+            const exit = yield* Effect.exit(runGithubChecks("cheap-gates").pipe(TestClock.withLive));
 
             if (Exit.isSuccess(exit)) {
               assert.fail("Expected cheap gates to report both configured failures");

@@ -9,7 +9,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer, pipe } from "effect";
+import { ConfigProvider, Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { Command } from "effect/unstable/cli";
@@ -36,6 +36,28 @@ const findSubcommand = (name: string) =>
   );
 
 describe("yeet merge-loop command wiring", () => {
+  it.layer(commandTestLayer, { timeout: "30 seconds" })("foreground monitor", (it) => {
+    it.effect(
+      "dispatches a foreground monitor without creating a detached job",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const originalCwd = process.cwd();
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* Effect.addFinalizer(() => Effect.sync(() => process.chdir(originalCwd)));
+        yield* Effect.sync(() => process.chdir(root));
+        yield* runYeetCommand(["monitor", "--until-ready"]).pipe(
+          Effect.result,
+          Effect.tap((result) =>
+            Effect.sync(() => {
+              expect(result._tag).toBe("Failure");
+              if (result._tag === "Failure") expect(result.failure).toMatchObject({ _tag: "YeetCommandError" });
+            })
+          ),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
+        );
+      })
+    );
+  });
   it.effect("dispatches the top-level publish and repair planners", () =>
     Effect.forEach(
       [

@@ -1,4 +1,12 @@
-import { planPacket, readSecurityBundle, renderPacketDocuments, writePacket } from "@beep/repo-cli/test/Codex";
+import {
+  GitHubRepoSlug,
+  GitHubRepoSlugFromRemote,
+  planPacket,
+  readSecurityBundle,
+  renderPacketDocuments,
+  securityRepositoryFromRemote,
+  writePacket,
+} from "@beep/repo-cli/test/Codex";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
@@ -122,6 +130,54 @@ const expectRejected = Effect.fn("SecurityTest.expectRejected")(function* (root:
 });
 
 it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings", (it) => {
+  it.effect.prop(
+    "round trips schema-generated repository identities",
+    { repository: GitHubRepoSlug },
+    ({ repository }) =>
+      Effect.gen(function* () {
+        const remote = yield* S.encodeEffect(GitHubRepoSlugFromRemote)(repository);
+        expect(yield* S.decodeEffect(GitHubRepoSlugFromRemote)(remote)).toBe(repository);
+      }),
+    { arbitrary: { runs: 100 } }
+  );
+  it.effect(
+    "encodes canonical repository identity and rejects a foreign origin",
+    Effect.fnUntraced(function* () {
+      expect(yield* S.encodeEffect(GitHubRepoSlugFromRemote)("example/project")).toBe(
+        "https://github.com/example/project.git"
+      );
+      const rejected = yield* securityRepositoryFromRemote("https://example.invalid/project").pipe(Effect.result);
+      expect(rejected._tag).toBe("Failure");
+    })
+  );
+
+  it.effect(
+    "refuses oversized individual files and total bundle input",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, manifest } = yield* fixture();
+      const large = new Uint8Array(14 * 1024 * 1024);
+      const digest = yield* hash(large);
+      const extra = yield* Effect.forEach(
+        ["a", "b", "c", "d", "e"],
+        Effect.fnUntraced(function* (name) {
+          const filename = `${name}.bin`;
+          yield* fs.writeFile(path.join(root, filename), large);
+          return { path: filename, sha256: digest, mediaType: "application/octet-stream" };
+        })
+      );
+      yield* writeJson(root, "scan-manifest.json", {
+        ...manifest,
+        scan: { ...manifest.scan, artifacts: [...manifest.scan.artifacts, ...extra] },
+      });
+      const aggregate = yield* expectRejected(root);
+      if (aggregate._tag === "Failure") expect(aggregate.failure.message).toContain("64 MiB");
+      yield* fs.writeFile(path.join(root, "scan-manifest.json"), new Uint8Array(16777217));
+      const oversized = yield* expectRejected(root);
+      if (oversized._tag === "Failure") expect(oversized.failure.message).toContain("16 MiB");
+    })
+  );
   it.effect(
     "uses a separate source receipt when the upstream remote is absent and rejects revision drift",
     Effect.fnUntraced(function* () {
