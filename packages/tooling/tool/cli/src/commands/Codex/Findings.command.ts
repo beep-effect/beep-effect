@@ -18,7 +18,11 @@ import { Command, Flag } from "effect/unstable/cli";
 import { dryRunFlag, forceFlag, jsonFlag } from "../../internal/cli/Flags.ts";
 import { printJsonOrLines, printLines } from "../../internal/cli/Printer.ts";
 import { writePortfolioIndex } from "../Goals/PortfolioIndex.ts";
-import { CodexFindingSeverity, decodeCodexFindingsCapturePayload } from "./Findings.capture.schemas.ts";
+import {
+  CodexCaptureSource,
+  CodexFindingSeverity,
+  decodeCodexFindingsCapturePayload,
+} from "./Findings.capture.schemas.ts";
 import { decodeCodexFindingsCsv } from "./Findings.csv.ts";
 import { CodexFindingsIngestError, CodexFindingsRedactionError } from "./Findings.errors.ts";
 import { defaultPacketSlug, planPacket, priorIdsOfEntries } from "./Findings.normalize.ts";
@@ -31,7 +35,10 @@ import {
 } from "./Findings.refresh.ts";
 import { describeSensitiveHits, scanSensitiveUnknown } from "./Findings.scan.ts";
 import { decodeCodexTriageLedger } from "./Findings.triage.schemas.ts";
-import { writePacket } from "./Findings.write.ts";
+import { PacketDocument, writePacket } from "./Findings.write.ts";
+import { readSecurityBundle } from "./Security.bundle.ts";
+import { CodexSecurityError } from "./Security.errors.ts";
+import { verifySecurityBundleContract } from "./Security.runtime.ts";
 import type { CodexFindingsRefreshReconciliation, CodexRefreshLedgerSource } from "./Findings.refresh.ts";
 import type { CodexPacketPlan } from "./Findings.schemas.ts";
 
@@ -100,6 +107,7 @@ const readPriorIds = Effect.fnUntraced(function* (packetDir: string) {
 });
 
 type CodexFindingsIngestCommandOptions = {
+  readonly source?: CodexCaptureSource;
   readonly from: string;
   readonly slug: O.Option<string>;
   readonly date: O.Option<string>;
@@ -219,6 +227,40 @@ const prepareCodexFindingsIngest = Effect.fn("CodexFindings.prepareIngest")(func
 ) {
   const path = yield* Path.Path;
   const repoRoot = yield* locateRepositoryRoot();
+  if (options.source === "security-bundle") {
+    if (options.refresh || options.force || O.isSome(options.date)) {
+      return yield* CodexSecurityError.make({
+        message: "Bundle ingest derives its date from the seal and does not support --refresh, --force, or --date.",
+      });
+    }
+    const bundle = yield* readSecurityBundle(options.from);
+    yield* verifySecurityBundleContract(options.from);
+    const plan = yield* planPacket(bundle.payload, {
+      slug: O.getOrElse(options.slug, () => `${defaultPacketSlug(bundle.payload.capture.capturedAt)}-local`),
+      branch: O.getOrUndefined(options.branch),
+      expectedCount: O.getOrUndefined(options.expectedCount),
+    });
+    return {
+      repoRoot,
+      plan,
+      refreshSource: O.none<CodexRefreshLedgerSource>(),
+      documents: A.append(
+        renderPacketDocuments({
+          plan,
+          rawReports: bundle.reports,
+          rawPayloadJson: `${encodePayload(bundle.payload)}\n`,
+        }),
+        // Raw upstream evidence legitimately carries secret-shaped text (that is
+        // what a credential finding is); hits are reported, never a refusal.
+        PacketDocument.make({
+          path: "raw/security-bundle.json",
+          tracked: false,
+          scan: "report",
+          contents: `${bundle.evidenceJson}\n`,
+        })
+      ),
+    };
+  }
   const parsed = yield* readCodexFindingsExport(options.from);
   const capturedAt = yield* resolveCaptureDate(options.date, path.basename(options.from));
   const payload = yield* decodeCapturePayload(parsed, capturedAt, options.expectedCount);
@@ -413,7 +455,7 @@ export const runCodexFindingsIngest = Effect.fn("CodexFindings.runIngest")(funct
 });
 
 const fromFlag = Flag.String("from").pipe(
-  Flag.withDescription("Path to the CSV downloaded from the signed-in findings view")
+  Flag.withDescription("Path to a cloud CSV export or sealed scan directory selected by --source")
 );
 const slugFlag = Flag.String("slug").pipe(Flag.optional, Flag.withDescription("Override the generated packet slug"));
 const dateFlag = Flag.String("date").pipe(
@@ -436,6 +478,10 @@ const refreshFlag = Flag.Boolean("refresh").pipe(
 const findingsIngestCommand = Command.make(
   "ingest",
   {
+    source: Flag.ChoiceWithValue(
+      "source",
+      A.map(CodexCaptureSource.Options, (source): readonly [CodexCaptureSource, CodexCaptureSource] => [source, source])
+    ).pipe(Flag.withDefault("cloud-csv")),
     from: fromFlag,
     slug: slugFlag,
     date: dateFlag,
@@ -448,6 +494,7 @@ const findingsIngestCommand = Command.make(
   },
   Effect.fnUntraced(function* (flags) {
     yield* runCodexFindingsIngest({
+      source: flags.source,
       from: flags.from,
       slug: flags.slug,
       date: flags.date,
@@ -459,7 +506,9 @@ const findingsIngestCommand = Command.make(
       json: flags.json,
     });
   })
-).pipe(Command.withDescription("Capture or refresh a goal packet from a signed-in Codex findings CSV export"));
+).pipe(
+  Command.withDescription("Capture or refresh a goal packet from a cloud CSV export or a sealed local scan bundle")
+);
 
 /**
  * `beep codex findings` — capture-to-packet commands.
@@ -480,6 +529,7 @@ export const findingsCommand = Command.make("findings", {}, () =>
     "Codex findings commands:",
     "- bun run beep codex findings ingest --from <export.csv>",
     "- bun run beep codex findings ingest --refresh --from <full-export.csv>",
+    "- bun run beep codex findings ingest --source security-bundle --from <sealed-scan-directory>",
     "",
     "Export the CSV from the signed-in findings view first:",
     `  ${SOURCE_URL}`,

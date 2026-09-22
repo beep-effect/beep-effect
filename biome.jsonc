@@ -274,9 +274,11 @@
       ]
     },
     {
-      // noConsole allowlist: tests, examples, stories, scripts, seeds, and CLI bins
-      // legitimately use console. Keeps the advisory signal focused on runtime source.
+      // noConsole allowlist: tests, examples, stories, scripts, seeds, CLI bins, and
+      // exploration research regenerators (evidence scripts under research/) legitimately
+      // use console. Keeps the advisory signal focused on runtime source.
       "includes": [
+        "explorations/**/research/**",
         "**/test/**",
         "**/__tests__/**",
         "**/*.test.*",

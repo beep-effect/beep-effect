@@ -30,7 +30,7 @@ Scope:
 Rules:
 
 <!-- codex-findings-refresh:start -->
-All 13 captured findings are validated and assigned. Twelve are merged and closed; CSF-013 is implemented and awaiting final proof and publication.
+All 13 findings merged in PRs #1026, #1032, and #1037 and were closed as Already fixed. The final completion receipt on PR #1037 records local proof, hosted acceptance, and exact-ID closure; this PR reconciles the stale tracked lifecycle.
 <!-- codex-findings-refresh:end -->
 
 1. Default every item to `remediate`; use `already-fixed` or `false-positive`
@@ -56,5 +56,8 @@ The operator authorized a follow-up PR on September 9 because PR #1026 merged
 while the newly surfaced CSF-012 fix was being finalized. That authorization
 supersedes the original one-PR limit. Prior findings remain covered by #1026;
 CSF-012 merged in PR #1032 on September 9 and was closed as Already fixed.
-CSF-013 surfaced before that merge and is carried into the remaining follow-up
-under the same instruction to resolve every finding. Its closure remains post-merge.
+CSF-013 subsequently merged in PR #1037 and was closed after merge.
+
+
+Completed: all 13 IDs are merged and closed. Final evidence is recorded in
+`ops/closures.json` and the completion receipt on PR #1037.

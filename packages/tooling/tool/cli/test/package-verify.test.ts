@@ -86,6 +86,7 @@ const seedWorkspaceRepository = Effect.fn("seedWorkspaceRepository")(function* (
   yield* runGit(repoRoot, ["init", "--quiet"]);
   yield* runGit(repoRoot, ["config", "user.email", "codex@example.invalid"]);
   yield* runGit(repoRoot, ["config", "user.name", "Codex"]);
+  yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
   if (options.commit !== false) {
     yield* runGit(repoRoot, ["add", "."]);
     yield* runGit(repoRoot, ["commit", "--quiet", "-m", "initial"]);
@@ -419,6 +420,7 @@ describe("package verify", () => {
           yield* runGit(tmpDir, ["init", "--quiet"]);
           yield* runGit(tmpDir, ["config", "user.email", "codex@example.invalid"]);
           yield* runGit(tmpDir, ["config", "user.name", "Codex"]);
+          yield* runGit(tmpDir, ["config", "commit.gpgsign", "false"]);
           yield* fs.makeDirectory(path.dirname(sourceFile), { recursive: true });
           yield* fs.writeFileString(sourceFile, "export const demo = true;\n");
           yield* runGit(tmpDir, ["add", "."]);

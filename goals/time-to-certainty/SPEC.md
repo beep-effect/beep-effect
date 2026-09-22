@@ -92,6 +92,11 @@ Each item is one small PR with its own receipt. All six were paid for on 2026-09
   runs in its own scope with a durable id, reports through the inbox, and outlives the submitter.
 - **B6 Journal every death.** Lease death and submitter death become events in the admission
   journal (the ontology packet's replay needs them; today it infers evictions from arithmetic).
+- **B7 Babysit to certainty, not to the first red.** `yeet monitor` exited 1 while printing
+  `merge-ready: yes` on optional reds, fired instantly on standing optional reds, and never ran the
+  closeout it required. `--until-ready` settles on the base ruleset's expected contexts, runs the
+  read-first closeout itself, and exits 0 on the first merge-ready poll; a session blocks on it and
+  learns push→ready as a number.
 
 ### C — Proof reuse (the multiplier)
 
@@ -125,10 +130,11 @@ Schema first, then the service contract, then a shadow ledger, then enforcement.
   }) {}
   ```
 
-  The existing shadow records in `packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts`
-  (`YeetLaneProofState`, keyed by command hash and whole-tree diff fingerprint) are the migration
-  source; the new key replaces the whole-tree fingerprint with per-lane inputs so an unchanged lane
-  can be reused after a docs edit or a merge that did not touch its inputs.
+  The legacy proof stores (`YeetLaneProofState` rows once kept in `ProofState.ts`, and the
+  `LaneProofRecord` rows in `.beep/yeet/lane-proofs.json`) are keyed by whole-tree identity. They are
+  retired and never migrated (rulings 59–60). The new key uses per-lane inputs instead of the
+  whole-tree fingerprint, so an unchanged lane can be reused after a docs edit or a merge that did
+  not touch its inputs.
 - **C2 ProofLedger service.** A `Context.Service` with record, lookup, and expire, backed by a
   per-checkout append-only NDJSON ledger under the checkout's Yeet state directory. No new
   coordination primitive: one writer, keyed rows, like the inbox. A machine-wide ledger keyed by

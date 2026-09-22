@@ -722,8 +722,8 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
           "Environment=PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin",
           "Environment=CI=true",
           `EnvironmentFile=${path.join(stateDir, "env")}`,
-          `ExecStartPre=/usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
-          'ExecStartPre="/usr/bin/bun" install --frozen-lockfile',
+          `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true /usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
+          'ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true "/usr/bin/bun" install --frozen-lockfile --ignore-scripts',
           `ExecStart="/usr/bin/bun" run beep graft deep refresh --owner "${owner}" --jobs 16`,
           "TimeoutStartSec=8h",
           "TimeoutStopSec=90",
@@ -873,6 +873,38 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
   );
 
   it.effect(
+    "runs pull, install, and sibling rebuild with only the allowlisted environment and keeps build overrides",
+    Effect.fn(function* () {
+      const { directory } = yield* fixture();
+      const phases: ReadonlyArray<GraftDeepRunnerStep["phase"]> = ["pull", "install", "rebuild"];
+      yield* Effect.forEach(phases, (phase) =>
+        Effect.gen(function* () {
+          const result = yield* GraftDeepRunner.use((runner) =>
+            runner.run({
+              args: ["-c", 'test -z "${GRAFT_API_KEY+x}" && test -z "${OTHER_PROVIDER_KEY+x}" && test "$CI" = true'],
+              command: "/bin/sh",
+              cwd: directory,
+              phase,
+              env: { GRAFT_API_KEY: "synthetic-provider-key", OTHER_PROVIDER_KEY: "synthetic-other-key" },
+            })
+          ).pipe(withLiveRunner());
+          expect(result.exitCode).toBe(0);
+        })
+      );
+      const build = yield* GraftDeepRunner.use((runner) =>
+        runner.run({
+          args: ["-c", 'test "$GRAFT_API_KEY" = synthetic-provider-key'],
+          command: "/bin/sh",
+          cwd: directory,
+          phase: "build",
+          env: { GRAFT_API_KEY: "synthetic-provider-key" },
+        })
+      ).pipe(withLiveRunner());
+      expect(build.exitCode).toBe(0);
+    })
+  );
+
+  it.effect(
     "reads back a missing, a written, and an unreadable status document",
     Effect.fn(function* () {
       const { fs, path, owner, stateDir } = yield* fixture();
@@ -912,7 +944,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
         refresh.run(refreshOptions({ owner, stateDir, model: "grok-4.6(low)" }))
       ).pipe(refreshWith(runner));
       expect(status.model).toBe("grok-4.6(low)");
-      expect(A.filter(commandLines(calls), Str.startsWith("bun install --frozen-lockfile"))).toHaveLength(1);
+      expect(commandLines(calls)).toContain("bun install --frozen-lockfile --ignore-scripts");
       const build = A.findFirst(calls, (call) =>
         Str.startsWith("graft build --deep")(formatCommandLine(call.command, call.args))
       );
@@ -1171,8 +1203,8 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       });
       const service = renderGraftDeepRefreshUnits(spaced)[0]?.text ?? "";
       expect(A.filter(Str.split("\n")(service), Str.startsWith("Exec"))).toEqual([
-        'ExecStartPre=/usr/bin/git -C "/clones/beep effect0" pull --ff-only --quiet origin main',
-        'ExecStartPre="/opt/bun 1/bin/bun" install --frozen-lockfile',
+        'ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true /usr/bin/git -C "/clones/beep effect0" pull --ff-only --quiet origin main',
+        'ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true "/opt/bun 1/bin/bun" install --frozen-lockfile --ignore-scripts',
         'ExecStart="/opt/bun 1/bin/bun" run beep graft deep refresh --owner "/clones/beep effect0" --jobs 16',
       ]);
       // systemd reads these two as whole lines, so quoting them would make the
@@ -1241,8 +1273,8 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       );
       assertSuccess(defaulted.result, undefined);
       expect(yield* execLines()).toEqual([
-        `ExecStartPre=/usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
-        `ExecStartPre="${shim}" install --frozen-lockfile`,
+        `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true /usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
+        `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true "${shim}" install --frozen-lockfile --ignore-scripts`,
         `ExecStart="${shim}" run beep graft deep refresh --owner "${owner}" --jobs 16`,
       ]);
       // An explicit --bun-path is pinned as given, with `~/` expanded against HOME.
@@ -1251,8 +1283,8 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       );
       assertSuccess(pinned.result, undefined);
       expect(yield* execLines()).toEqual([
-        `ExecStartPre=/usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
-        `ExecStartPre="${path.join(home, "tools", "bun")}" install --frozen-lockfile`,
+        `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true /usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
+        `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true "${path.join(home, "tools", "bun")}" install --frozen-lockfile --ignore-scripts`,
         `ExecStart="${path.join(home, "tools", "bun")}" run beep graft deep refresh --owner "${owner}" --jobs 16`,
       ]);
     }),
@@ -1639,8 +1671,8 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
             "\n"
           );
           expect(A.filter(service, Str.startsWith("Exec"))).toEqual([
-            `ExecStartPre=/usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
-            `ExecStartPre="${shim}" install --frozen-lockfile`,
+            `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true /usr/bin/git -C "${owner}" pull --ff-only --quiet origin main`,
+            `ExecStartPre=/usr/bin/env -i "HOME=%h" "PATH=%h/.local/share/mise/shims:%h/.local/bin:%h/.bun/bin:/usr/local/bin:/usr/bin:/bin" CI=true "${shim}" install --frozen-lockfile --ignore-scripts`,
             `ExecStart="${shim}" run beep graft deep refresh --owner "${owner}" --jobs 16`,
           ]);
           expect(service).toContain(`WorkingDirectory=${owner}`);

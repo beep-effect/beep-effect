@@ -1,0 +1,77 @@
+name: Heavy Admit
+
+# Label-triggered tier-2 admission (time-to-certainty B8, ruling 51).
+# Applying `ready-for-heavy` runs only the admission decision and the heavy
+# matrix for the labelled head. It never restarts Check's tier-1 jobs (a
+# `labeled` type on check.yml would cancel and re-run them), and it never
+# skips them either: a tier-1 job skipped on a `labeled` run would report a
+# skipped check run that GitHub counts as success, masking an earlier red on
+# the same SHA. Other labels are ignored at job level, so `size/*` from the
+# pr-size job (GITHUB_TOKEN, which never triggers workflows anyway) spends
+# nothing. Pushes after the label go through check.yml's own admission job,
+# which reads the sticky label.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [labeled]
+
+# No cancel-in-progress: every `labeled` event (any label, from any actor)
+# starts a run in this group, and cancelling would kill the heavy matrix a
+# previous `ready-for-heavy` run is executing. Runs for other labels skip at
+# job level; a superseded head's matrix is cancelled by check.yml's
+# admission job, never by a later label.
+concurrency:
+  group: heavy-admit-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  admission:
+    name: Heavy Admission
+    if: github.event.label.name == 'ready-for-heavy'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      verdict: ${{ steps.decide.outputs.verdict }}
+      admitted: ${{ steps.decide.outputs.admitted }}
+      docs_only: ${{ steps.decide.outputs.docs_only }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request base
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          free-disk: "false"
+
+      - name: Decide heavy admission
+        id: decide
+        shell: bash
+        run: bun run beep ci admission --github-output
+
+  heavy:
+    name: Heavy
+    needs: [admission]
+    if: ${{ needs.admission.outputs.verdict != 'hold' }}
+    permissions:
+      contents: read
+    uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main
+    secrets: inherit
+    with:
+      admitted: ${{ needs.admission.outputs.verdict == 'run' }}

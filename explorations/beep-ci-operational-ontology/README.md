@@ -21,7 +21,10 @@ the "bush" (`A_LETTER_FROM_THE_OTHER_SIDE_OF_THE_LOOP.md`).
 
 ## Next Open Question
 
-Auditor run 3 is closed and projected; run-4 pre-work is in flight. What is open:
+Auditor run 3 is closed and projected; run-4 pre-work is in flight. A September 16
+security closeout refresh moved only stale repository citation line numbers in
+the Stage A/B manifests; capture provenance and payload bytes remain unchanged.
+The run-4 questions below remain open:
 
 1. **PR #1092 is merged** (`e16e7a9297`): auditor skill v15 — required per-seat
    `effort` provenance on the run-manifest contract with its own self-test family
@@ -190,6 +193,11 @@ loop-closer) → S8 OWL 2 RL + SHACL formalization, rules compilation → S9 dog
 graduation. Full plan with locked decisions: [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
+
+- 2026-09-16: Reconciled inherited citation-line drift for security closeout;
+  [receipt](../../goals/codex-security-findings-2026-09-08/research/citation-refresh-2026-09-16.json)
+  maps unchanged source blocks from capture to current HEAD. No auditor run or
+  corpus recapture was performed.
 
 - 2026-09-12: Verified the merged PR #1095 docket against the authority records.
   All 138 unresolved IDs, the 54 carried-cluster assignments, 15 TAXONOMY flags,

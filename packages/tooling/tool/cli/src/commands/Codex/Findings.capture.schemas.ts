@@ -36,16 +36,17 @@ const $I = $RepoCliId.create("commands/Codex/Findings.capture.schemas");
  * ```ts
  * import { CodexFindingSeverity } from "@beep/repo-cli/commands/Codex/Findings.capture.schemas"
  *
- * console.log(CodexFindingSeverity.Options.indexOf("Medium")) // 1
- * console.log(CodexFindingSeverity.is.Informational("Informational")) // true
+ * console.log(CodexFindingSeverity.Options.indexOf("Medium")) // 2
+ * console.log(CodexFindingSeverity.is.Critical("Critical")) // true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const CodexFindingSeverity = LiteralKit(["High", "Medium", "Low", "Informational"]).pipe(
+export const CodexFindingSeverity = LiteralKit(["Critical", "High", "Medium", "Low", "Informational"]).pipe(
   $I.annoteSchema("CodexFindingSeverity", {
-    description: "Severity domain of a Codex Cloud security finding, ordered most severe first.",
+    description:
+      "Severity domain of a Codex security finding, ordered most severe first. Cloud exports never carry Critical; sealed local scans can.",
   })
 );
 
@@ -171,6 +172,56 @@ export const CodexFindingId = S.String.check(CodexFindingIdChecks).pipe(
  * @since 0.0.0
  */
 export type CodexFindingId = typeof CodexFindingId.Type;
+
+/**
+ * Disjoint cloud and local finding identities used by packet bindings.
+ *
+ * **Example** (Recognizing a local source identity)
+ * ```ts
+ * import { CapturedFindingId } from "@beep/repo-cli/commands/Codex/Findings.capture.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(CapturedFindingId)("local:csf_aaaaaaaaaaaaaaaaaaaaaaaa")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CapturedFindingId = S.Union([
+  CodexFindingId,
+  S.String.check(S.isPattern(/^local:csf_[a-f0-9]{24}$/)),
+]).pipe(
+  $I.annoteSchema("CapturedFindingId", { description: "Cloud ID or explicitly namespaced local stable finding ID." })
+);
+/**
+ * Source identity used for stable packet numbering.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CapturedFindingId = typeof CapturedFindingId.Type;
+
+/**
+ * Source contract of a findings capture.
+ *
+ * **Example** (Selecting a sealed bundle)
+ * ```ts
+ * import { CodexCaptureSource } from "@beep/repo-cli/commands/Codex/Findings.capture.schemas"
+ * console.log(CodexCaptureSource.is["security-bundle"]("security-bundle")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CodexCaptureSource = LiteralKit(["cloud-csv", "security-bundle"]).pipe(
+  $I.annoteSchema("CodexCaptureSource", { description: "Discriminates cloud exports from local sealed bundles." })
+);
+/**
+ * Capture source contract.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CodexCaptureSource = typeof CodexCaptureSource.Type;
 
 const GitCommitShaChecks = S.makeFilterGroup([
   S.isLengthBetween(40, 40, {
@@ -403,9 +454,9 @@ export type CodexFindingTitle = typeof CodexFindingTitle.Type;
  */
 export class CodexCaptureFinding extends S.Class<CodexCaptureFinding>($I`CodexCaptureFinding`)(
   {
-    codexId: CodexFindingId.pipe(
+    codexId: CapturedFindingId.pipe(
       $I.annoteKey("CodexCaptureFinding.codexId", {
-        description: "Codex Cloud identifier used to reconcile reruns and post-merge closure.",
+        description: "Cloud identifier or namespaced local identity used to reconcile reruns and closure.",
       })
     ),
     title: CodexFindingTitle.pipe(
@@ -466,6 +517,7 @@ export class CodexCaptureFinding extends S.Class<CodexCaptureFinding>($I`CodexCa
  */
 export class CodexCaptureMeta extends S.Class<CodexCaptureMeta>($I`CodexCaptureMeta`)(
   {
+    source: CodexCaptureSource.pipe(SchemaUtils.withKeyDefaults("cloud-csv")),
     capturedAt: CaptureDate.pipe(
       $I.annoteKey("CodexCaptureMeta.capturedAt", {
         description: "Calendar date the capture ran, used to derive the packet slug.",

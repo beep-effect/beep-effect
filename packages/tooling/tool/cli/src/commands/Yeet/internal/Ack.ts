@@ -38,11 +38,12 @@ import { readContainedFileStringNoFollow, writeContainedFileString } from "../..
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { yeetInboxAckPath } from "./Inbox.ts";
+import { ProofJobObservedVia } from "./ProofJob.ts";
 import type { FileSystem, Path } from "effect";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Ack");
 
-const YeetAckResolutionKind = LiteralKit(["fix-sha", "environment-only", "wontfix", "thread-url", "waive"]);
+const YeetAckResolutionKind = LiteralKit(["fix-sha", "environment-only", "wontfix", "thread-url", "waive", "observed"]);
 
 /**
  * Schema version stamped on every ack receipt.
@@ -196,16 +197,40 @@ export class YeetAckWaiveResolution extends S.Class<YeetAckWaiveResolution>($I`Y
 ) {}
 
 /**
+ * Acknowledge an informational row by observation: a proof-job result or a merge-ready announcement.
+ *
+ * **Details**
+ *
+ * `yeet inbox ack --observed` accepts only the kinds in `YeetInboxObservedRowKind`
+ * (`proof-job-finished`, `pr-merge-ready`); every other row needs a fix SHA, a
+ * reason, a thread URL, or a waiver.
+ *
+ * **Example** (Observe a job)
+ * ```ts
+ * import { YeetAckObservedResolution } from "@beep/repo-cli/test/Yeet"
+ * console.log(YeetAckObservedResolution.make({ via: "job-wait" }).kind) // "observed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetAckObservedResolution extends S.Class<YeetAckObservedResolution>($I`YeetAckObservedResolution`)(
+  { kind: S.tag("observed"), via: ProofJobObservedVia },
+  $I.annote("YeetAckObservedResolution", {
+    description: "Observation of an informational row: a proof-job result or a merge-ready announcement.",
+  })
+) {}
+
+/**
  * What was done about an inbox row: four permanent closing moves or a temporary waiver.
  *
  * **Details**
  *
  * The original SPEC A2 members remain unchanged — fix SHA, wontfix plus reason,
  * or thread URL — while `environment-only` adds a reasoned attribution without
- * changing the `yeet-ack/v1` wire shape. There is deliberately no bare "seen"
- * member: a receipt with no work log would turn the ack protocol into a
- * dismissal button, and dismissals are A3's *waive* concept with attribution
- * and expiry, not an acknowledgment.
+ * changing the `yeet-ack/v1` wire shape. The observed member applies only to the informational
+ * `proof-job-finished` and `pr-merge-ready` rows; gate rows still require a resolution or an
+ * attributed waiver.
  *
  * **Example** (Decode an environment-only resolution)
  *
@@ -229,6 +254,7 @@ export const YeetAckResolution = S.Union([
   YeetAckWontfixResolution,
   YeetAckThreadResolution,
   YeetAckWaiveResolution,
+  YeetAckObservedResolution,
 ]).pipe(
   $I.annoteSchema("YeetAckResolution", {
     title: "Yeet Ack Resolution",
@@ -263,6 +289,7 @@ export type YeetAckResolution = typeof YeetAckResolution.Type;
  */
 export const renderYeetAckResolution = (resolution: YeetAckResolution): string =>
   Match.value(resolution).pipe(
+    Match.discriminator("kind")("observed", (observed) => `observed via ${observed.via}`),
     Match.discriminator("kind")("environment-only", (environmentOnly) => `environment-only: ${environmentOnly.reason}`),
     Match.discriminator("kind")("fix-sha", (fix) => `fix-sha ${fix.sha}`),
     Match.discriminator("kind")("thread-url", (thread) => `thread ${thread.url}`),

@@ -77,6 +77,16 @@ set -euo pipefail
 # Without jq the instrument degrades to silence rather than to noise or a block.
 command -v jq >/dev/null 2>&1 || exit 0
 
+# `BEEP_HOOK_PULSE_AGENT_KIND` lets an adapter that reuses this body (the Cursor
+# adapter at `.cursor/hooks/hook-pulse.sh`) tag its rows. Only `HookPulseAgentKind`
+# literals may reach the ledger: an inherited stray value would append a row that
+# `HookPulseV1` cannot decode, so an unknown kind writes nothing and notifies no one.
+agent_kind="${BEEP_HOOK_PULSE_AGENT_KIND:-claude-code}"
+case "${agent_kind}" in
+  claude-code|codex-cli|cursor-cli) ;;
+  *) exit 0 ;;
+esac
+
 # Same degradation rule for the digest tool, and for a stronger reason: without
 # it the writer cannot pseudonymize `sessionId`, `cwd`, and `transcriptPath`, and
 # those are exactly the fields `Sha256Hex` exists to keep out of the ledger in
@@ -325,7 +335,7 @@ def notification_types: [ "permission_prompt", "idle_prompt" ];
 output="$(
   jq -c -r \
     --arg ts "${ts}" \
-    --arg agentKind "claude-code" \
+    --arg agentKind "${agent_kind}" \
     --arg notifierRev "${notifier_rev}" \
     --arg instrumentClass "${instrument_class}" \
     --arg sessionIdHash "${session_id_hash}" \
@@ -383,14 +393,31 @@ if [ "${notifier_rev}" != "log-only-0" ]; then
       <<<"${notification_fields}"
     notifier_path="${BASH_SOURCE[0]%/*}/sequence-break-notifier.sh"
     if [ -x "${notifier_path}" ]; then
+      # Local display/navigation context stays out of the evidence and ntfy
+      # ledgers. Preserve the controlling terminal before setsid detaches us.
+      notification_terminal=""
+      if [ "${TERM_PROGRAM:-}" = "ghostty" ]; then
+        if { exec 7>/dev/tty; } 2>/dev/null && [ -t 7 ]; then
+          notification_terminal="ghostty"
+        fi
+      fi
+      notification_uri="${BEEP_SEQUENCE_BREAK_OPEN_URI:-}"
+      if [ -z "${notification_uri}" ] &&
+        [ "${CODEX_INTERNAL_ORIGINATOR_OVERRIDE:-}" = "Codex Desktop" ] &&
+        [ -n "${CODEX_THREAD_ID:-}" ] && [ "${CODEX_THREAD_ID}" = "${raw_session_id}" ]; then
+        notification_uri="codex://threads/${raw_session_id}"
+      fi
       notifier_args=(
-        "claude-code"
+        "${agent_kind}"
         "${notification_session}"
         "${notification_ts}"
         "${notification_reason}"
         "${notification_target}"
         "${notification_tool}"
         "${notifier_rev}"
+        "${raw_cwd}"
+        "${notification_uri}"
+        "${notification_terminal}"
       )
       if [ "${BEEP_SEQUENCE_BREAK_FOREGROUND:-0}" = "1" ]; then
         "${notifier_path}" "${notifier_args[@]}" </dev/null >/dev/null 2>&1 || true

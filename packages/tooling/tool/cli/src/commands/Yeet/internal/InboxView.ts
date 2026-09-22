@@ -35,7 +35,13 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { readYeetAckState, YeetAckState } from "./Ack.ts";
-import { YeetInboxRow, YeetInboxRowJson, yeetInboxExpectedRowId, yeetInboxPaths } from "./Inbox.ts";
+import {
+  YeetInboxRow,
+  YeetInboxRowJson,
+  yeetInboxExpectedRowId,
+  yeetInboxPaths,
+  yeetInboxRowIsObserved,
+} from "./Inbox.ts";
 import { loadYeetRemediationWave } from "./Remediation.ts";
 import type { Path } from "effect";
 import type { YeetRemediationWave } from "./Remediation.ts";
@@ -140,7 +146,11 @@ export const yeetInboxRowLiveness: {
   (wave: O.Option<YeetRemediationWave>): (row: YeetInboxRow) => YeetInboxLiveness;
   (row: YeetInboxRow, wave: O.Option<YeetRemediationWave>): YeetInboxLiveness;
 } = dual(2, (row: YeetInboxRow, wave: O.Option<YeetRemediationWave>): YeetInboxLiveness => {
-  if (row.kind === "sibling-collision" || row.kind === "local-shard-failed") {
+  // Rows the remediation wave never owns: collisions, local shards, and the rows
+  // acknowledged by observation (job results, and merge-ready announcements the
+  // merge loop supersedes itself with a fix-sha receipt on push). Their liveness
+  // is not a wave question.
+  if (row.kind === "sibling-collision" || row.kind === "local-shard-failed" || yeetInboxRowIsObserved(row)) {
     return "live";
   }
   return O.match(wave, {

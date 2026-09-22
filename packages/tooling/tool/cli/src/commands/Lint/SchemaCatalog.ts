@@ -677,7 +677,7 @@ export const renderSchemaCatalogDocument = Effect.fn("SchemaCatalog.renderDocume
   document: SchemaCatalogDocument
 ) {
   const encodedDocument = yield* encodeSchemaCatalogDocument(document);
-  const rendered = yield* stringifyJsonPretty.run(O.some(encodedDocument), {});
+  const rendered = yield* SchemaGetter.run(stringifyJsonPretty, O.some(encodedDocument), {});
   const serialized = O.getOrElse(rendered, thunkEmptyStr);
   return `${SCHEMA_CATALOG_HEADER}\n${serialized}\n`;
 });

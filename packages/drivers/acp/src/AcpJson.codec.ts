@@ -428,11 +428,11 @@ const JsonText = S.String.annotate({
   contentMediaType: "application/json",
 });
 
-const decodeJsonTextGetter = SchemaGetter.onSome<unknown, string>((input, options) =>
+const decodeJsonTextGetter = SchemaGetter.transformEffect<unknown, string>((input, options) =>
   Result.match(readJsonText(input), {
     onFailure: (error) =>
       Effect.fail(new SchemaIssue.InvalidValue({ expected: "a JSON text", message: error.message }, input, options)),
-    onSuccess: Effect.succeedSome,
+    onSuccess: Effect.succeed,
   })
 );
 

@@ -2296,7 +2296,11 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,
     knip: A.empty<string>,
-    labs: A.empty<string>,
+    // check.yml runs `ci lane labs --summarize` with no affected shape (a
+    // positive filter plus --affected would widen the selection). The summary
+    // is what folds the lab check/lint/test task hashes into the lane digest
+    // (TTC ruling 58), so the local replay passes it too.
+    labs: () => ["--summarize"],
     lint: () => turboShapeFlags,
     "lint-policy": A.empty<string>,
     nix: A.empty<string>,

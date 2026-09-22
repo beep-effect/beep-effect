@@ -1,0 +1,10 @@
+{
+  "$schema": "https://v2-11-2.turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": ["$TURBO_EXTENDS$", ".env*"],
+      "env": ["$TURBO_EXTENDS$", "ANALYZE"]
+    }
+  }
+}

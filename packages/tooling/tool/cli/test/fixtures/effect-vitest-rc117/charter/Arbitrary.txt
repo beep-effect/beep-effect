@@ -1,0 +1,39 @@
+// Exact declaration excerpts from packages/effect/src/unstable/arbitrary/Arbitrary.ts at
+// @effect/vitest@4.0.0-rc.117 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: cbca0b7788692dfdcb8204c512d42af2416c75975975a01cb025ce3f73adf742
+
+// @effect-vitest-anchor Arbitrary.CheckOptions 182 189
+export interface CheckOptions {
+  readonly runs?: number | undefined
+  readonly size?: number | undefined
+  readonly maxDiscards?: number | undefined
+  readonly maxShrinks?: number | undefined
+  readonly seed?: string | number | undefined
+  readonly replay?: Replay | undefined
+}
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.runs 183 183
+  readonly runs?: number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.size 184 184
+  readonly size?: number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.maxDiscards 185 185
+  readonly maxDiscards?: number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.maxShrinks 186 186
+  readonly maxShrinks?: number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.seed 187 187
+  readonly seed?: string | number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.replay 188 188
+  readonly replay?: Replay | undefined
+
+// @effect-vitest-anchor Arbitrary.schema 362 367
+export function schema<S extends Schema_.Constraint>(
+  schema: S,
+  options?: SchemaOptions<S["Type"]>
+): Arbitrary<S["Type"]> {
+  return Internal.schema(schema, options)
+}

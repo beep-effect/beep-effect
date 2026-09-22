@@ -16,6 +16,9 @@ commit, push, PR checks, review closeout, and merge readiness.
 
 ```bash
 git status --short --branch
+```
+
+```bash
 git diff --name-status
 ```
 
@@ -25,6 +28,9 @@ git diff --name-status
 
 ```bash
 git fetch origin main:refs/remotes/origin/main --quiet
+```
+
+```bash
 git rev-list --count "$(git merge-base HEAD origin/main)"..origin/main
 ```
 
@@ -35,6 +41,9 @@ git rev-list --count "$(git merge-base HEAD origin/main)"..origin/main
 
 ```bash
 git fetch origin
+```
+
+```bash
 git merge origin/main
 ```
 
@@ -57,6 +66,31 @@ ps -eo pid,ppid,stat,etime,comm | rg 'bun|node|beep|turbo|gh|git' | rg -v 'rg|ps
 ```
 
 ## Canonical Commands
+
+### Detached durable jobs
+
+Use `--detach` for a proof expected to outlive the current repair loop. It runs
+as a transient systemd user service and reports completion or death through the
+checkout inbox. An unavailable user manager is an error.
+
+```bash
+bun run beep yeet verify --tier cheap-gates --detach
+bun run beep yeet publish --message "feat: describe change" --detach
+bun run beep yeet monitor --until-ready --detach
+bun run beep yeet job wait <jobId> --timeout "1 hour"
+bun run beep yeet job status <jobId> --ack
+bun run beep yeet job logs <jobId> --tail 100
+bun run beep yeet job cancel <jobId>
+```
+
+`repair`, `closeout`, and `monitor` also accept `--detach`. Use
+`--job-max-runtime "2 hours"` to set a systemd runtime ceiling. `--plan` and
+recursive detachment inside a job are rejected. `job wait` returns 0 for green,
+1 for red, and 2 for termination, and acknowledges the informational inbox row.
+Use `yeet inbox ack <id> --observed` to acknowledge a job result manually.
+The finalizer records abnormal deaths in the attempt journal; job records and
+logs remain under `.beep/yeet/jobs/`, with the newest 50 terminal jobs retained.
+
 
 - Repair local work:
 
@@ -157,17 +191,19 @@ output into GitHub, a PR body, or another public surface. A workstation without 
 matching registry row or Claude `pr-link` transcript exits 4 and prints the native
 `claude --from-pr <n>` recovery hint.
 
-- Keep monitoring across pushes until the PR merges or closes, instead of
-  re-arming a fresh monitor after every fix wave:
+- Keep monitoring across pushes until the PR merges or closes. This announces
+  readiness once per head, writes the `pr-merge-ready` inbox row, and keeps
+  polling after the announcement:
 
 ```bash
 bun run beep yeet monitor --until-merged
 ```
 
-- Stream one NDJSON row per PR state transition (typed `yeet-watch/v1` rows:
+- For stream consumers: emit one NDJSON row per PR state transition (typed `yeet-watch/v1` rows:
   check transitions, thread open/resolve, new PR comments, mergeability, head
-  supersession) until the PR settles; exits non-zero on a red wave, a closed
-  PR, or a poll error. Every observed red also appends a failure capsule —
+  supersession) until the PR settles; exits non-zero on a required red, a closed
+  PR, a settle timeout, or a poll error. Optional reds remain in transition rows
+  and the `watch-ended.optionalFailing` count. Every observed red also appends a failure capsule —
   derived from the failing check's own record — to
   `<checkout>/.beep/inbox/failures.ndjson` (`yeet-inbox/v1`) and advances the
   wave record at `.beep/inbox/dispatch.json` (`yeet-dispatch/v1`): first red
@@ -178,12 +214,13 @@ bun run beep yeet monitor --until-merged
 bun run beep yeet monitor --watch
 ```
 
-- The agent babysitting loop: the same stream, but the process **exits** on
-  the first actionable event batch — immediately when a check fails (the
+- For stream consumers that need an event wake: the process **exits** on
+  the first actionable event batch — immediately when a required check fails (the
   failure capsule is already durable when it exits, even while sibling checks
   still run), and ~20 seconds after the first new PR comment so a review bot's
   burst lands as one batch of `comment-posted` rows. Exit code 0 is a
-  comment-only wake; non-zero means a red, a closed PR, or a poll error. The
+  comment-only wake; non-zero means a required red, a closed PR, a settle
+  timeout, or a poll error. Optional reds never trigger the event exit. The
   comment cursor is a durable branch-scoped watermark shared with plain
   `yeet monitor`, so relaunching after acting loses nothing: a comment posted
   while no monitor was attached is the next session's first row. Run it as a
@@ -199,6 +236,9 @@ bun run beep yeet monitor --watch --until-event
 
 ```bash
 bun run beep yeet sweep --plan
+```
+
+```bash
 bun run beep yeet sweep
 ```
 
@@ -212,6 +252,9 @@ bun run beep yeet sweep
 
 ```bash
 bun run beep yeet sweep --retire --plan
+```
+
+```bash
 CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run beep yeet sweep --retire && cd "$CLONE"
 ```
 
@@ -256,6 +299,9 @@ bun run beep yeet merge
 
 ```bash
 bun run beep yeet status
+```
+
+```bash
 bun run beep yeet status --json
 ```
 
@@ -269,6 +315,9 @@ bun run beep yeet status --remote
 
 ```bash
 bun run beep yeet monitor --summary
+```
+
+```bash
 bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0
 ```
 
@@ -282,6 +331,9 @@ bun run beep yeet closeout --require-greptile-score 5/5 --require-greptile-issue
 
 ```bash
 bun run beep quality profile detect
+```
+
+```bash
 bun run beep quality profile config workstation
 ```
 
@@ -289,13 +341,37 @@ Use plan mode before long or risky runs when you need to inspect the shape:
 
 ```bash
 bun run beep yeet repair --plan --json
+```
+
+```bash
 bun run beep yeet verify --plan --json
+```
+
+```bash
 bun run beep yeet verify --tier cheap-gates --plan --json
+```
+
+```bash
 bun run beep yeet verify --tier review-fix --plan --json
+```
+
+```bash
 bun run beep yeet publish --message "type(scope): summary" --plan --json
+```
+
+```bash
 bun run beep yeet status --remote --plan --json
+```
+
+```bash
 bun run beep yeet monitor --summary --plan --json
+```
+
+```bash
 bun run beep yeet closeout --plan --json
+```
+
+```bash
 bun run beep yeet sweep --plan --json
 ```
 
@@ -365,6 +441,37 @@ the **actual CI token's permissions**, not just locally. A gate that reads, say,
 Confirm the token scope (or fail *open* on a genuine permission error, distinct
 from a real security failure) before shipping such a fix.
 
+## Settle rule
+
+The monitor loops read the base branch ruleset once per head. They wait for every
+expected required context to report a terminal result. If an exact parent name
+is absent but `<context> (<variant>)` children report, the parent is tolerated
+and those children must finish. A missing parent with no children keeps waiting.
+If the ruleset read fails, one warning precedes fallback to the `--required`
+view. Optional reds do not affect exit codes. `--settle-timeout` defaults to
+30 minutes; it applies to `--until-ready`, `--until-merged`, and `--watch`, and
+it bounds registration only: the budget counts while no check has registered
+or an expected context is still missing, never while a registered required
+check is queued or running (that wait is GitHub's job timeout, not ours).
+Gate lines name `registration`, `required-pending`, `heavy-not-admitted`,
+`base-conflict`, `closeout-pending`, or `settle-timeout`, including missing and
+pending contexts. `base-conflict` means the base moved under the head (GitHub
+reports `CONFLICTING`/`DIRTY` and empties the check rollup): merge `origin/main`
+and push; the wait never spends the budget. A context once seen registered for
+a head stays `pending` when one poll omits it, never `missing`. `heavy-not-admitted` is tier-2 admission (B8): the loop computes the
+heavy verdict every poll from the same function CI runs (`ready-for-heavy`
+label, docs-only diff) and, while the verdict is `hold` with `Heavy / *`
+contexts still open, moves them from `missing`/`pending` into a `gated` census
+bucket and prints
+`settle: heavy-not-admitted; gated: …; admit: gh pr edit --add-label ready-for-heavy; waited …`.
+Held time never counts toward `--settle-timeout`; the settle clock resets when
+the verdict changes, and the label admits within one poll. `skip-satisfied`
+(docs-only) settles once every lane reports a terminal outcome: `pass` when it
+passed without work on a hosted runner, `skip` where a lane is still skipped.
+A settled head does not time out while waiting for review closeout. The final
+readiness gate line includes the head timeline and push→ready wall clock when
+the push date is known.
+
 ## Mergeable PR Workflow
 
 1. Run `bun run beep yeet repair` when local changes need deterministic fixers,
@@ -376,14 +483,22 @@ from a real security failure) before shipping such a fix.
 5. If no pull request exists for the pushed branch, prefer publishing with
    `--pr` so Yeet creates a ready PR from the commit log and local proof
    summary; `gh pr create --draft --fill` remains the manual fallback.
-6. Arm `bun run beep yeet monitor --watch --until-event` as a blocking command
-   (generous timeout) as soon as the PR exists. When it exits, act on the rows
-   it printed instead of waiting for anything more: `comment-posted` rows →
-   draft replies and run the reply flow; a non-zero exit with a red →
-   read the inbox capsule and `bun run beep yeet status --remote`, fix,
-   publish. Then re-arm the watch. The watch's exit IS the comment/red signal
-   — do not idle-poll the PR between exits. `bun run beep yeet monitor
-   --summary` remains for one-shot compact reads.
+6. As soon as the PR exists, submit the babysit loop as a detached job and block
+   on it from a background tool call:
+   `bun run beep yeet monitor --until-ready --detach`, then
+   `bun run beep yeet job wait <jobId>`. The job survives session restarts and
+   the ten-minute tool-call cap, but not a reboot: re-submit it after one.
+   `job wait` returns 0 for green (the loop ended `ready`), 1 for red
+   (`required-red`, `settle-timeout`, `closed`, or a spent poll-error budget),
+   2 for a terminated job. When the user manager is unreachable, run
+   `bun run beep yeet monitor --until-ready` attached instead. Exit 0 with
+   `merge-ready: yes` means hand the PR to the operator; it does not merge it.
+   On exit 1, read the summary line, fix the named blocker, publish, and re-arm
+   the command. A code PR holds at `heavy-not-admitted` until you apply the
+   `ready-for-heavy` label (see Merge Loop); do that once tier 1 is green, not
+   at publish. Act on unresolved review threads through the reply flow while
+   the loop waits. The loop runs read-first closeout automatically after the
+   required checks settle. `monitor --summary` remains a one-shot compact read.
 7. Run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`
    to inspect unresolved actionable review threads and review-bot gates.
 8. Use `bun run beep yeet verify --tier review-fix` while fixing PR comments,
@@ -448,6 +563,18 @@ the authoritative gates.
 the merge-loop porcelain. They read the clone and the PR; none of them plan
 turbo work, so they are cheap to run mid-loop.
 
+- **Heavy admission is a deliberate verb.** Publish without the label and let
+  tier 1 (lint shards, unit shards, cheap gates) go green first; `Heavy
+  Admission` in `check.yml` then holds a code PR (`Heavy / *` stays
+  "Expected", merge blocked) until `gh pr edit <n> --add-label ready-for-heavy`.
+  Apply it yourself, then run `bun run beep yeet monitor --until-ready` — the
+  held loop prints that exact command and does not burn its settle budget.
+  The label triggers `heavy-admit.yml`, which runs only the admission job and
+  the heavy matrix for that head; tier 1 is neither cancelled nor re-run.
+  Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,
+  any `*.md`, packet prose) need no label: every heavy lane passes without work on
+  a hosted runner and satisfies the ruleset. Removing the label changes nothing already reported;
+  cancel a heavy run from the Actions UI if it must stop.
 - `monitor --until-merged` re-reads status every poll, so a push landing
   mid-session is picked up as the new budget scope. Job triage is job-level
   and mid-run: a completed red job is classified on the poll after it

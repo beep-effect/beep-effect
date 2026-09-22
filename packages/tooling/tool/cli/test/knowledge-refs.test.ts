@@ -12,6 +12,7 @@ import {
   makeKnowledgeTreeOracle,
   scanKnowledgeRefsTree,
 } from "@beep/repo-cli/commands/Knowledge";
+import { renderKnowledgeRefsReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.command";
 import {
   EffectVitestFinding,
   EffectVitestInventoryDocument,
@@ -502,6 +503,45 @@ describe("knowledge refs golden fixture matrix", () => {
         "malformed-utf8 goals/example/ops/data.json",
       ]);
       expect(verdicts(report.observations)).toEqual(["verified/resolved"]);
+    })
+  );
+});
+
+describe("knowledge refs listing", () => {
+  it.effect(
+    "omits verified rows by default and restores them with verbose output",
+    Effect.fnUntraced(function* () {
+      const report = yield* scanFixture({
+        "docs/guide.md": "See `docs/README.md` and `docs/missing.md`.\n",
+        "docs/README.md": "ok\n",
+      });
+      const normal = renderKnowledgeRefsReport(report, "all", { verbose: false });
+      const verbose = renderKnowledgeRefsReport(report, "all", { verbose: true });
+      expect(normal).toContain("observations (all) (2):");
+      expect(normal).toContain("  verified: 1 row(s) omitted (--verbose lists them)");
+      expect(normal).not.toContain("  verified docs/guide.md:");
+      expect(verbose).toContain("observations (all) (2):");
+      expect(verbose).toContain("  verified docs/guide.md:");
+      expect(verbose).not.toContain("row(s) omitted");
+      for (const output of [normal, verbose]) {
+        expect(output).toContain("  broken-target docs/guide.md:");
+        expect(output).toContain("docs/missing.md");
+      }
+    })
+  );
+
+  it.effect(
+    "counts omitted verified rows within the requested surface",
+    Effect.fnUntraced(function* () {
+      const report = yield* scanFixture({
+        "docs/guide.md": "See `docs/README.md`.\n",
+        "goals/example/research/notes.md": "See `docs/README.md`.\n",
+        "docs/README.md": "ok\n",
+      });
+      const output = renderKnowledgeRefsReport(report, "live", { verbose: false });
+      expect(output).toContain("observations: 2 (live 1, archival 1)");
+      expect(output).toContain("observations (live) (1):");
+      expect(output).toContain("  verified: 1 row(s) omitted (--verbose lists them)");
     })
   );
 });
@@ -1027,7 +1067,7 @@ const generatedDocuments = Effect.fnUntraced(function* (finding: EffectVitestFin
   const inventory = yield* encodeEffectVitestInventoryDocument(
     EffectVitestInventoryDocument.make({
       schemaVersion: "effect-vitest-inventory/v1",
-      effectVitestVersion: "4.0.0-rc.113",
+      effectVitestVersion: "4.0.0-rc.117",
       scope: [],
       findings: [finding],
     })

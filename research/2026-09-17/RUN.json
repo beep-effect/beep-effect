@@ -1,0 +1,84 @@
+{
+  "schema": "beep.research.run/v0",
+  "date": "2026-09-17",
+  "status": "partial",
+  "window": {
+    "start": "2026-09-13T08:20:00-05:00",
+    "end": "2026-09-17T08:45:00-05:00",
+    "label": "America/Chicago"
+  },
+  "prior": {
+    "lastSuccessfulPacket": "research/2026-09-13",
+    "lastSuccessfulPr": 1136,
+    "lastSuccessfulRun": "2026-09-13T08:20:00-05:00"
+  },
+  "orphan_absorbed": {
+    "packet": "research/2026-09-16",
+    "claims": 29,
+    "reason": "publisher CloudAgent stuck creating; cancelled; never opened PR",
+    "excluded_path": "research/ledger/excluded-packets/2026-09-16.jsonl"
+  },
+  "counts": {
+    "total": 27,
+    "window_new": 13,
+    "refute": 16,
+    "by_axis": {
+      "law": 7,
+      "effect": 11,
+      "agents": 9
+    }
+  },
+  "novelty": {
+    "window_new": 13,
+    "exclusion_url_collisions": 1,
+    "exclusion_collision_pct": 7.7,
+    "collision_urls": [
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/2640"
+    ],
+    "note": "Hard collision is intentional SEP-2640 re-cite after settle; soft-exclusion absorbs from orphaned 09-16. Gate <40% pass."
+  },
+  "quotaPools": {
+    "search": "web+github-mcp+arxiv+npm",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "frictions": [
+    {
+      "source": "user-X",
+      "tools": ["search_posts_all", "search_news"],
+      "error": "client-not-enrolled",
+      "detail": "X API v2 Client Forbidden; continued without X."
+    },
+    {
+      "source": "arxiv-export",
+      "error": "HTTP-429",
+      "detail": "export.arxiv.org rate-limited; absorbed prior verified in-window arXiv claims from orphaned 09-16."
+    },
+    {
+      "source": "local-gh",
+      "error": "bad-credentials",
+      "detail": "Unused by design; GitHub via cursor-github MCP as kriegcloud."
+    }
+  ],
+  "resume_cursor": {
+    "x": null,
+    "arxiv": "retry when 429 clears",
+    "note": "Retry X when project enrollment fixed."
+  },
+  "headline_deltas": [
+    "Legora ontology + AI-native citator (Sep 14; Q4 GA) + Salesforce global adoption (Sep 16)",
+    "Effect #8269 HttpApi.ParseOptions + #8261 HTTP QUERY MERGED Sep 17; tip still rc.115 / #8201 OPEN",
+    "SEP-2640 remains MERGED Final; Tier-1 SDKs still OPEN (ts#2818 draft)",
+    "jazz-tools tip HOLD alpha.55 wire v2; no alpha.56",
+    "SchemaJIT #7908 + Evolu #708 updated Sep 17 but still unpublished",
+    "USPTO/iManage/Harvey-Everlaw/Instant/drizzle/Zero HOLDs unchanged",
+    "Orphaned 09-16 absorbed into excluded-packets + re-verified absorbs"
+  ],
+  "blinding": {
+    "cloned_beep_effect": false,
+    "opened_pr": false,
+    "called_cloud_agent": false
+  }
+}

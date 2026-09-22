@@ -407,6 +407,7 @@ describe("CI runner security", () => {
       git(["init"]);
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
+      git(["config", "commit.gpgsign", "false"]);
       yield* fs.makeDirectory(path.join(tempRoot, "goals", "example"), { recursive: true });
       yield* fs.writeFileString(path.join(tempRoot, "goals", "example", "GOAL.md"), "# baseline\n");
       git(["add", "."]);
@@ -491,6 +492,7 @@ describe("CI runner security", () => {
       git(["init"]);
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
+      git(["config", "commit.gpgsign", "false"]);
       yield* writeAndCommit("README.md", "# baseline\n", "baseline");
       git(["update-ref", "refs/remotes/origin/main", git(["rev-parse", "HEAD"])]);
       const baseline = git(["rev-parse", "HEAD"]);
@@ -548,6 +550,29 @@ describe("CI runner security", () => {
     }, provideScopedLayer(NodeServices.layer))
   );
 
+  // TTC ruling 58: the labs lane gained a Turbo input digest without losing its
+  // pull-request path gate; pushes still run the full labs set, and the hosted
+  // argv carries the --summarize that the digest folds.
+  it.effect(
+    "keeps the labs lane path gate and its summarized hosted argv",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml"));
+
+      assert.include(
+        workflowText,
+        'if [[ "${{ matrix.id }}" == "labs" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then'
+      );
+      assert.include(
+        workflowText,
+        "grep -Eq '(^apps/labs/|^\\.github/workflows/check\\.yml$|^(bun\\.lock|package\\.json|turbo\\.json)$)'"
+      );
+      assert.include(workflowText, "run_lane ci lane labs --summarize");
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
   // Release lanes run only on `professional-desktop-v*` tags, so this parse is
   // the standing proof that the ubuntu-22.04 matrix leg prunes the third-party
   // apt sources before its first apt-get update, once checkout has put the
@@ -594,6 +619,7 @@ describe("CI runner security", () => {
       git(["init"]);
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
+      git(["config", "commit.gpgsign", "false"]);
       yield* fs.writeFileString(path.join(tempRoot, "README.md"), "# baseline\n");
       git(["add", "."]);
       git(["commit", "-m", "baseline"]);

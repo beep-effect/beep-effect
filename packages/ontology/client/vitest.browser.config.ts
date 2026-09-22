@@ -1,18 +1,14 @@
-import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 // Browser-mode suite for the graph renderer toggle (cosmos default, 3D opt-in,
 // selection sync). Run with `bun run test:browser`; requires a Playwright
 // chromium, matching the storybook CI lane's browser setup.
+// Since @cosmos.gl/graph 3.4.2 the package imports gl-bench's shipped ESM
+// build by its deep path, so the former `gl-bench` alias (which a bare-name
+// prefix rewrite would turn into a doubled, nonexistent path) is gone here and
+// in the professional-desktop vite config alike.
 export default defineConfig({
-  resolve: {
-    alias: {
-      // cosmos.gl imports gl-bench whose `main` is a default-less UMD build;
-      // pin the shipped ESM build, mirroring the professional-desktop vite fix.
-      "gl-bench": fileURLToPath(new URL("../../../node_modules/gl-bench/dist/gl-bench.module.js", import.meta.url)),
-    },
-  },
   test: {
     name: "ontology-client-browser",
     include: ["test/browser/**/*.test.{ts,tsx}"],

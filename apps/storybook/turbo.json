@@ -1,5 +1,5 @@
 {
-  "$schema": "https://turborepo.com/schema.json",
+  "$schema": "https://v2-11-2.turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
     "check": {
@@ -11,6 +11,12 @@
     },
     "storybook": {
       "passThroughEnv": ["PORTLESS", "PORTLESS_URL"]
+    },
+    "lint": {
+      "inputs": [
+        "$TURBO_EXTENDS$",
+        "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**"
+      ]
     }
   }
 }

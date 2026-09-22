@@ -2,6 +2,7 @@ import {
   CI_LANE_DESCRIPTORS,
   CI_LANE_ID_VALUES,
   CI_LANE_PARTITIONS,
+  CiLaneId,
   CiLanePartition,
   CiLaneRunOptions,
   CiLocalStepPlan,
@@ -122,6 +123,7 @@ const ciExecutionLayer = (
 const firstOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.head(items));
 const stepAt = <T>(items: ReadonlyArray<T>, index: number): T => O.getOrThrow(A.get(items, index));
 const lastOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.last(items));
+const isLocalCiLaneId = S.is(CiLaneId);
 
 const baseOptions = CiLaneRunOptions.make({
   affected: false,
@@ -1532,10 +1534,31 @@ describe("ciLocalStepsForTesting", () => {
     expect(inputs[0]?.[2]).toStrictEqual(O.none());
   });
 
-  it("dispatches the labs lane bare, without affected shaping", () => {
+  it("dispatches the labs lane with the hosted --summarize and without affected shaping", () => {
     const affectedPlan = CiLocalStepPlan.make({ ...branchPlan, affected: true });
-    const step = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["labs"], affectedPlan));
-    expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "labs"]);
+    const affected = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["labs"], affectedPlan));
+    const branch = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["labs"], branchPlan));
+    expect([...affected.args]).toEqual(["run", "beep", "ci", "lane", "labs", "--summarize"]);
+    expect([...branch.args]).toEqual([...affected.args]);
+  });
+
+  // TTC ruling 58: a lane whose descriptor accepts --summarize replays it locally,
+  // because the run summary is the only source of the lane's Turbo input digest.
+  it("replays --summarize for every local lane whose descriptor accepts it", () => {
+    const summarizing = pipe(
+      CI_LANE_DESCRIPTORS,
+      A.filter((descriptor) => A.contains(descriptor.flags, "--summarize")),
+      A.map((descriptor) => descriptor.id),
+      A.filter(isLocalCiLaneId)
+    );
+    const missingFor = (plan: CiLocalStepPlan) =>
+      A.filter(
+        summarizing,
+        (laneId) => !A.contains(firstOf(ciLocalStepsForTesting(REPO_ROOT, [laneId], plan)).args, "--summarize")
+      );
+    expect(summarizing).toContain("labs");
+    expect(missingFor(branchPlan)).toEqual([]);
+    expect(missingFor(CiLocalStepPlan.make({ ...branchPlan, affected: true }))).toEqual([]);
   });
 
   it("forwards the affected shape to the storybook lane as its change-profile gate", () => {

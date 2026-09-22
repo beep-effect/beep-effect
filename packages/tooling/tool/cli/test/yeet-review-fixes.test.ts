@@ -175,6 +175,8 @@ describe("yeet review fixes", () => {
             "user.name=Yeet Test",
             "-c",
             "user.email=yeet@example.test",
+            "-c",
+            "commit.gpgsign=false",
             "commit",
             "--allow-empty",
             "-m",

@@ -704,7 +704,7 @@ const writeDoctorBaseline = Effect.fn("Goals.writeDoctorBaseline")(function* (
     ),
   });
   const encoded = yield* encodeBaseline(baseline);
-  const rendered = yield* stringifyBaseline.run(O.some(encoded), {});
+  const rendered = yield* SchemaGetter.run(stringifyBaseline, O.some(encoded), {});
   yield* fs.writeFileString(GOALS_DOCTOR_BASELINE_PATH, `${O.getOrElse(rendered, thunkEmptyStr)}\n`);
   yield* Console.log(`[goals:doctor] wrote ${GOALS_DOCTOR_BASELINE_PATH} with ${A.length(blocking)} finding key(s).`);
 });

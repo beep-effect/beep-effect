@@ -37,6 +37,22 @@ const configured = (values: Readonly<Record<string, string>>) =>
   provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(values)));
 
 describe("run scope", () => {
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })("proof job unit", (it) => {
+    it.effect("adopts the proof service without probing busctl", () =>
+      enterRunScope("ticket", "/repo").pipe(
+        configured({ BEEP_YEET_JOB_UNIT: "beep-proof-job.service", PATH: "/not-present" }),
+        Effect.tap((record) =>
+          Effect.sync(() => {
+            expect(record.unitName).toBe("beep-proof-job.service");
+            expect(record.support).toBe("active");
+            expect(record.attachedPid).toBe(process.pid);
+            expect(runScopeCleanupHint(record.unitName)).toContain("collected by systemd");
+          })
+        )
+      )
+    );
+  });
+
   it.effect("reports disabled without probing when BEEP_RUN_SCOPES is 0", () =>
     detectRunScopeSupport().pipe(
       configured({ BEEP_RUN_SCOPES: "0" }),

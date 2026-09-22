@@ -164,3 +164,6 @@ explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-*/g
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
+
+# Disposable Vitest subprocess fixtures; authored fixture templates remain tracked.
+/packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/

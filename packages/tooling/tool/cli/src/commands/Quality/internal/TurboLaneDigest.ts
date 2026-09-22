@@ -278,7 +278,24 @@ export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")
   const entries = yield* fs.readDirectory(runsDirectory).pipe(Effect.orElseSucceed(A.empty<string>));
   const summaries = yield* Effect.forEach(
     A.filter(entries, Str.endsWith(".json")),
-    (entry) => fs.readFileString(path.join(runsDirectory, entry)).pipe(Effect.flatMap(decodeSummary), Effect.option),
+    Effect.fnUntraced(
+      function* (entry) {
+        const summaryPath = path.join(runsDirectory, entry);
+        const info = yield* fs.stat(summaryPath);
+        // Avoid decoding the checkout's entire run history for every lane. Keep
+        // a one-second margin for filesystems with coarse modification times.
+        if (
+          O.exists(
+            info.mtime,
+            (mtime) => DateTime.toEpochMillis(DateTime.fromDateUnsafe(mtime)) < startedAt.value - 1_000
+          )
+        ) {
+          return O.none<TurboRunSummary>();
+        }
+        return yield* fs.readFileString(summaryPath).pipe(Effect.flatMap(decodeSummary), Effect.asSome);
+      },
+      Effect.orElseSucceed(O.none<TurboRunSummary>)
+    ),
     { concurrency: 4 }
   );
   const fresh = pipe(

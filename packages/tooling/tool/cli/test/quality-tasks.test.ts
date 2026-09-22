@@ -1,4 +1,3 @@
-import { cacheRuntimeStep } from "@beep/repo-cli/commands/Cache";
 import {
   CiLaneRunOptions,
   CiLocalStepPlan,
@@ -164,6 +163,7 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import {
   Cause,
   ConfigProvider,
+  Console,
   Effect,
   Exit,
   Fiber,
@@ -213,12 +213,6 @@ const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   TestConsole.layer
-);
-const PullRequestConfigLayer = ConfigProvider.layer(
-  ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "pull_request", GITHUB_REF_NAME: "feature/cheap-gates" })
-);
-const MainPushConfigLayer = ConfigProvider.layer(
-  ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "push", GITHUB_REF_NAME: "main" })
 );
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
@@ -515,6 +509,7 @@ const initializeLaneProofRepository = Effect.fn("QualityTasksTest.initializeLane
   yield* runGit(repoRoot, ["init"]);
   yield* runGit(repoRoot, ["config", "user.email", "lane-proof@example.test"]);
   yield* runGit(repoRoot, ["config", "user.name", "Lane Proof Test"]);
+  yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
   yield* runGit(repoRoot, ["add", "."]);
   yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
   yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
@@ -575,10 +570,7 @@ const policyCommandKey = (text: string): string =>
 // A live 1Password session suffixes the resolved step label with " (op run)".
 const policyLabelKey = Str.replace(" (op run)", "");
 
-const policyStepCommand = (step: QualityTaskStep) => {
-  const runtime = cacheRuntimeStep(step);
-  return A.join([runtime.command, ...runtime.args], " ");
-};
+const policyStepCommand = (step: QualityTaskStep) => A.join([step.command, ...step.args], " ");
 
 // A red policy run fails as one group whose failures name exactly the red planned label.
 const expectPolicyGroupFailure = (exit: Exit.Exit<unknown, unknown>, failedLabel: string): void => {
@@ -632,12 +624,6 @@ const cheapGatesSpawner = (
 
     return Effect.die("the cheap-gates test never spawns a piped command");
   });
-
-const cheapGatesSpawnerLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
-  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, failedCommands, policyCommandKey));
-
-const cheapGatesTestLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
-  Layer.mergeAll(FileSystemLayer, TestConsole.layer, cheapGatesSpawnerLayer(spawned, failedCommands));
 
 type FallowFeatureMatrixRowTuple = readonly [
   featureFamily: GithubChecksFallowFeatureMatrix["features"][number]["featureFamily"],
@@ -762,6 +748,26 @@ describe("quality task adapter", () => {
         cwd: "/repo",
       });
     }));
+
+  it.each(["op://vault/item/field", "postgres://user:op://vault/item/password@host/db"])(
+    "clears unresolved SQL test references for package audit: %s",
+    (value) =>
+      withEnvVar("BEEP_TEST_DATABASE_URL", value, () => {
+        const steps = rootQualityStepsForTesting("/repo", getInvocation(["audit", "packages"]));
+
+        expect(steps[0]?.env?.BEEP_TEST_DATABASE_URL).toBe("");
+      })
+  );
+
+  it.each([undefined, "", "postgres://localhost/beep_test", "postgresql://localhost/beep_test"])(
+    "preserves ordinary SQL test configuration for package audit: %s",
+    (value) =>
+      withEnvVar("BEEP_TEST_DATABASE_URL", value, () => {
+        const steps = rootQualityStepsForTesting("/repo", getInvocation(["audit", "packages"]));
+
+        expect(steps[0]?.env?.BEEP_TEST_DATABASE_URL).toBeUndefined();
+      })
+  );
 
   it("keeps package audit cacheable by default for local runs", () =>
     withEnvVar("CI", undefined, () => {
@@ -1364,15 +1370,15 @@ describe("quality task adapter", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
-  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
-    it.effect("declares a direct Turbo step's digest to the ledger the parent named", () =>
+  it("declares a direct Turbo step's digest to the ledger the parent named", () =>
+    Effect.runPromise(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const tempDir = yield* fs.makeTempDirectory();
         const bin = path.join(tempDir, "bin");
         yield* fs.makeDirectory(bin, { recursive: true });
-        // A stand-in Cache launcher that leaves the summary its governed Turbo child would write.
+        // A stand-in `bunx` that leaves the run summary `turbo run --summarize` would have written.
         // The summary starts far enough in the future to count as this attempt's own.
         const summary = TurboRunSummary.make({
           id: "fixture",
@@ -1388,7 +1394,7 @@ describe("quality task adapter", () => {
           ],
         });
         yield* fs.writeFileString(path.join(bin, "summary.json"), yield* encodeTurboRunSummary(summary));
-        const fakeBunx = path.join(bin, "bun");
+        const fakeBunx = path.join(bin, "bunx");
         yield* fs.writeFileString(
           fakeBunx,
           A.join(
@@ -1429,9 +1435,8 @@ describe("quality task adapter", () => {
         const lane = yield* Effect.fromOption(A.head(report.lanes));
         expect(lane.status).toBe("passed");
         assertSome(lane.inputDigest, expected.digest);
-      })
-    );
-  });
+      }).pipe(provideScopedLayer(PlatformLayer))
+    ));
 
   it("appends schema-versioned lane rows and ignores malformed side-channel rows", () =>
     Effect.runPromise(
@@ -2541,112 +2546,150 @@ describe("quality task adapter", () => {
       )
     ));
 
-  describe("runs every cheap gate through the collected runner when all lanes pass", () => {
-    const spawned: Array<string> = [];
-    const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
-    const changesetStatusCommand = policyStepCommand(githubCheckChangesetStatusLane(process.cwd()).step);
-    const proofMode = Layer.effectDiscard(
-      Effect.acquireRelease(
-        Effect.sync(() => vi.stubEnv("BEEP_YEET_LANE_PROOF_MODE", undefined)),
-        () => Effect.sync(() => vi.unstubAllEnvs())
-      )
-    );
-    it.layer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), PullRequestConfigLayer, proofMode), {
-      timeout: "10 seconds",
-    })((it) => {
-      it.effect("executes the governed plan", () =>
-        runGithubChecks("cheap-gates").pipe(
-          Effect.tap(
-            Effect.fnUntraced(function* () {
-              const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-              expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
-              expect(logText).toContain('"failurePolicy":"collect-all"');
-              expect(logText).toContain('"status":"passed"');
-              expect(spawned).toContain(changesetStatusCommand);
-              expect(
-                A.every(cheapGateLanes, (lane) =>
-                  A.contains(spawnedPolicyCommands(spawned), policyCommandKey(policyStepCommand(lane.step)))
-                )
-              ).toBe(true);
-            })
+  it.layer(FileSystemLayer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "runs every cheap gate through the collected runner when all lanes pass",
+      Effect.fnUntraced(function* () {
+        const testConsole = yield* TestConsole.make;
+        const spawned: Array<string> = [];
+        const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+        const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
+        const changesetStatusCommand = A.join(
+          [changesetStatusLane.step.command, ...changesetStatusLane.step.args],
+          " "
+        );
+
+        yield* withEnvVarEffect(
+          "BEEP_YEET_LANE_PROOF_MODE",
+          undefined,
+          runGithubChecks("cheap-gates").pipe(
+            Effect.tap(
+              Effect.fnUntraced(function* () {
+                const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
+                expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
+                expect(logText).toContain('"failurePolicy":"collect-all"');
+                expect(logText).toContain('"status":"passed"');
+                expect(spawnedPolicyCommands(spawned)).toContain(policyCommandKey(changesetStatusCommand));
+                expect(
+                  A.filter(
+                    cheapGateLanes,
+                    (lane) =>
+                      !A.contains(spawnedPolicyCommands(spawned), policyCommandKey(policyStepCommand(lane.step)))
+                  )
+                ).toEqual([]);
+              })
+            ),
+            Effect.provideService(Console.Console, testConsole),
+            Effect.provideService(
+              ChildProcessSpawner.ChildProcessSpawner,
+              cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
+            ),
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "pull_request", GITHUB_REF_NAME: "feature/cheap-gates" })
+            )
           )
-        )
-      );
-    });
-  });
-
-  describe("skips changeset status on a main push while running every cheap gate", () => {
-    const spawned: Array<string> = [];
-    const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
-    const changesetStatusCommand = policyStepCommand(githubCheckChangesetStatusLane(process.cwd()).step);
-    const proofMode = Layer.effectDiscard(
-      Effect.acquireRelease(
-        Effect.sync(() => vi.stubEnv("BEEP_YEET_LANE_PROOF_MODE", "off")),
-        () => Effect.sync(() => vi.unstubAllEnvs())
-      )
+        );
+      })
     );
-    it.layer(Layer.mergeAll(cheapGatesTestLayer(spawned, A.empty()), MainPushConfigLayer, proofMode), {
-      timeout: "10 seconds",
-    })((it) => {
-      it.effect("executes the governed plan", () =>
-        runGithubChecks("cheap-gates").pipe(
-          Effect.tap(
-            Effect.fnUntraced(function* () {
-              const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-              expect(logText).toContain("[github-checks] quality: skipped changeset status on main push");
-              expect(spawned).not.toContain(changesetStatusCommand);
-              expect(
-                A.every(cheapGateLanes, (lane) =>
-                  A.contains(spawnedPolicyCommands(spawned), policyCommandKey(policyStepCommand(lane.step)))
-                )
-              ).toBe(true);
-            })
+
+    it.effect(
+      "skips changeset status on a main push while running every cheap gate",
+      Effect.fnUntraced(function* () {
+        const testConsole = yield* TestConsole.make;
+        const spawned: Array<string> = [];
+        const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+        const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());
+        const changesetStatusCommand = A.join(
+          [changesetStatusLane.step.command, ...changesetStatusLane.step.args],
+          " "
+        );
+
+        yield* withEnvVarEffect(
+          "BEEP_YEET_LANE_PROOF_MODE",
+          "off",
+          runGithubChecks("cheap-gates").pipe(
+            Effect.tap(
+              Effect.fnUntraced(function* () {
+                const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
+                expect(logText).toContain("[github-checks] quality: skipped changeset status on main push");
+                expect(spawnedPolicyCommands(spawned)).not.toContain(policyCommandKey(changesetStatusCommand));
+                expect(
+                  A.filter(
+                    cheapGateLanes,
+                    (lane) =>
+                      !A.contains(spawnedPolicyCommands(spawned), policyCommandKey(policyStepCommand(lane.step)))
+                  )
+                ).toEqual([]);
+              })
+            ),
+            Effect.provideService(Console.Console, testConsole),
+            Effect.provideService(
+              ChildProcessSpawner.ChildProcessSpawner,
+              cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
+            ),
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "push", GITHUB_REF_NAME: "main" })
+            )
           )
-        )
-      );
-    });
-  });
+        );
+      })
+    );
 
-  it("collects multiple failures through the cheap-gates runner without stopping later lanes", () => {
-    const spawned: Array<string> = [];
-    const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
-    const failedCommands = [
-      policyStepCommand(
-        O.getOrThrow(A.findFirst(cheapGateLanes, (lane) => lane.id === "repo-sanity:tsconfig-sync")).step
-      ),
-      policyStepCommand(O.getOrThrow(A.findFirst(cheapGateLanes, (lane) => lane.id === "lint:effect-imports")).step),
-    ];
-    const lastLane = O.getOrThrow(A.last(cheapGateLanes));
-    const lastCommand = policyStepCommand(lastLane.step);
+    it.effect(
+      "collects multiple failures through the cheap-gates runner without stopping later lanes",
+      Effect.fnUntraced(function* () {
+        const testConsole = yield* TestConsole.make;
+        const spawned: Array<string> = [];
+        const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
+        const failedCommands = [
+          A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "repo-sanity:tsconfig-sync")], " "),
+          A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "lint:effect-imports")], " "),
+        ];
+        const lastLane = O.getOrThrow(A.last(cheapGateLanes));
+        const lastCommand = A.join([lastLane.step.command, ...lastLane.step.args], " ");
 
-    return Effect.runPromise(
-      withEnvVarEffect(
-        "BEEP_YEET_LANE_PROOF_MODE",
-        "off",
-        Effect.gen(function* () {
-          const exit = yield* Effect.exit(runGithubChecks("cheap-gates"));
+        yield* withEnvVarEffect(
+          "BEEP_YEET_LANE_PROOF_MODE",
+          "off",
+          Effect.gen(function* () {
+            const exit = yield* Effect.exit(runGithubChecks("cheap-gates"));
 
-          expect(Exit.isFailure(exit)).toBe(true);
-          if (Exit.isFailure(exit)) {
-            const failure = Cause.squash(exit.cause);
-            expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
-            if (isQualityTaskGroupFailed(failure)) {
-              expect(A.map(failure.failures, (step) => step.label)).toEqual([
-                "repo-sanity:tsconfig-sync",
-                "lint:effect-imports",
-              ]);
+            if (Exit.isSuccess(exit)) {
+              assert.fail("Expected cheap gates to report both configured failures");
             }
-          }
+            if (Exit.isFailure(exit)) {
+              const failure = Cause.squash(exit.cause);
+              expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+              if (isQualityTaskGroupFailed(failure)) {
+                expect(A.map(failure.failures, (step) => step.label)).toEqual([
+                  "repo-sanity:tsconfig-sync",
+                  "lint:effect-imports",
+                ]);
+              }
+            }
 
-          expect(spawnedPolicyCommands(spawned)).toContain(policyCommandKey(lastCommand));
-          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
-          expect(logText).toContain('"failurePolicy":"collect-all"');
-          expect(logText).toContain('"id":"repo-sanity:tsconfig-sync","stage":"repo-sanity","status":"failed"');
-          expect(logText).toContain('"id":"lint:effect-imports","stage":"repo-quality","status":"failed"');
-          expect(logText).toContain('"status":"passed"');
-        })
-      ).pipe(provideScopedLayer(Layer.mergeAll(cheapGatesTestLayer(spawned, failedCommands), PullRequestConfigLayer)))
+            expect(spawnedPolicyCommands(spawned)).toContain(policyCommandKey(lastCommand));
+            const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
+            expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
+            expect(logText).toContain('"failurePolicy":"collect-all"');
+            expect(logText).toContain('"id":"repo-sanity:tsconfig-sync","stage":"repo-sanity","status":"failed"');
+            expect(logText).toContain('"id":"lint:effect-imports","stage":"repo-quality","status":"failed"');
+            expect(logText).toContain('"status":"passed"');
+          })
+        ).pipe(
+          Effect.provideService(Console.Console, testConsole),
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            cheapGatesSpawner(spawned, failedCommands, policyCommandKey)
+          ),
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: "pull_request", GITHUB_REF_NAME: "feature/cheap-gates" })
+          )
+        );
+      })
     );
   });
 
@@ -4261,6 +4304,7 @@ describe("quality task adapter", () => {
           yield* runGit(repoRoot, ["init"]);
           yield* runGit(repoRoot, ["config", "user.email", "coverage@example.invalid"]);
           yield* runGit(repoRoot, ["config", "user.name", "Coverage Test"]);
+          yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
           yield* runGit(repoRoot, ["add", "package.json"]);
           yield* runGit(repoRoot, ["commit", "-m", "test: seed coverage fixture"]);
           yield* writeCoverageRegressionBaseline(repoRoot, false);
@@ -4345,6 +4389,7 @@ describe("quality task adapter", () => {
           yield* runGit(repoRoot, ["init"]);
           yield* runGit(repoRoot, ["config", "user.email", "coverage@example.invalid"]);
           yield* runGit(repoRoot, ["config", "user.name", "Coverage Test"]);
+          yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
           yield* runGit(repoRoot, ["add", "--all"]);
           yield* runGit(repoRoot, ["commit", "-m", "test: seed unchanged coverage fixture"]);
 
@@ -4983,6 +5028,7 @@ describe("quality task adapter", () => {
             yield* runGit(repoRoot, ["init"]);
             yield* runGit(repoRoot, ["config", "user.email", "coverage-delta@example.test"]);
             yield* runGit(repoRoot, ["config", "user.name", "Coverage Delta Test"]);
+            yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
 
             // The base has no baseline at all: nothing can be diffed.
             yield* fs.writeFileString(path.join(repoRoot, "README.md"), "# fixture\n");
@@ -5042,6 +5088,7 @@ describe("quality task adapter", () => {
             yield* runGit(repoRoot, ["init"]);
             yield* runGit(repoRoot, ["config", "user.email", "coverage-base@example.test"]);
             yield* runGit(repoRoot, ["config", "user.name", "Coverage Base Test"]);
+            yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
             yield* writeBaseline(
               CoverageRegressionBaseline.make({
                 ...coverageRegressionBaseline,
@@ -5639,6 +5686,7 @@ describe("quality task adapter", () => {
               yield* runGit(repoRoot, ["init"]);
               yield* runGit(repoRoot, ["config", "user.email", "coverage-lowered@example.test"]);
               yield* runGit(repoRoot, ["config", "user.name", "Coverage Lowered Test"]);
+              yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
               yield* runGit(repoRoot, ["add", "--all"]);
               yield* runGit(repoRoot, ["commit", "-m", "seed"]);
 
@@ -5725,6 +5773,7 @@ describe("quality task adapter", () => {
             yield* runGit(repoRoot, ["init"]);
             yield* runGit(repoRoot, ["config", "user.email", "coverage-affected@example.test"]);
             yield* runGit(repoRoot, ["config", "user.name", "Coverage Affected Test"]);
+            yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
             yield* runGit(repoRoot, ["add", "--all"]);
             yield* runGit(repoRoot, ["commit", "-m", "seed"]);
 
@@ -5906,6 +5955,7 @@ describe("quality task adapter", () => {
           yield* runGit(repoRoot, ["init"]);
           yield* runGit(repoRoot, ["config", "user.email", "coverage-scope@example.test"]);
           yield* runGit(repoRoot, ["config", "user.name", "Coverage Scope Test"]);
+          yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
           yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
           yield* fs.writeFileString(sourcePath, "export const moved = true;\n");
           yield* runGit(repoRoot, ["add", "--all"]);
@@ -7189,75 +7239,70 @@ describe("quality task adapter", () => {
       )
     ));
 
-  it.effect("keeps running repo-wide root lint policy checks after aggregate lint fails", () =>
-    withTempRepo(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const tmpDir = process.cwd();
-        const binDir = path.join(tmpDir, "bin");
-        const commandLogPath = path.join(tmpDir, "quality-commands.log");
-        const fakeBunxPath = path.join(binDir, "bunx");
-        const fakeBunPath = path.join(binDir, "bun");
+  it("keeps running repo-wide root lint policy checks after aggregate lint fails", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpDir = process.cwd();
+          const binDir = path.join(tmpDir, "bin");
+          const commandLogPath = path.join(tmpDir, "quality-commands.log");
+          const fakeBunxPath = path.join(binDir, "bunx");
+          const fakeBunPath = path.join(binDir, "bun");
 
-        yield* fs.makeDirectory(binDir, { recursive: true });
-        yield* fs.writeFileString(
-          fakeBunxPath,
-          [
-            "#!/usr/bin/env sh",
-            "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
-            'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
-            "  exit 7",
-            "fi",
-            "exit 0",
-            "",
-          ].join("\n")
-        );
-        yield* fs.writeFileString(
-          fakeBunPath,
-          [
-            "#!/usr/bin/env sh",
-            "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
-            'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
-            "exit 0",
-            "",
-          ].join("\n")
-        );
-        yield* fs.chmod(fakeBunxPath, 0o755);
-        yield* fs.chmod(fakeBunPath, 0o755);
+          yield* fs.makeDirectory(binDir, { recursive: true });
+          yield* fs.writeFileString(
+            fakeBunxPath,
+            [
+              "#!/usr/bin/env sh",
+              "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
+              'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
+              "  exit 7",
+              "fi",
+              "exit 0",
+              "",
+            ].join("\n")
+          );
+          yield* fs.writeFileString(
+            fakeBunPath,
+            ["#!/usr/bin/env sh", "printf 'bun %s\\n' \"$*\" >> quality-commands.log", "exit 0", ""].join("\n")
+          );
+          yield* fs.chmod(fakeBunxPath, 0o755);
+          yield* fs.chmod(fakeBunPath, 0o755);
 
-        const exit = yield* withEnvVarEffect(
-          "PATH",
-          `${binDir}:${Bun.env.PATH ?? ""}`,
-          Effect.exit(runQualityTask(getInvocation(["lint"])))
-        );
+          const exit = yield* withEnvVarEffect(
+            "PATH",
+            `${binDir}:${Bun.env.PATH ?? ""}`,
+            Effect.exit(runQualityTask(getInvocation(["lint"])))
+          );
 
-        expect(Exit.isFailure(exit)).toBe(true);
-        if (Exit.isFailure(exit)) {
-          const failure = Cause.squash(exit.cause);
-          expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
-          if (isQualityTaskGroupFailed(failure)) {
-            expect(failure.exitCode).toBe(7);
-            expect(A.map(failure.failures, (step) => step.label)).toEqual(["lint"]);
+          expect(Exit.isFailure(exit)).toBe(true);
+          if (Exit.isFailure(exit)) {
+            const failure = Cause.squash(exit.cause);
+            expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+            if (isQualityTaskGroupFailed(failure)) {
+              expect(failure.exitCode).toBe(7);
+              expect(A.map(failure.failures, (step) => step.label)).toEqual(["lint"]);
+            }
           }
-        }
 
-        const commandLog = yield* fs.readFileString(commandLogPath);
-        // The aggregate fails first; ordered policy diagnostics still execute.
-        expect(commandLog).toContain("cache execute -- run lint");
-        expect(commandLog).toContain("lint:effect-imports");
-        expect(commandLog).toContain("lint:roadmap-refs");
-        expect(commandLog).toContain("lint:typos");
+          const commandLog = yield* fs.readFileString(commandLogPath);
+          // The aggregate fails first; ordered policy diagnostics still execute.
+          expect(commandLog).toContain("bunx turbo run lint");
+          expect(commandLog).toContain("lint:effect-imports");
+          expect(commandLog).toContain("lint:roadmap-refs");
+          expect(commandLog).toContain("lint:typos");
 
-        const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-        // Derived from the same plan the runtime executes (aggregate lane plus
-        // every policy step), so a lint step added on another branch does not
-        // break this assertion when the two land together in a merge.
-        const lintStepCount = A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"])));
-        expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
-      })
-    )
-  );
+          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          // Derived from the same plan the runtime executes (aggregate lane plus
+          // every policy step), so a lint step added on another branch does not
+          // break this assertion when the two land together in a merge.
+          const lintStepCount = A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"])));
+          expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
+        })
+      )
+    ));
 
   it("leaves lint policy subcommands on the existing command tree", () => {
     expect(O.isNone(parseQualityTaskInvocation(["lint", "circular"]))).toBe(true);
@@ -7461,6 +7506,34 @@ describe("labs turbo exclusion", () => {
       expect(shardFilterIndex).toBeGreaterThan(-1);
       expect(shardDelimiterIndex).toBeGreaterThan(shardFilterIndex);
       expect(A.some(shardArgs, Str.startsWith("--filter=@beep/"))).toBe(true);
+    }
+  });
+
+  it("keeps golden regeneration fresh in isolated native command plans", () => {
+    // ConfigProvider's default environment trie is process-scoped. Exercise
+    // both modes in fresh runtimes, as separate CLI invocations actually run.
+    for (const mode of ["0", "1"]) {
+      const script = `
+        import { rootQualityStepsForTesting } from "@beep/repo-cli/test/Quality";
+        const invocation = {
+          task: "check",
+          args: ["--filter=@beep/schema", "--cache=local:r", "--force=false", "--", "--force=false"]
+        };
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const [step] = rootQualityStepsForTesting("/repo", invocation);
+          console.log(step.args.join("\\n"));
+        }
+      `;
+      const child = Bun.spawnSync(["bun", "--eval", script], {
+        env: { ...Bun.env, CI: "false", REGEN_GOLDENS: mode },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      expect(child.exitCode, child.stderr.toString()).toBe(0);
+      const lines = Str.split(child.stdout.toString(), "\n");
+      expect(A.filter(lines, (line) => line === "--force")).toHaveLength(mode === "1" ? 2 : 0);
+      expect(A.filter(lines, (line) => line === "--force=false")).toHaveLength(mode === "1" ? 2 : 4);
+      expect(child.stdout.toString()).toContain("--\n--force=false");
     }
   });
 

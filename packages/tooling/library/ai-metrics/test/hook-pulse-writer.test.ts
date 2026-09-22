@@ -41,9 +41,33 @@ import { ChildProcess } from "effect/unstable/process";
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../../", import.meta.url));
 const writerPath = `${repoRoot}.claude/hooks/hook-pulse.sh`;
 const codexWriterPath = `${repoRoot}.codex/hooks/hook-pulse.sh`;
+// The Cursor adapter renames camelCase events into the ledger vocabulary, tags rows
+// `cursor-cli`, and — unlike the Claude writer — MUST print a permission decision, because
+// Cursor treats an empty stdout on a permission hook as malformed JSON and blocks the tool.
+const cursorWriterPath = `${repoRoot}.cursor/hooks/hook-pulse.sh`;
+const notifierPath = `${repoRoot}.claude/hooks/sequence-break-notifier.sh`;
 // The operator half of the same instrument: the switch writes the sentinel the
 // writer tests for, so the two scripts have to agree about where it lives.
 const switchPath = `${repoRoot}.claude/hooks/hook-pulse-switch.sh`;
+
+// Module scope: the compiled guard is built once, as the oxlint hoist rule requires.
+const isHookPulseAgentKind = S.is(HookPulseAgentKind);
+
+// Two guards exit before the writer reads stdin: the kill switch and an agent kind
+// outside `HookPulseAgentKind`. Ignoring the pipe in those cases avoids racing a payload
+// write against the child's intentional exit. With the pipe attached, the parent's write
+// can land on a reader that has already gone, and Bun's fs-backed stdin stream reports
+// that EPIPE from its post-`finish` destroy — after the sink has released its error
+// listener — as an unhandled error that fails the run with every test passing (hosted
+// Property Laws on this branch; main's nightly sweep of 2026-09-20).
+const writerStdinFor = (
+  stdin: string,
+  options: { readonly agentKind?: string | undefined; readonly disarmSentinel?: string | undefined }
+) =>
+  O.isNone(O.fromUndefinedOr(options.disarmSentinel)) &&
+  isHookPulseAgentKind(options.agentKind ?? HookPulseAgentKind.Enum["claude-code"])
+    ? ({ stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true } as const)
+    : ("ignore" as const);
 
 // A distinctive marker planted in every content-bearing raw key measured by the
 // P1 spike. Amendment 6 is only actually enforced if this never reaches disk —
@@ -156,6 +180,7 @@ interface WriterRun {
 const runWriter = Effect.fnUntraced(function* (
   stdin: string,
   options: {
+    readonly agentKind?: string;
     readonly aiMetricsHashSalt?: string;
     readonly disarmSentinel?: string;
     readonly hashSalt?: string;
@@ -176,12 +201,7 @@ const runWriter = Effect.fnUntraced(function* (
     yield* fs.writeFileString(hookPulseDisarmSentinelPath(evidenceRoot), `${options.disarmSentinel}\n`);
   }
 
-  const childStdin = O.match(O.fromUndefinedOr(options.disarmSentinel), {
-    // The kill-switch guard exits before the writer reads stdin. Ignoring the pipe in
-    // that case avoids racing a payload write against the child's intentional exit.
-    onSome: () => "ignore" as const,
-    onNone: () => ({ stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true }) as const,
-  });
+  const childStdin = writerStdinFor(stdin, options);
 
   // Effect's `ChildProcess`, deliberately, and neither `Bun.spawn*` nor
   // `node:child_process`. Measured: inside a vitest worker under the coverage script
@@ -229,6 +249,12 @@ const runWriter = Effect.fnUntraced(function* (
       // about projection semantics rather than the current intervention state.
       BEEP_HOOK_PULSE_NOTIFIER_REV: "log-only-0",
       BEEP_HOOK_PULSE_INSTRUMENT_CLASS: "",
+      // Cleared unless a case sets it, so an ambient adapter value cannot retag rows;
+      // empty falls through to the writer's `claude-code` default.
+      BEEP_HOOK_PULSE_AGENT_KIND: options.agentKind ?? "",
+      // The Cursor adapter caps the writer at 3 s. Measured 2026-09-16: at load average ~300
+      // the cap killed the writer and this suite saw no row, so the conformance run lifts it.
+      BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
       // Both salt rungs are cleared unless a case sets one, so a developer who
       // exports a real ai-metrics salt cannot change what these digests are.
       // Cleared, they exercise the insecure-default fallback that keeps an
@@ -537,6 +563,93 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["codex-cli"]);
       })
     )
+  );
+
+  it.effect("tags Cursor hook rows as cursor-cli and answers the permission protocol", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // Cursor's stdin: the same snake_case keys, a camelCase event name.
+        const cursorPayload = {
+          ...preToolUsePayload,
+          conversation_id: "cursor-conversation-writer-1",
+          cursor_version: "2026.09.10",
+          generation_id: "cursor-generation-writer-1",
+          hook_event_name: "preToolUse",
+          model: "composer-2.5",
+          workspace_roots: [baseFields.cwd],
+        };
+        const run = yield* runWriter(encodeJson(cursorPayload), { writerPath: cursorWriterPath });
+
+        expect(run.exitCode).toBe(0);
+        expect(run.stderr).toBe("");
+        expect(run.stdout).toBe('{"permission":"allow"}\n');
+        expect(run.rows).toHaveLength(1);
+        const [row] = run.rows;
+        expect(row).toBeDefined();
+        const decoded = yield* decodeHookPulseRow(`${row}`);
+
+        expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["cursor-cli"]);
+        expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PreToolUse);
+      })
+    )
+  );
+
+  it.effect("writes nothing for an agent kind outside HookPulseAgentKind", () =>
+    Effect.gen(function* () {
+      const run = yield* runWriter(encodeJson(preToolUsePayload), { agentKind: "other" });
+
+      expectSilentRefusal(run);
+    })
+  );
+
+  it.effect("keeps the writer's agent-kind guard set-equal to HookPulseAgentKind", () =>
+    Effect.gen(function* () {
+      // The writer copies `BEEP_HOOK_PULSE_AGENT_KIND` into every row, so its guard `case`
+      // is the only thing keeping an undecodable kind out of the ledger.
+      const fs = yield* FileSystem.FileSystem;
+      const source = yield* fs.readFileString(writerPath);
+      const arm = O.fromNullishOr(/case "\$\{agent_kind\}" in\s*\n\s*([^)\n]+)\)\s*;;/.exec(source)?.[1]);
+      const admitted = O.match(arm, {
+        onNone: () => A.empty<string>(),
+        onSome: (body) => A.map(body.split("|"), (kind) => kind.trim()),
+      });
+
+      expect(A.difference(admitted, HookPulseAgentKind.Options)).toEqual([]);
+      expect(A.difference(HookPulseAgentKind.Options, admitted)).toEqual([]);
+    })
+  );
+
+  it.effect("keeps the sequence-break notifier agent-kind allowlist and title map in lockstep", () =>
+    Effect.gen(function* () {
+      // `HookPulseAgentKind` is the schema; the notifier hand-duplicates it twice — the
+      // admission `case` arm and the desktop title map. Without this check a new kind
+      // (as `cursor-cli` was) reaches the ledger but is silently dropped by the notifier,
+      // or is admitted with an empty title (" needs your input"). Same drift class the
+      // `hook_events` allowlist sync above protects against, so the same set-equality.
+      const fs = yield* FileSystem.FileSystem;
+      const source = yield* fs.readFileString(notifierPath);
+      const arm = O.fromNullishOr(/case "\$\{agent_kind\}" in\s*\n\s*([^)\n]+)\)\s*;;/.exec(source)?.[1]);
+      const admitted = O.match(arm, {
+        onNone: () => A.empty<string>(),
+        onSome: (body) => A.map(body.split("|"), (kind) => kind.trim()),
+      });
+      // Anchored to the agent-kind title `case`: the target `case` below it also has
+      // `<name>) title="..." ;;` arms (human-input, plan-approval, tool-permission).
+      const titleArm = O.fromNullishOr(
+        /case "\$\{agent_kind\}" in((?:\s*[a-z-]+\) title="[^"]+" ;;)+)\s*esac/.exec(source)?.[1]
+      );
+      const titled = O.match(titleArm, {
+        onNone: () => A.empty<string>(),
+        onSome: (body) =>
+          A.getSomes(A.map(A.fromIterable(body.matchAll(/([a-z-]+)\) title=/g)), (match) => O.fromNullishOr(match[1]))),
+      });
+      const schemaKinds = HookPulseAgentKind.Options;
+
+      expect(A.difference(admitted, schemaKinds)).toEqual([]);
+      expect(A.difference(schemaKinds, admitted)).toEqual([]);
+      expect(A.difference(titled, schemaKinds)).toEqual([]);
+      expect(A.difference(schemaKinds, titled)).toEqual([]);
+    })
   );
 
   A.forEach(measuredPayloads, ({ label, payload, permissionMode, waitReason }) => {

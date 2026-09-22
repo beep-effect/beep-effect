@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # sequence-break-notifier: content-free, fail-open notification worker for one
 # HookPulseV1 PermissionRequest row. hook-pulse.sh starts this process only after
-# its canonical row is durable, and passes only schema-owned identifiers/enums.
+# its canonical row is durable. Optional local origin/navigation context is used
+# only for desktop presentation, never the evidence ledger or phone transport.
 # The worker never receives prompt, command, tool-input, tool-result, message, or
 # error content.
 
@@ -23,6 +24,12 @@ wait_reason="${4:-}"
 target="${5:-}"
 tool_name="${6:-}"
 notifier_rev="${7:-}"
+origin_cwd="${8:-}"
+open_uri="${9:-}"
+origin_terminal="${10:-}"
+action_listener_pid=""
+# Do not propagate a local navigation override to transport subprocesses.
+unset BEEP_SEQUENCE_BREAK_OPEN_URI
 
 # Capture phone configuration once, then remove its exported names before any
 # external command or desktop transport can inherit them. The worker-scoped
@@ -43,7 +50,7 @@ if [ -e "${disarm_sentinel}" ]; then
 fi
 
 case "${agent_kind}" in
-  claude-code | codex-cli) ;;
+  claude-code | codex-cli | cursor-cli) ;;
   *) exit 0 ;;
 esac
 case "${session_id}" in
@@ -385,6 +392,74 @@ notification_body() {
   esac
 }
 
+# Sanitize filesystem labels before either notification markup or terminal OSC.
+# Git is bounded and read-only; a deleted/non-Git directory still has a label.
+desktop_origin() {
+  local root common clone label
+  root="${origin_cwd%/}"
+  [ -n "${root}" ] || return 0
+  if command -v git >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
+    root="$(timeout 2s git -C "${origin_cwd}" rev-parse --show-toplevel 2>/dev/null)" || root="${origin_cwd%/}"
+    common="$(timeout 2s git -C "${origin_cwd}" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || common=""
+  else
+    common=""
+  fi
+  common="${common%/}"
+  case "${common}" in
+    */.git) clone="${common%/.git}" ;;
+    *.git) clone="${common}" ;;
+    *) clone="${root}" ;;
+  esac
+  label="Clone: ${clone##*/}"
+  if [ "${root}" != "${clone}" ]; then
+    label="${label} · Worktree: ${root##*/}"
+  fi
+  jq -nr --arg label "${label}" '$label | gsub("[\u0000-\u001f\u007f-\u009f;]"; " ") | .[0:240]'
+}
+
+# Only explicit, session-specific app routes are accepted. Never evaluate a
+# callback command, accept an arbitrary URL, or fall back to "last session".
+case "${agent_kind}:${open_uri}" in
+  codex-cli:codex://threads/*)
+    if [[ ! "${open_uri#codex://threads/}" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then open_uri=""; fi
+    ;;
+  claude-code:claude://code/continue\?session=local_*)
+    if [[ ! "${open_uri#claude://code/continue\?session=local_}" =~ ^[A-Za-z0-9-]{1,64}$ ]]; then open_uri=""; fi
+    ;;
+  *) open_uri="" ;;
+esac
+local_origin="$(desktop_origin)"
+
+# A bounded background listener owns the notification action. Its stdout is
+# private to this pipe, never the permission hook. Receipt of the notification
+# ID proves the send; closing/dismissing never opens an app. Reminder delivery
+# does not wait on this listener. No session URL is written to the ledger.
+deliver_action_notification() {
+  local stage="${1}" measured_age="${2}" urgency="${3}" title="${4}" body="${5}"
+  (
+    XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \
+      timeout 3600s stdbuf -oL notify-send --app-name="beep agent" --urgency="${urgency}" --expire-time=0 \
+      --print-id --action="default=Open task" "${title}" "${body}" 7>/dev/null |
+      {
+        local notification_id action
+        if ! IFS= read -r notification_id; then
+          append_delivery desktop "${stage}" failed command-failed "${measured_age}"
+          exit 0
+        fi
+        case "${notification_id}" in
+          "" | *[!0-9]*) append_delivery desktop "${stage}" failed command-failed "${measured_age}"; exit 0 ;;
+        esac
+        append_delivery desktop "${stage}" sent "" "${measured_age}"
+        if IFS= read -r action && [ "${action}" = "default" ] && [ ! -e "${disarm_sentinel}" ] &&
+          [ "$(bracket_status)" = "open" ]; then
+          XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \
+            timeout 5s xdg-open "${open_uri}" </dev/null >/dev/null 2>&1 || true
+        fi
+      }
+  ) </dev/null >/dev/null 2>&1 &
+  action_listener_pid=$!
+}
+
 deliver_desktop() {
   local stage="${1}"
   local measured_age="${2}"
@@ -393,17 +468,46 @@ deliver_desktop() {
     append_delivery desktop "${stage}" skipped transport-unconfigured "${measured_age}"
     return 0
   fi
-  command -v notify-send >/dev/null 2>&1 || {
-    append_delivery desktop "${stage}" failed command-unavailable "${measured_age}"
-    return 0
-  }
   command -v timeout >/dev/null 2>&1 || {
     append_delivery desktop "${stage}" failed command-unavailable "${measured_age}"
     return 0
   }
   case "${stage}" in initial) urgency=normal ;; reminder | urgent) urgency=critical ;; esac
-  title="$(notification_title)"
-  body="$(notification_body "${stage}" "${measured_age}")"
+  case "${agent_kind}" in claude-code) title="Claude Code" ;; codex-cli) title="Codex" ;; cursor-cli) title="Cursor" ;; esac
+  case "${target}" in
+    human-input) title="${title} needs your input" ;;
+    plan-approval) title="${title} plan is awaiting approval" ;;
+    tool-permission) title="${title} needs permission" ;;
+  esac
+  body="${local_origin}"
+  case "${open_uri}" in
+    codex:*) body="${body} · ChatGPT Desktop" ;;
+    claude:*) body="${body} · Claude Desktop" ;;
+    *) [ "${origin_terminal}" != "ghostty" ] || body="${body} · Ghostty" ;;
+  esac
+  [ -z "${body}" ] || body="${body}
+"
+  body="${body}$(notification_body "${stage}" "${measured_age}")"
+
+  # Ghostty binds its native OSC notification to the emitting surface, including
+  # the tab/split click action. FD 7 was opened before the hook detached. Never
+  # write terminal escapes to hook stdout or reopen a potentially recycled PTY.
+  if [ -z "${open_uri}" ] && [ "${origin_terminal}" = "ghostty" ] && [ -t 7 ]; then
+    local osc_body
+    # Ghostty uses the body as its notification ID. Distinguish simultaneous
+    # sessions in the same checkout so one cannot replace the other's action.
+    osc_body="$(jq -nr --arg body "${body} [${session_id:0:12}]" '$body | gsub("[\u0000-\u001f\u007f-\u009f;]"; " ")')"
+    if [ ! -e "${disarm_sentinel}" ] &&
+      timeout 2s bash -c 'printf "\\033]777;notify;%s;%s\\033\\\\" "$1" "$2" >&7' bash "${title}" "${osc_body}"; then
+      append_delivery desktop "${stage}" sent "" "${measured_age}"
+      return 0
+    fi
+  fi
+  command -v notify-send >/dev/null 2>&1 || {
+    append_delivery desktop "${stage}" failed command-unavailable "${measured_age}"
+    return 0
+  }
+  body="$(jq -nr --arg body "${body}" '$body | @html')"
 
   # Terminal and background agent processes on this workstation do not always
   # inherit the graphical session variables even though the Plasma user bus is
@@ -429,6 +533,16 @@ deliver_desktop() {
   # Recheck at the transport boundary, after all setup that can consume time.
   # The stage-level check alone is insufficient if disarm races bus discovery.
   if [ -e "${disarm_sentinel}" ]; then
+    return 0
+  fi
+  if [ -n "${open_uri}" ] && command -v xdg-open >/dev/null 2>&1 && command -v stdbuf >/dev/null 2>&1; then
+    # The existing persistent notification remains actionable. Damping later
+    # desktop stages keeps at most one listener per wait; ntfy still escalates.
+    if [ -n "${action_listener_pid}" ] && kill -0 "${action_listener_pid}" 2>/dev/null; then
+      append_delivery desktop "${stage}" skipped storm-damped "${measured_age}"
+      return 0
+    fi
+    deliver_action_notification "${stage}" "${measured_age}" "${urgency}" "${title}" "${body}"
     return 0
   fi
   if XDG_RUNTIME_DIR="${runtime_dir}" DBUS_SESSION_BUS_ADDRESS="${bus_address}" \

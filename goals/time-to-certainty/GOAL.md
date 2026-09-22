@@ -37,14 +37,10 @@ orchestrator writes schemas and contracts and judges evidence. Record friction r
 `research/OPPORTUNITIES.md` at the moment they happen, redacted for a public repo. Update PLAN
 checkmarks as items land; the status flip and closeout reflection ride the final PR.
 
-Status (2026-09-03): P0 complete. `research/baseline.md` is ratified (ruling 8: M1 P50 43.3 min /
-P95 3.95 h; pre-push wave 65.9% of local wrapper time; hosted-wait 19.4%; M3/M4 unmeasurable until
-journals carry fingerprints and inner lanes). `research/decisions.md` holds eighteen ratified rulings: seven on the
-ProofFact schema, baseline ratification, A5 first, coverage-first migration, six from the A5
-journal-facts review (terminal tags, durable inner-lane reports, ticket death, forward-compatible
-eviction variant, atomic claims, stage and profile via the C1 vocabulary), and two from the A5b
-compaction review (retention budget over terminal attempts only; economics left-censored from
-compaction receipts). Landed: A5, A5b and A5c (journal facts complete and admission claims
-crash-recoverable), A4, B1, B2, B4, C1/C2, C3 coverage and tsgo tests; B6 is complete with
-protocol-disabled eviction sinks retained until exactly-once emission (PR #1005). Next: B3, A3 and
-C3 lint-policy.
+Status (2026-09-16): P0 complete; P1 hygiene complete. `research/baseline.md` is ratified (ruling 8: M1 P50
+43.3 min / P95 3.95 h; pre-push wave 65.9% of local wrapper time; M3/M4 unmeasurable until journals
+carry fingerprints and inner lanes). `research/decisions.md` holds sixty rulings: C1 schema,
+baseline, A5 journal facts and compaction, C3 package-task migration (19–34), B5 detached proof
+jobs (35–40), B7 until-ready monitoring (41–49), B8 heavy-check admission (50–57), the labs
+lane digest (58), and legacy proof-store retirement (59–60). Landed: A4, A5/A5b/A5c, B1–B6, C1/C2, and C3 complete (coverage, tsgo tests,
+lint-policy C3.1–C3.6, labs), and C4a (legacy proof stores never migrate). Next: C4, A3.
