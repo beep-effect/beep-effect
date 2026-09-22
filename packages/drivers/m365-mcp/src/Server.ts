@@ -53,7 +53,7 @@ export class M365McpServerConfig extends S.Class<M365McpServerConfig>($I`M365Mcp
  * **Example** (Reading the advertised instructions)
  *
  * ```ts
- * import { M365_MCP_INSTRUCTIONS } from "@beep/m365-mcp"
+ * import { M365_MCP_INSTRUCTIONS } from "@beep/m365-mcp/Server"
  *
  * console.log(M365_MCP_INSTRUCTIONS.startsWith("Read-only Microsoft 365"))
  * // true
@@ -78,7 +78,7 @@ export const M365_MCP_INSTRUCTIONS =
  * **Example** (Mounting the registrations without a transport)
  *
  * ```ts
- * import { M365McpRegistrationsLive } from "@beep/m365-mcp"
+ * import { M365McpRegistrationsLive } from "@beep/m365-mcp/Server"
  * import { Layer } from "effect"
  *
  * console.log(Layer.isLayer(M365McpRegistrationsLive))
