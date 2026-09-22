@@ -55,6 +55,7 @@ export * from "../commands/Yeet/internal/ProofFact.ts";
 export * from "../commands/Yeet/internal/ProofJob.ts";
 export * from "../commands/Yeet/internal/ProofJobLauncher.ts";
 export * from "../commands/Yeet/internal/ProofLedger.ts";
+export * from "../commands/Yeet/internal/ProofShadow.ts";
 export * from "../commands/Yeet/internal/ProofState.ts";
 export * from "../commands/Yeet/internal/Provenance.ts";
 export * from "../commands/Yeet/internal/ProvenanceFooter.ts";

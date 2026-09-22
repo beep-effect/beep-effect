@@ -115,6 +115,11 @@ import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
 import { ProofJobOutcome, ProofJobRunner } from "./ProofJob.ts";
 import { updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
 import {
+  proofShadowAttemptFacts,
+  recordProofShadowForAttempt,
+  renderProofShadowAttemptSummary,
+} from "./ProofShadow.ts";
+import {
   acquireFullProofFallbackLockOrObserveAtPath,
   assertReusableVerifiedState,
   collectDiffFingerprint,
@@ -1546,6 +1551,12 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
       onSome: (summary) =>
         Console.log(`[yeet] pre-push first red: ${summary.firstRed}; skipped after red: ${summary.skippedAfterRed}`),
     })
+  );
+  // Shadow mode (ruling 63): observe what the proof ledger would have reused,
+  // never change what ran, and never let a ledger fault fail the attempt.
+  yield* recordProofShadowForAttempt(plan.context.repoRoot, proofShadowAttemptFacts(attempt), innerLaneReports).pipe(
+    Effect.flatMap((summary) => Console.log(`[yeet] ${renderProofShadowAttemptSummary(summary)}`)),
+    Effect.catch((error) => Console.error(`[yeet] proof shadow skipped: ${error.message}`))
   );
   const endedAtEpochMillis = yield* Clock.currentTimeMillis;
   const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
