@@ -20,7 +20,7 @@
  */
 
 import { assert, describe, it, layer } from "@effect/vitest";
-import { Cause, Context, Effect, Exit, Fiber, Layer, Queue, Sink, Stream } from "effect";
+import { Cause, Context, Deferred, Effect, Exit, Fiber, Layer, Queue, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -222,11 +222,19 @@ export const withStdioHost =
             }).pipe(Layer.provide(stdioLayer))
           )
         );
+        // The transport answers as soon as it is up, but a host's registrations
+        // may open databases or read bundles while they build. Hand `io` to the
+        // caller only once the whole server layer is built, or fail with the
+        // build's own failure, so a slow host cannot answer "tool not found".
+        const ready = yield* Deferred.make<void>();
         const serverFiber = yield* Layer.build(serverLayer).pipe(
+          Effect.tap(() => Deferred.succeed(ready, void 0)),
           Effect.andThen(Effect.never),
           Effect.scoped,
           Effect.forkScoped
         );
+        // A host that fails to build is a harness defect, not an arm outcome.
+        yield* Effect.raceFirst(Deferred.await(ready), Fiber.join(serverFiber)).pipe(Effect.orDie);
         yield* Stream.fromQueue(stdout).pipe(
           Stream.map(toBytes),
           decodeLines,
