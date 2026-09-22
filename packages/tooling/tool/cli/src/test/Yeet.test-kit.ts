@@ -70,11 +70,15 @@ export * from "../commands/Yeet/internal/Resume.schemas.ts";
 export * from "../commands/Yeet/internal/Resume.ts";
 export * from "../commands/Yeet/internal/Retire.schemas.ts";
 export * from "../commands/Yeet/internal/Retire.ts";
+export * from "../commands/Yeet/internal/ReviewBodySignal.ts";
+export * from "../commands/Yeet/internal/ReviewThreadState.ts";
 export * from "../commands/Yeet/internal/Settle.ts";
 export {
   collectRemoteChecks as collectRemoteChecksForTesting,
   GhStatusCheck,
   summarizeRemoteChecksForTesting,
+  YeetStatusThreadTriage,
+  yeetStatusThreadTriageForTesting,
 } from "../commands/Yeet/internal/Status.ts";
 export * from "../commands/Yeet/internal/Sweep.schemas.ts";
 export * from "../commands/Yeet/internal/Sweep.ts";

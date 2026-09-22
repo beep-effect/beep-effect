@@ -272,7 +272,7 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
 > {
   const pr = yield* closeoutGhOutput(
     context,
-    ["pr", "view", "--json", "number,headRefName,state,url,headRefOid,isDraft"],
+    ["pr", "view", "--json", "number,headRefName,state,url,headRefOid,isDraft,author"],
     "gh pr view"
   ).pipe(
     Effect.flatMap((output) =>

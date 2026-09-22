@@ -770,3 +770,90 @@ ratified bar (`attempts 12/200, branches 2/10, disagreements 0/0`). `--json` pri
 also deletes `LaneProofReuse` and `lane-proofs.json` (ruling 60). Rejected: a section in `yeet
 status` (status is per-branch; the sample is per-checkout) and waiting for A3's economics
 surface (A3 prints the report at closeout; the bar must be readable every day before that).
+
+## 2026-09-22 — reviewer follow-ups as a merge gate, round 20 (three rulings, proposed by the orchestrator, locked by Benjamin in the 2026-09-22 grill and ratified by merge of this PR; numbered after C4 shadow's 61–64)
+
+Context: babysitting PR #1184 found three threads the author had resolved that CodeRabbit had
+commented on afterwards — two confirmations and one "verification inconclusive" that needed an
+answer. Nothing surfaced them. `Status.ts` counted only `isResolved === false` threads and read
+each thread's opening comment; the closeout collector fetched the full comment chain and used only
+the first node; `Reply.ts` settled every resolved thread as `stale` and posted nothing. The
+follow-ups were found by dumping each thread's comments by hand. Separately, the monitor's comment
+stream had printed those replies live, but the stream is in-memory: a reboot killed it and no later
+read-first surface replayed what was missed. The status thread query was also capped at one page of
+100 threads behind a `"additional review threads omitted after the first 100"` sentinel, so on a
+large PR the counts the gate reads were not counts of the PR.
+
+**Ruling 65 (FU-1) — a review thread's obligation is a four-state union derived from structure, and
+a bot's last word is an acknowledgement, not a follow-up.** `ReviewThreadState.ts` is pure and
+schema-first: `ThreadUnresolved`, `ThreadResolvedAnswered`, `ThreadResolvedFollowUp` and
+`ThreadResolvedAcknowledged` fold into `YeetReviewThreadState` through `S.toTaggedUnion("state")`,
+and `deriveYeetReviewThreadState` decides between them from `isResolved`, `resolvedBy`, the PR
+author, and the newest comment's author login and `__typename` — never from comment text. Its input
+class carries no comment body at all, so no later rule can start reading one. Unknown resolves to
+`resolved-answered`: when the PR author or the resolver is absent, or the newest comment is
+unknowable because the thread has a further comment page the caller did not fetch, the thread does
+not block, matching the "unknown is not a named blocker" doctrine already stated at
+`Status.ts threadsAreResolved`. `resolved-acknowledged` (`authorKind === "bot"`) is printed and
+counted but never gates. Outstanding is exactly `unresolved || resolved-follow-up`, exported once as
+`yeetReviewThreadStateOutstanding` and consumed by status, watch, reply, the handler assert and
+closeout, so no surface keeps a private opinion. Rejected: reading comment bodies for "LGTM"-style
+heuristics (prose is not a contract); treating the thread opener as the obligation (the opener is
+what was already answered); exempting bot-token comments wholesale (a bot that asks a question is
+still a question); and a ninth `merge-ready` criterion (a follow-up is the same obligation as an
+unresolved thread and belongs in the same criterion).
+
+**Ruling 66 (FU-2) — `threads-resolved` widens to cover follow-ups, every live surface agrees with
+it, and the status thread read is paginated.** `merge-ready`'s `threads-resolved` criterion is
+`unresolved + follow-up === 0` with the closeout artifact's own issue count unchanged;
+`followUpThreadCount` counts only `resolved-follow-up`, and new `acknowledgedThreadCount` /
+`acknowledgedThreads` fields carry the advisory kind in the same optional/Option style the existing
+thread fields use. `nextCommandForRemote` routes to `bun run beep yeet reply` only when
+`threads-resolved` fails, live thread counts are non-zero, and *every other* merge-ready criterion
+holds — `failing` names the first blocker in protocol order, and threads lead the checks, so reading
+it alone sent the operator to answer reviewers on a branch with a red pipeline. It still routes to
+closeout when the failure is carried only by the artifact's issue count. `WatchMode`'s thread query grows the
+same fields, `YeetWatchThread` carries the state tag instead of an `isResolved` boolean, and
+`YeetThreadTransition.to` gains `follow-up` and `acknowledged` targets — so the gate closing on a
+thread that stays resolved is now a visible transition rather than silence.
+`assertNoUnresolvedReviewThreads` asserts on the two counts rather than on an id list, because a
+count without triage rows used to wave a PR through. Closeout's own thread query grows the same
+`latest: comments(last: 1)` selection Status, Reply and WatchMode already carry, and its newest-
+comment read prefers that node, falling back to the last node of the first comment page only while
+GitHub says that page is the whole chain: a resolved thread with more than a hundred comments used
+to classify as answered whatever a reviewer had said since. The status thread query became a cursor
+loop and the omission sentinel is deleted: a page claiming a successor with no end cursor now fails
+loudly instead of being rounded down to "100". Rejected: leaving the sentinel with a widened gate
+(a gate reading a truncated population is worse than no gate) and a separate follow-up criterion in
+`merge-ready`.
+
+**Ruling 67 (FU-3) — read-first surfaces replay the durable comment stream, and review bodies are
+parsed for structural markers only and never gate.** `replayYeetMonitorComments` is called by
+`runStatusMode` (when `--remote` resolved a PR number), by `runCloseoutMode`, and by the first cycle
+of `runYeetMonitorUntilMerged` through a seam on its options — never inside `collectYeetStatus`,
+which stays observational. The watermark becomes `yeet-monitor-comments/v2` with a third
+`reviewBody` cursor; a v1 record still decodes and seeds `reviewBody` from the *earlier* of its two
+cursors, because the later one would skip every review body submitted in between. Writes are
+monotone under `commentCursorOrder`, so two surfaces holding the same PR open cannot drag a cursor
+back over rows the other already printed. A truncated fetch is salvaged rather than failed: the
+intact prefix is decoded and the cursor advances only to the rows actually decoded. A failed read
+prints `comment replay unavailable: …` and leaves the cursor untouched — a closeout must not exit
+non-zero because GitHub blinked while it was printing old comments. Review bodies join the stream as
+a third member and are parsed by `ReviewBodySignal.ts` for markers only: CodeRabbit's
+`Actionable comments posted: N`, its nitpick/outside-diff `<summary>` counts and its fix-prompt
+path/line items; Greptile's confidence and its new findings, read as the *maximum* per severity of its
+`P0:n P1:n P2:n` triplet and the `N×Pk` items after `**NEW:**` — never their sum, because the two
+notations are two readings of one round, and never the triplet alone, because a body can print a
+stale zeroed tally above a listed finding. A Greptile-format body is detected by a named marker —
+an author login containing `greptile`, a *line-anchored* heading or bolded line naming Greptile, or
+the tokens `Greptile-format`/`Greptile-style` — or by the structural fallback of a confidence
+fraction plus a triplet or `**NEW:**` marker, which the real r8 body on PR #1184 needs because it
+names no tool at all. The word in running prose is not a marker: a body-wide `greptile` test read an
+operator's aside ("greptile scored this 5/5") as a review. Advisories
+subtract body findings that already opened an inline thread at the same location, and closeout reads
+only the newest body per author so an older round is superseded rather than summed. The
+`review-advisories` gate row is always `passed`. Rejected: replaying inside `collectYeetStatus`
+(status would stop being observational); a schema-version bump on `PrCloseoutReport` for the three
+new counts (`S.withConstructorDefault` + `S.withDecodingDefault` at 0 lets a legacy report decode as
+"knew about none of them"); parsing finding prose out of review bodies; and letting any advisory
+count block a merge.
