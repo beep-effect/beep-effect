@@ -11,6 +11,7 @@ import {
   decodePackageJsonEffect,
   resolveWorkspaceDirs,
   topologicalSort,
+  workspaceDependencyNames,
 } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import {
@@ -73,14 +74,6 @@ const arraysEqual = (left: ReadonlyArray<string>, right: ReadonlyArray<string>):
 
 const referenceEntries = (paths: ReadonlyArray<string>): ReadonlyArray<{ readonly path: string }> =>
   A.map(paths, (entry) => ({ path: entry }));
-
-const dependencyNamesFromWorkspaceDeps = (workspaceDeps: WorkspaceDeps): ReadonlyArray<string> =>
-  uniqueSorted([
-    ...R.keys(workspaceDeps.workspace.dependencies),
-    ...R.keys(workspaceDeps.workspace.devDependencies),
-    ...R.keys(workspaceDeps.workspace.peerDependencies),
-    ...R.keys(workspaceDeps.workspace.optionalDependencies),
-  ]);
 
 const parseJsonc = Effect.fn(function* <Schema extends S.Top>(content: string, filePath: string, schema: Schema) {
   return yield* decodeJsoncTextAs(schema)(content).pipe(
@@ -405,7 +398,7 @@ const buildAdjacency = (
     }
 
     let depSet = HashSet.empty<string>();
-    for (const depName of dependencyNamesFromWorkspaceDeps(deps)) {
+    for (const depName of workspaceDependencyNames(deps)) {
       depSet = HashSet.add(depSet, depName);
     }
 
@@ -826,7 +819,7 @@ const computedPackageReferenceTargets = Effect.fnUntraced(function* (
     return O.none<ReadonlyArray<string>>();
   }
 
-  const directDeps = A.filter(dependencyNamesFromWorkspaceDeps(workspaceDeps.value), (depName) => {
+  const directDeps = A.filter(workspaceDependencyNames(workspaceDeps.value), (depName) => {
     const descriptor = HashMap.get(workspaceByName, depName);
     return O.isSome(descriptor) && descriptor.value.ownerTsconfigPath !== undefined;
   });
