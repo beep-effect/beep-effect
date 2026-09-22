@@ -147744,13 +147744,13 @@
       "status": "open"
     },
     {
-      "id": "EV006:packages/tooling/tool/cli/test/yeet-watch-stream.test.ts:252:expect@4#1",
+      "id": "EV006:packages/tooling/tool/cli/test/yeet-watch-stream.test.ts:264:expect@4#1",
       "lens": "detector",
       "ruleId": "EV006",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-watch-stream.test.ts",
-      "line": 252,
-      "endLine": 252,
+      "line": 264,
+      "endLine": 264,
       "symbol": "expect",
       "occurrence": "v2:5fc94995a3fbe28a3c2a177e3096608372f227975ba473d152da5238852df0a8",
       "class": "hand-rolled-data-assertion",
