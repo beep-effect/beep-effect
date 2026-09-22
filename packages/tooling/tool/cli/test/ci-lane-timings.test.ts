@@ -138,12 +138,13 @@ const BAD_RECORD_MAC: ScriptedGhExit = {
  * every backoff sleep the retry schedule can request (250ms·2^n jittered,
  * at most ~4.5s across four retries).
  */
-const forkCollect = Effect.fn("TestCiLaneTimings.forkCollect")((spawner: ChildProcessSpawner.ChildProcessSpawner) =>
-  collectCiLaneTimings(".", 1).pipe(
-    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-    Effect.exit,
-    Effect.forkChild
-  )
+const forkCollect = Effect.fn("TestCiLaneTimings.forkCollect")(
+  (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) =>
+    collectCiLaneTimings(".", 1).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      Effect.exit,
+      Effect.forkChild
+    )
 );
 
 /**
@@ -154,7 +155,7 @@ const forkCollect = Effect.fn("TestCiLaneTimings.forkCollect")((spawner: ChildPr
  * drain grace so a clock jump cannot trip its pipe-wedge watchdog.
  */
 const collectWithRetries = Effect.fn("TestCiLaneTimings.collectWithRetries")(function* (
-  spawner: ChildProcessSpawner.ChildProcessSpawner
+  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]
 ) {
   const fiber = yield* forkCollect(spawner);
   yield* Effect.forEach(A.range(1, 1_200), () => TestClock.adjust("1 second"));
