@@ -1,4 +1,25 @@
-# Campaign resumed — 2026-09-14
+# Save PR preparation — 2026-09-21
+
+Benjamin requested merging current main and bringing a save PR to a green,
+mergeable state before continuing campaign work. The save PR remains draft;
+Benjamin retains merge authority. This checkpoint does not ratify GATE 2.
+
+Main `94c66a72ab` is included through merge `7f98ae35da`, including Effect
+`4.0.0-rc.117`. The packet contains 754 inventory records: 144 qualified and
+610 disqualified, with designs for all 144 qualified cases. Inventory and
+design-coverage validators pass after the merge. These structural checks do
+not establish current-source semantic review or publication readiness.
+
+The known source-refresh backlog has three completed P2 refreshes and one D1
+withdrawal out of 51 cases, leaving 47 pending. Two citation decisions remain
+open. No new dry census, replacement P3 review, or implementation is credited.
+Full local proof and hosted PR closeout must pass before this save is mergeable.
+
+The earlier verification job was cancelled after discovering it was still
+running across the main merge. Its results do not validate the merged head;
+fresh proof must use the updated dependencies and source together.
+
+## Historical campaign resumption — 2026-09-14
 
 Benjamin explicitly instructed `resume` after save PR #1069 merged. Campaign
 execution is authorized again under the unchanged SPEC and DECISIONS contract.
