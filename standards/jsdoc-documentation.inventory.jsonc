@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-09-22T19:33:35.857Z",
+  "generatedAt": "2026-09-22T19:41:17.369Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -68,13 +68,13 @@
     "publicModules": 2869,
     "publicExports": 20302,
     "openModules": 377,
-    "openExports": 3105,
+    "openExports": 3103,
     "missingExportExamples": 5,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 3343,
+    "exampleImportFindings": 3341,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 3342,
+    "no-root-package-import": 3340,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -442458,14 +442458,14 @@
       },
       "counts": {
         "openModules": 1,
-        "openExports": 3,
+        "openExports": 2,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 4,
+        "exampleImportFindings": 3,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -442483,7 +442483,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 4
+          "no-root-package-import": 3
         }
       },
       "modules": [
@@ -442978,18 +442978,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "makeServerLayer",
@@ -537354,14 +537348,14 @@
       },
       "counts": {
         "openModules": 7,
-        "openExports": 7,
+        "openExports": 6,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 10,
+        "exampleImportFindings": 9,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -537379,7 +537373,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 10
+          "no-root-package-import": 9
         }
       },
       "modules": [
@@ -537626,18 +537620,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the effect package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "makeServerLayer",

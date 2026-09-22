@@ -90,7 +90,7 @@ export const USPTO_MCP_INSTRUCTIONS =
  *
  * ```ts
  * import { UsptoMcpRegistrationsLive } from "@beep/uspto-mcp/Server"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * console.log(Layer.isLayer(UsptoMcpRegistrationsLive))
  * // true

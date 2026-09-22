@@ -79,7 +79,7 @@ export const M365_MCP_INSTRUCTIONS =
  *
  * ```ts
  * import { M365McpRegistrationsLive } from "@beep/m365-mcp/Server"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * console.log(Layer.isLayer(M365McpRegistrationsLive))
  * // true
