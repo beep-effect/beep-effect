@@ -7,7 +7,7 @@
 `a7a71921de`, and which changes break a consumer like beep-effect at compile time or at runtime?
 
 **Start with:**
-`git -C ${EFFECT_REF} log --oneline effect@4.0.0-rc.115..a7a71921de -- effect:packages/effect/src/unstable/ai effect:packages/effect/src/unstable/rpc`
+`git -C ${EFFECT_REF} log --oneline effect@4.0.0-rc.115..a7a71921de -- "${EFFECT_REF}/packages/effect/src/unstable/ai" "${EFFECT_REF}/packages/effect/src/unstable/rpc"`
 and `git diff` of the modules below over the same range.
 
 **Report sections:**

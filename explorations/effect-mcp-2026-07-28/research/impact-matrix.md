@@ -12,18 +12,21 @@ nlp, m365, uspto, gov-legal; practice-kg is listed separately because it has its
 "Clients" = in-repo wire clients and harnesses (sidecar HTTP harness, `live-mcp-client.ts`,
 m365 stdio test, `.mcp.json` `nlp` entry).
 
-## A. Snapshot pin (before any protocol flip)
+## A. Snapshot pin (before any protocol flip) — landed 2026-09-21 by #1173
+
+Rows marked **done** shipped in #1173 (catalog to rc.117, patch re-key, harness SSE unwrap,
+hosted-green). The two sql-pg audits are the only open items and fold into S1.
 
 | Change item | Lane | mcp-kit | Drivers | practice-kg | Sidecar | Clients | Repo-wide |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `Effect.isEffect` guard narrowing (`EffectSchema.ts`) | 25-r4 | n/a | n/a | n/a | n/a | n/a | **forced** (1 edit) |
-| `Stream.scan` LazyArg (ai-metrics) | 23-r4, 25-r4 | n/a | n/a | n/a | n/a | n/a | **forced** (1 edit, runtime) |
-| 16 catalog entries move together | 23-r4 | forced | forced | forced | forced | forced | **forced** |
-| platform-node-shared patch re-key + verify | 23-r4 | n/a | n/a | n/a | n/a | n/a | **forced** (UNVERIFIED apply) |
+| `Effect.isEffect` guard narrowing (`EffectSchema.ts`) | 25-r4 | n/a | n/a | n/a | n/a | n/a | done (#1173) |
+| `Stream.scan` LazyArg (ai-metrics) | 23-r4, 25-r4 | n/a | n/a | n/a | n/a | n/a | done (#1173) |
+| 16 catalog entries move together | 23-r4 | done | done | done | done | done | done (#1173, rc.117) |
+| platform-node-shared patch re-key + verify | 23-r4 | n/a | n/a | n/a | n/a | n/a | done (#1173 re-keyed to rc.117, hosted-green) |
 | sql-pg `Date` timestamp decode | 23-r4 | n/a | n/a | n/a | optional (PGlite) | n/a | **forced audit** of native `PgClient` users |
 | sql-pg unknown OID → UTF-8 text | 23-r4 | n/a | n/a | n/a | optional (PGlite) | n/a | **forced audit** (enum arrays) |
-| SSE framing of multi-message HTTP responses | 25-r4, 11-u2 | n/a | n/a | n/a | natural (server side, automatic) | **forced** (JSON-RPC codec cannot decode) | n/a |
-| POSIX process-group cleanup on success | 23-r4 | n/a | n/a | n/a | n/a | n/a | optional (spawner users; live test exists) |
+| SSE framing of multi-message HTTP responses | 25-r4, 11-u2 | n/a | n/a | n/a | natural (server side, automatic) | done for the sidecar harness (#1173 SSE unwrap); `live-mcp-client.ts` still open, S1b | n/a |
+| POSIX process-group cleanup on success | 23-r4 | n/a | n/a | n/a | n/a | n/a | optional (spawner users; live test exists); nothing surfaced in #1173's proof |
 | `Effect.orElseSucceed` receives the error | 23-r4 | n/a | n/a | n/a | n/a | n/a | optional (369 zero-arity thunks, neutral) |
 
 ## B. Kit and handler API (compile-level at the snapshot, all hosts through the kit)

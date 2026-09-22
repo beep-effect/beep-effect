@@ -92,7 +92,9 @@ withdrawn. Snapshot-era wording below is kept as the record of what was read.
 ### 2.2 Stateless runtime semantics (lane 11-u2)
 
 - Protocol selection: HTTP requires `MCP-Protocol-Version`, `_meta` protocol version and client
-  capabilities, `Mcp-Method` matching the JSON-RPC method, and `Mcp-Name` on tool calls (`method: tools/call`).
+  capabilities, `Mcp-Method` matching the JSON-RPC method, and `Mcp-Name` on every routed request: it must
+  equal `params.name` for `method: tools/call` and `method: prompts/get`, and `params.uri` for
+  `method: resources/read`, or the request is HTTP 400 / `-32020` (header mismatch).
   `selectStatefulProtocol` considers only stateful adapters, so a list of only
   `v2026_07_28` rejects `initialize`: HTTP 404 / `-32601` with 2026 headers, HTTP 400 /
   `-32020` (header mismatch) on a bare legacy `initialize`, and stdio `-32022` with no
@@ -210,8 +212,11 @@ client group is internal, so there is no public client to point harnesses at. Th
   attacker-Origin `OPTIONS` with 204 and no ACAO instead of the spec's 403, and emits the typed 403
   plus `ontology.mcp.origin` metric that Effect's check does not.
 - Replay and abuse surface after the flip: static per-launch bearer plus Origin, no nonce, no
-  body-size cap, no rate limit; a leftover client `Mcp-Session-Id` would silently become the gate
-  run key unless the kit stops reading it. `mcp.tool.call.*` spans have no correlation attribute
+  body-size cap, no rate limit. On the 2026 path as installed, a leftover client `Mcp-Session-Id`
+  does not reach the gate: `invocationFromRequestContext` builds no `McpServerClient`, so no
+  `CurrentMcpCaller` exists and `GovernedTierGate` refuses before `runIdOf` reads any header. The
+  header only becomes a risk if a future identity path (D-run-key) re-derives identity from
+  headers without the kit dropping that read. `mcp.tool.call.*` spans have no correlation attribute
   that survives the loss of the session id.
 - The Origin allow-list is a literal in `OntologyMcpTransport.ts`. `@beep/ontology-config` already
   owns `OntologyMcpServerConfig` (server-only MCP settings) and does not mention origins; the
@@ -330,9 +335,11 @@ The draft train with these constraints applied, sized per decision fork, is in
 
 ## 7. Where the friction went
 
-`research/OPPORTUNITIES.md` holds four receipts: headless grok deep-research interrupted on
+`research/OPPORTUNITIES.md` holds six receipts: headless grok deep-research interrupted on
 exit, Claude Code's built-in deep-research not model-routed, snapshot check reds cascading from
-two files, and the per-claim verification workflow stalling at fan-out scale.
+two files, the per-claim verification workflow stalling at fan-out scale, the semantic-delta
+gate reading Effect-clone paths as repo paths, and the release-vehicle decision overtaken by
+rc.117 before the packet merged.
 
 ## Appendix — Gate B split claims (one refuting vote of three)
 
