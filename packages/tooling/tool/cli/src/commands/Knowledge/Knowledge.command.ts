@@ -279,6 +279,8 @@ const topDocuments = (report: KnowledgeRefsReport): ReadonlyArray<string> =>
   );
 
 const OMITTED_HINT = "row(s) omitted (--verbose lists them)";
+/** Fold label for the skipped-blob rows; distinct from the `skipped:` header total on purpose. */
+const SKIPPED_FOLD_LABEL = "skipped-blobs";
 
 /** Per-class row counts of the quiet observations in one listing, keyed by quiet class. */
 const quietClassCounts = (
@@ -316,7 +318,9 @@ const skippedLines = (report: KnowledgeRefsReport, options: { readonly verbose: 
   Match.value(options.verbose).pipe(
     Match.when(true, () => A.map(report.skipped, (blob) => `  ${blob.reason} ${blob.path}`)),
     Match.when(false, () =>
-      A.isReadonlyArrayNonEmpty(report.skipped) ? [`  skipped: ${A.length(report.skipped)} ${OMITTED_HINT}`] : []
+      A.isReadonlyArrayNonEmpty(report.skipped)
+        ? [`  ${SKIPPED_FOLD_LABEL}: ${A.length(report.skipped)} ${OMITTED_HINT}`]
+        : []
     ),
     Match.exhaustive
   );
@@ -329,7 +333,8 @@ const skippedLines = (report: KnowledgeRefsReport, options: { readonly verbose: 
  * The surface filter narrows the listing only; summary counts remain whole-corpus. The listing
  * header counts every observation in the requested surface, including the rows it folds. Without
  * `--verbose`, rows in a quiet class ({@link KnowledgeRefQuietClassification}) and the skipped-blob
- * rows collapse to one `<class>: N row(s) omitted` line per non-empty class; rows in every other
+ * rows collapse to one `<class>: N row(s) omitted` line per non-empty class (the skipped fold is
+ * labelled `skipped-blobs` so it never reads as the `skipped:` header total); rows in every other
  * class always print, so a broken target is never hidden behind a count. Which rows the `--check`
  * gate decides on is unaffected: it reads the report, never this listing.
  *

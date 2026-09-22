@@ -4,9 +4,14 @@ import {
   encodeKnowledgeRefsReportJson,
   extractKnowledgeHostAnchors,
   isKnowledgeScopedPath,
+  KNOWLEDGE_REFS_GATED_CLASSIFICATIONS,
   KnowledgeOperationalError,
+  KnowledgeRefClassification,
+  KnowledgeRefMissing,
+  KnowledgeRefQuietClassification,
   KnowledgeRefSurface,
   KnowledgeTrackedEntry,
+  knowledgeRefRemediation,
   knowledgeRefsCheckFailure,
   knowledgeRefsLiveDebt,
   makeKnowledgeTreeOracle,
@@ -550,7 +555,7 @@ describe("knowledge refs listing", () => {
       );
       const normal = renderKnowledgeRefsReport(report, "all", { verbose: false });
       const verbose = renderKnowledgeRefsReport(report, "all", { verbose: true });
-      expect(normal).toContain("skipped: 1\n  skipped: 1 row(s) omitted (--verbose lists them)");
+      expect(normal).toContain("skipped: 1\n  skipped-blobs: 1 row(s) omitted (--verbose lists them)");
       expect(normal).not.toContain("  symlink CLAUDE.md");
       expect(normal).toContain("observations (all) (4):");
       expect(normal).toContain("  verified: 1 row(s) omitted (--verbose lists them)");
@@ -569,6 +574,18 @@ describe("knowledge refs listing", () => {
       }
     })
   );
+
+  it("derives the quiet set from the remediation table and keeps it disjoint from the gated set", () => {
+    const noRemediation = A.filter(KnowledgeRefClassification.Options, (classification) =>
+      Str.startsWith("None;")(knowledgeRefRemediation(classification, KnowledgeRefMissing.make({})))
+    );
+    expect(A.sort(noRemediation, Str.Order)).toEqual(A.sort(KnowledgeRefQuietClassification.Options, Str.Order));
+    expect(
+      A.filter(KnowledgeRefQuietClassification.Options, (classification) =>
+        HashSet.has(KNOWLEDGE_REFS_GATED_CLASSIFICATIONS, classification)
+      )
+    ).toEqual([]);
+  });
 
   it.effect(
     "prints no omitted-count line for a quiet class without rows and none at all for a loud listing",
