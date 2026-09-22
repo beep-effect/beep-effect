@@ -1,0 +1,31 @@
+{
+  "authority": "Independent retained-metadata relationship review; no raw archive, signed transport or qualification authority.",
+  "results": [
+    {
+      "channel": "stable",
+      "receiptSha256": "422f9c7e90ba9390817d23452cffaff0add1f2e5964ea08bd50fc03710fa698b",
+      "runs": 60,
+      "passingChecks": 30,
+      "primaryShadows": 10,
+      "absentScriptObservations": 1,
+      "metadataRelationshipsVerified": true,
+      "rawArchiveValidation": false,
+      "receipt": "research/synthetic-post-repair-stable.json"
+    },
+    {
+      "channel": "canary",
+      "receiptSha256": "c4183e7255d3814289274b631a268af93a22c53f46f159e773043a51656b611d",
+      "runs": 60,
+      "passingChecks": 30,
+      "primaryShadows": 10,
+      "absentScriptObservations": 1,
+      "metadataRelationshipsVerified": true,
+      "rawArchiveValidation": false,
+      "receipt": "research/synthetic-post-repair-canary.json"
+    }
+  ],
+  "reviewedAt": "2026-09-21",
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "processExitCodeRecovered": false,
+  "completionEvidence": "Both process handles are absent; complete schema v3 receipts exist and independently reviewed relationships pass. Original process exit codes are unavailable."
+}

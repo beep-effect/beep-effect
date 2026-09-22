@@ -1,0 +1,60 @@
+{
+  "authority": "Direct descriptor annotations on positive scalar reads in one fresh bounded execution. Not semantic dependence or complete indirect-I/O proof.",
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/lts-annotated-io-h3xn4c6y/receipt.json",
+    "sha256": "1b60c148acc9d3fefbe50a293b18585204d4c5d976fbcd9d9c4adb33bb210967"
+  },
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "compressedTraceSha256": "aeabad9b5e565f77f2b085b098f53d4634c28e1d33a9d1fe1ec47b873f941922",
+  "expandedTraceSha256": "57ed44daf5dc930dd4dcf8d24e820f98f5802fba35b33fa843dba1e3155757d8",
+  "expandedBytes": 276494250,
+  "joinedCalls": 1126406,
+  "pendingCalls": 0,
+  "scalarReadCalls": 132395,
+  "positiveScalarReadCalls": 66381,
+  "unannotatedPositiveReads": {},
+  "nonemptyReadBuffers": 0,
+  "groups": {
+    "outside-repository": {
+      "uniquePaths": 20,
+      "readCalls": 443,
+      "returnedBytes": 159015
+    },
+    "other-repository-paths": {
+      "uniquePaths": 8456,
+      "readCalls": 8483,
+      "returnedBytes": 126138092
+    },
+    "identity-subtree": {
+      "uniquePaths": 27,
+      "readCalls": 31,
+      "returnedBytes": 281186
+    },
+    "installed-dependencies": {
+      "uniquePaths": 16739,
+      "readCalls": 57412,
+      "returnedBytes": 15439829128
+    },
+    "non-filesystem-descriptor": {
+      "uniquePaths": 5,
+      "readCalls": 12,
+      "returnedBytes": 313
+    }
+  },
+  "limitations": [
+    "Vectored I/O retains raw descriptor formatting",
+    "io_uring submissions are not decoded",
+    "Path annotations and successful reads do not prove semantic relevance",
+    "A single execution does not establish the full possible input set"
+  ],
+  "wrapperExitCode": 0,
+  "beforeAfterDependencyToolchainParity": "passed",
+  "privateReview": {
+    "path": ".beep/qualification-local-preflight/lts-annotated-io-h3xn4c6y/annotated-read-review.json",
+    "sha256": "589e2bef4ad227b93a94e10e908db81f2ee4067869c042f3b23dbb917383fae0"
+  },
+  "reviewRecipe": {
+    "path": ".beep/qualification-local-preflight/review-lts-annotated-io.py",
+    "sha256": "21a7709aa4f86f1595dc18f44a7d395528f6ce54b4fe61487bea9f0a450b3afa"
+  }
+}

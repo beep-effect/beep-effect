@@ -1,0 +1,517 @@
+{
+  "observedOn": "2026-09-11",
+  "sourceRevision": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "authority": "resumption-preflight-only",
+  "census": {
+    "workspaces": 143,
+    "graphNodes": 3269,
+    "executableComputations": 1892,
+    "unresolved": [
+      "Classify nested workspace and root command semantics.",
+      "Review dynamic CI/Quality/Yeet entrypoint branches and their external verdicts."
+    ]
+  },
+  "audit": {
+    "findings": 0,
+    "unassessed": 1340
+  },
+  "activation": {
+    "sourceToolchainDigest": "006d57841870876cf81bd2a7c7d067fafe42a22779427a02f50c8d3b5167bad5",
+    "previewOnly": true
+  },
+  "evidence": [
+    {
+      "path": ".beep/qualification-local-preflight/resumed-census.json",
+      "sha256": "ccaf68ba95ed0b4b4f6273bf61c29c4103d79491f019e2ffef4af23c92515275"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/resumed-audit.json",
+      "sha256": "9b06c3bd46bb7325f494e84e7eb544cb9a5743ac92baf55858500e9ef1e2f8eb"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/resumed-activation.json",
+      "sha256": "d14b9416a8403c8058d5105d5027312710925e0190b8724dff9e3310e4708935"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/resumed-goals-doctor.log",
+      "sha256": "569c73c07c5ca37906f4e016bf9b1a08c3067c41087f6f192fa74d2590be605a"
+    }
+  ],
+  "remaining": [
+    "Finish runtime-key enforcement and semantic entrypoint review.",
+    "Complete native read/write and capture-adversary coverage.",
+    "Consume accepted signed conformance and trust runtime evidence.",
+    "Qualify a real computation, hand off to adoption, and finish final verification."
+  ],
+  "verification": {
+    "goalsDoctor": "pass; zero blocking findings, four inherited advisories",
+    "explorationCheck": "pass; no stream-integrity or fleet-graph findings",
+    "gitDiffCheck": "pass"
+  },
+  "pilotPreparation": {
+    "worktrees": [
+      "qualification-pilot-f1",
+      "qualification-pilot-f2"
+    ],
+    "dependencies": "copy and source parity verified; private receipt retained",
+    "stable": "passed; 67 observations, 40 passing checks and 10 shadows",
+    "canary": "passed; 67 observations, 40 passing checks and 10 shadows"
+  },
+  "stablePilot": {
+    "sourceRevision": "662823dd960367046ba7d73dd8fd25d15782865a",
+    "client": {
+      "version": "2.10.12",
+      "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+      "namespace": "qualification-pilot-local-stable-resumed-library-v6"
+    },
+    "toolchainSha256": "006d57841870876cf81bd2a7c7d067fafe42a22779427a02f50c8d3b5167bad5",
+    "observations": 67,
+    "checks": [
+      {
+        "name": "fresh-pair-0",
+        "passed": true
+      },
+      {
+        "name": "fresh-pair-1",
+        "passed": true
+      },
+      {
+        "name": "fresh-pair-2",
+        "passed": true
+      },
+      {
+        "name": "activation-capture-equivalence",
+        "passed": true
+      },
+      {
+        "name": "local-replay",
+        "passed": true
+      },
+      {
+        "name": "concurrent-fresh-equivalence",
+        "passed": true
+      },
+      {
+        "name": "absolute-root-equivalence",
+        "passed": true
+      },
+      {
+        "name": "shadow-baseline",
+        "passed": true
+      },
+      {
+        "name": "input-baseline",
+        "passed": true
+      },
+      {
+        "name": "shadow-source-comment",
+        "passed": true
+      },
+      {
+        "name": "input-source-comment",
+        "passed": true
+      },
+      {
+        "name": "shadow-added-source",
+        "passed": true
+      },
+      {
+        "name": "input-added-source",
+        "passed": true
+      },
+      {
+        "name": "shadow-readme",
+        "passed": true
+      },
+      {
+        "name": "input-readme",
+        "passed": true
+      },
+      {
+        "name": "shadow-declared-env",
+        "passed": true
+      },
+      {
+        "name": "input-declared-env",
+        "passed": true
+      },
+      {
+        "name": "shadow-declared-env-empty",
+        "passed": true
+      },
+      {
+        "name": "input-declared-env-empty",
+        "passed": true
+      },
+      {
+        "name": "shadow-orchestration-env",
+        "passed": true
+      },
+      {
+        "name": "input-orchestration-env",
+        "passed": true
+      },
+      {
+        "name": "shadow-locale",
+        "passed": true
+      },
+      {
+        "name": "input-locale",
+        "passed": true
+      },
+      {
+        "name": "shadow-timezone",
+        "passed": true
+      },
+      {
+        "name": "input-timezone",
+        "passed": true
+      },
+      {
+        "name": "shadow-absolute-root",
+        "passed": true
+      },
+      {
+        "name": "input-absolute-root",
+        "passed": true
+      },
+      {
+        "name": "failed-source-not-reused",
+        "passed": true
+      },
+      {
+        "name": "invalidation-root-task-config",
+        "passed": true
+      },
+      {
+        "name": "invalidation-child-task-config",
+        "passed": true
+      },
+      {
+        "name": "invalidation-missing-child-config",
+        "passed": true
+      },
+      {
+        "name": "invalidation-root-lint-config",
+        "passed": true
+      },
+      {
+        "name": "invalidation-lockfile",
+        "passed": true
+      },
+      {
+        "name": "invalidation-package-manager",
+        "passed": true
+      },
+      {
+        "name": "invalidation-generated-alias",
+        "passed": true
+      },
+      {
+        "name": "invalidation-dependency-source",
+        "passed": true
+      },
+      {
+        "name": "non-execution-missing-root-config",
+        "passed": true
+      },
+      {
+        "name": "non-execution-malformed-root-config",
+        "passed": true
+      },
+      {
+        "name": "non-execution-malformed-child-config",
+        "passed": true
+      },
+      {
+        "name": "non-execution-absent-script",
+        "passed": true
+      }
+    ],
+    "shadowDecisions": 10,
+    "authority": "local-observation-only",
+    "remaining": [
+      "Complete native read/write and capture-adversary coverage",
+      "Enforce verified runtime-key calculation in ordinary entrypoints before enabling live reuse",
+      "Accepted signed remote comparisons and final qualification"
+    ],
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/resumed-stable-pilot.json",
+      "sha256": "b77983eaf74b933a4376291acd752dc964cc840054d84ce61324e1bcdf13929a"
+    }
+  },
+  "siblingEvidenceSearch": {
+    "scope": "124 local beep-effect clone/worktree roots; manifest-registered evidence only",
+    "packetCopies": 78,
+    "result": "All conformance/trust packet copies remained paused with two initial registered reports; no accepted signed runtime evidence identified in that scope."
+  },
+  "canaryPilot": {
+    "sourceRevision": "662823dd960367046ba7d73dd8fd25d15782865a",
+    "client": {
+      "version": "2.10.13-canary.1",
+      "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+      "namespace": "qualification-pilot-local-canary-resumed-library-v6"
+    },
+    "toolchainSha256": "89a1bba00ce2df6706a0c14751c757c7a198a1047a8f1ebafdc9e6f7b1f97e9e",
+    "observations": 67,
+    "checks": [
+      {
+        "name": "fresh-pair-0",
+        "passed": true
+      },
+      {
+        "name": "fresh-pair-1",
+        "passed": true
+      },
+      {
+        "name": "fresh-pair-2",
+        "passed": true
+      },
+      {
+        "name": "activation-capture-equivalence",
+        "passed": true
+      },
+      {
+        "name": "local-replay",
+        "passed": true
+      },
+      {
+        "name": "concurrent-fresh-equivalence",
+        "passed": true
+      },
+      {
+        "name": "absolute-root-equivalence",
+        "passed": true
+      },
+      {
+        "name": "shadow-baseline",
+        "passed": true
+      },
+      {
+        "name": "input-baseline",
+        "passed": true
+      },
+      {
+        "name": "shadow-source-comment",
+        "passed": true
+      },
+      {
+        "name": "input-source-comment",
+        "passed": true
+      },
+      {
+        "name": "shadow-added-source",
+        "passed": true
+      },
+      {
+        "name": "input-added-source",
+        "passed": true
+      },
+      {
+        "name": "shadow-readme",
+        "passed": true
+      },
+      {
+        "name": "input-readme",
+        "passed": true
+      },
+      {
+        "name": "shadow-declared-env",
+        "passed": true
+      },
+      {
+        "name": "input-declared-env",
+        "passed": true
+      },
+      {
+        "name": "shadow-declared-env-empty",
+        "passed": true
+      },
+      {
+        "name": "input-declared-env-empty",
+        "passed": true
+      },
+      {
+        "name": "shadow-orchestration-env",
+        "passed": true
+      },
+      {
+        "name": "input-orchestration-env",
+        "passed": true
+      },
+      {
+        "name": "shadow-locale",
+        "passed": true
+      },
+      {
+        "name": "input-locale",
+        "passed": true
+      },
+      {
+        "name": "shadow-timezone",
+        "passed": true
+      },
+      {
+        "name": "input-timezone",
+        "passed": true
+      },
+      {
+        "name": "shadow-absolute-root",
+        "passed": true
+      },
+      {
+        "name": "input-absolute-root",
+        "passed": true
+      },
+      {
+        "name": "failed-source-not-reused",
+        "passed": true
+      },
+      {
+        "name": "invalidation-root-task-config",
+        "passed": true
+      },
+      {
+        "name": "invalidation-child-task-config",
+        "passed": true
+      },
+      {
+        "name": "invalidation-missing-child-config",
+        "passed": true
+      },
+      {
+        "name": "invalidation-root-lint-config",
+        "passed": true
+      },
+      {
+        "name": "invalidation-lockfile",
+        "passed": true
+      },
+      {
+        "name": "invalidation-package-manager",
+        "passed": true
+      },
+      {
+        "name": "invalidation-generated-alias",
+        "passed": true
+      },
+      {
+        "name": "invalidation-dependency-source",
+        "passed": true
+      },
+      {
+        "name": "non-execution-missing-root-config",
+        "passed": true
+      },
+      {
+        "name": "non-execution-malformed-root-config",
+        "passed": true
+      },
+      {
+        "name": "non-execution-malformed-child-config",
+        "passed": true
+      },
+      {
+        "name": "non-execution-absent-script",
+        "passed": true
+      }
+    ],
+    "shadowDecisions": 10,
+    "authority": "local-observation-only",
+    "remaining": [
+      "Complete native read/write and capture-adversary coverage",
+      "Enforce verified runtime-key calculation in ordinary entrypoints before enabling live reuse",
+      "Accepted signed remote comparisons and final qualification"
+    ],
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/resumed-canary-pilot.json",
+      "sha256": "a8a07a2c22ad06400ddd9a4db7748591511424e7c29b5c0b888b2bc3ef67e7c4"
+    }
+  },
+  "receiptLinkageImplementation": {
+    "field": "CachePilotReceipt.runtimeLinker",
+    "compatibility": "Historical v5 receipts decode to explicit absence; the current producer always supplies the requested client snapshot.",
+    "verification": {
+      "focusedTests": 14,
+      "testTypecheckFiles": 220,
+      "packageAuditSeconds": 543.8,
+      "packageDocgenSeconds": 24.3,
+      "result": "passed"
+    },
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/receipt-linkage-test.log",
+        "sha256": "4f0fdce84ababd8bef3b2f51dd6befa01ec13b844ec2eb038cf535170deeac3b"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/receipt-linkage-test-tsgo.log",
+        "sha256": "bc081953b1b0482a6526188dc67e312859aceb7b32fc2f3974dcdcf2a3ebc688"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/receipt-linkage-package.log",
+        "sha256": "95ae6dd2eaba4118d83da0bba88d06696ab1a4d20bb1c98620353a3eae9e28ab"
+      }
+    ],
+    "nativeReceiptStatus": "New stable and canary receipts contain the snapshot and pass independent reconstruction; earlier matrices remain historical."
+  },
+  "linkageNativeVerification": {
+    "status": "passed for stable and canary",
+    "sourceFiles": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+        "sha256": "79a4cb8be6d1c459858389eb7fc82f107b691d03801d8d06b311bc60f6b69dca"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+        "sha256": "786b1a39528da31f68a5ec4d0580c2d903e1af19d52313f14af208feab58e00a"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+        "sha256": "0e96e51cecd5e1d2d9866032e53977f16a3b5d4f8de3904d4ab6031a74b40c2f"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.linker.ts",
+        "sha256": "a1d657bdb74e4e77235bd5c04c358c38bad800ebc8f85d50391fe0ac28b19d60"
+      }
+    ],
+    "reconstructionMethod": "Verify the activation reference SHA-256; independently serialize its source toolchain as compact UTF-8 JSON and verify the reviewed digest. Replace turbo with receipt.client version/sha256 and runtimeLinker with receipt.runtimeLinker, then hash the compact JSON and compare with receipt.runtimeKeyDigest. Changing the retained loader hash must change the reconstructed digest.",
+    "stable": {
+      "channel": "stable",
+      "clientVersion": "2.10.12",
+      "toolchainSha256": "90e85d869e86be999a9aea5b68e0078f7e1eac10a195128dc286124847f440bc",
+      "reconstructionPassed": true,
+      "alteredLoaderRejected": true,
+      "observations": 67,
+      "passingChecks": 40,
+      "shadowDecisions": 10,
+      "receipt": {
+        "path": ".beep/qualification-local-preflight/linkage-stable-pilot.json",
+        "sha256": "59ca368d17d1ff40ad2c1cad9ad71754cdaa3ce955fda8c50e166fbb8fb80657"
+      }
+    },
+    "dependencyRefresh": "The original requests rejected stale previews. Only installedDependencies changed, with the materialized-tree diff identifying generated Vitest results.json. Fresh activation and verified dependency-copy references were used.",
+    "canary": {
+      "channel": "canary",
+      "clientVersion": "2.10.13-canary.1",
+      "toolchainSha256": "d5868b5cc3073ae19d4d41a3aca0588e4d671890b7f6c939a0d147c9b39fd237",
+      "reconstructionPassed": true,
+      "alteredLoaderRejected": true,
+      "observations": 67,
+      "passingChecks": 40,
+      "shadowDecisions": 10,
+      "receipt": {
+        "path": ".beep/qualification-local-preflight/linkage-canary-pilot.json",
+        "sha256": "1ac9e9eed059753d476e558124493afe273ad34141e69e8dd984306334a4a5b5"
+      }
+    },
+    "sourceFilesUnchangedDuringRuns": true,
+    "verifier": {
+      "path": ".beep/qualification-local-preflight/reconstruct-pilot-linkage.py",
+      "sha256": "167eab081c2f9d20b7935cccd4a3f0c8727d3e05e3069bb8bc15c2221654b409"
+    },
+    "reconstructionReceipt": {
+      "path": ".beep/qualification-local-preflight/linkage-reconstruction-stable-canary.json",
+      "sha256": "fa96d3121c1903d51402e4ec3ac67913af5d1993b1edb4931d26640dad51493f"
+    }
+  }
+}

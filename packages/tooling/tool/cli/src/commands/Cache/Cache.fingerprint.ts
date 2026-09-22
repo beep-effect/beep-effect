@@ -79,6 +79,40 @@ const decodeToolchainProfile = S.decodeUnknownEffect(CacheToolchainSnapshot.fiel
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 /**
+ * Bind clone-local Git exclusions to the runtime identity, including linked worktrees.
+ *
+ * **Details**
+ * The portable source label denotes `info/exclude` in Git's resolved common
+ * directory. Missing and empty files have the same inert identity. Reads are
+ * bounded to one MiB and reject symlinks and non-regular files. This observation
+ * does not cover other Git configuration or prevent concurrent file mutation.
+ *
+ * **Example** (Observe local exclusion identity)
+ *
+ * ```ts
+ * import { collectCacheGitExclusions } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * const observation = collectCacheGitExclusions("/repo")
+ * console.assert(Effect.isEffect(observation))
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const collectCacheGitExclusions = Effect.fn("CacheFingerprint.gitExclusions")(function* (root: string) {
+  const commonDirectory = yield* captureVersion(root, "git", [
+    "rev-parse",
+    "--path-format=absolute",
+    "--git-common-dir",
+  ]);
+  const file = yield* readContainedFileBytesNoFollow(commonDirectory, "info/exclude", NonNegativeInt.make(1048576));
+  if (file.exists && O.isNone(file.contents))
+    return yield* CacheCommandError.new("Git local exclusions must be a bounded regular file or absent.");
+  const contents = O.getOrElse(file.contents, () => new Uint8Array(0));
+  return CacheCensusSource.make({ path: ".git/info/exclude", sha256: yield* hashBytes(contents) });
+}, CacheCommandError.mapError("Cannot fingerprint Git local exclusions."));
+
+/**
  * Observe an explicitly supported runtime matching the repository's bounded Bun pin.
  *
  * **Example** (Plan toolchain observation)
@@ -152,12 +186,40 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
     installedDependencies: O.some(
       yield* inspectCacheDependencyTree(root, (yield* collectCacheCensus(root)).workspaces)
     ),
-    sources: [CacheCensusSource.make({ path: ".bun-version", sha256: yield* hashBytes(declaration) }), ...sources],
+    sources: [
+      CacheCensusSource.make({ path: ".bun-version", sha256: yield* hashBytes(declaration) }),
+      yield* collectCacheGitExclusions(root),
+      ...sources,
+    ],
   });
 }, CacheCommandError.mapError("Cannot fingerprint the qualification runtime."));
 const encodeCacheComputationConfigurationJson = S.encodeEffect(S.fromJsonString(CacheComputationConfiguration));
 
 const encodeCacheToolchainSnapshotJson = S.encodeEffect(S.fromJsonString(CacheToolchainSnapshot));
+
+/**
+ * Hash the canonical toolchain snapshot used by qualification and execution.
+ *
+ * **Example** (Derive a key from an observed toolchain)
+ *
+ * ```ts
+ * import { hashCacheToolchain } from "@beep/repo-cli/commands/Cache"
+ * import { collectCacheToolchain } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * const key = collectCacheToolchain(".").pipe(Effect.flatMap(hashCacheToolchain))
+ * console.assert(Effect.isEffect(key))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const hashCacheToolchain = Effect.fn("CacheFingerprint.hashToolchain")(function* (
+  toolchain: CacheToolchainSnapshot
+) {
+  const text = yield* encodeCacheToolchainSnapshotJson(toolchain);
+  return yield* hashBytes(new TextEncoder().encode(text));
+}, CacheCommandError.mapError("Cannot hash the observed toolchain."));
 
 /**
  * Bind an executable computation to all of its configured dependencies, including graph-only nodes.
@@ -221,9 +283,8 @@ export const fingerprintCacheComputation = Effect.fn("CacheFingerprint.computati
     ),
   });
   const configurationText = yield* encodeCacheComputationConfigurationJson(configuration);
-  const toolchainText = yield* encodeCacheToolchainSnapshotJson(toolchain);
   const configurationDigest = yield* hashBytes(new TextEncoder().encode(configurationText));
-  const toolchainDigest = yield* hashBytes(new TextEncoder().encode(toolchainText));
+  const toolchainDigest = yield* hashCacheToolchain(toolchain);
   return CacheLiveIdentity.make({ key, configuration, configurationDigest, toolchain, toolchainDigest });
 }, CacheCommandError.mapError("Cannot fingerprint the computation configuration."));
 
