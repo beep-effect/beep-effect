@@ -391,6 +391,9 @@
       "path": "packages/tooling/test-kit/fc-runs"
     },
     {
+      "path": "packages/tooling/test-kit/test-runner"
+    },
+    {
       "path": "packages/tooling/test-kit/test-utils"
     },
     {

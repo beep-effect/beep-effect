@@ -57,7 +57,15 @@ export class GreptileSummary extends S.Class<GreptileSummary>($I`GreptileSummary
   })
 ) {}
 
-const PrCloseoutGateName = LiteralKit(["hosted-checks", "review-threads", "greptile", "coderabbit", "chatgpt"]).pipe(
+const PrCloseoutGateName = LiteralKit([
+  "hosted-checks",
+  "review-threads",
+  "review-follow-ups",
+  "review-advisories",
+  "greptile",
+  "coderabbit",
+  "chatgpt",
+]).pipe(
   $I.annoteSchema("PrCloseoutGateName", {
     description: "Named PR closeout gate represented in durable Yeet state.",
   })
@@ -150,13 +158,27 @@ export class PrCloseoutWriteAction extends S.Class<PrCloseoutWriteAction>($I`PrC
  * reviewed. It is optional only so legacy reports still decode; an absent head
  * is stale and cannot satisfy merge readiness.
  *
+ * `followUpThreadCount`, `acknowledgedThreadCount` and `advisoryCount` default
+ * to zero on both construction and decoding rather than bumping the schema
+ * version: a report written before thread states were classified simply
+ * reports none of them, which is what it knew.
+ *
  * @category models
  * @since 0.0.0
  */
 export class PrCloseoutReport extends S.Class<PrCloseoutReport>($I`PrCloseoutReport`)(
   {
+    acknowledgedThreadCount: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefault(Effect.succeed(0))
+    ),
     actionableReviewThreadCount: S.Finite,
+    advisoryCount: S.Finite.pipe(S.withConstructorDefault(Effect.succeed(0)), S.withDecodingDefault(Effect.succeed(0))),
     botCommentCount: S.Finite,
+    followUpThreadCount: S.Finite.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefault(Effect.succeed(0))
+    ),
     greptile: GreptileSummary,
     issueCount: S.Finite,
     issues: S.Array(QualityIssue),

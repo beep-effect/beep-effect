@@ -22,11 +22,15 @@
  * against that one snapshot — no per-draft REST round trip.
  *
  * Classification is pure ({@link planReplyActions}) and separated from
- * execution: a thread that is already resolved settles as `stale` without a
- * write, an id that matches no live thread settles as `failed` with a detail
- * naming both handles, and only surviving drafts become
- * {@link ReplyPostAction}s. That split is what makes the interesting behaviour
- * testable without a network.
+ * execution: every live thread is first reduced to one
+ * {@link YeetReviewThreadState} tag by the same rule the merge gate reads, and
+ * that tag decides the action. `unresolved` posts and resolves,
+ * `resolved-follow-up` posts *without* resolving, `resolved-answered` and
+ * `resolved-acknowledged` settle as `stale` without a write, and an id that
+ * matches no live thread settles as `failed` with a detail naming both
+ * handles. Only the two outstanding states become {@link ReplyPostAction}s.
+ * That split is what makes the interesting behaviour testable without a
+ * network.
  *
  * **Gotchas**
  *
@@ -34,6 +38,11 @@
  * diff moved under the comment; the thread is still open and still counts
  * against the "threads resolved" merge criterion, so skipping it would leave
  * the merge blocked — the opposite of this engine's purpose.
+ *
+ * A `resolved-follow-up` thread is never re-resolved, whatever the draft's
+ * `resolve` flag says. The thread is already resolved on GitHub, so the
+ * mutation would be a no-op at best; what the reviewer is owed is the answer,
+ * and leaving the resolution to whoever reads that answer is the honest state.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -48,6 +57,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   collectTruncatableThreadPages,
+  GhActor,
   GhPageInfo,
   ghGraphqlPage,
   ghOutput,
@@ -68,11 +78,19 @@ import {
   replyOutcomesWithStatus,
   replyOutcomeTarget,
 } from "./Reply.schemas.ts";
+import {
+  deriveYeetReviewThreadState,
+  YeetReviewThreadNewestComment,
+  YeetReviewThreadStateTag,
+  yeetReviewCommentAuthorKind,
+  yeetReviewThreadStateInput,
+} from "./ReviewThreadState.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { GhRepoView } from "./closeout/Gh.schemas.ts";
 import type { ReplyDrafts, ReplyOutcomeStatus } from "./Reply.schemas.ts";
+import type { YeetReviewThreadStateInput } from "./ReviewThreadState.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Reply");
 
@@ -158,6 +176,7 @@ export const replyReviewThreadsPageQuery = `
 query YeetReplyReviewThreads($owner: String!, $name: String!, $number: Int!, $cursor: String) {
   repository(owner: $owner, name: $name) {
     pullRequest(number: $number) {
+      author { login }
       reviewThreads(first: 100, after: $cursor) {
         pageInfo { hasNextPage endCursor }
         nodes {
@@ -166,9 +185,13 @@ query YeetReplyReviewThreads($owner: String!, $name: String!, $number: Int!, $cu
           isOutdated
           path
           line
+          resolvedBy { login }
           comments(first: 100) {
             pageInfo { hasNextPage endCursor }
-            nodes { id databaseId }
+            nodes { id databaseId author { login } }
+          }
+          latest: comments(last: 1) {
+            nodes { author { __typename login } }
           }
         }
       }
@@ -196,6 +219,7 @@ export class ReplyThreadComment extends S.Class<ReplyThreadComment>($I`ReplyThre
   {
     databaseId: S.NullOr(S.Finite),
     id: S.String,
+    author: GhActor.pipe(S.NullOr, S.optionalKey),
   },
   $I.annote("ReplyThreadComment", {
     description: "Review thread comment carrying the GraphQL node id and the numeric REST database id.",
@@ -229,6 +253,33 @@ export class ReplyThreadCommentConnection extends S.Class<ReplyThreadCommentConn
   },
   $I.annote("ReplyThreadCommentConnection", {
     description: "Comment connection nested under a live pull request review thread.",
+  })
+) {}
+
+/**
+ * The newest comment of a review thread, fetched as `comments(last: 1)` so a
+ * thread longer than one page still reports who spoke last.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyThreadLatestComment extends S.Class<ReplyThreadLatestComment>($I`ReplyThreadLatestComment`)(
+  { author: GhActor.pipe(S.NullOr, S.optionalKey) },
+  $I.annote("ReplyThreadLatestComment", {
+    description: "Author of a review thread's newest comment.",
+  })
+) {}
+
+/**
+ * Single-node connection carrying a thread's newest comment.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyThreadLatestConnection extends S.Class<ReplyThreadLatestConnection>($I`ReplyThreadLatestConnection`)(
+  { nodes: S.Array(ReplyThreadLatestComment) },
+  $I.annote("ReplyThreadLatestConnection", {
+    description: "`comments(last: 1)` connection of a review thread.",
   })
 ) {}
 
@@ -267,11 +318,24 @@ export class ReplyThreadCommentConnection extends S.Class<ReplyThreadCommentConn
 export class ReplyLiveThread extends S.Class<ReplyLiveThread>($I`ReplyLiveThread`)(
   {
     comments: ReplyThreadCommentConnection,
+    // The thread's newest comment regardless of how many pages it spans.
+    latest: S.optionalKey(ReplyThreadLatestConnection),
     id: S.String,
     isOutdated: S.Boolean,
     isResolved: S.Boolean,
     line: S.NullOr(S.Finite),
     path: S.NullOr(S.String),
+    // Who closed the thread; only the pull request author closing it can leave
+    // a reviewer follow-up behind.
+    resolvedBy: GhActor.pipe(S.NullOr, S.optionalKey),
+    // What the thread still owes, under the one rule the merge gate, the watch
+    // and closeout also read. Stamped by `markReplyThreadStates`, which is why
+    // it defaults to `unresolved`: a thread nobody classified is treated as
+    // open, never silently waved through as answered.
+    state: YeetReviewThreadStateTag.pipe(
+      S.withConstructorDefault(Effect.succeed<YeetReviewThreadStateTag>("unresolved")),
+      S.withDecodingDefault(Effect.succeed<YeetReviewThreadStateTag>("unresolved"))
+    ),
   },
   $I.annote("ReplyLiveThread", {
     description: "Live pull request review thread inspected before a drafted reply is written.",
@@ -287,11 +351,107 @@ const ReplyReviewThreadsDocument = S.Struct({
   data: S.Struct({
     repository: S.Struct({
       pullRequest: S.Struct({
+        author: GhActor.pipe(S.NullOr, S.optionalKey),
         reviewThreads: ReplyLiveThreadConnection,
       }),
     }),
   }),
 });
+
+// Prefer the `comments(last: 1)` node; the last node of the first page is only
+// the newest comment when the thread fits in that page.
+const newestCommentActor = (thread: ReplyLiveThread): O.Option<GhActor> =>
+  pipe(
+    O.fromUndefinedOr(thread.latest),
+    O.flatMap((latest) => A.last(latest.nodes)),
+    O.flatMap((comment) => O.fromNullishOr(comment.author)),
+    O.orElse(() =>
+      thread.comments.pageInfo.hasNextPage
+        ? O.none<GhActor>()
+        : pipe(
+            A.last(thread.comments.nodes),
+            O.flatMap((comment) => O.fromNullishOr(comment.author))
+          )
+    )
+  );
+
+// The newest comment reduced to the two structural facts the rule reads; a
+// comment GitHub no longer attributes yields None, and unknown never gates.
+const newestReplyComment = (thread: ReplyLiveThread): O.Option<YeetReviewThreadNewestComment> =>
+  pipe(
+    newestCommentActor(thread),
+    O.map((actor) =>
+      YeetReviewThreadNewestComment.make({
+        authorLogin: actor.login,
+        authorKind: yeetReviewCommentAuthorKind(O.fromUndefinedOr(actor.__typename)),
+      })
+    )
+  );
+
+const replyThreadStateInput = (
+  thread: ReplyLiveThread,
+  pullRequestAuthor: O.Option<string>
+): YeetReviewThreadStateInput => yeetReviewThreadStateInput(thread, pullRequestAuthor, newestReplyComment(thread));
+
+/**
+ * Stamp each live thread with the state the merge gate classifies it as.
+ *
+ * **Details**
+ *
+ * The reply engine does not own a second opinion about what a thread owes: it
+ * feeds the same {@link YeetReviewThreadStateInput} `yeet status`, the watch
+ * and closeout feed, so a thread this engine posts on is exactly a thread the
+ * gate is still holding the pull request open for.
+ *
+ * **Example** (A resolved thread the reviewer answered after the author)
+ *
+ * ```ts
+ * import { markReplyThreadStates, ReplyLiveThread, ReplyThreadLatestComment, ReplyThreadLatestConnection, ReplyThreadCommentConnection } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const thread = ReplyLiveThread.make({
+ *   comments: ReplyThreadCommentConnection.make({
+ *     nodes: [],
+ *     pageInfo: { endCursor: null, hasNextPage: false },
+ *   }),
+ *   latest: ReplyThreadLatestConnection.make({
+ *     nodes: [ReplyThreadLatestComment.make({ author: { login: "reviewer" } })],
+ *   }),
+ *   id: "PRRT_1",
+ *   isOutdated: false,
+ *   isResolved: true,
+ *   line: null,
+ *   path: null,
+ *   resolvedBy: { login: "octocat" },
+ * })
+ * console.log(markReplyThreadStates([thread], O.some("octocat"))[0]?.state) // "resolved-follow-up"
+ * ```
+ *
+ * @param threads - Live review threads as decoded from GitHub.
+ * @param pullRequestAuthor - The pull request author's login when known.
+ * @returns The same threads with `state` computed.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const markReplyThreadStates: {
+  (pullRequestAuthor: O.Option<string>): (threads: ReadonlyArray<ReplyLiveThread>) => ReadonlyArray<ReplyLiveThread>;
+  (threads: ReadonlyArray<ReplyLiveThread>, pullRequestAuthor: O.Option<string>): ReadonlyArray<ReplyLiveThread>;
+} = dual(
+  2,
+  (threads: ReadonlyArray<ReplyLiveThread>, pullRequestAuthor: O.Option<string>): ReadonlyArray<ReplyLiveThread> =>
+    A.map(threads, (thread) =>
+      ReplyLiveThread.make({
+        ...thread,
+        state: deriveYeetReviewThreadState(replyThreadStateInput(thread, pullRequestAuthor)).state,
+      })
+    )
+);
+
+// The two states that still owe the reviewer a sentence: exactly the states
+// `yeetReviewThreadStateOutstanding` gates on, read off the carried tag.
+const replyThreadIsOutstanding = (thread: ReplyLiveThread): boolean =>
+  YeetReviewThreadStateTag.is.unresolved(thread.state) ||
+  YeetReviewThreadStateTag.is["resolved-follow-up"](thread.state);
 
 const decodeReplyReviewThreadsDocument = S.decodeUnknownEffect(S.fromJsonString(ReplyReviewThreadsDocument));
 
@@ -319,6 +479,12 @@ export class ReplyPostAction extends S.TaggedClass<ReplyPostAction>($I`ReplyPost
   {
     draft: ReplyDraft,
     threadId: S.NonEmptyString,
+    // Why this thread is postable, which is also what decides whether the
+    // write resolves it: only an `unresolved` thread is resolved afterwards.
+    state: YeetReviewThreadStateTag.pipe(
+      S.withConstructorDefault(Effect.succeed<YeetReviewThreadStateTag>("unresolved")),
+      S.withDecodingDefault(Effect.succeed<YeetReviewThreadStateTag>("unresolved"))
+    ),
   },
   $I.annote("ReplyPostAction", {
     description: "Drafted reply resolved to a live, unresolved review thread and ready to write.",
@@ -533,7 +699,7 @@ const classifyReplyDraft = (
             `review thread ${thread.id} (${threadLocation(thread)}) is already targeted by an earlier draft in this file; merge the two bodies into one draft`
           );
         }
-        if (thread.isResolved) {
+        if (!replyThreadIsOutstanding(thread)) {
           return settledAction(
             draft,
             O.some(thread.id),
@@ -541,7 +707,7 @@ const classifyReplyDraft = (
             `review thread ${thread.id} (${threadLocation(thread)}) is already resolved upstream; nothing was posted`
           );
         }
-        return ReplyPostAction.make({ draft, threadId: thread.id });
+        return ReplyPostAction.make({ draft, state: thread.state, threadId: thread.id });
       },
     })
   );
@@ -807,7 +973,18 @@ const collectReplyThreads = (
             Effect.mapError(YeetCommandError.new("Failed to decode the reply review threads GraphQL JSON."))
           )
         ),
-        Effect.map((document) => document.data.repository.pullRequest.reviewThreads)
+        Effect.map((document) => {
+          const pullRequest = document.data.repository.pullRequest;
+          const author = pipe(
+            O.fromUndefinedOr(pullRequest.author),
+            O.flatMap(O.fromNullishOr),
+            O.map((actor) => actor.login)
+          );
+          return ReplyLiveThreadConnection.make({
+            ...pullRequest.reviewThreads,
+            nodes: markReplyThreadStates(pullRequest.reviewThreads.nodes, author),
+          });
+        })
       ),
     truncationWarning: (threadIds) =>
       `Review thread(s) ${A.join(threadIds, ", ")} have more than 100 comments; yeet reply reads only the first 100 per thread, so a comment id beyond that page will not resolve. Target those threads by PRRT_ thread id.`,
@@ -839,6 +1016,14 @@ const performReplyPost = Effect.fnUntraced(function* (
       ...target,
       detail: `${posted.failure.message} Nothing was posted; retry with: ${REPLY_RERUN_COMMAND}`,
       status: "failed",
+    });
+  }
+  if (YeetReviewThreadStateTag.is["resolved-follow-up"](action.state)) {
+    return ReplyDraftOutcome.make({
+      ...target,
+      detail:
+        "reply posted; answered a reviewer follow-up on a resolved thread, so the thread was left resolved and nothing was re-resolved",
+      status: "posted",
     });
   }
   if (!action.draft.resolve) {

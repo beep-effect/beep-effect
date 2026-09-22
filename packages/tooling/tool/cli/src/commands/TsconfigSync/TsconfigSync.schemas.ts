@@ -300,6 +300,10 @@ const schemaSourceOnlyTestKitAliases = [
   ["@beep/schema/test/Markdown", "src/internal/test/Markdown.test-kit.ts"],
   ["@beep/schema/test/Yaml", "src/internal/test/Yaml.test-kit.ts"],
 ] as const satisfies ReadonlyArray<SourceOnlyTestKitAlias>;
+const mcpKitPackageName = "@beep/mcp-kit" as const;
+const mcpKitSourceOnlyTestKitAliases = [
+  ["@beep/mcp-kit/test/Conformance", "src/test/Conformance.test-kit.ts"],
+] as const satisfies ReadonlyArray<SourceOnlyTestKitAlias>;
 
 const sourceOnlyTestKitAliasesForPackage = (packageName: string): ReadonlyArray<SourceOnlyTestKitAlias> => {
   if (Str.equivalence(packageName, repoCliPackageName)) {
@@ -308,6 +312,10 @@ const sourceOnlyTestKitAliasesForPackage = (packageName: string): ReadonlyArray<
 
   if (Str.equivalence(packageName, schemaPackageName)) {
     return schemaSourceOnlyTestKitAliases;
+  }
+
+  if (Str.equivalence(packageName, mcpKitPackageName)) {
+    return mcpKitSourceOnlyTestKitAliases;
   }
 
   return A.empty();

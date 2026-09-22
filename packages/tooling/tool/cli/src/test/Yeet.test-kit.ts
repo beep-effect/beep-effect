@@ -55,6 +55,7 @@ export * from "../commands/Yeet/internal/ProofFact.ts";
 export * from "../commands/Yeet/internal/ProofJob.ts";
 export * from "../commands/Yeet/internal/ProofJobLauncher.ts";
 export * from "../commands/Yeet/internal/ProofLedger.ts";
+export * from "../commands/Yeet/internal/ProofShadow.ts";
 export * from "../commands/Yeet/internal/ProofState.ts";
 export * from "../commands/Yeet/internal/Provenance.ts";
 export * from "../commands/Yeet/internal/ProvenanceFooter.ts";
@@ -69,11 +70,15 @@ export * from "../commands/Yeet/internal/Resume.schemas.ts";
 export * from "../commands/Yeet/internal/Resume.ts";
 export * from "../commands/Yeet/internal/Retire.schemas.ts";
 export * from "../commands/Yeet/internal/Retire.ts";
+export * from "../commands/Yeet/internal/ReviewBodySignal.ts";
+export * from "../commands/Yeet/internal/ReviewThreadState.ts";
 export * from "../commands/Yeet/internal/Settle.ts";
 export {
   collectRemoteChecks as collectRemoteChecksForTesting,
   GhStatusCheck,
   summarizeRemoteChecksForTesting,
+  YeetStatusThreadTriage,
+  yeetStatusThreadTriageForTesting,
 } from "../commands/Yeet/internal/Status.ts";
 export * from "../commands/Yeet/internal/Sweep.schemas.ts";
 export * from "../commands/Yeet/internal/Sweep.ts";

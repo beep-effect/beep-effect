@@ -1,0 +1,83 @@
+{
+  "schema": "beep.research.run/v0",
+  "date": "2026-09-22",
+  "status": "partial",
+  "window": {
+    "start": "2026-09-17T08:45:00-05:00",
+    "end": "2026-09-22T08:51:00-05:00",
+    "label": "America/Chicago"
+  },
+  "prior": {
+    "lastSuccessfulPacket": "research/2026-09-17",
+    "lastSuccessfulPr": 1171,
+    "lastSuccessfulRun": "2026-09-17T08:45:00-05:00"
+  },
+  "counts": {
+    "total": 25,
+    "window_new": 14,
+    "refute": 18,
+    "by_axis": {
+      "law": 5,
+      "effect": 12,
+      "agents": 8
+    }
+  },
+  "novelty": {
+    "window_new": 14,
+    "exclusion_url_collisions": 5,
+    "exclusion_collision_pct": 35.7,
+    "collision_urls": [
+      "https://github.com/Effect-TS/effect/pull/8201",
+      "https://www.npmjs.com/package/effect?activeTab=versions",
+      "https://github.com/Effect-TS/effect/pull/7908",
+      "https://github.com/Effect-TS/effect/pull/7265",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3004"
+    ],
+    "note": "Hard collisions are intentional settle/refute re-cites (#8201/#7908/#7265/#3004 + npm tip). Gate <40% pass. Soft-exclusion prior packet URLs not double-counted as novelty fails."
+  },
+  "quotaPools": {
+    "search": "web+github-mcp+arxiv+npm",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot",
+    "publisher": "cursor-cloud-agent"
+  },
+  "frictions": [
+    {
+      "source": "user-X",
+      "tools": ["search_posts_all", "search_news"],
+      "error": "client-not-enrolled",
+      "detail": "X API v2 Client Forbidden; continued without X."
+    },
+    {
+      "source": "local-gh",
+      "error": "bad-credentials / unauthenticated-rate-limit",
+      "detail": "Unused by design; GitHub via user-Github MCP."
+    },
+    {
+      "source": "npmjs-web",
+      "error": "cloudflare-block",
+      "detail": "npmjs.com HTML fetch blocked by Cloudflare; registry.npmjs.org JSON used instead."
+    }
+  ],
+  "resume_cursor": {
+    "x": null,
+    "arxiv": null,
+    "note": "Retry X when project enrollment fixed. arXiv export API OK this run."
+  },
+  "headline_deltas": [
+    "Effect #8201 MERGED Sep 18 → rc.116; tip now rc.117 (Sep 21); #8336 stages rc.118",
+    "SchemaJIT #7908 MERGED Sep 18; #8354 unstable→top-level + #8365 http-api rename MERGED Sep 22",
+    "OpenAI Astra for Law (Sep 17) with 26 plugins naming Harvey/Legora/iManage/TR",
+    "jazz-tools alpha.56 (Sep 21); Zero canary → 1.11.0-canary.11",
+    "SEP-3004 CLOSED unmerged Sep 22 (not Final)",
+    "arXiv RAC 2609.23498 (Sep 20) authorization-drift for MCP workflows",
+    "USPTO/iManage/Harvey-Everlaw/Evolu/Instant/drizzle/SEP-2640 SDK/#3306 HOLDs unchanged"
+  ],
+  "blinding": {
+    "cloned_beep_effect": false,
+    "opened_pr": false,
+    "called_cloud_agent": false
+  },
+  "written_at": "2026-09-22T08:56:00-05:00"
+}
