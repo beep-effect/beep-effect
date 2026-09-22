@@ -20,3 +20,6 @@ CI script end to end.
   turbo declares under `global.passThroughEnv`, which Biome cannot read.
 - Two skill documents drop incidental triple-backticks that unbalanced the
   markdown fence count for `lint:effect-imports-markdown`.
+- `beep knowledge refs --check` reads a shell assignment (`VAR=~/.portless-lan`)
+  as the path it assigns and treats the bare home root (`~/`) as portable, so
+  refreshed upstream skill mirrors no longer gate on their own examples.

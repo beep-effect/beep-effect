@@ -1778,15 +1778,23 @@ const PORTABLE_HOME_CONVENTIONS = HashSet.make(
 // Exact-mention conventions: naming the XDG user directory itself is portable, but any concrete
 // descendant (`~/Downloads/report.csv`) is machine session residue and stays gated — a prefix
 // admission here would let live guidance park arbitrary machine-local files behind the folder name.
-const PORTABLE_HOME_EXACT_CONVENTIONS = HashSet.make("~/Downloads");
+// The bare home root (`~/`) names no machine-local file: upstream skill mirrors use it as an
+// import-alias spelling (`@/`, `~/`) and as the generic "your home" placeholder.
+const PORTABLE_HOME_EXACT_CONVENTIONS = HashSet.make("~", "~/Downloads");
 const TEMP_CONVENTIONS = HashSet.make("/tmp/portless");
 const stripTrailingSlashes = Str.replace(/\/+$/u, "");
+// A shell assignment (`PORTLESS_STATE_DIR=~/.portless-lan`) carries the same convention as the bare
+// path; the variable name is not part of the anchor.
+const SHELL_ASSIGNMENT_PREFIX_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*=/u;
+const stripShellAssignment = Str.replace(SHELL_ASSIGNMENT_PREFIX_PATTERN, "");
 
-const hasConventionPrefix = (conventions: HashSet.HashSet<string>, token: string): boolean =>
-  HashSet.some(conventions, (prefix) => token === prefix || Str.startsWith(`${prefix}/`)(token));
+const hasConventionPrefix = (conventions: HashSet.HashSet<string>, rawToken: string): boolean => {
+  const token = stripShellAssignment(rawToken);
+  return HashSet.some(conventions, (prefix) => token === prefix || Str.startsWith(`${prefix}/`)(token));
+};
 
 const isExactHomeConvention = (token: string): boolean =>
-  HashSet.has(PORTABLE_HOME_EXACT_CONVENTIONS, stripTrailingSlashes(token));
+  HashSet.has(PORTABLE_HOME_EXACT_CONVENTIONS, stripTrailingSlashes(stripShellAssignment(token)));
 
 /**
  * Whether a line reads as rule, pattern, or inventory text rather than as guidance.
