@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 // Bun-API shim for Node-based Vitest runs, including the canonical coverage lane.
 // Explicit Bun coverage runs use Istanbul instrumentation; Node uses V8.
 // Runtime/provider qualification lives in scratchpad/bun-test. The per-file
