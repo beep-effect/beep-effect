@@ -730,42 +730,75 @@ const CI_BRANCH_RULES_JQ = "[.[]|{ruleset_id,type}+(if .parameters==null then {}
  */
 const GH_API_TRANSIENT_RETRY_COUNT = 4;
 
-/**
- * Exponential backoff between transient `gh api` retries: 250ms, 500ms, 1s,
- * 2s, jittered ±20% so a fan-out of eight concurrent page fetches does not
- * retry in lockstep.
- */
-const ghApiTransientRetrySchedule = Schedule.exponential(Duration.millis(250)).pipe(Schedule.jittered);
+const GhApiTransientKind = LiteralKit(["transport", "secondary-rate-limit"]).pipe(
+  $I.annoteSchema("GhApiTransientKind", {
+    description: "Which transient class a failed gh api exit belongs to; each class has its own backoff base.",
+  })
+);
+type GhApiTransientKind = typeof GhApiTransientKind.Type;
 
 /**
- * Output fragments that mark a failed `gh api` exit as transient. The
- * transport class (`bad record MAC`, connection resets, unexpected EOF,
- * timeouts) was observed once per several thousand paginated GETs under a
- * fan-out of eight; the HTTP class is limited to 502/503/504 and secondary
- * rate limits. Every other non-zero exit, including 4xx and other 5xx API
- * errors, fails immediately.
+ * Backoff base per transient class, doubled on every retry and jittered ±20%
+ * so a fan-out of eight concurrent page fetches does not retry in lockstep.
+ * Transport blips clear in milliseconds (250ms → 2s); a secondary rate limit
+ * needs minutes (GitHub asks for at least one minute before the first retry,
+ * then exponential growth), so it waits 1m → 8m instead.
  */
-const GH_API_TRANSIENT_OUTPUT_PATTERNS: ReadonlyArray<RegExp> = [
+const GH_API_TRANSIENT_BASE_DELAY: Record<GhApiTransientKind, Duration.Duration> = {
+  transport: Duration.millis(250),
+  "secondary-rate-limit": Duration.minutes(1),
+};
+
+/**
+ * Output fragments that mark a failed `gh api` exit as a transport-class
+ * transient failure: `bad record MAC`, connection resets, unexpected EOF, and
+ * timeouts (observed once per several thousand paginated GETs under a fan-out
+ * of eight) plus the 502/503/504 gateway statuses. Every other non-zero exit,
+ * including 4xx and other 5xx API errors, fails immediately.
+ */
+const GH_API_TRANSPORT_OUTPUT_PATTERNS: ReadonlyArray<RegExp> = [
   /bad record MAC/iu,
   /connection reset/iu,
   /unexpected EOF/iu,
   /\btimed out\b|\btimeout\b/iu,
   /\(HTTP 50[234]\)/u,
-  /secondary rate limit/iu,
 ];
 
-const isTransientGhApiOutput = (output: string): boolean =>
-  A.some(GH_API_TRANSIENT_OUTPUT_PATTERNS, (pattern) => pattern.test(output));
+/**
+ * A secondary rate limit is only trusted when GitHub's documented message
+ * arrives with the documented 403 or 429 status; the phrase alone under any
+ * other status is not a rate limit.
+ */
+const GH_API_SECONDARY_RATE_LIMIT_PATTERN = /secondary rate limit/iu;
+const GH_API_RATE_LIMIT_STATUS_PATTERN = /\(HTTP (?:403|429)\)/u;
+
+const classifyGhApiTransientOutput = (output: string): O.Option<GhApiTransientKind> =>
+  GH_API_SECONDARY_RATE_LIMIT_PATTERN.test(output) && GH_API_RATE_LIMIT_STATUS_PATTERN.test(output)
+    ? O.some("secondary-rate-limit")
+    : A.some(GH_API_TRANSPORT_OUTPUT_PATTERNS, (pattern) => pattern.test(output))
+      ? O.some("transport")
+      : O.none();
 
 class CiGhApiTransientExit extends S.TaggedError<CiGhApiTransientExit>($I`CiGhApiTransientExit`)(
   "CiGhApiTransientExit",
-  { endpoint: S.String, exitCode: S.Number, output: S.String },
+  { endpoint: S.String, exitCode: S.Finite, kind: GhApiTransientKind, output: S.String },
   $I.annoteError<CiGhApiTransientExit>("CiGhApiTransientExit", {
-    description: "A non-zero gh api exit whose output matches a transient transport or HTTP failure.",
+    description: "A non-zero gh api exit whose output matches a transient transport or rate-limit failure.",
   })
 ) {}
 
 const isCiGhApiTransientExit = P.isTagged("CiGhApiTransientExit");
+
+const ghApiTransientBaseDelay = (error: CiCommandError | CiGhApiTransientExit): Duration.Duration =>
+  isCiGhApiTransientExit(error) ? GH_API_TRANSIENT_BASE_DELAY[error.kind] : GH_API_TRANSIENT_BASE_DELAY.transport;
+
+const ghApiTransientRetrySchedule: Schedule.Schedule<Duration.Duration, CiCommandError | CiGhApiTransientExit> =
+  Schedule.fromStepWithMetadata(
+    Effect.succeed((meta: Schedule.InputMetadata<CiCommandError | CiGhApiTransientExit>) => {
+      const delay = Duration.millis(Duration.toMillis(ghApiTransientBaseDelay(meta.input)) * 2 ** (meta.attempt - 1));
+      return Effect.succeed([delay, delay] as const);
+    })
+  ).pipe(Schedule.jittered);
 
 const ghApiJsonAttempt = Effect.fn("Ci.laneTimingsGhApiAttempt")(function* (
   repoRoot: string,
@@ -779,9 +812,10 @@ const ghApiJsonAttempt = Effect.fn("Ci.laneTimingsGhApiAttempt")(function* (
     return yield* CiCommandError.make({ message: `gh api ${endpoint} returned a truncated response.` });
   }
   if (result.exitCode !== 0) {
-    return yield* isTransientGhApiOutput(result.output)
-      ? CiGhApiTransientExit.make({ endpoint, exitCode: result.exitCode, output: result.output })
-      : CiCommandError.make({ message: `gh api ${endpoint} exited ${result.exitCode}: ${result.output}` });
+    return yield* O.match(classifyGhApiTransientOutput(result.output), {
+      onNone: () => CiCommandError.make({ message: `gh api ${endpoint} exited ${result.exitCode}: ${result.output}` }),
+      onSome: (kind) => CiGhApiTransientExit.make({ endpoint, exitCode: result.exitCode, kind, output: result.output }),
+    });
   }
   return result.output;
 });
@@ -803,7 +837,7 @@ const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
     }),
     Effect.catchTag("CiGhApiTransientExit", (exit) =>
       CiCommandError.make({
-        message: `gh api ${endpoint} exited ${exit.exitCode} on every one of ${GH_API_TRANSIENT_RETRY_COUNT + 1} attempts (transient failure): ${exit.output}`,
+        message: `gh api ${endpoint} exited ${exit.exitCode} on every one of ${GH_API_TRANSIENT_RETRY_COUNT + 1} attempts (${exit.kind}): ${exit.output}`,
       })
     )
   );

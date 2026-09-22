@@ -138,17 +138,33 @@ const BAD_RECORD_MAC: ScriptedGhExit = {
  * every backoff sleep the retry schedule can request (250ms·2^n jittered,
  * at most ~4.5s across four retries).
  */
-const collectWithRetries = Effect.fn("TestCiLaneTimings.collectWithRetries")(function* (
-  spawner: ChildProcessSpawner.ChildProcessSpawner
-) {
-  const fiber = yield* collectCiLaneTimings(".", 1).pipe(
+const forkCollect = Effect.fn("TestCiLaneTimings.forkCollect")((spawner: ChildProcessSpawner.ChildProcessSpawner) =>
+  collectCiLaneTimings(".", 1).pipe(
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
     Effect.exit,
     Effect.forkChild
-  );
-  yield* Effect.forEach(A.range(1, 12), () => TestClock.adjust("1 second"));
+  )
+);
+
+/**
+ * Run `collectCiLaneTimings` under the TestClock, advancing virtual time past
+ * every backoff sleep the retry schedule can request: transport retries wait
+ * 250ms·2^n jittered (≤ ~4.5s across four retries), secondary rate limits wait
+ * 1m·2^n jittered (≤ 18m). Steps stay under the capture layer's 2-second
+ * drain grace so a clock jump cannot trip its pipe-wedge watchdog.
+ */
+const collectWithRetries = Effect.fn("TestCiLaneTimings.collectWithRetries")(function* (
+  spawner: ChildProcessSpawner.ChildProcessSpawner
+) {
+  const fiber = yield* forkCollect(spawner);
+  yield* Effect.forEach(A.range(1, 1_200), () => TestClock.adjust("1 second"));
   return yield* Fiber.join(fiber);
 });
+
+const SECONDARY_RATE_LIMIT: ScriptedGhExit = {
+  exitCode: 1,
+  output: "gh: You have exceeded a secondary rate limit. Please wait a few minutes before you try again. (HTTP 403)",
+};
 
 const laneTimingsSpawnerLayer = Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner);
 
@@ -443,7 +459,7 @@ describe("ci lane timings gh api retry", () => {
         BAD_RECORD_MAC,
         { exitCode: 1, output: "read tcp 10.0.0.2:51234->140.82.112.6:443: read: connection reset by peer" },
         { exitCode: 1, output: "gh: Bad Gateway (HTTP 502)" },
-        { exitCode: 1, output: "gh: You have exceeded a secondary rate limit. Please wait a few minutes (HTTP 403)" },
+        { exitCode: 1, output: "gh: secondary rate limit reached, retry later (HTTP 429)" },
       ]);
       const exit = yield* collectWithRetries(scripted.spawner);
 
@@ -461,6 +477,36 @@ describe("ci lane timings gh api retry", () => {
       expect(Exit.isFailure(exit)).toBe(true);
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("exited 1: gh: Not Found (HTTP 404)");
       expect(scripted.state.spawned).toBe(1);
+    })
+  );
+
+  it.effect("does not treat the rate-limit phrase as transient under any other status", () =>
+    Effect.gen(function* () {
+      const scripted = scriptedGhSpawner([
+        { exitCode: 1, output: "gh: Validation Failed: secondary rate limit mentioned in a message (HTTP 422)" },
+      ]);
+      const exit = yield* collectWithRetries(scripted.spawner);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("(HTTP 422)");
+      expect(scripted.state.spawned).toBe(1);
+    })
+  );
+
+  it.effect("waits at least a minute before retrying a secondary rate limit", () =>
+    Effect.gen(function* () {
+      const scripted = scriptedGhSpawner([SECONDARY_RATE_LIMIT]);
+      const fiber = yield* forkCollect(scripted.spawner);
+
+      yield* Effect.forEach(A.range(1, 40), () => TestClock.adjust("1 second"));
+      expect(scripted.state.spawned).toBe(1);
+      yield* Effect.forEach(A.range(1, 40), () => TestClock.adjust("1 second"));
+      expect(scripted.state.spawned).toBeGreaterThanOrEqual(2);
+      yield* Effect.forEach(A.range(1, 180), () => TestClock.adjust("1 second"));
+      const exit = yield* Fiber.join(fiber);
+
+      expect(Exit.isSuccess(exit)).toBe(true);
+      expect(scripted.state.spawned).toBe(1 + 3);
     })
   );
 
