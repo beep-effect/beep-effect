@@ -2037,3 +2037,12 @@ it was observed rather than duplicated. Runtime crash isolation and durable
 publication jobs would avoid losing the orchestration process before proof.
 The shell also lacked the user-session bus environment, so detached launch was
 unavailable and the supported attached route was used.
+
+## New package generated-boundary coverage
+
+The extraction passed all cheap gates, but full publication stopped at
+`repo-sanity:fallow-boundaries-config`: the generated boundary configuration
+did not yet include the new runner. `bun run fallow:boundaries:write` added
+only the runner package and its expected dependency edges. Including this
+generation in package scaffolding or its immediate verification would expose
+the missing artifact before a full publication attempt.
