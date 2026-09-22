@@ -21310,15 +21310,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 83.72,
-      "statements": 83.51,
-      "branches": 75.02,
-      "functions": 78.98,
+      "lines": 84.31,
+      "statements": 84.11,
+      "branches": 75.88,
+      "functions": 79.83,
       "uncovered": {
-        "lines": 8179,
-        "statements": 8728,
-        "branches": 4840,
-        "functions": 3254
+        "lines": 8065,
+        "statements": 8609,
+        "branches": 4814,
+        "functions": 3210
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -21909,6 +21909,18 @@
             "functions": 14
           }
         },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts": {
+          "lines": 95.34,
+          "statements": 95.45,
+          "branches": 92.68,
+          "functions": 90.9,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 3,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": {
           "lines": 100,
           "statements": 100,
@@ -21994,15 +22006,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts": {
-          "lines": 98.24,
-          "statements": 97.7,
-          "branches": 97.27,
+          "lines": 98.16,
+          "statements": 97.67,
+          "branches": 98.31,
           "functions": 95.26,
           "uncovered": {
-            "lines": 7,
-            "statements": 10,
-            "branches": 3,
-            "functions": 9
+            "lines": 8,
+            "statements": 11,
+            "branches": 2,
+            "functions": 10
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/index.ts": {
@@ -35138,17 +35150,104 @@
         }
       }
     },
+    "@beep/test-runner": {
+      "path": "packages/tooling/test-kit/test-runner",
+      "lines": 98.47,
+      "statements": 98.06,
+      "branches": 93.24,
+      "functions": 97.7,
+      "uncovered": {
+        "lines": 3,
+        "statements": 4,
+        "branches": 5,
+        "functions": 2
+      },
+      "files": {
+        "packages/tooling/test-kit/test-runner/src/Vitest.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-runner/src/Vitest.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-runner/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-runner/src/internal/VitestInstrumentation.ts": {
+          "lines": 98.3,
+          "statements": 97.8,
+          "branches": 92.06,
+          "functions": 97.4,
+          "uncovered": {
+            "lines": 3,
+            "statements": 4,
+            "branches": 5,
+            "functions": 2
+          }
+        },
+        "packages/tooling/test-kit/test-runner/src/internal/VitestRuntime.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/test-kit/test-runner/src/test/Vitest.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/test-utils": {
       "path": "packages/tooling/test-kit/test-utils",
-      "lines": 96.41,
-      "statements": 95.74,
-      "branches": 93.3,
-      "functions": 91.75,
+      "lines": 96.74,
+      "statements": 96.08,
+      "branches": 93.18,
+      "functions": 92.62,
       "uncovered": {
-        "lines": 74,
-        "statements": 95,
-        "branches": 50,
-        "functions": 56
+        "lines": 63,
+        "statements": 82,
+        "branches": 45,
+        "functions": 45
       },
       "files": {
         "packages/tooling/test-kit/test-utils/src/ConformanceLedger/ConformanceLedger.evidence.ts": {
@@ -35332,30 +35431,6 @@
           }
         },
         "packages/tooling/test-kit/test-utils/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/test-kit/test-utils/src/internal/VitestInstrumentation.ts": {
-          "lines": 98.26,
-          "statements": 97.77,
-          "branches": 93.58,
-          "functions": 96.96,
-          "uncovered": {
-            "lines": 3,
-            "statements": 4,
-            "branches": 5,
-            "functions": 2
-          }
-        },
-        "packages/tooling/test-kit/test-utils/src/internal/VitestRuntime.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
