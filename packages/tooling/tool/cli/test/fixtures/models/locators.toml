@@ -1,0 +1,11 @@
+model = "gpt-6-astra" # ratified 2026-09-09
+model_reasoning_effort = "medium"
+plan_mode_reasoning_effort = "xhigh"
+hashed_model = "gpt-6-astra#pinned" # a hash inside quotes is part of the value
+
+[models]
+default = "grok-4.6"
+default_reasoning_effort = "xhigh"  # pending operator ratification
+
+[tui]
+model = "never-read-me"

