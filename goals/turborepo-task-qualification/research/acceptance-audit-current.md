@@ -90,6 +90,25 @@ does not establish semantic closure, replay correctness or signed transport.
 Sixteen original capture, preparation and review files were copied outside the
 worktree and verified byte-for-byte; the receipt records hashes and retention.
 
+## Supplemental descriptor and ring observations: 2026-09-22
+
+[A separate capture](./descriptor-capture-2026-09-22.json) retained complete pipe and socket-pair descriptor arrays while
+keeping string payload suppression. All 21 observed scalar writes are attributed:
+eleven pipe writes, five Unix-socket writes, two stderr writes, two null-device
+writes and one eventfd write. The two one-byte child writes have immediately
+preceding pipe-creation records. This resolves attribution in this execution;
+it does not rewrite the original trace's two unknown destinations.
+
+Both captures read the same 428 repository paths and produced identical stdout
+and stderr. Their repository read-call counts differ (448 versus 447), so path-set
+agreement is not presented as identical execution. No tuple is promoted.
+
+[A separate focused stack capture](./ring-attribution-2026-09-22.json) resolves all five ring-enter calls to Node's
+`uv__epoll_ctl_flush` using the exact installed binary and its ELF load base.
+The retained reviewer reproduces all ten setup/enter events and stream equality.
+This supplies runtime caller attribution for that capture. Queue contents remain
+undecoded, and semantic-input completeness and signed transport remain open.
+
 ## Execution order and ownership
 
 1. Qualification continues local semantic-input, read/write and capture closure,

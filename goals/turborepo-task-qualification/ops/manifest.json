@@ -327,7 +327,9 @@
     "research/profile-git-routing-attribution.json",
     "research/profile-runtime-integration.json",
     "research/profile-closure-refresh-2026-09-22.json",
-    "research/current-profile-capture-2026-09-22.json"
+    "research/current-profile-capture-2026-09-22.json",
+    "research/descriptor-capture-2026-09-22.json",
+    "research/ring-attribution-2026-09-22.json"
   ],
   "agentLaunchers": [
     {

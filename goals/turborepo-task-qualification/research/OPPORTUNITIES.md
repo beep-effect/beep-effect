@@ -1672,3 +1672,14 @@ because `-s 0` also abbreviated `pipe2` return arrays. A bounded smoke check
 verified that `-e abbrev=!pipe,pipe2,socketpair` exposes those descriptor arrays
 while retaining string-payload suppression. The next capture uses that setting;
 the smoke check alone does not establish its runtime outcome.
+
+### Exact native version probes must disable repository inference
+
+While preparing the current canary matrix, an integrity-verified
+`@turbo/linux-64@2.11.3-canary.3` binary reported `2.11.2` when invoked with
+`--version` inside the repository. Repeating the probe with
+`--skip-infer --version` reported `2.11.3-canary.3`. The first probe had selected
+the installed client; it did not establish a package-version mismatch. Use the
+same inference-disabled invocation as the pilot runner for exact-pin preflights.
+The initial diagnosis and correction remain in private retained preparation
+evidence; no canary matrix was executed with a substituted version.
