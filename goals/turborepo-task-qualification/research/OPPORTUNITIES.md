@@ -1552,3 +1552,17 @@ Bounded docgen also found five noncanonical category names on the same cache
 API; replaced them with canonical categories. The Effect import check is
 `bun run lint:effect-imports`; `beep lint effect-imports` enters the generic
 root-lint adapter instead. Use the generated root script for this check.
+
+### 2026-09-22: shared checkout drift invalidated checkpoint proof
+
+While the checkpoint publication proof was live, the clone switched from the
+qualification branch to main. The reflog and live process working directory
+confirmed the mismatch. Stopped the affected proof; its mixed-checkout output
+is not exact-head evidence. Published draft PR #1182 before waiting for proof,
+then moved the feature branch into a dedicated sibling worktree and merged main.
+Keep long proofs in branch-owned worktrees to prevent this interference.
+
+The fresh worktree initially lacked commitlint dependencies; frozen installation
+allowed the pending merge commit to pass its hooks. Detached verification then
+refused because the systemd user manager was unavailable. No detached proof
+started. Use an attached proof with a retained log for this session.
