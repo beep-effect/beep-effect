@@ -78,6 +78,7 @@ import {
   YeetPrMergeReadyRow,
   yeetPrMergeReadyRowId,
 } from "./Inbox.ts";
+import { replayYeetMonitorComments } from "./MonitorComments.ts";
 import {
   renderYeetHeadTimeline,
   YEET_MONITOR_POLL_ERROR_BUDGET,
@@ -989,6 +990,11 @@ interface YeetMonitorUntilMergedOptions {
     | undefined;
   readonly policy?: YeetMonitorLoopPolicy | undefined;
   readonly pollInterval?: Duration.Duration | undefined;
+  // Runs once, on the first cycle only: the durable comment stream is replayed
+  // where the session starts, not on every poll, because after that this loop
+  // is attached and nothing can be missed. The seam exists so a test can prove
+  // the call without a GitHub read.
+  readonly replayComments?: typeof replayYeetMonitorComments | undefined;
   readonly rulesetRead?: typeof readYeetRulesetRequiredContexts | undefined;
 }
 
@@ -1068,6 +1074,10 @@ class MonitorPoll extends S.Class<MonitorPoll>($I`MonitorPoll`)(
     head: MonitorHeadState.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     terminal: YeetMonitorTerminalState.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     failure: YeetCommandError.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    // Whether this tick replayed the durable comment stream. The loop keeps
+    // its first cycle open until a tick reports true, so a failed read or a
+    // read without a pull request number cannot spend the one replay.
+    replayed: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   },
   $I.annote("MonitorPoll", { description: "One loop tick, retaining per-head state across recoverable read failures." })
 ) {}
@@ -1409,14 +1419,14 @@ const triageMonitorReds = Effect.fn("YeetMonitorLoop.triageReds")(function* (
   observation: MonitorObservation
 ) {
   const { snapshot, poll } = observation;
-  const { budget, head } = poll;
+  const { budget, head, replayed } = poll;
   const headSha = snapshot.remote.headSha;
   const policy = options.policy ?? YeetUntilMergedPolicy.make({});
   const terminals = yeetMonitorPolicyTerminals(policy);
   const readyTerminal = monitorReadyTerminal(observation, policy);
   const verdict = O.flatMap(head, (value) => value.verdict);
   if ((snapshot.remote.failingCheckCount ?? 0) === 0 || O.isNone(headSha)) {
-    return MonitorPoll.make({ budget, head, terminal: readyTerminal });
+    return MonitorPoll.make({ budget, head, terminal: readyTerminal, replayed });
   }
   const failedJobs = yield* collectYeetMonitorFailedJobs(context, headSha.value);
   const plan = planYeetMonitorReruns(budget, headSha.value, failedJobs);
@@ -1436,20 +1446,29 @@ const triageMonitorReds = Effect.fn("YeetMonitorLoop.triageReds")(function* (
         ", "
       )}`
     );
-    return MonitorPoll.make({ budget: plan.budget, terminal: O.some("required-red"), head });
+    return MonitorPoll.make({ budget: plan.budget, terminal: O.some("required-red"), head, replayed });
   }
-  return MonitorPoll.make({ budget: plan.budget, head, terminal: readyTerminal });
+  return MonitorPoll.make({ budget: plan.budget, head, terminal: readyTerminal, replayed });
 });
 
 const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   context: RepoRunContext,
   options: YeetMonitorUntilMergedOptions,
   budget: YeetMonitorRerunBudget,
-  previous: O.Option<MonitorHeadState>
+  previous: O.Option<MonitorHeadState>,
+  firstCycle: boolean
 ) {
   const collected = yield* (options.collectStatus ?? collectYeetStatus)(context, true).pipe(Effect.result);
   if (Result.isFailure(collected)) {
     return MonitorPoll.make({ budget, head: previous, failure: O.some(collected.failure) });
+  }
+  // The first poll is the first time this session knows the pull request
+  // number, and the last moment before it starts reporting state the operator
+  // will act on, so the comments they missed are printed here.
+  let replayed = false;
+  if (firstCycle && collected.success.remote.number !== undefined) {
+    yield* (options.replayComments ?? replayYeetMonitorComments)(context, collected.success.remote.number);
+    replayed = true;
   }
   const now = yield* options.now ?? DateTime.now;
   const observed = yield* observeMonitorHead(
@@ -1457,7 +1476,7 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
     options,
     MonitorObservation.make({
       snapshot: collected.success,
-      poll: MonitorPoll.make({ budget, head: previous }),
+      poll: MonitorPoll.make({ budget, head: previous, replayed }),
       at: DateTime.formatIso(now),
       millis: DateTime.toEpochMillis(now),
     })
@@ -1563,8 +1582,10 @@ export const runYeetMonitorUntilMerged: {
     let budget = emptyYeetMonitorRerunBudget;
     let head = O.none<MonitorHeadState>();
     let failures = 0;
+    let firstCycle = true;
     while (true) {
-      const next = yield* pollUntilMerged(context, options, budget, head);
+      const next: MonitorPoll = yield* pollUntilMerged(context, options, budget, head, firstCycle);
+      firstCycle = firstCycle && !next.replayed;
       budget = next.budget;
       head = next.head;
       failures = yield* stepMonitorFailureBudget(next, failures);

@@ -2302,3 +2302,21 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   lowered or missing row for a changed package (it did, but as a non-required context), and
   `yeet monitor --until-ready` should treat a non-required red with `needs code fix` as blocking
   rather than merge-ready.
+
+## 2026-09-22 — a reboot lost the PR comments the monitor had already printed
+
+- Doing: resuming the #1184 lane after the workstation rebooted mid-babysit, then running
+  `yeet status --remote` and a read-first `yeet closeout` to find out what had arrived.
+- Evidence: the monitor's comment stream kept its position in memory only, so the reboot took it
+  with the process; neither status nor closeout replayed anything, and the CodeRabbit replies and
+  review bodies posted while nothing was watching appeared in no local surface. The saved cursor
+  artifact existed but no read-first command read it, and its v1 shape had no cursor for review
+  bodies at all. Recovering the window meant `gh api .../comments` by hand and eyeballing
+  timestamps.
+- Prevention: landed in this PR — `replayYeetMonitorComments` runs on `yeet status --remote`,
+  `yeet closeout` and the monitor's first cycle, over a `yeet-monitor-comments/v2` watermark that
+  adds a review-body cursor, migrates v1 from the earlier of its two cursors, and merges
+  monotonically so two surfaces cannot drag it backwards. The general lesson: any in-memory stream
+  position an operator will act on needs a durable cursor plus a replay on the next read, and the
+  replay has to be reachable from the commands that are actually run after an interruption, not
+  only from the long-lived loop that died.

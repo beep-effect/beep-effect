@@ -2,7 +2,7 @@ import {
   failedReplyOutcomes,
   failYeetReplyOnFailedOutcomes,
   findReplyThread,
-  markReplyFollowUps,
+  markReplyThreadStates,
   planReplyActions,
   REPLY_DRAFTS_FILE_NAME,
   REPLY_REPORT_FILE_NAME,
@@ -43,6 +43,8 @@ import type { ReplyAction } from "@beep/repo-cli/test/Yeet";
 const OPEN_COMMENT_ID = 2_284_119_001;
 const RESOLVED_COMMENT_ID = 2_284_119_002;
 const OUTDATED_COMMENT_ID = 2_284_119_003;
+const FOLLOW_UP_COMMENT_ID = 2_284_119_004;
+const ACKNOWLEDGED_COMMENT_ID = 2_284_119_007;
 const UNKNOWN_COMMENT_ID = 2_284_119_999;
 
 const closedPageInfo = { endCursor: null, hasNextPage: false };
@@ -69,6 +71,7 @@ const resolvedThread = ReplyLiveThread.make({
   isResolved: true,
   line: 7,
   path: "src/commands/Yeet/internal/Verdict.ts",
+  state: "resolved-answered",
 });
 
 // A thread whose diff hunk moved: still open, still counts against the
@@ -89,33 +92,59 @@ const outdatedThread = ReplyLiveThread.make({
   path: null,
 });
 
-// Resolved by the author, then answered again by the review bot: the last word
-// is not the author's, so a reply is still owed and the thread is postable.
+// Resolved by the author, then answered again by a human reviewer: the last
+// word is not the author's, so a reply is still owed and the thread is
+// postable. (A GitHub App speaking last is `acknowledgedThread` below.)
 const followUpThread = ReplyLiveThread.make({
   comments: ReplyThreadCommentConnection.make({
     nodes: [
       ReplyThreadComment.make({
-        databaseId: 2_284_119_004,
-        id: "PRRC_followup_bot",
-        author: { login: "coderabbitai" },
+        databaseId: FOLLOW_UP_COMMENT_ID,
+        id: "PRRC_followup_reviewer",
+        author: { login: "reviewer" },
       }),
       ReplyThreadComment.make({ databaseId: 2_284_119_005, id: "PRRC_followup_author", author: { login: "octocat" } }),
       ReplyThreadComment.make({
         databaseId: 2_284_119_006,
         id: "PRRC_followup_again",
-        author: { login: "coderabbitai" },
+        author: { login: "reviewer" },
       }),
     ],
     pageInfo: closedPageInfo,
+  }),
+  latest: ReplyThreadLatestConnection.make({
+    nodes: [ReplyThreadLatestComment.make({ author: { login: "reviewer", __typename: "User" } })],
   }),
   id: "PRRT_followup",
   isOutdated: false,
   isResolved: true,
   line: 12,
   path: "src/commands/Yeet/internal/Status.ts",
-  hasFollowUp: true,
+  resolvedBy: { login: "octocat" },
+  state: "resolved-follow-up",
 });
-const liveThreads = [openThread, resolvedThread, outdatedThread, followUpThread];
+
+// Resolved by the author, then confirmed by a GitHub App: the last word is a
+// bot's, so nothing is owed and a draft aimed here settles as stale.
+const acknowledgedThread = ReplyLiveThread.make({
+  comments: ReplyThreadCommentConnection.make({
+    nodes: [
+      ReplyThreadComment.make({ databaseId: ACKNOWLEDGED_COMMENT_ID, id: "PRRC_ack", author: { login: "octocat" } }),
+    ],
+    pageInfo: closedPageInfo,
+  }),
+  latest: ReplyThreadLatestConnection.make({
+    nodes: [ReplyThreadLatestComment.make({ author: { login: "coderabbitai", __typename: "Bot" } })],
+  }),
+  id: "PRRT_acknowledged",
+  isOutdated: false,
+  isResolved: true,
+  line: 3,
+  path: "src/commands/Yeet/internal/Handler.ts",
+  resolvedBy: { login: "octocat" },
+  state: "resolved-acknowledged",
+});
+const liveThreads = [openThread, resolvedThread, outdatedThread, followUpThread, acknowledgedThread];
 
 const draftsOf = (drafts: ReadonlyArray<ReplyDraft>): ReplyDrafts =>
   ReplyDrafts.make({ schemaVersion: "yeet-reply-drafts/v1", prNumber: 558, drafts });
@@ -200,48 +229,59 @@ describe("planReplyActions", () => {
     expect(postThreadIds(actions)).toEqual(["PRRT_open"]);
   });
 
-  it("marks a resolved thread as a follow-up only when a reviewer spoke last", () => {
-    const unmarked = ReplyLiveThread.make({ ...followUpThread, hasFollowUp: false });
-    const [marked] = markReplyFollowUps([unmarked], O.some("octocat"));
-    expect(marked?.hasFollowUp).toBe(true);
-    const [authorLast] = markReplyFollowUps(
+  it("classifies a resolved thread by who resolved it and who spoke last", () => {
+    const unmarked = ReplyLiveThread.make({ ...followUpThread, state: "unresolved" });
+    const [marked] = markReplyThreadStates([unmarked], O.some("octocat"));
+    expect(marked?.state).toBe("resolved-follow-up");
+    // The author had the last word: the thread is answered, so nothing is owed.
+    const [authorLast] = markReplyThreadStates(
       [
         ReplyLiveThread.make({
           ...unmarked,
-          comments: ReplyThreadCommentConnection.make({
-            nodes: A.take(unmarked.comments.nodes, 2),
-            pageInfo: closedPageInfo,
+          latest: ReplyThreadLatestConnection.make({
+            nodes: [ReplyThreadLatestComment.make({ author: { login: "octocat" } })],
           }),
         }),
       ],
       O.some("octocat")
     );
-    expect(authorLast?.hasFollowUp).toBe(false);
-    const [unknownAuthor] = markReplyFollowUps([unmarked], O.none());
-    expect(unknownAuthor?.hasFollowUp).toBe(false);
-    const [open] = markReplyFollowUps([openThread], O.some("someone-else"));
-    expect(open?.hasFollowUp).toBe(false);
+    expect(authorLast?.state).toBe("resolved-answered");
+    // An unknown pull request author must not block: unknown is never a gate.
+    const [unknownAuthor] = markReplyThreadStates([unmarked], O.none());
+    expect(unknownAuthor?.state).toBe("resolved-answered");
+    // A reviewer closing their own thread owes nothing either.
+    const [reviewerResolved] = markReplyThreadStates(
+      [ReplyLiveThread.make({ ...unmarked, resolvedBy: { login: "reviewer" } })],
+      O.some("octocat")
+    );
+    expect(reviewerResolved?.state).toBe("resolved-answered");
+    // A bot having the last word is an acknowledgement, not a follow-up.
+    const [acknowledged] = markReplyThreadStates(
+      [ReplyLiveThread.make({ ...acknowledgedThread, state: "unresolved" })],
+      O.some("octocat")
+    );
+    expect(acknowledged?.state).toBe("resolved-acknowledged");
+    const [open] = markReplyThreadStates([openThread], O.some("someone-else"));
+    expect(open?.state).toBe("unresolved");
   });
 
   it("reads the newest comment from comments(last: 1) when the thread spans more than one page", () => {
     const longThread = ReplyLiveThread.make({
       ...followUpThread,
-      hasFollowUp: false,
+      state: "unresolved",
       comments: ReplyThreadCommentConnection.make({
         // First page ends with the author's own reply; the real newest comment is on a later page.
         nodes: A.take(followUpThread.comments.nodes, 2),
         pageInfo: { endCursor: "cursor-2", hasNextPage: true },
       }),
-      latest: ReplyThreadLatestConnection.make({
-        nodes: [ReplyThreadLatestComment.make({ author: { login: "coderabbitai" } })],
-      }),
     });
-    const [marked] = markReplyFollowUps([longThread], O.some("octocat"));
-    expect(marked?.hasFollowUp).toBe(true);
-    // Without the latest node, a multi-page thread never claims to know who spoke last.
+    const [marked] = markReplyThreadStates([longThread], O.some("octocat"));
+    expect(marked?.state).toBe("resolved-follow-up");
+    // Without the latest node, a multi-page thread never claims to know who
+    // spoke last, and an unknown last speaker is answered, never a gate.
     const { latest: _latest, ...withoutLatest } = longThread;
-    const [unknown] = markReplyFollowUps([ReplyLiveThread.make(withoutLatest)], O.some("octocat"));
-    expect(unknown?.hasFollowUp).toBe(false);
+    const [unknown] = markReplyThreadStates([ReplyLiveThread.make(withoutLatest)], O.some("octocat"));
+    expect(unknown?.state).toBe("resolved-answered");
   });
 
   it("posts on a resolved thread that carries a reviewer follow-up", () => {
@@ -250,6 +290,14 @@ describe("planReplyActions", () => {
       liveThreads
     );
     expect(postThreadIds(actions)).toEqual(["PRRT_followup"]);
+  });
+
+  it("settles a bot-acknowledged thread as stale, posting nothing", () => {
+    const [outcome] = settledOutcomes(
+      planReplyActions(draftsOf([ReplyDraft.make({ threadId: O.some("PRRT_acknowledged"), body: "ack" })]), liveThreads)
+    );
+    expect(outcome?.status).toBe("stale");
+    expect(outcome?.detail).toContain("already resolved upstream");
   });
 
   it("settles an already-resolved thread as stale, naming its location", () => {
@@ -378,31 +426,40 @@ const stubHandle = (stub: CommandStub) =>
     unref: Effect.succeed(Effect.void),
   });
 
-/** A spawner answering by command-line marker; unlisted commands succeed empty. */
-const stubSpawnerLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
+/**
+ * A spawner answering by command-line marker; unlisted commands succeed empty.
+ * `spawned`, when given, records every command line so a test can assert what
+ * was *not* run — which is the whole point of the follow-up routing.
+ */
+const stubSpawnerLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>, spawned?: Array<string>) =>
   Layer.effect(
     ChildProcessSpawner.ChildProcessSpawner,
     Effect.succeed(
-      ChildProcessSpawner.make((command) =>
-        ChildProcess.isStandardCommand(command)
-          ? Effect.succeed(
-              stubHandle(
-                pipe(
-                  A.findFirst(stubs, ([marker]) =>
-                    Str.includes(marker)(A.join([command.command, ...command.args], " "))
-                  ),
-                  O.match({ onNone: () => ok(""), onSome: ([, stub]) => stub })
-                )
-              )
+      ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) {
+          return Effect.die("the reply engine never spawns a piped command");
+        }
+        const line = A.join([command.command, ...command.args], " ");
+        spawned?.push(line);
+        return Effect.succeed(
+          stubHandle(
+            pipe(
+              A.findFirst(stubs, ([marker]) => Str.includes(marker)(line)),
+              O.match({ onNone: () => ok(""), onSome: ([, stub]) => stub })
             )
-          : Effect.die("the reply engine never spawns a piped command")
-      )
+          )
+        );
+      })
     )
   );
 
 const repoViewJson = `{"name":"beep-effect","owner":{"login":"YeeBois"}}`;
 
 const reviewThreadsJson = `{"data":{"repository":{"pullRequest":{"reviewThreads":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRT_open","isResolved":false,"isOutdated":false,"path":"src/commands/Yeet/internal/Reply.ts","line":42,"comments":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRC_open","databaseId":${OPEN_COMMENT_ID}}]}},{"id":"PRRT_resolved","isResolved":true,"isOutdated":false,"path":"src/commands/Yeet/internal/Verdict.ts","line":7,"comments":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRC_resolved","databaseId":${RESOLVED_COMMENT_ID}}]}}]}}}}}`;
+
+// A pull request whose author resolved both threads: a human reviewer spoke
+// last on the first (a follow-up), a bot on the second (an acknowledgement).
+const resolvedThreadsJson = `{"data":{"repository":{"pullRequest":{"author":{"login":"octocat"},"reviewThreads":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRT_followup","isResolved":true,"isOutdated":false,"path":"src/commands/Yeet/internal/Status.ts","line":12,"resolvedBy":{"login":"octocat"},"comments":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRC_followup","databaseId":${FOLLOW_UP_COMMENT_ID}}]},"latest":{"nodes":[{"author":{"__typename":"User","login":"reviewer"}}]}},{"id":"PRRT_acknowledged","isResolved":true,"isOutdated":false,"path":"src/commands/Yeet/internal/Handler.ts","line":3,"resolvedBy":{"login":"octocat"},"comments":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRC_ack","databaseId":${ACKNOWLEDGED_COMMENT_ID}}]},"latest":{"nodes":[{"author":{"__typename":"Bot","login":"coderabbitai"}}]}}]}}}}}`;
 
 const replyContext = (root: string): RepoRunContext =>
   RepoRunContext.make({
@@ -430,8 +487,8 @@ const withTempDirectory = Effect.fn("withTempDirectory")(function* <Value, Failu
   );
 });
 
-const replyTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
-  Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs));
+const replyTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>, spawned?: Array<string>) =>
+  Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs, spawned));
 
 const deniedRepoViewStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["gh repo view", { exitCode: 1, output: "gh: authentication required" }],
@@ -440,6 +497,11 @@ const deniedRepoViewStubs: ReadonlyArray<readonly [string, CommandStub]> = [
 const liveThreadStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["gh repo view", ok(repoViewJson)],
   ["YeetReplyReviewThreads", ok(reviewThreadsJson)],
+];
+
+const resolvedThreadStubs: ReadonlyArray<readonly [string, CommandStub]> = [
+  ["gh repo view", ok(repoViewJson)],
+  ["YeetReplyReviewThreads", ok(resolvedThreadsJson)],
 ];
 
 describe("runYeetReply", () => {
@@ -488,6 +550,33 @@ describe("runYeetReply", () => {
         expect(yield* ReplyReportJson.decode(written)).toEqual(report);
       })
     ).pipe(provideScopedLayer(replyTestLayer(liveThreadStubs)))
+  );
+
+  const spawned: Array<string> = [];
+
+  it.effect("answers a reviewer follow-up without resolving, and leaves an acknowledgement alone", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const context = replyContext(root);
+        yield* writeDrafts(
+          context,
+          draftsOf([
+            ReplyDraft.make({ threadId: O.some("PRRT_followup"), body: "Answered: the cast is load-bearing." }),
+            ReplyDraft.make({ threadId: O.some("PRRT_acknowledged"), body: "Nothing left to say." }),
+          ])
+        );
+
+        const report = yield* runYeetReply(context);
+        expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["posted", "stale"]);
+        const [followUp, acknowledged] = report.outcomes;
+        expect(followUp?.detail).toContain("answered a reviewer follow-up on a resolved thread");
+        expect(acknowledged?.detail).toContain("already resolved upstream");
+        // The follow-up thread is already resolved on GitHub: the run posts the
+        // answer and must not fire the resolve mutation for either thread.
+        expect(A.filter(spawned, Str.includes("addPullRequestReviewThreadReply"))).toHaveLength(1);
+        expect(A.filter(spawned, Str.includes("resolveReviewThread"))).toEqual([]);
+      })
+    ).pipe(provideScopedLayer(replyTestLayer(resolvedThreadStubs, spawned)))
   );
 });
 

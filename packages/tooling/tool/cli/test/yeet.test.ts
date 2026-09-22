@@ -32,7 +32,12 @@ import {
   buildQualityIssueIndex,
   buildYeetRunPlanForTesting,
   buildYeetVerdictForTesting,
+  CloseoutGateStatesTestComment,
+  CloseoutGateStatesTestInput,
+  CloseoutReviewAdvisories,
   closeoutGateStatesForTesting,
+  closeoutReviewAdvisories,
+  closeoutReviewThreadTriage,
   closeoutWritePlanForTesting,
   collectDiffFingerprintForTesting,
   collectPublishIntent,
@@ -46,8 +51,14 @@ import {
   FallowFeedbackAllowedRoot,
   findOpenPullRequest,
   GhActor,
+  GhInlineReviewCommentConnection,
   GhRestIssueComment,
   GhRestReviewComment,
+  GhReview,
+  GhReviewThread,
+  GhReviewThreadCommentConnection,
+  GhReviewThreadLatestComment,
+  GhReviewThreadLatestConnection,
   GreptileSummary,
   gitPathListFromNulOutputForTesting,
   greptileIssueLimitExceededForTesting,
@@ -86,6 +97,7 @@ import {
   restorePublishStashOnFailure,
   restoreStashedWorktreeForTesting,
   retireFullProofLockOrObserveAtPath,
+  reviewFollowUpThreadIssue,
   runGhPullRequestView,
   runWithFullProofCoordinatorForTesting,
   runYeetFallowFeedbackForTesting,
@@ -911,7 +923,7 @@ describe("yeet planner", () => {
       "pr",
       "view",
       "--json",
-      "number,headRefName,state,url,headRefOid,isDraft",
+      "number,headRefName,state,url,headRefOid,isDraft,author",
     ]);
   });
 
@@ -1735,36 +1747,241 @@ describe("yeet planner", () => {
   });
 
   it("builds durable closeout gate states for bot and review gates", () => {
-    const states = closeoutGateStatesForTesting({
-      options: PrCloseoutOptions.make({
-        bots: "coderabbit,chatgpt,greptile",
-        requireGreptileIssues: 0,
-        requireGreptileScore: "5/5",
-        requireReviewComments: 0,
-        retriggerGreptile: false,
-      }),
-      actionableReviewThreadCount: 0,
-      greptile: GreptileSummary.make({
-        issueCount: 0,
-        score: "5/5",
-        url: "https://github.test/pr#greptile",
-      }),
-      botComments: [
-        {
-          authorLogin: "coderabbitai",
-          body: "Review completed",
-          url: "https://github.test/pr#coderabbit",
-        },
-      ],
-    });
+    const states = closeoutGateStatesForTesting(
+      CloseoutGateStatesTestInput.make({
+        options: PrCloseoutOptions.make({
+          bots: "coderabbit,chatgpt,greptile",
+          requireGreptileIssues: 0,
+          requireGreptileScore: "5/5",
+          requireReviewComments: 0,
+          retriggerGreptile: false,
+        }),
+        actionableReviewThreadCount: 0,
+        advisories: CloseoutReviewAdvisories.make({ count: 0, sources: [] }),
+        followUpThreadCount: 0,
+        greptile: GreptileSummary.make({
+          issueCount: 0,
+          score: "5/5",
+          url: "https://github.test/pr#greptile",
+        }),
+        botComments: [
+          CloseoutGateStatesTestComment.make({
+            authorLogin: "coderabbitai",
+            body: "Review completed",
+            url: "https://github.test/pr#coderabbit",
+          }),
+        ],
+      })
+    );
 
     expect(states).toEqual([
       expect.objectContaining({ name: "review-threads", status: "passed", count: 0 }),
+      expect.objectContaining({ name: "review-follow-ups", status: "passed", count: 0 }),
       expect.objectContaining({ name: "greptile", status: "passed", count: 0 }),
       expect.objectContaining({ name: "coderabbit", status: "passed", count: 0 }),
       expect.objectContaining({ name: "chatgpt", status: "unknown", count: 0 }),
+      expect.objectContaining({ name: "review-advisories", status: "passed", count: 0 }),
       expect.objectContaining({ name: "hosted-checks", status: "unknown" }),
     ]);
+  });
+
+  it("blocks on reviewer follow-ups and reports review-body advisories without blocking", () => {
+    const states = closeoutGateStatesForTesting(
+      CloseoutGateStatesTestInput.make({
+        options: PrCloseoutOptions.make({
+          bots: "greptile",
+          requireGreptileIssues: -1,
+          requireGreptileScore: "",
+          requireReviewComments: -1,
+          retriggerGreptile: false,
+        }),
+        actionableReviewThreadCount: 0,
+        advisories: CloseoutReviewAdvisories.make({ count: 13, sources: ["coderabbitai=11", "greptile-apps=2"] }),
+        followUpThreadCount: 1,
+        greptile: GreptileSummary.make({ issueCount: 0, score: "5/5" }),
+        botComments: [],
+      })
+    );
+
+    const followUps = states.find((state) => state.name === "review-follow-ups");
+    expect(followUps).toMatchObject({ status: "blocked", count: 1 });
+    expect(followUps?.detail).toContain("bun run beep yeet reply");
+    // An advisory is a number the operator reads, never a condition the merge waits on.
+    const advisories = states.find((state) => state.name === "review-advisories");
+    expect(advisories).toMatchObject({ status: "passed", count: 13 });
+    expect(advisories?.detail).toContain("coderabbitai=11, greptile-apps=2");
+  });
+
+  it("classifies a resolved thread a reviewer spoke on last as a blocking follow-up", () => {
+    const thread = (
+      id: string,
+      resolvedBy: string,
+      newest: { readonly login: string; readonly typename: string }
+    ): GhReviewThread =>
+      GhReviewThread.make({
+        comments: GhReviewThreadCommentConnection.make({
+          nodes: [
+            {
+              author: GhActor.make({ login: "reviewer" }),
+              body: "Please cover this branch.",
+              id: `${id}-1`,
+              url: `https://github.test/pr#${id}-1`,
+            },
+            {
+              author: GhActor.make({ __typename: newest.typename, login: newest.login }),
+              body: "Still not covered.",
+              createdAt: "2026-09-22T00:00:00Z",
+              id: `${id}-2`,
+              url: `https://github.test/pr#${id}-2`,
+            },
+          ],
+          pageInfo: { endCursor: null, hasNextPage: false },
+        }),
+        id,
+        isOutdated: false,
+        isResolved: true,
+        line: 42,
+        path: "src/file.ts",
+        resolvedBy: GhActor.make({ login: resolvedBy }),
+      });
+
+    const triage = closeoutReviewThreadTriage(
+      [
+        thread("PRRT_followup", "kriegcloud", { login: "reviewer", typename: "User" }),
+        // A bot's last word on a thread the author resolved is a receipt, not an objection.
+        thread("PRRT_ack", "kriegcloud", { login: "coderabbitai", typename: "Bot" }),
+        // A reviewer closing their own thread owes nothing.
+        thread("PRRT_reviewer_closed", "reviewer", { login: "reviewer", typename: "User" }),
+      ],
+      O.some("kriegcloud")
+    );
+
+    expect(triage.counts).toMatchObject({ unresolved: 0, followUp: 1, acknowledged: 1, answered: 1 });
+    expect(triage.followUpThreads.map((value) => value.id)).toEqual(["PRRT_followup"]);
+    const issue = reviewFollowUpThreadIssue(triage.followUpThreads[0]!);
+    expect(issue).toMatchObject({ blocking: true, category: "pr-review", id: "pr-review-follow-up:PRRT_followup" });
+    expect(issue.message).toContain("src/file.ts:42");
+    expect(issue.evidence).toContain("reviewer: Still not covered.");
+  });
+
+  it("classifies a thread whose comments outgrew the first page from its newest comment", () => {
+    // The blind spot this closes: closeout only ever fetched the first hundred
+    // comments, so on a thread longer than that the last speaker it could see
+    // was whoever happened to end that page — here the author — and the
+    // reviewer who has spoken since was invisible. `latest` answers it
+    // outright, so the page boundary stops deciding the gate.
+    const thread = GhReviewThread.make({
+      comments: GhReviewThreadCommentConnection.make({
+        nodes: [
+          {
+            author: GhActor.make({ __typename: "User", login: "kriegcloud" }),
+            body: "Fixed in the follow-up commit.",
+            createdAt: "2026-09-22T09:00:00Z",
+            id: "PRRT_paged-100",
+            url: "https://github.test/pr#PRRT_paged-100",
+          },
+        ],
+        pageInfo: { endCursor: "Y3Vyc29yOjEwMA==", hasNextPage: true },
+      }),
+      id: "PRRT_paged",
+      isOutdated: false,
+      isResolved: true,
+      latest: GhReviewThreadLatestConnection.make({
+        nodes: [
+          GhReviewThreadLatestComment.make({
+            author: GhActor.make({ __typename: "User", login: "reviewer" }),
+            body: "Still failing on my side after that commit.",
+            createdAt: "2026-09-22T12:00:00Z",
+            url: "https://github.test/pr#PRRT_paged-latest",
+          }),
+        ],
+      }),
+      line: 42,
+      path: "src/file.ts",
+      resolvedBy: GhActor.make({ login: "kriegcloud" }),
+    });
+
+    const triage = closeoutReviewThreadTriage([thread], O.some("kriegcloud"));
+
+    expect(triage.counts).toMatchObject({ unresolved: 0, followUp: 1, acknowledged: 0, answered: 0 });
+    // The evidence quotes the speaker who made the thread outstanding, not the
+    // author's reply that happened to end the first comment page.
+    expect(reviewFollowUpThreadIssue(triage.followUpThreads[0]!)).toMatchObject({
+      blocking: true,
+      category: "pr-review",
+      evidence: ["https://github.test/pr#PRRT_paged-latest", "reviewer: Still failing on my side after that commit."],
+      id: "pr-review-follow-up:PRRT_paged",
+    });
+
+    const states = closeoutGateStatesForTesting(
+      CloseoutGateStatesTestInput.make({
+        options: PrCloseoutOptions.make({
+          bots: "greptile",
+          requireGreptileIssues: -1,
+          requireGreptileScore: "",
+          requireReviewComments: -1,
+          retriggerGreptile: false,
+        }),
+        actionableReviewThreadCount: 0,
+        advisories: CloseoutReviewAdvisories.make({ count: 0, sources: [] }),
+        followUpThreadCount: triage.counts.followUp,
+        greptile: GreptileSummary.make({ issueCount: 0, score: "5/5" }),
+        botComments: [],
+      })
+    );
+
+    expect(states.find((state) => state.name === "review-follow-ups")).toMatchObject({ status: "blocked", count: 1 });
+  });
+
+  it("counts advisories from the newest review body per author, minus findings a thread carries", () => {
+    const review = (id: string, login: string, submittedAt: string, body: string): GhReview =>
+      GhReview.make({
+        author: GhActor.make({ login }),
+        body,
+        comments: GhInlineReviewCommentConnection.make({
+          nodes: [],
+          pageInfo: { endCursor: null, hasNextPage: false },
+        }),
+        id,
+        state: "COMMENTED",
+        submittedAt,
+      });
+    const threads: ReadonlyArray<GhReviewThread> = [
+      GhReviewThread.make({
+        comments: GhReviewThreadCommentConnection.make({
+          nodes: [],
+          pageInfo: { endCursor: null, hasNextPage: false },
+        }),
+        id: "PRRT_linked",
+        isOutdated: false,
+        isResolved: false,
+        line: 412,
+        path: "src/Reply.ts",
+      }),
+    ];
+
+    const advisories = closeoutReviewAdvisories(
+      [
+        // An older round from the same author is superseded, not summed.
+        review("PRR_1", "coderabbitai", "2026-09-20T00:00:00Z", "**Actionable comments posted: 9**\n"),
+        review(
+          "PRR_2",
+          "coderabbitai",
+          "2026-09-22T00:00:00Z",
+          "**Actionable comments posted: 2**\n\n<summary>Nitpick comments (3)</summary>\n\nIn `@src/Reply.ts`:\n- Line 412: already a thread\n\nIn `@src/Status.ts`:\n- Line 7: no thread here\n"
+        ),
+        review(
+          "PRR_3",
+          "operator",
+          "2026-09-22T01:00:00Z",
+          "### Greptile Review\n\nConfidence **4/5**\n\n**NEW:** P0:0 P1:1 P2:1\n"
+        ),
+      ],
+      threads
+    );
+
+    // 1 unlinked CodeRabbit item + 3 nitpicks, plus 2 new Greptile findings.
+    expect(advisories).toEqual({ count: 6, sources: ["coderabbitai=4", "operator=2"] });
   });
 });
 
@@ -5332,6 +5549,10 @@ describe("yeet publish scope helpers", () => {
         });
         expect(decoded.writeActions).toEqual([]);
         expect(decoded.states).toEqual([]);
+        // A report written before thread states were classified reports none of them.
+        expect(decoded.followUpThreadCount).toBe(0);
+        expect(decoded.acknowledgedThreadCount).toBe(0);
+        expect(decoded.advisoryCount).toBe(0);
       })
     ));
 

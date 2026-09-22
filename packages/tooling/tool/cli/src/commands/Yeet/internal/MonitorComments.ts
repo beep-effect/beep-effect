@@ -24,11 +24,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
+import { repoRunOutputBound } from "../../../internal/process/StepExec.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
+import { parseYeetReviewBodySignal, YeetReviewBodySignal, YeetReviewBodySignalInput } from "./ReviewBodySignal.ts";
 import type { Path } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -138,8 +140,59 @@ export class YeetMonitorIssueComment extends S.TaggedClass<YeetMonitorIssueComme
   })
 ) {}
 
+/**
+ * Normalized pull request review *body* emitted by Yeet monitor.
+ *
+ * **Details**
+ *
+ * The prose a reviewer submits alongside their inline comments. It is carried
+ * in the same stream as the two comment collections because it is the same
+ * kind of event to an operator — a reviewer said something — and because its
+ * structural signal (`signal`) is where a CodeRabbit round's nitpick tally and
+ * a Greptile-format round's new findings live. It is stamped `submittedAt`
+ * rather than `createdAt` because that is the field GitHub advances when the
+ * review leaves the pending state, and a review drafted hours earlier must not
+ * appear to predate the watermark that was written while it was still pending.
+ *
+ * **Example** (Describe a submitted review)
+ *
+ * ```ts
+ * import { YeetMonitorReviewBody, ReviewBodyPlain } from "@beep/repo-cli/test/Yeet"
+ *
+ * const body = YeetMonitorReviewBody.make({
+ *   author: "coderabbitai[bot]",
+ *   body: "**Actionable comments posted: 0**",
+ *   id: 5275652920,
+ *   signal: ReviewBodyPlain.make({ signal: "plain" }),
+ *   state: "COMMENTED",
+ *   submittedAt: "2026-09-22T12:00:01.000Z",
+ *   url: "https://github.com/o/r/pull/1#pullrequestreview-5275652920",
+ * })
+ * console.log(body.state) // COMMENTED
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetMonitorReviewBody extends S.TaggedClass<YeetMonitorReviewBody>($I`YeetMonitorReviewBody`)(
+  "review-body",
+  {
+    author: S.String,
+    body: S.String,
+    id: S.Finite,
+    signal: YeetReviewBodySignal,
+    state: S.String,
+    submittedAt: S.String,
+    url: S.String,
+  },
+  $I.annote("YeetMonitorReviewBody", {
+    description: "Normalized GitHub pull request review body streamed during Yeet monitoring.",
+  })
+) {}
+
 const isYeetMonitorReviewComment = S.is(YeetMonitorReviewComment);
 const isYeetMonitorIssueComment = S.is(YeetMonitorIssueComment);
+const isYeetMonitorReviewBody = S.is(YeetMonitorReviewBody);
 
 /**
  * Comment variants surfaced by a Yeet monitor session.
@@ -164,9 +217,13 @@ const isYeetMonitorIssueComment = S.is(YeetMonitorIssueComment);
  * @category schemas
  * @since 0.0.0
  */
-export const YeetMonitorComment = S.Union([YeetMonitorReviewComment, YeetMonitorIssueComment]).pipe(
+export const YeetMonitorComment = S.Union([
+  YeetMonitorReviewComment,
+  YeetMonitorIssueComment,
+  YeetMonitorReviewBody,
+]).pipe(
   $I.annoteSchema("YeetMonitorComment", {
-    description: "Review and conversation comment variants surfaced by Yeet monitor.",
+    description: "Review comment, conversation comment and review body variants surfaced by Yeet monitor.",
   })
 );
 
@@ -178,6 +235,47 @@ export const YeetMonitorComment = S.Union([YeetMonitorReviewComment, YeetMonitor
  * @since 0.0.0
  */
 export type YeetMonitorComment = typeof YeetMonitorComment.Type;
+
+/**
+ * The two stream members that belong to a review *thread* rather than a review.
+ *
+ * **Details**
+ *
+ * Surfaces keyed on a comment's path and id — the watch stream's
+ * `comment-posted` rows above all — accept only these two. A review body has
+ * no thread, no path and no line, so widening those rows to carry one would
+ * mean inventing values for all three.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetMonitorThreadComment = YeetMonitorReviewComment | YeetMonitorIssueComment;
+
+/**
+ * Test whether a streamed row is an inline or conversation comment.
+ *
+ * **Example** (Keep only thread comments)
+ *
+ * ```ts
+ * import { isYeetMonitorThreadComment, YeetMonitorIssueComment } from "@beep/repo-cli/test/Yeet"
+ *
+ * const comment = YeetMonitorIssueComment.make({
+ *   author: "octocat",
+ *   body: "Ready for review.",
+ *   createdAt: "2026-08-04T12:00:01.000Z",
+ *   id: 44,
+ *   url: "https://github.com/o/r/pull/1#issuecomment-44",
+ * })
+ * console.log(isYeetMonitorThreadComment(comment)) // true
+ * ```
+ *
+ * @param comment - One row from the monitor comment stream.
+ * @returns Whether the row is a review or conversation comment.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isYeetMonitorThreadComment = (comment: YeetMonitorComment): comment is YeetMonitorThreadComment =>
+  !isYeetMonitorReviewBody(comment);
 
 /**
  * GitHub REST inline review payload used by monitor normalization tests.
@@ -221,23 +319,43 @@ export class GhRestIssueComment extends S.Class<GhRestIssueComment>($I`GhRestIss
 ) {}
 
 /**
- * The pair of cursors one monitor session advances.
+ * GitHub REST submitted-review payload used by monitor normalization tests.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GhRestReview extends S.Class<GhRestReview>($I`GhRestReview`)(
+  {
+    body: S.NullOr(S.String),
+    html_url: S.String,
+    id: S.Finite,
+    state: S.String,
+    submitted_at: S.NullOr(S.String),
+    user: S.NullOr(GhActor),
+  },
+  $I.annote("GhRestReview", {
+    description: "GitHub REST submitted pull request review payload used by Yeet monitor.",
+  })
+) {}
+
+/**
+ * The three cursors one monitor session advances.
  *
  * **Details**
  *
- * GitHub exposes inline review comments and conversation comments as two
- * collections with independent id spaces and independent `since` filters, so
- * one shared cursor would let a busy collection drag the quiet one forward and
- * silently skip its comments. They are carried together because they are
- * advanced and persisted together — one poll, one write.
+ * GitHub exposes inline review comments, conversation comments and submitted
+ * review bodies as three collections with independent id spaces, so one shared
+ * cursor would let a busy collection drag the quiet ones forward and silently
+ * skip their rows. They are carried together because they are advanced and
+ * persisted together — one poll, one write.
  *
- * **Example** (Start both cursors at the same instant)
+ * **Example** (Start every cursor at the same instant)
  *
  * ```ts
  * import { YeetMonitorCommentCursor, YeetMonitorCommentWatermark } from "@beep/repo-cli/test/Yeet"
  *
  * const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-16T12:00:00.000Z", id: 0 })
- * const watermark = YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor })
+ * const watermark = YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor, reviewBody: cursor })
  * console.log(watermark.review.id) // 0
  * ```
  *
@@ -248,9 +366,22 @@ export class YeetMonitorCommentWatermark extends S.Class<YeetMonitorCommentWater
   {
     issue: YeetMonitorCommentCursor,
     review: YeetMonitorCommentCursor,
+    reviewBody: YeetMonitorCommentCursor,
   },
   $I.annote("YeetMonitorCommentWatermark", {
-    description: "Per-collection comment cursors for one pull request monitor session.",
+    description: "Per-collection comment and review-body cursors for one pull request monitor session.",
+  })
+) {}
+
+// The v1 watermark, kept only so a position written before review bodies were
+// streamed still resumes. It is never written again.
+class YeetMonitorCommentWatermarkV1 extends S.Class<YeetMonitorCommentWatermarkV1>($I`YeetMonitorCommentWatermarkV1`)(
+  {
+    issue: YeetMonitorCommentCursor,
+    review: YeetMonitorCommentCursor,
+  },
+  $I.annote("YeetMonitorCommentWatermarkV1", {
+    description: "The pre-review-body comment cursors carried by a v1 monitor comment artifact.",
   })
 ) {}
 
@@ -273,10 +404,10 @@ export class YeetMonitorCommentWatermark extends S.Class<YeetMonitorCommentWater
  *
  * const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-16T12:00:00.000Z", id: 44 })
  * const state = YeetMonitorCommentState.make({
- *   schemaVersion: "yeet-monitor-comments/v1",
+ *   schemaVersion: "yeet-monitor-comments/v2",
  *   prNumber: 558,
  *   updatedAt: "2026-08-16T12:00:05.000Z",
- *   watermark: YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor }),
+ *   watermark: YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor, reviewBody: cursor }),
  * })
  * console.log(state.prNumber) // 558
  * ```
@@ -286,7 +417,7 @@ export class YeetMonitorCommentWatermark extends S.Class<YeetMonitorCommentWater
  */
 export class YeetMonitorCommentState extends S.Class<YeetMonitorCommentState>($I`YeetMonitorCommentState`)(
   {
-    schemaVersion: S.Literal("yeet-monitor-comments/v1"),
+    schemaVersion: S.Literal("yeet-monitor-comments/v2"),
     prNumber: S.Int.check(S.isGreaterThan(0)),
     updatedAt: S.String,
     watermark: YeetMonitorCommentWatermark,
@@ -295,6 +426,24 @@ export class YeetMonitorCommentState extends S.Class<YeetMonitorCommentState>($I
     description: "Branch-scoped comment stream position carried between Yeet monitor runs.",
   })
 ) {}
+
+// The v1 artifact. Accepted on read and upgraded in place on the next write,
+// because the alternative — treating it as a decode miss — restarts the stream
+// from now and drops exactly the comments a resumed session exists to print.
+class YeetMonitorCommentStateV1 extends S.Class<YeetMonitorCommentStateV1>($I`YeetMonitorCommentStateV1`)(
+  {
+    schemaVersion: S.Literal("yeet-monitor-comments/v1"),
+    prNumber: S.Int.check(S.isGreaterThan(0)),
+    updatedAt: S.String,
+    watermark: YeetMonitorCommentWatermarkV1,
+  },
+  $I.annote("YeetMonitorCommentStateV1", {
+    description: "The pre-review-body branch-scoped comment stream position.",
+  })
+) {}
+
+const YeetMonitorCommentStateStored = S.Union([YeetMonitorCommentState, YeetMonitorCommentStateV1]);
+const isYeetMonitorCommentStateV1 = S.is(YeetMonitorCommentStateV1);
 
 /**
  * JSON-string codec for the persisted comment stream position.
@@ -307,18 +456,21 @@ export class YeetMonitorCommentState extends S.Class<YeetMonitorCommentState>($I
  *
  * const cursor = YeetMonitorCommentCursor.make({ createdAt: "2026-08-16T12:00:00.000Z", id: 44 })
  * const state = YeetMonitorCommentState.make({
- *   schemaVersion: "yeet-monitor-comments/v1",
+ *   schemaVersion: "yeet-monitor-comments/v2",
  *   prNumber: 558,
  *   updatedAt: "2026-08-16T12:00:05.000Z",
- *   watermark: YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor }),
+ *   watermark: YeetMonitorCommentWatermark.make({ issue: cursor, review: cursor, reviewBody: cursor }),
  * })
- * console.log(Effect.runSync(YeetMonitorCommentStateJson.encode(state)).includes("yeet-monitor-comments/v1"))
+ * console.log(Effect.runSync(YeetMonitorCommentStateJson.encode(state)).includes("yeet-monitor-comments/v2"))
  * ```
  *
  * @category codecs
  * @since 0.0.0
  */
 export const YeetMonitorCommentStateJson = JsonStringCodec(YeetMonitorCommentState);
+
+// Reads accept both versions; writes only ever go through the v2 codec above.
+const YeetMonitorCommentStateStoredJson = JsonStringCodec(YeetMonitorCommentStateStored);
 
 /**
  * File name of the persisted comment stream position inside a Yeet run
@@ -363,6 +515,37 @@ const commentCursorOrder: Order.Order<YeetMonitorCommentCursor> = Order.combine(
   Order.mapInput(Order.String, (cursor: YeetMonitorCommentCursor) => cursor.createdAt),
   Order.mapInput(Order.Number, (cursor: YeetMonitorCommentCursor) => cursor.id)
 );
+const earlierCursor = Order.min(commentCursorOrder);
+const laterCursor = Order.max(commentCursorOrder);
+
+// The earliest of the cursors is where a resumed stream genuinely reaches
+// back to: the collections advance independently, so quoting any single one of
+// them would understate how far back the others still reach.
+const earliestWatermarkAt = (watermark: YeetMonitorCommentWatermark): string =>
+  earlierCursor(earlierCursor(watermark.issue, watermark.review), watermark.reviewBody).createdAt;
+
+// A review body is stamped with its submission instant, the two comment kinds
+// with their creation instant; the stream orders all three on one axis.
+const commentPosition = (comment: YeetMonitorComment): YeetMonitorCommentCursor =>
+  YeetMonitorCommentCursor.make({
+    createdAt: Match.value(comment).pipe(
+      Match.tag("review-body", (body) => body.submittedAt),
+      Match.orElse((other) => other.createdAt)
+    ),
+    id: comment.id,
+  });
+
+// A v1 artifact knew nothing about review bodies, so the only honest seed is
+// the earlier of the two cursors it did carry: starting the new collection at
+// the later one would skip every review body submitted in between.
+const upgradeStoredWatermark = (state: typeof YeetMonitorCommentStateStored.Type): YeetMonitorCommentWatermark =>
+  isYeetMonitorCommentStateV1(state)
+    ? YeetMonitorCommentWatermark.make({
+        issue: state.watermark.issue,
+        review: state.watermark.review,
+        reviewBody: earlierCursor(state.watermark.issue, state.watermark.review),
+      })
+    : state.watermark;
 
 /**
  * Test whether a monitor comment is later than a stored cursor.
@@ -391,13 +574,11 @@ export const isYeetMonitorCommentAfter: {
   (comment: YeetMonitorComment): (cursor: YeetMonitorCommentCursor) => boolean;
 } = dual(
   2,
-  (cursor: YeetMonitorCommentCursor, comment: YeetMonitorComment): boolean => commentCursorOrder(comment, cursor) > 0
+  (cursor: YeetMonitorCommentCursor, comment: YeetMonitorComment): boolean =>
+    commentCursorOrder(commentPosition(comment), cursor) > 0
 );
 
-const commentOrder: Order.Order<YeetMonitorComment> = Order.combine(
-  Order.mapInput(Order.String, (comment: YeetMonitorComment) => comment.createdAt),
-  Order.mapInput(Order.Number, (comment: YeetMonitorComment) => comment.id)
-);
+const commentOrder: Order.Order<YeetMonitorComment> = Order.mapInput(commentCursorOrder, commentPosition);
 
 const authorLogin = (user: GhActor | null): string =>
   pipe(
@@ -443,6 +624,41 @@ const normalizeIssueComment = (comment: GhRestIssueComment): YeetMonitorIssueCom
     id: comment.id,
     url: comment.html_url,
   });
+
+// A review with no body is the "approved, nothing to say" case and carries no
+// signal; a pending review has no submission instant and is not an event yet.
+const normalizeReviewBody = (review: GhRestReview): O.Option<YeetMonitorReviewBody> =>
+  pipe(
+    O.fromNullishOr(review.submitted_at),
+    O.flatMap((submittedAt) =>
+      pipe(
+        O.fromNullishOr(review.body),
+        O.map(Str.trim),
+        O.filter(Str.isNonEmpty),
+        O.map((body) =>
+          YeetMonitorReviewBody.make({
+            author: authorLogin(review.user),
+            body,
+            id: review.id,
+            signal: parseYeetReviewBodySignal(
+              YeetReviewBodySignalInput.make({ authorLogin: authorLogin(review.user), body })
+            ),
+            state: review.state,
+            submittedAt,
+            url: review.html_url,
+          })
+        )
+      )
+    )
+  );
+
+/**
+ * Review-body normalizer exposed through the source-only Yeet test kit.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const normalizeYeetMonitorReviewBodyForTesting = normalizeReviewBody;
 
 /**
  * Review-comment normalizer exposed through the source-only Yeet test kit.
@@ -496,6 +712,53 @@ export const yeetCommentExcerpt: {
 const excerpt = (body: string): string => yeetCommentExcerpt(body, commentExcerptLength);
 
 /**
+ * Summarize what a review body reports, when it reports anything structural.
+ *
+ * **Details**
+ *
+ * `None` for a body with no recognised markers: an operator reading the stream
+ * should see the excerpt and nothing else rather than a row of zeroes that
+ * looks like a measurement. Every number here is advisory — it names what a
+ * reviewer said, never what blocks the merge.
+ *
+ * **Example** (Summarize a CodeRabbit round)
+ *
+ * ```ts
+ * import { renderYeetMonitorReviewBodySignal, ReviewBodyCoderabbit } from "@beep/repo-cli/test/Yeet"
+ *
+ * const summary = renderYeetMonitorReviewBodySignal(
+ *   ReviewBodyCoderabbit.make({ signal: "coderabbit", actionable: 2, items: [], nitpicks: 11, outsideDiff: 0 })
+ * )
+ * console.log(summary)
+ * ```
+ *
+ * @param signal - The parsed structural signal of one review body.
+ * @returns The one-line advisory summary, or `None` for an unreadable body.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetMonitorReviewBodySignal = (signal: YeetReviewBodySignal): O.Option<string> =>
+  Match.value(signal).pipe(
+    Match.discriminator("signal")("coderabbit", (coderabbit) =>
+      O.some(
+        `coderabbit: ${coderabbit.actionable} actionable, ${coderabbit.nitpicks} nitpick(s), ${coderabbit.outsideDiff} outside diff (advisory)`
+      )
+    ),
+    Match.discriminator("signal")("greptile", (greptile) =>
+      O.some(
+        `greptile: confidence ${O.getOrElse(greptile.confidence, () => "unknown")}, new P0:${greptile.newFindings.p0} P1:${greptile.newFindings.p1} P2:${greptile.newFindings.p2} (advisory)`
+      )
+    ),
+    Match.discriminator("signal")("plain", () => O.none<string>()),
+    Match.exhaustive
+  );
+
+const reviewBodySignalLine: (signal: YeetReviewBodySignal) => string = flow(
+  renderYeetMonitorReviewBodySignal,
+  O.match({ onNone: () => Str.empty, onSome: (summary) => `\n  ${summary}` })
+);
+
+/**
  * Render a new pull request comment in Yeet monitor's compact operator format.
  *
  * **Example** (Render an inline review)
@@ -516,7 +779,7 @@ const excerpt = (body: string): string => yeetCommentExcerpt(body, commentExcerp
  * console.log(output)
  * ```
  *
- * @param comment - The normalized review or issue comment to render.
+ * @param comment - The normalized review comment, issue comment or review body.
  * @returns The compact multi-line operator string for the comment.
  * @category formatting
  * @since 0.0.0
@@ -533,32 +796,143 @@ export const renderYeetMonitorComment = (comment: YeetMonitorComment): string =>
       (issue) =>
         `[yeet] new PR issue comment: ${stripTerminalControlSequences(issue.author)}\n  ${excerpt(issue.body)}\n  ${stripTerminalControlSequences(issue.url)}`
     ),
+    Match.tag(
+      "review-body",
+      (body) =>
+        `[yeet] new PR review: ${stripTerminalControlSequences(body.author)} (${stripTerminalControlSequences(body.state)})\n  ${excerpt(body.body)}${reviewBodySignalLine(body.signal)}\n  ${stripTerminalControlSequences(body.url)}`
+    ),
     Match.exhaustive
   );
 
-const decodeReviewComments = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhRestReviewComment)));
-const decodeIssueComments = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhRestIssueComment)));
+const decodeReviewCommentPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Array(GhRestReviewComment))));
+const decodeIssueCommentPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Array(GhRestIssueComment))));
+const decodeReviewPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Array(GhRestReview))));
+
+const decodePages =
+  <Payload>(decode: (text: string) => Effect.Effect<ReadonlyArray<ReadonlyArray<Payload>>, S.SchemaError>) =>
+  (text: string): Effect.Effect<ReadonlyArray<Payload>, S.SchemaError> =>
+    Effect.map(decode(text), A.flatten);
+
+/**
+ * Warn that a comment page was cut off before it could be read in full.
+ *
+ * **Example** (Render the truncation warning)
+ *
+ * ```ts
+ * import { renderYeetMonitorCommentTruncation } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(renderYeetMonitorCommentTruncation("repos/{owner}/{repo}/issues/1/comments"))
+ * ```
+ *
+ * @param endpoint - The REST endpoint whose capture was clipped.
+ * @returns The operator warning naming what was kept and what repeats.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetMonitorCommentTruncation = (endpoint: string): string =>
+  `[yeet] the PR comment read of ${endpoint} was clipped by the capture bound; the rows that were read in full are streamed and the cursor stops at the last of them, so the rest repeat on the next read.`;
+
+// Recover the complete elements of a clipped top-level JSON array. `gh api
+// --paginate --slurp` emits one array of pages, so a capture cut mid-object is
+// invalid JSON as a whole while every element before the cut is intact: this
+// scanner keeps those and closes the containers they were in, and the cursor
+// then advances only as far as they reach. The capture's own truncation notice
+// is removed first — it carries brackets of its own, and a scanner that read
+// them would balance the document against text GitHub never sent.
+class ClipScan extends S.Class<ClipScan>($I`ClipScan`)(
+  {
+    depth: S.Finite,
+    inString: S.Boolean,
+    escaped: S.Boolean,
+    // Offset just past the last container that closed, and the depth it left.
+    lastComplete: S.Finite,
+    closeDepth: S.Finite,
+  },
+  $I.annote("ClipScan", { description: "The scanner state after one character of a clipped JSON capture." })
+) {}
+
+const clipScanStart = ClipScan.make({ depth: 0, inString: false, escaped: false, lastComplete: 0, closeDepth: 0 });
+
+const scanStringChar = (scan: ClipScan, char: string): ClipScan =>
+  ClipScan.make({ ...scan, inString: scan.escaped || char !== '"', escaped: !scan.escaped && char === "\\" });
+
+const scanStructuralChar = (scan: ClipScan, char: string, index: number): ClipScan => {
+  if (char === '"') return ClipScan.make({ ...scan, inString: true });
+  if (char === "[" || char === "{") return ClipScan.make({ ...scan, depth: scan.depth + 1 });
+  if (char === "]" || char === "}") {
+    const depth = scan.depth - 1;
+    return ClipScan.make({ ...scan, depth, lastComplete: index + 1, closeDepth: depth });
+  }
+  return scan;
+};
+
+const salvageClippedJsonArray = (text: string): string => {
+  const scanned = pipe(text, Str.replace(repoRunOutputBound.truncatedNotice, Str.empty));
+  let scan = clipScanStart;
+  for (let index = 0; index < scanned.length; index = index + 1) {
+    const char = scanned[index] ?? Str.empty;
+    scan = scan.inString ? scanStringChar(scan, char) : scanStructuralChar(scan, char, index);
+    // The outermost array closed: the document is whole up to here.
+    if (scan.depth === 0 && scan.lastComplete === index + 1) return scanned.slice(0, index + 1);
+  }
+  return scan.lastComplete === 0 ? "[]" : `${scanned.slice(0, scan.lastComplete)}${Str.repeat(scan.closeDepth)("]")}`;
+};
+
+/**
+ * Salvage the intact prefix of a clipped `gh api --paginate --slurp` capture.
+ *
+ * **Example** (Keep the page that was read in full)
+ *
+ * ```ts
+ * import { salvageYeetMonitorClippedJson } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(salvageYeetMonitorClippedJson('[[{"id":1}],[{"id":2'))
+ * ```
+ *
+ * @param text - The captured, possibly clipped, JSON text.
+ * @returns JSON text holding every element that was read in full.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const salvageYeetMonitorClippedJson = salvageClippedJsonArray;
 
 const fetchComments = Effect.fn("YeetMonitor.fetchComments")(function* <Comment>(
   context: RepoRunContext,
   endpoint: string,
-  since: string,
+  since: O.Option<string>,
   decode: (text: string) => Effect.Effect<ReadonlyArray<Comment>, S.SchemaError>
 ): Effect.fn.Return<ReadonlyArray<Comment>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runRepoCommandCapture(
     "gh",
-    ["api", "--method", "GET", endpoint, "-f", "per_page=100", "-f", `since=${since}`],
+    [
+      "api",
+      "--method",
+      "GET",
+      endpoint,
+      "--paginate",
+      "--slurp",
+      "-f",
+      "per_page=100",
+      ...O.match(since, { onNone: () => A.empty<string>(), onSome: (at) => ["-f", `since=${at}`] }),
+    ],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to poll pull request comments during yeet monitor.")));
-  if (result.exitCode !== 0 || result.truncated) {
+  if (result.exitCode !== 0) {
     return yield* YeetCommandError.make({
       command: `gh api --method GET ${endpoint}`,
-      exitCode: result.exitCode === 0 ? 1 : result.exitCode,
+      exitCode: result.exitCode,
       // The reason travels with the failure: a degraded poll is reported to the
       // operator by message alone, and "the poll failed" without gh's own words
       // cannot distinguish a rate limit from a revoked token.
       message: `Failed to poll pull request comments during yeet monitor: ${excerpt(result.output)}`,
     });
+  }
+  // A clipped read is no longer a failed read. Losing the whole poll over a
+  // loud pull request means the operator sees nothing at all, while keeping the
+  // intact prefix shows what was read and leaves the rest behind the cursor.
+  if (result.truncated) {
+    yield* Console.error(renderYeetMonitorCommentTruncation(endpoint));
+    return yield* decode(salvageClippedJsonArray(result.output)).pipe(Effect.orElseSucceed(() => A.empty<Comment>()));
   }
   return yield* decode(result.output).pipe(
     Effect.mapError(YeetCommandError.new("Failed to decode pull request comments during yeet monitor."))
@@ -567,10 +941,70 @@ const fetchComments = Effect.fn("YeetMonitor.fetchComments")(function* <Comment>
 
 const nextCursor = (cursor: YeetMonitorCommentCursor, comments: ReadonlyArray<YeetMonitorComment>) =>
   A.reduce(comments, cursor, (latest, comment) =>
-    isYeetMonitorCommentAfter(latest, comment)
-      ? YeetMonitorCommentCursor.make({ createdAt: comment.createdAt, id: comment.id })
-      : latest
+    isYeetMonitorCommentAfter(latest, comment) ? commentPosition(comment) : latest
   );
+
+/**
+ * Read the persisted comment stream position for one pull request.
+ *
+ * **Details**
+ *
+ * Every way the read can go wrong — no artifact yet, an unreadable file, a
+ * shape from an unknown schema version, a position recorded against a
+ * different pull request — yields `None`, which the caller reads as "start
+ * from now". A monitor session must not be blocked by its own resumption
+ * optimisation. A `v1` position is *not* one of those ways: it decodes, and
+ * its missing review-body cursor is seeded from the earlier of the two cursors
+ * it does carry.
+ *
+ * **Example** (Build the read effect)
+ *
+ * ```ts
+ * import { loadYeetMonitorCommentWatermark } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(Effect.succeed(loadYeetMonitorCommentWatermark))) // true
+ * ```
+ *
+ * @param context - Repo run context carrying the artifact directory and branch.
+ * @param pullRequestNumber - The pull request the position must belong to.
+ * @returns The persisted watermark, or `None` when there is no usable one.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const loadYeetMonitorCommentWatermark = Effect.fn("YeetMonitor.loadCommentWatermark")(function* (
+  context: RepoRunContext,
+  pullRequestNumber: number
+): Effect.fn.Return<O.Option<YeetMonitorCommentWatermark>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const statePath = yield* yeetMonitorCommentStatePath(context).pipe(Effect.option);
+  if (O.isNone(statePath)) return O.none();
+  const text = yield* Effect.option(fs.readFileString(statePath.value));
+  return pipe(
+    text,
+    O.flatMap(YeetMonitorCommentStateStoredJson.decodeOption),
+    O.filter((state) => state.prNumber === pullRequestNumber),
+    O.map(upgradeStoredWatermark)
+  );
+});
+
+// Merge rather than overwrite: two surfaces can hold this branch's pull request
+// open at once — a monitor loop and an operator's `yeet status --remote` — and
+// the second one to finish must not drag a cursor backwards over rows the first
+// one already printed. Per-cursor max is the only merge that cannot lose a row.
+const mergeWatermarks = (
+  current: O.Option<YeetMonitorCommentWatermark>,
+  next: YeetMonitorCommentWatermark
+): YeetMonitorCommentWatermark =>
+  O.match(current, {
+    onNone: () => next,
+    onSome: (persisted) =>
+      YeetMonitorCommentWatermark.make({
+        issue: laterCursor(persisted.issue, next.issue),
+        review: laterCursor(persisted.review, next.review),
+        reviewBody: laterCursor(persisted.reviewBody, next.reviewBody),
+      }),
+  });
 
 const writeCommentState = Effect.fn("YeetMonitor.writeCommentState")(function* (
   context: RepoRunContext,
@@ -579,12 +1013,13 @@ const writeCommentState = Effect.fn("YeetMonitor.writeCommentState")(function* (
 ): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const statePath = yield* yeetMonitorCommentStatePath(context);
   const updatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
   const json = yield* YeetMonitorCommentStateJson.encode(
     YeetMonitorCommentState.make({
-      schemaVersion: "yeet-monitor-comments/v1",
+      schemaVersion: "yeet-monitor-comments/v2",
       prNumber: pullRequestNumber,
       updatedAt,
-      watermark,
+      watermark: mergeWatermarks(persisted, watermark),
     })
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to encode the yeet monitor comment cursor artifact.")));
   yield* writeTextFile(statePath, `${json}\n`);
@@ -622,48 +1057,7 @@ const persistCommentState = (
   );
 
 /**
- * Read the persisted comment stream position for one pull request.
- *
- * **Details**
- *
- * Every way the read can go wrong — no artifact yet, an unreadable file, a
- * shape from an older schema version, a position recorded against a different
- * pull request — yields `None`, which the caller reads as "start from now".
- * A monitor session must not be blocked by its own resumption optimisation.
- *
- * **Example** (Build the read effect)
- *
- * ```ts
- * import { loadYeetMonitorCommentWatermark } from "@beep/repo-cli/test/Yeet"
- * import { Effect } from "effect"
- *
- * console.log(Effect.isEffect(Effect.succeed(loadYeetMonitorCommentWatermark))) // true
- * ```
- *
- * @param context - Repo run context carrying the artifact directory and branch.
- * @param pullRequestNumber - The pull request the position must belong to.
- * @returns The persisted watermark, or `None` when there is no usable one.
- * @category utilities
- * @since 0.0.0
- */
-export const loadYeetMonitorCommentWatermark = Effect.fn("YeetMonitor.loadCommentWatermark")(function* (
-  context: RepoRunContext,
-  pullRequestNumber: number
-): Effect.fn.Return<O.Option<YeetMonitorCommentWatermark>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const statePath = yield* yeetMonitorCommentStatePath(context).pipe(Effect.option);
-  if (O.isNone(statePath)) return O.none();
-  const text = yield* Effect.option(fs.readFileString(statePath.value));
-  return pipe(
-    text,
-    O.flatMap(YeetMonitorCommentStateJson.decodeOption),
-    O.filter((state) => state.prNumber === pullRequestNumber),
-    O.map((state) => state.watermark)
-  );
-});
-
-/**
- * Poll both comment collections once and return the comments past the watermark.
+ * Poll every comment collection once and return the rows past the watermark.
  *
  * **Details**
  *
@@ -701,28 +1095,39 @@ export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewCo
   Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const watermark = yield* Ref.get(watermarkRef);
-  const [reviewPayload, issuePayload] = yield* Effect.all(
+  const [reviewPayload, issuePayload, reviewBodyPayload] = yield* Effect.all(
     [
       fetchComments(
         context,
         `repos/{owner}/{repo}/pulls/${pullRequestNumber}/comments`,
-        watermark.review.createdAt,
-        decodeReviewComments
+        O.some(watermark.review.createdAt),
+        decodePages(decodeReviewCommentPages)
       ),
       fetchComments(
         context,
         `repos/{owner}/{repo}/issues/${pullRequestNumber}/comments`,
-        watermark.issue.createdAt,
-        decodeIssueComments
+        O.some(watermark.issue.createdAt),
+        decodePages(decodeIssueCommentPages)
+      ),
+      // The reviews endpoint takes no `since`, so the whole list comes back and
+      // the cursor filter below is the only thing standing between the operator
+      // and every review the pull request ever received.
+      fetchComments(
+        context,
+        `repos/{owner}/{repo}/pulls/${pullRequestNumber}/reviews`,
+        O.none(),
+        decodePages(decodeReviewPages)
       ),
     ],
-    { concurrency: 2 }
+    { concurrency: 3 }
   );
   const reviewComments = pipe(reviewPayload, A.map(normalizeReviewComment));
   const issueComments = pipe(issuePayload, A.map(normalizeIssueComment));
+  const reviewBodies = pipe(reviewBodyPayload, A.map(normalizeReviewBody), A.getSomes);
   const newReviewComments = A.filter(reviewComments, (comment) => isYeetMonitorCommentAfter(watermark.review, comment));
   const newIssueComments = A.filter(issueComments, (comment) => isYeetMonitorCommentAfter(watermark.issue, comment));
-  return A.sort([...newReviewComments, ...newIssueComments], commentOrder);
+  const newReviewBodies = A.filter(reviewBodies, (body) => isYeetMonitorCommentAfter(watermark.reviewBody, body));
+  return A.sort([...newReviewComments, ...newIssueComments, ...newReviewBodies], commentOrder);
 });
 
 /**
@@ -764,9 +1169,11 @@ export const acknowledgeYeetMonitorComments = Effect.fn("YeetMonitor.acknowledge
   const watermark = yield* Ref.get(watermarkRef);
   const reviewComments = A.filter(comments, isYeetMonitorReviewComment);
   const issueComments = A.filter(comments, isYeetMonitorIssueComment);
+  const reviewBodies = A.filter(comments, isYeetMonitorReviewBody);
   const advanced = YeetMonitorCommentWatermark.make({
     issue: nextCursor(watermark.issue, issueComments),
     review: nextCursor(watermark.review, reviewComments),
+    reviewBody: nextCursor(watermark.reviewBody, reviewBodies),
   });
   yield* Ref.set(watermarkRef, advanced);
   yield* persistCommentState(context, pullRequestNumber, advanced);
@@ -927,7 +1334,7 @@ export const openYeetMonitorCommentStream = Effect.fn("YeetMonitor.openCommentSt
   const initialCursor = YeetMonitorCommentCursor.make({ createdAt: startedAt, id: 0 });
   const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
   const watermark = O.getOrElse(persisted, () =>
-    YeetMonitorCommentWatermark.make({ issue: initialCursor, review: initialCursor })
+    YeetMonitorCommentWatermark.make({ issue: initialCursor, review: initialCursor, reviewBody: initialCursor })
   );
   const watermarkRef = yield* Ref.make(watermark);
   if (O.isNone(persisted)) {
@@ -999,11 +1406,7 @@ export const runYeetPullRequestCommentMonitor = Effect.fn("Yeet.runPullRequestCo
   // resumes: the collections advance independently, so quoting one of them
   // would understate how far back the other still reaches.
   const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
-  yield* Console.log(
-    renderYeetMonitorCommentStreamStart(
-      O.map(persisted, (watermark) => Order.min(commentCursorOrder)(watermark.issue, watermark.review).createdAt)
-    )
-  );
+  yield* Console.log(renderYeetMonitorCommentStreamStart(O.map(persisted, earliestWatermarkAt)));
   const watermarkRef = yield* openYeetMonitorCommentStream(context, pullRequestNumber);
   const failuresRef = yield* Ref.make(0);
   return yield* Effect.forever(
@@ -1011,4 +1414,147 @@ export const runYeetPullRequestCommentMonitor = Effect.fn("Yeet.runPullRequestCo
       Effect.andThen(Effect.sleep(monitorPollInterval))
     )
   );
+});
+
+/**
+ * Report how much of the comment stream one replay is about to print.
+ *
+ * **Example** (Announce two missed comments)
+ *
+ * ```ts
+ * import { renderYeetMonitorCommentReplay } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(renderYeetMonitorCommentReplay(2, "2026-09-22T12:00:00.000Z"))
+ * ```
+ *
+ * @param count - How many rows the replay found past the watermark.
+ * @param since - The watermark instant the replay read from.
+ * @returns The one-line replay header.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetMonitorCommentReplay: {
+  (count: number, since: string): string;
+  (since: string): (count: number) => string;
+} = dual(2, (count: number, since: string): string =>
+  count === 0
+    ? `[yeet] comment replay: nothing new since ${since}`
+    : `[yeet] comment replay: ${count} comment(s) since ${since}`
+);
+
+/**
+ * Report that this branch had no saved position, so the replay starts here.
+ *
+ * **Details**
+ *
+ * The honest first-open line. There is nothing to replay because nothing was
+ * ever recorded, and saying so — with the instant the new watermark starts at
+ * — is what tells the operator that the *next* read is the one that resumes.
+ *
+ * **Example** (Announce a first open)
+ *
+ * ```ts
+ * import { renderYeetMonitorCommentReplayStart } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(renderYeetMonitorCommentReplayStart(1184, "2026-09-22T12:00:00.000Z"))
+ * ```
+ *
+ * @param pullRequestNumber - The pull request that had no recorded position.
+ * @param startedAt - The instant the new watermark starts from.
+ * @returns The one-line first-open notice.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetMonitorCommentReplayStart: {
+  (pullRequestNumber: number, startedAt: string): string;
+  (startedAt: string): (pullRequestNumber: number) => string;
+} = dual(
+  2,
+  (pullRequestNumber: number, startedAt: string): string =>
+    `[yeet] comment replay: no watermark for #${pullRequestNumber}; starting at ${startedAt}`
+);
+
+/**
+ * Report that the replay could not read GitHub, without failing the command.
+ *
+ * **Example** (Render the degraded replay notice)
+ *
+ * ```ts
+ * import { renderYeetMonitorCommentReplayFailure } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(renderYeetMonitorCommentReplayFailure("gh: API rate limit exceeded"))
+ * ```
+ *
+ * @param reason - Why the read failed, in gh's own words.
+ * @returns The operator warning naming the consequence.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetMonitorCommentReplayFailure = (reason: string): string =>
+  `[yeet] comment replay unavailable: ${reason} The saved position is unchanged, so nothing was skipped.`;
+
+/**
+ * Print every comment posted since this branch's saved position, once.
+ *
+ * **When to use**
+ *
+ * At the head of a read-first surface — `yeet status --remote`, `yeet closeout`,
+ * the first cycle of the merge loop — where the operator is about to be told
+ * whether the pull request is mergeable and should first see what was said
+ * while nothing was attached.
+ *
+ * **Details**
+ *
+ * One pass, not a loop: collect past the watermark, print each row, then
+ * acknowledge, in that order, so an interrupted print repeats rather than
+ * disappears. A branch with no saved position replays nothing — there is no
+ * "since" to read from — and records its starting position instead, which is
+ * what makes the *next* open a resumption.
+ *
+ * **Gotchas**
+ *
+ * This effect cannot fail. A closeout that exits non-zero because GitHub was
+ * briefly unreachable while it tried to print old comments would be reporting
+ * the wrong thing entirely, so a failed read degrades to one warning line and
+ * leaves the cursor exactly where it was.
+ *
+ * **Example** (Build the replay effect)
+ *
+ * ```ts
+ * import { replayYeetMonitorComments } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(Effect.succeed(replayYeetMonitorComments))) // true
+ * ```
+ *
+ * @param context - Repo run context carrying the repo root and artifact directory.
+ * @param pullRequestNumber - The pull request whose stream is replayed.
+ * @returns Nothing once the missed rows have been printed and acknowledged.
+ * @category processes
+ * @since 0.0.0
+ */
+export const replayYeetMonitorComments = Effect.fn("Yeet.replayMonitorComments")(function* (
+  context: RepoRunContext,
+  pullRequestNumber: number
+): Effect.fn.Return<
+  void,
+  never,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> {
+  const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
+  const watermarkRef = yield* openYeetMonitorCommentStream(context, pullRequestNumber);
+  const since = earliestWatermarkAt(yield* Ref.get(watermarkRef));
+  if (O.isNone(persisted)) {
+    return yield* Console.log(renderYeetMonitorCommentReplayStart(pullRequestNumber, since));
+  }
+  const collected = yield* Effect.result(collectNewYeetMonitorComments(context, pullRequestNumber, watermarkRef));
+  if (Result.isFailure(collected)) {
+    return yield* Console.error(renderYeetMonitorCommentReplayFailure(collected.failure.message));
+  }
+  yield* Console.log(renderYeetMonitorCommentReplay(A.length(collected.success), since));
+  yield* Effect.forEach(collected.success, (comment) => Console.log(renderYeetMonitorComment(comment)), {
+    concurrency: 1,
+    discard: true,
+  });
+  yield* acknowledgeYeetMonitorComments(context, pullRequestNumber, watermarkRef, collected.success);
 });
