@@ -21,7 +21,7 @@ protocol its host serves (`rg -n '"@beep/mcp-kit' --glob package.json`):
 | `packages/drivers/gov-legal-mcp` | `SourceAuth`, `composeGatedLayers`, `annotateFourHints`, `sanitizedToolkit` | `v2025_06_18` (flips in PR 3) |
 | `packages/law-practice/server` (+ `apps/practice-kg-mcp`) | `composeGatedLayers`, `SourceAuthRegistration`, `sanitizedToolkit`, `CurrentMcpCaller` in tool handlers | `v2025_06_18` (flips in PR 3) |
 | `packages/law-practice/use-cases` | `annotateFourHints` on the practice-kg toolkit | n/a (toolkit definitions) |
-| `packages/drivers/nlp-mcp` | `sanitizedToolkit`, `annotateFourHints` | `v2025_06_18` (held behind the D-cli-contract capture, PR 4) |
+| `packages/drivers/nlp-mcp` | `sanitizedToolkit`, `annotateFourHints` | `v2025_06_18` (held: the 2026-09-22 capture in the goal's `history/nlp-mcp-capture.md` shows Claude Code defaults stdio to `initialize`; re-entry gate in the exploration MAP) |
 | `packages/ontology/use-cases` | `annotateFourHints` on the ontology toolkit | n/a (toolkit definitions) |
 | `packages/ontology/server` | `TierGate`, `dispatchWithTierGate`, `CurrentMcpCaller` in tool handlers | served by the desktop sidecar |
 | `packages/epistemic/server` | implements `TierGateShape` (`GovernedTierGate`), reads `CurrentMcpCaller` and, after the sibling goal, the dispatch anchor | served by the desktop sidecar |
