@@ -62,3 +62,33 @@ no secrets, home paths as `~`, minimal error text.
 - Prevented by: keying advisory exceptions by symbol, not line. Resolution taken instead: model
   the two inline option objects as `S.Class` (`ToolHandlerPayload`, `McpHttpProtocolOptions`),
   which removes the advisories at the source.
+
+### `lint schema-first` peaks near 17.5 GiB and is the first earlyoom casualty under lane concurrency
+
+- Doing: the detached full proof of the PR 1 lint fix (`yeet verify --detach`) while two sibling
+  lanes and a local ComfyUI process (~23 GiB resident) were also running.
+- Evidence: `//:lint:schema-first: error: script "beep" was terminated by signal SIGKILL` (exit
+  137) in the proof log; the user journal shows earlyoom sending SIGTERM then SIGKILL to
+  `bun run ... lint schema-first` at `VmRSS 17564 MiB`. A standalone rerun died the same way
+  while the other lanes were still active. The hosted Repo Sanity lane on the same head was green.
+- Prevented by: bounding schema-first's resident set (shard the 143-package scan, or stream
+  per-package results instead of holding every program in memory) or having Yeet admission count
+  the known peak of `lint:schema-first` against `MemAvailable` before starting a full proof, the
+  way it already gates on tokens. Workaround taken: ack the P0 as environment-only and re-arm the
+  proof once memory recovered.
+
+### Three spot-reclaimed heavy runners in fifty minutes read as "needs code fix"
+
+**Doing:** babysitting PR #1192 (head `a783636379`) to merge-ready after tier 1 went green and `ready-for-heavy` was applied.
+
+**Evidence:** `Heavy / Check` and `Heavy / Coverage Regression` both concluded `failure` with the step "Run verification lane" still `in_progress`, no failed step, and a `BlobNotFound` job log. The check-run annotation on all three jobs (the two originals and the first Check rerun) was "The self-hosted runner lost communication with the server". `aws ec2 describe-instances` on the instance ids embedded in the runner names showed `InstanceLifecycle=spot`, `terminated`, `StateTransitionReason: Service initiated` five to seven minutes after launch for every one (`r7a.2xlarge` ×2, `r7i.2xlarge` ×1, 15:06Z–15:52Z). The until-ready monitor reported both lanes as "red with no known flake fingerprint; needs code fix" and, after one rerun of Check died the same way, "its one rerun is spent". GitHub also refuses `gh run rerun --job` for a second job while the first rerun is in flight, so the two reruns had to be serialized by hand.
+
+**Prevented by:** teaching the monitor's flake classifier the `lost communication` annotation plus the spot `Service initiated` proof (it already knows the TTL "shutdown signal" class), letting that class spend a rerun per occurrence instead of once per job, and having it serialize reruns on the same run instead of surfacing "cannot be rerun".
+
+### The local coverage proof lands after fifty minutes and its first red is the branch floor of a rewritten file
+
+**Doing:** third detached full proof for PR #1192 (the first two were earlyoom casualties); it went green through every lane and then failed `quality:coverage` at minute 53.
+
+**Evidence:** `[coverage-ratchet]` reported two classes at once. (1) Rows this branch minted with a local `--write-baseline` sit above what the lane measures (`@beep/mcp-kit` totals / `client.ts` / `Conformance.test-kit.ts` functions rows). (2) `SanitizedSpan.ts` branches fell from the base floor 89.65 % (3 of 29 uncovered) to 69.73 % (23 of 76) because the sanitized-toolkit rewrite added the whole tool-failure classification path with no test exercising a failing tool; the package branch total fell from 93.1 % to 80 % the same way. The same run also listed `@beep/repo-cli` rows (`LaneTimings.ts`, `Cache.runtime.ts`, `TsconfigSync.schemas.ts`) that are main's own red, being fixed in PR #1201. A scoped `vitest run --coverage --coverage.reporter=lcov` from the package directory reproduced every mcp-kit number to two decimals in about forty seconds, which is the loop that should have run before the first push.
+
+**Prevented by:** a package-scoped coverage step in `package-verify` (or in the publish preflight) for every touched package, so a branch-floor drop surfaces in under a minute instead of at minute 53 of a full proof; and a ratchet message that separates inherited rows (already red on `origin/main`) from introduced ones instead of listing them in one block.

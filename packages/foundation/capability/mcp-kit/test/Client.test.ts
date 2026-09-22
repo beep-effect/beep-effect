@@ -9,6 +9,7 @@ import {
   connect,
   decodeHttpMessages,
   JsonRpcMessage,
+  JsonRpcMessageFromLine,
   layerProtocolHttp,
   layerProtocolNdjson,
   MCP_METHOD_HEADER,
@@ -35,9 +36,19 @@ import { assert, describe, expect, it, layer } from "@effect/vitest";
 import { Deferred, Effect, Fiber, Layer, Queue, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { RpcClient } from "effect/unstable/rpc";
 import { fixtureHost } from "./fixtures/FixtureHost.ts";
+
+// One JSON-RPC frame is exactly one wire line, so the kit's own codec builds
+// and reads the stub host's traffic instead of hand-rolled JSON.
+const encodeFrame = S.encodeSync(JsonRpcMessageFromLine);
+const decodeFrame = S.decodeSync(JsonRpcMessageFromLine);
+// A typeless `Blob` body is how a response gets no `content-type` header at
+// all: a string body would have one inferred.
+const encodeFrameBody = (message: JsonRpcMessage): Blob => new Blob([encodeFrame(message)]);
 
 describe("wire helpers", () => {
   it("builds request metadata from the client options", () => {
@@ -84,6 +95,10 @@ describe("wire helpers", () => {
       [MCP_PROTOCOL_VERSION_HEADER]: "2026-07-28",
       [MCP_METHOD_HEADER]: "tools/list",
     });
+    // A response frame has no method to mirror, so only the version travels.
+    expect(routingHeaders(JsonRpcMessage.make({ id: 1, result: {} }))).toEqual({
+      [MCP_PROTOCOL_VERSION_HEADER]: "2026-07-28",
+    });
   });
 
   it("splits server-sent events into data payloads", () => {
@@ -107,6 +122,16 @@ describe("wire helpers", () => {
       );
       const empty = yield* decodeHttpMessages("", "application/json");
       assert.strictEqual(empty.length, 0);
+      // A JSON body may be a batch: the array is the message list itself, not
+      // a single message to be wrapped.
+      const batch = yield* decodeHttpMessages(
+        '[{"jsonrpc":"2.0","id":1,"result":{}},{"jsonrpc":"2.0","id":2,"result":{}}]',
+        "application/json"
+      );
+      assert.deepStrictEqual(
+        A.map(batch, (message) => message.id),
+        [1, 2]
+      );
     })
   );
 });
@@ -164,10 +189,45 @@ describe("layerProtocolHttp", () => {
     })
   );
 
+  it.effect("decodes a body with no content-type header and fails the call on a JSON-RPC error", () =>
+    Effect.gen(function* () {
+      // No `content-type` at all: the decoder must fall back to JSON rather
+      // than dying on a missing header, and a host error frame must reach the
+      // caller as a failure instead of an empty success.
+      const erroringClient = HttpClient.make((request) => {
+        const sent =
+          request.body._tag === "Uint8Array"
+            ? decodeFrame(new TextDecoder().decode(request.body.body))
+            : JsonRpcMessage.make({});
+        const id = sent.id ?? 1;
+        const body =
+          sent.method === "server/discover"
+            ? JsonRpcMessage.make({ id, result: { supportedVersions: ["2026-07-28"], capabilities: {} } })
+            : JsonRpcMessage.make({ id, error: { code: -32603, message: "host said no" } });
+        return Effect.succeed(
+          HttpClientResponse.fromWeb(request, new Response(encodeFrameBody(body), { status: 200 }))
+        );
+      });
+      const protocol = yield* Layer.build(
+        layerProtocolHttp(McpHttpProtocolOptions.make({ url: "http://stub/mcp" })).pipe(
+          Layer.provide(Layer.succeed(HttpClient.HttpClient, erroringClient))
+        )
+      );
+      const { rpc } = yield* connect.pipe(Effect.provideContext(protocol));
+      const error = yield* Effect.flip(rpc["tools/list"]({}));
+      // The host's JSON-RPC error object is the failure: it must not be
+      // swallowed into an empty success because the body carried no type.
+      assert.strictEqual(P.hasProperty(error, "code") ? error.code : undefined, -32603);
+      assert.strictEqual(P.hasProperty(error, "message") ? error.message : undefined, "host said no");
+    })
+  );
+
   layer(layerConformanceHttp(fixtureHost))("against the fixture host", (it) => {
     it.effect("discovers, calls a tool, and reads structured content", () =>
       Effect.gen(function* () {
-        const { discovery, rpc } = yield* connectHttp();
+        // Explicit client options exercise the identity the connection
+        // presents, rather than the runner's default.
+        const { discovery, rpc } = yield* connectHttp(McpClientOptions.make({}));
         assert.strictEqual(discovery.instructions, fixtureHost.instructions);
         const result = yield* rpc["tools/call"]({ name: "echo", arguments: { text: "round-trip" } });
         assert.deepStrictEqual(result.structuredContent, { echoed: "round-trip" });
@@ -195,6 +255,37 @@ describe("layerProtocolNdjson", () => {
         assert.deepStrictEqual(result.structuredContent, { echoed: "stdio" });
       })
     )
+  );
+
+  it.effect("ignores blank, undecodable and unmatched lines while still answering the pending request", () =>
+    Effect.gen(function* () {
+      const written = yield* Queue.unbounded<string>();
+      const incoming = yield* Queue.unbounded<string>();
+      const protocol = yield* Layer.build(
+        layerProtocolNdjson({
+          write: (line) => Effect.asVoid(Queue.offer(written, line)),
+          lines: Stream.fromQueue(incoming),
+        })
+      );
+      const rpc = yield* RpcClient.make(McpClientRpcs).pipe(Effect.provideContext(protocol));
+      const fiber = yield* Effect.forkScoped(rpc["tools/list"]({}));
+      const request = yield* Queue.take(written);
+      const id = decodeFrame(request).id ?? 1;
+
+      // A stdio host interleaves keep-alive blanks, log noise and responses
+      // to requests this client never sent; none of them may settle or
+      // corrupt the waiter for the request that is actually pending.
+      yield* Queue.offerAll(incoming, [
+        "   ",
+        "this is not a json-rpc line",
+        encodeFrame(JsonRpcMessage.make({ method: "notifications/progress", params: {} })),
+        encodeFrame(JsonRpcMessage.make({ id: "unknown-request", result: {} })),
+        encodeFrame(JsonRpcMessage.make({ id, result: { tools: [] } })),
+      ]);
+
+      const result = yield* Fiber.join(fiber);
+      assert.deepStrictEqual(result.tools, []);
+    })
   );
 
   it.effect("releases the pending waiter and sends notifications/cancelled when a request is interrupted", () =>
