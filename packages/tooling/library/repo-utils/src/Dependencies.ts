@@ -120,7 +120,7 @@ const uniqueSorted = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
  * **Example** (Collect workspace dependency names)
  *
  * ```ts
- * import { HashSet } from "effect"
+ * import { HashSet } from "effect/HashSet"
  * import { extractWorkspaceDependencies, workspaceDependencyNames } from "@beep/repo-utils/Dependencies"
  * import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson"
  *
@@ -158,7 +158,8 @@ export const workspaceDependencyNames = (workspaceDeps: WorkspaceDeps): Readonly
  * **Example** (Sort a two-package workspace)
  *
  * ```ts
- * import { Effect, HashSet } from "effect"
+ * import { Effect } from "effect/Effect"
+ * import { HashSet } from "effect/HashSet"
  * import { extractWorkspaceDependencies, sortWorkspacePackages } from "@beep/repo-utils/Dependencies"
  * import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson"
  *
