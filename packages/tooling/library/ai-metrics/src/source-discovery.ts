@@ -335,7 +335,10 @@ const readAttributionContent = (
 
   return fs.stream(sourcePath, { chunkSize: 64 * 1024 }).pipe(
     Stream.decodeText(),
-    Stream.scan("", (content, chunk) => `${content}${chunk}`),
+    Stream.scan(
+      () => "",
+      (content, chunk) => `${content}${chunk}`
+    ),
     Stream.takeUntil(contentHasCodexSessionMetaLine),
     Stream.runLast,
     Effect.map(O.getOrElse(() => ""))

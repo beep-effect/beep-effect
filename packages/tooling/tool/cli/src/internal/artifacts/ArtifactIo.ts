@@ -59,7 +59,7 @@ const stringifyJsonPretty = SchemaGetter.stringifyJson({ space: 2 });
  * @since 0.0.0
  */
 export const formatJsonc = Effect.fn("ArtifactIo.formatJsonc")(function* (value: unknown) {
-  const rendered = yield* stringifyJsonPretty.run(O.some(value), {});
+  const rendered = yield* SchemaGetter.run(stringifyJsonPretty, O.some(value), {});
   return `${O.getOrElse(rendered, thunkEmptyStr)}\n`;
 });
 

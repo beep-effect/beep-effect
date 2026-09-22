@@ -24,6 +24,7 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBudgetDuration = S.decodeEffect(BudgetDuration);
+const isBudgetDuration = S.is(BudgetDuration);
 const decodeFailureReceipt = S.decodeEffect(FailureReceipt);
 const decodeRecoveryPolicyResult = S.decodeResult(RecoveryPolicy);
 const decodeUnknownFailureReceiptPredicate = S.decodeUnknownEffect(FailureReceiptPredicate);
@@ -217,6 +218,18 @@ describe("@beep/skill-contract Recovery", () => {
       expect(cancelled.attempts).toEqual([]);
     })
   );
+
+  it("accepts only budget durations that the millisecond encoding carries exactly", () => {
+    expect(isBudgetDuration(Duration.zero)).toBe(true);
+    expect(isBudgetDuration(Duration.nanos(5_000_000n))).toBe(true);
+    expect(isBudgetDuration(Duration.millis(Number.MAX_SAFE_INTEGER))).toBe(true);
+    expect(isBudgetDuration(Duration.nanos(1_500n))).toBe(false);
+    expect(isBudgetDuration(Duration.nanos(10n ** 400n))).toBe(false);
+    expect(isBudgetDuration(Duration.millis(Number.MAX_SAFE_INTEGER + 1))).toBe(false);
+    expect(isBudgetDuration(Duration.millis(1.5))).toBe(false);
+    expect(isBudgetDuration(Duration.millis(-1))).toBe(false);
+    expect(isBudgetDuration(Duration.infinity)).toBe(false);
+  });
 
   it("models explicit no-recovery and bounded policies without an engine", () => {
     const none = NoRecoveryPolicy.make({});
