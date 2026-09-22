@@ -713,3 +713,60 @@ paragraph now says the legacy stores are retired, not migrated. Rejected: deleti
 C4 (it drops a working reuse path) and a shadow comparison against store 2 (its whole-tree identity
 is not the per-lane key that C4 must prove).
 
+
+## 2026-09-21 — C4 shadow mode, round 19 (four rulings, proposed by the orchestrator, ratified by merge of the C4 shadow PR; numbered after C4a's 59–60)
+
+Context: PLAN C4 is "shadow mode with a disagreement report", then enforcement once ruling 7's bar
+is met. A read of main at `3b8a17d850` found the ledger (C2) with no production consumer, the
+reuse key typed with the top-level `CiLaneId` vocabulary, and the shadow row carrying only an
+attempt id. The inner-lane reports the pre-push and merged-preview wrappers write (A5) carry
+wave-qualified lane ids (`quality:coverage`, `cheap-gates:tsgo-rules`, `repo-sanity:sherif`),
+the Turbo input digest when the lane declared one, the command line, duration and outcome; the
+attempt-started row carries attempt and run ids, branch, head, tier, stage and env profile. That
+is every field the reuse key and the enforcement bar need, all in hand in one place: the verdict
+writer.
+
+**Ruling 61 (C4-1) — the reuse key's lane id is the wave-qualified GitHub-check lane id.**
+`ProofInputDigest.laneId` widens from `CiLaneId` to a non-empty string, because the lanes that
+actually run inside the local waves are `quality:*`, `cheap-gates:*`, `repo-sanity:*` and
+`fallow:*` ids, one per command (ruling 28), and the top-level `CiLaneId` set names neither the
+wave nor the sub-lanes. `laneClass` is `cli-runnable` for every locally journaled lane by
+construction. Rejected: mapping inner ids back onto `CiLaneId` (loses the wave and cannot name
+`cheap-gates:effect-imports`) and adding the wave as a separate key field (the id already carries
+it; two fields to keep honest).
+
+**Ruling 62 (C4-2) — shadow rows carry the sample facts the enforcement bar counts.**
+`ProofLedgerShadowRow` gains `laneId`, `branch`, `stage`, `envProfile` and `durationMs`, so
+ruling 7's "at least 200 attempts across at least 10 distinct branches with zero disagreements"
+is computable from the ledger alone, per stage and profile, and the would-have-saved time is the
+sum of hit durations. No production writer existed before this PR, so the fields are required
+with no compatibility shim. Rejected: joining attempt ids to the branch-scoped attempt journals
+(a scan over every branch's journal for a per-checkout report).
+
+**Ruling 63 (C4-3) — shadow wiring lives in the verdict writer, is always on, and never fails an
+attempt.** After the durable inner-lane reports are read, every lane that ran to `passed` or
+`failed` with a command line is shadowed in report order: derive the key (lane id, SHA-256 of the
+command line, attempt env profile, the report's input digest or the `undeclared` sentinel with
+`inputSource: "undeclared"`, epoch digest collected once per attempt), look the key up, append
+the shadow row next to the observed outcome, then append the lane's own fact (passed or failed,
+30-day expiry, provenance from the attempt row). Lookup precedes record so a lane never hits the
+fact it is writing. Reused and skipped lanes carry no evidence and are not recorded. Both the
+pre-push and merged-preview stages record, which is the evidence base for the second pair
+(ruling 2); their env profiles differ, so shadow cannot cross them. A ledger fault logs
+`proof shadow skipped` and the verdict proceeds. The changed-package tripwire stays unwired in
+shadow (`constFalse`); C5 wires it with its must-fail fixture, and until then a tripwire-worthy
+lane whose digest missed the change would surface as a disagreement, which is the signal wanted.
+Rejected: wiring inside `Quality/Tasks.ts` (it has neither attempt identity nor the epoch, and
+ruling 60 keeps the ledger away from the legacy store that lives there); an env-var mode switch
+(shadow is observation; there is nothing to turn off); shadowing the pre-push stage only (drops
+the second pair's evidence for free).
+
+**Ruling 64 (C4-4) — the disagreement report is `bun run beep yeet proof-report`.** It reads the
+checkout ledger and prints shadow rows, distinct attempts and branches, would-reuse hits and the
+passed-lane minutes they represent, misses by reason, each disagreement (lane, branch, stage,
+attempt, time), fact and expiry counts, malformed rows, and the enforcement verdict against the
+ratified bar (`attempts 12/200, branches 2/10, disagreements 0/0`). `--json` prints the same as
+`proof-shadow-report/v1`. Enforcement is a later PR gated on this report reading `ready`; that PR
+also deletes `LaneProofReuse` and `lane-proofs.json` (ruling 60). Rejected: a section in `yeet
+status` (status is per-branch; the sample is per-checkout) and waiting for A3's economics
+surface (A3 prints the report at closeout; the bar must be readable every day before that).

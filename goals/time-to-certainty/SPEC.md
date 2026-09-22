@@ -147,7 +147,8 @@ Schema first, then the service contract, then a shadow ledger, then enforcement.
   hash too; migration order follows the economics report's minutes-per-lane ranking. A lane
   without a declared input set is not reusable and says so in the report (rulings 1, 4, 5).
 - **C4 Shadow, then enforce.** Shadow mode records what would have been reused and compares it
-  with what actually ran. The first enforced pair is attempt-to-attempt within pre-push (a review
+  with what actually ran (landed 2026-09-21 in the verdict writer for both local stages; the
+  sample and the bar verdict print from `bun run beep yeet proof-report`, rulings 61–64). The first enforced pair is attempt-to-attempt within pre-push (a review
   fix reruns only the lanes whose inputs changed), gated on at least 200 attempts across at least
   10 branches with zero disagreements and every must-fail fixture green (rulings 2, 7). The second
   pair, pre-push to merged preview, follows once env profiles are proven in the key. Hosted reuse

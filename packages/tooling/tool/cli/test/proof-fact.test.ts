@@ -79,8 +79,13 @@ const factRow = ProofLedgerFactRow.make({ schemaVersion: PROOF_FACT_SCHEMA_VERSI
 const shadowRow = ProofLedgerShadowRow.make({
   schemaVersion: PROOF_FACT_SCHEMA_VERSION,
   attemptId: "attempt-2",
+  laneId: "quality:coverage",
+  branch: "feat/example",
+  stage: "pre-push",
+  envProfile: "local",
   decision: hit,
   observed: "failed",
+  durationMs: 1_200,
   recordedAt: "2026-09-03T12:05:00.000Z",
 });
 
