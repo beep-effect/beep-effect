@@ -19,6 +19,15 @@ Mutable execution plan. Contract: [`SPEC.md`](./SPEC.md); binding decisions:
 
 ## Current lane
 
+The [2026-09-21 acknowledgement boundary correction](./data/ack-request-boundary-correction-2026-09-21.json)
+reclassifies the raw acknowledgement request as D1. The application already
+receives the existing tagged resolution; conflicting flags produce supported
+parser diagnostics. Current inventory is **754 records: 144 qualified and
+610 disqualified**, with **112 Tier 1 /32 Tier 2**, 21 historical reviewed,
+123 designed, and zero applied. The prior row and design are archived. No
+independent-review or implementation credit follows from this correction.
+
+
 **Resumed at Benjamin's instruction on 2026-09-14, after save PR #1069 merged.**
 The [handoff](./PAUSE.md) preserves the unanswered decisions and resume order.
 The new continuation branch starts from main
@@ -446,7 +455,7 @@ foundation UI/capability, Tier 1D application/ontology UI, Tier 1E internal tool
 then 32 Tier 2 singleton PRs. Re-resolve and merge `origin/main` forward before every
 review and publication operation; never rebase or merge a PR as the agent.
 
-The current 113-record Tier 1 landing map is:
+The current 112-record Tier 1 landing map is:
 
 - **1A — backend and driver state (15):**
   `scan-state-json-lexer-flags`, `duckdb-transaction-began-closed`,
@@ -490,10 +499,10 @@ The current 113-record Tier 1 landing map is:
   `document-violation-flags`, `r2-domains-ontology-graph-worker-requeue-latches`,
   `composer-shell-edit-content`, `r2-apps-hero-clip-playback`,
   `r26-apps-sidecar-ipc-ready-latch`.
-- **1E — internal tooling domains (49):**
+- **1E — internal tooling domains (48):**
   `package-verify-step-outcome`, `create-package-template-type-flags`,
   `r2-tooling-bin-main-fast-paths`, `corpus-legacy-word-terminal`,
-  `yeet-ack-resolution-flags`, `worktree-removal-mode`,
+  `worktree-removal-mode`,
   `r3-tooling-docker-tag-kind-flags`, `r3-tooling-ecosystem-polarity-specifier-call`,
   `r2-tooling-packet-transition-stream-trace`,
   `r3-tooling-registration-deletion-note-phase`,

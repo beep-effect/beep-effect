@@ -56,6 +56,47 @@ and compatibility laws remain binding.
 
 ## Latest Evidence
 
+The [resolved test-selection refresh](./data/test-selection-design-refresh-2026-09-21.json)
+confirms the unchanged 4/3 normalized output, runtime ordering and cited
+compatibility fixtures at `7536a751b4`. Current known refresh progress is
+**three P2 refreshes complete, one qualification withdrawn, 47 pending** from
+the 51-case list. This does not replace a current-corpus census or independent
+review. Inventory remains 754 records, including 144 qualified cases.
+
+The [coverage-operation refresh](./data/coverage-design-refresh-2026-09-21.json)
+rebinds the unchanged nine-state model, execution paths, dependencies and cited
+fixtures to `7536a751b4`. It preserves the newer shared golden-regeneration
+argument policy. Together with VersionSync and the acknowledgement withdrawal,
+that was the second completed P2 refresh from the known 51-case list.
+The latest remaining count is recorded above. No new census, independent
+review, or implementation credit is claimed.
+
+The [2026-09-21 acknowledgement boundary correction](./data/ack-request-boundary-correction-2026-09-21.json)
+reclassifies the raw acknowledgement request as D1. The application already
+receives the existing tagged resolution; conflicting flags produce supported
+parser diagnostics. Current inventory is **754 records: 144 qualified and
+610 disqualified**, with **112 Tier 1 /32 Tier 2**, 21 historical reviewed,
+123 designed, and zero applied. The prior row and design are archived. No
+independent-review or implementation credit follows from this correction.
+
+
+The [VersionSync selection design refresh](./data/version-sync-design-refresh-2026-09-21.json)
+now covers the six-category contract and current direct consumers, resolver
+behavior, report-driven updates, export routes, and test plan at `7536a751b4`.
+The 4/3 qualification and designed status remain unchanged; independent review
+and implementation remain pending. This was the first completed P2 owner refresh from the known 51-case list.
+The latest remaining count is recorded above; the list is not a new census.
+
+The [2026-09-21 bounded corrections](./data/bounded-design-corrections-2026-09-21.json)
+preserve command text in two lane-proof designs, current scheduler cleanup and
+journal contracts in two scheduler designs, and the sixth VersionSync category
+in its design and inventory citation. Exact prior files are archived. Inventory
+and design coverage validation pass at 754 records and 145 qualified cases.
+These are five partial design corrections, with no status changes, completed
+full refreshes, independent-review credit, or dry-round credit. The latest full
+Yeet proof failed in the unrelated UI coverage prebuild; see the opportunities
+ledger. Publication readiness remains unproved.
+
 The [resumption receipt](./data/resume-2026-09-14-source-forward.json) binds
 current main, the unchanged saved packet, the 3,114-file corpus plan and the
 465-file source-impact list. The [bounded audit](./data/resume-2026-09-14-bounded-audit.json)
@@ -82,9 +123,9 @@ merge; the final review-thread inspection found no threads. The recorded two
 Vercel failures are provider rate limits. The monitor is terminal and the merged
 scanner configuration is now available to the packet's eventual publication.
 
-The canonical inventory contains **754 records: 145 qualified and 609 disqualified**
-(D1 391 / D2 218). The qualified set is **113 Tier 1 and 32 Tier 2**; statuses are 21
-historically `reviewed`, 124 `designed`, and 0 `applied`. All await replacement
+The canonical inventory contains **754 records: 144 qualified and 610 disqualified**
+(D1 392 / D2 218). The qualified set is **112 Tier 1 and 32 Tier 2**; statuses are 21
+historically `reviewed`, 123 `designed`, and 0 `applied`. All await replacement
 independent review. Four additional owners remain in an [explicit unresolved hold](./data/r31-law-owner-holds.json).
 
 Before that merge, the branch included main `e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`

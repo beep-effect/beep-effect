@@ -1392,3 +1392,29 @@ the ratchet reports zero introduced and three resolved findings. Migrating
 touched inherited findings before refreshing a repository-wide inventory would
 have avoided that unnecessary scope expansion.
 
+## Full verification blocked in coverage prebuild, 2026-09-21
+
+The full Yeet verification at `6db45e9d9182bc5d8f0fbae07b6fbe7727179559`
+failed in `quality:coverage` before coverage shards ran. The prebuild reported
+`@beep/ui:build: error TS2589: Type instantiation is excessively deep and possibly infinite.`
+The pre-push unit-test lane passed. The branch has no production-package,
+lockfile, or root TypeScript configuration delta against its main base; its
+only package change is a CLI monitor test. A separate exact-main build was not
+run, so this establishes unrelated branch scope rather than a reproduced main
+failure. The local inbox row was acknowledged as outside the campaign's repair
+scope under the SPEC stop condition. Full verification remains failed.
+
+A current all-package prebuild result before the long proof would have exposed
+this blocker sooner. Preserve the failed proof and attribute the UI build
+separately; do not weaken coverage or claim that its announced shards ran.
+
+## Raw acknowledgement request mistaken for application state, 2026-09-21
+
+The retained `yeet-ack-resolution-flags` design claimed application Boolean
+reads that current `InboxPorcelain.ts:567–578` does not perform. The runner
+parses once and passes `YeetAckResolution` to the existing application seam.
+A bounded eight-combination parser probe confirms documented conflicting-request
+errors. The row is now D1 and its prior design is archived. Applying the packet's
+request-boundary adjudication to each candidate before designing would have
+prevented this redundant migration. The new observed request switch also shows
+why current complete-owner inspection matters.

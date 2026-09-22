@@ -1,23 +1,5 @@
 # r27-cli-commands-l-q-github-check-lane-proof-reuse
 
-## Reused-run payload correction, 2026-09-21
-
-A bounded source audit at `6db45e9d9182bc5d8f0fbae07b6fbe7727179559`
-found that the current reused-run constructor at `Tasks.ts:1983–2012` also
-supplies `commandText: O.some(commandText(lane.step.command, lane.step.args))`.
-Preserve that field when constructing the migrated result and when encoding its
-`QualityTaskLaneRun`. Keep the actual lane command and arguments. The report
-schema declares `commandText: OptionalLaneRunString` at
-`Quality.schemas.ts:1304`. Yeet reads this field as a repair-command fallback
-at `IssueParser.ts:370` and `Verdict.ts:743`.
-
-Add an assertion that active reuse retains the command text in the returned
-lane report and journal. Keep the existing absent timing and exit-code fields
-and `inputDigest: None`. This correction changes no qualification, target
-shape, or status. The rest of the design retains its historical source binding
-until its remaining consumers and policy references are audited. This is P2
-evidence, with no independent-review or implementation credit.
-
 **Current source-forward binding (P2 only)**
 
 Revalidated against HEAD `4509872869eb87071250c67717769260f850bcf5` and merged main
@@ -140,7 +122,7 @@ compatibility object with the two flags.
 | Owner / consumer | Atomic migration and preservation |
 | --- | --- |
 | `Quality.schemas.ts`, existing schema import in `Tasks.ts` | Define/import the one annotated kit and derived type; document its intentionally exported schema surface. Existing required `GithubCheckLaneSpec.tier` at1108–1118 and tier kit at896–909 stay exact. |
-| `Tasks.ts:1716–1737` | Replace the local pair and hit/reuse readers. Reused still returns the same `GithubCheckLaneOutcome`: original lane/session, `Some(QualityTaskLaneRun.make(...))`, status reused, inputDigest None, commandText Some(actual lane command), empty failures, reused true, stopAfterRed false. |
+| `Tasks.ts:1716–1737` | Replace the local pair and hit/reuse readers. Reused still returns the same `GithubCheckLaneOutcome`: original lane/session, `Some(QualityTaskLaneRun.make(...))`, status reused, inputDigest None, empty failures, reused true, stopAfterRed false. |
 | `Tasks.ts:1740–1758` | Miss/shadow keep the current log, per-lane collector with concurrency1 and `ignoreQualityTaskLaneRun`, optional first run, full failures, reused false and precise-red stop predicate. No journal write moves into this concurrent lane body. |
 | `Tasks.ts:1656–1666,1760–1779` | Preserve observer default versus ignored observer; keep successful-only proof persistence, optional duration fallback0, complete session payload, and caught warning. Outcome flags are outside this cluster; the R30 GithubCheckLaneOutcome design owns their migration. Preserve all optional fields. |
 | `Tasks.ts:1794–1833` | The only runtime caller executes chunks concurrently, then folds outcomes in declaration order. Preserve `Math.max(1, concurrency)` chunking, serial chunks, active ID accumulation, serial journal append, failure order, stop accumulation and serial proof persistence. Already-started chunk members finish; precise fail-fast reds stop the next chunk. Stopped chunks append skipped records without preparing sessions. |
