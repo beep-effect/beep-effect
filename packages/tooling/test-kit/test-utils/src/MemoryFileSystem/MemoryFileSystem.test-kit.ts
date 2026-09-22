@@ -2150,29 +2150,26 @@ const collectDirectoryEntries = (
     index: 0,
   });
   const frames: Array<Frame> = [directoryFrame(directory, prefix)];
-  while (frames.length > 0) {
-    const frameOption = A.last(frames);
-    if (O.isNone(frameOption)) break;
-    const frame = frameOption.value;
-    if (frame.index >= frame.names.length) {
-      frames.pop();
-      continue;
-    }
-    const nameOption = A.get(frame.names, frame.index);
-    if (O.isNone(nameOption)) {
-      frames.pop();
-      continue;
-    }
-    const name = nameOption.value;
+  const visit = (frame: Frame, name: string): void => {
     frame.index += 1;
     const relativePath = frame.prefix.length === 0 ? name : `${frame.prefix}/${name}`;
     output.push(relativePath);
-    if (!recursive) continue;
+    if (!recursive) return;
     const childOption = O.filter(
       O.flatMap(findEntry(frame.directory, name), (inode) => findInode(state, inode)),
       isDirectoryInode
     );
     O.map(childOption, (child) => frames.push(directoryFrame(child, relativePath)));
+  };
+  while (true) {
+    const frameOption = A.last(frames);
+    if (O.isNone(frameOption)) break;
+    const nameOption = A.get(frameOption.value.names, frameOption.value.index);
+    if (O.isNone(nameOption)) {
+      frames.pop();
+      continue;
+    }
+    visit(frameOption.value, nameOption.value);
   }
   return output;
 };
@@ -2684,15 +2681,11 @@ const expandBraces = Effect.fnUntraced(function* (method: string, pattern: strin
   }
   let patterns = [pattern];
   while (true) {
-    const found = A.findFirstIndex(patterns, (pattern) => O.isSome(findBraceExpansion(pattern)));
+    const found = A.findFirst(patterns, (candidate, index) =>
+      O.map(findBraceExpansion(candidate), (expansion) => ({ current: candidate, expansion, index }))
+    );
     if (O.isNone(found)) return yield* Effect.succeed(patterns);
-    const index = found.value;
-    const currentOption = A.get(patterns, index);
-    if (O.isNone(currentOption)) return yield* Effect.succeed(patterns);
-    const current = currentOption.value;
-    const expansionOption = findBraceExpansion(current);
-    if (O.isNone(expansionOption)) return yield* Effect.succeed(patterns);
-    const expansion = expansionOption.value;
+    const { current, expansion, index } = found.value;
     if (patterns.length - 1 + expansion.alternatives.length > MAX_BRACE_EXPANSIONS) {
       return yield* argumentError(method, `brace expansion exceeds ${MAX_BRACE_EXPANSIONS} alternatives`);
     }

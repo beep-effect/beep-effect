@@ -2,6 +2,7 @@ import plugin from "@beep/lint-rules/oxlint";
 import { NodeServices } from "@effect/platform-node";
 import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 import { describe, expect, it } from "vitest";
 import { provideScopedLayer } from "./harness.ts";
 import { OXLINT_RULES, runOxlintRule, runOxlintRuleFix } from "./oxlint-harness.ts";
@@ -14,7 +15,7 @@ describe("oxlint rules", () => {
   it("runs the global process rule in-process", () => {
     const reports: Array<unknown> = [];
     const rule = plugin.rules["no-global-process-runtime"];
-    if (!("createOnce" in rule)) {
+    if (P.isUndefined(rule) || !("createOnce" in rule)) {
       throw new Error("Expected the global process rule to use createOnce");
     }
     const visitors = rule.createOnce({
@@ -44,7 +45,7 @@ describe("oxlint rules", () => {
   it("classifies static and runtime schema compiler inputs in-process", () => {
     const reports: Array<unknown> = [];
     const rule = plugin.rules["no-inline-schema-compile"];
-    if (!("createOnce" in rule)) {
+    if (P.isUndefined(rule) || !("createOnce" in rule)) {
       throw new Error("Expected the inline schema compile rule to use createOnce");
     }
     const visitors = rule.createOnce({
