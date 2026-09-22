@@ -3,13 +3,14 @@
   "initiative": {
     "id": "codex-security-findings-2026-09-16",
     "title": "Codex Security Findings (2026-09-16)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-16",
-    "updated": "2026-09-16",
+    "updated": "2026-09-22",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-09-16",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
+  "mergedPullRequest": 1160,
   "mission": "Remediate and close the 4 Codex Cloud security findings captured on 2026-09-16.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -120,12 +121,12 @@
     {
       "id": "P6",
       "name": "Publish",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P8",
@@ -153,5 +154,5 @@
     "A remediation requires an architecture or product decision outside packet scope.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Four findings implemented; package audit, repair, and full Yeet verification passed. Publishing one combined PR; merge and dashboard closure remain pending."
+  "statusNote": "2026-09-21: closed. The four findings and the scheduler synchronization repair merged in PR #1160 on 2026-09-16 and #1174 closed the coverage gaps; the closeout reflection landed the same day. P6 and P7 are complete on those receipts. P8 keeps the merge receipt but the Codex Cloud dashboard closure of the four findings has no receipt in the repo, so it stays open until the operator records it; P9 is the lifecycle flip in this PR."
 }

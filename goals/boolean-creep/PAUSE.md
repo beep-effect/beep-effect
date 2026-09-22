@@ -1,10 +1,59 @@
-# Campaign paused — 2026-09-09
+# Save PR preparation — 2026-09-21
+
+Benjamin requested merging current main and bringing a save PR to a green,
+mergeable state before continuing campaign work. PR #1176 is now ready for
+review and carries `ready-for-heavy`; its local and hosted checks must still
+finish before merge readiness is established. Benjamin retains merge authority.
+This checkpoint does not ratify GATE 2.
+
+Main `3b8a17d850` is included through merge `183b4dbb25`, including Effect
+`4.0.0-rc.117`, upstream Codex Security repairs, and the Effect Vitest P1
+inventory. Security helper conflicts retain the newer upstream implementations;
+the branch's monitor timeout tests are preserved. The packet contains 754 inventory records: 144 qualified and
+610 disqualified, with designs for all 144 qualified cases. Inventory and
+design-coverage validators passed before the latest main merge. These structural checks do
+not establish current-source semantic review or publication readiness.
+
+Three September 21 P2 refreshes and one D1 withdrawal are recorded. The
+[backlog reconciliation](./data/pr1176-backlog-reconciliation-2026-09-21.json)
+derives 45 pending from the saved 46-item September 14 subset after the
+test-selection refresh. The other two refreshes and the withdrawal are outside
+that subset. The unsupported 51-total/47-pending claim is withdrawn; the complete
+current-source backlog remains uncounted. Two citation decisions remain open. No new dry census, replacement P3 review, or implementation is credited.
+Full local proof and hosted PR closeout must pass before this save is mergeable.
+
+Full local verification and CLI package verification passed on `df044dedd6`,
+which was published as draft PR #1176. Main moved during hosted checks; the
+readiness monitor was stopped for the new merge. Fresh proof and hosted checks
+must validate the merged head before readiness can be claimed.
+
+## Historical campaign resumption — 2026-09-14
+
+Benjamin explicitly instructed `resume` after save PR #1069 merged. Campaign
+execution is authorized again under the unchanged SPEC and DECISIONS contract.
+The continuation starts on `codex/boolean-creep-resume-2026-09-14` at current
+main `cecfb9f8e9a5f20d768666c65f89425349f7f9e6`; the saved packet is unchanged
+between the published head and that main tree. The two citation decisions below
+remain unanswered. GATE 2, independent review and implementation remain subject
+to their existing evidence requirements. Follow the resume order below.
+
+## Reboot checkpoint — 2026-09-14
+
+Benjamin requested saving work before reboot. The resumed packet now has 754
+records (145 qualified /609 disqualified), six refreshed qualified designs and
+46 changed-path qualified cases still to audit. The [bounded audit receipt](./data/resume-2026-09-14-bounded-audit.json)
+records passed hash checks and the incomplete final Bun validators. Re-run those
+commands after reboot before using the revised packet as validated evidence.
+The two citation decisions remain unanswered; no census, P3 or implementation
+has started. Continue from the saved branch and private active handoff.
+
+## Historical pause — 2026-09-09
 
 Benjamin requested a pause and a PR to save the current work. Campaign execution
-is paused; resume only on his instruction. He subsequently authorized taking
+was paused until his instruction to resume. He subsequently authorized taking
 PR #1069 to a mergeable state while retaining draft status. That authorization
 covers quality and review fixes for this PR; the census and implementation
-campaign remain paused. The packet lifecycle remains `active`
+campaign remained paused until the resumption above. The packet lifecycle remains `active`
 because its acceptance criteria are unfinished. This draft save PR does not
 ratify GATE 2 or authorize implementation.
 

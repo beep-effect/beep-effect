@@ -10,7 +10,7 @@ middleware, CORS allow/expose lists, bearer security middleware, span and metric
 `repo:standards/architecture/12-observability.md`, `repo:standards/architecture/06-configuration-boundaries.md`;
 Effect `effect:packages/effect/src/unstable/ai/McpServer.ts` (`layerHttp`, `allowedOrigins`,
 `spanPrefix` values), `internal/mcpRuntime.ts` (HTTP header admission),
-`packages/effect/test/unstable/ai/McpServer/McpConformance/TransportsTest.ts` (security suite).
+`effect:packages/effect/test/unstable/ai/McpServer/McpConformance/TransportsTest.ts` (security suite).
 
 **Report sections:**
 1. Header contract table: every header a 2026-07-28 HTTP request and response uses in Effect

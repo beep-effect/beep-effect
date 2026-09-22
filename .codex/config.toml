@@ -36,6 +36,9 @@
     name = "explore"
     enabled = true
   [[skills.config]]
+    name = "graft"
+    enabled = true
+  [[skills.config]]
     name = "grill-me"
     enabled = true
   [[skills.config]]
@@ -43,6 +46,9 @@
     enabled = true
   [[skills.config]]
     name = "grilling"
+    enabled = true
+  [[skills.config]]
+    name = "impeccable"
     enabled = true
   [[skills.config]]
     name = "jsdoc-annotation-specialist"

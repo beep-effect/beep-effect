@@ -4,12 +4,6 @@
   "workspaces": {
     "": {
       "name": "@beep/root",
-      "dependencies": {
-        "css-select": "catalog:",
-        "css-tree": "catalog:",
-        "domutils": "catalog:",
-        "htmlparser2": "catalog:",
-      },
       "devDependencies": {
         "@babel/cli": "catalog:",
         "@babel/core": "catalog:",
@@ -29,9 +23,13 @@
         "@vitest/coverage-istanbul": "catalog:",
         "@vitest/coverage-v8": "catalog:",
         "babel-plugin-annotate-pure-calls": "catalog:",
+        "css-select": "catalog:",
+        "css-tree": "catalog:",
+        "domutils": "catalog:",
         "effect": "catalog:",
         "eslint": "catalog:",
         "fallow": "catalog:",
+        "htmlparser2": "catalog:",
         "knip": "catalog:",
         "lefthook": "catalog:",
         "micromark": "catalog:",

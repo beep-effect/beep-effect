@@ -1,5 +1,30 @@
 # r29-yeet-sweep-worktree-probe-address
 
+## Current source refresh — 2026-09-14
+
+This P2 refresh is bound to source/main
+`cecfb9f8e9a5f20d768666c65f89425349f7f9e6`. Sweep.ts SHA256 is
+`88ec5658bf142fecb7c6c5f494ee3106a179f9f8459588c8a182e77ce0620d1a`.
+Compared with the historical design source at main `3657f8f9`, Sweep.ts differs
+only in the renderer's JSDoc category; the entire Sweep test file and encoded
+Sweep schemas are byte-identical. All selected-field producers/readers and
+fixture locations below therefore remain current. Qualification remains 4/3.
+The historical source binding below is provenance, superseded by this binding.
+
+Current indirect consumers also include `Retire.ts:77–104,201–237,331–347`
+and `Porcelain.ts:157–174,195–219`. They receive SweepGitState through the
+existing observer. Retire reads only the unchanged PR state/head fields;
+Porcelain forwards the state to that gate and emits the dedicated retire plan
+and report codecs. Neither reads the fields selected by this design, constructs
+a competing state, or serializes the raw class. Preserve these routes, the
+retirement gate and the current `yeet-retire-sweep-plan/v1` and
+`yeet-retire-sweep-report/v1` outputs. Include retirement plan/report fixtures
+in implementation validation alongside the unchanged Sweep suite.
+
+This expands the known consumer list in the retained design; prior statements
+that the old list was exhaustive do not exclude these new indirect users.
+No product tests ran and no census, dryness or independent P3 credit is granted.
+
 Native P2 proposal on HEAD `1c07c15495aaa42f521b887b01e943e68804606c`,
 whose reviewed Sweep source equals immutable main
 `3657f8f97f7135c53c3c0b9fa99aa19093c3e5ee`. The tracking ref subsequently

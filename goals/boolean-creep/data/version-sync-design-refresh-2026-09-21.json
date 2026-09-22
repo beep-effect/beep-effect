@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "boolean-creep-design-refresh/v1",
+  "id": "r3-tooling-version-sync-category-filter-gates",
+  "sourceSha": "7536a751b40b8560706dfe8cfa451591b11b025d",
+  "beforeArchive": "history/designs/2026-09-21-before-version-sync-refresh-r3-tooling-version-sync-category-filter-gates.md",
+  "beforeSha256": "2d35e6abda1cc1e3f8c8d1a5348af4d77be106bd66a4463d320f44645f46674a",
+  "afterSha256": "b56caa957a4636d70c04e023985ef50fa09d7373036cea7e6c8a32b49684231f",
+  "qualification": "4/3 unchanged",
+  "status": "designed",
+  "sourceHashes": {
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts": "92fa7e2021b055059e4a5b51d3f77b272d9b3af2c0e107550d24b5d3690ef7aa",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/ResolverService.ts": "76ebdb572714c5808590444826344b1869049ac51c900e6b8ffdc487f8c5d96d",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/UpdateApplierService.ts": "b13f88babe1e34a4ba534c42f2175e77d38322aa79a575439a273fcbfdffb209",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/Handler.ts": "1a9717e926af04ecd6bbef6f84c7b8ca7ef38984ac7b65b8f0ad78a762bbed40",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/TurboResolver.ts": "27265b5345991b202ac14828f631b47e77ad3bd401246827e319ee7be8a27b6d",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/RootCatalog.ts": "26ffe8fbfdca44626dfb06416880e2dedb6d347bf1472aa912bcfb7905b1f8da",
+    "packages/tooling/tool/cli/src/commands/VersionSync/internal/updaters/JsoncSchemaUpdater.ts": "ec30bc4ec9e2760ac08379967cdbf2b48e8363dcab516fa82529351d1c74f424",
+    "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts": "403c1c089a7f763aaf590221984448fbd10c1394fc39c5fb1cbc2f8946c7c97a",
+    "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.command.ts": "7d2c4371cd691cb4aba8c5b548acfecd7cc31745a8995446cbb3a9a56b4d9354",
+    "packages/tooling/tool/cli/src/test/VersionSync.test-kit.ts": "8933a144f6ffb3a21994816133d666e135867203ef99391da183b22c643335b0",
+    "packages/tooling/tool/cli/test/version-sync-effect.test.ts": "4e85a7466b2389841e4ede5b6a2e8aabfd66ef2a0b7199e48e62f5412e987a6b",
+    "packages/tooling/tool/cli/package.json": "917dc5e460d2a61b7a9acdc969bb851e475fd4f74015b43a81ad40a111ee60f1"
+  },
+  "scope": "Current selection owner and all discovered direct consumers, six-category input contract, resolver/update preservation, exports, and test plan. No product implementation.",
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "testExecution": false
+}
