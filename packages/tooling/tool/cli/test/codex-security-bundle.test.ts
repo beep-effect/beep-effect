@@ -173,9 +173,23 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       });
       const aggregate = yield* expectRejected(root);
       if (aggregate._tag === "Failure") expect(aggregate.failure.message).toContain("64 MiB");
-      yield* fs.writeFile(path.join(root, "scan-manifest.json"), new Uint8Array(16777217));
+      const oversizedBytes = new Uint8Array(16777217);
+      yield* fs.writeFile(path.join(root, "oversized.bin"), oversizedBytes);
+      yield* writeJson(root, "scan-manifest.json", {
+        ...manifest,
+        scan: {
+          ...manifest.scan,
+          artifacts: [
+            ...manifest.scan.artifacts,
+            { path: "oversized.bin", sha256: yield* hash(oversizedBytes), mediaType: "application/octet-stream" },
+          ],
+        },
+      });
       const oversized = yield* expectRejected(root);
       if (oversized._tag === "Failure") expect(oversized.failure.message).toContain("16 MiB");
+      yield* fs.writeFile(path.join(root, "scan-manifest.json"), oversizedBytes);
+      const oversizedManifest = yield* expectRejected(root);
+      if (oversizedManifest._tag === "Failure") expect(oversizedManifest.failure.message).toContain("16 MiB");
     })
   );
   it.effect(

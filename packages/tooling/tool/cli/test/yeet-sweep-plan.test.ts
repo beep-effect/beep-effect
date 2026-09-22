@@ -25,7 +25,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, FileSystem, Layer, pipe, Sink, Stream } from "effect";
+import { Effect, Exit, FileSystem, Layer, pipe, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -497,7 +497,20 @@ describe("executeSweep", () => {
         Effect.fnUntraced(function* () {
           const fs = yield* FileSystem.FileSystem;
           const root = yield* fs.makeTempDirectoryScoped();
-          const report = yield* executeSweep(sweepContext(root));
+          const spawned = yield* Ref.make(A.empty<string>());
+          const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+          const recordingSpawner = ChildProcessSpawner.make((command) =>
+            Effect.gen(function* () {
+              if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected piped command");
+              yield* Ref.update(spawned, A.append(A.join([command.command, ...command.args], " ")));
+              return yield* spawner.spawn(command);
+            })
+          );
+          const report = yield* executeSweep(sweepContext(root)).pipe(
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner)
+          );
+          expect(yield* Ref.get(spawned)).toContain("git branch -d feat/merge-loop");
+          expect(yield* Ref.get(spawned)).not.toContain("git branch -D feat/merge-loop");
           const deletion = O.getOrThrow(A.findFirst(report.steps, (step) => step.id === "delete-local-branch"));
           expect(deletion.outcome.status).toBe("executed");
           expect(
