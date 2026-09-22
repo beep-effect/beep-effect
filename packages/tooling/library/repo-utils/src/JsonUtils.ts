@@ -37,11 +37,9 @@ const compactGetter = SchemaGetter.stringifyJson();
  * @since 0.0.0
  */
 export const jsonStringifyPretty: (value: unknown) => Effect.Effect<string, DomainError> = Effect.fn(function* (value) {
-  const result = yield* prettyGetter
-    .run(O.some(value), {})
-    .pipe(
-      Effect.mapError((issue) => DomainError.make({ message: `JSON serialization failed: ${issue}`, cause: issue }))
-    );
+  const result = yield* SchemaGetter.run(prettyGetter, O.some(value), {}).pipe(
+    Effect.mapError((issue) => DomainError.make({ message: `JSON serialization failed: ${issue}`, cause: issue }))
+  );
   return O.getOrElse(result, thunkEmptyStr);
 });
 
@@ -66,9 +64,9 @@ export const jsonStringifyPretty: (value: unknown) => Effect.Effect<string, Doma
  */
 export const jsonStringifyCompact: (value: unknown) => Effect.Effect<string, DomainError> = Effect.fn(
   function* (value) {
-    const result = yield* compactGetter
-      .run(O.some(value), {})
-      .pipe(Effect.mapError((issue) => DomainError.make({ message: `JSON serialization failed: ${issue}` })));
+    const result = yield* SchemaGetter.run(compactGetter, O.some(value), {}).pipe(
+      Effect.mapError((issue) => DomainError.make({ message: `JSON serialization failed: ${issue}` }))
+    );
     return O.getOrElse(result, thunkEmptyStr);
   }
 );

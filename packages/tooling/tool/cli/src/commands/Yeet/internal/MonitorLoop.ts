@@ -1134,7 +1134,7 @@ const observeMonitorHead = Effect.fn("YeetMonitorLoop.observeHead")(function* (
     firstObservedMs: millis,
     settleClockMs: millis,
     expected,
-    families: O.match(expected, { onNone: () => A.empty<YeetGatedContextFamily>(), onSome: yeetGatedFamiliesFor }),
+    families: O.match(expected, { onNone: A.empty<YeetGatedContextFamily>, onSome: yeetGatedFamiliesFor }),
     changedPaths: yield* readYeetChangedPaths(context, capture),
   });
   return MonitorObservation.make({ ...observation, poll: MonitorPoll.make({ ...poll, head: O.some(head) }) });

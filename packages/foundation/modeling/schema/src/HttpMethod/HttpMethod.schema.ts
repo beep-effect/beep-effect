@@ -11,7 +11,7 @@ import { LiteralKit } from "../LiteralKit/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("http/HttpMethod/HttpMethod");
-const HttpMethodBase = LiteralKit(["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "TRACE"]);
+const HttpMethodBase = LiteralKit(["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "TRACE", "QUERY"]);
 
 /**
  * Base literal kit for all supported HTTP method tokens.
@@ -91,6 +91,7 @@ export const HttpMethod = HttpMethod_.pipe(
           ["HEAD", "head"],
           ["OPTIONS", "options"],
           ["TRACE", "trace"],
+          ["QUERY", "query"],
         ] as const,
         NoBody,
         WithBody,

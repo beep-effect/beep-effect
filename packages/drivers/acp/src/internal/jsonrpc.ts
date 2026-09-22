@@ -145,7 +145,7 @@ const toResponseMessage = (
                 Result.map(decodeCauseEntries(error.data), A.map(toCauseEntry)),
                 (): ExitCause => [{ _tag: "Die", defect: error }]
               )
-            : [{ _tag: "Die", defect: error }],
+            : [{ _tag: "Fail", error }],
       }),
     }),
   });

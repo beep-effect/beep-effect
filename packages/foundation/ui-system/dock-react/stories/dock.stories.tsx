@@ -204,6 +204,8 @@ const ChipTab = (props: DockTabProps) => (
   </span>
 );
 
+const QUADRANT_STORY_GAP_PX = 8;
+
 const DockStory = (props: {
   readonly graph: DockAtomGraph;
   readonly watermark?: React.FunctionComponent | undefined;
@@ -215,7 +217,7 @@ const DockStory = (props: {
       components={components}
       watermarkComponent={props.watermark}
       defaultTabComponent={props.tab}
-      options={{ gap: 8 }}
+      options={{ gap: QUADRANT_STORY_GAP_PX }}
     />
   </div>
 );
@@ -381,14 +383,30 @@ export const DropQuadrants: Story = {
         const source = canvasElement.querySelector<HTMLElement>("[data-panel-id='story-quadrant-source-panel']");
         const target = canvasElement.querySelector<HTMLElement>("[data-group-id='story-quadrant-target']");
         if (source === null || target === null) throw new Error("Missing quadrant story geometry");
+        const root = canvasElement.querySelector<HTMLElement>("[data-testid='dockview-react']");
+        if (root === null) throw new Error("Missing dock root");
         // Pin the host so the quadrant math never depends on the test
-        // viewport, then wait out the ResizeObserver measurement race.
+        // viewport, then wait out the ResizeObserver measurement race. The
+        // root follows the pinned host synchronously (CSS), while the groups
+        // follow it a frame later (ResizeObserver → geometry), so the wait
+        // asserts the projected geometry itself: two equal groups spanning the
+        // root minus the gap, at the root's height. A weaker bound (any
+        // width above the pre-pin size) let the first pointer probe fire on
+        // the pre-pin layout — vitest's default 414px viewport — and the
+        // recorded root-relative pointer landed inside the source group once
+        // the re-layout settled, which compiles to no preview at all.
         pinHost(canvasElement, "960px", "640px");
-        yield* Effect.promise(() => waitFor(() => expect(target.getBoundingClientRect().width).toBeGreaterThan(100)));
         // Never cache boxes: a mid-play re-measure (viewport settle, strip
         // measurement) moves the live geometry away from any snapshot, so
         // expected and actual must derive from the same read.
         const targetBox = (): DOMRect => target.getBoundingClientRect();
+        yield* Effect.promise(() =>
+          waitFor(() => {
+            const rootBox = root.getBoundingClientRect();
+            expect(targetBox().width).toBeCloseTo((rootBox.width - QUADRANT_STORY_GAP_PX) / 2, 0);
+            expect(targetBox().height).toBeCloseTo(rootBox.height, 0);
+          })
+        );
         const preview = (): DOMRect => {
           const indicator = canvasElement.querySelector<HTMLElement>("[data-drop-indicator]");
           if (indicator === null) throw new Error("Missing compiled drop preview");

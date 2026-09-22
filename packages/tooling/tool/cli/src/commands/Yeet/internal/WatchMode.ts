@@ -431,7 +431,7 @@ const newWatchSettleState = Effect.fn("Yeet.newWatchSettleState")(function* (
     firstObservedMs: millis,
     settleClockMs: millis,
     expected,
-    families: O.match(expected, { onNone: () => A.empty<YeetGatedContextFamily>(), onSome: yeetGatedFamiliesFor }),
+    families: O.match(expected, { onNone: A.empty<YeetGatedContextFamily>, onSome: yeetGatedFamiliesFor }),
     changedPaths: yield* (config.changedPathsRead ?? readYeetChangedPaths)(context),
   });
 });
