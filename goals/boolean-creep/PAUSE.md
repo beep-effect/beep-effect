@@ -4,8 +4,10 @@ Benjamin requested merging current main and bringing a save PR to a green,
 mergeable state before continuing campaign work. The save PR remains draft;
 Benjamin retains merge authority. This checkpoint does not ratify GATE 2.
 
-Main `94c66a72ab` is included through merge `7f98ae35da`, including Effect
-`4.0.0-rc.117`. The packet contains 754 inventory records: 144 qualified and
+Main `593a000a41` is included through merge `b6112a4e27`, including Effect
+`4.0.0-rc.117` and the upstream Codex Security coverage repairs. Overlapping
+scan tests retain the newer upstream cases; the branch's monitor timeout
+tests are preserved. The packet contains 754 inventory records: 144 qualified and
 610 disqualified, with designs for all 144 qualified cases. Inventory and
 design-coverage validators pass after the merge. These structural checks do
 not establish current-source semantic review or publication readiness.
