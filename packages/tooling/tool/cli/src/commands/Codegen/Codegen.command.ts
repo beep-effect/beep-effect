@@ -44,8 +44,11 @@ const TYPESCRIPT_IMPORT_PATH_PATTERN = /^\.\/.+\.ts$/;
 // `(?!\*\/)` keeps a block from swallowing the comment that follows it: a lazy
 // `[\s\S]*?` would happily span from the module header to the first documented export.
 const BARREL_DOC_BLOCK_PATTERN = /\/\*\*(?:(?!\*\/)[\s\S])*\*\//;
+// A block documents an export only when the export sits on the very next line; the same
+// single-newline rule decides both patterns so a module header separated from its first
+// export by a blank line stays a header instead of vanishing on regeneration.
 const BARREL_DOCUMENTED_EXPORT_PATTERN = /(\/\*\*(?:(?!\*\/)[\s\S])*\*\/)\r?\nexport \* from "([^"]+)";/g;
-const BARREL_EXPORT_FOLLOWS_PATTERN = /^\s*export \* from "/;
+const BARREL_EXPORT_FOLLOWS_PATTERN = /^\r?\nexport \* from "/;
 
 const TypeScriptSourceFileName = S.String.check(S.isPattern(TYPE_SCRIPT_SOURCE_FILE_PATTERN)).pipe(
   S.brand("TypeScriptSourceFileName"),
@@ -230,8 +233,9 @@ const emptyBarrelDocs = (): HashMap.HashMap<string, string> => HashMap.empty<str
  * **Details**
  *
  * The header is the file's first JSDoc block when it is not the block documenting
- * the first `export *` statement. A barrel whose first block sits directly above an
- * export has no separate header, so the caller falls back to the generated default.
+ * the first `export *` statement, which is the block sitting on the line directly above
+ * that export. A barrel whose first block sits directly above an export has no separate
+ * header, so the caller falls back to the generated default.
  *
  * **Example** (Log parseBarrelHeader label)
  *

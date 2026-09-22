@@ -275,11 +275,12 @@ describe("knowledge refs golden fixture matrix", () => {
       const report = yield* scanFixture({
         ".claude/skills/demo/SKILL.md":
           "Run `PORTLESS_STATE_DIR=~/.portless-lan portless service install` and set NODE_EXTRA_CA_CERTS=~/.portless/ca.pem.\n" +
-          "Never set MIRROR=~/src/other-project from guidance.\n",
+          "Never set MIRROR=~/src/other-project or PORTLESS_STATE_DIR=~/.portless-lan/$(hostname) from guidance.\n",
       });
       expect(verdicts(report.observations)).toEqual([
         "portable-home-convention/not-applicable",
         "portable-home-convention/not-applicable",
+        "external-mirror-reference/not-applicable",
         "external-mirror-reference/not-applicable",
       ]);
     })

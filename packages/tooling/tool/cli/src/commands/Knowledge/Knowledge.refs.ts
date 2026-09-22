@@ -1784,9 +1784,15 @@ const PORTABLE_HOME_EXACT_CONVENTIONS = HashSet.make("~", "~/Downloads");
 const TEMP_CONVENTIONS = HashSet.make("/tmp/portless");
 const stripTrailingSlashes = Str.replace(/\/+$/u, "");
 // A shell assignment (`PORTLESS_STATE_DIR=~/.portless-lan`) carries the same convention as the bare
-// path; the variable name is not part of the anchor.
+// path; the variable name is not part of the anchor. Only a plain literal value is admitted: a
+// right-hand side with substitution, expansion, quoting, or globbing (`~/.portless-lan/$(hostname)`)
+// is not the path it appears to be, so the token is judged whole and stays gated.
 const SHELL_ASSIGNMENT_PREFIX_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*=/u;
-const stripShellAssignment = Str.replace(SHELL_ASSIGNMENT_PREFIX_PATTERN, "");
+const SHELL_DYNAMIC_VALUE_PATTERN = /[$`"'\\(){}*?[\]]/u;
+const stripShellAssignment = (token: string): string => {
+  const value = Str.replace(SHELL_ASSIGNMENT_PREFIX_PATTERN, "")(token);
+  return value !== token && SHELL_DYNAMIC_VALUE_PATTERN.test(value) ? token : value;
+};
 
 const hasConventionPrefix = (conventions: HashSet.HashSet<string>, rawToken: string): boolean => {
   const token = stripShellAssignment(rawToken);
