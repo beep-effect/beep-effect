@@ -136,6 +136,8 @@ const uniqueSorted = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
  * console.log(workspaceDependencyNames(deps))
  * ```
  *
+ * @param workspaceDeps - Classified dependencies for one package.
+ * @returns Sorted unique workspace package names from every bucket.
  * @category utilities
  * @since 0.0.0
  */
