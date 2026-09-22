@@ -53,6 +53,13 @@ export class CiCommandError extends S.TaggedError<CiCommandError>($I`CiCommandEr
 /**
  * Failure reasons emitted by the fail-closed CI lane partition proof.
  *
+ * **Details**
+ *
+ * The `shard-*` reasons cover a package that is split across several
+ * partitions with Vitest `--shard`: every such partition must carry a shard,
+ * share one total, hold exactly that package, and together enumerate the
+ * indexes `1..total` exactly once.
+ *
  * **Example** (Recognize a stale package failure)
  *
  * ```ts
@@ -72,6 +79,11 @@ export const CiLanePartitionErrorReason = LiteralKit([
   "incomplete-selection",
   "missing-package",
   "stale-package",
+  "shard-index-duplicate",
+  "shard-set-incomplete",
+  "shard-total-mismatch",
+  "sharded-bin-package-count",
+  "sharded-package-unsharded",
   "unknown-selected-task",
   "workspace-read",
   "turbo-dry-run",

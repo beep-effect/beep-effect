@@ -1,0 +1,2255 @@
+{
+  "schemaVersion": "boolean-creep-resumption/v1",
+  "date": "2026-09-14",
+  "authorization": "Benjamin explicitly instructed resume in the existing campaign task.",
+  "branch": "codex/boolean-creep-resume-2026-09-14",
+  "sourceSha": "cecfb9f8e9a5f20d768666c65f89425349f7f9e6",
+  "originMainSha": "cecfb9f8e9a5f20d768666c65f89425349f7f9e6",
+  "priorPublishedHead": "06e9e79d0db5221997653c4c244b2aae542bb65e",
+  "savedPr": {
+    "number": 1069,
+    "state": "MERGED",
+    "mergeCommit": "65c29e5177293cfdacc47d3b33c64596a512e6a4"
+  },
+  "packetUnchangedAtBranchStart": true,
+  "scope": {
+    "comparisonMain": "e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b",
+    "corpusFileCount": 3114,
+    "corpusPathsSha256": "df13365bbaeff875b22310a308e6097272fb997ca22323eaad69110b0dc7982c",
+    "laneCount": 27,
+    "scopeClassifierSha256": "51dc7c1ea3d7c4cb0059a8c77cca9414ccf327ec9dea7f9847bffe6c67622f0e",
+    "changedIncludedFiles": [
+      "apps/oip-web/src/app/layout.tsx",
+      "apps/oip-web/src/contact/ContactSubmission.model.ts",
+      "apps/oip-web/src/content/OipContent.model.ts",
+      "apps/oip-web/src/proxy.ts",
+      "apps/oip-web/src/runtime/OipRuntimeConfig.ts",
+      "apps/practice-kg-mcp/src/bin.ts",
+      "apps/practice-kg-mcp/src/build.ts",
+      "apps/practice-kg-mcp/src/claims.ts",
+      "apps/practice-kg-mcp/src/package.ts",
+      "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
+      "apps/professional-desktop/src/intake/VaultDirectoryPickerOrchestrator.ts",
+      "apps/professional-desktop/src/runtime/Layer.ts",
+      "apps/professional-desktop/src/runtime/Observability.ts",
+      "apps/professional-desktop/src/runtime/Pglite.ts",
+      "apps/professional-desktop/src/spikes/CosmosSpike.tsx",
+      "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
+      "apps/todox/src/app/api/request-demo/route.ts",
+      "apps/todox/src/app/globals.css",
+      "apps/todox/src/app/icon.svg",
+      "apps/todox/src/app/layout.tsx",
+      "apps/todox/src/app/opengraph-image.png",
+      "apps/todox/src/app/page.tsx",
+      "apps/todox/src/components/ContactForm.tsx",
+      "apps/todox/src/components/EvidenceGraph.tsx",
+      "apps/todox/src/components/Hero.tsx",
+      "apps/todox/src/components/InspectorList.tsx",
+      "apps/todox/src/components/ReceiptView.tsx",
+      "apps/todox/src/components/SessionDemo.tsx",
+      "apps/todox/src/components/SiteNav.tsx",
+      "apps/todox/src/components/SourcePane.tsx",
+      "apps/todox/src/components/Wordmark.tsx",
+      "apps/todox/src/content/copy.ts",
+      "apps/todox/src/runtime/TodoxAtomProvider.tsx",
+      "apps/todox/src/session/Session.schema.ts",
+      "apps/todox/src/session/session.ts",
+      "packages/_internal/db-admin/src/migrations/ArchitectureLab.ts",
+      "packages/agents/client/src/Chat.atoms.ts",
+      "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.layer.ts",
+      "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.http.ts",
+      "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.service.ts",
+      "packages/architecture-lab/use-cases/src/entities/Worker/Worker.service.ts",
+      "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+      "packages/documents/server/src/aggregates/Sync/DmsMirrorBox.ts",
+      "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts",
+      "packages/drivers/acp/src/AcpClient.service.ts",
+      "packages/drivers/acp/src/AcpJson.codec.ts",
+      "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "packages/drivers/acp/src/index.ts",
+      "packages/drivers/acp/src/internal/jsonrpc.ts",
+      "packages/drivers/anthropic/src/Anthropic.repair.ts",
+      "packages/drivers/anthropic/src/Anthropic.service.ts",
+      "packages/drivers/box-provisioning/src/BoxProvisioningApplier.ts",
+      "packages/drivers/box-provisioning/src/BoxProvisioningPlanner.ts",
+      "packages/drivers/box/src/Box.config.ts",
+      "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "packages/drivers/firecrawl/src/Firecrawl.service.ts",
+      "packages/drivers/freshbooks/src/Freshbooks.config.ts",
+      "packages/drivers/freshbooks/src/Freshbooks.service.ts",
+      "packages/drivers/govinfo/src/Govinfo.service.ts",
+      "packages/drivers/govinfo/src/domain/values/GranuleMetadata/GranuleMetadata.model.ts",
+      "packages/drivers/hubspot/src/HubSpot.config.ts",
+      "packages/drivers/hubspot/src/HubSpot.service.ts",
+      "packages/drivers/m365-mcp/src/M365Handlers.ts",
+      "packages/drivers/m365/src/M365.auth.ts",
+      "packages/drivers/m365/src/M365.config.ts",
+      "packages/drivers/m365/src/M365.errors.ts",
+      "packages/drivers/m365/src/M365.service.ts",
+      "packages/drivers/n3/src/N3.service.ts",
+      "packages/drivers/obs/src/ObsProtocol.service.ts",
+      "packages/drivers/openai-compat/src/OpenAiCompatClient.service.ts",
+      "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "packages/drivers/openai/src/OpenAi.service.ts",
+      "packages/drivers/openclaw/src/OpenclawRender.ts",
+      "packages/drivers/oxigraph/src/Oxigraph.sparql.ts",
+      "packages/drivers/pacer/src/Pacer.config.ts",
+      "packages/drivers/pacer/src/Pacer.mock-data.ts",
+      "packages/drivers/pacer/src/Pacer.mock.ts",
+      "packages/drivers/pacer/src/Pacer.tokens.ts",
+      "packages/drivers/phoenix/src/Phoenix.config.ts",
+      "packages/drivers/phoenix/src/Phoenix.service.ts",
+      "packages/drivers/rdf-canonize/src/adapters/canonicalization.ts",
+      "packages/drivers/runpod/src/Runpod.config.ts",
+      "packages/drivers/runpod/src/Runpod.service.ts",
+      "packages/drivers/runpod/src/RunpodDocs.service.ts",
+      "packages/drivers/sanity/src/Sanity.service.ts",
+      "packages/drivers/tika/src/Tika.config.ts",
+      "packages/drivers/tika/src/Tika.server.ts",
+      "packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts",
+      "packages/drivers/uspto/src/Uspto.config.ts",
+      "packages/drivers/uspto/src/Uspto.models.ts",
+      "packages/drivers/uspto/src/Uspto.service.ts",
+      "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+      "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
+      "packages/drivers/wink/src/Wink.models.ts",
+      "packages/drivers/xai/src/XAi.config.ts",
+      "packages/drivers/xai/src/XAi.service.ts",
+      "packages/drivers/xai/src/XAiLanguageModel.service.ts",
+      "packages/ecosystem/effect-drizzle/src/core/Meta.ts",
+      "packages/ecosystem/effect-drizzle/src/core/classification.ts",
+      "packages/ecosystem/effect-drizzle/src/core/model.ts",
+      "packages/ecosystem/effect-drizzle/src/core/names.ts",
+      "packages/ecosystem/effect-drizzle/src/core/repository.ts",
+      "packages/ecosystem/effect-drizzle/src/pg/Column.ts",
+      "packages/ecosystem/effect-drizzle/src/pg/combinators.ts",
+      "packages/ecosystem/effect-drizzle/src/pg/derive.ts",
+      "packages/ecosystem/effect-drizzle/src/pg/extras.ts",
+      "packages/ecosystem/effect-drizzle/src/pg/schema.ts",
+      "packages/ecosystem/effect-drizzle/src/pg/table.ts",
+      "packages/ecosystem/effect-drizzle/src/sqlite/Column.ts",
+      "packages/ecosystem/effect-drizzle/src/sqlite/extras.ts",
+      "packages/ecosystem/effect-drizzle/src/sqlite/schema.ts",
+      "packages/ecosystem/effect-drizzle/src/sqlite/table.ts",
+      "packages/epistemic/config/src/ServerConfig.ts",
+      "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts",
+      "packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts",
+      "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.commands.ts",
+      "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts",
+      "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts",
+      "packages/foundation/capability/file-processing/src/SourceText/SourceText.schema.ts",
+      "packages/foundation/capability/langextract/src/Alignment/Alignment.model.ts",
+      "packages/foundation/capability/langextract/src/Service/Service.policy.ts",
+      "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
+      "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+      "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+      "packages/foundation/capability/observability/src/CauseDiagnostics.ts",
+      "packages/foundation/capability/observability/src/experimental/server/DevToolsRelay.ts",
+      "packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts",
+      "packages/foundation/capability/observability/src/server/DevTools.ts",
+      "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
+      "packages/foundation/modeling/html/src/Html.attributes.ts",
+      "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "packages/foundation/modeling/html/src/Html.policy.ts",
+      "packages/foundation/modeling/identity/src/Curie.ts",
+      "packages/foundation/modeling/identity/src/Id.ts",
+      "packages/foundation/modeling/identity/src/PnLocal.ts",
+      "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+      "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "packages/foundation/modeling/lexical/src/internal/conformance/Lexical.strict-invariants.ts",
+      "packages/foundation/modeling/md/src/Md.escape.ts",
+      "packages/foundation/modeling/md/src/Md.model.ts",
+      "packages/foundation/modeling/md/src/Md.render.ts",
+      "packages/foundation/modeling/nlp/src/Core/PatternParsers.ts",
+      "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+      "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+      "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts",
+      "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+      "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+      "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+      "packages/foundation/modeling/provenance/src/SourceTextIdentity.ts",
+      "packages/foundation/modeling/provenance/src/TextAnchor.ts",
+      "packages/foundation/modeling/rdf/src/Iri.ts",
+      "packages/foundation/modeling/rdf/src/Rdf.ts",
+      "packages/foundation/modeling/rdf/src/Uri.ts",
+      "packages/foundation/modeling/schema/src/ArrayBuffer.ts",
+      "packages/foundation/modeling/schema/src/AtURI.ts",
+      "packages/foundation/modeling/schema/src/Bytes.ts",
+      "packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/CrossOriginEmbedderPolicy.schema.ts",
+      "packages/foundation/modeling/schema/src/CrossOriginOpenerPolicy/CrossOriginOpenerPolicy.schema.ts",
+      "packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/CrossOriginResourcePolicy.schema.ts",
+      "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
+      "packages/foundation/modeling/schema/src/Csv/Csv.schema.ts",
+      "packages/foundation/modeling/schema/src/Cuid.ts",
+      "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts",
+      "packages/foundation/modeling/schema/src/Did.ts",
+      "packages/foundation/modeling/schema/src/Double.ts",
+      "packages/foundation/modeling/schema/src/Duration/Duration.input.ts",
+      "packages/foundation/modeling/schema/src/EthereumValidatorPublicKey/EthereumValidatorPublicKey.schema.ts",
+      "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
+      "packages/foundation/modeling/schema/src/FileInfo.ts",
+      "packages/foundation/modeling/schema/src/FileName.ts",
+      "packages/foundation/modeling/schema/src/FilePath/FilePath.roots.ts",
+      "packages/foundation/modeling/schema/src/FilePath/FilePath.schema.ts",
+      "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.schema.ts",
+      "packages/foundation/modeling/schema/src/Fixed32.ts",
+      "packages/foundation/modeling/schema/src/Fixed64.ts",
+      "packages/foundation/modeling/schema/src/Float.ts",
+      "packages/foundation/modeling/schema/src/Float16Array.ts",
+      "packages/foundation/modeling/schema/src/Float32Array.ts",
+      "packages/foundation/modeling/schema/src/Float64Array.ts",
+      "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
+      "packages/foundation/modeling/schema/src/FrameGuard/FrameGuard.schema.ts",
+      "packages/foundation/modeling/schema/src/Glob/Glob.schema.ts",
+      "packages/foundation/modeling/schema/src/Graph/Graph.edge.ts",
+      "packages/foundation/modeling/schema/src/Graph/Graph.transforms.ts",
+      "packages/foundation/modeling/schema/src/Http/Http.headers.shared.ts",
+      "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
+      "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.shared.ts",
+      "packages/foundation/modeling/schema/src/Jsonc.ts",
+      "packages/foundation/modeling/schema/src/Jsonl.ts",
+      "packages/foundation/modeling/schema/src/KebabStr.ts",
+      "packages/foundation/modeling/schema/src/LocalDate/LocalDate.schema.ts",
+      "packages/foundation/modeling/schema/src/Markdown.ts",
+      "packages/foundation/modeling/schema/src/MutableHashMap.ts",
+      "packages/foundation/modeling/schema/src/MutableHashSet.ts",
+      "packages/foundation/modeling/schema/src/NoOpen/NoOpen.schema.ts",
+      "packages/foundation/modeling/schema/src/NoSniff/NoSniff.schema.ts",
+      "packages/foundation/modeling/schema/src/PascalStr.ts",
+      "packages/foundation/modeling/schema/src/PermissionsPolicy/PermissionsPolicy.schema.ts",
+      "packages/foundation/modeling/schema/src/PermittedCrossDomainPolicies/PermittedCrossDomainPolicies.schema.ts",
+      "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts",
+      "packages/foundation/modeling/schema/src/RegExp.ts",
+      "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts",
+      "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
+      "packages/foundation/modeling/schema/src/Semver.ts",
+      "packages/foundation/modeling/schema/src/Sfixed32.ts",
+      "packages/foundation/modeling/schema/src/Sfixed64.ts",
+      "packages/foundation/modeling/schema/src/Sha256.ts",
+      "packages/foundation/modeling/schema/src/Sint32.ts",
+      "packages/foundation/modeling/schema/src/Sint64.ts",
+      "packages/foundation/modeling/schema/src/SnakeStr.ts",
+      "packages/foundation/modeling/schema/src/Timestamp/Timestamp.schema.ts",
+      "packages/foundation/modeling/schema/src/Toml.ts",
+      "packages/foundation/modeling/schema/src/Transformations.ts",
+      "packages/foundation/modeling/schema/src/URL.ts",
+      "packages/foundation/modeling/schema/src/Uint32.ts",
+      "packages/foundation/modeling/schema/src/Uint64.ts",
+      "packages/foundation/modeling/schema/src/Xml.ts",
+      "packages/foundation/modeling/schema/src/XssProtection/XssProtection.schema.ts",
+      "packages/foundation/modeling/schema/src/Yaml.ts",
+      "packages/foundation/modeling/schema/src/internal/ProtobufInt64Input.ts",
+      "packages/foundation/modeling/schema/src/internal/ProtobufNumber.ts",
+      "packages/foundation/modeling/skill-contract/src/Recovery.ts",
+      "packages/foundation/modeling/utils/src/Data.ts",
+      "packages/foundation/modeling/utils/src/FileSystem.ts",
+      "packages/foundation/modeling/utils/src/HostProcess.ts",
+      "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+      "packages/foundation/ui-system/ui/src/hooks/useSpinner.ts",
+      "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
+      "packages/law-practice/domain/src/values/ApplicationNumber/ApplicationNumber.model.ts",
+      "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "packages/law-practice/domain/src/values/CitingApplicationIdentity/CitingApplicationIdentity.model.ts",
+      "packages/law-practice/domain/src/values/LegalOppositionCandidateInput/LegalOppositionCandidateInput.model.ts",
+      "packages/law-practice/domain/src/values/LegalRole/LegalRole.model.ts",
+      "packages/law-practice/domain/src/values/PatentNumber/PatentNumber.model.ts",
+      "packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts",
+      "packages/ontology/config/src/McpConfig.ts",
+      "packages/ontology/config/src/ServerConfig.ts",
+      "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "packages/ontology/use-cases/src/tools/OntologyToolService.ts",
+      "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
+      "packages/tooling/library/ai-metrics/src/archive.ts",
+      "packages/tooling/library/ai-metrics/src/flight-record.ts",
+      "packages/tooling/library/ai-metrics/src/forwarder.ts",
+      "packages/tooling/library/ai-metrics/src/hook-pulse.ts",
+      "packages/tooling/library/ai-metrics/src/sequence-break.ts",
+      "packages/tooling/library/ai-metrics/src/session-lease.ts",
+      "packages/tooling/library/ai-sync/src/models.ts",
+      "packages/tooling/library/ai-sync/src/schemas.ts",
+      "packages/tooling/library/ai-sync/src/validation.ts",
+      "packages/tooling/library/codegen-kit/src/CodegenKit.cli.ts",
+      "packages/tooling/library/qa-capture/src/Collector.service.ts",
+      "packages/tooling/library/qa-capture/src/ExtractionPlanner.ts",
+      "packages/tooling/library/repo-utils/src/JSDoc/JSDoc.ts",
+      "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+      "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+      "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
+      "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+      "packages/tooling/policy-pack/lint-rules/src/rules/no-inline-schema-compile.ts",
+      "packages/tooling/policy-pack/repo-configs/src/cache/Cache.governance.policy.ts",
+      "packages/tooling/policy-pack/repo-configs/src/cache/Cache.policy.ts",
+      "packages/tooling/policy-pack/repo-configs/src/cache/index.ts",
+      "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts",
+      "packages/tooling/test-kit/fc-runs/src/FastCheckRuns.ts",
+      "packages/tooling/test-kit/fc-runs/src/index.ts",
+      "packages/tooling/test-kit/test-utils/src/ConformanceLedger/index.ts",
+      "packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
+      "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts",
+      "packages/tooling/test-kit/test-utils/src/Layer.ts",
+      "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+      "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/index.ts",
+      "packages/tooling/test-kit/test-utils/src/Schema.ts",
+      "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+      "packages/tooling/test-kit/test-utils/src/Vitest.errors.ts",
+      "packages/tooling/test-kit/test-utils/src/Vitest.ts",
+      "packages/tooling/test-kit/test-utils/src/internal/VitestInstrumentation.ts",
+      "packages/tooling/test-kit/test-utils/src/internal/VitestRuntime.ts",
+      "packages/tooling/tool/cli/src/bin-main.ts",
+      "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts",
+      "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts",
+      "packages/tooling/tool/cli/src/commands/Architecture/Architecture.command.ts",
+      "packages/tooling/tool/cli/src/commands/Architecture/OperationPlanExecution.ts",
+      "packages/tooling/tool/cli/src/commands/Architecture/OperationPlanPackageJson.ts",
+      "packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.linker.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.capture.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+      "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+      "packages/tooling/tool/cli/src/commands/Codegen/Codegen.command.ts",
+      "packages/tooling/tool/cli/src/commands/Codex/Codex.command.ts",
+      "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "packages/tooling/tool/cli/src/commands/Corpus/Corpus.command.ts",
+      "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.ts",
+      "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
+      "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityExportBlock.ts",
+      "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+      "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
+      "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Docgen/internal/Doctest.ts",
+      "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
+      "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts",
+      "packages/tooling/tool/cli/src/commands/Docs/Docs.aggregate.ts",
+      "packages/tooling/tool/cli/src/commands/Docs/Docs.command.ts",
+      "packages/tooling/tool/cli/src/commands/Explore/Atlas.ts",
+      "packages/tooling/tool/cli/src/commands/Explore/Explore.command.ts",
+      "packages/tooling/tool/cli/src/commands/Fallow/Fallow.command.ts",
+      "packages/tooling/tool/cli/src/commands/Files/Files.command.ts",
+      "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.errors.ts",
+      "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts",
+      "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts",
+      "packages/tooling/tool/cli/src/commands/Files/internal/MediaExec.ts",
+      "packages/tooling/tool/cli/src/commands/Goals/Adopt.ts",
+      "packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts",
+      "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+      "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts",
+      "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+      "packages/tooling/tool/cli/src/commands/Goals/SetRiskTier.ts",
+      "packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.command.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.errors.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/Graft.service.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/GraftDeep.service.ts",
+      "packages/tooling/tool/cli/src/commands/Graft/index.ts",
+      "packages/tooling/tool/cli/src/commands/Image/Image.command.ts",
+      "packages/tooling/tool/cli/src/commands/Image/Image.progress.ts",
+      "packages/tooling/tool/cli/src/commands/Image/Image.render.ts",
+      "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.command.ts",
+      "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "packages/tooling/tool/cli/src/commands/Labs/Labs.command.ts",
+      "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts",
+      "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.model.ts",
+      "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.ts",
+      "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
+      "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+      "packages/tooling/tool/cli/src/commands/Laws/index.ts",
+      "packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/EffectVitest.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/index.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestPolicy.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestPrimitives.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestScan.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestStore.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstArbitraryCoverage.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstDetectors.ts",
+      "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstPolicy.ts",
+      "packages/tooling/tool/cli/src/commands/Purge/Purge.command.ts",
+      "packages/tooling/tool/cli/src/commands/Qa/Extract.ts",
+      "packages/tooling/tool/cli/src/commands/Qa/JudgePack.ts",
+      "packages/tooling/tool/cli/src/commands/Qa/Qa.command.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/index.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
+      "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
+      "packages/tooling/tool/cli/src/commands/Research/Research.command.ts",
+      "packages/tooling/tool/cli/src/commands/Research/Research.render.ts",
+      "packages/tooling/tool/cli/src/commands/Research/Research.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Research/internal/BrowserHistory.ts",
+      "packages/tooling/tool/cli/src/commands/Research/internal/CogneeClient.ts",
+      "packages/tooling/tool/cli/src/commands/Research/internal/Cognify.ts",
+      "packages/tooling/tool/cli/src/commands/Research/internal/Daily.ts",
+      "packages/tooling/tool/cli/src/commands/Research/internal/NotionPull.ts",
+      "packages/tooling/tool/cli/src/commands/Research/internal/ResearchEnv.ts",
+      "packages/tooling/tool/cli/src/commands/Research/internal/Timers.ts",
+      "packages/tooling/tool/cli/src/commands/Research/internal/Vault.ts",
+      "packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts",
+      "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+      "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
+      "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.command.ts",
+      "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/Iso3166.ts",
+      "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/VocabTerms.ts",
+      "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
+      "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.command.ts",
+      "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/EffectResolver.ts",
+      "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/NodeResolver.ts",
+      "packages/tooling/tool/cli/src/commands/Worktree/Reap.command.ts",
+      "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "packages/tooling/tool/cli/src/commands/Worktree/Worktree.constants.ts",
+      "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/index.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueClassification.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueParser.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/MergedPreview.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorComments.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/PrSessionRegistry.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Resume.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.schemas.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts",
+      "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
+      "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "packages/tooling/tool/cli/src/internal/cli/Flags.ts",
+      "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "packages/tooling/tool/cli/src/internal/cli/LintRouting.ts",
+      "packages/tooling/tool/cli/src/internal/cli/Stdout.ts",
+      "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts",
+      "packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts",
+      "packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts",
+      "packages/tooling/tool/cli/src/internal/package-scripts/PackageScriptsPolicy.ts",
+      "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts",
+      "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts",
+      "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
+      "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+      "packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.schemas.ts",
+      "packages/tooling/tool/cli/src/internal/systemd/SystemdUnit.ts",
+      "packages/tooling/tool/cli/src/internal/systemd/index.ts",
+      "packages/tooling/tool/docgen/src/CLI.ts",
+      "packages/tooling/tool/docgen/src/Printer.ts",
+      "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts"
+    ],
+    "affectedInventoryRecords": [
+      {
+        "id": "yeet-merge-ready-verdict",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts"
+        ]
+      },
+      {
+        "id": "runners-bake-freshness",
+        "status": "reviewed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts"
+        ]
+      },
+      {
+        "id": "yeet-status-github-thread-mirror",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts"
+        ]
+      },
+      {
+        "id": "effect-drizzle-meta-column-flags",
+        "status": "disqualified",
+        "files": ["packages/ecosystem/effect-drizzle/src/core/Meta.ts"]
+      },
+      {
+        "id": "drivers-stream-state",
+        "status": "reviewed",
+        "files": [
+          "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts"
+        ]
+      },
+      {
+        "id": "drivers-acp-protocol-logging-options",
+        "status": "disqualified",
+        "files": ["packages/drivers/acp/src/AcpProtocol.service.ts"]
+      },
+      {
+        "id": "shacl-validation-result-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts"
+        ]
+      },
+      {
+        "id": "source-text-page-nav-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/foundation/capability/file-processing/src/SourceText/SourceText.schema.ts"
+        ]
+      },
+      {
+        "id": "rm-sync-options-flags",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/utils/src/FileSystem.ts"]
+      },
+      {
+        "id": "json-schema-node-keywords",
+        "status": "disqualified",
+        "files": [
+          "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts"
+        ]
+      },
+      {
+        "id": "force-https-redirect-config-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts"
+        ]
+      },
+      {
+        "id": "allow-list-url-policy-relative-flags",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/md/src/Md.escape.ts"]
+      },
+      {
+        "id": "use-number-input-options",
+        "status": "disqualified",
+        "files": [
+          "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts"
+        ]
+      },
+      {
+        "id": "number-input-modifier-keys",
+        "status": "disqualified",
+        "files": [
+          "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts"
+        ]
+      },
+      {
+        "id": "number-input-step-modifiers",
+        "status": "disqualified",
+        "files": [
+          "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts"
+        ]
+      },
+      {
+        "id": "law-practice-pincite-info",
+        "status": "disqualified",
+        "files": [
+          "packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts"
+        ]
+      },
+      {
+        "id": "full-case-citation-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/law-practice/domain/src/values/Citation/Citation.models.ts"
+        ]
+      },
+      {
+        "id": "dms-mirror-probe-connected",
+        "status": "designed",
+        "files": [
+          "packages/documents/server/src/aggregates/Sync/DmsMirrorBox.ts"
+        ]
+      },
+      {
+        "id": "vault-sync-status-connected",
+        "status": "reviewed",
+        "files": [
+          "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts"
+        ]
+      },
+      {
+        "id": "tsconfig-compiler-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"]
+      },
+      {
+        "id": "tsconfig-build-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"]
+      },
+      {
+        "id": "ts-node-config",
+        "status": "disqualified",
+        "files": ["packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"]
+      },
+      {
+        "id": "create-package-template-type-flags",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts"
+        ]
+      },
+      {
+        "id": "yeet-status-remote-check-phase",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts"
+        ]
+      },
+      {
+        "id": "runners-bake-cli-mode",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts"
+        ]
+      },
+      {
+        "id": "docgen-local-json-requires-plan",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts"
+        ]
+      },
+      {
+        "id": "create-package-scaffold-shape",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts"
+        ]
+      },
+      {
+        "id": "yeet-command-shared-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"]
+      },
+      {
+        "id": "yeet-run-plan-mode-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts"
+        ]
+      },
+      {
+        "id": "yeet-handler-test-plan-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts"
+        ]
+      },
+      {
+        "id": "yeet-verdict-commit-push",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts"
+        ]
+      },
+      {
+        "id": "yeet-sweep-git-state",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts"
+        ]
+      },
+      {
+        "id": "yeet-sweep-options-json-plan",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts"
+        ]
+      },
+      {
+        "id": "yeet-reply-live-thread-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts"
+        ]
+      },
+      {
+        "id": "turbo-summary-task-cache",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts"]
+      },
+      {
+        "id": "runners-aws-ebs-block-device",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts"
+        ]
+      },
+      {
+        "id": "worktree-list-entry-porcelain",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+        ]
+      },
+      {
+        "id": "worktree-porcelain-accumulator",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+        ]
+      },
+      {
+        "id": "worktree-doctor-entry-facts",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts"
+        ]
+      },
+      {
+        "id": "delete-package-handler-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts"
+        ]
+      },
+      {
+        "id": "laws-effect-imports-command-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts"]
+      },
+      {
+        "id": "laws-terse-effect-command-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts"]
+      },
+      {
+        "id": "laws-terse-effect-rules-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"]
+      },
+      {
+        "id": "docgen-local-allow-full",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts"
+        ]
+      },
+      {
+        "id": "ci-lane-run-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
+      },
+      {
+        "id": "ci-local-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
+      },
+      {
+        "id": "ci-local-step-plan",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
+      },
+      {
+        "id": "quality-test-lane-selection",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
+      },
+      {
+        "id": "fallow-command-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts"
+        ]
+      },
+      {
+        "id": "codex-findings-ingest-command-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts"
+        ]
+      },
+      {
+        "id": "research-repo-card-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Research/Research.schemas.ts"
+        ]
+      },
+      {
+        "id": "aimetrics-install-doctor-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts"
+        ]
+      },
+      {
+        "id": "aimetrics-install-apply-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts"
+        ]
+      },
+      {
+        "id": "aimetrics-sources-discover-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts"
+        ]
+      },
+      {
+        "id": "aimetrics-forwarder-run-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts"
+        ]
+      },
+      {
+        "id": "aimetrics-forwarder-timer-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts"
+        ]
+      },
+      {
+        "id": "aimetrics-benchmark-run-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts"
+        ]
+      },
+      {
+        "id": "aimetrics-label-add-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts"
+        ]
+      },
+      {
+        "id": "agent-effectiveness-doctor-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts"
+        ]
+      },
+      {
+        "id": "agent-effectiveness-eval-score-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts"
+        ]
+      },
+      {
+        "id": "sync-data-target-selection",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.command.ts"
+        ]
+      },
+      {
+        "id": "knowledge-ref-classification-input",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts"
+        ]
+      },
+      {
+        "id": "knowledge-ref-candidate",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts"
+        ]
+      },
+      {
+        "id": "step-exec-run-captured-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/internal/process/StepExec.ts"]
+      },
+      {
+        "id": "r2-apps-practice-kg-build-flags",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/build.ts"]
+      },
+      {
+        "id": "r2-apps-oip-layout-script-gates",
+        "status": "disqualified",
+        "files": ["apps/oip-web/src/app/layout.tsx"]
+      },
+      {
+        "id": "r2-apps-oip-metadata-robots",
+        "status": "disqualified",
+        "files": ["apps/oip-web/src/app/layout.tsx"]
+      },
+      {
+        "id": "statutes-at-large-pincite-is-range",
+        "status": "designed",
+        "files": ["packages/law-practice/domain/test/LawPracticeDomain.test.ts"]
+      },
+      {
+        "id": "openai-compat-language-model-config",
+        "status": "disqualified",
+        "files": [
+          "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts"
+        ]
+      },
+      {
+        "id": "yeet-merge-ready-criteria",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts"
+        ]
+      },
+      {
+        "id": "yeet-merge-ready-encoded",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts"
+        ]
+      },
+      {
+        "id": "r2-tooling-bin-main-fast-paths",
+        "status": "reviewed",
+        "files": ["packages/tooling/tool/cli/src/bin-main.ts"]
+      },
+      {
+        "id": "vault-sync-move-delta-axes",
+        "status": "disqualified",
+        "files": [
+          "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts"
+        ]
+      },
+      {
+        "id": "r3-drivers-arch-work-item-config-env-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.layer.ts"
+        ]
+      },
+      {
+        "id": "phoenix-prompt-read-exists",
+        "status": "reviewed",
+        "files": ["packages/drivers/phoenix/src/Phoenix.service.ts"]
+      },
+      {
+        "id": "xai-sse-done-payload",
+        "status": "reviewed",
+        "files": [
+          "packages/drivers/xai/src/XAi.service.ts",
+          "packages/drivers/xai/src/XAiLanguageModel.service.ts"
+        ]
+      },
+      {
+        "id": "venice-sse-done-payload",
+        "status": "reviewed",
+        "files": [
+          "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+          "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts"
+        ]
+      },
+      {
+        "id": "r3-tooling-phoenix-sync-program-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts"
+        ]
+      },
+      {
+        "id": "corpus-organize-category-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts"
+        ]
+      },
+      {
+        "id": "xai-websocket-message-binary",
+        "status": "designed",
+        "files": ["packages/drivers/xai/src/XAi.service.ts"]
+      },
+      {
+        "id": "goals-repair-fork-mode",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts"
+        ]
+      },
+      {
+        "id": "goals-migrate-conventions-mode",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts"
+        ]
+      },
+      {
+        "id": "goals-set-status-input",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts"]
+      },
+      {
+        "id": "codex-findings-ingest-command-force-refresh",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts"
+        ]
+      },
+      {
+        "id": "html-standard-global-boolean-attributes",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/html/src/Html.attributes.ts"]
+      },
+      {
+        "id": "html-picture-source-sizes-auto",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
+      },
+      {
+        "id": "jsonc-parser-sdk-flags",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/schema/src/Jsonc.ts"]
+      },
+      {
+        "id": "xml-parser-sdk-flags",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/schema/src/Xml.ts"]
+      },
+      {
+        "id": "taxonomy-loader-manifest-presence",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/ontology/src/TaxonomyLoader.ts"]
+      },
+      {
+        "id": "identity-property-descriptor-flags",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/identity/src/Id.ts"]
+      },
+      {
+        "id": "tsconfig-compiler-options-export",
+        "status": "disqualified",
+        "files": ["packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"]
+      },
+      {
+        "id": "ts-node-compiler-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"]
+      },
+      {
+        "id": "yeet-monitor-command-route",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"]
+      },
+      {
+        "id": "yeet-merge-ready-criterion-changed",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/WatchStream.ts"
+        ]
+      },
+      {
+        "id": "yeet-monitor-failed-job-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts"
+        ]
+      },
+      {
+        "id": "doctest-cli-config",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Docgen/Doctest.schemas.ts"
+        ]
+      },
+      {
+        "id": "worktree-removal-mode",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts"
+        ]
+      },
+      {
+        "id": "worktree-residue-reason-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts"
+        ]
+      },
+      {
+        "id": "html-select-child-grammar",
+        "status": "designed",
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
+      },
+      {
+        "id": "html-dl-child-grammar",
+        "status": "designed",
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
+      },
+      {
+        "id": "r2-foundation-retry1-number-input-spin-disabled",
+        "status": "disqualified",
+        "files": [
+          "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts"
+        ]
+      },
+      {
+        "id": "r3-apps-pglite-data-dir-probe",
+        "status": "designed",
+        "files": ["apps/professional-desktop/src/runtime/Pglite.ts"]
+      },
+      {
+        "id": "r3-apps-sidecar-devtools-gates",
+        "status": "designed",
+        "files": ["apps/professional-desktop/src/runtime/Observability.ts"]
+      },
+      {
+        "id": "r3-tooling-ecosystem-polarity-specifier-call",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts"
+        ]
+      },
+      {
+        "id": "r3-tooling-match-person-disposition-facts",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts"
+        ]
+      },
+      {
+        "id": "r3-tooling-fn-schema-inline-contracts",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstDetectors.ts"
+        ]
+      },
+      {
+        "id": "r2-apps-mcpb-user-config-required",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
+      },
+      {
+        "id": "r2-domains-ontology-graph-fold-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts"
+        ]
+      },
+      {
+        "id": "html-datalist-child-grammar",
+        "status": "designed",
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
+      },
+      {
+        "id": "html-media-child-grammar",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
+      },
+      {
+        "id": "r3-tooling-goal-doctor-supersession-loci",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Goals/Doctor.ts"]
+      },
+      {
+        "id": "r2-apps-practice-kg-build-overwrite-phase",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/build.ts"]
+      },
+      {
+        "id": "r2-apps-oip-route-instant-flags",
+        "status": "disqualified",
+        "files": ["apps/oip-web/src/app/layout.tsx"]
+      },
+      {
+        "id": "r2-foundation-html-foreign-entry-flags",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
+      },
+      {
+        "id": "r3-arch-ecosystem-internal-pg-timestamp-timezone",
+        "status": "designed",
+        "files": [
+          "packages/ecosystem/effect-drizzle/src/pg/Column.ts",
+          "packages/ecosystem/effect-drizzle/src/pg/combinators.ts"
+        ]
+      },
+      {
+        "id": "chat-timeline-refresh-latch",
+        "status": "disqualified",
+        "files": ["packages/agents/client/src/Chat.atoms.ts"]
+      },
+      {
+        "id": "r3-foundation-attribute-requirement-gates",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
+      },
+      {
+        "id": "with-codec-statics-install-on-owned-schema",
+        "status": "disqualified",
+        "files": [
+          "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts"
+        ]
+      },
+      {
+        "id": "acp-client-protocol-capabilities",
+        "status": "disqualified",
+        "files": ["packages/drivers/acp/src/AcpProtocol.service.ts"]
+      },
+      {
+        "id": "acp-server-protocol-capabilities",
+        "status": "disqualified",
+        "files": ["packages/drivers/acp/src/AcpProtocol.service.ts"]
+      },
+      {
+        "id": "openclaw-telegram-channel-document-flags",
+        "status": "disqualified",
+        "files": ["packages/drivers/openclaw/src/OpenclawRender.ts"]
+      },
+      {
+        "id": "r2-apps-observability-exporter-gates",
+        "status": "disqualified",
+        "files": ["apps/professional-desktop/src/runtime/Observability.ts"]
+      },
+      {
+        "id": "r2-apps-practice-kg-package-rm-opts",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
+      },
+      {
+        "id": "r2-apps-root-layout-suppress-hydration",
+        "status": "disqualified",
+        "files": ["apps/oip-web/src/app/layout.tsx"]
+      },
+      {
+        "id": "r2-foundation-iri-ipv6-segment-facts",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/rdf/src/Iri.ts"]
+      },
+      {
+        "id": "r2-foundation-float-fast-check-options",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/schema/src/Float.ts"]
+      },
+      {
+        "id": "r2-foundation-double-fast-check-options",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/schema/src/Double.ts"]
+      },
+      {
+        "id": "r3-foundation-verified-span-source-failure-facts",
+        "status": "disqualified",
+        "files": [
+          "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts"
+        ]
+      },
+      {
+        "id": "r3-tooling-envconfig-unresolved-turbo-secrets",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts"]
+      },
+      {
+        "id": "r3-apps-claims-directory-must-exist",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/claims.ts"]
+      },
+      {
+        "id": "r3-apps-bin-directory-must-exist",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/bin.ts"]
+      },
+      {
+        "id": "r3-apps-pglite-mkdir-recursive",
+        "status": "disqualified",
+        "files": ["apps/professional-desktop/src/runtime/Pglite.ts"]
+      },
+      {
+        "id": "r3-apps-package-assert-archive-force",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
+      },
+      {
+        "id": "r3-apps-build-fs-recursive",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/build.ts"]
+      },
+      {
+        "id": "r3-apps-tauri-ipc-incremental-metrics",
+        "status": "disqualified",
+        "files": ["apps/professional-desktop/src/transport/TauriIpcSocket.ts"]
+      },
+      {
+        "id": "r3-apps-contradiction-qa-mkdir-recursive",
+        "status": "disqualified",
+        "files": [
+          "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts"
+        ]
+      },
+      {
+        "id": "r3-apps-package-mkdir-recursive",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
+      },
+      {
+        "id": "r3-apps-package-prezip-force",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
+      },
+      {
+        "id": "r3-apps-package-foreach-discard",
+        "status": "disqualified",
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
+      },
+      {
+        "id": "r3-drivers-arch-folder-resolution-blocked-provider",
+        "status": "designed",
+        "files": [
+          "packages/drivers/box-provisioning/src/BoxProvisioningPlanner.ts"
+        ]
+      },
+      {
+        "id": "r3-tooling-pglite-integration-gate-flags",
+        "status": "disqualified",
+        "files": ["packages/tooling/test-kit/test-utils/src/SqlTest.ts"]
+      },
+      {
+        "id": "r3-tooling-lint-tagged-union-pattern-gates",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts"]
+      },
+      {
+        "id": "r24-foundation-modeling-rest-link-sizes-issue-flags",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
+      },
+      {
+        "id": "r24-foundation-modeling-rest-recovery-budget-coherence",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/skill-contract/src/Recovery.ts"]
+      },
+      {
+        "id": "html-img-sizes-disposition",
+        "status": "designed",
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
+      },
+      {
+        "id": "r25-foundation-schema-n-z-semver-prerelease-numeric-flags",
+        "status": "disqualified",
+        "files": ["packages/foundation/modeling/schema/src/Semver.ts"]
+      },
+      {
+        "id": "html-link-imagesizes-disposition",
+        "status": "designed",
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
+      },
+      {
+        "id": "r25-drivers-a-f-box-action-base-destructive-provider",
+        "status": "disqualified",
+        "files": [
+          "packages/drivers/box-provisioning/src/BoxProvisioningPlanner.ts"
+        ]
+      },
+      {
+        "id": "r25-drivers-n-r-stream-state-finished-finish-reason",
+        "status": "disqualified",
+        "files": [
+          "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts"
+        ]
+      },
+      {
+        "id": "r25-drivers-n-r-runpod-raw-request-authenticated-body",
+        "status": "disqualified",
+        "files": ["packages/drivers/runpod/src/Runpod.service.ts"]
+      },
+      {
+        "id": "r25-tool-docgen-cli-config-toggles",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/docgen/src/CLI.ts"]
+      },
+      {
+        "id": "contained-file-read-outcome",
+        "status": "designed",
+        "files": ["packages/tooling/tool/cli/src/internal/cli/FsGuards.ts"]
+      },
+      {
+        "id": "r25-cli-internal-root-turbo-env-configured",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/internal/cli/TurboCache.ts"]
+      },
+      {
+        "id": "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
+      },
+      {
+        "id": "r25-cli-commands-a-c-architecture-ensure-absent-remove",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Architecture/OperationPlanExecution.ts"
+        ]
+      },
+      {
+        "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
+      },
+      {
+        "id": "r25-cli-commands-r-z-notion-query-has-more",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Research/internal/NotionPull.ts"
+        ]
+      },
+      {
+        "id": "r25-cli-commands-r-z-worktree-list-entry-detached-branch",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+        ]
+      },
+      {
+        "id": "r25-cli-commands-r-z-porcelain-accumulator-detached-branch",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+        ]
+      },
+      {
+        "id": "r25-cli-commands-r-z-worktree-doctor-entry-detached-branch",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts"
+        ]
+      },
+      {
+        "id": "r25-cli-commands-r-z-fleet-checkout-detached-branch",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+        ]
+      },
+      {
+        "id": "r25-cli-yeet-shared-options-ci-parity-no-fail-fast",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"]
+      },
+      {
+        "id": "coverage-baseline-write-mode",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
+      },
+      {
+        "id": "yeet-prepared-publish-commit",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts"
+        ]
+      },
+      {
+        "id": "citation-blank-page",
+        "status": "designed",
+        "files": [
+          "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+          "packages/law-practice/domain/test/LawPracticeDomain.test.ts"
+        ]
+      },
+      {
+        "id": "pincite-range-endpoints",
+        "status": "designed",
+        "files": [
+          "packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts"
+        ]
+      },
+      {
+        "id": "goals-packet-migration-kind",
+        "status": "designed",
+        "files": ["packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts"]
+      },
+      {
+        "id": "worktree-fleet-epoch-target",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts"
+        ]
+      },
+      {
+        "id": "files-worker-score-thresholds",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts"
+        ]
+      },
+      {
+        "id": "files-person-reference-disposition",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts"
+        ]
+      },
+      {
+        "id": "m365-tool-error-retryability",
+        "status": "designed",
+        "files": ["packages/drivers/m365-mcp/src/M365Handlers.ts"]
+      },
+      {
+        "id": "vault-sync-push-failure-disposition",
+        "status": "designed",
+        "files": [
+          "packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts"
+        ]
+      },
+      {
+        "id": "agents-chat-turn-surface",
+        "status": "disqualified",
+        "files": ["packages/agents/client/src/Chat.atoms.ts"]
+      },
+      {
+        "id": "r26-cli-commands-d-k-seed-snapshot-prior-presence",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts"
+        ]
+      },
+      {
+        "id": "r26-cli-commands-d-k-docgen-quality-command-scope",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts"
+        ]
+      },
+      {
+        "id": "r26-cli-commands-d-k-goals-index-command-mode",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts"
+        ]
+      },
+      {
+        "id": "receipt-fallback-draft-occupancy",
+        "status": "designed",
+        "files": ["packages/agents/client/src/Chat.atoms.ts"]
+      },
+      {
+        "id": "create-package-retired-name-reconciliation",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts"
+        ]
+      },
+      {
+        "id": "r26-cli-commands-a-c-create-package-execute-mutation-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts"
+        ]
+      },
+      {
+        "id": "r27-cli-commands-a-c-ecosystem-package-json-flags",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts"
+        ]
+      },
+      {
+        "id": "r27-cli-commands-l-q-effect-tsgo-readme-parser",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+        ]
+      },
+      {
+        "id": "r27-cli-commands-l-q-tsgo-smoke-compiler-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+        ]
+      },
+      {
+        "id": "r27-cli-commands-r-z-sync-data-target-selection-auth",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.command.ts"
+        ]
+      },
+      {
+        "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+        "status": "designed",
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
+      },
+      {
+        "id": "r27-boolean-state-foundation-spinner-state",
+        "status": "designed",
+        "files": ["packages/foundation/ui-system/ui/src/hooks/useSpinner.ts"]
+      },
+      {
+        "id": "r28-tooling-library-support-tsmorph-project-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts"
+        ]
+      },
+      {
+        "id": "r28-tooling-library-support-pglite-container-stop-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/test-kit/test-utils/src/SqlTest.ts"]
+      },
+      {
+        "id": "r28-tooling-policy-jsonc-parse-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts"
+        ]
+      },
+      {
+        "id": "r28-tooling-library-observability-mechanical-terminal-consistency",
+        "status": "disqualified",
+        "files": ["packages/tooling/library/ai-metrics/src/flight-record.ts"]
+      },
+      {
+        "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts"
+        ]
+      },
+      {
+        "id": "r28-cli-internal-root-tmpfs-gitfile-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts"
+        ]
+      },
+      {
+        "id": "r28-cli-internal-root-tmpfs-directory-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts"
+        ]
+      },
+      {
+        "id": "r28-cli-internal-root-tmpfs-fallow-extras-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts"
+        ]
+      },
+      {
+        "id": "r28-cli-internal-root-admission-journal-sidecar-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/internal/repo-run/AdmissionJournal.ts"
+        ]
+      },
+      {
+        "id": "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
+      },
+      {
+        "id": "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts"
+        ]
+      },
+      {
+        "id": "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts"
+        ]
+      },
+      {
+        "id": "r28-cli-quality-coverage-resolved-operation",
+        "status": "designed",
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
+      },
+      {
+        "id": "r28-cli-quality-test-lane-resolved-selection",
+        "status": "designed",
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
+      },
+      {
+        "id": "r28-cli-commands-r-z-write-remote-skill-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts"
+        ]
+      },
+      {
+        "id": "r28-cli-commands-r-z-write-agents-mirror-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts"
+        ]
+      },
+      {
+        "id": "r28-cli-internal-root-tmpfs-stub-observations",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts"
+        ]
+      },
+      {
+        "id": "codex-findings-write-request-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts"
+        ]
+      },
+      {
+        "id": "r29-cli-internal-root-run-captured-streams-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/internal/process/StepExec.ts"]
+      },
+      {
+        "id": "r29-cli-commands-a-c-mode-validation-request",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts"
+        ]
+      },
+      {
+        "id": "r29-cli-commands-l-q-github-checks-feature-matrix-jsonc-parse-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+        ]
+      },
+      {
+        "id": "r29-cli-commands-l-q-tsgo-rules-tsconfig-jsonc-parse-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+        ]
+      },
+      {
+        "id": "r29-cli-commands-l-q-tsgo-rules-generated-aliases-json-parse-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+        ]
+      },
+      {
+        "id": "r29-cli-commands-l-q-test-tsgo-tempdir-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+        ]
+      },
+      {
+        "id": "r29-cli-commands-l-q-pre-push-ci-lane-plan",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts"
+        ]
+      },
+      {
+        "id": "r29-cli-commands-l-q-collect-output-capture-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+        ]
+      },
+      {
+        "id": "r29-cli-commands-l-q-test-tsgo-turbo-capture-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+        ]
+      },
+      {
+        "id": "r29-cli-commands-l-q-collect-resolved-step-capture-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
+      },
+      {
+        "id": "r29-cli-commands-l-q-quarantine-step-capture-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
+      },
+      {
+        "id": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+        ]
+      },
+      {
+        "id": "acp-patched-protocol-options",
+        "status": "disqualified",
+        "files": ["packages/drivers/acp/src/AcpProtocol.service.ts"]
+      },
+      {
+        "id": "acp-client-options",
+        "status": "disqualified",
+        "files": ["packages/drivers/acp/src/AcpClient.service.ts"]
+      },
+      {
+        "id": "acp-client-child-process-options",
+        "status": "disqualified",
+        "files": ["packages/drivers/acp/src/AcpClient.service.ts"]
+      },
+      {
+        "id": "r29-acp-client-constructed-protocol-options",
+        "status": "disqualified",
+        "files": ["packages/drivers/acp/src/AcpClient.service.ts"]
+      },
+      {
+        "id": "r29-yeet-sweep-worktree-probe-address",
+        "status": "designed",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts"
+        ]
+      },
+      {
+        "id": "r30-tooling-library-observability-collector-serve-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/library/qa-capture/src/Collector.service.ts"
+        ]
+      },
+      {
+        "id": "r30-tooling-library-support-test-layer-settings",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts"
+        ]
+      },
+      {
+        "id": "r30-tooling-library-support-watch-subscription",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts"
+        ]
+      },
+      {
+        "id": "r30-tooling-library-support-temp-directory-scoped-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-l-q-workspace-tsconfig-profile-jsonc-parse-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-l-q-purge-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Purge/Purge.command.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-l-q-fallow-audit-diff-tempdir-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-l-q-coverage-regression-clean-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-l-q-check-census-overlay-compiler-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-d-k-delete-package-tree-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-d-k-match-person-stage-copy-tempdir-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-d-k-match-person-stage-manifest-tempdir-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-d-k-match-person-cleanup-staging-remove-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-d-k-match-person-glob-scan-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-d-k-match-person-validate-lock-capture-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-d-k-match-person-materialize-env-capture-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-d-k-match-person-execute-worker-capture-options",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.worker-service.ts"
+        ]
+      },
+      {
+        "id": "r30-tooling-library-support-open-mode",
+        "status": "designed",
+        "files": [
+          "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts"
+        ]
+      },
+      {
+        "id": "r30-tooling-library-support-open-file-descriptor",
+        "status": "designed",
+        "files": [
+          "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts"
+        ]
+      },
+      {
+        "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+        "status": "designed",
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
+      },
+      {
+        "id": "r31-foundation-capability-mcp-wire-tool-annotations",
+        "status": "disqualified",
+        "files": ["packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts"]
+      },
+      {
+        "id": "r31-cli-commands-a-c-storybook-affected-spawn-options",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
+      },
+      {
+        "id": "r31-cli-commands-d-k-person-match-commit-record",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.ts"
+        ]
+      },
+      {
+        "id": "r31-cli-internal-root-admitted-child-spawn-fields",
+        "status": "disqualified",
+        "files": ["packages/tooling/tool/cli/src/internal/process/StepExec.ts"]
+      },
+      {
+        "id": "id-citation-pincite-inherited-in-footnote",
+        "status": "disqualified",
+        "files": [
+          "packages/law-practice/domain/src/values/Citation/Citation.models.ts"
+        ]
+      },
+      {
+        "id": "supra-citation-pincite-inherited-in-footnote",
+        "status": "disqualified",
+        "files": [
+          "packages/law-practice/domain/src/values/Citation/Citation.models.ts"
+        ]
+      },
+      {
+        "id": "short-form-case-citation-pincite-inherited-in-footnote",
+        "status": "disqualified",
+        "files": [
+          "packages/law-practice/domain/src/values/Citation/Citation.models.ts"
+        ]
+      },
+      {
+        "id": "check-census-package-config-presence",
+        "status": "disqualified",
+        "files": [
+          "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts"
+        ]
+      }
+    ]
+  },
+  "scopeInterpretation": "Mechanical changed-path impact only; no semantic census, dryness or independent review credit. Tests and generated surfaces remain excluded by the existing prepared classifier.",
+  "inventory": {
+    "records": 754,
+    "qualified": 145,
+    "disqualified": 609,
+    "applied": 0,
+    "beforeArchive": "history/inventory/2026-09-14-pre-resume.jsonl",
+    "beforeSha256": "ed743923428ac9b8d8973a48dcf5f8011526881d64436a0779658a4159f42426",
+    "afterSha256": "03a787218e9baf186e71cdfc00474b46df49b338281764f10d13fa43b2c0bbbe",
+    "unchangedRows": 744,
+    "changes": [
+      {
+        "id": "docgen-local-json-requires-plan",
+        "beforeSha256": "2cff1dae7e980246a983f2ae5694fb5303ba2a9fbd30fcdbcb176a4aaa6bcb8e",
+        "afterSha256": "c0e6a3184a7431157cf9ea8d7169bab702d81f9a97bfa3d107f324688230a90b",
+        "status": "disqualified"
+      },
+      {
+        "id": "yeet-run-plan-mode-options",
+        "beforeSha256": "6a2db526af705cf110d72e0509e07835d193a9fd79ee7952be6398c2c51c2c35",
+        "afterSha256": "8c3ba5bb9b42ac787cf8fba583ccbc40dc24d346bf878a933099ee4365a93a5c",
+        "status": "disqualified"
+      },
+      {
+        "id": "ci-local-step-plan",
+        "beforeSha256": "c9875ae75e154de7971d15e6878e618d2c3fc7677f01d8a66f0b832c0417b846",
+        "afterSha256": "1e2c1e0766b871d67c6ea635366190c2878731fb08fd0f97cc144d2a8f706d0e",
+        "status": "disqualified"
+      },
+      {
+        "id": "pincite-range-endpoints",
+        "beforeSha256": "f971515d549acd8cf05f38562442aeeeed6351a87d7d80d53d7bbb6d6fb90400",
+        "afterSha256": "5fbc69bf420dc348cd416618590980774629a22a851c43a0b206217290132c5b",
+        "status": "designed"
+      },
+      {
+        "id": "r28-cli-quality-coverage-resolved-operation",
+        "beforeSha256": "81c1e7a61fdd9daf7ee634adaf7f25d1266330822e466a43acad42c4e0d89295",
+        "afterSha256": "9eddb7041eda31fec28617ed7270763b8d324cbdb73bcfdb0f7b20d7c1c990bc",
+        "status": "designed"
+      },
+      {
+        "id": "r30-tooling-library-support-watch-subscription",
+        "beforeSha256": "61ed34799c16a007b805acbf8e039c9ba07efb73b2efd524541a484324797688",
+        "afterSha256": "a28215972f45ece415f4ac050fc8763a2f1ab1c920416f029b7a0ea3d3435a8d",
+        "status": "disqualified"
+      },
+      {
+        "id": "r30-tooling-library-support-temp-directory-scoped-remove-options",
+        "beforeSha256": "c2cc67085ee4cc2c32144beee373fa1d6876c738423609ad6c2c540d7259c24b",
+        "afterSha256": "dc684e9d00b9249f362508629486f4216cd9f24af7a30a50d96cd324295fbc99",
+        "status": "disqualified"
+      },
+      {
+        "id": "r30-tooling-library-support-open-mode",
+        "beforeSha256": "e651e8f2f541b92c87d57cdb2961a9a93ff011addaaff4cf1810be29d7ea1e67",
+        "afterSha256": "2b787d6a766eca189da17057b5c03e7face0528b986b67f5848f6f5c241a935a",
+        "status": "designed"
+      },
+      {
+        "id": "r30-tooling-library-support-open-file-descriptor",
+        "beforeSha256": "f58763b2283bb31848cfb06a94c389894f31ccd181a24820f607e7917178f247",
+        "afterSha256": "baae8ee6dc31821d628296d8eff4ed65e0efc3e7b69156a59a2a0be91cee5e75",
+        "status": "designed"
+      },
+      {
+        "id": "coverage-baseline-write-options",
+        "beforeSha256": null,
+        "afterSha256": "effae1ef36c3f9537a7ea59aee323ddf2289ef4ef8e80e36880ff954d2f0c261",
+        "status": "disqualified"
+      }
+    ],
+    "addedIds": ["coverage-baseline-write-options"],
+    "removedIds": [],
+    "qualificationCountUnchanged": true,
+    "cardinalityCorrections": [
+      {
+        "id": "r28-cli-quality-coverage-resolved-operation",
+        "before": {
+          "representable": 16,
+          "legal": 7
+        },
+        "after": {
+          "representable": 16,
+          "legal": 9
+        },
+        "reason": "Current main supports scoped replacement and affected noop replacement."
+      }
+    ]
+  },
+  "remaining": [
+    "Resolve the two existing citation decisions before finalizing R31.",
+    "Complete current-source owner/design audits, including the 52 qualified changed-path candidates.",
+    "Run two complete current-source dry census rounds with fresh admission.",
+    "Obtain independent exact-source zero-finding Fable review and merge packet-only ratification before implementation."
+  ],
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "designs": [
+    {
+      "id": "pincite-range-endpoints",
+      "beforeArchive": "history/designs/2026-09-14-pre-resume-pincite-range-endpoints.md",
+      "changes": [
+        "Rebind current source and evidence locations.",
+        "Include IdCitation, SupraCitation and ShortFormCaseCitation recursive embeddings.",
+        "Remove the obsolete constant-empty arbitrary preservation requirement.",
+        "Correct guard accounting: four Option defaults; isRange has no default."
+      ],
+      "qualificationUnchanged": true,
+      "status": "designed; replacement independent review pending",
+      "beforeSha256": "41daa4ed2dd929ec9c79f253830848d884d0c037b64e7ad615e3dc1735a05eec",
+      "afterSha256": "c49576b0c98c1b4fd549d2e069f733872d8da214c603d87835c1820dc4ace482"
+    },
+    {
+      "id": "r30-tooling-library-support-open-mode",
+      "beforeArchive": "history/designs/2026-09-14-pre-resume-r30-tooling-library-support-open-mode.md",
+      "changes": [
+        "Rebind all source and supporting test locations.",
+        "Retain ten opening modes with the current Effect rc.113 API."
+      ],
+      "qualificationUnchanged": true,
+      "status": "designed; replacement independent review pending",
+      "beforeSha256": "268e398eaa03e533e321e16986fb4a045d4b6b4807fe5c216d421b9d57e59d78",
+      "afterSha256": "d3debc57d58294b94c56f33225b6cbd31e9a0b35ad27083ab6afd20a6880c401"
+    },
+    {
+      "id": "r30-tooling-library-support-open-file-descriptor",
+      "beforeArchive": "history/designs/2026-09-14-pre-resume-r30-tooling-library-support-open-file-descriptor.md",
+      "changes": [
+        "Retain five access modes and current before-zero seek failure.",
+        "Preserve bigint seek positions/results, number IO counts, ByteSize file information and current fixtures."
+      ],
+      "qualificationUnchanged": true,
+      "status": "designed; replacement independent review pending",
+      "beforeSha256": "eb3b32af41684af11ba76ba56ba72a96863f64daa23b359fe8fccfe819598f4e",
+      "afterSha256": "d4cdbf2603237b346cdcf32677c0e11a94c0b482267d3e8a14696f0d45e776fb"
+    },
+    {
+      "id": "yeet-sweep-git-state",
+      "beforeArchive": "history/designs/2026-09-14-pre-resume-yeet-sweep-git-state.md",
+      "changes": [
+        "Rebind unchanged selected fields and exact test/schema bytes.",
+        "Add current Retire and Porcelain indirect consumers and encoded output preservation."
+      ],
+      "qualificationUnchanged": true,
+      "status": "designed; replacement independent review pending",
+      "beforeSha256": "d416138c7fdb90d5c81770b3032b70d9395c0e04781b0bcf376f3f0a834d034b",
+      "afterSha256": "ef42beec1f327801ac102bfb914476f396b7234d417099d1f9c851708accb913"
+    },
+    {
+      "id": "r29-yeet-sweep-worktree-probe-address",
+      "beforeArchive": "history/designs/2026-09-14-pre-resume-r29-yeet-sweep-worktree-probe-address.md",
+      "changes": [
+        "Rebind unchanged selected fields and exact test/schema bytes.",
+        "Add current Retire and Porcelain indirect consumers and encoded output preservation."
+      ],
+      "qualificationUnchanged": true,
+      "status": "designed; replacement independent review pending",
+      "beforeSha256": "34632b0e4887a6ddf8ba44db994358a189808c7ca940dfe848717463fbfc75da",
+      "afterSha256": "0420f7854fd3592261c599096e44e1d1e892f6ec0a2de8122e8be7acf27e27f2"
+    },
+    {
+      "id": "r28-cli-quality-coverage-resolved-operation",
+      "beforeArchive": "history/designs/2026-09-14-pre-resume-r28-cli-quality-coverage-resolved-operation.md",
+      "changes": [
+        "Replace obsolete seven-state target with nine supported operations.",
+        "Preserve optional topology-owner array presence and current executor topology.",
+        "Retain scoped replacement, unmeasured committed rows, raw diagnostic inputs and current baseline writer semantics."
+      ],
+      "qualificationUnchanged": true,
+      "status": "designed; replacement independent review pending",
+      "beforeSha256": "ca053be1237e3059473c0a9992e42992d87aab1ae68d535ce58b7ec8c015d984",
+      "afterSha256": "f0318e57b96dd0a166841b0047c1277bca539d0ba035c3a1208cb01a07be4ed1"
+    }
+  ],
+  "boundedAudit": {
+    "receipt": "data/resume-2026-09-14-bounded-audit.json",
+    "qualifiedDesignsRefreshed": 6,
+    "remainingChangedPathQualifiedIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "create-package-template-type-flags",
+      "yeet-status-remote-check-phase",
+      "create-package-scaffold-shape",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "phoenix-prompt-read-exists",
+      "xai-sse-done-payload",
+      "venice-sse-done-payload",
+      "xai-websocket-message-binary",
+      "yeet-merge-ready-criterion-changed",
+      "worktree-removal-mode",
+      "html-select-child-grammar",
+      "html-dl-child-grammar",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "html-datalist-child-grammar",
+      "r3-arch-ecosystem-internal-pg-timestamp-timezone",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "html-img-sizes-disposition",
+      "html-link-imagesizes-disposition",
+      "contained-file-read-outcome",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "files-worker-score-thresholds",
+      "files-person-reference-disposition",
+      "m365-tool-error-retryability",
+      "vault-sync-push-failure-disposition",
+      "receipt-fallback-draft-occupancy",
+      "create-package-retired-name-reconciliation",
+      "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-quality-test-lane-resolved-selection",
+      "r28-cli-internal-root-tmpfs-stub-observations",
+      "r30-cli-commands-l-q-github-check-lane-outcome"
+    ]
+  }
+}

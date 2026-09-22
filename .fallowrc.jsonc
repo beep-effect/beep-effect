@@ -204,6 +204,16 @@
     "fast-uri",
     "hono",
     "nanoid",
+    // css-select, css-tree, domutils, htmlparser2: root devDependencies imported by the
+    // vendored Impeccable detector CLI, which is declared an entry point above for
+    // dependency accounting. The private root package is never installed with
+    // `--production`, so `dev-dependencies-in-production` cannot break a deployment here;
+    // keeping them in devDependencies is what satisfies the sherif
+    // `root-package-dependencies` rule (a private root declares devDependencies only).
+    "css-select",
+    "css-tree",
+    "domutils",
+    "htmlparser2",
     "@effect/vitest",
     "@effect/language-service",
     "babel-plugin-annotate-pure-calls",

@@ -13,7 +13,6 @@ import {
   ciLocalStepsForTesting,
   DocgenLaneMode,
   docgenLaneModeForChangedPaths,
-  doctestStepForTesting,
 } from "@beep/repo-cli/commands/Ci";
 import { GithubCheckLaneSpec, githubCheckLanesForModeForTesting, QualityTaskStep } from "@beep/repo-cli/test/Quality";
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
@@ -117,14 +116,10 @@ const report = {
     [[], ["LICENSE"], ["packages/foundation/modeling/identity/src/index.ts"], ["bun.lock"]],
     (changedPaths) => ({ changedPaths, mode: docgenLaneModeForChangedPaths(changedPaths) })
   ),
-  doctestSelection: [
-    { kind: "full", steps: doctestStepForTesting("/repo", undefined) },
-    { kind: "empty-marked-selection", steps: doctestStepForTesting("/repo", []) },
-    {
-      kind: "illustrative-marked-selection",
-      steps: doctestStepForTesting("/repo", ["packages/foundation/modeling/identity/src/index.ts"]),
-    },
-  ],
+  doctestSelection: A.map(variants, ({ label, options }) => ({
+    kind: label,
+    steps: ciLaneStepsForTesting("/repo", "doctest", options),
+  })),
 };
 const encoded = await Effect.runPromise(S.encodeUnknownEffect(S.fromJsonString(Report))(report));
 const output = await Effect.runPromise(

@@ -54,12 +54,15 @@ const sourcePaths = A.sort(
     "packages/tooling/tool/cli/test/cache-pilot.test.ts",
     "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
     "packages/tooling/tool/cli/test/cache-census.test.ts",
+    "packages/tooling/tool/cli/test/cache-runtime.test.ts",
     "packages/tooling/tool/cli/src/commands/Lint/TsconfigOverlay.ts",
     "packages/tooling/tool/cli/src/commands/Lint/internal/WorkspaceWalk.ts",
     "scripts/ci-job-env.mjs",
     "scripts/ci-change-profile.sh",
     "tsconfig.configs.json",
     "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+    "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+    "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
   ]),
   Order.String
 );

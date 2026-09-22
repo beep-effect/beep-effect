@@ -495,6 +495,36 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       }
     })
   );
+  it.effect("refuses directories, oversized artifacts, and a bundle exceeding the aggregate budget", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, manifest, findings } = yield* fixture();
+      yield* fs.remove(path.join(root, "findings.json"));
+      yield* fs.makeDirectory(path.join(root, "findings.json"));
+      expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toContain("regular file");
+      yield* fs.remove(path.join(root, "findings.json"), { recursive: true });
+      const bytes = new Uint8Array(16 * 1024 * 1024 + 1);
+      yield* fs.writeFile(path.join(root, "findings.json"), bytes);
+      expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toContain("16 MiB");
+      yield* writeJson(root, "findings.json", findings);
+      const large = new Uint8Array(16 * 1024 * 1024);
+      const digest = yield* hash(large);
+      const extra = yield* Effect.forEach(
+        [1, 2, 3, 4],
+        Effect.fnUntraced(function* (n) {
+          const name = `large-${n}.bin`;
+          yield* fs.writeFile(path.join(root, name), large);
+          return { path: name, sha256: digest, mediaType: "application/octet-stream" };
+        })
+      );
+      yield* writeJson(root, "scan-manifest.json", {
+        ...manifest,
+        scan: { ...manifest.scan, artifacts: [...extra, ...manifest.scan.artifacts] },
+      });
+      expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toContain("64 MiB");
+    })
+  );
 });
 
 it.layer(testLayer, { timeout: "30 seconds" })("security bundle input bounds", (it) => {

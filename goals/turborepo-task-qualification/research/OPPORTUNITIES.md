@@ -911,3 +911,775 @@ controls disable reuse and may still run after this comparison stops reuse.
 - Prevention: inspect executable-task and dependency-output changes after a
   merge before starting another full proof. An interrupted prior-head run is
   retained as partial evidence, never treated as a pass for the new merge.
+
+## 2026-09-11: resumption state and command discovery
+
+- Resuming after the merged save PR required replacing stale worktree and
+  dependency-receipt references before native experiments. Retain explicit
+  source revision and refresh commands in future checkpoint handoffs.
+- `goals set-status ... active` updates lifecycle but preserves the old pause
+  status note. Updated that note explicitly with operator resumption and the
+  remaining gates. A transition warning for contradictory notes would help.
+- `cache audit --output ...` was rejected because audit supports `--json`.
+  The corrected command redirected JSON to a private evidence file and passed.
+  Consistent report-output flags across Cache commands would prevent this
+  invocation error.
+
+## 2026-09-11: receipt linkage compatibility
+
+The pilot calculated its runtime digest with the requested Turbo client
+linkage but omitted that snapshot from the receipt. This prevented independent
+reconstruction when the client differed from the reviewed installation. The
+receipt now retains the existing linkage schema; older receipts decode with
+explicit absence. Tests cover a dynamic client replacing a reviewed static
+client and both new and historical wire formats.
+
+The first compatibility test used `Record.omit`, which is absent from the
+pinned Effect API. The focused test failed with `omit is not a function`.
+Checked the local Effect reference and replaced it with `Struct.omit`; all
+14 process-boundary tests then passed. Consult the pinned helper module before
+using a remembered API.
+
+The aggregate `quality test-tsgo` wrapper suppressed the child command error
+for an unsupported `--strict` argument. Replaying the same Turbo task with
+error logs exposed the invocation mistake. The canonical command then found
+three introduced `preferTypedSchemaDecoder` diagnostics in the new tests;
+replaced `decodeUnknownEffect` with `decodeEffect` for schema-typed encoded
+inputs. Preserve the child diagnostic when the wrapper fails.
+
+## 2026-09-11: verification invalidates installed-tree previews
+
+Both native pilot launches rejected the previous activation preview as stale
+after package verification. Comparing the old and refreshed previews isolated
+the change to installed dependencies. Comparing the materialized trees without
+dereferencing workspace links found one changed file under
+`node_modules/.vite/vitest/*/results.json`. The dependency fingerprint includes
+that generated test cache, so verification conservatively invalidates a pilot
+preview even when native binaries and computation configuration are unchanged.
+Refreshed both the activation preview and verified dependency materialization
+before relaunching; retained the rejected-run logs. A reviewed separation of
+installed executable content from generated cache metadata could prevent these
+false misses, but requires its own completeness evidence.
+
+### Runtime guard compiler feedback (2026-09-11)
+
+- Work: share the existing Turbo command classifier with Cache-owned runtime validation.
+- Evidence: package verification and `beep quality test-tsgo` rejected the initial
+  export with `TS377101` (missing pipeable signature). The audit opened inbox
+  `local-shard-a38410bd316e`.
+- Repair: preserve command recognition and expose its two-argument form through
+  `dual`, including the pipeable overload. Commit `1ffb0878f6` contains the repair;
+  the inbox row is acknowledged against that commit.
+- Prevention: copy the adjacent `turboEnvExtendsAmbient` overload pattern when
+  exposing an existing two-argument environment helper.
+
+### Native selection mode collisions (2026-09-11)
+
+- Work: prepare the runtime task selector against the pinned native Turbo client.
+- Evidence: the isolated selection probe found duplicate `--cache` and `--dry-run`
+  arguments rejected, while `--graph --dry=json` exited zero with graph output.
+- Prevention: preserve the task argument separator, normalize execution options,
+  and require a decoded native plan rather than interpreting success as an empty
+  selection. Cases and evidence hashes are in `runtime-enforcement-boundary.json`.
+
+### Runtime selector map and provider corrections (2026-09-11)
+
+- Work: implement native task selection using existing workspace discovery.
+- Evidence: focused tests passed, but test typechecking reported `TS2339` because
+  workspace names are map keys, not fields on `WorkspacePackage`. It also reported
+  the nested pipeable opportunity. The private native harness initially lacked
+  the filesystem service required to construct `FsUtilsLive`.
+- Repair: derive names from map entries with `pipe`; provide Node services to the
+  harness layer construction. The corrected collector observes identity plus its
+  types dependency and types-only selection without requiring a toolchain profile.
+- Prevention: retain the discovery map key and satisfy layer dependencies before
+  testing a collector against the actual native client.
+
+### Wrapper recognition and environment hygiene (2026-09-11)
+
+- Work: prepare a Cache-owned child under the existing secret-session wrapper.
+- Evidence: synthetic inputs to the current environment helpers showed the original
+  Turbo command disables ambient extension and drops an unrelated reference; the
+  proposed rewritten command is unrecognized and would restore that reference.
+- Prevention: resolve hygiene using the original step, then rewrite executable
+  arguments. Preserve the resulting environment and extension policy explicitly.
+  No secret operation was performed; the probe used a fabricated reference.
+
+### Runtime command integration feedback (2026-09-11)
+
+- Work: add the Cache-owned execution command and final-spawn tests.
+- Evidence: typechecking reported `readonly unknown[]` for variadic CLI arguments;
+  Vitest rejected imports under the explicitly private `./internal/*` boundary.
+  The dispatch test also detected a changed command-list prefix.
+- Repair: decode arguments through `S.Array(S.String)`, expose module namespaces
+  through the existing source-only Cache test kit, and append the new command to
+  the command list. Thirty-two focused tests now pass, including calculated-key
+  injection, native-client drift rejection, and exit-code preservation.
+- Prevention: follow the actual CLI argument type and package export boundary
+  before building command handlers and process-level tests.
+
+- Follow-up: the hash-file spy inferred the curried overload and rejected a raw
+  `Effect` mock return during typechecking. Preserve the dual call contract in
+  mocks with `dual(2, ...)`; runtime assertions had passed before this typing fix.
+
+- The mock correction initially omitted its `dual` import; both the focused test
+  and test typecheck caught it. The import is fixed and all six runtime tests
+  pass on the corrected file. Wait for stable focused/type results before starting
+  another full audit to avoid proving an intermediate test revision.
+
+### Runner rewrite test isolation (2026-09-11)
+
+- Work: wire the Cache child into ordinary Quality and direct CI execution.
+- Evidence: the CI partition fixture shimmed `bunx` only. Rewriting execution to
+  `bun` escaped the process double and ran real local lint tasks. The focused test
+  command was intentionally terminated (exit 143); this is not a passed test run.
+- Repair: the fixture now intercepts both executables, and execution assertions
+  expect the Cache child while retaining task selection and failure checks.
+- Prevention: when changing the spawned executable, update executable-level test
+  doubles before broad tests. A default process fixture should reject unexpected
+  executables rather than falling through to the workstation toolchain.
+
+### Bun startup environment reload (2026-09-11)
+
+- Work: place Cache execution inside the resolved secret-session environment.
+- Evidence: Bun supports `--no-env-file`; a real fixture showed the routed child
+  executes with that flag, while omitting it reloads the fixture runtime-key value
+  and is rejected before task execution.
+- Prevention: invoke the checkout CLI directly with `--no-env-file`. A repository
+  script would introduce another Bun process with its own environment-file loading.
+
+### Execution ownership moved beyond the census glob (2026-09-11)
+
+- Work: review discovery coverage after routing execution through Cache.
+- Evidence: the refreshed census has 107 entrypoint sources and omits four checked
+  Cache execution modules. Its source glob still covers only CI, Quality and Yeet.
+- Prevention: update execution-source discovery whenever a new module becomes an
+  execution authority, and require a regression check for the new source path.
+  File presence alone is not completed semantic review.
+
+### Full routing verification repairs (2026-09-11)
+
+- Work: verify the integrated runtime routing across the whole CLI package.
+- Evidence: the audit passed 3,756 tests and failed two lint-worker assertions for
+  the old Turbo command shape. Docgen rejected the `QualityTaskStep` example import
+  from the Quality public facade. Both failures opened P0 inbox rows.
+- Repair: assert the Cache execution prefix while preserving task selectors and
+  environment expectations; import the step model from the existing source-only
+  Quality test kit in the example. Docgen now passes all 1,666 examples.
+- Focused-run attribution: root-CWD execution of lint-worker tests exposed existing
+  package-CWD expectations. Run this file from the same package directory as the
+  full audit rather than rewriting unrelated expectations.
+- Prevention: include all execution-shape assertion files in the targeted routing
+  suite, and use an actually exported path in documentation examples.
+
+### Toolchain digest naming in public summaries (2026-09-11)
+
+- Work: commit the verified runtime enforcement increment and P0 repairs.
+- Evidence: the secret-scanning hook classified four `runtimeKeyDigest` fields in
+  the public preflight summary as generic API keys. They are reconstructed SHA-256
+  toolchain digests, not credentials; private native receipts retain their schema.
+- Repair: name the public summary fields `toolchainSha256`, preserving all digest
+  bytes and avoiding ambiguous key terminology. No scanner rule is suppressed.
+
+### Interrupted final-code native matrix (2026-09-12)
+
+- Work: refresh the stable pilot against the committed runtime-routing code.
+- Evidence: the original session handle disappeared; its retained log reports
+  `All fibers interrupted without error` and exit 130. No pilot receipt exists.
+  The cause of interruption is unestablished, so this is not a semantic failure
+  or a passing matrix.
+- Response: preserve the log hash and interruption receipt, then start a new
+  attempt with a distinct namespace and the same independently validated inputs.
+  The runner revalidates activation, dependencies and worktrees before execution.
+- Prevention: retain terminal status independently of the interactive polling
+  session so an interrupted observer cannot obscure a completed experiment.
+
+### Native merged task streams vary in order (2026-09-12)
+
+- Work: validate grouped native capture with progress-looking stdout and task
+  stderr on pinned stable and canary clients.
+- Evidence: fresh/replay pairs matched, but ten fresh runs per client yielded
+  three merged log orders despite identical sequential producer writes.
+  The private `native-stream-order.json` retains all twenty payloads and hashes.
+- Disposition: the mixed-stream synthetic fixture cannot qualify under exact
+  merged-log equivalence. No live tuple was enabled; do not infer that the real
+  lint task has the same behavior or normalize away the observed differences.
+- Prevention: require repeated fresh/fresh stream observations before accepting
+  replay fidelity as evidence of deterministic captured output.
+
+### Installed I/O trace exceeded mapping-only budget (2026-09-12)
+
+- Work: expand the existing executable-mapping observer to installed lint I/O.
+- Evidence: the trace reached exactly 8,388,608 bytes and the observer rejected
+  it. The partial trace includes 15,333 directory-enumeration calls; it is not
+  a complete I/O record and grants no passing evidence.
+- Repair: retain the failed attempt, render directory-entry buffers in compact
+  raw form and use a bounded 32 MiB trace limit for the expanded observation.
+  Source/dependency isolation and the command timeout remain in force.
+- Prevention: size full file-I/O observations separately from executable-only
+  traces, and reject truncation before interpreting their results.
+
+The 32 MiB retry also reached its limit. Its partial trace includes successful
+directory and metadata operations across the installed dependency tree and
+other repository paths; the observation cannot be narrowed to identity files
+without losing actual behavior. A third attempt compresses the unchanged
+syscall selection while writing, caps the compressed file at 32 MiB and limits
+expanded trace reads to 256 MiB. Both partial attempts remain non-passing.
+
+
+The compressed attempt completed the traced command, but its expanded trace
+was 275,653,259 bytes, exceeding the 256 MiB parser budget. A bounded streaming
+diagnostic reached gzip EOF and retained the expanded digest and terminal exit
+records; it does not restore the missing wrapper postchecks or grant acceptance.
+The trace includes broad installed-tree traversal and io_uring calls, so syscall
+counts alone cannot establish the task input closure. Retain this rejected run
+and use a 384 MiB expanded bound for the next admitted observation; keep the
+32 MiB compressed bound and 90-second command timeout unchanged. The new bound
+is based on measured complete output, not an unbounded retry.
+
+
+### Loose-mode environment is outside the runtime digest (2026-09-12)
+
+- Work: classify installed launcher environment inputs after I/O collection.
+- Evidence: eight native controls on stable and canary; changing two ambient
+  launcher variables changed task-observed values in loose mode without changing
+  the task hash within that mode. Cache reads and writes were disabled.
+- Disposition: require explicit environment-mode review and enforcement before
+  promotion. The synthetic result does not establish a live enabled-tuple defect.
+- Prevention: include ambient environment-mode controls beside runtime binary
+  perturbations, and distinguish package-manager-generated values from inherited
+  values when interpreting child environments.
+
+
+- During current-head canary pilot admission, `bun run beep cache pilot` ended
+  with exit 137 and `SIGKILL` before producing a receipt. The last phase was
+  admission waiting; bounded kernel/user journal queries returned no cause.
+  A scheduler/process termination receipt identifying signal origin would
+  prevent ambiguous experiment attribution. The interrupted log is bound in
+  `runtime-enforcement-boundary.json`; do not count it as a pilot verdict.
+
+
+- Resume canary attempt three rejected a stale activation preview. The next
+  preview observed an installed tree 1,059 bytes smaller; subsequent complete
+  dependency materialization matched the original tree digest. This transient
+  dependency drift has no attributed writer. Immutable dependency evidence
+  should be used consistently across activation and execution; do not weaken
+  the current stale-preview check. Private evidence is bound in
+  `runtime-enforcement-boundary.json` under `resumedDependencyDrift`.
+
+
+- A resumed stable receipt filename already contained an older source revision.
+  Independent activation-digest validation rejected it while the new process
+  was still live. Preserved the older receipt under a revision-specific private
+  name; its original activation bytes were not found in the bounded filename
+  search. Future attempts should allocate a fresh directory and refuse existing
+  output names before launch. File existence alone never establishes completion.
+
+
+## Preserve existing report names during census refresh
+
+While adding the hosted workflow projection, `git diff` revealed that the new
+review had replaced the existing `research/workflow-boundaries.md` report.
+The historical bytes were restored and the new report moved to
+`research/hosted-workflow-boundaries.md`; evidence references were updated.
+Checking tracked-path existence before creating an artifact would have avoided
+this collision and preserved the broader historical review automatically.
+
+
+## Resumed branch quality attribution
+
+`beep yeet verify --tier cheap-gates` failed at `9480eaf486` on
+`lint:effect-vitest`, `fallow:audit` and `fallow:health`. The two Fallow lanes
+identified the same three introduced complexity findings in cache selection
+and tests. Refactoring cleared the audit findings, and both focused cache
+suites passed 23 tests. CLI package audit and docgen then passed before merging main.
+A fresh fetch found 46 commits on main beyond this branch base, including
+Effect Vitest baseline changes. Integrate the current base before treating
+the 110 remaining local membership findings as final migration obligations;
+never refresh the baseline merely to accept them. Earlier base-freshness
+inspection would have exposed this overlap before broad verification.
+
+
+## Main integration: routing fixtures and test conventions
+
+Merging main at `1969de85bf` reduced the Effect Vitest ratchet to 21 new
+findings in five test files. Canonical suite layers and assertions removed
+the new migration findings; one immediate-lifetime partition fixture retains
+a reasoned EV003 exception. Do not replace its per-invocation release with
+suite teardown.
+
+The first five-suite run passed 344 tests and failed eight. Newly merged
+assertions and fake launchers still assumed direct Turbo execution; this
+branch routes those steps through Cache. Updating the launcher boundary and
+command expectations preserved ledger-digest, failure-aggregation and ordered
+policy assertions. All 352 tests then passed. Integration fixtures that
+project the governed runtime step would have prevented these stale launcher
+assumptions. Final package verification and cheap gates remain separate
+proof obligations.
+
+
+The source planner recipe also failed after integration because main removed
+`doctestStepForTesting`. The current Ci planner always runs the full doctest
+fleet; the recipe now captures its public planner across the existing option
+variants. Versioned recipes must be exercised after base merges before their
+old snapshots are rebound to new sources.
+
+
+## Exact native client preflight
+
+A manual canary `--version` probe reported the workspace's stable version even
+though the canary file digest matched. Repeating with `--skip-infer --version`
+reported the pinned `2.10.13-canary.1`. Preflight probes must use the runner's
+existing native skip-infer posture; otherwise workspace inference can be
+misreported as executable drift. No binary or expected pin was changed.
+
+
+The post-main canary admission reported an undecodable lease and automatically
+quarantined it before runtime checks passed. The diagnostic came from
+`beep cache pilot`; no pilot failure is inferred from it. Atomic, validated
+admission-state writes would prevent this recovery path. The lease writer and
+cause have not been attributed, and other tasks' admission state was not edited.
+
+
+### Repeated admission-state quarantine during input controls (2026-09-15)
+
+The admitted external-input wrapper again reported `quarantined malformed
+admission state` with reason `undecodable`. Admission continued and the five
+controls plus before/after verification passed. The private wrapper log is
+referenced by `postMainExternalInputControls`; no lease identity or raw runtime
+path is copied here. The writer and cause remain unattributed. A schema-valid
+atomic lease publication contract would prevent this class of recovery;
+inspect the owning admission lane before proposing a repair.
+
+
+### Native dry selection needs an explicit root (2026-09-15)
+
+The isolated dependency control ran the pinned Turbo binary with `--skip-infer`
+from the identity package. It rejected the child configuration with
+`Found an unknown key extends`, because the package was treated as the root.
+The command exited before producing comparison evidence. The retry specifies
+`--cwd=/fixture`; preserve the original failed run as harness evidence.
+Explicit root selection in every inference-disabled probe prevents this error.
+
+
+### Git local exclusions escape the observed task identity (2026-09-15)
+
+A bounded paired control changed only Git `info/exclude`, keeping an invalid
+identity source identical. Lint changed from exit one to zero; stable native
+identity/types task hashes and input maps remained identical. The admitted
+wrapper and independent retained-byte review passed. See
+`postMainGitExcludeCounterexample` in the runtime boundary receipt.
+Treat local Git exclusion state as a semantic input or enforce a controlled
+exclusion boundary. Existing disabled/excluded pilot policy prevents activation;
+the runtime contract needs repair before qualification.
+
+
+### Native Git regression needs explicit platform provenance (2026-09-15)
+
+The new exclusion regression introduced EV010 for its `NodeServices` import.
+The test uses a real Git clone and linked worktree to exercise common-directory
+resolution, then checks native symlink and bounded-read behavior. A virtual
+filesystem would not be visible to Git. One reviewed inventory exception names
+those services and the scoped cleanup; the fleet baseline was not regenerated.
+The initial test also exposed a directory-cleanup mistake (`EISDIR`), repaired
+with recursive removal of the fixture-owned directory before the passing run.
+
+
+### Source-only pilot worktrees cannot run the post-merge hook (2026-09-15)
+
+Fast-forwarding both clean pilot worktrees to `0dca998780` succeeded, but their
+post-merge version check reported `Cannot find module @beep/utils`. These
+fixtures intentionally have no local install; the pilot supplies a verified
+read-only dependency overlay. The main checkout version check passed. Keep
+fixture post-merge diagnostics separate from source fast-forward success, and
+run fixture tools inside their declared dependency boundary. No dependency
+installation or hook bypass was introduced.
+
+### Qualification refresh: packet doctor invocation
+
+- Work: validate the refreshed stable/canary checkpoint.
+- Evidence: `beep goals doctor turborepo-task-qualification` rejected the packet
+  argument as unexpected; the command accepts flags only. Retried the canonical
+  `bun run beep goals doctor` without changing its baseline.
+- Prevention: retain the exact doctor invocation in the qualification handoff.
+
+### Qualification probe: scheduler status hint
+
+- Work: inspect admission after the targeted native probes waited ten minutes.
+- Evidence: the scheduler suggested `bun run beep quality scheduler status`,
+  which failed with `Missing required flag: --json`. Adding `--json` succeeded
+  and reported eight active tokens against eight capacity tokens, with no dead
+  leases. The experiments remained queued; no reap or bypass was warranted.
+- Prevention: include the required flag in the admission wait hint, or make
+  plain-text status the default.
+
+### Compiler inventory: census workspace field
+
+- Work: resolve compiler configuration paths from the retained census.
+- Evidence: initial extraction assumed `path` and failed with `KeyError`;
+  the census workspace field is `directory`. Corrected the recipe before output.
+- Prevention: inspect the retained schema keys before joining a new inventory.
+
+### Census attachment comparison shape
+
+While attaching the completed tool reviews, a direct request/result equality
+assertion failed because accepted planner artifacts add a decoded `document`.
+The source and review references matched; comparing each artifact's `format`
+and `reference` proved attachment identity. A documented projection for this
+comparison would prevent mistaking result enrichment for evidence drift.
+
+### Exact-client version probe must disable inference
+
+During the synthetic refresh, hashing the retained canary binary succeeded but
+its plain `--version` invocation from the installed workspace selected stable.
+The same binary with `--skip-infer --version` returned the pinned canary.
+Direct-client preflight should always disable inference; a workspace-inferred
+version is not evidence that the retained executable bytes changed.
+
+### Scheduler status command routing
+
+During the synthetic refresh wait, `beep scheduler status --json` was rejected
+with `Unknown subcommand "scheduler"`. The documented read-only route is
+`beep quality scheduler status --json`; that command succeeded. Status probes
+should use the full command path before attempting to decode JSON output.
+
+### Admission state quarantine during Git configuration probe (2026-09-21)
+
+The existing admitted probe wrapper reported `quarantined malformed admission
+state` with reason `undecodable`. The scheduler handled the record itself; no
+manual reaping or bypass was used. The probe handle remained live after the
+message. A versioned state migration or a diagnostic naming the incompatible
+schema field would make this attributable without inspecting raw shared state.
+
+### Toolchain drift prevents the next pilot control (2026-09-21)
+
+The admitted Git configuration probe exited one before execution with
+`Git-config observation runtime differs from its preview.` The retained
+activation remains historical evidence. A diagnostic collection now retains
+the current toolchain snapshot privately for a field-level comparison. The
+identity gate was preserved; no lint or native-selection result is claimed.
+An explicit compact toolchain-difference diagnostic at this gate would avoid
+a second collection solely to attribute the mismatch.
+
+### Encoded and decoded snapshot comparison (2026-09-21)
+
+The initial toolchain diagnostic compared encoded receipt JSON with a direct
+JSON serialization of a decoded schema value. An Effect `Option` wrapper
+made unchanged installed dependencies appear different. Comparing the values
+confirmed identical archive digest, counts and links; only kernel and runtime
+linker fields differ. Serialize diagnostic snapshots through the schema encoder
+before comparing them to durable receipts. The drift receipt is corrected.
+
+### Read-only Git mount rejected a synthetic file (2026-09-21)
+
+The Git configuration control failed with `bwrap: Can't create file` and
+`Read-only file system` when mounting a new synthetic exclusion file inside
+the read-only Git directory. The unchanged baseline ran, but the changed case
+did not start. The corrected fixture mounts the file in its existing writable
+setup directory and points `core.excludesFile` there. This is a fixture error,
+not evidence about lint or cache behavior. Check new bind destinations against
+the parent mount mode before launching the admitted comparison.
+
+### Split syscalls omitted by the first read reconstruction (2026-09-21)
+
+The first descriptor reconstruction matched only complete syscall lines and
+omitted unfinished/resumed pairs. That produced a misleadingly small read
+footprint. Joining 1,038,987 pairs with no unmatched or pending pairs changed
+the attributed other-repository count from 30 to 8,364 paths. The public report
+and worksheet are corrected. Raw-trace analysis must account for every split
+call before interpreting path counts; retain parser coverage counts alongside
+observations. Descriptor races and indirect I/O remain separate limitations.
+
+### Raw read formatting obscured descriptor attribution (2026-09-21)
+
+The historical trace used raw read formatting to avoid capturing buffer
+contents, which also removed descriptor path annotations. Reconstructing
+shared descriptors left timing ambiguities. A bounded synthetic format control
+with the pinned tracer confirmed that `-yy -s 0` retains read path annotations
+while omitting synthetic buffer contents. A fresh admitted trace uses that
+format for scalar reads; vectored reads and writes retain raw formatting.
+Validate trace formatting with a synthetic buffer before collecting workload
+evidence, and preserve the limits for indirect I/O and concurrent execution.
+
+### Package-local Biome project rebased plugin paths (2026-09-21)
+
+A private package-local root config extended the repository config but baseline
+lint failed with `Error(s) during loading of plugins` and `Cannot read file`.
+No semantic-control result is accepted from that candidate. Keep inherited
+relative plugin paths in their original configuration directory, or prove
+that a relocation preserves every effective rule and override before using it.
+The next isolated profile resides beside the root config and selects its file
+explicitly; repository configuration remains unchanged.
+
+## 2026-09-21 — Scanner candidate omitted root exclusions
+
+While preparing profile generation, inspection of `biome.jsonc` and the private
+`scoped-scanner-biome.json` found that replacing `files.includes` with two
+package selectors discarded every root negation, including `!**/*.gen.*`.
+The existing ignored-source control used a package `.gitignore`, so its passing
+result did not cover root-config exclusions. No candidate has been adopted.
+A preserved-exclusion candidate and original/flat/preserved generated-source
+comparison are now under the admitted probe. Generate from the complete root
+configuration, retain exclusion order, and reject unsupported positive-selector
+shapes rather than silently broadening or narrowing them. Require both config
+exclusion and VCS-ignore controls before acceptance.
+
+The admitted comparison completed: original root exclusion exit 0, earlier flat
+profile exit 1, preserved exclusions exit 0 for identical invalid generated
+source. Nine independent trace/stream reviews passed. The replacement candidate
+retains the tested behavior and reduces the observed read set to 396 paths;
+see `preserved-profile-scanner-review.json`. This is candidate evidence, not
+production adoption or complete input closure.
+
+## 2026-09-21 — Explicit metadata globs included installed dependencies
+
+The pinned native dry plan expanded broad root metadata patterns to 4,912
+node_modules paths, producing 5,666 identity inputs. Expected ignore behavior
+was insufficient once explicit input patterns were supplied. A bounded revised
+plan adds an explicit node_modules exclusion and must retain observed repository
+coverage. Independent hash review also found 40 entries with CRLF-normalized
+Git blob identities; raw-byte coverage belongs to the retained dependency tree
+receipt. Verify actual native expansion and distinguish normalized task hashes
+from raw dependency digests before adopting input patterns. Evidence:
+`profile-native-inputs-review.json`.
+
+## 2026-09-21 — Profile implementation compile checks caught two local mistakes
+
+The first focused format/test pass failed because a glob in a JSDoc code
+example contained the comment terminator. Replacing the example with a simple
+exclusion fixed parsing. The next pass found `Flag.boolean` unavailable in the
+pinned Effect CLI; source inspection confirmed `Flag.Boolean`. Both failures
+were introduced by this change and repaired before the four focused tests
+passed. Check the local CLI constructor spelling and avoid comment terminators
+inside documentation examples before running dependent verification.
+
+## 2026-09-21 — Package audit cheap-gate assertions differ from isolated runs
+
+The profile package verification completed with docgen passing and audit
+failing: 4,023 tests passed, three cheap-gate runner assertions failed in
+`quality-tasks.test.ts`. The same three cases pass alone; all 242 tests in that
+file pass separately; the three also pass with `CI=true`. These narrower passes
+do not waive the full audit failure. An admitted focused comparison is queued
+to test execution-context influence. Keep the P0 open until attribution and
+repair are supported by evidence. See `profile-generation-implementation.json`.
+
+The failure was reproduced with the root-loaded environment: `TURBO_CACHE` is
+present when launching from the repo root and absent in the package-only
+launch. Diagnostic assertions showed every missing lane matched after the
+existing `policyCommandKey` normalization. The cheap-gate fixture compared raw
+commands and also selected injected failures by raw command equality. Reusing
+the existing normalization for both restores the intended lane/failure checks;
+the three cases now pass under the reproducing root environment. Full-file and
+package verification remain required. No cache-policy assertion was removed.
+
+### Runtime profile integration: nested collection inference
+
+While adding task-scoped profile environment checks, `beep:check` reported
+`TS18046: 'node' is of type 'unknown'` in `Cache.census.ts`. The nested
+`A.flatMap(A.filter(...), ...)` expression lost inference. One direct
+`A.flatMap(nodes, ...)` expresses the same selection and avoids the nested
+inference boundary. Keep typechecking alongside behavior tests: the focused
+runtime cases passed before this compile error was detected.
+
+### Generated profile formatting contract
+
+The first live `biome.identity.jsonc` failed `biome check` formatting because
+its deterministic generator emits compact JSON. A generator-owned JSONC
+`biome-ignore format` comment preserves that byte contract without weakening
+lint rules or freshness checks. Native file checking confirmed the marker is
+accepted. Include generated-file formatting in future generator acceptance,
+not only structural JSON equality and consumer behavior.
+
+### Live Biome relative profile selection
+
+The native Turbo runtime fixture verified environment isolation, but its child
+only reported the selected value. The first actual identity lint run with the
+relative profile path failed before linting: `Biome couldn't find an ignore
+file` at the identity package directory. Identity's ordinary package audit
+passed. Keep caching disabled and attribute relative versus absolute config
+resolution using the real Biome consumer before accepting this profile path.
+Future selection controls must execute the actual tool as well as assert the
+child environment; environment delivery alone did not cover VCS resolution.
+
+### Post-main complexity gate — 2026-09-21
+
+The checkpoint `beep yeet repair` reported four introduced Fallow complexity
+findings in runtime identity observation, native profile scope validation,
+pilot environment observation, and fixture source setup. Extracted those
+existing responsibilities without changing their guards. A focused Fallow
+audit now reports zero introduced findings; all 33 focused cache tests and
+CLI typechecking pass on Effect rc.117. Running the exact changed-file audit
+earlier would have surfaced these before the full repair lane. Full proof
+and hosted checks remain separate obligations.
+
+### Location-free compiler diagnostics during RC checkpoint
+
+The post-merge repair build reported `TS2589` without a source location in
+`@beep/box`, `@beep/ui`, and `@beep/xai`; their sources are unchanged against
+`origin/main`. The same repair later rebuilt box and xai successfully as
+dependencies, while the repository typecheck passed 244 tasks. Preserve the
+failed lane result until a fresh full proof passes. A source location and
+compiler-context receipt would make this failure easier to attribute.
+
+### Merge integration lost runtime-aware test fixtures
+
+The main merge retained the newer Effect test harness in `quality-tasks.test.ts`
+but dropped the branch's cache-runtime-aware launcher fixtures. Six tests failed
+because their stand-ins still expected direct `bunx turbo` commands. Restored
+runtime step projection for command comparisons and updated the launcher and
+failure fixtures while retaining main's test harness. The focused file now
+passes all 249 tests. Semantic conflict review must cover executable test
+fixtures even when the production implementation merges cleanly.
+
+### Checkpoint summary digest naming
+
+The commit secret scan classified twelve `runtimeKeyDigest` summary fields as
+generic API keys. They are SHA-256 toolchain identities from retained pilot
+receipts, not credentials. Used the existing public-summary name
+`toolchainSha256` while preserving every digest byte and all private receipt
+references. No scanner rule or raw receipt was changed.
+
+### Fresh JSDoc inventory exposed checkpoint regressions
+
+The full publication proof regenerated the repository inventory and found five
+new root-package imports in examples and five Details sections after Examples.
+The cheap check against the committed inventory and package docgen had passed;
+neither was a fresh repository totals comparison. Moved Details before Examples
+and used stable Effect module imports. Keep the fresh inventory ratchet in the
+publication gate; package docgen success does not establish that ratchet.
+
+Bounded docgen also found five noncanonical category names on the same cache
+API; replaced them with canonical categories. The Effect import check is
+`bun run lint:effect-imports`; `beep lint effect-imports` enters the generic
+root-lint adapter instead. Use the generated root script for this check.
+
+### 2026-09-22: shared checkout drift invalidated checkpoint proof
+
+While the checkpoint publication proof was live, the clone switched from the
+qualification branch to main. The reflog and live process working directory
+confirmed the mismatch. Stopped the affected proof; its mixed-checkout output
+is not exact-head evidence. Published draft PR #1182 before waiting for proof,
+then moved the feature branch into a dedicated sibling worktree and merged main.
+Keep long proofs in branch-owned worktrees to prevent this interference.
+
+The fresh worktree initially lacked commitlint dependencies; frozen installation
+allowed the pending merge commit to pass its hooks. Detached verification then
+refused because the systemd user manager was unavailable. No detached proof
+started. Use an attached proof with a retained log for this session.
+
+### 2026-09-22: stronger pilot assertions crossed the Fallow complexity gate
+
+PR #1182's Fallow audit attributed one new complexity finding to the pilot
+fixture's `observeExecution` function after review fixes added real profile-byte
+hashing. The full CLI package audit passed, but does not replace this repository
+complexity gate. Retain mounted-byte hashing and move invocation-level profile
+reads outside the execution observation. Run both Fallow audit and health after
+test fixture changes that introduce branching, before queuing full proof.
+
+The generated Fallow check scripts require a populated base-ref environment.
+An unwrapped local invocation expanded an empty base and failed before analysis.
+For focused local diagnosis use `beep quality fallow audit --base origin/main`
+and the corresponding health command with explicit base, check and output flags.
+
+### 2026-09-22: root policy checks found inline schema compilation
+
+The full checkpoint proof reported six `beep(no-inline-schema-compile)` findings
+in the cache execute command and pilot receipt round-trip tests. Package lint and
+type checks had passed without exercising this root Oxlint policy. Hoisted the
+compiled argument decoder and receipt codecs to module scope, preserving their
+schemas and assertions. Run root Oxlint before queuing the next full proof.
+
+Main advanced during proof and conflicted only in the generated Effect/Vitest
+inventory. Stopped the superseded proof, merged main, regenerated the inventory
+with `bun run beep lint effect-vitest --write`, and pushed the merge before
+waiting for fresh proof. The prior run also reported a knowledge-reference
+failure. On the merged revision, its four live gates were absolute temporary-path
+literals in this packet's historical trace descriptions. Reworded them as
+experiment temporary-root observations, retaining their meaning and evidence
+limits without prescribing a host path.
+
+### 2026-09-22: main's lint configuration invalidated the generated pilot profile
+
+After merging main, PR #1182's hosted lint-a lane rejected the generated profile
+as stale before native lint execution. Main added allowed environment names to
+the root Biome policy. Regenerated `biome.identity.jsonc` with
+`bun run beep cache profile --write`; the runtime freshness guard remains intact.
+Include profile regeneration in main-sync checks whenever root lint policy moves,
+before publishing and queuing full proof.
+
+### 2026-09-22: heavy checks exposed test typing and command coverage gaps
+
+PR #1182's heavy check reported `strictBooleanExpressions` on defaulted flags in
+an Effect-wrapped fixture, a nested pipeable call, and a void/undefined mock
+mismatch. Explicit schema-derived flag types, pipe syntax, and void-returning
+profile operation signatures preserve behavior while satisfying both compiler
+and lint contracts. Package check alone omitted these test diagnostics; run
+`bun run beep quality test-tsgo` before the next publication.
+
+Hosted coverage fell below the existing cache command and CI runner file floors.
+Added profile/execute dispatch tests and a caller-identity rejection test, and
+reused one environment default in CI dispatch instead of evaluating it twice.
+Keep coverage floors unchanged; compare measured file coverage before full proof.
+
+## 2026-09-22 — runtime and dry-plan evidence need separate commands
+
+While refreshing the merged profile input map, `cache execute` rejected
+`--dry=json` with “Runtime selection does not accept output modes or directory
+overrides.” The direct native dry-run and governed actual execution both
+passed separately. A documented paired recipe would prevent treating a
+configuration plan as runtime-identity proof or repeatedly probing a rejected
+output mode. Receipt: `profile-closure-refresh-2026-09-22.json`.
+
+## 2026-09-22 — retirement does not retain ignored evidence
+
+After PR #1189 merged, `bun run beep yeet sweep --retire` removed its worktree.
+The residue archive contains a manifest and retained Git ref, but its manifest
+has `patchPath: null` and an empty `untrackedFiles` list. The ignored `.beep`
+proof logs, temporary addition/restoration plans and reviewer-validation outputs
+were not preserved. The initial cleanup report overstated their retention.
+
+The published packet and copied recovery handoff survive. A separate capture
+worktree also retains the observer, reviewer, dependency receipt and native
+plans. Thirteen static preparation files were subsequently copied outside the
+worktrees, checked byte-for-byte, and inventoried with SHA-256 digests and a
+seven-day retention record. That backup excludes the live observation log and
+any future trace; those require their own verified copy after completion.
+
+Before retiring another evidence-producing worktree, copy required ignored
+artifacts to a private durable directory and verify the inventory. A Git residue
+manifest alone is insufficient. Do not reconstruct missing files and label them
+as original evidence. This is a qualification evidence-retention correction;
+it does not change Yeet proof ownership or qualify the pilot.
+
+## 2026-09-22 — successful tracing leaves indirect I/O undecoded
+
+The fresh isolated lint capture passed, but its trace contains five successful
+`io_uring_setup` and five `io_uring_enter` calls. Scalar reads are attributable;
+ring submissions are not decoded by the current observer. Reporting no decoded
+network calls or a complete explicit input map would not resolve that gap.
+Receipt: `current-profile-capture-2026-09-22.json`.
+
+Capture the submitted operation metadata without payloads, or establish a
+separately named supported profile with the relevant mechanism constrained and
+run its complete comparison matrix. A diagnostic fallback cannot silently stand
+in for the ordinary runtime. Retain the current trace as partial evidence.
+
+The follow-up write review exposed an incomplete socket-operation allowlist in
+the raw reviewer: `socketpair`, `getpeername`, `setsockopt` and `shutdown` were
+omitted. The published projection now includes those observed calls while
+preserving original raw bytes. Two child write descriptors remain unknown
+because `-s 0` also abbreviated `pipe2` return arrays. A bounded smoke check
+verified that `-e abbrev=!pipe,pipe2,socketpair` exposes those descriptor arrays
+while retaining string-payload suppression. The next capture uses that setting;
+the smoke check alone does not establish its runtime outcome.
+
+### Exact native version probes must disable repository inference
+
+While preparing the current canary matrix, an integrity-verified
+`@turbo/linux-64@2.11.3-canary.3` binary reported `2.11.2` when invoked with
+`--version` inside the repository. Repeating the probe with
+`--skip-infer --version` reported `2.11.3-canary.3`. The first probe had selected
+the installed client; it did not establish a package-version mismatch. Use the
+same inference-disabled invocation as the pilot runner for exact-pin preflights.
+The initial diagnosis and correction remain in private retained preparation
+evidence; no canary matrix was executed with a substituted version.

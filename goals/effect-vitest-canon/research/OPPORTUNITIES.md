@@ -1967,3 +1967,44 @@ Original processes and evidence are preserved.
   four metrics in the focused report before repeating full publication proof.
 - Prevention: inspect the ratchet's complete metric contract, not only the first
   metrics reported in an earlier failed run. Do not lower or seed baseline floors.
+
+
+## Runner import detector prerequisite
+
+The existing instrumented-harness recognizer names only the test-utils entrypoint.
+A runner extraction must extend this recognizer before adoption, or the new
+import path will silently escape test-body checks. Its regression suite now
+covers both leaf entrypoints, aliases, namespaces, nested layers, shadowing and
+non-tester exports. Keep this CLI change separate under D13.
+
+The first test command was run from the repository root with a package config
+whose include paths are relative to the working directory; it found no tests.
+Running from the CLI package directory found the suite. The initial new negative
+fixture used a nonexistent `it.TestHang` member; use the public namespace error
+export when testing non-tester rejection.
+
+
+## Detached publish availability
+
+The early PR publication command rejected `--detach` because this session has no
+active systemd user manager. No fallback job started. Publication continues with
+the same canonical command attached to the live session, with its handle and log
+saved for resume. A user-manager preflight would avoid the failed detached launch.
+
+## Scanner traversal complexity feedback
+
+The inline annotation correction passed package audit and docgen but the full
+proof and hosted Fallow gate reported introduced complexity. An Option-based
+AST traversal retained the four regression cases while removing the finding.
+Running the affected Fallow audit before publication would expose this earlier.
+The direct quality command needs an explicit base; the root wrapper expects
+BEEP_PROOF_BASE to be populated by the proof environment.
+
+## Fixture finalizer test typecheck
+
+PR #1191 Heavy / Check found that the new acquireRelease fixture cleanup retained
+PlatformError in its release channel. Focused runtime tests and the package quick
+check had passed; the separate package-test-typecheck command exposed the mismatch.
+The cleanup now uses Effect.orDie so removal failures fail the test without a typed
+release error. All six focused tests, package-test-typecheck, and the quick package
+proof pass. Include the package test typecheck before publishing new Effect tests.

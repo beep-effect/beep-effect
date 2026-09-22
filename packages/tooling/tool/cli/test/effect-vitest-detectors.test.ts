@@ -42,15 +42,19 @@ const findingsWithHarness = Effect.fnUntraced(function* (harnessImport: string, 
   );
 });
 
-const pairedHarnessFindings = Effect.fnUntraced(function* (body: string) {
+const pairedHarnessFindings = Effect.fnUntraced(function* (body: string, module = "@beep/test-utils/Vitest") {
   return {
-    instrumented: yield* findingsWithHarness('import { it as instrumentedIt } from "@beep/test-utils/Vitest";', body),
+    instrumented: yield* findingsWithHarness(`import { it as instrumentedIt } from "${module}";`, body),
     original: yield* findingsWithHarness('import { it as instrumentedIt } from "@effect/vitest";', body),
   };
 });
 
-const assertEquivalentFindings = Effect.fnUntraced(function* (body: string, expectedRule: EffectVitestRuleId) {
-  const { instrumented, original } = yield* pairedHarnessFindings(body);
+const assertEquivalentFindings = Effect.fnUntraced(function* (
+  body: string,
+  expectedRule: EffectVitestRuleId,
+  module?: string
+) {
+  const { instrumented, original } = yield* pairedHarnessFindings(body, module);
   assertTrue(A.some(original, (finding) => finding.ruleId === expectedRule));
   assertTrue(original.length === instrumented.length);
   A.zipWith(original, instrumented, (left, right) => {
@@ -1925,6 +1929,313 @@ layer(BunCrypto.layer)((it) => {
         deepStrictEqual(
           A.map(rows, (row) => row.mechanization),
           ["judgment"]
+        );
+      }
+    })
+  );
+});
+
+layer(BunCrypto.layer)((it) => {
+  it.effect("does not infer tagged return values across a plain or incomplete boundary: (each)", () =>
+    Effect.gen(function* () {
+      for (const expression of [
+        "O.map((value) => O.some(value))",
+        "O.map()",
+        "O.map(...args)",
+        "O.map(value, transform, extra)",
+        "O.map(transform)(value)(extra)",
+        "O.match(option, { onNone: () => '', onSome: (value) => value.name })",
+        "O.getOrElse(O.some(value), () => fallback)",
+        "R.getOrThrow(R.succeed(value))",
+        "X.match(exit, { onSuccess: identity, onFailure: identity })",
+        "O.map(option, transform).pipe(O.getOrElse(() => plain))",
+        "pipe(O.some(value), unknown)",
+        "O.some(value).pipe(unknown)",
+        "Fx.exit(program)",
+        "program.pipe(Fx.result)",
+        "yield* Fx.exit(program).pipe(Fx.map(() => plain))",
+        "yield Fx.exit(program)",
+        "A.filter(values, O.isSome).length",
+        "A.every(values, (value) => unknown(O.some(value)))",
+        "A.every(values, (value) => { const incidental = O.some(value); return true; })",
+        "A.every(values, async (value) => O.isSome(value))",
+        "A.every(values, function* (value) { return O.isSome(value); })",
+        "A.every(O.isNone)",
+        "A.every(O.isNone)(values)(extra)",
+      ]) {
+        assertFalse(
+          yield* hasRule(
+            `import { pipe } from "effect"; import * as A from "effect/Array"; it.effect("plain", function* () { expect(${expression}).toBeDefined(); });`,
+            "EV006"
+          )
+        );
+      }
+    })
+  );
+
+  it.effect("requires exact provenance for computed transforms, pipe predicates and Array facades", () =>
+    Effect.gen(function* () {
+      for (const body of [
+        `import { map as mapped } from "effect/Option"; it("alias", () => expect(mapped(option, transform)).toEqual(expected));`,
+        `import * as Wrapped from "@beep/utils/Option"; it("alias", () => expect(Wrapped.map(option, transform)).toEqual(expected));`,
+        `import * as Wrapped from "@beep/utils/Array"; it("alias", () => expect(Wrapped.some(values, O.isSome)).toBe(true));`,
+      ])
+        assertTrue(yield* hasRule(body, "EV006"));
+      for (const body of [
+        `import * as Wrapped from "effect/OptionOther"; it("fake", () => expect(Wrapped.map(option, transform)).toEqual(expected));`,
+        `import { map as mapped } from "effect/Option"; it("shadow", (mapped) => expect(mapped(option, transform)).toEqual(expected));`,
+        `import { isNone } from "effect/Option"; it("shadow", (isNone) => expect(option.pipe(isNone)).toBe(true));`,
+        `import * as A from "effect/Array"; it("shadow", (A) => expect(A.every(values, O.isNone)).toBe(true));`,
+        `import { A } from "@beep/utils-other"; it("fake", () => expect(A.every(values, O.isNone)).toBe(true));`,
+        `import * as Utils from "@beep/utils"; it("fake", () => expect(Utils.every(values, O.isNone)).toBe(true));`,
+        `import { A as Wrapped } from "@beep/utils"; it("shadow", (Wrapped) => expect(Wrapped.every(values, O.isNone)).toBe(true));`,
+        `it("unknown", () => expect(opaque(O.map(option, transform))).toEqual(expected));`,
+      ])
+        assertFalse(yield* hasRule(body, "EV006"));
+    })
+  );
+
+  it.effect("recognizes final whole-body scope application: (each)", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'it.effect("health", () => verifyHealth().pipe(Fx.scoped));',
+        'import { pipe } from "effect"; it.live("health", () => pipe(verifyHealth(), Fx.scoped));',
+        'import { scoped as closeScope } from "effect/Effect"; it.effect("health", () => program.pipe(closeScope));',
+        'it.live("tika", Fx.fnUntraced(function* () { yield* acquire; }, Fx.scoped));',
+      ]) {
+        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        deepStrictEqual(
+          A.map(rows, (row) => [row.class, row.mechanization]),
+          [["redundant-whole-body-scope", "detector"]]
+        );
+      }
+    })
+  );
+
+  it.effect("retains shorter or uncertain scope ownership: (each)", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'it.effect("reader", Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped, Fx.flip); yield* after; }));',
+        'it.effect("tail", () => program.pipe(Fx.scoped, unknown));',
+        'it.live("tika", Fx.fnUntraced(function* () { yield* acquire; }, Fx.scoped, unknown));',
+        'const shared = () => program.pipe(Fx.scoped); shared(); it.effect("shared", () => shared());',
+      ]) {
+        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        deepStrictEqual(
+          A.map(rows, (row) => row.mechanization),
+          ["judgment"]
+        );
+        assertFalse(A.some(rows, (row) => row.class === "redundant-whole-body-scope"));
+      }
+    })
+  );
+
+  it.effect("does not invent applied test scopes: (each)", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'const scoped = Fx.scoped(program); it.effect("hoisted", () => scoped);',
+        'it.effect("shadow", (Fx) => program.pipe(Fx.scoped));',
+        'import { scoped } from "lookalike"; it.effect("fake", () => program.pipe(scoped));',
+        'it("plain", () => program.pipe(Fx.scoped));',
+        "const unused = program.pipe(Fx.scoped);",
+      ]) {
+        assertFalse(yield* hasRule(source, "EV004"));
+      }
+    })
+  );
+
+  it.effect("retains applied immutable provider provenance: (each)", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'const provideLive = provide(L.effect(Service, acquire)); it.live("tika", Fx.fnUntraced(function* () { yield* program; }, provideLive));',
+        'const provideLive = provide(L.effect(Service, acquire)); it.effect("pipe", () => program.pipe(provideLive));',
+        'const provideLive = provide(L.effect(Service, acquire)); it.effect("call", () => provideLive(program));',
+        'const provideLive = Fx.provide(L.effect(Service, acquire)); const alias = provideLive; it.live("alias", Fx.fnUntraced(function* () { yield* program; }, alias));',
+      ]) {
+        const rows = A.filter(
+          yield* findings(`import { provideScopedLayer as provide } from "@beep/test-utils/Layer"; ${source}`),
+          (row) => row.ruleId === "EV002"
+        );
+        deepStrictEqual(
+          A.map(rows, (row) => [row.class, row.mechanization, row.replacement.primitive]),
+          [["per-test-layer-provide", "detector", "it.layer"]]
+        );
+      }
+    })
+  );
+
+  it.effect("preserves pure, unknown, shadowed and unused provider-result distinctions", () =>
+    Effect.gen(function* () {
+      const header = 'import { provideScopedLayer as provide } from "@beep/test-utils";';
+      for (const layer of ["L.succeed(Service, {})", "L.mock(Service, {})"]) {
+        assertFalse(
+          yield* hasRule(
+            `${header} const provideLive = provide(${layer}); it.live("stub", Fx.fnUntraced(function* () { yield* program; }, provideLive));`,
+            "EV002"
+          )
+        );
+      }
+      const rows = A.filter(
+        yield* findings(
+          `${header} const provideLive = provide(ImportedLive); it.live("opaque", Fx.fnUntraced(function* () { yield* program; }, provideLive));`
+        ),
+        (row) => row.ruleId === "EV002"
+      );
+      deepStrictEqual(
+        A.map(rows, (row) => [row.class, row.mechanization]),
+        [["unresolved-layer-provide", "judgment"]]
+      );
+      for (const source of [
+        `${header} const unused = provide(L.effect(Service, acquire)); it.live("unused", () => program);`,
+        `${header} let mutable = provide(L.effect(Service, acquire)); it.live("mutable", Fx.fnUntraced(function* () { yield* program; }, mutable));`,
+        `${header} const provideLive = provide(L.effect(Service, acquire)); it.live("shadow", (provideLive) => program.pipe(provideLive));`,
+        'import { provideScopedLayer as provide } from "lookalike"; const provideLive = provide(Resource); it.live("fake", Fx.fnUntraced(function* () { yield* program; }, provideLive));',
+      ])
+        assertFalse(yield* hasRule(source, "EV002"));
+    })
+  );
+
+  it.effect("distinguishes nested resource, pure-stub and opaque layer provisions", () =>
+    Effect.gen(function* () {
+      const resource = A.filter(
+        yield* findings(
+          'it.effect("nested", () => Fx.succeed(1).pipe(Fx.provide(L.mergeAll(L.effect(Service, acquire), L.empty))))'
+        ),
+        (row) => row.ruleId === "EV002"
+      );
+      deepStrictEqual(
+        A.map(resource, (row) => [row.class, row.mechanization, row.replacement.primitive]),
+        [["per-test-layer-provide", "detector", "it.layer"]]
+      );
+      assertFalse(
+        yield* hasRule(
+          'it.effect("stub", () => program.pipe(Fx.provide(L.mergeAll(L.succeed(Service, {}), L.succeed(Other, {})))))',
+          "EV002"
+        )
+      );
+      const unknown = A.filter(
+        yield* findings('it.effect("opaque", () => program.pipe(Fx.provide(wrap(unknownLayer))))'),
+        (row) => row.ruleId === "EV002"
+      );
+      deepStrictEqual(
+        A.map(unknown, (row) => [row.class, row.mechanization]),
+        [["unresolved-layer-provide", "judgment"]]
+      );
+    })
+  );
+
+  it.effect("keeps result migration neutral without inventing expected values: (each)", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'it.live("tika", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(engine.extract(operation)); if (R.isFailure(outcome)) expect(outcome.failure._tag).toBe("ExtractError"); }));',
+        'it.effect("success Boolean", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(program); expect(R.isSuccess(outcome)).not.toBe(false); }));',
+        'it.effect("unknown", () => expect(Fx.result(program)).toBeDefined());',
+      ]) {
+        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV005");
+        deepStrictEqual(
+          A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
+          [["readme.exit", "judgment"]]
+        );
+        assertTrue(A.every(rows, (row) => row.replacement.sketch.includes("Cause")));
+      }
+    })
+  );
+
+  it.effect("keeps Result operands intact while requiring Exit migration review: (each)", () =>
+    Effect.gen(function* () {
+      for (const source of [
+        'it.effect("known success", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(Fx.succeed(42)); expect(outcome).toEqual(R.succeed(42)); }));',
+        'it.effect("known failure", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(Fx.fail(error)); expect(outcome).toEqual(R.fail(error)); }));',
+        'it.effect("mixed", Fx.fnUntraced(function* () { const outcome = yield* Fx.result(program); expect(R.isFailure(outcome) || R.isSuccess(outcome)).toBe(true); }));',
+      ]) {
+        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV005");
+        deepStrictEqual(
+          A.map(rows, (row) => [row.replacement.primitive, row.mechanization]),
+          [["readme.exit", "judgment"]]
+        );
+      }
+    })
+  );
+
+  it.effect("does not invent result migration for an unexecuted unasserted effect or a shadow", () =>
+    Effect.gen(function* () {
+      assertFalse(
+        yield* hasRule('it.effect("unused", () => { const unused = Fx.result(program); return Fx.void; });', "EV005")
+      );
+      assertFalse(yield* hasRule('it.effect("shadow", (Fx) => expect(Fx.result(program)).toBeDefined());', "EV005"));
+    })
+  );
+
+  it.effect("retains inner helper pipe scopes and ambiguous generator-return lifetimes as judgment", () =>
+    Effect.gen(function* () {
+      const inner = A.filter(
+        yield* findings(
+          'const helper = Fx.fnUntraced(function* () { yield* reader.pipe(Fx.scoped); yield* after; }); it.effect("helper", helper);'
+        ),
+        (row) => row.ruleId === "EV004"
+      );
+      deepStrictEqual(
+        A.map(inner, (row) => [row.class, row.mechanization]),
+        [["inner-helper-scope-lifetime-review", "judgment"]]
+      );
+      for (const source of [
+        'it.effect("returned value", Fx.fnUntraced(function* () { return program.pipe(Fx.scoped); }));',
+        'it.live("opaque body", Fx.fnUntraced(body, Fx.scoped));',
+      ]) {
+        const rows = A.filter(yield* findings(source), (row) => row.ruleId === "EV004");
+        deepStrictEqual(
+          A.map(rows, (row) => row.mechanization),
+          ["judgment"]
+        );
+      }
+    })
+  );
+
+  it.effect("preserves instrumented tester provenance for the test-runner modules", () =>
+    Effect.gen(function* () {
+      for (const module of ["@beep/test-runner", "@beep/test-runner/Vitest"]) {
+        yield* assertEquivalentFindings('instrumentedIt("runtime", () => Fx.runSync(program));', "EV001", module);
+        yield* assertEquivalentFindings('instrumentedIt.effect("scope", () => Fx.scoped(program));', "EV004", module);
+        yield* assertEquivalentFindings(
+          'instrumentedIt.layer(L.succeed(Service, value))("shared", (it) => { it.effect("clock", () => Fx.sleep("1 second")); });',
+          "EV008",
+          module
+        );
+        assertTrue(
+          A.some(
+            yield* findingsWithHarness(
+              `import * as Runner from "${module}";`,
+              'Runner.it("namespace", () => Fx.runSync(program));'
+            ),
+            (finding) => finding.ruleId === "EV001"
+          )
+        );
+        assertFalse(
+          A.some(
+            yield* findingsWithHarness(
+              `import { it as runner } from "${module}";`,
+              'const run = () => { const runner = subject; runner("shadowed", () => Fx.runSync(program)); };'
+            ),
+            (finding) => finding.ruleId === "EV001"
+          )
+        );
+        assertFalse(
+          A.some(
+            yield* findingsWithHarness(
+              `import * as Runner from "${module}";`,
+              'Runner.TestHang("unrelated", () => Fx.runSync(program));'
+            ),
+            (finding) => finding.ruleId === "EV001"
+          )
+        );
+        assertFalse(
+          A.some(
+            yield* findingsWithHarness(
+              `import { TestHang as candidate } from "${module}";`,
+              'candidate("error", () => Fx.runSync(program));'
+            ),
+            (finding) => finding.ruleId === "EV001"
+          )
         );
       }
     })

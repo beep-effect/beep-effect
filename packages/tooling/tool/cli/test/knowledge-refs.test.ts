@@ -270,6 +270,34 @@ describe("knowledge refs golden fixture matrix", () => {
     })
   );
 
+  it.effect("a shell assignment carries the convention of the path it assigns", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md":
+          "Run `PORTLESS_STATE_DIR=~/.portless-lan portless service install` and set NODE_EXTRA_CA_CERTS=~/.portless/ca.pem.\n" +
+          "Never set MIRROR=~/src/other-project or PORTLESS_STATE_DIR=~/.portless-lan/$(hostname) from guidance.\n",
+      });
+      expect(verdicts(report.observations)).toEqual([
+        "portable-home-convention/not-applicable",
+        "portable-home-convention/not-applicable",
+        "external-mirror-reference/not-applicable",
+        "external-mirror-reference/not-applicable",
+      ]);
+    })
+  );
+
+  it.effect("the bare home root is portable, a descendant of it is not", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md": "Use the alias prefix (e.g. `@/`, `~/`) but never cite ~/src/other-project.\n",
+      });
+      expect(verdicts(report.observations)).toEqual([
+        "portable-home-convention/not-applicable",
+        "external-mirror-reference/not-applicable",
+      ]);
+    })
+  );
+
   it.effect("a convention prefix is segment-aware, not a string prefix", () =>
     Effect.gen(function* () {
       const report = yield* scanFixture({
