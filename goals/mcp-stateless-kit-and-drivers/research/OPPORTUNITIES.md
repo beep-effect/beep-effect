@@ -51,3 +51,14 @@ no secrets, home paths as `~`, minimal error text.
   for every `@beep/*` import until `bunx turbo run build --filter="@beep/mcp-kit^..."` ran.
 - Prevented by: `worktree new` offering (or documenting) a dependency build for the package a
   lane is about to edit.
+
+### `schema-first --write` re-keys advisory rows by line and drops exceptions
+
+- Doing: clearing two `SFV4-fn-schema` advisories by marking the inventory rows `exception`.
+- Evidence: after unrelated JSDoc edits shifted the symbols' lines, the next
+  `bun run beep lint schema-first --write` re-emitted both rows as `advisory` and the gate went
+  red again; `candidate` rows (interfaces) kept their `exception` status because they carry no
+  line.
+- Prevented by: keying advisory exceptions by symbol, not line. Resolution taken instead: model
+  the two inline option objects as `S.Class` (`ToolHandlerPayload`, `McpHttpProtocolOptions`),
+  which removes the advisories at the source.

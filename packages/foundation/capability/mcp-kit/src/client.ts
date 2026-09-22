@@ -801,6 +801,37 @@ const responseExit = (
 const codecFor = S.toCodecJson as RpcSerialization.CodecFor;
 
 /**
+ * Options of {@link layerProtocolHttp}: the endpoint URL, the client identity
+ * (defaults to `McpClientOptions.make({})`), and extra headers sent on every
+ * POST (for example `origin` or `authorization`).
+ *
+ * **Example** (Options for a local endpoint)
+ *
+ * ```ts
+ * import { McpHttpProtocolOptions } from "@beep/mcp-kit/client"
+ *
+ * const options = McpHttpProtocolOptions.make({ url: "http://localhost/mcp" })
+ * console.log(options.url)
+ * // "http://localhost/mcp"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class McpHttpProtocolOptions extends S.Class<McpHttpProtocolOptions>($I`McpHttpProtocolOptions`)(
+  {
+    url: S.String.annotateKey({ description: "Streamable HTTP endpoint the requests are posted to." }),
+    client: S.optionalKey(McpClientOptions).annotateKey({
+      description: "Identity presented on every request; defaults to McpClientOptions.make({}).",
+    }),
+    headers: S.optionalKey(S.Record(S.String, S.String)).annotateKey({
+      description: "Extra headers on every POST, for example origin or authorization.",
+    }),
+  },
+  $I.annote("McpHttpProtocolOptions", { description: "Options of the streamable HTTP client protocol layer." })
+) {}
+
+/**
  * `RpcClient.Protocol` over streamable HTTP for a stateless host: every
  * request is one POST carrying the `_meta` keys and routing headers, and the
  * response body (JSON or event stream) is decoded to the request's exit.
@@ -808,10 +839,10 @@ const codecFor = S.toCodecJson as RpcSerialization.CodecFor;
  * **Example** (HTTP client layer)
  *
  * ```ts
- * import { layerProtocolHttp } from "@beep/mcp-kit/client"
+ * import { layerProtocolHttp, McpHttpProtocolOptions } from "@beep/mcp-kit/client"
  * import * as Layer from "effect/Layer"
  *
- * const protocol = layerProtocolHttp({ url: "http://localhost/mcp" })
+ * const protocol = layerProtocolHttp(McpHttpProtocolOptions.make({ url: "http://localhost/mcp" }))
  * console.log(Layer.isLayer(protocol))
  * // true
  * ```
@@ -819,17 +850,9 @@ const codecFor = S.toCodecJson as RpcSerialization.CodecFor;
  * @category layers
  * @since 0.0.0
  */
-export const layerProtocolHttp = (options: {
-  readonly url: string;
-  /**
-   * Identity presented on every request; defaults to `McpClientOptions.make({})`.
-   */
-  readonly client?: McpClientOptions | undefined;
-  /**
-   * Extra headers on every POST (for example `origin` or `authorization`).
-   */
-  readonly headers?: Readonly<Record<string, string>> | undefined;
-}): Layer.Layer<RpcClient.Protocol, never, HttpClient.HttpClient> =>
+export const layerProtocolHttp = (
+  options: McpHttpProtocolOptions
+): Layer.Layer<RpcClient.Protocol, never, HttpClient.HttpClient> =>
   Layer.effect(RpcClient.Protocol)(
     Effect.gen(function* () {
       const httpClient = yield* HttpClient.HttpClient;
@@ -1099,7 +1122,7 @@ export interface McpClientConnection {
  * **Example** (Connect over HTTP and call a tool)
  *
  * ```ts
- * import { connect, layerProtocolHttp } from "@beep/mcp-kit/client"
+ * import { connect, layerProtocolHttp, McpHttpProtocolOptions } from "@beep/mcp-kit/client"
  * import * as Effect from "effect/Effect"
  * import * as Layer from "effect/Layer"
  * import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient"
@@ -1110,7 +1133,9 @@ export interface McpClientConnection {
  * const program = Effect.scoped(
  *   Effect.gen(function* () {
  *     const protocol = yield* Layer.build(
- *       layerProtocolHttp({ url: "http://localhost/mcp" }).pipe(Layer.provide(FetchHttpClient.layer))
+ *       layerProtocolHttp(McpHttpProtocolOptions.make({ url: "http://localhost/mcp" })).pipe(
+ *         Layer.provide(FetchHttpClient.layer)
+ *       )
  *     )
  *     const { discovery, rpc } = yield* connect.pipe(Effect.provideContext(protocol))
  *     const result = yield* rpc["tools/call"]({ name: "echo", arguments: { text: "hi" } })

@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-09-22T11:40:52.436Z",
+  "generatedAt": "2026-09-22T11:52:37.829Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 117,
     "publicModules": 2865,
-    "publicExports": 20285,
+    "publicExports": 20287,
     "openModules": 377,
     "openExports": 3104,
     "missingExportExamples": 5,
@@ -10384,7 +10384,7 @@
         "srcDir": "src",
         "sourceFileCount": 12,
         "publicModuleCount": 12,
-        "publicExportCount": 110
+        "publicExportCount": 112
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -10446,7 +10446,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 4,
+          "exportCount": 5,
           "remediationStatus": "open"
         },
         {
@@ -10690,7 +10690,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 38,
+          "exportCount": 39,
           "remediationStatus": "resolved"
         },
         {
@@ -10805,12 +10805,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "ToolHandlerPayload",
+          "exportKind": "class",
+          "filePath": "src/ApiKeyRequired.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+          "line": 169,
+          "anchor": "packages-foundation-capability-mcp-kit-src-apikeyrequired-ts-169-toolhandlerpayload",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "translateApiKeyRequired",
           "exportKind": "const",
           "filePath": "src/ApiKeyRequired.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
-          "line": 181,
-          "anchor": "packages-foundation-capability-mcp-kit-src-apikeyrequired-ts-181-translateapikeyrequired",
+          "line": 211,
+          "anchor": "packages-foundation-capability-mcp-kit-src-apikeyrequired-ts-211-translateapikeyrequired",
           "currentTags": [
             "@category",
             "@since"
@@ -11496,8 +11518,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 586,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-586-sanitizedtoolkit",
+          "line": 590,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-590-sanitizedtoolkit",
           "currentTags": [
             "@category",
             "@since"
@@ -13216,12 +13238,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "McpHttpProtocolOptions",
+          "exportKind": "class",
+          "filePath": "src/client.ts",
+          "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
+          "line": 821,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-821-mcphttpprotocoloptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "layerProtocolHttp",
           "exportKind": "const",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 822,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-822-layerprotocolhttp",
+          "line": 853,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-853-layerprotocolhttp",
           "currentTags": [
             "@category",
             "@since"
@@ -13242,8 +13286,8 @@
           "exportKind": "interface",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 908,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-908-mcpndjsontransport",
+          "line": 931,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-931-mcpndjsontransport",
           "currentTags": [
             "@category",
             "@since"
@@ -13264,8 +13308,8 @@
           "exportKind": "const",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 944,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-944-decodelines",
+          "line": 967,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-967-decodelines",
           "currentTags": [
             "@category",
             "@since"
@@ -13286,8 +13330,8 @@
           "exportKind": "const",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 968,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-968-layerprotocolndjson",
+          "line": 991,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-991-layerprotocolndjson",
           "currentTags": [
             "@category",
             "@since"
@@ -13308,8 +13352,8 @@
           "exportKind": "type",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 1058,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1058-mcprpcclient",
+          "line": 1081,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1081-mcprpcclient",
           "currentTags": [
             "@category",
             "@since"
@@ -13330,8 +13374,8 @@
           "exportKind": "interface",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 1077,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1077-mcpclientconnection",
+          "line": 1100,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1100-mcpclientconnection",
           "currentTags": [
             "@category",
             "@since"
@@ -13352,8 +13396,8 @@
           "exportKind": "const",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 1127,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1127-connect",
+          "line": 1152,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1152-connect",
           "currentTags": [
             "@category",
             "@since"
@@ -13374,8 +13418,8 @@
           "exportKind": "type",
           "filePath": "src/client.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/client.ts",
-          "line": 1153,
-          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1153-mcphttperror",
+          "line": 1178,
+          "anchor": "packages-foundation-capability-mcp-kit-src-client-ts-1178-mcphttperror",
           "currentTags": [
             "@category",
             "@since"

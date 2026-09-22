@@ -16,6 +16,7 @@ import {
   MCP_PROTOCOL_VERSION_HEADER,
   McpClientOptions,
   McpClientRpcs,
+  McpHttpProtocolOptions,
   PROTOCOL_VERSION_META_KEY,
   parseServerSentEvents,
   requestMetadata,
@@ -153,7 +154,7 @@ describe("layerProtocolHttp", () => {
         // Built into the test scope (not `Effect.provide`d) so the protocol
         // outlives `connect` for the follow-up call.
         const protocol = yield* Layer.build(
-          layerProtocolHttp({ url: "http://stub/mcp" }).pipe(
+          layerProtocolHttp(McpHttpProtocolOptions.make({ url: "http://stub/mcp" })).pipe(
             Layer.provide(Layer.succeed(HttpClient.HttpClient, streamingClient))
           )
         );

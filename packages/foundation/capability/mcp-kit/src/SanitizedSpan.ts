@@ -45,7 +45,7 @@ import * as McpServer from "effect/unstable/ai/McpServer";
 import * as AiTool from "effect/unstable/ai/Tool";
 import * as Toolkit from "effect/unstable/ai/Toolkit";
 import { Headers, HttpServerRequest } from "effect/unstable/http";
-import { translateApiKeyRequired } from "./ApiKeyRequired.ts";
+import { ToolHandlerPayload, translateApiKeyRequired } from "./ApiKeyRequired.ts";
 import { CurrentMcpCaller, CurrentMcpDispatchAnchor, McpCallerIdentity } from "./McpCaller.ts";
 import type * as JsonSchema from "effect/JsonSchema";
 import type * as SchemaAST from "effect/SchemaAST";
@@ -360,14 +360,18 @@ const projectToolResult = (result: ToolHandlerResult): Effect.Effect<CallToolRes
         )
       )
     : Effect.succeed(
-        O.getOrElse(translateApiKeyRequired(result), () =>
-          CallToolResult.make({
-            isError: result.isFailure,
-            ...(result.isFailure || !isJsonObject(result.encodedResult)
-              ? {}
-              : { structuredContent: result.encodedResult }),
-            content: textContent(result.encodedResult),
-          })
+        O.getOrElse(
+          translateApiKeyRequired(
+            ToolHandlerPayload.make({ result: result.result, encodedResult: result.encodedResult })
+          ),
+          () =>
+            CallToolResult.make({
+              isError: result.isFailure,
+              ...(result.isFailure || !isJsonObject(result.encodedResult)
+                ? {}
+                : { structuredContent: result.encodedResult }),
+              content: textContent(result.encodedResult),
+            })
         )
       );
 

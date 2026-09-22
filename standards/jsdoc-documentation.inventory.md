@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-22T11:40:52.436Z
+Generated: 2026-09-22T11:52:37.829Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 117 |
 | publicModules | 2865 |
-| publicExports | 20285 |
+| publicExports | 20287 |
 | openModules | 377 |
 | openExports | 3104 |
 | missingExportExamples | 5 |
@@ -64,7 +64,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 6 | `@beep/root` | `.` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 7 | `@beep/pacer` | `packages/drivers/pacer` | needs-remediation | 13 | 89 | 12 | 13 |
 | 8 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 19 | 48 | 0 | 0 |
-| 9 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 12 | 110 | 8 | 53 |
+| 9 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 12 | 112 | 8 | 53 |
 | 10 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 22 | 81 | 1 | 36 |
 | 11 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 2 |
 | 12 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 104 | 368 | 3 | 51 |
@@ -346,7 +346,7 @@ Export findings:
 - `src/SanitizedSpan.ts:70` `defaultSanitizedSpanKeys` (const) - 1 example import violation(s)
 - `src/SanitizedSpan.ts:95` `sanitizeTracerAttributes` (const) - 2 example import violation(s)
 - `src/SanitizedSpan.ts:184` `withSanitizedToolSpan` (const) - 2 example import violation(s); 1 documentation section/link violation(s)
-- `src/SanitizedSpan.ts:586` `sanitizedToolkit` (const) - 2 example import violation(s); 1 documentation section/link violation(s)
+- `src/SanitizedSpan.ts:590` `sanitizedToolkit` (const) - 2 example import violation(s); 1 documentation section/link violation(s)
 - `src/SourceAuth.ts:53` `SourceAuthGate` (const) - 1 example import violation(s)
 - `src/SourceAuth.ts:75` `SourceAuthGate` (type) - 1 example import violation(s)
 - `src/SourceAuth.ts:98` `SourceAuthRegistration` (class) - 1 example import violation(s)

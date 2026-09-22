@@ -40,6 +40,7 @@ import {
   layerProtocolNdjson,
   MCP_PROTOCOL_VERSION_HEADER,
   McpClientOptions,
+  McpHttpProtocolOptions,
   PROTOCOL_VERSION_META_KEY,
   postJsonRpc,
   requestMetadata,
@@ -158,9 +159,9 @@ export const connectHttp = (
     // Built into the ambient scope, not `Effect.provide`d: the protocol must
     // outlive `connect` so later calls on the returned client still route.
     const protocol = yield* Layer.build(
-      layerProtocolHttp({ url: http.url, client: options }).pipe(
-        Layer.provide(Layer.succeed(HttpClient.HttpClient, http.httpClient))
-      )
+      layerProtocolHttp(
+        McpHttpProtocolOptions.make({ url: http.url, ...(options === undefined ? {} : { client: options }) })
+      ).pipe(Layer.provide(Layer.succeed(HttpClient.HttpClient, http.httpClient)))
     );
     return yield* connect.pipe(Effect.provideContext(protocol), Effect.orDie);
   });

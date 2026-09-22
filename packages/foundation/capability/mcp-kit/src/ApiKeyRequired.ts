@@ -149,6 +149,34 @@ export const apiKeyRequiredFailure = (params: ApiKeyRequiredFailureParamsInput):
 export const isApiKeyRequiredFailure = S.is(ApiKeyRequiredFailure);
 
 /**
+ * The pair a `Toolkit` handler result carries for a declared failure: the
+ * decoded failure value and its JSON encoding. This is the input of
+ * {@link translateApiKeyRequired}.
+ *
+ * **Example** (Build a payload)
+ *
+ * ```ts
+ * import { ToolHandlerPayload } from "@beep/mcp-kit/ApiKeyRequired"
+ *
+ * const payload = ToolHandlerPayload.make({ result: { error: "other" }, encodedResult: { error: "other" } })
+ * console.log(payload.encodedResult)
+ * // { error: "other" }
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ToolHandlerPayload extends S.Class<ToolHandlerPayload>($I`ToolHandlerPayload`)(
+  {
+    result: S.Unknown.annotateKey({ description: "Decoded handler result or declared failure value." }),
+    encodedResult: S.Unknown.annotateKey({ description: "JSON encoding of `result`, as the Toolkit produced it." }),
+  },
+  $I.annote("ToolHandlerPayload", {
+    description: "Decoded result and its JSON encoding, as carried by a Toolkit handler result.",
+  })
+) {}
+
+/**
  * Named error translator at the kit protocol adapter: turns a declared
  * `api_key_required` handler failure into a non-error `CallToolResult`
  * carrying the encoded envelope, and declines every other result.
@@ -165,12 +193,14 @@ export const isApiKeyRequiredFailure = S.is(ApiKeyRequiredFailure);
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { apiKeyRequiredFailure, translateApiKeyRequired } from "@beep/mcp-kit/ApiKeyRequired"
+ * import { apiKeyRequiredFailure, ToolHandlerPayload, translateApiKeyRequired } from "@beep/mcp-kit/ApiKeyRequired"
  * import { SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
  *
  * const registration = SourceAuthRegistration.make({ name: "Example", envVar: "EXAMPLE_KEY", gate: "soft" })
  * const failure = apiKeyRequiredFailure({ tool: "example_tool", registration })
- * const translated = translateApiKeyRequired({ result: failure, encodedResult: { error: "api_key_required" } })
+ * const translated = translateApiKeyRequired(
+ *   ToolHandlerPayload.make({ result: failure, encodedResult: { error: "api_key_required" } })
+ * )
  * console.log(O.isSome(translated) && translated.value.isError)
  * // false
  * ```
@@ -178,16 +208,13 @@ export const isApiKeyRequiredFailure = S.is(ApiKeyRequiredFailure);
  * @category translators
  * @since 0.0.0
  */
-export const translateApiKeyRequired = (result: {
-  readonly result: unknown;
-  readonly encodedResult: unknown;
-}): O.Option<CallToolResult> =>
-  isApiKeyRequiredFailure(result.result)
+export const translateApiKeyRequired = (payload: ToolHandlerPayload): O.Option<CallToolResult> =>
+  isApiKeyRequiredFailure(payload.result)
     ? O.some(
         CallToolResult.make({
           isError: false,
-          ...(P.isObject(result.encodedResult) ? { structuredContent: result.encodedResult } : {}),
-          content: [{ type: "text", text: JSON.stringify(result.encodedResult) }],
+          ...(P.isObject(payload.encodedResult) ? { structuredContent: payload.encodedResult } : {}),
+          content: [{ type: "text", text: JSON.stringify(payload.encodedResult) }],
         })
       )
     : O.none();

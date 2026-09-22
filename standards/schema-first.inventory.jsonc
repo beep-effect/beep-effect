@@ -352,16 +352,6 @@
       "reason": "Mixed service contract: FileProcessingEngineDescriptor is already schema-backed, while the remaining members are Effectful driver operations."
     },
     {
-      "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
-      "symbol": "translateApiKeyRequired",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-fn-schema",
-      "line": 181,
-      "owner": "@beep/mcp-kit",
-      "reason": "Exported function \"translateApiKeyRequired\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
       "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
       "symbol": "ToolCallRequest",
       "kind": "exported-interface",
@@ -384,16 +374,6 @@
       "status": "exception",
       "owner": "@beep/mcp-kit",
       "reason": "Transport port carrying an Effect writer and a Stream of lines (runtime-bound), not data; the identity half (McpClientOptions) is an annotated S.Class."
-    },
-    {
-      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
-      "symbol": "layerProtocolHttp",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-fn-schema",
-      "line": 822,
-      "owner": "@beep/mcp-kit",
-      "reason": "Exported function \"layerProtocolHttp\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
       "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
