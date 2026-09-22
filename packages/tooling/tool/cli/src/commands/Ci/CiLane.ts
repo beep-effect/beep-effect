@@ -1506,7 +1506,8 @@ const renderStepCommand = (step: QualityTaskStep): string => A.join([step.comman
 const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<number, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, step.env ?? {}).pipe(
+  const stepEnv = step.env ?? {};
+  yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, stepEnv).pipe(
     CiCommandError.mapError("Rejected a caller-provided cache runtime identity.")
   );
   yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(step)}`);
@@ -1520,7 +1521,7 @@ const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
     command: runtime.command,
     args: runtime.args,
     cwd: step.cwd,
-    env: { ...envOverrides, ...(step.env ?? {}) },
+    env: { ...envOverrides, ...stepEnv },
     extendEnv: turboEnvExtendsAmbient(step.command, step.args),
     stdio: "inherit",
   }).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(step)}.`));

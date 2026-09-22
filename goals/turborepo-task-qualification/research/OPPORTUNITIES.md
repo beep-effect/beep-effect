@@ -1606,3 +1606,17 @@ the root Biome policy. Regenerated `biome.identity.jsonc` with
 `bun run beep cache profile --write`; the runtime freshness guard remains intact.
 Include profile regeneration in main-sync checks whenever root lint policy moves,
 before publishing and queuing full proof.
+
+### 2026-09-22: heavy checks exposed test typing and command coverage gaps
+
+PR #1182's heavy check reported `strictBooleanExpressions` on defaulted flags in
+an Effect-wrapped fixture, a nested pipeable call, and a void/undefined mock
+mismatch. Explicit schema-derived flag types, pipe syntax, and void-returning
+profile operation signatures preserve behavior while satisfying both compiler
+and lint contracts. Package check alone omitted these test diagnostics; run
+`bun run beep quality test-tsgo` before the next publication.
+
+Hosted coverage fell below the existing cache command and CI runner file floors.
+Added profile/execute dispatch tests and a caller-identity rejection test, and
+reused one environment default in CI dispatch instead of evaluating it twice.
+Keep coverage floors unchanged; compare measured file coverage before full proof.

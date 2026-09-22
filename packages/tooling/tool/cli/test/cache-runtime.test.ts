@@ -52,7 +52,7 @@ describe("cache runtime identity input", () => {
               environments.ambient,
               environments.step
             ).pipe(Effect.result);
-            const failure = O.getOrThrow(Result.getFailure(result));
+            const failure = result.pipe(Result.getFailure, O.getOrThrow);
             expect(failure._tag).toBe("CacheCommandError");
             expect(failure.message).toBe(
               "BEEP_CACHE_TOOLCHAIN_DIGEST must be computed by the cache runtime; caller overrides are not accepted."

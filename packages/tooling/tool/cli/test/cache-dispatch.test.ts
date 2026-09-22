@@ -11,6 +11,8 @@ import {
   CacheToolchainSnapshot,
   CacheTransitionRequest,
 } from "@beep/repo-cli/commands/Cache";
+import * as Profile from "@beep/repo-cli/commands/Cache/Cache.profile";
+import * as Runtime from "@beep/repo-cli/commands/Cache/Cache.runtime";
 import { makeCacheCommandForTesting } from "@beep/repo-cli/test/Cache";
 import {
   CacheActivationProjection,
@@ -30,7 +32,7 @@ import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -195,7 +197,40 @@ const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (
   };
 });
 
+afterEach(() => vi.restoreAllMocks());
+
 describe("cache qualification command dispatch", () => {
+  it.effect("checks and regenerates the profile only through the selected operation", () =>
+    Effect.gen(function* () {
+      const verify = vi.spyOn(Profile, "verifyCacheIdentityLintProfile").mockReturnValue(Effect.void);
+      const write = vi.spyOn(Profile, "writeCacheIdentityLintProfile").mockReturnValue(Effect.void);
+      const f = yield* fixture();
+      yield* f.run(["profile"]);
+      expect(verify).toHaveBeenCalledWith(process.cwd());
+      expect(write).not.toHaveBeenCalled();
+      yield* f.run(["profile", "--write"]);
+      expect(verify).toHaveBeenCalledTimes(1);
+      expect(write).toHaveBeenCalledWith(process.cwd());
+      const text = yield* consoleText;
+      expect(text).toContain("Identity lint candidate profile is current.");
+      expect(text).toContain("Identity lint candidate profile written.");
+      verify.mockReturnValue(Effect.fail(CacheCommandError.new("stale profile fixture")));
+      expect(yield* f.run(["profile"]).pipe(Effect.isFailure)).toBe(true);
+      expect(yield* errorText).toContain("stale profile fixture");
+    }).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("forwards native arguments and reports unsuccessful native execution", () =>
+    Effect.gen(function* () {
+      const execute = vi.spyOn(Runtime, "runCacheRuntimeTasks").mockReturnValue(Effect.succeed(0));
+      const f = yield* fixture();
+      const args = ["run", "lint", "--filter=@beep/identity"];
+      yield* f.run(["execute", "--", ...args]);
+      expect(execute).toHaveBeenCalledWith(process.cwd(), args);
+      execute.mockReturnValue(Effect.succeed(7));
+      expect(yield* f.run(["execute", "--", ...args]).pipe(Effect.isFailure)).toBe(true);
+    }).pipe(provideScopedLayer(testLayer))
+  );
   it.effect("preserves arbitrary reviewed baseline requests through file decoding and command dispatch", () =>
     Arbitrary.checkEffect(
       Arbitrary.schema(CacheBaselineRequest),

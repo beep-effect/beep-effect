@@ -1483,6 +1483,25 @@ layer(storybookCiLayer(storybookDryRun([]), unscopedStorybookSpawns), { timeout:
   }
 );
 
+const overriddenStorybookSpawns = A.empty<StorybookSpawn>();
+layer(storybookCiLayer(storybookDryRun([]), overriddenStorybookSpawns))(
+  "storybook lane caller runtime identity rejection",
+  (it) => {
+    it.effect("rejects an ambient runtime key before launching a native task", () =>
+      withEnvVarEffect(
+        "BEEP_CACHE_TOOLCHAIN_DIGEST",
+        "caller-controlled",
+        Effect.gen(function* () {
+          const error = yield* runCiLane("storybook", baseOptions).pipe(Effect.flip);
+          expect(error._tag).toBe("QualityTaskConfigurationError");
+          expect(error.message).toContain("cache runtime identity");
+          expect(overriddenStorybookSpawns).toEqual([]);
+        })
+      )
+    );
+  }
+);
+
 const failedStorybookSpawns = A.empty<StorybookSpawn>();
 layer(storybookCiLayer("turbo: could not resolve base", failedStorybookSpawns, 2))(
   "storybook lane affected probe (Turbo failure)",

@@ -14,6 +14,8 @@ import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { decodeCacheExperimentText, readCacheExperimentBytes } from "./Cache.evidence.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
+import type { FileSystem, Path } from "effect";
+import type { FsGuardError } from "../../internal/cli/FsGuards.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.profile");
 const SupportedIncludes = S.TupleWithRest(S.Tuple([S.Literal("**")]), [S.String.check(S.isPattern(/^!.+/))]).annotate(
@@ -84,7 +86,9 @@ const renderFromRoot = Effect.fn("CacheProfile.renderFromRoot")(function* (root:
  * @category validation
  * @since 0.0.0
  */
-export const verifyCacheIdentityLintProfile = Effect.fn("CacheProfile.verify")(function* (root: string) {
+export const verifyCacheIdentityLintProfile = Effect.fn("CacheProfile.verify")(function* (
+  root: string
+): Effect.fn.Return<void, CacheCommandError | FsGuardError, FileSystem.FileSystem | Path.Path> {
   const expected = yield* renderFromRoot(root);
   const actual = yield* readCacheExperimentBytes(root, profilePath).pipe(Effect.flatMap(decodeCacheExperimentText));
   if (actual !== expected)
@@ -109,6 +113,8 @@ export const verifyCacheIdentityLintProfile = Effect.fn("CacheProfile.verify")(f
  * @category commands
  * @since 0.0.0
  */
-export const writeCacheIdentityLintProfile = Effect.fn("CacheProfile.write")(function* (root: string) {
+export const writeCacheIdentityLintProfile = Effect.fn("CacheProfile.write")(function* (
+  root: string
+): Effect.fn.Return<void, CacheCommandError | FsGuardError, FileSystem.FileSystem | Path.Path> {
   yield* writeContainedFileString(root, profilePath, yield* renderFromRoot(root));
 }, CacheCommandError.mapError("Cannot write the generated identity lint profile."));

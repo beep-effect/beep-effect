@@ -121,8 +121,8 @@ const linker = CacheRuntimeLinkerSnapshot.make({
 const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   fault: typeof faultDomain.Type = "none",
   requestedLinker: CacheRuntimeLinkerSnapshot = linker,
-  profile = false,
-  observeProfile = true
+  profile: typeof S.Boolean.Type = false,
+  observeProfile: typeof S.Boolean.Type = true
 ) {
   const crypto = yield* Crypto.Crypto;
   const fs = yield* FileSystem.FileSystem;
