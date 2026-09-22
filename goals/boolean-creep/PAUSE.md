@@ -4,12 +4,12 @@ Benjamin requested merging current main and bringing a save PR to a green,
 mergeable state before continuing campaign work. The save PR remains draft;
 Benjamin retains merge authority. This checkpoint does not ratify GATE 2.
 
-Main `593a000a41` is included through merge `b6112a4e27`, including Effect
-`4.0.0-rc.117` and the upstream Codex Security coverage repairs. Overlapping
-scan tests retain the newer upstream cases; the branch's monitor timeout
-tests are preserved. The packet contains 754 inventory records: 144 qualified and
+Main `3b8a17d850` is included through merge `183b4dbb25`, including Effect
+`4.0.0-rc.117`, upstream Codex Security repairs, and the Effect Vitest P1
+inventory. Security helper conflicts retain the newer upstream implementations;
+the branch's monitor timeout tests are preserved. The packet contains 754 inventory records: 144 qualified and
 610 disqualified, with designs for all 144 qualified cases. Inventory and
-design-coverage validators pass after the merge. These structural checks do
+design-coverage validators passed before the latest main merge. These structural checks do
 not establish current-source semantic review or publication readiness.
 
 The known source-refresh backlog has three completed P2 refreshes and one D1
@@ -17,9 +17,10 @@ withdrawal out of 51 cases, leaving 47 pending. Two citation decisions remain
 open. No new dry census, replacement P3 review, or implementation is credited.
 Full local proof and hosted PR closeout must pass before this save is mergeable.
 
-The earlier verification job was cancelled after discovering it was still
-running across the main merge. Its results do not validate the merged head;
-fresh proof must use the updated dependencies and source together.
+Full local verification and CLI package verification passed on `df044dedd6`,
+which was published as draft PR #1176. Main moved during hosted checks; the
+readiness monitor was stopped for the new merge. Fresh proof and hosted checks
+must validate the merged head before readiness can be claimed.
 
 ## Historical campaign resumption — 2026-09-14
 
