@@ -1,4 +1,12 @@
-import { planPacket, readSecurityBundle, renderPacketDocuments, writePacket } from "@beep/repo-cli/test/Codex";
+import {
+  GitHubRepoSlug,
+  GitHubRepoSlugFromRemote,
+  planPacket,
+  readSecurityBundle,
+  renderPacketDocuments,
+  securityRepositoryFromRemote,
+  writePacket,
+} from "@beep/repo-cli/test/Codex";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
@@ -11,6 +19,8 @@ import { NodeTestLayer } from "./support/CommandTest.ts";
 
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
 const hash = S.decodeEffect(Sha256HexFromBytes);
+const encodeRepository = S.encodeEffect(GitHubRepoSlugFromRemote);
+const decodeRepository = S.decodeEffect(GitHubRepoSlugFromRemote);
 const testLayer = Layer.mergeAll(NodeTestLayer, NodeCrypto.layer);
 
 const fixture = Effect.fn("SecurityTest.fixture")(function* (coverage = "complete") {
@@ -122,6 +132,95 @@ const expectRejected = Effect.fn("SecurityTest.expectRejected")(function* (root:
 });
 
 it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings", (it) => {
+  it.effect.prop(
+    "round trips schema-generated repository identities",
+    { repository: GitHubRepoSlug },
+    ({ repository }) =>
+      Effect.gen(function* () {
+        const remote = yield* encodeRepository(repository);
+        expect(yield* decodeRepository(remote)).toBe(repository);
+      }),
+    { arbitrary: { runs: 100 } }
+  );
+  it.effect.prop(
+    "normalizes bare and suffixed remotes for names without a terminal .git",
+    { repository: GitHubRepoSlug },
+    ({ repository }) =>
+      Effect.gen(function* () {
+        const slug = `${repository}-remote`;
+        const canonical = `https://github.com/${slug}.git`;
+        for (const remote of [
+          `https://github.com/${slug}`,
+          canonical,
+          `git@github.com:${slug}`,
+          `ssh://git@github.com/${slug}.git`,
+        ]) {
+          const decoded = yield* decodeRepository(remote);
+          expect(decoded).toBe(slug);
+          expect(yield* encodeRepository(decoded)).toBe(canonical);
+        }
+      }),
+    { arbitrary: { runs: 100 } }
+  );
+  it.effect(
+    "requires an explicit transport suffix to preserve a repository name ending in .git",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeRepository("https://github.com/example/project.git")).toBe("example/project");
+      const canonical = yield* encodeRepository("example/project.git");
+      expect(canonical).toBe("https://github.com/example/project.git.git");
+      expect(yield* decodeRepository(canonical)).toBe("example/project.git");
+    })
+  );
+  it.effect(
+    "encodes canonical repository identity and rejects a foreign origin",
+    Effect.fnUntraced(function* () {
+      expect(yield* encodeRepository("example/project")).toBe("https://github.com/example/project.git");
+      const rejected = yield* securityRepositoryFromRemote("https://example.invalid/project").pipe(Effect.result);
+      expect(rejected._tag).toBe("Failure");
+    })
+  );
+
+  it.effect(
+    "refuses oversized bundle totals, referenced artifacts, and manifests",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, manifest } = yield* fixture();
+      const large = new Uint8Array(14 * 1024 * 1024);
+      const digest = yield* hash(large);
+      const extra = yield* Effect.forEach(
+        ["a", "b", "c", "d", "e"],
+        Effect.fnUntraced(function* (name) {
+          const filename = `${name}.bin`;
+          yield* fs.writeFile(path.join(root, filename), large);
+          return { path: filename, sha256: digest, mediaType: "application/octet-stream" };
+        })
+      );
+      yield* writeJson(root, "scan-manifest.json", {
+        ...manifest,
+        scan: { ...manifest.scan, artifacts: [...manifest.scan.artifacts, ...extra] },
+      });
+      const aggregate = yield* expectRejected(root);
+      if (aggregate._tag === "Failure") expect(aggregate.failure.message).toContain("64 MiB");
+      const oversizedBytes = new Uint8Array(16777217);
+      yield* fs.writeFile(path.join(root, "oversized.bin"), oversizedBytes);
+      yield* writeJson(root, "scan-manifest.json", {
+        ...manifest,
+        scan: {
+          ...manifest.scan,
+          artifacts: [
+            ...manifest.scan.artifacts,
+            { path: "oversized.bin", sha256: yield* hash(oversizedBytes), mediaType: "application/octet-stream" },
+          ],
+        },
+      });
+      const oversized = yield* expectRejected(root);
+      if (oversized._tag === "Failure") expect(oversized.failure.message).toContain("16 MiB");
+      yield* fs.writeFile(path.join(root, "scan-manifest.json"), oversizedBytes);
+      const oversizedManifest = yield* expectRejected(root);
+      if (oversizedManifest._tag === "Failure") expect(oversizedManifest.failure.message).toContain("16 MiB");
+    })
+  );
   it.effect(
     "uses a separate source receipt when the upstream remote is absent and rejects revision drift",
     Effect.fnUntraced(function* () {
