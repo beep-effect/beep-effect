@@ -200,59 +200,66 @@ const withPartitionShim = <A, E, R>(
   options: PartitionShimOptions,
   use: (fixture: { readonly commandLogPath: string; readonly tempDir: string }) => Effect.Effect<A, E, R>
 ) =>
-  Effect.scoped(
+  Effect.acquireUseRelease(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
       const tempDir = yield* fs.makeTempDirectory();
-      const binDir = path.join(tempDir, "bin");
-      const commandLogPath = path.join(tempDir, "commands.log");
-      const bunxPath = path.join(binDir, "bunx");
+      return { fs, tempDir };
+    }),
+    ({ fs, tempDir }) =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const binDir = path.join(tempDir, "bin");
+        const commandLogPath = path.join(tempDir, "commands.log");
+        const bunxPath = path.join(binDir, "bunx");
 
-      yield* fs.makeDirectory(binDir, { recursive: true });
-      yield* fs.writeFileString(
-        bunxPath,
-        A.join(
-          [
-            "#!/usr/bin/env sh",
-            'printf \'%s\\n\' "$*" >> "$CI_LANE_TEST_COMMAND_LOG"',
-            'case " $* " in',
-            '  *" --dry-run=json "*)',
-            "    printf '%s\\n' \"$CI_LANE_TEST_DRY_RUN_OUTPUT\"",
-            '    exit "${CI_LANE_TEST_DRY_RUN_EXIT:-0}"',
-            "    ;;",
-            "esac",
-            'exit "${CI_LANE_TEST_EXECUTION_EXIT:-0}"',
-            "",
-          ],
-          "\n"
-        )
-      );
-      yield* fs.chmod(bunxPath, 0o755);
-      yield* Effect.addFinalizer(() => fs.remove(tempDir, { force: true, recursive: true }).pipe(Effect.orDie));
+        yield* fs.makeDirectory(binDir, { recursive: true });
+        yield* fs.writeFileString(
+          bunxPath,
+          A.join(
+            [
+              "#!/usr/bin/env sh",
+              'printf \'%s\\n\' "$*" >> "$CI_LANE_TEST_COMMAND_LOG"',
+              'case " $* " in',
+              '  *" --dry-run=json "*)',
+              "    printf '%s\\n' \"$CI_LANE_TEST_DRY_RUN_OUTPUT\"",
+              '    exit "${CI_LANE_TEST_DRY_RUN_EXIT:-0}"',
+              "    ;;",
+              "esac",
+              'exit "${CI_LANE_TEST_EXECUTION_EXIT:-0}"',
+              "",
+            ],
+            "\n"
+          )
+        );
+        yield* fs.chmod(bunxPath, 0o755);
+        const bunPath = path.join(binDir, "bun");
+        yield* fs.writeFileString(bunPath, yield* fs.readFileString(bunxPath));
+        yield* fs.chmod(bunPath, 0o755);
 
-      return yield* withEnvVarEffect(
-        "PATH",
-        `${binDir}:${Bun.env.PATH ?? ""}`,
-        withEnvVarEffect(
-          "CI_LANE_TEST_COMMAND_LOG",
-          commandLogPath,
+        return yield* withEnvVarEffect(
+          "PATH",
+          `${binDir}:${Bun.env.PATH ?? ""}`,
           withEnvVarEffect(
-            "CI_LANE_TEST_DRY_RUN_OUTPUT",
-            options.dryRunOutput,
+            "CI_LANE_TEST_COMMAND_LOG",
+            commandLogPath,
             withEnvVarEffect(
-              "CI_LANE_TEST_DRY_RUN_EXIT",
-              String(options.dryRunExitCode ?? 0),
+              "CI_LANE_TEST_DRY_RUN_OUTPUT",
+              options.dryRunOutput,
               withEnvVarEffect(
-                "CI_LANE_TEST_EXECUTION_EXIT",
-                String(options.executionExitCode ?? 0),
-                use({ commandLogPath, tempDir })
+                "CI_LANE_TEST_DRY_RUN_EXIT",
+                String(options.dryRunExitCode ?? 0),
+                withEnvVarEffect(
+                  "CI_LANE_TEST_EXECUTION_EXIT",
+                  String(options.executionExitCode ?? 0),
+                  use({ commandLogPath, tempDir })
+                )
               )
             )
           )
-        )
-      );
-    })
+        );
+      }),
+    ({ fs, tempDir }) => fs.remove(tempDir, { force: true, recursive: true }).pipe(Effect.orDie)
   );
 
 const withWorkingDirectory = <A, E, R>(directory: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -633,72 +640,75 @@ describe("CI lane partitions", () => {
 });
 
 describe("partitioned CI lane execution", () => {
-  it.effect("proves and executes a full lint partition with exact package tasks", () =>
-    Effect.gen(function* () {
-      const selectedPackages = lanePackages("lint");
-      const firstPackage = firstOf(partitionPackages("lint-a"));
-      const nonexistentPackage = firstPackage;
-      const dryRunOutput = encodeJson({
-        tasks: [
-          ...A.map(selectedPackages, (packageName) => ({
-            command: "bun run lint",
-            package: packageName,
-            task: "lint",
-            taskId: `${packageName}#lint`,
-          })),
-          {
-            command: "bun run lint",
-            package: firstPackage,
-            task: "lint",
-            taskId: `${firstPackage}#lint`,
-          },
-          {
-            command: "<NONEXISTENT>",
-            package: nonexistentPackage,
-            task: "lint",
-            taskId: `${nonexistentPackage}#lint`,
-          },
-          {
-            command: "bun run test",
-            package: firstPackage,
-            task: "test",
-            taskId: `${firstPackage}#test`,
-          },
-        ],
-      });
+  it.layer(PartitionLaneLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("proves and executes a full lint partition with exact package tasks", () =>
+      Effect.gen(function* () {
+        const selectedPackages = lanePackages("lint");
+        const firstPackage = firstOf(partitionPackages("lint-a"));
+        const nonexistentPackage = firstPackage;
+        const dryRunOutput = encodeJson({
+          tasks: [
+            ...A.map(selectedPackages, (packageName) => ({
+              command: "bun run lint",
+              package: packageName,
+              task: "lint",
+              taskId: `${packageName}#lint`,
+            })),
+            {
+              command: "bun run lint",
+              package: firstPackage,
+              task: "lint",
+              taskId: `${firstPackage}#lint`,
+            },
+            {
+              command: "<NONEXISTENT>",
+              package: nonexistentPackage,
+              task: "lint",
+              taskId: `${nonexistentPackage}#lint`,
+            },
+            {
+              command: "bun run test",
+              package: firstPackage,
+              task: "test",
+              taskId: `${firstPackage}#test`,
+            },
+          ],
+        });
 
-      yield* withPartitionShim({ dryRunOutput }, ({ commandLogPath }) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          yield* runCiLane(
-            "lint",
-            CiLaneRunOptions.make({
-              ...baseOptions,
-              force: true,
-              partition: "lint-a",
-              summarize: true,
-            })
-          );
+        yield* withPartitionShim({ dryRunOutput }, ({ commandLogPath }) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* runCiLane(
+              "lint",
+              CiLaneRunOptions.make({
+                ...baseOptions,
+                force: true,
+                partition: "lint-a",
+                summarize: true,
+              })
+            );
 
-          const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
-          expect(commands).toHaveLength(2);
-          const selection = firstOf(commands);
-          const execution = lastOf(commands);
-          expect(selection).toContain("turbo run lint");
-          expect(selection).toContain("--filter=!./apps/labs/** --only --dry-run=json");
-          expect(selection).not.toContain("--affected");
-          expect(execution).toContain(`turbo run ${firstPackage}#lint`);
-          expect(execution).toContain("--only --concurrency=2 --filter=!./apps/labs/**");
-          expect(execution).toContain(`--filter=${firstPackage}`);
-          expect(execution).toContain("--force --summarize");
-          expect(execution).not.toContain("--affected");
+            const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+            expect(commands).toHaveLength(2);
+            const selection = firstOf(commands);
+            const execution = lastOf(commands);
+            expect(selection).toContain("turbo run lint");
+            expect(selection).toContain("--filter=!./apps/labs/** --only --dry-run=json");
+            expect(selection).not.toContain("--affected");
+            expect(execution).toContain(`cache execute -- run ${firstPackage}#lint`);
+            expect(execution).toContain("--no-env-file");
+            expect(execution).toContain("--only --concurrency=2 --filter=!./apps/labs/**");
+            expect(execution).toContain(`--filter=${firstPackage}`);
+            expect(execution).toContain("--force --summarize");
+            expect(execution).not.toContain("--affected");
 
-          const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-          expect(output).toContain("lint partition union proved: 135 executable tasks, 135 selected, 68 in lint-a");
-        })
-      );
-    }).pipe(provideScopedLayer(PartitionLaneLayer))
-  );
+            const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+            expect(output).toContain("lint partition union proved: 135 executable tasks, 135 selected, 68 in lint-a");
+          })
+        );
+      })
+    );
+  });
 
   it.effect("rejects partial unscoped selections but allows affected selections", () =>
     Effect.gen(function* () {
@@ -1432,7 +1442,8 @@ layer(
       },
     ]),
     selectedStorybookSpawns
-  )
+  ),
+  { timeout: "10 seconds" }
 )("storybook lane affected probe (transitive dependency changed)", (it) => {
   it.effect("runs the whole lane when the plan carries @beep/storybook#storybook:build", () =>
     Effect.gen(function* () {
@@ -1441,10 +1452,10 @@ layer(
       const lines = A.map(selectedStorybookSpawns, (spawn) => spawn.line);
       expect(lines).toHaveLength(4);
       expect(lines[0]).toBe(storybookProbeLine);
-      expect(lines[1]).toContain("turbo run storybook:build");
+      expect(lines[1]).toContain("cache execute -- run storybook:build");
       expect(lines[1]).toContain("--filter=@beep/storybook --summarize");
       expect(lines[1]).not.toContain("--affected");
-      expect(lines[2]).toContain("turbo run test:storybook");
+      expect(lines[2]).toContain("cache execute -- run test:storybook");
       expect(lines[2]).not.toContain("--affected");
       expect(lines[3]).toBe("test -f apps/storybook/storybook-static/index.html");
       expect(yield* consoleOutput).toContain(
@@ -1455,19 +1466,41 @@ layer(
 });
 
 const unscopedStorybookSpawns = A.empty<StorybookSpawn>();
-layer(storybookCiLayer(storybookDryRun([]), unscopedStorybookSpawns))("storybook lane without --affected", (it) => {
-  it.effect("never probes Turbo and runs every step", () =>
-    Effect.gen(function* () {
-      yield* runCiLane("storybook", baseOptions);
+layer(storybookCiLayer(storybookDryRun([]), unscopedStorybookSpawns), { timeout: "10 seconds" })(
+  "storybook lane without --affected",
+  (it) => {
+    it.effect("never probes Turbo and runs every step", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("storybook", baseOptions);
 
-      const lines = A.map(unscopedStorybookSpawns, (spawn) => spawn.line);
-      expect(lines).toHaveLength(3);
-      expect(A.some(lines, Str.includes("--dry-run=json"))).toBe(false);
-      expect(lines[0]).toContain("turbo run storybook:build");
-      expect(lines[2]).toBe("test -f apps/storybook/storybook-static/index.html");
-    })
-  );
-});
+        const lines = A.map(unscopedStorybookSpawns, (spawn) => spawn.line);
+        expect(lines).toHaveLength(3);
+        expect(A.some(lines, Str.includes("--dry-run=json"))).toBe(false);
+        expect(lines[0]).toContain("cache execute -- run storybook:build");
+        expect(lines[2]).toBe("test -f apps/storybook/storybook-static/index.html");
+      })
+    );
+  }
+);
+
+const overriddenStorybookSpawns = A.empty<StorybookSpawn>();
+layer(storybookCiLayer(storybookDryRun([]), overriddenStorybookSpawns))(
+  "storybook lane caller runtime identity rejection",
+  (it) => {
+    it.effect("rejects an ambient runtime key before launching a native task", () =>
+      withEnvVarEffect(
+        "BEEP_CACHE_TOOLCHAIN_DIGEST",
+        "caller-controlled",
+        Effect.gen(function* () {
+          const error = yield* runCiLane("storybook", baseOptions).pipe(Effect.flip);
+          expect(error._tag).toBe("QualityTaskConfigurationError");
+          expect(error.message).toContain("cache runtime identity");
+          expect(overriddenStorybookSpawns).toEqual([]);
+        })
+      )
+    );
+  }
+);
 
 const failedStorybookSpawns = A.empty<StorybookSpawn>();
 layer(storybookCiLayer("turbo: could not resolve base", failedStorybookSpawns, 2))(
@@ -1648,13 +1681,13 @@ layer(ciExecutionLayer(["scripts/release.sh"], [], inertDocgenCommands))("automa
 
 const fullDoctestCommands = A.empty<string>();
 
-layer(ciExecutionLayer([], [], fullDoctestCommands))("full Doctest CI lane", (it) => {
+layer(ciExecutionLayer([], [], fullDoctestCommands), { timeout: "10 seconds" })("full Doctest CI lane", (it) => {
   it.effect("runs the complete documentation Vitest corpus without Git discovery", () =>
     Effect.gen(function* () {
       yield* runCiLane("doctest", baseOptions);
 
       expect(fullDoctestCommands).toHaveLength(1);
-      expect(fullDoctestCommands[0]).toContain("bunx turbo run doctest");
+      expect(fullDoctestCommands[0]).toContain("cache execute -- run doctest");
       expect(fullDoctestCommands[0]).toContain("--summarize");
       expect(fullDoctestCommands[0]).not.toContain("--affected");
     })
@@ -1668,23 +1701,26 @@ const fallowReports: ReadonlyArray<readonly [string, string]> = [
   [".beep/fallow/health.check.json", "{}"],
 ];
 
-layer(ciExecutionLayer([], fallowReports, fallowCommands))("Fallow CI lane execution", (it) => {
-  it.effect("runs blocking and advisory sublanes before validating blocking envelopes", () =>
-    Effect.gen(function* () {
-      yield* runCiLane("fallow", CiLaneRunOptions.make({ ...baseOptions, validateEnvelopes: true }));
+layer(ciExecutionLayer([], fallowReports, fallowCommands), { timeout: "10 seconds" })(
+  "Fallow CI lane execution",
+  (it) => {
+    it.effect("runs blocking and advisory sublanes before validating blocking envelopes", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("fallow", CiLaneRunOptions.make({ ...baseOptions, validateEnvelopes: true }));
 
-      expect(fallowCommands).toHaveLength(14);
-      expect(fallowCommands[0]).toContain("turbo run fallow:audit:check");
-      expect(fallowCommands[1]).toContain("turbo run fallow:dead-code:check");
-      expect(fallowCommands[2]).toContain("turbo run fallow:health:check");
-      expect(fallowCommands[11]).toContain("fallow envelope-check .beep/fallow/audit.check.json");
-      expect(fallowCommands[13]).toContain("fallow envelope-check .beep/fallow/health.check.json");
-    })
-  );
-});
+        expect(fallowCommands).toHaveLength(14);
+        expect(fallowCommands[0]).toContain("cache execute -- run fallow:audit:check");
+        expect(fallowCommands[1]).toContain("cache execute -- run fallow:dead-code:check");
+        expect(fallowCommands[2]).toContain("cache execute -- run fallow:health:check");
+        expect(fallowCommands[11]).toContain("fallow envelope-check .beep/fallow/audit.check.json");
+        expect(fallowCommands[13]).toContain("fallow envelope-check .beep/fallow/health.check.json");
+      })
+    );
+  }
+);
 
 const failedInventoryCommands = A.empty<string>();
-layer(ciExecutionLayer([], [], failedInventoryCommands, "jsdoc:inventory:check"))(
+layer(ciExecutionLayer([], [], failedInventoryCommands, "jsdoc:inventory:check"), { timeout: "10 seconds" })(
   "JSDoc inventory dependency",
   (it) => {
     it.effect("does not compare a stale inventory after the Turbo inventory task fails", () =>
@@ -1692,7 +1728,7 @@ layer(ciExecutionLayer([], [], failedInventoryCommands, "jsdoc:inventory:check")
         const result = yield* runCiLane("jsdoc-ratchet", baseOptions).pipe(Effect.exit);
         expect(Exit.isFailure(result)).toBe(true);
         expect(failedInventoryCommands).toHaveLength(1);
-        expect(failedInventoryCommands[0]).toContain("turbo run jsdoc:inventory:check");
+        expect(failedInventoryCommands[0]).toContain("cache execute -- run jsdoc:inventory:check");
       })
     );
   }

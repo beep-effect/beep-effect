@@ -1,0 +1,84 @@
+{
+  "authority": "Isolated explicit self-contained root-sibling configuration experiment. Preserves the four tested lint behaviors and narrows observed scalar reads; not qualification or complete semantic closure.",
+  "status": "candidate-not-adopted",
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "wrapperExitCode": 0,
+  "beforeAfterParity": "passed",
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/flat-profile-scanner-f751q7or/receipt.json",
+    "sha256": "7f23b74b6649b1e86bc111965bd5ff03311a5de73eb87fe4b7b88453aaf41305"
+  },
+  "profile": {
+    "path": ".beep/qualification-local-preflight/scoped-scanner-biome.json",
+    "sha256": "ab6eaac389031b523f602029b27b49a6096e609fc5dd9ebdc59942134710b058"
+  },
+  "probe": {
+    "path": ".beep/qualification-local-preflight/probe-flat-profile-scanner.py",
+    "sha256": "ced88ea7aa522530cc31a416e5a7b9c2896679c4b87d949b3e142bd0a6d5cf57"
+  },
+  "checks": {
+    "baselinePasses": true,
+    "workspaceDeprecationFails": true,
+    "workspaceDeprecationDiagnostic": true,
+    "visibleSyntaxFails": true,
+    "ignoredSyntaxPasses": true,
+    "quietVerboseExitParity": true
+  },
+  "mutationBytesVerified": true,
+  "results": [
+    {
+      "case": "baseline",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/flat-profile-scanner-f751q7or/baseline-read-review.json",
+        "sha256": "68e86b879a2e593387b406a79a1827e2b6e08f27928b9d6bfc8d8aff6facc2c4"
+      },
+      "otherRepositoryPaths": 407,
+      "unannotatedPositiveReads": {}
+    },
+    {
+      "case": "workspace-deprecated",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/flat-profile-scanner-f751q7or/workspace-deprecated-read-review.json",
+        "sha256": "9cc4f0cad0b0f1ece0e36d7f5030a910b36b46b64919d3a7f7e230380c5aaf1e"
+      },
+      "otherRepositoryPaths": 407,
+      "unannotatedPositiveReads": {}
+    },
+    {
+      "case": "invalid-visible",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/flat-profile-scanner-f751q7or/invalid-visible-read-review.json",
+        "sha256": "4c85b28097a93e44be1a9c853d94d52aeaca351857cad76c40fe11e712b9b5c3"
+      },
+      "otherRepositoryPaths": 407,
+      "unannotatedPositiveReads": {}
+    },
+    {
+      "case": "invalid-ignored",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/flat-profile-scanner-f751q7or/invalid-ignored-read-review.json",
+        "sha256": "61e3922e7a514ed5fb9afceabe0fdf5bb11d7a604a280613b7e695df0abc0611"
+      },
+      "otherRepositoryPaths": 407,
+      "unannotatedPositiveReads": {}
+    }
+  ],
+  "comparison": {
+    "originalOtherRepositoryPaths": 8456,
+    "directRootOverlayPaths": 406,
+    "selfContainedProfilePaths": 407,
+    "addedPath": "/fixture/biome.identity.jsonc",
+    "removedPathsComparedToDirectOverlay": []
+  },
+  "limitations": [
+    "Controls cover workspace deprecation and visible/ignored syntax; external dependency deprecation has not been rerun for this explicit profile.",
+    "Observed reads do not prove semantic relevance or the complete possible input set.",
+    "Generated configuration adoption, input hashing, native replay and full pilot matrices remain pending.",
+    "Signed sibling receipts and signed remote acceptance remain required."
+  ],
+  "nextAction": "Validate external dependency semantics for the explicit profile, then bind the generated configuration and remaining observed inputs in the pilot contract before native replay."
+}

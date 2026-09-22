@@ -1,0 +1,44 @@
+{
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "authority": "Independent retained-metadata reconstruction. No raw archive or signed remote qualification authority.",
+  "stable": {
+    "processExitCode": 0,
+    "review": {
+      "channel": "stable",
+      "clientVersion": "2.10.12",
+      "toolchainSha256": "c1e60cc5070c45d60b1c8e486dfa93fd5dc0d310bcb6cffdc9dc2721c18423d7",
+      "reconstructionPassed": true,
+      "rawArchiveValidation": false,
+      "signedTransportValidation": false,
+      "alteredLoaderRejected": true,
+      "alteredGitExclusionRejected": true,
+      "observations": 67,
+      "passingChecks": 40,
+      "shadowDecisions": 10,
+      "receipt": {
+        "path": ".beep/qualification-local-preflight/lts-stable-pilot.json",
+        "sha256": "7fa94ec0c5e7b86491ba8029d3e75f12d0e0257d4cbfe7bead62366b52f1e91e"
+      }
+    }
+  },
+  "canary": {
+    "processExitCode": 0,
+    "review": {
+      "channel": "canary",
+      "clientVersion": "2.10.13-canary.1",
+      "toolchainSha256": "bddd0b5454acc2853fc3d9493a9f44e75b6bf8b774156fb5ee7ccdcce5581fb6",
+      "reconstructionPassed": true,
+      "rawArchiveValidation": false,
+      "signedTransportValidation": false,
+      "alteredLoaderRejected": true,
+      "alteredGitExclusionRejected": true,
+      "observations": 67,
+      "passingChecks": 40,
+      "shadowDecisions": 10,
+      "receipt": {
+        "path": ".beep/qualification-local-preflight/lts-canary-pilot.json",
+        "sha256": "74ca7dc362e1b58945d05a342d4fbe929cc35a6c793baaa888381dd222fa568b"
+      }
+    }
+  }
+}

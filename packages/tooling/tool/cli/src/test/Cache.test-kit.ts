@@ -24,6 +24,7 @@ export {
   runCacheSyntheticForTesting,
 } from "../commands/Cache/Cache.experiment.ts";
 export {
+  collectCacheGitExclusions,
   collectCacheToolchain,
   fingerprintCacheComputation,
   projectCacheActivation,
@@ -36,3 +37,11 @@ export {
 } from "../commands/Cache/Cache.linker.ts";
 export { extractCachePilotLog } from "../commands/Cache/Cache.pilot.capture.ts";
 export { runCachePilotForTesting } from "../commands/Cache/Cache.pilot.ts";
+export * as CacheRuntimeProfile from "../commands/Cache/Cache.profile.ts";
+export {
+  renderCacheIdentityLintProfile,
+  verifyCacheIdentityLintProfile,
+  writeCacheIdentityLintProfile,
+} from "../commands/Cache/Cache.profile.ts";
+export * as CacheRuntimeFileGuards from "../internal/cli/FsGuards.ts";
+export * as CacheRuntimeProcess from "../internal/process/StepExec.ts";

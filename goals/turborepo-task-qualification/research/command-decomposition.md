@@ -81,3 +81,37 @@ are integrated into the operational census and outstanding cases are explicit.
 No row is qualified by this review. After the identity-lint exclusion, 927 cached executable
 computations remain unassessed. At least one real computation must still pass
 the complete local, shadow and signed-remote protocol before this goal closes.
+
+## Resumed manifest boundary review (2026-09-11)
+
+The refreshed census contains 1,892 executable computations and 1,377 graph-only
+nodes across 143 workspaces. Its entrypoint inventory now includes 125 files,
+including Cache's execution boundary. These numbers supersede the historical
+population above; they do not supersede its unresolved semantic obligations.
+The runtime enforcement receipt binds the census, exact command groups, local
+alias expansion and selected nested manifest definitions by SHA-256.
+
+Review of all 76 command strings after exact local `bun run beep:*` expansion
+identifies the following boundaries. Counts below describe manifest definitions,
+not independent executions or qualified tuples.
+
+| Boundary | Current manifest evidence | Qualification implication |
+| --- | --- | --- |
+| Composite audits | 140 `beep:audit` definitions; 79 include integration tests, 50 use the basic build/check/test/lint chain, and 11 have additional variants | Resolve each invoked script in its own workspace. A cached audit must account for every nested computation and its outputs. |
+| Generation within audits | Four audits invoke `generate` before build; six workspaces map `generate` to `scripts/generate.ts` | Inventory generator inputs, writes and any external reads before treating the enclosing audit as reusable. |
+| Compiled output rewriting | 117 Babel definitions rewrite `dist` and source maps after TypeScript emission | Both producer stages and generated files belong to the computation boundary. |
+| Nested typechecking | Test, scripts, stories, examples and type-test scripts use distinct configurations; stories use `tsc`, while most checks use `tsgo` | Compiler identity and all selected configurations must be included; the root check configuration alone is insufficient. |
+| Nested dependency installation | `@beep/infra`'s `test:lambda` changes into `lambda/turbo-cache`, installs with a frozen lockfile, then runs typecheck, tests, bundle and ZIP checks | Review the nested lockfile, installation behavior, directory change and bundle/ZIP artifacts separately. Frozen lockfile syntax does not prove offline or deterministic execution. |
+| Cross-workspace file selection | Storybook lint expands the Git repository root and a UI stories glob through `sh -c` | File membership depends on shell expansion and checkout layout, beyond the Storybook workspace manifest. |
+| Source mutation | Biome `--write`, barrel codegen, migration synchronization and allowlist generation appear explicitly | Keep mutation and validation boundaries distinct; inspect actual writes before any reuse decision. |
+| Persistent services | Portless commands start watch, Next, Vite, Storybook or preview processes | Their service lifetime requires explicit policy; a finite successful-task cache contract is not established. |
+| Tests and build tools | Vitest, coverage, integration configurations, Next, Vite and Storybook builds remain terminal commands in this manifest review | Test/configuration source, environment, clock, randomness, network/service dependencies and output/log behavior still need evidence. |
+
+The 140 top-level `bun run --if-present beep:audit` commands were outside the
+earlier narrow alias-expansion rule. Their workspace definitions were inspected
+explicitly here. Compound shell execution, optional-script semantics and nested
+external tools have not been interpreted by that alias recipe. The selected
+manifest evidence is retained privately as
+`runtime-nested-manifest-boundaries.json`; the public runtime boundary receipt
+records its hash. This review grants no qualification and does not claim a
+complete transitive interpreter/source inventory.

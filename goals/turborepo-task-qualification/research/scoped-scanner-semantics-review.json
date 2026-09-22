@@ -1,0 +1,83 @@
+{
+  "authority": "Private scanner-overlay semantic controls, not adopted configuration or qualified reuse.",
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "wrapperExitCode": 0,
+  "beforeAfterDependencyToolchainParity": "passed",
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/scoped-semantics-2_ow0118/receipt.json",
+    "sha256": "3d9659d272a9cc7db4abcc7f259b92a0b0e2bcad014ddeca8e1ea6f412ef09e6"
+  },
+  "configuration": {
+    "path": ".beep/qualification-local-preflight/scoped-scanner-biome.json",
+    "sha256": "ab6eaac389031b523f602029b27b49a6096e609fc5dd9ebdc59942134710b058"
+  },
+  "probe": {
+    "path": ".beep/qualification-local-preflight/probe-scoped-semantics.py",
+    "sha256": "ca5ca6a7bd240d0613197ffd003605800a917688a17a129deaddfa8f60f86627"
+  },
+  "reviewRecipe": {
+    "path": ".beep/qualification-local-preflight/review-scoped-semantics.py",
+    "sha256": "872082441ed49ac76fbeadd926d5e10ce472f493b9b4632a8d0ebe3180b37471"
+  },
+  "checks": {
+    "baselinePasses": true,
+    "workspaceDeprecationFails": true,
+    "workspaceDeprecationDiagnostic": true,
+    "visibleSyntaxFails": true,
+    "ignoredSyntaxPasses": true,
+    "quietVerboseExitParity": true
+  },
+  "mutationBytesVerified": true,
+  "results": [
+    {
+      "case": "baseline",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/scoped-semantics-2_ow0118/baseline-read-review.json",
+        "sha256": "a3cf8598fc490d9dfb9a393bab6c6ba22c1f43630261cd602713bc325a2e54e8"
+      },
+      "otherRepositoryPaths": 406,
+      "unannotatedPositiveReads": {},
+      "nonemptyReadBuffers": 0
+    },
+    {
+      "case": "workspace-deprecated",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/scoped-semantics-2_ow0118/workspace-deprecated-read-review.json",
+        "sha256": "f5d0adf33e67c93724ddd936a267d1c8c356c4680940d4f4b97009706d9eb039"
+      },
+      "otherRepositoryPaths": 406,
+      "unannotatedPositiveReads": {},
+      "nonemptyReadBuffers": 0
+    },
+    {
+      "case": "invalid-visible",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/scoped-semantics-2_ow0118/invalid-visible-read-review.json",
+        "sha256": "20b39790edee4b00c9ea293378ba4003b43d0349f5ed7e9519b80615f3759eb5"
+      },
+      "otherRepositoryPaths": 406,
+      "unannotatedPositiveReads": {},
+      "nonemptyReadBuffers": 0
+    },
+    {
+      "case": "invalid-ignored",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/scoped-semantics-2_ow0118/invalid-ignored-read-review.json",
+        "sha256": "3dc7434501f984331e572ba78cfa6b40fddea0384d706bef86e1783b1a6b82fe"
+      },
+      "otherRepositoryPaths": 406,
+      "unannotatedPositiveReads": {},
+      "nonemptyReadBuffers": 0
+    }
+  ],
+  "remaining": [
+    "Account for remaining 406 repository read paths",
+    "Validate candidate-specific native input hashing and replay",
+    "Run complete stable/canary matrices for any adopted candidate",
+    "Complete signed conformance/trust receipt integration and final qualification gates"
+  ]
+}
