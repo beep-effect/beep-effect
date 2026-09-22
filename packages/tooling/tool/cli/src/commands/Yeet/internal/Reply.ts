@@ -172,6 +172,9 @@ query YeetReplyReviewThreads($owner: String!, $name: String!, $number: Int!, $cu
             pageInfo { hasNextPage endCursor }
             nodes { id databaseId author { login } }
           }
+          latest: comments(last: 1) {
+            nodes { author { login } }
+          }
         }
       }
     }
@@ -236,6 +239,33 @@ export class ReplyThreadCommentConnection extends S.Class<ReplyThreadCommentConn
 ) {}
 
 /**
+ * The newest comment of a review thread, fetched as `comments(last: 1)` so a
+ * thread longer than one page still reports who spoke last.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyThreadLatestComment extends S.Class<ReplyThreadLatestComment>($I`ReplyThreadLatestComment`)(
+  { author: GhActor.pipe(S.NullOr, S.optionalKey) },
+  $I.annote("ReplyThreadLatestComment", {
+    description: "Author of a review thread's newest comment.",
+  })
+) {}
+
+/**
+ * Single-node connection carrying a thread's newest comment.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyThreadLatestConnection extends S.Class<ReplyThreadLatestConnection>($I`ReplyThreadLatestConnection`)(
+  { nodes: S.Array(ReplyThreadLatestComment) },
+  $I.annote("ReplyThreadLatestConnection", {
+    description: "`comments(last: 1)` connection of a review thread.",
+  })
+) {}
+
+/**
  * A live pull request review thread as the reply engine sees it.
  *
  * **Details**
@@ -270,6 +300,8 @@ export class ReplyThreadCommentConnection extends S.Class<ReplyThreadCommentConn
 export class ReplyLiveThread extends S.Class<ReplyLiveThread>($I`ReplyLiveThread`)(
   {
     comments: ReplyThreadCommentConnection,
+    // The thread's newest comment regardless of how many pages it spans.
+    latest: S.optionalKey(ReplyThreadLatestConnection),
     id: S.String,
     isOutdated: S.Boolean,
     isResolved: S.Boolean,
@@ -303,10 +335,21 @@ const ReplyReviewThreadsDocument = S.Struct({
   }),
 });
 
+// Prefer the `comments(last: 1)` node; the last node of the first page is only
+// the newest comment when the thread fits in that page.
 const latestCommentAuthor = (thread: ReplyLiveThread): O.Option<string> =>
   pipe(
-    A.last(thread.comments.nodes),
+    O.fromUndefinedOr(thread.latest),
+    O.flatMap((latest) => A.last(latest.nodes)),
     O.flatMap((comment) => O.fromNullishOr(comment.author)),
+    O.orElse(() =>
+      thread.comments.pageInfo.hasNextPage
+        ? O.none<GhActor>()
+        : pipe(
+            A.last(thread.comments.nodes),
+            O.flatMap((comment) => O.fromNullishOr(comment.author))
+          )
+    ),
     O.map((author) => author.login)
   );
 

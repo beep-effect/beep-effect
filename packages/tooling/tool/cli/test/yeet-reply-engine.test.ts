@@ -16,6 +16,8 @@ import {
   ReplyReportJson,
   ReplyThreadComment,
   ReplyThreadCommentConnection,
+  ReplyThreadLatestComment,
+  ReplyThreadLatestConnection,
   RepoRunContext,
   renderYeetReplyFailureVerdict,
   replyDraftsPathForContext,
@@ -218,6 +220,27 @@ describe("planReplyActions", () => {
     expect(unknownAuthor?.hasFollowUp).toBe(false);
     const [open] = markReplyFollowUps([openThread], O.some("someone-else"));
     expect(open?.hasFollowUp).toBe(false);
+  });
+
+  it("reads the newest comment from comments(last: 1) when the thread spans more than one page", () => {
+    const longThread = ReplyLiveThread.make({
+      ...followUpThread,
+      hasFollowUp: false,
+      comments: ReplyThreadCommentConnection.make({
+        // First page ends with the author's own reply; the real newest comment is on a later page.
+        nodes: A.take(followUpThread.comments.nodes, 2),
+        pageInfo: { endCursor: "cursor-2", hasNextPage: true },
+      }),
+      latest: ReplyThreadLatestConnection.make({
+        nodes: [ReplyThreadLatestComment.make({ author: { login: "coderabbitai" } })],
+      }),
+    });
+    const [marked] = markReplyFollowUps([longThread], O.some("octocat"));
+    expect(marked?.hasFollowUp).toBe(true);
+    // Without the latest node, a multi-page thread never claims to know who spoke last.
+    const { latest: _latest, ...withoutLatest } = longThread;
+    const [unknown] = markReplyFollowUps([ReplyLiveThread.make(withoutLatest)], O.some("octocat"));
+    expect(unknown?.hasFollowUp).toBe(false);
   });
 
   it("posts on a resolved thread that carries a reviewer follow-up", () => {
