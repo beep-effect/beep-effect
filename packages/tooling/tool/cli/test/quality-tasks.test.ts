@@ -1,4 +1,4 @@
-import { cacheRuntimeStep } from "@beep/repo-cli/commands/Cache";
+import { fileURLToPath } from "node:url";
 import {
   CiLaneRunOptions,
   CiLocalStepPlan,
@@ -573,8 +573,19 @@ const policyCommandKey = (text: string): string =>
 const policyLabelKey = Str.replace(" (op run)", "");
 
 const policyStepCommand = (step: QualityTaskStep) => {
-  const runtime = cacheRuntimeStep(step);
-  return A.join([runtime.command, ...runtime.args], " ");
+  const expected =
+    step.command === "bunx" && step.args[0] === "turbo" && step.args[1] === "run"
+      ? [
+          "bun",
+          "--no-env-file",
+          fileURLToPath(new URL("../src/bin.ts", import.meta.url)),
+          "cache",
+          "execute",
+          "--",
+          ...A.drop(step.args, 1),
+        ]
+      : [step.command, ...step.args];
+  return A.join(expected, " ");
 };
 
 // A red policy run fails as one group whose failures name exactly the red planned label.

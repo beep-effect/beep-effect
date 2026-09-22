@@ -228,15 +228,25 @@ describe("thin lint workers", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const content = '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"turbo"}';
         yield* runSweepCommand(["deprecated-apis", "--full"], content);
-        expect(execution.mock.calls[0]?.[0].args).toEqual(
-          expect.arrayContaining(["--no-env-file", "cache", "execute", "--", "run"])
-        );
+        expect(A.take(execution.mock.calls[0]?.[0].args ?? [], 6)).toEqual([
+          "--no-env-file",
+          expect.stringMatching(/\/src\/bin\.ts$/),
+          "cache",
+          "execute",
+          "--",
+          "run",
+        ]);
         expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
         execution.mockClear();
         yield* runSweepCommand(["deprecated-apis"], content, { CI: "true" });
-        expect(execution.mock.calls[0]?.[0].args).toEqual(
-          expect.arrayContaining(["--no-env-file", "cache", "execute", "--", "run"])
-        );
+        expect(A.take(execution.mock.calls[0]?.[0].args ?? [], 6)).toEqual([
+          "--no-env-file",
+          expect.stringMatching(/\/src\/bin\.ts$/),
+          "cache",
+          "execute",
+          "--",
+          "run",
+        ]);
         expect(execution.mock.calls[0]?.[0].env?.TURBO_SCM_BASE).toBeUndefined();
       })
     );

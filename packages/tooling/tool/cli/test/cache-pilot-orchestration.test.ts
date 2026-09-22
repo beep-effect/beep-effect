@@ -375,14 +375,18 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                   const readme = yield* fs.readFileString(path.join(identity, "README.md"));
                   const added = yield* fs.exists(path.join(identity, "src/qualification-shadow.ts"));
                   const env = command.options.env ?? {};
-                  const mutation = Str.startsWith("mutation-")(label);
+                  const rootConfigBytes = yield* fs.readFileString(mounted(`${guest}/biome.jsonc`));
+                  const profileBytes = profile
+                    ? yield* fs.readFileString(mounted(`${guest}/biome.identity.jsonc`))
+                    : "absent";
+                  const mutation = Str.startsWith("mutation-")(label) && label !== "mutation-root-lint-config";
                   const mutationKey = () => (mutation ? label + (number === 0 ? "before" : "after") : "");
                   const taskHash = Str.slice(
                     0,
                     16
                   )(
                     yield* hash(
-                      `${sourceText}:${readme}:${added}:${env.BEEP_ESLINT_PROFILE ?? "absent"}:${enabled}:${mutationKey()}`
+                      `${sourceText}:${readme}:${added}:${rootConfigBytes}:${profileBytes}:${env.BEEP_ESLINT_PROFILE ?? "absent"}:${enabled}:${mutationKey()}`
                     )
                   );
                   const cacheFile = `cache/${taskHash}`;

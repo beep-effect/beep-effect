@@ -5,7 +5,7 @@
 Lifecycle: `active`
 
 Source: [ops/manifest.json](./ops/manifest.json).
-Authored but not started. Launch begins P0; see [PLAN.md](./PLAN.md) for resume
+Launched and in progress; see [PLAN.md](./PLAN.md) for resume
 conditions and milestone dependencies.
 
 ## Mission
@@ -30,15 +30,16 @@ Make cache reuse an enforced, evidence-backed contract for each quality computat
 
 ## Current phase
 
-P0 Refresh and contract, not started.
+Qualification implementation and local pilot work are in progress.
 
-Refresh the executable census and define the qualification policy shared by the pilot, conformance runner and adoption audit.
+The census and shared policy are implemented in part. Complete semantic input
+coverage and accepted signed evidence before qualification; see [PLAN.md](./PLAN.md).
 
 ## Latest evidence
 
 [Graduation receipt](./history/graduation-2026-09-08.md) records approval and
-packet creation only. Implementation tests, deployment and observation have
-not started.
+packet creation only. The [acceptance audit](./research/acceptance-audit-current.md)
+records implementation and pilot evidence alongside remaining acceptance gaps.
 
 ## Notes
 
