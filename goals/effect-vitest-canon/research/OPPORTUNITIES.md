@@ -1967,3 +1967,26 @@ Original processes and evidence are preserved.
   four metrics in the focused report before repeating full publication proof.
 - Prevention: inspect the ratchet's complete metric contract, not only the first
   metrics reported in an earlier failed run. Do not lower or seed baseline floors.
+
+
+## Runner import detector prerequisite
+
+The existing instrumented-harness recognizer names only the test-utils entrypoint.
+A runner extraction must extend this recognizer before adoption, or the new
+import path will silently escape test-body checks. Its regression suite now
+covers both leaf entrypoints, aliases, namespaces, nested layers, shadowing and
+non-tester exports. Keep this CLI change separate under D13.
+
+The first test command was run from the repository root with a package config
+whose include paths are relative to the working directory; it found no tests.
+Running from the CLI package directory found the suite. The initial new negative
+fixture used a nonexistent `it.TestHang` member; use the public namespace error
+export when testing non-tester rejection.
+
+
+## Detached publish availability
+
+The early PR publication command rejected `--detach` because this session has no
+active systemd user manager. No fallback job started. Publication continues with
+the same canonical command attached to the live session, with its handle and log
+saved for resume. A user-manager preflight would avoid the failed detached launch.
