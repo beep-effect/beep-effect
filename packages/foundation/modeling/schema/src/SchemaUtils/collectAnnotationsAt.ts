@@ -59,11 +59,6 @@ const collect = (schema: S.Top, key: string): ReadonlyArray<unknown> => {
 
     visitStructuralChildren(ast, visit);
 
-    const constructorDefault = ast.context?.constructorDefault;
-    if (constructorDefault !== undefined) {
-      visit(constructorDefault.to);
-    }
-
     if (ast.encoding !== undefined) {
       A.forEach(ast.encoding, (link) => visit(link.to));
     }
@@ -118,9 +113,10 @@ const visitStructuralChildren = (ast: SchemaAST.AST, visit: (ast: SchemaAST.AST)
  *
  * Traversal is deterministic and root-first. At each AST node, ordinary,
  * check-level, and property-key annotations are collected in that order.
- * Structural children retain their declaration order, followed by
- * constructor-default and encoding targets. Recursive schemas terminate
- * because each AST identity is visited once.
+ * Structural children retain their declaration order, followed by encoding
+ * targets. A constructor default is a bare Effect rather than a schema link,
+ * so it carries no AST to traverse. Recursive schemas terminate because each
+ * AST identity is visited once.
  *
  * Supports both call styles:
  * - Data-last: `collectAnnotationsAt("profile")(schema)`
