@@ -1620,3 +1620,12 @@ Hosted coverage fell below the existing cache command and CI runner file floors.
 Added profile/execute dispatch tests and a caller-identity rejection test, and
 reused one environment default in CI dispatch instead of evaluating it twice.
 Keep coverage floors unchanged; compare measured file coverage before full proof.
+
+## 2026-09-22 — runtime and dry-plan evidence need separate commands
+
+While refreshing the merged profile input map, `cache execute` rejected
+`--dry=json` with “Runtime selection does not accept output modes or directory
+overrides.” The direct native dry-run and governed actual execution both
+passed separately. A documented paired recipe would prevent treating a
+configuration plan as runtime-identity proof or repeatedly probing a rejected
+output mode. Receipt: `profile-closure-refresh-2026-09-22.json`.

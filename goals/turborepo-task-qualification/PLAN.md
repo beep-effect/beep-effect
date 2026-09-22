@@ -1518,3 +1518,14 @@ Effect and `@effect/vitest` rc.117. Resolve post-merge quality findings through
 Yeet repair, full verify, publish and hosted review/check closeout. This is an
 intermediate checkpoint: keep the goal active and retain the incomplete
 qualification and signed-evidence gates. Do not mark the packet completed.
+
+### Resumed after checkpoint merge: 2026-09-22
+
+PR #1182 is merged. Resume independent P2 work from `0be1f13d62` in a new
+qualification lane. The current native-map and actual-execution evidence is
+recorded in `research/profile-closure-refresh-2026-09-22.json`. Current input
+bytes and four file-addition controls pass; the historical read-path gap is
+closed for its recorded path set. Next obtain current-profile read/write and
+capture evidence, then refresh the exact-version local comparison matrix.
+Signed sibling acceptance remains required. Do not promote the pilot or count
+the reboot-interrupted full local proof as passing.
