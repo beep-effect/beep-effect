@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ontology-sidecar-stateless-identity",
+    "title": "Ontology Sidecar Stateless Identity",
+    "status": "active",
+    "created": "2026-09-22",
+    "updated": "2026-09-22",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ontology-sidecar-stateless-identity",
+  "lifecycle": "active",
+  "statusNote": "Starts after goals/mcp-stateless-kit-and-drivers PR 1 (kit dual-read, dispatch anchor, @beep/mcp-kit/client, conformance port) merges; may overlap that goal's later PRs.",
+  "mission": "Move the desktop ontology MCP sidecar to the stateless 2026-07-28 protocol with the GovernedTierGate run keyed on the verified per-launch bearer, the harness on the 2026 wire, and the Origin policy owned by config.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/effect-mcp-2026-07-28",
+    "graduated": "2026-09-22"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ontology-sidecar-stateless-identity/README.md",
+    "goals/ontology-sidecar-stateless-identity/SPEC.md",
+    "goals/ontology-sidecar-stateless-identity/PLAN.md",
+    "goals/ontology-sidecar-stateless-identity/GOAL.md",
+    "goals/ontology-sidecar-stateless-identity/research/SOURCES.md",
+    "explorations/effect-mcp-2026-07-28/BRIEF.md",
+    "explorations/effect-mcp-2026-07-28/DECISIONS.md",
+    "explorations/effect-mcp-2026-07-28/MAP.md",
+    "goals/agent-execution-authority/SPEC.md",
+    "goals/mcp-stateless-kit-and-drivers/SPEC.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "explorations/effect-mcp-2026-07-28/research/SOURCES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ontology-sidecar-stateless-identity/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete",
+      "exit": "Done in the exploration: lanes 22-r3 (governance identity) and 24-r5 (HTTP security), Gate B, Gate C."
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ontology-sidecar-stateless-identity/GOAL.md)\" -le 4000",
+    "jq . goals/ontology-sidecar-stateless-identity/ops/manifest.json",
+    "rg -n \"ontology-sidecar-stateless-identity|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/ontology-sidecar-stateless-identity",
+    "git diff --check -- goals/ontology-sidecar-stateless-identity",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
