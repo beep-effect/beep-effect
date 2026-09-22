@@ -1,14 +1,17 @@
 import {
+  buildJSDocDocumentationInventory,
   summarizeTurboDryRunOutput,
   summarizeTurboQueryAffectedOutput,
   writeJSDocDocumentationInventory,
 } from "@beep/repo-cli/test/Quality";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
+import { it as effectIt } from "@beep/test-utils/Vitest";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as A from "effect/Array";
 import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
 
@@ -169,6 +172,41 @@ const withLabsFixtureRepo = Effect.fnUntraced(function* <A, E, R>(use: (repoRoot
 });
 
 describe("quality artifact generators", () => {
+  effectIt.layer(PlatformLayer, { timeout: "30 seconds" })("inline schema annotations", (it) => {
+    it.effect(
+      "recognizes annotations without accepting field metadata or empty annotations",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* Effect.acquireRelease(acquireFixtureRepo(), (root) =>
+          fs.remove(root, { recursive: true }).pipe(Effect.orDie)
+        );
+        yield* fs.writeFileString(
+          path.join(repoRoot, "packages", "demo", "src", "index.ts"),
+          `import * as S from "effect/Schema";
+export class AnnotatedError extends S.TaggedError<AnnotatedError>()("AnnotatedError", {}, { identifier: "AnnotatedError", description: "A failure." }) {}
+export class AnnotatedClass extends S.Class<AnnotatedClass>("AnnotatedClass")({}, { description: "A model." }) {}
+export class EmptyError extends S.TaggedError<EmptyError>()("EmptyError", {}, {}) {}
+export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { description: S.String }) {}
+`
+        );
+        const inventory = yield* buildJSDocDocumentationInventory({ rootDir: repoRoot, generatedAt: fixedGeneratedAt });
+        const gaps = A.flatMap(inventory.packages, (pkg) =>
+          A.map(pkg.exports, (entry) => ({
+            name: entry.symbolName,
+            rules: A.map(entry.schemaAnnotationGaps, (gap) => gap.rule),
+          }))
+        );
+        expect(gaps).toEqual([
+          { name: "AnnotatedError", rules: [] },
+          { name: "AnnotatedClass", rules: [] },
+          { name: "EmptyError", rules: ["missing-schema-annotation"] },
+          { name: "FieldOnly", rules: ["missing-schema-annotation"] },
+        ]);
+      })
+    );
+  });
+
   it("writes the JSDoc inventory to explicit artifact paths", () =>
     Effect.runPromise(
       withFixtureRepo(
