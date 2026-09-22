@@ -1999,3 +1999,12 @@ AST traversal retained the four regression cases while removing the finding.
 Running the affected Fallow audit before publication would expose this earlier.
 The direct quality command needs an explicit base; the root wrapper expects
 BEEP_PROOF_BASE to be populated by the proof environment.
+
+## Fixture finalizer test typecheck
+
+PR #1191 Heavy / Check found that the new acquireRelease fixture cleanup retained
+PlatformError in its release channel. Focused runtime tests and the package quick
+check had passed; the separate package-test-typecheck command exposed the mismatch.
+The cleanup now uses Effect.orDie so removal failures fail the test without a typed
+release error. All six focused tests, package-test-typecheck, and the quick package
+proof pass. Include the package test typecheck before publishing new Effect tests.

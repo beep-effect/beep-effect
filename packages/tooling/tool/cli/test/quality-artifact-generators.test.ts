@@ -179,7 +179,7 @@ describe("quality artifact generators", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const repoRoot = yield* Effect.acquireRelease(acquireFixtureRepo(), (root) =>
-          fs.remove(root, { recursive: true })
+          fs.remove(root, { recursive: true }).pipe(Effect.orDie)
         );
         yield* fs.writeFileString(
           path.join(repoRoot, "packages", "demo", "src", "index.ts"),
