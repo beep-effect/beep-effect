@@ -2151,6 +2151,9 @@
       ],
       "@beep/epistemic-use-cases/ClaimEvidenceReview": [
         "./packages/epistemic/use-cases/src/ClaimEvidenceReview/index.ts"
+      ],
+      "@beep/repo-cli/commands/Models": [
+        "./packages/tooling/tool/cli/src/commands/Models/index.ts"
       ]
     }
   }
