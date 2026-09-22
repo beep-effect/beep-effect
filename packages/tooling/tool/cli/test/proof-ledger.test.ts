@@ -4,6 +4,7 @@ import {
   ProofFact,
   ProofInputDigest,
   ProofLedger,
+  ProofLedgerFactRow,
   ProofLedgerShadowRow,
   ProofProvenance,
   ProofReuseHit,
@@ -227,6 +228,44 @@ describe("ProofLedger", () => {
           () => true
         );
       })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("decides many keys against one snapshot and appends many rows in one write", () =>
+    inTempRepo((root) =>
+      withLedger(root, (ledger) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* ledger.appendAll([
+            ProofLedgerFactRow.make({ schemaVersion: PROOF_FACT_SCHEMA_VERSION, fact: fact() }),
+            ProofLedgerFactRow.make({
+              schemaVersion: PROOF_FACT_SCHEMA_VERSION,
+              fact: fact({ key: input({ laneId: "quality:check", key: "check-key" }), outcome: "failed" }),
+            }),
+          ]);
+          const contents = yield* fs.readFileString(yield* proofLedgerPathForCheckout(root));
+          expect(A.length(A.filter(Str.split(contents, "\n"), Str.isNonEmpty))).toBe(2);
+
+          const decisions = yield* ledger.lookupAll(
+            [
+              input(),
+              input({ laneId: "quality:check", key: "check-key" }),
+              input({ laneId: "quality:labs", key: "labs-key", inputSource: "undeclared" }),
+              input({ laneId: "quality:lint", key: "lint-key" }),
+            ],
+            NOW
+          );
+          expect(decisions).toStrictEqual([
+            ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" }),
+            ProofReuseMiss.make({ key: "check-key", reason: "prior-failed" }),
+            ProofReuseMiss.make({ key: "labs-key", reason: "undeclared-inputs" }),
+            ProofReuseMiss.make({ key: "lint-key", reason: "no-fact" }),
+          ]);
+          expect(yield* ledger.lookupAll([], NOW)).toStrictEqual([]);
+          yield* ledger.appendAll([]);
+          expect(yield* ledger.facts).toBe(2);
+        })
+      )
     ).pipe(provideScopedLayer(PlatformLayer))
   );
 

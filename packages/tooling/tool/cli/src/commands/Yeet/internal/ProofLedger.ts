@@ -71,10 +71,13 @@ const loadProofLedger = Effect.fn("Yeet.ProofLedger.load")(function* (
   return { malformedRows: A.length(lines) - A.length(rows), rows };
 });
 
-const appendRow = Effect.fn("Yeet.ProofLedger.appendRow")(function* (
+const appendRows = Effect.fn("Yeet.ProofLedger.appendRows")(function* (
   repoRoot: string,
-  row: ProofLedgerRow
+  rows: ReadonlyArray<ProofLedgerRow>
 ): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  if (A.isReadonlyArrayEmpty(rows)) {
+    return;
+  }
   const ledgerPath = yield* proofLedgerPathForCheckout(repoRoot);
   const read = yield* readContainedFileStringNoFollow(repoRoot, ledgerPath).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to inspect proof ledger "${ledgerPath}" before appending.`))
@@ -89,10 +92,14 @@ const appendRow = Effect.fn("Yeet.ProofLedger.appendRow")(function* (
     onNone: () => "",
     onSome: (contents) => (Str.isNonEmpty(contents) && !Str.endsWith("\n")(contents) ? "\n" : ""),
   });
-  const line = yield* ProofLedgerRowJson.encode(row).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to encode a proof ledger row."))
+  const lines = yield* Effect.forEach(rows, (row) =>
+    ProofLedgerRowJson.encode(row).pipe(Effect.mapError(YeetCommandError.new("Failed to encode a proof ledger row.")))
   );
-  yield* appendContainedFileString(repoRoot, ledgerPath, `${recoveryPrefix}${line}\n`).pipe(
+  const text = A.join(
+    A.map(lines, (line) => `${line}\n`),
+    ""
+  );
+  yield* appendContainedFileString(repoRoot, ledgerPath, `${recoveryPrefix}${text}`).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to append proof ledger "${ledgerPath}".`))
   );
 });
@@ -148,6 +155,42 @@ const decideRelatedFact = (key: ProofInputDigest, fact: ProofFact): ProofReuseDe
  */
 export type ProofChangedPackageTripwire = (key: ProofInputDigest) => boolean;
 
+// Newest-first facts from a loaded ledger, decoded once per snapshot.
+const factsNewestFirst = (loaded: LoadedProofLedger): ReadonlyArray<ProofFact> =>
+  A.reverse(A.map(A.filter(loaded.rows, isFactRow), (row) => row.fact));
+
+const decideAgainstFacts = (
+  facts: ReadonlyArray<ProofFact>,
+  tripwire: ProofChangedPackageTripwire,
+  key: ProofInputDigest,
+  now: DateTime.DateTime
+): ProofReuseDecision => {
+  if (Str.Equivalence(key.inputSource, "undeclared")) {
+    return miss(key.key, "undeclared-inputs");
+  }
+  if (tripwire(key)) {
+    return miss(key.key, "changed-package-tripwire");
+  }
+  const exact = A.findFirst(
+    facts,
+    (fact) =>
+      Str.Equivalence(fact.key.key, key.key) &&
+      sameReuseIdentity(fact.key, key) &&
+      !Str.Equivalence(fact.key.inputSource, "undeclared") &&
+      Str.Equivalence(fact.key.epochDigest, fact.epoch.digest)
+  );
+  if (O.isSome(exact)) {
+    return decideExactFact(exact.value, now);
+  }
+  return O.match(
+    A.findFirst(facts, (fact) => sameActionInputs(fact.key, key)),
+    {
+      onNone: () => miss(key.key, "no-fact"),
+      onSome: (fact) => decideRelatedFact(key, fact),
+    }
+  );
+};
+
 /**
  * Operations exposed by the checkout proof ledger.
  *
@@ -155,6 +198,7 @@ export type ProofChangedPackageTripwire = (key: ProofInputDigest) => boolean;
  * @since 0.0.0
  */
 export interface ProofLedgerShape {
+  readonly appendAll: (rows: ReadonlyArray<ProofLedgerRow>) => Effect.Effect<void, YeetCommandError>;
   readonly disagreements: Effect.Effect<ReadonlyArray<ProofLedgerShadowRow>, YeetCommandError>;
   readonly expire: (now: DateTime.DateTime) => Effect.Effect<number, YeetCommandError>;
   readonly facts: Effect.Effect<number, YeetCommandError>;
@@ -162,6 +206,10 @@ export interface ProofLedgerShape {
     key: ProofInputDigest,
     now: DateTime.DateTime
   ) => Effect.Effect<ProofReuseDecision, YeetCommandError>;
+  readonly lookupAll: (
+    keys: ReadonlyArray<ProofInputDigest>,
+    now: DateTime.DateTime
+  ) => Effect.Effect<ReadonlyArray<ProofReuseDecision>, YeetCommandError>;
   readonly malformedRows: Effect.Effect<number, YeetCommandError>;
   readonly record: (fact: ProofFact) => Effect.Effect<void, YeetCommandError>;
   readonly recordShadow: (row: ProofLedgerShadowRow) => Effect.Effect<void, YeetCommandError>;
@@ -175,7 +223,10 @@ export interface ProofLedgerShape {
  *
  * `expire` reports how many persisted facts are logically expired at the
  * supplied instant; it never rewrites history. `lookup` independently checks
- * expiry, so callers do not need to run expiration first. `shadowRows` returns
+ * expiry, so callers do not need to run expiration first. `lookupAll` decides
+ * every key against one ledger snapshot and `appendAll` writes rows through one
+ * read and one append, so an attempt with many lanes costs two reads and one
+ * write rather than three reads per lane. `shadowRows` returns
  * every shadow row in append order so the disagreement report can count
  * attempts, branches and would-have-reused time; `disagreements` is the
  * hit-versus-failed subset.
@@ -202,14 +253,30 @@ export class ProofLedger extends Context.Service<ProofLedger, ProofLedgerShape>(
       record: Effect.fn("Yeet.ProofLedger.record")(function* (
         fact: ProofFact
       ): Effect.fn.Return<void, YeetCommandError> {
-        yield* appendRow(repoRoot, ProofLedgerFactRow.make({ schemaVersion: PROOF_FACT_SCHEMA_VERSION, fact })).pipe(
+        yield* appendRows(repoRoot, [ProofLedgerFactRow.make({ schemaVersion: PROOF_FACT_SCHEMA_VERSION, fact })]).pipe(
           Effect.provide(runtimeContext)
         );
       }),
       recordShadow: Effect.fn("Yeet.ProofLedger.recordShadow")(function* (
         row: ProofLedgerShadowRow
       ): Effect.fn.Return<void, YeetCommandError> {
-        yield* appendRow(repoRoot, row).pipe(Effect.provide(runtimeContext));
+        yield* appendRows(repoRoot, [row]).pipe(Effect.provide(runtimeContext));
+      }),
+      appendAll: Effect.fn("Yeet.ProofLedger.appendAll")(function* (
+        rows: ReadonlyArray<ProofLedgerRow>
+      ): Effect.fn.Return<void, YeetCommandError> {
+        yield* appendRows(repoRoot, rows).pipe(Effect.provide(runtimeContext));
+      }),
+      lookupAll: Effect.fn("Yeet.ProofLedger.lookupAll")(function* (
+        keys: ReadonlyArray<ProofInputDigest>,
+        now: DateTime.DateTime
+      ): Effect.fn.Return<ReadonlyArray<ProofReuseDecision>, YeetCommandError> {
+        if (A.isReadonlyArrayEmpty(keys)) {
+          return A.empty<ProofReuseDecision>();
+        }
+        const loaded = yield* loadProofLedger(repoRoot).pipe(Effect.provide(runtimeContext));
+        const facts = factsNewestFirst(loaded);
+        return A.map(keys, (key) => decideAgainstFacts(facts, changedPackageTripwire, key, now));
       }),
       lookup: Effect.fn("Yeet.ProofLedger.lookup")(function* (
         key: ProofInputDigest,
@@ -222,25 +289,7 @@ export class ProofLedger extends Context.Service<ProofLedger, ProofLedgerShape>(
           return miss(key.key, "changed-package-tripwire");
         }
         const loaded = yield* loadProofLedger(repoRoot).pipe(Effect.provide(runtimeContext));
-        const facts = A.reverse(A.map(A.filter(loaded.rows, isFactRow), (row) => row.fact));
-        const exact = A.findFirst(
-          facts,
-          (fact) =>
-            Str.Equivalence(fact.key.key, key.key) &&
-            sameReuseIdentity(fact.key, key) &&
-            !Str.Equivalence(fact.key.inputSource, "undeclared") &&
-            Str.Equivalence(fact.key.epochDigest, fact.epoch.digest)
-        );
-        if (O.isSome(exact)) {
-          return decideExactFact(exact.value, now);
-        }
-        return O.match(
-          A.findFirst(facts, (fact) => sameActionInputs(fact.key, key)),
-          {
-            onNone: () => miss(key.key, "no-fact"),
-            onSome: (fact) => decideRelatedFact(key, fact),
-          }
-        );
+        return decideAgainstFacts(factsNewestFirst(loaded), changedPackageTripwire, key, now);
       }),
       expire: Effect.fn("Yeet.ProofLedger.expire")(function* (
         now: DateTime.DateTime

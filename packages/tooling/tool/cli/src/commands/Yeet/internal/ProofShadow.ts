@@ -20,6 +20,7 @@ import {
   ProofFact,
   ProofInputDigest,
   ProofInputSource,
+  ProofLedgerFactRow,
   ProofLedgerShadowRow,
   ProofMissReason,
   ProofOutcome,
@@ -441,10 +442,13 @@ const isDisagreement = (row: ProofLedgerShadowRow): boolean => isHit(row.decisio
  * For every lane that ran to `passed` or `failed`, in report order: derive the
  * tier-independent reuse key, ask the ledger what it would have decided, append
  * that decision next to the observed outcome as a shadow row, then append the
- * lane's own fact so the next attempt can hit it. The lookup runs before the
- * record so a lane never "reuses" the fact it is about to write. Nothing is
- * skipped or short-circuited: shadow mode only observes. The changed-package
- * tripwire is not wired here; C5 adds it with its must-fail fixture.
+ * lane's own fact so the next attempt can hit it. All keys are decided against
+ * one ledger snapshot taken before anything is written, so a lane never
+ * "reuses" the fact it is about to write, and every row of the attempt lands in
+ * one append (shadow row then fact, per lane, in report order), so a fault
+ * mid-attempt leaves no half-recorded lane. Nothing is skipped or
+ * short-circuited: shadow mode only observes. The changed-package tripwire is
+ * not wired here; C5 adds it with its must-fail fixture.
  *
  * **Example** (Build the shadow pass effect)
  *
@@ -488,16 +492,19 @@ export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForA
   }
   const epoch = yield* collectProofEpoch(repoRoot);
   const ledger = yield* ProofLedger.make(repoRoot, constFalse);
-  const rows = yield* Effect.forEach(candidates, (candidate) =>
-    Effect.gen(function* () {
-      const now = yield* DateTime.now;
-      const key = yield* shadowInputDigest(candidate, facts, epoch);
-      const decision = yield* ledger.lookup(key, now);
-      const row = shadowRow(decision, candidate, facts, now);
-      yield* ledger.recordShadow(row);
-      yield* ledger.record(shadowFact(key, epoch, candidate, facts, repoRoot, now));
-      return { row, undeclared: ProofInputSource.is.undeclared(key.inputSource) };
-    })
+  const now = yield* DateTime.now;
+  const keys = yield* Effect.forEach(candidates, (candidate) => shadowInputDigest(candidate, facts, epoch));
+  const decisions = yield* ledger.lookupAll(keys, now);
+  const rows = A.map(A.zip(A.zip(candidates, keys), decisions), ([[candidate, key], decision]) => ({
+    row: shadowRow(decision, candidate, facts, now),
+    fact: shadowFact(key, epoch, candidate, facts, repoRoot, now),
+    undeclared: ProofInputSource.is.undeclared(key.inputSource),
+  }));
+  yield* ledger.appendAll(
+    A.flatMap(rows, ({ row, fact }) => [
+      row,
+      ProofLedgerFactRow.make({ schemaVersion: PROOF_FACT_SCHEMA_VERSION, fact }),
+    ])
   );
   return ProofShadowAttemptSummary.make({
     attemptId: facts.attemptId,
