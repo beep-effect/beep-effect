@@ -194,7 +194,8 @@ const generatedComposers = $I.compose(
   "openai",
   "todox",
   "box-provisioning",
-  "freshbooks"
+  "freshbooks",
+  "test-runner"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -2644,3 +2645,20 @@ export const $BoxProvisioningId: Identity.IdentityComposer<"@beep/box-provisioni
  * @since 0.0.0
  */
 export const $FreshbooksId: Identity.IdentityComposer<"@beep/freshbooks"> = composers.$FreshbooksId;
+
+/**
+ * Identity composer for `@beep/test-runner`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $TestRunnerId } from "@beep/identity/packages"
+ *
+ * const id = $TestRunnerId.make("TestRunner")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $TestRunnerId: Identity.IdentityComposer<"@beep/test-runner"> = composers.$TestRunnerId;
