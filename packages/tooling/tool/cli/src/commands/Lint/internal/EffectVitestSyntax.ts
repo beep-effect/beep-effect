@@ -536,7 +536,7 @@ const isImportedHarness = (binding: ImportBinding, chain: ExpressionChain): bool
 
 const isInstrumentedHarness = (binding: ImportBinding, chain: ExpressionChain): boolean => {
   const instrumentedHarness =
-    binding.module === "@beep/test-utils/Vitest" &&
+    A.contains(["@beep/test-utils/Vitest", "@beep/test-runner", "@beep/test-runner/Vitest"], binding.module) &&
     (binding.imported === "it" || (binding.imported === "*" && chain.members[0] === "it"));
   return instrumentedHarness;
 };
