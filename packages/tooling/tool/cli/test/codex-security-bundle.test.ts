@@ -19,6 +19,8 @@ import { NodeTestLayer } from "./support/CommandTest.ts";
 
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
 const hash = S.decodeEffect(Sha256HexFromBytes);
+const encodeRepository = S.encodeEffect(GitHubRepoSlugFromRemote);
+const decodeRepository = S.decodeEffect(GitHubRepoSlugFromRemote);
 const testLayer = Layer.mergeAll(NodeTestLayer, NodeCrypto.layer);
 
 const fixture = Effect.fn("SecurityTest.fixture")(function* (coverage = "complete") {
@@ -135,17 +137,15 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
     { repository: GitHubRepoSlug },
     ({ repository }) =>
       Effect.gen(function* () {
-        const remote = yield* S.encodeEffect(GitHubRepoSlugFromRemote)(repository);
-        expect(yield* S.decodeEffect(GitHubRepoSlugFromRemote)(remote)).toBe(repository);
+        const remote = yield* encodeRepository(repository);
+        expect(yield* decodeRepository(remote)).toBe(repository);
       }),
     { arbitrary: { runs: 100 } }
   );
   it.effect(
     "encodes canonical repository identity and rejects a foreign origin",
     Effect.fnUntraced(function* () {
-      expect(yield* S.encodeEffect(GitHubRepoSlugFromRemote)("example/project")).toBe(
-        "https://github.com/example/project.git"
-      );
+      expect(yield* encodeRepository("example/project")).toBe("https://github.com/example/project.git");
       const rejected = yield* securityRepositoryFromRemote("https://example.invalid/project").pipe(Effect.result);
       expect(rejected._tag).toBe("Failure");
     })
