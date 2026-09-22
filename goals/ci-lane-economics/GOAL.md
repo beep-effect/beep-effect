@@ -48,7 +48,8 @@ rejects the census until it is added to the table and PLAN.
 Write `research/admission-week-3-p95.md` from the emitted tables with the
 verdict for every required lane, the Lint and Test Unit effective p95 values,
 and the pickup tripwire (breach above 5m00s). Admit only when every required
-p95 is below 20m00s and the context-set check passes.
+p95 is below 20m00s, the pickup tripwire does not breach, and the context-set
+check passes.
 
 Close in order: mark PLAN P3 complete, complete the manifest lifecycle, run
 `/reflect ci-lane-economics`, then fire `ci-fleet-endgame` P6. Until a census
