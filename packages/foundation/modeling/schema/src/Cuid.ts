@@ -8,7 +8,9 @@
 import { $SchemaId } from "@beep/identity/packages";
 import { Str } from "@beep/utils";
 import { DateTimes } from "@beep/utils/DateTime";
-import { Context, Crypto, Effect, Layer } from "effect";
+import { Context, Crypto, Effect, Layer, pipe } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 import type * as PlatformError from "effect/PlatformError";
@@ -157,9 +159,11 @@ export class CuidState extends Context.Service<CuidState>()("@beep/schema/Cuid/C
     const { now } = yield* DateTimes;
     const crypto = yield* Crypto.Crypto;
     const initialBytes = yield* crypto.randomBytes(4);
-    const initialValue =
-      Math.abs((initialBytes[0] << 24) | (initialBytes[1] << 16) | (initialBytes[2] << 8) | initialBytes[3]) %
-      INITIAL_COUNT_MAX;
+    const initialValue = pipe(
+      initialBytes,
+      A.reduce(0, (accumulator, byte) => (accumulator << 8) | byte),
+      (combined) => Math.abs(combined) % INITIAL_COUNT_MAX
+    );
 
     // Create fingerprint from environment data
     const envHash = yield* hash(envData);
@@ -222,8 +226,11 @@ function createEntropy(length: number, random: Uint8Array): string {
   let offset = 0;
 
   while (entropy.length < length) {
-    const value = random[offset];
-    entropy += Math.floor(value % 36).toString(36);
+    const byte = O.fromUndefinedOr(random[offset]);
+    if (O.isNone(byte)) {
+      break;
+    }
+    entropy += Math.floor(byte.value % 36).toString(36);
     offset = (offset + 1) % random.length;
   }
 
@@ -253,7 +260,11 @@ const makeCuidFromSeed = Effect.fn("Schema.Cuid.cuidFromSeed")(function* ({
   timestamp,
 }: CuidSeed) {
   // First letter is always a random lowercase letter from the seed
-  const firstLetter = String.fromCharCode((random[0] % ALPHABET_LENGTH) + ALPHABET_START_CODE);
+  const firstLetter = pipe(
+    O.fromUndefinedOr(random[0]),
+    O.map((byte) => String.fromCharCode((byte % ALPHABET_LENGTH) + ALPHABET_START_CODE)),
+    O.getOrThrowWith(() => new Error("CUID seed random bytes must be non-empty"))
+  );
 
   // Convert components to base36
   const time = timestamp.toString(36);

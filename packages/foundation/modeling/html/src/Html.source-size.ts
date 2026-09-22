@@ -710,10 +710,9 @@ const isAuthorMediaCondition = (nodes: ReadonlyArray<ComponentValue>): boolean =
 
   let hasGeneralEnclosed = false;
   query.walk(({ node }) => {
-    if (isGeneralEnclosed(node)) {
-      hasGeneralEnclosed = true;
-      return false;
-    }
+    hasGeneralEnclosed = hasGeneralEnclosed || isGeneralEnclosed(node);
+    // Returning false stops the walk at the first general-enclosed node.
+    return !hasGeneralEnclosed;
   });
   return !hasGeneralEnclosed;
 };

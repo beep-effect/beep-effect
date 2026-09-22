@@ -17,7 +17,17 @@
  */
 import { every, findFirst, last as lastArray, reduce } from "effect/Array";
 import { dual } from "effect/Function";
-import { fromUndefinedOr, getOrElse, getOrUndefined, isSome, match, none, orElse, some } from "effect/Option";
+import {
+  fromUndefinedOr,
+  getOrElse,
+  getOrThrowWith,
+  getOrUndefined,
+  isSome,
+  match,
+  none,
+  orElse,
+  some,
+} from "effect/Option";
 import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "effect/Predicate";
 import { empty, set } from "effect/Record";
 import { flip, is, optionalKey } from "effect/Schema";
@@ -735,9 +745,15 @@ export const makeModelClass: {
       harvested.length === 0
         ? extras
         : (columns) => [
-            ...harvested.map(([key, intent, name]) =>
-              intent.unique ? TableExtras.uniqueIndex(name, [columns[key]]) : TableExtras.index(name, [columns[key]])
-            ),
+            ...harvested.map(([key, intent, name]) => {
+              const column = getOrThrowWith(fromUndefinedOr(columns[key]), () =>
+                ModelInvariantError.make({
+                  message: `Model '${identifier}' colocated index references missing field '${key}'.`,
+                  fieldName: key,
+                })
+              );
+              return intent.unique ? TableExtras.uniqueIndex(name, [column]) : TableExtras.index(name, [column]);
+            }),
             ...match(fromUndefinedOr(extras), {
               onNone: () => [],
               onSome: (callback) => callback(columns),

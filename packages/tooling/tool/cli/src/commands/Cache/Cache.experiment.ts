@@ -561,7 +561,7 @@ const runSynthetic = Effect.fn("CacheExperiment.synthetic")(
           "package.json",
           Str.replace(`bun@${bun.pin.version}`, `bun@${alternateBun.pin.version}`)(files["package.json"]),
         ],
-      ]) {
+      ] as const) {
         const fixture = yield* prepare(name);
         const before = yield* execute(fixture, "/fixture", `${name}-before`, "local:rw");
         yield* writeContainedFileString(fixture, relative, contents);

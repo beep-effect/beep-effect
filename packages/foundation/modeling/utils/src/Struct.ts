@@ -811,7 +811,8 @@ export const reverse: {
     const symbolEntries = pipe(
       Reflect.ownKeys(self),
       A.filter(P.isSymbol),
-      A.map((key) => [self[key], key] as const)
+      A.map((key) => O.map(O.fromUndefinedOr(self[key]), (value) => [value, key] as const)),
+      A.getSomes
     );
 
     return cast(fromEntries(A.appendAll(stringEntries, symbolEntries)));

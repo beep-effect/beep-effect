@@ -206,7 +206,7 @@ const makeFixtureCatalog = Effect.fn("PracticeKgTest.makeFixtureCatalog")(functi
         [fixtureDigests.family, "family-notes.txt", "family"],
         [fixtureDigests.archive, "archive.pst", "archive"],
         [fixtureDigests.email, "exported-message.txt", "email"],
-      ],
+      ] as const,
       ([digest, relativePath], index) =>
         db.run(
           "INSERT INTO corpus_source_files VALUES ('base', 'fixture-source', $1, $2, '2026-01-02T03:04:05.000Z', $3)",
@@ -296,7 +296,7 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
       ["Message00001", "Alpha fixture", "Fixture Sender", "/O=FIXTURE/OU=UNIT/CN=RECIPIENTS/CN=SENDER"],
       ["Message00002", "Beta fixture", "Fixture Sender Two", "sender.two@example.invalid"],
       ["Message00003", "Gamma fixture", "Fixture Sender Three", "sender.three@example.invalid"],
-    ],
+    ] as const,
     ([messageDir, subject, senderName, senderAddress], index) => {
       const directory = path.join(childrenRoot, messageDir);
       return fs

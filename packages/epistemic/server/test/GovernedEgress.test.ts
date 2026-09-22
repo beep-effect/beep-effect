@@ -104,7 +104,7 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
   // network, so "allowed" is a positively observed fact rather than an absence
   // of errors.
   const redirectModes: Array<string> = [];
-  const baseFetch = ((input: RequestInfo | URL, requestInit?: RequestInit) => {
+  const baseFetch = ((input: string | URL | Request, requestInit?: RequestInit) => {
     attempted.push(String(input));
     redirectModes.push(String(requestInit?.redirect));
     if (options?.throwFetch === true) {

@@ -3,8 +3,10 @@ import { NLPBackend } from "@beep/nlp-processing/Backend/NLPBackend";
 import * as ATG from "@beep/nlp-processing/Graph/AnnotatedTextGraph";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -139,7 +141,7 @@ describe("AnnotatedTextGraph queries", () => {
     Effect.fnUntraced(function* () {
       const g = yield* ATG.fromDocumentAnnotated("Hello world.").pipe(provideScopedLayer(StubBackend));
       const counts = ATG.countNodesByType(g);
-      const sum = counts.text + counts.pos + counts.entity + counts.lemma + counts.dependency + counts.relation;
+      const sum = A.reduce(R.values(counts), 0, (total, count) => total + count);
       expect(sum).toBe(ATG.nodeCount(g));
     })
   );

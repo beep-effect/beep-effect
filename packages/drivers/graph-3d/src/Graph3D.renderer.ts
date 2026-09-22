@@ -713,10 +713,10 @@ const mountRenderer = (
       if (rank > opaqueBand && rank > budget * 0.5) {
         bandOpacity = Math.max(0.1, 1 - smoothstep01((rank - budget * 0.5) / (budget * 0.5)));
       }
+      const neighborsOfSelected = P.isNotUndefined(selectedIndex) ? current.adjacency[selectedIndex] : undefined;
+      const isNeighborOfSelected = P.isNotUndefined(neighborsOfSelected) && neighborsOfSelected.includes(nodeIndex);
       const dimmed =
-        P.isNotUndefined(selectedIndex) &&
-        nodeIndex !== selectedIndex &&
-        !current.adjacency[selectedIndex]?.includes(nodeIndex)
+        P.isNotUndefined(selectedIndex) && nodeIndex !== selectedIndex && !isNeighborOfSelected
           ? config.dimmedNodeOpacity
           : 1;
       const logical = logicalSize(current.importance[nodeIndex]!);

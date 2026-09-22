@@ -279,26 +279,34 @@ const isValidIPv4Octet = (input: string): boolean => {
   }
 
   if (length === 2) {
-    return input[0] >= "1" && input[0] <= "9" && secondCodePoint !== undefined && isDigit(secondCodePoint);
+    return (
+      firstCodePoint !== undefined &&
+      firstCodePoint >= 0x31 &&
+      firstCodePoint <= 0x39 &&
+      secondCodePoint !== undefined &&
+      isDigit(secondCodePoint)
+    );
   }
 
   if (length !== 3) {
     return false;
   }
 
-  const first = input[0];
-  const second = input[1];
-  const third = input[2];
+  const thirdCodePoint = codePointAt(input, 2);
 
-  if (first === "1") {
-    return second >= "0" && second <= "9" && third >= "0" && third <= "9";
+  if (firstCodePoint === undefined || secondCodePoint === undefined || thirdCodePoint === undefined) {
+    return false;
   }
 
-  if (first === "2" && second >= "0" && second <= "4") {
-    return third >= "0" && third <= "9";
+  if (firstCodePoint === 0x31) {
+    return secondCodePoint >= 0x30 && secondCodePoint <= 0x39 && thirdCodePoint >= 0x30 && thirdCodePoint <= 0x39;
   }
 
-  return first === "2" && second === "5" && third >= "0" && third <= "5";
+  if (firstCodePoint === 0x32 && secondCodePoint >= 0x30 && secondCodePoint <= 0x34) {
+    return thirdCodePoint >= 0x30 && thirdCodePoint <= 0x39;
+  }
+
+  return firstCodePoint === 0x32 && secondCodePoint === 0x35 && thirdCodePoint >= 0x30 && thirdCodePoint <= 0x35;
 };
 
 const isValidIPv4Address = (input: string): boolean => {

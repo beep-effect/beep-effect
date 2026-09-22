@@ -23,6 +23,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { pipe, Result } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -310,7 +311,7 @@ describe("@beep/openclaw render adapter", () => {
 
     expect(findings).toHaveLength(1);
     expect(findings[0]).toBeInstanceOf(OpenclawSchemaPlaceholderFinding);
-    expect(Result.getOrThrow(encodeOpenclawSchemaPlaceholderFindingResult(findings[0]))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawSchemaPlaceholderFindingResult(O.getOrThrow(A.head(findings))))).toEqual({
       reason: "missing",
       surface: "channels.telegram",
     });

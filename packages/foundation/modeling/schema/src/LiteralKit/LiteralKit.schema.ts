@@ -592,13 +592,21 @@ function buildMatch<L extends Literals, M extends EnumMappings<L> | undefined = 
       const cases = args[0] as Record<string, (value: L[number]) => unknown>;
       return (value: L[number]) => {
         const key = helperKey(value, mapping);
-        return cases[key](value);
+        const handler = cases[key];
+        if (P.isUndefined(handler)) {
+          throw new Error(`No case handler for literal key: ${String(key)}`);
+        }
+        return handler(value);
       };
     }
     const value = args[0] as L[number];
     const cases = args[1] as Record<string, (value: L[number]) => unknown>;
     const key = helperKey(value, mapping);
-    return cases[key](value);
+    const handler = cases[key];
+    if (P.isUndefined(handler)) {
+      throw new Error(`No case handler for literal key: ${String(key)}`);
+    }
+    return handler(value);
   }
 
   return $match;

@@ -170,8 +170,8 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
 
         expect(listed).toHaveLength(1);
         expect(O.getOrThrow(probed.lastProbe).status).toBe("authenticated");
-        expect(O.getOrThrow(listed[0]?.lastProbe).status).toBe("authenticated");
-        const snapshot = O.getOrThrow(listed[0]?.lastProbe);
+        expect(O.getOrThrow(O.flatMap(A.head(listed), (instance) => instance.lastProbe)).status).toBe("authenticated");
+        const snapshot = O.getOrThrow(O.flatMap(A.head(listed), (instance) => instance.lastProbe));
         expect(Domain.AuthenticatedSnapshot.is(snapshot)).toBe(true);
         const requests = yield* Ref.get(runnerRequests);
         expect(requests[0]?.executable).toBe("/opt/bin/claude");
@@ -202,7 +202,9 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
           expect(failure.guidance).toContain("`codex login`");
         }
         const listed = yield* useCases.list(ListProviderInstancesQuery.make({}));
-        expect(O.getOrThrow(listed[0]?.lastProbe).status).toBe("unauthenticated");
+        expect(O.getOrThrow(O.flatMap(A.head(listed), (instance) => instance.lastProbe)).status).toBe(
+          "unauthenticated"
+        );
         const requests = yield* Ref.get(runnerRequests);
         expect(requests[0]?.executable).toBe(HostPath.join(NodeOS.homedir(), "opt/bin/codex"));
         expect(requests[0]?.env).toEqual({ CODEX_HOME: "/tmp/codex-home" });

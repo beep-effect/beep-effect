@@ -207,6 +207,8 @@ const clampLeadingExtent = (
   });
 };
 
+type SplitBoxes = readonly [first: DockBox, second: DockBox, gap: DockBox];
+
 const projectNode = (
   node: DockNode,
   box: DockBox,
@@ -264,7 +266,7 @@ const projectNode = (
       );
       const trailing = N.subtract(available, leading);
       const [firstBox, secondBox, gapBox] = SplitLayout.match(layout, {
-        horizontal: () => [
+        horizontal: (): SplitBoxes => [
           DockBox.make({ left: box.left, top: box.top, width: leading, height: box.height }),
           DockBox.make({
             left: N.sum(box.left, N.sum(leading, gap)),
@@ -274,7 +276,7 @@ const projectNode = (
           }),
           DockBox.make({ left: N.sum(box.left, leading), top: box.top, width: gap, height: box.height }),
         ],
-        vertical: () => [
+        vertical: (): SplitBoxes => [
           DockBox.make({ left: box.left, top: box.top, width: box.width, height: leading }),
           DockBox.make({
             left: box.left,
