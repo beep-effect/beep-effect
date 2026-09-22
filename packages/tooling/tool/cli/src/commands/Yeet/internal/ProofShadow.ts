@@ -321,13 +321,15 @@ export class ProofShadowAttemptFacts extends S.Class<ProofShadowAttemptFacts>($I
  *
  * ```ts
  * import { proofShadowAttemptFacts, YeetAttemptStarted } from "@beep/repo-cli/test/Yeet"
+ * import { UUID } from "@beep/schema/String"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
  * const facts = proofShadowAttemptFacts(
  *   YeetAttemptStarted.make({
  *     schemaVersion: "yeet-attempt-journal/v1",
  *     _tag: "attempt-started",
- *     attemptId: "7c9f5b1e-2d4a-4f6b-9a8c-1e2d3f4a5b6c",
+ *     attemptId: S.decodeSync(UUID)("7c9f5b1e-2d4a-4f6b-9a8c-1e2d3f4a5b6c"),
  *     runId: "run-1",
  *     branch: "feat/example",
  *     base: "main",
@@ -825,6 +827,29 @@ export class YeetProofReportOptions extends S.Class<YeetProofReportOptions>($I`Y
     description: "Parsed `yeet proof-report` flags: whether to print the report as JSON.",
   })
 ) {}
+
+/**
+ * The `yeet proof-report` command handler: decode the parsed flags and run the
+ * report from the working directory's checkout.
+ *
+ * **Example** (Build the handler effect)
+ *
+ * ```ts
+ * import { runYeetProofReportCommand } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runYeetProofReportCommand({ json: true }))) // true
+ * ```
+ *
+ * @param options - Parsed `yeet proof-report` flags.
+ * @returns Void once the report was printed.
+ * @category services
+ * @since 0.0.0
+ */
+export const runYeetProofReportCommand = (
+  options: Parameters<typeof YeetProofReportOptions.make>[0]
+): Effect.Effect<void, YeetCommandError, FileSystem.FileSystem | Path.Path> =>
+  runYeetProofReport(YeetProofReportOptions.make(options));
 
 const locateRepoRoot: Effect.Effect<string, YeetCommandError, FileSystem.FileSystem> = findRepoRoot().pipe(
   Effect.mapError(YeetCommandError.new("Failed to locate repo root."))

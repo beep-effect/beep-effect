@@ -13,11 +13,13 @@ import {
   renderProofShadowAttemptSummary,
   renderProofShadowReport,
   runYeetProofReport,
+  runYeetProofReportCommand,
   shadowableLaneRuns,
   UNDECLARED_INPUT_DIGEST,
   YeetAttemptStarted,
   YeetProofReportOptions,
 } from "@beep/repo-cli/test/Yeet";
+import { UUID } from "@beep/schema/String";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -26,6 +28,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -47,7 +50,7 @@ const attemptStarted = (overrides: Partial<Parameters<typeof YeetAttemptStarted.
   YeetAttemptStarted.make({
     schemaVersion: "yeet-attempt-journal/v1",
     _tag: "attempt-started",
-    attemptId: "7c9f5b1e-2d4a-4f6b-9a8c-1e2d3f4a5b6c",
+    attemptId: S.decodeSync(UUID)("7c9f5b1e-2d4a-4f6b-9a8c-1e2d3f4a5b6c"),
     runId: "run-9",
     branch: "feat/facts",
     base: "main",
@@ -374,6 +377,7 @@ describe("proof shadow mode", () => {
         yield* runYeetProofReport(YeetProofReportOptions.make({ json: true }), Effect.succeed(root));
         const lines = yield* TestConsole.logLines;
         expect(A.length(lines)).toBe(2);
+        expect(Effect.isEffect(runYeetProofReportCommand({ json: false }))).toBe(true);
         expect(Str.startsWith("proof shadow report")(String(lines[0]))).toBe(true);
         const decoded = yield* ProofShadowReportJson.decode(String(lines[1]));
         expect(decoded).toMatchObject({ shadowRows: 1, attempts: 1, branches: 1, enforcementReady: false });
