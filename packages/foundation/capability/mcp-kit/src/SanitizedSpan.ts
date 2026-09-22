@@ -480,6 +480,11 @@ const readRequestCaller = Effect.gen(function* () {
   return readCaller(requestContext, client, httpRequest);
 });
 
+// `Toolkit.toLayer` keys each built handler by its tool id, so a key with that
+// string is the handler's runtime identity in the toolkit's context.
+const toolHandlerKey = (toolId: string): Context.Key<never, AiTool.Handler<string>> =>
+  Context.Service<never, AiTool.Handler<string>>(toolId);
+
 const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Record<string, AiTool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>
 ) {
@@ -491,17 +496,21 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
       Exclude<AiTool.HandlersFor<Tools>, McpRequestContext>
     >
   ).pipe(
-    Effect.updateContext((context: Context.Context<Exclude<AiTool.HandlersFor<Tools>, McpRequestContext>>) => {
-      // Toolkit handlers also retain the context in which their layer was built.
-      const handlerServices = new Map(context.mapUnsafe);
-      for (const tool of R.values<string, AiTool.Any>(toolkit.tools)) {
-        const handler = handlerServices.get(tool.id) as AiTool.Handler<string> | undefined;
-        if (handler !== undefined) {
-          handlerServices.set(tool.id, { ...handler, context: omitRequestServices(handler.context) });
-        }
-      }
-      return Context.makeUnsafe(handlerServices);
-    })
+    Effect.updateContext((context: Context.Context<Exclude<AiTool.HandlersFor<Tools>, McpRequestContext>>) =>
+      // Toolkit handlers also retain the context in which their layer was
+      // built; each one is keyed by its tool id, so re-adding under the same
+      // key replaces it with a handler whose retained context is trimmed.
+      A.reduce(R.values<string, AiTool.Any>(toolkit.tools), context, (services, tool) =>
+        O.match(Context.getOption(services, toolHandlerKey(tool.id)), {
+          onNone: () => services,
+          onSome: (handler) =>
+            Context.add(services, toolHandlerKey(tool.id), {
+              ...handler,
+              context: omitRequestServices(handler.context),
+            }),
+        })
+      )
+    )
   );
   const services = omitRequestServices(yield* Effect.context<never>());
   const internalToolError = makeInternalToolError(services);

@@ -23,6 +23,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { Deferred, Effect, Layer, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -362,11 +363,12 @@ export class McpDiscoverResult extends S.Class<McpDiscoverResult>($I`McpDiscover
    * {@link SERVER_INFO_META_KEY}.
    */
   get serverInfo(): O.Option<McpSchema.Implementation> {
-    return O.filter(O.fromNullishOr(this._meta?.[SERVER_INFO_META_KEY]), S.is(McpSchema.Implementation));
+    return O.filter(O.fromNullishOr(this._meta?.[SERVER_INFO_META_KEY]), isImplementation);
   }
 }
 
 const McpErrorSchema = McpSchema.McpError;
+const isImplementation = S.is(McpSchema.Implementation);
 
 /**
  * `server/discover` request.
@@ -668,8 +670,7 @@ export const parseServerSentEvents = (text: string): ReadonlyArray<string> =>
   );
 
 const decodeJsonRpcMessages = S.decodeUnknownEffect(S.Array(JsonRpcMessage));
-const decodeJsonText = (text: string): Effect.Effect<unknown, S.SchemaError> =>
-  S.decodeEffect(UnknownFromJsonString)(text);
+const decodeJsonText: (text: string) => Effect.Effect<unknown, S.SchemaError> = S.decodeEffect(UnknownFromJsonString);
 const decodeMessageLine = S.decodeEffect(JsonRpcMessageFromLine);
 const encodeMessageLine = S.encodeSync(JsonRpcMessageFromLine);
 const encodeJsonRpcError = S.encodeSync(JsonRpcError);
@@ -872,44 +873,42 @@ export const layerProtocolHttp = (
         );
       return yield* RpcClient.Protocol.make((writeResponse) =>
         Effect.succeed({
-          send: (clientId, message) => {
-            switch (message._tag) {
-              case "Request": {
-                return post(
+          send: (clientId, message) =>
+            Match.value(message).pipe(
+              Match.tag("Request", (request) =>
+                post(
                   JsonRpcMessage.make({
-                    id: message.id,
-                    method: message.tag,
-                    params: withRequestMetadata(message.payload, metadata),
+                    id: request.id,
+                    method: request.tag,
+                    params: withRequestMetadata(request.payload, metadata),
                   })
                 ).pipe(
                   Effect.flatMap((exchange) =>
                     writeResponse(
                       clientId,
                       responseExit(
-                        message.id,
+                        request.id,
                         A.findFirst(
                           exchange.messages,
-                          (candidate) => isResponse(candidate) && candidate.id === message.id
+                          (candidate) => isResponse(candidate) && candidate.id === request.id
                         ),
-                        `MCP HTTP ${exchange.status}: no response for request ${String(message.id)}`
+                        `MCP HTTP ${exchange.status}: no response for request ${String(request.id)}`
                       )
                     )
                   ),
                   Effect.orDie
-                );
-              }
-              case "Interrupt": {
-                return post(
+                )
+              ),
+              Match.tag("Interrupt", (interrupt) =>
+                post(
                   JsonRpcMessage.make({
                     method: "notifications/cancelled",
-                    params: withRequestMetadata({ requestId: message.requestId }, metadata),
+                    params: withRequestMetadata({ requestId: interrupt.requestId }, metadata),
                   })
-                ).pipe(Effect.ignore);
-              }
-              default:
-                return Effect.void;
-            }
-          },
+                ).pipe(Effect.ignore)
+              ),
+              Match.orElse(() => Effect.void)
+            ),
           supportsAck: false,
           supportsTransferables: false,
           codecFor,
@@ -1021,32 +1020,32 @@ export const layerProtocolNdjson = (transport: McpNdjsonTransport): Layer.Layer<
       const writeMessage = (message: JsonRpcMessage) => transport.write(encodeMessageLine(message));
       return yield* RpcClient.Protocol.make((writeResponse) =>
         Effect.succeed({
-          send: (clientId, message) => {
-            switch (message._tag) {
-              case "Request": {
-                const key = requestKey(message.id);
+          send: (clientId, message) =>
+            Match.value(message).pipe(
+              Match.tag("Request", (request) => {
+                const key = requestKey(request.id);
                 return Effect.gen(function* () {
                   const waiter = yield* Deferred.make<JsonRpcMessage>();
                   MutableHashMap.set(pending, key, waiter);
                   yield* writeMessage(
                     JsonRpcMessage.make({
-                      id: message.id,
-                      method: message.tag,
-                      params: withRequestMetadata(message.payload, metadata),
+                      id: request.id,
+                      method: request.tag,
+                      params: withRequestMetadata(request.payload, metadata),
                     })
                   );
                   const response = yield* Deferred.await(waiter);
-                  yield* writeResponse(clientId, responseExit(message.id, O.some(response), ""));
+                  yield* writeResponse(clientId, responseExit(request.id, O.some(response), ""));
                 }).pipe(
                   // The waiter never outlives its send: a late response, an
                   // interrupt, or a transport failure all release the entry.
                   Effect.ensuring(Effect.sync(() => MutableHashMap.remove(pending, key)))
                 );
-              }
-              case "Interrupt": {
+              }),
+              Match.tag("Interrupt", (interrupt) => {
                 // Release the waiter first so the interrupted call settles even
                 // if the host never acknowledges the cancellation.
-                const key = requestKey(message.requestId);
+                const key = requestKey(interrupt.requestId);
                 const waiter = MutableHashMap.get(pending, key);
                 MutableHashMap.remove(pending, key);
                 return Effect.andThen(
@@ -1054,15 +1053,13 @@ export const layerProtocolNdjson = (transport: McpNdjsonTransport): Layer.Layer<
                   writeMessage(
                     JsonRpcMessage.make({
                       method: "notifications/cancelled",
-                      params: withRequestMetadata({ requestId: message.requestId }, metadata),
+                      params: withRequestMetadata({ requestId: interrupt.requestId }, metadata),
                     })
                   )
                 );
-              }
-              default:
-                return Effect.void;
-            }
-          },
+              }),
+              Match.orElse(() => Effect.void)
+            ),
           supportsAck: false,
           supportsTransferables: false,
           codecFor,
