@@ -5,19 +5,11 @@
  * @since 0.0.0
  */
 
-import { buildRepoDependencyIndex, findRepoRoot, topologicalSort } from "@beep/repo-utils";
+import { buildRepoDependencyIndex, findRepoRoot, sortWorkspacePackages } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Console, Effect, HashMap, HashSet, pipe } from "effect";
-import * as R from "effect/Record";
+import { Console, Effect, HashMap } from "effect";
 import { Command } from "effect/unstable/cli";
-import type { WorkspaceDeps } from "@beep/repo-utils";
-
-const dependencyNames = (workspaceDeps: WorkspaceDeps): ReadonlyArray<string> =>
-  pipe(
-    workspaceDeps.workspace,
-    R.toEntries,
-    A.map(([k]) => k)
-  );
+import { isRootDepIndexKey } from "../TsconfigSync/TsconfigSync.schemas.ts";
 
 /**
  * CLI command that builds the workspace dependency graph and prints package names
@@ -38,21 +30,9 @@ export const topoSortCommand = Command.make(
   Effect.fn(function* () {
     const rootDir = yield* findRepoRoot();
     const depIndex = yield* buildRepoDependencyIndex(rootDir);
-
-    // Build adjacency list: each package maps to its workspace dependencies
-    let adjacencyList = HashMap.empty<string, HashSet.HashSet<string>>();
-
-    for (const [name, workspaceDeps] of depIndex) {
-      let depSet = HashSet.empty<string>();
-      for (const depName of dependencyNames(workspaceDeps)) {
-        depSet = HashSet.add(depSet, depName);
-      }
-
-      adjacencyList = HashMap.set(adjacencyList, name, depSet);
-    }
-
+    const workspaceIndex = HashMap.filter(depIndex, (_deps, name) => !isRootDepIndexKey(name));
     const sorted = yield* Effect.catchTag(
-      topologicalSort(adjacencyList),
+      sortWorkspacePackages(workspaceIndex),
       "CyclicDependencyError",
       Effect.fn(function* (err) {
         yield* Console.error(`Error: Cyclic dependencies detected`);
@@ -63,7 +43,7 @@ export const topoSortCommand = Command.make(
       })
     );
 
-    yield* Effect.forEach(sorted, Console.log, {
+    yield* Effect.forEach(sorted, (name) => Console.log(name), {
       discard: true,
     });
   })
