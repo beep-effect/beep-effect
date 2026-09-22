@@ -69,11 +69,11 @@
     }
   },
   "dependencies": {
-    "effect": "catalog:",
-    "@effect/vitest": "catalog:"
+    "@effect/vitest": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "@beep/fc-runs": "workspace:^"
+    "@beep/fc-runs": "workspace:^",
+    "@types/node": "catalog:"
   }
 }

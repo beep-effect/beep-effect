@@ -137,7 +137,10 @@ export class CiLanePartition extends S.Class<CiLanePartition>($I`CiLanePartition
  * candidates are ordered by descending p95 weight with task id as the stable
  * tie-break, then assigned to the currently lightest bin. Test Unit first
  * isolates `@beep/repo-cli`; the remaining tasks are assigned to two bins.
- * The weights are evidence, not runtime scheduling inputs.
+ * The extracted `@beep/test-runner` stays beside `@beep/test-utils` in each
+ * lane so the moved workload retains its existing placement. Historical p95
+ * weights remain unchanged; they do not claim a new measurement of split-task
+ * startup overhead. The weights are evidence, not runtime scheduling inputs.
  *
  * **Example** (List the hosted partitions)
  *
@@ -237,6 +240,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/box-provisioning",
       "@beep/html",
       "@beep/ontology-server",
+      "@beep/test-runner",
       "@beep/test-utils",
       "@beep/acp",
       "@beep/agents-domain",
@@ -334,6 +338,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/workspace-server",
       "@beep/mcp-kit",
       "@beep/md",
+      "@beep/test-runner",
       "@beep/test-utils",
       "@beep/tika",
       "@beep/documents-tables",

@@ -2046,3 +2046,11 @@ did not yet include the new runner. `bun run fallow:boundaries:write` added
 only the runner package and its expected dependency edges. Including this
 generation in package scaffolding or its immediate verification would expose
 the missing artifact before a full publication attempt.
+
+## New package Vitest alias projection
+
+PR #1188 review identified three missing runner aliases in the generated Vitest
+alias data, although root tsconfig already carried them. Projecting root paths
+into the generated artifact produced exactly those three additions and passed
+the tsgo-rules check. Package creation should generate and verify this projection
+alongside the existing tsconfig and boundary artifacts.

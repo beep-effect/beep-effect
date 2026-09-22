@@ -82,3 +82,25 @@ new runner tasks, eleven changed existing tasks, no removals, and unchanged glob
 configuration. Frozen installation passed. The post-merge test-runner package
 proof passed audit (10.1 seconds) and docgen (2.3 seconds). Further repository and
 compatibility-package proof remains in progress.
+
+## Atomic CI placement exception
+
+Benjamin explicitly authorized a narrow D13 exception for the CI partition table
+and focused tests in PR #1188. A separate prerequisite cannot pass the existing
+fail-closed contract: missing package placements and placements for absent
+packages are both rejected. The extracted runner therefore lands with its table
+entries. It stays beside test-utils in lint-b and unit-a, preserving placement
+of the moved workload. Historical p95 bin weights are retained as historical
+evidence, not new measurements of the extra package startup overhead.
+
+The focused CI partition suite passed all 70 tests. Full repo-cli package
+verification passed audit (754.6 seconds) and docgen (25.1 seconds). Sherif and
+changeset-status passed after manifest key ordering was corrected. Hosted
+property failures on the prior head also identify the missing runner placement;
+repository and hosted proof of the corrected head remain required.
+
+Main was integrated again at 6c412ed5a3. Two existing CI test findings retained
+their open dispositions; only their occurrence hashes changed to reflect the
+135-to-136 task-count assertions. The detector reports zero introduced and zero
+resolved findings. The three runner aliases were projected from root tsconfig
+into the generated Vitest alias data; the tsgo-rules check passes.
