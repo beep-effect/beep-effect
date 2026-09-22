@@ -7,6 +7,7 @@ import {
 import {
   EXECUTION_DECISION_TABLE_NAME,
   EXECUTION_OUTCOME_TABLE_NAME,
+  ExecutionRecordConverterError,
   executionDecisionTable,
   executionOutcomeTable,
   fromExecutionDecisionRow,
@@ -23,6 +24,7 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type {
   ExecutionDecisionInsert,
   ExecutionDecisionRow,
@@ -101,6 +103,31 @@ const columnFacts = (table: Table): Readonly<Record<string, { readonly columnTyp
     columnType: column.columnType,
     name: column.name,
   }));
+
+// The record schemas encode instances, so an unencodable record has to stay an
+// instance: clone onto the same prototype and corrupt one sealed field.
+const withUnencodableHash = <A extends object>(record: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(record)), record, { hash: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (
+  error: ExecutionRecordConverterError,
+  operation: ExecutionRecordConverterError["operation"]
+): void => {
+  expect(error._tag).toBe("ExecutionRecordConverterError");
+  expect(error.operation).toBe(operation);
+  expect(Str.isNonEmpty(error.reason)).toBe(true);
+};
+
+// `defaultFormatter` renders a `message: ""` annotation verbatim, so this is a
+// real SchemaError whose rendered message is empty - the input the `fromSchema`
+// fallback branch is written for.
+const emptyMessageSchemaError = S.decodeUnknownResult(S.String.annotate({ message: "" }))(0).pipe(
+  Result.flip,
+  Effect.fromResult
+);
 
 describe("ExecutionRecordTables", () => {
   it("pins the physical table names", () => {
@@ -229,6 +256,55 @@ describe("ExecutionRecordTables", () => {
           sealedOutcome
         )
       ).toBe(true);
+    })
+  );
+  it.effect(
+    "reports a typed converter failure on every ledger boundary",
+    Effect.fnUntraced(function* () {
+      const decision = yield* allowedDecision;
+      const decisionInsert = yield* Effect.fromResult(toExecutionDecisionInsert(decision));
+      const recorded = yield* outcome;
+      const outcomeInsert = yield* Effect.fromResult(toExecutionOutcomeInsert(recorded));
+
+      expectConverterFailure(
+        yield* converterFailure(toExecutionDecisionInsert(withUnencodableHash(decision))),
+        "toDecisionInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromExecutionDecisionRow({
+            ...asSelectedRow(decisionInsert),
+            hash: 42,
+          } as unknown as ExecutionDecisionRow)
+        ),
+        "fromDecisionRow"
+      );
+      expectConverterFailure(
+        yield* converterFailure(toExecutionOutcomeInsert(withUnencodableHash(recorded))),
+        "toOutcomeInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromExecutionOutcomeRow({
+            ...asSelectedOutcomeRow(outcomeInsert),
+            hash: 42,
+          } as unknown as ExecutionOutcomeRow)
+        ),
+        "fromOutcomeRow"
+      );
+    })
+  );
+
+  it.effect(
+    "falls back to a generic reason when the schema failure renders empty",
+    Effect.fnUntraced(function* () {
+      const schemaError = yield* emptyMessageSchemaError;
+      expect(schemaError.message).toBe("");
+
+      const converterError = ExecutionRecordConverterError.fromSchema("fromDecisionRow", schemaError);
+      expect(converterError._tag).toBe("ExecutionRecordConverterError");
+      expect(converterError.operation).toBe("fromDecisionRow");
+      expect(converterError.reason).toBe("schema conversion failed");
     })
   );
 });

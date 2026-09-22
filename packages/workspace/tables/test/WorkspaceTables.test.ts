@@ -17,7 +17,9 @@ import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const ThreadEquivalence = S.toEquivalence(ThreadModel);
 
@@ -33,6 +35,20 @@ const decodeUnknownTurnModel = S.decodeUnknownEffect(TurnModel);
 const decodeUnknownWorkspaceModel = S.decodeUnknownEffect(WorkspaceModel);
 
 const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
+
+// Every row codec here is a class schema, so an unencodable entity has to stay
+// an instance of its model: clone onto the same prototype and corrupt a single
+// column rather than handing the encoder a bare struct it would reject wholesale.
+const withUnencodablePublicId = <A extends object>(entity: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
+  expect(error._tag).toBe(tag);
+  expect(Str.isNonEmpty(error.message)).toBe(true);
+};
 
 const expectBaseProjectionColumns = (table: typeof CandidateDraft.Table | typeof CandidateProject.Table) => {
   const columns = getColumns(table);
@@ -236,5 +252,94 @@ describe("WorkspaceTables", () => {
       expect(WorkspaceEquivalence(roundTrippedWorkspace, workspace)).toBe(true);
     }),
     { arbitrary: fcRuns(50) }
+  );
+  it.effect(
+    "reports a typed converter failure on both sides of each entity boundary",
+    Effect.fnUntraced(function* () {
+      const thread = yield* decodeUnknownThreadModel({
+        ...productEntityFixtureInput("WorkspaceThread", 10),
+        title: "Matter intake",
+        workspaceId: 2,
+      });
+      const threadInsert = yield* Effect.fromResult(Thread.toThreadInsert(thread));
+      expectConverterFailure(
+        yield* converterFailure(Thread.toThreadInsert(withUnencodablePublicId(thread))),
+        "ThreadConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          Thread.fromThreadRow({ ...threadInsert, id: 10, publicId: 42 } as unknown as Thread.ThreadRow)
+        ),
+        "ThreadConverterError"
+      );
+
+      const message = yield* decodeUnknownMessageModel({
+        ...productEntityFixtureInput("WorkspaceMessage", 20),
+        content: { _tag: "document", children: [] },
+        role: "user",
+        threadId: 10,
+        turnId: 30,
+      });
+      const messageInsert = yield* Effect.fromResult(Message.toMessageInsert(message));
+      expectConverterFailure(
+        yield* converterFailure(Message.toMessageInsert(withUnencodablePublicId(message))),
+        "MessageConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          Message.fromMessageRow({ ...messageInsert, id: 20, publicId: 42 } as unknown as Message.MessageRow)
+        ),
+        "MessageConverterError"
+      );
+
+      const turn = yield* decodeUnknownTurnModel({
+        ...productEntityFixtureInput("WorkspaceTurn", 30),
+        items: [{ itemType: "message", messageId: 20 }],
+        parentTurnId: null,
+        threadId: 10,
+        turnIndex: 0,
+      });
+      const turnInsert = yield* Effect.fromResult(Turn.toTurnInsert(turn));
+      expectConverterFailure(
+        yield* converterFailure(Turn.toTurnInsert(withUnencodablePublicId(turn))),
+        "TurnConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          Turn.fromTurnRow({
+            ...turnInsert,
+            id: 30,
+            parentTurnId: absentAsNull(turnInsert.parentTurnId),
+            publicId: 42,
+          } as unknown as Turn.TurnRow)
+        ),
+        "TurnConverterError"
+      );
+
+      const workspace = yield* decodeUnknownWorkspaceModel({
+        ...productEntityFixtureInput("WorkspaceWorkspace", 40),
+        fixtureKey: "workspace.default",
+        name: "Default Workspace",
+        organizationFixtureKey: "organization.default",
+        ownerPrincipalFixtureKey: "principal.default",
+        vaultRootPath: "/tmp/beep-workspace-vault",
+      });
+      const workspaceInsert = yield* Effect.fromResult(Workspace.toWorkspaceInsert(workspace));
+      expectConverterFailure(
+        yield* converterFailure(Workspace.toWorkspaceInsert(withUnencodablePublicId(workspace))),
+        "WorkspaceConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          Workspace.fromWorkspaceRow({
+            ...workspaceInsert,
+            id: 40,
+            publicId: 42,
+            vaultRootPath: absentAsNull(workspaceInsert.vaultRootPath),
+          } as unknown as Workspace.WorkspaceRow)
+        ),
+        "WorkspaceConverterError"
+      );
+    })
   );
 });

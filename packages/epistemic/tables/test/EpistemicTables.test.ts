@@ -135,6 +135,53 @@ const claimDispositionInput = (id: number) => ({
   ],
 });
 
+// Every row codec here is a class schema, so an unencodable entity has to stay
+// an instance of its model: clone onto the same prototype and corrupt a single
+// column rather than handing the encoder a bare struct it would reject wholesale.
+const withUnencodablePublicId = <A extends object>(entity: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (
+  error: { readonly _tag: string; readonly operation: string; readonly reason: string },
+  tag: string,
+  operation: string
+): void => {
+  expect(error._tag).toBe(tag);
+  expect(error.operation).toBe(operation);
+  expect(Str.isNonEmpty(error.reason)).toBe(true);
+};
+
+// `defaultFormatter` renders a `message: ""` annotation verbatim, so this is a
+// real SchemaError whose rendered message is empty - the input every
+// `fromSchema` fallback branch is written for.
+const emptyMessageSchemaError = S.decodeUnknownResult(S.String.annotate({ message: "" }))(0).pipe(
+  Result.flip,
+  Effect.fromResult
+);
+
+const fallbackReasonCases = [
+  [
+    "CandidateClaimConverterError",
+    (error: S.SchemaError) => CandidateClaim.CandidateClaimConverterError.fromSchema("fromRow", error),
+  ],
+  [
+    "ClaimDispositionConverterError",
+    (error: S.SchemaError) => ClaimDisposition.ClaimDispositionConverterError.fromSchema("fromRow", error),
+  ],
+  [
+    "EdgeVersionConverterError",
+    (error: S.SchemaError) => EdgeVersion.EdgeVersionConverterError.fromSchema("fromRow", error),
+  ],
+  ["EvidenceConverterError", (error: S.SchemaError) => Evidence.EvidenceConverterError.fromSchema("fromRow", error)],
+  [
+    "UsageRecordConverterError",
+    (error: S.SchemaError) => UsageRecord.UsageRecordConverterError.fromSchema("fromRow", error),
+  ],
+] as const;
+
 const baseEntityColumnNames = {
   createdAt: "created_at",
   createdByPrincipal: "created_by_principal",
@@ -634,5 +681,118 @@ describe("EpistemicTables", () => {
 
       expect(outcome._tag).toBe("Passed");
     })
+  );
+  it.effect(
+    "reports a typed CandidateClaim converter failure on both sides of the boundary",
+    Effect.fnUntraced(function* () {
+      const claim = yield* decodeUnknownCandidateClaimModel(candidateClaimInput(10));
+      const insert = yield* Effect.fromResult(CandidateClaim.toCandidateClaimInsert(claim));
+
+      expectConverterFailure(
+        yield* converterFailure(CandidateClaim.toCandidateClaimInsert(withUnencodablePublicId(claim))),
+        "CandidateClaimConverterError",
+        "toInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          CandidateClaim.fromCandidateClaimRow({
+            ...insert,
+            id: 10,
+            publicId: 42,
+          } as unknown as CandidateClaim.CandidateClaimRow)
+        ),
+        "CandidateClaimConverterError",
+        "fromRow"
+      );
+    })
+  );
+
+  it.effect(
+    "reports a typed ClaimDisposition converter failure on both sides of the boundary",
+    Effect.fnUntraced(function* () {
+      const disposition = yield* decodeUnknownClaimDispositionModel(claimDispositionInput(10));
+      const insert = yield* Effect.fromResult(ClaimDisposition.toClaimDispositionInsert(disposition));
+
+      expectConverterFailure(
+        yield* converterFailure(ClaimDisposition.toClaimDispositionInsert(withUnencodablePublicId(disposition))),
+        "ClaimDispositionConverterError",
+        "toInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          ClaimDisposition.fromClaimDispositionRow({
+            ...insert,
+            id: 10,
+            publicId: 42,
+          } as unknown as ClaimDisposition.ClaimDispositionRow)
+        ),
+        "ClaimDispositionConverterError",
+        "fromRow"
+      );
+    })
+  );
+
+  it.effect(
+    "reports a typed EdgeVersion converter failure on both sides of the boundary",
+    Effect.fnUntraced(function* () {
+      const version = yield* decodeUnknownEdgeVersionModel(edgeVersionInput(10));
+      const insert = yield* Effect.fromResult(EdgeVersion.toEdgeVersionInsert(version));
+
+      expectConverterFailure(
+        yield* converterFailure(EdgeVersion.toEdgeVersionInsert(withUnencodablePublicId(version))),
+        "EdgeVersionConverterError",
+        "toInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          EdgeVersion.fromEdgeVersionRow({
+            ...edgeVersionRow(insert, 10),
+            publicId: 42,
+          } as unknown as EdgeVersion.EdgeVersionRow)
+        ),
+        "EdgeVersionConverterError",
+        "fromRow"
+      );
+    })
+  );
+
+  it.effect(
+    "reports a typed UsageRecord converter failure on both sides of the boundary",
+    Effect.fnUntraced(function* () {
+      const record = yield* decodeUnknownUsageRecordModel(usageRecordInput(10));
+      const insert = yield* Effect.fromResult(UsageRecord.toUsageRecordInsert(record));
+
+      expectConverterFailure(
+        yield* converterFailure(UsageRecord.toUsageRecordInsert(withUnencodablePublicId(record))),
+        "UsageRecordConverterError",
+        "toInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          UsageRecord.fromUsageRecordRow({
+            ...insert,
+            id: 10,
+            publicId: 42,
+          } as unknown as UsageRecord.UsageRecordRow)
+        ),
+        "UsageRecordConverterError",
+        "fromRow"
+      );
+    })
+  );
+
+  A.forEach(fallbackReasonCases, ([tag, lift]) =>
+    it.effect(
+      `falls back to a generic reason when ${tag} lifts an empty schema failure`,
+      Effect.fnUntraced(function* () {
+        const schemaError = yield* emptyMessageSchemaError;
+        expect(schemaError.message).toBe("");
+
+        const converterError = lift(schemaError);
+        expect(converterError._tag).toBe(tag);
+        expect(converterError.operation).toBe("fromRow");
+        expect(converterError.reason).toBe("schema conversion failed");
+      })
+    )
   );
 });
