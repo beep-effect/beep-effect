@@ -1,14 +1,21 @@
 import { findingsCommand, runCodexFindingsIngest } from "@beep/repo-cli/commands/Codex";
-import { SECURITY_PACKAGE_VERSION, SECURITY_PLUGIN_VERSION } from "@beep/repo-cli/test/Codex";
+import {
+  runSecurityCli,
+  SECURITY_PACKAGE_VERSION,
+  SECURITY_PLUGIN_VERSION,
+  securityCommand,
+  securityRuntime,
+} from "@beep/repo-cli/test/Codex";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { Config, ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
+import { Config, ConfigProvider, Duration, Effect, FileSystem, Layer, Path } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { NodeTestLayer, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -272,6 +279,92 @@ it.layer(testLayer, { timeout: "60 seconds" })("codex findings sealed bundle ing
 
       const lines = yield* printedLines;
       expect(A.some(lines, Str.includes("--source security-bundle --from <sealed-scan-directory>"))).toBe(true);
+    })
+  );
+});
+
+it.layer(testLayer, { timeout: "60 seconds" })("security scan execution boundary", (it) => {
+  it.effect("runs only the pinned local stub and preserves source receipts and guard failures", () =>
+    withRepository(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const git = (args: ReadonlyArray<string>) => spawner.string(ChildProcess.make("git", args));
+        yield* git(["init", "--quiet"]);
+        yield* git(["remote", "add", "origin", "https://github.com/example/project.git"]);
+        yield* fs.writeFileString("source.txt", "fixture");
+        yield* git(["add", "source.txt"]);
+        yield* git([
+          "-c",
+          "core.hooksPath=/dev/null",
+          "-c",
+          "user.name=Fixture",
+          "-c",
+          "user.email=fixture@example.com",
+          "-c",
+          "commit.gpgsign=false",
+          "commit",
+          "--quiet",
+          "-m",
+          "fixture",
+        ]);
+        const parent = yield* fs.makeTempDirectoryScoped();
+        const provider = yield* pinnedRuntime(0);
+        const run = (args: ReadonlyArray<string>) =>
+          Command.runWith(securityCommand, { version: "0.0.0" })(args).pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, provider)
+          );
+        const flags = (output: string) => ["--output-dir", output, "--max-cost", "5"];
+        yield* run([]);
+        yield* run(["preflight", ...flags(path.join(parent, "preflight"))]);
+        yield* fs.writeFileString("source.txt", "dirty");
+        yield* run(["preflight", ...flags(path.join(parent, "dirty-preflight")), "--path", "source.txt"]);
+        expect((yield* run(["scan", ...flags(path.join(parent, "dirty"))]).pipe(Effect.flip)).message).toContain(
+          "Commit or stash"
+        );
+        yield* git(["checkout", "--", "source.txt"]);
+        expect((yield* run(["scan", ...flags(parent)]).pipe(Effect.flip)).message).toContain("new output directory");
+        expect((yield* run(["scan", ...flags(path.join(process.cwd(), "scan"))]).pipe(Effect.flip)).message).toContain(
+          "outside the repository"
+        );
+        const output = path.join(parent, "scan");
+        yield* run(["scan", ...flags(output), "--path", "source.txt"]);
+        expect(yield* fs.readFileString(path.join(output, "beep-source.json"))).toContain(
+          '"repository":"example/project"'
+        );
+        const failureProvider = yield* pinnedRuntime(1);
+        const failedOutput = path.join(parent, "failed-scan");
+        const failed = yield* Command.runWith(securityCommand, { version: "0.0.0" })([
+          "scan",
+          ...flags(failedOutput),
+        ]).pipe(Effect.provideService(ConfigProvider.ConfigProvider, failureProvider), Effect.flip);
+        expect(failed.message).toContain("Security CLI exited 1");
+        expect(yield* fs.exists(path.join(failedOutput, "beep-source.json"))).toBe(true);
+      })
+    )
+  );
+  it.effect("reports missing pinned installs and enforces the process deadline", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const home = yield* fs.makeTempDirectoryScoped();
+      const missing = yield* securityRuntime.pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromUnknown({ HOME: home, PATH: "/usr/bin" })
+        ),
+        Effect.flip
+      );
+      expect(missing.message).toContain("Install the pinned runtime");
+      const provider = yield* pinnedRuntime(0);
+      const error = yield* runSecurityCli({
+        args: [],
+        stdout: "ignore",
+        stderr: "ignore",
+        timeout: Duration.zero,
+        timeoutMessage: "fixture deadline",
+      }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider), Effect.flip);
+      expect(error.message).toBe("fixture deadline");
     })
   );
 });

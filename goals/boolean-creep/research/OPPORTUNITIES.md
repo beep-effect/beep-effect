@@ -1418,3 +1418,14 @@ errors. The row is now D1 and its prior design is archived. Applying the packet'
 request-boundary adjudication to each candidate before designing would have
 prevented this redundant migration. The new observed request switch also shows
 why current complete-owner inspection matters.
+
+## Coverage gaps after the main merge, 2026-09-21
+
+Full Yeet proof `61a9b426-1f2d-4811-ba7f-99a05b5e6fb4` passed the CLI
+unit and coverage test shards, then failed the coverage ratchet on inherited
+security modules without baseline identities and the attached monitor branch.
+The focused repair exercises the pinned local security stub, scan receipts,
+output guards, runtime deadlines, remote conversion, and artifact size budgets;
+it also supplies an explicit attached-monitor environment. The focused security
+coverage reports 100% lines and functions. Running the coverage ratchet against
+new main modules before the long proof would have exposed these gaps earlier.

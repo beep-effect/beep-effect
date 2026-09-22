@@ -7,6 +7,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { SchemaGetter } from "effect";
+import { constant } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -57,7 +58,7 @@ const GITHUB_REMOTE = /^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|git@)github\.com[:/]
 const remoteSlug = (remote: string): string =>
   O.getOrElse(
     O.flatMap(Str.match(GITHUB_REMOTE)(remote), (found) => O.fromNullishOr(found[1])),
-    () => remote
+    constant(remote)
   );
 
 /**
