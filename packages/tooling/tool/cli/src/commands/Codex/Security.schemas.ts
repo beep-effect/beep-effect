@@ -49,7 +49,8 @@ export const SECURITY_PLUGIN_VERSION = "0.1.95";
 /**
  * Every remote spelling GitHub and the upstream seal can produce for one repository:
  * `https://`, `http://`, `ssh://[user@]`, and scp-style `git@github.com:`; host
- * case-insensitive; optional `.git` and at most one trailing slash.
+ * case-insensitive; one terminal `.git` is treated as a transport suffix,
+ * followed by at most one trailing slash.
  */
 const GITHUB_REMOTE = /^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|git@)github\.com[:/]([^?#]+?)(?:\.git)?\/?$/i;
 
@@ -68,6 +69,12 @@ const remoteSlug = (remote: string): string =>
  * while a local checkout's origin is often scp-style (`git@github.com:owner/repo.git`).
  * Both, plus `https://` and `http://`, decode to the same slug; encoding renders
  * the canonical `https://github.com/owner/repo.git` form.
+ *
+ * **Gotchas**
+ * Bare and `.git`-suffixed URLs identify the same slug only when the repository
+ * name does not itself end in `.git` (case-insensitive). The decoder removes
+ * one transport suffix. To preserve a slug such as `owner/repo.git`, use the
+ * encoder's explicit `https://github.com/owner/repo.git.git` spelling.
  *
  * **Example** (Normalizing the seal's SSH URL form)
  * ```ts import.meta.vitest name="Normalizing the seal's SSH URL form"
