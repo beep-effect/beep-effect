@@ -1,0 +1,71 @@
+{
+  "package": "@beep/uspto",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:43.874368+00:00",
+  "totalMs": 4463.3681640625,
+  "testCount": 13,
+  "files": [
+    {
+      "file": "packages/drivers/uspto/test/Uspto.equivalence.test.ts",
+      "ms": 1.1142578125,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "ms": 44.3681640625,
+      "tests": 12
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "testName": "Uspto schema parity round-trips schema-derived USPTO payloads through encoded form",
+      "ms": 31.929153000000042
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "testName": "Uspto identifier normalization constructs errors in data-last form",
+      "ms": 31.21574099999998
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "testName": "Uspto identifier normalization normalizes application numbers",
+      "ms": 31.193938000000344
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "testName": "Uspto identifier normalization normalizes patent numbers",
+      "ms": 30.613228000000163
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "testName": "Uspto schema parity keeps encoded schema wire shapes byte-identical",
+      "ms": 30.59300699999949
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "testName": "Uspto service extracts continuity parents and children",
+      "ms": 11.301225999999588
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "testName": "Uspto service resolves application metadata from a file wrapper envelope",
+      "ms": 10.963068000000021
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "testName": "Uspto service sends the application request to the open data portal path",
+      "ms": 10.752325000000383
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "testName": "Uspto service maps 429 responses to rate-limited",
+      "ms": 10.655687000000398
+    },
+    {
+      "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
+      "testName": "Uspto service maps 404 responses to not-found",
+      "ms": 10.64149500000076
+    }
+  ]
+}

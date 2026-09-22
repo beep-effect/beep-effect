@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-failures/v1",
+  "status": "All 139 package attempts completed.",
+  "records": [
+    {
+      "package": "@beep/ciops",
+      "head": "662823dd960367046ba7d73dd8fd25d15782865a",
+      "runner": "node-vitest",
+      "runtime": {
+        "node": "v22.22.3",
+        "bun": "1.4.2"
+      },
+      "exitCode": 1,
+      "registeredTests": 0,
+      "failedTests": 0,
+      "wholeCommandSeconds": 10.366358664000018,
+      "acceptedBaseline": false,
+      "sourceDrift": [],
+      "attribution": "Inherited runtime/compatibility boundary in unchanged starting source; no P1 source edits caused this attempt.",
+      "causes": [
+        "The threads pool rejects --js-float16array supplied by shared Node<24 configuration; no test bodies ran."
+      ],
+      "rawReporterSha256": "0308d35f9ab8348fe4d5880c03d5e38726366d2290f48ff71ff127827485e77a",
+      "logSha256": "8da31f2b40b11f233912afa06619540252253738326f2a7d2d0eaccfb620ed51",
+      "repairsApplied": false
+    },
+    {
+      "package": "@beep/effect-drizzle",
+      "head": "662823dd960367046ba7d73dd8fd25d15782865a",
+      "runner": "node-vitest",
+      "runtime": {
+        "node": "v22.22.3",
+        "bun": "1.4.2"
+      },
+      "exitCode": 1,
+      "registeredTests": 101,
+      "failedTests": 0,
+      "wholeCommandSeconds": 8.734228857999824,
+      "acceptedBaseline": false,
+      "sourceDrift": [],
+      "attribution": "Inherited runtime/compatibility boundary in unchanged starting source; no P1 source edits caused this attempt.",
+      "causes": [
+        "Node cannot collect the SQLite integration suite importing bun:sqlite. Its cases are absent from the registered-test count."
+      ],
+      "rawReporterSha256": "e325aa2900e343f3f7783bb95730d5145b12890e03d3f79683d93f42756ae5e9",
+      "logSha256": "dd7eec21d6d618cf54e7a69df082e4ff3cf4510aa68a2fce20becd7b0adc824a",
+      "repairsApplied": false
+    },
+    {
+      "package": "@beep/qa-capture",
+      "head": "662823dd960367046ba7d73dd8fd25d15782865a",
+      "runner": "node-vitest",
+      "runtime": {
+        "node": "v22.22.3",
+        "bun": "1.4.2"
+      },
+      "exitCode": 1,
+      "registeredTests": 41,
+      "failedTests": 4,
+      "wholeCommandSeconds": 4.621820840000055,
+      "acceptedBaseline": false,
+      "sourceDrift": [],
+      "attribution": "Inherited runtime/compatibility boundary in unchanged starting source; no P1 source edits caused this attempt.",
+      "causes": [
+        "Two collector tests: the Node Bun.serve shim omits hostname required by the native Bun HTTP adapter; reload is also absent.",
+        "Stale-owner test fixture: the Node Bun.spawnSync shim omits the completed child PID, violating the existing required integer field before collector startup.",
+        "Witness compilation: the Node shim omits fileURLToPath and build; entrypoint preparation fails before a native compiler failure is established."
+      ],
+      "rawReporterSha256": "85dab95989718af7e7cf5f48d37cba4e8c4a20d4cd1e7201168411902e117222",
+      "logSha256": "2929f108dc86db64fdea0d054a1e9b037f470eca7555db9120edc5764bfb8ef3",
+      "repairsApplied": false
+    }
+  ],
+  "policy": "Retain unsuccessful attempts. Do not exclude tests, weaken schemas, substitute runtimes or treat startup failures as accepted timing baselines.",
+  "attempts": 139,
+  "succeeded": 136,
+  "failed": 3
+}

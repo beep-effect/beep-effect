@@ -1,0 +1,81 @@
+{
+  "package": "@beep/epistemic-tables",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:32:36.863332+00:00",
+  "totalMs": 5136.9375,
+  "testCount": 39,
+  "files": [
+    {
+      "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
+      "ms": 26.335205078125,
+      "tests": 9
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "ms": 35.9375,
+      "tests": 17
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "ms": 29.251953125,
+      "tests": 6
+    },
+    {
+      "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
+      "ms": 4.306640625,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "testName": "EvidenceVerificationTable projects the immutable sidecar column shape",
+      "ms": 28.81916100000035
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "testName": "EvidenceVerificationTable publishes the table through both aggregates",
+      "ms": 28.637001000000055
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "testName": "EvidenceVerificationTable round-trips schema-derived manifestations through the sealed row converters",
+      "ms": 28.619665000000168
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "testName": "EvidenceVerificationTable round-trips rows through schema-derived converters",
+      "ms": 28.60920900000019
+    },
+    {
+      "file": "packages/epistemic/tables/test/EvidenceVerificationTables.test.ts",
+      "testName": "EvidenceVerificationTable uses the manifestation schema as the digest input contract",
+      "ms": 28.60014500000034
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "testName": "EpistemicTables round-trips a ClaimDisposition row through the converters",
+      "ms": 25.93758700000035
+    },
+    {
+      "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
+      "testName": "EpistemicTables round-trips schema-derived UsageRecords through the row converters",
+      "ms": 25.923125999999684
+    },
+    {
+      "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
+      "testName": "Contradiction candidate row converters round-trips schema-derived canonical belief pairs used by candidate JSONB rows",
+      "ms": 18.815872000000127
+    },
+    {
+      "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
+      "testName": "Contradiction candidate row converters round-trips a candidate only when every persisted seal is valid",
+      "ms": 18.636516999999913
+    },
+    {
+      "file": "packages/epistemic/tables/test/ContradictionTables.test.ts",
+      "testName": "Contradiction candidate row converters round-trips receipt and disposition rows without generated identifiers",
+      "ms": 18.61895099999947
+    }
+  ]
+}

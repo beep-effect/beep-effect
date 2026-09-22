@@ -1,0 +1,26 @@
+{
+  "package": "@beep/architecture-lab-proof",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:50:35.383879+00:00",
+  "totalMs": 7122.797607421875,
+  "testCount": 2,
+  "files": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "ms": 15.797607421875,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "testName": "architecture lab proof app runs through the composed app layer",
+      "ms": 15.797668000000158
+    },
+    {
+      "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+      "testName": "architecture lab proof app round-trips the proof result schema with schema-derived arbitraries",
+      "ms": 15.560442999999395
+    }
+  ]
+}

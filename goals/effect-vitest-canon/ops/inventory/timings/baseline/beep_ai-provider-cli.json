@@ -1,0 +1,76 @@
+{
+  "package": "@beep/ai-provider-cli",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:19:46.001201+00:00",
+  "totalMs": 4041.56591796875,
+  "testCount": 18,
+  "files": [
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",
+      "ms": 15.56591796875,
+      "tests": 3
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "ms": 15.549560546875,
+      "tests": 13
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCliHome.equivalence.test.ts",
+      "ms": 1.228515625,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",
+      "testName": "@beep/ai-provider-cli keeps encoded provider CLI wire shapes byte-identical",
+      "ms": 15.566021000000092
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",
+      "testName": "@beep/ai-provider-cli round-trips schema-derived provider CLI payloads",
+      "ms": 15.40306099999998
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",
+      "testName": "@beep/ai-provider-cli maps Claude and Codex CLI exit codes to sanitized auth probes",
+      "ms": 15.394358000000011
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "testName": "@beep/ai-provider-cli auth snapshots decodes a logged-in Claude status payload into a rich snapshot",
+      "ms": 9.457863999999972
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "testName": "@beep/ai-provider-cli auth snapshots maps unknown Claude subscription types to the generic label",
+      "ms": 9.287933000000066
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "testName": "@beep/ai-provider-cli auth snapshots reports a logged-out Claude CLI as not authenticated with no account detail",
+      "ms": 9.271318000000065
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "testName": "@beep/ai-provider-cli auth snapshots degrades malformed Claude stdout to the exit-code-only interpretation",
+      "ms": 9.261582999999973
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "testName": "@beep/ai-provider-cli auth snapshots classifies the Codex ChatGPT status line as a chatgpt token source",
+      "ms": 9.25389099999984
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "testName": "@beep/ai-provider-cli executable overrides expands Windows-style tilde prefixes with host path semantics",
+      "ms": 3.296436000000085
+    },
+    {
+      "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts",
+      "testName": "@beep/ai-provider-cli executable overrides expands a tilde executable override before it reaches the runner",
+      "ms": 3.2796799999996438
+    }
+  ]
+}

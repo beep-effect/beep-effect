@@ -1,0 +1,1098 @@
+{
+  "schemaVersion": "effect-vitest-p1-configured-subsets/v1",
+  "head": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "packages": [
+    {
+      "package": "@beep/graph-3d",
+      "classification": "supported-configured-runner-boundary",
+      "acceptedFullCensusBaseline": false,
+      "reporterSummary": {
+        "package": "@beep/graph-3d",
+        "runner": "node-vitest",
+        "capturedAt": "2026-09-11T23:17:47.177041+00:00",
+        "totalMs": 4307.96142578125,
+        "testCount": 1,
+        "files": [
+          {
+            "file": "packages/drivers/graph-3d/test/Graph3D.equivalence.test.ts",
+            "ms": 0.96142578125,
+            "tests": 1
+          }
+        ],
+        "slowest": [
+          {
+            "file": "packages/drivers/graph-3d/test/Graph3D.equivalence.test.ts",
+            "testName": "Graph3D declared-field equivalence treats field-equal Graph3DDriverError instances as equivalent and field-different ones as distinct",
+            "ms": 0.9613750000007713
+          }
+        ]
+      },
+      "coverage": {
+        "expectedSourceTests": [
+          "packages/drivers/graph-3d/test/Graph3D.equivalence.test.ts",
+          "packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts"
+        ],
+        "reportedFiles": [
+          {
+            "file": "packages/drivers/graph-3d/test/Graph3D.equivalence.test.ts",
+            "ms": 0.96142578125,
+            "tests": 1
+          }
+        ],
+        "missingSourceTests": [
+          {
+            "file": "packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          }
+        ],
+        "reportedOutsidePackageCensus": [],
+        "testStatusCounts": {
+          "passed": 1
+        },
+        "allReportedFilesPreserved": true,
+        "sourceTestCoverageComplete": false
+      },
+      "boundary": "Separate Playwright Chromium renderer configuration.",
+      "qualification": "Absent files are not reported skipped. Default-command success does not prove separate-runner or opt-in execution. No additional gates were enabled or alternate runners executed.",
+      "remaining": "Separate source/runtime/artifact-bound runner evidence and an explicit representation of the distinct cohorts."
+    },
+    {
+      "package": "@beep/infra",
+      "classification": "supported-configured-runner-boundary",
+      "acceptedFullCensusBaseline": false,
+      "reporterSummary": {
+        "package": "@beep/infra",
+        "runner": "node-vitest",
+        "capturedAt": "2026-09-11T23:32:47.723552+00:00",
+        "totalMs": 6793.00830078125,
+        "testCount": 93,
+        "files": [
+          {
+            "file": "infra/test/AIMetrics.test.ts",
+            "ms": 15.71337890625,
+            "tests": 7
+          },
+          {
+            "file": "infra/test/AccountCostControls.test.ts",
+            "ms": 58.565185546875,
+            "tests": 4
+          },
+          {
+            "file": "infra/test/CiFleetController.test.ts",
+            "ms": 77.368408203125,
+            "tests": 11
+          },
+          {
+            "file": "infra/test/CiRunners.test.ts",
+            "ms": 17.19287109375,
+            "tests": 10
+          },
+          {
+            "file": "infra/test/CiTurboCache.test.ts",
+            "ms": 121.00830078125,
+            "tests": 7
+          },
+          {
+            "file": "infra/test/OipWeb.test.ts",
+            "ms": 13.633544921875,
+            "tests": 6
+          },
+          {
+            "file": "infra/test/OpenClaw.test.ts",
+            "ms": 56.213134765625,
+            "tests": 41
+          },
+          {
+            "file": "infra/test/Storybook.test.ts",
+            "ms": 10.221923828125,
+            "tests": 7
+          }
+        ],
+        "slowest": [
+          {
+            "file": "infra/test/CiTurboCache.test.ts",
+            "testName": "@beep/infra CiTurboCache uses Lambda invocation ARNs for the read and write API integrations",
+            "ms": 118.00841200000013
+          },
+          {
+            "file": "infra/test/CiTurboCache.test.ts",
+            "testName": "@beep/infra CiTurboCache accepts absolute ZIP paths and rejects relative or non-ZIP paths",
+            "ms": 103.77554799999962
+          },
+          {
+            "file": "infra/test/CiFleetController.test.ts",
+            "testName": "@beep/infra CiFleetController wires the fail-closed workload identity boundary before runner startup",
+            "ms": 73.36848699999973
+          },
+          {
+            "file": "infra/test/OpenClaw.test.ts",
+            "testName": "@beep/infra OpenClaw round-trips OpenClaw config schemas through encoded wire values",
+            "ms": 35.05389699999978
+          },
+          {
+            "file": "infra/test/OpenClaw.test.ts",
+            "testName": "@beep/infra OpenClaw models renderer input contracts as schemas",
+            "ms": 35.038503000000674
+          },
+          {
+            "file": "infra/test/OpenClaw.test.ts",
+            "testName": "@beep/infra OpenClaw re-addresses the generation when the deployment intent changes",
+            "ms": 32.96608000000015
+          },
+          {
+            "file": "infra/test/AccountCostControls.test.ts",
+            "testName": "@beep/infra AccountCostControls limits resources to account visibility and preserves the existing budget semantics",
+            "ms": 32.5652170000003
+          },
+          {
+            "file": "infra/test/AccountCostControls.test.ts",
+            "testName": "@beep/infra AccountCostControls redacts malformed recipient values at the Pulumi output boundary",
+            "ms": 19.13351899999998
+          },
+          {
+            "file": "infra/test/CiRunners.test.ts",
+            "testName": "@beep/infra CiRunners keeps stack args import-safe",
+            "ms": 13.285262999999759
+          },
+          {
+            "file": "infra/test/CiRunners.test.ts",
+            "testName": "@beep/infra CiRunners exports the launcher kill-tag pair and stable AWS-side names",
+            "ms": 13.256690000000162
+          }
+        ]
+      },
+      "coverage": {
+        "expectedSourceTests": [
+          "infra/ci-runners/sdks/ghaRunners/test/build.test.js",
+          "infra/lambda/turbo-cache/test/authorizer.test.ts",
+          "infra/lambda/turbo-cache/test/hmac.test.ts",
+          "infra/lambda/turbo-cache/test/writer.test.ts",
+          "infra/test/AIMetrics.test.ts",
+          "infra/test/AccountCostControls.test.ts",
+          "infra/test/CiFleetController.test.ts",
+          "infra/test/CiRunners.test.ts",
+          "infra/test/CiTurboCache.test.ts",
+          "infra/test/OipWeb.test.ts",
+          "infra/test/OpenClaw.test.ts",
+          "infra/test/Storybook.test.ts"
+        ],
+        "reportedFiles": [
+          {
+            "file": "infra/test/AIMetrics.test.ts",
+            "ms": 15.71337890625,
+            "tests": 7
+          },
+          {
+            "file": "infra/test/AccountCostControls.test.ts",
+            "ms": 58.565185546875,
+            "tests": 4
+          },
+          {
+            "file": "infra/test/CiFleetController.test.ts",
+            "ms": 77.368408203125,
+            "tests": 11
+          },
+          {
+            "file": "infra/test/CiRunners.test.ts",
+            "ms": 17.19287109375,
+            "tests": 10
+          },
+          {
+            "file": "infra/test/CiTurboCache.test.ts",
+            "ms": 121.00830078125,
+            "tests": 7
+          },
+          {
+            "file": "infra/test/OipWeb.test.ts",
+            "ms": 13.633544921875,
+            "tests": 6
+          },
+          {
+            "file": "infra/test/OpenClaw.test.ts",
+            "ms": 56.213134765625,
+            "tests": 41
+          },
+          {
+            "file": "infra/test/Storybook.test.ts",
+            "ms": 10.221923828125,
+            "tests": 7
+          }
+        ],
+        "missingSourceTests": [
+          {
+            "file": "infra/ci-runners/sdks/ghaRunners/test/build.test.js",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "infra/lambda/turbo-cache/test/authorizer.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "infra/lambda/turbo-cache/test/hmac.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "infra/lambda/turbo-cache/test/writer.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          }
+        ],
+        "reportedOutsidePackageCensus": [],
+        "testStatusCounts": {
+          "passed": 93
+        },
+        "allReportedFilesPreserved": true,
+        "sourceTestCoverageComplete": false
+      },
+      "boundary": "Nested SDK Node-native runner and Lambda Bun runner; neither is in the parent Vitest include.",
+      "qualification": "Absent files are not reported skipped. Default-command success does not prove separate-runner or opt-in execution. No additional gates were enabled or alternate runners executed.",
+      "remaining": "Separate source/runtime/artifact-bound runner evidence and an explicit representation of the distinct cohorts."
+    },
+    {
+      "package": "@beep/ontology-client",
+      "classification": "supported-configured-runner-boundary",
+      "acceptedFullCensusBaseline": false,
+      "reporterSummary": {
+        "package": "@beep/ontology-client",
+        "runner": "node-vitest",
+        "capturedAt": "2026-09-11T23:51:09.009090+00:00",
+        "totalMs": 6766.827880859375,
+        "testCount": 25,
+        "files": [
+          {
+            "file": "packages/ontology/client/test/Session.atoms.test.ts",
+            "ms": 56.20166015625,
+            "tests": 8
+          },
+          {
+            "file": "packages/ontology/client/test/TaggedError.equivalence.test.ts",
+            "ms": 1.38623046875,
+            "tests": 1
+          },
+          {
+            "file": "packages/ontology/client/test/auto-open.test.ts",
+            "ms": 13.679931640625,
+            "tests": 4
+          },
+          {
+            "file": "packages/ontology/client/test/failure-messages.test.ts",
+            "ms": 12.637939453125,
+            "tests": 2
+          },
+          {
+            "file": "packages/ontology/client/test/graph-centrality.test.ts",
+            "ms": 442.827880859375,
+            "tests": 2
+          },
+          {
+            "file": "packages/ontology/client/test/graph-labels.test.ts",
+            "ms": 2.47900390625,
+            "tests": 2
+          },
+          {
+            "file": "packages/ontology/client/test/inspector-actions.test.ts",
+            "ms": 10.415283203125,
+            "tests": 2
+          },
+          {
+            "file": "packages/ontology/client/test/stale-read.test.ts",
+            "ms": 5.150146484375,
+            "tests": 1
+          },
+          {
+            "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+            "ms": 203.341552734375,
+            "tests": 1
+          },
+          {
+            "file": "packages/ontology/client/test/worker-wire.test.ts",
+            "ms": 3.849365234375,
+            "tests": 2
+          }
+        ],
+        "slowest": [
+          {
+            "file": "packages/ontology/client/test/graph-centrality.test.ts",
+            "testName": "3d graph centrality budget does not reuse channels for unrelated projections with the same revision",
+            "ms": 442.070377
+          },
+          {
+            "file": "packages/ontology/client/test/graph-centrality.test.ts",
+            "testName": "3d graph centrality budget stays exact at the cutover and samples deterministically above it",
+            "ms": 441.8278930000006
+          },
+          {
+            "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+            "testName": "ontology workbench state lifetime keeps the open document when the workbench is unmounted for longer than the idle TTL",
+            "ms": 203.34163100000023
+          },
+          {
+            "file": "packages/ontology/client/test/Session.atoms.test.ts",
+            "testName": "Session atoms shares the chat transport selector for ontology RPCs",
+            "ms": 28.082972000000154
+          },
+          {
+            "file": "packages/ontology/client/test/Session.atoms.test.ts",
+            "testName": "Session atoms detects dirty change-log divergence at the saved length",
+            "ms": 27.831033999999818
+          },
+          {
+            "file": "packages/ontology/client/test/Session.atoms.test.ts",
+            "testName": "Session atoms requeues the in-flight projection after a transient worker failure and guards against retry storms",
+            "ms": 27.808109000000513
+          },
+          {
+            "file": "packages/ontology/client/test/Session.atoms.test.ts",
+            "testName": "Session atoms contains synchronous worker construction and message-send failures",
+            "ms": 27.79667100000006
+          },
+          {
+            "file": "packages/ontology/client/test/Session.atoms.test.ts",
+            "testName": "Session atoms settles inferred view without reinvoking inference for an unchanged session signature",
+            "ms": 27.787967000000208
+          },
+          {
+            "file": "packages/ontology/client/test/Session.atoms.test.ts",
+            "testName": "Session atoms schema round-trips round-trips session client schemas with schema-derived arbitraries",
+            "ms": 27.201774000000114
+          },
+          {
+            "file": "packages/ontology/client/test/auto-open.test.ts",
+            "testName": "ontologyWorkbenchAutoOpenAtom opens the seeded tutorial when the app session starts with no document",
+            "ms": 13.680019000000357
+          }
+        ]
+      },
+      "coverage": {
+        "expectedSourceTests": [
+          "packages/ontology/client/test/Session.atoms.test.ts",
+          "packages/ontology/client/test/TaggedError.equivalence.test.ts",
+          "packages/ontology/client/test/auto-open.test.ts",
+          "packages/ontology/client/test/browser/graph-renderer-toggle.test.ts",
+          "packages/ontology/client/test/failure-messages.test.ts",
+          "packages/ontology/client/test/graph-centrality.test.ts",
+          "packages/ontology/client/test/graph-labels.test.ts",
+          "packages/ontology/client/test/inspector-actions.test.ts",
+          "packages/ontology/client/test/stale-read.test.ts",
+          "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+          "packages/ontology/client/test/worker-wire.test.ts"
+        ],
+        "reportedFiles": [
+          {
+            "file": "packages/ontology/client/test/Session.atoms.test.ts",
+            "ms": 56.20166015625,
+            "tests": 8
+          },
+          {
+            "file": "packages/ontology/client/test/TaggedError.equivalence.test.ts",
+            "ms": 1.38623046875,
+            "tests": 1
+          },
+          {
+            "file": "packages/ontology/client/test/auto-open.test.ts",
+            "ms": 13.679931640625,
+            "tests": 4
+          },
+          {
+            "file": "packages/ontology/client/test/failure-messages.test.ts",
+            "ms": 12.637939453125,
+            "tests": 2
+          },
+          {
+            "file": "packages/ontology/client/test/graph-centrality.test.ts",
+            "ms": 442.827880859375,
+            "tests": 2
+          },
+          {
+            "file": "packages/ontology/client/test/graph-labels.test.ts",
+            "ms": 2.47900390625,
+            "tests": 2
+          },
+          {
+            "file": "packages/ontology/client/test/inspector-actions.test.ts",
+            "ms": 10.415283203125,
+            "tests": 2
+          },
+          {
+            "file": "packages/ontology/client/test/stale-read.test.ts",
+            "ms": 5.150146484375,
+            "tests": 1
+          },
+          {
+            "file": "packages/ontology/client/test/workbench-state-lifetime.test.ts",
+            "ms": 203.341552734375,
+            "tests": 1
+          },
+          {
+            "file": "packages/ontology/client/test/worker-wire.test.ts",
+            "ms": 3.849365234375,
+            "tests": 2
+          }
+        ],
+        "missingSourceTests": [
+          {
+            "file": "packages/ontology/client/test/browser/graph-renderer-toggle.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          }
+        ],
+        "reportedOutsidePackageCensus": [],
+        "testStatusCounts": {
+          "passed": 25
+        },
+        "allReportedFilesPreserved": true,
+        "sourceTestCoverageComplete": false
+      },
+      "boundary": "Separate Playwright Chromium renderer-toggle configuration.",
+      "qualification": "Absent files are not reported skipped. Default-command success does not prove separate-runner or opt-in execution. No additional gates were enabled or alternate runners executed.",
+      "remaining": "Separate source/runtime/artifact-bound runner evidence and an explicit representation of the distinct cohorts."
+    },
+    {
+      "package": "@beep/professional-desktop",
+      "classification": "supported-configured-runner-boundary",
+      "acceptedFullCensusBaseline": false,
+      "reporterSummary": {
+        "package": "@beep/professional-desktop",
+        "runner": "node-vitest",
+        "capturedAt": "2026-09-11T23:51:33.390412+00:00",
+        "totalMs": 15097.419921875,
+        "testCount": 238,
+        "files": [
+          {
+            "file": "apps/professional-desktop/test/App.test.tsx",
+            "ms": 138.32373046875,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/ContradictionQaSeed.test.ts",
+            "ms": 1.097412109375,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/TaggedErrors.equivalence.test.ts",
+            "ms": 3.41162109375,
+            "tests": 7
+          },
+          {
+            "file": "apps/professional-desktop/test/UsagePricing.test.ts",
+            "ms": 5.1162109375,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+            "ms": 38.49951171875,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/chat-contract.test.ts",
+            "ms": 121.111328125,
+            "tests": 18
+          },
+          {
+            "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+            "ms": 359.975341796875,
+            "tests": 11
+          },
+          {
+            "file": "apps/professional-desktop/test/code-block.test.tsx",
+            "ms": 89.618896484375,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+            "ms": 50.43896484375,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+            "ms": 215.120361328125,
+            "tests": 3
+          },
+          {
+            "file": "apps/professional-desktop/test/composer-policy.test.ts",
+            "ms": 27.298583984375,
+            "tests": 8
+          },
+          {
+            "file": "apps/professional-desktop/test/composer-send-lifetime.test.tsx",
+            "ms": 409.984619140625,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
+            "ms": 25.5390625,
+            "tests": 6
+          },
+          {
+            "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
+            "ms": 3068.32080078125,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+            "ms": 1143.419921875,
+            "tests": 8
+          },
+          {
+            "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+            "ms": 2297.698974609375,
+            "tests": 35
+          },
+          {
+            "file": "apps/professional-desktop/test/editor-proof-panel.test.tsx",
+            "ms": 214.089111328125,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/failure-message.test.ts",
+            "ms": 5.716064453125,
+            "tests": 8
+          },
+          {
+            "file": "apps/professional-desktop/test/failure-observability.test.ts",
+            "ms": 4.66748046875,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/fps-atoms.test.ts",
+            "ms": 2.660888671875,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+            "ms": 351.87060546875,
+            "tests": 15
+          },
+          {
+            "file": "apps/professional-desktop/test/intake-refusal.test.ts",
+            "ms": 1.498291015625,
+            "tests": 3
+          },
+          {
+            "file": "apps/professional-desktop/test/mermaid-viewer.test.tsx",
+            "ms": 1466.66064453125,
+            "tests": 5
+          },
+          {
+            "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
+            "ms": 8.823486328125,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/ontology-workspace-seed.test.ts",
+            "ms": 18.38330078125,
+            "tests": 3
+          },
+          {
+            "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+            "ms": 303.102783203125,
+            "tests": 9
+          },
+          {
+            "file": "apps/professional-desktop/test/packaged-rpc-origin.test.ts",
+            "ms": 1.7158203125,
+            "tests": 4
+          },
+          {
+            "file": "apps/professional-desktop/test/professional-atom-provider.test.tsx",
+            "ms": 25.362060546875,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
+            "ms": 6.808837890625,
+            "tests": 5
+          },
+          {
+            "file": "apps/professional-desktop/test/rpc-session-auth.test.ts",
+            "ms": 2.347412109375,
+            "tests": 3
+          },
+          {
+            "file": "apps/professional-desktop/test/schema-parity.test.ts",
+            "ms": 26.94140625,
+            "tests": 8
+          },
+          {
+            "file": "apps/professional-desktop/test/sidebar-layout.test.ts",
+            "ms": 55.24609375,
+            "tests": 6
+          },
+          {
+            "file": "apps/professional-desktop/test/spike-schema.test.ts",
+            "ms": 9.875,
+            "tests": 3
+          },
+          {
+            "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
+            "ms": 81.253662109375,
+            "tests": 4
+          },
+          {
+            "file": "apps/professional-desktop/test/sync-atoms.test.ts",
+            "ms": 115.91064453125,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/sync-retry.test.tsx",
+            "ms": 113.2548828125,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/table-layout.test.tsx",
+            "ms": 76.954833984375,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/tailwind-sources.test.ts",
+            "ms": 4.652099609375,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+            "ms": 16.400390625,
+            "tests": 7
+          },
+          {
+            "file": "apps/professional-desktop/test/tauri-youtube-security.test.ts",
+            "ms": 3.593017578125,
+            "tests": 6
+          },
+          {
+            "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+            "ms": 441.20458984375,
+            "tests": 6
+          },
+          {
+            "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",
+            "ms": 141.7001953125,
+            "tests": 5
+          },
+          {
+            "file": "apps/professional-desktop/test/vault-directory-picker.test.ts",
+            "ms": 13.3583984375,
+            "tests": 5
+          },
+          {
+            "file": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
+            "ms": 467.520263671875,
+            "tests": 10
+          },
+          {
+            "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
+            "ms": 90.17431640625,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
+            "ms": 256.79638671875,
+            "tests": 3
+          }
+        ],
+        "slowest": [
+          {
+            "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
+            "testName": "Cosmos spike runtime failure surfaces and redacts a worker-construction failure instead of remaining in rendering state",
+            "ms": 3068.3209150000002
+          },
+          {
+            "file": "apps/professional-desktop/test/mermaid-viewer.test.tsx",
+            "testName": "persisted mermaid rendering keeps the strict-mode adversarial corpus inert",
+            "ms": 824.372985
+          },
+          {
+            "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+            "testName": "Desktop dock shell persists automatically once workspace changes settle (debounced binding)",
+            "ms": 614.7300579999992
+          },
+          {
+            "file": "apps/professional-desktop/test/mermaid-viewer.test.tsx",
+            "testName": "persisted mermaid rendering renders the diagram as a Lexical node, leaving no hidden source behind",
+            "ms": 476.8550410000007
+          },
+          {
+            "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+            "testName": "editor contract hardening scopes concurrent typeahead listbox ids and aria-controls to each composer",
+            "ms": 446.62805000000117
+          },
+          {
+            "file": "apps/professional-desktop/test/composer-send-lifetime.test.tsx",
+            "testName": "chat composer send lifetime still sends after the registry's idle TTL has elapsed",
+            "ms": 380.0206420000013
+          },
+          {
+            "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+            "testName": "ChatTurnErrorToasts toasts a failed runTurnAtom RPC stream and clears the atom",
+            "ms": 321.9754560000001
+          },
+          {
+            "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+            "testName": "ChatTurnErrorToasts toasts a client-safe turn error message and clears the atom",
+            "ms": 321.72898499999974
+          },
+          {
+            "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+            "testName": "Atom-owned workbench theme theme preference migration updates the MUI color scheme without remounting its child subtree",
+            "ms": 305.2976149999995
+          },
+          {
+            "file": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
+            "testName": "vault sync panel lists both supported credential modes when credentials are missing",
+            "ms": 296.5042590000012
+          }
+        ]
+      },
+      "coverage": {
+        "expectedSourceTests": [
+          "apps/professional-desktop/test/App.test.tsx",
+          "apps/professional-desktop/test/ContradictionQaSeed.test.ts",
+          "apps/professional-desktop/test/TaggedErrors.equivalence.test.ts",
+          "apps/professional-desktop/test/UsagePricing.test.ts",
+          "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+          "apps/professional-desktop/test/chat-contract.test.ts",
+          "apps/professional-desktop/test/chat-ui.test.tsx",
+          "apps/professional-desktop/test/code-block.test.tsx",
+          "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+          "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+          "apps/professional-desktop/test/composer-policy.test.ts",
+          "apps/professional-desktop/test/composer-send-lifetime.test.tsx",
+          "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
+          "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
+          "apps/professional-desktop/test/dock-shell.test.tsx",
+          "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+          "apps/professional-desktop/test/editor-proof-panel.test.tsx",
+          "apps/professional-desktop/test/failure-message.test.ts",
+          "apps/professional-desktop/test/failure-observability.test.ts",
+          "apps/professional-desktop/test/fps-atoms.test.ts",
+          "apps/professional-desktop/test/intake-atoms.test.ts",
+          "apps/professional-desktop/test/intake-refusal.test.ts",
+          "apps/professional-desktop/test/integration/Pglite.equivalence.test.ts",
+          "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+          "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
+          "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
+          "apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts",
+          "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+          "apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts",
+          "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+          "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+          "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
+          "apps/professional-desktop/test/integration/sidecar-smoke.test.ts",
+          "apps/professional-desktop/test/mermaid-viewer.test.tsx",
+          "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
+          "apps/professional-desktop/test/ontology-workspace-seed.test.ts",
+          "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+          "apps/professional-desktop/test/packaged-rpc-origin.test.ts",
+          "apps/professional-desktop/test/professional-atom-provider.test.tsx",
+          "apps/professional-desktop/test/renderer-observability-config.test.ts",
+          "apps/professional-desktop/test/rpc-session-auth.test.ts",
+          "apps/professional-desktop/test/schema-parity.test.ts",
+          "apps/professional-desktop/test/sidebar-layout.test.ts",
+          "apps/professional-desktop/test/spike-schema.test.ts",
+          "apps/professional-desktop/test/surface-boundary.test.tsx",
+          "apps/professional-desktop/test/sync-atoms.test.ts",
+          "apps/professional-desktop/test/sync-retry.test.tsx",
+          "apps/professional-desktop/test/table-layout.test.tsx",
+          "apps/professional-desktop/test/tailwind-sources.test.ts",
+          "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+          "apps/professional-desktop/test/tauri-youtube-security.test.ts",
+          "apps/professional-desktop/test/theme-atoms.test.tsx",
+          "apps/professional-desktop/test/thread-transcript-view.test.ts",
+          "apps/professional-desktop/test/vault-directory-picker.test.ts",
+          "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
+          "apps/professional-desktop/test/viewer-encoding.test.tsx",
+          "apps/professional-desktop/test/youtube-watch-opener.test.tsx"
+        ],
+        "reportedFiles": [
+          {
+            "file": "apps/professional-desktop/test/App.test.tsx",
+            "ms": 138.32373046875,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/ContradictionQaSeed.test.ts",
+            "ms": 1.097412109375,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/TaggedErrors.equivalence.test.ts",
+            "ms": 3.41162109375,
+            "tests": 7
+          },
+          {
+            "file": "apps/professional-desktop/test/UsagePricing.test.ts",
+            "ms": 5.1162109375,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/browser-failure-atoms.test.ts",
+            "ms": 38.49951171875,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/chat-contract.test.ts",
+            "ms": 121.111328125,
+            "tests": 18
+          },
+          {
+            "file": "apps/professional-desktop/test/chat-ui.test.tsx",
+            "ms": 359.975341796875,
+            "tests": 11
+          },
+          {
+            "file": "apps/professional-desktop/test/code-block.test.tsx",
+            "ms": 89.618896484375,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/composer-atom-lifetime.test.ts",
+            "ms": 50.43896484375,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/composer-dispatch-confirm.test.ts",
+            "ms": 215.120361328125,
+            "tests": 3
+          },
+          {
+            "file": "apps/professional-desktop/test/composer-policy.test.ts",
+            "ms": 27.298583984375,
+            "tests": 8
+          },
+          {
+            "file": "apps/professional-desktop/test/composer-send-lifetime.test.tsx",
+            "ms": 409.984619140625,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
+            "ms": 25.5390625,
+            "tests": 6
+          },
+          {
+            "file": "apps/professional-desktop/test/cosmos-spike-runtime.test.tsx",
+            "ms": 3068.32080078125,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/dock-shell.test.tsx",
+            "ms": 1143.419921875,
+            "tests": 8
+          },
+          {
+            "file": "apps/professional-desktop/test/editor-contract-hardening.test.tsx",
+            "ms": 2297.698974609375,
+            "tests": 35
+          },
+          {
+            "file": "apps/professional-desktop/test/editor-proof-panel.test.tsx",
+            "ms": 214.089111328125,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/failure-message.test.ts",
+            "ms": 5.716064453125,
+            "tests": 8
+          },
+          {
+            "file": "apps/professional-desktop/test/failure-observability.test.ts",
+            "ms": 4.66748046875,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/fps-atoms.test.ts",
+            "ms": 2.660888671875,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/intake-atoms.test.ts",
+            "ms": 351.87060546875,
+            "tests": 15
+          },
+          {
+            "file": "apps/professional-desktop/test/intake-refusal.test.ts",
+            "ms": 1.498291015625,
+            "tests": 3
+          },
+          {
+            "file": "apps/professional-desktop/test/mermaid-viewer.test.tsx",
+            "ms": 1466.66064453125,
+            "tests": 5
+          },
+          {
+            "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
+            "ms": 8.823486328125,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/ontology-workspace-seed.test.ts",
+            "ms": 18.38330078125,
+            "tests": 3
+          },
+          {
+            "file": "apps/professional-desktop/test/optimistic-user-turn.test.tsx",
+            "ms": 303.102783203125,
+            "tests": 9
+          },
+          {
+            "file": "apps/professional-desktop/test/packaged-rpc-origin.test.ts",
+            "ms": 1.7158203125,
+            "tests": 4
+          },
+          {
+            "file": "apps/professional-desktop/test/professional-atom-provider.test.tsx",
+            "ms": 25.362060546875,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/renderer-observability-config.test.ts",
+            "ms": 6.808837890625,
+            "tests": 5
+          },
+          {
+            "file": "apps/professional-desktop/test/rpc-session-auth.test.ts",
+            "ms": 2.347412109375,
+            "tests": 3
+          },
+          {
+            "file": "apps/professional-desktop/test/schema-parity.test.ts",
+            "ms": 26.94140625,
+            "tests": 8
+          },
+          {
+            "file": "apps/professional-desktop/test/sidebar-layout.test.ts",
+            "ms": 55.24609375,
+            "tests": 6
+          },
+          {
+            "file": "apps/professional-desktop/test/spike-schema.test.ts",
+            "ms": 9.875,
+            "tests": 3
+          },
+          {
+            "file": "apps/professional-desktop/test/surface-boundary.test.tsx",
+            "ms": 81.253662109375,
+            "tests": 4
+          },
+          {
+            "file": "apps/professional-desktop/test/sync-atoms.test.ts",
+            "ms": 115.91064453125,
+            "tests": 2
+          },
+          {
+            "file": "apps/professional-desktop/test/sync-retry.test.tsx",
+            "ms": 113.2548828125,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/table-layout.test.tsx",
+            "ms": 76.954833984375,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/tailwind-sources.test.ts",
+            "ms": 4.652099609375,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/tauri-ipc-socket.test.ts",
+            "ms": 16.400390625,
+            "tests": 7
+          },
+          {
+            "file": "apps/professional-desktop/test/tauri-youtube-security.test.ts",
+            "ms": 3.593017578125,
+            "tests": 6
+          },
+          {
+            "file": "apps/professional-desktop/test/theme-atoms.test.tsx",
+            "ms": 441.20458984375,
+            "tests": 6
+          },
+          {
+            "file": "apps/professional-desktop/test/thread-transcript-view.test.ts",
+            "ms": 141.7001953125,
+            "tests": 5
+          },
+          {
+            "file": "apps/professional-desktop/test/vault-directory-picker.test.ts",
+            "ms": 13.3583984375,
+            "tests": 5
+          },
+          {
+            "file": "apps/professional-desktop/test/vault-sync-disconnected-note.test.tsx",
+            "ms": 467.520263671875,
+            "tests": 10
+          },
+          {
+            "file": "apps/professional-desktop/test/viewer-encoding.test.tsx",
+            "ms": 90.17431640625,
+            "tests": 1
+          },
+          {
+            "file": "apps/professional-desktop/test/youtube-watch-opener.test.tsx",
+            "ms": 256.79638671875,
+            "tests": 3
+          }
+        ],
+        "missingSourceTests": [
+          {
+            "file": "apps/professional-desktop/test/integration/Pglite.equivalence.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "apps/professional-desktop/test/integration/UsageRecordSink.pglite.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "apps/professional-desktop/test/integration/chat-persist.pglite.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "apps/professional-desktop/test/integration/chat-real-anthropic.e2e.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "apps/professional-desktop/test/integration/contradiction-sidecar-contract.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          },
+          {
+            "file": "apps/professional-desktop/test/integration/sidecar-smoke.test.ts",
+            "reason": "not in reporter; skip/exclusion cause is unproven and needs Root review"
+          }
+        ],
+        "reportedOutsidePackageCensus": [],
+        "testStatusCounts": {
+          "passed": 238
+        },
+        "allReportedFilesPreserved": true,
+        "sourceTestCoverageComplete": false
+      },
+      "boundary": "Default jsdom config excludes integration suites; separate Bun-hosted integration and compiled IPC routes include existing opt-in cases.",
+      "qualification": "Absent files are not reported skipped. Default-command success does not prove separate-runner or opt-in execution. No additional gates were enabled or alternate runners executed.",
+      "remaining": "Separate source/runtime/artifact-bound runner evidence and an explicit representation of the distinct cohorts."
+    }
+  ],
+  "missingCensusFiles": 17,
+  "reviewManifestSha256": [
+    "0298f4b6540efcd1ebb372f6ec950371ff5f8762647a9cb47da3639d113066c4",
+    "a78927fdf19dace2acb105861396a1e013097eaa0f156bd0e68d8aea3baf062a"
+  ]
+}

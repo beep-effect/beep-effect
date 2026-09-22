@@ -1,0 +1,71 @@
+{
+  "package": "@beep/anthropic",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:19:55.902287+00:00",
+  "totalMs": 5751.049560546875,
+  "testCount": 9,
+  "files": [
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.equivalence.test.ts",
+      "ms": 0.96728515625,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
+      "ms": 12.892578125,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.test.ts",
+      "ms": 12.049560546875,
+      "tests": 4
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
+      "testName": "Anthropic repair helpers collects streamed tool params until the end marker",
+      "ms": 12.892539999999826
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
+      "testName": "Anthropic repair helpers collects terminal repair usage and round-trips the result through JSON",
+      "ms": 12.682568000000174
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
+      "testName": "Anthropic repair helpers fails with a typed repair error when provider usage metadata is absent",
+      "ms": 12.664010000000417
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
+      "testName": "Anthropic repair helpers round-trips schema-derived repair responses through JSON",
+      "ms": 12.65110999999979
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.test.ts",
+      "testName": "@beep/anthropic pins the generated-catalog-safe default model",
+      "ms": 12.049496999999974
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.test.ts",
+      "testName": "@beep/anthropic builds live layers and the acquisition retry plan",
+      "ms": 11.864422999999988
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.test.ts",
+      "testName": "@beep/anthropic keeps encoded Anthropic schema wire shapes byte-identical",
+      "ms": 11.84554500000013
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.test.ts",
+      "testName": "@beep/anthropic round-trips schema-derived Anthropic payloads through encoded form",
+      "ms": 11.843450999999732
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.equivalence.test.ts",
+      "testName": "Anthropic declared-field equivalence treats field-equal RepairError instances as equivalent and field-different ones as distinct",
+      "ms": 0.9671829999997499
+    }
+  ]
+}

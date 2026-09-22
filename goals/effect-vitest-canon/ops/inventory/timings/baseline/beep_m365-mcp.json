@@ -1,0 +1,51 @@
+{
+  "package": "@beep/m365-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:25:21.171689+00:00",
+  "totalMs": 5430.946533203125,
+  "testCount": 6,
+  "files": [
+    {
+      "file": "packages/drivers/m365-mcp/test/SanitizedSpan.test.ts",
+      "ms": 7.9794921875,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "ms": 31.946533203125,
+      "tests": 5
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "M365 MCP server serves tool listing and tool calls over stdio",
+      "ms": 29.946601999999984
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "M365 MCP server keeps encoded schema wire shapes byte-identical",
+      "ms": 17.223058000000492
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "M365 MCP server round-trips schema-derived MCP schemas through their encoded shape",
+      "ms": 17.03567099999964
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "M365 MCP server exposes the supported read-only Microsoft 365 tools",
+      "ms": 17.008569999999963
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/Server.test.ts",
+      "testName": "M365 MCP server via the mounted toolkit returns driver results through toolkit handlers",
+      "ms": 8.469184999999925
+    },
+    {
+      "file": "packages/drivers/m365-mcp/test/SanitizedSpan.test.ts",
+      "testName": "m365-mcp sanitized dispatch with M365Toolkit mounted via sanitizedToolkit does not leak the raw m365_get_site request payload onto span attributes",
+      "ms": 7.979495999999926
+    }
+  ]
+}

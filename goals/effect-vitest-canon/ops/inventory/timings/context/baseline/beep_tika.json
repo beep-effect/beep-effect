@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/tika",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "fe5cf7834ec9a0138a065e6ddd87a401815153bbe4bf54d3bf0df97b69930933",
+  "rawLogSha256": "c9de5c8cdbe48524032bab6ca3b78b1e997508609196464a890563c23df6df62",
+  "rawReceiptSha256": "b3f1cc6d2b6be03e6d77b0a6b0e4304333179ec8bdb1250d2a1750b94a51153b",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 7.174559887999749,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 70
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 79.96630859375,
+  "minimumMemAvailableGiB": 43.692623138427734,
+  "maxPressureAvg10": {
+    "cpu": 11.64,
+    "memory": 0.0,
+    "io": 0.0
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "ms": 164.20703125,
+      "tests": 40
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "ms": 49.79736328125,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.tikaapp.test.ts",
+      "ms": 36.102294921875,
+      "tests": 9
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.errors.test.ts",
+      "ms": 11.82666015625,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
+      "ms": 9.416748046875,
+      "tests": 11
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

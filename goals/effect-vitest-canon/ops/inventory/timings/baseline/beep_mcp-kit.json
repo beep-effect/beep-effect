@@ -1,0 +1,91 @@
+{
+  "package": "@beep/mcp-kit",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:22:44.300456+00:00",
+  "totalMs": 7221.79443359375,
+  "testCount": 43,
+  "files": [
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts",
+      "ms": 21.546142578125,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
+      "ms": 30.010009765625,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedSpan.test.ts",
+      "ms": 8.67578125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+      "ms": 13.615234375,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/TierGate.test.ts",
+      "ms": 33.79443359375,
+      "tests": 12
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ToolkitComposition.test.ts",
+      "ms": 4.0400390625,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/TierGate.test.ts",
+      "testName": "recordOutcome settlement reports interrupted when an approved dispatch is interrupted",
+      "ms": 25.79438399999981
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/TierGate.test.ts",
+      "testName": "tier-gate schema parity laws round-trips TierGateAuditRecord with schema-owned toolCallId absence",
+      "ms": 21.96730799999932
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/TierGate.test.ts",
+      "testName": "tier-gate schema parity laws round-trips TierGateVerdict and TierGatePolicy from their production schemas",
+      "ms": 21.93641099999968
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
+      "testName": "field-tier projector names minimal/balanced/complete as actual Schema.Struct variants",
+      "ms": 18.848848999999973
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
+      "testName": "field-tier projector reduces a large documentBag-shaped fixture payload below a configured size budget",
+      "ms": 18.539003999999295
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
+      "testName": "field-tier projector projects a single named tier's field set",
+      "ms": 18.505301999999574
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
+      "testName": "field-tier projector never returns an oversized payload inline when even the minimal tier exceeds the budget",
+      "ms": 18.48705500000051
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
+      "testName": "field-tier projector round-trips fetchable projection schemas through their encoded shape",
+      "ms": 18.470970000000307
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts",
+      "testName": "schema parity laws round-trips SourceAuthRegistration with schema-owned signupUrl defaults",
+      "ms": 15.34926600000017
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts",
+      "testName": "schema parity laws round-trips ApiKeyRequiredFailure with the tag default owned by the schema",
+      "ms": 15.105792999999721
+    }
+  ]
+}

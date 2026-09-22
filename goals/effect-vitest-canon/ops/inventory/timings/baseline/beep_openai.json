@@ -1,0 +1,76 @@
+{
+  "package": "@beep/openai",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:23:11.107136+00:00",
+  "totalMs": 6646.695068359375,
+  "testCount": 12,
+  "files": [
+    {
+      "file": "packages/drivers/openai/test/OpenAi.equivalence.test.ts",
+      "ms": 2.15576171875,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.service.test.ts",
+      "ms": 31.695068359375,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.test.ts",
+      "ms": 15.522705078125,
+      "tests": 4
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/openai/test/OpenAi.service.test.ts",
+      "testName": "OpenAI model Layers provides Dimensions and round-trips embedMany through a stubbed HttpClient",
+      "ms": 28.969867999999224
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.service.test.ts",
+      "testName": "OpenAI model Layers forwards an explicit language model and exposes its model metadata through the stubbed client boundary",
+      "ms": 28.609276000000136
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.service.test.ts",
+      "testName": "OpenAI model Layers retains malformed provider output as AiError",
+      "ms": 28.573772000000645
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.service.test.ts",
+      "testName": "OpenAI model Layers resolves model id overrides from the language and embedding environment bindings",
+      "ms": 28.482982000000447
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.service.test.ts",
+      "testName": "OpenAI model Layers resolves default model ids when the model environment variables are absent",
+      "ms": 28.45647099999951
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.test.ts",
+      "testName": "@beep/openai pins defaults from the upstream OpenAI model unions",
+      "ms": 15.493594999999914
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.test.ts",
+      "testName": "@beep/openai keeps encoded OpenAI option wire shapes byte-identical",
+      "ms": 14.52260699999988
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.test.ts",
+      "testName": "@beep/openai rejects empty model identifiers and non-positive embedding dimensions",
+      "ms": 14.481382999999369
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.test.ts",
+      "testName": "@beep/openai round-trips schema-derived OpenAI options through encoded form",
+      "ms": 14.474623000000065
+    },
+    {
+      "file": "packages/drivers/openai/test/OpenAi.service.test.ts",
+      "testName": "OpenAI model Layers fails acquisition when the API key is missing and defaults blank model overrides",
+      "ms": 2.6951399999998102
+    }
+  ]
+}

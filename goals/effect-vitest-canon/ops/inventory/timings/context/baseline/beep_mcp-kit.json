@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/mcp-kit",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "b2397e090f15edf49894ef0a46fc88d62d3c3c0731303d281ff8a82ccc05a1d6",
+  "rawLogSha256": "5d8eef59d618509d36ef70523af1629d92b9789d776324f400868ea40bd9a0ab",
+  "rawReceiptSha256": "c1362ddbcbe85fd7e8744145f12b8f03c2ecf3e2f67e53a81cba7ec39efe6011",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 7.67148559799989,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 43
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 65.54345703125,
+  "minimumMemAvailableGiB": 56.342010498046875,
+  "maxPressureAvg10": {
+    "cpu": 14.94,
+    "memory": 0.0,
+    "io": 0.0
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/TierGate.test.ts",
+      "ms": 33.79443359375,
+      "tests": 12
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/FieldTier.test.ts",
+      "ms": 30.010009765625,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts",
+      "ms": 21.546142578125,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+      "ms": 13.615234375,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedSpan.test.ts",
+      "ms": 8.67578125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/test/ToolkitComposition.test.ts",
+      "ms": 4.0400390625,
+      "tests": 2
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

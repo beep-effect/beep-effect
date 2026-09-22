@@ -1,0 +1,76 @@
+{
+  "package": "@beep/epistemic-ui",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:50:43.092680+00:00",
+  "totalMs": 8018.987060546875,
+  "testCount": 13,
+  "files": [
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriagePanel.test.tsx",
+      "ms": 11.338623046875,
+      "tests": 1
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "ms": 1077.987060546875,
+      "tests": 11
+    },
+    {
+      "file": "packages/epistemic/ui/test/EvidenceSourcePanel.test.tsx",
+      "ms": 13.750732421875,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView wraps exact persisted JSON and drives the pane layout from the triage container",
+      "ms": 194.98699100000067
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView forwards controlled filters, selections, tabs, review draft, and confirmation",
+      "ms": 145.04488500000025
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView labels queue rows with persisted proposal rationale and demotes hash metadata",
+      "ms": 137.8807829999996
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView renders symmetric exact beliefs, persisted proposals, and verified source text",
+      "ms": 136.02188899999965
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView makes loading, empty, stale, failure, and resolved states explicit",
+      "ms": 100.58492600000045
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView marks only the proposal selected by a completed supersession as applied",
+      "ms": 97.0821479999995
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView keeps backward navigation available on an empty noninitial page",
+      "ms": 73.80970100000013
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView keeps a historical detail open when a successful review resolved after knownAt",
+      "ms": 66.62633000000005
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView treats a successful review as authoritative at or after its resolution time",
+      "ms": 59.98924199999965
+    },
+    {
+      "file": "packages/epistemic/ui/test/ContradictionTriageView.test.tsx",
+      "testName": "ContradictionTriageView blocks review reasons over the persisted schema limit",
+      "ms": 55.682724999999664
+    }
+  ]
+}

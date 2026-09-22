@@ -1,0 +1,106 @@
+{
+  "package": "@beep/rdf",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:02.460567+00:00",
+  "totalMs": 5270.705078125,
+  "testCount": 89,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/rdf/test/IRI.test.ts",
+      "ms": 17.73681640625,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/InteropAndMetadata.test.ts",
+      "ms": 7.451171875,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvO.test.ts",
+      "ms": 4.509765625,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
+      "ms": 59.580810546875,
+      "tests": 26
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "ms": 258.705078125,
+      "tests": 29
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/SemanticSchemaConformance.test.ts",
+      "ms": 10.33544921875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/TaggedError.equivalence.test.ts",
+      "ms": 0.94580078125,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/URI.test.ts",
+      "ms": 14.21435546875,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/VocabDrift.test.ts",
+      "ms": 1.363037109375,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf crispening parity exposes reversible Web Annotation codecs without changing wrapper behavior",
+      "ms": 179.705199
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf crispening parity round-trips schema-derived arbitrary values through crispened schemas",
+      "ms": 179.6841859999995
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf package and vocabulary exports exports the package root version and all core vocabulary named nodes",
+      "ms": 179.67798700000003
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf IRI schemas keeps native URL parsing separate from RFC 3987 validation",
+      "ms": 179.67269900000065
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf JSON-LD models rejects malformed JSON-LD identifiers",
+      "ms": 53.86910800000078
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf semantic metadata constructs metadata and exposes literal domains",
+      "ms": 53.845853000000716
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf semantic metadata annotates schemas in direct and curried forms and finds nested metadata",
+      "ms": 53.8393530000003
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf semantic metadata round-trips decode/encode for metadata derived from the source schema",
+      "ms": 53.83398399999987
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+      "testName": "@beep/rdf IRI schemas rejects malformed authorities and illegal delimiters",
+      "ms": 53.829256999999416
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/test/ProvRdf.test.ts",
+      "testName": "ProvRdf requires relation discriminators when decoding a provenance bundle",
+      "ms": 42.44210800000019
+    }
+  ]
+}

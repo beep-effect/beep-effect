@@ -1,0 +1,76 @@
+{
+  "package": "@beep/provenance",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:23:56.809564+00:00",
+  "totalMs": 4744.132568359375,
+  "testCount": 22,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/provenance/test/TaggedError.equivalence.test.ts",
+      "ms": 0.951416015625,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
+      "ms": 10.499755859375,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
+      "ms": 28.132568359375,
+      "tests": 14
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
+      "testName": "@beep/provenance VerifiedTextAnchor snapshots source authority before the asynchronous digest boundary",
+      "ms": 28.132550999999694
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
+      "testName": "@beep/provenance VerifiedTextAnchor derives constructive arbitrary source identities from the schema",
+      "ms": 13.039762000000337
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
+      "testName": "@beep/provenance VerifiedTextAnchor verifies a source manifestation independently of any anchor",
+      "ms": 9.931087999999363
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
+      "testName": "@beep/provenance VerifiedTextAnchor reuses one verified source proof across exact anchors",
+      "ms": 9.72917900000084
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
+      "testName": "@beep/provenance VerifiedTextAnchor rejects proofs constructed through recovered constructors",
+      "ms": 9.71830299999965
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/VerifiedTextAnchor.test.ts",
+      "testName": "@beep/provenance VerifiedTextAnchor binds an exact raw UTF-16 slice to its source identity",
+      "ms": 9.709358000000066
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
+      "testName": "@beep/provenance TextAnchor round-trips schema-derived anchors through the encoded wire shape",
+      "ms": 6.499780000000101
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
+      "testName": "@beep/provenance TextAnchor colocated well-ordered predicate agrees with ordered offset pairs",
+      "ms": 6.475242999999864
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
+      "testName": "@beep/provenance TextAnchor exposes TextAnchor from the public subpath",
+      "ms": 3.643852999999581
+    },
+    {
+      "file": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
+      "testName": "@beep/provenance TextAnchor decodes a well-formed anchor and re-slices the source text to the quote",
+      "ms": 3.472200999999586
+    }
+  ]
+}

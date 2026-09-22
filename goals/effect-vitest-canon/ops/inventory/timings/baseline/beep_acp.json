@@ -1,0 +1,81 @@
+{
+  "package": "@beep/acp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:19:39.900468+00:00",
+  "totalMs": 5455.481689453125,
+  "testCount": 22,
+  "files": [
+    {
+      "file": "packages/drivers/acp/test/Acp.equivalence.test.ts",
+      "ms": 1.145263671875,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/acp/test/agent.test.ts",
+      "ms": 40.5,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "ms": 967.481689453125,
+      "tests": 12
+    },
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "ms": 960.01513671875,
+      "tests": 5
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "testName": "effect-acp client initializes, prompts, receives updates, and handles permission requests",
+      "ms": 960.0150309999999
+    },
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "testName": "effect-acp client replays buffered notifications to handlers registered after they arrive",
+      "ms": 951.7806539999992
+    },
+    {
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "testName": "effect-acp protocol propagates the real child exit code when the input stream ends",
+      "ms": 928.4816329999994
+    },
+    {
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "testName": "effect-acp protocol does not emit a second process-exit error after a decode failure",
+      "ms": 918.1374589999996
+    },
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "testName": "effect-acp client continues dispatching session updates after one handler fails",
+      "ms": 900.5602440000002
+    },
+    {
+      "file": "packages/drivers/acp/test/integration/client.integration.test.ts",
+      "testName": "effect-acp client returns formatted invalid params when a typed extension request payload is wrong",
+      "ms": 896.4566910000003
+    },
+    {
+      "file": "packages/drivers/acp/test/agent.test.ts",
+      "testName": "effect-acp agent handles core agent requests and outbound client requests",
+      "ms": 40.49996899999951
+    },
+    {
+      "file": "packages/drivers/acp/test/agent.test.ts",
+      "testName": "effect-acp agent uses distinct ids for RPC calls and extension requests",
+      "ms": 37.610428999999385
+    },
+    {
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "testName": "round-trips schema-derived JSON-RPC notifications and responses through JSON boundaries",
+      "ms": 36.50531300000057
+    },
+    {
+      "file": "packages/drivers/acp/test/protocol.test.ts",
+      "testName": "round-trips handwritten ACP schemas through encoded form",
+      "ms": 36.2647850000003
+    }
+  ]
+}

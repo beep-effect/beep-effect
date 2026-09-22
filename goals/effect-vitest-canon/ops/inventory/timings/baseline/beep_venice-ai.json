@@ -1,0 +1,76 @@
+{
+  "package": "@beep/venice-ai",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:26:18.344543+00:00",
+  "totalMs": 5362.48095703125,
+  "testCount": 17,
+  "files": [
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.equivalence.test.ts",
+      "ms": 11.974365234375,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "ms": 473.48095703125,
+      "tests": 15
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/integration/VeniceAI.integration.test.ts",
+      "ms": 4.80615234375,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "testName": "@beep/venice-ai keeps descriptor metadata aligned with swagger.yaml",
+      "ms": 438.4810070000003
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "testName": "@beep/venice-ai keeps the operation registry and service surface aligned with swagger.yaml",
+      "ms": 280.87380399999984
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "testName": "@beep/venice-ai sends every operation with the expected method, path, auth, query, and body mode",
+      "ms": 52.91521600000033
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "testName": "@beep/venice-ai constructs language models in data-last form",
+      "ms": 34.85570900000039
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "testName": "@beep/venice-ai round-trips schema-derived OpenAPI fixture and prompt body data",
+      "ms": 34.65758399999959
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "testName": "@beep/venice-ai keeps crispened production schema encoded shapes stable",
+      "ms": 34.630253000000266
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "testName": "@beep/venice-ai round-trips crispened production schemas with schema-derived arbitraries",
+      "ms": 34.62789000000066
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "testName": "@beep/venice-ai honors request options for headers, accept, path encoding, JSON bodies, and missing path params",
+      "ms": 17.682598999999755
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "testName": "@beep/venice-ai normalizes custom base URLs",
+      "ms": 16.714375999999902
+    },
+    {
+      "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+      "testName": "@beep/venice-ai decodes JSON, text, and binary success responses",
+      "ms": 15.007942000000185
+    }
+  ]
+}

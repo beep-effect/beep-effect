@@ -1,0 +1,81 @@
+{
+  "package": "@beep/architecture-lab-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:32:03.092489+00:00",
+  "totalMs": 5593.5,
+  "testCount": 13,
+  "files": [
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "ms": 14.5,
+      "tests": 3
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 2.0869140625,
+      "tests": 4
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "ms": 7.6494140625,
+      "tests": 4
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/Worker.test.ts",
+      "ms": 6.46533203125,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/architecture-lab-use-cases schema parity round-trips touched schemas with schema-derived arbitraries",
+      "ms": 14.500014000000192
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/architecture-lab-use-cases schema parity preserves command and query encoded wire shapes",
+      "ms": 14.30782999999974
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/architecture-lab-use-cases schema parity preserves public and repository error encoded wire shapes",
+      "ms": 14.2885610000003
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "testName": "WorkItem use-cases creates and lists work items through the repository port",
+      "ms": 6.883130000000165
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "testName": "WorkItem use-cases redacts repository unavailable details at the public action boundary",
+      "ms": 6.690133999999489
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "testName": "WorkItem use-cases translates repository not-found failures to public failures",
+      "ms": 6.670985000000655
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+      "testName": "WorkItem use-cases keeps archive terminal at the use-case boundary",
+      "ms": 6.649502000000211
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/Worker.test.ts",
+      "testName": "Worker use-cases creates and lists Worker entities",
+      "ms": 6.465210000000297
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/Worker.test.ts",
+      "testName": "Worker use-cases translates repository not-found failures to public failures",
+      "ms": 6.272305000000415
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/test/TaggedError.equivalence.test.ts",
+      "testName": "architecture-lab-use-cases tagged-error declared equivalence compares every public WorkItem error by its declared fields",
+      "ms": 2.0869659999998476
+    }
+  ]
+}
