@@ -634,7 +634,7 @@ const cheapGatesSpawner = (
   });
 
 const cheapGatesSpawnerLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
-  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, failedCommands));
+  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, failedCommands, policyCommandKey));
 
 const cheapGatesTestLayer = (spawned: Array<string>, failedCommands: ReadonlyArray<string>) =>
   Layer.mergeAll(FileSystemLayer, TestConsole.layer, cheapGatesSpawnerLayer(spawned, failedCommands));
@@ -2563,7 +2563,11 @@ describe("quality task adapter", () => {
               expect(logText).toContain('"failurePolicy":"collect-all"');
               expect(logText).toContain('"status":"passed"');
               expect(spawned).toContain(changesetStatusCommand);
-              expect(A.every(cheapGateLanes, (lane) => A.contains(spawned, policyStepCommand(lane.step)))).toBe(true);
+              expect(
+                A.every(cheapGateLanes, (lane) =>
+                  A.contains(spawnedPolicyCommands(spawned), policyCommandKey(policyStepCommand(lane.step)))
+                )
+              ).toBe(true);
             })
           )
         )
@@ -2591,7 +2595,11 @@ describe("quality task adapter", () => {
               const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
               expect(logText).toContain("[github-checks] quality: skipped changeset status on main push");
               expect(spawned).not.toContain(changesetStatusCommand);
-              expect(A.every(cheapGateLanes, (lane) => A.contains(spawned, policyStepCommand(lane.step)))).toBe(true);
+              expect(
+                A.every(cheapGateLanes, (lane) =>
+                  A.contains(spawnedPolicyCommands(spawned), policyCommandKey(policyStepCommand(lane.step)))
+                )
+              ).toBe(true);
             })
           )
         )
@@ -2630,7 +2638,7 @@ describe("quality task adapter", () => {
             }
           }
 
-          expect(spawned).toContain(lastCommand);
+          expect(spawnedPolicyCommands(spawned)).toContain(policyCommandKey(lastCommand));
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           expect(logText).toContain(GITHUB_CHECK_RUN_REPORT_PREFIX);
           expect(logText).toContain('"failurePolicy":"collect-all"');
