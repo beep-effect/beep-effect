@@ -523,18 +523,25 @@ export class McpClientRpcs extends RpcGroup.make(
   ResourcesRead
 ) {}
 
-const encodeClientCapabilities = S.encodeSync(McpSchema.ClientCapabilities);
-const encodeImplementation = S.encodeSync(McpSchema.Implementation);
+const encodeClientCapabilities = S.encodeEffect(McpSchema.ClientCapabilities);
+const encodeImplementation = S.encodeEffect(McpSchema.Implementation);
 
 /**
  * The `_meta` object a request must carry for `options`.
+ *
+ * **Details**
+ *
+ * Both identity fields are encoded through their schemas, so the metadata is
+ * produced in `Effect` and an encoding failure surfaces as a typed
+ * `S.SchemaError` instead of a thrown exception.
  *
  * **Example** (Build request metadata)
  *
  * ```ts
  * import { McpClientOptions, requestMetadata } from "@beep/mcp-kit/client"
+ * import * as Effect from "effect/Effect"
  *
- * const metadata = requestMetadata(McpClientOptions.make({}))
+ * const metadata = Effect.runSync(requestMetadata(McpClientOptions.make({})))
  * console.log(metadata["io.modelcontextprotocol/protocolVersion"])
  * // "2026-07-28"
  * ```
@@ -542,11 +549,15 @@ const encodeImplementation = S.encodeSync(McpSchema.Implementation);
  * @category utilities
  * @since 0.0.0
  */
-export const requestMetadata = (options: McpClientOptions): JsonObject => ({
-  [PROTOCOL_VERSION_META_KEY]: options.protocolVersion,
-  [CLIENT_CAPABILITIES_META_KEY]: encodeClientCapabilities(options.clientCapabilities),
-  [CLIENT_INFO_META_KEY]: encodeImplementation(options.clientInfo),
-});
+export const requestMetadata = (options: McpClientOptions): Effect.Effect<JsonObject, S.SchemaError> =>
+  Effect.map(
+    Effect.all([encodeClientCapabilities(options.clientCapabilities), encodeImplementation(options.clientInfo)]),
+    ([clientCapabilities, clientInfo]) => ({
+      [PROTOCOL_VERSION_META_KEY]: options.protocolVersion,
+      [CLIENT_CAPABILITIES_META_KEY]: clientCapabilities,
+      [CLIENT_INFO_META_KEY]: clientInfo,
+    })
+  );
 
 /**
  * Merges request metadata under `params._meta`; keys the caller already set
@@ -672,8 +683,8 @@ export const parseServerSentEvents = (text: string): ReadonlyArray<string> =>
 const decodeJsonRpcMessages = S.decodeUnknownEffect(S.Array(JsonRpcMessage));
 const decodeJsonText: (text: string) => Effect.Effect<unknown, S.SchemaError> = S.decodeEffect(UnknownFromJsonString);
 const decodeMessageLine = S.decodeEffect(JsonRpcMessageFromLine);
-const encodeMessageLine = S.encodeSync(JsonRpcMessageFromLine);
-const encodeJsonRpcError = S.encodeSync(JsonRpcError);
+const encodeMessageLine = S.encodeEffect(JsonRpcMessageFromLine);
+const encodeJsonRpcError = S.encodeEffect(JsonRpcError);
 
 /**
  * Decodes the JSON-RPC messages of an HTTP body: a JSON object or array, or
@@ -790,21 +801,27 @@ const requestKey = (id: string | number): string => `${typeof id}:${id}`;
 const isResponse = (message: JsonRpcMessage): message is JsonRpcMessage & { readonly id: string | number } =>
   message.method === undefined && (P.isString(message.id) || P.isNumber(message.id));
 
+type ResponseExit = RpcMessage.ResponseExitEncoded["exit"];
+
 const responseExit = (
   requestId: string | number,
   response: O.Option<JsonRpcMessage>,
   missing: string
-): RpcMessage.ResponseExitEncoded => ({
-  _tag: "Exit",
-  requestId,
-  exit: O.match(response, {
-    onNone: () => ({ _tag: "Failure", cause: [{ _tag: "Die", defect: missing }] }),
-    onSome: (message) =>
-      message.error === undefined
-        ? { _tag: "Success", value: message.result }
-        : { _tag: "Failure", cause: [{ _tag: "Fail", error: encodeJsonRpcError(message.error) }] },
-  }),
-});
+): Effect.Effect<RpcMessage.ResponseExitEncoded, S.SchemaError> =>
+  Effect.map(
+    O.match(response, {
+      onNone: (): Effect.Effect<ResponseExit, S.SchemaError> =>
+        Effect.succeed({ _tag: "Failure", cause: [{ _tag: "Die", defect: missing }] }),
+      onSome: (message): Effect.Effect<ResponseExit, S.SchemaError> =>
+        message.error === undefined
+          ? Effect.succeed({ _tag: "Success", value: message.result })
+          : Effect.map(encodeJsonRpcError(message.error), (error) => ({
+              _tag: "Failure",
+              cause: [{ _tag: "Fail", error }],
+            })),
+    }),
+    (exit) => ({ _tag: "Exit", requestId, exit })
+  );
 
 const codecFor = S.toCodecJson as RpcSerialization.CodecFor;
 
@@ -864,7 +881,7 @@ export const layerProtocolHttp = (
   Layer.effect(RpcClient.Protocol)(
     Effect.gen(function* () {
       const httpClient = yield* HttpClient.HttpClient;
-      const metadata = requestMetadata(options.client ?? McpClientOptions.make({}));
+      const metadata = yield* Effect.orDie(requestMetadata(options.client ?? McpClientOptions.make({})));
       const post = (message: JsonRpcMessage) =>
         // Routing mirrors always describe the frame being sent: caller headers
         // (origin, authorization) go first so they can never shadow them.
@@ -884,8 +901,7 @@ export const layerProtocolHttp = (
                   })
                 ).pipe(
                   Effect.flatMap((exchange) =>
-                    writeResponse(
-                      clientId,
+                    Effect.flatMap(
                       responseExit(
                         request.id,
                         A.findFirst(
@@ -893,7 +909,8 @@ export const layerProtocolHttp = (
                           (candidate) => isResponse(candidate) && candidate.id === request.id
                         ),
                         `MCP HTTP ${exchange.status}: no response for request ${String(request.id)}`
-                      )
+                      ),
+                      (exit) => writeResponse(clientId, exit)
                     )
                   ),
                   Effect.orDie
@@ -999,7 +1016,7 @@ export const decodeLines = <E, R>(bytes: Stream.Stream<Uint8Array, E, R>): Strea
 export const layerProtocolNdjson = (transport: McpNdjsonTransport): Layer.Layer<RpcClient.Protocol> =>
   Layer.effect(RpcClient.Protocol)(
     Effect.gen(function* () {
-      const metadata = requestMetadata(transport.client ?? McpClientOptions.make({}));
+      const metadata = yield* Effect.orDie(requestMetadata(transport.client ?? McpClientOptions.make({})));
       const pending = MutableHashMap.empty<string, Deferred.Deferred<JsonRpcMessage>>();
       const route = Effect.fnUntraced(function* (line: string) {
         if (Str.isEmpty(Str.trim(line))) {
@@ -1017,7 +1034,10 @@ export const layerProtocolNdjson = (transport: McpNdjsonTransport): Layer.Layer<
         }
       });
       yield* transport.lines.pipe(Stream.runForEach(route), Effect.forkScoped);
-      const writeMessage = (message: JsonRpcMessage) => transport.write(encodeMessageLine(message));
+      // A framed message always encodes; a failure here is a kit defect, not a
+      // transport error the protocol's `send` channel could carry.
+      const writeMessage = (message: JsonRpcMessage) =>
+        Effect.flatMap(Effect.orDie(encodeMessageLine(message)), transport.write);
       return yield* RpcClient.Protocol.make((writeResponse) =>
         Effect.succeed({
           send: (clientId, message) =>
@@ -1035,7 +1055,8 @@ export const layerProtocolNdjson = (transport: McpNdjsonTransport): Layer.Layer<
                     })
                   );
                   const response = yield* Deferred.await(waiter);
-                  yield* writeResponse(clientId, responseExit(request.id, O.some(response), ""));
+                  const exit = yield* Effect.orDie(responseExit(request.id, O.some(response), ""));
+                  yield* writeResponse(clientId, exit);
                 }).pipe(
                   // The waiter never outlives its send: a late response, an
                   // interrupt, or a transport failure all release the entry.

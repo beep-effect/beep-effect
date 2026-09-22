@@ -186,8 +186,13 @@ export interface StdioHost {
 
 const encoder = new TextEncoder();
 const toBytes = (chunk: string | Uint8Array): Uint8Array => (P.isString(chunk) ? encoder.encode(chunk) : chunk);
-const encodeLine = S.encodeSync(JsonRpcMessageFromLine);
-const decodeLine = S.decodeSync(JsonRpcMessageFromLine);
+const encodeLine = S.encodeEffect(JsonRpcMessageFromLine);
+const decodeLine = S.decodeEffect(JsonRpcMessageFromLine);
+// Harness framing: a line the runner builds or the host emits always codes, so
+// a codec failure is a harness defect rather than a conformance outcome.
+const encodeLineOrDie = (message: JsonRpcMessage) => Effect.orDie(encodeLine(message));
+const decodeLineOrDie = (line: string) => Effect.orDie(decodeLine(line));
+const defaultRequestMetadata = Effect.orDie(requestMetadata(McpClientOptions.make({})));
 
 /**
  * Runs `use` against a fresh stdio instance of the host built on
@@ -234,15 +239,16 @@ export const withStdioHost =
           Effect.forkScoped
         );
         const sendChunk = (chunk: string | Uint8Array) => Effect.asVoid(Queue.offer(stdin, toBytes(chunk)));
+        const metadata = yield* defaultRequestMetadata;
         return yield* use({
           sendChunk,
-          sendMessage: (message) => sendChunk(`${encodeLine(message)}\n`),
+          sendMessage: (message) => Effect.flatMap(encodeLineOrDie(message), (line) => sendChunk(`${line}\n`)),
           nextLine: Queue.take(lines),
-          nextMessage: Effect.map(Queue.take(lines), decodeLine),
+          nextMessage: Effect.flatMap(Queue.take(lines), decodeLineOrDie),
           lines: Stream.fromQueue(lines),
           close: Effect.asVoid(Queue.end(stdin)),
           serverExit: Fiber.await(serverFiber),
-          metadata: requestMetadata(McpClientOptions.make({})),
+          metadata,
         });
       })
     );
@@ -305,8 +311,6 @@ const legacyInitialize = (id: number) =>
  * @since 0.0.0
  */
 export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
-  const metadata = requestMetadata(McpClientOptions.make({}));
-
   describe(`conformance 2026-07-28: ${host.name}`, () => {
     layer(layerConformanceHttp(host))("over streamable HTTP", (it) => {
       it.effect("discovers the server without initialize or a session", () =>
@@ -362,6 +366,7 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
           assert.notMatch(text, /AiError|ToolParameterValidationError|Toolkit/);
 
           const http = yield* ConformanceHttp;
+          const metadata = yield* defaultRequestMetadata;
           const malformed = JsonRpcMessage.make({
             id: 11,
             method: "tools/call",
@@ -383,6 +388,7 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
       it.effect("answers a 2026-framed initialize and ping with method not found", () =>
         Effect.gen(function* () {
           const http = yield* ConformanceHttp;
+          const metadata = yield* defaultRequestMetadata;
           for (const method of ["initialize", "ping"]) {
             const message = JsonRpcMessage.make({ id: 2, method, params: withRequestMetadata({}, metadata) });
             const exchange = yield* http.post(message, routingHeaders(message));
@@ -394,6 +400,7 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
       it.effect("rejects a POST missing request metadata with 400", () =>
         Effect.gen(function* () {
           const http = yield* ConformanceHttp;
+          const metadata = yield* defaultRequestMetadata;
           const withoutMeta = JsonRpcMessage.make({ id: 3, method: "tools/list", params: {} });
           const missingCapabilities = JsonRpcMessage.make({
             id: 4,
@@ -425,6 +432,7 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
       it.effect("rejects an unsupported protocol version with -32022 and the supported list", () =>
         Effect.gen(function* () {
           const http = yield* ConformanceHttp;
+          const metadata = yield* defaultRequestMetadata;
           const message = JsonRpcMessage.make({
             id: 6,
             method: "tools/list",
@@ -452,6 +460,7 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
       it.effect("rejects a method header that does not match the request", () =>
         Effect.gen(function* () {
           const http = yield* ConformanceHttp;
+          const metadata = yield* defaultRequestMetadata;
           const message = JsonRpcMessage.make({
             id: 7,
             method: "tools/list",
@@ -508,7 +517,14 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
       it.effect("reconstructs a request whose bytes arrive in separate chunks", () =>
         withStdioHost(host)((io) =>
           Effect.gen(function* () {
-            const line = `${encodeLine(JsonRpcMessage.make({ id: 8, method: "server/discover", params: withRequestMetadata({}, io.metadata) }))}\n`;
+            const frame = yield* encodeLineOrDie(
+              JsonRpcMessage.make({
+                id: 8,
+                method: "server/discover",
+                params: withRequestMetadata({}, io.metadata),
+              })
+            );
+            const line = `${frame}\n`;
             const bytes = encoder.encode(line);
             const split = Math.floor(bytes.length / 2);
             yield* io.sendChunk(bytes.slice(0, split));
@@ -527,7 +543,7 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
               JsonRpcMessage.make({ id: 9, method: "tools/list", params: withRequestMetadata({}, io.metadata) })
             );
             const first = yield* io.nextLine;
-            assert.strictEqual(decodeLine(first).id, 9);
+            assert.strictEqual((yield* decodeLineOrDie(first)).id, 9);
             assert.isFalse(first.includes("\n"));
             yield* io.sendMessage(
               JsonRpcMessage.make({

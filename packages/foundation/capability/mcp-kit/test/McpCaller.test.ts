@@ -8,7 +8,8 @@
 import { CurrentMcpDispatchAnchor, McpCallerIdentity, McpDispatchAnchor } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
 import { assert, describe, it, layer } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, Layer } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as McpServer from "effect/unstable/ai/McpServer";
@@ -20,7 +21,7 @@ const anchorReport = (result: { readonly content: ReadonlyArray<unknown> }): str
   return JSON.parse((first as { readonly text: string }).text) as string;
 };
 
-const decodeAnchor = S.decodeUnknownSync(McpDispatchAnchor);
+const decodeAnchor = S.decodeUnknownEffect(McpDispatchAnchor);
 
 const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, FixtureRegistrationsLive, StubMcpClientLayer);
 
@@ -29,10 +30,12 @@ describe("dispatch anchor", () => {
     assert.isTrue(O.isNone(Effect.runSync(CurrentMcpDispatchAnchor)));
   });
 
-  it("brands a non-empty string and rejects an empty one", () => {
-    assert.strictEqual(decodeAnchor("launch:abc"), "launch:abc");
-    assert.throws(() => decodeAnchor(""));
-  });
+  it.effect("brands a non-empty string and rejects an empty one", () =>
+    Effect.gen(function* () {
+      assert.strictEqual(yield* decodeAnchor("launch:abc"), "launch:abc");
+      assertTrue(Exit.isFailure(yield* Effect.exit(decodeAnchor(""))));
+    })
+  );
 
   layer(fullLayer)("through sanitized dispatch", (it) => {
     it.effect("dispatch anchor is absent unless provided", () =>
@@ -48,7 +51,7 @@ describe("dispatch anchor", () => {
         const server = yield* McpServer.McpServer;
         const result = yield* server
           .callTool({ name: "anchor_report", arguments: {} })
-          .pipe(Effect.provideService(CurrentMcpDispatchAnchor, O.some(decodeAnchor("anchor-under-test"))));
+          .pipe(Effect.provideService(CurrentMcpDispatchAnchor, O.some(McpDispatchAnchor.make("anchor-under-test"))));
         assert.strictEqual(anchorReport(result), "anchor-under-test");
       })
     );
@@ -56,7 +59,7 @@ describe("dispatch anchor", () => {
 
   layer(
     Layer.mergeAll(McpServer.McpServer.layer, StubMcpClientLayer, FixtureRegistrationsLive).pipe(
-      Layer.provide(Layer.succeed(CurrentMcpDispatchAnchor, O.some(decodeAnchor("captured-at-build"))))
+      Layer.provide(Layer.succeed(CurrentMcpDispatchAnchor, O.some(McpDispatchAnchor.make("captured-at-build"))))
     )
   )("with an anchor in the layer-build context", (it) => {
     it.effect("does not leak a build-time anchor into a dispatch", () =>
