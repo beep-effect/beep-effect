@@ -537,19 +537,31 @@ describe("knowledge refs golden fixture matrix", () => {
 
 describe("knowledge refs listing", () => {
   it.effect(
-    "omits verified rows by default and restores them with verbose output",
+    "folds quiet-class and skipped rows into counts by default and lists them with verbose output",
     Effect.fnUntraced(function* () {
-      const report = yield* scanFixture({
-        "docs/guide.md": "See `docs/README.md` and `docs/missing.md`.\n",
-        "docs/README.md": "ok\n",
-      });
+      const report = yield* scanFixture(
+        {
+          "docs/guide.md": "See `docs/README.md` and `docs/missing.md`.\n",
+          "docs/README.md": "ok\n",
+          ".claude/skills/demo/SKILL.md": "Memory lives under ~/.claude/memory and ~/.claude/rules.\n",
+          "CLAUDE.md": "Guidance citing /home/example/checkouts/beep-effect.\n",
+        },
+        { modes: { "CLAUDE.md": "120000" }, unreadable: ["CLAUDE.md"] }
+      );
       const normal = renderKnowledgeRefsReport(report, "all", { verbose: false });
       const verbose = renderKnowledgeRefsReport(report, "all", { verbose: true });
-      expect(normal).toContain("observations (all) (2):");
+      expect(normal).toContain("skipped: 1\n  skipped: 1 row(s) omitted (--verbose lists them)");
+      expect(normal).not.toContain("  symlink CLAUDE.md");
+      expect(normal).toContain("observations (all) (4):");
       expect(normal).toContain("  verified: 1 row(s) omitted (--verbose lists them)");
+      expect(normal).toContain("  portable-home-convention: 2 row(s) omitted (--verbose lists them)");
+      expect(normal).not.toContain("archival-provenance:");
       expect(normal).not.toContain("  verified docs/guide.md:");
-      expect(verbose).toContain("observations (all) (2):");
+      expect(normal).not.toContain("  portable-home-convention .claude/skills/demo/SKILL.md:");
+      expect(verbose).toContain("skipped: 1\n  symlink CLAUDE.md");
+      expect(verbose).toContain("observations (all) (4):");
       expect(verbose).toContain("  verified docs/guide.md:");
+      expect(verbose).toContain("  portable-home-convention .claude/skills/demo/SKILL.md:");
       expect(verbose).not.toContain("row(s) omitted");
       for (const output of [normal, verbose]) {
         expect(output).toContain("  broken-target docs/guide.md:");
@@ -559,7 +571,20 @@ describe("knowledge refs listing", () => {
   );
 
   it.effect(
-    "counts omitted verified rows within the requested surface",
+    "prints no omitted-count line for a quiet class without rows and none at all for a loud listing",
+    Effect.fnUntraced(function* () {
+      const report = yield* scanFixture({
+        "docs/guide.md": "See `docs/missing.md`.\n",
+      });
+      const output = renderKnowledgeRefsReport(report, "all", { verbose: false });
+      expect(output).toContain("skipped: 0\nclassification:");
+      expect(output).toContain("  broken-target docs/guide.md:");
+      expect(output).not.toContain("row(s) omitted");
+    })
+  );
+
+  it.effect(
+    "counts omitted quiet rows within the requested surface",
     Effect.fnUntraced(function* () {
       const report = yield* scanFixture({
         "docs/guide.md": "See `docs/README.md`.\n",
