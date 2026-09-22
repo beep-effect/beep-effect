@@ -286,6 +286,9 @@ export const CatalogSourceOptions = CatalogSourceKit.Options;
  * every live entry. A reader that accepted only the omission would fail a
  * whole cache read over a field it never consumes, so absence and `null` are
  * decoded to the same thing here.
+ *
+ * @param schema - The field schema to make optional.
+ * @returns The schema as an optional key that also accepts `null`.
  */
 const looseOptional = <Schema extends S.Top>(schema: Schema) => schema.pipe(S.NullOr, S.optionalKey);
 // ── Upstream manifest (models.router-for.me) ────────────────────────────────
