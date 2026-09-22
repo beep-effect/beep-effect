@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "authority": "Coverage index of retained local synthetic receipts. Relationships independently checked by synthetic-post-repair-review.json; no raw archive or signed remote proof.",
+  "requirementsSource": "SPEC.md:77-80",
+  "localCases": {
+    "absent-script": [
+      "absent-script-is-not-execution"
+    ],
+    "root-child-configuration": [
+      "root-configuration-invalidation",
+      "child-configuration-invalidation"
+    ],
+    "lockfile-package-manager": [
+      "lockfile-invalidation",
+      "package-manager-invalidation"
+    ],
+    "actual-runtime": [
+      "actual-runtime-invalidation",
+      "local-shadow-alternate-runtime"
+    ],
+    "orchestration-only-inputs": [
+      "orchestration-invariance",
+      "orchestration-fresh-invariance"
+    ],
+    "absolute-path": [
+      "absolute-path"
+    ],
+    "unsafe-logs": [
+      "unsafe-log",
+      "capture-overflow"
+    ],
+    "failed-task-non-reuse": [
+      "failed-task-is-not-reused"
+    ],
+    "semantic-inputs": [
+      "semantic-env-invalidation",
+      "semantic-file-invalidation"
+    ],
+    "fresh-output-log-equivalence": [
+      "isolated-fresh-fresh-and-cross-root",
+      "isolated-fresh-fresh-pair-2",
+      "isolated-fresh-fresh-pair-3",
+      "local-restoration",
+      "concurrent-isolated-fresh"
+    ]
+  },
+  "channels": {
+    "stable": {
+      "receipt": "research/synthetic-post-repair-stable.json",
+      "sha256": "422f9c7e90ba9390817d23452cffaff0add1f2e5964ea08bd50fc03710fa698b",
+      "client": {
+        "version": "2.10.12",
+        "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+        "namespace": "qualification-local-stable-bun142-v3"
+      },
+      "matchedChecks": 20
+    },
+    "canary": {
+      "receipt": "research/synthetic-post-repair-canary.json",
+      "sha256": "c4183e7255d3814289274b631a268af93a22c53f46f159e773043a51656b611d",
+      "client": {
+        "version": "2.10.13-canary.1",
+        "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+        "namespace": "qualification-local-canary-bun142-v3"
+      },
+      "matchedChecks": 20
+    }
+  },
+  "remaining": [
+    {
+      "requirement": "remote fault and signature cases",
+      "owner": "conformance and trust",
+      "status": "accepted runtime evidence missing"
+    },
+    {
+      "requirement": "real-pilot semantic read/write/capture closure",
+      "owner": "qualification",
+      "status": "incomplete; synthetic fixture does not establish real-pilot closure"
+    },
+    {
+      "requirement": "three verified signed remote pairs",
+      "owner": "qualification consuming accepted sibling boundary",
+      "status": "missing"
+    }
+  ]
+}

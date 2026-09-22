@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "boolean-creep-review-correction/v1",
+  "date": "2026-09-21",
+  "inventory": {
+    "beforeArchive": "history/inventory/2026-09-21-pre-pr1176-review.jsonl",
+    "beforeSha256": "5799f50a6dce00f59d896efff3a78d2865e5fd1d07a6f4f6f2ea1ef0c7d1b161",
+    "afterSha256": "04e53a7c4755efb9acbafed10291dde7f67a7d03f1eb3c1232cf31e63b020146",
+    "change": "Explicitly distinguish inventory evidence source cecfb9f8 from the separately mapped 7536a751b4 design source."
+  },
+  "design": {
+    "id": "r30-cli-commands-l-q-github-check-lane-outcome",
+    "beforeArchive": "history/designs/2026-09-21-pre-pr1176-review-r30-cli-commands-l-q-github-check-lane-outcome.md",
+    "beforeSha256": "0bb888a9375f940437f1513ea357488125ff76697be0a625bc8c947e5326f837",
+    "afterSha256": "b6d87b563630d240fbebc2dccd5536226db27b4948fdeae5725fec27a6ceb55b",
+    "change": "Escape table pipes for rendering only; original historical snapshots remain byte-exact."
+  },
+  "backlogReceipt": "data/pr1176-backlog-reconciliation-2026-09-21.json",
+  "dryCredit": false,
+  "independentP3Approval": false
+}

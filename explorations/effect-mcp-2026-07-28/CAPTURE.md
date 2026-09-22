@@ -47,7 +47,7 @@ Grounding facts gathered before the grill (orchestrator, read-only):
   `a7a71921de` and for `769f6046a2` (#8242).
 - Local Effect clone (`$HOME/YeeBois/dev/effect`, remotes `origin` Effect-TS/effect and `fork`
   beep-effect/effect) is at `a7a71921de`; `effect@4.0.0-rc.115..a7a71921de` is 32 commits and
-  +4027/-1010 lines under `packages/effect/src/unstable/{ai,rpc}`.
+  +4027/-1010 lines under `effect:packages/effect/src/unstable/{ai,rpc}`.
 - Pending changesets on upstream main: 29 besides the MCP ones, including sql-pg `timestamp` and
   `timestamptz` decoding as `Date`, sql-pg unknown OIDs decoding as text, the Effect/Stream API
   alignment (#8256), strict `ByteSize.Input`, HttpApi literal action suffixes, and file response
@@ -56,7 +56,7 @@ Grounding facts gathered before the grill (orchestrator, read-only):
   registration handler requirements exclude `McpSchema.McpRequestContext` instead of
   `McpServerClient`; `McpServerClient` is only supplied for initialized stateful requests; strict
   tools reject excess input properties; declared handler failures produce `isError` results.
-- `packages/effect/MCP.md` upstream was not touched by #7265 (last changes #8079, #6829, #6625).
+- `effect:packages/effect/MCP.md` upstream was not touched by #7265 (last changes #8079, #6829, #6625).
 - In-repo MCP servers all pin `McpProtocol.v2025_06_18` and mount through `@beep/mcp-kit`:
   `packages/drivers/nlp-mcp`, `packages/drivers/m365-mcp`, `packages/drivers/uspto-mcp`,
   `packages/drivers/gov-legal-mcp`, `packages/law-practice/server` (run by `apps/practice-kg-mcp`),

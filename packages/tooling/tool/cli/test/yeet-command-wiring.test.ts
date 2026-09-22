@@ -9,10 +9,11 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, pipe } from "effect";
+import { Cause, ConfigProvider, Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { Command } from "effect/unstable/cli";
+import { ChildProcessSpawner } from "effect/unstable/process";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 
@@ -301,4 +302,21 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("detached proof job comman
       )
     );
   });
+});
+
+it.layer(commandTestLayer, { timeout: "30 seconds" })("attached monitor environment", (it) => {
+  it.effect("dispatches an attached monitor without inheriting the parent proof job identity", () =>
+    Effect.gen(function* () {
+      const exit = yield* runYeetCommand(["monitor", "--until-ready"]).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+        Effect.provideService(
+          ChildProcessSpawner.ChildProcessSpawner,
+          ChildProcessSpawner.make(() => Effect.die("fixture-git-boundary"))
+        ),
+        Effect.exit
+      );
+      expect(exit._tag).toBe("Failure");
+      if (exit._tag === "Failure") expect(Cause.pretty(exit.cause)).toContain("fixture-git-boundary");
+    })
+  );
 });

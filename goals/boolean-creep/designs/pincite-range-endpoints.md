@@ -1,14 +1,14 @@
 # Instance
 
 - id: `pincite-range-endpoints`
-- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
-- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
-- file:line: `packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts:187`
+- exact source SHA: `cecfb9f8e9a5f20d768666c65f89425349f7f9e6`
+- corpus source SHA: `cecfb9f8e9a5f20d768666c65f89425349f7f9e6`
+- file:line: `packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts:148`
 - symbol: `PinciteInfo`
 - members: `isRange`, `page`, `endPage`, `paragraph`, `endParagraph`
-- evidence: E3 at `PinciteInfo.model.ts:115-122,158-210` declares page and
+- evidence: E3 at `PinciteInfo.model.ts:112-117,150-201` declares page and
   paragraph mutually exclusive, calls the end fields range endpoints, and
-  defines `isRange` as page-or-paragraph range; E1 at lines 134-151 constructs
+  defines `isRange` as page-or-paragraph range; E1 at lines 126-137 constructs
   a page range with its start/end and a discrete page without an end.
 
 # Current shape
@@ -42,35 +42,44 @@ abbreviation normalization that the current schema does not promise.
 
 # Migration inventory
 
-- `PinciteInfo.model.ts:14-109` — update the hand-written recursive
+- `PinciteInfo.model.ts:35-105` — update the hand-written recursive
   `PinciteInfo.Type` to own `locator`, but retain the existing flat
   `PinciteInfo.Encoded` fields and the self-recursive `AdditionalPincites`
-  codec/default/arbitrary boundary.
-- `PinciteInfo.model.ts:111-223` — introduce the named locator union, replace
+  codec/default boundary. Main removed `additionalPincitesToArbitrary` and its
+  annotation; do not restore the old constant-empty-array override.
+- `PinciteInfo.model.ts:108-211` — introduce the named locator union, replace
   the five decoded fields in `PinciteInfo`, and wrap the model with the flat
   compatibility codec. Keep footnote, footnoteEnd, starPage, raw, and
   additionalPincites unchanged.
-- `Citation.models.ts:242-269,633-740` — FullCaseCitation embeds optional
+- `Citation.models.ts:233-266,624-752` — FullCaseCitation embeds optional
   PinciteInfo and names `PinciteInfo.Encoded`; retain that recursive wire
   boundary.
-- `Citation.models.ts:1507-1536,1578-1618` — the exported Citation union
-  recursively carries FullCaseCitation and its PinciteInfo codec; no union
+- `Citation.models.ts:792-909,951-993` — IdCitation embeds optional PinciteInfo
+  and exposes it through its recursive Type/Encoded companion.
+- `Citation.models.ts:1032-1105,1147-1177` — SupraCitation carries the same
+  optional structured pincite; update its decoded companion atomically.
+- `Citation.models.ts:1219-1371,1413-1475` — ShortFormCaseCitation also embeds
+  PinciteInfo; retain its flat optional encoded field. The separate unresolved
+  inherited-pincite provenance cluster is not part of this migration.
+- The exported Citation union in `Citation.models.ts:1572-1625` — its recursive
+  Type/Encoded companions carry all four case-citation embeddings; no union
   discriminator or outer encoding changes.
 - `NeutralCitation.model.ts:87-100` — retain its independent numeric pincite
   field and optional structured PinciteInfo embedding.
 - `PinciteInfo/index.ts:21`, `values/index.ts:607-618`, and the package root
   expose PinciteInfo. Export the locator owner through the same public value
   surface and add the required changeset.
-- `LawPracticeDomain.test.ts:417-537,539-648,683-686` — migrate decoded
+- `LawPracticeDomain.test.ts:501-527,562-586,618-623,666-671` — migrate decoded
   constructors and retain defaults, nondefault recursive additional pincites,
-  flat encoding, and recursive Citation arbitrary round trips.
+  and flat encoding fixtures. Retain the package's recursive Citation
+  arbitrary-round-trip coverage when migrating the schema.
 - Whole-repository search found no production parser/reader beyond these
   schema embeddings, but `PinciteInfo.Type`, `PinciteInfo.Encoded`, the value
   barrels, and recursive codecs are explicit public wire exposure.
 
 # Guard-deletion accounting
 
-Delete decoded `isRange` and all four locator Options, their five constructor
+Delete decoded `isRange` and all four locator Options, their four constructor
 defaults, and any page/paragraph/range coherence guards. Only the compatibility
 codec handles those flat fields. Keep the recursive-array guard/default and
 all star-page and footnote fields because they encode separate facts.
@@ -90,9 +99,10 @@ and NeutralCitation.
 Add table tests for all five legal flat projections and representative failures:
 range without end, end without matching start, page plus paragraph, both end
 kinds, and non-range with an end. Add schema-derived arbitrary round trips for
-the locator and PinciteInfo while retaining the recursive arbitrary override
-that bounds additionalPincites. Preserve starPage-only, footnote-only,
-footnote-range, and nested additional-pincite fixtures to prove those facts
+the locator and PinciteInfo with the current recursive-array schema derivation;
+do not reinstate the removed constant-empty arbitrary override. Preserve
+starPage-only, footnote-only, footnote-range, and nested additional-pincite
+fixtures to prove those facts
 remain independent. Run focused domain tests and full package verification.
 
 # Risk and sequencing

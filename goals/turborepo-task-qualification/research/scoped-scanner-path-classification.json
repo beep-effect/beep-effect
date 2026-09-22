@@ -1,0 +1,28 @@
+{
+  "authority": "Classification of observed private scanner-candidate read paths; not semantic relevance or qualification.",
+  "review": {
+    "path": ".beep/qualification-local-preflight/scoped-semantics-2_ow0118/baseline-read-review.json",
+    "sha256": "a3cf8598fc490d9dfb9a393bab6c6ba22c1f43630261cd602713bc325a2e54e8"
+  },
+  "counts": {
+    "other": 8,
+    ".gitignore": 23,
+    "package.json": 151,
+    "tsconfig.json": 176,
+    "turbo.json": 8,
+    "biome.jsonc": 3,
+    "utils-source": 27,
+    "types-source": 10
+  },
+  "other": [
+    ".git",
+    "packages/tooling/policy-pack/lint-rules/rules/no-bigint-literals.grit",
+    "packages/tooling/policy-pack/lint-rules/rules/no-empty-named-blocks.grit",
+    "packages/tooling/policy-pack/lint-rules/rules/no-native-error.grit",
+    "packages/tooling/policy-pack/lint-rules/rules/prefer-array-flat-map.grit",
+    "tsconfig.base.json",
+    "vitest.aliases.generated.json",
+    "vitest.shared.ts"
+  ],
+  "nextAction": "Test a package-local inherited Biome project boundary before considering a root-scoped config change. Retain dependency and ignore diagnostics."
+}

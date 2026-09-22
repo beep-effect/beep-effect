@@ -1,0 +1,47 @@
+{
+  "authority": "Path-level join only. Absence from explicit maps does not prove absence from every native hash component or semantic dependence.",
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "references": [
+    {
+      "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/baseline-read-review.json",
+      "sha256": "ecb79528fdde6f1aa4afa45b49fab3fea197bcdc1f44748d92e3addf70bf38fd"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/git-config-input-g1q_9alo/invalid-visible/dry.json",
+      "sha256": "929fcca790d913908ca68f07c493cd89b9ad5d313b60f969158860fb5eb2708b"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/lts-activation.json",
+      "sha256": "3fa2a6c1d70c795728aab8a70f64c7ebf6fb34498c8fbd08e6617a68bdf1208d"
+    }
+  ],
+  "comparisonBoundary": "Path-membership comparison against the retained original-profile native plan, at the same source revision. The proposed profile is a private overlay absent from that plan; this is not a native plan for the revised candidate, byte-identity proof, or qualification.",
+  "counts": {
+    "not-in-explicit-maps": 374,
+    "explicit-map-covered": 49
+  },
+  "remaining": [
+    "Implement and validate the generation/selection mechanism before changing live lint behavior.",
+    "Obtain a native plan for the revised candidate and compare expanded input membership.",
+    "Prove invalidation, replay and full stable/canary pilot acceptance; signed evidence remains a separate gate."
+  ],
+  "unmappedCategories": {
+    ".git": 1,
+    ".gitignore": 20,
+    "package.json": 147,
+    "tsconfig.json": 169,
+    "turbo.json": 7,
+    "biome.identity.jsonc": 1,
+    "utils-source": 27,
+    "vitest.aliases.generated.json": 1,
+    "vitest.shared.ts": 1
+  },
+  "candidateIntegrationRequirements": [
+    "Hash the generated profile bytes and a portable selection value; strict Turbo environment mode must pass that value to every task using it.",
+    "Bind manifests, compiler/Turbo configuration and ignore files across the scanner discovery scope, including file additions and alternate configuration names. Verify actual native expansion rather than inferring it from glob spelling.",
+    "Cover utils source and Vitest support dependencies; a fixed list of observed files alone cannot establish closure for future imports or alternate execution paths.",
+    "Attribute the synthetic /fixture/.git pointer separately from source files; existing local exclusion runtime identity is not blanket coverage of Git configuration.",
+    "Keep the live census and pilot input/configuration equality check intact; a private overlay cannot silently bypass it.",
+    "Regenerate effective profile from changed root configuration before execution, and preserve the existing root-lint mutation negative control."
+  ]
+}

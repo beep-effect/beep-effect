@@ -35,13 +35,13 @@ const findingsWithHarness = (harnessImport: string, body: string) => {
   return detectEffectVitestFindings(source, "packages/example/test/instrumented-fixture.test.ts", "@beep/example");
 };
 
-const pairedHarnessFindings = (body: string) => ({
-  instrumented: findingsWithHarness('import { it as instrumentedIt } from "@beep/test-utils/Vitest";', body),
+const pairedHarnessFindings = (body: string, module = "@beep/test-utils/Vitest") => ({
+  instrumented: findingsWithHarness(`import { it as instrumentedIt } from "${module}";`, body),
   original: findingsWithHarness('import { it as instrumentedIt } from "@effect/vitest";', body),
 });
 
-const assertEquivalentFindings = (body: string, expectedRule: EffectVitestRuleId) => {
-  const { instrumented, original } = pairedHarnessFindings(body);
+const assertEquivalentFindings = (body: string, expectedRule: EffectVitestRuleId, module?: string) => {
+  const { instrumented, original } = pairedHarnessFindings(body, module);
   assertTrue(A.some(original, (finding) => finding.ruleId === expectedRule));
   assertTrue(original.length === instrumented.length);
   A.zipWith(original, instrumented, (left, right) => {
@@ -1706,3 +1706,52 @@ it("retains inner helper pipe scopes and ambiguous generator-return lifetimes as
     );
   }
 });
+
+it.each(["@beep/test-runner", "@beep/test-runner/Vitest"])(
+  "preserves instrumented tester provenance for %s",
+  (module) => {
+    assertEquivalentFindings('instrumentedIt("runtime", () => Fx.runSync(program));', "EV001", module);
+    assertEquivalentFindings('instrumentedIt.effect("scope", () => Fx.scoped(program));', "EV004", module);
+    assertEquivalentFindings(
+      'instrumentedIt.layer(L.succeed(Service, value))("shared", (it) => { it.effect("clock", () => Fx.sleep("1 second")); });',
+      "EV008",
+      module
+    );
+    assertTrue(
+      A.some(
+        findingsWithHarness(
+          `import * as Runner from "${module}";`,
+          'Runner.it("namespace", () => Fx.runSync(program));'
+        ),
+        (finding) => finding.ruleId === "EV001"
+      )
+    );
+    assertFalse(
+      A.some(
+        findingsWithHarness(
+          `import { it as runner } from "${module}";`,
+          'const run = () => { const runner = subject; runner("shadowed", () => Fx.runSync(program)); };'
+        ),
+        (finding) => finding.ruleId === "EV001"
+      )
+    );
+    assertFalse(
+      A.some(
+        findingsWithHarness(
+          `import * as Runner from "${module}";`,
+          'Runner.TestHang("unrelated", () => Fx.runSync(program));'
+        ),
+        (finding) => finding.ruleId === "EV001"
+      )
+    );
+    assertFalse(
+      A.some(
+        findingsWithHarness(
+          `import { TestHang as candidate } from "${module}";`,
+          'candidate("error", () => Fx.runSync(program));'
+        ),
+        (finding) => finding.ruleId === "EV001"
+      )
+    );
+  }
+);

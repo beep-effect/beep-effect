@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "boolean-creep-design-refresh/v1",
+  "id": "r28-cli-quality-test-lane-resolved-selection",
+  "sourceSha": "7536a751b40b8560706dfe8cfa451591b11b025d",
+  "comparisonSource": "bed30c6adf3beed7de8538209fbdc84d26a3b8ce",
+  "beforeArchive": "history/designs/2026-09-21-before-test-selection-refresh-r28-cli-quality-test-lane-resolved-selection.md",
+  "beforeSha256": "5b1c4770f34f662e74d52cf90cbd07421a99917458ab8cc077b8a8444507da9c",
+  "afterSha256": "98cead274247f4a33b762490d7994792c69bbc65fbcabfd40cc9b3308f182e3d",
+  "sourceHashes": {
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": "e813f6de7fde4bb1588dd8b87dce37e7d0bac03f5b9eafa84cd974df4b33320b",
+    "packages/tooling/tool/cli/src/test/Quality.test-kit.ts": "5f1b6dad7ae20d94f7002db5834bee869019d933fe8bb48cc747299e2cf2dc81",
+    "packages/tooling/tool/cli/test/quality-tasks.test.ts": "f157e55b9b5c2fe40aebb7609cc6a1c2199110d6fc6ace28c18b3394da1343f6"
+  },
+  "exactLineMappings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": [232, 236],
+      "current": [232, 236]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": [263, 267],
+      "current": [264, 268]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": [294, 300],
+      "current": [295, 301]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": [307, 321],
+      "current": [308, 322]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": [323, 339],
+      "current": [324, 340]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": [3153, 3199],
+      "current": [3563, 3609]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": [3202, 3219],
+      "current": [3612, 3629]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "old": [2774, 2825],
+      "current": [3178, 3229]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "old": [6179, 6197],
+      "current": [7636, 7654]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "old": [2864, 2874],
+      "current": [3199, 3209]
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "old": [5467, 5569],
+      "current": [6894, 6996]
+    }
+  ],
+  "qualification": "4/3 unchanged",
+  "status": "designed",
+  "testExecution": false,
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "implementationStarted": false
+}

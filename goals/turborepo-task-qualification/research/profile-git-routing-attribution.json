@@ -1,0 +1,50 @@
+{
+  "authority": "Process attribution of positive annotated Git metadata reads in the retained candidate baseline only; not semantic closure.",
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "traceSha256": "b73dba53613c0b7247b8b4506b963214474ac8a4d880a25fe63ec51550610e7b",
+  "events": [
+    {
+      "process": "/fixture/node_modules/@biomejs/cli-linux-x64/biome",
+      "path": "/fixture/.git",
+      "bytes": 46
+    },
+    {
+      "process": "/fixture/node_modules/@biomejs/cli-linux-x64/biome",
+      "path": "/git/worktrees/qualification-pilot-h1/commondir",
+      "bytes": 6
+    },
+    {
+      "process": "/fixture/node_modules/@biomejs/cli-linux-x64/biome",
+      "path": "/git/info/exclude",
+      "bytes": 727
+    }
+  ],
+  "attribution": {
+    "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/git-read-attribution.json",
+    "sha256": "db74025011afe6038639bdaf864fa1fe3ce96d8eb342d87b603c7a2a436b6bc6"
+  },
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/receipt.json",
+    "sha256": "b2977562ce6fa2d9d6a51990dbb4437c0254ebbe1a7b84424d2aacae9b3c67ad"
+  },
+  "activation": {
+    "path": ".beep/qualification-local-preflight/lts-activation.json",
+    "sha256": "3fa2a6c1d70c795728aab8a70f64c7ebf6fb34498c8fbd08e6617a68bdf1208d"
+  },
+  "fixturePointer": {
+    "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/baseline/gitfile",
+    "sha256": "f12b2f19333ce45701437533c1d515370b84cf460637fbf2b42cebd10a1307ad"
+  },
+  "runtimeSource": {
+    "path": ".git/info/exclude",
+    "sha256": "bd3a4c3bdcb5dbe80aedaa624282b2c67465370377b57ae0ab3ec0be45de330e"
+  },
+  "interpretation": "In this retained execution Biome reads the fixture pointer and worktree common-directory routing metadata before reading the common exclusion file. That target is represented by the portable .git/info/exclude runtime-source label.",
+  "limits": [
+    "Descriptor reads and process attribution do not prove universal semantic irrelevance of other Git metadata.",
+    "This trace belongs to revision 0dca998780; no new-head pilot execution is claimed.",
+    "The runtime receipt binds the exclusion file observation; the trace suppresses buffer contents and does not independently hash bytes returned by read.",
+    "Alternate Git layouts, concurrent external changes and current-head execution remain separate acceptance obligations."
+  ],
+  "nextAction": "Validate routing invariants alongside the integrated current-head pilot rather than adding clone-specific pointer bytes to portable native inputs."
+}
