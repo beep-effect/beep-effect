@@ -42,10 +42,12 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { Console, Context, DateTime, Duration, Effect, Order, pipe } from "effect";
+import { Console, Context, DateTime, Duration, Effect, Order, pipe, Schedule } from "effect";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { Command, Flag } from "effect/unstable/cli";
@@ -723,6 +725,108 @@ const CI_WINDOW_WORKFLOW_JOBS_JQ =
   "{total_count,jobs:[.jobs[]|{completed_at,conclusion,created_at,id,name,run_attempt,run_id,started_at,status}]}";
 const CI_BRANCH_RULES_JQ = "[.[]|{ruleset_id,type}+(if .parameters==null then {} else {parameters} end)]";
 
+/**
+ * Number of retries after the first attempt, so a transient `gh api` failure is
+ * attempted five times in total before it becomes a {@link CiCommandError}.
+ */
+const GH_API_TRANSIENT_RETRY_COUNT = 4;
+
+const GhApiTransientKind = LiteralKit(["transport", "secondary-rate-limit"]).pipe(
+  $I.annoteSchema("GhApiTransientKind", {
+    description: "Which transient class a failed gh api exit belongs to; each class has its own backoff base.",
+  })
+);
+type GhApiTransientKind = typeof GhApiTransientKind.Type;
+
+/**
+ * Backoff base per transient class, doubled on every retry and jittered
+ * upward by 0–20% so a fan-out of eight concurrent page fetches does not retry
+ * in lockstep. The jitter is one-sided so the base is a floor: a secondary
+ * rate limit never retries before the full minute GitHub asks for.
+ * Transport blips clear in milliseconds (250ms → 2s); a secondary rate limit
+ * needs minutes (GitHub asks for at least one minute before the first retry,
+ * then exponential growth), so it waits 1m → 8m instead.
+ */
+const GH_API_TRANSIENT_BASE_DELAY: Record<GhApiTransientKind, Duration.Duration> = {
+  transport: Duration.millis(250),
+  "secondary-rate-limit": Duration.minutes(1),
+};
+
+/**
+ * Output fragments that mark a failed `gh api` exit as a transport-class
+ * transient failure: `bad record MAC`, connection resets, unexpected EOF, and
+ * timeouts (observed once per several thousand paginated GETs under a fan-out
+ * of eight) plus the 502/503/504 gateway statuses. Every other non-zero exit,
+ * including 4xx and other 5xx API errors, fails immediately.
+ */
+const GH_API_TRANSPORT_OUTPUT_PATTERNS: ReadonlyArray<RegExp> = [
+  /bad record MAC/iu,
+  /connection reset/iu,
+  /unexpected EOF/iu,
+  /\btimed out\b|\btimeout\b/iu,
+  /\(HTTP 50[234]\)/u,
+];
+
+/**
+ * A secondary rate limit is only trusted when GitHub's documented message
+ * arrives with the documented 403 or 429 status; the phrase alone under any
+ * other status is not a rate limit.
+ */
+const GH_API_SECONDARY_RATE_LIMIT_PATTERN = /secondary rate limit/iu;
+const GH_API_RATE_LIMIT_STATUS_PATTERN = /\(HTTP (?:403|429)\)/u;
+
+const classifyGhApiTransientOutput = (output: string): O.Option<GhApiTransientKind> =>
+  GH_API_SECONDARY_RATE_LIMIT_PATTERN.test(output) && GH_API_RATE_LIMIT_STATUS_PATTERN.test(output)
+    ? O.some("secondary-rate-limit")
+    : A.some(GH_API_TRANSPORT_OUTPUT_PATTERNS, (pattern) => pattern.test(output))
+      ? O.some("transport")
+      : O.none();
+
+class CiGhApiTransientExit extends S.TaggedError<CiGhApiTransientExit>($I`CiGhApiTransientExit`)(
+  "CiGhApiTransientExit",
+  { endpoint: S.String, exitCode: S.Finite, kind: GhApiTransientKind, output: S.String },
+  $I.annoteError<CiGhApiTransientExit>("CiGhApiTransientExit", {
+    description: "A non-zero gh api exit whose output matches a transient transport or rate-limit failure.",
+  })
+) {}
+
+const isCiGhApiTransientExit = P.isTagged("CiGhApiTransientExit");
+
+const ghApiTransientBaseDelay = (error: CiCommandError | CiGhApiTransientExit): Duration.Duration =>
+  isCiGhApiTransientExit(error) ? GH_API_TRANSIENT_BASE_DELAY[error.kind] : GH_API_TRANSIENT_BASE_DELAY.transport;
+
+const ghApiTransientRetrySchedule: Schedule.Schedule<Duration.Duration, CiCommandError | CiGhApiTransientExit> =
+  Schedule.fromStepWithMetadata(
+    Effect.succeed((meta: Schedule.InputMetadata<CiCommandError | CiGhApiTransientExit>) => {
+      const delay = Duration.millis(Duration.toMillis(ghApiTransientBaseDelay(meta.input)) * 2 ** (meta.attempt - 1));
+      return Effect.succeed<[Duration.Duration, Duration.Duration]>([delay, delay]);
+    })
+  ).pipe(
+    Schedule.modifyDelay(({ duration }) =>
+      Effect.map(Random.next, (random) => Duration.millis(Duration.toMillis(duration) * (1 + 0.2 * random)))
+    )
+  );
+
+const ghApiJsonAttempt = Effect.fn("Ci.laneTimingsGhApiAttempt")(function* (
+  repoRoot: string,
+  endpoint: string,
+  args: ReadonlyArray<string>
+): Effect.fn.Return<string, CiCommandError | CiGhApiTransientExit, ChildProcessSpawner.ChildProcessSpawner> {
+  const result = yield* runRepoCommandCapture("gh", args, repoRoot).pipe(
+    CiCommandError.mapError(`Failed to run gh api ${endpoint}.`)
+  );
+  if (result.truncated) {
+    return yield* CiCommandError.make({ message: `gh api ${endpoint} returned a truncated response.` });
+  }
+  if (result.exitCode !== 0) {
+    return yield* O.match(classifyGhApiTransientOutput(result.output), {
+      onNone: () => CiCommandError.make({ message: `gh api ${endpoint} exited ${result.exitCode}: ${result.output}` }),
+      onSome: (kind) => CiGhApiTransientExit.make({ endpoint, exitCode: result.exitCode, kind, output: result.output }),
+    });
+  }
+  return result.output;
+});
+
 const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
   repoRoot: string,
   endpoint: string,
@@ -732,17 +836,18 @@ const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
     ["api", endpoint],
     A.flatMap(O.toArray(jqProjection), (projection) => ["--jq", projection])
   );
-  const result = yield* runRepoCommandCapture("gh", args, repoRoot).pipe(
-    CiCommandError.mapError(`Failed to run gh api ${endpoint}.`)
+  return yield* ghApiJsonAttempt(repoRoot, endpoint, args).pipe(
+    Effect.retry({
+      schedule: ghApiTransientRetrySchedule,
+      times: GH_API_TRANSIENT_RETRY_COUNT,
+      while: isCiGhApiTransientExit,
+    }),
+    Effect.catchTag("CiGhApiTransientExit", (exit) =>
+      CiCommandError.make({
+        message: `gh api ${endpoint} exited ${exit.exitCode} on every one of ${GH_API_TRANSIENT_RETRY_COUNT + 1} attempts (${exit.kind}): ${exit.output}`,
+      })
+    )
   );
-  if (result.exitCode !== 0 || result.truncated) {
-    return yield* CiCommandError.make({
-      message: result.truncated
-        ? `gh api ${endpoint} returned a truncated response.`
-        : `gh api ${endpoint} exited ${result.exitCode}: ${result.output}`,
-    });
-  }
-  return result.output;
 });
 
 type CiWorkflowJobsPageFetcher<Requirements> = (
