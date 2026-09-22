@@ -14,11 +14,10 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { Str } from "@beep/utils";
+import { A, O, pipe, Str } from "@beep/utils";
 import { Match } from "effect";
 import * as S from "effect/Schema";
 import { TargetRoot } from "./Models.manifest.schemas.ts";
-import type { A, O } from "@beep/utils";
 
 const $I = $RepoCliId.create("commands/Models/Models.paths");
 
@@ -133,9 +132,39 @@ export class ModelsTargetLocation extends S.Class<ModelsTargetLocation>($I`Model
   })
 ) {}
 
+// A manifest is operator-written text, so a path in it can point anywhere —
+// including out of the tree it names. Containment is decided on normalized
+// segments rather than on the joined string so `a/../../b` and `a/./b` are
+// judged by where they land, not by how they are spelled.
+const pathSegments = (path: string): ReadonlyArray<string> =>
+  A.filter(Str.split(path, "/"), (segment) => !Str.isEmpty(segment) && segment !== ".");
+
+const normalizeSegments = (segments: ReadonlyArray<string>): O.Option<ReadonlyArray<string>> =>
+  A.reduce(segments, O.some<ReadonlyArray<string>>([]), (resolved, segment) =>
+    O.flatMap(resolved, (kept) =>
+      segment === ".."
+        ? A.matchRight(kept, {
+            onEmpty: O.none<ReadonlyArray<string>>,
+            onNonEmpty: (init) => O.some<ReadonlyArray<string>>(init),
+          })
+        : O.some(A.append(kept, segment))
+    )
+  );
+
+const absolutePathOf = (segments: ReadonlyArray<string>): string => `/${A.join(segments, "/")}`;
+
+const resolveWithin = (root: string, relative: string): O.Option<string> => {
+  const rootPath = absolutePathOf(pathSegments(root));
+  return pipe(
+    normalizeSegments(A.appendAll(pathSegments(root), pathSegments(relative))),
+    O.map(absolutePathOf),
+    O.filter((resolved) => resolved === rootPath || pipe(resolved, Str.startsWith(`${rootPath}/`)))
+  );
+};
+
 /**
  * Resolve a manifest-written path against the repo checkout or the operator
- * home.
+ * home, or `None` when it escapes that root.
  *
  * **Details**
  *
@@ -143,29 +172,47 @@ export class ModelsTargetLocation extends S.Class<ModelsTargetLocation>($I`Model
  * why a manifest spells a home path `$HOME/…`: the literal prefix is replaced
  * with whatever home the caller passed.
  *
- * **Example** (Resolve both roots)
+ * The joined path is normalized and then required to stay under the root it
+ * names, so a manifest cannot reach `/etc/passwd` by spelling
+ * `$HOME/../../etc/passwd`.
+ *
+ * **Gotchas**
+ *
+ * A `repo` path is relative to the checkout and nothing else: an absolute one
+ * is rejected outright rather than silently read from wherever it points. An
+ * escaping path is `None`, and `ModelsCheck` turns that into a `missing-file`
+ * finding for every locator on the target — including an `optional` one,
+ * because an unreachable root is a manifest defect rather than an absent file.
+ *
+ * **Example** (Resolve both roots, reject an escape)
  *
  * ```ts
- * import { resolveTargetPath } from "@beep/repo-cli/commands/Models"
+ * import { ModelsTargetLocation, resolveTargetPath } from "@beep/repo-cli/commands/Models"
+ * import * as O from "effect/Option"
  *
- * console.log(resolveTargetPath({ root: "home", path: "$HOME/.zshrc", home: "/home/op", repo: "/repo" }))
- * console.log(resolveTargetPath({ root: "repo", path: "AGENTS.md", home: "/home/op", repo: "/repo" }))
+ * const at = (root: "home" | "repo", path: string) =>
+ *   ModelsTargetLocation.make({ root, path, home: "/home/op", repo: "/repo" })
+ *
+ * console.log(O.getOrNull(resolveTargetPath(at("home", "$HOME/.zshrc")))) // "/home/op/.zshrc"
+ * console.log(O.getOrNull(resolveTargetPath(at("repo", "AGENTS.md")))) // "/repo/AGENTS.md"
+ * console.log(O.isNone(resolveTargetPath(at("home", "$HOME/../etc/passwd")))) // true
  * ```
  *
  * @param location - The target root, its manifest-written path, and both trees.
- * @returns The absolute path on this box.
+ * @returns The absolute path on this box, or `None` when it leaves its root.
  * @category utilities
  * @since 0.0.0
  */
-export const resolveTargetPath = (location: ModelsTargetLocation): string =>
+export const resolveTargetPath = (location: ModelsTargetLocation): O.Option<string> =>
   Match.value(location.root).pipe(
     Match.when("home", () =>
-      Str.startsWith("$HOME/")(location.path)
-        ? `${location.home}/${Str.slice(6)(location.path)}`
-        : `${location.home}/${location.path}`
+      resolveWithin(
+        location.home,
+        Str.startsWith("$HOME/")(location.path) ? Str.slice(6)(location.path) : location.path
+      )
     ),
     Match.when("repo", () =>
-      Str.startsWith("/")(location.path) ? location.path : `${location.repo}/${location.path}`
+      Str.startsWith("/")(location.path) ? O.none<string>() : resolveWithin(location.repo, location.path)
     ),
     Match.exhaustive
   );

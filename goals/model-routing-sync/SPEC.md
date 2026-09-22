@@ -120,7 +120,11 @@ JetBrains Air config, or any CLI-managed cache.
   `cursor-agent models` output without loss.
 - `beep models check` prints drift for every declared target, including the four known conflicts
   below, and exits non-zero on drift.
-- Zero writes: no `--write` path exists yet; the command cannot mutate any file (R12).
+- No projection write: no `--write` path exists yet, so no declared target is ever mutated
+  (R12). The slice's only writes are the R6 catalog ledger under
+  `$HOME/.local/state/beep/models/`, the optional `--report-dir` output
+  (`models-report.json` / `models-report.md`), and the `init` seed manifest, which refuses to
+  overwrite an existing one.
 
 **Slice 2:** `--write` lands with `$HOME/.config-backups/` backups, idempotent rewrites, the
 dirty-checkout refusal, and the one-time prose rewrite that adopts generated blocks. It requires

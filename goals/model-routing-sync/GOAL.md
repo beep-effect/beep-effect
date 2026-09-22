@@ -54,7 +54,8 @@ Acceptance:
       `cursor-agent models` output without loss.
 - [ ] `check` prints drift for every declared target, including the seven known
       live conflicts in `SPEC.md`, and exits non-zero on drift.
-- [ ] No write path exists; the command cannot mutate any file.
+- [ ] No `--write` path exists: the only writes are the R6 ledger, the
+      optional `--report-dir` output, and the `init` seed manifest.
 - [ ] `SPEC.md` slice-1 acceptance criteria are satisfied.
 - [ ] Required verification commands pass, or unrelated failures are reproduced
       and recorded separately.
@@ -70,8 +71,10 @@ test "$(wc -m < goals/model-routing-sync/GOAL.md)" -le 4000
 ```
 
 Stop and report before changing public API, dependencies, lockfiles, generated
-files, or destructive state unless `SPEC.md` explicitly requires it. Never
-write to a file under `$HOME` in this slice.
+files, or destructive state unless `SPEC.md` explicitly requires it. The only
+`$HOME` writes this slice may make are the R6 ledger under
+`$HOME/.local/state/beep/models/` and the `init` seed manifest, which refuses
+to overwrite an existing one; never touch any other operator file.
 
 Done only when acceptance passes and verification is complete, or when a
 blocker is reported with file/command evidence.

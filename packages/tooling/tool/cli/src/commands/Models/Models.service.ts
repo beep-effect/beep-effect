@@ -171,7 +171,11 @@ const surfaceOverlay = (surface: RoutingSurface): O.Option<CatalogSource> =>
     Match.whenOr("codex-cli", "codex-plugin", "jetbrains-codex", () => O.some<CatalogSource>("codex-cache")),
     Match.when("grok-cli", () => O.some<CatalogSource>("grok-cache")),
     Match.when("cursor-seat", () => O.some<CatalogSource>("cursor-agent")),
-    Match.whenOr("proxy-workflow", "claude-code", O.none<CatalogSource>),
+    Match.when("proxy-workflow", () => O.some<CatalogSource>("proxy-v1-models")),
+    // `claude-code` is the one ungated surface: no overlay enumerates the
+    // models a direct Anthropic session may select, so availability there is
+    // never asserted.
+    Match.when("claude-code", O.none<CatalogSource>),
     Match.exhaustive
   );
 
@@ -180,7 +184,8 @@ const availableOnSurface = (model: CatalogModel, surface: RoutingSurface): boole
     Match.whenOr("codex-cli", "codex-plugin", "jetbrains-codex", () => model.availability.codexCli),
     Match.when("grok-cli", () => model.availability.grokCli),
     Match.when("cursor-seat", () => model.availability.cursor),
-    Match.whenOr("proxy-workflow", "claude-code", () => true),
+    Match.when("proxy-workflow", () => model.availability.proxy),
+    Match.when("claude-code", () => true),
     Match.exhaustive
   );
 
@@ -346,7 +351,7 @@ const makeCheck = (): ModelsCheckShape => ({
       const findings = yield* Effect.forEach(
         manifest.targets,
         Effect.fnUntraced(function* (target: ModelSyncTarget) {
-          const absolutePath = resolveTargetPath(
+          const resolved = resolveTargetPath(
             ModelsTargetLocation.make({
               root: target.root,
               path: target.path,
@@ -354,6 +359,17 @@ const makeCheck = (): ModelsCheckShape => ({
               repo: options.repo,
             })
           );
+
+          // A path that leaves its declared root is never opened, and the
+          // `optional` flag does not excuse it: the manifest is wrong, not the
+          // filesystem.
+          if (O.isNone(resolved)) {
+            return A.map(target.locators, (locator) =>
+              finding(target, locator, O.none(), `a path inside the ${target.root} root`, "missing-file")
+            );
+          }
+
+          const absolutePath = resolved.value;
           const exists = yield* fs.exists(absolutePath).pipe(Effect.orElseSucceed(() => false));
 
           if (!exists) {

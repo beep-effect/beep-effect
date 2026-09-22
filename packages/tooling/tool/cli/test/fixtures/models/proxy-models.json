@@ -3,6 +3,7 @@
   "data": [
     { "id": "grok-4.6", "object": "model", "owned_by": "xai" },
     { "id": "claude-fable-5-1", "object": "model", "owned_by": "anthropic" },
+    { "id": "claude-opus-5", "object": "model", "owned_by": "anthropic" },
     { "id": "gpt-5.6-sol", "object": "model", "owned_by": "openai" }
   ]
 }

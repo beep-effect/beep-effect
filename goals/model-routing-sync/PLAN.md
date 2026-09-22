@@ -51,8 +51,9 @@ deliberately read-only (R12); its smoke run is recorded in [`README.md`](./READM
 
 ## Execution Notes
 
-- Never edit the user's global files unprompted. S1 writes nothing; S2 writes only after the
-  operator ratifies the Codex effort value.
+- Never edit the user's global files unprompted. S1 writes no projection target — only the R6
+  ledger, the optional `--report-dir` output, and the `init` seed manifest; S2 adds the
+  `--write` path, and only after the operator ratifies the Codex effort value.
 - Prose naming a not-yet-existing command uses the bare form `beep models check`, never
   `bun run beep models check`, until the command is registered — the semantic-delta gate treats the
   latter as an introduced broken reference.

@@ -87,20 +87,22 @@ const labelFor = (render: LocatorRender, effort: EffortLevel): O.Option<string> 
  * import { ModelId } from "@beep/repo-cli/commands/Models"
  * import { ModelBinding, expectedLocatorValue } from "@beep/repo-cli/commands/Models"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
  * const binding = ModelBinding.make({
  *   role: "codex.heavy",
  *   surface: "codex-cli",
- *   modelId: ("gpt-6-astra" as ModelId),
+ *   modelId: S.decodeUnknownSync(ModelId)("gpt-6-astra"),
  *   effort: O.some("medium"),
  *   supersedes: [],
  *   note: O.none()
  * })
- * const render = { _tag: "verbatim" } as const
  *
- * console.log(O.getOrNull(expectedLocatorValue(binding, "model", render))) // "gpt-6-astra"
- * console.log(O.getOrNull(expectedLocatorValue(binding, "effort", render))) // "medium"
- * console.log(O.getOrNull(expectedLocatorValue(binding, "model-effort-suffix", render))) // "gpt-6-astra(medium)"
+ * console.log(O.getOrNull(expectedLocatorValue(binding, "model", { _tag: "verbatim" }))) // "gpt-6-astra"
+ * console.log(O.getOrNull(expectedLocatorValue(binding, "effort", { _tag: "verbatim" }))) // "medium"
+ * console.log(
+ *   O.getOrNull(expectedLocatorValue(binding, "model-effort-suffix", { _tag: "verbatim" }))
+ * ) // "gpt-6-astra(medium)"
  * ```
  *
  * @param binding - The resolved `role x surface` pin.
@@ -154,11 +156,12 @@ const supersededLine: (superseded: ReadonlyArray<SupersededModel>) => O.Option<s
  * ```ts
  * import { ModelBinding, ModelId, renderGeneratedBlockBody } from "@beep/repo-cli/commands/Models"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
  * const binding = ModelBinding.make({
  *   role: "cursor.volume",
  *   surface: "cursor-seat",
- *   modelId: ("composer-2.5" as ModelId),
+ *   modelId: S.decodeUnknownSync(ModelId)("composer-2.5"),
  *   effort: O.none(),
  *   supersedes: [],
  *   note: O.none()

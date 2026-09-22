@@ -86445,15 +86445,15 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:117:scoped@12#1",
+      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:133:scoped@12#1",
       "lens": "detector",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/models-check.test.ts",
-      "line": 117,
-      "endLine": 117,
+      "line": 133,
+      "endLine": 133,
       "symbol": "scoped",
-      "occurrence": "v2:6233fb546e04ed0ee734e2491668152c55fb1d4746fd119ea55001e9148b9326",
+      "occurrence": "v2:774a589f78a77a5dd2c02fe6a3332516d15e310fea7f2b9dd8d6b961d970b4dd",
       "class": "redundant-whole-body-scope",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -86466,15 +86466,15 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:140:scoped@12#1",
+      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:147:scoped@12#1",
       "lens": "detector",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/models-check.test.ts",
-      "line": 140,
-      "endLine": 140,
+      "line": 147,
+      "endLine": 147,
       "symbol": "scoped",
-      "occurrence": "v2:4c85081a838ac9e7d87a27f6629ab0394afbb4b463f564aa150971501021f781",
+      "occurrence": "v2:ee1f7cfde3b25b377e41be56edac6f7529b019372d05c97bd6cee27d2d253a90",
       "class": "redundant-whole-body-scope",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -86487,15 +86487,57 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:163:scoped@12#1",
+      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:158:scoped@12#1",
       "lens": "detector",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/models-check.test.ts",
-      "line": 163,
-      "endLine": 163,
+      "line": 158,
+      "endLine": 158,
+      "symbol": "scoped",
+      "occurrence": "v2:174c085456fdc0d44336a6740d380a281fd8cc4c6a0f763476f024ae4625ccc1",
+      "class": "redundant-whole-body-scope",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:181:scoped@12#1",
+      "lens": "detector",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/models-check.test.ts",
+      "line": 181,
+      "endLine": 181,
       "symbol": "scoped",
       "occurrence": "v2:255d3ffa5ba5a76a851bf92af1afef5569ef674a87061177fc8c2652cb0be064",
+      "class": "redundant-whole-body-scope",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:204:scoped@12#1",
+      "lens": "detector",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/models-check.test.ts",
+      "line": 204,
+      "endLine": 204,
+      "symbol": "scoped",
+      "occurrence": "v2:c0818dce7bc7e8ad50a48a1bc9a38fc2652fa2ed458dcabb2cbbb4660914fed4",
       "class": "redundant-whole-body-scope",
       "evidence": "Effect.scoped",
       "replacement": {
@@ -176893,15 +176935,36 @@
       "status": "open"
     },
     {
-      "id": "EV014:packages/tooling/tool/cli/test/models-check.test.ts:62:it.layer@0#1",
+      "id": "EV014:packages/tooling/tool/cli/test/models-check.test.ts:197:it.layer@0#1",
       "lens": "resource",
       "ruleId": "EV014",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/models-check.test.ts",
-      "line": 62,
-      "endLine": 62,
+      "line": 197,
+      "endLine": 197,
       "symbol": "it.layer",
-      "occurrence": "v2:e6145bc5bce751a875904f0e7a725fb1e5cea0f4bdb626e9a28df99b4ef4a599",
+      "occurrence": "v2:cb44d7dba7637af844265501e9229ed3421ae3837013ee5f31467f5f4ce109d0",
+      "class": "resource-layer-without-hook-timeout",
+      "evidence": "layer(Layer.mergeAll(platform, modelsWithoutProxy))",
+      "replacement": {
+        "primitive": "it.layer.option.timeout",
+        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV014:packages/tooling/tool/cli/test/models-check.test.ts:79:it.layer@0#1",
+      "lens": "resource",
+      "ruleId": "EV014",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/models-check.test.ts",
+      "line": 79,
+      "endLine": 79,
+      "symbol": "it.layer",
+      "occurrence": "v2:368428d972bf0f06858cdf5cb11ea2cf9dc5d8b38df0244ef52773de801f93ad",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(Layer.mergeAll(platform, models))",
       "replacement": {
@@ -176922,7 +176985,7 @@
       "line": 57,
       "endLine": 57,
       "symbol": "it.layer",
-      "occurrence": "v2:9bd23aaa7f5d25bf6e08c79fa861743e60ed4f85b0df13ef7b77d58540a1af93",
+      "occurrence": "v2:d81a69e6399ca3722b71fee8df7d5463cb180ae4b70948a13110724ca76a3a9d",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive))",
       "replacement": {

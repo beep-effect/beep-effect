@@ -113,6 +113,41 @@ layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive))((it) => {
     })
   );
 
+  it.effect("strips a TOML inline comment but keeps a hash inside quotes", () =>
+    Effect.gen(function* () {
+      // `model = "gpt-6-astra" # ratified …` — the comment is not part of the
+      // value, so a reader that kept it would report permanent drift.
+      assertSome(
+        yield* readFixture("locators.toml", {
+          _tag: "toml-top-level-key",
+          binding: binding("model"),
+          render: verbatim,
+          key: "model",
+        } as Locator),
+        "gpt-6-astra"
+      );
+      assertSome(
+        yield* readFixture("locators.toml", {
+          _tag: "toml-top-level-key",
+          binding: binding("model"),
+          render: verbatim,
+          key: "hashed_model",
+        } as Locator),
+        "gpt-6-astra#pinned"
+      );
+      assertSome(
+        yield* readFixture("locators.toml", {
+          _tag: "toml-table-key",
+          binding: binding("effort"),
+          render: verbatim,
+          table: "models",
+          key: "default_reasoning_effort",
+        } as Locator),
+        "xhigh"
+      );
+    })
+  );
+
   it.effect("reads a TOML table key inside its own table", () =>
     Effect.gen(function* () {
       assertSome(

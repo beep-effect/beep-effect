@@ -13,7 +13,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { A, O, P, pipe, R, Str } from "@beep/utils";
+import { A, flow, O, P, pipe, R, Str } from "@beep/utils";
 import { Effect, Layer, Match } from "effect";
 import * as Context from "effect/Context";
 import { XMLParser } from "fast-xml-parser";
@@ -86,8 +86,24 @@ const unquote = (value: string): string =>
 
 const isTableHeader = (line: string): boolean => Str.startsWith("[")(Str.trim(line));
 
+// A quoted TOML value may itself contain `#`, so the comment cut is anchored
+// on the closing quote when the value is quoted and on the first `#` only when
+// it is not.
+const quotedTomlValue = /^(["'])(?:\\.|(?!\1).)*\1/;
+
+const stripInlineComment = (value: string): string =>
+  pipe(Str.trim(value), (trimmed) =>
+    O.match(O.fromNullishOr(quotedTomlValue.exec(trimmed)), {
+      onNone: () => Str.trim(A.headNonEmpty(Str.split(trimmed, "#"))),
+      onSome: (match) => match[0],
+    })
+  );
+
 const readKeyFromLines = (lines: ReadonlyArray<string>, key: string): O.Option<string> =>
-  O.map(firstMatch(lines, new RegExp(`^\\s*${escapeRegExp(key)}\\s*=\\s*(.+?)\\s*$`)), unquote);
+  O.map(
+    firstMatch(lines, new RegExp(`^\\s*${escapeRegExp(key)}\\s*=\\s*(.+?)\\s*$`)),
+    flow(stripInlineComment, unquote)
+  );
 
 const topLevelLines = (content: string): ReadonlyArray<string> =>
   pipe(

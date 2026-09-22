@@ -9,7 +9,7 @@ these `Context.Service` contracts → implementation. Rulings cited as (Rn) from
 
 | File | Role |
 | --- | --- |
-| `Models.command.ts` | `beep models` group: `check` (default), `catalog`, `init`; flags `--home <dir>` (default `$HOME` via `Config`), `--repo <dir>` (default: cwd checkout root), `--manifest <path>` (default `$HOME/.config/beep/models.yaml`), `--json`, `--report-dir <dir>`, `--offline` (skip upstream fetch, use ledger latest). |
+| `Models.command.ts` | `beep models` group: `check` (default), `catalog`, `init`; flags `--home <dir>` (default `$HOME` via `Config`), `--repo <dir>` (default: cwd checkout root), `--manifest <path>` (default `$HOME/.config/beep/models.yaml`), `--json`, `--report-dir <dir>`, `--offline` (skip the upstream fetch and assemble from the local overlays alone). |
 | `Models.errors.ts` | one `ModelsCommandError` at the boundary; internal tagged errors `ModelsCatalogError`, `ModelsManifestError`, `ModelsLocatorError`, `ModelsLedgerError` (S.TaggedError). |
 | `Models.service.ts` | the contracts below + default live layers. Split into `Models.catalog.service.ts` / `Models.locator.service.ts` only if `Models.service.ts` passes ~500 lines. |
 | `Models.render.ts` | pure: expected value for a (binding, field, render): `model` → id; `effort` → effort (or display label via `effort-display-label`); `model-effort-suffix` → `id(effort)`. Also the md generated-block renderer (table of bindings + `superseded:` list between `<!-- beep-models:begin blockId -->` / `<!-- beep-models:end blockId -->`). |

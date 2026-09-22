@@ -81,3 +81,26 @@ export const FixtureCatalogSources = Layer.effect(
     });
   })
 );
+
+/**
+ * The same fixture-backed sources with the proxy overlay silent, as a box with
+ * no admitted proxy credential sees it.
+ *
+ * @internal
+ */
+export const FixtureCatalogSourcesWithoutProxy = Layer.effect(
+  ModelsCatalogSources,
+  Effect.map(readFixtureLayers(), (fixtures) => {
+    const codexCache = Effect.succeedSome(fixtures.codex);
+    const grokCache = Effect.succeedSome(fixtures.grok);
+    const noProxy = Effect.succeedNone;
+
+    return ModelsCatalogSources.of({
+      fetchUpstream: Effect.succeed(fixtures.upstream),
+      readCodexCache: constant(codexCache),
+      readGrokCache: constant(grokCache),
+      listCursorModels: Effect.succeedSome(fixtures.cursor),
+      listProxyModels: constant(noProxy),
+    });
+  })
+);

@@ -322,13 +322,16 @@ export const isEffortAllowedOnSurface: {
  * import { ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
  * import { ModelBinding } from "@beep/repo-cli/commands/Models/Models.manifest.schemas"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const asModelId = S.decodeUnknownSync(ModelId)
  *
  * const binding = ModelBinding.make({
  *   role: "codex.heavy",
  *   surface: "codex-cli",
- *   modelId: ("gpt-6-astra" as ModelId),
+ *   modelId: asModelId("gpt-6-astra"),
  *   effort: O.some("medium"),
- *   supersedes: [("gpt-daybreak-blue-latest" as ModelId)],
+ *   supersedes: [asModelId("gpt-daybreak-blue-latest")],
  *   note: O.none()
  * })
  * console.log(O.getOrNull(binding.effort)) // "medium"
@@ -769,9 +772,10 @@ export type Locator = typeof Locator.Type;
  *
  * ```ts
  * import { ModelSyncTarget, TargetId } from "@beep/repo-cli/commands/Models/Models.manifest.schemas"
+ * import * as S from "effect/Schema"
  *
  * const target = ModelSyncTarget.make({
- *   id: ("home.grok.config" as TargetId),
+ *   id: S.decodeUnknownSync(TargetId)("home.grok.config"),
  *   root: "home",
  *   path: "$HOME/.grok/config.toml",
  *   optional: true,
@@ -813,11 +817,14 @@ export class ModelSyncTarget extends S.Class<ModelSyncTarget>($I`ModelSyncTarget
  * import { SupersededModel } from "@beep/repo-cli/commands/Models/Models.manifest.schemas"
  * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const asModelId = S.decodeUnknownSync(ModelId)
  *
  * const retired = SupersededModel.make({
- *   id: ("grok-4.5" as ModelId),
+ *   id: asModelId("grok-4.5"),
  *   retiredAt: DateTime.makeUnsafe("2026-09-22T00:00:00Z"),
- *   replacedBy: O.some(("grok-4.6" as ModelId)),
+ *   replacedBy: O.some(asModelId("grok-4.6")),
  *   note: O.none()
  * })
  * console.log(O.isSome(retired.replacedBy)) // true

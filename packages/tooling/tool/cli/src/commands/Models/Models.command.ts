@@ -68,17 +68,26 @@ const modelsFlags = {
   offline: offlineFlag,
 };
 
+// Every subcommand takes the same flag set, so the three runners share one
+// named shape rather than three copies of the same literal.
+interface ModelsCommandFlags {
+  readonly home: O.Option<string>;
+  readonly json: boolean;
+  readonly manifest: O.Option<string>;
+  readonly offline: boolean;
+  readonly repo: O.Option<string>;
+  readonly reportDir: O.Option<string>;
+}
+
 interface ResolvedPaths {
   readonly home: string;
   readonly manifestPath: string;
   readonly repo: string;
 }
 
-const resolvePaths = Effect.fnUntraced(function* (flags: {
-  readonly home: O.Option<string>;
-  readonly repo: O.Option<string>;
-  readonly manifest: O.Option<string>;
-}): Effect.fn.Return<ResolvedPaths, ModelsCommandError, FileSystem.FileSystem | Path.Path> {
+const resolvePaths = Effect.fnUntraced(function* (
+  flags: Pick<ModelsCommandFlags, "home" | "manifest" | "repo">
+): Effect.fn.Return<ResolvedPaths, ModelsCommandError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const home = yield* pipe(
     flags.home,
@@ -160,14 +169,7 @@ const writeReports = Effect.fnUntraced(function* (
     .pipe(ModelsCommandError.mapError("Failed to write models-report.md"));
 });
 
-const runCheck = Effect.fnUntraced(function* (flags: {
-  readonly home: O.Option<string>;
-  readonly repo: O.Option<string>;
-  readonly manifest: O.Option<string>;
-  readonly json: boolean;
-  readonly reportDir: O.Option<string>;
-  readonly offline: boolean;
-}) {
+const runCheck = Effect.fnUntraced(function* (flags: ModelsCommandFlags) {
   const paths = yield* resolvePaths(flags);
   const check = yield* ModelsCheck;
   const report = yield* check.run({
@@ -197,14 +199,7 @@ const runCheck = Effect.fnUntraced(function* (flags: {
   }
 });
 
-const runCatalog = Effect.fnUntraced(function* (flags: {
-  readonly home: O.Option<string>;
-  readonly repo: O.Option<string>;
-  readonly manifest: O.Option<string>;
-  readonly json: boolean;
-  readonly reportDir: O.Option<string>;
-  readonly offline: boolean;
-}) {
+const runCatalog = Effect.fnUntraced(function* (flags: ModelsCommandFlags) {
   const paths = yield* resolvePaths(flags);
   const catalog = yield* ModelsCatalog;
   const snapshot = yield* catalog
@@ -231,14 +226,7 @@ const runCatalog = Effect.fnUntraced(function* (flags: {
   yield* Console.log(`models: ${snapshot.summary.modelCount} model(s) from ${A.join(snapshot.summary.sources, ", ")}`);
 });
 
-const runInit = Effect.fnUntraced(function* (flags: {
-  readonly home: O.Option<string>;
-  readonly repo: O.Option<string>;
-  readonly manifest: O.Option<string>;
-  readonly json: boolean;
-  readonly reportDir: O.Option<string>;
-  readonly offline: boolean;
-}) {
+const runInit = Effect.fnUntraced(function* (flags: ModelsCommandFlags) {
   const paths = yield* resolvePaths(flags);
   const store = yield* ModelsManifestStore;
   const written = yield* store

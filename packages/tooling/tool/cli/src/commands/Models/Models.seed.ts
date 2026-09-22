@@ -49,6 +49,7 @@ const jetBrainsEffortLabels: LocatorRender = {
     { effort: "high", label: "High" },
     { effort: "xhigh", label: "Extra High" },
     { effort: "max", label: "Max" },
+    { effort: "ultra", label: "Ultra" },
   ],
 };
 

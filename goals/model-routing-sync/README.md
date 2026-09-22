@@ -38,9 +38,10 @@ P1 Implement. **Slice 1 landed**: the `beep models` command group is registered 
 read-only subcommands — `check` (the default), `catalog`, and `init`, which seeds a manifest only
 when none exists. It decodes the upstream catalog plus the Codex cache, the Grok cache,
 `cursor-agent models`, and the proxy availability overlay, diffs against the home ledger, and
-prints drift for every declared target. It writes nothing except that ledger under
-`$HOME/.local/state/beep/models/` (R6, R12). The write path, the lint, and the timer are slices 2
-and 3.
+prints drift for every declared target. It writes no projection target: the only writes are that
+ledger under `$HOME/.local/state/beep/models/` (R6), the optional `--report-dir` output, and the
+`init` seed manifest, which refuses to overwrite an existing one (R12). The write path, the lint,
+and the timer are slices 2 and 3.
 
 ## Latest Evidence
 
@@ -78,6 +79,9 @@ and 3.
 ## Notes
 
 - `home` is a parameter, never `os.homedir()` at a call site.
-- Never edit the user's global files unprompted; slice 1 cannot write at all.
+- Never edit the user's global files unprompted; slice 1 has no `--write` path and never writes
+  a projection target. Its only writes are the R6 ledger under
+  `$HOME/.local/state/beep/models/`, the optional `--report-dir` output, and the `init` seed
+  manifest, which refuses to overwrite an existing one.
 - Codex effort currently has three different values across four live files. Slice 2 is blocked until
   the operator ratifies one.

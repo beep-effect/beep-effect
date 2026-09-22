@@ -898,9 +898,10 @@ export class CatalogAvailability extends S.Class<CatalogAvailability>($I`Catalog
  *   ModelId
  * } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
  * const model = CatalogModel.make({
- *   id: ("gpt-6-astra" as ModelId),
+ *   id: S.decodeUnknownSync(ModelId)("gpt-6-astra"),
  *   provider: O.some("codex-pro"),
  *   origin: "router-for-me",
  *   levels: ["low", "medium", "high", "xhigh", "max"],
@@ -1017,9 +1018,10 @@ export class CatalogSnapshot extends S.Class<CatalogSnapshot>($I`CatalogSnapshot
  *
  * ```ts
  * import { CatalogLevelsChange, ModelId } from "@beep/repo-cli/commands/Models/Models.catalog.schemas"
+ * import * as S from "effect/Schema"
  *
  * const change = CatalogLevelsChange.make({
- *   id: ("grok-4.6" as ModelId),
+ *   id: S.decodeUnknownSync(ModelId)("grok-4.6"),
  *   before: ["low", "medium", "high"],
  *   after: ["low", "medium", "high", "xhigh"]
  * })

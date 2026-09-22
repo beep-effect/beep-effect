@@ -145,9 +145,10 @@ export const DriftKindOptions = DriftKindKit.Options;
  * import { DriftFinding } from "@beep/repo-cli/commands/Models/Models.report.schemas"
  * import { TargetId } from "@beep/repo-cli/commands/Models/Models.manifest.schemas"
  * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
  * const finding = DriftFinding.make({
- *   targetId: ("home.codex.config" as TargetId),
+ *   targetId: S.decodeUnknownSync(TargetId)("home.codex.config"),
  *   path: "$HOME/.codex/config.toml",
  *   locator: {
  *     _tag: "toml-top-level-key",
