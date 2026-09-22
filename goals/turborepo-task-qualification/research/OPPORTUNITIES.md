@@ -1663,3 +1663,12 @@ Capture the submitted operation metadata without payloads, or establish a
 separately named supported profile with the relevant mechanism constrained and
 run its complete comparison matrix. A diagnostic fallback cannot silently stand
 in for the ordinary runtime. Retain the current trace as partial evidence.
+
+The follow-up write review exposed an incomplete socket-operation allowlist in
+the raw reviewer: `socketpair`, `getpeername`, `setsockopt` and `shutdown` were
+omitted. The published projection now includes those observed calls while
+preserving original raw bytes. Two child write descriptors remain unknown
+because `-s 0` also abbreviated `pipe2` return arrays. A bounded smoke check
+verified that `-e abbrev=!pipe,pipe2,socketpair` exposes those descriptor arrays
+while retaining string-payload suppression. The next capture uses that setting;
+the smoke check alone does not establish its runtime outcome.

@@ -93,7 +93,28 @@
         "count": 4
       }
     ],
-    "networkOperations": [],
+    "networkOperations": [
+      {
+        "operation": "getpeername",
+        "outcome": "failed",
+        "count": 2
+      },
+      {
+        "operation": "setsockopt",
+        "outcome": "succeeded",
+        "count": 12
+      },
+      {
+        "operation": "shutdown",
+        "outcome": "succeeded",
+        "count": 1
+      },
+      {
+        "operation": "socketpair",
+        "outcome": "succeeded",
+        "count": 3
+      }
+    ],
     "ioUringOperations": [
       {
         "operation": "io_uring_enter",
@@ -121,7 +142,8 @@
     ],
     "repositoryUniquePathCount": 428,
     "repositoryReadCalls": 448,
-    "metricProjection": "The retained raw review names the unique-path metric repositoryReadCount. This published projection renames it repositoryUniquePathCount and derives repositoryReadCalls from the repository groups; original retained bytes and their hashes are unchanged."
+    "metricProjection": "The retained raw review names the unique-path metric repositoryReadCount. This published projection renames it repositoryUniquePathCount and derives repositoryReadCalls from the repository groups; original retained bytes and their hashes are unchanged.",
+    "networkProjection": "Expanded from the retained trace to include socketpair, getpeername, setsockopt and shutdown. The original raw review used an incomplete operation allowlist; its original bytes and hashes remain unchanged."
   },
   "nativePlanReview": {
     "nativePlanSha256": "44b587736fdd942ec24adf16b98d5df348e4c3cf0a8d8fa1e2b521f4b7629eb3",
@@ -233,5 +255,47 @@
       }
     ]
   },
-  "qualification": "Not established: io_uring operations and indirect I/O remain undecoded; no replay matrix or signed remote comparison is claimed."
+  "qualification": "Not established: io_uring operations and indirect I/O remain undecoded; no replay matrix or signed remote comparison is claimed.",
+  "supplementalWriteReview": {
+    "authority": "Explicit scalar-write attribution using observed descriptor annotations and CLONE_FILES groups; later annotations are retrospective evidence.",
+    "traceSha256": "3753f776c3901edf98a5311dcbd18c48e0c450e7dbecdcf39774178a70d081aa",
+    "scriptSha256": "3c1cb78fc611ae286e76c2b4bf12b4eee1edb44c84db823237bea6054e20e1e9",
+    "reviewSha256": "430634995b77469e6322b0335d2953f96a822801e1309aa80d6ae7ce34801d05",
+    "writeCalls": 21,
+    "totals": {
+      "capture-stderr": {
+        "calls": 2,
+        "returnedBytes": 53
+      },
+      "pipe": {
+        "calls": 9,
+        "returnedBytes": 39
+      },
+      "unattributed": {
+        "calls": 2,
+        "returnedBytes": 2
+      },
+      "unix-socket": {
+        "calls": 5,
+        "returnedBytes": 267
+      },
+      "null-device": {
+        "calls": 2,
+        "returnedBytes": 42
+      },
+      "eventfd": {
+        "calls": 1,
+        "returnedBytes": 8
+      }
+    },
+    "vectorOperations": {},
+    "limitations": [
+      "No io_uring queue bytes decoded",
+      "Descriptor continuity is checked against captured syscalls, not hidden ring operations",
+      "Process sharing is reconstructed for this observed execution; not a general fork/exec verifier",
+      "Original scalar-only network inventory omitted local socketpair and socket metadata calls"
+    ],
+    "privateBackup": "~/.cache/beep/turbo-qualification/evidence/write-lifetime-review-f334zoid",
+    "backupManifestSha256": "c95c377312beed8c9f4d38c9c0266b9e8b590db8eba19a5fb7d4a18adcce407c"
+  }
 }

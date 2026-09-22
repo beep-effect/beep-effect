@@ -70,7 +70,17 @@ Its independent reviewer verified the original capture hashes and reconstructed
 read-buffer contents. Of 428 repository paths read, 427 occur in the native
 input map; `.git` remains separately attributed. No repository-backed memory
 mappings were detected. The recorded write-related operations concern a private
-`/tmp/biome` directory and device opens; no decoded network operations appear.
+`/tmp/biome` directory and device opens. An expanded socket-call inventory found
+three local Unix socket pairs, twelve successful socket-option changes, one
+shutdown and two failed peer-name queries. The initial reviewer omitted those
+operation names; its empty network list was incomplete.
+
+A supplemental lifetime review joined all 21 explicit writes. Nineteen are
+attributed to captured stderr, pipes, Unix sockets, the null device or an eventfd.
+Two one-byte child writes remain unattributed because their preceding `pipe2`
+return arrays were abbreviated. This is a captured-syscall attribution, not a
+complete descriptor or indirect-I/O proof. No vectored-read or vectored-write
+calls were found in this trace.
 
 Five successful `io_uring_setup` and five `io_uring_enter` calls remain undecoded.
 Raw write arguments and vectored I/O also prevent a complete destination claim.
