@@ -1,8 +1,83 @@
-import { extractWorkspaceDependencies } from "@beep/repo-utils/Dependencies";
+import { CyclicDependencyError } from "@beep/repo-utils";
+import {
+  extractWorkspaceDependencies,
+  sortWorkspacePackages,
+  workspaceDependencyNames,
+} from "@beep/repo-utils/Dependencies";
 import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson";
 import { describe, expect, it } from "@effect/vitest";
-import { HashSet } from "effect";
+import { Effect, HashSet } from "effect";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
+
+const isCyclicDependencyError = S.is(CyclicDependencyError);
+
+describe("workspaceDependencyNames", () => {
+  it("reads package names inside every bucket and drops the bucket names", () => {
+    const workspaceNames = HashSet.make("@beep/kit", "@beep/lib", "@beep/opt", "@beep/peer");
+    const deps = extractWorkspaceDependencies(
+      decodePackageJson({
+        name: "@beep/app",
+        dependencies: { "@beep/lib": "workspace:*", effect: "^4.0.0" },
+        devDependencies: { "@beep/kit": "workspace:*", "@beep/lib": "workspace:*" },
+        peerDependencies: { "@beep/peer": "workspace:*" },
+        optionalDependencies: { "@beep/opt": "workspace:*" },
+      }),
+      workspaceNames
+    );
+
+    expect(workspaceDependencyNames(deps)).toEqual(["@beep/kit", "@beep/lib", "@beep/opt", "@beep/peer"]);
+  });
+});
+
+describe("sortWorkspacePackages", () => {
+  it.effect("prints a dependency before the package that depends on it", () =>
+    Effect.gen(function* () {
+      const workspaceNames = HashSet.make("@beep/lib");
+      const lib = extractWorkspaceDependencies(decodePackageJson({ name: "@beep/lib" }), workspaceNames);
+      const app = extractWorkspaceDependencies(
+        decodePackageJson({
+          name: "@beep/app",
+          dependencies: { "@beep/lib": "workspace:*" },
+        }),
+        workspaceNames
+      );
+
+      expect(
+        yield* sortWorkspacePackages([
+          ["@beep/app", app],
+          ["@beep/lib", lib],
+        ])
+      ).toEqual(["@beep/lib", "@beep/app"]);
+    })
+  );
+
+  it.effect("fails with CyclicDependencyError when two packages depend on each other", () =>
+    Effect.gen(function* () {
+      const workspaceNames = HashSet.make("@beep/a", "@beep/b");
+      const a = extractWorkspaceDependencies(
+        decodePackageJson({
+          name: "@beep/a",
+          dependencies: { "@beep/b": "workspace:*" },
+        }),
+        workspaceNames
+      );
+      const b = extractWorkspaceDependencies(
+        decodePackageJson({
+          name: "@beep/b",
+          dependencies: { "@beep/a": "workspace:*" },
+        }),
+        workspaceNames
+      );
+      const result = yield* sortWorkspacePackages([
+        ["@beep/a", a],
+        ["@beep/b", b],
+      ]).pipe(Effect.catchTag("CyclicDependencyError", (error) => Effect.succeed(error)));
+
+      expect(isCyclicDependencyError(result)).toBe(true);
+    })
+  );
+});
 
 describe("Dependencies", () => {
   const workspaceNames = HashSet.make("@mock/pkg-a", "@mock/pkg-b", "@mock/pkg-c");
