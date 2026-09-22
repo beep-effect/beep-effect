@@ -38,7 +38,7 @@ const findSubcommand = (name: string) =>
 describe("yeet merge-loop command wiring", () => {
   it.layer(commandTestLayer, { timeout: "30 seconds" })("foreground monitor", (it) => {
     it.effect(
-      "dispatches a foreground monitor without creating a detached job",
+      "reports a command error for foreground monitoring outside a repository",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const originalCwd = process.cwd();

@@ -10,7 +10,7 @@ import { Sha256HexFromBytes } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { Config, ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
+import { Config, ConfigProvider, Effect, FileSystem, Layer, Path, Ref } from "effect";
 import * as Duration from "effect/Duration";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -318,11 +318,13 @@ it.layer(testLayer, { timeout: "60 seconds" })("security scan orchestration", (i
     "lists the supported commands without discovering a runtime",
     Effect.fnUntraced(function* () {
       yield* runScanCommand([]);
-      expect(A.join(yield* printedLines, "\n")).toContain("security-bundle");
+      const help = A.join(yield* printedLines, "\n");
+      expect(help).toContain("beep codex security preflight");
+      expect(help).toContain("beep codex security scan");
     })
   );
   it.effect(
-    "passes bounded scan arguments and writes an exclusive source receipt",
+    "passes bounded scan arguments and refuses a reused output directory",
     Effect.fnUntraced(function* () {
       const provider = yield* pinnedRuntime(
         0,
@@ -442,15 +444,27 @@ process.exit(args.includes("--dry-run") && args.includes("--path") ? 0 : 17);
       expect(missing._tag).toBe("Failure");
       if (missing._tag === "Failure") expect(missing.failure.message).toContain("Install the pinned runtime");
       const provider = yield* pinnedRuntime(0, "setInterval(() => {}, 1000);\n");
+      const childPid = yield* Ref.make(O.none<number>());
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const recordingSpawner = ChildProcessSpawner.make((command) =>
+        spawner.spawn(command).pipe(Effect.tap((handle) => Ref.set(childPid, O.some(handle.pid))))
+      );
       const stalled = yield* runSecurityCli({
         args: [],
         stdout: "ignore",
         stderr: "ignore",
         timeout: Duration.millis(100),
         timeoutMessage: "fixture deadline",
-      }).pipe(Effect.provideService(ConfigProvider.ConfigProvider, provider), TestClock.withLive, Effect.result);
+      }).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, provider),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner),
+        TestClock.withLive,
+        Effect.result
+      );
       expect(stalled._tag).toBe("Failure");
       if (stalled._tag === "Failure") expect(stalled.failure.message).toBe("fixture deadline");
+      const pid = O.getOrThrow(yield* Ref.get(childPid));
+      expect(() => process.kill(pid, 0)).toThrowError(expect.objectContaining({ code: "ESRCH" }));
     })
   );
 });

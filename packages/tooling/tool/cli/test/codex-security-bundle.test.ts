@@ -142,6 +142,35 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       }),
     { arbitrary: { runs: 100 } }
   );
+  it.effect.prop(
+    "normalizes bare and suffixed remotes for names without a terminal .git",
+    { repository: GitHubRepoSlug },
+    ({ repository }) =>
+      Effect.gen(function* () {
+        const slug = `${repository}-remote`;
+        const canonical = `https://github.com/${slug}.git`;
+        for (const remote of [
+          `https://github.com/${slug}`,
+          canonical,
+          `git@github.com:${slug}`,
+          `ssh://git@github.com/${slug}.git`,
+        ]) {
+          const decoded = yield* decodeRepository(remote);
+          expect(decoded).toBe(slug);
+          expect(yield* encodeRepository(decoded)).toBe(canonical);
+        }
+      }),
+    { arbitrary: { runs: 100 } }
+  );
+  it.effect(
+    "requires an explicit transport suffix to preserve a repository name ending in .git",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeRepository("https://github.com/example/project.git")).toBe("example/project");
+      const canonical = yield* encodeRepository("example/project.git");
+      expect(canonical).toBe("https://github.com/example/project.git.git");
+      expect(yield* decodeRepository(canonical)).toBe("example/project.git");
+    })
+  );
   it.effect(
     "encodes canonical repository identity and rejects a foreign origin",
     Effect.fnUntraced(function* () {
@@ -152,7 +181,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
   );
 
   it.effect(
-    "refuses oversized individual files and total bundle input",
+    "refuses oversized bundle totals, referenced artifacts, and manifests",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
