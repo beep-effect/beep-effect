@@ -181,6 +181,11 @@ describe("proof shadow mode", () => {
           facts: 6,
           expiredFacts: 0,
           malformedRows: 0,
+          barStage: "pre-push",
+          barEnvProfile: "local",
+          barAttempts: 2,
+          barBranches: 2,
+          barDisagreements: 1,
           enforcementReady: false,
         });
         expect(A.map(shadow.misses, (miss) => [miss.reason, miss.count])).toStrictEqual([
@@ -197,7 +202,9 @@ describe("proof shadow mode", () => {
         expect(Str.includes("shadow rows: 6 across 2 attempt(s) on 2 branch(es)")(text)).toBe(true);
         expect(Str.includes("would reuse: 2 lane run(s), 2.0 min of passed lane time")(text)).toBe(true);
         expect(Str.includes("quality:coverage on fix/review (pre-push, attempt attempt-2)")(text)).toBe(true);
-        expect(Str.includes("not ready — attempts 2/200, branches 2/10, disagreements 1/0")(text)).toBe(true);
+        expect(
+          Str.includes("pre-push, local): not ready — attempts 2/200, branches 2/10, disagreements 1/0")(text)
+        ).toBe(true);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -246,8 +253,56 @@ describe("proof shadow mode", () => {
       bar: ProofShadowEnforcementBar.make({ attempts: 0, branches: 0, disagreements: 0 }),
     });
     expect(lowered.enforcementReady).toBe(true);
-    expect(Str.includes("enforcement (attempt-to-attempt, pre-push): ready")(renderProofShadowReport(lowered))).toBe(
-      true
-    );
+    expect(
+      Str.includes("enforcement (attempt-to-attempt, pre-push, local): ready")(renderProofShadowReport(lowered))
+    ).toBe(true);
   });
+
+  it.live("never lets merged-preview rows satisfy the pre-push bar", () =>
+    inTempCheckout((root) =>
+      Effect.gen(function* () {
+        const lanes = [lane("quality:coverage", "passed", O.some("digest-a"))];
+        yield* recordProofShadowForAttempt(
+          root,
+          facts({ attemptId: "preview-1", branch: "feat/a", stage: "merged-preview", envProfile: "pr-posture" }),
+          [report(lanes)]
+        );
+        yield* recordProofShadowForAttempt(
+          root,
+          facts({ attemptId: "preview-2", branch: "feat/b", stage: "merged-preview", envProfile: "pr-posture" }),
+          [report(lanes)]
+        );
+        const previewOnly = yield* loadProofShadowReport(root);
+        const bar = ProofShadowEnforcementBar.make({ attempts: 2, branches: 2, disagreements: 0 });
+        const judged = buildProofShadowReport({
+          ...previewOnly,
+          rows: yield* (yield* ProofLedger.make(root)).shadowRows,
+          bar,
+        });
+        expect(judged).toMatchObject({
+          attempts: 2,
+          branches: 2,
+          barAttempts: 0,
+          barBranches: 0,
+          enforcementReady: false,
+        });
+
+        yield* recordProofShadowForAttempt(root, facts({ attemptId: "push-1", branch: "feat/a" }), [report(lanes)]);
+        yield* recordProofShadowForAttempt(root, facts({ attemptId: "push-2", branch: "feat/b" }), [report(lanes)]);
+        const mixed = buildProofShadowReport({
+          ...previewOnly,
+          rows: yield* (yield* ProofLedger.make(root)).shadowRows,
+          bar,
+        });
+        expect(mixed).toMatchObject({
+          attempts: 4,
+          branches: 2,
+          barAttempts: 2,
+          barBranches: 2,
+          barDisagreements: 0,
+          enforcementReady: true,
+        });
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
 });

@@ -9,6 +9,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ProofEnvProfile, ProofStage } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { GithubCheckLaneRunStatus } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -24,13 +25,12 @@ import {
   ProofOutcome,
   ProofProvenance,
   ProofReuseHit,
-  ProofStage,
 } from "./ProofFact.ts";
 import { ProofLedger } from "./ProofLedger.ts";
 import type { Crypto, FileSystem, Path } from "effect";
 import type { QualityTaskLaneRun, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetAttemptStarted } from "./AttemptJournal.ts";
-import type { ProofEnvProfile, ProofEpoch, ProofReuseDecision } from "./ProofFact.ts";
+import type { ProofEpoch, ProofReuseDecision } from "./ProofFact.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofShadow");
 
@@ -156,10 +156,14 @@ export class ProofShadowMissCount extends S.Class<ProofShadowMissCount>($I`Proof
  * **Details**
  *
  * Every count comes from the checkout's proof ledger alone: `attempts` and
- * `branches` are distinct attempt ids and branches across shadow rows,
+ * `branches` are distinct attempt ids and branches across all shadow rows,
  * `wouldReuse` is the hit decisions, `reusableMs` is the observed duration of
- * the hits whose lane passed (the time enforcement would have saved), and
- * `enforcementReady` is the ratified bar applied to those numbers.
+ * the hits whose lane passed (the time enforcement would have saved). The bar
+ * is judged on the first enforced pair only (ruling 2): `barAttempts`,
+ * `barBranches` and `barDisagreements` count the rows whose stage and env
+ * profile equal `barStage` / `barEnvProfile`, and `enforcementReady` is the
+ * ratified bar applied to those, so merged-preview rows can never flip the
+ * pre-push gate.
  *
  * **Example** (Recognise a not-ready report)
  *
@@ -181,6 +185,11 @@ export class ProofShadowMissCount extends S.Class<ProofShadowMissCount>($I`Proof
  *   expiredFacts: 0,
  *   malformedRows: 0,
  *   bar: ProofShadowEnforcementBar.ratified,
+ *   barStage: "pre-push",
+ *   barEnvProfile: "local",
+ *   barAttempts: 0,
+ *   barBranches: 0,
+ *   barDisagreements: 0,
  *   enforcementReady: false,
  * })
  * console.log(report.enforcementReady) // false
@@ -205,11 +214,16 @@ export class ProofShadowReport extends S.Class<ProofShadowReport>($I`ProofShadow
     expiredFacts: ProofCount,
     malformedRows: ProofCount,
     bar: ProofShadowEnforcementBar,
+    barStage: ProofStage,
+    barEnvProfile: ProofEnvProfile,
+    barAttempts: ProofCount,
+    barBranches: ProofCount,
+    barDisagreements: ProofCount,
     enforcementReady: S.Boolean,
   },
   $I.annote("ProofShadowReport", {
     description:
-      "Shadow-mode disagreement report: sample size, would-have-reused decisions, misses by reason, disagreements, ledger health, and the enforcement bar verdict.",
+      "Shadow-mode disagreement report: sample size, would-have-reused decisions, misses by reason, disagreements, ledger health, and the enforcement bar verdict over the first enforced pair's stage and env profile.",
   })
 ) {}
 
@@ -535,7 +549,30 @@ const distinctCount = (
 ): number => HashSet.size(HashSet.fromIterable(A.map(rows, pick)));
 
 /**
+ * The first enforced pair (ruling 2): attempt-to-attempt within pre-push, on
+ * the local profile. Only rows from this stage and profile count toward the
+ * enforcement bar.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const PROOF_SHADOW_BAR_SAMPLE = { stage: "pre-push", envProfile: "local" } as const satisfies {
+  readonly stage: ProofStage;
+  readonly envProfile: ProofEnvProfile;
+};
+
+const inBarSample = (row: ProofLedgerShadowRow): boolean =>
+  ProofStage.is[PROOF_SHADOW_BAR_SAMPLE.stage](row.stage) &&
+  ProofEnvProfile.is[PROOF_SHADOW_BAR_SAMPLE.envProfile](row.envProfile);
+
+/**
  * Fold shadow rows and ledger health into the disagreement report.
+ *
+ * **Details**
+ *
+ * The headline counts fold every shadow row; the enforcement verdict folds only
+ * the rows in {@link PROOF_SHADOW_BAR_SAMPLE}, so a ledger full of
+ * merged-preview rows reads `not ready` for the pre-push pair.
  *
  * **Example** (An empty ledger is not ready)
  *
@@ -583,6 +620,10 @@ export const buildProofShadowReport = (input: {
   );
   const attempts = distinctCount(input.rows, (row) => row.attemptId);
   const branches = distinctCount(input.rows, (row) => row.branch);
+  const barRows = A.filter(input.rows, inBarSample);
+  const barAttempts = distinctCount(barRows, (row) => row.attemptId);
+  const barBranches = distinctCount(barRows, (row) => row.branch);
+  const barDisagreements = A.length(A.filter(barRows, isDisagreement));
   return ProofShadowReport.make({
     schemaVersion: PROOF_SHADOW_REPORT_SCHEMA_VERSION,
     generatedAt: input.generatedAt,
@@ -603,8 +644,13 @@ export const buildProofShadowReport = (input: {
     expiredFacts: input.expiredFacts,
     malformedRows: input.malformedRows,
     bar,
+    barStage: PROOF_SHADOW_BAR_SAMPLE.stage,
+    barEnvProfile: PROOF_SHADOW_BAR_SAMPLE.envProfile,
+    barAttempts,
+    barBranches,
+    barDisagreements,
     enforcementReady:
-      attempts >= bar.attempts && branches >= bar.branches && A.length(disagreements) <= bar.disagreements,
+      barAttempts >= bar.attempts && barBranches >= bar.branches && barDisagreements <= bar.disagreements,
   });
 };
 
@@ -656,7 +702,7 @@ export const renderProofShadowReport = (report: ProofShadowReport): string => {
       ...misses,
       ...disagreements,
       `facts: ${report.facts} recorded, ${report.expiredFacts} expired; malformed rows: ${report.malformedRows}`,
-      `enforcement (attempt-to-attempt, pre-push): ${report.enforcementReady ? "ready" : "not ready"} — attempts ${report.attempts}/${bar.attempts}, branches ${report.branches}/${bar.branches}, disagreements ${A.length(report.disagreements)}/${bar.disagreements}`,
+      `enforcement (attempt-to-attempt, ${report.barStage}, ${report.barEnvProfile}): ${report.enforcementReady ? "ready" : "not ready"} — attempts ${report.barAttempts}/${bar.attempts}, branches ${report.barBranches}/${bar.branches}, disagreements ${report.barDisagreements}/${bar.disagreements}`,
     ],
     "\n"
   );
