@@ -46,6 +46,13 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { DmsMirrorShape, VaultSyncEngineShape } from "@beep/documents-use-cases/aggregates/Sync/server";
 
+const decodeGetVaultSyncStatusPayload = S.decodeEffect(GetVaultSyncStatusPayload);
+const decodeUnknownDmsEventType = S.decodeUnknownEffect(DmsEventType);
+const decodeVaultSyncError = S.decodeEffect(VaultSyncError);
+const decodeVaultSyncStatus = S.decodeEffect(VaultSyncStatus);
+const decodeVaultSyncStatusInput = S.decodeEffect(VaultSyncStatusInput);
+const encodeVaultSyncStatus = S.encodeEffect(VaultSyncStatus);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -113,7 +120,7 @@ describe("DmsMirror port models", () => {
       expect(DmsEventType.is.deleted("created")).toBe(false);
       expect(DmsEventType.Enum.unknown).toBe("unknown");
 
-      const exit = yield* Effect.exit(S.decodeUnknownEffect(DmsEventType)("uploaded"));
+      const exit = yield* Effect.exit(decodeUnknownDmsEventType("uploaded"));
       expect(Exit.isFailure(exit)).toBe(true);
     })
   );
@@ -169,7 +176,7 @@ describe("VaultSyncEngine port", () => {
   it.effect(
     "round-trips the vault sync status read model",
     Effect.fnUntraced(function* () {
-      const decoded = yield* S.decodeEffect(VaultSyncStatus)({
+      const decoded = yield* decodeVaultSyncStatus({
         conflictItems: 0,
         connected: false,
         cursorPosition: null,
@@ -185,7 +192,7 @@ describe("VaultSyncEngine port", () => {
       });
 
       expect(O.isNone(decoded.cursorPosition)).toBe(true);
-      expect(yield* S.encodeEffect(VaultSyncStatus)(decoded)).toStrictEqual({
+      expect(yield* encodeVaultSyncStatus(decoded)).toStrictEqual({
         conflictItems: 0,
         connected: false,
         cursorPosition: null,
@@ -206,12 +213,12 @@ describe("VaultSyncEngine port", () => {
   it.effect(
     "decodes and guards the vault sync error union",
     Effect.fnUntraced(function* () {
-      const scanFailed = yield* S.decodeEffect(VaultSyncError)(VaultScanFailed.make({ reason: "vault root missing" }));
+      const scanFailed = yield* decodeVaultSyncError(VaultScanFailed.make({ reason: "vault root missing" }));
       expect(scanFailed._tag).toBe("VaultScanFailed");
 
       // Wire shape, not an instance: the optional-key disconnectReason encodes
       // as a bare literal (or an absent key), never as an Option object.
-      const mirrorDown = yield* S.decodeEffect(VaultSyncError)({
+      const mirrorDown = yield* decodeVaultSyncError({
         _tag: "DmsMirrorUnavailable",
         disconnectReason: "transient",
         provider: "box",
@@ -220,7 +227,7 @@ describe("VaultSyncEngine port", () => {
       });
       expect(mirrorDown._tag).toBe("DmsMirrorUnavailable");
 
-      const repositoryDown = yield* S.decodeEffect(VaultSyncError)(
+      const repositoryDown = yield* decodeVaultSyncError(
         SyncItemRepositoryUnavailable.make({ reason: "database connection closed" })
       );
       expect(repositoryDown._tag).toBe("SyncItemRepositoryUnavailable");
@@ -255,9 +262,9 @@ describe("VaultSyncEngine port", () => {
       // Both construction and missing-key decoding must stay wire-compatible
       // with pre-forceProbe callers, which never bypass the probe cache.
       expect(VaultSyncStatusInput.make({ workspaceId }).forceProbe).toBe(false);
-      const decodedInput = yield* S.decodeEffect(VaultSyncStatusInput)({ workspaceId: 1 });
+      const decodedInput = yield* decodeVaultSyncStatusInput({ workspaceId: 1 });
       expect(decodedInput.forceProbe).toBe(false);
-      const decodedPayload = yield* S.decodeEffect(GetVaultSyncStatusPayload)({ workspaceId: 1 });
+      const decodedPayload = yield* decodeGetVaultSyncStatusPayload({ workspaceId: 1 });
       expect(decodedPayload.forceProbe).toBe(false);
       expect(GetVaultSyncStatusPayload.make({ forceProbe: true, workspaceId }).forceProbe).toBe(true);
     })

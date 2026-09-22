@@ -47,6 +47,8 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
+const decodeUnknownSafeMetadataKey = S.decodeUnknownEffect(SafeMetadataKey);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
@@ -209,12 +211,11 @@ describe("@beep/ffmpeg capture", () => {
 
   it.effect("rejects unsafe metadata keys", () =>
     Effect.gen(function* () {
-      const decode = S.decodeUnknownEffect(SafeMetadataKey);
-      expect(yield* decode("BEEP_QA_SESSION_ID")).toBe("BEEP_QA_SESSION_ID");
-      expect(Exit.isFailure(yield* Effect.exit(decode("BEEP QA")))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode("BEEP=QA")))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode("1BEEP")))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decode("")))).toBe(true);
+      expect(yield* decodeUnknownSafeMetadataKey("BEEP_QA_SESSION_ID")).toBe("BEEP_QA_SESSION_ID");
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeMetadataKey("BEEP QA")))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeMetadataKey("BEEP=QA")))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeMetadataKey("1BEEP")))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUnknownSafeMetadataKey("")))).toBe(true);
     })
   );
 

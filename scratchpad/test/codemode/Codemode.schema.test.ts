@@ -61,9 +61,15 @@ import { executeWithLimits } from "../../codemode/interpreter/Interpreter.execut
 import { resolvePromiseValue } from "../../codemode/interpreter/Interpreter.promises.ts";
 import { invokeDateMethod } from "../../codemode/stdlib/StdLib.date.ts";
 import { toHostRegex } from "../../codemode/stdlib/StdLib.regexp.ts";
+
+const decodeCodeModeDate = S.decodeEffect(CodeModeDate);
+const decodeCodeModeNumber = S.decodeEffect(CodeModeNumber);
 const decodeExecutionLimits = S.decodeEffect(ExecutionLimits);
+const decodeIntrinsicMethod = S.decodeEffect(IntrinsicMethod);
+const decodeOperationId = S.decodeEffect(OperationId);
 const decodeSearchInput = S.decodeEffect(SearchInput);
 const decodeUnknownApiPathResult = S.decodeUnknownResult(ApiPath);
+const decodeUnknownCodeModeNumber = S.decodeUnknownEffect(CodeModeNumber);
 const decodeUnknownDiagnosticLocationResult = S.decodeUnknownResult(DiagnosticLocation);
 const decodeUnknownExecutionLimitsResult = S.decodeUnknownResult(ExecutionLimits);
 const decodeUnknownGlobalMethodReferenceResult = S.decodeUnknownResult(GlobalMethodReference);
@@ -77,9 +83,9 @@ const encodeSearchInput = S.encodeEffect(SearchInput);
 const encodeStatementBreak = S.encodeEffect(StatementBreak);
 const isApiPath2 = S.is(ApiPath);
 const isIdentifierSegment = S.is(IdentifierSegment);
+const isInt = S.is(S.Int);
 const isMemberReference = S.is(MemberReference);
 const isResult = S.is(Result);
-const isInt = S.is(S.Int);
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
   name: string,
@@ -107,10 +113,10 @@ describe("CodeMode schema laws", () => {
     "preserves finite and non-finite guest numbers while rejecting other values",
     Effect.fnUntraced(function* () {
       for (const value of [0, -0, 42, NaN, Infinity, -Infinity]) {
-        expect(yield* S.decodeEffect(CodeModeNumber)(value)).toBe(value);
-        const date = yield* S.decodeEffect(CodeModeDate)({ _tag: "CodeModeDate", time: value });
+        expect(yield* decodeCodeModeNumber(value)).toBe(value);
+        const date = yield* decodeCodeModeDate({ _tag: "CodeModeDate", time: value });
         expect(date.time).toBe(value);
-        const method = yield* S.decodeEffect(IntrinsicMethod)({
+        const method = yield* decodeIntrinsicMethod({
           receiverKind: "Number",
           receiver: value,
           name: "toString",
@@ -118,7 +124,7 @@ describe("CodeMode schema laws", () => {
         expect(method.receiver).toBe(value);
       }
       for (const value of ["1", null, undefined, {}, true]) {
-        expect(Rs.isFailure(yield* S.decodeUnknownEffect(CodeModeNumber)(value).pipe(Effect.result))).toBe(true);
+        expect(Rs.isFailure(yield* decodeUnknownCodeModeNumber(value).pipe(Effect.result))).toBe(true);
       }
     })
   );
@@ -248,7 +254,7 @@ describe("CodeMode schema laws", () => {
       assert.strictEqual(Rs.isSuccess(decodeUnknownApiPathResult("/users/{id}")), true);
       assert.strictEqual(Rs.isFailure(decodeUnknownApiPathResult("users/{id}")), true);
       assert.strictEqual(Rs.isFailure(decodeUnknownOperationIdResult("   ")), true);
-      assert.strictEqual(yield* S.decodeEffect(OperationId)("  getUser  "), "getUser");
+      assert.strictEqual(yield* decodeOperationId("  getUser  "), "getUser");
     })
   );
 
@@ -259,7 +265,7 @@ describe("CodeMode schema laws", () => {
       expect(isIdentifierSegment(candidate)).toBe(/^[A-Za-z_$][A-Za-z0-9_$]*$/u.test(candidate));
       expect(isApiPath2(candidate)).toBe(/^\/.*$/u.test(candidate));
       const trimmed = Str.trim(candidate);
-      const decoded = yield* S.decodeEffect(OperationId)(candidate).pipe(Effect.result);
+      const decoded = yield* decodeOperationId(candidate).pipe(Effect.result);
       expect(Str.isEmpty(trimmed) ? Rs.isFailure(decoded) : Rs.isSuccess(decoded) && decoded.success === trimmed).toBe(
         true
       );
@@ -385,8 +391,8 @@ describe("CodeMode schema laws", () => {
     "keeps numeric execution-limit checks equivalent to positive and non-negative integers",
     [S.Finite],
     Effect.fnUntraced(function* ([value]) {
-      const timeout = yield* S.decodeEffect(ExecutionLimits)({ timeoutMs: value }).pipe(Effect.result);
-      const toolCalls = yield* S.decodeEffect(ExecutionLimits)({ maxToolCalls: value }).pipe(Effect.result);
+      const timeout = yield* decodeExecutionLimits({ timeoutMs: value }).pipe(Effect.result);
+      const toolCalls = yield* decodeExecutionLimits({ maxToolCalls: value }).pipe(Effect.result);
       expect(Rs.isSuccess(timeout)).toBe(isInt(value) && N.isGreaterThan(0)(value));
       expect(Rs.isSuccess(toolCalls)).toBe(isInt(value) && N.isGreaterThanOrEqualTo(0)(value));
     }),

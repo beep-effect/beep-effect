@@ -13,6 +13,8 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { afterEach, vi } from "vitest";
 
+const decodeCanonicalizeDatasetRequest = S.decodeEffect(CanonicalizeDatasetRequest);
+const encodeCanonicalizeDatasetRequest = S.encodeEffect(CanonicalizeDatasetRequest);
 const encodeDataset = S.encodeEffect(Dataset);
 
 const provideScopedLayer =
@@ -64,7 +66,7 @@ const expectSemanticBudgetFailure = (error: Error) => {
       Effect.gen(function* () {
         const service = yield* CanonicalizationService;
         return yield* service.canonicalize(
-          yield* S.decodeEffect(CanonicalizeDatasetRequest)({
+          yield* decodeCanonicalizeDatasetRequest({
             algorithm: "rdfc-1.0",
             dataset: yield* encodeDataset(dataset),
           })
@@ -100,7 +102,7 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
             Effect.gen(function* () {
               const service = yield* CanonicalizationService;
               return yield* service.canonicalize(
-                yield* S.decodeEffect(CanonicalizeDatasetRequest)({
+                yield* decodeCanonicalizeDatasetRequest({
                   algorithm: "rdfc-1.0",
                   dataset: yield* encodeDataset(dataset),
                 })
@@ -152,7 +154,7 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
           Effect.gen(function* () {
             const service = yield* CanonicalizationService;
             return yield* service.canonicalize(
-              yield* S.decodeEffect(CanonicalizeDatasetRequest)({
+              yield* decodeCanonicalizeDatasetRequest({
                 algorithm: "lexical-sort-v1",
                 dataset: yield* encodeDataset(dataset),
               })
@@ -211,10 +213,10 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
           Arbitrary.all([arbitrary]),
           ([request]) =>
             Effect.gen(function* () {
-              const encoded = yield* S.encodeEffect(CanonicalizeDatasetRequest)(request);
-              const decoded = yield* S.decodeEffect(CanonicalizeDatasetRequest)(encoded);
+              const encoded = yield* encodeCanonicalizeDatasetRequest(request);
+              const decoded = yield* decodeCanonicalizeDatasetRequest(encoded);
 
-              expect(yield* S.encodeEffect(CanonicalizeDatasetRequest)(decoded)).toEqual(encoded);
+              expect(yield* encodeCanonicalizeDatasetRequest(decoded)).toEqual(encoded);
 
               return true;
             }),

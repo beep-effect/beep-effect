@@ -22,6 +22,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const encodePandocCompatibilityReport = S.encodeEffect(PandocCompatibilityReport);
+const encodePandocMappingIssue = S.encodeEffect(PandocMappingIssue);
 const decodeUnknownMdYouTube = S.decodeUnknownEffect(Md.YouTube);
 
 const JsonPathArbitrary = Arbitrary.schema(JsonPath);
@@ -394,11 +396,11 @@ describe("Pandoc.mapping", () => {
             expect(issue.pointer).toBe(JsonPath.toPointer(path));
             expect(issue.pointer).toBe(jsonPointerFromPath(path));
             expect(issue.severity).toBe("unsupported");
-            expect(yield* S.encodeEffect(PandocMappingIssue)(issue)).not.toHaveProperty("pointer");
+            expect(yield* encodePandocMappingIssue(issue)).not.toHaveProperty("pointer");
 
             const report = PandocCompatibilityReport.fromIssues([issue]);
             expect(report.profile).toBe("gap");
-            expect(yield* S.encodeEffect(PandocCompatibilityReport)(report)).not.toHaveProperty("profile");
+            expect(yield* encodePandocCompatibilityReport(report)).not.toHaveProperty("profile");
 
             return true;
           }),

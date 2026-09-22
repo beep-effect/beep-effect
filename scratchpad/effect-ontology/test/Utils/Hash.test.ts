@@ -24,6 +24,8 @@ import {
   hashParams,
 } from "../../Utils/IdempotencyKey.ts";
 
+const decodeExtractionParams = S.decodeEffect(ExtractionParams);
+
 const abcDigest = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 
 it.layer(BunCrypto.layer)("platform hashing compatibility", (it) => {
@@ -76,8 +78,8 @@ it.layer(BunCrypto.layer)("platform hashing compatibility", (it) => {
       const empty = ExtractionParams.make({});
       assert.strictEqual(yield* hashParams(empty), "f615ccc9a6538a62");
       assert.strictEqual(yield* computeOntologyVersion("abc"), "ba7816bf8f01cfea");
-      const first = yield* S.decodeEffect(ExtractionParams)({ temperature: 0.1, maxTokens: 100 });
-      const reordered = yield* S.decodeEffect(ExtractionParams)({ maxTokens: 100, temperature: 0.1 });
+      const first = yield* decodeExtractionParams({ temperature: 0.1, maxTokens: 100 });
+      const reordered = yield* decodeExtractionParams({ maxTokens: 100, temperature: 0.1 });
       assert.strictEqual(yield* hashParams(first), yield* hashParams(reordered));
       const key = yield* computeIdempotencyKey(" Ada  LOVELACE\n", "foaf", "v1", empty);
       // The golden digest is asserted by shape only: a 64-hex literal in source trips

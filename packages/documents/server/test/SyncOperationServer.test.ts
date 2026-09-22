@@ -25,6 +25,8 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const decodeUnknownSyncOperation = S.decodeUnknownEffect(DomainSyncOperation.SyncOperation);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -156,7 +158,7 @@ describe("SyncOperation server repository", () => {
     "fails update for an unknown operation with not-found",
     Effect.fnUntraced(function* () {
       const repository = yield* makeInMemorySyncOperationRepository();
-      const detachedOperation = yield* S.decodeUnknownEffect(DomainSyncOperation.SyncOperation)(detachedOperationRow);
+      const detachedOperation = yield* decodeUnknownSyncOperation(detachedOperationRow);
 
       const error = yield* Effect.flip(repository.update(detachedOperation));
       expect(SyncOperationRepositoryNotFound.is(error)).toBe(true);

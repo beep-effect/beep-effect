@@ -9,6 +9,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const decodeUnknownSyncOperation = S.decodeUnknownEffect(SyncOperation.SyncOperation);
+const decodeUnknownSyncOperationStatus = S.decodeUnknownEffect(SyncOperation.SyncOperationStatus);
+const decodeUnknownSyncOperationType = S.decodeUnknownEffect(SyncOperation.SyncOperationType);
+const encodeSyncOperation = S.encodeEffect(SyncOperation.SyncOperation);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -60,20 +65,20 @@ describe("SyncOperation entity", () => {
 
   it.effect("decodes and encodes a full upload outbox row", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(SyncOperation.SyncOperation)(uploadRow);
+      const decoded = yield* decodeUnknownSyncOperation(uploadRow);
 
       expect(decoded).toBeInstanceOf(SyncOperation.SyncOperation);
       expect(decoded.inputContentDigest).toEqual(O.some("abc123"));
       expect(decoded.targetParentRelPath).toEqual(O.some("matters/client-default"));
       expect(decoded.lastError).toEqual(O.none());
       expect(decoded.status).toBe("queued");
-      expect(yield* S.encodeEffect(SyncOperation.SyncOperation)(decoded)).toStrictEqual(uploadRow);
+      expect(yield* encodeSyncOperation(decoded)).toStrictEqual(uploadRow);
     })
   );
 
   it.effect("decodes folder creation rows targeting the mirror root", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(SyncOperation.SyncOperation)({
+      const decoded = yield* decodeUnknownSyncOperation({
         ...uploadRow,
         inputContentDigest: null,
         lastError: "box responded 503",
@@ -96,8 +101,8 @@ describe("SyncOperation entity", () => {
       expect(SyncOperation.SyncOperationType.is.moveItem("uploadFile")).toBe(false);
       expect(SyncOperation.SyncOperationStatus.is.queued("queued")).toBe(true);
       expect(SyncOperation.SyncOperationStatus.Enum.leased).toBe("leased");
-      const typeExit = yield* Effect.exit(S.decodeUnknownEffect(SyncOperation.SyncOperationType)("deleteItem"));
-      const statusExit = yield* Effect.exit(S.decodeUnknownEffect(SyncOperation.SyncOperationStatus)("cancelled"));
+      const typeExit = yield* Effect.exit(decodeUnknownSyncOperationType("deleteItem"));
+      const statusExit = yield* Effect.exit(decodeUnknownSyncOperationStatus("cancelled"));
       expect(Exit.isFailure(typeExit)).toBe(true);
       expect(Exit.isFailure(statusExit)).toBe(true);
     })

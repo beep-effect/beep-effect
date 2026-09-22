@@ -25,8 +25,8 @@ import * as S from "effect/Schema";
 
 const decodeUnknownJSDocMigrateProxyUrl = S.decodeUnknownEffect(JSDocMigrateProxyUrl);
 const isJSDocMigrateInlineText = S.is(JSDocMigrateInlineText);
-const encodeUnknownJson = (value: unknown): string =>
-  Result.getOrThrow(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value));
+const encodeUnknownJsonString = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeUnknownJson = (value: unknown): string => Result.getOrThrow(encodeUnknownJsonString(value));
 
 const lines = (...values: ReadonlyArray<string>): string => values.join("\n");
 

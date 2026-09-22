@@ -15,6 +15,8 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { SyncCursorRepositoryShape } from "@beep/documents-use-cases/entities/SyncCursor/server";
 
+const decodeUnknownSyncCursor = S.decodeUnknownEffect(DomainSyncCursor.SyncCursor);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -37,8 +39,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 };
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
-const decodeSyncCursor = (input: unknown) =>
-  S.decodeUnknownEffect(DomainSyncCursor.SyncCursor)(input).pipe(Effect.orDie);
+const decodeSyncCursor = (input: unknown) => decodeUnknownSyncCursor(input).pipe(Effect.orDie);
 
 const cursorSeed = (streamPosition: string) =>
   SyncCursorSeed.make({

@@ -426,7 +426,8 @@ it.layer(platform)("B7 readiness loop", (test) => {
   );
 });
 
-const encodeJson = (value: unknown) => S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(value).pipe(Effect.orDie);
+const encodeUnknownJsonString = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = (value: unknown) => encodeUnknownJsonString(value).pipe(Effect.orDie);
 const handle = (output: string, code = 0) =>
   ChildProcessSpawner.makeHandle({
     all: Stream.make(new TextEncoder().encode(output)),

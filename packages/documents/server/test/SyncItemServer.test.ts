@@ -24,6 +24,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const decodeUnknownSyncItem = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -138,7 +140,7 @@ describe("SyncItem server repository", () => {
     "fails update for an untracked item with not-found",
     Effect.fnUntraced(function* () {
       const repository = yield* makeInMemorySyncItemRepository();
-      const detachedItem = yield* S.decodeUnknownEffect(DomainSyncItem.SyncItem)(detachedItemRow);
+      const detachedItem = yield* decodeUnknownSyncItem(detachedItemRow);
 
       const error = yield* Effect.flip(repository.update(detachedItem));
       expect(SyncItemRepositoryNotFound.is(error)).toBe(true);

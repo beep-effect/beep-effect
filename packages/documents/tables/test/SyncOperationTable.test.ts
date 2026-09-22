@@ -16,6 +16,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const decodeUnknownSyncOperation = S.decodeUnknownEffect(DomainSyncOperation.SyncOperation);
+
 const SyncOperationEquivalence = S.toEquivalence(DomainSyncOperation.SyncOperation);
 
 const indexConfigNamed = (name: string) =>
@@ -85,7 +87,7 @@ describe("SyncOperation table", () => {
   it.effect(
     "round-trips SyncOperation rows through the converters",
     Effect.fnUntraced(function* () {
-      const syncOperation = yield* S.decodeUnknownEffect(DomainSyncOperation.SyncOperation)(uploadRow);
+      const syncOperation = yield* decodeUnknownSyncOperation(uploadRow);
       const insert = yield* Effect.fromResult(toSyncOperationInsert(syncOperation));
 
       expect("id" in insert).toBe(false);

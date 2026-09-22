@@ -47,6 +47,7 @@ import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const decodePandocJsonFromString = S.decodeEffect(PandocJsonFromString);
 const encodeTable = S.encodeEffect(Table);
 const isPandocLosslessDocument = S.is(PandocLosslessDocument);
 const isPandocMetaValue = S.is(PandocMetaValue);
@@ -1486,9 +1487,7 @@ describe("Pandoc.codec", () => {
 
   it.effect("exposes a schema-owned JSON string boundary", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeEffect(PandocJsonFromString)(
-        `{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`
-      );
+      const decoded = yield* decodePandocJsonFromString(`{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`);
       expect(decoded.blocks).toEqual([]);
     })
   );

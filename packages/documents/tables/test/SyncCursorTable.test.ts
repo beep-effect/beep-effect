@@ -16,6 +16,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const decodeUnknownSyncCursor = S.decodeUnknownEffect(DomainSyncCursor.SyncCursor);
+
 const SyncCursorEquivalence = S.toEquivalence(DomainSyncCursor.SyncCursor);
 
 const indexConfigNamed = (name: string) =>
@@ -66,7 +68,7 @@ describe("SyncCursor table", () => {
   it.effect(
     "round-trips SyncCursor rows through the converters",
     Effect.fnUntraced(function* () {
-      const syncCursor = yield* S.decodeUnknownEffect(DomainSyncCursor.SyncCursor)(activeCursorRow);
+      const syncCursor = yield* decodeUnknownSyncCursor(activeCursorRow);
       const insert = yield* Effect.fromResult(toSyncCursorInsert(syncCursor));
 
       expect("id" in insert).toBe(false);

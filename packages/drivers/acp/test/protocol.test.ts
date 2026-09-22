@@ -34,6 +34,9 @@ import {
   makeTerminationError,
 } from "./helpers.ts";
 
+const decodeAcpIncomingNotification = Schema.decodeEffect(AcpProtocol.AcpIncomingNotification);
+const decodeAcpProtocolLogEvent = Schema.decodeEffect(AcpProtocol.AcpProtocolLogEvent);
+
 const SessionCancelNotification = jsonRpcNotification("session/cancel", AcpSchema.CancelNotification);
 const SessionUpdateNotification = jsonRpcNotification("session/update", AcpSchema.SessionNotification);
 const ElicitationCompleteNotification = jsonRpcNotification(
@@ -191,7 +194,7 @@ it.effect(
     assert.deepEqual(
       encode(
         AcpProtocol.AcpProtocolLogEvent,
-        yield* Schema.decodeEffect(AcpProtocol.AcpProtocolLogEvent)({
+        yield* decodeAcpProtocolLogEvent({
           direction: "incoming",
           payload: "{}",
           stage: "raw",
@@ -206,7 +209,7 @@ it.effect(
     assert.deepEqual(
       encode(
         AcpProtocol.AcpIncomingNotification,
-        yield* Schema.decodeEffect(AcpProtocol.AcpIncomingNotification)({
+        yield* decodeAcpIncomingNotification({
           _tag: "ExtNotification",
           method: "x/custom",
           params: { ok: true },

@@ -9,6 +9,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const decodeUnknownSyncCursor = S.decodeUnknownEffect(SyncCursor.SyncCursor);
+const decodeUnknownSyncCursorStatus = S.decodeUnknownEffect(SyncCursor.SyncCursorStatus);
+const encodeSyncCursor = S.encodeEffect(SyncCursor.SyncCursor);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -59,19 +63,19 @@ describe("SyncCursor entity", () => {
 
   it.effect("decodes and encodes a fresh cursor row", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(SyncCursor.SyncCursor)(freshCursorRow);
+      const decoded = yield* decodeUnknownSyncCursor(freshCursorRow);
 
       expect(decoded).toBeInstanceOf(SyncCursor.SyncCursor);
       expect(decoded.lastEventId).toEqual(O.none());
       expect(decoded.lastError).toEqual(O.none());
       expect(decoded.status).toBe("active");
-      expect(yield* S.encodeEffect(SyncCursor.SyncCursor)(decoded)).toStrictEqual(freshCursorRow);
+      expect(yield* encodeSyncCursor(decoded)).toStrictEqual(freshCursorRow);
     })
   );
 
   it.effect("decodes advanced cursors with recorded event and error state", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(SyncCursor.SyncCursor)({
+      const decoded = yield* decodeUnknownSyncCursor({
         ...freshCursorRow,
         lastError: "box stream returned 429",
         lastEventId: "evt-9",
@@ -90,7 +94,7 @@ describe("SyncCursor entity", () => {
       expect(SyncCursor.SyncCursorStatus.is.active("active")).toBe(true);
       expect(SyncCursor.SyncCursorStatus.is.error("active")).toBe(false);
       expect(SyncCursor.SyncCursorStatus.Enum.error).toBe("error");
-      const statusExit = yield* Effect.exit(S.decodeUnknownEffect(SyncCursor.SyncCursorStatus)("paused"));
+      const statusExit = yield* Effect.exit(decodeUnknownSyncCursorStatus("paused"));
       expect(Exit.isFailure(statusExit)).toBe(true);
     })
   );

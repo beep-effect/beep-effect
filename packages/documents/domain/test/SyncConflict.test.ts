@@ -9,6 +9,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const decodeUnknownSyncConflict = S.decodeUnknownEffect(SyncConflict.SyncConflict);
+const decodeUnknownSyncConflictKind = S.decodeUnknownEffect(SyncConflict.SyncConflictKind);
+const decodeUnknownSyncConflictResolution = S.decodeUnknownEffect(SyncConflict.SyncConflictResolution);
+const encodeSyncConflict = S.encodeEffect(SyncConflict.SyncConflict);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -65,7 +70,7 @@ describe("SyncConflict entity", () => {
 
   it.effect("decodes and encodes a locally mapped drift row", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(SyncConflict.SyncConflict)(mappedDriftRow);
+      const decoded = yield* decodeUnknownSyncConflict(mappedDriftRow);
 
       expect(decoded).toBeInstanceOf(SyncConflict.SyncConflict);
       expect(decoded.syncItemId).toEqual(O.some(1));
@@ -73,13 +78,13 @@ describe("SyncConflict entity", () => {
       expect(decoded.remoteEventId).toEqual(O.some("evt-1"));
       expect(decoded.localRelPath).toEqual(O.some("matters/client-default/complaint.pdf"));
       expect(decoded.remotePayload).toEqual({ eventType: "ITEM_MODIFY", itemId: "9001" });
-      expect(yield* S.encodeEffect(SyncConflict.SyncConflict)(decoded)).toStrictEqual(mappedDriftRow);
+      expect(yield* encodeSyncConflict(decoded)).toStrictEqual(mappedDriftRow);
     })
   );
 
   it.effect("decodes drift for remote items unknown locally as none", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(SyncConflict.SyncConflict)({
+      const decoded = yield* decodeUnknownSyncConflict({
         ...mappedDriftRow,
         conflictKind: "remoteCreate",
         localRelPath: null,
@@ -101,10 +106,8 @@ describe("SyncConflict entity", () => {
       expect(SyncConflict.SyncConflictKind.is.remoteDelete("remoteEdit")).toBe(false);
       expect(SyncConflict.SyncConflictResolution.is.open("open")).toBe(true);
       expect(SyncConflict.SyncConflictResolution.Enum.reviewed).toBe("reviewed");
-      const kindExit = yield* Effect.exit(S.decodeUnknownEffect(SyncConflict.SyncConflictKind)("localEdit"));
-      const resolutionExit = yield* Effect.exit(
-        S.decodeUnknownEffect(SyncConflict.SyncConflictResolution)("dismissed")
-      );
+      const kindExit = yield* Effect.exit(decodeUnknownSyncConflictKind("localEdit"));
+      const resolutionExit = yield* Effect.exit(decodeUnknownSyncConflictResolution("dismissed"));
       expect(Exit.isFailure(kindExit)).toBe(true);
       expect(Exit.isFailure(resolutionExit)).toBe(true);
     })

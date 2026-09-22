@@ -9,6 +9,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const decodeUnknownSyncItem = S.decodeUnknownEffect(SyncItem.SyncItem);
+const decodeUnknownSyncItemState = S.decodeUnknownEffect(SyncItem.SyncItemState);
+const encodeSyncItem = S.encodeEffect(SyncItem.SyncItem);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -61,7 +65,7 @@ describe("SyncItem entity", () => {
 
   it.effect("decodes and encodes a full file row", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(SyncItem.SyncItem)(fileRow);
+      const decoded = yield* decodeUnknownSyncItem(fileRow);
 
       expect(decoded).toBeInstanceOf(SyncItem.SyncItem);
       expect(decoded.contentDigest).toEqual(O.some("abc123"));
@@ -69,13 +73,13 @@ describe("SyncItem entity", () => {
       expect(decoded.remoteId).toEqual(O.some("9001"));
       expect(decoded.lastError).toEqual(O.none());
       expect(decoded.syncState).toBe("pending");
-      expect(yield* S.encodeEffect(SyncItem.SyncItem)(decoded)).toStrictEqual(fileRow);
+      expect(yield* encodeSyncItem(decoded)).toStrictEqual(fileRow);
     })
   );
 
   it.effect("decodes folder rows with null content and remote fields as none", () =>
     Effect.gen(function* () {
-      const decoded = yield* S.decodeUnknownEffect(SyncItem.SyncItem)({
+      const decoded = yield* decodeUnknownSyncItem({
         ...fileRow,
         contentDigest: null,
         contentSizeBytes: null,
@@ -103,10 +107,8 @@ describe("SyncItem entity", () => {
       expect(SyncItem.SyncItemState.is.pending("pending")).toBe(true);
       expect(SyncItem.SyncItemState.is.conflict("pending")).toBe(false);
       expect(SyncItem.SyncItemState.Enum.current).toBe("current");
-      const stateExit = yield* Effect.exit(S.decodeUnknownEffect(SyncItem.SyncItemState)("unknown"));
-      const rowExit = yield* Effect.exit(
-        S.decodeUnknownEffect(SyncItem.SyncItem)({ ...fileRow, syncState: "unknown" })
-      );
+      const stateExit = yield* Effect.exit(decodeUnknownSyncItemState("unknown"));
+      const rowExit = yield* Effect.exit(decodeUnknownSyncItem({ ...fileRow, syncState: "unknown" }));
       expect(Exit.isFailure(stateExit)).toBe(true);
       expect(Exit.isFailure(rowExit)).toBe(true);
     })

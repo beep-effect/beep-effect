@@ -28,6 +28,8 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 
+const decodeBoxObservedFolder = S.decodeEffect(BoxObservedFolder);
+const encodeBoxObservedFolder = S.encodeEffect(BoxObservedFolder);
 const decodeBoxDesiredStateOption = S.decodeOption(BoxDesiredState);
 const encodeBoxProvisioningPlanJson = S.encodeEffect(S.fromJsonString(BoxProvisioningPlan));
 const encodeBoxDesiredState = S.encodeEffect(BoxDesiredState);
@@ -37,8 +39,8 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
     "round-trips schema-derived observed folders",
     Effect.fnUntraced(function* () {
       const equivalent = S.toEquivalence(BoxObservedFolder);
-      const encode = S.encodeEffect(BoxObservedFolder);
-      const decode = S.decodeEffect(BoxObservedFolder);
+      const encode = encodeBoxObservedFolder;
+      const decode = decodeBoxObservedFolder;
       const result = yield* Arbitrary.checkEffect(
         Arbitrary.all([Arbitrary.schema(BoxObservedFolder)]),
         ([folder]) =>

@@ -16,6 +16,8 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+const decodeUnknownSyncConflict = S.decodeUnknownEffect(DomainSyncConflict.SyncConflict);
+
 const SyncConflictEquivalence = S.toEquivalence(DomainSyncConflict.SyncConflict);
 
 const indexConfigNamed = (name: string) =>
@@ -80,7 +82,7 @@ describe("SyncConflict table", () => {
   it.effect(
     "round-trips SyncConflict rows through the converters",
     Effect.fnUntraced(function* () {
-      const syncConflict = yield* S.decodeUnknownEffect(DomainSyncConflict.SyncConflict)(mappedDriftRow);
+      const syncConflict = yield* decodeUnknownSyncConflict(mappedDriftRow);
       const insert = yield* Effect.fromResult(toSyncConflictInsert(syncConflict));
 
       expect("id" in insert).toBe(false);

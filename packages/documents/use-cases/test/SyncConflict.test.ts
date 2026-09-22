@@ -17,6 +17,8 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { SyncConflictRepositoryShape } from "@beep/documents-use-cases/entities/SyncConflict/server";
 
+const decodeUnknownSyncConflict = S.decodeUnknownEffect(DomainSyncConflict.SyncConflict);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -40,8 +42,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const unknownConflictId = Documents.SyncConflictId.make(99);
-const decodeSyncConflict = (input: unknown) =>
-  S.decodeUnknownEffect(DomainSyncConflict.SyncConflict)(input).pipe(Effect.orDie);
+const decodeSyncConflict = (input: unknown) => decodeUnknownSyncConflict(input).pipe(Effect.orDie);
 
 const driftSeed = (remoteEventId: O.Option<string>) =>
   SyncConflictSeed.make({

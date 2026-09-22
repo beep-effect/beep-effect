@@ -22,6 +22,8 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { SyncOperationRepositoryShape } from "@beep/documents-use-cases/entities/SyncOperation/server";
 
+const decodeUnknownSyncOperation = S.decodeUnknownEffect(DomainSyncOperation.SyncOperation);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -46,8 +48,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const syncItemId = Documents.SyncItemId.make(1);
 const zero = NonNegativeInt.make(0);
-const decodeSyncOperation = (input: unknown) =>
-  S.decodeUnknownEffect(DomainSyncOperation.SyncOperation)(input).pipe(Effect.orDie);
+const decodeSyncOperation = (input: unknown) => decodeUnknownSyncOperation(input).pipe(Effect.orDie);
 
 const uploadSeed = (idempotencyKey: string, targetRelPath: string) =>
   SyncOperationSeed.make({

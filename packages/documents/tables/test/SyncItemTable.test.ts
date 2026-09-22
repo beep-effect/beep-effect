@@ -17,6 +17,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { SyncItemInsert, SyncItemRow } from "@beep/documents-tables/entities/SyncItem";
 
+const decodeUnknownSyncItem = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
+
 const SyncItemEquivalence = S.toEquivalence(DomainSyncItem.SyncItem);
 
 const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
@@ -108,7 +110,7 @@ describe("SyncItem table", () => {
   it.effect(
     "round-trips SyncItem rows through the converters",
     Effect.fnUntraced(function* () {
-      const syncItem = yield* S.decodeUnknownEffect(DomainSyncItem.SyncItem)(fileRow);
+      const syncItem = yield* decodeUnknownSyncItem(fileRow);
       const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
 
       expect("id" in insert).toBe(false);

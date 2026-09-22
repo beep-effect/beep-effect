@@ -14,6 +14,8 @@ import type * as PlatformError from "effect/PlatformError";
 import type * as SchemaIssue from "effect/SchemaIssue";
 import type { BoxLogicalKey } from "../BoxProvisioningIntent.ts";
 
+const decodeUnknownJson = S.decodeUnknownEffect(S.Json);
+
 type CanonicalEntry = readonly [key: string, value: unknown];
 
 const byKeyAscending = Order.mapInput(Order.String, ([key]: CanonicalEntry) => key);
@@ -65,7 +67,7 @@ export const digestText = Effect.fnUntraced(function* (value: string) {
  * @since 0.0.0
  */
 export const digestEncoded = Effect.fnUntraced(function* (value: unknown) {
-  const json = yield* S.decodeUnknownEffect(S.Json)(value);
+  const json = yield* decodeUnknownJson(value);
   return yield* digestText(canonicalJson(json));
 });
 

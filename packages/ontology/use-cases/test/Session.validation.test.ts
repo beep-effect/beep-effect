@@ -44,6 +44,8 @@ import { Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
 import type { Quad } from "@beep/rdf/Rdf";
 
+const decodePrefixMap = S.decodeEffect(PrefixMap);
+
 const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
 const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
 const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
@@ -100,7 +102,7 @@ describe("Ontology validation and provenance", () => {
     parse: Effect.fn("TurtleCodec.parse")(function* () {
       return ParseTurtleResult.make({
         dataset: makeDataset([]),
-        prefixes: yield* Effect.orDie(S.decodeEffect(PrefixMap)({})),
+        prefixes: yield* Effect.orDie(decodePrefixMap({})),
       });
     }),
     serialize: Effect.fn("TurtleCodec.serialize")((request) =>

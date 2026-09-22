@@ -27,6 +27,20 @@ import { Cause, Effect, Equal, Exit, Layer, Schema, Stream } from "effect";
 import * as O from "effect/Option";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const decodeBowCosineSimilaritySuccess = Schema.decodeEffect(BowCosineSimilarity.successSchema);
+const decodeChunkBySentencesParameters = Schema.decodeEffect(ChunkBySentences.parametersSchema);
+const decodeCreateCorpusParameters = Schema.decodeEffect(CreateCorpus.parametersSchema);
+const decodeExtractKeywordsParameters = Schema.decodeEffect(ExtractKeywords.parametersSchema);
+const decodeTextSimilaritySuccess = Schema.decodeEffect(TextSimilarity.successSchema);
+const decodeTverskySimilarityParameters = Schema.decodeEffect(TverskySimilarity.parametersSchema);
+const decodeTverskySimilaritySuccess = Schema.decodeEffect(TverskySimilarity.successSchema);
+const encodeCorpusManagerError = Schema.encodeEffect(CorpusManagerError);
+const encodeCustomEntityExample = Schema.encodeEffect(CustomEntityExample);
+const encodeEntityGroupName = Schema.encodeEffect(EntityGroupName);
+const encodeInstanceId = Schema.encodeEffect(InstanceId);
+const encodeSentenceSpanFailure = Schema.encodeEffect(SentenceSpanFailure);
+const encodeVectorizerError = Schema.encodeEffect(VectorizerError);
+
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
@@ -57,16 +71,16 @@ const assertDecodeFailure = Effect.fn("assertDecodeFailure")(function* <A, E>(de
 
 describe("Tool validation", () => {
   it.effect("rejects fractional keyword limits at the schema boundary", () =>
-    assertDecodeFailure(Schema.decodeEffect(ExtractKeywords.parametersSchema)({ text: "hello", topN: 2.5 }))
+    assertDecodeFailure(decodeExtractKeywordsParameters({ text: "hello", topN: 2.5 }))
   );
 
   it.effect("rejects non-positive chunk limits at the schema boundary", () =>
-    assertDecodeFailure(Schema.decodeEffect(ChunkBySentences.parametersSchema)({ maxChunkChars: 0, text: "One. Two." }))
+    assertDecodeFailure(decodeChunkBySentencesParameters({ maxChunkChars: 0, text: "One. Two." }))
   );
 
   it.effect("rejects invalid BM25 ranges at the schema boundary", () =>
     assertDecodeFailure(
-      Schema.decodeEffect(CreateCorpus.parametersSchema)({
+      decodeCreateCorpusParameters({
         bm25Config: {
           b: 2,
           k: 0,
@@ -78,33 +92,31 @@ describe("Tool validation", () => {
 
   it.effect("defaults Tversky parameters at the schema boundary", () =>
     Effect.gen(function* () {
-      expect(yield* Schema.decodeEffect(TverskySimilarity.parametersSchema)({ text1: "alpha", text2: "beta" })).toEqual(
-        {
-          alpha: 0.5,
-          beta: 0.5,
-          text1: "alpha",
-          text2: "beta",
-        }
-      );
+      expect(yield* decodeTverskySimilarityParameters({ text1: "alpha", text2: "beta" })).toEqual({
+        alpha: 0.5,
+        beta: 0.5,
+        text1: "alpha",
+        text2: "beta",
+      });
     })
   );
 
   it.effect("rejects out-of-range similarity scores in tool success schemas", () =>
     Effect.gen(function* () {
       yield* assertDecodeFailure(
-        Schema.decodeEffect(BowCosineSimilarity.successSchema)({
+        decodeBowCosineSimilaritySuccess({
           method: "bow.cosine",
           score: 1.2,
         })
       );
       yield* assertDecodeFailure(
-        Schema.decodeEffect(TextSimilarity.successSchema)({
+        decodeTextSimilaritySuccess({
           method: "vector.cosine",
           score: -0.1,
         })
       );
       yield* assertDecodeFailure(
-        Schema.decodeEffect(TverskySimilarity.successSchema)({
+        decodeTverskySimilaritySuccess({
           alpha: 0.5,
           beta: 0.5,
           method: "set.tversky",
@@ -149,24 +161,24 @@ describe("Tool validation", () => {
       expect(EntityGroupName.is(entityGroupName)).toBe(true);
       expect(InstanceId.is(instanceId)).toBe(true);
       expect(WinkError.is(winkError)).toBe(true);
-      expect(yield* Schema.encodeEffect(EntityGroupName)(entityGroupName)).toBe("ProductName");
-      expect(yield* Schema.encodeEffect(InstanceId)(instanceId)).toBe("wink-engine-example-4");
-      expect(yield* Schema.encodeEffect(CustomEntityExample)(customEntityExample)).toEqual({
+      expect(yield* encodeEntityGroupName(entityGroupName)).toBe("ProductName");
+      expect(yield* encodeInstanceId(instanceId)).toBe("wink-engine-example-4");
+      expect(yield* encodeCustomEntityExample(customEntityExample)).toEqual({
         name: "SKU",
         patterns: ["[PROPN]"],
       });
-      expect(yield* Schema.encodeEffect(SentenceSpanFailure)(sentenceSpanFailure)).toEqual({
+      expect(yield* encodeSentenceSpanFailure(sentenceSpanFailure)).toEqual({
         _tag: "SentenceSpanFailure",
         reason: "Unable to derive a stable sentence token span.",
         sentenceIndex: 0,
         sentenceText: "Hello world.",
       });
-      expect(yield* Schema.encodeEffect(CorpusManagerError)(corpusManagerError)).toEqual({
+      expect(yield* encodeCorpusManagerError(corpusManagerError)).toEqual({
         _tag: "CorpusManagerError",
         corpusId: "support-docs",
         message: "Corpus does not exist",
       });
-      expect(yield* Schema.encodeEffect(VectorizerError)(vectorizerError)).toEqual({
+      expect(yield* encodeVectorizerError(vectorizerError)).toEqual({
         _tag: "VectorizerError",
         message: "Document index is out of range",
         operation: "tf",
