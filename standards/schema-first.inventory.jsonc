@@ -208,16 +208,6 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
-      "file": "packages/epistemic/config/test/Config.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 100,
-      "owner": "@beep/epistemic-config",
-      "reason": "Audience-routing regression over fixed loopback and external URL cases; schema-derived URL property coverage lives with the owning @beep/schema URL models, while arbitrary destinations would not prove these named security classifications."
-    },
-    {
       "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
       "symbol": "EdgeVersionSourceColumns",
       "kind": "exported-type-literal",
@@ -318,6 +308,16 @@
       "line": 49,
       "owner": "@beep/epistemic-server",
       "reason": "Restart regression decodes fixed commands to write history in one PGlite scope and re-read it in a second over the same dataDir; what is under test is that the data files carry history, lineage, dispositions, and live constraints across a process boundary, not schema laws."
+    },
+    {
+      "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 52,
+      "owner": "@beep/epistemic-tables",
+      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts",
