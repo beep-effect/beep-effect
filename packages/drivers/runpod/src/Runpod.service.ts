@@ -613,7 +613,15 @@ const rawUrlParams = (request: RunpodRawRequest): RunpodUrlParams =>
     R.toEntries,
     A.map(
       ([key, value]) =>
-        [key, pipe(value, queryValueToStrings, (values) => (A.length(values) === 1 ? values[0] : values))] as const
+        [
+          key,
+          pipe(value, queryValueToStrings, (values) =>
+            A.matchLeft(values, {
+              onEmpty: () => values,
+              onNonEmpty: (head, tail) => (A.isReadonlyArrayEmpty(tail) ? head : values),
+            })
+          ),
+        ] as const
     ),
     R.fromEntries
   );

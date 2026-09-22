@@ -785,23 +785,41 @@ const scaleFaceToOriginal = (face: RawFaceDetection, image: PreprocessedImage): 
   });
 };
 
+const outputNameAt = (index: number): Effect.Effect<(typeof outputNames)[number], FaceDetectionError> =>
+  pipe(
+    A.get(outputNames, index),
+    Effect.fromOption(() =>
+      FaceDetectionError.make({
+        message: `YuNet model output name at index ${index} is out of range.`,
+        operation: "postprocess",
+      })
+    )
+  );
+
 const decodeStrideFaces = Effect.fn("FaceDetection.decodeStrideFaces")(function* (
   outputs: Awaited<ReturnType<OrtSession["run"]>>,
   strideIndex: number,
   image: PreprocessedImage,
   request: FaceDetectionImageRequest
 ): Effect.fn.Return<ReadonlyArray<RawFaceDetection>, FaceDetectionError> {
-  const stride = strides[strideIndex];
+  const stride = yield* pipe(
+    A.get(strides, strideIndex),
+    Effect.fromOption(() =>
+      FaceDetectionError.make({
+        message: `YuNet stride index ${strideIndex} is out of range.`,
+        operation: "postprocess",
+      })
+    )
+  );
   const cols = image.padWidth / stride;
   const rows = image.padHeight / stride;
-  const cls = yield* outputTensor(outputs, outputNames[strideIndex]).pipe(
-    Effect.flatMap((tensor) => tensorData(tensor, outputNames[strideIndex]))
-  );
-  const objName = outputNames[strideIndex + strides.length];
+  const clsName = yield* outputNameAt(strideIndex);
+  const cls = yield* outputTensor(outputs, clsName).pipe(Effect.flatMap((tensor) => tensorData(tensor, clsName)));
+  const objName = yield* outputNameAt(strideIndex + strides.length);
   const obj = yield* outputTensor(outputs, objName).pipe(Effect.flatMap((tensor) => tensorData(tensor, objName)));
-  const bboxName = outputNames[strideIndex + strides.length * 2];
+  const bboxName = yield* outputNameAt(strideIndex + strides.length * 2);
   const bbox = yield* outputTensor(outputs, bboxName).pipe(Effect.flatMap((tensor) => tensorData(tensor, bboxName)));
-  const kpsName = outputNames[strideIndex + strides.length * 3];
+  const kpsName = yield* outputNameAt(strideIndex + strides.length * 3);
   const kps = yield* outputTensor(outputs, kpsName).pipe(Effect.flatMap((tensor) => tensorData(tensor, kpsName)));
   return collectStrideFaces(rows, cols, stride, request.minConfidence, cls, obj, bbox, kps);
 });
