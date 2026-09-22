@@ -25,12 +25,33 @@ verifies retained metadata; it cannot reconstruct deleted temporary archives.
 | census | partial | `toolBoundaryCensusAttachment`: Population and 784 attached references accepted; seven semantic/runtime obligations remain. | Complete dynamic command and semantic classifications required by SPEC; preserve unknowns. |
 | policy-and-transitions | partial | `qualification-contract.md`: Policy and rejection boundaries exist; qualified transition remains deliberately closed. | Integrate accepted sibling receipt validation into audit and transition paths, then test valid and adversarial imports. |
 | synthetic-fixture | partial | `runtime-enforcement-boundary.json`: Refreshed synthetic receipts pass 30 checks across 60 runs per client; independent metadata review passes (`synthetic-post-repair-review.json`). Signed cases and raw archive validation remain absent. | Local cases explicitly named in SPEC:77-80 are mapped in `synthetic-mandatory-case-coverage.json`; obtain accepted remote fault/signature evidence and preserve raw-evidence limitations. |
-| real-pilot | partial | `gitExclusionRepair`: Both exact clients pass local matrices; signed remote pairs and complete semantic input/capture coverage remain absent. | Resolve the explicit-map gap recorded in `annotated-input-coverage.json`, complete semantic/capture closure, and consume three verified signed remote pairs per qualified profile. |
+| real-pilot | partial | `gitExclusionRepair`: Both exact clients pass local matrices; signed remote pairs and complete semantic input/capture coverage remain absent. | Refresh semantic/capture closure after the current native-map review, and consume three verified signed remote pairs per qualified profile. |
 | legacy-posture | scoped-pass | `currentCachePolicyAudit`: Current audit passes with zero blocking findings and 1386 unassessed cached computations; no entry qualified. | Retain honest classification and rerun gate after implementation changes. |
 | adoption-handoff | partial | `qualification-contract.md`: Population, API and decomposition leads available; validated pilot unavailable. | Deliver accepted pilot and invalidation evidence through the governed transition contract. |
 | package-and-protocol-checks | partial | `gitExclusionRepair.packageVerification`: Latest Git exclusion repair has CLI package audit/docgen proof; final protocol integration is pending. | Run all affected package checks and protocol checks after remaining implementation. |
 | final-pr | not-established | `SPEC.md`: No final implementation PR with exact-head Yeet merge-ready evidence is established by this audit. | Run Yeet repair, verify, publish and monitor after acceptance work is ready. |
 | same-pr-closeout | pending | `SPEC.md`: Final reflection and completed-retained lifecycle are intentionally not claimed. | Land final evidence, reflection and lifecycle in the final implementation PR. |
+
+## Merged profile refresh: 2026-09-22
+
+Checkpoint PR #1182 merged as `f25286554f`. Its interrupted full local proof
+is not recorded as a pass. The resumed source is `0be1f13d62`; the installed
+stable client is now 2.11.2. Historical matrices retain their exact old pins.
+
+[Current native input review](./profile-closure-refresh-2026-09-22.json)
+verified all 789 input blob hashes (761 identity, 28 types). Actual governed
+execution passed both tasks with zero cached tasks, and profile freshness
+passed. Four independent file additions (alternate compiler configuration,
+alternate Biome configuration, utils source and root Vitest support) entered
+the input map and changed identity's hash. Removing them restored the original
+hash and map.
+
+The current explicit maps cover 422 repository read paths from the retained
+historical candidate trace; `.git` remains separately attributed by the Git
+routing review. This supersedes the old explicit-map gap for that historical
+path set. It does not prove current semantic closure: fresh read/write/capture
+observations, alternate paths, concurrency, current-version replay matrices
+and signed remote evidence remain necessary. Both tasks retain `cache: false`.
 
 ## Execution order and ownership
 
