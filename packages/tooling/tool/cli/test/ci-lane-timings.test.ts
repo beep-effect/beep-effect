@@ -545,6 +545,41 @@ describe("ci lane timings gh api retry", () => {
       expect(scripted.state.spawned).toBe(5);
     })
   );
+
+  it.effect("rejects a capture that overflowed the output bound instead of decoding it", () =>
+    Effect.gen(function* () {
+      // A zero-exit capture past the 512 KiB repo-run bound is a partial body:
+      // decoding it would read as a short run list rather than a failure.
+      const scripted = scriptedGhSpawner([{ exitCode: 0, output: Str.repeat(512 * 1024 + 1)("x") }]);
+      const exit = yield* collectWithRetries(scripted.spawner);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("returned a truncated response");
+      expect(scripted.state.spawned).toBe(1);
+    })
+  );
+});
+
+describe("ci lane timings jobs pagination", () => {
+  it.effect("fails when a jobs page stalls below its own total_count", () =>
+    Effect.gen(function* () {
+      // An empty page while `total_count` still promises more jobs would loop
+      // forever on the next page number; the command must stop and say so.
+      const stalledSpawner = ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) {
+          return Effect.die("lane timings never spawns a piped command");
+        }
+        const rendered = A.join([command.command, ...command.args], " ");
+        return Effect.succeed(
+          stubHandle(Str.includes("page=2")(rendered) ? '{"jobs":[],"total_count":2}' : laneTimingsResponse(rendered))
+        );
+      });
+      const exit = yield* collectWithRetries(stalledSpawner);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("ended after 1 of 2 jobs");
+    })
+  );
 });
 
 describe("ci lane timings derivations", () => {
@@ -1156,19 +1191,6 @@ describe("ci lane timing admission window", () => {
         "Ruleset 10240248 version 50000000 is not a ratified admission population."
       );
       expect(A.some(commands, Str.includes("/actions/"))).toBe(false);
-    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
-  });
-
-  it.effect("fails closed when a jobs page is empty before total_count is reached", () => {
-    const commands = A.empty<string>();
-    const response = (endpoint: string) =>
-      Str.includes("/actions/runs/")(endpoint)
-        ? Effect.succeed('{"jobs":[],"total_count":3}')
-        : windowGithubResponse(endpoint);
-    return Effect.gen(function* () {
-      const failure = yield* Effect.flip(collectCiLaneTimingWindow(".", windowOptions()));
-
-      expect(failure.message).toBe("Jobs pagination for run 102 ended after 0 of 3 jobs.");
     }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
 
