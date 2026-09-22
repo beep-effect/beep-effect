@@ -1597,3 +1597,12 @@ failure. On the merged revision, its four live gates were absolute temporary-pat
 literals in this packet's historical trace descriptions. Reworded them as
 experiment temporary-root observations, retaining their meaning and evidence
 limits without prescribing a host path.
+
+### 2026-09-22: main's lint configuration invalidated the generated pilot profile
+
+After merging main, PR #1182's hosted lint-a lane rejected the generated profile
+as stale before native lint execution. Main added allowed environment names to
+the root Biome policy. Regenerated `biome.identity.jsonc` with
+`bun run beep cache profile --write`; the runtime freshness guard remains intact.
+Include profile regeneration in main-sync checks whenever root lint policy moves,
+before publishing and queuing full proof.
