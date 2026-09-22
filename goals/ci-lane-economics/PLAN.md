@@ -9,7 +9,7 @@ Status: `active`
 | P0 Cache-warm census | complete | Re-measure every required lane's p50/p95 on cache-warm PR and push waves (attempt-one successful runs only; failures and reruns feed flake attribution, never the percentiles). | Completed 2026-08-13 via the explicit 10-wave alternative; see `research/cache-warm-lane-census.md`. |
 | P1 Placement decisions | complete | Decide fleet vs hosted vs free re-fit per lane from the census plus cost model. | Signed and live-falsified 2026-08-13; see `research/placement-decision.md`. No fleet additions; the one hosted re-fit candidate remains on its existing fleet placement after two runner shutdowns. |
 | P2 Execute moves | complete | Move lanes per the placement table (workflow lane edits; sharding where caching cannot help). | Completed 2026-08-16: every signed zero-expansion move merged through #719. |
-| P3 Evidence + close | in progress — admission denied 2026-09-21 | Prove the charter on live waves and close. | The 2026-09-04T00:00:00Z → 2026-09-11T00:00:00Z admission week was censused 2026-09-21 with `beep ci lane-timings --window` and fails: `Check` 20m19s p95, `Coverage Regression` 30m58s p95, shard-pickup tripwire 8m22s p95; see `research/admission-week-p95.md`. Lint (14m38s) and Test Unit (16m31s) clear. Close requires a ratified 17-context population, a signed repair for `Check` and the pickup queue, then a fresh half-open week with every required p95 below 20m00s and no tripwire breach. |
+| P3 Evidence + close | in progress — two windows denied, repair path | Prove the charter on live waves and close. | Window 1 (2026-09-04 → 2026-09-11, 18 contexts) denied 2026-09-21: `Check` 20m19s, `Coverage Regression` 30m58s, pickup 8m22s (`research/admission-week-p95.md`). Window 2 (2026-09-13 → 2026-09-20, ratified 17 contexts) denied 2026-09-22: `Test Unit` 22m02s, `Lint Policy` 21m59s, pickup 7m47s; `Check` recovered to 8m22s (`research/admission-week-2-p95.md`). Close requires signed repair decisions for `Test Unit`, `Lint Policy`, and the shard-pickup queue, their moves merged, then a fresh half-open week under the ratified population with every required p95 below 20m00s and no tripwire breach. |
 
 ## Notes
 
@@ -34,7 +34,8 @@ Status: `active`
   effective 2026-09-03T17:12:53.589Z, supplies the window's ratified 18 contexts.
   A windowed census resolves the latest history version strictly before its
   exclusive `--until`; recent-runs reporting retains live behavior. The
-  census command is unchanged.
+  census flags are unchanged; the expected count now comes from the ratified
+  population table (2026-09-22) instead of a fixed 18.
 
 - Prior baseline (pre-cache, hosted): Lint ~43.6m, Test Unit ~23m, Property
   Laws ~22.4m. Treat as historical only.

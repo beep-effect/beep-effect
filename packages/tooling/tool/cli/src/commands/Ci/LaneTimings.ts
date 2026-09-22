@@ -2124,7 +2124,10 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
  * This is the deterministic test and offline-analysis seam. It normalizes the
  * reusable-workflow prefix, replaces sharded `Lint` and `Test Unit` aggregator
  * spans with their effective critical paths, and rejects any required-context
- * set whose normalized cardinality is not exactly 18.
+ * set whose normalized cardinality is not a ratified population size. With no
+ * ruleset version to look up, it accepts any count in the ratified table
+ * (17 or 18); the windowed collector pins the exact count for the resolved
+ * version.
  *
  * **Example** (Observe the fail-closed context assertion)
  *
