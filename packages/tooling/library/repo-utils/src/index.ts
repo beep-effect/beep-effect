@@ -18,6 +18,16 @@ export {
    * @since 0.0.0
    */
   extractWorkspaceDependencies,
+  /**
+   * @category utilities
+   * @since 0.0.0
+   */
+  sortWorkspacePackages,
+  /**
+   * @category utilities
+   * @since 0.0.0
+   */
+  workspaceDependencyNames,
 } from "./Dependencies.ts";
 /**
  * @category utilities
