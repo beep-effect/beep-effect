@@ -1,0 +1,241 @@
+{
+  "status": "profile-generation-package-verification-passed; runtime-integration-pending",
+  "authority": "Working-tree implementation checkpoint. Does not establish integration into runtime execution or cache qualification.",
+  "baseRevision": "afce6d6625dc03574a776f2624b79e5bc48069ca",
+  "workingTreeChanges": true,
+  "command": "bun run beep cache profile [--write]",
+  "behavior": [
+    "Default checks exact generated-profile freshness without writing.",
+    "--write projects current root rules into a fixed root-sibling candidate path using contained-path guards.",
+    "Projection preserves exclusion order and all other decoded root fields; unsupported roots, inheritance and positive selectors fail.",
+    "Generation and checking do not select the profile or enable cache reuse."
+  ],
+  "sourceFiles": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.profile.ts",
+      "sha256": "dda7c5e5c0a15c7066fd9af01af31923e66928a1f8e25152433c38ec7f3c0c22"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "925f866e05e9515cdc20e8a79434090b59b022db6ad97e58c3378eb382e78674"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "4cd0122ea5058fe2c77dfc6c3b35d772cd96fe0a9b57faf652349b6fd52d9c26"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-profile.test.ts",
+      "sha256": "a30c944034124e74eb2484b27a6485c3a88fae5317639ed8e6ff04a9fd40aff9"
+    }
+  ],
+  "focusedTests": {
+    "command": "bun run --cwd packages/tooling/tool/cli beep:test test/cache-profile.test.ts",
+    "exitCode": 0,
+    "tests": 4,
+    "log": {
+      "path": ".beep/qualification-local-preflight/cache-profile-tests-v3.log",
+      "sha256": "df7b1a755f03c342a43279f7276f38c6f033cf913364c5917af00b1c09d73f30"
+    },
+    "coverage": [
+      "Exclusions/settings/plugins/overrides preserved",
+      "Unsupported roots and selectors rejected",
+      "Root changes and edited output rejected until regenerated",
+      "Symlink output refused with target preserved"
+    ]
+  },
+  "projectionParity": {
+    "result": "matches retained behavior-tested profile structurally",
+    "log": {
+      "path": ".beep/qualification-local-preflight/cache-profile-projection-parity.log",
+      "sha256": "bc809978c36f43f13d5e0990d311e1cb11d229e905af6ca49987a0b213a54779"
+    }
+  },
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "status": "passed",
+    "exitCode": 0,
+    "audit": {
+      "status": "passed",
+      "seconds": 674.8
+    },
+    "docgen": {
+      "status": "passed",
+      "seconds": 25.3
+    },
+    "sourceHashesVerifiedAfterCompletion": true,
+    "log": {
+      "path": ".beep/qualification-local-preflight/cache-profile-package-verify-v3.log",
+      "sha256": "a4087ebca462b5dc3a4887136820d7c4b7e0bbeea559de126b9c34891dadab30"
+    }
+  },
+  "remaining": [
+    "Integrate profile freshness and task-scoped selection before native spawn, including cache-disabled execution.",
+    "Integrate reviewed native input configuration and refresh live census without relaxing pilot equality.",
+    "Run current-revision execution/replay and signed acceptance; retained Git attribution is historical only."
+  ],
+  "integrationConstraint": "Profile freshness must be checked before native spawn even when caching is disabled; keep it separate from the existing needsKey branch.",
+  "cliBehavior": {
+    "result": "passed",
+    "fixtureScope": "private directory; live root configuration unchanged",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/cache-profile-cli-j_yjeoht/receipt.json",
+      "sha256": "74fb1e1f56fa98bffe5ae2f303bce63d31c8775cf5a2116b2b95a20560eae47e"
+    },
+    "cases": [
+      {
+        "case": "missing-default",
+        "exitCode": 1
+      },
+      {
+        "case": "write",
+        "exitCode": 0
+      },
+      {
+        "case": "current-default",
+        "exitCode": 0
+      },
+      {
+        "case": "stale-default",
+        "exitCode": 1
+      },
+      {
+        "case": "regenerate",
+        "exitCode": 0
+      },
+      {
+        "case": "regenerated-default",
+        "exitCode": 0
+      },
+      {
+        "case": "unsupported-write",
+        "exitCode": 1
+      }
+    ],
+    "checks": {
+      "defaultDoesNotCreate": true,
+      "checkDoesNotRewrite": true,
+      "staleDefaultFails": true,
+      "regenerationChangesOutput": true,
+      "unsupportedWritePreservesOutput": true
+    },
+    "independentStreamHashReview": "passed",
+    "negativeDiagnosticAttribution": "missing file, stale output and unsupported projection failures confirmed"
+  },
+  "failureAttribution": {
+    "status": "test-fixture-command-normalization-fixed",
+    "inboxId": "local-shard-dddc0f8fd4b8",
+    "failingTests": "three cheap-gate runner assertions in quality-tasks.test.ts",
+    "reproductions": [
+      {
+        "scope": "three failing cases",
+        "exitCode": 0,
+        "log": {
+          "path": ".beep/qualification-local-preflight/cache-profile-cheap-gates-repro.log",
+          "sha256": "ead30a3e9bec352c276573f2d8c708510f114e2b175f654b327b2aae14b7e176"
+        }
+      },
+      {
+        "scope": "entire quality-tasks.test.ts file",
+        "exitCode": 0,
+        "tests": 242,
+        "log": {
+          "path": ".beep/qualification-local-preflight/cache-profile-quality-file-repro.log",
+          "sha256": "7a49ccd4949b7ef4452f0e9daa6b665ffdfee57713c24f5819dc60c3fd3de761"
+        }
+      },
+      {
+        "scope": "three cases with CI=true",
+        "exitCode": 0,
+        "log": {
+          "path": ".beep/qualification-local-preflight/cache-profile-cheap-gates-ci.log",
+          "sha256": "96789b8eea5fa75275d7d5cd871956f01e469af9195675c9dd9dbfe08e2bbe55"
+        }
+      }
+    ],
+    "nextProbe": "None for this fixture defect; continue runtime integration.",
+    "conclusion": "The command-normalization test fixture fix passed full package re-verification including audit and docgen.",
+    "cause": "Root launch loads TURBO_CACHE; raw planned/runtime command equality made valid cache-posture differences look like missing lanes and prevented the fake spawner from injecting requested failures.",
+    "fix": "Reuse existing policyCommandKey normalization in the fake spawner and lane comparisons; retain exact failed-lane and collect-all assertions.",
+    "fixCommit": "afce6d6625dc03574a776f2624b79e5bc48069ca",
+    "rootEnvironmentReproduction": {
+      "path": ".beep/qualification-local-preflight/cache-profile-cheap-gates-root-env.log",
+      "sha256": "f78c9fb9b01d3877f600e891aabf03e36787cb3422c33d812a5ef60000372488"
+    },
+    "focusedAfterFix": {
+      "path": ".beep/qualification-local-preflight/cache-profile-cheap-gates-root-env-fixed.log",
+      "sha256": "ffc68f99dd8e5b442f17ddf35d6b516f65680f79bc80b9bab7123a68f552c63f"
+    },
+    "wholeFileAfterFix": {
+      "tests": 242,
+      "exitCode": 0,
+      "log": {
+        "path": ".beep/qualification-local-preflight/cache-profile-quality-root-env-fixed.log",
+        "sha256": "32a88ce6b68143d5b8cfda1ca9622285b7b6ead69e2c9d0c5da425233430de75"
+      }
+    },
+    "inboxAcknowledgment": {
+      "kind": "fix-sha",
+      "exitCode": 0,
+      "log": {
+        "path": ".beep/qualification-local-preflight/cheap-gate-inbox-ack.log",
+        "sha256": "6ed5f6dbd2d020e9476abc2218ee2e07eb33487a61ba96ef23feb374212d3783"
+      }
+    }
+  },
+  "previousPackageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "status": "failed",
+    "log": ".beep/qualification-local-preflight/cache-profile-package-verify-v2.log",
+    "observedStage": "terminal",
+    "exitCode": 1,
+    "audit": "failed: three quality-tasks tests",
+    "docgen": "passed",
+    "passedTests": 4023,
+    "failedTests": 3
+  },
+  "integrationReview": {
+    "status": "source-reviewed; implementation pending",
+    "sourceRevision": "afce6d6625dc03574a776f2624b79e5bc48069ca",
+    "boundaries": [
+      {
+        "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
+        "finding": "needsKey is conditional on cache=true; profile validation must precede this branch. Environment assignment inside this branch must not discard the selected profile."
+      },
+      {
+        "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+        "finding": "verifyNativePlans compares input digest, command digest and task configuration with live census. Integrate the reviewed profile and inputs into both sides; preserve these comparisons."
+      },
+      {
+        "file": "packages/foundation/modeling/identity/turbo.json",
+        "finding": "Current configuration remains cache=false with no BIOME_CONFIG_PATH declaration. Private proposed plans do not change this live policy."
+      }
+    ],
+    "requiredNegativeCases": [
+      "Missing or stale generated profile rejects governed execution with cache=false before a native task runs.",
+      "Caller-provided profile selection cannot override the governed selection.",
+      "Mixed identity and types closure selects the profile only for identity; verify actual child environments.",
+      "Loose environment mode or pass-through configuration cannot silently expose identity selection to unrelated tasks.",
+      "Root configuration mutation regenerates the effective profile or is rejected; a stale baseline profile cannot satisfy mutation acceptance.",
+      "Live census mismatch still rejects a pilot after profile integration.",
+      "Installed dependency trees remain excluded from native source inputs and bound by retained toolchain identity."
+    ],
+    "gitRoutingEvidence": "research/profile-git-routing-attribution.json",
+    "gitRoutingLimit": "Old-source process attribution does not close current-source Git layout or concurrency obligations."
+  },
+  "packetChecks": {
+    "explorationCheck": {
+      "command": "bun run beep explore --check",
+      "exitCode": 0,
+      "result": "No stream-integrity or fleet-graph findings",
+      "log": {
+        "path": ".beep/qualification-local-preflight/profile-integration-explore-check.log",
+        "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+      }
+    },
+    "launcher": {
+      "characters": 2755,
+      "maximum": 4000
+    },
+    "implementationSnapshot": "All four recorded source hashes match during active verification"
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "authority": "Isolated preserved-exclusion profile controls. Supersedes earlier flat profile as the implementation candidate, without granting qualification.",
+  "status": "candidate-not-adopted",
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "wrapperExitCode": 0,
+  "beforeAfterParity": "passed",
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/receipt.json",
+    "sha256": "b2977562ce6fa2d9d6a51990dbb4437c0254ebbe1a7b84424d2aacae9b3c67ad"
+  },
+  "configuration": {
+    "path": ".beep/qualification-local-preflight/preserved-scanner-biome.json",
+    "sha256": "810fb82d12f5006a6f185850e08ee9c02fe742bf54de66e78de4a38187317b86"
+  },
+  "sourceConfiguration": {
+    "path": "biome.jsonc",
+    "sha256": "bc4a085a4b196907415426b0f6e8bd262bb46c9fcc7a7ecb3a2a73a5958d7b07"
+  },
+  "probe": {
+    "path": ".beep/qualification-local-preflight/probe-preserved-profile-scanner.py",
+    "sha256": "b88c739ebf9788ccb9d355bf49c4b6df70bb234ee4869294eee99d0737ba9ed9"
+  },
+  "reviewRecipe": {
+    "path": ".beep/qualification-local-preflight/review-preserved-profile.py",
+    "sha256": "858a15d8dcd860485ba85302157e3115853e5d3f3219d4d3849d00cc71152c8c"
+  },
+  "checks": {
+    "baselinePasses": true,
+    "workspaceDeprecationFails": true,
+    "workspaceDeprecationDiagnostic": true,
+    "visibleSyntaxFails": true,
+    "ignoredSyntaxPasses": true,
+    "quietVerboseExitParity": true,
+    "externalControlPasses": true,
+    "externalDeprecationFails": true,
+    "originalRootExclusionPasses": true,
+    "flatProfileExclusionDiverges": true,
+    "preservedRootExclusionPasses": true
+  },
+  "independentReview": {
+    "traceAndStreamHashes": "passed for all nine cases",
+    "joinedCalls": "no unresolved calls",
+    "scalarReadAttribution": "no unattributed positive reads",
+    "readBufferContents": "zero nonempty captured buffers",
+    "rootExclusionSourceBytes": "identical across original, flat and preserved cases",
+    "externalMutationBytes": "only deprecation comment differs",
+    "configurationTransformation": "All root negations retained in order; all fields outside files.includes identical"
+  },
+  "results": [
+    {
+      "case": "baseline",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/baseline-read-review.json",
+        "sha256": "ecb79528fdde6f1aa4afa45b49fab3fea197bcdc1f44748d92e3addf70bf38fd"
+      },
+      "otherRepositoryPaths": 396
+    },
+    {
+      "case": "workspace-deprecated",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/workspace-deprecated-read-review.json",
+        "sha256": "cd1ce8ea1678aced83de654015709776a9eac64211b86bd46027dce053e34107"
+      },
+      "otherRepositoryPaths": 396
+    },
+    {
+      "case": "invalid-visible",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/invalid-visible-read-review.json",
+        "sha256": "1476b4ffcd9147645741d9f99b9b62b9fc1789b520bfe9a9faf7bcfc295c7862"
+      },
+      "otherRepositoryPaths": 396
+    },
+    {
+      "case": "invalid-ignored",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/invalid-ignored-read-review.json",
+        "sha256": "5294b15fe5a8e12a0f47898eaa901ba1a056bddca1f1be8365797e47d3007a34"
+      },
+      "otherRepositoryPaths": 396
+    },
+    {
+      "case": "external-control",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/external-control-read-review.json",
+        "sha256": "ab188b3aee44ecd582953a6caa6a029bcb42c2c97170c351fdadf1f6df5caf16"
+      },
+      "otherRepositoryPaths": 396
+    },
+    {
+      "case": "external-deprecated",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/external-deprecated-read-review.json",
+        "sha256": "1887798aed7a9e8c759913194a188d0d84680b3248636d35aa130e86acd21188"
+      },
+      "otherRepositoryPaths": 396
+    },
+    {
+      "case": "root-excluded-original",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/root-excluded-original-read-review.json",
+        "sha256": "35c6251a48c04ed74402e0c7a2ffcaece2e1f892a332ee7c3c98ff7757c35a4b"
+      },
+      "otherRepositoryPaths": 8457
+    },
+    {
+      "case": "root-excluded-flat",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/root-excluded-flat-read-review.json",
+        "sha256": "ae7a41a4b66833b2d331d85047fef6f6577296d752ac03211d756d81639c74ce"
+      },
+      "otherRepositoryPaths": 407
+    },
+    {
+      "case": "root-excluded-preserved",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/preserved-profile-scanner-w82oqpv7/root-excluded-preserved-read-review.json",
+        "sha256": "265a39ca78e87e6031ca000826229108ec1168cda23a6b4a38997f58ebf9e0a4"
+      },
+      "otherRepositoryPaths": 396
+    }
+  ],
+  "remainingBaselineReadPaths": {
+    "other": 13,
+    ".gitignore": 21,
+    "package.json": 149,
+    "tsconfig.json": 171,
+    "turbo.json": 8,
+    "biome.identity.jsonc": 1,
+    "biome.jsonc": 1,
+    "workspace-source": 32
+  },
+  "generationContract": {
+    "supportedRootIncludes": "leading ** followed only by exclusions",
+    "narrowPositiveSelectors": [
+      "packages/foundation/modeling/identity/**",
+      "packages/foundation/primitive/types/**"
+    ],
+    "preserve": "all remaining exclusion selectors in original order and all other config fields",
+    "unsupportedRootShape": "reject before execution instead of silently translating"
+  },
+  "limitations": [
+    "Nine controls do not establish complete semantic input closure.",
+    "Remaining read paths need coverage or attribution, including workspace metadata and sources.",
+    "Profile generation and portable selection must enter the live task census and hashes; root-rule mutations must regenerate effective configuration.",
+    "Native full pilot replay, signed sibling receipts, signed remote evidence and final acceptance remain pending."
+  ]
+}

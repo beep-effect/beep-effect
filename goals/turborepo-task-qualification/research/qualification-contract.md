@@ -13,6 +13,33 @@ and capture-safety verdicts. Neither source review nor a local cache hit can
 satisfy those imports. The sole writer for the qualification source files and
 this packet is this task; sibling source files remain outside its write scope.
 
+## Current consumer checkpoint: Git-exclusion repair
+
+The implementation and refreshed runtime experiments are at `0dca998780`.
+The latest operational census was refreshed at that same commit and accepted
+the expanded command-boundary source attachment. Its regenerated nested graph
+matches the retained post-main graph structure. Earlier censuses retain their
+original revisions. The dated sections
+below retain the initial contract and implementation history.
+
+| Surface | Current evidence and disposition |
+| --- | --- |
+| Population | The post-main census records 143 workspaces, 1,957 executable computations and 1,492 graph-only nodes. `nested-commands-post-main.json` expands 3,317 reachable definitions from all executable roots; it preserves unsupported shell syntax. |
+| Entrypoints | `entrypoint-review-tool-boundaries.json` binds 784 references: 765 source files, six snapshots and 13 reviews. The retained operational census accepts the attachment and records seven unresolved semantic/runtime obligations. Source integrity is not runtime authority. |
+| Policy | The pure facade remains `@beep/repo-configs/cache`. Ledger revision 3 excludes identity lint in both recorded profiles and types lint in the current profile. No entry is qualified. The current operational cache-policy audit passes with zero blocking findings and reports 1,386 unassessed cached computations. |
+| Execution | Ordinary Quality/CI planned Turbo execution uses Cache runtime identity enforcement. The caller cannot supply the governed digest. The repair additionally fingerprints bounded Git common-directory `info/exclude` bytes. This does not authorize activation or replace required hosted proof. |
+| Local pilot | Separate stable 2.10.12 and canary 2.10.13-canary.1 v11 pilots each passed 67 observations, 40 checks and ten shadow comparisons. Their runtime identities reconstruct independently. The experiment profile remains `local-linux-x64-bun1.4.2`, epoch `qualification-v2`, on Linux 7.2.2-1-cachyos. |
+| Targeted invalidation | Both exact clients now change identity's native task hash when exclusions change the lint result, with identical source bytes and own input maps. Separate raw reviews and before/after dependency/toolchain verification passed. Other Git configuration and concurrent mutation remain outside this proof. |
+| Capture | Earlier separate native probes cover fresh/replay task text and rejection of control bytes, malformed UTF-8 and oversized logs. Those retain their original revision and provenance. The mixed-stream fixture varied in line order and remains ineligible under exact merged-log comparison. |
+| Remaining authority | Full semantic input review, accepted signed-remote comparisons and conformance/trust imports remain outstanding. Local pilot metadata does not supply independently retained raw archives or a validated qualification handoff. |
+
+The [runtime boundary receipt](./runtime-enforcement-boundary.json), especially
+`gitExclusionRepair` and `toolBoundaryCensusAttachment`, binds current private observations and public source
+attachments by hash. Adoption may use the population, policy API, decomposition
+leads and invalidation rules for preparation. It must not treat this checkpoint
+as permission to activate a tuple or broaden a cohort. Qualification still owes
+the validated pilot and final acceptance evidence required by SPEC.
+
 The key is computation × reuse layer × named profile × epoch. Cache records
 bind an exact contract digest (command/subprocess graph and input/output/log
 worksheet), effective root/child configuration digest, toolchain digest,
@@ -61,12 +88,42 @@ allowlist of qualifications. New executable caching or changes outside the
 pilot need review. Narrowing legacy reuse is permitted; unsafe known tuples
 must be suspended at their actual boundary.
 
+The [current acceptance audit](./acceptance-audit-current.md) separates local
+semantic/capture obligations from the sibling dependency and final closeout.
+
 ## Sibling handoff and remaining gates
 
 Conformance/trust may consume this contract before full qualification closes.
 Their versioned receipt formats remain owned by those packets; qualification
 will validate imported references through their public contracts when present.
 P3 stays pending until passing executable signed-fixture/lab receipts exist.
+
+The current integration points are `Cache.service.ts`'s `audit` and
+`validateTransitionContract`: both explicitly refuse `qualified` state. The
+qualification owner must replace those refusals with validation against the
+accepted sibling public contracts, not remove them merely because local checks
+pass. That work has the following ordered acceptance obligations:
+
+1. Consume the sibling-owned versioned result/producer and conformance formats;
+   reject unknown versions and incompatible client/backend/profile/epoch pins.
+2. Read referenced original bytes, verify their digests and provenance, and
+   interpret transport, signature, tenant, capability and capture outcomes.
+   A supplied pass flag or task-level hit string is insufficient.
+3. Bind verified remote comparisons to this computation contract and its actual
+   activation/configuration/toolchain digests. Keep stable and canary separate.
+4. Combine that evidence with three fresh pairs, three wire-verified remote
+   pairs, ten shadows and the applicable negatives; reject incomplete,
+   contradictory or borrowed evidence.
+5. Validate promotion and subsequent audit against the same evidence semantics,
+   and validate the enabled configuration before applying any activation.
+6. Exercise tampered/missing evidence, wrong identity, stale pins and unsafe
+   captures through the operational boundary before accepting a real tuple.
+
+The local runner intentionally removes scoped fixtures. Its retained
+`cache-pilot-local/v5` metadata does not contain independently reviewable raw
+archives. The signed integration must use the siblings' accepted retention and
+receipt contract; it must not reinterpret a local receipt as signed proof.
+
 Adoption receives the reproducible census, governed API, reviewed projection,
 decomposition leads, invalidation rules and validated pilot receipt.
 

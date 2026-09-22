@@ -1,0 +1,89 @@
+{
+  "authority": "Conservative sequential descriptor reconstruction of historical direct read syscalls. Candidate read footprint, not semantic dependence or current-runtime qualification. Concurrent FD mutation remains a limitation.",
+  "sourceRevision": "028262e8c0269da6a2811003841bbadaf916e32f",
+  "traceSha256": "4bc3344131009559e755034d3fb28a1b564bfc1e2a7669ff6fb3186eef7e93f2",
+  "groups": {
+    "outside-repository": {
+      "uniquePaths": 20,
+      "readCalls": 450,
+      "returnedBytes": 162083
+    },
+    "other-repository-paths": {
+      "uniquePaths": 8456,
+      "readCalls": 8483,
+      "returnedBytes": 126131741
+    },
+    "identity-subtree": {
+      "uniquePaths": 27,
+      "readCalls": 31,
+      "returnedBytes": 281186
+    },
+    "installed-dependencies": {
+      "uniquePaths": 16739,
+      "readCalls": 54184,
+      "returnedBytes": 15400198589
+    }
+  },
+  "joinedResumedCalls": 1038987,
+  "unmatchedResumedCalls": 0,
+  "pendingCalls": 0,
+  "unattributedPositiveReads": {
+    "read": 110
+  },
+  "execDescriptorResets": 9,
+  "limitations": [
+    "io_uring submissions not decoded",
+    "Inherited descriptors discarded on exec",
+    "Sequential trace ordering cannot exclude concurrent descriptor races",
+    "Mapping inventory records successful file-backed mmap annotations; it does not establish mapped-byte consumption."
+  ],
+  "fileMappings": [
+    {
+      "path": "/usr/lib/libc.so.6",
+      "calls": 36
+    },
+    {
+      "path": "/usr/lib/libdl.so.2",
+      "calls": 16
+    },
+    {
+      "path": "/usr/lib/libgcc_s.so.1",
+      "calls": 8
+    },
+    {
+      "path": "/usr/lib/libm.so.6",
+      "calls": 16
+    },
+    {
+      "path": "/usr/lib/libncursesw.so.6.6",
+      "calls": 16
+    },
+    {
+      "path": "/usr/lib/libpthread.so.0",
+      "calls": 16
+    },
+    {
+      "path": "/usr/lib/libreadline.so.8.3",
+      "calls": 16
+    },
+    {
+      "path": "/usr/lib/libstdc++.so.6.0.36",
+      "calls": 4
+    },
+    {
+      "path": "anon_inode:[io_uring]",
+      "calls": 10
+    }
+  ],
+  "privateReport": {
+    "path": ".beep/qualification-local-preflight/post-main-io-1pm_dqii/direct-read-footprint-v4.json",
+    "sha256": "85789e6afb154baf58d49a15721dec9ed307722fb7388f91ed143534cd937593"
+  },
+  "recipe": {
+    "path": ".beep/qualification-local-preflight/review-retained-read-footprint-v4.py",
+    "sha256": "dc3361f83198960c277b2a098e643126f7abd6cb60ab1002f0a8d98104796b75"
+  },
+  "method": "Join unfinished/resumed calls; retain descriptor mapping at read entry when available; avoid clearing a reused descriptor on a differently annotated close. Descriptor races remain unresolved.",
+  "supersedes": "Initial 30-path count omitted split calls. The intermediate 8364-path count also lost mappings while reads were in progress. Neither is the final reconstructed footprint.",
+  "nextAction": "Attribute the remaining 110 positive direct reads and investigate broad repository input dependence; mapping and indirect-I/O limitations remain."
+}

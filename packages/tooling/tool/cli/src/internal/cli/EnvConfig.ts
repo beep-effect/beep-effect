@@ -284,6 +284,31 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
     )
   );
 
+/**
+ * Identify the direct and secret-session Turbo commands emitted by task planners.
+ *
+ * **Example** (Recognize a planned Turbo command)
+ *
+ * ```ts
+ * import { isPlannedTurboCommand } from "@beep/repo-cli/internal/cli/EnvConfig"
+ *
+ * console.log(isPlannedTurboCommand("bunx", ["turbo", "run", "check"])) // true
+ * ```
+ *
+ * **Details**
+ * Recognizes `bunx turbo` and its `op run --` wrapper. This is not a shell parser.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const isPlannedTurboCommand: {
+  (args: ReadonlyArray<string>): (command: string) => boolean;
+  (command: string, args: ReadonlyArray<string>): boolean;
+} = dual(
+  2,
+  (command: string, args: ReadonlyArray<string>): boolean => isBunxTurbo(command, args) || isOpRunTurbo(command, args)
+);
+
 const isTurboCacheSecretEnvName = S.is(TurboCacheSecretEnvName);
 
 const environmentWithoutSecretReferences = (

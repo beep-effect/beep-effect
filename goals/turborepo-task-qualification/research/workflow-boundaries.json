@@ -1,0 +1,966 @@
+{
+  "authority": "Source projection only. Matrices, expressions and remote sources are not executed or resolved; no hosted proof or qualification.",
+  "source": {
+    "path": "goals/turborepo-task-qualification/research/workflow-sources-runtime-routing.json",
+    "sha256": "ea64e138b90efb788d37d906f38c709cf736d5fd25167d0b8d72209adad82bb2"
+  },
+  "workflowAndActionFiles": 10,
+  "jobs": [
+    {
+      "path": ".github/workflows/cache-warm.yml",
+      "job": "warm",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 3,
+          "condition": "always()"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "pr-size",
+      "needs": [],
+      "condition": "github.event_name == 'pull_request'",
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": []
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "heavy",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+      "matrix": null,
+      "conditionalSteps": []
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "verify",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": {
+        "include": [
+          {
+            "id": "repo-sanity",
+            "name": "Repo Sanity",
+            "runner": "ubuntu-24.04",
+            "timeout_minutes": 30,
+            "uses_turbo": "false"
+          },
+          {
+            "id": "ecosystem",
+            "name": "Ecosystem Contracts",
+            "runner": "ubuntu-24.04",
+            "timeout_minutes": 30,
+            "uses_turbo": "false"
+          },
+          {
+            "id": "codegen",
+            "name": "Codegen Drift",
+            "runner": "ubuntu-24.04",
+            "timeout_minutes": 30,
+            "uses_turbo": "false"
+          },
+          {
+            "id": "labs",
+            "name": "Labs",
+            "runner": "ubuntu-24.04",
+            "timeout_minutes": 40,
+            "uses_turbo": "true"
+          }
+        ]
+      },
+      "conditionalSteps": [
+        {
+          "index": 1,
+          "condition": "github.event_name == 'pull_request'"
+        },
+        {
+          "index": 3,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 4,
+          "condition": "matrix.id == 'codegen' && steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 5,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 6,
+          "condition": "matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()"
+        },
+        {
+          "index": 7,
+          "condition": "github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()"
+        },
+        {
+          "index": 8,
+          "condition": "steps.lane-gate.outputs.should_run != 'true'"
+        },
+        {
+          "index": 9,
+          "condition": "always() && matrix.id == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "lint-shard",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": {
+        "partition": [
+          "lint-a",
+          "lint-b"
+        ]
+      },
+      "conditionalSteps": [
+        {
+          "index": 1,
+          "condition": "github.event_name == 'pull_request'"
+        },
+        {
+          "index": 3,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 4,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 5,
+          "condition": "steps.lane-gate.outputs.should_run == 'true' && always()"
+        },
+        {
+          "index": 6,
+          "condition": "github.event_name == 'push' && steps.lane-gate.outputs.should_run == 'true' && success()"
+        },
+        {
+          "index": 7,
+          "condition": "steps.lane-gate.outputs.should_run != 'true'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "lint",
+      "needs": [
+        "lint-shard"
+      ],
+      "condition": "${{ always() }}",
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": []
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "test-unit-shard",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": {
+        "partition": [
+          "repo-cli",
+          "unit-a",
+          "unit-b"
+        ]
+      },
+      "conditionalSteps": [
+        {
+          "index": 1,
+          "condition": "github.event_name == 'pull_request'"
+        },
+        {
+          "index": 3,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 4,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 5,
+          "condition": "steps.lane-gate.outputs.should_run == 'true' && always()"
+        },
+        {
+          "index": 6,
+          "condition": "github.event_name == 'push' && steps.lane-gate.outputs.should_run == 'true' && success()"
+        },
+        {
+          "index": 7,
+          "condition": "steps.lane-gate.outputs.should_run != 'true'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "test-unit",
+      "needs": [
+        "test-unit-shard"
+      ],
+      "condition": "${{ always() }}",
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": []
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "professional-desktop-ipc-stdio",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 1,
+          "condition": "github.event_name == 'pull_request'"
+        },
+        {
+          "index": 3,
+          "condition": "steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'"
+        },
+        {
+          "index": 4,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 5,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 6,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 7,
+          "condition": "steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'"
+        },
+        {
+          "index": 8,
+          "condition": "steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.rust_should_run == 'true'"
+        },
+        {
+          "index": 9,
+          "condition": "steps.lane-gate.outputs.should_run != 'true'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "property-laws",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 1,
+          "condition": "github.event_name == 'pull_request'"
+        },
+        {
+          "index": 4,
+          "condition": "always()"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "fallow-advisory",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 4,
+          "condition": "always()"
+        },
+        {
+          "index": 5,
+          "condition": "always()"
+        },
+        {
+          "index": 6,
+          "condition": "always()"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "knip",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": []
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "jsdoc-ratchet",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": []
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "commitlint",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": []
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "secrets",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 1,
+          "condition": "github.event_name == 'pull_request'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "security",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 5,
+          "condition": "github.event_name == 'pull_request'"
+        },
+        {
+          "index": 6,
+          "condition": "github.event_name == 'pull_request' && steps.dependency-graph.outputs.enabled == 'true'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "nix",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 3,
+          "condition": "github.event_name != 'push'"
+        },
+        {
+          "index": 4,
+          "condition": "github.event_name == 'push'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/check.yml",
+      "job": "sast",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 1,
+          "condition": "github.event_name == 'pull_request'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/data-sync.yml",
+      "job": "sync-data",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 5,
+          "condition": "always() && steps.focused-check.outcome != 'skipped'"
+        },
+        {
+          "index": 6,
+          "condition": "steps.focused-check.outcome == 'success'"
+        },
+        {
+          "index": 7,
+          "condition": "always()"
+        },
+        {
+          "index": 8,
+          "condition": "always() && steps.focused-test.outcome != 'skipped'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/fleet-lane-probe.yml",
+      "job": "lane-probe",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 3,
+          "condition": "inputs.lane == 'lint'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/fleet-shadow-check.yml",
+      "job": "shadow-probe",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 1,
+          "condition": "${{ inputs.redteam }}"
+        },
+        {
+          "index": 2,
+          "condition": "${{ inputs.redteam }}"
+        },
+        {
+          "index": 3,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 4,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 5,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 6,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 7,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 8,
+          "condition": "${{ inputs.redteam }}"
+        },
+        {
+          "index": 9,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 10,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 11,
+          "condition": "${{ inputs.redteam && inputs.jit_replay }}"
+        },
+        {
+          "index": 12,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 13,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 14,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 15,
+          "condition": "${{ always() && inputs.redteam }}"
+        },
+        {
+          "index": 16,
+          "condition": "${{ always() && inputs.redteam }}"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/heavy.yml",
+      "job": "verify",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": {
+        "include": [
+          {
+            "id": "lint-policy",
+            "name": "Lint Policy",
+            "timeout_minutes": 50,
+            "uses_turbo": "false",
+            "install_typos": "true"
+          },
+          {
+            "id": "check",
+            "name": "Check",
+            "timeout_minutes": 120,
+            "uses_turbo": "true",
+            "install_typos": "false"
+          },
+          {
+            "id": "test-integration",
+            "name": "Test Integration",
+            "timeout_minutes": 40,
+            "uses_turbo": "true",
+            "install_typos": "false"
+          },
+          {
+            "id": "coverage",
+            "name": "Coverage Regression",
+            "timeout_minutes": 80,
+            "uses_turbo": "true",
+            "install_typos": "false",
+            "node_version": "22.22.3"
+          },
+          {
+            "id": "docgen",
+            "name": "Docgen",
+            "timeout_minutes": 60,
+            "uses_turbo": "false",
+            "install_typos": "false",
+            "docgen_concurrency": 6
+          },
+          {
+            "id": "doctest",
+            "name": "Doctest",
+            "timeout_minutes": 60,
+            "uses_turbo": "false",
+            "install_typos": "false"
+          },
+          {
+            "id": "build",
+            "name": "Build",
+            "timeout_minutes": 40,
+            "uses_turbo": "true",
+            "install_typos": "false"
+          }
+        ]
+      },
+      "conditionalSteps": [
+        {
+          "index": 1,
+          "condition": "github.event_name == 'pull_request'"
+        },
+        {
+          "index": 3,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 4,
+          "condition": "steps.lane-gate.outputs.should_run == 'true' && matrix.id == 'coverage'"
+        },
+        {
+          "index": 5,
+          "condition": "matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'pull_request'"
+        },
+        {
+          "index": 6,
+          "condition": "steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'"
+        },
+        {
+          "index": 7,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 8,
+          "condition": "matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push'"
+        },
+        {
+          "index": 9,
+          "condition": "matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()"
+        },
+        {
+          "index": 10,
+          "condition": "github.event_name == 'push' && matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && success()"
+        },
+        {
+          "index": 11,
+          "condition": "matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && always()"
+        },
+        {
+          "index": 12,
+          "condition": "steps.lane-gate.outputs.should_run != 'true'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/property-laws-nightly.yml",
+      "job": "property-sweep",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 3,
+          "condition": "always()"
+        },
+        {
+          "index": 4,
+          "condition": "failure()"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/release-desktop.yml",
+      "job": "release-desktop-preflight",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": []
+    },
+    {
+      "path": ".github/workflows/release-desktop.yml",
+      "job": "release-desktop",
+      "needs": "release-desktop-preflight",
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": {
+        "include": [
+          {
+            "name": "macOS arm64",
+            "os": "macos-14",
+            "rust-target": "aarch64-apple-darwin",
+            "args": "--target aarch64-apple-darwin",
+            "release-target": "darwin-aarch64",
+            "asset-arch": "aarch64",
+            "updater-platform": "darwin-aarch64",
+            "updater-suffixes": "[\".app.tar.gz\"]"
+          },
+          {
+            "name": "macOS x64",
+            "os": "macos-15-intel",
+            "rust-target": "x86_64-apple-darwin",
+            "args": "--target x86_64-apple-darwin",
+            "release-target": "darwin-x86_64",
+            "asset-arch": "x64",
+            "updater-platform": "darwin-x86_64",
+            "updater-suffixes": "[\".app.tar.gz\"]"
+          },
+          {
+            "name": "Linux x64",
+            "os": "ubuntu-22.04",
+            "rust-target": "x86_64-unknown-linux-gnu",
+            "args": "",
+            "release-target": "linux-x86_64",
+            "asset-arch": "x86_64",
+            "updater-platform": "linux-x86_64",
+            "updater-suffixes": "[\".AppImage.tar.gz\",\".AppImage\"]"
+          },
+          {
+            "name": "Windows x64",
+            "os": "windows-latest",
+            "rust-target": "x86_64-pc-windows-msvc",
+            "args": "",
+            "release-target": "windows-x86_64",
+            "asset-arch": "x64",
+            "updater-platform": "windows-x86_64",
+            "updater-suffixes": "[\".msi.zip\",\".nsis.zip\"]"
+          }
+        ]
+      },
+      "conditionalSteps": [
+        {
+          "index": 3,
+          "condition": "runner.os == 'Linux'"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/release-desktop.yml",
+      "job": "release-desktop-ready",
+      "needs": [
+        "release-desktop"
+      ],
+      "condition": "${{ needs.release-desktop.result == 'success' }}",
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 2,
+          "condition": "${{ needs.release-desktop.result == 'success' }}"
+        },
+        {
+          "index": 3,
+          "condition": "${{ needs.release-desktop.result == 'success' }}"
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/storybook.yml",
+      "job": "storybook",
+      "needs": [],
+      "condition": null,
+      "reusableWorkflow": null,
+      "matrix": null,
+      "conditionalSteps": [
+        {
+          "index": 1,
+          "condition": "github.event_name == 'pull_request'"
+        },
+        {
+          "index": 3,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 4,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 5,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 6,
+          "condition": "steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push' && steps.playwright-cache-restore.outputs.cache-hit != 'true'"
+        },
+        {
+          "index": 7,
+          "condition": "steps.lane-gate.outputs.should_run == 'true'"
+        },
+        {
+          "index": 8,
+          "condition": "steps.lane-gate.outputs.should_run == 'true' && always()"
+        },
+        {
+          "index": 9,
+          "condition": "steps.lane-gate.outputs.should_run == 'true' && hashFiles('apps/storybook/storybook-static/index.html') != ''"
+        },
+        {
+          "index": 10,
+          "condition": "steps.lane-gate.outputs.should_run != 'true'"
+        }
+      ]
+    }
+  ],
+  "uses": [
+    {
+      "reference": "./.github/actions/setup-monorepo-ci",
+      "kind": "local",
+      "locations": [
+        ".github/workflows/cache-warm.yml/jobs/warm/steps/1",
+        ".github/workflows/check.yml/jobs/verify/steps/3",
+        ".github/workflows/check.yml/jobs/lint-shard/steps/3",
+        ".github/workflows/check.yml/jobs/test-unit-shard/steps/3",
+        ".github/workflows/check.yml/jobs/professional-desktop-ipc-stdio/steps/5",
+        ".github/workflows/check.yml/jobs/property-laws/steps/2",
+        ".github/workflows/check.yml/jobs/fallow-advisory/steps/2",
+        ".github/workflows/check.yml/jobs/knip/steps/1",
+        ".github/workflows/check.yml/jobs/jsdoc-ratchet/steps/1",
+        ".github/workflows/check.yml/jobs/commitlint/steps/2",
+        ".github/workflows/check.yml/jobs/nix/steps/1",
+        ".github/workflows/check.yml/jobs/sast/steps/2",
+        ".github/workflows/data-sync.yml/jobs/sync-data/steps/1",
+        ".github/workflows/fleet-lane-probe.yml/jobs/lane-probe/steps/2",
+        ".github/workflows/heavy.yml/jobs/verify/steps/3",
+        ".github/workflows/property-laws-nightly.yml/jobs/property-sweep/steps/1",
+        ".github/workflows/release-desktop.yml/jobs/release-desktop/steps/5",
+        ".github/workflows/storybook.yml/jobs/storybook/steps/3"
+      ]
+    },
+    {
+      "reference": "actions-rust-lang/setup-rust-toolchain@166cdcfd11aee3cb47222f9ddb555ce30ddb9659",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/check.yml/jobs/professional-desktop-ipc-stdio/steps/4",
+        ".github/workflows/release-desktop.yml/jobs/release-desktop/steps/4"
+      ]
+    },
+    {
+      "reference": "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/actions/setup-monorepo-ci/action.yml/runs/steps/6",
+        ".github/actions/setup-monorepo-ci/action.yml/runs/steps/7",
+        ".github/workflows/heavy.yml/jobs/verify/steps/5",
+        ".github/workflows/storybook.yml/jobs/storybook/steps/4"
+      ]
+    },
+    {
+      "reference": "actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/check.yml/jobs/verify/steps/7",
+        ".github/workflows/check.yml/jobs/lint-shard/steps/6",
+        ".github/workflows/check.yml/jobs/test-unit-shard/steps/6",
+        ".github/workflows/heavy.yml/jobs/verify/steps/10"
+      ]
+    },
+    {
+      "reference": "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/actions/setup-monorepo-ci/action.yml/runs/steps/9",
+        ".github/actions/setup-monorepo-ci/action.yml/runs/steps/10",
+        ".github/workflows/heavy.yml/jobs/verify/steps/8",
+        ".github/workflows/storybook.yml/jobs/storybook/steps/6"
+      ]
+    },
+    {
+      "reference": "actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/cache-warm.yml/jobs/warm/steps/0"
+      ]
+    },
+    {
+      "reference": "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/check.yml/jobs/verify/steps/0",
+        ".github/workflows/check.yml/jobs/lint-shard/steps/0",
+        ".github/workflows/check.yml/jobs/test-unit-shard/steps/0",
+        ".github/workflows/check.yml/jobs/professional-desktop-ipc-stdio/steps/0",
+        ".github/workflows/check.yml/jobs/property-laws/steps/0",
+        ".github/workflows/check.yml/jobs/fallow-advisory/steps/0",
+        ".github/workflows/check.yml/jobs/knip/steps/0",
+        ".github/workflows/check.yml/jobs/jsdoc-ratchet/steps/0",
+        ".github/workflows/check.yml/jobs/commitlint/steps/0",
+        ".github/workflows/check.yml/jobs/secrets/steps/0",
+        ".github/workflows/check.yml/jobs/security/steps/0",
+        ".github/workflows/check.yml/jobs/nix/steps/0",
+        ".github/workflows/check.yml/jobs/sast/steps/0",
+        ".github/workflows/data-sync.yml/jobs/sync-data/steps/0",
+        ".github/workflows/fleet-lane-probe.yml/jobs/lane-probe/steps/1",
+        ".github/workflows/heavy.yml/jobs/verify/steps/0",
+        ".github/workflows/property-laws-nightly.yml/jobs/property-sweep/steps/0",
+        ".github/workflows/release-desktop.yml/jobs/release-desktop/steps/0",
+        ".github/workflows/release-desktop.yml/jobs/release-desktop-ready/steps/0",
+        ".github/workflows/storybook.yml/jobs/storybook/steps/0"
+      ]
+    },
+    {
+      "reference": "actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/check.yml/jobs/security/steps/6"
+      ]
+    },
+    {
+      "reference": "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/release-desktop.yml/jobs/release-desktop-ready/steps/2"
+      ]
+    },
+    {
+      "reference": "actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/check.yml/jobs/pr-size/steps/0",
+        ".github/workflows/property-laws-nightly.yml/jobs/property-sweep/steps/4",
+        ".github/workflows/release-desktop.yml/jobs/release-desktop/steps/1",
+        ".github/workflows/release-desktop.yml/jobs/release-desktop/steps/8"
+      ]
+    },
+    {
+      "reference": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/actions/setup-monorepo-ci/action.yml/runs/steps/4",
+        ".github/workflows/check.yml/jobs/security/steps/2"
+      ]
+    },
+    {
+      "reference": "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/check.yml/jobs/fallow-advisory/steps/6",
+        ".github/workflows/data-sync.yml/jobs/sync-data/steps/3",
+        ".github/workflows/release-desktop.yml/jobs/release-desktop/steps/9",
+        ".github/workflows/storybook.yml/jobs/storybook/steps/9"
+      ]
+    },
+    {
+      "reference": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/cache-warm.yml/jobs/warm/steps/3"
+      ]
+    },
+    {
+      "reference": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+      "kind": "mutable-or-dynamic",
+      "locations": [
+        ".github/workflows/check.yml/jobs/heavy"
+      ]
+    },
+    {
+      "reference": "cachix/cachix-action@5f2d7c5294214f71b873db4b969586b980625e71",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/check.yml/jobs/nix/steps/3",
+        ".github/workflows/check.yml/jobs/nix/steps/4"
+      ]
+    },
+    {
+      "reference": "cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/check.yml/jobs/nix/steps/2"
+      ]
+    },
+    {
+      "reference": "google/osv-scanner-action/osv-scanner-action@c5996e0193a3df57d695c1b8a1dec2a4c62e8730",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/check.yml/jobs/security/steps/4"
+      ]
+    },
+    {
+      "reference": "oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/actions/setup-monorepo-ci/action.yml/runs/steps/3",
+        ".github/workflows/check.yml/jobs/security/steps/1"
+      ]
+    },
+    {
+      "reference": "peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/data-sync.yml/jobs/sync-data/steps/9"
+      ]
+    },
+    {
+      "reference": "taiki-e/install-action@91ddec75689c4c78665b598d188dc821c5a43e5c",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/fleet-lane-probe.yml/jobs/lane-probe/steps/3",
+        ".github/workflows/heavy.yml/jobs/verify/steps/6"
+      ]
+    },
+    {
+      "reference": "tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5",
+      "kind": "commit-pinned",
+      "locations": [
+        ".github/workflows/release-desktop.yml/jobs/release-desktop/steps/7"
+      ]
+    }
+  ]
+}

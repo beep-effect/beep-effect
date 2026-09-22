@@ -147,3 +147,168 @@ only, which S1 re-checks against the installed source.
 **Rejected:** re-running the blast-radius census on rc.117 (the census was for a pkg.pr.new
 tarball that will never be pinned; #1173's hosted proof is the census now); keeping S5b as a
 "verify the RC" stage (nothing to swap).
+
+## 2026-09-22 — D-posture: keep G4, per-host cutover, no mixed interim
+
+**Question:** A 2026-only list rejects `initialize` from every current wire client; a mixed list
+accepts everyone but mints a 2025 session even for a client that offers 2026-07-28 (compatibility,
+not adoption) and keeps both identity machines alive in mcp-kit. Keep G4, relax, stage, or exempt
+per transport?
+
+**Answer:** Keep G4. Every host ends on `[McpProtocol.v2026_07_28]`; hosts flip one at a time
+(stdio drivers first, nlp-mcp last behind D-cli-contract, sidecar last of all with D-run-key).
+There is no mixed interim: the proof vehicle is the in-repo 2026 client (D-client-home), not
+vendor CLIs.
+
+**Rationale:** G5 ("an actually good protocol") is only honoured if a host actually runs
+stateless; a mixed list never does. Sizing 24–34 agent-days accepted.
+
+**Rejected:** per-transport exception (stdio hosts would stay on the session protocol in
+practice); mixed everywhere (reverses G4, nothing proven); mixed now then cut over (two
+campaigns, no host ever proves 2026 until the second).
+
+## 2026-09-22 — D-cli-contract: live capture is an entrance criterion for nlp-mcp
+
+**Question:** Claude Code, Codex and grok binaries contain the 2026-07-28 string, but lane 14-s2
+found all three default stdio to `initialize` (Claude Code stdio probes only under
+`MCP_PROTOCOL_NEGOTIATION=auto`, Codex behind a feature flag, grok stdio has no modern path).
+Is a live first-message capture an entrance criterion before the `.mcp.json` host flips?
+
+**Answer:** Yes. Before nlp-mcp goes 2026-only, capture the first stdio message from Claude Code
+(and Codex if cheap) against a 2026-only build. If no CLI the user runs daily speaks 2026 on
+stdio, nlp-mcp stays last in the order and its flip is held as a re-entry gate in `MAP.md`; the
+other stdio hosts and the in-repo client carry the proof meanwhile.
+
+**Rationale:** the pre-mortem's "a proving host nobody's CLI can speak is a failed proof" applies
+to the one host the user depends on every day; G6 still holds for every other host.
+
+**Rejected:** operator notes only (loses the daily nlp server silently); flip nlp-mcp last with no
+capture (no evidence when it breaks).
+
+## 2026-09-22 — D-run-key: the run is a sidecar launch, keyed by the verified bearer's digest
+
+**Question:** Without `Mcp-Session-Id` and with HTTP `clientId` per-POST, what mints the
+`GovernedTierGate` run key (grant freeze, hash chains, TTL)?
+
+**Answer:** A server-side digest of the per-launch bearer that `requireRpcSessionToken` already
+verifies on every request (`launch:<digest>`), composed in `apps/professional-desktop/server`
+and consumed by `epistemic/server` through a run-key service; `McpCallerIdentity` in mcp-kit
+carries transport facts only and never a bearer. Decision 10 in
+`goals/agent-execution-authority/SPEC.md` becomes "a run is a sidecar launch". The test "keys
+the run on the session, not the per-request client id" is deleted and replaced by "keys the run
+on the launch".
+
+**Rationale:** the client cannot rotate the key (no TTL-reset defect), no new wire field, the raw
+token never reaches a ledger. Coarser than a conversation, matching today's process-scoped
+`GovernedEgress`.
+
+**Rejected:** explicit open-run tool (client-echoed token, agent-dependent); signed `requestState`
+(spec-native but no client echoes it yet; revisit once the kit client exists); MRTR per-call
+approval (deletes the grant-freeze semantics PR 5 built).
+
+## 2026-09-22 — D-client-home: `@beep/mcp-kit/client`
+
+**Question:** Effect's 2026 client group is `@internal`; the in-repo clients (sidecar harness,
+`live-mcp-client.ts`, m365 stdio test) are scattered. Where does the 2026 client live?
+
+**Answer:** A client role module under the existing `foundation/capability/mcp-kit` package,
+exported as `@beep/mcp-kit/client` (the `./*` export exists): the 2026 `ClientRpcs` group with
+`server/discover`, the `MCP-Protocol-Version`/`Mcp-Method`/`Mcp-Name` and `_meta` injector, a
+stdio NDJSON helper that sends `discover`, the SSE unwrap ported from the #1173 harness, and the
+conformance harness port.
+
+**Rationale:** domain-agnostic protocol substrate next to the server adapter; no new package,
+one import for harnesses, live proof and driver tests.
+
+**Rejected:** a new `mcp-client-kit` package (package gates for one consumer set); test-side only
+(the live proof and the D-cli-contract capture would run on duplicated code).
+
+## 2026-09-22 — D-conformance: conformance per host, stdio error-shape gap filed upstream
+
+**Question:** Must a 2026-only host pass a 2026-07-28 conformance run, and who owns the stdio
+`-32022`-without-`data.supported` mismatch?
+
+**Answer:** Every flipped host passes an in-repo port of Effect's conformance harness for
+2026-07-28 through `@beep/mcp-kit/client`. The stdio error-shape gap is filed as the G8 upstream
+lane (fork PR), not waived in-repo. nlp-mcp additionally needs the D-cli-contract capture.
+
+**Rationale:** one proof standard for six hosts; the gap is Effect's to fix.
+
+**Rejected:** sidecar-only conformance; in-repo smoke only.
+
+## 2026-09-22 — D-projection: keep `api_key_required`, invalid arguments become `InvalidParams`
+
+**Question:** Under strict 2026 tools, upstream rejects invalid input as JSON-RPC `InvalidParams`
+and projects declared failures as `isError`; the kit returns two canned non-error results today.
+
+**Answer:** `api_key_required` stays a named non-error `CallToolResult` envelope (agent-actionable
+kit value), declared as error translation at the kit protocol adapter (architecture 09).
+Invalid arguments stop being canned and surface as upstream `InvalidParams`.
+
+**Rationale:** one named translator, less fork drift, protocol-native validation.
+
+**Rejected:** everything native (agents lose the "go get a key" hint); keep both canned
+(fights strict decode, more drift).
+
+## 2026-09-22 — D-origin: config-owned allow-list, one Origin check, spec fixes
+
+**Question:** Home of the Origin allow-list, keep or drop the sidecar's own Origin middleware,
+`OPTIONS` and Origin-less POST behaviour, browser clients.
+
+**Answer:** The allow-list becomes an `OntologyMcpServerConfig` field (`@beep/ontology-config`);
+the sidecar middleware stays as the single Origin check (typed 403 + `ontology.mcp.origin`
+metric) and feeds Effect's `allowedOrigins` from the same value; attacker-Origin `OPTIONS`
+answers 403; Origin-less POST stays denied (in-repo clients always send Origin); no
+browser-origin `/mcp` client is in scope, so CORS gains `mcp-method`/`mcp-name` only for the
+in-repo client and drops `mcp-session-id`.
+
+**Rationale:** architecture 06 (config, not literals); the metric and typed error are product
+value Effect's check lacks.
+
+**Rejected:** Effect `allowedOrigins` only (loses metric and typed 403); app-local literal with
+a written exception.
+
+## 2026-09-22 — Goal split: two goals, one train
+
+**Question:** One, two or three goal packets for S1–S5a?
+
+**Answer:** Two. Goal A `mcp-stateless-kit-and-drivers` = S1 kit rebase + `@beep/mcp-kit/client`
++ conformance port, S2/S3 host cutover (m365, uspto, gov-legal, practice-kg, then nlp-mcp behind
+the capture), kit README. Goal B `ontology-sidecar-stateless-identity` = S4 run key, sidecar pin,
+Origin/CORS, agent-execution-authority SPEC wording. B depends on A's kit; both have their own
+PR train and closeout reflection.
+
+**Rejected:** one goal (two owners, cannot close until the sidecar lands); three goals (packet
+overhead without a review benefit).
+
+## 2026-09-22 — Gate D amendments (three grok reviewers, `reviews/gate-d-*.md`)
+
+**Question:** Which Gate D findings change a ruling rather than a packet sentence?
+
+**Answer:** Six amendments, none reopening a decision's intent:
+1. D-run-key carrier: the run key crosses packages through a product-neutral dispatch anchor in
+   `@beep/mcp-kit` (a branded string `Context.Reference`, no bearer, no launch or sidecar
+   vocabulary), following the 2026-07-25 foundation-mediated inversion; the desktop provides
+   `launch:<digest>`, `epistemic/server` and `ontology/server` both read the anchor and never
+   import each other. "Never a kit schema field" now reads "never identity semantics in the kit".
+2. Sequencing: Goal A PR 1 keeps the 2025 `mcp-session-id` read (dual-read) so `main` never runs
+   a session-keyed gate with no key; the read is deleted in Goal B's identity PR.
+3. D-client-home layout: `@beep/mcp-kit/client` is a `client.ts` barrel with an explicit
+   `./client` export (the `./*` map resolves single files, not a directory); the stdio NDJSON
+   helper is a Node entry (`client.node.ts`); the conformance runner is a test-only surface.
+   The kit re-declares its own 2026 RpcGroup (rc.117 exposes no public typed
+   `server/discover` group; the internal one is not imported).
+4. Spans: the architectural spans are the gate's own (`epistemic.governed_tier_gate.evaluate`,
+   `epistemic.governed_tier_gate.record_outcome`) in `GovernedTierGate.gate.ts`, carrying
+   `epistemic.governed_tier_gate.run_id` (the digest); kit `mcp.tool.call.*` spans stay technical.
+5. D-origin: the allow-list field defaults to deny-all (empty); the desktop ConfigProvider
+   supplies its host origins; `OntologyMcpOriginForbidden` becomes an `S.TaggedError`
+   (cleanup-on-touch, architecture 09).
+6. Consumer table: the mcp-kit README names every importer (eleven packages today), not six hosts.
+
+**Rationale:** each is a doctrine or mechanics correction with `file:line` evidence; none
+changes the posture, run-key source, client home, proof standard, projection, or origin policy.
+
+**Rejected:** a new architecture-wide `DECISIONS.md` row for the run-key anchor (the 2026-07-25
+inversion already covers it); Goal B `blockedBy` on all of Goal A (the machine edge has no PR
+grain; B keeps a status note and starts after A PR 1).

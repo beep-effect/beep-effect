@@ -1,0 +1,69 @@
+{
+  "authority": "Isolated explicit root-sibling configuration experiment. Semantic controls pass; input-boundary reduction does not.",
+  "status": "not-adopted-no-read-boundary-reduction",
+  "wrapperExitCode": 0,
+  "beforeAfterParity": "passed",
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/root-profile-scanner-u7v01534/receipt.json",
+    "sha256": "b3249056495a77b3a4da0ff2b11619030fe7085dd022c5b720c147e857de1c34"
+  },
+  "profile": {
+    "path": ".beep/qualification-local-preflight/identity-scanner-profile.json",
+    "sha256": "1d83c43db5aa280ff7c3bc41a71b862e50d5d8ec097fb41c8491ba13aa4c31d7"
+  },
+  "probe": {
+    "path": ".beep/qualification-local-preflight/probe-root-profile-scanner.py",
+    "sha256": "b02927ed1c4247ca5c14d642174548c885e1976093e632b45fec1567ba005457"
+  },
+  "checks": {
+    "baselinePasses": true,
+    "workspaceDeprecationFails": true,
+    "workspaceDeprecationDiagnostic": true,
+    "visibleSyntaxFails": true,
+    "ignoredSyntaxPasses": true,
+    "quietVerboseExitParity": true
+  },
+  "results": [
+    {
+      "case": "baseline",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/root-profile-scanner-u7v01534/baseline-read-review.json",
+        "sha256": "1497b5454b2af8aa19c0bf49b2b38aa3793ee1d186b285bdd714390ea32df4ad"
+      },
+      "otherRepositoryPaths": 8457,
+      "unannotatedPositiveReads": {}
+    },
+    {
+      "case": "workspace-deprecated",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/root-profile-scanner-u7v01534/workspace-deprecated-read-review.json",
+        "sha256": "b4024bff30bddd0d957084056b50867ea50dffbc8d4fe170ec9bdbe608fbdb4f"
+      },
+      "otherRepositoryPaths": 8457,
+      "unannotatedPositiveReads": {}
+    },
+    {
+      "case": "invalid-visible",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/root-profile-scanner-u7v01534/invalid-visible-read-review.json",
+        "sha256": "8ef092c67748396e720ce3f7f4b051d4cc234bf57d5a743bd473d27c66161baa"
+      },
+      "otherRepositoryPaths": 8457,
+      "unannotatedPositiveReads": {}
+    },
+    {
+      "case": "invalid-ignored",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/root-profile-scanner-u7v01534/invalid-ignored-read-review.json",
+        "sha256": "32a9432fd71e7aae0cfbb4c6737f4b78ad4a934d36a493fb0c8c156331344a5b"
+      },
+      "otherRepositoryPaths": 8457,
+      "unannotatedPositiveReads": {}
+    }
+  ],
+  "nextAction": "Determine effective includes/configuration discovery behavior for pinned Biome before choosing a package-scoped implementation. Do not infer equivalence to the successful direct root overlay."
+}
