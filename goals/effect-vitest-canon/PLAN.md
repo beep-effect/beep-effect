@@ -6,7 +6,7 @@ Status: `active`
 
 Benjamin requested merging main, restoring green repository checks, and publishing
 this progress as a PR before continuing the goal after that PR merges. Main was
-integrated at `3367c008d9`; the installed runtime is now Effect rc.115 and Vitest
+integrated at `593a000a41`; the installed runtime is now Effect rc.117 and Vitest
 5.0.1. The census, timing cohort, inventory rows and independent review below
 remain evidence of the frozen rc.113 source snapshot. They are not proof that
 new or changed main files have been audited. Refresh and reconcile that delta

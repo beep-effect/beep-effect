@@ -117,5 +117,5 @@
     "Never merge without explicit user authorization.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "Progress-save integration requested 2026-09-21: main integrated at 3367c008d9 with Effect rc.115/Vitest5.0.1. Existing P1 inventory and timings describe the frozen rc.113 snapshot, not current-main audit completeness. The frozen diagnostic consistency draft covers all 147 candidates; root review, corrections and main delta refresh remain. Continue goal after progress PR merges; Benjamin acknowledgement still required before P2."
+  "statusNote": "Progress-save integration requested 2026-09-21: main integrated at 593a000a41 with Effect rc.117/Vitest5.0.1. Existing P1 inventory and timings describe the frozen rc.113 snapshot, not current-main audit completeness. The frozen diagnostic consistency draft covers all 147 candidates; root review, corrections and main delta refresh remain. Continue goal after progress PR merges; Benjamin acknowledgement still required before P2."
 }

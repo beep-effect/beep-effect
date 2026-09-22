@@ -1954,3 +1954,16 @@ Original processes and evidence are preserved.
   explicitly. Run the affected root checks before retrying the full proof.
 - Prevention: include root test diagnostics and source-policy lint in the focused
   test-authoring loop; a green package audit alone does not establish policy parity.
+
+### 2026-09-21 — New-file coverage requires every metric
+
+- Publication coverage passed all tests and reached 100% lines/functions in the
+  security bundle reader, but its new-file identity also required every statement
+  and branch. An internal missing-entry branch remained after earlier manifest
+  binding and digest checks had already guaranteed the required entries.
+- Evidence: `Security.bundle.ts` reported one uncovered branch and statement;
+  no other coverage regression remained in the full publication run.
+- Preserve the typed fallback through the standard Option fold and verify all
+  four metrics in the focused report before repeating full publication proof.
+- Prevention: inspect the ratchet's complete metric contract, not only the first
+  metrics reported in an earlier failed run. Do not lower or seed baseline floors.
