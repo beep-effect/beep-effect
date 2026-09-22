@@ -288,18 +288,10 @@ export const readPreviousReporterVocabularyForTesting = Effect.fn("SyncDataToTs.
 const decodeArchiveEntry = <A, E>(
   targetId: string,
   file: string,
-  text: string | undefined,
+  text: string,
   decode: (input: string) => Effect.Effect<A, E>
 ): Effect.Effect<A, SyncDataToTsError> =>
-  text === undefined
-    ? Effect.fail(
-        SyncDataToTsError.make({
-          message: `Missing archive entry "${file}".`,
-          targetId,
-          file,
-        })
-      )
-    : decode(text).pipe(SyncDataToTsError.mapError(`Failed to decode ${file}`, targetId, file));
+  decode(text).pipe(SyncDataToTsError.mapError(`Failed to decode ${file}`, targetId, file));
 
 const recordArrayCount = <A>(record: Readonly<Record<string, ReadonlyArray<A>>>): number =>
   pipe(
@@ -348,17 +340,32 @@ export const decodeReportersDbSourceData = Effect.fn("SyncDataToTs.ReportersDb.d
   const caseNameAbbreviations = yield* decodeArchiveEntry(
     targetId,
     caseNameAbbreviationsPath,
-    entries[caseNameAbbreviationsPath],
+    O.getOrThrow(R.get(entries, caseNameAbbreviationsPath)),
     decodeCaseNameAbbreviations
   );
-  const journals = yield* decodeArchiveEntry(targetId, journalsPath, entries[journalsPath], decodeJournals);
-  const laws = yield* decodeArchiveEntry(targetId, lawsPath, entries[lawsPath], decodeLaws);
-  const regexes = yield* decodeArchiveEntry(targetId, regexesPath, entries[regexesPath], decodeReporterRegexes);
-  const reporters = yield* decodeArchiveEntry(targetId, reportersPath, entries[reportersPath], decodeReporters);
+  const journals = yield* decodeArchiveEntry(
+    targetId,
+    journalsPath,
+    O.getOrThrow(R.get(entries, journalsPath)),
+    decodeJournals
+  );
+  const laws = yield* decodeArchiveEntry(targetId, lawsPath, O.getOrThrow(R.get(entries, lawsPath)), decodeLaws);
+  const regexes = yield* decodeArchiveEntry(
+    targetId,
+    regexesPath,
+    O.getOrThrow(R.get(entries, regexesPath)),
+    decodeReporterRegexes
+  );
+  const reporters = yield* decodeArchiveEntry(
+    targetId,
+    reportersPath,
+    O.getOrThrow(R.get(entries, reportersPath)),
+    decodeReporters
+  );
   const stateAbbreviations = yield* decodeArchiveEntry(
     targetId,
     stateAbbreviationsPath,
-    entries[stateAbbreviationsPath],
+    O.getOrThrow(R.get(entries, stateAbbreviationsPath)),
     decodeStateAbbreviations
   );
 

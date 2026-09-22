@@ -269,11 +269,12 @@ const comparePrerelease = (
     return -1;
   }
 
-  return pipe(
-    A.zipWith(left.value, right.value, compareBunSemverIdentifier),
-    A.findFirst((result) => result !== 0),
-    O.getOrElse(() => Order.Number(left.value.length, right.value.length))
-  );
+  for (const result of A.zipWith(left.value, right.value, compareBunSemverIdentifier)) {
+    if (result !== 0) {
+      return result;
+    }
+  }
+  return Order.Number(left.value.length, right.value.length);
 };
 
 const compareBunSemver = (left: BunSemver, right: BunSemver): number => {

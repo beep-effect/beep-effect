@@ -9,7 +9,6 @@ import { $Graph3dId } from "@beep/identity/packages";
 import { Float32Arr } from "@beep/schema/Float32Array";
 import { Effect, Number as N, Order } from "effect";
 import * as A from "effect/Array";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $Graph3dId.create("Graph3D.projection");
@@ -181,21 +180,10 @@ const makeRandom = (seed: number): (() => number) => {
   };
 };
 
-const float32At = (buffer: Float32Array, index: number): number => {
-  const value = buffer[index];
-  if (P.isUndefined(value)) {
-    throw new RangeError(`Float32Array index ${index} is out of bounds for length ${buffer.length}`);
-  }
-  return value;
-};
+// The synthetic generator allocates every typed array from nodeCount and edgeCount, so in-range reads always hold a number.
+const float32At = (buffer: Float32Array, index: number): number => buffer[index]!;
 
-const uint16At = (buffer: Uint16Array, index: number): number => {
-  const value = buffer[index];
-  if (P.isUndefined(value)) {
-    throw new RangeError(`Uint16Array index ${index} is out of bounds for length ${buffer.length}`);
-  }
-  return value;
-};
+const uint16At = (buffer: Uint16Array, index: number): number => buffer[index]!;
 
 /**
  * Generates a deterministic, community-clustered 3D graph projection.

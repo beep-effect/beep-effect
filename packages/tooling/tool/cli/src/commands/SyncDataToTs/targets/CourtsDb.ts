@@ -445,25 +445,17 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
     pathSuffixes: courtsDbArchivePaths,
     targetId,
   });
-  const requireArchiveEntry = (file: string): Effect.Effect<string, SyncDataToTsError> =>
-    Effect.fromOption(R.get(entries, file), () =>
-      SyncDataToTsError.make({
-        message: `Missing archive entry "${file}".`,
-        targetId,
-        file,
-      })
-    );
-  const places = yield* pipe(
-    Effect.forEach(placeNames, (name) =>
-      Effect.map(requireArchiveEntry(placePath(name)), (text) => [name, text] as const)
-    ),
-    Effect.map(R.fromEntries)
+  const archiveEntry = (file: string): string => O.getOrThrow(R.get(entries, file));
+  const places = pipe(
+    placeNames,
+    A.map((name) => [name, archiveEntry(placePath(name))] as const),
+    R.fromEntries
   );
   const courts = yield* assembleCourtsData(
-    yield* requireArchiveEntry(courtsPath),
-    yield* requireArchiveEntry(variablesPath),
+    archiveEntry(courtsPath),
+    archiveEntry(variablesPath),
     places,
-    yield* requireArchiveEntry(utilsPath)
+    archiveEntry(utilsPath)
   );
 
   if (A.length(courts) !== expectedCourtCount) {

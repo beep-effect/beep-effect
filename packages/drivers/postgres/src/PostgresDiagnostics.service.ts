@@ -212,16 +212,11 @@ const formatParams = (parameters: ReadonlyArray<unknown>, palette: Colors): stri
     A.map((parameter, index): readonly [number, number] => [index % 3, visualLength(parameter)]),
     A.reduce(
       [0, 0, 0] as readonly [number, number, number],
-      (acc, [column, length]): readonly [number, number, number] => {
-        const [w0, w1, w2] = acc;
-        if (column === 0) {
-          return [Math.max(w0, length), w1, w2];
-        }
-        if (column === 1) {
-          return [w0, Math.max(w1, length), w2];
-        }
-        return [w0, w1, Math.max(w2, length)];
-      }
+      (acc, [column, length]): readonly [number, number, number] => [
+        column === 0 ? Math.max(acc[0], length) : acc[0],
+        column === 1 ? Math.max(acc[1], length) : acc[1],
+        column === 2 ? Math.max(acc[2], length) : acc[2],
+      ]
     )
   );
 

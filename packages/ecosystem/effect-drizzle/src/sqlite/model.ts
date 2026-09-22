@@ -9,7 +9,7 @@
 // fallow-ignore-file code-duplication -- pg/sqlite are deliberately mirrored dialect implementations; shared logic lives in src/core and the remaining parallelism is per-dialect vocabulary that must evolve independently (doc 14 family; review at next dialect addition)
 import { last, reduce } from "effect/Array";
 import { dual } from "effect/Function";
-import { fromUndefinedOr, getOrElse, getOrThrowWith, getOrUndefined, match, none, orElse, some } from "effect/Option";
+import { fromUndefinedOr, getOrElse, getOrThrow, getOrUndefined, match, none, orElse, some } from "effect/Option";
 import { isFunction, isNotUndefined, isNumber, isString, isUint8Array } from "effect/Predicate";
 import { empty, set } from "effect/Record";
 import { Finite, flip, is, makeFilter, optionalKey } from "effect/Schema";
@@ -672,12 +672,7 @@ export const makeModelClass: {
         ? extras
         : (columns) => [
             ...harvested.map(([key, intent, name]) => {
-              const column = getOrThrowWith(fromUndefinedOr(columns[key]), () =>
-                ModelInvariantError.make({
-                  message: `Model '${identifier}' colocated index references missing field '${key}'.`,
-                  fieldName: key,
-                })
-              );
+              const column = getOrThrow(fromUndefinedOr(columns[key]));
               return intent.unique ? TableExtras.uniqueIndex(name, [column]) : TableExtras.index(name, [column]);
             }),
             ...match(fromUndefinedOr(extras), {
