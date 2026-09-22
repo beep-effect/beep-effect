@@ -187,10 +187,12 @@ export class CiLanePartition extends S.Class<CiLanePartition>($I`CiLanePartition
  * `goals/ci-lane-economics/research/tail-attribution.md`. For each lane,
  * candidates are ordered by descending p95 weight with task id as the stable
  * tie-break, then assigned to the currently lightest bin. Test Unit first
- * isolates `@beep/repo-cli` and splits it into two Vitest `--shard` halves
- * (`repair-decision-2.md`: ~440 s of serial body each); the remaining tasks
- * are assigned to two bins. The weights are evidence, not runtime scheduling
- * inputs.
+ * isolates `@beep/repo-cli` and splits it into two Vitest `--shard` halves;
+ * their 440 s weights are arithmetic halves of the measured 879 s serial body
+ * (the split is by path hash, so the real halves are close but not equal),
+ * per the `goals/ci-lane-economics` window-2 repair decision. The remaining
+ * tasks are assigned to two bins. The weights are evidence, not runtime
+ * scheduling inputs.
  *
  * **Example** (List the hosted partitions)
  *
