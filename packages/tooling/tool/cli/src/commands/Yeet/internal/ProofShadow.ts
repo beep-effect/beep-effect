@@ -875,19 +875,18 @@ export const loadProofShadowReport = Effect.fn("Yeet.loadProofShadowReport")(fun
 ): Effect.fn.Return<ProofShadowReport, YeetCommandError, FileSystem.FileSystem | Path.Path> {
   const ledger = yield* ProofLedger.make(repoRoot, constFalse);
   const now = yield* DateTime.now;
-  const rows = yield* ledger.shadowRows;
-  const facts = yield* ledger.facts;
-  const expiredFacts = yield* ledger.expire(now);
-  const malformedRows = yield* ledger.malformedRows;
+  // One load: the rows and every count describe the same instant even when an
+  // attempt is appending to the ledger while the report runs.
+  const snapshot = yield* ledger.snapshot(now);
   const ledgerPath = yield* proofLedgerPathForCheckout(repoRoot);
   return buildProofShadowReport(
     ProofShadowReportInput.make({
       generatedAt: DateTime.formatIso(now),
       ledgerPath,
-      rows,
-      facts,
-      expiredFacts,
-      malformedRows,
+      rows: snapshot.shadowRows,
+      facts: snapshot.facts,
+      expiredFacts: snapshot.expiredFacts,
+      malformedRows: snapshot.malformedRows,
     })
   );
 });

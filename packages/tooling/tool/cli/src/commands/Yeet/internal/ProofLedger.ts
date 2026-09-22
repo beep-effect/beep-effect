@@ -155,6 +155,34 @@ const decideRelatedFact = (key: ProofInputDigest, fact: ProofFact): ProofReuseDe
  */
 export type ProofChangedPackageTripwire = (key: ProofInputDigest) => boolean;
 
+/**
+ * Everything a report needs from the ledger, read in one load so the shadow
+ * rows and the counts describe the same instant even while an attempt appends.
+ *
+ * **Example** (An empty ledger's snapshot)
+ *
+ * ```ts
+ * import { ProofLedgerSnapshot } from "@beep/repo-cli/test/Yeet"
+ *
+ * const snapshot = ProofLedgerSnapshot.make({ shadowRows: [], facts: 0, expiredFacts: 0, malformedRows: 0 })
+ * console.log(snapshot.facts) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProofLedgerSnapshot extends S.Class<ProofLedgerSnapshot>($I`ProofLedgerSnapshot`)(
+  {
+    shadowRows: S.Array(ProofLedgerShadowRow),
+    facts: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    expiredFacts: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    malformedRows: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+  },
+  $I.annote("ProofLedgerSnapshot", {
+    description: "Shadow rows, fact count, expired-fact count and malformed-row count read from one ledger load.",
+  })
+) {}
+
 // Newest-first facts from a loaded ledger, decoded once per snapshot.
 const factsNewestFirst = (loaded: LoadedProofLedger): ReadonlyArray<ProofFact> =>
   A.reverse(A.map(A.filter(loaded.rows, isFactRow), (row) => row.fact));
@@ -214,6 +242,7 @@ export interface ProofLedgerShape {
   readonly record: (fact: ProofFact) => Effect.Effect<void, YeetCommandError>;
   readonly recordShadow: (row: ProofLedgerShadowRow) => Effect.Effect<void, YeetCommandError>;
   readonly shadowRows: Effect.Effect<ReadonlyArray<ProofLedgerShadowRow>, YeetCommandError>;
+  readonly snapshot: (now: DateTime.DateTime) => Effect.Effect<ProofLedgerSnapshot, YeetCommandError>;
 }
 
 /**
@@ -229,7 +258,9 @@ export interface ProofLedgerShape {
  * write rather than three reads per lane. `shadowRows` returns
  * every shadow row in append order so the disagreement report can count
  * attempts, branches and would-have-reused time; `disagreements` is the
- * hit-versus-failed subset.
+ * hit-versus-failed subset. `snapshot` reads the rows once and derives the
+ * shadow rows and every count from that single load, which is what a report
+ * must use so its numbers describe one instant.
  *
  * **Example** (Construct a disconnected ledger service)
  *
@@ -312,6 +343,18 @@ export class ProofLedger extends Context.Service<ProofLedger, ProofLedgerShape>(
         Effect.map((loaded) => A.length(A.filter(loaded.rows, isFactRow))),
         Effect.withSpan("Yeet.ProofLedger.facts")
       ),
+      snapshot: Effect.fn("Yeet.ProofLedger.snapshot")(function* (
+        now: DateTime.DateTime
+      ): Effect.fn.Return<ProofLedgerSnapshot, YeetCommandError> {
+        const loaded = yield* loadProofLedger(repoRoot).pipe(Effect.provide(runtimeContext));
+        const factRows = A.filter(loaded.rows, isFactRow);
+        return ProofLedgerSnapshot.make({
+          shadowRows: A.filter(loaded.rows, isShadowRow),
+          facts: A.length(factRows),
+          expiredFacts: A.length(A.filter(factRows, (row) => factExpiredAt(row.fact, now))),
+          malformedRows: loaded.malformedRows,
+        });
+      }),
       shadowRows: loadProofLedger(repoRoot).pipe(
         Effect.provide(runtimeContext),
         Effect.map((loaded) => A.filter(loaded.rows, isShadowRow)),

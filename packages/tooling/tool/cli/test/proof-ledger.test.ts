@@ -262,6 +262,11 @@ describe("ProofLedger", () => {
             ProofReuseMiss.make({ key: "lint-key", reason: "no-fact" }),
           ]);
           expect(yield* ledger.lookupAll([], NOW)).toStrictEqual([]);
+          const snapshot = yield* ledger.snapshot(NOW);
+          expect(snapshot).toMatchObject({ facts: 2, expiredFacts: 0, malformedRows: 0 });
+          expect(snapshot.shadowRows).toStrictEqual([]);
+          const expired = yield* ledger.snapshot(DateTime.makeUnsafe("2026-12-01T00:00:00.000Z"));
+          expect(expired.expiredFacts).toBe(2);
           const tripped = yield* withLedger(root, (guarded) => guarded.lookupAll([input()], NOW), constTrue);
           expect(tripped).toStrictEqual([
             ProofReuseMiss.make({ key: "proof-key", reason: "changed-package-tripwire" }),
