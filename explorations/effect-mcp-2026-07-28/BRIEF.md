@@ -52,12 +52,16 @@ and only after a live first-message capture of Claude Code (and Codex if cheap) 
 as a re-entry gate in `MAP.md`, recorded in Goal A's exception ledger.
 
 **Sidecar last (Goal B, S4).** The run key becomes a server-side digest of the per-launch bearer
-that `requireRpcSessionToken` already verifies (`launch:<digest>`), composed in
-`apps/professional-desktop/server` and consumed by `epistemic/server` through a run-key service
-(D-run-key); decision 10 reads "a run is a sidecar launch". Same PR: the sidecar protocol pin,
+that `requireRpcSessionToken` already verifies (`launch:<digest>`). The desktop composition fills
+the kit's product-neutral dispatch anchor (a branded `Context.Reference` added by Goal A) with
+that digest; `epistemic/server` (`runIdOf`) and `ontology/server` (`OntologyChangeActor`) both
+read the anchor and never import each other (D-run-key as amended by Gate D, 2026-07-25
+foundation-mediated inversion); the kit's 2025 `mcp-session-id` read is deleted in the same PR;
+decision 10 reads "a run is a sidecar launch". Same PR: the sidecar protocol pin,
 the harness on the 2026 wire through the kit client, grant-expired and never-evict tests,
-`OntologyChangeActor` keyed to the run id, the gate span renamed to an architectural action and
-carrying the correlation attribute (not the kit's technical `mcp.tool.call.*` spans), and the
+`OntologyChangeActor` keyed to the anchor, the gate's own spans in `GovernedTierGate.gate.ts`
+renamed `epistemic.governed_tier_gate.evaluate` / `record_outcome` and carrying
+`epistemic.governed_tier_gate.run_id` (not the kit's technical `mcp.tool.call.*` spans), and the
 Origin allow-list moved into `OntologyMcpServerConfig` with one Origin check, `OPTIONS` → 403,
 Origin-less POST denied, CORS headers updated (D-origin). HTTP cancellation stays a recorded
 Effect gap.
@@ -70,8 +74,10 @@ shared-kernel promotion record (the kit is `foundation/capability`, its consumer
 ## Rabbit holes
 
 - Reading `Mcp-Session-Id` after Effect stops minting it: a client-supplied string would become a
-  grant-run key. The kit must drop that read in S1 so the header cannot reach the gate (patched:
-  D-run-key keys on the bearer digest).
+  grant-run key. Sequencing matters (Gate D amendment 2): Goal A PR 1 keeps the 2025 read as part
+  of the dual-read so `main` never runs a session-keyed gate with no key; Goal B deletes the read
+  in the same PR that fills the dispatch anchor with `launch:<digest>`, and adds a test that a
+  stray header on a 2026 dispatch still yields `sessionId: None`.
 - `sanitizedToolkit` drift: the fork excludes `McpServerClient` where upstream now excludes
   `McpRequestContext`; rebasing by hand re-creates drift within one RC. Rebase once, then a
   `SanitizedSpan` coverage ratchet and a stale-comment sweep are the guard.
@@ -92,8 +98,8 @@ shared-kernel promotion record (the kit is `foundation/capability`, its consumer
 - No canned invalid-arguments result once strict tools land (D-projection).
 - No browser-origin `/mcp` client, no Origin-less POST allowance, no app-local allow-list
   literal (D-origin).
-- No identity fields, bearers, or run keys in mcp-kit schemas; the kit carries transport facts
-  only.
+- No bearer, launch, or sidecar semantics in mcp-kit schemas; the kit carries transport facts plus
+  one product-neutral dispatch anchor that app composition fills (Gate D amendment 1).
 - No architecture-wide decision-log entry, numbered-doc edit, or promotion record for this work.
 - External agent clients (cursor-agent and others) do not gate any flip (G6); the only capture is
   the nlp-mcp entrance criterion.

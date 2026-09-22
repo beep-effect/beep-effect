@@ -124,5 +124,6 @@ passes for 2026-07-28. Over HTTP the client sends `MCP-Protocol-Version`, `Mcp-M
 - `withTopLevelObjectInputSchema` may be dead after Effect#8326: decide from the installed source
   in S1, not from the frozen research.
 - Vendor stdio clients may never speak 2026: Goal A closes with the hold recorded.
-- Leftover `Mcp-Session-Id` reads: the kit drops them in S1 so no header can key the gate.
+- Leftover `Mcp-Session-Id` reads: Goal A PR 1 keeps the 2025 read (dual-read); Goal B deletes it
+  when the launch digest fills the dispatch anchor, so no header can key the gate afterwards.
 - HTTP cancellation gap and the stdio `data.supported` gap are upstream, not in-repo.
