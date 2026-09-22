@@ -3,6 +3,7 @@
   "extends": "../../../../tsconfig.base.json",
   "include": ["src", "test", "scripts"],
   "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
     "composite": false,
     "declaration": false,
     "declarationMap": false,
