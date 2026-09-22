@@ -1,8 +1,9 @@
 ---
-{}
+"@beep/identity": patch
+"@beep/repo-configs": patch
 ---
 
-No release: repair the findings surfaced by running every root quality and
+Repair the findings surfaced by running every root quality and
 CI script end to end.
 
 - `beep codegen barrel` now preserves the module header and the per-export

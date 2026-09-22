@@ -16,7 +16,7 @@
     "browser-qa-loop": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "8355aed86b118f16463022d6b7e083c69f6d72ebc1f4c447d7bb4ecac6677a39"
+      "computedHash": "431ae592c79036d7d359a5abf258d7309fdebdc179686360426f151a3a7a32ff"
     },
     "codex-findings": {
       "source": "repo-local",
@@ -68,7 +68,7 @@
     "jsdoc-annotation-specialist": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "45f818ddfcebe2a24c2d2bca82ffdc823421a2101e57fc613b5f78be061299b6"
+      "computedHash": "3a92878a2892f36b6bd471ccb510c5cd2418a0c031eb50a6683907cea08916c6"
     },
     "motion-evidence-review": {
       "source": "repo-local",
@@ -174,7 +174,7 @@
     "turborepo": {
       "source": "vercel/turborepo",
       "sourceType": "github",
-      "computedHash": "590da092446d19a3f18502ee013d62bd0064a72d58bd9b6809c594be2d29ee28",
+      "computedHash": "39a68e35d02b8a03dc35774038d373c95c98924e95dd0c8061f50ad43a78f9fe",
       "ref": "main",
       "skillPath": "skills/turborepo/SKILL.md"
     },

@@ -247,7 +247,7 @@ const emptyBarrelDocs = (): HashMap.HashMap<string, string> => HashMap.empty<str
 const parseBarrelHeader = (content: string): O.Option<string> =>
   pipe(
     O.fromNullishOr(BARREL_DOC_BLOCK_PATTERN.exec(content)),
-    O.filter((match) => !BARREL_EXPORT_FOLLOWS_PATTERN.test(Str.slice(content, match.index + Str.length(match[0])))),
+    O.filter((match) => !BARREL_EXPORT_FOLLOWS_PATTERN.test(Str.slice(match.index + Str.length(match[0]))(content))),
     O.map((match) => match[0])
   );
 
@@ -420,7 +420,7 @@ const barrelCommand = Command.make(
     const indexPath = pathSvc.join(srcDir, "index.ts");
 
     // Preserve documentation already authored on the committed barrel.
-    const previous = yield* fs.readFileString(indexPath).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+    const previous = yield* fs.readFileString(indexPath).pipe(Effect.asSome, Effect.orElseSucceed(O.none<string>));
 
     // Generate barrel content
     const content = buildBarrelContent(packageName, modules, previous);
