@@ -68,15 +68,16 @@ Verification:
 bun run beep quality package-verify @beep/epistemic-server
 bun run beep quality package-verify @beep/ontology-config
 bun run beep quality package-verify @beep/ontology-server
+bun run beep quality package-verify @beep/mcp-kit
 bun run beep ci lane test-integration --affected --base origin/main
 test "$(wc -m < goals/ontology-sidecar-stateless-identity/GOAL.md)" -le 4000
 jq . goals/ontology-sidecar-stateless-identity/ops/manifest.json
 git diff --check -- goals/ontology-sidecar-stateless-identity
 ```
 
-Stop before changing public API beyond the named surfaces, dependencies,
-lockfiles, or generated files. The raw bearer never enters a ledger, span,
-log, or assertion.
+Do not change public API, dependencies, lockfiles, or generated files
+outside the named surfaces. The raw bearer never enters a ledger, span, log,
+or assertion.
 
 Done only when acceptance passes and verification is complete, or a blocker
 is reported with file/command evidence.
