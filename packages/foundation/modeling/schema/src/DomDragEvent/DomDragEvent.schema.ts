@@ -6,6 +6,7 @@
  */
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
+import { instanceOfDomGlobal } from "../internal/domGlobal.ts";
 
 const $I = $SchemaId.create("DomDragEvent");
 
@@ -23,7 +24,7 @@ const $I = $SchemaId.create("DomDragEvent");
  * @category guards
  * @since 0.0.0
  */
-export const isDragEvent = (u: unknown): u is DragEvent => u instanceof DragEvent;
+export const isDragEvent: (u: unknown) => u is DragEvent = instanceOfDomGlobal<DragEvent>("DragEvent");
 
 /**
  * A DragEvent.
