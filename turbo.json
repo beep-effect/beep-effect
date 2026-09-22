@@ -247,6 +247,8 @@
         "packages/tooling/policy-pack/repo-configs/src/**",
         "packages/tooling/test-kit/fc-runs/package.json",
         "packages/tooling/test-kit/fc-runs/src/**",
+        "packages/tooling/test-kit/test-runner/package.json",
+        "packages/tooling/test-kit/test-runner/src/**",
         "packages/tooling/test-kit/test-utils/package.json",
         "packages/tooling/test-kit/test-utils/src/**",
         "packages/tooling/tool/cli/package.json",

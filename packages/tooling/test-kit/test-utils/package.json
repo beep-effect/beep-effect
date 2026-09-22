@@ -73,7 +73,8 @@
     "@effect/vitest": "catalog:",
     "effect": "catalog:",
     "pg": "^8.20.0",
-    "testcontainers": "catalog:"
+    "testcontainers": "catalog:",
+    "@beep/test-runner": "workspace:^"
   },
   "devDependencies": {
     "@types/bun": "catalog:",

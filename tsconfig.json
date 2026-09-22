@@ -2151,6 +2151,13 @@
       ],
       "@beep/epistemic-use-cases/ClaimEvidenceReview": [
         "./packages/epistemic/use-cases/src/ClaimEvidenceReview/index.ts"
+      ],
+      "@beep/test-runner": [
+        "./packages/tooling/test-kit/test-runner/src/index.ts"
+      ],
+      "@beep/test-runner/*": ["./packages/tooling/test-kit/test-runner/src/*"],
+      "@beep/test-runner/test/Vitest": [
+        "./packages/tooling/test-kit/test-runner/src/test/Vitest.test-kit.ts"
       ]
     }
   }
