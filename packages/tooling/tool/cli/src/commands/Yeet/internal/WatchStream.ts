@@ -40,9 +40,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { YeetReviewThreadStateTag } from "./ReviewThreadState.ts";
 import { YeetSettleVerdict, yeetSettleCensusRequires } from "./Settle.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriteria, YeetMergeReadyCriterion } from "./Verdict.ts";
-import type { YeetMonitorComment } from "./MonitorComments.ts";
+import type { YeetMonitorThreadComment } from "./MonitorComments.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/WatchStream");
 
@@ -161,7 +162,14 @@ export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
 ) {}
 
 /**
- * One review thread within a watch snapshot: its identity and resolution.
+ * One review thread within a watch snapshot: its identity and what it owes.
+ *
+ * **Details**
+ *
+ * The row carries the classified state rather than `isResolved`, because the
+ * watch and the status gate have to agree on what "outstanding" means: a
+ * thread the author resolved with a reviewer speaking last is resolved and
+ * still owed, and a boolean cannot say that.
  *
  * @category models
  * @since 0.0.0
@@ -169,10 +177,10 @@ export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
 export class YeetWatchThread extends S.Class<YeetWatchThread>($I`YeetWatchThread`)(
   {
     id: S.NonEmptyString,
-    isResolved: S.Boolean,
+    state: YeetReviewThreadStateTag,
   },
   $I.annote("YeetWatchThread", {
-    description: "One PR review thread's identity and resolution state within a watch snapshot.",
+    description: "One PR review thread's identity and classified state within a watch snapshot.",
   })
 ) {}
 
@@ -293,7 +301,74 @@ export class YeetCheckTransition extends S.Class<YeetCheckTransition>($I`YeetChe
 ) {}
 
 /**
- * A review thread appeared or changed resolution state.
+ * Whether a watched review thread still owes the pull request an answer.
+ *
+ * **Details**
+ *
+ * The snapshot-level reading of {@link yeetReviewThreadStateOutstanding}:
+ * unresolved threads and threads the author resolved with a human reviewer
+ * speaking last. It is what the inbox converges rows for, so an acknowledged
+ * thread never opens a task nobody owes.
+ *
+ * **Example** (An unresolved thread is outstanding)
+ *
+ * ```ts
+ * import { YeetWatchThread, yeetWatchThreadOutstanding } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetWatchThreadOutstanding(YeetWatchThread.make({ id: "T1", state: "unresolved" }))) // true
+ * ```
+ *
+ * @param thread - One review thread row of a watch snapshot.
+ * @returns `true` when the thread blocks merge readiness.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetWatchThreadOutstanding = (thread: YeetWatchThread): boolean =>
+  YeetReviewThreadStateTag.$match(thread.state, {
+    unresolved: () => true,
+    "resolved-follow-up": () => true,
+    "resolved-answered": () => false,
+    "resolved-acknowledged": () => false,
+  });
+
+/**
+ * What a review thread's transition moved it to.
+ *
+ * **Details**
+ *
+ * `opened` is the first observation of a thread that owes something; the other
+ * four name the classified state the thread moved into. `follow-up` and
+ * `acknowledged` exist because a thread can move while staying resolved — a
+ * reviewer speaking after the author closed it changes what is owed without
+ * changing `isResolved`, and a stream that only watched resolution would show
+ * nothing at the moment the merge gate closed.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetThreadTransitionTarget = LiteralKit([
+  "opened",
+  "resolved",
+  "unresolved",
+  "follow-up",
+  "acknowledged",
+]).pipe(
+  $I.annoteSchema("YeetThreadTransitionTarget", {
+    title: "Yeet Thread Transition Target",
+    description: "The state a review thread moved into within the watch stream.",
+  })
+);
+
+/**
+ * What a review thread's transition moved it to.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetThreadTransitionTarget = typeof YeetThreadTransitionTarget.Type;
+
+/**
+ * A review thread appeared or changed what it owes.
  *
  * @category models
  * @since 0.0.0
@@ -307,10 +382,11 @@ export class YeetThreadTransition extends S.Class<YeetThreadTransition>($I`YeetT
     at: S.String,
     headSha: S.NonEmptyString,
     threadId: S.NonEmptyString,
-    to: LiteralKit(["opened", "resolved", "unresolved"]),
+    to: YeetThreadTransitionTarget,
   },
   $I.annote("YeetThreadTransition", {
-    description: "A review thread appeared (opened), was resolved, or was re-opened (unresolved).",
+    description:
+      "A review thread appeared (opened), was resolved, re-opened (unresolved), drew a reviewer follow-up, or was acknowledged by a bot.",
   })
 ) {}
 
@@ -532,11 +608,11 @@ const WATCH_COMMENT_EXCERPT_LENGTH = 200;
  * @since 0.0.0
  */
 export const yeetWatchCommentEvent: {
-  (at: string, headSha: string): (comment: YeetMonitorComment) => YeetCommentPosted;
-  (comment: YeetMonitorComment, at: string, headSha: string): YeetCommentPosted;
+  (at: string, headSha: string): (comment: YeetMonitorThreadComment) => YeetCommentPosted;
+  (comment: YeetMonitorThreadComment, at: string, headSha: string): YeetCommentPosted;
 } = dual(
   3,
-  (comment: YeetMonitorComment, at: string, headSha: string): YeetCommentPosted =>
+  (comment: YeetMonitorThreadComment, at: string, headSha: string): YeetCommentPosted =>
     Match.value(comment).pipe(
       Match.tag("review", (review) =>
         YeetCommentPosted.make({
@@ -720,8 +796,19 @@ export const renderYeetWatchEventLine = (event: YeetWatchEvent): Effect.Effect<s
 const checkOutcomes = (snapshot: YeetWatchSnapshot): HashMap.HashMap<string, YeetCheckOutcome> =>
   HashMap.fromIterable(A.map(snapshot.checks, (check) => [check.name, check.outcome] as const));
 
-const threadStates = (snapshot: YeetWatchSnapshot): HashMap.HashMap<string, boolean> =>
-  HashMap.fromIterable(A.map(snapshot.threads, (thread) => [thread.id, thread.isResolved] as const));
+const threadStates = (snapshot: YeetWatchSnapshot): HashMap.HashMap<string, YeetReviewThreadStateTag> =>
+  HashMap.fromIterable(A.map(snapshot.threads, (thread) => [thread.id, thread.state] as const));
+
+// A thread state read as the transition that lands on it. `resolved-answered`
+// is the quiet state: reaching it is a thread going away, which the stream
+// reports as `resolved`.
+const threadTransitionTarget = (state: YeetReviewThreadStateTag): YeetThreadTransitionTarget =>
+  YeetReviewThreadStateTag.$match(state, {
+    unresolved: () => "unresolved" as const,
+    "resolved-answered": () => "resolved" as const,
+    "resolved-follow-up": () => "follow-up" as const,
+    "resolved-acknowledged": () => "acknowledged" as const,
+  });
 
 /**
  * The differ's input: two consecutive snapshots plus the row timestamp.
@@ -835,12 +922,16 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
   const previousThreads = threadStates(prev);
   const threadEvents = A.flatMap(next.threads, (thread): ReadonlyArray<YeetWatchEvent> => {
     const before = HashMap.get(previousThreads, thread.id);
+    const target = threadTransitionTarget(thread.state);
     const to = O.match(before, {
-      onNone: () => (thread.isResolved ? O.none<"opened" | "resolved" | "unresolved">() : O.some("opened" as const)),
-      onSome: (wasResolved) =>
-        wasResolved === thread.isResolved
-          ? O.none<"opened" | "resolved" | "unresolved">()
-          : O.some(thread.isResolved ? ("resolved" as const) : ("unresolved" as const)),
+      // A thread first seen already answered is not news; first seen still
+      // owing something is, and an unresolved one is reported as `opened`
+      // because that is the moment the watch learned it exists.
+      onNone: () =>
+        target === "resolved"
+          ? O.none<YeetThreadTransitionTarget>()
+          : O.some(target === "unresolved" ? ("opened" as const) : target),
+      onSome: (wasState) => (wasState === thread.state ? O.none<YeetThreadTransitionTarget>() : O.some(target)),
     });
     return O.match(to, {
       onNone: A.empty<YeetWatchEvent>,

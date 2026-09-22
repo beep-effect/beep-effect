@@ -101,7 +101,7 @@ import {
   renderYeetCheckRegistrationExhausted,
   YEET_CHECK_REGISTRATION_BACKOFF,
 } from "./MonitorChecks.ts";
-import { runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
+import { replayYeetMonitorComments, runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
 import {
   buildYeetRunPlanWithMode,
@@ -157,7 +157,7 @@ import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuaran
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
-import type { YeetStatusSnapshot } from "./Status.ts";
+import type { YeetStatusReviewThread, YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdict.ts";
 
 const decodeGhPrViewJson = S.decodeEffect(S.fromJsonString(GhPrView));
@@ -1105,16 +1105,36 @@ const failWithRerunGuidance = Effect.fn("Yeet.failWithRerunGuidance")(function* 
   });
 });
 
+const threadDescriptors = (threads: O.Option<ReadonlyArray<YeetStatusReviewThread>>): ReadonlyArray<string> =>
+  O.match(threads, {
+    onNone: A.empty<string>,
+    onSome: A.map(
+      (thread) =>
+        `${thread.threadId}${O.match(thread.path, { onNone: () => Str.empty, onSome: (path) => ` (${path})` })}`
+    ),
+  });
+
+// The gate is the COUNTS, not the id list: a snapshot can report a thread
+// count it has no triage rows for (a legacy artifact, a listing that decoded
+// but carried no context), and reading the list alone would wave that pull
+// request through. Follow-ups count with unresolved threads because both owe
+// a reply; acknowledgements are excluded because nothing is owed on them.
 const assertNoUnresolvedReviewThreads = Effect.fn("Yeet.assertNoUnresolvedReviewThreads")(function* (
   snapshot: YeetStatusSnapshot
 ): Effect.fn.Return<void, YeetCommandError> {
-  const unresolved = snapshot.remote.unresolvedReviewThreads ?? A.empty<string>();
-  if (A.isReadonlyArrayEmpty(unresolved)) {
+  const remote = snapshot.remote;
+  const outstanding = (remote.unresolvedReviewThreadCount ?? 0) + (remote.followUpThreadCount ?? 0);
+  if (outstanding === 0) {
     return;
   }
+  const named = [
+    ...(remote.unresolvedReviewThreads ?? threadDescriptors(remote.unresolvedThreads)),
+    ...threadDescriptors(remote.followUpThreads),
+  ];
+  const detail = A.isReadonlyArrayNonEmpty(named) ? `: ${A.join(named, ", ")}` : Str.empty;
   return yield* YeetCommandError.make({
-    message: `Yeet merge readiness requires zero unresolved review threads; found ${A.length(unresolved)}: ${A.join(unresolved, ", ")}`,
-    command: "bun run beep yeet closeout --summary",
+    message: `Yeet merge readiness requires zero outstanding review threads; found ${outstanding} (${remote.unresolvedReviewThreadCount ?? 0} unresolved, ${remote.followUpThreadCount ?? 0} reviewer follow-up)${detail}`,
+    command: "bun run beep yeet reply",
     exitCode: 1,
   });
 });
@@ -1386,6 +1406,13 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
 > {
   const snapshot = yield* collectYeetStatus(context, options.remote);
   yield* writeYeetStatusSnapshot(snapshot);
+  // A read-first status is the operator's first look at the pull request since
+  // the last session ended, so it replays what was said in between — but never
+  // under `--json`, where a comment printed to stdout would corrupt the
+  // document the caller is parsing.
+  if (!options.json && snapshot.remote.number !== undefined) {
+    yield* replayYeetMonitorComments(context, snapshot.remote.number);
+  }
   if (options.json) {
     yield* printCommandJson(snapshot).pipe(Effect.mapError(YeetCommandError.new("Failed to print yeet status JSON.")));
   } else {
@@ -1393,6 +1420,28 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
   }
   return yield* emptyPlanResult(context);
 });
+
+/**
+ * Run `yeet status` end to end, for tests that need the whole mode.
+ *
+ * **Details**
+ *
+ * The seam the comment-replay guard is proved through: replay is a side effect
+ * of the mode, not of `collectYeetStatus`, so nothing below this function can
+ * show whether `--json` suppressed it.
+ *
+ * **Example** (Name the status mode runner)
+ *
+ * ```ts
+ * import { runStatusModeForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof runStatusModeForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runStatusModeForTesting = runStatusMode;
 
 /**
  * Expose the closeout artifact writer to focused tests.
@@ -1433,6 +1482,9 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
   );
   const reportPath = yield* writePrCloseoutReport(context, report);
   yield* Console.log(`[yeet] PR closeout report written to ${reportPath}`);
+  // The closeout is the read-first surface an agent runs after a gap, so it is
+  // where a comment posted while nothing was attached has to surface.
+  yield* replayYeetMonitorComments(context, report.prNumber);
   if (options.summary) {
     yield* printOperatorStatusSummary(context, true);
   }
