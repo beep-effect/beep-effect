@@ -343,6 +343,42 @@ describe("tsconfig-sync", () => {
       );
     })
   );
+  effectIt.effect(
+    "generates the source-only Conformance test seam from the mcp-kit registry",
+    Effect.fnUntraced(function* () {
+      yield* withTempRepo(
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const rootDir = process.cwd();
+          yield* bootstrapRootConfig(rootDir, {
+            workspaces: ["packages/foundation/capability/mcp-kit"],
+            references: [],
+            paths: {},
+            syncpackSources: ["package.json"],
+          });
+          yield* bootstrapWorkspace(rootDir, {
+            relativeDir: "packages/foundation/capability/mcp-kit",
+            packageName: "@beep/mcp-kit",
+            exports: {
+              ".": "./src/index.ts",
+              "./client": "./src/client.ts",
+              "./test/*": "./src/test/*.test-kit.ts",
+              "./package.json": "./package.json",
+            },
+          });
+          yield* syncTsconfigAtRoot(rootDir, {
+            mode: "sync",
+            filter: "@beep/mcp-kit",
+            verbose: false,
+          });
+          const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          assert.deepStrictEqual(paths.compilerOptions.paths["@beep/mcp-kit/test/Conformance"], [
+            "./packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts",
+          ]);
+        })
+      );
+    })
+  );
 
   it("does not synthesize wildcard aliases for packages without wildcard exports", () =>
     Effect.runPromise(
