@@ -2812,6 +2812,18 @@
         "@types/node": "catalog:",
       },
     },
+    "packages/tooling/test-kit/test-runner": {
+      "name": "@beep/test-runner",
+      "version": "0.0.0",
+      "dependencies": {
+        "@effect/vitest": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/fc-runs": "workspace:^",
+        "@types/node": "catalog:",
+      },
+    },
     "packages/tooling/test-kit/test-utils": {
       "name": "@beep/test-utils",
       "version": "0.0.2",
@@ -2819,6 +2831,7 @@
         "@beep/fc-runs": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/test-runner": "workspace:^",
         "@beep/utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/platform-node": "catalog:",
@@ -3721,6 +3734,8 @@
     "@beep/storybook": ["@beep/storybook@workspace:apps/storybook"],
 
     "@beep/tailscale": ["@beep/tailscale@workspace:packages/drivers/tailscale"],
+
+    "@beep/test-runner": ["@beep/test-runner@workspace:packages/tooling/test-kit/test-runner"],
 
     "@beep/test-utils": ["@beep/test-utils@workspace:packages/tooling/test-kit/test-utils"],
 

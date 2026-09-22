@@ -381,10 +381,10 @@ describe("CI lane partitions", () => {
       }))
     ).toEqual([
       { id: "lint-a", packages: 68, weightSeconds: 1132 },
-      { id: "lint-b", packages: 67, weightSeconds: 1134 },
+      { id: "lint-b", packages: 68, weightSeconds: 1134 },
       { id: "repo-cli-1", packages: 1, weightSeconds: 440 },
       { id: "repo-cli-2", packages: 1, weightSeconds: 440 },
-      { id: "unit-a", packages: 67, weightSeconds: 1214 },
+      { id: "unit-a", packages: 68, weightSeconds: 1214 },
       { id: "unit-b", packages: 67, weightSeconds: 1214 },
     ]);
   });
@@ -726,7 +726,7 @@ describe("CI lane partitions", () => {
 
         expect(A.length(A.dedupe(assignments))).toBe(A.length(assignments));
         expect(A.sort(assignments, Order.String)).toEqual(taskPackageNames);
-        expect(proof.selectedTaskCount).toBe(135);
+        expect(proof.selectedTaskCount).toBe(136);
       }
     }).pipe(provideScopedLayer(LiveRepoLayer))
   );
@@ -818,7 +818,7 @@ describe("partitioned CI lane execution", () => {
             expect(execution).not.toContain("--affected");
 
             const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-            expect(output).toContain("lint partition union proved: 135 executable tasks, 135 selected, 68 in lint-a");
+            expect(output).toContain("lint partition union proved: 136 executable tasks, 136 selected, 68 in lint-a");
           })
         );
       })
@@ -866,7 +866,7 @@ describe("partitioned CI lane execution", () => {
 
           const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
           expect(output).toContain(
-            "test-unit partition union proved: 135 executable tasks, 1 selected, 0 in repo-cli-1"
+            "test-unit partition union proved: 136 executable tasks, 1 selected, 0 in repo-cli-1"
           );
           expect(output).toContain("test-unit repo-cli-1: partition has no selected tasks (skipped)");
         })

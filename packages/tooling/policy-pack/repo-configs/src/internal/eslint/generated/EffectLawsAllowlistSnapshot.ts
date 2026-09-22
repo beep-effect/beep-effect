@@ -246,10 +246,10 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/test-kit/test-utils/src/internal/VitestInstrumentation.ts",
+      "file": "packages/tooling/test-kit/test-runner/src/internal/VitestInstrumentation.ts",
       "kind": "new-map-set",
       "reason": "The public Vitest adapter associates live TestContext objects with execution state using weak identity keys so finished tests are not retained. Each execution also records property registration objects in insertion order for finishPropertyRuns finalization; native Map preserves object identity and ordered in-place iteration. These are foreign runtime handles, not domain values. The Node/Bun lifecycle, overlapping-property and repeat/retry regressions verify the adapter contract.",
-      "owner": "@beep/test-utils",
+      "owner": "@beep/test-runner",
       "issue": "https://github.com/beep-effect/beep-effect/pull/1067"
     },
     {
@@ -262,10 +262,10 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/test-kit/test-utils/src/internal/VitestRuntime.ts",
+      "file": "packages/tooling/test-kit/test-runner/src/internal/VitestRuntime.ts",
       "kind": "object-method",
       "reason": "The adapter exposes Vitest methods on a callable registration function. Object.assign copies enumerable own vendor method values onto that callable before Proxy interception, preserving the combined callable/object protocol. A plain Effect Record would lose callability; omitting the copy would change own-property inspection. Public each, conditional and layer registration regression tests exercise this adapter.",
-      "owner": "@beep/test-utils",
+      "owner": "@beep/test-runner",
       "issue": "https://github.com/beep-effect/beep-effect/pull/1067"
     }
   ],
