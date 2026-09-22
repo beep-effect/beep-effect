@@ -1,0 +1,290 @@
+{
+  "schemaVersion": "boolean-creep-bounded-source-audit/v1",
+  "date": "2026-09-14",
+  "sourceSha": "cecfb9f8e9a5f20d768666c65f89425349f7f9e6",
+  "mainSha": "cecfb9f8e9a5f20d768666c65f89425349f7f9e6",
+  "purpose": "Resume P2 source/design refresh after merged save PR and Effect upgrade.",
+  "scope": "Bounded design and source-delta checks only. This is not a completed whole-corpus census or independent review.",
+  "inputBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "d64ec5731c9ba1453efba0bd73f67945be74e84b8587ef83df01a884a82c7c4d"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts",
+      "sha256": "86bbd86a854a8af5d51b8aa40b86ae08a6de0975108e10f84f7c5b1beede06cb"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "sha256": "2340f0a39f198015de6ee023df62bb3774f4cd97341001d74bdd8707e016742c"
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/NeutralCitation/NeutralCitation.model.ts",
+      "sha256": "29c6697e12ff006ce9752adfae2fef4516a84d9bbb1f7398e9b73deaae09b83b"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/MemoryFileSystem/MemoryFileSystem.test-kit.ts",
+      "sha256": "f60c016d62eb22dee35836d7df19baeca822acf8a707888e3cf7a7db6f1281ec"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/MemoryFileSystem/Characterization.test.ts",
+      "sha256": "a938282cc3198cda7667cbd72384c8732108d413843cbc760c4fa64e8c29cc01"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/test/MemoryFileSystem/Coverage.test.ts",
+      "sha256": "6935f1c00db9c67258e61d2839360ef74de5cd17e02c274dbd06ccde4d659c77"
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts",
+      "sha256": "00f4f9b7c3c8be66dff6863d2169b16aa4b5be4d5cc0483213f6085605b227d2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "sha256": "88ec5658bf142fecb7c6c5f494ee3106a179f9f8459588c8a182e77ce0620d1a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.schemas.ts",
+      "sha256": "144a32a95cc11183dd97fb13af33ad08b4b23090fde0c3923a46805c070991a8"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
+      "sha256": "03aa6c285215195e6952e1da5c994ca1da8c312fc1e0ded9bd7962eadfd10c59"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+      "sha256": "64ed630bfd6ee4f6a807eb8e9b2d2bbb4ba6e443ca0e05acb452a319756f76bb"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.ts",
+      "sha256": "3fa9e7e8ec628e07ef52ea330cb6094d5915a189635cc29803c9a83eeba2d8d5"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts",
+      "sha256": "428284b4615d7800abff6dbc291e7e37222ad7c1229701236125a05486f4c89f"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "sha256": "9e298f08057953cb950bd1e3ac1dda7da8d69fdc857b40d541490a4644d25418"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
+      "sha256": "241d9232d5c4b01df857b4d8715588afce653ec119e3253209d685fe5f1d81d4"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "sha256": "6a8c8072026603aa2f149ced16c9c570ad0db5b0effd4f2a8e4ca270164c8905"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "sha256": "9d7f30ab31625103fc33bdb2d8a7db34c78f9e744d21e598bee737df89838fb2"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "sha256": "83ecc7398db34c8db8f47fdd602b63059cb7c053dbdbf47a665bb02b77194c38"
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "sha256": "6cc0ae8c102fe7739522522f66177b8391f992b1e645af858fb8e5d6d925d128"
+    }
+  ],
+  "endingCorpusCheck": {
+    "files": 3114,
+    "changedSinceInitialMap": []
+  },
+  "changes": [
+    {
+      "owner": "CiLocalStepPlan",
+      "finding": "Class bytes match the prior refresh; original line anchor exceeded EOF.",
+      "disposition": "D1 retained; anchor and independent request evidence refreshed."
+    },
+    {
+      "owner": "PinciteInfo",
+      "finding": "Current source removed a constant-empty arbitrary override and requires recursive short-citation consumers.",
+      "disposition": "32/5 qualification retained; P2 migration inventory and guard accounting corrected."
+    },
+    {
+      "owner": "MemoryFileSystem OpenMode/OpenFileDescriptor",
+      "finding": "Current rc.113 APIs use number IO counts and ByteSize information; seeks before zero fail before cursor mutation.",
+      "disposition": "64/10 and 8/5 retained; both designs updated to current source and characterization fixtures."
+    },
+    {
+      "owner": "SweepGitState selected clusters",
+      "finding": "Whole implementation differs only in one documentation category; entire Sweep test and schema files match historical source. New indirect retirement consumers use only unchanged PR fields.",
+      "disposition": "Both 4/3 cases retained; current indirect consumers added to preservation/test requirements."
+    },
+    {
+      "owner": "YeetRunPlanModeOptions and repair step construction",
+      "finding": "Added repair steps construct RepoPlanStep through the existing helper; its fields introduce no Boolean carrier. Mode request and dispatch retain priority behavior.",
+      "disposition": "D1 retained and source locations refreshed."
+    },
+    {
+      "owner": "DocgenLocalOptions and new configured-package tuple",
+      "finding": "New tuple carries existing package/config models; metadata eligibility reads outDir. json-without-plan remains an intentional diagnostic request before root IO.",
+      "disposition": "Existing request disposition retained; json/plan anchor corrected. Broader historical nested-owner audit is not claimed complete."
+    },
+    {
+      "owner": "Resolved coverage operation",
+      "finding": "Scoped replacement and affected noop replacement are now supported. Optional topology owners and executor behavior changed too.",
+      "disposition": "Qualified 16/9 replaces obsolete 16/7; complete current nine-operation P2 design installed."
+    },
+    {
+      "owner": "CoverageBaselineWriteOptions",
+      "finding": "Measured-row adoption and unmeasured-row retention/dependent adoption are independent. All four input pairs have current source/test witnesses.",
+      "disposition": "New D1 inventory row; no implementation target."
+    }
+  ],
+  "coverageStateCalculation": {
+    "order": [
+      "replaceAll",
+      "scoped",
+      "skip",
+      "writeBaseline"
+    ],
+    "constraints": [
+      "replaceAll implies writeBaseline",
+      "skip implies scoped"
+    ],
+    "representable": 16,
+    "legal": 9,
+    "tuples": [
+      [
+        false,
+        false,
+        false,
+        false
+      ],
+      [
+        false,
+        false,
+        false,
+        true
+      ],
+      [
+        false,
+        true,
+        false,
+        false
+      ],
+      [
+        false,
+        true,
+        false,
+        true
+      ],
+      [
+        false,
+        true,
+        true,
+        false
+      ],
+      [
+        false,
+        true,
+        true,
+        true
+      ],
+      [
+        true,
+        false,
+        false,
+        true
+      ],
+      [
+        true,
+        true,
+        false,
+        true
+      ],
+      [
+        true,
+        true,
+        true,
+        true
+      ]
+    ],
+    "method": "Python enumeration of the source-established constraints; not TypeScript test execution."
+  },
+  "designIdsRefreshed": [
+    "pincite-range-endpoints",
+    "r30-tooling-library-support-open-mode",
+    "r30-tooling-library-support-open-file-descriptor",
+    "yeet-sweep-git-state",
+    "r29-yeet-sweep-worktree-probe-address",
+    "r28-cli-quality-coverage-resolved-operation"
+  ],
+  "remainingChangedPathQualifiedIds": [
+    "yeet-merge-ready-verdict",
+    "runners-bake-freshness",
+    "drivers-stream-state",
+    "dms-mirror-probe-connected",
+    "vault-sync-status-connected",
+    "create-package-template-type-flags",
+    "yeet-status-remote-check-phase",
+    "create-package-scaffold-shape",
+    "sync-data-target-selection",
+    "statutes-at-large-pincite-is-range",
+    "r2-tooling-bin-main-fast-paths",
+    "phoenix-prompt-read-exists",
+    "xai-sse-done-payload",
+    "venice-sse-done-payload",
+    "xai-websocket-message-binary",
+    "yeet-merge-ready-criterion-changed",
+    "worktree-removal-mode",
+    "html-select-child-grammar",
+    "html-dl-child-grammar",
+    "r3-apps-pglite-data-dir-probe",
+    "r3-apps-sidecar-devtools-gates",
+    "r3-tooling-ecosystem-polarity-specifier-call",
+    "html-datalist-child-grammar",
+    "r3-arch-ecosystem-internal-pg-timestamp-timezone",
+    "r3-drivers-arch-folder-resolution-blocked-provider",
+    "html-img-sizes-disposition",
+    "html-link-imagesizes-disposition",
+    "contained-file-read-outcome",
+    "yeet-prepared-publish-commit",
+    "citation-blank-page",
+    "goals-packet-migration-kind",
+    "worktree-fleet-epoch-target",
+    "files-worker-score-thresholds",
+    "files-person-reference-disposition",
+    "m365-tool-error-retryability",
+    "vault-sync-push-failure-disposition",
+    "receipt-fallback-draft-occupancy",
+    "create-package-retired-name-reconciliation",
+    "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+    "r27-boolean-state-foundation-spinner-state",
+    "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+    "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+    "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+    "r28-cli-quality-test-lane-resolved-selection",
+    "r28-cli-internal-root-tmpfs-stub-observations",
+    "r30-cli-commands-l-q-github-check-lane-outcome"
+  ],
+  "remaining": [
+    "Resolve the two citation domain decisions and finalize the four held R31 owners.",
+    "Finish remaining changed-owner/design audits; the full CoverageRegression delta and historical nested-owner audits are not closed by these targeted findings.",
+    "Bind and execute actual consecutive current-source dry rounds.",
+    "Complete independent Fable runtime/admission proof and exact-source review, then packet-only ratification."
+  ],
+  "implementationStarted": false,
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "productTestsExecuted": false,
+  "verification": {
+    "receiptAndArchiveHashes": "passed",
+    "endingCorpusHashes": "passed for all 3114 frozen files",
+    "packetOnlyEditScope": "passed",
+    "earlierFocusedValidators": "passed at 753 records / 145 designs before the last coverage and D1 edits",
+    "finalInventoryValidator": "incomplete; blocked in filesystem path_openat, termination requested before user reboot",
+    "finalDesignValidator": "incomplete; blocked in filesystem path_openat, termination requested before user reboot",
+    "reflectionArtifacts": "incomplete; blocked in filesystem path_openat, termination requested before user reboot",
+    "productTestsExecuted": false,
+    "fullYeetProofExecuted": false
+  },
+  "rebootCheckpoint": {
+    "userRequested": true,
+    "instruction": "Save work before reboot; resume from the recorded current branch and pending audits.",
+    "allWorkComplete": false
+  }
+}

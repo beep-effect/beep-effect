@@ -1,7 +1,7 @@
 # r28-cli-quality-coverage-resolved-operation
 
-Current P2 refresh, 2026-09-21, bound to source
-`7536a751b40b8560706dfe8cfa451591b11b025d`. The exact earlier seven-state design
+Current P2 refresh, 2026-09-14, bound to source and main
+`cecfb9f8e9a5f20d768666c65f89425349f7f9e6`. The exact earlier seven-state design
 is archived at
 `history/designs/2026-09-14-pre-resume-r28-cli-quality-coverage-resolved-operation.md`.
 The current successful resolver admits nine states. Status remains `designed`,
@@ -9,21 +9,6 @@ Tier 1, derived/internal, with replacement independent P3 review pending.
 Product paths below are relative to `packages/tooling/tool/cli/`.
 
 ## Current shape
-
-The prior September 14 design is preserved in
-`history/designs/2026-09-21-before-coverage-refresh-r28-cli-quality-coverage-resolved-operation.md`.
-Exact line comparisons confirm the owner, raw parser, resolver, test adapter,
-coverage step, selected execution, root dispatch, and cited scoped-replacement
-fixtures remain unchanged. CoverageRegression, CoverageScope, and the Quality
-test facade are byte-identical to the prior binding. The accompanying receipt
-records the mapped ranges and hashes.
-
-Shared Turbo argument construction now inserts `--force` when `REGEN_GOLDENS=1`,
-removes conflicting force options before the passthrough delimiter, and retains
-arguments after that delimiter. Preserve this existing policy when simplifying
-coverage step inputs. The other Tasks.ts change clears unresolved SQL references
-for package audit children; that unrelated behavior is outside this migration.
-
 
 `src/commands/Quality/Tasks.ts:249–257` defines CoverageTaskOptions with four
 Boolean members: replaceAll, scoped, skip and writeBaseline. It also carries
@@ -36,7 +21,7 @@ qualification covers the successful resolved carrier, including the exposed
 `validateCoverageTaskArgsForTesting` result at :966–973. The raw parser at
 :637–647 intentionally accepts contradictory request flags and remains a
 separate, unrestricted request boundary. Its pure `coverageStepForTesting`
-consumer at :3400–3414 does not run the resolver or its guards.
+consumer at :3376–3390 does not run the resolver or its guards.
 
 Resolution at :855–948 rejects replacement without writing at :863–867.
 Non-affected resolution at :678–688 preserves parsed flags; scoped writes must
@@ -49,7 +34,7 @@ at :926–945 preserve the caller's replacement and writing intent.
 Current main deliberately permits scoped replacement. The prior restriction
 `replaceAll && scoped` was removed, and affected selected/noop writers now retain
 replaceAll. The current source comment :860–862 and the public resolver fixture
-`test/quality-tasks.test.ts:3825–3856` establish this supported behavior.
+`test/quality-tasks.test.ts:3770–3801` establish this supported behavior.
 
 ## Cardinality gap
 
@@ -124,11 +109,11 @@ host-dependent executor policy as part of this migration.
 | Tasks.ts:855–913 | Preserve missing-write rejection before affected selector validation, base/error handling, optional baseline-row deltas, complete present/removed arrays, planner logs and scope resolution. Remove no valid diagnostic. |
 | Tasks.ts:914–947 | Map full/selected/noop success to the nine operations. Selected results retain complete appended filters and owner arrays; noop retains both empty arrays and replacement intent. Full fallback retains parser passthrough behavior. |
 | Tasks.ts:966–973 | Return the resolved class from the existing validator. Migrate decoded assertions atomically; preserve services, typed errors and diagnostic ordering. |
-| Tasks.ts:2486–2504 | Reduce coverageStep to actual inputs. Preserve topology precedence, bunx, cwd, ratchet/baseline label, complete Turbo/Vitest args and report-only environment. |
-| Tasks.ts:3278–3310 | Preserve selected prebuild/weighted shards, exact owner filters, nonempty-owner and weight tests, and baseline-write sharding. Derive the scoped/write decisions from operation without changing executor policy. |
-| Tasks.ts:3338–3371 | Migrate coverageSelectedStepsForTesting's constructed resolved object. Preserve hosted/writeBaseline inputs, both dual forms, full arrays and filter normalization. |
-| Tasks.ts:3400–3414 | Keep both coverageStepForTesting forms and optional owners input. Its raw parser route still supports replacement without writing and selector strings the resolver would reject. Preserve optional topology-owner derivation. |
-| Tasks.ts:3478–3525 | Preserve selected-step count dispatch and logs. Check report-only eligibility before noop; noop exits before cleanup; cleanup precedes executor selection; write/compare follows successful measurement. Both full-replace and scoped-replace pass replaceAll=true at the existing writer boundary. |
+| Tasks.ts:2481–2499 | Reduce coverageStep to actual inputs. Preserve topology precedence, bunx, cwd, ratchet/baseline label, complete Turbo/Vitest args and report-only environment. |
+| Tasks.ts:3254–3286 | Preserve selected prebuild/weighted shards, exact owner filters, nonempty-owner and weight tests, and baseline-write sharding. Derive the scoped/write decisions from operation without changing executor policy. |
+| Tasks.ts:3314–3347 | Migrate coverageSelectedStepsForTesting's constructed resolved object. Preserve hosted/writeBaseline inputs, both dual forms, full arrays and filter normalization. |
+| Tasks.ts:3376–3390 | Keep both coverageStepForTesting forms and optional owners input. Its raw parser route still supports replacement without writing and selector strings the resolver would reject. Preserve optional topology-owner derivation. |
+| Tasks.ts:3454–3501 | Preserve selected-step count dispatch and logs. Check report-only eligibility before noop; noop exits before cleanup; cleanup precedes executor selection; write/compare follows successful measurement. Both full-replace and scoped-replace pass replaceAll=true at the existing writer boundary. |
 | CoverageRegression.ts:1450–1460,1531–1593,2469 onward | Preserve current independent baseline-write options, scoped carry of unmeasured rows, measured-row adoption, dependent-owner behavior, lost-live-row prevention, schema/version checks, provenance, reports and atomic writes. No baseline format or coverage floor change belongs to this design. |
 | CoverageScope.ts and current test facade | Preserve the scope model, full owner/row payloads and exported validator/helpers. Use the current source-only Quality test route for necessary schema tests; introduce no production resolved-model export. |
 | test/quality-tasks.test.ts | Migrate resolved Boolean assertions to operation checks while keeping complete args/owner/topology assertions, diagnostics, execution plans and baseline outputs. Existing raw-helper tests retain their request flags. |
@@ -176,7 +161,7 @@ call's correlation does not justify deleting either of its legal options.
 At implementation, add a complete nine-operation resolver matrix with existing
 workspace/scope fixtures. Exercise all affected full/selected/noop routes with
 ratchet, write and replacement intent. Retain the current scoped-replacement
-fixture at test/quality-tasks.test.ts:3825–3856, including the rejected --since
+fixture at test/quality-tasks.test.ts:3770–3801, including the rejected --since
 selector and accepted exact filter. Add direct noop-replace coverage through the
 real resolver; do not fabricate only a final class instance.
 
@@ -192,7 +177,7 @@ argument; a helper call must not acquire runtime services merely to validate a
 raw request. Keep the broader raw replacement-without-writing step fixture.
 
 Retain baseline planner tests for all four carryUnmeasured/replaceAll pairs,
-especially scoped replacement at :6838–6854. Assert measured rows are adopted and
+especially scoped replacement at :6783–6799. Assert measured rows are adopted and
 unmeasured committed rows remain. No baseline regeneration or ratchet lowering
 is part of this migration.
 

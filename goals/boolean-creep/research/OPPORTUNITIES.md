@@ -1326,3 +1326,117 @@ Local coverage should announce and validate its Node runtime against the
 hosted lane before starting its full prebuild and test fan-out. Reading that
 existing pin first would have avoided rediscovering an already documented
 runtime defect during this recovery.
+
+
+## 2026-09-14 — Source-forward validation and designs retained pre-upgrade assumptions
+
+Resuming the saved packet on main `cecfb9f8` exposed two stale inventory anchors:
+`ci-local-step-plan` pointed beyond the shortened CiLane file, and PinciteInfo's
+E4 annotation pointed beyond its current end. The inventory validator reported
+both; current-source inspection preserved their prior qualification decisions
+and repaired the anchors. Frozen source hashes plus an explicit changed-owner
+worklist make this repair reviewable without treating a line-number fix as a
+new census result.
+
+The MemoryFileSystem descriptor design also required the old negative stored
+seek positions and FileSystem.Size IO results. Current main rejects seek
+positions before zero with BadArgument and uses number IO counts under Effect
+`4.0.0-rc.113`; Characterization tests 07 and 13 record that behavior. Following
+the stale design would undo the dependency migration. Source-hash checks on
+behavioral requirements, including supporting test fixtures, would catch this
+drift before implementation. The exact old designs are archived; the refreshed
+P2 designs retain the new contract and still require independent P3 review.
+
+
+The same refresh found a semantic change beyond shifted anchors: Tasks.ts now
+accepts scoped `--replace-all`, and its selected/noop producers preserve that
+intent. The archived coverage operation design required the removed rejection
+and therefore counted seven legal states instead of nine. Current resolver
+source and `quality-tasks.test.ts`'s scoped replacement fixture establish the
+correction. The new optional topology-owner array also distinguishes an absent
+list from an empty list. Design refresh must compare complete producer payloads
+and supported fixtures, not just the count or spelling of Boolean fields.
+
+
+## 2026-09-14 — Reboot interrupted final packet validation
+
+The final inventory/design validators and reflection-artifact command remained
+in kernel `path_openat` waits with zero CPU use. Other Bun processes were also
+waiting, so the symptom was not limited to a validator assertion. No cause was
+confirmed and no unrelated process was changed. Benjamin requested saving work
+before reboot; termination was requested for this task's validators only.
+Receipt/archive hashes and all 3,114 frozen source hashes passed, but the last
+754-record inventory and six-design revision still need their final command
+checks after reboot. Earlier 753-record passes do not cover those later edits.
+
+## 2026-09-21 — Monitor timeout assertion blocked merged-main verification
+
+After merging main, full `bun run beep yeet verify` passed every lane except
+coverage. The inherited `yeet-monitor-check-registration.test.ts` 20 ms pending
+timeout case reported `expected 2 to be 1`; 4,299 other tests passed. Its retry
+sleep and timeout use the same remaining deadline, so the retry can start before
+the timeout interrupts it. The test now bounds attempts to one initial attempt
+plus at most one deadline-racing retry, while retaining the exact timeout message
+and single failed recorder entry assertions. Zero-budget behavior still requires
+exactly one attempt. Testing the bounded outcome instead of timer ordering would
+have prevented this false failure after the roughly 40-minute full proof.
+
+Changing the test body also changed two inherited Effect-Vitest occurrence
+hashes. Refreshing the inventory made coverage select its full-repository
+fallback (`standards/effect-vitest.inventory.jsonc: no current workspace
+owner`), which encountered an inherited locationless `@beep/ui` build TS2589.
+The final repair instead migrates the touched cases to `it.layer` with an
+explicit hook timeout, `it.effect`, a live clock for the filesystem-backed
+monitor, and direct stub-service injection. The original inventory is retained:
+the ratchet reports zero introduced and three resolved findings. Migrating
+touched inherited findings before refreshing a repository-wide inventory would
+have avoided that unnecessary scope expansion.
+
+## Full verification blocked in coverage prebuild, 2026-09-21
+
+The full Yeet verification at `6db45e9d9182bc5d8f0fbae07b6fbe7727179559`
+failed in `quality:coverage` before coverage shards ran. The prebuild reported
+`@beep/ui:build: error TS2589: Type instantiation is excessively deep and possibly infinite.`
+The pre-push unit-test lane passed. The branch has no production-package,
+lockfile, or root TypeScript configuration delta against its main base; its
+only package change is a CLI monitor test. A separate exact-main build was not
+run, so this establishes unrelated branch scope rather than a reproduced main
+failure. The local inbox row was acknowledged as outside the campaign's repair
+scope under the SPEC stop condition. Full verification remains failed.
+
+A current all-package prebuild result before the long proof would have exposed
+this blocker sooner. Preserve the failed proof and attribute the UI build
+separately; do not weaken coverage or claim that its announced shards ran.
+
+## Raw acknowledgement request mistaken for application state, 2026-09-21
+
+The retained `yeet-ack-resolution-flags` design claimed application Boolean
+reads that current `InboxPorcelain.ts:567–578` does not perform. The runner
+parses once and passes `YeetAckResolution` to the existing application seam.
+A bounded eight-combination parser probe confirms documented conflicting-request
+errors. The row is now D1 and its prior design is archived. Applying the packet's
+request-boundary adjudication to each candidate before designing would have
+prevented this redundant migration. The new observed request switch also shows
+why current complete-owner inspection matters.
+
+## Coverage gaps after the main merge, 2026-09-21
+
+Full Yeet proof `61a9b426-1f2d-4811-ba7f-99a05b5e6fb4` passed the CLI
+unit and coverage test shards, then failed the coverage ratchet on inherited
+security modules without baseline identities and the attached monitor branch.
+The focused repair exercises the pinned local security stub, scan receipts,
+output guards, runtime deadlines, remote conversion, and artifact size budgets;
+it also supplies an explicit attached-monitor environment. The focused security
+coverage reports 100% lines and functions. Running the coverage ratchet against
+new main modules before the long proof would have exposed these gaps earlier.
+
+## Concurrent dependency merge invalidated a running proof, 2026-09-21
+
+Proof `5a512b43-db13-4a9f-b223-4aece3b68f1b` was running CLI tests when
+another session merged the rc.117 dependency refresh and replaced installed
+packages. Already-loaded code called `prettyGetter.run`, which rc.117 removed;
+the newly merged source already uses `SchemaGetter.run`. The proof was
+terminated. A fresh process passed all 216 tests across the seven relevant
+files, including every affected test file. Serializing checkout mutation and
+dependency installation against active proofs would have prevented the mixed
+runtime and lost verification work. The next proof must bind the new head.

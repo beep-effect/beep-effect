@@ -1,0 +1,126 @@
+{
+  "schemaVersion": "boolean-creep-request-boundary-correction/v1",
+  "sourceSha": "7536a751b40b8560706dfe8cfa451591b11b025d",
+  "id": "yeet-ack-resolution-flags",
+  "disposition": "D1 raw request owner; withdraw unsupported successful-operation qualification",
+  "reason": "Exactly-one validation is an explicitly supported request diagnostic. The application already takes YeetAckResolution; the prior design invents post-parse Boolean reads to delete.",
+  "precedent": "data/design-refresh-2026-09-09-r27-yeet-request-boundary.md",
+  "beforeInventoryArchive": "history/inventory/2026-09-21-pre-ack-boundary.jsonl",
+  "beforeInventorySha256": "3b2fff6e2b08502cdae05d92242a8493a7e70735f6c246c16c2aa10bac84012b",
+  "afterInventorySha256": "5799f50a6dce00f59d896efff3a78d2865e5fd1d07a6f4f6f2ea1ef0c7d1b161",
+  "priorRow": {
+    "schemaVersion": "boolean-creep-inventory/v1",
+    "id": "yeet-ack-resolution-flags",
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+    "line": 84,
+    "symbol": "YeetAckResolutionFlags",
+    "kind": "interface",
+    "members": ["environmentOnly", "waive", "wontfix"],
+    "status": "designed",
+    "evidence": [
+      {
+        "class": "E2",
+        "cite": {
+          "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+          "line": 274
+        },
+        "note": "The parser requires exactly one fix, environment-only, wontfix, thread, or waiver candidate; at most one boolean-selected resolution is legal and each carries distinct required payload."
+      }
+    ],
+    "cardinality": {
+      "representable": 8,
+      "legal": 4
+    },
+    "storage": "stored",
+    "exposure": "internal",
+    "targetShape": "tagged-union",
+    "tier": 1,
+    "notes": "Current-corpus refresh admission refreshed after PR 966; reuse the existing five-member YeetAckResolution union after raw CLI validation."
+  },
+  "afterRow": {
+    "schemaVersion": "boolean-creep-inventory/v1",
+    "id": "yeet-ack-resolution-flags",
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts",
+    "symbol": "YeetAckResolutionFlags",
+    "kind": "interface",
+    "line": 91,
+    "members": ["environmentOnly", "observed", "waive", "wontfix"],
+    "status": "disqualified",
+    "disqualifier": {
+      "class": "D1",
+      "note": "Raw CLI request switches before operation validation, including optional observed. Conflicting selections are deliberate inputs to parseYeetAckResolution and yield named YeetCommandError diagnostics; this is not a claim that every combination is a successful acknowledgement. The private flags flow only through the parser and its validation helpers. runYeetInboxAck parses before repository IO and passes the existing YeetAckResolution union to ackYeetInboxRow. No correlated flags survive into the application owner. Follows the R27 request-boundary adjudication; source 7536a751b4."
+    },
+    "notes": "Source: InboxPorcelain.ts:91-109,260-337,403-425,567-578; Yeet.command.ts:1114-1130 exposes all switches; yeet-inbox-porcelain.test.ts:209-307 specifies diagnostics. Eight-combination parser probe confirms intentional combined-selection errors. Six tagged resolution kinds include observed, whose row-kind policy remains downstream. Historical qualification and design archived; no implementation or independent P3 credit."
+  },
+  "priorDesignArchive": "history/designs/2026-09-21-withdrawn-yeet-ack-resolution-flags.md",
+  "priorDesignSha256": "d2ea7da4c29f60c282e35632043e4342c6e2e26ed7124422e2b64cde27729f0b",
+  "sourceHashes": {
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts": "2be11b007db8ec2f5533c0c03da2a2cadf87f703b3ac828a8dde6e7fa093e21c",
+    "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts": "bdbc42b979d3475f0620389cf463b1b3721fc9e74b78c5be66bbb5775497c17e",
+    "packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts": "d39c6b94fb44a8a28384388a9c3d7c74420537267fe9783ed2e734a609906511"
+  },
+  "probe": {
+    "bitMeaning": {
+      "1": "environmentOnly",
+      "2": "waive",
+      "4": "wontfix"
+    },
+    "setup": "No selected Boolean uses fix-sha; selected booleans receive reason; waive also receives actor, future expiry and shard. Parser only; no inbox writes.",
+    "exitCode": 0,
+    "results": [
+      {
+        "bits": 0,
+        "result": "fix-sha"
+      },
+      {
+        "bits": 1,
+        "result": "environment-only"
+      },
+      {
+        "bits": 2,
+        "result": "waive"
+      },
+      {
+        "bits": 3,
+        "result": "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry, or --observed for a proof job or a merge-ready row."
+      },
+      {
+        "bits": 4,
+        "result": "wontfix"
+      },
+      {
+        "bits": 5,
+        "result": "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry, or --observed for a proof job or a merge-ready row."
+      },
+      {
+        "bits": 6,
+        "result": "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry, or --observed for a proof job or a merge-ready row."
+      },
+      {
+        "bits": 7,
+        "result": "yeet inbox ack requires exactly one of --fix-sha <sha>, --environment-only --reason <text>, --wontfix --reason <text>, --thread-url <url>, or --waive with attribution and expiry, or --observed for a proof job or a merge-ready row."
+      }
+    ]
+  },
+  "counts": {
+    "total": 754,
+    "qualified": 144,
+    "disqualified": 610,
+    "tier1": 112,
+    "tier2": 32,
+    "statuses": {
+      "reviewed": 21,
+      "designed": 123,
+      "disqualified": 610
+    }
+  },
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "implementationStarted": false,
+  "verification": {
+    "inventory": "passed:754/754",
+    "designCoverage": "passed:144",
+    "reflectionArtifacts": "passed:0blocking/0advisory",
+    "diffCheck": "passed"
+  }
+}

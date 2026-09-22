@@ -1,42 +1,5 @@
 # scheduler-promotion-tick-origin
 
-## Scheduler cleanup preservation, 2026-09-21
-
-At source `6db45e9d9182bc5d8f0fbae07b6fbe7727179559`, both
-origin outcome domains retain their 4/3 cardinality. The complete admission
-attempt, promotion tick, and admission wait blocks match the d68 source bytes;
-their current starting lines are 1738, 1882, and 1996.
-
-Preserve the updated dead-lease unit selection at
-`QualityScheduler.ts:2393–2423`. A recognized recorded `beep-proof-*.service`
-name is used directly. Other leases retain nonce-derived scope names and the
-legacy missing-nonce behavior. Keep recorded-name mismatch and live-unit conflict
-retention. Proof services do not take the disabled/unsupported scope shortcut.
-These checks belong to cleanup ownership and receive no Boolean-creep guard
-deletion credit.
-
-Retain the fixture at `quality-scheduler.test.ts:4620–4666`, which exercises
-both scope and proof-service names: preview makes no stop call, and apply stops
-the exact dead-lease unit. This bounded source comparison does not complete the
-dependent runtime, journal, generic capability, or test audit. The remaining
-design retains its historical binding and independent-review obligations.
-
-Preserve the current journal lock boundary at `AdmissionJournal.ts:1409–1478`.
-It keeps callback failures inside an inner Result and retries only when its own
-lock checks report generation loss. Keep `Effect.acquireUseRelease` around
-acquisition, callback, ownership assertion, and release. The second adopter
-election at `AdmissionJournal.ts:1034–1044` closes a stale-claim race and must
-also remain. None of these concurrency guards receives deletion credit.
-The fixtures at `goals-packet-concurrency.test.ts:116–170` cover callback
-non-replay, actual generation loss, interruption cleanup, and reacquisition.
-
-Preserve `RunScope.ts` recognition of `BEEP_YEET_JOB_UNIT`, the expanded safe
-unit-name schema, and the proof-service cleanup hint. Scheduler schemas,
-process-identity handling, and the RepoRun test facade match the d68 source
-bytes. The repo-run barrel adds ProcessTable without removing prior exports.
-The generic capability construction and full fixture-location refresh remain
-open; these dependency findings do not supply independent-review approval.
-
 Pre-R31 native P2 source/design refresh against immutable main
 `d68f1a11dd41579660a6c72f3d3e060d6b61352d` and merged HEAD
 `4509872869eb87071250c67717769260f850bcf5`. Both existing 4/3 domains, complete
