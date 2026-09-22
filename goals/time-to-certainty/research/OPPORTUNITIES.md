@@ -2273,3 +2273,15 @@ in the law command's flag help to prevent a vacuous success from looking like pr
 - Prevention: `worktree new` could end by printing (or running) the B1 route,
   `bun run beep quality package-verify <pkg> --quick`, which builds upstream through Turbo; a
   bare package `check` in a fresh lane is never attributable and should not be the first command.
+
+## 2026-09-22 — reviewer follow-ups on resolved threads were invisible
+
+- Doing: babysitting #1184; CodeRabbit replied on three threads after they were resolved
+  (two confirmations, one "verification inconclusive" that needed an answer).
+- Evidence: `yeet status` and the closeout read only unresolved threads and each thread's
+  opening comment; `yeet reply` settled any resolved thread as `stale` and posted nothing. The
+  follow-ups were found only by dumping every thread's full comment chain by hand.
+- Prevention: landed in this PR — status fetches the newest comment per thread plus the PR
+  author, lists resolved threads where a reviewer spoke last as `review follow-ups`, and
+  `yeet reply` posts on them. Still open: the monitor's comment stream showed the replies live,
+  but a reboot kills the stream and nothing replays it at the next read-first closeout.

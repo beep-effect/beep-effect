@@ -2,6 +2,7 @@ import {
   failedReplyOutcomes,
   failYeetReplyOnFailedOutcomes,
   findReplyThread,
+  markReplyFollowUps,
   planReplyActions,
   REPLY_DRAFTS_FILE_NAME,
   REPLY_REPORT_FILE_NAME,
@@ -85,7 +86,33 @@ const outdatedThread = ReplyLiveThread.make({
   path: null,
 });
 
-const liveThreads = [openThread, resolvedThread, outdatedThread];
+// Resolved by the author, then answered again by the review bot: the last word
+// is not the author's, so a reply is still owed and the thread is postable.
+const followUpThread = ReplyLiveThread.make({
+  comments: ReplyThreadCommentConnection.make({
+    nodes: [
+      ReplyThreadComment.make({
+        databaseId: 2_284_119_004,
+        id: "PRRC_followup_bot",
+        author: { login: "coderabbitai" },
+      }),
+      ReplyThreadComment.make({ databaseId: 2_284_119_005, id: "PRRC_followup_author", author: { login: "octocat" } }),
+      ReplyThreadComment.make({
+        databaseId: 2_284_119_006,
+        id: "PRRC_followup_again",
+        author: { login: "coderabbitai" },
+      }),
+    ],
+    pageInfo: closedPageInfo,
+  }),
+  id: "PRRT_followup",
+  isOutdated: false,
+  isResolved: true,
+  line: 12,
+  path: "src/commands/Yeet/internal/Status.ts",
+  hasFollowUp: true,
+});
+const liveThreads = [openThread, resolvedThread, outdatedThread, followUpThread];
 
 const draftsOf = (drafts: ReadonlyArray<ReplyDraft>): ReplyDrafts =>
   ReplyDrafts.make({ schemaVersion: "yeet-reply-drafts/v1", prNumber: 558, drafts });
@@ -168,6 +195,37 @@ describe("planReplyActions", () => {
       liveThreads
     );
     expect(postThreadIds(actions)).toEqual(["PRRT_open"]);
+  });
+
+  it("marks a resolved thread as a follow-up only when a reviewer spoke last", () => {
+    const unmarked = ReplyLiveThread.make({ ...followUpThread, hasFollowUp: false });
+    const [marked] = markReplyFollowUps([unmarked], O.some("octocat"));
+    expect(marked?.hasFollowUp).toBe(true);
+    const [authorLast] = markReplyFollowUps(
+      [
+        ReplyLiveThread.make({
+          ...unmarked,
+          comments: ReplyThreadCommentConnection.make({
+            nodes: A.take(unmarked.comments.nodes, 2),
+            pageInfo: closedPageInfo,
+          }),
+        }),
+      ],
+      O.some("octocat")
+    );
+    expect(authorLast?.hasFollowUp).toBe(false);
+    const [unknownAuthor] = markReplyFollowUps([unmarked], O.none());
+    expect(unknownAuthor?.hasFollowUp).toBe(false);
+    const [open] = markReplyFollowUps([openThread], O.some("someone-else"));
+    expect(open?.hasFollowUp).toBe(false);
+  });
+
+  it("posts on a resolved thread that carries a reviewer follow-up", () => {
+    const actions = planReplyActions(
+      draftsOf([ReplyDraft.make({ threadId: O.some("PRRT_followup"), body: "answered" })]),
+      liveThreads
+    );
+    expect(postThreadIds(actions)).toEqual(["PRRT_followup"]);
   });
 
   it("settles an already-resolved thread as stale, naming its location", () => {

@@ -48,6 +48,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   collectTruncatableThreadPages,
+  GhActor,
   GhPageInfo,
   ghGraphqlPage,
   ghOutput,
@@ -158,6 +159,7 @@ export const replyReviewThreadsPageQuery = `
 query YeetReplyReviewThreads($owner: String!, $name: String!, $number: Int!, $cursor: String) {
   repository(owner: $owner, name: $name) {
     pullRequest(number: $number) {
+      author { login }
       reviewThreads(first: 100, after: $cursor) {
         pageInfo { hasNextPage endCursor }
         nodes {
@@ -168,7 +170,7 @@ query YeetReplyReviewThreads($owner: String!, $name: String!, $number: Int!, $cu
           line
           comments(first: 100) {
             pageInfo { hasNextPage endCursor }
-            nodes { id databaseId }
+            nodes { id databaseId author { login } }
           }
         }
       }
@@ -196,6 +198,7 @@ export class ReplyThreadComment extends S.Class<ReplyThreadComment>($I`ReplyThre
   {
     databaseId: S.NullOr(S.Finite),
     id: S.String,
+    author: GhActor.pipe(S.NullOr, S.optionalKey),
   },
   $I.annote("ReplyThreadComment", {
     description: "Review thread comment carrying the GraphQL node id and the numeric REST database id.",
@@ -272,6 +275,12 @@ export class ReplyLiveThread extends S.Class<ReplyLiveThread>($I`ReplyLiveThread
     isResolved: S.Boolean,
     line: S.NullOr(S.Finite),
     path: S.NullOr(S.String),
+    // A resolved thread whose newest comment is not the pull request author's:
+    // a reviewer followed up after resolution, so a reply is still owed.
+    hasFollowUp: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
   },
   $I.annote("ReplyLiveThread", {
     description: "Live pull request review thread inspected before a drafted reply is written.",
@@ -287,11 +296,69 @@ const ReplyReviewThreadsDocument = S.Struct({
   data: S.Struct({
     repository: S.Struct({
       pullRequest: S.Struct({
+        author: GhActor.pipe(S.NullOr, S.optionalKey),
         reviewThreads: ReplyLiveThreadConnection,
       }),
     }),
   }),
 });
+
+const latestCommentAuthor = (thread: ReplyLiveThread): O.Option<string> =>
+  pipe(
+    A.last(thread.comments.nodes),
+    O.flatMap((comment) => O.fromNullishOr(comment.author)),
+    O.map((author) => author.login)
+  );
+
+/**
+ * Stamp each thread with whether a reviewer spoke last on a resolved thread.
+ *
+ * **Example** (A resolved thread the bot answered after the author)
+ *
+ * ```ts
+ * import { markReplyFollowUps, ReplyLiveThread, ReplyThreadComment, ReplyThreadCommentConnection } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const thread = ReplyLiveThread.make({
+ *   comments: ReplyThreadCommentConnection.make({
+ *     nodes: [
+ *       ReplyThreadComment.make({ databaseId: 1, id: "PRRC_a", author: { login: "coderabbitai" } }),
+ *       ReplyThreadComment.make({ databaseId: 2, id: "PRRC_b", author: { login: "octocat" } }),
+ *       ReplyThreadComment.make({ databaseId: 3, id: "PRRC_c", author: { login: "coderabbitai" } }),
+ *     ],
+ *     pageInfo: { endCursor: null, hasNextPage: false },
+ *   }),
+ *   id: "PRRT_1",
+ *   isOutdated: false,
+ *   isResolved: true,
+ *   line: null,
+ *   path: null,
+ * })
+ * console.log(markReplyFollowUps([thread], O.some("octocat"))[0]?.hasFollowUp) // true
+ * ```
+ *
+ * @param threads - Live review threads as decoded from GitHub.
+ * @param pullRequestAuthor - The pull request author's login when known.
+ * @returns The same threads with `hasFollowUp` computed.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const markReplyFollowUps: {
+  (pullRequestAuthor: O.Option<string>): (threads: ReadonlyArray<ReplyLiveThread>) => ReadonlyArray<ReplyLiveThread>;
+  (threads: ReadonlyArray<ReplyLiveThread>, pullRequestAuthor: O.Option<string>): ReadonlyArray<ReplyLiveThread>;
+} = dual(
+  2,
+  (threads: ReadonlyArray<ReplyLiveThread>, pullRequestAuthor: O.Option<string>): ReadonlyArray<ReplyLiveThread> =>
+    A.map(threads, (thread) =>
+      ReplyLiveThread.make({
+        ...thread,
+        hasFollowUp:
+          thread.isResolved &&
+          O.isSome(pullRequestAuthor) &&
+          O.exists(latestCommentAuthor(thread), (login) => !Str.Equivalence(login, pullRequestAuthor.value)),
+      })
+    )
+);
 
 const decodeReplyReviewThreadsDocument = S.decodeUnknownEffect(S.fromJsonString(ReplyReviewThreadsDocument));
 
@@ -533,7 +600,7 @@ const classifyReplyDraft = (
             `review thread ${thread.id} (${threadLocation(thread)}) is already targeted by an earlier draft in this file; merge the two bodies into one draft`
           );
         }
-        if (thread.isResolved) {
+        if (thread.isResolved && !thread.hasFollowUp) {
           return settledAction(
             draft,
             O.some(thread.id),
@@ -807,7 +874,18 @@ const collectReplyThreads = (
             Effect.mapError(YeetCommandError.new("Failed to decode the reply review threads GraphQL JSON."))
           )
         ),
-        Effect.map((document) => document.data.repository.pullRequest.reviewThreads)
+        Effect.map((document) => {
+          const pullRequest = document.data.repository.pullRequest;
+          const author = pipe(
+            O.fromUndefinedOr(pullRequest.author),
+            O.flatMap(O.fromNullishOr),
+            O.map((actor) => actor.login)
+          );
+          return ReplyLiveThreadConnection.make({
+            ...pullRequest.reviewThreads,
+            nodes: markReplyFollowUps(pullRequest.reviewThreads.nodes, author),
+          });
+        })
       ),
     truncationWarning: (threadIds) =>
       `Review thread(s) ${A.join(threadIds, ", ")} have more than 100 comments; yeet reply reads only the first 100 per thread, so a comment id beyond that page will not resolve. Target those threads by PRRT_ thread id.`,

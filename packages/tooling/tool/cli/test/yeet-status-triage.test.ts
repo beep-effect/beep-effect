@@ -153,6 +153,27 @@ describe("yeet unresolved-thread listing", () => {
     expect(lines[2]).toBe("  - PRRT_kwDOAbC2 comment 2412551123 @octocat: Please add a regression test");
   });
 
+  it("lists resolved threads where a reviewer spoke last as follow-ups under the unresolved block", () => {
+    const block = renderYeetReviewThreadBlock(
+      YeetStatusRemote.make({
+        available: true,
+        checked: true,
+        detail: "PR #560 OPEN",
+        unresolvedReviewThreadCount: 0,
+        unresolvedThreads: O.some([]),
+        followUpThreadCount: 1,
+        followUpThreads: O.some([triageThread]),
+      })
+    );
+    const lines = Str.split("\n")(block);
+
+    expect(lines[0]).toBe("review threads: 0 unresolved");
+    expect(lines[1]).toBe(
+      "review follow-ups: 1 resolved thread(s) where a reviewer spoke last; read and answer them (yeet reply posts on them)"
+    );
+    expect(lines[2]).toContain("PRRT_kwDOAbC1 comment 2412551122");
+  });
+
   it("falls back to the legacy inline id list when a snapshot carries no triage context", () => {
     const remote = YeetStatusRemote.make({
       available: true,
