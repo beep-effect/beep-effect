@@ -1,6 +1,19 @@
 --- a/ai/synthesize.js
 +++ b/ai/synthesize.js
-@@ -94,7 +94,10 @@
+@@ -83,6 +83,12 @@
+     return out;
+ }
+ const RECORD_TOOL = "record_graph";
++// Local patch (2026-09-22): an empty or non-numeric GRAFT_SYNTH_MAX_TOKENS must not
++// become 0 or NaN, which would recreate the truncated-answer failure this knob fixes.
++const synthMaxTokens = () => {
++    const n = Number(process.env.GRAFT_SYNTH_MAX_TOKENS);
++    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 8192;
++};
+ /** Synthesizer backed by any {@link ChatModel} via forced tool calling. */
+ export class ChatSynthesizer {
+     model;
+@@ -94,7 +100,10 @@
              return [];
          const res = await this.model.create({
              temperature: 0,
@@ -8,7 +21,7 @@
 +            // Local patch (2026-09-22): claude-opus-5 through the proxy needs more than
 +            // 8192 output tokens for most concept batches; every truncated answer costs
 +            // a full ~80 s call and an empty tool call. GRAFT_SYNTH_MAX_TOKENS overrides.
-+            maxTokens: Number(process.env.GRAFT_SYNTH_MAX_TOKENS ?? 8192),
++            maxTokens: synthMaxTokens(),
              tools: [
                  {
                      name: RECORD_TOOL,

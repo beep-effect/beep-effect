@@ -452,7 +452,7 @@ version manager tree, and `graft telemetry disable` has been run once on the
 workstation:
 
 ```sh
-npm install -g --prefix "$HOME/.local" @nanonets/graft@0.16.0
+npm install -g --prefix "$HOME/.local" @nanonets/graft@0.18.0
 graft --version
 ```
 The deep build depends on four workstation-local patches to the installed

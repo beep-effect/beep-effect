@@ -9,7 +9,8 @@
 +    // later batches is already in flight while the loop below awaits the current one.
 +    // The loop itself is untouched: cache writes and synthNodes pushes stay in batch
 +    // order on this task, so summaries.json is never raced and the graph is unchanged.
-+    const SYNTH_JOBS = Math.max(1, Number(process.env.GRAFT_SYNTH_JOBS ?? 1));
++    const synthJobsValue = Number(process.env.GRAFT_SYNTH_JOBS ?? 1);
++    const SYNTH_JOBS = Number.isFinite(synthJobsValue) ? Math.max(1, Math.floor(synthJobsValue)) : 1;
 +    if (SYNTH_JOBS > 1) {
 +        const inner = opts.synthesizer;
 +        const inflight = new Map();
@@ -35,7 +36,6 @@
 +                    fill(i + 1);
 +                    const settled = await inflight.get(batch);
 +                    inflight.delete(batch);
-+                    fill(i + 1);
 +                    if (settled.e)
 +                        throw settled.e;
 +                    return settled.v;
@@ -46,13 +46,14 @@
      for (let b = 0; b < batches.length; b++) {
          opts.onProgress?.({ phase: "synthesize", index: b, total: batches.length, file: `batch ${b + 1}` });
          const key = batchKey(batches[b], hashByPath);
-@@ -162,10 +201,20 @@
+@@ -162,10 +201,21 @@
          const cached = Array.isArray(nodes) && nodes.length > 0;
          if (!cached) {
              nodes = await opts.synthesizer.synthesize(batches[b]);
 +            // Local patch (2026-09-09): an empty batch is usually the model ignoring
 +            // tool_choice; retry a bounded number of times before accepting the hole.
-+            const emptyRetries = Number(process.env.GRAFT_SYNTH_EMPTY_RETRIES ?? 2);
++            const emptyRetriesValue = Number(process.env.GRAFT_SYNTH_EMPTY_RETRIES ?? 2);
++            const emptyRetries = Number.isFinite(emptyRetriesValue) ? Math.max(0, Math.floor(emptyRetriesValue)) : 2;
 +            for (let attempt = 1; nodes.length === 0 && attempt <= emptyRetries; attempt++) {
 +                console.error(`  synthesis batch ${b + 1}/${batches.length}: empty, retry ${attempt}/${emptyRetries}`);
 +                nodes = await opts.synthesizer.synthesize(batches[b]);
