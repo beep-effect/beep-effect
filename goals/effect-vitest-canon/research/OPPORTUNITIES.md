@@ -1918,3 +1918,39 @@ Original processes and evidence are preserved.
   human rows. Preserve finding identities, counts, judgments and exact test assertions.
 - Prevention: run knowledge reference checks on the assembled inventory before the
   expensive publication proof, with historical evidence separated from live guidance.
+
+## 2026-09-21 — Inherited CLI coverage blocks the P1 checkpoint
+
+- Work: prove the progress commit after repairing its knowledge references.
+- Evidence: the second full Yeet publication passed the knowledge gates but failed
+  the coverage ratchet. Four Codex Security modules lacked baseline identities;
+  `Yeet.command.ts` measured branches 98.66 below 100 and statements 97.06 below
+  97.21. All five source blobs were identical to the integrated main revision.
+- Repair: add focused behavioral tests for uncovered Security paths and attached
+  monitor failure propagation. Keep the existing ratchet floors and production
+  behavior intact; root owns combined package verification and publication proof.
+- Prevention: require the package coverage ratchet when landing new CLI command
+  modules, and cover attached as well as detached command routing.
+
+### 2026-09-21 — Run cheap gates before expensive coverage-repair proof
+
+- While repairing inherited security coverage gaps, the new dispatch fixture passed
+  focused tests but introduced resource-ownership and complexity findings.
+- Evidence: `beep lint effect-vitest` initially found eight introduced rows; after
+  fixture ownership repair it reported zero. `beep yeet verify --tier cheap-gates`
+  then attributed two Fallow complexity findings to the new dispatch test.
+- The in-flight package audit was interrupted before changing its inputs; no pass
+  was claimed for that run. Simplify test setup and rerun cheap gates first.
+- Prevention: sequence focused behavior checks, all cheap gates, then the costly
+  package audit so newly authored fixtures do not invalidate an expensive proof.
+
+### 2026-09-21 — Package audit does not cover every root test policy
+
+- The full package audit and all cheap gates passed, but publication's root policy
+  lane found two inline schema compiler calls and three Effect test diagnostics.
+- Evidence: `beep(no-inline-schema-compile)`, `strictBooleanExpressions`, and
+  `preferTypedSchemaDecoder` in the new security regression tests.
+- Hoist compiled codecs, use the typed string decoder, and compare optional flags
+  explicitly. Run the affected root checks before retrying the full proof.
+- Prevention: include root test diagnostics and source-policy lint in the focused
+  test-authoring loop; a green package audit alone does not establish policy parity.
