@@ -33,13 +33,22 @@ practice-kg, then nlp-mcp behind a live first-message capture of the vendor CLIs
 
 ## Current Phase
 
-P1 Implement, not started. First action: PR 1, the kit rebase plus `@beep/mcp-kit/client` and the
-conformance port, with every host still compiling on `v2025_06_18`.
+P1 Implement, in progress. PR 1 (kit rebase on rc.117 `registerToolkit`, dual-read caller,
+dispatch anchor, `@beep/mcp-kit/client`, conformance port, README consumer table) is published
+from lane `mcp-stateless-kit`; every host still compiles on `v2025_06_18`. Next: PR 2 (m365, uspto).
+
+Goal B checkpoint: `goals/ontology-sidecar-stateless-identity` may start once PR 1 merges (it
+consumes `CurrentMcpDispatchAnchor`, the dual-read and `@beep/mcp-kit/client`; keep those
+signatures stable).
 
 ## Latest Evidence
 
-Not started. The exploration's Gate B/C evidence is in
-`explorations/effect-mcp-2026-07-28/research/verification/README.md` and `reviews/`.
+- 2026-09-22: `bunx vitest run` in `packages/foundation/capability/mcp-kit`: 74 tests pass,
+  including every verification-matrix filter and the 15-arm `conformance 2026-07-28` suite on
+  the kit fixture host over HTTP and stdio. PR 1 decisions are in `PLAN.md`.
+- `history/sql-pg-pgclient-census.md` — the inherited S0 census.
+- The exploration's Gate B/C evidence is in
+  `explorations/effect-mcp-2026-07-28/research/verification/README.md` and `reviews/`.
 
 ## Notes
 

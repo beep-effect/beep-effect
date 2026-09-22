@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-22T16:36:45.165Z
+Generated: 2026-09-22T17:52:23.043Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2867 |
-| publicExports | 20250 |
+| publicModules | 2869 |
+| publicExports | 20298 |
 | openModules | 377 |
 | openExports | 3103 |
 | missingExportExamples | 5 |
@@ -79,7 +79,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 21 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | needs-remediation | 26 | 130 | 0 | 55 |
 | 22 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 57 | 255 | 8 | 18 |
 | 23 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 313 | 9 | 40 |
-| 24 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 10 | 64 | 8 | 53 |
+| 24 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 12 | 112 | 8 | 53 |
 | 25 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 41 | 0 | 0 |
 | 26 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
 | 27 | `@beep/agents-use-cases` | `packages/agents/use-cases` | needs-remediation | 31 | 128 | 2 | 23 |
@@ -1357,8 +1357,8 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/ApiKeyRequired.ts:68` `ApiKeyRequiredFailure` (class) - 1 example import violation(s)
-- `src/ApiKeyRequired.ts:124` `apiKeyRequiredFailure` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
+- `src/ApiKeyRequired.ts:75` `ApiKeyRequiredFailure` (class) - 1 example import violation(s)
+- `src/ApiKeyRequired.ts:131` `apiKeyRequiredFailure` (const) - 1 example import violation(s); 1 documentation section/link violation(s)
 - `src/FieldTier.ts:47` `FieldTierName` (const) - 1 example import violation(s)
 - `src/FieldTier.ts:68` `FieldTierName` (type) - 1 example import violation(s)
 - `src/FieldTier.ts:93` `FieldTierSet` (interface) - 1 example import violation(s)
@@ -1373,12 +1373,12 @@ Export findings:
 - `src/FieldTier.ts:417` `projectWithinBudget` (const) - 2 example import violation(s)
 - `src/FieldTier.ts:453` `ColumnarEnvelope` (class) - 1 example import violation(s)
 - `src/FieldTier.ts:500` `toColumnarEnvelope` (const) - 1 example import violation(s)
-- `src/McpCaller.ts:42` `McpCallerIdentity` (class) - 2 example import violation(s)
-- `src/McpCaller.ts:71` `CurrentMcpCaller` (const) - 2 example import violation(s)
-- `src/SanitizedSpan.ts:58` `defaultSanitizedSpanKeys` (const) - 1 example import violation(s)
-- `src/SanitizedSpan.ts:83` `sanitizeTracerAttributes` (const) - 2 example import violation(s)
-- `src/SanitizedSpan.ts:172` `withSanitizedToolSpan` (const) - 2 example import violation(s); 1 documentation section/link violation(s)
-- `src/SanitizedSpan.ts:410` `sanitizedToolkit` (const) - 2 example import violation(s); 1 documentation section/link violation(s)
+- `src/McpCaller.ts:44` `McpCallerIdentity` (class) - 2 example import violation(s)
+- `src/McpCaller.ts:76` `CurrentMcpCaller` (const) - 2 example import violation(s)
+- `src/SanitizedSpan.ts:70` `defaultSanitizedSpanKeys` (const) - 1 example import violation(s)
+- `src/SanitizedSpan.ts:95` `sanitizeTracerAttributes` (const) - 2 example import violation(s)
+- `src/SanitizedSpan.ts:184` `withSanitizedToolSpan` (const) - 2 example import violation(s); 1 documentation section/link violation(s)
+- `src/SanitizedSpan.ts:599` `sanitizedToolkit` (const) - 2 example import violation(s); 1 documentation section/link violation(s)
 - `src/SourceAuth.ts:53` `SourceAuthGate` (const) - 1 example import violation(s)
 - `src/SourceAuth.ts:75` `SourceAuthGate` (type) - 1 example import violation(s)
 - `src/SourceAuth.ts:98` `SourceAuthRegistration` (class) - 1 example import violation(s)

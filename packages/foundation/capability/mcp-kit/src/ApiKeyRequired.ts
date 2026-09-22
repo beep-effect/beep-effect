@@ -1,23 +1,30 @@
 /**
- * The `api_key_required` envelope.
+ * The `api_key_required` envelope and its protocol translation.
  *
  * A typed `failureMode: "return"` tool failure for `soft`-gated (or
  * key-optional `none`-gated) sources whose credential is absent at call
- * time. `effect/unstable/ai`'s `Toolkit`/`McpServer` machinery folds
- * `"return"`-mode failures into the tool's success union (verified
- * `Toolkit.ts:240-242`), so `McpServer.registerToolkit` ships this failure as
- * `CallToolResult({ isError: false, ... })` — never a protocol-level error —
- * with the encoded failure JSON mirrored into `content[].text` (verified
- * `McpServer.ts:717-734`). This lets the calling model see the structured
- * `api_key_required` reason and self-correct instead of treating the call as
- * a hard failure.
+ * time. `effect/unstable/ai`'s `Toolkit` folds `"return"`-mode failures into
+ * the handler's result stream as declared failures; rc.117
+ * `McpServer.registerToolkit` projects every declared failure as
+ * `CallToolResult({ isError: true })`. The kit's `sanitizedToolkit` instead
+ * routes this one envelope through {@link translateApiKeyRequired}, the named
+ * error translator at the kit protocol adapter (architecture 09): the
+ * envelope stays a **non-error** `CallToolResult` with the encoded failure in
+ * `content[].text` (never `structuredContent`, which must conform to the
+ * tool's advertised `outputSchema`), so the calling
+ * model sees the structured `api_key_required` reason and self-corrects
+ * instead of treating the call as a hard failure. Every other failure keeps
+ * upstream semantics (declared failures are tool errors, invalid arguments
+ * are JSON-RPC `InvalidParams`).
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $McpKitId } from "@beep/identity/packages";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { CallToolResult } from "effect/unstable/ai/McpSchema";
 import { SourceAuthRegistration } from "./SourceAuth.ts";
 
 const $I = $McpKitId.create("ApiKeyRequired");
@@ -123,3 +130,93 @@ export class ApiKeyRequiredFailure extends S.Class<ApiKeyRequiredFailure>($I`Api
  */
 export const apiKeyRequiredFailure = (params: ApiKeyRequiredFailureParamsInput): ApiKeyRequiredFailure =>
   ApiKeyRequiredFailure.forTool(params);
+
+/**
+ * Guard for the `api_key_required` envelope.
+ *
+ * **Example** (Recognize the envelope)
+ *
+ * ```ts
+ * import { isApiKeyRequiredFailure } from "@beep/mcp-kit/ApiKeyRequired"
+ *
+ * console.log(isApiKeyRequiredFailure({ error: "other" }))
+ * // false
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isApiKeyRequiredFailure = S.is(ApiKeyRequiredFailure);
+
+/**
+ * The pair a `Toolkit` handler result carries for a declared failure: the
+ * decoded failure value and its JSON encoding. This is the input of
+ * {@link translateApiKeyRequired}.
+ *
+ * **Example** (Build a payload)
+ *
+ * ```ts
+ * import { ToolHandlerPayload } from "@beep/mcp-kit/ApiKeyRequired"
+ *
+ * const payload = ToolHandlerPayload.make({ result: { error: "other" }, encodedResult: { error: "other" } })
+ * console.log(payload.encodedResult)
+ * // { error: "other" }
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ToolHandlerPayload extends S.Class<ToolHandlerPayload>($I`ToolHandlerPayload`)(
+  {
+    result: S.Unknown.annotateKey({ description: "Decoded handler result or declared failure value." }),
+    encodedResult: S.Unknown.annotateKey({ description: "JSON encoding of `result`, as the Toolkit produced it." }),
+  },
+  $I.annote("ToolHandlerPayload", {
+    description: "Decoded result and its JSON encoding, as carried by a Toolkit handler result.",
+  })
+) {}
+
+/**
+ * Named error translator at the kit protocol adapter: turns a declared
+ * `api_key_required` handler failure into a non-error `CallToolResult`
+ * carrying the encoded envelope, and declines every other result.
+ *
+ * **Details**
+ *
+ * Takes the decoded failure and its JSON encoding (the pair the `Toolkit`
+ * result stream already carries), so no re-encoding happens at the protocol
+ * boundary. `None` means "not this envelope": the caller falls through to
+ * upstream projection, where declared failures are tool errors and invalid
+ * arguments are `InvalidParams`.
+ *
+ * **Example** (Translate a declared failure)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { apiKeyRequiredFailure, ToolHandlerPayload, translateApiKeyRequired } from "@beep/mcp-kit/ApiKeyRequired"
+ * import { SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
+ *
+ * const registration = SourceAuthRegistration.make({ name: "Example", envVar: "EXAMPLE_KEY", gate: "soft" })
+ * const failure = apiKeyRequiredFailure({ tool: "example_tool", registration })
+ * const translated = translateApiKeyRequired(
+ *   ToolHandlerPayload.make({ result: failure, encodedResult: { error: "api_key_required" } })
+ * )
+ * console.log(O.isSome(translated) && translated.value.isError)
+ * // false
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
+export const translateApiKeyRequired = (payload: ToolHandlerPayload): O.Option<CallToolResult> =>
+  isApiKeyRequiredFailure(payload.result)
+    ? O.some(
+        // The envelope travels in `content[].text` only: `structuredContent`
+        // must conform to the tool's advertised `outputSchema`, which describes
+        // the success value, not this failure.
+        CallToolResult.make({
+          isError: false,
+          content: [{ type: "text", text: JSON.stringify(payload.encodedResult) }],
+        })
+      )
+    : O.none();

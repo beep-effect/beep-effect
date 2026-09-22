@@ -106,40 +106,28 @@ it.effect(
 );
 
 describe("withTopLevelObjectInputSchema guard arms", () => {
-  it("patches a local wildcard target with a top-level object type", () => {
-    const patched = withTopLevelObjectInputSchemaForTesting({
-      $ref: "#/$defs/Params",
-      $defs: { Params: { not: { type: "null" } } },
-    });
+  // rc.117 inlines a top-level `$ref` before the kit sees the schema, so the
+  // arms operate on the root itself (measured 2026-09-22: an empty parameter
+  // class still renders as the non-null wildcard, with no `type`).
+  it("patches a non-null wildcard root with a top-level object type", () => {
+    const patched = withTopLevelObjectInputSchemaForTesting({ not: { type: "null" } });
     expect(patched.type).toBe("object");
   });
 
-  it("leaves an external ref untouched", () => {
-    const schema = { $ref: "https://example.org/schema.json#/$defs/Params" };
+  it("patches an anyOf root that has an object branch", () => {
+    const patched = withTopLevelObjectInputSchemaForTesting({ anyOf: [{ type: "object" }, { type: "array" }] });
+    expect(patched.type).toBe("object");
+  });
+
+  it("leaves an object root untouched", () => {
+    const schema = { type: "object", properties: {} };
     expect(withTopLevelObjectInputSchemaForTesting(schema)).toBe(schema);
   });
 
-  it("leaves a local ref without matching defs untouched", () => {
-    const schema = { $ref: "#/$defs/Params", $defs: { Other: { type: "object" } } };
-    expect(withTopLevelObjectInputSchemaForTesting(schema)).toBe(schema);
-  });
-
-  it("leaves a non-ref schema without a defs table untouched", () => {
-    const schema = { anyOf: [{ type: "string" }] };
-    expect(withTopLevelObjectInputSchemaForTesting(schema)).toBe(schema);
-  });
-
-  it("patches an anyOf object target and skips a non-object wildcard-shaped miss", () => {
-    const anyOfTarget = {
-      $ref: "#/$defs/Params",
-      $defs: { Params: { anyOf: [{ type: "object" }, { type: "array" }] } },
-    };
-    expect(withTopLevelObjectInputSchemaForTesting(anyOfTarget).type).toBe("object");
-
-    const nonWildcard = {
-      $ref: "#/$defs/Params",
-      $defs: { Params: { not: { type: "string" } } },
-    };
+  it("leaves a non-object root untouched", () => {
+    const nonWildcard = { not: { type: "string" } };
     expect(withTopLevelObjectInputSchemaForTesting(nonWildcard)).toBe(nonWildcard);
+    const stringBranches = { anyOf: [{ type: "string" }] };
+    expect(withTopLevelObjectInputSchemaForTesting(stringBranches)).toBe(stringBranches);
   });
 });
