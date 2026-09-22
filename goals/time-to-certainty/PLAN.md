@@ -159,6 +159,10 @@ orchestrator owns schemas, contracts, and judgment.
       only after zero disagreements over a ratified sample; hosted reuse recorded as a separate
       decision. The PR that turns ledger reuse on also deletes `LaneProofReuse` and
       `.beep/yeet/lane-proofs.json`, with a retirement receipt (ruling 60).
+      Handoff (2026-09-22): `goals/ci-lane-economics` window 2 measured the `Lint Policy`
+      wall-clock debt at p95 21m59s (median 17m) before the 2026-09-22 sweep, with 6–9 min
+      observed since; its window-3 census decides whether C4 is pulled forward. C4 status
+      is unchanged by this note.
 - [ ] C5 must-fail fixtures: changed package, epoch change, cross-profile reuse.
 
 ## P3 — Ordering handoff

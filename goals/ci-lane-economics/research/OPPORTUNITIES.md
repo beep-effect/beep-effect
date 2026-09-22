@@ -953,3 +953,51 @@ evidence, what would have prevented it). Redact for the public repo.
   transport errors (bounded backoff) inside the lane-timings collector, or
   checkpoint fetched pages to the scratchpad so a rerun resumes instead of
   restarting.
+
+## 2026-09-22 — Fable-only Workflow children ran the repair train
+
+- **Doing:** launching the Test Unit shard, refs-check listing, and packet lanes
+  for the window-2 repair path as native Workflow children.
+- **Evidence:** every child ran on Fable as a one-off operator override of the
+  `AGENTS.md` volume-pool order (Codex, then Cursor, then hold); the doctrine
+  itself is unchanged and no pool check preceded the launch.
+- **Would have prevented it:** a pool-aware Workflow launcher that reads the
+  Codex and Cursor remaining-quota floors and picks the lane model before
+  `agent()` is called, so an override is an explicit flag rather than a default.
+
+## 2026-09-22 — refs-check per-row flood truncated two hosted Lint Policy logs
+
+- **Doing:** attributing the hosted `Lint Policy` reds on #1178 and #1186
+  before the window-2 verdict could be signed.
+- **Evidence:** `knowledge refs --check` printed one line per non-verified
+  observation row; the job log hit the viewer's truncation limit before the
+  `[beep-cli]` step summary, so each red cost a second attribution round
+  (download the raw log, grep `[beep-cli]` and `failed`) before the
+  environment-only conclusion held.
+- **Would have prevented it:** the quiet listing PR (#1194): non-verified
+  observation classes are counted, not listed, in `--check` output while the
+  gate's exit semantics stay byte-identical.
+
+## 2026-09-22 — the beep-ec2-heavy fleet runner died mid-step on Lint Policy
+
+- **Doing:** driving #1186 to merge-ready while its `Lint Policy` job ran on
+  the `beep-ec2-heavy` fleet group.
+- **Evidence:** the job ended with the step conclusion `null` and no
+  `[beep-cli]` failure line; the runner lost communication with the service
+  mid-step. Attributed environment-only and cleared with one
+  `gh run rerun <runId> --failed`.
+- **Would have prevented it:** a fleet-runner liveness watchdog that requeues a
+  job whose step conclusion is `null`, so the rerun does not wait on a human
+  attribution pass.
+
+## 2026-09-22 — the partition model could not split one package task
+
+- **Doing:** re-sharding `Test Unit` after window 2 showed the `repo-cli` shard
+  as the critical path (cold p50 1195 s for one package task, 217 test files).
+- **Evidence:** `CiLanePartition` bins whole package names, so the LPT
+  rebalance had no unit smaller than `@beep/repo-cli#test`; merging the four
+  small bins instead lands at 1214 s / 1130 s cold and moves the breach rather
+  than removing it (`research/repair-decision-2.md`).
+- **Would have prevented it:** the optional `shard {index,total}` field on the
+  partition (#1195), forwarding `--shard=i/n` as a Turbo pass-through so one
+  package task can occupy several bins with the proof invariants enforced.
