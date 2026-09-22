@@ -1,8 +1,8 @@
 // Exact declaration excerpts from packages/effect/src/Effect.ts at
-// @effect/vitest@4.0.0-rc.115 (MIT; see ../LICENSE).
-// Pinned full-file SHA-256: f5afcafb823cf84181aabd49320d225d93d8dd8ecd63beda2bc5ba78df49e401
+// @effect/vitest@4.0.0-rc.117 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: 187e60ec752555b7e2e05ad9154448f9d2ded6f38c220ac8d7b939dfc1aa7aef
 
-// @effect-vitest-anchor Effect.timeoutOrElse 4637 4649
+// @effect-vitest-anchor Effect.timeoutOrElse 4641 4653
 export const timeoutOrElse: {
   <A2, E2, R2>(options: {
     readonly duration: Duration.Input
@@ -17,7 +17,7 @@ export const timeoutOrElse: {
   ): Effect<A | A2, E | E2, R | R2>
 } = internal.timeoutOrElse
 
-// @effect-vitest-anchor Effect.raceFirst 4900 4918
+// @effect-vitest-anchor Effect.raceFirst 4904 4922
 export const raceFirst: {
   <A2, E2, R2>(
     that: Effect<A2, E2, R2>,
@@ -38,37 +38,33 @@ export const raceFirst: {
   ): Effect<A | A2, E | E2, R | R2>
 } = internal.raceFirst
 
-// @effect-vitest-anchor Effect.scopedWith 6516 6518
+// @effect-vitest-anchor Effect.scopedWith 6520 6522
 export const scopedWith: <A, E, R>(
   f: (scope: Scope) => Effect<A, E, R>
 ) => Effect<A, E, R> = internal.scopedWith
 
-// @effect-vitest-anchor Effect.fnUntraced 13529 13529
+// @effect-vitest-anchor Effect.fnUntraced 13535 13535
 export const fnUntraced: fn.Untraced = internal.fnUntraced
 
-// @effect-vitest-anchor Effect.annotateLogs 13992 14028
-export const annotateLogs = dual<
-  {
-    (
-      key: string,
-      value: unknown
-    ): <A, E, R>(effect: Effect<A, E, R>) => Effect<A, E, R>
-    (
-      values: Record<string, unknown>
-    ): <A, E, R>(effect: Effect<A, E, R>) => Effect<A, E, R>
-  },
-  {
-    <A, E, R>(
-      effect: Effect<A, E, R>,
-      key: string,
-      value: unknown
-    ): Effect<A, E, R>
-    <A, E, R>(
-      effect: Effect<A, E, R>,
-      values: Record<string, unknown>
-    ): Effect<A, E, R>
-  }
->(
+// @effect-vitest-anchor Effect.annotateLogs 14001 14033
+export const annotateLogs: {
+  (
+    key: string,
+    value: unknown
+  ): <A, E, R>(effect: Effect<A, E, R>) => Effect<A, E, R>
+  (
+    values: Record<string, unknown>
+  ): <A, E, R>(effect: Effect<A, E, R>) => Effect<A, E, R>
+  <A, E, R>(
+    effect: Effect<A, E, R>,
+    key: string,
+    value: unknown
+  ): Effect<A, E, R>
+  <A, E, R>(
+    effect: Effect<A, E, R>,
+    values: Record<string, unknown>
+  ): Effect<A, E, R>
+} = dual(
   (args) => isEffect(args[0]),
   <A, E, R>(
     effect: Effect<A, E, R>,
@@ -84,4 +80,3 @@ export const annotateLogs = dual<
       return newAnnotations
     })
 )
-

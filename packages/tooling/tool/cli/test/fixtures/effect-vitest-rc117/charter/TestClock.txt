@@ -1,5 +1,5 @@
 // Exact declaration excerpts from packages/effect/src/testing/TestClock.ts at
-// @effect/vitest@4.0.0-rc.115 (MIT; see ../LICENSE).
+// @effect/vitest@4.0.0-rc.117 (MIT; see ../LICENSE).
 // Pinned full-file SHA-256: b35d4584199f9f5aaec54bfccf9092a45388b72b617858cdbfe95170a1ac30e3
 
 // @effect-vitest-anchor TestClock.adjust 507 508
@@ -9,4 +9,3 @@ export const adjust = (duration: Duration.Input): Effect.Effect<void> =>
 // @effect-vitest-anchor TestClock.withLive 580 581
 export const withLive = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
   testClockWith((testClock) => testClock.withLive(effect))
-

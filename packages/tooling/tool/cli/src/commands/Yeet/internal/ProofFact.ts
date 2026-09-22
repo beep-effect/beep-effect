@@ -17,11 +17,11 @@
  *
  * **Gotchas**
  *
- * The existing `YeetLaneProofState` (ProofState.ts) keys a lane on its
- * command hash plus a whole-tree diff fingerprint, so any edit anywhere
- * invalidates every lane. `ProofInputDigest` replaces the tree fingerprint
- * with per-lane inputs; the two coexist until the ledger migrates the
- * shadow records.
+ * Legacy proof stores are never a source of facts (TTC rulings 59–60): their
+ * rows carry no per-lane input digest, env profile, epoch, or provenance, so
+ * a fact built from them would attribute an old result to inputs it may never
+ * have run against. Facts come only from lane runs recorded after the A5
+ * journal facts exist.
  *
  * @packageDocumentation
  * @since 0.0.0

@@ -83,6 +83,7 @@ const initPortfolioRepo = Effect.fn("initPortfolioRepo")(function* (tmpDir: stri
   yield* runGit(tmpDir, ["init"]);
   yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
   yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
+  yield* runGit(tmpDir, ["config", "commit.gpgsign", "false"]);
 
   for (const slug of slugs) {
     const opsDir = path.join(tmpDir, "goals", slug, "ops");

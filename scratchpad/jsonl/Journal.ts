@@ -999,7 +999,7 @@ const makeEngine = Effect.fn("makeEngine")(function* (
     ) =>
       changesStream(slice).pipe(
         Stream.filter((envelope) => matchesEnvelope(envelope, slice)),
-        Stream.scan(initial, fold)
+        Stream.scan(() => initial, fold)
       )) as never,
     create: Effect.gen(function* () {
       const present = yield* exists();

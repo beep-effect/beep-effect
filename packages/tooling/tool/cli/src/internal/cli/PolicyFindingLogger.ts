@@ -30,7 +30,7 @@ export const makePolicyFindingLogger = <Finding, EncodeError, EncodeRequirements
 }) => {
   const render = Effect.fn("PolicyFindingLogger.render")(function* (finding: Finding) {
     const encoded = yield* options.encode(finding);
-    const rendered = yield* stringifyJsonLine.run(O.some(encoded), {});
+    const rendered = yield* SchemaGetter.run(stringifyJsonLine, O.some(encoded), {});
     return `${options.issuePrefix}${O.getOrElse(rendered, thunkEmptyStr)}`;
   });
 

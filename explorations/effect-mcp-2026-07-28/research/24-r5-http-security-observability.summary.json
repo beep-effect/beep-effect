@@ -1,0 +1,27 @@
+{
+  "lane": "24-r5-http-security-observability",
+  "path": "research/24-r5-http-security-observability.md",
+  "claimCount": 20,
+  "topRisks": [
+    "Browser-origin /mcp clients cannot CORS-preflight a 2026-07-28 POST because allowedHeaders omit mcp-method and mcp-name; in-repo HttpClient tests will not catch this.",
+    "HTTP 2026-07-28 does not mint mcp-session-id, so GovernedTierGate runId falls to per-request clientId and ledger/grant chains cannot span two POSTs; stdio stays process-scoped client:0.",
+    "Sidecar CORS answers attacker-Origin OPTIONS with 204 (no ACAO) instead of the spec/Effect 403; POST Origin checks are duplicated with Effect and stricter on missing Origin.",
+    "Replay after G4 is still a static per-launch bearer plus Origin; no nonce, no body-size cap, no rate limit. A client-supplied leftover Mcp-Session-Id would silently become the gate run key."
+  ],
+  "decisionChallenges": [
+    "G4 v2026_07_28-only on the sidecar is unimplementable for browser-origin clients unless the CORS allow-list grows, and it breaks the initialize-based HTTP harness.",
+    "Keep vs remove the sidecar Origin middleware (typed 403 + metric vs Effect allowedOrigins; missing-Origin deny vs spec/Effect allow).",
+    "OPTIONS 204-without-ACAO vs spec-strict 403 for attacker Origin.",
+    "Governed-run identity without sessions: new shell header, per-launch bearer, OTLP trace, trust client-supplied Mcp-Session-Id, or keep a stateful adapter on the sidecar (G4-contradicting; Effect allows mixed lists)."
+  ],
+  "grillQuestions": [
+    "Is any browser-origin client of /mcp in scope for G4 (Tauri webview, portless Vite, future workbench), or is /mcp only for in-repo HttpClient/tests?",
+    "Should attacker-Origin OPTIONS stay 204-without-ACAO (CORS) or become 403 (spec / Effect security suite)?",
+    "Should Origin-less POST stay denied (sidecar) or become allowed (Effect/spec non-browser path)?",
+    "Keep the sidecar Origin middleware for the typed 403 + metric, or treat Effect allowedOrigins as sufficient?",
+    "Under G4 HTTP, what is the governed-run identity: per-launch bearer, a new shell-minted header, OTLP trace, client-supplied Mcp-Session-Id, or keep a stateful adapter on the sidecar?",
+    "Should mcp.tool.call.* / ontology.mcp.origin grow a correlation attribute so origin/auth/tool/ledger can be joined without mcp-session-id?",
+    "Do we want an HTTP body-size cap and/or rate limit keyed on Mcp-Method/Mcp-Name, or is loopback + bearer enough?",
+    "Is the Origin allowlist allowed to remain a literal in OntologyMcpTransport.ts, or does configuration-boundaries require a config declaration before it is touched?"
+  ]
+}

@@ -130,10 +130,11 @@ Schema first, then the service contract, then a shadow ledger, then enforcement.
   }) {}
   ```
 
-  The existing shadow records in `packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts`
-  (`YeetLaneProofState`, keyed by command hash and whole-tree diff fingerprint) are the migration
-  source; the new key replaces the whole-tree fingerprint with per-lane inputs so an unchanged lane
-  can be reused after a docs edit or a merge that did not touch its inputs.
+  The legacy proof stores (`YeetLaneProofState` rows once kept in `ProofState.ts`, and the
+  `LaneProofRecord` rows in `.beep/yeet/lane-proofs.json`) are keyed by whole-tree identity. They are
+  retired and never migrated (rulings 59–60). The new key uses per-lane inputs instead of the
+  whole-tree fingerprint, so an unchanged lane can be reused after a docs edit or a merge that did
+  not touch its inputs.
 - **C2 ProofLedger service.** A `Context.Service` with record, lookup, and expire, backed by a
   per-checkout append-only NDJSON ledger under the checkout's Yeet state directory. No new
   coordination primitive: one writer, keyed rows, like the inbox. A machine-wide ledger keyed by

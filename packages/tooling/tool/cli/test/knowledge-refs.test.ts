@@ -1067,7 +1067,7 @@ const generatedDocuments = Effect.fnUntraced(function* (finding: EffectVitestFin
   const inventory = yield* encodeEffectVitestInventoryDocument(
     EffectVitestInventoryDocument.make({
       schemaVersion: "effect-vitest-inventory/v1",
-      effectVitestVersion: "4.0.0-rc.115",
+      effectVitestVersion: "4.0.0-rc.117",
       scope: [],
       findings: [finding],
     })

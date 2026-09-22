@@ -66,7 +66,7 @@ export const renderAllowlistSnapshotModule = (
     Effect.succeed(encodeAllowlistSnapshot(snapshot)),
     Effect.flatMap(
       Effect.fnUntraced(function* (encodedSnapshot) {
-        return yield* stringifyJsonPretty.run(O.some(encodedSnapshot), {});
+        return yield* SchemaGetter.run(stringifyJsonPretty, O.some(encodedSnapshot), {});
       })
     ),
     Effect.map(O.getOrElse(thunkEmptyStr)),
