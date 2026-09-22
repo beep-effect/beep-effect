@@ -313,11 +313,11 @@
       "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
       "line": 52,
       "owner": "@beep/epistemic-tables",
-      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Converter failure-path regression over fixed corrupted rows and unencodable records; schema-derived property coverage for ExecutionDecisionRecord and ExecutionOutcomeRecord lives with the owning @beep/epistemic-domain value models, while the table converters only project them across the persistence boundary."
     },
     {
       "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts",
