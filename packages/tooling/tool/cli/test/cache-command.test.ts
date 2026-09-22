@@ -30,6 +30,7 @@ const initializeWarmRepository = Effect.fn("CacheCommandTest.initializeWarmRepos
   git("init");
   git("config", "user.email", "cache-warm@example.test");
   git("config", "user.name", "Cache Warm Test");
+  git("config", "commit.gpgsign", "false");
   git("add", ".");
   git("commit", "-m", "baseline");
   git("update-ref", "refs/remotes/origin/main", "HEAD");
