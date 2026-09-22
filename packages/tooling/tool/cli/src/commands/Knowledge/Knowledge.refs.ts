@@ -319,6 +319,71 @@ export type KnowledgeRefClassification = typeof KnowledgeRefClassification.Type;
 export const isKnowledgeRefClassification = S.is(KnowledgeRefClassification);
 
 /**
+ * The informational classes the human listing folds into per-class counts instead of printing per row.
+ *
+ * **Details**
+ *
+ * Every member is derived from {@link KnowledgeRefClassification} and carries a "None" remediation:
+ * the observation is expected data (a resolved target, a documented convention, captured provenance,
+ * or rule and inventory literals), not something a reader can act on. None of them is ever counted
+ * by `--check` (see {@link KNOWLEDGE_REFS_GATED_CLASSIFICATIONS}), so folding them changes what
+ * the listing prints and nothing about what the gate decides. Classes with a real remediation
+ * (`broken-target`, `producer-owned-target`, `ungoverned-syntax`, ...) stay loud even though they
+ * are not gated either: they are the rows a human scans the listing for.
+ *
+ * **Example** (Read the quiet classes)
+ *
+ * ```ts
+ * import { KnowledgeRefQuietClassification } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ *
+ * console.log(KnowledgeRefQuietClassification.is.verified("verified")) // true
+ * console.log(KnowledgeRefQuietClassification.Options.length) // 5
+ * ```
+ *
+ * @see {@link isKnowledgeRefQuietClassification} for the derived guard the listing filters with.
+ * @category models
+ * @since 0.0.0
+ */
+export const KnowledgeRefQuietClassification = LiteralKit([
+  KnowledgeRefClassification.Enum.verified,
+  KnowledgeRefClassification.Enum["portable-home-convention"],
+  KnowledgeRefClassification.Enum["documented-temp-convention"],
+  KnowledgeRefClassification.Enum["archival-provenance"],
+  KnowledgeRefClassification.Enum["audit-pattern-literal"],
+]).pipe(
+  $I.annoteSchema("KnowledgeRefQuietClassification", {
+    description: "Informational classification the human listing summarizes as a count rather than per row.",
+  })
+);
+
+/**
+ * One informational triage class the listing summarizes.
+ *
+ * @see {@link KnowledgeRefQuietClassification} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type KnowledgeRefQuietClassification = typeof KnowledgeRefQuietClassification.Type;
+
+/**
+ * Narrows a classification to the quiet subset the listing summarizes.
+ *
+ * **Example** (A gated class is never quiet)
+ *
+ * ```ts
+ * import { isKnowledgeRefQuietClassification } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ *
+ * console.log(isKnowledgeRefQuietClassification("archival-provenance")) // true
+ * console.log(isKnowledgeRefQuietClassification("actionable-host-path")) // false
+ * console.log(isKnowledgeRefQuietClassification("broken-target")) // false
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isKnowledgeRefQuietClassification = S.is(KnowledgeRefQuietClassification);
+
+/**
  * Resolution outcome of one reference against the requested tree.
  *
  * **Details**
