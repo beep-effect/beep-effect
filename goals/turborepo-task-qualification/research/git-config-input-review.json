@@ -1,0 +1,23 @@
+{
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/git-config-input-g1q_9alo/receipt.json",
+    "sha256": "bb246c571aa495f394fe996965477653a24be662bc1b360180e6df6d0980cb05"
+  },
+  "rawSummariesChecked": 2,
+  "streamsChecked": 4,
+  "sourceBytesIdentical": true,
+  "exitCodes": [
+    1,
+    1
+  ],
+  "nativeSelectionsIdentical": true,
+  "observation": "The core.excludesFile control did not suppress the invalid identity source in this isolated profile. No divergence was observed; this does not establish all Git configuration as irrelevant.",
+  "wrapperPostflight": "passed",
+  "wrapperExitCode": 0,
+  "channel": "stable",
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "activation": {
+    "path": ".beep/qualification-local-preflight/lts-activation.json",
+    "sha256": "3fa2a6c1d70c795728aab8a70f64c7ebf6fb34498c8fbd08e6617a68bdf1208d"
+  }
+}

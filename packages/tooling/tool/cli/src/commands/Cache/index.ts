@@ -126,7 +126,7 @@ export { runCachePilotExperiment } from "./Cache.pilot.ts";
 /**
  * Execute tasks with a runtime-owned identity.
  *
- * @category execution
+ * @category commands
  * @since 0.0.0
  */
 export { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep, runCacheRuntimeTasks } from "./Cache.runtime.ts";

@@ -22,7 +22,11 @@ import * as Evidence from "@beep/repo-cli/commands/Cache/Cache.evidence";
 import * as Fingerprint from "@beep/repo-cli/commands/Cache/Cache.fingerprint";
 import * as Linker from "@beep/repo-cli/commands/Cache/Cache.linker";
 import * as Worktree from "@beep/repo-cli/commands/Worktree";
-import { runCachePilotForTesting } from "@beep/repo-cli/test/Cache";
+import {
+  renderCacheIdentityLintProfile,
+  runCachePilotForTesting,
+  writeCacheIdentityLintProfile,
+} from "@beep/repo-cli/test/Cache";
 import {
   CacheActivationProjection,
   CacheClientPin,
@@ -111,7 +115,9 @@ const linker = CacheRuntimeLinkerSnapshot.make({
 // process double. No Git worktree, native tool, scheduler or cache service is run.
 const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   fault: typeof faultDomain.Type = "none",
-  requestedLinker: CacheRuntimeLinkerSnapshot = linker
+  requestedLinker: CacheRuntimeLinkerSnapshot = linker,
+  profile = false,
+  observeProfile = true
 ) {
   const crypto = yield* Crypto.Crypto;
   const fs = yield* FileSystem.FileSystem;
@@ -124,23 +130,32 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   });
   const rootFiles = {
     "turbo.json": '{"global":{"env":[]},"tasks":{"lint":{}}}',
-    "biome.jsonc": '{"files":{"includes":["**"]}}',
+    "biome.jsonc": '{"root":true,"files":{"includes":["**"]}}',
     "bun.lock": '{"packages":{"effect":["effect@4.0.0"]}}',
     "package.json": '{"packageManager":"bun@1.4.2"}',
     "tsconfig.json": '{"compilerOptions":{"paths":{}}}',
   };
-  const before = '{"extends":["//"],"tasks":{"lint":{"cache":false,"env":["BEEP_CACHE_TOOLCHAIN_DIGEST"]}}}';
+  const unprofiled = '{"extends":["//"],"tasks":{"lint":{"cache":false,"env":["BEEP_CACHE_TOOLCHAIN_DIGEST"]}}}';
+  const before = profile
+    ? Str.replace('"cache":false', '"cache":false,"passThroughEnv":["BIOME_CONFIG_PATH"]')(unprofiled)
+    : unprofiled;
   const after = Str.replace('"cache":false', '"cache":true')(before);
   const sourceRoots = [path.join(root, "source-a"), path.join(root, "source-b")] as const;
-  for (const directory of [root, ...sourceRoots]) {
+  const writeSourceRoot = Effect.fnUntraced(function* (directory: string) {
     for (const [relative, text] of R.toEntries(rootFiles)) yield* write(directory, relative, text);
+    if (profile) yield* writeCacheIdentityLintProfile(directory);
     for (const packageDirectory of [identityDirectory, typesDirectory]) {
       yield* write(directory, `${packageDirectory}/src/index.ts`, "export const fixture = 1;\n");
       yield* write(directory, `${packageDirectory}/README.md`, "Fixture\n");
       yield* write(directory, `${packageDirectory}/package.json`, '{"scripts":{"lint":"bun run beep:lint"}}');
-      yield* write(directory, `${packageDirectory}/turbo.json`, before);
+      yield* write(
+        directory,
+        `${packageDirectory}/turbo.json`,
+        packageDirectory === identityDirectory ? before : unprofiled
+      );
     }
-  }
+  });
+  yield* Effect.forEach([root, ...sourceRoots], writeSourceRoot, { discard: true });
   yield* write(root, "tool", "fixture");
   const reference = Effect.fnUntraced(function* (relative: string, text: string) {
     yield* write(root, relative, text);
@@ -171,7 +186,10 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       command: O.some("bun run beep:lint"),
       commandDigest: digest,
       dependencies: id === task ? [dependencyTask] : [],
-      configuration,
+      configuration:
+        profile && id === task
+          ? CacheTaskConfiguration.make({ ...configuration, passThroughEnv: ["BIOME_CONFIG_PATH"] })
+          : configuration,
       inputCount: NonNegativeInt.make(0),
       inputsDigest: digest,
     })
@@ -240,6 +258,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     selection: "full",
   });
   vi.spyOn(Census, "collectCacheCensus").mockReturnValue(Effect.succeed(census));
+  vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed(nodes));
   vi.spyOn(Census, "joinCacheCensusPlan").mockReturnValue(Effect.succeed(nodes));
   vi.spyOn(Dependencies, "verifyCacheDependencies").mockImplementation(
     Effect.fn("PilotOrchestrationTest.verifyDependencies")(function* (observedRoot, receipt) {
@@ -273,6 +292,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     )
   );
   const runtimeKey = `BEEP_CACHE_TOOLCHAIN_DIGEST=${yield* hash(digest)}`;
+  const profileMutations: Array<boolean> = [];
   const calls: Array<string> = [];
   const counts = MutableHashMap.empty<string, number>();
   const spawner = ChildProcessSpawner.make(
@@ -305,6 +325,16 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
             const types = mounted(`${guest}/${typesDirectory}`);
             const directory = path.dirname(identity);
             const label = path.basename(directory);
+            if (profile) {
+              expect(command.options.env?.BIOME_CONFIG_PATH).toBe(path.join(guest, "biome.identity.jsonc"));
+              if (label === "mutation-root-lint-config") {
+                const rootText = yield* fs.readFileString(mounted(`${guest}/biome.jsonc`));
+                const generatedText = yield* fs.readFileString(mounted(`${guest}/biome.identity.jsonc`));
+                expect(generatedText).toBe(yield* renderCacheIdentityLintProfile(rootText));
+                profileMutations.push(Str.includes("!**/src/index.ts")(rootText));
+              }
+            }
+            const profileKey = `BIOME_CONFIG_PATH=${yield* hash(path.join(guest, "biome.identity.jsonc"))}`;
             const nativeTask = (id: string, taskHash: string, hit = false, code = 0) => ({
               taskId: id,
               task: "lint",
@@ -315,7 +345,10 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
               resolvedTaskDefinition: { ...configuration, passThroughEnv: [] },
               hash: taskHash,
               cache: { status: hit ? "HIT" : "MISS", local: hit, remote: fault === "remote-hit" },
-              environmentVariables: { configured: fault === "missing-runtime-key" ? [] : [runtimeKey] },
+              environmentVariables: {
+                configured: fault === "missing-runtime-key" ? [] : [runtimeKey],
+                passthrough: profile && observeProfile && id === task ? [profileKey] : [],
+              },
               execution: { exitCode: code },
             });
             const observeTask = Effect.fn("PilotOrchestrationTest.observeTask")(function* () {
@@ -459,12 +492,29 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(CacheQualificationService, service)
     );
-  return { root, fs, path, run, request, calls, preview, sourceRoots };
+  return { root, fs, path, run, request, calls, preview, sourceRoots, profileMutations };
 });
 
 afterEach(() => vi.restoreAllMocks());
 
 it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process boundary", (it) => {
+  it.effect("regenerates mounted profile bytes for root mutations and retains fixed selection", () =>
+    Effect.gen(function* () {
+      const { run, profileMutations } = yield* fixture("none", linker, true);
+      const receipt = yield* run();
+      expect(A.filter(receipt.checks, (check) => !check.passed)).toEqual([]);
+      expect(profileMutations).toContain(false);
+      expect(A.filter(profileMutations, (changed) => changed)).toHaveLength(2);
+    })
+  );
+
+  it.effect("rejects native plans missing the selected profile observation", () =>
+    Effect.gen(function* () {
+      const { run } = yield* fixture("none", linker, true, false);
+      const failure = yield* run().pipe(Effect.flip);
+      expect(failure.message).toContain("native pilot plan omitted");
+    })
+  );
   it.effect(
     "retains the requested dynamic client linkage instead of the reviewed static client",
     Effect.fnUntraced(function* () {

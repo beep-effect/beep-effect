@@ -1,0 +1,74 @@
+{
+  "authority": "Private explicit-profile external dependency experiment; no configuration adoption or qualification granted.",
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "wrapperExitCode": 0,
+  "beforeAfterParity": "passed",
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/flat-profile-external-8r9_bwyc/receipt.json",
+    "sha256": "f37e4b854cd52a529b1b06b6babd4e6b02c92dd6a5c0816a4b0f5ed814c4d4c3"
+  },
+  "configuration": {
+    "path": ".beep/qualification-local-preflight/scoped-scanner-biome.json",
+    "sha256": "ab6eaac389031b523f602029b27b49a6096e609fc5dd9ebdc59942134710b058"
+  },
+  "probe": {
+    "path": ".beep/qualification-local-preflight/probe-flat-profile-external.py",
+    "sha256": "c1bf78ae705b2e1ad61138ad079d1a19f5221b6453d5615bb2c5da6864537920"
+  },
+  "reviewRecipe": {
+    "path": ".beep/qualification-local-preflight/review-scoped-scanner.py",
+    "sha256": "a92dbe7f37979ec20580f282b794dc03c7a0ba26a6f2fde6a2687fc56c6c8604"
+  },
+  "checks": {
+    "normalInstalledLintPasses": true,
+    "importControlPasses": true,
+    "deprecatedImportFails": true,
+    "quietVerboseExitParity": true,
+    "externalDeprecationDiagnostic": true
+  },
+  "independentReview": {
+    "traceAndQuietStreamHashes": "passed",
+    "verboseStreamHashes": "passed",
+    "quietVerboseExitParity": "passed",
+    "expectedDeprecationDiagnostic": "passed",
+    "identicalImportSource": "passed",
+    "onlyDependencyOverlayDifference": "deprecation comment"
+  },
+  "results": [
+    {
+      "case": "scoped-unmodified",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/flat-profile-external-8r9_bwyc/scoped-unmodified-read-review.json",
+        "sha256": "cbc08a40365eb9dc20d9eff2b562e419b036701fa82a5550c3677a8cc79ebac7"
+      },
+      "otherRepositoryPaths": 407,
+      "unannotatedPositiveReads": {}
+    },
+    {
+      "case": "scoped-effect-control",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/flat-profile-external-8r9_bwyc/scoped-effect-control-read-review.json",
+        "sha256": "36887b407ebc2da006e8e899c18c49bef04402da747d6cea98431ba5105ac147"
+      },
+      "otherRepositoryPaths": 407,
+      "unannotatedPositiveReads": {}
+    },
+    {
+      "case": "scoped-effect-deprecated",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/flat-profile-external-8r9_bwyc/scoped-effect-deprecated-read-review.json",
+        "sha256": "21c32902aaa51dc37e496b33d67e7f88de78621f8ab69e09360a7ccaa5328d76"
+      },
+      "otherRepositoryPaths": 407,
+      "unannotatedPositiveReads": {}
+    }
+  ],
+  "limitations": [
+    "Observed scalar reads and these controls do not establish the complete possible input set.",
+    "Configuration generation and selection must be integrated into the live census and task hashes before native pilot acceptance.",
+    "Native replay, full comparison matrices and signed remote acceptance remain pending."
+  ]
+}

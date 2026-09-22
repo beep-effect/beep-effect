@@ -1,6 +1,7 @@
 import {
   assertCacheRuntimeKeyUnspecified,
   CacheCensusNode,
+  CacheCommandError,
   CacheExecutablePin,
   CacheToolchainSnapshot,
   cacheRuntimeStep,
@@ -13,6 +14,7 @@ import * as Fingerprint from "@beep/repo-cli/commands/Cache/Cache.fingerprint";
 import {
   collectCacheGitExclusions,
   CacheRuntimeFileGuards as FsGuards,
+  CacheRuntimeProfile as Profile,
   CacheRuntimeProcess as StepExec,
 } from "@beep/repo-cli/test/Cache";
 import { QualityTaskStep } from "@beep/repo-cli/test/Quality";
@@ -245,7 +247,104 @@ const runtimeLayer = FsUtilsLive.pipe(
 );
 
 it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) => {
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it.effect("injects the fixed profile for disabled caching and retains it alongside an observed cache key", () =>
+    Effect.gen(function* () {
+      for (const cache of [false, true]) {
+        const node = CacheCensusNode.make({
+          ...runtimeNode,
+          id: "@beep/identity#lint",
+          workspace: "@beep/identity",
+          configuration: CacheTaskConfiguration.make({
+            ...runtimeNode.configuration,
+            cache,
+            env: ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
+            passThroughEnv: ["BIOME_CONFIG_PATH"],
+          }),
+        });
+        vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed([node]));
+        vi.spyOn(Census, "resolveCacheTurboBinary").mockReturnValue(Effect.succeed("/fixture/turbo"));
+        const profile = vi.spyOn(Profile, "verifyCacheIdentityLintProfile").mockReturnValue(Effect.void);
+        vi.spyOn(Fingerprint, "collectCacheToolchain").mockReturnValue(Effect.succeed(runtimeSnapshot));
+        vi.spyOn(FsGuards, "hashFileSha256").mockImplementation(
+          dual(2, (_filePath: string, _onError: (cause: unknown, filePath: string) => unknown) =>
+            Effect.succeed(runtimeDigest)
+          )
+        );
+        const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
+        expect(yield* runCacheRuntimeTasks("/fixture", ["run", "lint"])).toBe(0);
+        expect(profile).toHaveBeenCalledWith("/fixture");
+        expect(spawn).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            env: cache
+              ? {
+                  BIOME_CONFIG_PATH: "/fixture/biome.identity.jsonc",
+                  BEEP_CACHE_TOOLCHAIN_DIGEST: yield* hashCacheToolchain(runtimeSnapshot),
+                }
+              : { BIOME_CONFIG_PATH: "/fixture/biome.identity.jsonc" },
+          })
+        );
+      }
+    })
+  );
+
+  it.effect("rejects caller profile overrides including empty values", () =>
+    Effect.gen(function* () {
+      const node = CacheCensusNode.make({
+        ...runtimeNode,
+        id: "@beep/identity#lint",
+        workspace: "@beep/identity",
+        configuration: CacheTaskConfiguration.make({
+          ...runtimeNode.configuration,
+          cache: false,
+          passThroughEnv: ["BIOME_CONFIG_PATH"],
+        }),
+      });
+      vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed([node]));
+      const profile = vi.spyOn(Profile, "verifyCacheIdentityLintProfile");
+      const spawn = vi.spyOn(StepExec, "runToExit");
+      for (const value of ["", "other.json", "/fixture/biome.identity.jsonc"]) {
+        vi.stubEnv("BIOME_CONFIG_PATH", value);
+        const failure = yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]).pipe(Effect.flip);
+        expect(failure.message).toContain("caller overrides");
+      }
+      expect(profile).not.toHaveBeenCalled();
+      expect(spawn).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("rejects stale governed profiles before native execution even with caching disabled", () =>
+    Effect.gen(function* () {
+      const node = CacheCensusNode.make({
+        ...runtimeNode,
+        id: "@beep/identity#lint",
+        workspace: "@beep/identity",
+        configuration: CacheTaskConfiguration.make({
+          ...runtimeNode.configuration,
+          cache: false,
+          passThroughEnv: ["BIOME_CONFIG_PATH"],
+        }),
+      });
+      vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed([node]));
+      const profile = vi
+        .spyOn(Profile, "verifyCacheIdentityLintProfile")
+        .mockReturnValue(
+          CacheCommandError.new("Identity lint profile is stale; regenerate it with cache profile --write.")
+        );
+      const resolve = vi.spyOn(Census, "resolveCacheTurboBinary");
+      const observe = vi.spyOn(Fingerprint, "collectCacheToolchain");
+      const spawn = vi.spyOn(StepExec, "runToExit");
+      yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]).pipe(Effect.flip);
+      expect(profile).toHaveBeenCalledWith("/fixture");
+      expect(resolve).not.toHaveBeenCalled();
+      expect(observe).not.toHaveBeenCalled();
+      expect(spawn).not.toHaveBeenCalled();
+    })
+  );
 
   it.effect("injects the observed canonical key into the final native spawn", () =>
     Effect.gen(function* () {

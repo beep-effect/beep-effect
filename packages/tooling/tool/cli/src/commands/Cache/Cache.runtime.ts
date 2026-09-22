@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { fileURLToPath } from "node:url";
-import { Effect } from "effect";
+import { Effect, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -15,24 +15,25 @@ import { QualityTaskStep } from "../../internal/process/index.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
 import { collectCacheTaskSelection, isCacheTaskInspectionArg, resolveCacheTurboBinary } from "./Cache.census.ts";
 import { collectCacheToolchain, hashCacheToolchain } from "./Cache.fingerprint.ts";
+import { verifyCacheIdentityLintProfile } from "./Cache.profile.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 
 /**
  * Reject caller-provided cache identity before ordinary Turbo task execution.
  *
- * **Example** (Accept an environment without an identity override)
- *
- * ```ts
- * import { assertCacheRuntimeKeyUnspecified } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
- *
- * Effect.runSync(assertCacheRuntimeKeyUnspecified("bunx", ["turbo", "run", "lint"], {}, {}))
- * ```
- *
  * **Details**
  * Checks ambient and step environments separately so one cannot hide the other.
  * Empty values are supplied values. Successful validation does not calculate an
  * identity or authorize cache reuse; the runtime must compute its own identity.
+ *
+ * **Example** (Accept an environment without an identity override)
+ *
+ * ```ts
+ * import { assertCacheRuntimeKeyUnspecified } from "@beep/repo-cli/commands/Cache"
+ * import * as Effect from "effect/Effect"
+ *
+ * Effect.runSync(assertCacheRuntimeKeyUnspecified("bunx", ["turbo", "run", "lint"], {}, {}))
+ * ```
  *
  * @category validation
  * @since 0.0.0
@@ -53,25 +54,39 @@ export const assertCacheRuntimeKeyUnspecified = Effect.fn("Cache.assertCacheRunt
   }
 });
 
+const runtimeToolchainDigest = Effect.fn("Cache.runtimeToolchainDigest")(function* (root: string, turbo: string) {
+  const toolchain = yield* collectCacheToolchain(root);
+  const actualClient = yield* hashFileSha256(turbo, (cause) =>
+    CacheCommandError.new("Cannot verify the execution client.", cause)
+  );
+  if (actualClient !== toolchain.turbo.sha256) {
+    return yield* CacheCommandError.new("The native execution client changed during runtime observation.");
+  }
+  return yield* hashCacheToolchain(toolchain);
+});
+
 /**
  * Run native Turbo with a calculated key for enabled governed task caching.
+ *
+ * **Details**
+ * Invoke inside the final resolved child environment. Selection includes task
+ * dependencies. Disabled caching does not require a supported toolchain profile.
+ * Identity lint that passes through `BIOME_CONFIG_PATH` requires a fresh generated
+ * profile even with caching disabled. Its fixed selection rejects caller input;
+ * native task selection checks strict mode and prevents cross-task forwarding.
+ * The calculated key is applied only at the native spawn and cannot be replaced
+ * by caller input. This does not promote a qualification or authorize activation.
  *
  * **Example** (Prepare a types-only execution)
  *
  * ```ts
  * import { runCacheRuntimeTasks } from "@beep/repo-cli/commands/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.assert(Effect.isEffect(runCacheRuntimeTasks(".", ["run", "lint", "--filter=@beep/types"])))
  * ```
  *
- * **Details**
- * Invoke inside the final resolved child environment. Selection includes task
- * dependencies. Disabled caching does not require a supported toolchain profile.
- * The calculated key is applied only at the native spawn and cannot be replaced
- * by caller input. This does not promote a qualification or authorize activation.
- *
- * @category execution
+ * @category commands
  * @since 0.0.0
  */
 export const runCacheRuntimeTasks = Effect.fn("Cache.runRuntimeTasks")(function* (
@@ -86,6 +101,20 @@ export const runCacheRuntimeTasks = Effect.fn("Cache.runRuntimeTasks")(function*
     );
   }
   const nodes = yield* collectCacheTaskSelection(root, args);
+  const needsProfile = A.some(
+    nodes,
+    (node) =>
+      node.id === "@beep/identity#lint" &&
+      O.isSome(node.command) &&
+      A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
+  );
+  if (needsProfile) {
+    if (ambient.BIOME_CONFIG_PATH !== undefined)
+      return yield* CacheCommandError.new(
+        "Identity lint profile selection is governed; caller overrides are not accepted."
+      );
+    yield* verifyCacheIdentityLintProfile(root);
+  }
   const turbo = yield* resolveCacheTurboBinary(root);
   const needsKey = A.some(
     nodes,
@@ -94,16 +123,12 @@ export const runCacheRuntimeTasks = Effect.fn("Cache.runRuntimeTasks")(function*
       node.configuration.cache &&
       A.contains(node.configuration.env, "BEEP_CACHE_TOOLCHAIN_DIGEST")
   );
-  let environment: Record<string, string> = {};
+  const path = yield* Path.Path;
+  let environment: Record<string, string> = needsProfile
+    ? { BIOME_CONFIG_PATH: path.resolve(root, "biome.identity.jsonc") }
+    : {};
   if (needsKey) {
-    const toolchain = yield* collectCacheToolchain(root);
-    const actualClient = yield* hashFileSha256(turbo, (cause) =>
-      CacheCommandError.new("Cannot verify the execution client.", cause)
-    );
-    if (actualClient !== toolchain.turbo.sha256) {
-      return yield* CacheCommandError.new("The native execution client changed during runtime observation.");
-    }
-    environment = { BEEP_CACHE_TOOLCHAIN_DIGEST: yield* hashCacheToolchain(toolchain) };
+    environment = { ...environment, BEEP_CACHE_TOOLCHAIN_DIGEST: yield* runtimeToolchainDigest(root, turbo) };
   }
   return yield* runToExit({
     command: turbo,
@@ -119,6 +144,11 @@ export const runCacheRuntimeTasks = Effect.fn("Cache.runRuntimeTasks")(function*
 /**
  * Route a planned Turbo execution through Cache inside its existing wrapper.
  *
+ * **Details**
+ * Derive environment overrides and ambient-extension policy from the original
+ * step before applying this rewrite. The child invokes this checkout's CLI
+ * directly without reloading environment files. Inspection commands are unchanged.
+ *
  * **Example** (Rewrite an ordinary repository task)
  *
  * ```ts
@@ -129,14 +159,9 @@ export const runCacheRuntimeTasks = Effect.fn("Cache.runRuntimeTasks")(function*
  * console.log(cacheRuntimeStep(step).command) // bun
  * ```
  *
- * **Details**
- * Derive environment overrides and ambient-extension policy from the original
- * step before applying this rewrite. The child invokes this checkout's CLI
- * directly without reloading environment files. Inspection commands are unchanged.
- *
  * @param step - The original planned invocation whose environment policy is retained.
  * @returns The routed execution step, or the original inspection or non-Turbo step.
- * @category execution
+ * @category commands
  * @since 0.0.0
  */
 export const cacheRuntimeStep = (step: QualityTaskStep): QualityTaskStep => {

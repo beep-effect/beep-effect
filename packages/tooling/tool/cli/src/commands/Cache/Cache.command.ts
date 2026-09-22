@@ -28,6 +28,7 @@ import { CacheSyntheticReceipt, CacheSyntheticRequest } from "./Cache.experiment
 import { runCacheSyntheticExperiment } from "./Cache.experiment.ts";
 import { CachePilotReceipt, CachePilotRequest } from "./Cache.pilot.schemas.ts";
 import { runCachePilotExperiment } from "./Cache.pilot.ts";
+import { verifyCacheIdentityLintProfile, writeCacheIdentityLintProfile } from "./Cache.profile.ts";
 import { runCacheRuntimeTasks } from "./Cache.runtime.ts";
 import {
   CacheActivationPreview,
@@ -739,6 +740,19 @@ const readCacheRequest = Effect.fn("Cache.readRequest")(function* <Decoded, Enco
   );
 });
 
+const cacheProfileCommand = Command.make(
+  "profile",
+  { write: Flag.Boolean("write").pipe(Flag.withDefault(false)) },
+  ({ write }) =>
+    Effect.gen(function* () {
+      if (write) yield* writeCacheIdentityLintProfile(process.cwd());
+      else yield* verifyCacheIdentityLintProfile(process.cwd());
+      yield* Console.log(
+        write ? "Identity lint candidate profile written." : "Identity lint candidate profile is current."
+      );
+    }).pipe(renderCacheFailure)
+).pipe(Command.withDescription("Check generated identity lint profile freshness, or regenerate with --write"));
+
 const cacheActivationCommand = Command.make(
   "activation",
   { request: Flag.File("request"), output: outputFlag },
@@ -809,7 +823,7 @@ const cacheExecuteCommand = Command.make(
 
 const cacheCommandDefinition = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, inspect, baseline, fingerprint, activation, transition, synthetic, dependencies, pilot, warm, probe, dashboard, execute"
+    "cache commands: census, audit, inspect, baseline, fingerprint, profile, activation, transition, synthetic, dependencies, pilot, warm, probe, dashboard, execute"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -821,6 +835,7 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
     cacheBaselineCommand,
     cacheFingerprintCommand,
     cacheActivationCommand,
+    cacheProfileCommand,
     cacheTransitionCommand,
     cacheSyntheticCommand,
     cacheDependenciesCommand,

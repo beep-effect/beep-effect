@@ -205,13 +205,13 @@ const encodeCacheToolchainSnapshotJson = S.encodeEffect(S.fromJsonString(CacheTo
  * ```ts
  * import { hashCacheToolchain } from "@beep/repo-cli/commands/Cache"
  * import { collectCacheToolchain } from "@beep/repo-cli/test/Cache"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const key = collectCacheToolchain(".").pipe(Effect.flatMap(hashCacheToolchain))
  * console.assert(Effect.isEffect(key))
  * ```
  *
- * @category hashing
+ * @category utilities
  * @since 0.0.0
  */
 export const hashCacheToolchain = Effect.fn("CacheFingerprint.hashToolchain")(function* (

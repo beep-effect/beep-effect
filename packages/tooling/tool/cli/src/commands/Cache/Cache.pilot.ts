@@ -21,7 +21,7 @@ import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schem
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { resolveWorktreeContext } from "../Worktree/index.ts";
-import { collectCacheCensus, joinCacheCensusPlan } from "./Cache.census.ts";
+import { collectCacheCensus, collectCacheTaskSelection, joinCacheCensusPlan } from "./Cache.census.ts";
 import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
 import { verifyCacheDependencies } from "./Cache.dependencies.ts";
 import {
@@ -45,6 +45,7 @@ import {
   CachePilotShadow,
   CachePilotTask,
 } from "./Cache.pilot.schemas.ts";
+import { renderCacheIdentityLintProfile, verifyCacheIdentityLintProfile } from "./Cache.profile.ts";
 import {
   CacheActivationPreview,
   CacheActivationRequest,
@@ -87,7 +88,10 @@ const NativeTask = S.Struct({
   }),
   hash: CacheSyntheticRun.fields.taskHash,
   cache: S.Struct({ status: S.Literals(["HIT", "MISS"]), local: S.Boolean, remote: S.Boolean }),
-  environmentVariables: S.Struct({ configured: S.Array(S.String) }),
+  environmentVariables: S.Struct({
+    configured: S.Array(S.String),
+    passthrough: S.Array(S.String).pipe(S.OptionFromNullOr),
+  }),
   execution: S.OptionFromOptionalKey(S.Struct({ exitCode: S.OptionFromOptionalKey(S.Int) })),
 });
 const NativeSummary = S.Struct({ tasks: S.Array(NativeTask) });
@@ -261,6 +265,20 @@ const runPilot = Effect.fn("CachePilot.run")(
       Order.String
     );
     const census = yield* collectCacheCensus(root);
+    const needsProfile = A.some(
+      census.nodes,
+      (node) =>
+        node.id === identityTask &&
+        O.isSome(node.command) &&
+        A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
+    );
+    const profileObservation = Effect.fn("CachePilot.profileObservation")(function* (guest: string) {
+      return `BIOME_CONFIG_PATH=${yield* hashText(path.join(guest, "biome.identity.jsonc"))}`;
+    });
+    if (needsProfile) {
+      yield* verifyCacheIdentityLintProfile(root);
+      yield* collectCacheTaskSelection(root, ["run", "lint", "--filter=@beep/identity", "--env-mode=strict"]);
+    }
     const context = yield* resolveWorktreeContext(root);
     const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(Effect.flatMap(decodeGitObjectId));
     const commonGit = yield* captureHost(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
@@ -334,6 +352,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       label: PilotRoot["label"],
       name: string
     ) {
+      if (needsProfile) yield* verifyCacheIdentityLintProfile(source);
       const directory = path.join(experiment, name);
       yield* fs.makeDirectory(directory);
       const identity = path.join(directory, "identity");
@@ -432,6 +451,8 @@ const runPilot = Effect.fn("CachePilot.run")(
       args: ReadonlyArray<string>,
       env: Readonly<Record<string, string>> = {}
     ) {
+      if (needsProfile && env.BIOME_CONFIG_PATH !== undefined)
+        return yield* CacheCommandError.new("Pilot scenario cannot override the governed lint profile.");
       for (const name of ["run", "identity-log", "types-log", "cache"])
         yield* fs.makeDirectory(path.join(fixture.directory, name), { recursive: true });
       return yield* runCapturedStreams({
@@ -501,6 +522,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           GIT_CONFIG_NOSYSTEM: "1",
           GIT_OPTIONAL_LOCKS: "0",
           ...env,
+          ...(needsProfile ? { BIOME_CONFIG_PATH: path.join(guest, "biome.identity.jsonc") } : {}),
           BEEP_CACHE_TOOLCHAIN_DIGEST: runtimeIdentity.toolchainDigest,
         },
         bound: captureBound,
@@ -561,6 +583,7 @@ const runPilot = Effect.fn("CachePilot.run")(
     yield* verifySandboxVersions();
     yield* Effect.logInfo(`Pilot ${request.channel}: installed runtime and exact client checks passed.`);
     const verifyNativePlans = Effect.fn("CachePilot.verifyNativePlans")(function* () {
+      const expectedProfile = yield* profileObservation("/fixture");
       yield* Effect.forEach(
         roots,
         Effect.fn("CachePilot.verifyNativePlan")(function* (fixture) {
@@ -581,7 +604,9 @@ const runPilot = Effect.fn("CachePilot.run")(
             !A.some(
               plan.tasks,
               (task) =>
-                task.taskId === identityTask && A.contains(task.environmentVariables.configured, runtimeKeyObservation)
+                task.taskId === identityTask &&
+                A.contains(task.environmentVariables.configured, runtimeKeyObservation) &&
+                (!needsProfile || O.exists(task.environmentVariables.passthrough, A.contains(expectedProfile)))
             )
           )
             return yield* CacheCommandError.new("The native pilot plan omitted the verified runtime key.");
@@ -673,6 +698,21 @@ const runPilot = Effect.fn("CachePilot.run")(
       if (fixture.omitChild) yield* fs.remove(path.join(fixture.identity, "turbo.json"), { force: true });
       else yield* writeContainedFileString(fixture.identity, "turbo.json", enabled ? fixture.after : fixture.before);
     });
+    const verifyExecutionEnvironment = Effect.fn("CachePilot.verifyExecutionEnvironment")(function* (
+      fixture: PilotRoot,
+      id: string,
+      task: typeof NativeTask.Type,
+      expectedProfile: string
+    ) {
+      if (!fixture.omitChild && !A.contains(task.environmentVariables.configured, runtimeKeyObservation))
+        return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified runtime key.`);
+      if (
+        needsProfile &&
+        !fixture.omitChild &&
+        !O.exists(task.environmentVariables.passthrough, A.contains(expectedProfile))
+      )
+        return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified lint profile.`);
+    });
     const execute = Effect.fn("CachePilot.execute")(function* (
       fixture: PilotRoot,
       id: string,
@@ -681,6 +721,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       guest = "/fixture",
       env: Readonly<Record<string, string>> = {}
     ) {
+      const expectedProfile = yield* profileObservation(guest);
       yield* prepareExecution(fixture, enabled);
       const beforeTrees = yield* Effect.all([snapshot(fixture.identity), snapshot(fixture.types)], { concurrency: 2 });
       const captured = yield* invoke(
@@ -730,8 +771,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           return CachePilotOutcome.cases.Blocked.make({ failedDependencies: failed });
         }),
         onSome: Effect.fn("CachePilot.executed")(function* (task: typeof NativeTask.Type) {
-          if (!fixture.omitChild && !A.contains(task.environmentVariables.configured, runtimeKeyObservation))
-            return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified runtime key.`);
+          yield* verifyExecutionEnvironment(fixture, id, task, expectedProfile);
           const observation = yield* taskObservation(task);
           if (task.command !== "bun run beep:lint" || (captured.exitCode === 0) !== (observation.exitCode === 0))
             return yield* CacheCommandError.new("Selected pilot command or verdict disagrees with its graph.");
@@ -1141,6 +1181,12 @@ const runPilot = Effect.fn("CachePilot.run")(
           !A.contains(mutationIds.pickOptions(["child-task-config", "missing-child-config", "dependency-source"]), id)
         )
           changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
+        if (needsProfile && id === "root-lint-config")
+          changedFixture = yield* overlayRootFile(
+            changedFixture,
+            "biome.identity.jsonc",
+            yield* renderCacheIdentityLintProfile(changedText)
+          );
         const changed = yield* execute(changedFixture, `${id}-changed`, true, true, "/fixture", env);
         const replayed = yield* execute(changedFixture, `${id}-replay`, true, true, "/fixture", env);
         runs.push(seeded, changed, replayed);

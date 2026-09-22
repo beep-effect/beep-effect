@@ -1,3 +1,4 @@
+import { cacheRuntimeStep } from "@beep/repo-cli/commands/Cache";
 import {
   CiLaneRunOptions,
   CiLocalStepPlan,
@@ -571,7 +572,10 @@ const policyCommandKey = (text: string): string =>
 // A live 1Password session suffixes the resolved step label with " (op run)".
 const policyLabelKey = Str.replace(" (op run)", "");
 
-const policyStepCommand = (step: QualityTaskStep) => A.join([step.command, ...step.args], " ");
+const policyStepCommand = (step: QualityTaskStep) => {
+  const runtime = cacheRuntimeStep(step);
+  return A.join([runtime.command, ...runtime.args], " ");
+};
 
 // A red policy run fails as one group whose failures name exactly the red planned label.
 const expectPolicyGroupFailure = (exit: Exit.Exit<unknown, unknown>, failedLabel: string): void => {
@@ -1379,7 +1383,7 @@ describe("quality task adapter", () => {
         const tempDir = yield* fs.makeTempDirectory();
         const bin = path.join(tempDir, "bin");
         yield* fs.makeDirectory(bin, { recursive: true });
-        // A stand-in `bunx` that leaves the run summary `turbo run --summarize` would have written.
+        // A stand-in Cache launcher leaves the summary its governed Turbo child would write.
         // The summary starts far enough in the future to count as this attempt's own.
         const summary = TurboRunSummary.make({
           id: "fixture",
@@ -1395,7 +1399,7 @@ describe("quality task adapter", () => {
           ],
         });
         yield* fs.writeFileString(path.join(bin, "summary.json"), yield* encodeTurboRunSummary(summary));
-        const fakeBunx = path.join(bin, "bunx");
+        const fakeBunx = path.join(bin, "bun");
         yield* fs.writeFileString(
           fakeBunx,
           A.join(
@@ -2646,12 +2650,12 @@ describe("quality task adapter", () => {
         const testConsole = yield* TestConsole.make;
         const spawned: Array<string> = [];
         const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());
-        const failedCommands = [
-          A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "repo-sanity:tsconfig-sync")], " "),
-          A.join(["bunx", ...qualityLaneArgs(cheapGateLanes, "lint:effect-imports")], " "),
-        ];
+        const failedCommands = A.map(
+          A.filter(cheapGateLanes, (lane) => A.contains(["repo-sanity:tsconfig-sync", "lint:effect-imports"], lane.id)),
+          (lane) => policyStepCommand(lane.step)
+        );
         const lastLane = O.getOrThrow(A.last(cheapGateLanes));
-        const lastCommand = A.join([lastLane.step.command, ...lastLane.step.args], " ");
+        const lastCommand = policyStepCommand(lastLane.step);
 
         yield* withEnvVarEffect(
           "BEEP_YEET_LANE_PROOF_MODE",
@@ -7269,7 +7273,13 @@ describe("quality task adapter", () => {
           );
           yield* fs.writeFileString(
             fakeBunPath,
-            ["#!/usr/bin/env sh", "printf 'bun %s\\n' \"$*\" >> quality-commands.log", "exit 0", ""].join("\n")
+            [
+              "#!/usr/bin/env sh",
+              "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
+              'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
+              "exit 0",
+              "",
+            ].join("\n")
           );
           yield* fs.chmod(fakeBunxPath, 0o755);
           yield* fs.chmod(fakeBunPath, 0o755);
@@ -7292,7 +7302,7 @@ describe("quality task adapter", () => {
 
           const commandLog = yield* fs.readFileString(commandLogPath);
           // The aggregate fails first; ordered policy diagnostics still execute.
-          expect(commandLog).toContain("bunx turbo run lint");
+          expect(commandLog).toContain("cache execute -- run lint");
           expect(commandLog).toContain("lint:effect-imports");
           expect(commandLog).toContain("lint:roadmap-refs");
           expect(commandLog).toContain("lint:typos");

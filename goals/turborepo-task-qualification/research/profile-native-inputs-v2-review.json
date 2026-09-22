@@ -1,0 +1,42 @@
+{
+  "authority": "Native dry-run input maps with independent Git blob digest verification. No task execution, replay or complete semantic closure.",
+  "status": "proposal-not-adopted",
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/profile-native-inputs-v2-o_yp7ieu/receipt.json",
+    "sha256": "0d9b06f6bdf956059fbb95b517ede66bf120ce5b9a73a60ce453fa9cb24d455a"
+  },
+  "independentReview": {
+    "path": ".beep/qualification-local-preflight/profile-native-inputs-v2-o_yp7ieu/input-review.json",
+    "sha256": "31b58a568e05d11a8fab51c1246f47da4aadbf61abc4157d44ec3dfe631a3508"
+  },
+  "reviewRecipe": {
+    "path": ".beep/qualification-local-preflight/review-profile-native-inputs.py",
+    "sha256": "9bf98c2807abbd66f8e92e790d948e8d6c6fce314c591ed6af77fcfeea798dae"
+  },
+  "candidateTaskConfiguration": {
+    "path": ".beep/qualification-local-preflight/profile-native-inputs-v2-o_yp7ieu/proposed-inputs/identity/turbo.json",
+    "sha256": "eec2b270259c9bfb2a0c5a632f57414bf5cb0b054ca66f6802f0888cd817a4b3"
+  },
+  "wrapperExitCode": 0,
+  "beforeAfterParity": "passed",
+  "checks": {
+    "observedRepositoryReadPathsCovered": 422,
+    "remainingReadPaths": [
+      ".git"
+    ],
+    "identityInputEntries": 754,
+    "typesInputEntries": 28,
+    "verifiedRawGitBlobEntries": 782,
+    "normalizedBlobEntries": 0,
+    "installedDependencyInputEntries": 0,
+    "planBytes": 83033
+  },
+  "comparison": "Explicit node_modules exclusion removes all 4912 installed dependency inputs while retaining the same observed repository-path coverage.",
+  "scope": "Only identity selects the revised profile; types remains on original configuration. All cache remains disabled in these dry-run fixtures.",
+  "remaining": [
+    "Generated profile freshness and portable selection must be implemented for production execution.",
+    "Mounted Git pointer needs attribution; current-run membership does not prove future/alternate-path closure.",
+    "New runtime identity, native execution and replay, complete pilot matrices and signed remote acceptance remain pending."
+  ]
+}

@@ -634,5 +634,2007 @@
       "sha256": "25ed24c337b77d923f169dc85c3cd7dea599e0f0640c3518b03b274c461f8fce"
     },
     "scope": "Current local and hosted planner snapshots, workflow documents and command grouping; no runtime qualification or remote proof"
+  },
+  "nativeCaptureProbe": {
+    "authority": "local-observation-only",
+    "clientVersion": "2.10.12",
+    "clientSha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+    "network": "unshared sandbox",
+    "observations": 5,
+    "freshReplayTextEqual": true,
+    "nativeLocalHitVerified": true,
+    "taskStderrRetained": true,
+    "progressAndDependencyLookingTextRetained": true,
+    "rejected": [
+      "carriage-return",
+      "invalid-utf8",
+      "task-log-over-64-KiB"
+    ],
+    "limitations": [
+      "Synthetic fixture, not real lint read/write coverage",
+      "Canary not exercised",
+      "No signed remote evidence",
+      "Initial fixture failed before task execution because PATH lacked Bun; corrected attempt used a separate directory"
+    ],
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/native-capture-probe-r2/observations.json",
+        "sha256": "39b78cf70405375a51fdb9af439dfd2fc42d01e4d98c882ec42026e6473902fc"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/native-capture-probe-r2/parser-results.json",
+        "sha256": "de70635b08a595ac1d223bd27d458db113492e5a992896be7991ae599e139cd8"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/native-capture-probe-r2.py",
+        "sha256": "7f8e5ec18418768309b7c83860782f1c0701f667b3a86b4e5ee76c1b728c7f4e"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/verify-native-capture.ts",
+        "sha256": "bf0fd6bd3c0a9d07011f26ccdbdc7b18714e0289715aa14fb3b2a979b0640ec3"
+      }
+    ]
+  },
+  "nativeCanaryCaptureProbe": {
+    "authority": "local-observation-only",
+    "clientVersion": "2.10.13-canary.1",
+    "clientSha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+    "network": "unshared sandbox",
+    "observations": 5,
+    "freshReplayTextEqual": true,
+    "nativeLocalHitVerified": true,
+    "taskStderrRetained": true,
+    "progressAndDependencyLookingTextRetained": true,
+    "rejected": [
+      "carriage-return",
+      "invalid-utf8",
+      "task-log-over-64-KiB"
+    ],
+    "limitations": [
+      "Synthetic fixture, not real lint read/write coverage",
+      "No signed remote evidence"
+    ],
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/native-capture-probe-canary/observations.json",
+        "sha256": "a8021f5d2e727dd6c9758db3ceab991d614268844432155319b0da496c41420c"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/native-capture-probe-canary/parser-results.json",
+        "sha256": "9749a49bb1decac1defbabe17fc2dd31dfda6ac16e7218fe9e16ad78726000dc"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/native-capture-probe-canary.py",
+        "sha256": "05eb39b51714fb35986f8c76207558fb41fa01f83571c3a24f826395ae6b56af"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/verify-native-capture-canary.ts",
+        "sha256": "f84e84e12f8695bab6860ecc7ea6a70d1756eb14989cd2d1ca5941dde70c1fa3"
+      }
+    ]
+  },
+  "nativeMergedStreamOrder": {
+    "authority": "local-observation-only",
+    "result": "mixed-stream fixture fails fresh/fresh exact-log equivalence",
+    "channels": [
+      {
+        "channel": "stable",
+        "version": "2.10.12",
+        "freshTrials": 10,
+        "distinctPayloads": 3
+      },
+      {
+        "channel": "canary",
+        "version": "2.10.13-canary.1",
+        "freshTrials": 10,
+        "distinctPayloads": 3
+      }
+    ],
+    "disposition": "Do not promote this synthetic fixture under exact merged-log comparison; no live tuple was enabled",
+    "scope": "Identical sequential stdout/stderr writes produce three merged line orders on each pinned client. This does not establish divergence for the real lint pilot.",
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/native-stream-order.py",
+        "sha256": "0fbb26285467af4f01834ab5c9504935aa6b0dd8fdd5cff73edefc0c6383d2de"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/native-stream-order.json",
+        "sha256": "dcc58a14bc7d27975d1fa7ce940f87481c1a15388f4893c934337c7f6d26960a"
+      }
+    ]
+  },
+  "finalCodeStablePilot": {
+    "authority": "local-observation-only",
+    "sourceRevision": "d1d1d32378617603fd7e831eeb64ce708c075a12",
+    "exitCode": 0,
+    "channel": "stable",
+    "clientVersion": "2.10.12",
+    "reconstructionPassed": true,
+    "alteredLoaderRejected": true,
+    "observations": 67,
+    "passingChecks": 40,
+    "shadowDecisions": 10,
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/routing-stable-r2-pilot.json",
+      "sha256": "026ddb241b65a8e473dddfaef6ded540db5db9b476343b001247a938225bab98"
+    },
+    "toolchainSha256": "551da2bf49526542dc4aad4d7304fff24ccc4671b73e442d76bbb50c1d1343b9",
+    "reconstruction": {
+      "path": ".beep/qualification-local-preflight/routing-r2-reconstruction-stable.json",
+      "sha256": "75d318ad83dd7c6c9c60c5ec349d693c49133b9e42d610e3eef4624de7ed1787"
+    }
+  },
+  "finalCodeCanaryPilot": {
+    "authority": "local-observation-only",
+    "sourceRevision": "d1d1d32378617603fd7e831eeb64ce708c075a12",
+    "exitCode": 0,
+    "channel": "canary",
+    "clientVersion": "2.10.13-canary.1",
+    "reconstructionPassed": true,
+    "alteredLoaderRejected": true,
+    "observations": 67,
+    "passingChecks": 40,
+    "shadowDecisions": 10,
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/routing-canary-r2-pilot.json",
+      "sha256": "effb217056cf0e28006fbefcd56949c63831e7fe7a65ec1a1564eaa2523743c8"
+    },
+    "toolchainSha256": "67616e7a4a770ad73c340cbb89469aafa7f15e5cf2b3fdc43130552201c6d475",
+    "reconstruction": {
+      "path": ".beep/qualification-local-preflight/routing-r2-reconstruction-stable-canary.json",
+      "sha256": "f2b8785af20e9d11dffd970919344b0a67a75a23961ef7ef9a290558995063d5"
+    }
+  },
+  "rootCommandReview": {
+    "authority": "source-review-only",
+    "rootScripts": 73,
+    "exactManifestMembershipReviewed": true,
+    "runtimeBranchesExecuted": false,
+    "unresolved": [
+      "Quality argument parsing and nested runtime behavior"
+    ],
+    "sources": [
+      {
+        "path": "packages/tooling/tool/cli/src/bin.ts",
+        "sha256": "d00684cb007afd1aca747d285ecc7af14aa1669a2dab4bad1fcdcf3bb9ffc284"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/bin-main.ts",
+        "sha256": "a8eba686bcfd61b0f2617152d8542f75f8a1de39fd9e3ce7c3d90524aa76180e"
+      },
+      {
+        "path": "goals/turborepo-task-qualification/research/root-command-boundaries.md",
+        "sha256": "5867efbff24091a163e2aa409659190c45c8444ef7fd1d5b1944484a902cd9f6"
+      }
+    ],
+    "pureParserObservations": 13,
+    "parserEvidence": [
+      {
+        "path": ".beep/qualification-local-preflight/root-quality-dispatch.ts",
+        "sha256": "1d643c7bf507385d4c73975aaf2e003af3d9282051ee05769be884680045805e"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/root-quality-dispatch.json",
+        "sha256": "2003d033d5c4afeb0f87d6c0b53d5c2a243e42c9136095787419b204fe6f4981"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+        "sha256": "a3dff78ee32f4a42dd4fa9d29ce1d2644a7d4f3552d586b7554193e5bb2b32e9"
+      }
+    ],
+    "operationalAttachment": {
+      "accepted": true,
+      "sources": 303,
+      "reviews": 2,
+      "authority": "source-review-only",
+      "request": {
+        "path": ".beep/qualification-local-preflight/root-review-before-environment-guard.json",
+        "sha256": "d517182ad5dd82f0b379e23eab10f46aea5fbbc884bff4f36ef595d774c87143"
+      },
+      "census": {
+        "path": ".beep/qualification-local-preflight/root-reviewed-census.json",
+        "sha256": "6cd3ef22c0165ef29bb5a5d5f7e62eb8b6857364a026567a3c1547ce8de9a153"
+      },
+      "unresolved": [
+        "Candidate semantic reads, writes, captures and signed/shadow comparisons remain required.",
+        "Classify nested workspace and root command semantics.",
+        "Entrypoint attachments establish source identity only; candidate runtime evidence remains required.",
+        "Hosted expanded workflows, remote action sources and required statuses retain their existing proof owners.",
+        "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts.",
+        "Root Quality parser observations do not exhaust downstream argument interpretation or runtime execution.",
+        "Source planner scenarios do not exhaust dynamic interpreter decisions or prove their runtime outcomes."
+      ],
+      "supersededBy": "environmentGuardCensusRefresh; original accepted request retained privately with its original digest."
+    }
+  },
+  "rejectedIoTraceDiagnostic": {
+    "authority": "Diagnostic only. Observer exceeded its expanded-read bound; no accepted run receipt or completed wrapper postchecks.",
+    "traceExpandedBytes": 275653259,
+    "traceExpandedSha256": "3fa613187422adfea339ab266ed9c72b9c71840182f7452942921d7279405700",
+    "diagnostics": [
+      {
+        "path": ".beep/qualification-local-preflight/routing-io-gmej1495/installed-unmodified/rejected-trace-diagnostic.json",
+        "sha256": "e5b97c6155e7a07e13635720864878fca49b85d94bd3cc1506549d7c68dcbf37"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/routing-io-gmej1495/installed-unmodified/io-special-diagnostic.json",
+        "sha256": "1eaed4cea3e26c25e9ee51efd24a9a689e97d315a5a48ea90f609c4334b5074f"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/routing-io-gmej1495/installed-unmodified/write-exec-diagnostic.json",
+        "sha256": "8c9bb0bc25ef0e4a501c0f0cc228446daca9f7a1cffbd8d1a6215bdcdddce515"
+      }
+    ],
+    "observations": [
+      "Installed launcher executes Node, invokes ldd --version, then launches the installed Biome binary.",
+      "Five io_uring setup and five submission calls occur in the Node launcher process; this syscall trace does not decode submitted operations.",
+      "Biome attempts ten mkdir operations on /tmp/biome; the first succeeds and the remaining attempts report EEXIST.",
+      "Observed socket pairs use AF_UNIX. These events do not prove the absence of other communication."
+    ],
+    "remaining": "Complete the bounded admitted replacement and review indirect I/O and temporary-state semantics before asserting any input or side-effect closure."
+  },
+  "boundedIoObservation": {
+    "authority": "Local trace inventory. Command, bounded trace integrity, dependency and toolchain checks passed. Indirect I/O and semantic closure remain unproven; no qualification credit.",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/routing-io-dqngxc4y/receipt.json",
+      "sha256": "9850f30d12c7fa6bd59887ee3a22a6f27b8e6e316e4e83c60696abf32d45d8ae"
+    },
+    "review": {
+      "path": ".beep/qualification-local-preflight/routing-io-dqngxc4y/io-review.json",
+      "sha256": "df781c1319df1e8b92ccaf8c2d27c244d7a2237cf54cbed53781d989e8c6d4f9"
+    },
+    "commandExitCode": 0,
+    "traceBytes": 284951646,
+    "unfinishedCalls": 0,
+    "ioUringOperations": 10,
+    "networkOperations": 16,
+    "writeIntentOpens": 5,
+    "mutationOperations": 10,
+    "remaining": [
+      "Indirect io_uring operation interpretation",
+      "Temporary-state semantics",
+      "Complete computation input and side-effect review"
+    ],
+    "wrapperExitCode": 0,
+    "dependencyAndToolchainVerifiedBeforeAndAfter": true,
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/routing-io-r4.log",
+      "sha256": "2f0299ec4f6f15a5ed191318f4eb3b8bef0b21ea25e51385163698373da7083d"
+    },
+    "semanticReview": {
+      "authority": "Review of recorded direct syscall effects and installed launcher source; not complete indirect-I/O or semantic-input closure.",
+      "installedLauncher": {
+        "path": "node_modules/@biomejs/biome/bin/biome",
+        "sha256": "7ffb4d217e5ddefcc19ca6afe76bb982f5eb36c9a124448105195fbcfc84bd77"
+      },
+      "directWriteIntentClassification": {
+        "successfulDeviceSinkOpens": 1,
+        "failedTerminalOpens": 4,
+        "successfulDirectoryCreates": 1,
+        "alreadyExistingDirectoryResults": 9,
+        "directory": "/tmp/biome"
+      },
+      "toolchainCoverage": [
+        "The retained installed-dependency digest covers the launcher bytes.",
+        "The runtime-linker snapshot fingerprints ldd, the loader, bash and sh in addition to Bun, Node, Turbo and Biome."
+      ],
+      "unresolvedInputs": [
+        "Launcher source reads BIOME_BINARY and npm_config_user_agent. Native task environment filtering must be verified before classifying their effect on the production task.",
+        "The successful temporary-directory creation needs a seeded-state and shared-root comparison before being declared irrelevant to reuse.",
+        "io_uring submission contents remain undecoded. Local socket records alone do not prove complete communication closure."
+      ]
+    }
+  },
+  "nativeLauncherEnvironmentControl": {
+    "authority": "Synthetic local native control; no real computation qualified.",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/native-launcher-env/observations.json",
+      "sha256": "3eb9306ca7495d23e8e8fcc912732db73306d1bd563107a7876e85fce99c97e0"
+    },
+    "recipe": {
+      "path": ".beep/qualification-local-preflight/native-launcher-env.py",
+      "sha256": "4237eb614345df54c9ce384086ec24386e35138e4b91e9ac4622bd2b64f0a8e9"
+    },
+    "runs": 8,
+    "clients": [
+      "2.10.12",
+      "2.10.13-canary.1"
+    ],
+    "finding": "For each client, strict mode removed BIOME_BINARY and produced identical observed values across two marker inputs. Loose mode passed different BIOME_BINARY and npm_config_user_agent values while retaining the same task hash within loose mode.",
+    "implication": "Qualification must bind and enforce environment mode; runtime toolchain identity alone does not cover arbitrary loose-mode environment inputs.",
+    "limits": "Minimal synthetic configuration and Python payload, not the real identity task or a remote replay. Bun replaced the user agent in strict mode; its embedded node version text is not evidence of an executed Node binary."
+  },
+  "nativeSelectionEnvironmentGuard": {
+    "authority": "Twelve native dry-selection controls; full CLI package verification passed. No computation qualified.",
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/native-selection-mode/stable-observations.json",
+        "sha256": "49d5a78053e86704cf9606c153d54dd93fc7a1852e2836b6507d8a54128969de"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/native-selection-mode/canary-observations.json",
+        "sha256": "49d5a78053e86704cf9606c153d54dd93fc7a1852e2836b6507d8a54128969de"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/verify-selection-mode.ts",
+        "sha256": "96689a74accf758972760b921cb1ed670af6af4bfc6c94b7577b642fe9780326"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+        "sha256": "966d49e705395fc699529edb6f984fa923a2baf4a86b3e3a16c4235019013718"
+      }
+    ],
+    "checks": "Both pinned clients reject governed enabled caching in loose mode, accept strict mode, and preserve disabled/unkeyed selections in both modes.",
+    "implementationCommit": "9480eaf486",
+    "packageVerification": {
+      "package": "@beep/repo-cli",
+      "exitCode": 0,
+      "auditSeconds": 502.4,
+      "docgenSeconds": 22.8,
+      "log": ".beep/qualification-local-preflight/environment-mode-package-verify.log",
+      "sha256": "c31104534c65ff166ff985cd675033e5b4414022469d83a2acbc1de04835961f"
+    }
+  },
+  "temporaryStateComparison": {
+    "authority": "Bounded local temporary-state comparison; no cache replay, concurrency or complete side-effect equivalence established.",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/routing-temp-state-eirnfx0b/receipt.json",
+      "sha256": "37c86e5dc1ee057dd545a550d5955cb044f574facaf2e63b545dc9cb3bbb3c54"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/environment-temp-state.log",
+      "sha256": "2ccacfc249c8a69cffffaf47b65c96d31da64d4276f64e1dc3fcf02c59324e10"
+    },
+    "checks": {
+      "streamBytesAndHashesVerified": true,
+      "threeExitCodesZero": true,
+      "streamsEqualAcrossThreeCases": true,
+      "existingSentinelUnchanged": true,
+      "directoryCasesEmptyAfter": true
+    },
+    "interpretation": "These three initial states did not change the captured lint verdict. Fresh execution created an empty temporary directory when absent; a cache hit would not necessarily reproduce that side effect. Contract relevance, shared-state concurrency and other temporary inputs remain unresolved.",
+    "review": {
+      "path": ".beep/qualification-local-preflight/routing-temp-state-eirnfx0b/review.json",
+      "sha256": "140edc7ffef97cc0ff95db384a0018f60fd173fa0ff1d7f75d39686a74b9af3f"
+    }
+  },
+  "temporaryStateConcurrentScheduling": {
+    "authority": "Six fresh local executions scheduled in pairs with shared temporary directories; no remote replay or qualification.",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/routing-temp-concurrent-66joo53e/receipt.json",
+      "sha256": "5fc43e973ef327dd9b0731507a91b734a69630e44ede809836f6293dc49e70b8"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/environment-temp-concurrency.log",
+      "sha256": "46f9d107b7b4daf8a2f5a2a3c1801029ad6718383346ba24140d0dc442286a43"
+    },
+    "recipe": {
+      "path": ".beep/qualification-local-preflight/probe-routing-temp-concurrent.py",
+      "sha256": "7846216c306d8cfbc20e04c33efb45b8983174d73ec3565b432689015dcb1cd3"
+    },
+    "wrapperExitCode": 0,
+    "allSixExitCodesZero": true,
+    "allCapturedStreamsEqual": true,
+    "retainedTemporaryStatesMatchSequentialControls": true,
+    "limits": [
+      "The two-worker executor schedules each pair concurrently but does not retain child lifetime intervals; actual overlap is not independently established.",
+      "One pair per initial state does not prove all possible shared-state interleavings.",
+      "The acceptability of omitting temporary-directory creation on replay remains a contract question."
+    ]
+  },
+  "temporaryStateObservedOverlap": {
+    "authority": "Bounded local pair execution with sampled native Biome process presence and overlapping wrapper intervals; not exhaustive race coverage or cache replay.",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/routing-temp-overlap-antp2yaq/receipt.json",
+      "sha256": "7dd989434c82d45a034b58c71ec159bfaa96d1b27296fb4aaaefb006c49cbc33"
+    },
+    "review": {
+      "path": ".beep/qualification-local-preflight/routing-temp-overlap-antp2yaq/overlap-review.json",
+      "sha256": "9698bd4e8dec56326dad242cbbc13ef4c503e36e71692263f0fb71a2a7fb88ba"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/environment-temp-overlap.log",
+      "sha256": "7ebc219a980b43148ee3b114c3cb7449047dff37b9777d4e417178c7dfd86802"
+    },
+    "wrapperExitCode": 0,
+    "cases": [
+      {
+        "case": "absent",
+        "wrapperOverlapMs": 3193.133753,
+        "nativeBiomeSamples": 16,
+        "allExitCodesZero": true
+      },
+      {
+        "case": "existing-directory",
+        "wrapperOverlapMs": 3243.939147,
+        "nativeBiomeSamples": 16,
+        "allExitCodesZero": true
+      },
+      {
+        "case": "existing-file",
+        "wrapperOverlapMs": 3491.389045,
+        "nativeBiomeSamples": 16,
+        "allExitCodesZero": true
+      }
+    ],
+    "allStreamsEqual": true,
+    "retainedTemporaryStatesMatchSequentialControls": true,
+    "limitations": [
+      "Process observations are sequential procfs samples, not an atomic kernel trace.",
+      "Only one pair per initial state was exercised.",
+      "Indirect I/O and replay side-effect contract remain unresolved."
+    ]
+  },
+  "temporaryStateContractDisposition": {
+    "authority": "Scoped contract interpretation of retained local observations; no promotion or signed replay claim.",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "contract": "explorations/turborepo-quality-cache/research/cache-qualification.md",
+    "supportedBoundary": "Read-only lint source and dependency overlays with a disposable private temporary directory, discarded at the end of the experiment; only the lint verdict, captured streams and declared output tree are consumer results.",
+    "disposition": "The empty biome directory is recorded as an observed write, but is not a reusable task output in this isolated boundary. Its absence on a hypothetical hit does not change a retained consumer result. Absent, empty-directory and sentinel-file controls produced equal verdicts and streams; overlapping pairs retained the expected state without observed contamination.",
+    "limits": [
+      "This disposition does not qualify a task using a persistent shared host temporary directory.",
+      "No claim covers arbitrary temporary contents or exhaustive thread schedules.",
+      "Indirect io_uring operations remain outside the decoded trace inventory.",
+      "Signed remote comparisons and the rest of the promotion contract remain required."
+    ]
+  },
+  "environmentGuardCensusRefresh": {
+    "authority": "Operational census and verified source attachment; seven review obligations remain, no qualification.",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/entrypoint-review-root-routing.json",
+      "sha256": "4ddf9bdbe2171cafbfc5cd32b35c6ecafc97c01389465854f3812d397ec8679f"
+    },
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/environment-reviewed-census.json",
+      "sha256": "b79331cc89307daee39aeb8a31bb2354c090244021ef5cde0b6f217ba8d64d1e"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/environment-reviewed-census.log",
+      "sha256": "c5bc9264160f512e9326bdff3c319f7beafe346799f52e3419b41fe31ef4e8ec"
+    },
+    "workspaces": 143,
+    "graphNodes": 3269,
+    "executableNodes": 1892,
+    "unresolvedReviewObligations": 7,
+    "sourceChange": "Only Cache.census.ts differed from the prior 303-source attachment; refreshed for the committed strict-mode guard."
+  },
+  "siblingManifestRefresh": {
+    "authority": "Bounded checkout manifest inventory, not an exhaustive artifact or task search.",
+    "candidateRoots": 155,
+    "packetCopies": 118,
+    "distinctManifestContents": 2,
+    "allObservedManifestsPausedAndNotStarted": true,
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/environment-sibling-inventory.json",
+      "sha256": "fdf9ff565192fdd128d179740441ef4b8bbc8e0f4711be76fbeb69a1ceb522ed"
+    },
+    "taskInventory": "Thirty recent non-pinned Codex tasks plus all pinned tasks exposed no separately named conformance or cache-trust task. Older and archived tasks were not covered by this refresh.",
+    "nextAction": "Operator question pending about launching both sibling goals; continue independent qualification work."
+  },
+  "ioUringSourceDisposition": {
+    "authority": "Pinned-source interpretation correlated with retained trace; SQE contents were not captured directly.",
+    "sourceRevision": "d1d1d32378617603fd7e831eeb64ce708c075a12",
+    "upstreamSource": "https://raw.githubusercontent.com/nodejs/node/v24.20.0/deps/uv/src/unix/linux.c",
+    "sourceSections": [
+      "uv__iou_get_sqe (lines 705-730)",
+      "uv__epoll_ctl_prep and uv__epoll_ctl_flush (lines 1160-1226)"
+    ],
+    "traceObservation": "Five 256-entry rings, each with NO_SQARRAY and without SQPOLL; five enter calls submit and await 2, 4, 2, 2 and 2 entries. Trace exec/clone lineage attributes these calls to Node and its thread.",
+    "interpretation": "This shape matches libuv epoll-control batching. The pinned filesystem submission path instead lazily initializes a 64-entry SQPOLL ring. No such ring occurs in the retained trace. The evidence supports event-watcher administration as the explanation for these calls, rather than unexplained filesystem submissions.",
+    "limits": [
+      "This is source-correlated inference, not direct decoding of submission entries.",
+      "The trace belongs to the recorded earlier revision, not the current-head matrix.",
+      "This finding alone does not establish complete semantic input closure or qualification."
+    ],
+    "events": {
+      "path": ".beep/qualification-local-preflight/routing-io-dqngxc4y/io-uring-events.json",
+      "sha256": "1231513b819bdd486c2027a57f2ebcf32c94d73de399ba3feee7d752bb5f24ea"
+    }
+  },
+  "environmentGuardStablePilot": {
+    "authority": "local-observation-only",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/environment-stable-pilot.json",
+      "sha256": "58ed63e45e3ab8aa26ef38c6af685810c6348d12320c2ba541644d2cc8460536"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/environment-stable-pilot.log",
+      "sha256": "69ab66fdeb521ec5a3a59b391fa2c4c0250f566b541bbe8671f6f49ffcc220ae"
+    },
+    "independentReview": {
+      "path": ".beep/qualification-local-preflight/environment-reconstruction-stable.json",
+      "sha256": "1c1ff982dbcf2d6eba26f70fb093dca69e8b9181a2b899f9cd4a0640a57e2da1"
+    },
+    "reviewRecipe": {
+      "path": ".beep/qualification-local-preflight/reconstruct-environment-linkage.py",
+      "sha256": "729cdcf0de5f64e6758880c578174688d40bd1ad6b650f5a639a2ef4463b626e"
+    },
+    "observations": 67,
+    "passingChecks": 40,
+    "shadowDecisions": 10,
+    "reviewScope": "Reconstructed runtime identity; checked fresh pairs, shadow producer/replay outcomes, mutation invalidation, failed-source non-reuse and non-execution outcomes. Does not independently decode retained raw task archives.",
+    "negativeInterpretation": [
+      "Missing child configuration removes the governed environment declaration in that explicit negative control.",
+      "Absent script returns graph exit zero with no selected execution; it is not a task success."
+    ]
+  },
+  "environmentGuardCanaryInterruption": {
+    "authority": "Terminal admission interruption; no pilot result.",
+    "exitCode": 137,
+    "signal": "SIGKILL",
+    "attribution": "Process was killed while its last recorded phase was admission wait. No matching OOM or kill attribution was returned by the bounded kernel/user journal queries; origin remains unknown.",
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/environment-canary-pilot.log",
+      "sha256": "a06d1a03a3fd6e34f32a44213c3a512074f8009c4df8db51386dfe23aa24ccbc"
+    },
+    "receiptPresent": false,
+    "nextAction": "Retain interrupted log and use a separate attempt after confirming terminal state; do not attribute this to computation divergence."
+  },
+  "environmentGuardCanarySecondInterruption": {
+    "authority": "Interrupted before a retained result; no qualification credit.",
+    "log": {
+      "path": ".beep/qualification-local-preflight/environment-canary-r2-pilot.log",
+      "sha256": "b3d4f311cd93c4f5809d82656ac174d12f288c00fb0d62a7e3c11455747339ed"
+    },
+    "observation": "On resume, both prior tool handles were missing, no matching canary process remained, and no receipt existed. Filesystem reads succeeded. The prior process exit status is unavailable.",
+    "nextAttempt": {
+      "path": ".beep/qualification-local-preflight/environment-canary-r3-request.json",
+      "sha256": "815ca4fc74f93579b15fefcc53df0ced5b625b0d0eac72b6ce210b593f54002f"
+    }
+  },
+  "localPilotRetentionReview": {
+    "authority": "Source review of local pilot retention; not signed evidence acceptance.",
+    "source": {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sha256": "79a4cb8be6d1c459858389eb7fc82f107b691d03801d8d06b311bc60f6b69dca"
+    },
+    "finding": "The runner uses makeTempDirectoryScoped and Effect.scoped. It verifies final runtime, source and dependency integrity before returning a cache-pilot-local/v5 receipt. Temporary archives and native summaries are removed when scope closes. Retained run metadata and summary hashes support local observations but do not make deleted bytes independently reviewable.",
+    "promotionBoundary": "Do not present receipt-relationship checks as independent raw archive validation. Accepted signed transport/fault evidence and validation remain required before promotion; their retention contract belongs to the conformance/trust integration."
+  },
+  "resumedDependencyDrift": {
+    "authority": "Preflight observation; no pilot result.",
+    "attempt3": {
+      "path": ".beep/qualification-local-preflight/environment-canary-r3-pilot.log",
+      "sha256": "9579db6b5e66cc541292eb83f855bf9d6dc7a6f2d7c4ed80fa5b0f13ea1f2034"
+    },
+    "firstPreview": {
+      "path": ".beep/qualification-local-preflight/resumed-activation.json",
+      "sha256": "5fc56373dd620e78d9f2065ac3814629d2e3203a680512242d20076fffc22682"
+    },
+    "snapshot": {
+      "path": ".beep/qualification-local-preflight/resumed-dependencies.json",
+      "sha256": "54ab036e0f174316be29ef1f1c30ef736d0dec5ef21fa2cb4b81bfb42b7e04fb"
+    },
+    "metadataComparison": {
+      "path": ".beep/qualification-local-preflight/resumed-dependency-metadata-diff.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "finding": "Attempt three rejected a stale activation preview. A new activation observed dependency tree 85729dde78dbe01f1b3b7b001291b0abcc22a547616fcdb921962890c36aa1fe, 1059 bytes smaller. Subsequent complete materialization matched the original 8cdffe1b3fd9f6eded1df8df930721464992b827f681a04ca34e3ae7c00c7007 tree exactly; metadata comparison also found no differences. This establishes transient installed-tree drift, not its writer or cause. Recheck activation before rerunning."
+  },
+  "resumedKernelBoundary": {
+    "authority": "Observed environment change; previous-kernel results are historical, not evidence for the new runtime.",
+    "activation": {
+      "path": ".beep/qualification-local-preflight/resumed-activation-r2.json",
+      "sha256": "5fc56373dd620e78d9f2065ac3814629d2e3203a680512242d20076fffc22682"
+    },
+    "dependencies": {
+      "path": ".beep/qualification-local-preflight/resumed-dependencies.json",
+      "sha256": "54ab036e0f174316be29ef1f1c30ef736d0dec5ef21fa2cb4b81bfb42b7e04fb"
+    },
+    "oldKernel": "Linux 7.2.0-1-cachyos",
+    "currentKernel": "Linux 7.2.2-1-cachyos",
+    "stableToolchainDigest": "a2cfdd8333bbe6d245e3f8012770913f0f300cdfe97456411a9500d5cdddea9a",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "requests": [
+      {
+        "path": ".beep/qualification-local-preflight/resumed-stable-request.json",
+        "sha256": "2f5e7f29562d75834aba0a58a1816754e8bdc892caf27d5008645028fb2f41ef"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/resumed-canary-request.json",
+        "sha256": "7681aa6f7b1973e1cb6f03f0086a5b2da44f4fe0e24531a16d2e844c4d5e746b"
+      }
+    ],
+    "status": "Stable and canary completed and independently reviewed; each has 67 observations, 40 checks and ten shadows. No signed remote or qualification claim."
+  },
+  "resumedCanaryPilot": {
+    "authority": "local-observation-only",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "kernel": "Linux 7.2.2-1-cachyos",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/resumed-canary-pilot.json",
+      "sha256": "8bed4b8b41f73b286cfdf458bbdac955e2f459177f488ba6f62f68f9cf734781"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/resumed-canary-pilot.log",
+      "sha256": "c9d5942a0fd1043f13988fa79f42ce613ea1a24d0b04db507a383cc762428a35"
+    },
+    "independentReview": {
+      "path": ".beep/qualification-local-preflight/resumed-reconstruction-canary.json",
+      "sha256": "a783cc0215d4b9e61d3fb8db9674e7aa9c7029293947792fd4add6f07a870ff3"
+    },
+    "reviewRecipe": {
+      "path": ".beep/qualification-local-preflight/reconstruct-resumed-linkage.py",
+      "sha256": "ce765565b6dc3244022b76b77c896cee5023c9a448eea3843d644e700759f46f"
+    },
+    "observations": 67,
+    "passingChecks": 40,
+    "shadowDecisions": 10,
+    "toolchainSha256": "58c53411d270833c03ebd8808f90445ca95df43d8f8a86e83d3df8bf8ced894e",
+    "limits": "Receipt relationships and reconstructed identity reviewed; no signed-remote evidence or independent review of deleted raw archives."
+  },
+  "resumedStablePilot": {
+    "authority": "local-observation-only",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "kernel": "Linux 7.2.2-1-cachyos",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/resumed-stable-pilot.json",
+      "sha256": "e245212eb2e65f81b3afb5d0c36667daf5047e4ed86eb8516817baca5ec8ef19"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/resumed-stable-pilot.log",
+      "sha256": "df73acb557badc1ab4828df973487984beb210f3eb087ddc54a1f7087d89f384"
+    },
+    "independentReview": {
+      "path": ".beep/qualification-local-preflight/resumed-reconstruction-stable-canary.json",
+      "sha256": "650781f792833424cca21c105469bdb418328e5db21bff974fc4bd5c93e658f9"
+    },
+    "reviewRecipe": {
+      "path": ".beep/qualification-local-preflight/reconstruct-resumed-linkage.py",
+      "sha256": "ce765565b6dc3244022b76b77c896cee5023c9a448eea3843d644e700759f46f"
+    },
+    "observations": 67,
+    "passingChecks": 40,
+    "shadowDecisions": 10,
+    "toolchainSha256": "a2cfdd8333bbe6d245e3f8012770913f0f300cdfe97456411a9500d5cdddea9a",
+    "limits": "Local receipt relationships and runtime identity only; signed remote evidence and promotion remain outstanding."
+  },
+  "rootQualityDownstreamReview": {
+    "authority": "Pure static planner and source review; no execution or qualification.",
+    "observations": 11,
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "references": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+        "sha256": "a3dff78ee32f4a42dd4fa9d29ce1d2644a7d4f3552d586b7554193e5bb2b32e9"
+      },
+      {
+        "path": "goals/turborepo-task-qualification/research/refresh-root-quality-plans.ts",
+        "sha256": "7a81679cae1adaf9000f18bad56e63b913aded1fdf69dcacf6ee867929dbcaa9"
+      },
+      {
+        "path": "goals/turborepo-task-qualification/research/root-quality-downstream-review.md",
+        "sha256": "35e2cc03facba80b5e392be575539b06173b56ed9da3f441aeb84dd0daca03b2"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/root-quality-downstream-plans.json",
+        "sha256": "22b2d2ba776940697b25e178a4abcc3c76082a052747de93e70a40cfe2b8f9b3"
+      }
+    ],
+    "remaining": "Runtime test/coverage/lint-fix selection and ambient options remain unresolved; empty static plans are not non-execution proof.",
+    "testLaneSelectorObservations": 5,
+    "runtimeSourceReview": "Test lane/resource/failure aggregation and coverage Git scope, output cleanup, shard/prebuild and baseline verdict boundaries classified; no runtime branch execution claimed."
+  },
+  "downstreamCensusAttachment": {
+    "authority": "Source integrity and reviewed interpretation, not runtime execution proof.",
+    "sources": 304,
+    "snapshots": 6,
+    "reviews": 3,
+    "workspaces": 143,
+    "executableNodes": 1892,
+    "graphOnlyNodes": 1377,
+    "unresolvedObligations": 7,
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/entrypoint-review-downstream-routing.json",
+      "sha256": "fd5335c656da86054e344ac71392374dd219ca96c2f056006843f8e4b2d8e55b"
+    },
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/downstream-reviewed-census.json",
+      "sha256": "0f86db8eca6a66041edb8c18b834cbb75c71d7a8717eb4c27394158a3a084290"
+    },
+    "log": {
+      "path": ".beep/qualification-local-preflight/downstream-reviewed-census.log",
+      "sha256": "d0b97aea7e48c95de69519632ce8efd991dc29414503522496edbf603c66c9fb"
+    }
+  },
+  "coverageArgumentRejections": {
+    "authority": "Six executed early argument rejection paths; no coverage jobs or platform services.",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "passed": 6,
+    "references": [
+      {
+        "path": ".beep/qualification-local-preflight/coverage-rejection-controls.ts",
+        "sha256": "704f290d584ad15d8dce9c7849e2d468af12598b433570a26eb682a17b6a17d5"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/coverage-rejection-controls.json",
+        "sha256": "4261f4a5f9b857a5b74b0fc0ed229489c0b1eab5ff428de73734f993346c4abd"
+      }
+    ],
+    "limits": "Does not exercise Git-selected scope, SQL resources, output cleanup, baseline mutation or hosted verdicts."
+  },
+  "nestedGeneratorReview": {
+    "authority": "Source classification only; no generator execution or qualification.",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "workspaces": 6,
+    "references": [
+      {
+        "path": "packages/drivers/acp/scripts/generate.ts",
+        "sha256": "717d612e65ec47544bf888d08a113b0e79ad1a1b7d6ccbc253c9c7ff152b5594"
+      },
+      {
+        "path": "packages/drivers/box/scripts/generate.ts",
+        "sha256": "6e1da108dde5729adbf4cc1cb3da465d58c73304e799270813c68048aea23e62"
+      },
+      {
+        "path": "packages/drivers/runpod/scripts/generate.ts",
+        "sha256": "b516e2af4ae1f4d309057870322e385035138f75fad848d3454bf4f06c21593e"
+      },
+      {
+        "path": "packages/drivers/ecfr/scripts/generate.ts",
+        "sha256": "6976d7b0c4b7d4452b4e601a4ef95c9dbeff16d06791cae8fcf2c1f6f98089e6"
+      },
+      {
+        "path": "packages/drivers/govinfo/scripts/generate.ts",
+        "sha256": "87c951a7619e05a9ab31a242d174581ddd7ee9985abf0381405696a131a0f710"
+      },
+      {
+        "path": "packages/drivers/gov-legal-mcp/scripts/generate.ts",
+        "sha256": "53684abc8b9f434feb17d8438606f5ea295405a8a7f0000d358ab509780cc1f5"
+      },
+      {
+        "path": "packages/tooling/library/codegen-kit/src/CodegenKit.cli.ts",
+        "sha256": "8e676350be14b56aff68709c800a8d5f3181ef5d5b42ac0e0cc9d9379633c5c4"
+      },
+      {
+        "path": "packages/tooling/library/codegen-kit/src/CodegenKit.service.ts",
+        "sha256": "ac5bd26f8e3ea3d54923f40f824ccc474b468cf6a4839d519484776dffdbf86a"
+      },
+      {
+        "path": "packages/tooling/library/codegen-kit/src/internal/format.ts",
+        "sha256": "3e773b65303fb7f2e8c4e2721ebb7493854a33ca123eb6a876822bec45aad453"
+      },
+      {
+        "path": "goals/turborepo-task-qualification/research/generator-boundaries.md",
+        "sha256": "69f9b3cf982a25f8fbf1caaeee47fffe8541bfc3c1faff23518bc659cffdd7a2"
+      },
+      {
+        "path": "packages/drivers/runpod/scripts/operations.renderer.ts",
+        "sha256": "17e27b149c5b07664912b849aa7813115ad5bfc044201197eaf10f43f5a283ee"
+      },
+      {
+        "path": "packages/drivers/gov-legal-mcp/src/ToolNames.ts",
+        "sha256": "365b788c48ce70b5d3b80b0dc09a27f9cc3db937a3d094a3d3df44315da01d02"
+      }
+    ]
+  },
+  "generatorCensusAttachment": {
+    "authority": "Source integrity and reviewed interpretation, not runtime execution proof.",
+    "sources": 315,
+    "snapshots": 6,
+    "reviews": 4,
+    "workspaces": 143,
+    "executableNodes": 1892,
+    "graphOnlyNodes": 1377,
+    "unresolvedObligations": 7,
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/entrypoint-review-generator-routing.json",
+      "sha256": "809f9e9359d86ffa3c1cdf47e892b6b9767d6a2390664da889cc1c3b7db12bf5"
+    },
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/generator-reviewed-census.json",
+      "sha256": "fb63fd5a15a4c4b8fda4ed8397ff3b71dc44e8aa26b72c299af3f14ea43bd268"
+    },
+    "log": {
+      "path": ".beep/qualification-local-preflight/generator-reviewed-census.log",
+      "sha256": "f41320c84d6cffdb44fc43dd3f95d8fe32240b2f4b74a6513fee796d32b720b2"
+    }
+  },
+  "hostedWorkflowBoundaryReview": {
+    "authority": "Source-only projection and review; not hosted execution or remote action implementation proof.",
+    "sourceRevision": "9480eaf486094222313b4264f3b87e4ffeaf40aa",
+    "files": 10,
+    "jobs": 27,
+    "matrixJobs": 5,
+    "usesOccurrences": 77,
+    "uniqueUses": 21,
+    "mutableReference": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+    "references": [
+      {
+        "path": "goals/turborepo-task-qualification/research/refresh-workflow-boundaries.py",
+        "sha256": "1028b92a11e644f6270756f4beafe57f6dce6859c10d07365a373814403464bb"
+      },
+      {
+        "path": "goals/turborepo-task-qualification/research/workflow-boundaries.json",
+        "sha256": "f07d4e85bc08fdf8e025a7f65bdd124b5201c8941febe99946b306d2f01a921d"
+      },
+      {
+        "path": "goals/turborepo-task-qualification/research/hosted-workflow-boundaries.md",
+        "sha256": "91a046f22f6c77ab1de30bc306dabc738f7aecf995649d5bd63bd6ca509323c2"
+      }
+    ]
+  },
+  "postMainQualityRepair": {
+    "head": "582502ed69",
+    "mergedMain": "1969de85bf",
+    "authority": "Dirty-tree local verification only. No signed replay, current census completeness, hosted proof or qualification is established.",
+    "fullPackage": {
+      "auditSeconds": 637.5,
+      "docgenSeconds": 20.5,
+      "evidence": {
+        "path": ".beep/qualification-local-preflight/post-main-repaired-package-verify.log",
+        "sha256": "6b4ba43bdac146b371d99752623c88d4ef98c28e0f9a0cd11d5ebbacba8db7e2"
+      },
+      "boundary": "Before final test-only suite lifecycle migrations; production source unchanged afterward."
+    },
+    "finalTestOnlyPackage": {
+      "lintSeconds": 6.4,
+      "checkSeconds": 10.7,
+      "evidence": {
+        "path": ".beep/qualification-local-preflight/test-lifecycle-package-quick.log",
+        "sha256": "fb8d85051b85523f1b6ca3a7d719001af818d8149b45fc0979c23292f63e77d3"
+      }
+    },
+    "focusedTests": {
+      "fiveSuites": 352,
+      "finalCiAndQuality": 310,
+      "finalQualityLifecycle": 242,
+      "evidence": [
+        {
+          "path": ".beep/qualification-local-preflight/routing-repaired-five-suites.log",
+          "sha256": "9f9798c35ff48cc186372a6d1626af7c2f37a4a1703f6f1d1eecc3f2bb049f6a"
+        },
+        {
+          "path": ".beep/qualification-local-preflight/final-routing-tests.log",
+          "sha256": "9960030ad5cef83d838f9ab07a2127aa21d03322f48d237db27aca881a10a659"
+        },
+        {
+          "path": ".beep/qualification-local-preflight/scoped-env-quality-tests.log",
+          "sha256": "a386db93c4dbc965cac0d5652adfe5b5f5a1b06b43882af3cacc186a89ac083e"
+        }
+      ]
+    },
+    "effectVitest": {
+      "introduced": 0,
+      "resolved": 17,
+      "reasonedExceptionsAdded": 1,
+      "evidence": {
+        "path": ".beep/qualification-local-preflight/scoped-env-effect-vitest.log",
+        "sha256": "894e2ea6291e6c10121e2e2c8b968c90ff33a64ce845cd79a957ccfa5c48b7a3"
+      }
+    },
+    "sources": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+        "sha256": "3bff563fe1762a28a5682b62208515f0396fe04f7510ea7ef4d4f9c4b3375f3d"
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/cache-runtime.test.ts",
+        "sha256": "e02935dcd6196c0a27b8723217ac09ec69fc1a50a938834f824b93c44692882a"
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+        "sha256": "01de94713b3a2c487e90aff8da209a7002517ca14f92edf4f23d424bb2b01071"
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+        "sha256": "22420870a2f22c277191a11e6e46e9e609dd7b8f1cd922ec6d6c1e6ff7c736ed"
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+        "sha256": "0d68de9b25338f6cb580094d1fa0a2325b6d495d8c4d3075296842f4af2c147f"
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+        "sha256": "39fe7f95cbbee91b1f484ecbf7a139df89546ff875fcf697bac67825e6d3bce5"
+      },
+      {
+        "path": "standards/effect-vitest.inventory.jsonc",
+        "sha256": "ed9da21f473685fd86b868b77cf4579302d19a3e7d97221c47209816abf5293c"
+      }
+    ],
+    "remaining": "Fresh reviewed census attachment passed. Signed sibling receipts, semantic/runtime qualification, final full Yeet proof and PR closeout remain required.",
+    "cheapGates": {
+      "passed": 15,
+      "failed": 0,
+      "evidence": {
+        "path": ".beep/qualification-local-preflight/ratchet-repaired-cheap-gates.log",
+        "sha256": "08803c1bdf69952f8b5e86592c9767378e9b056d4490f1241b9f107abe2d44cd"
+      }
+    }
+  },
+  "postMainCensus": {
+    "head": "582502ed69",
+    "authority": "Fresh unreviewed base census. Previous attached semantic/runtime obligations are not discharged by this smaller base-only obligation list. No qualification granted.",
+    "workspaces": 143,
+    "graphNodes": 3449,
+    "executableNodes": 1957,
+    "addedNodes": 180,
+    "addedExecutableNodes": 65,
+    "addedGraphOnlyNodes": 115,
+    "removedNodes": 0,
+    "changedExistingCommands": 0,
+    "addedExecutableFamilies": {
+      "doctest": 27,
+      "rootQuality": 38
+    },
+    "evidence": [
+      {
+        "path": ".beep/qualification-local-preflight/post-main-census.json",
+        "sha256": "3b08855a331322fbd284fa159aadfe7e993ded284568651640414c47a7e4a54f"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/post-main-census.log",
+        "sha256": "db2036f61cd42ffca0b0f59cb96a3b22e2633e668b8e5a210812695e542f0b77"
+      },
+      {
+        "path": ".beep/qualification-local-preflight/post-main-census-diff.json",
+        "sha256": "3e4dbf3342b63a623d463ded27c99c3f7528689b08b73164146a8b67a0b9b474"
+      }
+    ],
+    "remaining": "The seven carried-forward semantic/runtime obligations, signed sibling receipts and final hosted proof remain unresolved.",
+    "reviewedAttachment": {
+      "sources": 324,
+      "snapshots": 6,
+      "reviews": 5,
+      "verifiedReferences": 335,
+      "obligationsRetained": 7,
+      "request": {
+        "path": "goals/turborepo-task-qualification/research/entrypoint-review-post-main.json",
+        "sha256": "764a8c3d88a843c26961dfd4126088340d2838b8076ccf4b19373f17ff2a2b74"
+      },
+      "evidence": [
+        {
+          "path": ".beep/qualification-local-preflight/post-main-reviewed-census.json",
+          "sha256": "f7d2009671c5ebe9e22384bb0b27fb40739a0305636e925075b8b75d05cb4da1"
+        },
+        {
+          "path": ".beep/qualification-local-preflight/post-main-reviewed-census.log",
+          "sha256": "101003564cb2edaa8dca550003b4696cd775dc0be31601e17fb14d83e86716a3"
+        }
+      ],
+      "authority": "Operational attachment accepts current source identity and complete source snapshots. This is not runtime qualification.",
+      "packetChecks": [
+        {
+          "command": "bun run beep goals doctor",
+          "exitCode": 0,
+          "evidence": {
+            "path": ".beep/qualification-local-preflight/post-main-review-doctor.log",
+            "sha256": "333ebf49623945806ab825bc69adbe637aba46aa46c5d811d775c4bd5d36f09b"
+          }
+        },
+        {
+          "command": "bun run beep goals index --check",
+          "exitCode": 0,
+          "evidence": {
+            "path": ".beep/qualification-local-preflight/post-main-review-index.log",
+            "sha256": "741e42462957a1e1b6fd655db579f55828f237bec3e6758d8437b6e63b0a8f3e"
+          }
+        },
+        {
+          "command": "bun run beep lint reflection-artifacts",
+          "exitCode": 0,
+          "evidence": {
+            "path": ".beep/qualification-local-preflight/post-main-review-reflection.log",
+            "sha256": "dc58e3cf99fff163aa6e100a032a40ab464ea55b3fdd24cbbdcb42f25a1daa90"
+          }
+        }
+      ]
+    }
+  },
+  "postMainPilotPreflight": {
+    "sourceRevision": "028262e8c0",
+    "authority": "Activation preview and verified dependency copy. Pilot verdict pending; no reuse enabled.",
+    "activation": {
+      "path": ".beep/qualification-local-preflight/post-main-activation.json",
+      "sha256": "7b42a676cfd4c1e7b9a662a2e4b57cff073db3ed54b9660848cda64db8a49660"
+    },
+    "dependencies": {
+      "path": ".beep/qualification-local-preflight/post-main-dependencies.json",
+      "sha256": "71c365179998c1626c1587f58ac26fd8244bc12e37855cff131337561543dc55"
+    },
+    "stableRequest": {
+      "path": ".beep/qualification-local-preflight/post-main-stable-request.json",
+      "sha256": "f0b07c3056281a77ac788152802893cde87010ac2b65fa88c861eeaa145a0301"
+    },
+    "configurationDigest": "50a672e2afc10f299debc85682db29e12ce0a23bfe627d920ff5242f6cdeba30",
+    "toolchainDigest": "12d9928de18ba89015325cdf8bf48b6b27d1ca1dc268e3e54ea5fbed6fc624ae",
+    "dependencyFiles": 227402,
+    "dependencyBytes": 5426694501,
+    "sourceWorktrees": "Both existing h1/h2 pilot worktrees were clean and fast-forwarded to the committed source revision.",
+    "changeFromPriorPilot": "Configuration and toolchain digests changed. Installed dependency tree and toolchain source bindings changed; runtime executable pins did not.",
+    "remaining": "Stable and exact canary each passed 67 observations, 40 checks and ten shadow decisions. Accepted signed sibling evidence, complete native read/write and capture-adversary coverage, and final qualification remain required."
+  },
+  "postMainStablePilot": {
+    "sourceRevision": "028262e8c0269da6a2811003841bbadaf916e32f",
+    "authority": "Local observations and receipt relationship verification only. No signed remote replay or qualification.",
+    "observations": 67,
+    "passingChecks": 40,
+    "failedChecks": 0,
+    "shadowDecisions": 10,
+    "toolchainSha256": "12d9928de18ba89015325cdf8bf48b6b27d1ca1dc268e3e54ea5fbed6fc624ae",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/post-main-stable-pilot.json",
+      "sha256": "4130cf934569e229ae6607ca63d07ae762f5261022a62bee7394aff61a214419"
+    },
+    "log": {
+      "path": ".beep/qualification-local-preflight/post-main-stable-pilot.log",
+      "sha256": "bc86fda05248d289614fd6a6664b0b8a1db4e78116e6a52b0d498db05d100d7b"
+    },
+    "reconstruction": {
+      "path": ".beep/qualification-local-preflight/post-main-reconstruction-stable.json",
+      "sha256": "51a10c66a5aa4cd443bee8bd358a2e07ecc645aa6969a51c61921ec8021f54f8"
+    },
+    "recipe": {
+      "path": ".beep/qualification-local-preflight/reconstruct-post-main-linkage.py",
+      "sha256": "f062d30de426be4aae689c43168b9e6954c1d88a8a34e4630f23b23a07d18aeb"
+    },
+    "verified": "Source trees unchanged; three cross-root fresh pairs; producer/replay/shadow relationships; changed task hashes for mutations; invalid-source rejection; non-execution cases; reconstructed runtime key and altered-loader rejection.",
+    "retentionBoundary": "Scoped raw archives and summaries were removed by the runner. Receipt relationships do not independently validate those deleted bytes."
+  },
+  "postMainCanaryPilot": {
+    "sourceRevision": "028262e8c0269da6a2811003841bbadaf916e32f",
+    "authority": "Local observations and receipt relationships only; no signed remote qualification.",
+    "observations": 67,
+    "passingChecks": 40,
+    "failedChecks": 0,
+    "shadowDecisions": 10,
+    "toolchainSha256": "ac0daf59e7b754ba27262ffbdc905af9d170b9da3d7ab89ea966cbea30a3b8e4",
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/post-main-canary-pilot.json",
+      "sha256": "546e9f0d48950773c6dfb4fec0d086f31e2b7192095211d24ccc3aa20e57eb9f"
+    },
+    "log": {
+      "path": ".beep/qualification-local-preflight/post-main-canary-pilot.log",
+      "sha256": "f4cb2ae8ba3c3f39966f7dfcde9e102b9c3b70ae5ab163672eca9e4623c4e060"
+    },
+    "combinedReconstruction": {
+      "path": ".beep/qualification-local-preflight/post-main-reconstruction-stable-canary.json",
+      "sha256": "2dd25ccdbcb0b659ec59e5b5a1011caaaf4b6cce75153e8ff85d50c065e8ab52"
+    },
+    "recipe": {
+      "path": ".beep/qualification-local-preflight/reconstruct-post-main-linkage.py",
+      "sha256": "f062d30de426be4aae689c43168b9e6954c1d88a8a34e4630f23b23a07d18aeb"
+    },
+    "retentionBoundary": "Raw archives and native summaries are scoped and deleted; retained relationships do not independently validate deleted bytes.",
+    "packetChecks": [
+      {
+        "command": "bun run beep goals doctor",
+        "exitCode": 0,
+        "evidence": {
+          "path": ".beep/qualification-local-preflight/post-main-pilots-doctor.log",
+          "sha256": "333ebf49623945806ab825bc69adbe637aba46aa46c5d811d775c4bd5d36f09b"
+        }
+      },
+      {
+        "command": "bun run beep explore --check",
+        "exitCode": 0,
+        "evidence": {
+          "path": ".beep/qualification-local-preflight/post-main-pilots-explore.log",
+          "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+        }
+      }
+    ]
+  },
+  "postMainIoObservation": {
+    "sourceRevision": "028262e8c0269da6a2811003841bbadaf916e32f",
+    "authority": "Fresh bounded local installed-lint trace with verified dependency and toolchain parity before and after. No signed replay or qualification.",
+    "wrapperExitCode": 0,
+    "commandExitCode": 0,
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/post-main-io-1pm_dqii/receipt.json",
+      "sha256": "ea2de6581312cb14fd08aa502cb44ea7108406d594d0341f6bbbb70e5b23d0b7"
+    },
+    "review": {
+      "path": ".beep/qualification-local-preflight/post-main-io-1pm_dqii/io-review.json",
+      "sha256": "11f793bfc72b3cd662017212d58cb1442256cccd12bb8d74dd90fb4a7d145ef4"
+    },
+    "semanticReview": {
+      "path": ".beep/qualification-local-preflight/post-main-io-1pm_dqii/semantic-event-review.json",
+      "sha256": "e389c45e33c8f9031101fb6b6b9d8a81d987e1ec3bb032c939e01e9bc6900c44"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/post-main-io.log",
+      "sha256": "7ea5014810d1a4d9eb0151b902f2f4026a84774a3d96da403c95c52c5a6495e8"
+    },
+    "observer": {
+      "path": ".beep/qualification-local-preflight/probe-post-main-io.py",
+      "sha256": "be96bcb3308bbe866b9e0b02e18de0296915b3c9758b0cad24933a4d5e3be5ed"
+    },
+    "wrapper": {
+      "path": ".beep/qualification-local-preflight/post-main-io-wrapper/bin.ts",
+      "sha256": "fa2146a1fc9ebe143623b7b421ca7eb6e2fb2d40c48e0dfa4bc2139ba7d0ff27"
+    },
+    "reviewRecipe": {
+      "path": ".beep/qualification-local-preflight/review-post-main-io.py",
+      "sha256": "2b5a6b92e68a8717da7db7ceb5ac1f9537fa2e78861640c11ab3844cd37e2e6e"
+    },
+    "compressedTrace": {
+      "path": ".beep/qualification-local-preflight/post-main-io-1pm_dqii/installed-unmodified/trace/quiet.strace.gz",
+      "sha256": "4bc3344131009559e755034d3fb28a1b564bfc1e2a7669ff6fb3186eef7e93f2"
+    },
+    "compressedTraceBytes": 13542137,
+    "expandedTraceBytes": 246818555,
+    "expandedTraceSha256": "df26335f36cc681def6ef8e6eedd5cbb99bba09ce2e1711fd67c8e3484aae564",
+    "syscallEvents": 1055794,
+    "unfinishedCalls": 0,
+    "observations": {
+      "ioUringOperations": 10,
+      "networkRelatedOperations": 16,
+      "writeIntentOpens": 5,
+      "mutationOperations": 10,
+      "stdoutBytes": 0,
+      "stderrBytes": 53,
+      "streamsMatchPriorObservation": true,
+      "successfulDeviceSinkOpens": 1,
+      "failedTerminalOpens": 4,
+      "successfulTemporaryDirectoryCreates": 1,
+      "alreadyExistingTemporaryDirectoryResults": 9,
+      "ringSetups": 5,
+      "ringEntries": 256,
+      "sqpollObserved": false,
+      "socketFamilies": [
+        "AF_UNIX"
+      ]
+    },
+    "interpretation": "Direct writes match the prior disposable temporary-directory and device-sink observation. Ring shape remains consistent with the previously reviewed pinned libuv event-watcher path; that correlation is not direct SQE decoding.",
+    "remaining": [
+      "Complete semantic input and indirect-I/O closure",
+      "Accepted signed transport and protected-producer evidence",
+      "Final promotion, adoption handoff and hosted proof"
+    ],
+    "openFootprint": {
+      "report": {
+        "path": ".beep/qualification-local-preflight/post-main-io-1pm_dqii/open-footprint.json",
+        "sha256": "350b2f0022387c8654689f0b02c2f478d74b163b26e4c6247e1dcd3aa17d339c"
+      },
+      "recipe": {
+        "path": ".beep/qualification-local-preflight/review-post-main-open-footprint.py",
+        "sha256": "370d8b09f76a83a609ac50b917d908da79fc13f8df49268fba62b26e67bc34ce"
+      },
+      "groups": {
+        "other": {
+          "identity-subtree": {
+            "uniquePaths": 27,
+            "opens": 58
+          },
+          "installed-dependencies": {
+            "uniquePaths": 16747,
+            "opens": 54248
+          },
+          "other-repository-paths": {
+            "uniquePaths": 8457,
+            "opens": 8480
+          },
+          "outside-repository": {
+            "uniquePaths": 22,
+            "opens": 131
+          }
+        },
+        "directory": {
+          "identity-subtree": {
+            "uniquePaths": 2,
+            "opens": 4
+          },
+          "installed-dependencies": {
+            "uniquePaths": 22009,
+            "opens": 22011
+          },
+          "other-repository-paths": {
+            "uniquePaths": 4358,
+            "opens": 4367
+          },
+          "outside-repository": {
+            "uniquePaths": 2,
+            "opens": 5
+          }
+        }
+      },
+      "authority": "Successful direct open footprint only; not semantic dependence, decoded io_uring submission, or qualification.",
+      "nextExperiment": "Perturb repository files outside declared identity inputs and compare fresh exit/capture results before treating the observed traversal as semantically irrelevant."
+    }
+  },
+  "postMainExternalInputControls": {
+    "sourceRevision": "028262e8c0269da6a2811003841bbadaf916e32f",
+    "authority": "Five fresh installed lint executions: baseline, three independently mutated external repository files and an identity syntax-error positive control. Direct command observation only, not Turbo hash equivalence, replay, or complete input closure.",
+    "wrapperExitCode": 0,
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/post-main-external-input-uofr55t2/receipt.json",
+      "sha256": "1fbdbae627cdc14d3f775195cdd9a4c3587d27dca1afc27b5f916a2360795a13"
+    },
+    "observer": {
+      "path": ".beep/qualification-local-preflight/probe-post-main-external-input.py",
+      "sha256": "331736e5dc6befd36734d7e744f3d1704dfed6a1cbd8f2d6c9adb639e960747d"
+    },
+    "wrapper": {
+      "path": ".beep/qualification-local-preflight/post-main-external-input-wrapper/bin.ts",
+      "sha256": "becf83ed9542acf74561fc4ea2ceca0e7e021ed7b325e4b67125e4016be00981"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/post-main-external-input.log",
+      "sha256": "d96f730ab72743e7547870b84d24695d17a6df610f17d3e8d0d8bfc101c3d85b"
+    },
+    "checks": {
+      "baselinePasses": true,
+      "identityPositiveControlFails": true,
+      "external-typescriptEquivalent": true,
+      "external-tsconfigEquivalent": true,
+      "external-packageEquivalent": true
+    },
+    "streamFilesIndependentlyVerified": 10,
+    "cases": [
+      {
+        "id": "baseline",
+        "mutationPath": null,
+        "exitCode": 0,
+        "stdoutBytes": 0,
+        "stderrBytes": 53
+      },
+      {
+        "id": "external-typescript",
+        "mutationPath": "apps/labs/api-docs/src/Api.ts",
+        "exitCode": 0,
+        "stdoutBytes": 0,
+        "stderrBytes": 53
+      },
+      {
+        "id": "external-tsconfig",
+        "mutationPath": "apps/labs/api-docs/tsconfig.json",
+        "exitCode": 0,
+        "stdoutBytes": 0,
+        "stderrBytes": 53
+      },
+      {
+        "id": "external-package",
+        "mutationPath": "apps/labs/api-docs/package.json",
+        "exitCode": 0,
+        "stdoutBytes": 0,
+        "stderrBytes": 53
+      },
+      {
+        "id": "identity-positive-control",
+        "mutationPath": "packages/foundation/modeling/identity/src/index.ts",
+        "exitCode": 1,
+        "stdoutBytes": 0,
+        "stderrBytes": 138
+      }
+    ],
+    "remaining": [
+      "Classify further semantic inputs; three negative perturbations do not establish complete input closure.",
+      "Native Turbo hash behavior was not measured by this direct-command experiment.",
+      "Accepted signed conformance/trust evidence, promotion and final hosted acceptance remain required."
+    ]
+  },
+  "postMainWorkspaceDependencyControl": {
+    "sourceRevision": "028262e8c0269da6a2811003841bbadaf916e32f",
+    "channel": "stable",
+    "client": {
+      "version": "2.10.12",
+      "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde",
+      "namespace": "qualification-pilot-local-stable-post-main-v10"
+    },
+    "authority": "Two installed lint executions and pinned stable native dry selections comparing a workspace type-export deprecation overlay. Native dependency invalidation observation only; no replay, complete input closure or qualification.",
+    "wrapperExitCode": 0,
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/post-main-dependency-input-199uxugp/receipt.json",
+      "sha256": "0054b46d3764824d925c03e9d4a8a6415f5c8548962220b6db81fc5505b61e25"
+    },
+    "relationshipReview": {
+      "path": ".beep/qualification-local-preflight/post-main-dependency-input-199uxugp/relationship-review.json",
+      "sha256": "5b623a063bc9d7ce1558056c7639acf3a82d8504f5adbbea59355cad43159fee"
+    },
+    "observer": {
+      "path": ".beep/qualification-local-preflight/probe-post-main-dependency-input.py",
+      "sha256": "b540813ab09d3efd2376fa4b99cc9097d7ee4c5bac1c76b118674b455aa0d42e"
+    },
+    "wrapper": {
+      "path": ".beep/qualification-local-preflight/post-main-dependency-input-wrapper/bin.ts",
+      "sha256": "8bc0b6474b99b78060fb4bc1c47d1f83185ab0999dcd0f5d00cd41b7f2d4e197"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/post-main-dependency-input-r2.log",
+      "sha256": "ef0fbe88ac276b4b15faa23c6295f94103188c421ccefcd5c9a311c5870c234b"
+    },
+    "checks": {
+      "baselinePasses": true,
+      "typesHashChanges": true,
+      "identityHashChanges": true,
+      "identityOwnInputsUnchanged": true
+    },
+    "finding": "Deprecating the TString workspace export changes identity lint exit 0 to 1. Types src/index.ts is the only changed types input; identity own inputs remain identical, while both native task hashes change through the declared dependency edge.",
+    "remaining": [
+      "Other semantic inputs and indirect I/O remain subject to review.",
+      "Signed replay and accepted sibling contracts remain required."
+    ],
+    "versionedRelationshipReview": {
+      "path": ".beep/qualification-local-preflight/post-main-dependency-input-199uxugp/versioned-relationship-review.json",
+      "sha256": "683464bd25eace9d6b43dac509bd3192bf8730d8a46423c2126d04c5ce8ebc11"
+    },
+    "reviewRecipe": {
+      "path": ".beep/qualification-local-preflight/review-workspace-dependency.py",
+      "sha256": "be57b8aa888f7d8f2d541f6e026bdd495d4db071be285aa661539217ad96f983"
+    }
+  },
+  "postMainCanaryWorkspaceDependencyControl": {
+    "sourceRevision": "028262e8c0269da6a2811003841bbadaf916e32f",
+    "channel": "canary",
+    "client": {
+      "version": "2.10.13-canary.1",
+      "sha256": "86aa80b5c86c8b6d07061626a6f8562385c3aed1270794dac53c6beaec856223",
+      "namespace": "qualification-pilot-local-canary-post-main-v10"
+    },
+    "authority": "Two installed lint executions and pinned canary native dry selections comparing a workspace type-export deprecation overlay. Native dependency invalidation observation only; no replay, complete input closure or qualification.",
+    "wrapperExitCode": 0,
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/post-main-canary-dependency-input-4ttjj3cc/receipt.json",
+      "sha256": "89834a1e350c959b14461be019ce1782d3cdefdc2ce08e1fe3d5315bae1fe9ae"
+    },
+    "relationshipReview": {
+      "path": ".beep/qualification-local-preflight/post-main-canary-dependency-input-4ttjj3cc/versioned-relationship-review.json",
+      "sha256": "c28855a7d9233cd4aa4aa15fea2555348cc38cb2406c01d9b4518db88b8143ed"
+    },
+    "reviewRecipe": {
+      "path": ".beep/qualification-local-preflight/review-workspace-dependency.py",
+      "sha256": "be57b8aa888f7d8f2d541f6e026bdd495d4db071be285aa661539217ad96f983"
+    },
+    "observer": {
+      "path": ".beep/qualification-local-preflight/probe-post-main-canary-dependency-input.py",
+      "sha256": "e7ea28f9cdca116965d40c26eaf93a0cb2539fedf38f5c616aef3246dab7cb5e"
+    },
+    "wrapper": {
+      "path": ".beep/qualification-local-preflight/post-main-canary-dependency-input-wrapper/bin.ts",
+      "sha256": "b9540f94c5fb13aa3fd859abce3a046016c0753498a6b9873634f343e7d8937f"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/post-main-canary-dependency-input.log",
+      "sha256": "2bf8d5e3c39365cfed11b52859da144a326bf0b21abb81dc602c3ad7ed183455"
+    },
+    "checks": {
+      "baselinePasses": true,
+      "typesHashChanges": true,
+      "identityHashChanges": true,
+      "identityOwnInputsUnchanged": true
+    },
+    "finding": "Deprecating the TString workspace export changes identity lint exit 0 to 1. Types src/index.ts is the only changed types input; identity own inputs remain identical, while both native task hashes change through the declared dependency edge.",
+    "remaining": [
+      "Other semantic inputs and indirect I/O remain subject to review.",
+      "Signed replay and accepted sibling contracts remain required."
+    ]
+  },
+  "postMainNestedCensus": {
+    "authority": "Operational source-review attachment with deterministic local script graph; no new runtime qualification.",
+    "census": {
+      "path": ".beep/qualification-local-preflight/post-main-nested-reviewed-census.json",
+      "sha256": "18d815b8bf72f173f016ef037bfe1b16733e9b25386bebe6d6c77ef2929367f6"
+    },
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/entrypoint-review-nested-post-main.json",
+      "sha256": "13abf12a2ae0c7f5df682ada1258eb436eedeb740280c32733e8e9bc8294cdf6"
+    },
+    "report": {
+      "path": "goals/turborepo-task-qualification/research/nested-commands-post-main.json",
+      "sha256": "0c44a364c27bfe4e230ed2805ad1e596c2e43a1661587a3dd4a5b9c6db2120c4"
+    },
+    "recipe": {
+      "path": "goals/turborepo-task-qualification/research/refresh-nested-commands.py",
+      "sha256": "0e23296456a584dad3528b277c755a3dc6030716d06af71e35d617004ca7eea0"
+    },
+    "review": {
+      "path": "goals/turborepo-task-qualification/research/nested-command-review.md",
+      "sha256": "1abc6986ebe43bde88a73550b22ca633ab7592592ce0b04c8b91686e950e6d38"
+    },
+    "log": {
+      "path": ".beep/qualification-local-preflight/post-main-nested-reviewed-census.log",
+      "sha256": "4d4ef5ac3cbc19103ba49e2172a6b62b9b79aeeaeb9716905a32f208350c2aef"
+    },
+    "matchingFileReferences": 338,
+    "sources": 326,
+    "snapshots": 6,
+    "reviews": 6,
+    "executableRoots": 1957,
+    "reachableDefinitions": 3317,
+    "localScriptEdges": 2136,
+    "resolvedOptionalEdges": 140,
+    "terminalSteps": 1952,
+    "uninterpretedShellDefinitions": 21,
+    "cycles": 0,
+    "deterministicReproduction": true,
+    "unresolved": [
+      "Candidate semantic reads, writes, captures and signed/shadow comparisons remain required.",
+      "Classify nested workspace and root command semantics.",
+      "Entrypoint attachments establish source identity only; candidate runtime evidence remains required.",
+      "Hosted expanded workflows, remote action sources and required statuses retain their existing proof owners.",
+      "Review dynamic Cache/CI/Quality/Yeet entrypoint branches and their external verdicts.",
+      "Root Quality parser observations do not exhaust downstream argument interpretation or runtime execution.",
+      "Source planner scenarios do not exhaust dynamic interpreter decisions or prove their runtime outcomes."
+    ]
+  },
+  "postMainGitExcludeCounterexample": {
+    "sourceRevision": "028262e8c0269da6a2811003841bbadaf916e32f",
+    "authority": "Local direct-execution counterexample with stable native task identities; no replay claimed.",
+    "wrapperExitCode": 0,
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/post-main-git-exclude-dd81pami/receipt.json",
+      "sha256": "d40b98390b9c61f56c9df73cb604a819ae3d60ede8710ef6da7ef5e6434710eb"
+    },
+    "review": {
+      "path": ".beep/qualification-local-preflight/post-main-git-exclude-dd81pami/review.json",
+      "sha256": "87d7d7853d10068a1da5bcd32b39d6d989bb0c7d7afc5435d4782789566ab244"
+    },
+    "observer": {
+      "path": ".beep/qualification-local-preflight/probe-post-main-git-exclude.py",
+      "sha256": "ffe23e1ad4e53fceb865edbb1fecb9c293deeb415616fb3e0886bb3afabbf140"
+    },
+    "wrapper": {
+      "path": ".beep/qualification-local-preflight/post-main-git-exclude-wrapper/bin.ts",
+      "sha256": "b61727da06607fd21fab9d8a402e3cab85530f08b8172745aa05cfbc0bd6a5a7"
+    },
+    "wrapperLog": {
+      "path": ".beep/qualification-local-preflight/post-main-git-exclude.log",
+      "sha256": "d5abb6bdb5a86b021d9c575387759df6ed480e82c6f34fc3b4fca818173170d7"
+    },
+    "finding": {
+      "authority": "Local direct-execution counterexample with stable native task identities; no replay claimed.",
+      "client": "2.10.12",
+      "strictMode": true,
+      "exitCodes": [
+        1,
+        0
+      ],
+      "identitySourceIdentical": true,
+      "identityInputsAndHashIdentical": true,
+      "typesInputsAndHashIdentical": true,
+      "exclusionOverlayVerifiedAgainstCurrentOriginal": true,
+      "streamHashesVerified": 4,
+      "nativeSummaryHashesVerified": 2,
+      "implication": "Git local exclusions are a semantic input not represented in these task identities; retain exclusion until runtime identity or enforced environment accounts for them."
+    },
+    "disposition": "Pilot remains excluded and cache false. Repair the runtime identity or enforce the supported Git exclusion boundary before any qualification; rerun affected comparisons after repair."
+  },
+  "gitExclusionRepair": {
+    "status": "stable-canary-pilots-refreshed",
+    "authority": "Committed repair with focused native tests, full CLI package audit/docgen, accepted source attachment, separate refreshed stable/canary pilots, and separately reviewed stable/canary native Git-exclusion invalidation. Signed remote qualification remains pending.",
+    "sources": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+        "sha256": "1d1a50193537c9c49cbbff7d733b369b68a5012ee60cd4da01b0e7f5dea2b0ab"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+        "sha256": "3d290b322ca54c73d977e4669cc49e54f64193a652b2e03b0ecfebe0272c4ab4"
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/cache-runtime.test.ts",
+        "sha256": "5b8d28ece0cd0726048fcace64b6f0a48f964b0a6e92ef630642951d7486621c"
+      }
+    ],
+    "focusedTests": {
+      "path": ".beep/qualification-local-preflight/git-exclude-runtime-tests-r2.log",
+      "sha256": "93bdbec4cde915565c48fa2627eb08e2148f965f82bf764597726190a80f6c5f"
+    },
+    "testsPassed": 10,
+    "behavior": "Resolve Git common directory and bind bounded info/exclude bytes into the existing runtime source fingerprint. Missing and empty exclusions share a digest; symlink, non-regular and oversized files fail closed.",
+    "limits": [
+      "Other Git configuration and concurrent mutation are not covered by this repair.",
+      "Prior census attachments and pilot runtime fingerprints retain their recorded bytes; refresh affected evidence before qualification.",
+      "Signed sibling receipts and full final hosted proof remain outstanding."
+    ],
+    "effectVitestRatchet": {
+      "path": ".beep/qualification-local-preflight/git-exclude-effect-vitest-reviewed.log",
+      "sha256": "1958acc55ed49e87de7097b7d1ae7be38f7f0436e879feb4dca6e5ac72834c59",
+      "introduced": 0,
+      "resolved": 17
+    },
+    "nativePlatformException": {
+      "path": "standards/effect-vitest.inventory.jsonc",
+      "sha256": "e94b719c27b1f09af1c1b594e3e397a1a03055f5a7562373e4cc2e26aa3fbead",
+      "scope": "One EV010 provenance judgment for the real Git clone/worktree fixture; no full baseline refresh."
+    },
+    "sourceReview": {
+      "authority": "Source attachment matches the committed repair; it is not pilot qualification.",
+      "request": {
+        "path": "goals/turborepo-task-qualification/research/entrypoint-review-git-exclusion-repair.json",
+        "sha256": "793dd0e2c941a26b695339c922e69672c28e0dee86bcda0c50d5a37292ab1e0f"
+      },
+      "census": {
+        "path": ".beep/qualification-local-preflight/git-exclusion-repair-reviewed-census.json",
+        "sha256": "284dc47851ce39461021b58a244628973290d5472e5107b2efbacbba92a77f49"
+      },
+      "review": {
+        "path": "goals/turborepo-task-qualification/research/git-exclusion-repair-review.md",
+        "sha256": "bfdebcc0ff84435fb8c69e65518d88f861c6b6d1d78113d35d825ec3f1edb6e7"
+      },
+      "matchingReferences": 339,
+      "executableComputations": 1957,
+      "openObligations": 7
+    },
+    "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+    "packageVerification": {
+      "log": {
+        "path": ".beep/qualification-local-preflight/git-exclude-package-verify.log",
+        "sha256": "7d3931abc8046c31fb6c3df3ac7c2661a98b6f3791b98f856f06128f006ad070"
+      },
+      "exitCode": 0,
+      "auditSeconds": 872.3,
+      "docgenSeconds": 27.0
+    },
+    "activation": {
+      "path": ".beep/qualification-local-preflight/git-exclusion-activation.json",
+      "sha256": "4b46f5dd883308028ba68f8b434fe917eba376ad3ecc89b937cc00f6b1af99cd"
+    },
+    "retainedDependencies": {
+      "path": ".beep/qualification-local-preflight/post-main-dependencies.json",
+      "sha256": "71c365179998c1626c1587f58ac26fd8244bc12e37855cff131337561543dc55"
+    },
+    "retainedDependencyTreeMatchesActivation": true,
+    "mainVersionSync": {
+      "log": {
+        "path": ".beep/qualification-local-preflight/git-exclusion-version-sync.log",
+        "sha256": "dd016927622d98aa6f7a95513ff5c9a50f2b2e2fce00200b0b4829a7545fb2d1"
+      },
+      "exitCode": 0
+    },
+    "pilotRefresh": {
+      "status": "stable-canary-passed",
+      "stableRequest": {
+        "path": ".beep/qualification-local-preflight/git-exclusion-stable-request.json",
+        "sha256": "ca54007e5002c4b0ed45518655d2cb320d78057b20eb526e963ad96a7da9983a"
+      },
+      "canaryRequest": {
+        "path": ".beep/qualification-local-preflight/git-exclusion-canary-request.json",
+        "sha256": "6b40843aab01e19a20f3bdbe0227ab21f9a9bfd14e46dfc2fb13e8c49f2b5b4d"
+      },
+      "stable": {
+        "exitCode": 0,
+        "receipt": {
+          "path": ".beep/qualification-local-preflight/git-exclusion-stable-pilot.json",
+          "sha256": "40b0932bcad8fc27d61020686dfe2e3431fc24073af1aa8c933c7706c8e286b3"
+        },
+        "review": {
+          "path": ".beep/qualification-local-preflight/git-exclusion-reconstruction-stable-canary.json",
+          "sha256": "ac3f31a529c343957ddead06474460bef894aa7309a152d12e28ef66081c8607"
+        },
+        "recipe": {
+          "path": ".beep/qualification-local-preflight/reconstruct-git-exclusion-linkage.py",
+          "sha256": "ea749ba459cff6502fc360e579d9445b6d5983e67ff73843f8d693d3108f27c1"
+        },
+        "observations": 67,
+        "passingChecks": 40,
+        "shadowDecisions": 10,
+        "toolchainSha256": "277db60da42006a2a075bb443f2e757c778704d51f4e4e526d6086ba50de725f",
+        "alteredGitExclusionRejected": true,
+        "authority": "Local pilot and receipt relationship reconstruction; no signed remote qualification or independent review of deleted raw archives."
+      },
+      "canary": {
+        "exitCode": 0,
+        "receipt": {
+          "path": ".beep/qualification-local-preflight/git-exclusion-canary-pilot.json",
+          "sha256": "96c8faddf4e0f4840f897562396dcb3695c49f99775420328921aadf4235b25b"
+        },
+        "review": {
+          "path": ".beep/qualification-local-preflight/git-exclusion-reconstruction-stable-canary.json",
+          "sha256": "ac3f31a529c343957ddead06474460bef894aa7309a152d12e28ef66081c8607"
+        },
+        "recipe": {
+          "path": ".beep/qualification-local-preflight/reconstruct-git-exclusion-linkage.py",
+          "sha256": "ea749ba459cff6502fc360e579d9445b6d5983e67ff73843f8d693d3108f27c1"
+        },
+        "observations": 67,
+        "passingChecks": 40,
+        "shadowDecisions": 10,
+        "toolchainSha256": "c73d3e7e519774d600665df473ae8a06092118b5a6c206418607039b971cb124",
+        "alteredGitExclusionRejected": true,
+        "authority": "Local pilot and receipt relationship reconstruction; no signed remote qualification or independent review of deleted raw archives."
+      }
+    },
+    "packetDoctor": {
+      "exitCode": 0,
+      "log": {
+        "path": ".beep/qualification-local-preflight/git-exclusion-refreshed-goals-doctor-r2.log",
+        "sha256": "333ebf49623945806ab825bc69adbe637aba46aa46c5d811d775c4bd5d36f09b"
+      },
+      "newBlockingFindings": 0,
+      "inheritedBlockingFindings": 0
+    },
+    "targetedNativeInvalidation": {
+      "status": "stable-canary-passed",
+      "authority": "Paired direct lint executions and native dry selection with production-observed Git exclusion runtime keys; no signed replay authority.",
+      "stable": {
+        "exitCode": 0,
+        "receipt": {
+          "path": ".beep/qualification-local-preflight/repaired-git-exclude-kwp0qeq5/receipt.json",
+          "sha256": "8f479db4a02e9b256fbcc75a96440212145e7cea7ad994af9f5b5a7b336584b8"
+        },
+        "review": {
+          "path": ".beep/qualification-local-preflight/repaired-git-exclude-kwp0qeq5/repair-review.json",
+          "sha256": "d7271ec306c41778bc5430bc7f2be49d56ea0741001ca92deecf6d00dcb90dca"
+        },
+        "reviewer": {
+          "path": ".beep/qualification-local-preflight/review-repaired-git-exclude.py",
+          "sha256": "9ccbd0ced48f590341790afb2718db49c550cd7aecc553a90bd2ab14d999f546"
+        },
+        "wrapper": {
+          "path": ".beep/qualification-local-preflight/repaired-git-exclude-wrapper/bin.ts",
+          "sha256": "5f0cccb222cbe79814eb8c4b409b40c1c85dc8650ab17fcd3037e2988d8bcab1"
+        },
+        "recipe": {
+          "path": ".beep/qualification-local-preflight/probe-repaired-git-exclude.py",
+          "sha256": "089898855df4ab7ce435eb24cbd3c805ff0b1496d54a7ea1434ff57d319b4a45"
+        },
+        "log": {
+          "path": ".beep/qualification-local-preflight/repaired-git-exclude-stable.log",
+          "sha256": "d388f8da230df0d316a125b62748a383bc560ea03bd1f62fddb7068c04c78231"
+        },
+        "checks": {
+          "visibleSyntaxErrorFails": true,
+          "identityOwnInputsUnchanged": true,
+          "identityHashChanged": true,
+          "excludedSyntaxErrorPasses": true,
+          "typesHashUnchanged": true
+        },
+        "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+        "runtimeKeys": [
+          {
+            "name": "invalid-visible",
+            "toolchainSha256": "277db60da42006a2a075bb443f2e757c778704d51f4e4e526d6086ba50de725f"
+          },
+          {
+            "name": "invalid-excluded",
+            "toolchainSha256": "bdc42ee4c824af4b9abab26fd1bb2cfe3fa406a72c2e3e3536667afe8c4b3825"
+          }
+        ],
+        "rawSummariesReviewed": 2,
+        "capturedStreamsReviewed": 4,
+        "dependencyAndToolchainParityBeforeAndAfter": true
+      },
+      "canary": {
+        "exitCode": 0,
+        "receipt": {
+          "path": ".beep/qualification-local-preflight/repaired-git-exclude-2gt9t6kx/receipt.json",
+          "sha256": "69999df04eb0199c9db3cf8f8a0386d186310fe99ef213491f4839c2cd1c78a4"
+        },
+        "review": {
+          "path": ".beep/qualification-local-preflight/repaired-git-exclude-2gt9t6kx/repair-review.json",
+          "sha256": "21bd05d7ad6c5e80f728e400d71de09e61d424b3574aa9026b272b919881954d"
+        },
+        "reviewer": {
+          "path": ".beep/qualification-local-preflight/review-repaired-git-exclude.py",
+          "sha256": "9ccbd0ced48f590341790afb2718db49c550cd7aecc553a90bd2ab14d999f546"
+        },
+        "wrapper": {
+          "path": ".beep/qualification-local-preflight/repaired-git-exclude-wrapper/bin.ts",
+          "sha256": "5f0cccb222cbe79814eb8c4b409b40c1c85dc8650ab17fcd3037e2988d8bcab1"
+        },
+        "recipe": {
+          "path": ".beep/qualification-local-preflight/probe-repaired-git-exclude.py",
+          "sha256": "089898855df4ab7ce435eb24cbd3c805ff0b1496d54a7ea1434ff57d319b4a45"
+        },
+        "log": {
+          "path": ".beep/qualification-local-preflight/repaired-git-exclude-canary.log",
+          "sha256": "9091af5c2670f32f82a44c2627a721ec067f2c3c40a3a5823c193cee4826fc0b"
+        },
+        "checks": {
+          "visibleSyntaxErrorFails": true,
+          "identityOwnInputsUnchanged": true,
+          "identityHashChanged": true,
+          "excludedSyntaxErrorPasses": true,
+          "typesHashUnchanged": true
+        },
+        "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+        "runtimeKeys": [
+          {
+            "name": "invalid-visible",
+            "toolchainSha256": "c73d3e7e519774d600665df473ae8a06092118b5a6c206418607039b971cb124"
+          },
+          {
+            "name": "invalid-excluded",
+            "toolchainSha256": "693d3a9aaf5ca21e7fe3c33372203deae1baf5b1eed498c9003073d737badf02"
+          }
+        ],
+        "rawSummariesReviewed": 2,
+        "capturedStreamsReviewed": 4,
+        "dependencyAndToolchainParityBeforeAndAfter": true
+      }
+    },
+    "packetExploreCheck": {
+      "exitCode": 0,
+      "log": {
+        "path": ".beep/qualification-local-preflight/git-exclusion-explore-check.log",
+        "sha256": "a8e9e6963f045eb177b93c100bda803766fed5126e65ec44b4f750b95f828741"
+      },
+      "streamIntegrityOrFleetGraphFindings": 0
+    },
+    "launcherCharacters": 2755
+  },
+  "postMainCommandBoundaryInventory": {
+    "authority": "Static command and inherited-root review routing; not runtime closure, accepted operational attachment or qualification.",
+    "graph": {
+      "path": "goals/turborepo-task-qualification/research/nested-commands-post-main.json",
+      "sha256": "0c44a364c27bfe4e230ed2805ad1e596c2e43a1661587a3dd4a5b9c6db2120c4"
+    },
+    "recipe": {
+      "path": "goals/turborepo-task-qualification/research/refresh-command-boundaries.py",
+      "sha256": "7ffa7e50e6c494a4665333b480428d3fa418543a83db14e64c8f550b12ee0493"
+    },
+    "report": {
+      "path": "goals/turborepo-task-qualification/research/command-boundaries-post-main.json",
+      "sha256": "4e179a5deb8d66e2e132e62f9f395cd96a587244baef65ed2b48daf7e230755b"
+    },
+    "review": {
+      "path": "goals/turborepo-task-qualification/research/command-boundary-review.md",
+      "sha256": "48aeaff34aff038078271189650e98667158887289f47baca5324154eebc7980"
+    },
+    "rootCount": 1957,
+    "stepSites": 1973,
+    "families": 16,
+    "byteForByteReproductionPassed": true,
+    "openOperationalObligations": 7
+  },
+  "packageTestTypecheckSourceReview": {
+    "authority": "Source interpretation only; no new runtime execution or qualification.",
+    "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+    "review": {
+      "path": "goals/turborepo-task-qualification/research/package-test-typecheck-boundary.md",
+      "sha256": "8971c5dbede5c6a14a5292be65b31b952b969f05acae050a30c9f6101d14da5d"
+    },
+    "sources": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+        "sha256": "0203b3c6df5a7848cb9547f867ad4c10fddd6bde66925820a04d0fe1509e87dd"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts",
+        "sha256": "890dc265860033774361bef6f2e47610b3925b01edc15a99f2c7e8cb07bc6e71"
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/test-tsgo-turbo-inputs.test.ts",
+        "sha256": "70c193919e4f717584afd819d3c6fa04febab06ea77c70cf93ebbe798dd826e3"
+      },
+      {
+        "path": "turbo.json",
+        "sha256": "f8e79dbba04f33c356a71ed89465f38c1ca18c60703eb546ffcb6d8215ddf962"
+      }
+    ],
+    "terminalSites": 140,
+    "cacheEnabled": false,
+    "workerExitIsCompilerVerdict": false,
+    "openOperationalObligations": 7
+  },
+  "packageLintSourceReview": {
+    "authority": "Source interpretation only; no runtime closure or qualification.",
+    "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+    "review": {
+      "path": "goals/turborepo-task-qualification/research/package-lint-boundaries.md",
+      "sha256": "4e1cda8c6cb3269a880673272eccb5bf6c979a368f9f6d78babf1385a02049b9"
+    },
+    "sources": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
+        "sha256": "811fb1a59b624398bbf188e6a06931d7b361bec4f4c470c95a126d7ab2ed602f"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Laws/LawsPackage.ts",
+        "sha256": "e25c50aa6e4a52d61cab9da36035fc3efd21982aff7782c78bc95f6e08717ae7"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
+        "sha256": "586bd6c0ffdd908374c702ff24cc90956d6ee203f18b6d2bed76ac230c197239"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+        "sha256": "9a0f7cc7404a01f283278c1d9153f34a0ec1563e02f77a0d34c07a069675601a"
+      },
+      {
+        "path": "packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts",
+        "sha256": "fcb1c9da8e1edf60642bc64fd7c763e449dcaf62ebd0f2b50fb38c693af45eb3"
+      },
+      {
+        "path": "packages/tooling/policy-pack/repo-configs/src/eslint/DocsESLintConfig.ts",
+        "sha256": "69c32e156c63354823456f555870d7e0da3a2cbc68651ba2d0a37ebbec3a9447"
+      },
+      {
+        "path": "eslint.config.mjs",
+        "sha256": "b979596b89277dab4fcb0887b70707038a9357b7291ee0edbdfff6fe87ea2555"
+      }
+    ],
+    "terminalSites": {
+      "deprecatedApis": 140,
+      "laws": 140,
+      "jsdoc": 135
+    },
+    "openOperationalObligations": 7
+  },
+  "commandBoundaryCensusAttachment": {
+    "authority": "Accepted current-head source/snapshot/review attachment, with nested graph structural equality against freshly regenerated census data. No runtime qualification.",
+    "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/entrypoint-review-command-boundaries.json",
+      "sha256": "0090e46f5305a75e23802e98a8d897cac45424a001d598ba57e5a3bf243516b2"
+    },
+    "census": {
+      "path": ".beep/qualification-local-preflight/command-boundaries-reviewed-census.json",
+      "sha256": "a27f6e82800aaa6bcb33b1a15ba957c571365e6ff9fd0c84eba25e6f692e1e0d"
+    },
+    "log": {
+      "path": ".beep/qualification-local-preflight/command-boundaries-reviewed-census.log",
+      "sha256": "1d2745cb86011108c8e89aaf72979c8440236e4ee8120bf51906452091fa10e8"
+    },
+    "freshNestedGraph": {
+      "path": ".beep/qualification-local-preflight/command-boundaries-fresh-nested.json",
+      "sha256": "7986fd85138dee5917fcc8b87c70440d3ee26978efd2e92fd491bf34f7ca06e2"
+    },
+    "sourceReferences": 336,
+    "plannerSnapshots": 6,
+    "reviews": 10,
+    "matchingReferences": 352,
+    "workspaces": 143,
+    "graphNodes": 3449,
+    "executableComputations": 1957,
+    "graphOnlyNodes": 1492,
+    "nestedStructureMatchesRetainedInventory": true,
+    "openObligations": 7
+  },
+  "fileEntrypointSourceReview": {
+    "authority": "Source interpretation only; no script execution or runtime qualification.",
+    "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+    "review": {
+      "path": "goals/turborepo-task-qualification/research/file-entrypoint-boundaries.md",
+      "sha256": "48c49e1b8351ffa3c8e85534e41d93f30b651e9096986971d2e3cb8e963a67c1"
+    },
+    "priorGeneratorReview": {
+      "path": "goals/turborepo-task-qualification/research/generator-boundaries.md",
+      "sha256": "69f9b3cf982a25f8fbf1caaeee47fffe8541bfc3c1faff23518bc659cffdd7a2"
+    },
+    "sources": [
+      {
+        "path": "packages/tooling/policy-pack/repo-configs/scripts/GenerateEffectLawsAllowlistSnapshot.ts",
+        "sha256": "8bec89e6cfb6f98576e564fd4b0fd4515d2b73657e8a0968c9d1a0ce8bfed593"
+      },
+      {
+        "path": "packages/_internal/db-admin/scripts/check-migrations-drift.ts",
+        "sha256": "e52860ef10751c777910f6e151f398db253ee2b638086d8a25c31f0e31508027"
+      },
+      {
+        "path": "apps/professional-desktop/scripts/sync-migration-bundle.ts",
+        "sha256": "56c85a526f35e1e4bd58933c73876910b2ab51cd8c372b8ccc18b59f0f9131e1"
+      },
+      {
+        "path": "apps/storybook/scripts/run-storybook-tests.mjs",
+        "sha256": "488deb42c6c48cd65647ecad3d69593225819f9ac07c6ecd8ebee1d1bc373945"
+      },
+      {
+        "path": "packages/tooling/tool/docgen/src/bin.ts",
+        "sha256": "0333cf9b1814bc859f950171d6b64826742fde6d61a012cd5acf413125bb60f2"
+      }
+    ],
+    "terminalSites": 12,
+    "downstreamDocgenInterpretationComplete": false,
+    "openOperationalObligations": 7,
+    "downstreamDocgenReview": {
+      "path": "goals/turborepo-task-qualification/research/docgen-boundary-review.md",
+      "sha256": "712cf2d3504d75dc69d3737f6bdc8d6d24cad95f4e3679d37da76ff753abe8f3"
+    }
+  },
+  "docgenSourceReview": {
+    "authority": "Source interpretation and installed binary-link observation, not execution or qualified reuse.",
+    "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+    "review": {
+      "path": "goals/turborepo-task-qualification/research/docgen-boundary-review.md",
+      "sha256": "712cf2d3504d75dc69d3737f6bdc8d6d24cad95f4e3679d37da76ff753abe8f3"
+    },
+    "sources": [
+      {
+        "path": "packages/tooling/tool/docgen/package.json",
+        "sha256": "1cf92b24236df0750809695b7a0902f89e5f2ded2a2d3d5669f47c0639489e2f"
+      },
+      {
+        "path": "packages/tooling/tool/docgen/src/bin.ts",
+        "sha256": "0333cf9b1814bc859f950171d6b64826742fde6d61a012cd5acf413125bb60f2"
+      },
+      {
+        "path": "packages/tooling/tool/docgen/src/CLI.ts",
+        "sha256": "8094e0b4a66f0f0abe023ea479970d8af035cfc5aa80307d38d4937d849ac260"
+      },
+      {
+        "path": "packages/tooling/tool/docgen/src/Configuration.ts",
+        "sha256": "ac1a676711a1eb1d4837403d642469e2ecb72e8af984892959605293b450e1fd"
+      },
+      {
+        "path": "packages/tooling/tool/docgen/src/Core.ts",
+        "sha256": "d6ba58abb574a4f37b789772d4bbbe253eb36628d7a9a8470b0b22628a9becca"
+      },
+      {
+        "path": "packages/tooling/tool/docgen/src/ProofManifest.ts",
+        "sha256": "9d090321c360d7af5dbb32ee0d4f7cbbf8a4ba62b003756c5d32bbe3cb94d1ff"
+      }
+    ],
+    "executableDocgenNodes": 133,
+    "inheritedCachedNodes": 133,
+    "clockDependentProofOutput": ".beep/docgen/proof.json",
+    "installedRootBinTarget": "../@beep/repo-docgen/src/bin.ts",
+    "openOperationalObligations": 7
+  },
+  "compilerDeclaredConfigInventory": {
+    "authority": "Direct config declarations and argv selectors; no compiler execution or effective-options claim.",
+    "recipe": {
+      "path": "goals/turborepo-task-qualification/research/refresh-compiler-configs.py",
+      "sha256": "3633450175a307da9316373679ce5f57fe134ba856f96f5a89b1b288555483ec"
+    },
+    "report": {
+      "path": "goals/turborepo-task-qualification/research/compiler-configs-post-main.json",
+      "sha256": "240dcb40c7a0d852ce2ba86c364bd24fa70716737ec8c5bf4964bcb8f95ca119"
+    },
+    "review": {
+      "path": "goals/turborepo-task-qualification/research/compiler-config-review.md",
+      "sha256": "b819fc2053e271d1757987ca6cddbb9c6f6db4925201542f8589cad9c5341ac3"
+    },
+    "siteCount": 420,
+    "configCount": 418,
+    "byteForByteReproductionPassed": true,
+    "openOperationalObligations": 7
+  },
+  "currentCachePolicyAudit": {
+    "command": "bun run beep quality cache-policy",
+    "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+    "exitCode": 0,
+    "blockingFindings": 0,
+    "unassessedCachedComputations": 1386,
+    "log": {
+      "path": ".beep/qualification-local-preflight/current-cache-policy-audit.log",
+      "sha256": "829852e7b846e5f1697a4fbb61db7971f13f7f187bc567794f83e965e92f0161"
+    },
+    "authority": "Current operational posture audit; unassessed legacy reuse is not qualification."
+  },
+  "toolBoundaryCensusAttachment": {
+    "authority": "Accepted source, snapshot and review attachment only; no runtime qualification or effective compiler-options claim.",
+    "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+    "request": {
+      "path": "goals/turborepo-task-qualification/research/entrypoint-review-tool-boundaries.json",
+      "sha256": "7a816edbbd0bccb5fca8ec7de8fe456654b7b6e3e3c2d433276434b3bebfd538"
+    },
+    "census": {
+      "path": ".beep/qualification-local-preflight/tool-boundaries-reviewed-census.json",
+      "sha256": "eef50945a558bdb2a2d8f606a42ad17dfe29fc92211f2e9e71d79d8149fdb60f"
+    },
+    "log": {
+      "path": ".beep/qualification-local-preflight/tool-boundaries-reviewed-census.log",
+      "sha256": "50e3406c5f81cc33d7367e80f26f0f41d2244643de2eb05be0434ab5faa7bb00"
+    },
+    "sourceReferences": 765,
+    "plannerSnapshots": 6,
+    "reviews": 13,
+    "matchingReferences": 784,
+    "workspaces": 143,
+    "graphNodes": 3449,
+    "executableComputations": 1957,
+    "graphOnlyNodes": 1492,
+    "openObligations": 7
+  },
+  "syntheticPostRepairReview": {
+    "reference": "research/synthetic-post-repair-review.json",
+    "sha256": "030190d1bff4815568b8bd610b18f163658f2076bce6861538a5e0941efe60a5",
+    "status": "local-metadata-relationships-passed",
+    "rawArchiveValidation": false,
+    "signedTransportValidation": false
+  },
+  "ltsPilotRefresh": {
+    "reference": "research/lts-pilot-review.json",
+    "sha256": "b1a56564d32f4d997629d1b330e910cb3857cfbb7f639858bf78054e942bbb66",
+    "stable": "local-metadata-review-passed",
+    "canary": "local-metadata-review-passed",
+    "rawArchiveValidation": false,
+    "signedTransportValidation": false
+  },
+  "ltsAnnotatedIoObservation": {
+    "reference": "research/lts-annotated-io-review.json",
+    "sha256": "c334f77b8b22a79ed4b1c4252543f2ea13763f57abab57383eb9cd2efe320d33",
+    "status": "scalar-read-attribution-passed",
+    "semanticClosure": false,
+    "indirectIoClosure": false
   }
 }
