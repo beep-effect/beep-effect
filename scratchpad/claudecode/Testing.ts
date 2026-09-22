@@ -615,7 +615,7 @@ const assertDefined = <A>(value: A | undefined, label: string): A => {
 };
 
 const isOutputAssertionDataFirst = (args: IArguments): boolean =>
-  args.length >= 2 || (args.length === 1 && typeof args[0] !== "string");
+  args.length >= 2 || (args.length === 1 && !P.isString(args[0]));
 
 interface PipeableUnknownAssertion {
   (detail?: string): (output: unknown) => void;
@@ -1322,7 +1322,7 @@ export const expectPluginTree: {
 );
 
 const isPluginHarnessDataFirst = (args: IArguments): boolean =>
-  args.length >= 3 || (args.length > 0 && typeof args[0] !== "string");
+  args.length >= 3 || (args.length > 0 && !P.isString(args[0]));
 
 /**
  * Write a plugin definition into an in-memory file system harness and return

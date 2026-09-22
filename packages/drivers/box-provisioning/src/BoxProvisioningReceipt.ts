@@ -256,61 +256,60 @@ export const recoverBoxAdoptions: {
   ): Effect.Effect<BoxAdoptions, PlatformError.PlatformError, Crypto.Crypto>;
 } = dual(
   2,
-  (
+  Effect.fnUntraced(function* (
     desired: BoxDesiredState,
     journalEntries: ReadonlyArray<BoxApplyJournalEntry>
-  ): Effect.Effect<BoxAdoptions, PlatformError.PlatformError, Crypto.Crypto> =>
-    Effect.gen(function* () {
-      const latestAttemptByPlan = A.reduce(
+  ): Effect.fn.Return<BoxAdoptions, PlatformError.PlatformError, Crypto.Crypto> {
+    const latestAttemptByPlan = A.reduce(
+      journalEntries,
+      HashMap.empty<Sha256Hex, BoxApplyAttemptId>(),
+      (attempts, entry) =>
+        entry.phase === "Started" && Equal.equals(entry.sequence, 0)
+          ? HashMap.set(attempts, entry.planDigest, entry.attemptId)
+          : attempts
+    );
+    const recovered = A.getSomes(
+      yield* Effect.forEach(
         journalEntries,
-        HashMap.empty<Sha256Hex, BoxApplyAttemptId>(),
-        (attempts, entry) =>
-          entry.phase === "Started" && Equal.equals(entry.sequence, 0)
-            ? HashMap.set(attempts, entry.planDigest, entry.attemptId)
-            : attempts
-      );
-      const recovered = A.getSomes(
-        yield* Effect.forEach(
-          journalEntries,
-          Effect.fnUntraced(function* (entry) {
-            if (
-              entry.phase !== "Applied" ||
-              entry.resourceKind !== "folder" ||
-              !O.exists(HashMap.get(latestAttemptByPlan, entry.planDigest), (attemptId) =>
-                Equal.equals(attemptId, entry.attemptId)
-              )
-            ) {
-              return O.none<BoxAdoption>();
-            }
-            const identity = O.all({
-              expectedParentProviderId: entry.parentProviderId,
-              expectedProviderId: entry.providerId,
-            });
-            if (O.isNone(identity)) {
-              return O.none<BoxAdoption>();
-            }
-            const matches = yield* Effect.forEach(
-              desired.folders,
-              Effect.fnUntraced(function* (folder) {
-                const digest = yield* digestText(folder.logicalKey);
-                return Equal.equals(digest, entry.logicalKeyDigest) ? O.some(folder) : O.none();
-              }),
-              { concurrency: 1 }
-            );
-            return O.map(A.head(A.getSomes(matches)), (folder) =>
-              BoxAdoption.make({
-                expectedParentProviderId: identity.value.expectedParentProviderId,
-                expectedProviderId: identity.value.expectedProviderId,
-                logicalKey: folder.logicalKey,
-                resourceKind: "folder",
-              })
-            );
-          }),
-          { concurrency: 1 }
-        )
-      );
-      return mergeBoxAdoptions(desired.adoptions, recovered);
-    })
+        Effect.fnUntraced(function* (entry) {
+          if (
+            entry.phase !== "Applied" ||
+            entry.resourceKind !== "folder" ||
+            !O.exists(HashMap.get(latestAttemptByPlan, entry.planDigest), (attemptId) =>
+              Equal.equals(attemptId, entry.attemptId)
+            )
+          ) {
+            return O.none<BoxAdoption>();
+          }
+          const identity = O.all({
+            expectedParentProviderId: entry.parentProviderId,
+            expectedProviderId: entry.providerId,
+          });
+          if (O.isNone(identity)) {
+            return O.none<BoxAdoption>();
+          }
+          const matches = yield* Effect.forEach(
+            desired.folders,
+            Effect.fnUntraced(function* (folder) {
+              const digest = yield* digestText(folder.logicalKey);
+              return Equal.equals(digest, entry.logicalKeyDigest) ? O.some(folder) : O.none();
+            }),
+            { concurrency: 1 }
+          );
+          return O.map(A.head(A.getSomes(matches)), (folder) =>
+            BoxAdoption.make({
+              expectedParentProviderId: identity.value.expectedParentProviderId,
+              expectedProviderId: identity.value.expectedProviderId,
+              logicalKey: folder.logicalKey,
+              resourceKind: "folder",
+            })
+          );
+        }),
+        { concurrency: 1 }
+      )
+    );
+    return mergeBoxAdoptions(desired.adoptions, recovered);
+  })
 );
 
 /**

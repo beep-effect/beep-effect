@@ -1,5 +1,6 @@
 // fallow-ignore-file unused-file -- spawned C2 runtime probe entry resolved by path at runtime
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
+import { LiteralKit } from "@beep/schema";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, Layer, Result } from "effect";
 import * as A from "effect/Array";
@@ -16,13 +17,14 @@ import { RdfProjection } from "@/services/RdfProjection";
 
 const decodeCrashProjectionInput = S.decodeEffect(S.fromJsonString(CrashProjectionInput));
 
-const ProbeArgs = S.Union([
-  S.Tuple([S.Literal("bundle")]),
-  S.Tuple([S.Literal("crash"), S.String, RunId, RuntimeMode, S.String]),
-  S.Tuple([S.Literal("recover"), S.String, RunId, RuntimeMode]),
-]);
+const ProbeMode = LiteralKit(["bundle", "crash", "recover"]);
+const ProbeModeArgv = S.Tuple([ProbeMode]);
+const CrashArgv = S.Tuple([S.String, RunId, RuntimeMode, S.String]);
+const RecoverArgv = S.Tuple([S.String, RunId, RuntimeMode]);
 
-const decodeUnknownProbeArgs = S.decodeUnknownEffect(ProbeArgs);
+const decodeUnknownProbeModeArgv = S.decodeUnknownEffect(ProbeModeArgv);
+const decodeUnknownCrashArgv = S.decodeUnknownEffect(CrashArgv);
+const decodeUnknownRecoverArgv = S.decodeUnknownEffect(RecoverArgv);
 
 const usageExit = (): never => {
   process.stderr.write(
@@ -75,25 +77,27 @@ const recoverProbe = Effect.fn("recoverProbe")(function* (provideServices: Provi
   process.stdout.write(`${digest}\n`);
 });
 
-type ProbeFailure =
-  | Effect.Error<typeof bundleProbe>
-  | Effect.Error<ReturnType<typeof crashProbe>>
-  | Effect.Error<ReturnType<typeof recoverProbe>>;
+const runProbe = (mode: typeof ProbeMode.Type, rest: ReadonlyArray<string>) =>
+  ProbeMode.$match(mode, {
+    bundle: () => bundleProbe,
+    crash: () =>
+      decodeUnknownCrashArgv(rest).pipe(
+        Effect.flatMap(([ledgerRoot, runId, runtimeMode, inputPath]) =>
+          crashProbe(makeProvideServices(ledgerRoot, runtimeMode, runId), inputPath)
+        )
+      ),
+    recover: () =>
+      decodeUnknownRecoverArgv(rest).pipe(
+        Effect.flatMap(([ledgerRoot, runId, runtimeMode]) =>
+          recoverProbe(makeProvideServices(ledgerRoot, runtimeMode, runId), runId)
+        )
+      ),
+  });
 
-const runProbe = (args: typeof ProbeArgs.Type): Effect.Effect<void, ProbeFailure> => {
-  switch (args[0]) {
-    case "bundle":
-      return bundleProbe;
-    case "crash":
-      return crashProbe(makeProvideServices(args[1], args[3], args[2]), args[4]);
-    case "recover":
-      return recoverProbe(makeProvideServices(args[1], args[3], args[2]), args[2]);
-  }
-};
-
-const probe = decodeUnknownProbeArgs(A.drop(process.argv, 2)).pipe(
-  Effect.catchTag("SchemaError", () => Effect.sync(usageExit)),
-  Effect.flatMap(runProbe)
-);
+const probe = Effect.gen(function* () {
+  const argv = A.drop(process.argv, 2);
+  const [mode] = yield* decodeUnknownProbeModeArgv(A.take(argv, 1));
+  return yield* runProbe(mode, A.drop(argv, 1));
+}).pipe(Effect.catchTag("SchemaError", () => Effect.sync(usageExit)));
 
 await Effect.runPromise(probe);

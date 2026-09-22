@@ -157,11 +157,10 @@ export const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
   const capturedAt = DateTime.formatIso(yield* DateTime.now);
   const cards: Array<CardPersistRow> = yield* Effect.forEach(
     A.fromIterable(MutableHashMap.values(collection.byUrlNorm)),
-    (candidate) =>
-      Effect.gen(function* () {
-        const slug = yield* slugFor(candidate.title, candidate.url);
-        return yield* historyStubCard(candidate, capturedAt, path.join(VAULT_DIRS.inbox, `${slug}.md`));
-      })
+    Effect.fnUntraced(function* (candidate) {
+      const slug = yield* slugFor(candidate.title, candidate.url);
+      return yield* historyStubCard(candidate, capturedAt, path.join(VAULT_DIRS.inbox, `${slug}.md`));
+    })
   );
 
   yield* persistCards(options.vaultRoot, databasePath, "history-sift", cards);
