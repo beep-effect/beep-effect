@@ -1629,3 +1629,24 @@ overrides.” The direct native dry-run and governed actual execution both
 passed separately. A documented paired recipe would prevent treating a
 configuration plan as runtime-identity proof or repeatedly probing a rejected
 output mode. Receipt: `profile-closure-refresh-2026-09-22.json`.
+
+## 2026-09-22 — retirement does not retain ignored evidence
+
+After PR #1189 merged, `bun run beep yeet sweep --retire` removed its worktree.
+The residue archive contains a manifest and retained Git ref, but its manifest
+has `patchPath: null` and an empty `untrackedFiles` list. The ignored `.beep`
+proof logs, temporary addition/restoration plans and reviewer-validation outputs
+were not preserved. The initial cleanup report overstated their retention.
+
+The published packet and copied recovery handoff survive. A separate capture
+worktree also retains the observer, reviewer, dependency receipt and native
+plans. Thirteen static preparation files were subsequently copied outside the
+worktrees, checked byte-for-byte, and inventoried with SHA-256 digests and a
+seven-day retention record. That backup excludes the live observation log and
+any future trace; those require their own verified copy after completion.
+
+Before retiring another evidence-producing worktree, copy required ignored
+artifacts to a private durable directory and verify the inventory. A Git residue
+manifest alone is insufficient. Do not reconstruct missing files and label them
+as original evidence. This is a qualification evidence-retention correction;
+it does not change Yeet proof ownership or qualify the pilot.

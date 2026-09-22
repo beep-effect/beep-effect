@@ -53,6 +53,16 @@ path set. It does not prove current semantic closure: fresh read/write/capture
 observations, alternate paths, concurrency, current-version replay matrices
 and signed remote evidence remain necessary. Both tasks retain `cache: false`.
 
+PR #1189 merged as `02f8084070`. Its hosted readiness monitor passed; its full
+local proof was cancelled during coverage after the merge and is not a pass.
+Retirement removed ignored local proof logs and some temporary raw plans from
+that worktree. Published digests retain their historical meaning, but the
+missing original bytes cannot now be independently rechecked. The surviving
+capture worktree has a fresh native plan at `3f1d2a8a08`: both task input maps
+and hashes match the retained baseline, and all 789 input blobs match source.
+This establishes plan/content parity only. Fresh runtime observation remains
+pending. The retention correction is recorded in `OPPORTUNITIES.md`.
+
 ## Execution order and ownership
 
 1. Qualification continues local semantic-input, read/write and capture closure,
