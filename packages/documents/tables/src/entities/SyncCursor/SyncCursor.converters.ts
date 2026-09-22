@@ -68,7 +68,7 @@ const decodeSyncCursorRow = S.decodeUnknownResult(SyncCursor);
  * ```ts
  * import { fromSyncCursorRow, toSyncCursorInsert } from "@beep/documents-tables/entities/SyncCursor"
  * import type { SyncCursorRow } from "@beep/documents-tables/entities/SyncCursor"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   createdAt: 1,
@@ -114,7 +114,7 @@ export const toSyncCursorInsert = (syncCursor: SyncCursor): Result.Result<SyncCu
  * ```ts
  * import { fromSyncCursorRow } from "@beep/documents-tables/entities/SyncCursor"
  * import type { SyncCursorRow } from "@beep/documents-tables/entities/SyncCursor"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   createdAt: 1,

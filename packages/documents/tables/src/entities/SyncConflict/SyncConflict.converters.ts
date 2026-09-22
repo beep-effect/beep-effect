@@ -68,7 +68,7 @@ const decodeSyncConflictRow = S.decodeUnknownResult(SyncConflict);
  * ```ts
  * import { fromSyncConflictRow, toSyncConflictInsert } from "@beep/documents-tables/entities/SyncConflict"
  * import type { SyncConflictRow } from "@beep/documents-tables/entities/SyncConflict"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   conflictKind: "remoteEdit",
@@ -119,7 +119,7 @@ export const toSyncConflictInsert = (
  * ```ts
  * import { fromSyncConflictRow } from "@beep/documents-tables/entities/SyncConflict"
  * import type { SyncConflictRow } from "@beep/documents-tables/entities/SyncConflict"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   conflictKind: "remoteCreate",

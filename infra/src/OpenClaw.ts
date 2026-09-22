@@ -640,7 +640,7 @@ const sha256Hex = Effect.fnUntraced(function* (text: string) {
  *   OpenClawLocalProviderConfig
  * } from "@beep/infra"
  * import { OpenclawSecretReference } from "@beep/openclaw"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const deployment = OpenClawDeploymentConfig.make({
  *   hostedProvider: OpenClawHostedProviderConfig.make({
@@ -822,7 +822,7 @@ export class OpenClawBackupConfig extends S.Class<OpenClawBackupConfig>($I`OpenC
  * @example
  * ```ts
  * import { makeOpenClawGeneration, makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -1127,7 +1127,7 @@ const renderGenerationManifest = (generation: OpenClawGeneration): string =>
  * import { makeOpenClawBundleHash } from "@beep/infra"
  * import { OpenclawSha256Hex } from "@beep/openclaw"
  *
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const zeroHash = OpenclawSha256Hex.make("0".repeat(64))
  * const bundleHash = makeOpenClawBundleHash({
@@ -1177,7 +1177,7 @@ export const makeOpenClawBundleHash: (
  * @example
  * ```ts
  * import { makeOpenClawGeneration, makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
  *   expectedHome: "/home/elpresidank",
@@ -1258,7 +1258,7 @@ export const makeOpenClawGeneration: (
  *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawUnit
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -1332,7 +1332,7 @@ export const renderOpenClawUnit = (generation: OpenClawGeneration): string =>
  *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawRunScript
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -1434,7 +1434,7 @@ export class OpenClawGenerationFile extends S.Class<OpenClawGenerationFile>($I`O
  *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawGenerationTree
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -1496,7 +1496,7 @@ export const renderOpenClawGenerationTree = (
  *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawPreflightScript
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -1631,7 +1631,7 @@ const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<st
  *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawStageScript
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -1763,7 +1763,7 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
  *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawApplyScript
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -1885,7 +1885,7 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
  *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawRollbackScript
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -2032,7 +2032,7 @@ const expectedUnitTextLines = (generation: OpenClawGeneration): ReadonlyArray<st
  *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawDriftAuditScript
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -2088,7 +2088,7 @@ export const renderOpenClawDriftAuditScript = (input: OpenClawGenerationIdentity
  *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawProbeScript
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -2166,7 +2166,7 @@ export const renderOpenClawProbeScript = (input: OpenClawGenerationIdentityScrip
  *   makeOpenClawStackArgsFromConfigValues,
  *   renderOpenClawLiveAcceptanceScript
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
@@ -2264,7 +2264,7 @@ export const renderOpenClawLiveAcceptanceScript = (generation: OpenClawGeneratio
  *   OpenClawBackupConfig,
  *   renderOpenClawBackupShipScript
  * } from "@beep/infra"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *

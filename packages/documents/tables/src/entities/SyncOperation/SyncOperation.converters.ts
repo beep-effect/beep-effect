@@ -68,7 +68,7 @@ const decodeSyncOperationRow = S.decodeUnknownResult(SyncOperation);
  * ```ts
  * import { fromSyncOperationRow, toSyncOperationInsert } from "@beep/documents-tables/entities/SyncOperation"
  * import type { SyncOperationRow } from "@beep/documents-tables/entities/SyncOperation"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   attemptCount: 0,
@@ -123,7 +123,7 @@ export const toSyncOperationInsert = (
  * ```ts
  * import { fromSyncOperationRow } from "@beep/documents-tables/entities/SyncOperation"
  * import type { SyncOperationRow } from "@beep/documents-tables/entities/SyncOperation"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   attemptCount: 2,

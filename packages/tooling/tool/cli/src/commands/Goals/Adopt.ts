@@ -163,7 +163,7 @@ const directoryExists = Effect.fn("Goals.packetDirectoryExists")(function* (targ
  *
  * ```ts
  * import { readPacketSnapshot } from "@beep/repo-cli/commands/Goals/Adopt"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(readPacketSnapshot("knowledge-surface-automation"))) // true
  * ```
@@ -283,7 +283,7 @@ const isReflectionArtifact = (relativePath: string): boolean =>
  * ```ts
  * import { compileAdoptionPlan } from "@beep/repo-cli/commands/Goals/Adopt"
  * import { PacketSnapshot } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * const program = compileAdoptionPlan(

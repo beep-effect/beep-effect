@@ -69,11 +69,31 @@ const decodeProviderInstanceRow = S.decodeUnknownResult(ProviderInstance);
  *
  * ```ts
  * import { fromProviderInstanceRow, toProviderInstanceInsert } from "@beep/agents-tables/entities/ProviderInstance"
- * import { Result } from "effect"
+ * import type { ProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance"
+ * import * as Result from "effect/Result"
  *
- * declare const row: import("@beep/agents-tables/entities/ProviderInstance").ProviderInstanceRow
+ * const row = {
+ *   binaryPath: "/usr/local/bin/claude",
+ *   createdAt: 1,
+ *   createdByPrincipal: { kind: "System", component: "Runtime" },
+ *   entityType: "AgentsProviderInstance",
+ *   envVars: { CLAUDE_CONFIG_DIR: "/home/beep/.beep/providers/personal-max/.claude" },
+ *   homePath: "/home/beep/.beep/providers/personal-max",
+ *   id: 1,
+ *   kind: "claude",
+ *   label: "personal-max",
+ *   lastProbe: null,
+ *   orgId: 1,
+ *   publicId: "agents_provider_instance_a1",
+ *   rowVersion: 1,
+ *   schemaVersion: "0.0.0",
+ *   source: "System",
+ *   updatedAt: 1,
+ *   updatedByPrincipal: { kind: "System", component: "Runtime" }
+ * } satisfies ProviderInstanceRow
+ *
  * const insert = Result.flatMap(fromProviderInstanceRow(row), toProviderInstanceInsert)
- * console.log(Result.isFailure(insert) || Result.isSuccess(insert))
+ * console.log(Result.isSuccess(insert) && !("id" in insert.success))
  * ```
  *
  * @category tables
@@ -97,10 +117,31 @@ export const toProviderInstanceInsert = (
  *
  * ```ts
  * import { fromProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance"
- * import { Result } from "effect"
+ * import type { ProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance"
+ * import * as Result from "effect/Result"
  *
- * declare const row: import("@beep/agents-tables/entities/ProviderInstance").ProviderInstanceRow
- * console.log(Result.isFailure(fromProviderInstanceRow(row)) || Result.isSuccess(fromProviderInstanceRow(row)))
+ * const row = {
+ *   binaryPath: "/usr/local/bin/codex",
+ *   createdAt: 1,
+ *   createdByPrincipal: { kind: "System", component: "Runtime" },
+ *   entityType: "AgentsProviderInstance",
+ *   envVars: {},
+ *   homePath: null,
+ *   id: 1,
+ *   kind: "codex",
+ *   label: "work-pro",
+ *   lastProbe: null,
+ *   orgId: 1,
+ *   publicId: "agents_provider_instance_a1",
+ *   rowVersion: 1,
+ *   schemaVersion: "0.0.0",
+ *   source: "System",
+ *   updatedAt: 1,
+ *   updatedByPrincipal: { kind: "System", component: "Runtime" }
+ * } satisfies ProviderInstanceRow
+ *
+ * const providerInstance = fromProviderInstanceRow(row)
+ * console.log(Result.isSuccess(providerInstance) && providerInstance.success.kind)
  * ```
  *
  * @category tables

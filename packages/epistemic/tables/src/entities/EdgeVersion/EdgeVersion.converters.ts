@@ -136,7 +136,7 @@ const decodeEdgeVersionRow = S.decodeUnknownResult(EdgeVersion);
  * ```ts
  * import { fromEdgeVersionRow, toEdgeVersionInsert } from "@beep/epistemic-tables/entities/EdgeVersion"
  * import type { EdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   createdAt: 1,
@@ -200,7 +200,7 @@ export const toEdgeVersionInsert = (
  * ```ts
  * import { fromEdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion"
  * import type { EdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  * import * as O from "effect/Option"
  *
  * const row = {

@@ -148,7 +148,7 @@ const sha256Base64 = Effect.fnUntraced(function* (value: string) {
  * **Example** (Compute authentication string)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import { computeObsAuthentication } from "@beep/obs"
  *
  * const authentication = computeObsAuthentication({
@@ -216,7 +216,7 @@ const socketFailureToObsError = (config: ObsConfig): ((error: Socket.SocketError
  *
  * ```ts
  * import type { ObsProtocolShape } from "@beep/obs"
- * import { Stream } from "effect"
+ * import * as Stream from "effect/Stream"
  *
  * const eventsOf = (protocol: ObsProtocolShape) => Stream.take(protocol.events, 1)
  * console.log(eventsOf)
@@ -536,7 +536,7 @@ export class ObsProtocol extends Context.Service<ObsProtocol, ObsProtocolShape>(
    *
    * ```ts
    * import { ObsProtocol } from "@beep/obs"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect"
    *
    * const program = Effect.scoped(
    *   Effect.flatMap(ObsProtocol.connect(), (protocol) => protocol.request("GetVersion"))
@@ -583,7 +583,7 @@ export class ObsProtocol extends Context.Service<ObsProtocol, ObsProtocolShape>(
    *
    * ```ts
    * import { ObsProtocol } from "@beep/obs"
-   * import { Layer } from "effect"
+   * import * as Layer from "effect/Layer"
    * import { Socket } from "effect/unstable/socket"
    *
    * const layer = ObsProtocol.makeLayer().pipe(Layer.provide(Socket.layerWebSocketConstructorGlobal))

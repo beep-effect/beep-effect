@@ -107,7 +107,7 @@ const decodeClaimDispositionRow = S.decodeUnknownResult(ClaimDisposition);
  * ```ts
  * import { fromClaimDispositionRow, toClaimDispositionInsert } from "@beep/epistemic-tables/entities/ClaimDisposition"
  * import type { ClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   claimId: 3,
@@ -162,7 +162,7 @@ export const toClaimDispositionInsert = (
  * ```ts
  * import { fromClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition"
  * import type { ClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   claimId: 3,

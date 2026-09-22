@@ -103,7 +103,7 @@ const decodeExecutionOutcomeRow = S.decodeUnknownResult(ExecutionOutcomeRecord);
  * ```ts
  * import { ExecutionDecisionRecord } from "@beep/epistemic-domain/values/ExecutionRecord"
  * import { toExecutionDecisionInsert } from "@beep/epistemic-tables/values/ExecutionRecord"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const digest = "a".repeat(64)

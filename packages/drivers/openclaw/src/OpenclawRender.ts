@@ -367,7 +367,7 @@ const utf8 = new TextEncoder();
  *   OpenclawSecretReference,
  *   OpenclawSecretsResolverIntent
  * } from "@beep/openclaw/OpenclawIntent.models"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import { renderOpenclawConfig } from "@beep/openclaw/OpenclawRender"
  *
  * const rendered = renderOpenclawConfig(

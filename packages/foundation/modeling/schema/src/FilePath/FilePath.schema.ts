@@ -135,7 +135,7 @@ const FilePathChecks = S.makeFilterGroup(
  * **Example** (Decode valid file paths)
  *
  * ```ts import.meta.vitest name="Decode valid file paths"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import { FilePath } from "@beep/schema/FilePath"
  *
  * const posix = await Effect.runPromise(FilePath.decodeUnknownEffect("/usr/local/bin/node"))

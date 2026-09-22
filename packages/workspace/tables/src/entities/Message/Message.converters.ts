@@ -131,7 +131,7 @@ export const toMessageInsert = (message: Message): Result.Result<MessageInsert, 
  *
  * ```ts
  * import { fromMessageRow, type MessageRow } from "@beep/workspace-tables/entities/Message"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   content: {

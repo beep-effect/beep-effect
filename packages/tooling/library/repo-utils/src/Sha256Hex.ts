@@ -16,7 +16,7 @@ import type * as PlatformError from "effect/PlatformError";
  * **Example** (Detect a hash effect)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import { sha256Hex } from "@beep/repo-utils/Sha256Hex"
  *
  * console.log(Effect.isEffect(sha256Hex("beep"))) // true

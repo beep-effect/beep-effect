@@ -68,7 +68,7 @@ const decodeSyncItemRow = S.decodeUnknownResult(SyncItem);
  * ```ts
  * import { fromSyncItemRow, toSyncItemInsert } from "@beep/documents-tables/entities/SyncItem"
  * import type { SyncItemRow } from "@beep/documents-tables/entities/SyncItem"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   contentDigest: "abc123",
@@ -122,7 +122,7 @@ export const toSyncItemInsert = (syncItem: SyncItem): Result.Result<SyncItemInse
  * ```ts
  * import { fromSyncItemRow } from "@beep/documents-tables/entities/SyncItem"
  * import type { SyncItemRow } from "@beep/documents-tables/entities/SyncItem"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   contentDigest: null,

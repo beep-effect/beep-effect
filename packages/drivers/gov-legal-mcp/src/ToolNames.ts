@@ -223,7 +223,7 @@ export class ToolNameNormalizationError extends S.TaggedError<ToolNameNormalizat
  * **Example** (Fail closed on duplicates)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  * import * as S from "effect/Schema"
@@ -464,7 +464,7 @@ const projectUntruncatedToolNameCandidate = (
  * **Example** (Project candidate to wire name)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import { projectToolNameCandidate, ToolNameCandidate } from "@beep/gov-legal-mcp/ToolNames"
  *
  * const row = projectToolNameCandidate(ToolNameCandidate.make({ source: "ecfr", operationId: "getStructure" }))
@@ -539,7 +539,7 @@ const collisionReportFromRows = (
  * **Example** (Build clean multi-source report)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import { buildToolNameCollisionReport, ToolNameCandidate } from "@beep/gov-legal-mcp/ToolNames"
  *
  * const report = buildToolNameCollisionReport([

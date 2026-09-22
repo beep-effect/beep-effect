@@ -125,7 +125,7 @@ export const toWorkspaceInsert = (workspace: Workspace): Result.Result<Workspace
  * import { SystemPrincipal } from "@beep/shared-domain/entity/Principal"
  * import { fromWorkspaceRow } from "@beep/workspace-tables/entities/Workspace"
  * import type { WorkspaceRow } from "@beep/workspace-tables/entities/Workspace"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const principal = SystemPrincipal.make({ component: "Runtime", kind: "System" })
  * const row = {

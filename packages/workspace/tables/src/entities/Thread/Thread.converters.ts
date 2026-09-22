@@ -124,7 +124,7 @@ export const toThreadInsert = (thread: Thread): Result.Result<ThreadInsert, Thre
  *
  * ```ts
  * import { fromThreadRow, type ThreadRow } from "@beep/workspace-tables/entities/Thread"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   createdAt: 1,

@@ -112,7 +112,7 @@ const decodeUsageRecordRow = S.decodeUnknownResult(UsageRecord);
  * ```ts
  * import { fromUsageRecordRow, toUsageRecordInsert } from "@beep/epistemic-tables/entities/UsageRecord"
  * import type { UsageRecordRow } from "@beep/epistemic-tables/entities/UsageRecord"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   activityId: 7,
@@ -166,7 +166,7 @@ export const toUsageRecordInsert = (
  * ```ts
  * import { fromUsageRecordRow } from "@beep/epistemic-tables/entities/UsageRecord"
  * import type { UsageRecordRow } from "@beep/epistemic-tables/entities/UsageRecord"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   activityId: 7,

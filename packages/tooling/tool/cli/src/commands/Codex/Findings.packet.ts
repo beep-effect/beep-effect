@@ -784,7 +784,7 @@ const rawGitignoreDocument = (): PacketDocument =>
  * ```ts
  * import { CodexPacketPlan } from "@beep/repo-cli/commands/Codex/Findings.schemas"
  * import { renderPacketDocuments } from "@beep/repo-cli/commands/Codex/Findings.packet"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const plan = CodexPacketPlan.make({
  *   slug: "codex-security-findings-2026-08-04",

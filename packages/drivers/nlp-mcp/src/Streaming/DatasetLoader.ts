@@ -40,7 +40,7 @@ const DatasetFormatBase = LiteralKit(["json", "jsonl", "lines", "text"]);
  * ```ts
  * import { DatasetFormat } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function* () {
  *   const format = yield* DatasetFormat.fromUnknown("jsonl")
@@ -88,7 +88,7 @@ const DatasetSourceTypeBase = LiteralKit(["file", "url"]);
  * ```ts
  * import { DatasetSourceType } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function* () {
  *   const sourceType = yield* DatasetSourceType.fromUnknown("file")

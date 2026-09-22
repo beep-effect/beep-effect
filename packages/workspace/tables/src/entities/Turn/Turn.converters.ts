@@ -128,7 +128,7 @@ export const toTurnInsert = (turn: Turn): Result.Result<TurnInsert, TurnConverte
  *
  * ```ts
  * import { fromTurnRow, type TurnRow } from "@beep/workspace-tables/entities/Turn"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   createdAt: 1,

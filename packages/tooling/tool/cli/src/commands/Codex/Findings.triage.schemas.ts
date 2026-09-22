@@ -479,7 +479,7 @@ export class CodexTriageLedger extends S.Class<CodexTriageLedger>($I`CodexTriage
  *
  * ```ts
  * import { decodeCodexTriageLedger } from "@beep/repo-cli/commands/Codex/Findings.triage.schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = decodeCodexTriageLedger({ meta: { schemaVersion: "codex-triage/v2" } }).pipe(
  *   Effect.map(() => "accepted"),
@@ -510,7 +510,7 @@ export const decodeCodexTriageLedger: {
  *
  * ```ts
  * import { CodexTriageLedger, CodexTriageMeta, encodeCodexTriageLedger } from "@beep/repo-cli/commands/Codex/Findings.triage.schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const encoded = Effect.runSync(
  *   encodeCodexTriageLedger(

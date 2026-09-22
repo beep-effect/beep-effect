@@ -163,7 +163,7 @@ export const canonicalJsonTextPretty = (value: unknown): string => `${canonicalA
  *
  * ```ts
  * import { sha256Hex } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(sha256Hex(""))) // true
  * ```
@@ -190,7 +190,7 @@ export const sha256Hex = Effect.fn("PacketDigest.sha256Hex")(function* (text: st
  *
  * ```ts
  * import { sha256HexBytes } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(sha256HexBytes(new Uint8Array()))) // true
  * ```
@@ -215,7 +215,7 @@ const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);
  *
  * ```ts
  * import { PacketEvent, packetEventDigest } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const event = PacketEvent.make({
  *   schemaVersion: "packet-event/v1",
@@ -249,7 +249,7 @@ export const packetEventDigest: (
  *
  * ```ts
  * import { PacketEvent, renderPacketEventFile } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const event = PacketEvent.make({
  *   schemaVersion: "packet-event/v1",

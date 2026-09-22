@@ -533,7 +533,7 @@ export type ConflictRow = typeof PlanConflict.Encoded;
  *
  * ```ts
  * import { sealMaterializationPlan } from "@beep/repo-cli/commands/Goals/Bootstrap"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = sealMaterializationPlan({
  *   mode: "bootstrap",
@@ -610,7 +610,7 @@ export const sealMaterializationPlan = Effect.fnUntraced(function* (fields: {
  * ```ts
  * import { compileMaterializationPlan } from "@beep/repo-cli/commands/Goals/Bootstrap"
  * import { BootstrapInput } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = compileMaterializationPlan(
  *   BootstrapInput.make({
@@ -732,7 +732,7 @@ export const compileMaterializationPlan: {
  * ```ts
  * import { renderMaterializationPlanJson } from "@beep/repo-cli/commands/Goals/Bootstrap"
  * import { MaterializationPlan } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const plan = MaterializationPlan.make({
  *   planId: "goal-plan/v1:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",

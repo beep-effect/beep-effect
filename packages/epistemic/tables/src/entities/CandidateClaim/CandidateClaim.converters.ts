@@ -94,7 +94,7 @@ const decodeCandidateClaimRow = S.decodeUnknownResult(CandidateClaim);
  * ```ts
  * import { fromCandidateClaimRow, toCandidateClaimInsert } from "@beep/epistemic-tables/entities/CandidateClaim"
  * import type { CandidateClaimRow } from "@beep/epistemic-tables/entities/CandidateClaim"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   createdAt: 1,
@@ -139,7 +139,7 @@ export const toCandidateClaimInsert = (
  * ```ts
  * import { fromCandidateClaimRow } from "@beep/epistemic-tables/entities/CandidateClaim"
  * import type { CandidateClaimRow } from "@beep/epistemic-tables/entities/CandidateClaim"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   createdAt: 1,

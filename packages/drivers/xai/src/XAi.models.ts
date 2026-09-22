@@ -400,7 +400,7 @@ const XAiWebSocketEventKindBase = LiteralKit(["close", "error", "message"]);
  *
  * ```ts
  * import { XAiWebSocketEventKind } from "@beep/xai"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function* () {
  *   const kind = yield* XAiWebSocketEventKind.fromUnknown("message")
