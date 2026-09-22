@@ -38,4 +38,7 @@ Status: `active`
   time-only close.
 - The live required set changed to 18 contexts at 2026-09-03T17:12:53Z by
   adding `JSDoc Ratchet`. The 2026-09-04 through 2026-09-11 admission window
-  runs entirely under that population, so the census expects exactly 18.
+  ran entirely under that population, so its census expected exactly 18 and
+  was denied on 2026-09-21 (see the admission verdict above). That 18-context
+  expectation applies only to that window; the next window expects the
+  17-context population effective 2026-09-12T01:46:53Z once ratified.

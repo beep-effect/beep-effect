@@ -44,7 +44,8 @@ bun run beep ci lane-timings --window --workflow check.yml --event all --since 2
   [OPPORTUNITIES.md](./OPPORTUNITIES.md).
 - The unratified 2026-09-12 output in
   [admission-census-2026-09-04-window.md](./admission-census-2026-09-04-window.md)
-  was PR-event only. This census adds 59 to 69 push waves per lane; every
+  was PR-event only; its lede now marks it superseded by this verdict. This
+  census adds 59 to 69 push waves per lane; every
   verdict is unchanged, and no lane moved more than 20s at p95 except
   `Check` (20m39s to 20m19s).
 
