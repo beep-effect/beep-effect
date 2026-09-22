@@ -339,7 +339,13 @@ const makeCheck = (): ModelsCheckShape => ({
         ModelsCatalogOptions.make({ home: options.home, offline: options.offline })
       );
       const previous = yield* ledger.latest(options.home);
-      yield* ledger.record(options.home, snapshot);
+      // An offline snapshot omits the upstream layer, so recording it would
+      // make the next online run report every upstream-only model as `added`
+      // and a later offline run report them as `removed`. Only an online
+      // snapshot is a baseline.
+      if (!options.offline) {
+        yield* ledger.record(options.home, snapshot);
+      }
 
       const diff = diffSnapshots(previous, snapshot);
       const models = catalogModelsById(snapshot.models);

@@ -118,7 +118,7 @@ JetBrains Air config, or any CLI-managed cache.
 
 - The schemas decode the live upstream `models.json`, `$HOME/.codex/models_cache.json`, and
   `cursor-agent models` output without loss.
-- `beep models check` prints drift for every declared target, including the four known conflicts
+- `beep models check` prints drift for every declared target, including the seven known conflicts
   below, and exits non-zero on drift.
 - No projection write: no `--write` path exists yet, so no declared target is ever mutated
   (R12). The slice's only writes are the R6 catalog ledger under
