@@ -2250,3 +2250,55 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   commit). Tracked as separate work; this packet only records the attribution cost, which was one
   eleven-minute coverage lane plus the read to prove the failures were environmental.
 
+
+## 2026-09-21 — the reuse key's lane vocabulary did not match the lanes that run
+
+- Doing: wiring C4 shadow mode into the verdict writer, the ledger's first production consumer.
+- Evidence: `ProofInputDigest.laneId` was typed as `CiLaneId` (`coverage`, `lint`, ...), but every
+  inner-lane report row on disk carries a wave-qualified id (`quality:coverage`,
+  `cheap-gates:tsgo-rules`, `repo-sanity:sherif`; 30 distinct ids in one pre-push report). A
+  schema decoded only by its own tests for eighteen days never met a real row, so the mismatch
+  surfaced at wiring time, not at C1. Fixed by ruling 61 (widen to the report's id).
+- Prevention: when a schema is landed ahead of its first producer, add one test that decodes a
+  real artifact from `.beep/` (or a checked-in copy of one) rather than only hand-built fixtures;
+  the inner-lane report existed since A5 and would have failed the `CiLaneId` decode on day one.
+
+## 2026-09-21 — a fresh sibling lane's `bun run check` is red until the graph builds upstream dist
+
+- Doing: first typecheck of the C4 shadow change in a just-created `worktree new` lane.
+- Evidence: `bun run check` in `packages/tooling/tool/cli` reported dozens of `TS6305 Output file
+  ... has not been built from source file` plus cascading `unknown`/`any` errors in untouched
+  files, because the new worktree had installed dependencies but built no workspace `dist`.
+  None of the errors named the changed files.
+- Prevention: `worktree new` could end by printing (or running) the B1 route,
+  `bun run beep quality package-verify <pkg> --quick`, which builds upstream through Turbo; a
+  bare package `check` in a fresh lane is never attributable and should not be the first command.
+
+## 2026-09-22 — reviewer follow-ups on resolved threads were invisible
+
+- Doing: babysitting #1184; CodeRabbit replied on three threads after they were resolved
+  (two confirmations, one "verification inconclusive" that needed an answer).
+- Evidence: `yeet status` and the closeout read only unresolved threads and each thread's
+  opening comment; `yeet reply` settled any resolved thread as `stale` and posted nothing. The
+  follow-ups were found only by dumping every thread's full comment chain by hand.
+- Prevention: landed in this PR — status fetches the newest comment per thread plus the PR
+  author, lists resolved threads where a reviewer spoke last as `review follow-ups`, and
+  `yeet reply` posts on them. Still open: the monitor's comment stream showed the replies live,
+  but a reboot kills the stream and nothing replays it at the next read-first closeout.
+
+## 2026-09-22 — an inherited coverage red blocks every `@beep/repo-cli` pull request
+
+- Doing: driving #1184 to merge-ready after its own reds cleared; `Heavy / Coverage Regression`
+  stayed red on files this branch never touched.
+- Evidence: `[coverage-ratchet] coverage regression(s) detected` named `Ci/LaneTimings.ts`
+  (`lines: 98.16 < 98.24`) and `Cache/Cache.runtime.ts` (`new file ... no baseline file
+  identity`); the already-merged #1195 reported the identical rows, and neither file is in the
+  #1184 diff. The monitor still printed `merge-ready: yes` because the lane is not a required
+  context, while the repo's own mergeable definition counts it. Two merges on `main` (#1182,
+  #1195) each landed with a row missing or lowered, and the ratchet judges every later repo-cli
+  branch at the base floor, so the debt is paid by whoever pushes next.
+- Prevention: a hosted-only fix lane (`fix/coverage-inherited-repo-cli`) with two tests and the
+  hosted-measured row. Structurally: the ratchet could refuse a merge whose own run reported a
+  lowered or missing row for a changed package (it did, but as a non-required context), and
+  `yeet monitor --until-ready` should treat a non-required red with `needs code fix` as blocking
+  rather than merge-ready.

@@ -251,6 +251,8 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     unresolvedReviewThreadCount: S.optionalKey(S.Finite),
     unresolvedReviewThreads: S.Array(S.String).pipe(S.optionalKey),
     unresolvedThreads: S.Array(YeetStatusReviewThread).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    followUpThreadCount: S.optionalKey(S.Finite),
+    followUpThreads: S.Array(YeetStatusReviewThread).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     headSha: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     rerunFailedCommand: S.optionalKey(S.String),
     rerunFailedDecision: S.optionalKey(S.String),
@@ -392,9 +394,13 @@ class GhStatusReviewThread extends S.Class<GhStatusReviewThread>($I`GhStatusRevi
     path: S.NullOr(S.String),
     line: S.NullOr(S.Finite),
     comments: GhStatusThreadCommentConnection,
+    // The thread's newest comment; a resolved thread whose last word is not the
+    // PR author's is a follow-up the author has not read or answered.
+    latest: S.optionalKey(GhStatusThreadCommentConnection),
   },
   $I.annote("GhStatusReviewThread", {
-    description: "Review-thread identity plus opening-comment triage context used by Yeet remote status.",
+    description:
+      "Review-thread identity plus opening-comment and latest-comment triage context used by Yeet remote status.",
   })
 ) {}
 
@@ -415,7 +421,7 @@ class GhStatusReviewThreadConnection extends S.Class<GhStatusReviewThreadConnect
 ) {}
 
 class GhStatusReviewThreadsNode extends S.Class<GhStatusReviewThreadsNode>($I`GhStatusReviewThreadsNode`)(
-  { reviewThreads: GhStatusReviewThreadConnection },
+  { author: GhActor.pipe(S.NullOr, S.optionalKey), reviewThreads: GhStatusReviewThreadConnection },
   $I.annote("GhStatusReviewThreadsNode", { description: "Pull request review-thread status node." })
 ) {}
 
@@ -484,7 +490,7 @@ const decodeGhStatusPullRequest = S.decodeUnknownEffect(S.fromJsonString(GhStatu
 const decodeGhStatusReviewThreads = S.decodeUnknownEffect(S.fromJsonString(GhStatusReviewThreadsDocument));
 const decodeGhStatusWorkflowRuns = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusWorkflowRun)));
 const reviewThreadsQuery =
-  "query($id:ID!){node(id:$id){... on PullRequest{reviewThreads(first:100){nodes{id isResolved isOutdated path line comments(first:1){nodes{author{login} body databaseId}}} pageInfo{hasNextPage}}}}}";
+  "query($id:ID!){node(id:$id){... on PullRequest{author{login} reviewThreads(first:100){nodes{id isResolved isOutdated path line comments(first:1){nodes{author{login} body databaseId}} latest:comments(last:1){nodes{author{login} body databaseId}}} pageInfo{hasNextPage}}}}}";
 const decodeGhStatusChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusCheck)));
 
 const sortedUniquePaths: (paths: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
@@ -853,7 +859,7 @@ const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThre
   context: RepoRunContext,
   pullRequestId: string
 ): Effect.fn.Return<
-  GhStatusReviewThreadConnection,
+  GhStatusReviewThreadsNode,
   YeetCommandError,
   Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
@@ -870,7 +876,7 @@ const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThre
     });
   }
   return yield* decodeGhStatusReviewThreads(result.output).pipe(
-    Effect.map((document) => document.data.node.reviewThreads),
+    Effect.map((document) => document.data.node),
     Effect.mapError(YeetCommandError.new("Failed to decode PR review threads for yeet status."))
   );
 });
@@ -958,8 +964,11 @@ export const yeetReviewThreadExcerpt: (body: string) => string = flow(
   O.getOrElse(() => "(no comment body)")
 );
 
-const reviewThreadTriage = (thread: GhStatusReviewThread): YeetStatusReviewThread => {
-  const opening = A.head(thread.comments.nodes);
+const reviewThreadTriage = (
+  thread: GhStatusReviewThread,
+  comment: O.Option<GhStatusThreadComment> = A.head(thread.comments.nodes)
+): YeetStatusReviewThread => {
+  const opening = comment;
   return YeetStatusReviewThread.make({
     threadId: thread.id,
     author: pipe(
@@ -982,6 +991,66 @@ const reviewThreadTriage = (thread: GhStatusReviewThread): YeetStatusReviewThrea
     ),
   });
 };
+
+const latestThreadComment = (thread: GhStatusReviewThread): O.Option<GhStatusThreadComment> =>
+  pipe(
+    O.fromUndefinedOr(thread.latest),
+    O.flatMap((latest) => A.last(latest.nodes))
+  );
+
+const commentAuthorLogin = (comment: GhStatusThreadComment): O.Option<string> =>
+  pipe(
+    O.fromNullishOr(comment.author),
+    O.map((author) => author.login)
+  );
+
+/**
+ * Resolved threads whose newest comment is not the pull request author's:
+ * a reviewer (or review bot) spoke after the author resolved the thread, and
+ * nothing in "unresolved" accounting would ever surface it.
+ *
+ * **Example** (No follow-ups without a known author)
+ *
+ * ```ts
+ * import { reviewFollowUpThreadsForTesting } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(reviewFollowUpThreadsForTesting([], O.none()).length) // 0
+ * ```
+ *
+ * @param threads - Every review thread of the pull request.
+ * @param pullRequestAuthor - The pull request author's login when known.
+ * @returns Triage rows for each resolved thread with an unanswered reviewer follow-up.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const reviewFollowUpThreadsForTesting: {
+  (
+    pullRequestAuthor: O.Option<string>
+  ): (threads: ReadonlyArray<GhStatusReviewThread>) => ReadonlyArray<YeetStatusReviewThread>;
+  (
+    threads: ReadonlyArray<GhStatusReviewThread>,
+    pullRequestAuthor: O.Option<string>
+  ): ReadonlyArray<YeetStatusReviewThread>;
+} = dual(2, (threads: ReadonlyArray<GhStatusReviewThread>, pullRequestAuthor: O.Option<string>) =>
+  O.match(pullRequestAuthor, {
+    onNone: () => A.empty<YeetStatusReviewThread>(),
+    onSome: (author) =>
+      A.getSomes(
+        A.map(threads, (thread) =>
+          thread.isResolved
+            ? pipe(
+                latestThreadComment(thread),
+                O.filter((comment) =>
+                  O.exists(commentAuthorLogin(comment), (login) => !Str.Equivalence(login, author))
+                ),
+                O.map((comment) => reviewThreadTriage(thread, O.some(comment)))
+              )
+            : O.none<YeetStatusReviewThread>()
+        )
+      ),
+  })
+);
 
 const skippedRemote = YeetStatusRemote.make({
   available: false,
@@ -1071,9 +1140,18 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     collectRemoteChecks(context, false),
     collectRemoteChecks(context, true),
   ]);
-  const reviewThreads = yield* collectRemoteReviewThreads(context, view.id);
+  const threadsNode = yield* collectRemoteReviewThreads(context, view.id);
+  const reviewThreads = threadsNode.reviewThreads;
   const unresolved = A.filter(reviewThreads.nodes, (thread) => !thread.isResolved);
-  const unresolvedThreads = A.map(unresolved, reviewThreadTriage);
+  const unresolvedThreads = A.map(unresolved, (thread) => reviewThreadTriage(thread));
+  const followUpThreads = reviewFollowUpThreadsForTesting(
+    reviewThreads.nodes,
+    pipe(
+      O.fromUndefinedOr(threadsNode.author),
+      O.flatMap(O.fromNullishOr),
+      O.map((author) => author.login)
+    )
+  );
   const unresolvedReviewThreads = [
     ...A.map(unresolved, (thread) => `${thread.id}${thread.path === null ? "" : ` (${thread.path})`}`),
     ...(reviewThreads.pageInfo.hasNextPage ? ["additional review threads omitted after the first 100"] : []),
@@ -1119,6 +1197,8 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     unresolvedReviewThreadCount: A.length(unresolvedReviewThreads),
     unresolvedReviewThreads,
     unresolvedThreads: O.some(unresolvedThreads),
+    followUpThreadCount: A.length(followUpThreads),
+    followUpThreads: O.some(followUpThreads),
     headSha: O.some(view.headRefOid),
     ...O.getSomesStruct({
       ...checkSummary,
@@ -1422,7 +1502,7 @@ export const renderYeetReviewThreadBlock = (remote: YeetStatusRemote): string =>
     return "review threads: not checked";
   }
   const header = `review threads: ${remote.unresolvedReviewThreadCount ?? 0} unresolved`;
-  return pipe(
+  const unresolvedBlock = pipe(
     remote.unresolvedThreads,
     O.filter(A.isReadonlyArrayNonEmpty),
     O.match({
@@ -1431,6 +1511,22 @@ export const renderYeetReviewThreadBlock = (remote: YeetStatusRemote): string =>
         return A.isReadonlyArrayNonEmpty(threads) ? `${header} -> ${A.join(threads, ", ")}` : header;
       },
       onSome: (threads) => A.join([header, ...A.map(threads, renderThreadTriageLine)], "\n"),
+    })
+  );
+  return pipe(
+    remote.followUpThreads,
+    O.filter(A.isReadonlyArrayNonEmpty),
+    O.match({
+      onNone: () => unresolvedBlock,
+      onSome: (threads) =>
+        A.join(
+          [
+            unresolvedBlock,
+            `review follow-ups: ${A.length(threads)} resolved thread(s) where a reviewer spoke last; read and answer them (yeet reply posts on them)`,
+            ...A.map(threads, renderThreadTriageLine),
+          ],
+          "\n"
+        ),
     })
   );
 };
