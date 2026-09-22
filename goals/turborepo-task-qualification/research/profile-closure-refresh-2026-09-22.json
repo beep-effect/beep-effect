@@ -72,7 +72,8 @@
     "exitCode": 0,
     "successfulTasks": 2,
     "cachedTasks": 0,
-    "profileFreshness": "passed"
+    "profileFreshness": "passed",
+    "dependencyExplanation": "The single --filter=@beep/identity invocation includes @beep/types#lint through identity lint dependsOn: [\"^lint\"]. The native plan records this exact dependency edge; types was not separately invoked."
   },
   "configurationSources": [
     {
@@ -101,5 +102,14 @@
     "Dry-run uses the native client because cache execute rejects output modes; this map does not independently establish runtime identity.",
     "The 422-path join compares a historical trace to current inputs; it is not a fresh syscall trace or proof that every semantic read is covered.",
     "No raw cache archive, replay, signed-remote comparison or qualified tuple is established."
-  ]
+  ],
+  "restorationComparison": {
+    "scope": "Parsed native dry-run objects after removing only the top-level id field. All remaining fields are equal, including both task hashes and complete input maps.",
+    "differingJsonPointers": [
+      "/id"
+    ],
+    "reason": "Turbo emits a fresh run identifier for each invocation; raw artifact SHA-256 values therefore differ. Raw hashes remain unchanged for byte-level provenance.",
+    "encoding": "UTF-8 JSON, keys sorted recursively, compact separators, no trailing newline",
+    "normalizedPlanSha256": "ac9e38b57bdc44fd10f8ad3a0a67d4ba47ca2df9388421ef98faf170dc8977cc"
+  }
 }
