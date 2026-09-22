@@ -22,7 +22,9 @@ switch.
 Should G4 (`McpProtocol.v2026_07_28` only) be reopened at the align grill? Verified research shows
 a 2026-only list rejects `initialize` from every in-repo wire client and leaves `GovernedTierGate`
 with no server-minted identity, while upstream supports mixed lists with one stateless adapter.
-(Research stage: all ten lanes and Gate B verification complete; synthesis and Gate C next.)
+(Research stage complete: ten lanes, Gate B verification, synthesis in `RESEARCH.md`, Gate C
+reviews dispositioned in `reviews/`. Next: the align grill on the seven named decisions in
+`ops/manifest.json`; D-pin-sha was withdrawn on 2026-09-21 because rc.117 landed on `main`.)
 
 ## Read This First
 
@@ -41,3 +43,9 @@ with no server-minted identity, while upstream supports mixed lists with one sta
   orchestrator snapshot spike (`research/25-r4-spike-census.md`) complete.
 - 2026-09-17: Gate B verification complete: 184 claims, 175 survive, 9 struck
   (`research/verification/README.md`). Manifest open questions reseeded for the align grill.
+- 2026-09-17: Stage 2 synthesis written (`RESEARCH.md`, `research/impact-matrix.md`,
+  `research/sizing.md`, `research/SOURCES.md`); Gate C (three grok reviewers, 30 findings, all
+  `not-ready`) folded in; open questions reseeded as eight named decisions for the align grill.
+- 2026-09-21: capture PR #1169 merged. `effect@4.0.0-rc.117` shipped with the adapter and #1173
+  moved `main` to it, closing G1/G7 by events: S0 and S5b struck from `research/sizing.md`,
+  D-pin-sha withdrawn (seven decisions remain), `DECISIONS.md` entry added.

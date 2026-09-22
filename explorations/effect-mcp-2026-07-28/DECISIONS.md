@@ -103,7 +103,7 @@ first MCP PR.
 
 ## 2026-09-16 — G8 upstream documentation
 
-**Question:** `packages/effect/MCP.md` does not cover 2026-07-28. Contribute docs upstream?
+**Question:** `effect:packages/effect/MCP.md` does not cover 2026-07-28. Contribute docs upstream?
 
 **Answer:** Research records the doc gaps with evidence; the goal carries an optional, non-blocking
 lane for a docs PR from the `beep-effect/effect` fork, using examples proven on in-repo hosts.
@@ -124,3 +124,26 @@ sidecar (with `GovernedTierGate`) in scope?
 central research and grill topic.
 
 **Rejected:** drivers plus practice-kg only (sidecar deferred); drivers only.
+
+## 2026-09-21 — G1 and G7 revisited: the RC shipped first
+
+**Question:** `effect@4.0.0-rc.116` (2026-09-18) and `rc.117` (2026-09-21) were published after
+the research froze on `a7a71921de`, and #1173 moved the repo catalog to rc.117 on 2026-09-21. Does
+the snapshot-pin plan survive?
+
+**Answer:** No. G1 (pin a pkg.pr.new snapshot) and G7 (the snapshot bump as its own first PR) are
+closed by events: rc.117 carries `McpProtocol.v2026_07_28` and `McpRequestContext`, is installed
+on `main`, and every host still compiles on `v2025_06_18`. #1173 is the S0 PR that
+`research/sizing.md` sized: it re-keyed the platform-node-shared patch and added the SSE-unwrap
+to the sidecar harness. D-pin-sha is withdrawn from the align agenda; S0 and S5b are struck from
+the draft train; S1 depends on "rc.117 on `main`" instead of S0.
+
+**Rationale:** `a7a71921de` is an ancestor of the rc.117 tag, so the verified research still
+describes the installed adapter. The one MCP-surface commit between them (Effect-TS/effect#8326,
+identified output schemas normalised to object roots across revisions) is recorded in
+`RESEARCH.md` and not re-researched; it touches the kit's `withTopLevelObjectInputSchema` question
+only, which S1 re-checks against the installed source.
+
+**Rejected:** re-running the blast-radius census on rc.117 (the census was for a pkg.pr.new
+tarball that will never be pinned; #1173's hosted proof is the census now); keeping S5b as a
+"verify the RC" stage (nothing to swap).
