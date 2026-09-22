@@ -270,6 +270,23 @@ export const connectStdio = (io: StdioHost): Effect.Effect<McpClientConnection, 
 const errorOf = (exchange: McpHttpExchange) =>
   O.flatMap(A.head(exchange.messages), (message) => O.fromNullishOr(message.error));
 
+// One assertion for "the host answered this JSON-RPC error code", optionally
+// with the HTTP status the stateless transport pairs it with.
+const assertErrorCode = (
+  exchange: McpHttpExchange,
+  code: number,
+  options?: { readonly status?: number | undefined; readonly label?: string | undefined }
+): void => {
+  if (options?.status !== undefined) {
+    assert.strictEqual(exchange.status, options.status, options.label);
+  }
+  assert.deepStrictEqual(
+    O.map(errorOf(exchange), (error) => error.code),
+    O.some(code),
+    options?.label
+  );
+};
+
 const legacyInitialize = (id: number) =>
   JsonRpcMessage.make({
     id,
@@ -351,10 +368,7 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
             params: withRequestMetadata({ name: host.tool.name, arguments: "invalid" }, metadata),
           });
           const exchange = yield* http.post(malformed, routingHeaders(malformed));
-          assert.deepStrictEqual(
-            O.map(errorOf(exchange), (error) => error.code),
-            O.some(McpSchema.INVALID_PARAMS_ERROR_CODE)
-          );
+          assertErrorCode(exchange, McpSchema.INVALID_PARAMS_ERROR_CODE);
         })
       );
 
@@ -362,11 +376,7 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
         Effect.gen(function* () {
           const http = yield* ConformanceHttp;
           const exchange = yield* http.post(legacyInitialize(1), {});
-          assert.strictEqual(exchange.status, 400);
-          assert.deepStrictEqual(
-            O.map(errorOf(exchange), (error) => error.code),
-            O.some(McpSchema.HEADER_MISMATCH_ERROR_CODE)
-          );
+          assertErrorCode(exchange, McpSchema.HEADER_MISMATCH_ERROR_CODE, { status: 400 });
         })
       );
 
@@ -376,11 +386,7 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
           for (const method of ["initialize", "ping"]) {
             const message = JsonRpcMessage.make({ id: 2, method, params: withRequestMetadata({}, metadata) });
             const exchange = yield* http.post(message, routingHeaders(message));
-            assert.deepStrictEqual(
-              O.map(errorOf(exchange), (error) => error.code),
-              O.some(McpSchema.METHOD_NOT_FOUND_ERROR_CODE),
-              method
-            );
+            assertErrorCode(exchange, McpSchema.METHOD_NOT_FOUND_ERROR_CODE, { label: method });
           }
         })
       );
@@ -454,11 +460,7 @@ export const conformance2026 = <E>(host: ConformanceHost<E>): void => {
           const exchange = yield* http.post(message, {
             ...routingHeaders(JsonRpcMessage.make({ id: 7, method: "prompts/list", params: message.params })),
           });
-          assert.strictEqual(exchange.status, 400);
-          assert.deepStrictEqual(
-            O.map(errorOf(exchange), (error) => error.code),
-            O.some(McpSchema.HEADER_MISMATCH_ERROR_CODE)
-          );
+          assertErrorCode(exchange, McpSchema.HEADER_MISMATCH_ERROR_CODE, { status: 400 });
         })
       );
 
