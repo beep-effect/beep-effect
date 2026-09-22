@@ -79,5 +79,5 @@ Do not change public API, dependencies, lockfiles, or generated files
 outside the named surfaces. The raw bearer never enters a ledger, span, log,
 or assertion.
 
-Done only when acceptance passes and verification is complete, or a blocker
-is reported with file/command evidence.
+Done when acceptance passes and verification is complete, or a blocker is
+reported with file/command evidence.
