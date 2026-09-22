@@ -282,7 +282,7 @@ const OMITTED_HINT = "row(s) omitted (--verbose lists them)";
 /** Fold label for the skipped-blob rows; distinct from the `skipped:` header total on purpose. */
 const SKIPPED_FOLD_LABEL = "skipped-blobs";
 
-/** Per-class row counts of the quiet observations in one listing, keyed by quiet class. */
+// Per-class row counts of the quiet observations in one listing, keyed by quiet class.
 const quietClassCounts = (
   observations: ReadonlyArray<KnowledgeRefObservation>
 ): HashMap.HashMap<KnowledgeRefQuietClassification, number> =>
@@ -303,7 +303,7 @@ const quietClassCounts = (
     )
   );
 
-/** One omitted-count line per quiet class with rows in the listing, in classification-domain order. */
+// One omitted-count line per quiet class with rows in the listing, in classification-domain order.
 const quietClassLines = (observations: ReadonlyArray<KnowledgeRefObservation>): ReadonlyArray<string> => {
   const counts = quietClassCounts(observations);
   return A.getSomes(
@@ -313,7 +313,7 @@ const quietClassLines = (observations: ReadonlyArray<KnowledgeRefObservation>): 
   );
 };
 
-/** The skipped-blob rows, or one omitted-count line standing in for them when the listing is quiet. */
+// The skipped-blob rows, or one omitted-count line standing in for them when the listing is quiet.
 const skippedLines = (report: KnowledgeRefsReport, options: { readonly verbose: boolean }): ReadonlyArray<string> =>
   Match.value(options.verbose).pipe(
     Match.when(true, () => A.map(report.skipped, (blob) => `  ${blob.reason} ${blob.path}`)),
