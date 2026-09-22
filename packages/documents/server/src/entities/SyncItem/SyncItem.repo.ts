@@ -165,6 +165,16 @@ const repositoryUnavailable =
       )
     );
 
+const decodeOptionalSyncItemRow = (rows: ReadonlyArray<Parameters<typeof fromSyncItemRow>[0]>) =>
+  pipe(
+    A.head(rows),
+    O.match({
+      onNone: () => Effect.succeedNone,
+      onSome: (row) =>
+        Effect.fromResult(fromSyncItemRow(row)).pipe(repositoryUnavailable("decode SyncItem"), Effect.asSome),
+    })
+  );
+
 /**
  * Build a Drizzle-backed SyncItem repository used by live persistence tests.
  *
@@ -200,14 +210,7 @@ export const makeDrizzleSyncItemRepository = Effect.fn("Documents.SyncItemReposi
       )
       .limit(1)
       .pipe(repositoryUnavailable("select SyncItem by path"));
-    return yield* pipe(
-      A.head(rows),
-      O.match({
-        onNone: () => Effect.succeedNone,
-        onSome: (row) =>
-          Effect.fromResult(fromSyncItemRow(row)).pipe(repositoryUnavailable("decode SyncItem"), Effect.asSome),
-      })
-    );
+    return yield* decodeOptionalSyncItemRow(rows);
   });
 
   return SyncItemRepository.of({
@@ -250,14 +253,7 @@ export const makeDrizzleSyncItemRepository = Effect.fn("Documents.SyncItemReposi
         )
         .limit(1)
         .pipe(repositoryUnavailable("select SyncItem by remote id"));
-      return yield* pipe(
-        A.head(rows),
-        O.match({
-          onNone: () => Effect.succeedNone,
-          onSome: (row) =>
-            Effect.fromResult(fromSyncItemRow(row)).pipe(repositoryUnavailable("decode SyncItem"), Effect.asSome),
-        })
-      );
+      return yield* decodeOptionalSyncItemRow(rows);
     }),
     listByWorkspace: Effect.fn("Documents.SyncItemRepository.drizzleListByWorkspace")(function* (input) {
       const rows = yield* db

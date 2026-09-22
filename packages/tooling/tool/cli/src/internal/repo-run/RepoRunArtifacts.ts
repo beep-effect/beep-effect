@@ -5,9 +5,8 @@
  * @since 0.0.0
  */
 
+import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { Effect, flow } from "effect";
-import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
 import * as Str from "effect/String";
 import { QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 
@@ -34,11 +33,9 @@ export const repoRunSafeArtifactName: (value: string) => string = flow(
 );
 
 const artifactNameHash = Effect.fnUntraced(function* (value: string) {
-  const crypto = yield* Crypto.Crypto;
-  const bytes = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(value))
-    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to hash run artifact identity.")));
-  return Str.takeLeft(12)(Encoding.encodeHex(bytes));
+  return Str.takeLeft(12)(
+    yield* sha256Hex(value).pipe(Effect.mapError(QualitySchedulerError.new("Failed to hash run artifact identity.")))
+  );
 });
 
 /**

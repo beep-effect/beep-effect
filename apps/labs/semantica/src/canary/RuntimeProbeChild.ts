@@ -14,12 +14,19 @@ import { CrashProjectionInput } from "@/schema/Reasoning";
 import { Ledger } from "@/services/Ledger";
 import { RdfProjection } from "@/services/RdfProjection";
 
-const [probeMode, ledgerRoot, encodedRunId, encodedRuntimeMode, inputPath] = A.drop(process.argv, 2);
+const decodeRunId = S.decodeEffect(RunId);
+const decodeUnknownRuntimeMode = S.decodeUnknownEffect(RuntimeMode);
+const decodeCrashProjectionInput = S.decodeEffect(S.fromJsonString(CrashProjectionInput));
 
-if (probeMode === "bundle") {
-  await Effect.runPromise(Effect.scoped(Layer.build(RuntimeLayer)));
-  process.stdout.write("bundle-ready\n");
-} else {
+const probe = Effect.gen(function* () {
+  const [probeMode, ledgerRoot, encodedRunId, encodedRuntimeMode, inputPath] = A.drop(process.argv, 2);
+
+  if (probeMode === "bundle") {
+    yield* Effect.scoped(Layer.build(RuntimeLayer));
+    process.stdout.write("bundle-ready\n");
+    return;
+  }
+
   if (
     (probeMode !== "crash" && probeMode !== "recover") ||
     ledgerRoot === undefined ||
@@ -30,8 +37,8 @@ if (probeMode === "bundle") {
     process.exit(2);
   }
 
-  const runId = S.decodeSync(RunId)(encodedRunId);
-  const runtimeMode = S.decodeUnknownSync(RuntimeMode)(encodedRuntimeMode);
+  const runId = yield* decodeRunId(encodedRunId);
+  const runtimeMode = yield* decodeUnknownRuntimeMode(encodedRuntimeMode);
   const ledgerLayer = LedgerLive({ ledgerRoot, mode: runtimeMode, runId }).pipe(Layer.provide(BunServices.layer));
   const rdfLayer = RdfProjectionLive.pipe(Layer.provide(OxigraphSparqlQueryServiceLive), Layer.provide(LabConfigLive));
   const services = Layer.merge(ledgerLayer, rdfLayer).pipe(Layer.provide(BunServices.layer));
@@ -43,33 +50,32 @@ if (probeMode === "bundle") {
       process.stderr.write("Crash mode requires a projection input path.\n");
       process.exit(2);
     }
-    const input = S.decodeSync(S.fromJsonString(CrashProjectionInput))(await Bun.file(inputPath).text());
-    await Effect.runPromise(
-      provideServices(
-        Ledger.pipe(
-          Effect.flatMap((ledger) =>
-            Effect.forEach(input.outcomes, (outcome) => ledger.appendBatch(outcome, input.events), {
-              concurrency: 1,
-              discard: true,
-            })
-          )
+    const input = yield* decodeCrashProjectionInput(yield* Effect.promise(() => Bun.file(inputPath).text()));
+    yield* provideServices(
+      Ledger.pipe(
+        Effect.flatMap((ledger) =>
+          Effect.forEach(input.outcomes, (outcome) => ledger.appendBatch(outcome, input.events), {
+            concurrency: 1,
+            discard: true,
+          })
         )
       )
     );
-    await Bun.write(Bun.stdout, "projection-state-committed\n");
+    yield* Effect.promise(() => Bun.write(Bun.stdout, "projection-state-committed\n"));
     process.kill(process.pid, "SIGKILL");
-  } else {
-    const digest = await Effect.runPromise(
-      provideServices(
-        Effect.gen(function* () {
-          const ledger = yield* Ledger;
-          const rdf = yield* RdfProjection;
-          const snapshot = yield* ledger.read(runId);
-          const projection = yield* rdf.rebuild(snapshot);
-          return Result.getOrThrow(contentDigestSync(S.Array(S.String))(projection.serializedQuads));
-        })
-      )
-    );
-    process.stdout.write(`${digest}\n`);
+    return;
   }
-}
+
+  const digest = yield* provideServices(
+    Effect.gen(function* () {
+      const ledger = yield* Ledger;
+      const rdf = yield* RdfProjection;
+      const snapshot = yield* ledger.read(runId);
+      const projection = yield* rdf.rebuild(snapshot);
+      return Result.getOrThrow(contentDigestSync(S.Array(S.String))(projection.serializedQuads));
+    })
+  );
+  process.stdout.write(`${digest}\n`);
+});
+
+await Effect.runPromise(probe);

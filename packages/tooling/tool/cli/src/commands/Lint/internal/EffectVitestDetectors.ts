@@ -580,12 +580,9 @@ const appendTokenChildren = (pending: Array<MorphNode>, children: ReadonlyArray<
   }
 };
 
-const occurrenceAnchor = Effect.fnUntraced(function* (
-  node: MorphNode,
-  imports: EffectVitestImports,
-  statements: MutableHashMap.MutableHashMap<number, string>
-) {
-  const crypto = yield* Crypto.Crypto;
+// Length delimiters keep token and title boundaries unambiguous; literal text
+// is retained verbatim instead of collapsing significant string whitespace.
+const harnessLabelParts = (node: MorphNode, imports: EffectVitestImports): ReadonlyArray<string> => {
   const contexts = A.filter(
     node.getAncestors(),
     (ancestor) =>
@@ -596,43 +593,59 @@ const occurrenceAnchor = Effect.fnUntraced(function* (
   const labels = A.map(contexts, (context) =>
     Node.isCallExpression(context)
       ? A.map(A.filter(context.getArguments(), Node.isStringLiteral), (name) => name.getText())
-      : []
+      : A.empty<string>()
   );
-  const statement = node.getFirstAncestor((ancestor) => Node.isStatement(ancestor)) ?? node;
-  const labelParts = A.empty<string>();
-  // Length delimiters keep token and title boundaries unambiguous; literal text
-  // is retained verbatim instead of collapsing significant string whitespace.
-  for (const label of A.flatten(labels)) labelParts.push(`${label.length}:${label}`);
-  const cached = MutableHashMap.get(statements, statement.getStart());
-  let tokens: string;
-  if (O.isSome(cached)) {
-    tokens = cached.value;
-  } else {
-    // Stream the same getChildren leaves in preorder, including ts-morph's
-    // synthetic comments and empty syntax lists, without materializing every
-    // descendant or resuming a generator at each ancestor level.
-    const pending = A.reverse(statement.getChildren());
-    const tokenParts = A.empty<string>();
-    while (pending.length > 0) {
-      const token = pending.pop();
-      if (token === undefined) continue;
-      const children = token.getChildren();
-      if (children.length === 0) {
-        const text = token.getText();
-        tokenParts.push(`${token.getKind()}:${text.length}:${text}`);
-      } else {
-        appendTokenChildren(pending, children);
-      }
+  return A.map(A.flatten(labels), (label) => `${label.length}:${label}`);
+};
+
+// Stream the same getChildren leaves in preorder, including ts-morph's
+// synthetic comments and empty syntax lists, without materializing every
+// descendant or resuming a generator at each ancestor level.
+const statementTokenParts = (statement: MorphNode): Array<string> => {
+  const pending = A.reverse(statement.getChildren());
+  const tokenParts = A.empty<string>();
+  while (pending.length > 0) {
+    const token = pending.pop();
+    if (token === undefined) continue;
+    const children = token.getChildren();
+    if (children.length === 0) {
+      const text = token.getText();
+      tokenParts.push(`${token.getKind()}:${text.length}:${text}`);
+    } else {
+      appendTokenChildren(pending, children);
     }
-    tokens = Encoding.encodeHex(
-      yield* crypto
-        .digest("SHA-256", new TextEncoder().encode(A.join(tokenParts, "")))
-        .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest statement tokens."))
-    );
-    MutableHashMap.set(statements, statement.getStart(), tokens);
   }
+  return tokenParts;
+};
+
+const statementTokenDigest = Effect.fnUntraced(function* (
+  statement: MorphNode,
+  statements: MutableHashMap.MutableHashMap<number, string>
+) {
+  const cached = MutableHashMap.get(statements, statement.getStart());
+  if (O.isSome(cached)) {
+    return cached.value;
+  }
+  const crypto = yield* Crypto.Crypto;
+  const tokens = Encoding.encodeHex(
+    yield* crypto
+      .digest("SHA-256", new TextEncoder().encode(A.join(statementTokenParts(statement), "")))
+      .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest statement tokens."))
+  );
+  MutableHashMap.set(statements, statement.getStart(), tokens);
+  return tokens;
+});
+
+const occurrenceAnchor = Effect.fnUntraced(function* (
+  node: MorphNode,
+  imports: EffectVitestImports,
+  statements: MutableHashMap.MutableHashMap<number, string>
+) {
+  const crypto = yield* Crypto.Crypto;
+  const statement = node.getFirstAncestor((ancestor) => Node.isStatement(ancestor)) ?? node;
+  const tokens = yield* statementTokenDigest(statement, statements);
   const digest = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(`${A.join(labelParts, "")}${tokens}`))
+    .digest("SHA-256", new TextEncoder().encode(`${A.join(harnessLabelParts(node, imports), "")}${tokens}`))
     .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest occurrence identity."));
   return `v2:${Encoding.encodeHex(digest)}`;
 });

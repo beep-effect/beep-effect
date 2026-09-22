@@ -1075,6 +1075,13 @@ const wholeWorktreePublishIntent = Effect.fn("Yeet.wholeWorktreePublishIntent")(
   return YeetStagedPublishIntent.make({ paths: stagedPaths });
 });
 
+const collectPublishWorktreePaths = Effect.fnUntraced(function* (repoRoot: string) {
+  const stagedPaths = yield* collectStagedPublishPaths(repoRoot);
+  const unstagedPaths = yield* collectUnstagedTrackedPaths(repoRoot);
+  const untrackedPaths = yield* collectUntrackedPaths(repoRoot);
+  return { stagedPaths, unstagedPaths, untrackedPaths };
+});
+
 /**
  * Collect the reviewed file set Yeet is allowed to publish.
  *
@@ -1114,9 +1121,7 @@ export const collectPublishIntent = Effect.fn("Yeet.collectPublishIntent")(funct
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const stagedPaths = yield* collectStagedPublishPaths(context.repoRoot);
-  const unstagedPaths = yield* collectUnstagedTrackedPaths(context.repoRoot);
-  const untrackedPaths = yield* collectUntrackedPaths(context.repoRoot);
+  const { stagedPaths, unstagedPaths, untrackedPaths } = yield* collectPublishWorktreePaths(context.repoRoot);
 
   if (A.isReadonlyArrayEmpty(stagedPaths)) {
     return yield* emptyIndexPublishIntent(context, unstagedPaths, untrackedPaths);
@@ -1169,9 +1174,7 @@ export const validatePublishIntentStillSafe = Effect.fn("Yeet.validatePublishInt
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const stagedPaths = yield* collectStagedPublishPaths(context.repoRoot);
-  const unstagedPaths = yield* collectUnstagedTrackedPaths(context.repoRoot);
-  const untrackedPaths = yield* collectUntrackedPaths(context.repoRoot);
+  const { stagedPaths, unstagedPaths, untrackedPaths } = yield* collectPublishWorktreePaths(context.repoRoot);
   const unexpectedStagedPaths = publishPathsOutsideIntent(intent.paths, stagedPaths);
   const unexpectedUnstagedPaths = publishPathsOutsideIntent(intent.paths, unstagedPaths);
 
@@ -1374,9 +1377,7 @@ export const validatePostCommitProofDidNotChangeWorktree = Effect.fn(
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const stagedPaths = yield* collectStagedPublishPaths(context.repoRoot);
-  const unstagedPaths = yield* collectUnstagedTrackedPaths(context.repoRoot);
-  const untrackedPaths = yield* collectUntrackedPaths(context.repoRoot);
+  const { stagedPaths, unstagedPaths, untrackedPaths } = yield* collectPublishWorktreePaths(context.repoRoot);
   const changedPaths = sortedUniquePaths([...stagedPaths, ...unstagedPaths, ...untrackedPaths]);
 
   if (!A.isReadonlyArrayEmpty(changedPaths)) {

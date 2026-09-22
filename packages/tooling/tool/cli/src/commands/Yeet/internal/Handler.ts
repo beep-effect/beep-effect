@@ -221,6 +221,12 @@ interface YeetContextCoordinates {
   readonly packetDir: string;
 }
 
+const currentRepoRootAndBranch = Effect.fnUntraced(function* () {
+  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
+  const branch = yield* currentYeetBranch(repoRoot);
+  return { repoRoot, branch };
+});
+
 const readOnlyRunContext = (repoRoot: string, branch: string, options: YeetContextCoordinates): RepoRunContext =>
   RepoRunContext.make({
     repoRoot,
@@ -266,8 +272,7 @@ export const hydrateYeetReadOnlyContext = Effect.fn("Yeet.hydrateYeetReadOnlyCon
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
-  const branch = yield* currentYeetBranch(repoRoot);
+  const { repoRoot, branch } = yield* currentRepoRootAndBranch();
   return readOnlyRunContext(repoRoot, branch, options);
 });
 
@@ -295,8 +300,7 @@ export const hydrateYeetRunContext = Effect.fn("Yeet.hydrateYeetRunContext")(fun
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
-  const branch = yield* currentYeetBranch(repoRoot);
+  const { repoRoot, branch } = yield* currentRepoRootAndBranch();
   if (options.mode === "pre-push-hook") {
     return readOnlyRunContext(repoRoot, branch, options);
   }

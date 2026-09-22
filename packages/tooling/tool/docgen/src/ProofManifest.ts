@@ -7,17 +7,17 @@
 
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { FsUtils } from "@beep/repo-utils";
+import { sha256Hex as utf8Sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, Str, thunkFalse } from "@beep/utils";
 import { DateTime, Effect, FileSystem, Order, Path } from "effect";
-import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
 import * as S from "effect/Schema";
 import * as Configuration from "./Configuration.ts";
 import * as Domain from "./Domain.ts";
 import * as JsonFile from "./internal/JsonFile.ts";
 import * as Version from "./Version.ts";
+import type * as Crypto from "effect/Crypto";
 
 const $I = $RepoDocgenId.create("ProofManifest");
 
@@ -321,15 +321,13 @@ const DOCGEN_PROOF_OUTPUT_GLOBS = ["docs/**/*"] as const;
 const DOCGEN_PROOF_GLOB_IGNORES = ["**/.beep/**", "**/.turbo/**", "**/node_modules/**"] as const;
 
 const sha256Text = Effect.fnUntraced(function* (value: string) {
-  const crypto = yield* Crypto.Crypto;
-  const bytes = yield* crypto.digest("SHA-256", new TextEncoder().encode(value)).pipe(
+  return yield* utf8Sha256Hex(value).pipe(
     Effect.mapError((cause) =>
       Domain.DocgenError.make({
         message: `[ProofManifest.sha256] Failed to hash proof identity\n${String(cause)}`,
       })
     )
   );
-  return Encoding.encodeHex(bytes);
 });
 
 const sha256Hex = Effect.fnUntraced(function* (value: string) {

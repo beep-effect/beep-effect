@@ -7,11 +7,10 @@
 
 import { hostname, userInfo } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
+import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit } from "@beep/schema";
 import { Effect, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -19,6 +18,7 @@ import { repoRunArtifactId, repoRunSafeArtifactName } from "../../../internal/re
 import { perUserRuntimeRoot } from "../../../internal/repo-run/RuntimeRoot.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import type { FileSystem } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { RepoRunContext } from "../../../internal/repo-run/RepoRun.models.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ArtifactPaths");
@@ -130,11 +130,9 @@ const canonicalRepositoryIdentity = (repositoryIdentity: string): string => {
 export const safeArtifactName: (value: string) => string = repoRunSafeArtifactName;
 
 const artifactNameHash = Effect.fnUntraced(function* (value: string) {
-  const crypto = yield* Crypto.Crypto;
-  const bytes = yield* crypto
-    .digest("SHA-256", new TextEncoder().encode(value))
-    .pipe(Effect.mapError(YeetCommandError.new("Failed to hash proof coordinator identity.")));
-  return Str.takeLeft(12)(Encoding.encodeHex(bytes));
+  return Str.takeLeft(12)(
+    yield* sha256Hex(value).pipe(Effect.mapError(YeetCommandError.new("Failed to hash proof coordinator identity.")))
+  );
 });
 
 const effectiveUserId = (): number => userInfo().uid;

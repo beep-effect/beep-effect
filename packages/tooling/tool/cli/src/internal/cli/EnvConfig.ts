@@ -50,13 +50,21 @@ import type { TurboCacheValueSource } from "./TurboCache.ts";
  * console.log(O.isOption(configStringOptionSync("HOME")))
  * ```
  *
+ * **Gotchas**
+ *
+ * The default `ConfigProvider` reference builds its environment key trie once,
+ * on first use, and never re-reads `process.env` afterwards. This reader
+ * therefore parses through a fresh `ConfigProvider.fromEnv()` on every call so
+ * that a variable set or deleted between two calls (as tests that toggle `CI`
+ * do) is observed by the next read.
+ *
  * @param name - Config key to read.
  * @returns The configured value when present, evaluated at call time.
  * @category configuration
  * @since 0.0.0
  */
 export const configStringOptionSync = (name: string): O.Option<string> =>
-  Effect.runSync(Config.option(Config.String(name)));
+  Effect.runSync(Config.option(Config.String(name)).parse(ConfigProvider.fromEnv()));
 
 /**
  * Check whether an optional string config value equals an expected value.

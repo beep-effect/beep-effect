@@ -86,6 +86,11 @@ const respondWithNonce = (request: NextRequest, nonce: string): NextResponse => 
 /**
  * Adds a per-request CSP nonce to OIP document responses.
  *
+ * **Details**
+ *
+ * The nonce comes from the Effect `Crypto` service (`randomUUIDv4`) provided by a
+ * module-level `ManagedRuntime` over `NodeCrypto.layer`, so the handler is async.
+ *
  * **Example** (Assigning proxy handler)
  *
  * ```ts
@@ -95,11 +100,6 @@ const respondWithNonce = (request: NextRequest, nonce: string): NextResponse => 
  * const handler: (request: NextRequest) => Promise<NextResponse> = proxy
  * console.log(typeof handler)
  * ```
- *
- * **Details**
- *
- * The nonce comes from the Effect `Crypto` service (`randomUUIDv4`) provided by a
- * module-level `ManagedRuntime` over `NodeCrypto.layer`, so the handler is async.
  *
  * @category constructors
  * @since 0.0.0

@@ -1051,6 +1051,29 @@ const processAdmissionJournalSink = Effect.fnUntraced(function* (
   return O.some(acknowledged);
 });
 
+const schedulerLockToken = Effect.fnUntraced(function* () {
+  const crypto = yield* Crypto.Crypto;
+  const token = yield* crypto.randomUUIDv4.pipe(
+    Effect.mapError(QualitySchedulerError.new("Failed to create scheduler lock identity."))
+  );
+  return `${process.pid}:${token}`;
+});
+
+const acquireSchedulerSettlementLock = Effect.fnUntraced(function* (
+  lockPath: string,
+  settlementPath: string,
+  busyMessage: string
+) {
+  const lockToken = yield* schedulerLockToken();
+  if (yield* acquireJournalFileLock(lockPath, lockToken)) {
+    return O.some(lockToken);
+  }
+  if (yield* recoveryRecordRemainsAfterSettlement(settlementPath)) {
+    return yield* QualitySchedulerError.make({ message: busyMessage });
+  }
+  return O.none();
+});
+
 const processReapClaim = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   claimPath: string,
@@ -1058,20 +1081,15 @@ const processReapClaim = Effect.fnUntraced(function* (
 ): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const lockPath = reapClaimLockPath(claimPath);
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to create scheduler lock identity."))
+  const acquired = yield* acquireSchedulerSettlementLock(
+    lockPath,
+    claimPath,
+    `Admission reap claim ${claimPath} stayed busy; its outputs remain pending.`
   );
-  const lockToken = `${process.pid}:${token}`;
-  if (!(yield* acquireJournalFileLock(lockPath, lockToken))) {
-    const claimStillPending = yield* recoveryRecordRemainsAfterSettlement(claimPath);
-    if (claimStillPending) {
-      return yield* QualitySchedulerError.make({
-        message: `Admission reap claim ${claimPath} stayed busy; its outputs remain pending.`,
-      });
-    }
+  if (O.isNone(acquired)) {
     return;
   }
+  const lockToken = acquired.value;
   yield* Effect.ensuring(
     Effect.gen(function* () {
       const currentText = yield* fs.readFileString(claimPath).pipe(Effect.option);
@@ -1340,20 +1358,15 @@ const processPromotionTransition = Effect.fnUntraced(function* (
 ): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const lockPath = `${transitionPath}.lock`;
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to create scheduler lock identity."))
+  const acquired = yield* acquireSchedulerSettlementLock(
+    lockPath,
+    transitionPath,
+    `Admission promotion ${transitionPath} stayed busy; recovery remains pending.`
   );
-  const lockToken = `${process.pid}:${token}`;
-  if (!(yield* acquireJournalFileLock(lockPath, lockToken))) {
-    const transitionPending = yield* recoveryRecordRemainsAfterSettlement(transitionPath);
-    if (transitionPending) {
-      return yield* QualitySchedulerError.make({
-        message: `Admission promotion ${transitionPath} stayed busy; recovery remains pending.`,
-      });
-    }
+  if (O.isNone(acquired)) {
     return;
   }
+  const lockToken = acquired.value;
   yield* Effect.ensuring(
     Effect.gen(function* () {
       const currentText = yield* fs.readFileString(transitionPath).pipe(Effect.option);

@@ -30,6 +30,21 @@ const LOCK_RETRY_ATTEMPTS = 400;
 const PID_ONLY_OWNER_MAX_AGE = Duration.hours(24);
 const textEncoder = new TextEncoder();
 
+const attemptJournalLockToken = Effect.fnUntraced(function* () {
+  const crypto = yield* Crypto.Crypto;
+  const token = yield* crypto.randomUUIDv4.pipe(
+    Effect.mapError(QualitySchedulerError.new("Failed to create an attempt journal lock identity."))
+  );
+  return `${process.pid}:${token}`;
+});
+
+const acquireAttemptJournalLock = Effect.fnUntraced(function* (journalPath: string, retryAttempts: number) {
+  const lockPath = `${journalPath}.lock`;
+  const lockToken = yield* attemptJournalLockToken();
+  const acquired = yield* acquireJournalFileLock(lockPath, lockToken, retryAttempts);
+  return { acquired, lockPath, lockToken };
+});
+
 /**
  * Terminal reason retained for every interrupted Yeet attempt.
  *
@@ -540,13 +555,8 @@ export const reconcileAttemptJournal = Effect.fn("AttemptTerminationJournal.reco
   if (!(yield* fs.exists(journalPath).pipe(Effect.orElseSucceed(constant(false))))) {
     return 0;
   }
-  const lockPath = `${journalPath}.lock`;
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to create an attempt journal lock identity."))
-  );
-  const lockToken = `${process.pid}:${token}`;
-  if (!(yield* acquireJournalFileLock(lockPath, lockToken, LOCK_RETRY_ATTEMPTS))) {
+  const { acquired, lockPath, lockToken } = yield* acquireAttemptJournalLock(journalPath, LOCK_RETRY_ATTEMPTS);
+  if (!acquired) {
     return yield* QualitySchedulerError.make({
       message: `Yeet attempt journal lock "${lockPath}" stayed busy; could not reconcile owners.`,
     });
@@ -635,11 +645,7 @@ export const appendEncodedAttemptJournalEvent = Effect.fn("AttemptTerminationJou
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lockPath = `${journalPath}.lock`;
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to create an attempt journal lock identity."))
-  );
-  const lockToken = `${process.pid}:${token}`;
+  const lockToken = yield* attemptJournalLockToken();
   yield* fs
     .makeDirectory(path.dirname(journalPath), { recursive: true })
     .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to create Yeet attempt journal directory.`)));
@@ -751,13 +757,8 @@ export const appendProofJobAttemptTerminated = Effect.fn("AttemptTerminationJour
     !(yield* fs.exists(journalPath).pipe(Effect.mapError(QualitySchedulerError.new("Failed to inspect job journal."))))
   )
     return false;
-  const lockPath = `${journalPath}.lock`;
-  const crypto = yield* Crypto.Crypto;
-  const token = yield* crypto.randomUUIDv4.pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to create an attempt journal lock identity."))
-  );
-  const lockToken = `${process.pid}:${token}`;
-  if (!(yield* acquireJournalFileLock(lockPath, lockToken, LOCK_RETRY_ATTEMPTS))) {
+  const { acquired, lockPath, lockToken } = yield* acquireAttemptJournalLock(journalPath, LOCK_RETRY_ATTEMPTS);
+  if (!acquired) {
     return yield* QualitySchedulerError.make({ message: "Attempt journal stayed busy during proof-job finalization." });
   }
   const appendLocked = Effect.fnUntraced(function* () {
