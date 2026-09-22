@@ -2285,3 +2285,20 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   author, lists resolved threads where a reviewer spoke last as `review follow-ups`, and
   `yeet reply` posts on them. Still open: the monitor's comment stream showed the replies live,
   but a reboot kills the stream and nothing replays it at the next read-first closeout.
+
+## 2026-09-22 — an inherited coverage red blocks every `@beep/repo-cli` pull request
+
+- Doing: driving #1184 to merge-ready after its own reds cleared; `Heavy / Coverage Regression`
+  stayed red on files this branch never touched.
+- Evidence: `[coverage-ratchet] coverage regression(s) detected` named `Ci/LaneTimings.ts`
+  (`lines: 98.16 < 98.24`) and `Cache/Cache.runtime.ts` (`new file ... no baseline file
+  identity`); the already-merged #1195 reported the identical rows, and neither file is in the
+  #1184 diff. The monitor still printed `merge-ready: yes` because the lane is not a required
+  context, while the repo's own mergeable definition counts it. Two merges on `main` (#1182,
+  #1195) each landed with a row missing or lowered, and the ratchet judges every later repo-cli
+  branch at the base floor, so the debt is paid by whoever pushes next.
+- Prevention: a hosted-only fix lane (`fix/coverage-inherited-repo-cli`) with two tests and the
+  hosted-measured row. Structurally: the ratchet could refuse a merge whose own run reported a
+  lowered or missing row for a changed package (it did, but as a non-required context), and
+  `yeet monitor --until-ready` should treat a non-required red with `needs code fix` as blocking
+  rather than merge-ready.
