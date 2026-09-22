@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-22T17:52:23.043Z
+Generated: 2026-09-22T19:17:05.364Z
 
 ## Scope
 
@@ -15,15 +15,15 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
 | publicModules | 2869 |
-| publicExports | 20298 |
+| publicExports | 20302 |
 | openModules | 377 |
-| openExports | 3103 |
+| openExports | 3105 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3341 |
+| exampleImportFindings | 3343 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3340 |
+| no-root-package-import | 3342 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -175,7 +175,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 117 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 118 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 4 |
 | 119 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
-| 120 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | needs-remediation | 4 | 21 | 1 | 2 |
+| 120 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | needs-remediation | 4 | 23 | 1 | 3 |
 | 121 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 31 | 86 | 0 | 14 |
 | 122 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 123 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
@@ -189,7 +189,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 131 | `@beep/box-provisioning` | `packages/drivers/box-provisioning` | needs-remediation | 11 | 110 | 0 | 10 |
 | 132 | `@beep/freshbooks` | `packages/drivers/freshbooks` | needs-remediation | 6 | 49 | 5 | 12 |
 | 133 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | needs-remediation | 4 | 16 | 0 | 2 |
-| 134 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 30 | 7 | 6 |
+| 134 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 32 | 7 | 7 |
 | 135 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
 | 136 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 137 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | needs-remediation | 7 | 204 | 0 | 18 |
@@ -4019,7 +4019,8 @@ Module findings:
 
 Export findings:
 - `src/M365Handlers.ts:104` `M365ToolkitHandlersLive` (const) - 1 example import violation(s)
-- `src/Server.ts:68` `makeServerLayer` (const) - 1 example import violation(s)
+- `src/Server.ts:91` `M365McpRegistrationsLive` (const) - 1 example import violation(s)
+- `src/Server.ts:120` `makeServerLayer` (const) - 1 example import violation(s)
 
 ### @beep/oip-web
 
@@ -4537,7 +4538,8 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/Server.ts:88` `makeServerLayer` (const) - 1 example import violation(s)
+- `src/Server.ts:102` `UsptoMcpRegistrationsLive` (const) - 1 example import violation(s)
+- `src/Server.ts:133` `makeServerLayer` (const) - 1 example import violation(s)
 - `src/UsptoDocumentTiers.ts:189` `MintFetchableHandle` (const) - 2 example import violation(s)
 - `src/UsptoDocumentTiers.ts:248` `ProjectDocumentsWithinBudgetOptions` (class) - 2 example import violation(s)
 - `src/UsptoDocumentTiers.ts:300` `projectDocumentsWithinBudget` (const) - 2 example import violation(s)

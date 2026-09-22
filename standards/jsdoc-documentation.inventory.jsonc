@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-09-22T17:52:23.043Z",
+  "generatedAt": "2026-09-22T19:17:05.364Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,15 +66,15 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 117,
     "publicModules": 2869,
-    "publicExports": 20298,
+    "publicExports": 20302,
     "openModules": 377,
-    "openExports": 3103,
+    "openExports": 3105,
     "missingExportExamples": 5,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 3341,
+    "exampleImportFindings": 3343,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 3340,
+    "no-root-package-import": 3342,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -442448,7 +442448,7 @@
         "srcDir": "src",
         "sourceFileCount": 5,
         "publicModuleCount": 4,
-        "publicExportCount": 21
+        "publicExportCount": 23
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -442458,14 +442458,14 @@
       },
       "counts": {
         "openModules": 1,
-        "openExports": 2,
+        "openExports": 3,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 3,
+        "exampleImportFindings": 4,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -442483,7 +442483,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 3
+          "no-root-package-import": 4
         }
       },
       "modules": [
@@ -442550,7 +442550,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 2,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -442924,8 +442924,8 @@
           "exportKind": "class",
           "filePath": "src/Server.ts",
           "repoPath": "packages/drivers/m365-mcp/src/Server.ts",
-          "line": 37,
-          "anchor": "packages-drivers-m365-mcp-src-server-ts-37-m365mcpserverconfig",
+          "line": 36,
+          "anchor": "packages-drivers-m365-mcp-src-server-ts-36-m365mcpserverconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -442942,12 +442942,62 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "M365_MCP_INSTRUCTIONS",
+          "exportKind": "const",
+          "filePath": "src/Server.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/Server.ts",
+          "line": 65,
+          "anchor": "packages-drivers-m365-mcp-src-server-ts-65-m365-mcp-instructions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "M365McpRegistrationsLive",
+          "exportKind": "const",
+          "filePath": "src/Server.ts",
+          "repoPath": "packages/drivers/m365-mcp/src/Server.ts",
+          "line": 91,
+          "anchor": "packages-drivers-m365-mcp-src-server-ts-91-m365mcpregistrationslive",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the effect package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
           "symbolName": "makeServerLayer",
           "exportKind": "const",
           "filePath": "src/Server.ts",
           "repoPath": "packages/drivers/m365-mcp/src/Server.ts",
-          "line": 68,
-          "anchor": "packages-drivers-m365-mcp-src-server-ts-68-makeserverlayer",
+          "line": 120,
+          "anchor": "packages-drivers-m365-mcp-src-server-ts-120-makeserverlayer",
           "currentTags": [
             "@category",
             "@since"
@@ -537294,7 +537344,7 @@
         "srcDir": "src",
         "sourceFileCount": 7,
         "publicModuleCount": 7,
-        "publicExportCount": 30
+        "publicExportCount": 32
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -537304,14 +537354,14 @@
       },
       "counts": {
         "openModules": 7,
-        "openExports": 6,
+        "openExports": 7,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 9,
+        "exampleImportFindings": 10,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -537329,7 +537379,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 9
+          "no-root-package-import": 10
         }
       },
       "modules": [
@@ -537356,7 +537406,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 2,
+          "exportCount": 4,
           "remediationStatus": "open"
         },
         {
@@ -537540,12 +537590,62 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "USPTO_MCP_INSTRUCTIONS",
+          "exportKind": "const",
+          "filePath": "src/Server.ts",
+          "repoPath": "packages/drivers/uspto-mcp/src/Server.ts",
+          "line": 74,
+          "anchor": "packages-drivers-uspto-mcp-src-server-ts-74-uspto-mcp-instructions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "UsptoMcpRegistrationsLive",
+          "exportKind": "const",
+          "filePath": "src/Server.ts",
+          "repoPath": "packages/drivers/uspto-mcp/src/Server.ts",
+          "line": 102,
+          "anchor": "packages-drivers-uspto-mcp-src-server-ts-102-usptomcpregistrationslive",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [
+            {
+              "example": 1,
+              "rule": "no-root-package-import",
+              "detail": "Import stable public modules instead of the effect package root."
+            }
+          ],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "open"
+        },
+        {
           "symbolName": "makeServerLayer",
           "exportKind": "const",
           "filePath": "src/Server.ts",
           "repoPath": "packages/drivers/uspto-mcp/src/Server.ts",
-          "line": 88,
-          "anchor": "packages-drivers-uspto-mcp-src-server-ts-88-makeserverlayer",
+          "line": 133,
+          "anchor": "packages-drivers-uspto-mcp-src-server-ts-133-makeserverlayer",
           "currentTags": [
             "@category",
             "@since"
