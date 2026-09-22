@@ -65,7 +65,12 @@ export const PartitionedCiLane = LiteralKit(["lint", "test-unit"]).pipe(
 export type PartitionedCiLane = typeof PartitionedCiLane.Type;
 
 /**
- * Stable identifiers for the five hosted CI lane partitions.
+ * Stable identifiers for the six hosted CI lane partitions.
+ *
+ * **Details**
+ *
+ * `repo-cli-1` and `repo-cli-2` are the two Vitest `--shard` halves of the
+ * single `@beep/repo-cli#test` task; every other partition is a package bin.
  *
  * **Example** (Recognize a lint partition)
  *
@@ -78,7 +83,7 @@ export type PartitionedCiLane = typeof PartitionedCiLane.Type;
  * @category models
  * @since 0.0.0
  */
-export const CiLanePartitionId = LiteralKit(["lint-a", "lint-b", "repo-cli", "unit-a", "unit-b"]).pipe(
+export const CiLanePartitionId = LiteralKit(["lint-a", "lint-b", "repo-cli-1", "repo-cli-2", "unit-a", "unit-b"]).pipe(
   $I.annoteSchema("CiLanePartitionId", {
     description: "Stable identifier for one hosted Lint or Test Unit partition.",
   })
@@ -102,7 +107,52 @@ export const CiLanePartitionId = LiteralKit(["lint-a", "lint-b", "repo-cli", "un
 export type CiLanePartitionId = typeof CiLanePartitionId.Type;
 
 /**
+ * Vitest `--shard=<index>/<total>` slice carried by one CI lane partition.
+ *
+ * **Details**
+ *
+ * Vitest hashes each spec path and slices the sorted list into `total`
+ * contiguous ranges, so the split is deterministic per file set. `index` is
+ * one-based and never exceeds `total`; `total` is at least two because a
+ * single-shard partition is just an unsharded bin.
+ *
+ * **Example** (Describe the first of two halves)
+ *
+ * ```ts
+ * import { CiLanePartitionShard } from "@beep/repo-cli/commands/Ci"
+ *
+ * const shard = CiLanePartitionShard.make({ index: 1, total: 2 })
+ * console.log(`--shard=${shard.index}/${shard.total}`)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiLanePartitionShard extends S.Class<CiLanePartitionShard>($I`CiLanePartitionShard`)(
+  S.Struct({
+    index: S.Int.check(S.isGreaterThanOrEqualTo(1)),
+    total: S.Int.check(S.isGreaterThanOrEqualTo(2)),
+  }).check(
+    S.makeFilter((shard: { readonly index: number; readonly total: number }) => shard.index <= shard.total, {
+      identifier: $I`CiLanePartitionShardIndexBoundCheck`,
+      title: "CI Lane Partition Shard Index Bound",
+      description: "Checks that a Vitest shard index never exceeds its shard total.",
+      message: "Shard index must not exceed the shard total.",
+    })
+  ),
+  $I.annote("CiLanePartitionShard", {
+    description: "One-based Vitest --shard slice (index/total) forwarded by a sharded CI lane partition.",
+  })
+) {}
+
+/**
  * Schema-backed assignment and measured weight for one CI lane partition.
+ *
+ * **Details**
+ *
+ * A partition that carries `shard` runs a Vitest slice of its single package
+ * instead of the whole task; sibling partitions with the same package and
+ * total together cover every file once.
  *
  * **Example** (Inspect a partition)
  *
@@ -121,6 +171,7 @@ export class CiLanePartition extends S.Class<CiLanePartition>($I`CiLanePartition
     lane: PartitionedCiLane,
     packages: S.Array(S.String),
     weightSeconds: S.Finite,
+    shard: S.optionalKey(CiLanePartitionShard),
   },
   $I.annote("CiLanePartition", {
     description: "Schema-backed package assignment and measured p95 weight for one CI lane partition.",
@@ -136,11 +187,13 @@ export class CiLanePartition extends S.Class<CiLanePartition>($I`CiLanePartition
  * `goals/ci-lane-economics/research/tail-attribution.md`. For each lane,
  * candidates are ordered by descending p95 weight with task id as the stable
  * tie-break, then assigned to the currently lightest bin. Test Unit first
- * isolates `@beep/repo-cli`; the remaining tasks are assigned to two bins.
- * The extracted `@beep/test-runner` stays beside `@beep/test-utils` in each
- * lane so the moved workload retains its existing placement. Historical p95
- * weights remain unchanged; they do not claim a new measurement of split-task
- * startup overhead. The weights are evidence, not runtime scheduling inputs.
+ * isolates `@beep/repo-cli` and splits it into two Vitest `--shard` halves;
+ * their 440 s weights are arithmetic halves of the measured 879 s serial body
+ * (the split is by path hash, so the real halves are close but not equal),
+ * per the `goals/ci-lane-economics` window-2 repair decision. The remaining
+ * tasks are assigned to two bins. The extracted `@beep/test-runner` stays
+ * beside `@beep/test-utils` in each lane so the moved workload retains its
+ * existing placement. The weights are evidence, not runtime scheduling inputs.
  *
  * **Example** (List the hosted partitions)
  *
@@ -306,10 +359,18 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     ],
   }),
   CiLanePartition.make({
-    id: "repo-cli",
+    id: "repo-cli-1",
     lane: "test-unit",
-    weightSeconds: 879,
+    weightSeconds: 440,
     packages: ["@beep/repo-cli"],
+    shard: CiLanePartitionShard.make({ index: 1, total: 2 }),
+  }),
+  CiLanePartition.make({
+    id: "repo-cli-2",
+    lane: "test-unit",
+    weightSeconds: 440,
+    packages: ["@beep/repo-cli"],
+    shard: CiLanePartitionShard.make({ index: 2, total: 2 }),
   }),
   CiLanePartition.make({
     id: "unit-a",
