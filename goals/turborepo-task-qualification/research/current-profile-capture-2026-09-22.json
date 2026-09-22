@@ -106,7 +106,6 @@
         "count": 5
       }
     ],
-    "repositoryReadCount": 428,
     "unmappedRepositoryReads": [
       ".git"
     ],
@@ -119,7 +118,10 @@
       "Read paths do not establish semantic relevance",
       "Single execution cannot establish all possible inputs",
       "Native plan membership and read observations do not prove complete semantic inputs"
-    ]
+    ],
+    "repositoryUniquePathCount": 428,
+    "repositoryReadCalls": 448,
+    "metricProjection": "The retained raw review names the unique-path metric repositoryReadCount. This published projection renames it repositoryUniquePathCount and derives repositoryReadCalls from the repository groups; original retained bytes and their hashes are unchanged."
   },
   "nativePlanReview": {
     "nativePlanSha256": "44b587736fdd942ec24adf16b98d5df348e4c3cf0a8d8fa1e2b521f4b7629eb3",
