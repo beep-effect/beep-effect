@@ -4,6 +4,7 @@ import {
   ProofFact,
   ProofInputDigest,
   ProofLedger,
+  ProofLedgerFactRow,
   ProofLedgerShadowRow,
   ProofProvenance,
   ProofReuseHit,
@@ -16,7 +17,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
-import { constFalse } from "effect/Function";
+import { constFalse, constTrue } from "effect/Function";
 import * as Str from "effect/String";
 import type { ProofChangedPackageTripwire, ProofLedgerShape } from "@beep/repo-cli/test/Yeet";
 
@@ -230,6 +231,53 @@ describe("ProofLedger", () => {
     ).pipe(provideScopedLayer(PlatformLayer))
   );
 
+  it.live("decides many keys against one snapshot and appends many rows in one write", () =>
+    inTempRepo((root) =>
+      withLedger(root, (ledger) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* ledger.appendAll([
+            ProofLedgerFactRow.make({ schemaVersion: PROOF_FACT_SCHEMA_VERSION, fact: fact() }),
+            ProofLedgerFactRow.make({
+              schemaVersion: PROOF_FACT_SCHEMA_VERSION,
+              fact: fact({ key: input({ laneId: "quality:check", key: "check-key" }), outcome: "failed" }),
+            }),
+          ]);
+          const contents = yield* fs.readFileString(yield* proofLedgerPathForCheckout(root));
+          expect(A.length(A.filter(Str.split(contents, "\n"), Str.isNonEmpty))).toBe(2);
+
+          const decisions = yield* ledger.lookupAll(
+            [
+              input(),
+              input({ laneId: "quality:check", key: "check-key" }),
+              input({ laneId: "quality:labs", key: "labs-key", inputSource: "undeclared" }),
+              input({ laneId: "quality:lint", key: "lint-key" }),
+            ],
+            NOW
+          );
+          expect(decisions).toStrictEqual([
+            ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" }),
+            ProofReuseMiss.make({ key: "check-key", reason: "prior-failed" }),
+            ProofReuseMiss.make({ key: "labs-key", reason: "undeclared-inputs" }),
+            ProofReuseMiss.make({ key: "lint-key", reason: "no-fact" }),
+          ]);
+          expect(yield* ledger.lookupAll([], NOW)).toStrictEqual([]);
+          const snapshot = yield* ledger.snapshot(NOW);
+          expect(snapshot).toMatchObject({ facts: 2, expiredFacts: 0, malformedRows: 0 });
+          expect(snapshot.shadowRows).toStrictEqual([]);
+          const expired = yield* ledger.snapshot(DateTime.makeUnsafe("2026-12-01T00:00:00.000Z"));
+          expect(expired.expiredFacts).toBe(2);
+          const tripped = yield* withLedger(root, (guarded) => guarded.lookupAll([input()], NOW), constTrue);
+          expect(tripped).toStrictEqual([
+            ProofReuseMiss.make({ key: "proof-key", reason: "changed-package-tripwire" }),
+          ]);
+          yield* ledger.appendAll([]);
+          expect(yield* ledger.facts).toBe(2);
+        })
+      )
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
   it.live("records shadow rows and returns only hit-versus-failed disagreements", () =>
     inTempRepo((root) =>
       withLedger(root, (ledger) =>
@@ -237,8 +285,13 @@ describe("ProofLedger", () => {
           const disagreement = ProofLedgerShadowRow.make({
             schemaVersion: PROOF_FACT_SCHEMA_VERSION,
             attemptId: "attempt-1",
+            laneId: "quality:coverage",
+            branch: "feat/example",
+            stage: "pre-push",
+            envProfile: "local",
             decision: ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" }),
             observed: "failed",
+            durationMs: 1_200,
             recordedAt: "2026-09-03T12:31:00.000Z",
           });
           yield* ledger.recordShadow(disagreement);
@@ -246,11 +299,16 @@ describe("ProofLedger", () => {
             ProofLedgerShadowRow.make({
               schemaVersion: PROOF_FACT_SCHEMA_VERSION,
               attemptId: "attempt-2",
+              laneId: "quality:coverage",
+              branch: "feat/example",
+              stage: "pre-push",
+              envProfile: "local",
               decision: ProofReuseHit.make({
                 key: "proof-key",
                 factRecordedAt: "2026-09-03T12:00:00.000Z",
               }),
               observed: "passed",
+              durationMs: 1_200,
               recordedAt: "2026-09-03T12:32:00.000Z",
             })
           );
@@ -258,8 +316,13 @@ describe("ProofLedger", () => {
             ProofLedgerShadowRow.make({
               schemaVersion: PROOF_FACT_SCHEMA_VERSION,
               attemptId: "attempt-3",
+              laneId: "quality:coverage",
+              branch: "feat/example",
+              stage: "pre-push",
+              envProfile: "local",
               decision: ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" }),
               observed: "failed",
+              durationMs: 1_200,
               recordedAt: "2026-09-03T12:33:00.000Z",
             })
           );

@@ -30,7 +30,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ProofEnvProfile, ProofStage } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
-import { CiLaneClass, CiLaneId } from "../../Ci/CiLane.ts";
+import { CiLaneClass } from "../../Ci/CiLane.ts";
 import { YeetProofTier } from "./Planner.ts";
 
 export { ProofEnvProfile, ProofStage } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
@@ -166,7 +166,7 @@ export class ProofEpoch extends S.Class<ProofEpoch>($I`ProofEpoch`)(
  * import { ProofInputDigest } from "@beep/repo-cli/test/Yeet"
  *
  * const key = ProofInputDigest.make({
- *   laneId: "coverage",
+ *   laneId: "quality:coverage",
  *   laneClass: "cli-runnable",
  *   commandDigest: "c0",
  *   envProfile: "local",
@@ -175,15 +175,22 @@ export class ProofEpoch extends S.Class<ProofEpoch>($I`ProofEpoch`)(
  *   epochDigest: "e2",
  *   key: "k3",
  * })
- * console.log(key.laneId) // "coverage"
+ * console.log(key.laneId) // "quality:coverage"
  * ```
+ *
+ * **Details**
+ *
+ * `laneId` is the wave-qualified GitHub-check lane id the inner-lane report
+ * carries (`quality:coverage`, `cheap-gates:tsgo-rules`), one id per command
+ * (ruling 28); the top-level `CiLaneId` vocabulary is too narrow for the lanes
+ * that actually run inside the pre-push and merged-preview waves (ruling 61).
  *
  * @category models
  * @since 0.0.0
  */
 export class ProofInputDigest extends S.Class<ProofInputDigest>($I`ProofInputDigest`)(
   {
-    laneId: CiLaneId,
+    laneId: S.NonEmptyString,
     laneClass: CiLaneClass,
     commandDigest: S.NonEmptyString,
     envProfile: ProofEnvProfile,
@@ -457,6 +464,14 @@ export class ProofLedgerFactRow extends S.Class<ProofLedgerFactRow>($I`ProofLedg
  * still ran. `observed` is the lane's real outcome; a `hit` decision paired
  * with an observed `failed` is a disagreement and blocks enforcement (ruling 7).
  *
+ * **Details**
+ *
+ * The row carries the sample facts the enforcement bar counts (ruling 62):
+ * `laneId` and `branch` make attempts-per-branch and per-lane disagreement
+ * counts computable from the ledger alone, `stage` and `envProfile` keep the
+ * pre-push and merged-preview samples separable, and `durationMs` is the time
+ * a hit would have saved.
+ *
  * **Example** (Recognise a disagreement)
  *
  * ```ts
@@ -465,8 +480,13 @@ export class ProofLedgerFactRow extends S.Class<ProofLedgerFactRow>($I`ProofLedg
  * const row = ProofLedgerShadowRow.make({
  *   schemaVersion: "proof-fact/v1",
  *   attemptId: "attempt-2",
+ *   laneId: "quality:coverage",
+ *   branch: "feat/example",
+ *   stage: "pre-push",
+ *   envProfile: "local",
  *   decision: ProofReuseHit.make({ key: "k3", factRecordedAt: "2026-09-03T12:00:00.000Z" }),
  *   observed: "failed",
+ *   durationMs: 1200,
  *   recordedAt: "2026-09-03T12:05:00.000Z",
  * })
  * console.log(row.decision.kind === "hit" && row.observed === "failed") // true
@@ -480,12 +500,18 @@ export class ProofLedgerShadowRow extends S.Class<ProofLedgerShadowRow>($I`Proof
     kind: S.tag("shadow"),
     schemaVersion: S.Literal(PROOF_FACT_SCHEMA_VERSION),
     attemptId: S.NonEmptyString,
+    laneId: S.NonEmptyString,
+    branch: S.NonEmptyString,
+    stage: ProofStage,
+    envProfile: ProofEnvProfile,
     decision: ProofReuseDecision,
     observed: ProofOutcome,
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     recordedAt: S.NonEmptyString,
   },
   $I.annote("ProofLedgerShadowRow", {
-    description: "Shadow-mode row: the decision the ledger would have made and the outcome the lane actually produced.",
+    description:
+      "Shadow-mode row: the decision the ledger would have made, the outcome the lane actually produced, and the lane, branch, stage, env profile and duration the enforcement bar counts.",
   })
 ) {}
 
@@ -501,8 +527,13 @@ export class ProofLedgerShadowRow extends S.Class<ProofLedgerShadowRow>($I`Proof
  * const row = ProofLedgerShadowRow.make({
  *   schemaVersion: "proof-fact/v1",
  *   attemptId: "attempt-2",
+ *   laneId: "quality:coverage",
+ *   branch: "feat/example",
+ *   stage: "pre-push",
+ *   envProfile: "local",
  *   decision: ProofReuseMiss.make({ key: "k3", reason: "no-fact" }),
  *   observed: "passed",
+ *   durationMs: 1200,
  *   recordedAt: "2026-09-03T12:05:00.000Z",
  * })
  * console.log(S.is(ProofLedgerRow)(row)) // true
