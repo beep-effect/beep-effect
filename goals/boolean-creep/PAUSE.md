@@ -1,8 +1,10 @@
 # Save PR preparation — 2026-09-21
 
 Benjamin requested merging current main and bringing a save PR to a green,
-mergeable state before continuing campaign work. The save PR remains draft;
-Benjamin retains merge authority. This checkpoint does not ratify GATE 2.
+mergeable state before continuing campaign work. PR #1176 is now ready for
+review and carries `ready-for-heavy`; its local and hosted checks must still
+finish before merge readiness is established. Benjamin retains merge authority.
+This checkpoint does not ratify GATE 2.
 
 Main `3b8a17d850` is included through merge `183b4dbb25`, including Effect
 `4.0.0-rc.117`, upstream Codex Security repairs, and the Effect Vitest P1
