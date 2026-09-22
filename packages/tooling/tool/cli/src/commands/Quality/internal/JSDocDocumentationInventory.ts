@@ -763,12 +763,33 @@ const schemaAnnotationGaps = (name: string, node: Node, sourceFile: SourceFile):
 
   const gaps: Array<DocumentationIssue> = [];
   const text = getDocNode(node).getText();
+  const heritage = Node.isClassDeclaration(node) ? node.getExtends()?.getExpression() : undefined;
+  const constructor = heritage !== undefined && Node.isCallExpression(heritage) ? heritage.getExpression() : undefined;
+  const factory =
+    constructor !== undefined && Node.isCallExpression(constructor) ? constructor.getExpression() : undefined;
+  const inlineAnnotations =
+    factory !== undefined && Node.isPropertyAccessExpression(factory) && factory.getExpression().getText() === "S"
+      ? heritage?.asKind(SyntaxKind.CallExpression)?.getArguments()[factory.getName() === "TaggedError" ? 2 : 1]
+      : undefined;
+  const hasInlineClassAnnotation =
+    factory !== undefined &&
+    Node.isPropertyAccessExpression(factory) &&
+    A.contains(["Class", "TaggedError"], factory.getName()) &&
+    inlineAnnotations !== undefined &&
+    Node.isObjectLiteralExpression(inlineAnnotations) &&
+    A.some(
+      inlineAnnotations.getProperties(),
+      (property) =>
+        Node.isPropertyAssignment(property) &&
+        A.contains(["identifier", "description", "title", "schemaId"], property.getName()) &&
+        property.getInitializer() !== undefined
+    );
   const hasAnnotation =
     /\$I\.annote(?:Schema|Class|Error)?\s*(?:<[\s\S]*?>)?\s*\(/.test(text) ||
     /\.annotate\s*\(/.test(text) ||
     /\bS\.annotate\s*\(/.test(text);
 
-  if (!hasAnnotation) {
+  if (!hasAnnotation && !hasInlineClassAnnotation) {
     A.appendInPlace(gaps, {
       rule: "missing-schema-annotation",
       detail: "Exported schemas should carry $I.annote, $I.annoteClass, $I.annoteError, or $I.annoteSchema metadata.",
