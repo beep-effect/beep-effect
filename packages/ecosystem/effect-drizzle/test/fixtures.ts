@@ -6,6 +6,7 @@ import { schema, Table, toPgTable } from "@beep/effect-drizzle/pg";
 import { getColumnTable, getTableName, sql } from "drizzle-orm";
 import { getTableConfig as getPgTableConfig } from "drizzle-orm/pg-core";
 import { head } from "effect/Array";
+import * as O from "effect/Option";
 import { getOrThrow } from "effect/Option";
 import {
   Array,
@@ -60,8 +61,9 @@ const auditKit = make("pg", (pg) => ({
     rowVersion: PosInt.pipe(pg.integer(), pg.default(1), pg.version()),
   },
   defaultExtras: (columns) => {
-    const name: string = `${getTableName(getColumnTable(columns.rowVersion))}_row_version_positive`;
-    return [Table.check(sql<boolean>`${columns.rowVersion} > 0`, name)];
+    const rowVersion = O.getOrThrow(O.fromUndefinedOr(columns.rowVersion));
+    const name: string = `${getTableName(getColumnTable(rowVersion))}_row_version_positive`;
+    return [Table.check(sql<boolean>`${rowVersion} > 0`, name)];
   },
 }));
 

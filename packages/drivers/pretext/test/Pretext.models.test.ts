@@ -207,15 +207,16 @@ describe("pure layout helpers", () => {
     Effect.fnUntraced(function* () {
       const snapshot = yield* chromeLinuxArial16;
       const metrics = snapshot.metrics;
+      const wordWidth = (word: string): number => O.getOrThrow(R.get(metrics.words, word));
 
       expect(lineRanges(metrics, { maxWidth: 90, text: "The dragon slithers" })).toEqual(
         O.some([
           {
             startWord: 0,
             endWord: 2,
-            width: metrics.words.The + metrics.spaceWidth + metrics.words.dragon,
+            width: wordWidth("The") + metrics.spaceWidth + wordWidth("dragon"),
           },
-          { startWord: 2, endWord: 3, width: metrics.words.slithers },
+          { startWord: 2, endWord: 3, width: wordWidth("slithers") },
         ])
       );
     })

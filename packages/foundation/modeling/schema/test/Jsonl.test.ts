@@ -29,8 +29,8 @@ describe("Jsonl", () => {
 
       expect(people).toHaveLength(2);
       expect(people[0]).toBeInstanceOf(JsonlPerson);
-      expect(people[0].name).toBe("Ada");
-      expect(people[1].age).toBe(85);
+      expect(people[0]?.name).toBe("Ada");
+      expect(people[1]?.age).toBe(85);
     })
   );
 

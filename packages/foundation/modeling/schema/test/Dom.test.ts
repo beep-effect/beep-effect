@@ -6,6 +6,7 @@ import { DOMMouseEvent } from "@beep/schema/DomMouseEvent";
 import { createDOMRefSchema, DOMReactNode, isReactNode, isReactRef } from "@beep/schema/DomReactNode";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime } from "effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const isDOMCssProperties = S.is(DOMCssProperties);
@@ -19,17 +20,30 @@ class TestHTMLElement {}
 class TestDragEvent {}
 class TestMouseEvent {}
 
+type DomConstructor = new (type?: string) => object;
+
+// The schema package compiles without the dom lib, so the constructors are read from
+// globalThis and fall back to test doubles when the runtime has no DOM.
+const domGlobals = globalThis as Record<string, unknown>;
+const domConstructorOr = (name: string, fallback: DomConstructor): DomConstructor => {
+  const constructor = domGlobals[name];
+  return P.isFunction(constructor) ? (constructor as DomConstructor) : fallback;
+};
+const DragEventConstructor = domConstructorOr("DragEvent", TestDragEvent);
+const HTMLElementConstructor = domConstructorOr("HTMLElement", TestHTMLElement);
+const MouseEventConstructor = domConstructorOr("MouseEvent", TestMouseEvent);
+
 Object.assign(globalThis, {
-  DragEvent: globalThis.DragEvent ?? TestDragEvent,
-  HTMLElement: globalThis.HTMLElement ?? TestHTMLElement,
-  MouseEvent: globalThis.MouseEvent ?? TestMouseEvent,
+  DragEvent: DragEventConstructor,
+  HTMLElement: HTMLElementConstructor,
+  MouseEvent: MouseEventConstructor,
 });
 
 describe("DOM element and event guards", () => {
   it("recognizes DOM class-backed values", () => {
-    const element = new HTMLElement();
-    const dragEvent = new DragEvent("dragstart");
-    const mouseEvent = new MouseEvent("click");
+    const element = new HTMLElementConstructor();
+    const dragEvent = new DragEventConstructor("dragstart");
+    const mouseEvent = new MouseEventConstructor("click");
     const event = new Event("change");
 
     expect(isHTMLElement(element)).toBe(true);
@@ -72,8 +86,8 @@ describe("DOM element and event guards", () => {
     expect(isReactRef(undefined)).toBe(true);
     expect(isReactRef(() => undefined)).toBe(true);
     expect(isReactRef("legacy")).toBe(true);
-    expect(isReactRef({ current: new HTMLElement() })).toBe(true);
-    expect(isReactRef({ value: new HTMLElement() })).toBe(false);
+    expect(isReactRef({ current: new HTMLElementConstructor() })).toBe(true);
+    expect(isReactRef({ value: new HTMLElementConstructor() })).toBe(false);
     expect(isReactRef(1)).toBe(false);
     expect(S.is(createDOMRefSchema())({ current: null })).toBe(true);
   });

@@ -280,11 +280,11 @@ describe("CourtReporterVocabulary", () => {
 
     expect(kinds).toStrictEqual(A.sort([...ArtifactDriftChangeKind.Options], Order.String));
     expect(
-      A.every([reports[0], reports[1], ...reports.slice(3, 7)], ({ compatibility }) => compatibility === "compatible")
+      A.every([...A.take(reports, 2), ...reports.slice(3, 7)], ({ compatibility }) => compatibility === "compatible")
     ).toBe(true);
-    expect(A.every([reports[2], ...reports.slice(7)], ({ compatibility }) => compatibility === "incompatible")).toBe(
-      true
-    );
+    expect(
+      A.every([...reports.slice(2, 3), ...reports.slice(7)], ({ compatibility }) => compatibility === "incompatible")
+    ).toBe(true);
   });
 
   it("reports an unchanged artifact as compatible with no drift", () => {

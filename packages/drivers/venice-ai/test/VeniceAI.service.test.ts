@@ -35,6 +35,8 @@ import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
+const descriptorAt = (index: number) => O.getOrThrow(A.get(VENICE_AI_OPERATION_DESCRIPTORS, index));
+
 const $TestI = $VeniceAiId.create("VeniceAI.service.test");
 
 type CapturedRequest = {
@@ -778,7 +780,7 @@ describe("@beep/venice-ai", () => {
         yield* testHttp.respondWith(() =>
           Effect.succeed(new Response(new Uint8Array([1, 2, 3]), { headers: { "content-type": "image/png" } }))
         );
-        const binary = yield* venice.generateImage(requestFor(VENICE_AI_OPERATION_DESCRIPTORS[2]));
+        const binary = yield* venice.generateImage(requestFor(descriptorAt(2)));
 
         expect(json._tag).toBe("Json");
         expect(text._tag).toBe("Text");
@@ -811,9 +813,7 @@ describe("@beep/venice-ai", () => {
 
         yield* testHttp.reset;
         yield* testHttp.respondWith(() => Effect.succeed(makeJsonResponse({ code: "INSUFFICIENT_BALANCE" }, 402)));
-        const statusError = yield* venice
-          .topUpX402Balance(requestFor(VENICE_AI_OPERATION_DESCRIPTORS[44]))
-          .pipe(Effect.flip);
+        const statusError = yield* venice.topUpX402Balance(requestFor(descriptorAt(44))).pipe(Effect.flip);
 
         yield* testHttp.reset;
         yield* testHttp.respondWith(() =>
@@ -835,7 +835,7 @@ describe("@beep/venice-ai", () => {
           )
         );
         const transportError = yield* venice.listModels().pipe(Effect.flip);
-        const hostileProxyError = VeniceAIError.fromDescriptor(VENICE_AI_OPERATION_DESCRIPTORS[0], "transport", {
+        const hostileProxyError = VeniceAIError.fromDescriptor(descriptorAt(0), "transport", {
           cause: new Proxy(
             {},
             {
@@ -854,7 +854,7 @@ describe("@beep/venice-ai", () => {
             }
           ),
         });
-        const throwingNameError = VeniceAIError.fromDescriptor(VENICE_AI_OPERATION_DESCRIPTORS[0], "transport", {
+        const throwingNameError = VeniceAIError.fromDescriptor(descriptorAt(0), "transport", {
           cause: {
             get name(): string {
               throw new Error("name getter failed");
@@ -867,7 +867,7 @@ describe("@beep/venice-ai", () => {
           Effect.succeed(new Response("data: nope\n\n", { headers: { "content-type": "text/event-stream" } }))
         );
         const sseError = yield* venice
-          .streamChatCompletion(requestFor(VENICE_AI_OPERATION_DESCRIPTORS[0]))
+          .streamChatCompletion(requestFor(descriptorAt(0)))
           .pipe(Stream.runCollect, Effect.flip);
 
         yield* testHttp.reset;
@@ -875,7 +875,7 @@ describe("@beep/venice-ai", () => {
           Effect.succeed(new Response('{"message":"not sse"}', { headers: { "content-type": "application/json" } }))
         );
         const nonSseError = yield* venice
-          .streamChatCompletion(requestFor(VENICE_AI_OPERATION_DESCRIPTORS[0]))
+          .streamChatCompletion(requestFor(descriptorAt(0)))
           .pipe(Stream.runCollect, Effect.flip);
 
         yield* testHttp.reset;
@@ -887,7 +887,7 @@ describe("@beep/venice-ai", () => {
           )
         );
         const spoofedContentTypeError = yield* venice
-          .streamChatCompletion(requestFor(VENICE_AI_OPERATION_DESCRIPTORS[0]))
+          .streamChatCompletion(requestFor(descriptorAt(0)))
           .pipe(Stream.runCollect, Effect.flip);
 
         yield* testHttp.reset;
@@ -969,12 +969,8 @@ describe("@beep/venice-ai", () => {
         );
 
         const venice = yield* VeniceAI;
-        const chatEvents = yield* venice
-          .streamChatCompletion(requestFor(VENICE_AI_OPERATION_DESCRIPTORS[0]))
-          .pipe(Stream.runCollect);
-        const responseEvents = yield* venice
-          .streamResponse(requestFor(VENICE_AI_OPERATION_DESCRIPTORS[1]))
-          .pipe(Stream.runCollect);
+        const chatEvents = yield* venice.streamChatCompletion(requestFor(descriptorAt(0))).pipe(Stream.runCollect);
+        const responseEvents = yield* venice.streamResponse(requestFor(descriptorAt(1))).pipe(Stream.runCollect);
         const captures = yield* testHttp.captures;
 
         const chatEventArray = A.fromIterable(chatEvents);
@@ -1024,7 +1020,7 @@ describe("@beep/venice-ai", () => {
 
         const venice = yield* VeniceAI;
         const first = yield* venice
-          .streamChatCompletion(requestFor(VENICE_AI_OPERATION_DESCRIPTORS[0]))
+          .streamChatCompletion(requestFor(descriptorAt(0)))
           .pipe(Stream.take(1), Stream.runCollect, Effect.timeoutOption("1 second"));
 
         expect(O.isSome(first)).toBe(true);

@@ -728,7 +728,7 @@ describe("HookPulseV1", () => {
         (evidenceTier) =>
           encodeHookPulseToRaw(
             HookPulseV1.make({
-              ...decoded[0],
+              ...O.getOrThrow(A.head(decoded)),
               evidenceTier,
             })
           ),

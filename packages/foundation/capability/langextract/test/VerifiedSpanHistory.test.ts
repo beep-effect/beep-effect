@@ -349,8 +349,8 @@ describe("verified-span persistence and re-anchor history", () => {
               outcome: {
                 ...encodedOutcome,
                 anchors: [
-                  { ...encodedOutcome.anchors[0], receipt: encodedOutcome.anchors[1].receipt },
-                  { ...encodedOutcome.anchors[1], receipt: encodedOutcome.anchors[0].receipt },
+                  { ...encodedOutcome.anchors[0], receipt: encodedOutcome.anchors[1]?.receipt },
+                  { ...encodedOutcome.anchors[1], receipt: encodedOutcome.anchors[0]?.receipt },
                 ],
               },
             },

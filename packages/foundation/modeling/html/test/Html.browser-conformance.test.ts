@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/// <reference lib="dom" />
 
 import { conform, inspectConformance, serialize, untrustedHtmlValue } from "@beep/html";
 import { ForeignElementName } from "@beep/html/Html.attributes";
