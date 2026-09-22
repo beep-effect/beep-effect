@@ -1,6 +1,7 @@
 ---
 "@beep/m365-mcp": minor
 "@beep/uspto-mcp": minor
+"@beep/mcp-kit": patch
 ---
 
 Serve MCP `2026-07-28` only: both stdio hosts pin `statelessMcpProtocols`, advertise

@@ -62,7 +62,7 @@ export class UsptoMcpServerConfig extends S.Class<UsptoMcpServerConfig>($I`Uspto
  * **Example** (Reading the advertised instructions)
  *
  * ```ts
- * import { USPTO_MCP_INSTRUCTIONS } from "@beep/uspto-mcp"
+ * import { USPTO_MCP_INSTRUCTIONS } from "@beep/uspto-mcp/Server"
  *
  * console.log(USPTO_MCP_INSTRUCTIONS.startsWith("USPTO Open Data Portal"))
  * // true
@@ -89,7 +89,7 @@ export const USPTO_MCP_INSTRUCTIONS =
  * **Example** (Mounting the registrations without a transport)
  *
  * ```ts
- * import { UsptoMcpRegistrationsLive } from "@beep/uspto-mcp"
+ * import { UsptoMcpRegistrationsLive } from "@beep/uspto-mcp/Server"
  * import { Layer } from "effect"
  *
  * console.log(Layer.isLayer(UsptoMcpRegistrationsLive))
