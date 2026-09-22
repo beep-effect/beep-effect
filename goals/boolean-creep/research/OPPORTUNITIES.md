@@ -1380,3 +1380,15 @@ plus at most one deadline-racing retry, while retaining the exact timeout messag
 and single failed recorder entry assertions. Zero-budget behavior still requires
 exactly one attempt. Testing the bounded outcome instead of timer ordering would
 have prevented this false failure after the roughly 40-minute full proof.
+
+Changing the test body also changed two inherited Effect-Vitest occurrence
+hashes. Refreshing the inventory made coverage select its full-repository
+fallback (`standards/effect-vitest.inventory.jsonc: no current workspace
+owner`), which encountered an inherited locationless `@beep/ui` build TS2589.
+The final repair instead migrates the touched cases to `it.layer` with an
+explicit hook timeout, `it.effect`, a live clock for the filesystem-backed
+monitor, and direct stub-service injection. The original inventory is retained:
+the ratchet reports zero introduced and three resolved findings. Migrating
+touched inherited findings before refreshing a repository-wide inventory would
+have avoided that unnecessary scope expansion.
+

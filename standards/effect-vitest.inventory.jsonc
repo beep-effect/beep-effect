@@ -69498,13 +69498,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:511:provideScopedLayer@19#1",
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:508:provideScopedLayer@19#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 511,
-      "endLine": 511,
+      "line": 508,
+      "endLine": 508,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:a978a2754d3e82ca5713faf003d5bda13c5de95e1a2c89e880923864356f99d6",
       "class": "unresolved-layer-provide",
@@ -69519,15 +69519,15 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:522:provideScopedLayer@13#1",
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:514:provideScopedLayer@13#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 522,
-      "endLine": 522,
+      "line": 514,
+      "endLine": 514,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:825d6ab21a5a7fe28ae808d4a397bb877f4ccd1cff13412f14638767624557ac",
+      "occurrence": "v2:8ead3ef7b568b95012e9c01ca003e5f89bcf3625688f477dc45baa038c4a6361",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -160617,15 +160617,15 @@
       "status": "open"
     },
     {
-      "id": "EV009:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:498:it.live@4#1",
+      "id": "EV009:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:495:it.live@4#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 498,
-      "endLine": 523,
+      "line": 495,
+      "endLine": 515,
       "symbol": "it.live",
-      "occurrence": "v2:825d6ab21a5a7fe28ae808d4a397bb877f4ccd1cff13412f14638767624557ac",
+      "occurrence": "v2:8ead3ef7b568b95012e9c01ca003e5f89bcf3625688f477dc45baa038c4a6361",
       "class": "unjustified-live-test",
       "evidence": "it.live(`bounds pending retries and preserves their failure record (${timeout}ms)`, () => withTempDirectory((root) => Effect.gen(function* () { const calls = yield* Ref.make(0); const recorder = yield",
       "replacement": {
