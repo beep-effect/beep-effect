@@ -7,8 +7,9 @@
 
 import { buildRepoDependencyIndex, findRepoRoot, sortWorkspacePackages } from "@beep/repo-utils";
 import { A } from "@beep/utils";
-import { Console, Effect } from "effect";
+import { Console, Effect, HashMap } from "effect";
 import { Command } from "effect/unstable/cli";
+import { isRootDepIndexKey } from "../TsconfigSync/TsconfigSync.schemas.ts";
 
 /**
  * CLI command that builds the workspace dependency graph and prints package names
@@ -29,8 +30,9 @@ export const topoSortCommand = Command.make(
   Effect.fn(function* () {
     const rootDir = yield* findRepoRoot();
     const depIndex = yield* buildRepoDependencyIndex(rootDir);
+    const workspaceIndex = HashMap.filter(depIndex, (_deps, name) => !isRootDepIndexKey(name));
     const sorted = yield* Effect.catchTag(
-      sortWorkspacePackages(depIndex),
+      sortWorkspacePackages(workspaceIndex),
       "CyclicDependencyError",
       Effect.fn(function* (err) {
         yield* Console.error(`Error: Cyclic dependencies detected`);

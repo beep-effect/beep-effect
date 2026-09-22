@@ -41,9 +41,12 @@ describe("topo-sort", () => {
       expect(line.includes(" ")).toBe(false);
     }
     expect(repoCliAt).toBeGreaterThanOrEqual(0);
+    expect(lines).not.toContain("@beep/root");
     for (const dependencyName of workspaceDependencyNames(repoCli)) {
       if (!dependencyName.startsWith("@beep/")) continue;
-      expect(lines.indexOf(dependencyName)).toBeLessThan(repoCliAt);
+      const dependencyAt = lines.indexOf(dependencyName);
+      expect(dependencyAt).toBeGreaterThanOrEqual(0);
+      expect(dependencyAt).toBeLessThan(repoCliAt);
     }
   });
 });
