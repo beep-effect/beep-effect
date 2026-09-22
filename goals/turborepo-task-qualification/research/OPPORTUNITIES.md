@@ -1629,3 +1629,57 @@ overrides.” The direct native dry-run and governed actual execution both
 passed separately. A documented paired recipe would prevent treating a
 configuration plan as runtime-identity proof or repeatedly probing a rejected
 output mode. Receipt: `profile-closure-refresh-2026-09-22.json`.
+
+## 2026-09-22 — retirement does not retain ignored evidence
+
+After PR #1189 merged, `bun run beep yeet sweep --retire` removed its worktree.
+The residue archive contains a manifest and retained Git ref, but its manifest
+has `patchPath: null` and an empty `untrackedFiles` list. The ignored `.beep`
+proof logs, temporary addition/restoration plans and reviewer-validation outputs
+were not preserved. The initial cleanup report overstated their retention.
+
+The published packet and copied recovery handoff survive. A separate capture
+worktree also retains the observer, reviewer, dependency receipt and native
+plans. Thirteen static preparation files were subsequently copied outside the
+worktrees, checked byte-for-byte, and inventoried with SHA-256 digests and a
+seven-day retention record. That backup excludes the live observation log and
+any future trace; those require their own verified copy after completion.
+
+Before retiring another evidence-producing worktree, copy required ignored
+artifacts to a private durable directory and verify the inventory. A Git residue
+manifest alone is insufficient. Do not reconstruct missing files and label them
+as original evidence. This is a qualification evidence-retention correction;
+it does not change Yeet proof ownership or qualify the pilot.
+
+## 2026-09-22 — successful tracing leaves indirect I/O undecoded
+
+The fresh isolated lint capture passed, but its trace contains five successful
+`io_uring_setup` and five `io_uring_enter` calls. Scalar reads are attributable;
+ring submissions are not decoded by the current observer. Reporting no decoded
+network calls or a complete explicit input map would not resolve that gap.
+Receipt: `current-profile-capture-2026-09-22.json`.
+
+Capture the submitted operation metadata without payloads, or establish a
+separately named supported profile with the relevant mechanism constrained and
+run its complete comparison matrix. A diagnostic fallback cannot silently stand
+in for the ordinary runtime. Retain the current trace as partial evidence.
+
+The follow-up write review exposed an incomplete socket-operation allowlist in
+the raw reviewer: `socketpair`, `getpeername`, `setsockopt` and `shutdown` were
+omitted. The published projection now includes those observed calls while
+preserving original raw bytes. Two child write descriptors remain unknown
+because `-s 0` also abbreviated `pipe2` return arrays. A bounded smoke check
+verified that `-e abbrev=!pipe,pipe2,socketpair` exposes those descriptor arrays
+while retaining string-payload suppression. The next capture uses that setting;
+the smoke check alone does not establish its runtime outcome.
+
+### Exact native version probes must disable repository inference
+
+While preparing the current canary matrix, an integrity-verified
+`@turbo/linux-64@2.11.3-canary.3` binary reported `2.11.2` when invoked with
+`--version` inside the repository. Repeating the probe with
+`--skip-infer --version` reported `2.11.3-canary.3`. The first probe had selected
+the installed client; it did not establish a package-version mismatch. Use the
+same inference-disabled invocation as the pilot runner for exact-pin preflights.
+The initial diagnosis and correction remain in private retained preparation
+evidence; no canary matrix was executed with a substituted version.
