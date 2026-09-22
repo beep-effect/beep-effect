@@ -23,6 +23,7 @@ import {
   SchemaGetter,
   SchemaIssue,
 } from "effect";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -155,6 +156,18 @@ const localDateToDate = (self: LocalDate): Date => DateTime.toDateUtc(localDateT
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
+const parseIsoDateParts = (
+  match: RegExpMatchArray
+): O.Option<{ readonly year: number; readonly month: number; readonly day: number }> =>
+  pipe(
+    O.all([A.get(match, 1), A.get(match, 2), A.get(match, 3)]),
+    O.map(([yearStr, monthStr, dayStr]) => ({
+      year: Number.parseInt(yearStr, 10),
+      month: Number.parseInt(monthStr, 10),
+      day: Number.parseInt(dayStr, 10),
+    }))
+  );
+
 const isLeapYearInternal = (year: number): boolean => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 
 const daysInNonFebruaryMonth: (month: number) => number = Match.type<number>().pipe(
@@ -179,10 +192,11 @@ const decodeLocalDateFromString: (
   if (O.isNone(match)) {
     return yield* Effect.fail(new SchemaIssue.InvalidValue());
   }
-  const [, yearStr, monthStr, dayStr] = match.value;
-  const year = Number.parseInt(yearStr, 10);
-  const month = Number.parseInt(monthStr, 10);
-  const day = Number.parseInt(dayStr, 10);
+  const parts = parseIsoDateParts(match.value);
+  if (O.isNone(parts)) {
+    return yield* Effect.fail(new SchemaIssue.InvalidValue());
+  }
+  const { year, month, day } = parts.value;
 
   if (year < 1 || year > 9999) {
     return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast));
@@ -244,17 +258,18 @@ export const fromString = (dateString: string): Effect.Effect<LocalDate, S.Schem
           new SchemaIssue.InvalidValue({ message: "Expected an ISO 8601 local date in YYYY-MM-DD format" })
         )
       ),
-    onSome: ([, yearString, monthString, dayString]) => {
-      const parts = {
-        year: Number.parseInt(yearString, 10),
-        month: Number.parseInt(monthString, 10),
-        day: Number.parseInt(dayString, 10),
-      };
-
-      return isValidCalendarDate(parts)
-        ? LocalDate.decodeEffect(parts)
-        : Effect.fail(new S.SchemaError(new SchemaIssue.InvalidValue({ message: "Invalid calendar date" })));
-    },
+    onSome: (match) =>
+      pipe(
+        parseIsoDateParts(match),
+        O.match({
+          onNone: () =>
+            Effect.fail(new S.SchemaError(new SchemaIssue.InvalidValue({ message: "Invalid calendar date" }))),
+          onSome: (parts) =>
+            isValidCalendarDate(parts)
+              ? LocalDate.decodeEffect(parts)
+              : Effect.fail(new S.SchemaError(new SchemaIssue.InvalidValue({ message: "Invalid calendar date" }))),
+        })
+      ),
   });
 
 /**
