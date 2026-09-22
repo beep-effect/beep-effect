@@ -150,8 +150,8 @@ const forkCollect = Effect.fn("TestCiLaneTimings.forkCollect")(
 /**
  * Run `collectCiLaneTimings` under the TestClock, advancing virtual time past
  * every backoff sleep the retry schedule can request: transport retries wait
- * 250ms·2^n jittered (≤ ~4.5s across four retries), secondary rate limits wait
- * 1m·2^n jittered (≤ 18m). Steps stay under the capture layer's 2-second
+ * 250ms·2^n jittered upward (≤ ~4.5s across four retries), secondary rate limits wait
+ * 1m·2^n jittered upward (≤ 18m). Steps stay under the capture layer's 2-second
  * drain grace so a clock jump cannot trip its pipe-wedge watchdog.
  */
 const collectWithRetries = Effect.fn("TestCiLaneTimings.collectWithRetries")(function* (
@@ -499,9 +499,9 @@ describe("ci lane timings gh api retry", () => {
       const scripted = scriptedGhSpawner([SECONDARY_RATE_LIMIT]);
       const fiber = yield* forkCollect(scripted.spawner);
 
-      yield* Effect.forEach(A.range(1, 40), () => TestClock.adjust("1 second"));
+      yield* Effect.forEach(A.range(1, 59), () => TestClock.adjust("1 second"));
       expect(scripted.state.spawned).toBe(1);
-      yield* Effect.forEach(A.range(1, 40), () => TestClock.adjust("1 second"));
+      yield* Effect.forEach(A.range(1, 14), () => TestClock.adjust("1 second"));
       expect(scripted.state.spawned).toBeGreaterThanOrEqual(2);
       yield* Effect.forEach(A.range(1, 180), () => TestClock.adjust("1 second"));
       const exit = yield* Fiber.join(fiber);

@@ -47,6 +47,7 @@ import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { Command, Flag } from "effect/unstable/cli";
@@ -738,8 +739,10 @@ const GhApiTransientKind = LiteralKit(["transport", "secondary-rate-limit"]).pip
 type GhApiTransientKind = typeof GhApiTransientKind.Type;
 
 /**
- * Backoff base per transient class, doubled on every retry and jittered ±20%
- * so a fan-out of eight concurrent page fetches does not retry in lockstep.
+ * Backoff base per transient class, doubled on every retry and jittered
+ * upward by 0–20% so a fan-out of eight concurrent page fetches does not retry
+ * in lockstep. The jitter is one-sided so the base is a floor: a secondary
+ * rate limit never retries before the full minute GitHub asks for.
  * Transport blips clear in milliseconds (250ms → 2s); a secondary rate limit
  * needs minutes (GitHub asks for at least one minute before the first retry,
  * then exponential growth), so it waits 1m → 8m instead.
@@ -798,7 +801,11 @@ const ghApiTransientRetrySchedule: Schedule.Schedule<Duration.Duration, CiComman
       const delay = Duration.millis(Duration.toMillis(ghApiTransientBaseDelay(meta.input)) * 2 ** (meta.attempt - 1));
       return Effect.succeed<[Duration.Duration, Duration.Duration]>([delay, delay]);
     })
-  ).pipe(Schedule.jittered);
+  ).pipe(
+    Schedule.modifyDelay(({ duration }) =>
+      Effect.map(Random.next, (random) => Duration.millis(Duration.toMillis(duration) * (1 + 0.2 * random)))
+    )
+  );
 
 const ghApiJsonAttempt = Effect.fn("Ci.laneTimingsGhApiAttempt")(function* (
   repoRoot: string,
