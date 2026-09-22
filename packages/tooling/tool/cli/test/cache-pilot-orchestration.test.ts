@@ -334,6 +334,9 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                 profileMutations.push(Str.includes("!**/src/index.ts")(rootText));
               }
             }
+            const profileBytes = profile
+              ? yield* fs.readFileString(mounted(`${guest}/biome.identity.jsonc`))
+              : "absent";
             const profileKey = `BIOME_CONFIG_PATH=${yield* hash(path.join(guest, "biome.identity.jsonc"))}`;
             const nativeTask = (id: string, taskHash: string, hit = false, code = 0) => ({
               taskId: id,
@@ -376,9 +379,6 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                   const added = yield* fs.exists(path.join(identity, "src/qualification-shadow.ts"));
                   const env = command.options.env ?? {};
                   const rootConfigBytes = yield* fs.readFileString(mounted(`${guest}/biome.jsonc`));
-                  const profileBytes = profile
-                    ? yield* fs.readFileString(mounted(`${guest}/biome.identity.jsonc`))
-                    : "absent";
                   const mutation = Str.startsWith("mutation-")(label) && label !== "mutation-root-lint-config";
                   const mutationKey = () => (mutation ? label + (number === 0 ? "before" : "after") : "");
                   const taskHash = Str.slice(

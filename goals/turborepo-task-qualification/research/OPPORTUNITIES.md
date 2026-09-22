@@ -1566,3 +1566,17 @@ The fresh worktree initially lacked commitlint dependencies; frozen installation
 allowed the pending merge commit to pass its hooks. Detached verification then
 refused because the systemd user manager was unavailable. No detached proof
 started. Use an attached proof with a retained log for this session.
+
+### 2026-09-22: stronger pilot assertions crossed the Fallow complexity gate
+
+PR #1182's Fallow audit attributed one new complexity finding to the pilot
+fixture's `observeExecution` function after review fixes added real profile-byte
+hashing. The full CLI package audit passed, but does not replace this repository
+complexity gate. Retain mounted-byte hashing and move invocation-level profile
+reads outside the execution observation. Run both Fallow audit and health after
+test fixture changes that introduce branching, before queuing full proof.
+
+The generated Fallow check scripts require a populated base-ref environment.
+An unwrapped local invocation expanded an empty base and failed before analysis.
+For focused local diagnosis use `beep quality fallow audit --base origin/main`
+and the corresponding health command with explicit base, check and output flags.
