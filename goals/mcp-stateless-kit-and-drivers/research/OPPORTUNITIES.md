@@ -111,3 +111,11 @@ no secrets, home paths as `~`, minimal error text.
 **Evidence:** the proof's `quality:coverage` lane (17:46Z–17:51Z) failed 8 of 10 shards with `Failed to load tsconfig ".../tsconfig.json": JSONError` because the root `tsconfig.json` held conflict markers at that moment; no `[coverage-ratchet]` finding was produced. Every earlier lane had passed. The verdict is environment-only and self-inflicted, but it cost the fifty-minute proof and left the coverage question unanswered for this head.
 
 **Prevented by:** `yeet verify --detach` snapshotting the head into a throwaway worktree (or refusing to start while the tree is dirty and fencing writes while it runs), and an agent rule: never merge, install, or regenerate in a lane that has a live detached proof; do that work after `job wait` or in a sibling lane.
+
+### The stdio conformance harness raced a host whose registrations open databases
+
+**Doing:** PR 3, mounting `PracticeKgToolkitLayer` over a fixture bundle in `conformance2026`.
+
+**Evidence:** the five HTTP arms passed and two stdio arms failed with `Tool 'corpus_search_text' not found` and an undefined `tools/list` result. `withStdioHost` forked `Layer.build(serverLayer)` and handed `io` to the arm immediately; the stdio transport answered `server/discover` while the registrations layer was still opening PGlite and DuckDB, so the first `tools/call` hit an empty server. m365, uspto and gov-legal never showed it because their registrations build in microseconds.
+
+**Prevented by:** the harness now waits on a `Deferred` completed after the server layer is built, racing it against the server fiber so a build failure still surfaces (`Effect.raceFirst(Deferred.await(ready), Fiber.join(serverFiber))`). The same window exists in production for a stateless host: without the 2025 `initialize` round-trip, a client's first request can arrive before slow registrations finish. Worth a follow-up in the kit: build registrations before the transport starts reading stdin, or have the transport queue requests until the server layer is complete.
