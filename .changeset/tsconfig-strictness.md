@@ -18,6 +18,7 @@
 "@beep/identity": patch
 "@beep/langextract": patch
 "@beep/law-practice-domain": patch
+"@beep/lint-rules": patch
 "@beep/law-practice-server": patch
 "@beep/m365-mcp": patch
 "@beep/md": patch
