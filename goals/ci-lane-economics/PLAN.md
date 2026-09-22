@@ -9,9 +9,16 @@ Status: `active`
 | P0 Cache-warm census | complete | Re-measure every required lane's p50/p95 on cache-warm PR and push waves (attempt-one successful runs only; failures and reruns feed flake attribution, never the percentiles). | Completed 2026-08-13 via the explicit 10-wave alternative; see `research/cache-warm-lane-census.md`. |
 | P1 Placement decisions | complete | Decide fleet vs hosted vs free re-fit per lane from the census plus cost model. | Signed and live-falsified 2026-08-13; see `research/placement-decision.md`. No fleet additions; the one hosted re-fit candidate remains on its existing fleet placement after two runner shutdowns. |
 | P2 Execute moves | complete | Move lanes per the placement table (workflow lane edits; sharding where caching cannot help). | Completed 2026-08-16: every signed zero-expansion move merged through #719. |
-| P3 Evidence + close | in progress — admission window open | Prove the charter on live waves and close. | PR #982 merged at `2026-09-03T19:35:51Z`. Census the first complete post-merge half-open UTC week, `2026-09-04T00:00:00Z` → `2026-09-11T00:00:00Z`, with `beep ci lane-timings --window`; require attempt-one successes, effective critical paths from earliest shard start through aggregator completion, required set exactly 18, every required p95 below 20m00s, and no unaddressed shard-pickup tripwire. Live preflight currently fails closed at 18 contexts after `JSDoc Ratchet` joined the set. |
+| P3 Evidence + close | in progress — admission denied 2026-09-21 | Prove the charter on live waves and close. | The 2026-09-04T00:00:00Z → 2026-09-11T00:00:00Z admission week was censused 2026-09-21 with `beep ci lane-timings --window` and fails: `Check` 20m19s p95, `Coverage Regression` 30m58s p95, shard-pickup tripwire 8m22s p95; see `research/admission-week-p95.md`. Lint (14m38s) and Test Unit (16m31s) clear. Close requires a ratified 17-context population, a signed repair for `Check` and the pickup queue, then a fresh half-open week with every required p95 below 20m00s and no tripwire breach. |
 
 ## Notes
+
+- Admission verdict (2026-09-21): the 2026-09-04 → 2026-09-11 week is denied;
+  see `research/admission-week-p95.md`. `Check` breaches by 19s, the removed
+  `Coverage Regression` lane breaches at 30m58s inside its ratified window,
+  and shard pickup p95 is 8m22s. The next window needs the 17-context
+  population ratified with its effective date (2026-09-12T01:46:53Z) before
+  the census can accept it.
 
 - Operator ruling (2026-09-12): `Heavy / Coverage Regression` was removed
   after the admission window at 2026-09-12T01:46:53.354Z (ruleset `10240248`,
