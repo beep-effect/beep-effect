@@ -174,11 +174,11 @@ export class GhReviewThreadCommentConnection extends S.Class<GhReviewThreadComme
  *
  * **Details**
  *
- * What a `comments(last: 1)` selection returns: no body, no identifiers, only
- * the two structural facts the thread-state rule reads about whoever spoke
- * last. Both fields are optional because GitHub omits an author it no longer
- * knows, and because a payload captured before the selection existed must keep
- * decoding.
+ * What a `comments(last: 1)` selection returns: the two structural facts the
+ * thread-state rule reads about whoever spoke last, plus the body and url the
+ * closeout issue quotes as evidence. Every field is optional because GitHub
+ * omits an author it no longer knows, and because a payload captured before
+ * the selection (or before it carried a body) must keep decoding.
  *
  * **Example** (Name the last speaker)
  *
@@ -200,10 +200,13 @@ export class GhReviewThreadCommentConnection extends S.Class<GhReviewThreadComme
 export class GhReviewThreadLatestComment extends S.Class<GhReviewThreadLatestComment>($I`GhReviewThreadLatestComment`)(
   {
     author: GhActor.pipe(S.NullOr, S.optionalKey),
+    body: S.optionalKey(S.String),
     createdAt: S.optionalKey(S.String),
+    url: S.optionalKey(S.String),
   },
   $I.annote("GhReviewThreadLatestComment", {
-    description: "One review-thread comment reduced to the author and timestamp the thread-state rule reads.",
+    description:
+      "One review-thread comment reduced to the author and timestamp the thread-state rule reads, plus the body and url quoted as evidence.",
   })
 ) {}
 
@@ -1087,7 +1090,7 @@ query YeetPrCloseoutReviewThreads($owner: String!, $name: String!, $number: Int!
             pageInfo { hasNextPage endCursor }
             nodes { id body url createdAt author { __typename login } }
           }
-          latest: comments(last: 1) { nodes { author { __typename login } createdAt } }
+          latest: comments(last: 1) { nodes { author { __typename login } body createdAt url } }
         }
       }
     }

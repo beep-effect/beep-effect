@@ -81,15 +81,16 @@ import {
 import {
   deriveYeetReviewThreadState,
   YeetReviewThreadNewestComment,
-  YeetReviewThreadStateInput,
   YeetReviewThreadStateTag,
   yeetReviewCommentAuthorKind,
+  yeetReviewThreadStateInput,
 } from "./ReviewThreadState.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { GhRepoView } from "./closeout/Gh.schemas.ts";
 import type { ReplyDrafts, ReplyOutcomeStatus } from "./Reply.schemas.ts";
+import type { YeetReviewThreadStateInput } from "./ReviewThreadState.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Reply");
 
@@ -390,21 +391,7 @@ const newestReplyComment = (thread: ReplyLiveThread): O.Option<YeetReviewThreadN
 const replyThreadStateInput = (
   thread: ReplyLiveThread,
   pullRequestAuthor: O.Option<string>
-): YeetReviewThreadStateInput =>
-  YeetReviewThreadStateInput.make({
-    threadId: thread.id,
-    isResolved: thread.isResolved,
-    isOutdated: thread.isOutdated,
-    path: O.fromNullishOr(thread.path),
-    line: O.fromNullishOr(thread.line),
-    pullRequestAuthor,
-    resolvedBy: pipe(
-      O.fromUndefinedOr(thread.resolvedBy),
-      O.flatMap(O.fromNullishOr),
-      O.map((actor) => actor.login)
-    ),
-    newestComment: newestReplyComment(thread),
-  });
+): YeetReviewThreadStateInput => yeetReviewThreadStateInput(thread, pullRequestAuthor, newestReplyComment(thread));
 
 /**
  * Stamp each live thread with the state the merge gate classifies it as.

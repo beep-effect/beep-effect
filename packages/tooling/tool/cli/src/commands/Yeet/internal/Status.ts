@@ -34,8 +34,8 @@ import {
   summarizeYeetReviewThreadStates,
   YeetReviewThreadNewestComment,
   YeetReviewThreadStateCounts,
-  YeetReviewThreadStateInput,
   yeetReviewCommentAuthorKind,
+  yeetReviewThreadStateInput,
 } from "./ReviewThreadState.ts";
 import { YeetSettleCheck } from "./Settle.ts";
 import {
@@ -51,7 +51,11 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutReport } from "./Closeout.ts";
 import type { GateStalenessVerdict } from "./GateStaleness.ts";
-import type { YeetReviewThreadState, YeetReviewThreadStateTag } from "./ReviewThreadState.ts";
+import type {
+  YeetReviewThreadState,
+  YeetReviewThreadStateInput,
+  YeetReviewThreadStateTag,
+} from "./ReviewThreadState.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Status");
 const threadExcerptLength = 140;
@@ -926,6 +930,15 @@ const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThre
         exitCode: 1,
       });
     }
+    // A page that names itself as its own successor would re-read the same
+    // hundred threads forever and count each of them once per lap.
+    if (O.exists(cursor, (value) => value === pageInfo.endCursor)) {
+      return yield* YeetCommandError.make({
+        message: "PR review threads repeated the same GraphQL end cursor; refusing to re-read the same page.",
+        command: "gh api graphql",
+        exitCode: 1,
+      });
+    }
     cursor = O.some(pageInfo.endCursor);
   }
 });
@@ -1061,21 +1074,7 @@ const newestThreadComment = (thread: GhStatusReviewThread): O.Option<YeetReviewT
 const reviewThreadStateInput = (
   thread: GhStatusReviewThread,
   pullRequestAuthor: O.Option<string>
-): YeetReviewThreadStateInput =>
-  YeetReviewThreadStateInput.make({
-    threadId: thread.id,
-    isResolved: thread.isResolved,
-    isOutdated: thread.isOutdated,
-    path: O.fromNullishOr(thread.path),
-    line: O.fromNullishOr(thread.line),
-    pullRequestAuthor,
-    resolvedBy: pipe(
-      O.fromUndefinedOr(thread.resolvedBy),
-      O.flatMap(O.fromNullishOr),
-      O.map((actor) => actor.login)
-    ),
-    newestComment: newestThreadComment(thread),
-  });
+): YeetReviewThreadStateInput => yeetReviewThreadStateInput(thread, pullRequestAuthor, newestThreadComment(thread));
 
 /**
  * One pull request's review threads, partitioned by what each still owes.

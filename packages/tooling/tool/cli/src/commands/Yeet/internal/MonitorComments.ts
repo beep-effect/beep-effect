@@ -836,36 +836,43 @@ export const renderYeetMonitorCommentTruncation = (endpoint: string): string =>
 // then advances only as far as they reach. The capture's own truncation notice
 // is removed first — it carries brackets of its own, and a scanner that read
 // them would balance the document against text GitHub never sent.
+class ClipScan extends S.Class<ClipScan>($I`ClipScan`)(
+  {
+    depth: S.Finite,
+    inString: S.Boolean,
+    escaped: S.Boolean,
+    // Offset just past the last container that closed, and the depth it left.
+    lastComplete: S.Finite,
+    closeDepth: S.Finite,
+  },
+  $I.annote("ClipScan", { description: "The scanner state after one character of a clipped JSON capture." })
+) {}
+
+const clipScanStart = ClipScan.make({ depth: 0, inString: false, escaped: false, lastComplete: 0, closeDepth: 0 });
+
+const scanStringChar = (scan: ClipScan, char: string): ClipScan =>
+  ClipScan.make({ ...scan, inString: scan.escaped || char !== '"', escaped: !scan.escaped && char === "\\" });
+
+const scanStructuralChar = (scan: ClipScan, char: string, index: number): ClipScan => {
+  if (char === '"') return ClipScan.make({ ...scan, inString: true });
+  if (char === "[" || char === "{") return ClipScan.make({ ...scan, depth: scan.depth + 1 });
+  if (char === "]" || char === "}") {
+    const depth = scan.depth - 1;
+    return ClipScan.make({ ...scan, depth, lastComplete: index + 1, closeDepth: depth });
+  }
+  return scan;
+};
+
 const salvageClippedJsonArray = (text: string): string => {
   const scanned = pipe(text, Str.replace(repoRunOutputBound.truncatedNotice, Str.empty));
-  let depth = 0;
-  let inString = false;
-  let escaped = false;
-  let lastComplete = 0;
-  let closeDepth = 0;
+  let scan = clipScanStart;
   for (let index = 0; index < scanned.length; index = index + 1) {
-    const char = scanned[index];
-    if (inString) {
-      inString = escaped ? inString : char !== '"';
-      escaped = !escaped && char === "\\";
-      continue;
-    }
-    if (char === '"') {
-      inString = true;
-      continue;
-    }
-    if (char === "[" || char === "{") {
-      depth = depth + 1;
-      continue;
-    }
-    if (char === "]" || char === "}") {
-      depth = depth - 1;
-      if (depth === 0) return scanned.slice(0, index + 1);
-      lastComplete = index + 1;
-      closeDepth = depth;
-    }
+    const char = scanned[index] ?? Str.empty;
+    scan = scan.inString ? scanStringChar(scan, char) : scanStructuralChar(scan, char, index);
+    // The outermost array closed: the document is whole up to here.
+    if (scan.depth === 0 && scan.lastComplete === index + 1) return scanned.slice(0, index + 1);
   }
-  return lastComplete === 0 ? "[]" : `${scanned.slice(0, lastComplete)}${Str.repeat(closeDepth)("]")}`;
+  return scan.lastComplete === 0 ? "[]" : `${scanned.slice(0, scan.lastComplete)}${Str.repeat(scan.closeDepth)("]")}`;
 };
 
 /**

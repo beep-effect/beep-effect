@@ -644,4 +644,32 @@ it.layer(platform)("R7 durable comment replay", (test) => {
       })
     )
   );
+
+  test.effect("keeps the first cycle open until a poll can replay", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const polls = yield* Ref.make(0);
+        const replayed = yield* Ref.make<ReadonlyArray<number>>(A.empty());
+
+        // The first read fails before it learns the pull request number: the
+        // replay it would have done is owed by the next successful read, not
+        // dropped with the failure.
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          collectStatus: () =>
+            Ref.getAndUpdate(polls, (n) => n + 1).pipe(
+              Effect.flatMap((n) =>
+                n === 0 ? Effect.fail(failure) : Effect.succeed(snapshot(root, [check("Lint")], n >= 2))
+              )
+            ),
+          closeout: () => Effect.succeed(report()),
+          replayComments: (_context, prNumber) => Ref.update(replayed, A.append(prNumber)),
+        });
+
+        expect(terminal).toBe("ready");
+        expect(yield* Ref.get(replayed)).toStrictEqual([7]);
+        expect(yield* Ref.get(polls)).toBeGreaterThan(2);
+      })
+    )
+  );
 });

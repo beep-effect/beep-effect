@@ -41,9 +41,11 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { GhActor } from "../../../internal/github/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ReviewThreadState");
 
@@ -191,6 +193,110 @@ export class YeetReviewThreadStateInput extends S.Class<YeetReviewThreadStateInp
     description: "The structural review-thread metadata the thread-state rule classifies.",
   })
 ) {}
+
+/**
+ * The review-thread fields every yeet surface already decodes, read by
+ * {@link yeetReviewThreadStateInput} to build the rule's input.
+ *
+ * **Details**
+ *
+ * Status, reply and closeout each decode a thread through their own GraphQL
+ * selection, so this is a structural view rather than a fourth thread class:
+ * each of those classes satisfies it as it is. `resolvedBy` stays optional and
+ * nullable exactly as GitHub returns it.
+ *
+ * **Example** (A decoded thread satisfies the source shape)
+ *
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import * as S from "effect/Schema"
+ * import { YeetReviewThreadStateSource } from "@beep/repo-cli/test/Yeet"
+ *
+ * const thread = { id: "PRRT_1", isResolved: false, isOutdated: false, path: "src/a.ts", line: 3 }
+ * strictEqual(S.is(YeetReviewThreadStateSource)(thread), true)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetReviewThreadStateSource extends S.Class<YeetReviewThreadStateSource>($I`YeetReviewThreadStateSource`)(
+  {
+    id: S.String,
+    isResolved: S.Boolean,
+    isOutdated: S.Boolean,
+    path: S.NullOr(S.String),
+    line: S.NullOr(S.Finite),
+    resolvedBy: GhActor.pipe(S.NullOr, S.optionalKey),
+  },
+  $I.annote("YeetReviewThreadStateSource", {
+    description: "The thread fields shared by every yeet surface's decoded review thread.",
+  })
+) {}
+
+/**
+ * Build the thread-state rule's input from any surface's decoded thread.
+ *
+ * **Details**
+ *
+ * Identity, resolution and location are read the same way on every surface;
+ * only the newest comment differs, because each GraphQL selection names it
+ * differently, so the caller passes the newest comment it derived.
+ *
+ * **Example** (An unresolved thread with no newest comment)
+ *
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import * as O from "effect/Option"
+ * import { yeetReviewThreadStateInput } from "@beep/repo-cli/test/Yeet"
+ *
+ * const input = yeetReviewThreadStateInput(
+ *   { id: "PRRT_1", isResolved: false, isOutdated: false, path: "src/a.ts", line: 3 },
+ *   O.some("octocat"),
+ *   O.none()
+ * )
+ * strictEqual(input.threadId, "PRRT_1")
+ * strictEqual(O.isNone(input.resolvedBy), true)
+ * ```
+ *
+ * @param thread - The decoded thread of any yeet surface.
+ * @param pullRequestAuthor - The pull request author's login when known.
+ * @param newestComment - The newest comment's structural facts when knowable.
+ * @returns The input the thread-state rule classifies.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetReviewThreadStateInput: {
+  (
+    pullRequestAuthor: O.Option<string>,
+    newestComment: O.Option<YeetReviewThreadNewestComment>
+  ): (thread: YeetReviewThreadStateSource) => YeetReviewThreadStateInput;
+  (
+    thread: YeetReviewThreadStateSource,
+    pullRequestAuthor: O.Option<string>,
+    newestComment: O.Option<YeetReviewThreadNewestComment>
+  ): YeetReviewThreadStateInput;
+} = dual(
+  3,
+  (
+    thread: YeetReviewThreadStateSource,
+    pullRequestAuthor: O.Option<string>,
+    newestComment: O.Option<YeetReviewThreadNewestComment>
+  ): YeetReviewThreadStateInput =>
+    YeetReviewThreadStateInput.make({
+      threadId: thread.id,
+      isResolved: thread.isResolved,
+      isOutdated: thread.isOutdated,
+      path: O.fromNullishOr(thread.path),
+      line: O.fromNullishOr(thread.line),
+      pullRequestAuthor,
+      resolvedBy: pipe(
+        O.fromUndefinedOr(thread.resolvedBy),
+        O.flatMap(O.fromNullishOr),
+        O.map((actor) => actor.login)
+      ),
+      newestComment,
+    })
+);
 
 /**
  * A review thread nobody has resolved.

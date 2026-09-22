@@ -1884,7 +1884,9 @@ describe("yeet planner", () => {
         nodes: [
           GhReviewThreadLatestComment.make({
             author: GhActor.make({ __typename: "User", login: "reviewer" }),
+            body: "Still failing on my side after that commit.",
             createdAt: "2026-09-22T12:00:00Z",
+            url: "https://github.test/pr#PRRT_paged-latest",
           }),
         ],
       }),
@@ -1896,9 +1898,12 @@ describe("yeet planner", () => {
     const triage = closeoutReviewThreadTriage([thread], O.some("kriegcloud"));
 
     expect(triage.counts).toMatchObject({ unresolved: 0, followUp: 1, acknowledged: 0, answered: 0 });
+    // The evidence quotes the speaker who made the thread outstanding, not the
+    // author's reply that happened to end the first comment page.
     expect(reviewFollowUpThreadIssue(triage.followUpThreads[0]!)).toMatchObject({
       blocking: true,
       category: "pr-review",
+      evidence: ["https://github.test/pr#PRRT_paged-latest", "reviewer: Still failing on my side after that commit."],
       id: "pr-review-follow-up:PRRT_paged",
     });
 

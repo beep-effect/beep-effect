@@ -91,27 +91,28 @@ const outdatedThread = ReplyLiveThread.make({
   path: null,
 });
 
-// Resolved by the author, then answered again by the review bot: the last word
-// is not the author's, so a reply is still owed and the thread is postable.
+// Resolved by the author, then answered again by a human reviewer: the last
+// word is not the author's, so a reply is still owed and the thread is
+// postable. (A GitHub App speaking last is `acknowledgedThread` below.)
 const followUpThread = ReplyLiveThread.make({
   comments: ReplyThreadCommentConnection.make({
     nodes: [
       ReplyThreadComment.make({
         databaseId: FOLLOW_UP_COMMENT_ID,
-        id: "PRRC_followup_bot",
-        author: { login: "coderabbitai" },
+        id: "PRRC_followup_reviewer",
+        author: { login: "reviewer" },
       }),
       ReplyThreadComment.make({ databaseId: 2_284_119_005, id: "PRRC_followup_author", author: { login: "octocat" } }),
       ReplyThreadComment.make({
         databaseId: 2_284_119_006,
         id: "PRRC_followup_again",
-        author: { login: "coderabbitai" },
+        author: { login: "reviewer" },
       }),
     ],
     pageInfo: closedPageInfo,
   }),
   latest: ReplyThreadLatestConnection.make({
-    nodes: [ReplyThreadLatestComment.make({ author: { login: "coderabbitai", __typename: "User" } })],
+    nodes: [ReplyThreadLatestComment.make({ author: { login: "reviewer", __typename: "User" } })],
   }),
   id: "PRRT_followup",
   isOutdated: false,
@@ -249,7 +250,7 @@ describe("planReplyActions", () => {
     expect(unknownAuthor?.state).toBe("resolved-answered");
     // A reviewer closing their own thread owes nothing either.
     const [reviewerResolved] = markReplyThreadStates(
-      [ReplyLiveThread.make({ ...unmarked, resolvedBy: { login: "coderabbitai" } })],
+      [ReplyLiveThread.make({ ...unmarked, resolvedBy: { login: "reviewer" } })],
       O.some("octocat")
     );
     expect(reviewerResolved?.state).toBe("resolved-answered");

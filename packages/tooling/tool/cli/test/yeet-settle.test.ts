@@ -56,7 +56,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Duration, Effect, Fiber, FileSystem, HashSet, Layer, Ref, Sink, Stream } from "effect";
+import { Duration, Effect, Fiber, FileSystem, HashSet, Layer, Ref, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -1038,6 +1038,83 @@ it.effect("status retains classified checks from the existing two gh views", () 
       });
       expect(legacy.checks).toEqual([]);
       expect(legacy.labels).toEqual([]);
+    })
+  ).pipe(provideScopedLayer(platform))
+);
+
+it.effect("status refuses a review-thread page that names itself as its own successor", () =>
+  temporary((root) =>
+    Effect.gen(function* () {
+      const pageReads = yield* Ref.make(0);
+      const runner = ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
+        const [first, second] = command.args;
+        if (command.command === "git") return Effect.succeed(handle(0, ""));
+        if (first === "pr" && second === "view")
+          return Effect.succeed(
+            handle(
+              0,
+              JSON.stringify({
+                id: "PR_loop",
+                number: 1,
+                url: "https://github.com/beep/repo/pull/1",
+                state: "OPEN",
+                mergeable: "MERGEABLE",
+                mergeStateStatus: "CLEAN",
+                isDraft: false,
+                reviewDecision: null,
+                headRefOid: "aaa111",
+                labels: [],
+              })
+            )
+          );
+        if (first === "pr" && second === "checks") return Effect.succeed(handle(0, "[]"));
+        // Every page claims a successor at the cursor that was just requested:
+        // a loop that trusted it would re-read this page forever.
+        if (first === "api")
+          return Ref.update(pageReads, (n) => n + 1).pipe(
+            Effect.as(
+              handle(
+                0,
+                JSON.stringify({
+                  data: {
+                    node: {
+                      author: { login: "octocat" },
+                      reviewThreads: {
+                        nodes: [
+                          {
+                            id: "PRRT_loop",
+                            isResolved: false,
+                            isOutdated: false,
+                            path: "src/a.ts",
+                            line: 1,
+                            resolvedBy: null,
+                            comments: {
+                              nodes: [{ author: { __typename: "User", login: "reviewer" }, body: "?", databaseId: 1 }],
+                            },
+                            latest: {
+                              nodes: [{ author: { __typename: "User", login: "reviewer" }, body: "?", databaseId: 1 }],
+                            },
+                          },
+                        ],
+                        pageInfo: { hasNextPage: true, endCursor: "same-cursor" },
+                      },
+                    },
+                  },
+                })
+              )
+            )
+          );
+        return Effect.succeed(handle(0, "[]"));
+      });
+      const result = yield* collectYeetStatus(contextFor(root), true).pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner),
+        Effect.result
+      );
+      expect(Result.isFailure(result)).toBe(true);
+      expect(Result.isFailure(result) ? result.failure.message : "").toContain("repeated the same GraphQL end cursor");
+      // The first page and its claimed successor were read; the third lap never ran.
+      expect(yield* Ref.get(pageReads)).toBe(2);
     })
   ).pipe(provideScopedLayer(platform))
 );

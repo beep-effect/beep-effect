@@ -26,12 +26,13 @@ import {
   summarizeYeetReviewThreadStates,
   YeetReviewThreadNewestComment,
   YeetReviewThreadStateCounts,
-  YeetReviewThreadStateInput,
   yeetReviewCommentAuthorKind,
+  yeetReviewThreadStateInput,
 } from "../ReviewThreadState.ts";
 import { GreptileSummary, PrCloseoutGateState, PrCloseoutOptions } from "./Closeout.schemas.ts";
 import { GhReviewThread } from "./Gh.schemas.ts";
 import { authorLogin, botAuthoredReviewThreadCount, botCommentCount } from "./GreptileSignal.ts";
+import type { YeetReviewThreadStateInput } from "../ReviewThreadState.ts";
 import type { GhReview } from "./Gh.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/closeout/Gates");
@@ -72,13 +73,30 @@ const closeoutIssue = (
 
 const reviewThreadLocation = (thread: GhReviewThread): string => `${thread.path ?? "unknown-path"}:${thread.line ?? 0}`;
 
-// The thread's newest comment quoted as evidence, falling back to its location
-// when the thread carries no readable comment at all.
+const commentEvidence = (author: GhActor | null | undefined, body: string, url: string): ReadonlyArray<string> => [
+  url,
+  `${authorLogin(author ?? null)}: ${Str.slice(0, 240)(Str.trim(body))}`,
+];
+
+// The thread's newest comment quoted as evidence, read the way the thread's
+// state is: the `latest` node when it carries a body and url, else the last
+// node of the first page while GitHub said that page is the whole chain, else
+// the location. Evidence must never quote an older speaker than the one whose
+// comment made the thread outstanding.
 const reviewThreadEvidence = (thread: GhReviewThread): ReadonlyArray<string> =>
   pipe(
-    thread.comments.nodes,
-    A.last,
-    O.map((comment) => [comment.url, `${authorLogin(comment.author)}: ${Str.slice(0, 240)(Str.trim(comment.body))}`]),
+    O.fromUndefinedOr(thread.latest),
+    O.flatMap((latest) => A.last(latest.nodes)),
+    O.flatMap((comment) =>
+      O.flatMap(O.fromUndefinedOr(comment.url), (url) =>
+        O.map(O.fromUndefinedOr(comment.body), (body) => commentEvidence(comment.author, body, url))
+      )
+    ),
+    O.orElse(() =>
+      thread.comments.pageInfo.hasNextPage
+        ? O.none()
+        : O.map(A.last(thread.comments.nodes), (comment) => commentEvidence(comment.author, comment.body, comment.url))
+    ),
     O.getOrElse(() => [reviewThreadLocation(thread)])
   );
 
@@ -220,21 +238,7 @@ const closeoutNewestComment = (thread: GhReviewThread): O.Option<YeetReviewThrea
 const closeoutThreadStateInput = (
   thread: GhReviewThread,
   pullRequestAuthor: O.Option<string>
-): YeetReviewThreadStateInput =>
-  YeetReviewThreadStateInput.make({
-    threadId: thread.id,
-    isResolved: thread.isResolved,
-    isOutdated: thread.isOutdated,
-    path: O.fromNullishOr(thread.path),
-    line: O.fromNullishOr(thread.line),
-    pullRequestAuthor,
-    resolvedBy: pipe(
-      O.fromUndefinedOr(thread.resolvedBy),
-      O.flatMap(O.fromNullishOr),
-      O.map((actor) => actor.login)
-    ),
-    newestComment: closeoutNewestComment(thread),
-  });
+): YeetReviewThreadStateInput => yeetReviewThreadStateInput(thread, pullRequestAuthor, closeoutNewestComment(thread));
 
 /**
  * One pull request's closeout review threads, partitioned by what each owes.
