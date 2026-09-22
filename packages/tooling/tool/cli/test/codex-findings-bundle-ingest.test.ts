@@ -464,7 +464,7 @@ process.exit(args.includes("--dry-run") && args.includes("--path") ? 0 : 17);
       expect(stalled._tag).toBe("Failure");
       if (stalled._tag === "Failure") expect(stalled.failure.message).toBe("fixture deadline");
       const pid = O.getOrThrow(yield* Ref.get(childPid));
-      expect(() => process.kill(pid, 0)).toThrowError(expect.objectContaining({ code: "ESRCH" }));
+      expect(() => process.kill(pid, 0)).toThrow(expect.objectContaining({ code: "ESRCH" }));
     })
   );
 });
