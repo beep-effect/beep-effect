@@ -1,0 +1,101 @@
+{
+  "package": "@beep/documents-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:32:14.500525+00:00",
+  "totalMs": 4834.030029296875,
+  "testCount": 37,
+  "files": [
+    {
+      "file": "packages/documents/use-cases/test/Document.errors.test.ts",
+      "ms": 1.030029296875,
+      "tests": 1
+    },
+    {
+      "file": "packages/documents/use-cases/test/FilingDecision.test.ts",
+      "ms": 7.46875,
+      "tests": 2
+    },
+    {
+      "file": "packages/documents/use-cases/test/Sync.test.ts",
+      "ms": 35.07861328125,
+      "tests": 12
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncConflict.test.ts",
+      "ms": 18.21484375,
+      "tests": 4
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncCursor.test.ts",
+      "ms": 12.60791015625,
+      "tests": 4
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncItem.test.ts",
+      "ms": 16.020263671875,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncOperation.test.ts",
+      "ms": 15.3076171875,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 2.80078125,
+      "tests": 4
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/documents/use-cases/test/Sync.test.ts",
+      "testName": "DmsMirror port models defaults optional remote references to none at construction",
+      "ms": 25.666032999999516
+    },
+    {
+      "file": "packages/documents/use-cases/test/Sync.test.ts",
+      "testName": "DmsMirror port models exposes the DmsEventType literal family",
+      "ms": 25.462821000000076
+    },
+    {
+      "file": "packages/documents/use-cases/test/Sync.test.ts",
+      "testName": "DmsMirror port models resolves mirror and availability ports through their context tags",
+      "ms": 25.458204999999907
+    },
+    {
+      "file": "packages/documents/use-cases/test/Sync.test.ts",
+      "testName": "DmsMirror port models round-trips schema-derived mirror models and inputs",
+      "ms": 25.432855000000018
+    },
+    {
+      "file": "packages/documents/use-cases/test/Sync.test.ts",
+      "testName": "VaultSyncEngine port round-trips the vault sync status read model",
+      "ms": 25.423932000000605
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncConflict.test.ts",
+      "testName": "SyncConflict repository port dedupes drift records by provider and remote event id",
+      "ms": 18.214732999999796
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncConflict.test.ts",
+      "testName": "SyncConflict repository port lists only open drift records for the workspace mirror",
+      "ms": 17.982246999999916
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncConflict.test.ts",
+      "testName": "SyncConflict repository port marks drift records reviewed and fails for unknown identities",
+      "ms": 17.962906999999177
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncConflict.test.ts",
+      "testName": "SyncConflict repository port round-trips schema-derived seeds and inputs",
+      "ms": 17.916306000000077
+    },
+    {
+      "file": "packages/documents/use-cases/test/SyncItem.test.ts",
+      "testName": "SyncItem repository port creates a tracking row and finds it by path and remote id",
+      "ms": 15.398470000000088
+    }
+  ]
+}

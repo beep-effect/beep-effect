@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/agents-domain",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "822fccc5804466966eacd007ab33dba8363562f4b1a467cc1949060f0f89eec8",
+  "rawLogSha256": "ad9d19a9277eea9a41deb2bb65fed875e7355875eff3add302e3102c1b082dee",
+  "rawReceiptSha256": "f635797003c20b3477f65e2990ac4917d18a7099e97554ebef81b746e452c0e8",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 6.167678674999934,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 22
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 33.66650390625,
+  "minimumMemAvailableGiB": 77.85966491699219,
+  "maxPressureAvg10": {
+    "cpu": 3.83,
+    "memory": 0.0,
+    "io": 0.0
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "ms": 65.305908203125,
+      "tests": 13
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "ms": 20.713623046875,
+      "tests": 9
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

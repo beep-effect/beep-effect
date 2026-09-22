@@ -1,0 +1,81 @@
+{
+  "package": "@beep/documents-tables",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:32:09.369681+00:00",
+  "totalMs": 4519.718017578125,
+  "testCount": 17,
+  "files": [
+    {
+      "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
+      "ms": 31.311279296875,
+      "tests": 4
+    },
+    {
+      "file": "packages/documents/tables/test/SyncCursorTable.test.ts",
+      "ms": 22.1708984375,
+      "tests": 4
+    },
+    {
+      "file": "packages/documents/tables/test/SyncItemTable.test.ts",
+      "ms": 23.718017578125,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/tables/test/SyncOperationTable.test.ts",
+      "ms": 24.176513671875,
+      "tests": 4
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
+      "testName": "SyncConflict table materializes SyncConflict metadata without executing a live database",
+      "ms": 31.311397999999826
+    },
+    {
+      "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
+      "testName": "SyncConflict table round-trips schema-derived SyncConflicts through the row converters",
+      "ms": 31.121767000000546
+    },
+    {
+      "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
+      "testName": "SyncConflict table builds the SyncConflict indexes from schema-first hints",
+      "ms": 31.09863200000018
+    },
+    {
+      "file": "packages/documents/tables/test/SyncConflictTable.test.ts",
+      "testName": "SyncConflict table round-trips SyncConflict rows through the converters",
+      "ms": 31.077369999999974
+    },
+    {
+      "file": "packages/documents/tables/test/SyncOperationTable.test.ts",
+      "testName": "SyncOperation table materializes SyncOperation metadata without executing a live database",
+      "ms": 24.176491999999598
+    },
+    {
+      "file": "packages/documents/tables/test/SyncOperationTable.test.ts",
+      "testName": "SyncOperation table builds the SyncOperation indexes from schema-first hints",
+      "ms": 23.957416999999623
+    },
+    {
+      "file": "packages/documents/tables/test/SyncOperationTable.test.ts",
+      "testName": "SyncOperation table round-trips SyncOperation rows through the converters",
+      "ms": 23.93744599999991
+    },
+    {
+      "file": "packages/documents/tables/test/SyncOperationTable.test.ts",
+      "testName": "SyncOperation table round-trips schema-derived SyncOperations through the row converters",
+      "ms": 23.93235899999945
+    },
+    {
+      "file": "packages/documents/tables/test/SyncItemTable.test.ts",
+      "testName": "SyncItem table materializes SyncItem metadata without executing a live database",
+      "ms": 23.71806000000015
+    },
+    {
+      "file": "packages/documents/tables/test/SyncItemTable.test.ts",
+      "testName": "SyncItem table round-trips schema-derived SyncItems through the row converters",
+      "ms": 23.52644599999985
+    }
+  ]
+}

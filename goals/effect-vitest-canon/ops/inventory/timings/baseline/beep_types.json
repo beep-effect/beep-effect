@@ -1,0 +1,61 @@
+{
+  "package": "@beep/types",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:14:25.102867+00:00",
+  "totalMs": 353.61328125,
+  "testCount": 9,
+  "files": [
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "ms": 1.61328125,
+      "tests": 9
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "testName": "TString preserves non-empty literal strings",
+      "ms": 0.804224999999974
+    },
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "testName": "TString rejects empty literal strings",
+      "ms": 0.6133120000000076
+    },
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "testName": "TString preserves non-empty strings without boundary slashes",
+      "ms": 0.5946930000000066
+    },
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "testName": "TString rejects empty strings and strings with boundary slashes",
+      "ms": 0.5827550000000201
+    },
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "testName": "TString filters invalid union members",
+      "ms": 0.5733809999999835
+    },
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "testName": "TString splits string literals into character unions",
+      "ms": 0.3610240000000431
+    },
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "testName": "TString preserves ASCII dot property names",
+      "ms": 0.3340029999999956
+    },
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "testName": "TString rejects strings that cannot be used for ASCII dot property access",
+      "ms": 0.319279999999992
+    },
+    {
+      "file": "packages/foundation/primitive/types/test/TString.test.ts",
+      "testName": "TString filters invalid dot property name union members",
+      "ms": 0.3072920000000181
+    }
+  ]
+}

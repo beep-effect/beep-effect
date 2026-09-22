@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/freshbooks",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "1855cbb3b66b8e2d640b328b05bd5bfd319d74ef3f7d32804efccaf17316fbfb",
+  "rawLogSha256": "f529e227f70923b44b13eef3d6b50ee2e1344378a37d39fbb0df2af50b87c24c",
+  "rawReceiptSha256": "30f5ca11986514db1511be78de7a59cc00b17d5728521e4cbb6a1807a6a47532",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 7.2702762479998455,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 12
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 42.9111328125,
+  "minimumMemAvailableGiB": 65.23128890991211,
+  "maxPressureAvg10": {
+    "cpu": 14.51,
+    "memory": 0.0,
+    "io": 0.0
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.token.test.ts",
+      "ms": 14.630859375,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/freshbooks/test/Freshbooks.service.test.ts",
+      "ms": 14.39013671875,
+      "tests": 6
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

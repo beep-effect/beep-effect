@@ -1,0 +1,71 @@
+{
+  "package": "@beep/api-transport",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:20:02.269385+00:00",
+  "totalMs": 5074.2744140625,
+  "testCount": 9,
+  "files": [
+    {
+      "file": "packages/foundation/capability/api-transport/test/EgressDenied.test.ts",
+      "ms": 2.158447265625,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/TaggedError.equivalence.test.ts",
+      "ms": 0.9599609375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "ms": 11.2744140625,
+      "tests": 6
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "testName": "@beep/api-transport keeps auth constructors and matching on schema-backed transport options",
+      "ms": 11.20753700000023
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "testName": "@beep/api-transport preserves every legacy transport option input accepted by Effect Duration",
+      "ms": 11.037446000000273
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "testName": "@beep/api-transport keeps RateLimitSnapshot encoded wire shape unchanged",
+      "ms": 11.020299000000705
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "testName": "@beep/api-transport round-trips schema-derived RateLimitSnapshot values through the encoded shape",
+      "ms": 11.010263000000123
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "testName": "@beep/api-transport round-trips parseable schema-derived snapshots through rate-limit headers",
+      "ms": 11.001540999999634
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/EgressDenied.test.ts",
+      "testName": "EgressDenied constructs reason-free with only its tag",
+      "ms": 1.3463949999995748
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/EgressDenied.test.ts",
+      "testName": "EgressDenied round-trips through its schema",
+      "ms": 1.1583659999996598
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/TaggedError.equivalence.test.ts",
+      "testName": "@beep/api-transport tagged-error declared equivalence compares field-free egress denials by their declared tag",
+      "ms": 0.9599520000001576
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/test/Transport.test.ts",
+      "testName": "@beep/api-transport parses rate-limit aliases and ignores non-numeric headers",
+      "ms": 0.2743609999997716
+    }
+  ]
+}

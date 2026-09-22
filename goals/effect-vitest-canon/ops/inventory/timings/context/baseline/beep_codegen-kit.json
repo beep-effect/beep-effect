@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/codegen-kit",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "6136d9d1cc80ce13244f6eaf070fb5182ab72f431f726617e7a00b3f0dc7624e",
+  "rawLogSha256": "9c1388bafb6af305f29879d0a8c823a90a2d15966ae41e28c6154838ac733b66",
+  "rawReceiptSha256": "f59213c808b8b716b49c1a9dc11089bde94f68fa766e1d272b3e2949772a7b05",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 4.522130624000056,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 17
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 2,
+  "maxLoad1": 21.224609375,
+  "minimumMemAvailableGiB": 75.94578170776367,
+  "maxPressureAvg10": {
+    "cpu": 3.21,
+    "memory": 0.0,
+    "io": 0.03
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
+      "ms": 116.5,
+      "tests": 17
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

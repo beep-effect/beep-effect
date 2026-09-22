@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/oip-web",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "72c85451b98afca88942af04196ae5b998acfd3f588583944d402bc2bbc0ccbf",
+  "rawLogSha256": "7956a59d2f20d74d488f2ede839bfa61ddc4a119f0bb010682fe382df6a18991",
+  "rawReceiptSha256": "c04b498b4416a15399b1187ced4e3cfca4b2966fb5025c948c4934f14481edbc",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 6.317204808000042,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 54
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 33.40966796875,
+  "minimumMemAvailableGiB": 79.68801498413086,
+  "maxPressureAvg10": {
+    "cpu": 3.33,
+    "memory": 0.0,
+    "io": 0.04
+  },
+  "slowestFiles": [
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "ms": 501.48681640625,
+      "tests": 42
+    },
+    {
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "ms": 4.808837890625,
+      "tests": 9
+    },
+    {
+      "file": "apps/oip-web/test/TaggedErrors.equivalence.test.ts",
+      "ms": 1.455322265625,
+      "tests": 3
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

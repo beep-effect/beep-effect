@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/ontology-use-cases",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "fd41b2028fb37b19299cc033da459638740351b8ceb9fdb48f20f2c914fd60da",
+  "rawLogSha256": "d7b98f152d7a72129bd77a7767701924f487b6b539867a281cdaadbb82ef8da5",
+  "rawReceiptSha256": "40dc8f84d56997f1d24e8c3a558a10f59a33fd889db9d7ca39fd62d66f9de9ef",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 4.972863508000046,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 59
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 2,
+  "maxLoad1": 35.43603515625,
+  "minimumMemAvailableGiB": 80.61065292358398,
+  "maxPressureAvg10": {
+    "cpu": 0.34,
+    "memory": 0.0,
+    "io": 0.21
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/ontology/use-cases/test/WorkerImportGraph.test.ts",
+      "ms": 3860.082763671875,
+      "tests": 2
+    },
+    {
+      "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
+      "ms": 377.236083984375,
+      "tests": 18
+    },
+    {
+      "file": "packages/ontology/use-cases/test/BrowserWorkerImportGraph.test.ts",
+      "ms": 368.839111328125,
+      "tests": 1
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
+      "ms": 178.298828125,
+      "tests": 4
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.test.ts",
+      "ms": 57.61083984375,
+      "tests": 18
+    },
+    {
+      "file": "packages/ontology/use-cases/test/GraphLayout.test.ts",
+      "ms": 18.011474609375,
+      "tests": 2
+    },
+    {
+      "file": "packages/ontology/use-cases/test/PizzaTutorial.e2e.test.ts",
+      "ms": 12.8994140625,
+      "tests": 1
+    },
+    {
+      "file": "packages/ontology/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 3.3310546875,
+      "tests": 13
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

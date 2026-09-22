@@ -513,3 +513,68 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
     })
   );
 });
+
+it.layer(testLayer, { timeout: "30 seconds" })("security bundle input bounds", (it) => {
+  it.effect(
+    "rejects a missing required artifact instead of importing a partial bundle",
+    Effect.fnUntraced(function* () {
+      const { root } = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* fs.remove(path.join(root, "coverage.json"));
+      expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toBe("Required sealed artifact is missing.");
+    })
+  );
+
+  it.effect(
+    "rejects directories in place of sealed artifacts",
+    Effect.fnUntraced(function* () {
+      const { root } = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* fs.remove(path.join(root, "findings.json"));
+      yield* fs.makeDirectory(path.join(root, "findings.json"));
+      const error = yield* readSecurityBundle(root).pipe(Effect.flip);
+      expect(error.message).toBe("Bundle artifact is not a regular file within the 16 MiB input limit.");
+    })
+  );
+
+  it.effect(
+    "rejects an individual artifact over 16 MiB",
+    Effect.fnUntraced(function* () {
+      const { root } = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* fs.writeFile(path.join(root, "findings.json"), new Uint8Array(16777217));
+      expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toBe(
+        "Bundle artifact is not a regular file within the 16 MiB input limit."
+      );
+    })
+  );
+
+  it.effect(
+    "rejects aggregate input above 64 MiB even when each artifact satisfies its bound",
+    Effect.fnUntraced(function* () {
+      const { root, manifest } = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const bytes = new Uint8Array(16777216);
+      const digest = yield* hash(bytes);
+      const largeArtifacts = yield* Effect.forEach(
+        ["part1.bin", "part2.bin", "part3.bin", "part4.bin"],
+        Effect.fnUntraced(function* (name: string) {
+          yield* fs.writeFile(path.join(root, name), bytes);
+          return { path: name, sha256: digest, mediaType: "application/octet-stream" };
+        }),
+        { concurrency: 1 }
+      );
+      yield* writeJson(root, "scan-manifest.json", {
+        ...manifest,
+        scan: { ...manifest.scan, artifacts: [...manifest.scan.artifacts, ...largeArtifacts] },
+      });
+      expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toBe(
+        "Bundle exceeds the 64 MiB total input limit."
+      );
+    })
+  );
+});

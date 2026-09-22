@@ -1,0 +1,86 @@
+{
+  "package": "@beep/tika",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:31:20.563780+00:00",
+  "totalMs": 6817.20703125,
+  "testCount": 70,
+  "files": [
+    {
+      "file": "packages/drivers/tika/test/Tika.errors.test.ts",
+      "ms": 11.82666015625,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "ms": 164.20703125,
+      "tests": 40
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "ms": 49.79736328125,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.tikaapp.test.ts",
+      "ms": 36.102294921875,
+      "tests": 9
+    },
+    {
+      "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
+      "ms": 9.416748046875,
+      "tests": 11
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "TikaServerEngineConfig generates valid Tika Server configs for the nightly regression seed",
+      "ms": 164.20704399999977
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "TikaServerEngineConfig applies Tika Server schema defaults and keeps encoded shapes stable",
+      "ms": 63.42977599999995
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "TikaServerEngineConfig round-trips schema-derived Tika Server config through encoded form",
+      "ms": 63.08896300000015
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "TikaServerEngineConfig strips trailing slashes from the base URL",
+      "ms": 63.01863500000036
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "TikaServerEngineConfig rejects a base URL carrying a query string or fragment",
+      "ms": 62.99366699999973
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "testName": "@beep/tika keeps Tika error encoded shapes byte-identical",
+      "ms": 49.004675000000134
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "testName": "@beep/tika round-trips schema-derived extraction operation data through file-processing schemas",
+      "ms": 48.79744800000026
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "testName": "@beep/tika extracts text for a P1 text fixture",
+      "ms": 48.77629500000057
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.service.test.ts",
+      "testName": "@beep/tika defers DOCX extraction behind an operation-level error",
+      "ms": 48.76270399999976
+    },
+    {
+      "file": "packages/drivers/tika/test/Tika.server.test.ts",
+      "testName": "makeTikaServerFileProcessingEngine error boundary maps a slow Tika Server to operation-timed-out",
+      "ms": 39.73485999999957
+    }
+  ]
+}

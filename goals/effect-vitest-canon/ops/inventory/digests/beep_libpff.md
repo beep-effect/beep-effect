@@ -1,0 +1,53 @@
+# @beep/libpff — four-lens source audit
+
+5 census files, 20 rows, 4 review items and 16 file-specific no-findings rows. All rows are open P1 judgments; P2 remains gated.
+
+## Topology, native boundaries and limitations
+
+Five executable files separate pure EML/typed-error/scaffold contracts from the native pffexport adapter and gated real PST integration. The large adapter suite writes executable bash stubs, synthetic input bytes, symlinks and export trees in per-test scopes. NodeServices is provided per test; these are mechanical rebuild candidates, but native child visibility, sandbox paths, traversal behavior and temp cleanup must survive any outer-layer migration. Bubblewrap stubs check arguments and handoff contracts; they do not prove kernel isolation. One optional real /usr/bin/bwrap case returns successfully without assertions if unavailable.
+
+External symlinks in /var/tmp, the runtime binary directory and node_modules/.bin have release handlers that ignore removal failures; the enclosing temp directory does not cover those paths. Those native locations also constrain portability/permissions. No filesystem operation was performed by this audit. MemoryFileSystem cannot replace the process-visible fixtures. The scaffold itself derives a synthetic child ID and returns data without spawning pffexport; its NodeServices provision is not evidence that every test has native process cost.
+
+Production wraps the process in a configured timeout and kills on error/interruption. The late-output oracle adds a fixed 1250ms absence observation after a 250ms timeout; without readiness/completion evidence that observation is weaker than a child cancellation proof. This is not an observed production kill failure or a reason to freeze native process time. Preserve the quota, collision, all/recovered-tree, malformed path, EML octet and fcRuns(25) contracts. Real PST integration requires supplied archive content; optional items/date assertions do not prove every PST has the same shape.
+
+History contains twelve production coverage metric observations across three jobs, not twelve distinct flakes or failing test cases. The retained unit timing includes stub subprocess costs, but neither it nor the absent-gate live registrations establishes real pffexport/PST or bubblewrap availability.
+
+## Review items
+
+- **L-RES-02 — hidden-external-cleanup-failure**, `packages/drivers/libpff/test/Libpff.pffexport.test.ts:493-495`. The release of an external symlink uses fs.remove(...).pipe(Effect.ignore); the scoped temp directory does not own that external path. Keep acquireRelease ownership and native symlink/PATH behavior. Surface cleanup failure through an explicit test failure or defect instead of ignoring it. Apply the same correction to runtime-bin and node_modules/.bin symlink releases at 549-551 and the later corresponding release. These files are outside the temp directory. No leak was executed or observed in this audit.
+- **L-FLAKE-02 — bounded-absence-without-child-readiness**, `packages/drivers/libpff/test/Libpff.pffexport.test.ts:1036-1060`. The timeout case waits 1250ms after a 250ms timeout and asserts no late output from a script that sleeps 1s. Preserve the 250ms deadline, late-file absence assertion and native subprocess subject. Establish script readiness and cancellation/completion evidence through public process/fixture observations; a bounded absence check alone can pass before a delayed child reaches its write. Do not use TestClock to fake a native process or raise timeouts. Production has kill-on-error/interrupt, so this is an oracle-strength limitation, not proof of a cancellation defect.
+- **L-OBS-03 — unreported-native-gate**, `packages/drivers/libpff/test/Libpff.pffexport.test.ts:331-360`. The real bubblewrap test returns without assertions when /usr/bin/bwrap is missing. Preserve the native sandbox integration and every assertion when available. Make the unavailable capability an explicit reported non-execution outcome using the approved registration/gate mechanism during P2. Do not count the current successful early return as executed sandbox isolation; the separate bubblewrap stubs are not equivalent proof.
+- **L-OBS-03 — unreported-live-gate**, `packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts:80-185`. Missing BEEP_TEST_LIBPFF_PST returns skipNotice from live tests; this is not a reporter skip. Retain the always-on fcRuns(25) property and all live probe/export assertions. Represent absent PST capability separately from executed integration success, using the approved explicit gate. Preserve the supplied native PST and real process; do not acquire an archive or infer execution from a green registration.
+
+## Retained timing and provenance
+
+Node22.22.3 / Bun1.4.2 / Vitest4.1.11 context: 69 passed registrations; reporter interval 22208.553711ms; whole command 23.730146s. Source head 662823dd960367046ba7d73dd8fd25d15782865a. Full executable-file representation is recorded; support files have no independent test timing. This is not coverage, compiler or package acceptance. No rerun or workload adjustment was performed. Runtime and workload identities remain in the public package timing context.
+
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33139531081/job/98747032293, head `0ac4b223aeb6c84657673fe67a7b587b9d7e0c3d`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-28T03:50:36.7344683Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) branches: 63.57 < 76.13
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33139531081/job/98747032293, head `0ac4b223aeb6c84657673fe67a7b587b9d7e0c3d`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-28T03:50:36.7345208Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) functions: 69.23 < 74.48
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33139531081/job/98747032293, head `0ac4b223aeb6c84657673fe67a7b587b9d7e0c3d`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-28T03:50:36.7345716Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) lines: 80.69 < 87.38
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33139531081/job/98747032293, head `0ac4b223aeb6c84657673fe67a7b587b9d7e0c3d`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-28T03:50:36.7346224Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) statements: 79.57 < 87.5
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33231181776/job/99044190571, head `b82f8c8df20a2829706b7defe65edd608d309b6b`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-29T03:37:07.8415025Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) branches: 74.14 < 76.13
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33231181776/job/99044190571, head `b82f8c8df20a2829706b7defe65edd608d309b6b`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-29T03:37:07.8415540Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) functions: 72.05 < 74.48
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33231181776/job/99044190571, head `b82f8c8df20a2829706b7defe65edd608d309b6b`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-29T03:37:07.8416042Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) lines: 84.19 < 87.38
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33231181776/job/99044190571, head `b82f8c8df20a2829706b7defe65edd608d309b6b`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-29T03:37:07.8416546Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) statements: 82.99 < 87.5
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33297122027/job/99218639573, head `a1c563276bf140db92664b356488c16fb19ff802`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-30T06:53:32.4468393Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) branches: 74.07 < 76.13
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33297122027/job/99218639573, head `a1c563276bf140db92664b356488c16fb19ff802`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-30T06:53:32.4468899Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) functions: 71.15 < 74.48
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33297122027/job/99218639573, head `a1c563276bf140db92664b356488c16fb19ff802`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-30T06:53:32.4469396Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) lines: 83.53 < 87.38
+- Historical coverage-ratchet: https://github.com/beep-effect/beep-effect/actions/runs/33297122027/job/99218639573, head `a1c563276bf140db92664b356488c16fb19ff802`, path `packages/drivers/libpff/src/Libpff.pffexport.ts`. 2026-08-30T06:53:32.4469886Z   - @beep/libpff (packages/drivers/libpff/src/Libpff.pffexport.ts) statements: 82.36 < 87.5
+
+## P2 ordering and uncertainty
+
+After separate P2 authorization: establish resource ownership and preserve native subjects; strengthen identified assertions without removing originals; preserve generator inputs, seeds and run floors; control only justified Effect time or add native readiness evidence; then make gated execution and lifecycle output attributable. No timeout increases, retries, external service acquisition or flakyTest proposal is justified here. A passing timing cohort does not eliminate source-derived risks.
+
+## Top files and counts
+
+- `packages/drivers/libpff/test/Libpff.eml.test.ts`: 4 rows, 0 review items.
+- `packages/drivers/libpff/test/Libpff.equivalence.test.ts`: 4 rows, 0 review items.
+- `packages/drivers/libpff/test/Libpff.pffexport.test.ts`: 4 rows, 3 review items.
+- `packages/drivers/libpff/test/Libpff.service.test.ts`: 4 rows, 0 review items.
+- `packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts`: 4 rows, 1 review items.
+
+Root reviewed and accepted this package’s P1 rows after source hash, artifact and combined strict-schema validation. Full P1 remains incomplete; Benjamin’s acknowledgement after completeness and Grok review is required before P2.
+
+Evidence: [timing index](../timings/baseline-index.json), [failed timing attempts](../timings/baseline-failures.json), and [hosted history](../hosted-history-summary.json).

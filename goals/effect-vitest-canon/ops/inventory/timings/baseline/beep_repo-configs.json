@@ -1,0 +1,116 @@
+{
+  "package": "@beep/repo-configs",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:08.376066+00:00",
+  "totalMs": 5540.8173828125,
+  "testCount": 76,
+  "files": [
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+      "ms": 27.853515625,
+      "tests": 27
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts",
+      "ms": 24.8525390625,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+      "ms": 329.8173828125,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.model.test.ts",
+      "ms": 6.921875,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.schemas.test.ts",
+      "ms": 7.574951171875,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "ms": 39.005126953125,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NoNativeRuntimeHotspots.test.ts",
+      "ms": 2.43896484375,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts",
+      "ms": 20.52734375,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/docs-eslint-config.test.ts",
+      "ms": 1.38720703125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-first-regressions.test.ts",
+      "ms": 7.376953125,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-steering-guidance.test.ts",
+      "ms": 1.82421875,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+      "testName": "Effect tsgo effectFn policy fails reusable Effect.gen wrappers with a named Effect.fn suggestion",
+      "ms": 329.8173710000001
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+      "testName": "TypeScript compiler routing keeps the TypeScript 6 API beside the Effect-patched TypeScript 7 compiler",
+      "ms": 303.3484210000006
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "testName": "Next route schemas rejects invalid route discriminators and redirect mode mixing",
+      "ms": 28.00671599999987
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "testName": "Next route schemas round-trips redirect status-code values",
+      "ms": 27.401889000000665
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "testName": "Next route schemas round-trips route object schemas that do not contain never fields",
+      "ms": 27.372976000000563
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "testName": "Next image schemas round-trips schema-derived complete image configs",
+      "ms": 27.342829000000165
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "testName": "Next image schemas round-trips schema-derived partial image configs",
+      "ms": 27.302717999999913
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts",
+      "testName": "Effect laws allowlist schemas normalizes entry file paths during JSONC decode",
+      "ms": 24.105359000000135
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts",
+      "testName": "Effect laws allowlist schemas round-trips allowlist document and snapshot schemas",
+      "ms": 23.852561000000605
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+      "testName": "cache qualification policy accepts package names containing s and rejects whitespace independently",
+      "ms": 15.117164999999659
+    }
+  ]
+}

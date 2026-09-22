@@ -1,0 +1,106 @@
+{
+  "package": "@beep/nlp-processing",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:25:37.138703+00:00",
+  "totalMs": 5256.039306640625,
+  "testCount": 84,
+  "files": [
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/TaggedError.equivalence.test.ts",
+      "ms": 3.44189453125,
+      "tests": 13
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/Composition.test.ts",
+      "ms": 17.378173828125,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Backend/NLPBackend.test.ts",
+      "ms": 10.322265625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "ms": 29.93798828125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/EffectGraph.test.ts",
+      "ms": 17.23095703125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "ms": 40.689453125,
+      "tests": 23
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/TextGraph.test.ts",
+      "ms": 4.02978515625,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/TypeClass.test.ts",
+      "ms": 10.274658203125,
+      "tests": 14
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "ms": 56.039306640625,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "testName": "AI tool shared schemas round-trips schema-derived shared result models",
+      "ms": 56.0392580000007
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Tools/Schemas.test.ts",
+      "testName": "AI tool success schemas round-trips schema-derived success payloads",
+      "ms": 55.85845100000006
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph construction round-trips schema-derived annotated nodes",
+      "ms": 26.683662000000368
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph construction empty has no nodes",
+      "ms": 26.50402699999995
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph construction fromDocumentAnnotated builds doc + sentences + annotations",
+      "ms": 26.48686000000089
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph annotation passes are idempotent re-running addPOSAnnotations does not duplicate",
+      "ms": 26.47719599999982
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/AnnotatedTextGraph.test.ts",
+      "testName": "AnnotatedTextGraph annotation passes are idempotent re-running addEntityAnnotations does not duplicate",
+      "ms": 26.46855300000061
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "ExecutionMetrics monoid laws round-trips schema-derived metrics through encode/decode",
+      "ms": 23.084407999999712
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "ExecutionMetrics monoid laws satisfies left identity: empty \u2295 x = x",
+      "ms": 22.89921400000003
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/test/Graph/GraphOperations.test.ts",
+      "testName": "ExecutionMetrics monoid laws satisfies right identity: x \u2295 empty = x",
+      "ms": 22.88210699999945
+    }
+  ]
+}

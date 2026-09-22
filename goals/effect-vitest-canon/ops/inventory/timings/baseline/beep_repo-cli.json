@@ -1,0 +1,1021 @@
+{
+  "package": "@beep/repo-cli",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:34:56.961178+00:00",
+  "totalMs": 915025.275390625,
+  "testCount": 3748,
+  "files": [
+    {
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts",
+      "ms": 67.12158203125,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts",
+      "ms": 1332.692138671875,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "ms": 8294.5107421875,
+      "tests": 43
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
+      "ms": 27.6376953125,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/architecture-operation-plan.test.ts",
+      "ms": 257.189453125,
+      "tests": 17
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
+      "ms": 12.819580078125,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-census.test.ts",
+      "ms": 72.576904296875,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
+      "ms": 398.687744140625,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
+      "ms": 132.0078125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+      "ms": 88.611572265625,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-entrypoints.test.ts",
+      "ms": 1648.371826171875,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-evidence.test.ts",
+      "ms": 14.497802734375,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-experiment.test.ts",
+      "ms": 43.5048828125,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-linker.test.ts",
+      "ms": 36.362060546875,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+      "ms": 1391.55224609375,
+      "tests": 13
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-pilot.test.ts",
+      "ms": 7.44970703125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
+      "ms": 202.49658203125,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cache-synthetic-orchestration.test.ts",
+      "ms": 1432.336669921875,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
+      "ms": 67.487548828125,
+      "tests": 11
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
+      "ms": 29.08056640625,
+      "tests": 18
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/check-census.test.ts",
+      "ms": 1866.59912109375,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-command.test.ts",
+      "ms": 27.403564453125,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-lane-timings.test.ts",
+      "ms": 76.026123046875,
+      "tests": 34
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "ms": 830.64892578125,
+      "tests": 79
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-runner-security.test.ts",
+      "ms": 3345.5927734375,
+      "tests": 20
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cli-json-printer.test.ts",
+      "ms": 985.59375,
+      "tests": 17
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cli-kits.test.ts",
+      "ms": 5.095458984375,
+      "tests": 25
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/cli-stdin.test.ts",
+      "ms": 5.554931640625,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codegen-command.test.ts",
+      "ms": 11.02490234375,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-csv.test.ts",
+      "ms": 13.669921875,
+      "tests": 15
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-normalize.test.ts",
+      "ms": 11.171630859375,
+      "tests": 20
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-packet.test.ts",
+      "ms": 23.455322265625,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-refresh.test.ts",
+      "ms": 290.542236328125,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-scan.test.ts",
+      "ms": 9.3583984375,
+      "tests": 41
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/codex-findings-write.test.ts",
+      "ms": 73.77880859375,
+      "tests": 21
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/commitlint-config.test.ts",
+      "ms": 11.573974609375,
+      "tests": 9
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
+      "ms": 14737.908203125,
+      "tests": 54
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-preservation.test.ts",
+      "ms": 1738.861083984375,
+      "tests": 12
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
+      "ms": 52.396484375,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/coverage-turbo-inputs.test.ts",
+      "ms": 320.060302734375,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/create-package-identity-template.test.ts",
+      "ms": 4.201171875,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+      "ms": 2767.068115234375,
+      "tests": 12
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
+      "ms": 19.185302734375,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "ms": 1863.26953125,
+      "tests": 20
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/delete-package-labs.test.ts",
+      "ms": 87.396484375,
+      "tests": 22
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/delete-package.test.ts",
+      "ms": 304.25830078125,
+      "tests": 30
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/directory-handle.test.ts",
+      "ms": 14.759765625,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen-stall-watchdog.test.ts",
+      "ms": 1298.4697265625,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "ms": 2895.30615234375,
+      "tests": 81
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/doctest-lane.test.ts",
+      "ms": 1571.9296875,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/doctest.test.ts",
+      "ms": 38.49951171875,
+      "tests": 21
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ecosystem-polarity.test.ts",
+      "ms": 30.4453125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-fn.test.ts",
+      "ms": 2749.288330078125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-imports.test.ts",
+      "ms": 1102.873046875,
+      "tests": 23
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
+      "ms": 435.4775390625,
+      "tests": 27
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
+      "ms": 1149.19970703125,
+      "tests": 192
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-vitest-primitives.test.ts",
+      "ms": 1493.013427734375,
+      "tests": 12
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/effect-vitest-store.test.ts",
+      "ms": 9.64697265625,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
+      "ms": 204.253662109375,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/explore-check.test.ts",
+      "ms": 40.712890625,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/fallow-quality-invariants.test.ts",
+      "ms": 2.343994140625,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/files-command.test.ts",
+      "ms": 2739.7744140625,
+      "tests": 105
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/flake-quarantine.test.ts",
+      "ms": 8.58642578125,
+      "tests": 22
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/foundation-topology.test.ts",
+      "ms": 99.906494140625,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/frozen-grant-set.test.ts",
+      "ms": 70.404052734375,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-bootstrap-plan.test.ts",
+      "ms": 1758.505615234375,
+      "tests": 24
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-command.test.ts",
+      "ms": 12.216552734375,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts",
+      "ms": 20.78955078125,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-doctor.test.ts",
+      "ms": 57.185302734375,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts",
+      "ms": 146.41748046875,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts",
+      "ms": 318.44970703125,
+      "tests": 60
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-packet-core.test.ts",
+      "ms": 48.357666015625,
+      "tests": 28
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-set-risk-tier.test.ts",
+      "ms": 42.752685546875,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/goals-set-status-stream.test.ts",
+      "ms": 86.865478515625,
+      "tests": 12
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/graft-cache-sync.test.ts",
+      "ms": 886.44482421875,
+      "tests": 23
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/graft-hooks.test.ts",
+      "ms": 423.245849609375,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/identity-registration-removal.test.ts",
+      "ms": 267.54345703125,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/image-command.test.ts",
+      "ms": 2984.327392578125,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/jsdoc-categories.test.ts",
+      "ms": 3.266845703125,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+      "ms": 2190.3203125,
+      "tests": 17
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/jsdoc-migrate.test.ts",
+      "ms": 32.283447265625,
+      "tests": 42
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/knowledge-refs.test.ts",
+      "ms": 3727.629150390625,
+      "tests": 54
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+      "ms": 8967.257080078125,
+      "tests": 64
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lab-identity-segment.test.ts",
+      "ms": 55.7490234375,
+      "tests": 12
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/labs-ceremony-scoping.test.ts",
+      "ms": 4.2021484375,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
+      "ms": 25.8828125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/laws-package.test.ts",
+      "ms": 510.56689453125,
+      "tests": 9
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts",
+      "ms": 1172.279541015625,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
+      "ms": 3781.961669921875,
+      "tests": 58
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-identity-registry.test.ts",
+      "ms": 2236.306884765625,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-judge-rubric.test.ts",
+      "ms": 9.980712890625,
+      "tests": 9
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-security.test.ts",
+      "ms": 18.561279296875,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-subcommand-allowlist.test.ts",
+      "ms": 1024.366943359375,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts",
+      "ms": 35.74560546875,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+      "ms": 22117.920166015625,
+      "tests": 19
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/match-person-model-store.test.ts",
+      "ms": 33.2705078125,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/native-runtime-prefix.test.ts",
+      "ms": 15319.100830078125,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/native-runtime.test.ts",
+      "ms": 49.376220703125,
+      "tests": 9
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/package-scripts.policy.test.ts",
+      "ms": 95.978271484375,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/package-scripts.schemas.test.ts",
+      "ms": 19.189208984375,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/package-verify.test.ts",
+      "ms": 854.7841796875,
+      "tests": 19
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/person-match-model-store.test.ts",
+      "ms": 25.645751953125,
+      "tests": 13
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/person-match-portability.test.ts",
+      "ms": 11.3896484375,
+      "tests": 17
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/policy-fingerprint-turbo-inputs.test.ts",
+      "ms": 1391.603271484375,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/process-attachment.test.ts",
+      "ms": 681.29150390625,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/process-identity.test.ts",
+      "ms": 22.421630859375,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-digest.test.ts",
+      "ms": 5.873291015625,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-fact.test.ts",
+      "ms": 11.572265625,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/proof-ledger.test.ts",
+      "ms": 46.849609375,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/purge-security.test.ts",
+      "ms": 18.2890625,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-command.test.ts",
+      "ms": 71.6357421875,
+      "tests": 32
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-judge-contract-parity.test.ts",
+      "ms": 49.5693359375,
+      "tests": 19
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-judge-skill.test.ts",
+      "ms": 10.07958984375,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-pure.test.ts",
+      "ms": 47.300537109375,
+      "tests": 40
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/qa-round-pipeline.test.ts",
+      "ms": 71.64208984375,
+      "tests": 29
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "ms": 1702.8486328125,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-command-dispatch.test.ts",
+      "ms": 32.038818359375,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
+      "ms": 12.063720703125,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts",
+      "ms": 50.302978515625,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts",
+      "ms": 102.93408203125,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "ms": 16862.4814453125,
+      "tests": 132
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "ms": 3178.260986328125,
+      "tests": 207
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tmpfs-render.test.ts",
+      "ms": 1.275390625,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tsgo-directives.test.ts",
+      "ms": 3.0419921875,
+      "tests": 40
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tsgo-profile.test.ts",
+      "ms": 4.168701171875,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ratchet-diff.test.ts",
+      "ms": 6.22705078125,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/reflection-lint.test.ts",
+      "ms": 39.399169921875,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts",
+      "ms": 22.163330078125,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/research-command.test.ts",
+      "ms": 184.578125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
+      "ms": 1100.4169921875,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts",
+      "ms": 427.15625,
+      "tests": 12
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/restoration-transformations-coverage.test.ts",
+      "ms": 1479.661376953125,
+      "tests": 32
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/roadmap-refs.test.ts",
+      "ms": 15.71826171875,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/run-scope.test.ts",
+      "ms": 91.128662109375,
+      "tests": 15
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/runners-bake.test.ts",
+      "ms": 117.79833984375,
+      "tests": 25
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/runtime-root.test.ts",
+      "ms": 7.614990234375,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-catalog.test.ts",
+      "ms": 1334.063720703125,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-first-arbitrary-coverage.test.ts",
+      "ms": 20.581298828125,
+      "tests": 27
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-first.test.ts",
+      "ms": 756.235595703125,
+      "tests": 25
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/schema-topology.test.ts",
+      "ms": 8.611572265625,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/setup-effect-ref.test.ts",
+      "ms": 70.789306640625,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/shared-internals.test.ts",
+      "ms": 21.61083984375,
+      "tests": 44
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/single-project-emit.test.ts",
+      "ms": 382.087890625,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/skills-command.test.ts",
+      "ms": 25.66943359375,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/skills-provenance.test.ts",
+      "ms": 255.572021484375,
+      "tests": 9
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts",
+      "ms": 1983.925537109375,
+      "tests": 19
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/step-git-exec.test.ts",
+      "ms": 204.260009765625,
+      "tests": 22
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "ms": 95.017822265625,
+      "tests": 29
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tagged-error-equivalence.test.ts",
+      "ms": 9.138916015625,
+      "tests": 71
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/terse-effect.test.ts",
+      "ms": 936.074951171875,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/test-tsgo-turbo-inputs.test.ts",
+      "ms": 359.00048828125,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/test-typecheck-coverage.test.ts",
+      "ms": 20.005859375,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "ms": 7364.92431640625,
+      "tests": 30
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "ms": 1353.199951171875,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/turbo-cache.test.ts",
+      "ms": 4.1748046875,
+      "tests": 35
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/version-sync-effect.test.ts",
+      "ms": 54.486083984375,
+      "tests": 17
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-command.test.ts",
+      "ms": 3026.17431640625,
+      "tests": 39
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-fleet-scan.test.ts",
+      "ms": 1454.443115234375,
+      "tests": 9
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-fleet.test.ts",
+      "ms": 5.349609375,
+      "tests": 33
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/worktree-reap.test.ts",
+      "ms": 2748.662841796875,
+      "tests": 15
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-ack.test.ts",
+      "ms": 37.17626953125,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
+      "ms": 29.694091796875,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
+      "ms": 2142.767822265625,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-fallow-self-heal.test.ts",
+      "ms": 29.46044921875,
+      "tests": 9
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-gate-staleness.test.ts",
+      "ms": 3.871337890625,
+      "tests": 13
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts",
+      "ms": 1015.696533203125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts",
+      "ms": 111.814697265625,
+      "tests": 24
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox-view.test.ts",
+      "ms": 271.040771484375,
+      "tests": 17
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-inbox.test.ts",
+      "ms": 245.597900390625,
+      "tests": 17
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-merge-ready-coherence.test.ts",
+      "ms": 9.499755859375,
+      "tests": 12
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-merged-preview.test.ts",
+      "ms": 8.5791015625,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
+      "ms": 95.5224609375,
+      "tests": 18
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-comment-stream.test.ts",
+      "ms": 58.73046875,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-loop.test.ts",
+      "ms": 24.38134765625,
+      "tests": 41
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts",
+      "ms": 4.0224609375,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-portfolio-index-guard.test.ts",
+      "ms": 896.216796875,
+      "tests": 13
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-provenance-boundary.test.ts",
+      "ms": 28.237060546875,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts",
+      "ms": 71.099365234375,
+      "tests": 11
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts",
+      "ms": 15.04443359375,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-provenance-footer.test.ts",
+      "ms": 978.7099609375,
+      "tests": 27
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-remediation.test.ts",
+      "ms": 61.796630859375,
+      "tests": 22
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
+      "ms": 31.4345703125,
+      "tests": 32
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-reply-schemas.test.ts",
+      "ms": 7.370361328125,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-resume.test.ts",
+      "ms": 198.7265625,
+      "tests": 25
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "ms": 5347.3408203125,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-status-triage.test.ts",
+      "ms": 10.417724609375,
+      "tests": 31
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "ms": 1151.280517578125,
+      "tests": 64
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-schemas.test.ts",
+      "ms": 6.425537109375,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-verdict-json.test.ts",
+      "ms": 7.07666015625,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-watch-mode.test.ts",
+      "ms": 845.315673828125,
+      "tests": 32
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-watch-stream.test.ts",
+      "ms": 9.376708984375,
+      "tests": 26
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "ms": 13505.1201171875,
+      "tests": 166
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "testName": "quality-scheduler distinguishes busy recovery records from records that vanished behind their locks",
+      "ms": 10776.764126
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "testName": "yeet attempt journal returns zero for a missing journal and refuses a live lock generation",
+      "ms": 10278.16008
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+      "testName": "executed lint workers executes deprecated APIs on the ciops lab package",
+      "ms": 7746.217265
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+      "testName": "executed lint workers executes deprecated-apis against a fixture package surface",
+      "ms": 7338.920110999999
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/native-runtime-prefix.test.ts",
+      "testName": "native-runtime prefix command rejects prefixes that escape the repository or carry glob characters",
+      "ms": 6738.870481999999
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "testName": "yeet review fixes serializes same-origin proofs through the fallback lock below the scheduler envelope",
+      "ms": 5026.293034
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+      "testName": "knowledge semantic-delta current-checkout probes treats archived command modules and runtime configuration as data, never code",
+      "ms": 4662.1999
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+      "testName": "executed lint workers executes jsdoc against a fixture package surface",
+      "ms": 4500.635898999999
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+      "testName": "knowledge semantic-delta current-checkout probes derives the current command surface statically with exact live structural parity",
+      "ms": 4005.131543
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
+      "testName": "corpus restoration preservation recopies a same-size source that stabilizes after changing in flight",
+      "ms": 3784.782703
+    }
+  ]
+}

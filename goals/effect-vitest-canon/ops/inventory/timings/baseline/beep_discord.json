@@ -1,0 +1,41 @@
+{
+  "package": "@beep/discord",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:20:49.646423+00:00",
+  "totalMs": 5843.79296875,
+  "testCount": 4,
+  "files": [
+    {
+      "file": "packages/drivers/discord/test/Discord.equivalence.test.ts",
+      "ms": 1.168701171875,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/discord/test/Discord.service.test.ts",
+      "ms": 37.79296875,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/discord/test/Discord.service.test.ts",
+      "testName": "@beep/discord probes channel liveness and sends a test message with mentions disabled",
+      "ms": 37.79301299999952
+    },
+    {
+      "file": "packages/drivers/discord/test/Discord.service.test.ts",
+      "testName": "@beep/discord keeps encoded Discord schema wire shapes byte-identical",
+      "ms": 37.31812600000012
+    },
+    {
+      "file": "packages/drivers/discord/test/Discord.service.test.ts",
+      "testName": "@beep/discord round-trips schema-derived Discord payloads through encoded form",
+      "ms": 37.17016799999965
+    },
+    {
+      "file": "packages/drivers/discord/test/Discord.equivalence.test.ts",
+      "testName": "Discord declared-field equivalence treats field-equal DiscordError instances as equivalent and field-different ones as distinct",
+      "ms": 1.168732000000091
+    }
+  ]
+}

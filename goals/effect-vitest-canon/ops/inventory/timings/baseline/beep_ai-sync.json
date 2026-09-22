@@ -1,0 +1,71 @@
+{
+  "package": "@beep/ai-sync",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:19:50.673848+00:00",
+  "totalMs": 4623.748046875,
+  "testCount": 16,
+  "files": [
+    {
+      "file": "packages/tooling/library/ai-sync/test/AiSync.equivalence.test.ts",
+      "ms": 1.205078125,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "ms": 88.748046875,
+      "tests": 15
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "testName": "@beep/ai-sync validates the generated artifact set offline",
+      "ms": 64.58162600000014
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "testName": "@beep/ai-sync reports strict upstream drift through the typed failure channel",
+      "ms": 60.424041000000216
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "testName": "@beep/ai-sync round-trips crispened schemas with schema-derived arbitraries",
+      "ms": 55.16269199999988
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "testName": "@beep/ai-sync renders generated literal domains through LiteralKit",
+      "ms": 55.154099000000315
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "testName": "@beep/ai-sync keeps crispened schema encoded wire shapes byte-identical",
+      "ms": 55.14677800000027
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "testName": "@beep/ai-sync separates native config compatibility from checked-in repository safety policy",
+      "ms": 33.7481429999998
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "testName": "@beep/ai-sync validates a Codex TOML config and rejects typed invalid fields",
+      "ms": 21.98950100000002
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "testName": "@beep/ai-sync reads each mandatory config exactly once during combined validation",
+      "ms": 15.883477000000312
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "testName": "@beep/ai-sync keeps checked-in Claude grants inside the exact 57-value allow domain",
+      "ms": 8.654021000000284
+    },
+    {
+      "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
+      "testName": "@beep/ai-sync keeps check and audit cache keys coupled to repository safety configs",
+      "ms": 6.203693999999814
+    }
+  ]
+}

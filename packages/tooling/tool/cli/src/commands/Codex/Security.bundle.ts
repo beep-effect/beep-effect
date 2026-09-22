@@ -7,6 +7,7 @@
 import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { Effect, FileSystem, Match, Ref } from "effect";
 import * as A from "effect/Array";
+import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -179,14 +180,18 @@ const verifySealedArtifacts = Effect.fn("CodexSecurity.verifySealedArtifacts")(f
   );
 });
 
-const sealedArtifactBytes = Effect.fn("CodexSecurity.sealedArtifactBytes")(function* (
-  artifacts: ReadonlyArray<SealedArtifact>,
-  name: string
-) {
-  const artifact = A.findFirst(artifacts, (item) => item.path === name);
-  if (O.isNone(artifact)) return yield* CodexSecurityError.make({ message: "Required sealed artifact is missing." });
-  return artifact.value.bytes;
-});
+// Manifest binding and digest verification establish the required entries before lookup.
+// Keep the typed missing-artifact fallback for callers through the standard Option fold.
+const sealedArtifactBytes = Effect.fn("CodexSecurity.sealedArtifactBytes")(
+  (artifacts: ReadonlyArray<SealedArtifact>, name: string): Effect.Effect<Uint8Array, CodexSecurityError> =>
+    O.match(
+      A.findFirst(artifacts, (item) => item.path === name),
+      {
+        onNone: F.constant(Effect.fail(CodexSecurityError.make({ message: "Required sealed artifact is missing." }))),
+        onSome: ({ bytes }) => Effect.succeed(bytes),
+      }
+    )
+);
 
 const hasDuplicateIdentities = (findings: SecurityFindings): boolean => {
   const count = A.length(findings.findings);

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/observability",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "fa16360a0ab6f067ad9afe6982b7699041d67bdfdbdc781b29b4e0b844e1f685",
+  "rawLogSha256": "18979a76377fe057ddf1c5f31cbcc9686ceb8297a1d358e90b1fabba143f6440",
+  "rawReceiptSha256": "48f30e1306fd6b7881c4772c54b306e4f16249ae336725ca0a941737a01f3b33",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 10.36738638099996,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 80
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 4,
+  "maxLoad1": 63.09326171875,
+  "minimumMemAvailableGiB": 55.79496383666992,
+  "maxPressureAvg10": {
+    "cpu": 16.28,
+    "memory": 0.18,
+    "io": 0.0
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "ms": 2490.1103515625,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "ms": 38.97265625,
+      "tests": 15
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "ms": 24.802001953125,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "ms": 21.398193359375,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "ms": 19.099365234375,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "ms": 15.643798828125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "ms": 12.419677734375,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "ms": 10.308349609375,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "ms": 8.84228515625,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "ms": 5.16796875,
+      "tests": 14
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

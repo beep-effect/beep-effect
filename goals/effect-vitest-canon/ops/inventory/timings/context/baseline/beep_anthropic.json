@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/anthropic",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "ac3ead4532c751c0ad532fd20a825e2288d28ac1b2e147ff3d19375397172281",
+  "rawLogSha256": "356a5a628083256f25635e01d9a20bfd07703fe070ff1ae02c5cf452e65ff59c",
+  "rawReceiptSha256": "f6459c26d56ed50afdcb3b657b559c8230ac559662be7c8ad92164135521cb95",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 6.118133485999806,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 9
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 26.41455078125,
+  "minimumMemAvailableGiB": 70.24203872680664,
+  "maxPressureAvg10": {
+    "cpu": 5.92,
+    "memory": 0.0,
+    "io": 0.0
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.repair.test.ts",
+      "ms": 12.892578125,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.test.ts",
+      "ms": 12.049560546875,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/anthropic/test/Anthropic.equivalence.test.ts",
+      "ms": 0.96728515625,
+      "tests": 1
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

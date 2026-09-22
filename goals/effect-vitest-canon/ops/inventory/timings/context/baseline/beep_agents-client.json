@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/agents-client",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "fa0fe46a079dcee37ddb458ee03a1706e9558929d3b772fc7b8e8955b0d4b9a3",
+  "rawLogSha256": "3a9cff1eb313befe9f5a7b847351f4d91d16390a9659982f7cddd1abd9d34779",
+  "rawReceiptSha256": "bc8416897f27c75b84188682303fe7d52b4ebff4621e82c426fbe226cc6db678",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 6.821605846000239,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 23
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 16.0849609375,
+  "minimumMemAvailableGiB": 77.3548355102539,
+  "maxPressureAvg10": {
+    "cpu": 4.98,
+    "memory": 0.0,
+    "io": 0.0
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/agents/client/test/run-turn-defect.test.ts",
+      "ms": 364.363525390625,
+      "tests": 1
+    },
+    {
+      "file": "packages/agents/client/test/run-turn-reconciliation.test.ts",
+      "ms": 276.838623046875,
+      "tests": 14
+    },
+    {
+      "file": "packages/agents/client/test/selected-thread-lifetime.test.ts",
+      "ms": 202.6962890625,
+      "tests": 1
+    },
+    {
+      "file": "packages/agents/client/test/Chat.schema-parity.test.ts",
+      "ms": 87.334716796875,
+      "tests": 2
+    },
+    {
+      "file": "packages/agents/client/test/ProviderInstance.atoms.test.ts",
+      "ms": 12.337890625,
+      "tests": 3
+    },
+    {
+      "file": "packages/agents/client/test/Chat.layer.test.ts",
+      "ms": 1.172607421875,
+      "tests": 2
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

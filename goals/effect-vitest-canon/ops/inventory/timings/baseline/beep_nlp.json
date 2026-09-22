@@ -1,0 +1,111 @@
+{
+  "package": "@beep/nlp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:22:52.281743+00:00",
+  "totalMs": 7469.202392578125,
+  "testCount": 168,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+      "ms": 280.202392578125,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/PatternCore.test.ts",
+      "ms": 110.3603515625,
+      "tests": 11
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/TextVariants.test.ts",
+      "ms": 5.386962890625,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Algebra/Monoid.test.ts",
+      "ms": 40.84912109375,
+      "tests": 50
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts",
+      "ms": 85.19677734375,
+      "tests": 28
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/GraphOps.test.ts",
+      "ms": 11.143798828125,
+      "tests": 18
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+      "ms": 129.236083984375,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts",
+      "ms": 81.632568359375,
+      "tests": 13
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts",
+      "ms": 45.30126953125,
+      "tests": 13
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Operations/Composable.test.ts",
+      "ms": 8.734619140625,
+      "tests": 14
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+      "testName": "Core models keeps constructor-defaulted optional fields absent in encoded core wire shapes",
+      "ms": 279.5904300000002
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+      "testName": "Core models round-trips schema-derived core model values",
+      "ms": 279.27420600000005
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+      "testName": "Core models returns tokens whose character spans overlap the requested range",
+      "ms": 279.24395899999945
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+      "testName": "Core models uses document token indices for sentence range lookups",
+      "ms": 279.2266639999998
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/CoreModels.test.ts",
+      "testName": "Core models rebuilds filtered documents with consistent sentence and index lookups",
+      "ms": 279.2023760000002
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+      "testName": "TextNode decodes a valid node and round-trips",
+      "ms": 126.98724500000026
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+      "testName": "TextEdge accepts every declared relation",
+      "ms": 126.75928599999952
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+      "testName": "TextEdge rejects an unknown relation",
+      "ms": 126.74332200000026
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+      "testName": "TextNode rejects an unknown node type",
+      "ms": 126.66954799999985
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/test/Graph/Schema.test.ts",
+      "testName": "Schema-derived graph payloads round-trips generated graph schemas",
+      "ms": 126.60068299999966
+    }
+  ]
+}
