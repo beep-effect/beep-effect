@@ -37,7 +37,7 @@ import { InstrumentedVitestRuntime } from "./internal/VitestRuntime.ts";
  * ```ts
  * import { it } from "@beep/test-runner"
  * import { assertTrue } from "@effect/vitest/utils"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * it.effect("keeps the Effect test environment", () =>
  *   Effect.sync(() => assertTrue(true)))

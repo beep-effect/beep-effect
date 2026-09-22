@@ -104,3 +104,9 @@ their open dispositions; only their occurrence hashes changed to reflect the
 135-to-136 task-count assertions. The detector reports zero introduced and zero
 resolved findings. The three runner aliases were projected from root tsconfig
 into the generated Vitest alias data; the tsgo-rules check passes.
+
+The scanner prerequisite was tested against this checkout using an explicit
+root directory. Both error classes have no annotation gaps. The same scan
+identified one remaining example-import finding on the runner it export; its
+Effect import now uses the stable module. No runtime code or ratchet baseline
+was changed by this documentation correction.
