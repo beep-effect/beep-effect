@@ -1,0 +1,61 @@
+{
+  "package": "@beep/ontology-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:25:55.116482+00:00",
+  "totalMs": 529.287353515625,
+  "testCount": 8,
+  "files": [
+    {
+      "file": "packages/ontology/domain/test/Session.test.ts",
+      "ms": 7.287353515625,
+      "tests": 7
+    },
+    {
+      "file": "packages/ontology/domain/test/TaggedError.equivalence.test.ts",
+      "ms": 1.09814453125,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/ontology/domain/test/Session.test.ts",
+      "testName": "Ontology Session aggregate derives asserted and authored partitions from base plus change log",
+      "ms": 3.895807999999988
+    },
+    {
+      "file": "packages/ontology/domain/test/Session.test.ts",
+      "testName": "Ontology Session aggregate routes opened SHACL node and property shapes into the shapes partition",
+      "ms": 3.7123679999999695
+    },
+    {
+      "file": "packages/ontology/domain/test/Session.test.ts",
+      "testName": "Ontology Session aggregate applies remove operations without mutating other partitions",
+      "ms": 3.6948599999999487
+    },
+    {
+      "file": "packages/ontology/domain/test/Session.test.ts",
+      "testName": "Ontology Session aggregate accepts default-graph quads for non-asserted partitions",
+      "ms": 3.6835239999999203
+    },
+    {
+      "file": "packages/ontology/domain/test/Session.test.ts",
+      "testName": "Ontology Session aggregate rejects change operations whose named quad graph diverges from the partition",
+      "ms": 3.674310000000105
+    },
+    {
+      "file": "packages/ontology/domain/test/Session.test.ts",
+      "testName": "Ontology Session aggregate keeps one shared reasoning-exclusion rule across named graphs",
+      "ms": 3.28740700000003
+    },
+    {
+      "file": "packages/ontology/domain/test/Session.test.ts",
+      "testName": "Ontology Session aggregate returns real deltas for batch operations",
+      "ms": 3.2639410000000453
+    },
+    {
+      "file": "packages/ontology/domain/test/TaggedError.equivalence.test.ts",
+      "testName": "ontology domain tagged-error declared equivalence compares SessionChangeRejected by declared fields",
+      "ms": 1.098113000000012
+    }
+  ]
+}

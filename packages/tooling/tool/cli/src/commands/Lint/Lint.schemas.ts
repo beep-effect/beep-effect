@@ -722,7 +722,7 @@ const EffectVitestFindingStatus = LiteralKit(["open", "fixed", "exception"]).pip
   $I.annoteSchema("EffectVitestFindingStatus", { description: "Lifecycle state of an Effect Vitest finding." })
 );
 
-const EffectVitestLensRuleId = S.String.check(S.isPattern(/^L-(?:RES|FLAKE|PROP|OBS)-\d{2}$/u)).pipe(
+const EffectVitestLensRuleId = S.String.check(S.isPattern(/^L-(?:RES|FLAKE|PROP|OBS)-(?:\d{2}|NONE)$/u)).pipe(
   $I.annoteSchema("EffectVitestLensRuleId", {
     description: "Resource, flake, property, or observability judgment rule identifier.",
   })
@@ -798,6 +798,33 @@ export class EffectVitestReplacement extends S.Class<EffectVitestReplacement>($I
   $I.annote("EffectVitestReplacement", { description: "Pinned primitive identifier and concise P0c remediation hint." })
 ) {}
 
+const EffectVitestFindingLensRule = S.Union([
+  S.Struct({ lens: LiteralKit(EffectVitestLens.pickOptions(["detector", "resource"])), ruleId: EffectVitestRuleId }),
+  S.Struct({ lens: S.Literal("resource"), ruleId: EffectVitestLensRuleId.check(S.isStartsWith("L-RES-")) }),
+  S.Struct({ lens: S.Literal("flake"), ruleId: EffectVitestLensRuleId.check(S.isStartsWith("L-FLAKE-")) }),
+  S.Struct({ lens: S.Literal("property"), ruleId: EffectVitestLensRuleId.check(S.isStartsWith("L-PROP-")) }),
+  S.Struct({ lens: S.Literal("observability"), ruleId: EffectVitestLensRuleId.check(S.isStartsWith("L-OBS-")) }),
+]).pipe(
+  $I.annoteSchema("EffectVitestFindingLensRule", {
+    description: "A detector rule or a judgment rule belonging to the row's exact lens.",
+  })
+);
+const EffectVitestNoFindingsFields = S.Struct({
+  class: S.Literal("no-findings"),
+  severity: S.Literal("info"),
+  confidence: S.Literal(1),
+  mechanization: S.Literal("judgment"),
+  status: S.Literal("open"),
+  replacement: S.Struct({ primitive: S.Literal("module.@effect/vitest") }),
+  fixSha: S.Option(S.Never),
+}).pipe(
+  $I.annoteSchema("EffectVitestNoFindingsFields", {
+    description: "Charter coverage-only rows preserve info certainty, open judgment status and no fabricated fix.",
+  })
+);
+const isEffectVitestFindingLensRule = S.is(EffectVitestFindingLensRule);
+const isEffectVitestNoFindingsFields = S.is(EffectVitestNoFindingsFields);
+
 const EffectVitestFindingFields = S.Struct({
   id: S.NonEmptyString,
   lens: EffectVitestLens,
@@ -819,6 +846,20 @@ const EffectVitestFindingFields = S.Struct({
   reason: optionalText,
   fixSha: optionalText,
 }).check(
+  S.makeFilter(
+    (finding) =>
+      isEffectVitestFindingLensRule(finding) &&
+      (Str.endsWith("-NONE")(finding.ruleId)
+        ? isEffectVitestNoFindingsFields(finding)
+        : finding.class !== "no-findings"),
+    {
+      identifier: $I`EffectVitestFindingLensInvariant`,
+      title: "Effect Vitest finding lens and coverage invariants",
+      description:
+        "Rule prefixes match their lens; NONE identifies only charter coverage rows, never actionable findings.",
+      message: "Expected matching lens/rule and a faithful NONE/no-findings relationship",
+    }
+  ),
   S.makeFilter(
     (finding) =>
       (O.isNone(finding.endLine) || finding.endLine.value >= finding.line) &&

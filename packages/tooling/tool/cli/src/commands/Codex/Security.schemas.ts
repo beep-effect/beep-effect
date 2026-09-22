@@ -7,7 +7,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { SchemaGetter } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CodexFindingTitle, GitCommitSha, GitHubRepoSlug } from "./Findings.capture.schemas.ts";
@@ -49,16 +48,13 @@ export const SECURITY_PLUGIN_VERSION = "0.1.95";
 /**
  * Every remote spelling GitHub and the upstream seal can produce for one repository:
  * `https://`, `http://`, `ssh://[user@]`, and scp-style `git@github.com:`; host
- * case-insensitive; optional `.git` and at most one trailing slash.
+ * case-insensitive; one terminal `.git` is treated as a transport suffix,
+ * followed by at most one trailing slash.
  */
 const GITHUB_REMOTE = /^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|git@)github\.com[:/]([^?#]+?)(?:\.git)?\/?$/i;
 
-// Total on inputs that pass GITHUB_REMOTE; falls back to the input so the slug checks report the failure.
-const remoteSlug = (remote: string): string =>
-  O.getOrElse(
-    O.flatMap(Str.match(GITHUB_REMOTE)(remote), (found) => O.fromNullishOr(found[1])),
-    () => remote
-  );
+// The preceding pattern check guarantees the mandatory slug capture.
+const remoteSlug = Str.replace(GITHUB_REMOTE, "$1");
 
 /**
  * Codec from any credential-free GitHub remote URL to its `owner/repo` slug.
@@ -68,6 +64,12 @@ const remoteSlug = (remote: string): string =>
  * while a local checkout's origin is often scp-style (`git@github.com:owner/repo.git`).
  * Both, plus `https://` and `http://`, decode to the same slug; encoding renders
  * the canonical `https://github.com/owner/repo.git` form.
+ *
+ * **Gotchas**
+ * Bare and `.git`-suffixed URLs identify the same slug only when the repository
+ * name does not itself end in `.git` (case-insensitive). The decoder removes
+ * one transport suffix. To preserve a slug such as `owner/repo.git`, use the
+ * encoder's explicit `https://github.com/owner/repo.git.git` spelling.
  *
  * **Example** (Normalizing the seal's SSH URL form)
  * ```ts import.meta.vitest name="Normalizing the seal's SSH URL form"

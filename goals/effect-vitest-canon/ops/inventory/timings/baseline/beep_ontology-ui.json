@@ -1,0 +1,61 @@
+{
+  "package": "@beep/ontology-ui",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:51:25.529833+00:00",
+  "totalMs": 7063.5107421875,
+  "testCount": 9,
+  "files": [
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "ms": 9.5107421875,
+      "tests": 9
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "testName": "OntologyWorkbench hierarchy extracts the current form value from React change events",
+      "ms": 7.510801999999785
+    },
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "testName": "OntologyWorkbench hierarchy renders inferred transitive subclass closure as unique tree item ids",
+      "ms": 7.489469000000099
+    },
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "testName": "documentToolbarState keeps every action idle and gates session-bound actions while no session is open",
+      "ms": 1.3176899999998568
+    },
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "testName": "documentToolbarState shows a neutral badge instead of claiming Saved while no session is open",
+      "ms": 1.075326000000132
+    },
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "testName": "documentToolbarState enables session-bound actions once a session is open",
+      "ms": 1.0520510000005743
+    },
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "testName": "documentToolbarState flips the badge to Dirty for an open session with unsaved changes",
+      "ms": 1.0396620000001349
+    },
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "testName": "documentToolbarState marks an in-flight open busy, relabels it, and refuses re-entry",
+      "ms": 1.0298469999997906
+    },
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "testName": "documentToolbarState marks an in-flight save busy without disturbing its siblings",
+      "ms": 0.39692099999956554
+    },
+    {
+      "file": "packages/ontology/ui/test/Session.workbench.test.ts",
+      "testName": "documentToolbarState marks an in-flight preview busy and disabled even with a session open",
+      "ms": 0.3630590000002485
+    }
+  ]
+}

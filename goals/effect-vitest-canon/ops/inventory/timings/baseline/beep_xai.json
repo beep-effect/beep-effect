@@ -1,0 +1,71 @@
+{
+  "package": "@beep/xai",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:26:24.393660+00:00",
+  "totalMs": 4820.596923828125,
+  "testCount": 14,
+  "files": [
+    {
+      "file": "packages/drivers/xai/test/XAi.equivalence.test.ts",
+      "ms": 1.3447265625,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "ms": 86.596923828125,
+      "tests": 12
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "testName": "@beep/xai sends every HTTP endpoint with the expected method, path, auth, query, and body mode",
+      "ms": 86.5968840000005
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "testName": "@beep/xai keeps endpoint manifest and service surface aligned",
+      "ms": 42.83855700000004
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "testName": "@beep/xai constructs language models in data-last form",
+      "ms": 42.33745999999974
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "testName": "@beep/xai round-trips crispened xAI schemas through their encoded form",
+      "ms": 42.18948300000011
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "testName": "@beep/xai keeps encoded xAI schema wire shapes byte-identical",
+      "ms": 42.161449999999604
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "testName": "@beep/xai maps status, malformed JSON, multipart, and SSE failures",
+      "ms": 18.03894500000024
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "testName": "@beep/xai rejects non-JSON chat completion responses in the language model adapter",
+      "ms": 17.521743000000242
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "testName": "@beep/xai redacts xAI transport and WebSocket failure causes before rendering",
+      "ms": 17.43316799999957
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "testName": "@beep/xai maps language-model transport failures to retryable network errors",
+      "ms": 17.390250999999807
+    },
+    {
+      "file": "packages/drivers/xai/test/XAi.service.test.ts",
+      "testName": "@beep/xai parses SSE streams for chat, responses, and legacy-compatible endpoints",
+      "ms": 11.098791999999776
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "package": "@beep/semantica",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:33:26.752485+00:00",
+  "totalMs": 11968.96142578125,
+  "testCount": 131,
+  "files": [
+    {
+      "file": "apps/labs/semantica/test/App.test.tsx",
+      "ms": 53.760009765625,
+      "tests": 1
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "ms": 178.041259765625,
+      "tests": 13
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "ms": 3082.444091796875,
+      "tests": 2
+    },
+    {
+      "file": "apps/labs/semantica/test/Canary.test.ts",
+      "ms": 39.128173828125,
+      "tests": 8
+    },
+    {
+      "file": "apps/labs/semantica/test/Evaluator.test.ts",
+      "ms": 25.65283203125,
+      "tests": 5
+    },
+    {
+      "file": "apps/labs/semantica/test/Extractor.test.ts",
+      "ms": 48.729248046875,
+      "tests": 10
+    },
+    {
+      "file": "apps/labs/semantica/test/Fixtures.test.ts",
+      "ms": 69.669189453125,
+      "tests": 10
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "ms": 145.620361328125,
+      "tests": 13
+    },
+    {
+      "file": "apps/labs/semantica/test/GoldSource.test.ts",
+      "ms": 36.2470703125,
+      "tests": 5
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "ms": 1570.456298828125,
+      "tests": 2
+    },
+    {
+      "file": "apps/labs/semantica/test/Projection.test.ts",
+      "ms": 56.610595703125,
+      "tests": 4
+    },
+    {
+      "file": "apps/labs/semantica/test/ProjectionExpectation.test.ts",
+      "ms": 5.3330078125,
+      "tests": 1
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "ms": 469.7236328125,
+      "tests": 18
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "ms": 6737.96142578125,
+      "tests": 3
+    },
+    {
+      "file": "apps/labs/semantica/test/Schema.test.ts",
+      "ms": 54.7890625,
+      "tests": 36
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "testName": "C2 declarative reasoner recovers projection-relevant state committed before SIGKILL",
+      "ms": 6737.96136
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Slice.test.ts",
+      "testName": "C0 F1 live-to-replay slice runs real F1-only sources without a corpus root and replays to an equal report digest",
+      "ms": 3082.444080000001
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "testName": "C0 ledger rejects a reused primary key whose canonical payload digest differs",
+      "ms": 1569.4561889999995
+    },
+    {
+      "file": "apps/labs/semantica/test/Ledger.test.ts",
+      "testName": "C0 ledger is idempotent for byte-identical content-addressed rows",
+      "ms": 1569.1188219999995
+    },
+    {
+      "file": "apps/labs/semantica/test/Reasoning.test.ts",
+      "testName": "C2 declarative reasoner matches every committed conclusion and bounded restricted EYE proof",
+      "ms": 903.9732969999995
+    },
+    {
+      "file": "apps/labs/semantica/test/ProviderCache.test.ts",
+      "testName": "C0 provider cache and language-model boundary is write-once, caches misses, replays hits, and keeps offline misses typed",
+      "ms": 469.7236130000001
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "testName": "C0 F1 input services matches all nine declared parse outcomes and verifies every parsed anchor",
+      "ms": 172.04115300000012
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "testName": "C0 F1 input services chunks every parsed F1 text with exact global UTF-16 anchors",
+      "ms": 169.74793299999965
+    },
+    {
+      "file": "apps/labs/semantica/test/Gold.test.ts",
+      "testName": "C0 gold proposer removes gold.json when a complete set is followed by a partial rerun",
+      "ms": 132.8750919999993
+    },
+    {
+      "file": "apps/labs/semantica/test/C0Input.test.ts",
+      "testName": "C0 F1 input services acquires ParserRetryLive and preserves both F1 PDF outcomes",
+      "ms": 128.01895500000046
+    }
+  ]
+}

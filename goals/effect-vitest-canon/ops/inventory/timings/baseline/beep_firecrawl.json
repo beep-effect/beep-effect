@@ -1,0 +1,76 @@
+{
+  "package": "@beep/firecrawl",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:21:37.945615+00:00",
+  "totalMs": 6960.79443359375,
+  "testCount": 14,
+  "files": [
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.equivalence.test.ts",
+      "ms": 1.4306640625,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "ms": 57.79443359375,
+      "tests": 12
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/integration/Firecrawl.live.test.ts",
+      "ms": 0.89404296875,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "testName": "@beep/firecrawl decodes schema defaults into Option values",
+      "ms": 41.7025679999997
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "testName": "@beep/firecrawl keeps config wire shape while normalizing through the schema",
+      "ms": 41.35272099999929
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "testName": "@beep/firecrawl keeps error wire shape while tightening numeric diagnostics",
+      "ms": 41.32243500000004
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "testName": "@beep/firecrawl rejects malformed SDK shapes while preserving future response fields",
+      "ms": 41.30623000000014
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "testName": "@beep/firecrawl round-trips crispened schema invariants through derived arbitraries",
+      "ms": 41.25322899999992
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "testName": "@beep/firecrawl decodes every fake SDK endpoint through its public service method",
+      "ms": 14.320862999999918
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "testName": "@beep/firecrawl translates SDK throws into sanitized FirecrawlError values",
+      "ms": 11.128529999999955
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "testName": "@beep/firecrawl wraps SDK scrape output in a decoded success class",
+      "ms": 11.082548999999744
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "testName": "@beep/firecrawl wraps usage endpoints in decoded success classes",
+      "ms": 10.92605899999944
+    },
+    {
+      "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+      "testName": "@beep/firecrawl maps malformed SDK responses to response-decoding errors",
+      "ms": 10.167446000000382
+    }
+  ]
+}

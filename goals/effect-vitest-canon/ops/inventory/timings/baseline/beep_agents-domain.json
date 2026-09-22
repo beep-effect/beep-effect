@@ -1,0 +1,71 @@
+{
+  "package": "@beep/agents-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:26:29.905573+00:00",
+  "totalMs": 5802.305908203125,
+  "testCount": 22,
+  "files": [
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "ms": 65.305908203125,
+      "tests": 13
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "ms": 20.713623046875,
+      "tests": 9
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain decodes Agent Skills frontmatter through the derived codec",
+      "ms": 37.23275900000044
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain round-trips schema-derived agent modes",
+      "ms": 37.20720999999958
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain preserves assistant content exports from the canonical value-object path",
+      "ms": 37.195192000000134
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain keeps assistant content encoded shape stable",
+      "ms": 37.187378999999964
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain round-trips crispened schemas with schema-derived arbitraries",
+      "ms": 37.15517
+    },
+    {
+      "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+      "testName": "@beep/agents-domain keeps agents source code off removed turn subpath imports",
+      "ms": 23.305874000000586
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-domain ProviderInstance never stores token-bearing env-var names on a decoded instance",
+      "ms": 15.713682999999946
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-domain ProviderInstance returns exact login guidance for unauthenticated instances",
+      "ms": 15.686891000000287
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-domain ProviderInstance covers every provider kind and snapshot variant exhaustively",
+      "ms": 15.673471000000063
+    },
+    {
+      "file": "packages/agents/domain/test/ProviderInstance.test.ts",
+      "testName": "@beep/agents-domain ProviderInstance round-trips schema-derived arbitraries",
+      "ms": 15.666310000000522
+    }
+  ]
+}

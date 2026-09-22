@@ -1,0 +1,106 @@
+{
+  "package": "@beep/law-practice-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:50:51.700864+00:00",
+  "totalMs": 16713.361572265625,
+  "testCount": 72,
+  "files": [
+    {
+      "file": "packages/law-practice/server/test/CandorPromotionGate.test.ts",
+      "ms": 8.358154296875,
+      "tests": 5
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
+      "ms": 6347.4599609375,
+      "tests": 6
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.test.ts",
+      "ms": 7.200927734375,
+      "tests": 4
+    },
+    {
+      "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
+      "ms": 24.581787109375,
+      "tests": 32
+    },
+    {
+      "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+      "ms": 33.24560546875,
+      "tests": 5
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
+      "ms": 3139.54248046875,
+      "tests": 4
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.test.ts",
+      "ms": 25.817626953125,
+      "tests": 5
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "ms": 9326.361572265625,
+      "tests": 8
+    },
+    {
+      "file": "packages/law-practice/server/test/TaggedError.equivalence.test.ts",
+      "ms": 2.298583984375,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections builds byte-identical ordered dumps with stable IRIs and complete provenance",
+      "ms": 9326.361562
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections extracts, persists, and serves span-resolvable candidate claims with fixture model output",
+      "ms": 9081.007365
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections serves all nine tools from the synthetic fixture bundle and degrades oversized results",
+      "ms": 6652.029497
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections keeps the hand-written bundle DDL equal to the Drizzle read-model declarations",
+      "ms": 5106.240363
+    },
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "testName": "practice KG projections persists docket-scoped normalized patents with exact claims-section evidence and bounded input",
+      "ms": 4836.399692
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
+      "testName": "law-practice Drizzle candor record repository PgLite integration representative-volume query plans bounds every filing read by the existing tenant index before applying jsonb equality",
+      "ms": 681.7370570000003
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
+      "testName": "law-practice Drizzle legal position record repository PgLite integration appending and reading each record kind reads every appended kind back out of Postgres scoped to where it was recorded",
+      "ms": 248.5193049999998
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
+      "testName": "law-practice Drizzle candor record repository PgLite integration appending and reading each record kind reads every appended kind back out of Postgres scoped to the filing it was recorded for",
+      "ms": 226.16251300000113
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
+      "testName": "law-practice Drizzle legal position record repository PgLite integration tenant isolation in SQL never returns another organization's records for the same act and norm",
+      "ms": 203.1341339999999
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
+      "testName": "law-practice Drizzle candor record repository PgLite integration tenant isolation in SQL never returns another organization's records for the same citing application",
+      "ms": 191.83325800000057
+    }
+  ]
+}

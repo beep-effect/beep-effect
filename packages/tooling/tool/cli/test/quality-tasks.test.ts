@@ -182,6 +182,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
@@ -509,6 +510,7 @@ const initializeLaneProofRepository = Effect.fn("QualityTasksTest.initializeLane
   yield* runGit(repoRoot, ["init"]);
   yield* runGit(repoRoot, ["config", "user.email", "lane-proof@example.test"]);
   yield* runGit(repoRoot, ["config", "user.name", "Lane Proof Test"]);
+  yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
   yield* runGit(repoRoot, ["add", "."]);
   yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
   yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
@@ -2562,6 +2564,7 @@ describe("quality task adapter", () => {
           "BEEP_YEET_LANE_PROOF_MODE",
           undefined,
           runGithubChecks("cheap-gates").pipe(
+            TestClock.withLive,
             Effect.tap(
               Effect.fnUntraced(function* () {
                 const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
@@ -2608,6 +2611,7 @@ describe("quality task adapter", () => {
           "BEEP_YEET_LANE_PROOF_MODE",
           "off",
           runGithubChecks("cheap-gates").pipe(
+            TestClock.withLive,
             Effect.tap(
               Effect.fnUntraced(function* () {
                 const logText = A.join(A.filter(yield* testConsole.logLines, isString), "\n");
@@ -2653,7 +2657,7 @@ describe("quality task adapter", () => {
           "BEEP_YEET_LANE_PROOF_MODE",
           "off",
           Effect.gen(function* () {
-            const exit = yield* Effect.exit(runGithubChecks("cheap-gates"));
+            const exit = yield* Effect.exit(runGithubChecks("cheap-gates").pipe(TestClock.withLive));
 
             if (Exit.isSuccess(exit)) {
               assert.fail("Expected cheap gates to report both configured failures");
@@ -4303,6 +4307,7 @@ describe("quality task adapter", () => {
           yield* runGit(repoRoot, ["init"]);
           yield* runGit(repoRoot, ["config", "user.email", "coverage@example.invalid"]);
           yield* runGit(repoRoot, ["config", "user.name", "Coverage Test"]);
+          yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
           yield* runGit(repoRoot, ["add", "package.json"]);
           yield* runGit(repoRoot, ["commit", "-m", "test: seed coverage fixture"]);
           yield* writeCoverageRegressionBaseline(repoRoot, false);
@@ -4387,6 +4392,7 @@ describe("quality task adapter", () => {
           yield* runGit(repoRoot, ["init"]);
           yield* runGit(repoRoot, ["config", "user.email", "coverage@example.invalid"]);
           yield* runGit(repoRoot, ["config", "user.name", "Coverage Test"]);
+          yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
           yield* runGit(repoRoot, ["add", "--all"]);
           yield* runGit(repoRoot, ["commit", "-m", "test: seed unchanged coverage fixture"]);
 
@@ -5025,6 +5031,7 @@ describe("quality task adapter", () => {
             yield* runGit(repoRoot, ["init"]);
             yield* runGit(repoRoot, ["config", "user.email", "coverage-delta@example.test"]);
             yield* runGit(repoRoot, ["config", "user.name", "Coverage Delta Test"]);
+            yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
 
             // The base has no baseline at all: nothing can be diffed.
             yield* fs.writeFileString(path.join(repoRoot, "README.md"), "# fixture\n");
@@ -5084,6 +5091,7 @@ describe("quality task adapter", () => {
             yield* runGit(repoRoot, ["init"]);
             yield* runGit(repoRoot, ["config", "user.email", "coverage-base@example.test"]);
             yield* runGit(repoRoot, ["config", "user.name", "Coverage Base Test"]);
+            yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
             yield* writeBaseline(
               CoverageRegressionBaseline.make({
                 ...coverageRegressionBaseline,
@@ -5681,6 +5689,7 @@ describe("quality task adapter", () => {
               yield* runGit(repoRoot, ["init"]);
               yield* runGit(repoRoot, ["config", "user.email", "coverage-lowered@example.test"]);
               yield* runGit(repoRoot, ["config", "user.name", "Coverage Lowered Test"]);
+              yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
               yield* runGit(repoRoot, ["add", "--all"]);
               yield* runGit(repoRoot, ["commit", "-m", "seed"]);
 
@@ -5767,6 +5776,7 @@ describe("quality task adapter", () => {
             yield* runGit(repoRoot, ["init"]);
             yield* runGit(repoRoot, ["config", "user.email", "coverage-affected@example.test"]);
             yield* runGit(repoRoot, ["config", "user.name", "Coverage Affected Test"]);
+            yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
             yield* runGit(repoRoot, ["add", "--all"]);
             yield* runGit(repoRoot, ["commit", "-m", "seed"]);
 
@@ -5948,6 +5958,7 @@ describe("quality task adapter", () => {
           yield* runGit(repoRoot, ["init"]);
           yield* runGit(repoRoot, ["config", "user.email", "coverage-scope@example.test"]);
           yield* runGit(repoRoot, ["config", "user.name", "Coverage Scope Test"]);
+          yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
           yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
           yield* fs.writeFileString(sourcePath, "export const moved = true;\n");
           yield* runGit(repoRoot, ["add", "--all"]);

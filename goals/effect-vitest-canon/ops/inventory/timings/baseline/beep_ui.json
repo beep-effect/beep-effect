@@ -1,0 +1,111 @@
+{
+  "package": "@beep/ui",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:38.708415+00:00",
+  "totalMs": 4546.906982421875,
+  "testCount": 47,
+  "files": [
+    {
+      "file": "packages/foundation/ui-system/ui/test/AdapterEffectDateTime.test.ts",
+      "ms": 11.96728515625,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/FormWidgets.test.ts",
+      "ms": 4.5419921875,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/ReactInvariant.equivalence.test.ts",
+      "ms": 1.89990234375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/VerifiedSourceTextViewer.test.tsx",
+      "ms": 10.781005859375,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/hooks.test.ts",
+      "ms": 2.782470703125,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "ms": 28.906982421875,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/theme-components.test.ts",
+      "ms": 1.80078125,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/theme-provider.test.ts",
+      "ms": 1.154296875,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/ui.test.ts",
+      "ms": 16.740478515625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/url.test.ts",
+      "ms": 2.685302734375,
+      "tests": 5
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "testName": "@beep/ui schema parity round-trips exported schema models through encoded form",
+      "ms": 28.091693999999734
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "testName": "@beep/ui schema parity preserves nullable and optional encoded compatibility at UI boundaries",
+      "ms": 27.90704099999948
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "testName": "@beep/ui schema parity applies schema defaults and precision checks at construction boundaries",
+      "ms": 27.888441999999486
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "testName": "@beep/ui schema parity keeps schema-derived guards aligned with helper surfaces",
+      "ms": 27.875802999999905
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/ui.test.ts",
+      "testName": "@beep/ui uses the default tooltip item only when no formatter is supplied",
+      "ms": 13.543723
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/ui.test.ts",
+      "testName": "@beep/ui preserves a formatter result of null to suppress the tooltip item",
+      "ms": 13.341922999999952
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/ui.test.ts",
+      "testName": "@beep/ui preserves a formatter result of undefined to suppress the tooltip item",
+      "ms": 13.321691999999985
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/ui.test.ts",
+      "testName": "@beep/ui preserves a zero-valued formatter result",
+      "ms": 13.309564000000023
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/ui.test.ts",
+      "testName": "@beep/ui exports the package version constant",
+      "ms": 13.29815700000006
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/test/AdapterEffectDateTime.test.ts",
+      "testName": "AdapterEffectDateTime uses Effect v4 DateTime parts for getters and setters",
+      "ms": 11.244370000000004
+    }
+  ]
+}

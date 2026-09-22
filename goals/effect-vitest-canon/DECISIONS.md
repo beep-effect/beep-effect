@@ -519,3 +519,43 @@ rewrites an unsupported matcher. The existing Vitest peer-range decision remains
 bounded by actual runtime binding and Node/Bun evidence; R2-008 adds that evidence,
 not a broader upgrade or compatibility waiver. The round-two closure ledger records
 individual status and remaining integration proof.
+
+## 2026-09-11 — P1 inventory contract correction
+
+The first audit exposed a foundation defect: the charter requires explicit
+`L-RES-NONE`, `L-FLAKE-NONE`, `L-PROP-NONE` and `L-OBS-NONE` coverage rows,
+but the public schema accepted only numeric lens suffixes. Correcting that
+inventory boundary and adding its regression tests is P1 infrastructure work.
+It does not authorize the P2 migrations proposed by inventory rows.
+
+The repair is confined to the CLI finding schema and its contract tests.
+Coverage IDs must match their lens and the charter's coverage-only fields.
+Existing detector/resource judgment routing, source assertions, line bounds,
+exception reasons and decoder options remain intact. The private validator
+must request strict excess-field rejection and keep detector candidates from
+satisfying independent human-lens coverage. Structural validity never grants
+Root's inventory or baseline acceptance by itself.
+
+All first-attempt timing collection and normalization finished before the
+source correction. Those baselines retain their original source/runtime
+identity. The original census metadata and failed decoder receipts are retained;
+a refreshed census accounts for the added regressions and generated support
+metadata. No detector or coverage baseline is raised, no finding is marked
+fixed without its later commit evidence, and P2 still waits for Benjamin's
+acknowledgement of the completed P1 inventory. Package proof and final inventory
+validation remain separate acceptance requirements.
+
+
+## 2026-09-14 — P1 SkillProjection assertion adjudication
+
+At `SkillProjection.test.ts:165`, the asserted value is a projected reasons array,
+compared with `["frontmatter-missing"]`. D5 permits this plain-value assertion.
+The preceding line separately checks the Result failure branch; its candidate
+remains distinct. Preserve both existing assertions and their exact operands
+when planning P2, without inventing a full error value.
+
+The detector recursively recognizes the predicate in the ternary and routes the
+comparison to an ambiguous judgment candidate at confidence 0.55. That candidate
+is review evidence, not an automatic migration requirement. P1 semantic review
+is complete for this question; the detector rows remain open until coordinated
+P2 disposition. No source, detector baseline, exception or phase gate changed.

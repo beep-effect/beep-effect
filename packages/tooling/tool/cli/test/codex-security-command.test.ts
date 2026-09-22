@@ -59,6 +59,8 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("security scan command guards
       const path = yield* Path.Path;
       const repo = yield* repoFixture();
       const outputDir = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+      const absent = yield* assertPrivateOutputDirectory(repo, path.join(outputDir, "absent")).pipe(Effect.result);
+      expect(absent._tag).toBe("Failure");
       yield* assertPrivateOutputDirectory(repo, outputDir);
       yield* fs.remove(outputDir, { recursive: true });
       yield* fs.symlink(path.join(repo, "src"), outputDir);
@@ -79,6 +81,22 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("security scan command guards
       expect(yield* messageOf({ ...valid, target: O.some("/etc") })).toContain("--path");
       expect(yield* messageOf({ ...valid, target: O.some("../sibling") })).toContain("--path");
       expect((yield* decodeScanOptions({ ...valid, target: O.some("packages") })).maxCost).toBe(5);
+    })
+  );
+});
+
+it.layer(NodeTestLayer, { timeout: "30 seconds" })("security output disappearance", (it) => {
+  it.effect(
+    "rejects output removed before receipt validation",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repo = yield* repoFixture();
+      const error = yield* assertPrivateOutputDirectory(repo, path.join(repo, "missing")).pipe(Effect.flip);
+      expect(error.message).toBe(
+        "Scan output directory was replaced or linked into the repository; the scan is not usable."
+      );
+      expect(yield* fs.exists(path.join(repo, "missing"))).toBe(false);
     })
   );
 });

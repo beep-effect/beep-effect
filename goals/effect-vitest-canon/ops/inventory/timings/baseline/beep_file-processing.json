@@ -1,0 +1,81 @@
+{
+  "package": "@beep/file-processing",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:25:03.263093+00:00",
+  "totalMs": 5403.964111328125,
+  "testCount": 27,
+  "files": [
+    {
+      "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
+      "ms": 147.964111328125,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/PathSafety.test.ts",
+      "ms": 18.842041015625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
+      "ms": 44.318359375,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/TaggedError.equivalence.test.ts",
+      "ms": 1.649658203125,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
+      "testName": "@beep/file-processing derives child artifact ids distinct from their source artifact",
+      "ms": 139.53168000000005
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
+      "testName": "@beep/file-processing rejects invalid TextSpan offsets at decode",
+      "ms": 139.41207699999995
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
+      "testName": "@beep/file-processing round-trips TextSpan through its encoded shape and generated invariant",
+      "ms": 139.29123099999924
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
+      "testName": "@beep/file-processing round-trips schema-derived artifact and operation payloads",
+      "ms": 139.28334900000027
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts",
+      "testName": "@beep/file-processing round-trips file-processing JSON codecs byte-identically",
+      "ms": 139.26941799999986
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
+      "testName": "encodes SourceTextPage through its generation link",
+      "ms": 32.110248999999385
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
+      "testName": "@beep/file-processing SourceText moves a nominal page boundary back rather than splitting a surrogate pair",
+      "ms": 31.893756999999823
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
+      "testName": "@beep/file-processing SourceText keeps every page within the code-unit cap after a shifted boundary",
+      "ms": 31.873805999999604
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
+      "testName": "@beep/file-processing SourceText exposes one empty page and fails closed for an unavailable page",
+      "ms": 31.86149800000021
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/test/SourceText.test.ts",
+      "testName": "@beep/file-processing SourceText rejects impossible page relationships",
+      "ms": 31.837720999999874
+    }
+  ]
+}

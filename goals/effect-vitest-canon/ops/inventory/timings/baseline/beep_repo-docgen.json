@@ -1,0 +1,96 @@
+{
+  "package": "@beep/repo-docgen",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:30:48.668620+00:00",
+  "totalMs": 9947.672607421875,
+  "testCount": 100,
+  "files": [
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "ms": 959.414306640625,
+      "tests": 11
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Configuration.test.ts",
+      "ms": 11.196533203125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Core.test.ts",
+      "ms": 2282.672607421875,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Domain.equivalence.test.ts",
+      "ms": 0.955810546875,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Parser.test.ts",
+      "ms": 495.3857421875,
+      "tests": 64
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/SchemaParity.test.ts",
+      "ms": 33.187255859375,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/version.test.ts",
+      "ms": 2.445556640625,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/tool/docgen/test/Core.test.ts",
+      "testName": "Core [internal] extractFencedCode typechecks an Example section harvested from the description",
+      "ms": 2279.672627
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "testName": "Checker checkFunctions titled example sections accepts the repository's titled Example grammar",
+      "ms": 622.4934860000003
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "testName": "Checker checkClasses should raise an error if `@since` tag is missing",
+      "ms": 463.314343
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "testName": "Checker kind-aware example enforcement value-level exports rejects a value-level export without an Example",
+      "ms": 462.2270189999999
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "testName": "Checker kind-aware example enforcement pure type-level exports accepts interfaces, type aliases, and namespaces without Examples",
+      "ms": 462.18785899999966
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "testName": "Checker checkExports re-export edge documentation treats a re-export as a graph edge rather than a documentation owner",
+      "ms": 462.14098699999977
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "testName": "Checker checkNamespaces should raise an error if `@since` tag is missing",
+      "ms": 335.8382309999997
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "testName": "Checker checkNamespaces should raise an error if `@since` tag is missing on a nested interface",
+      "ms": 335.81089000000065
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "testName": "Checker checkNamespaces should raise an error if `@since` tag is missing on a nested type alias",
+      "ms": 335.79815999999937
+    },
+    {
+      "file": "packages/tooling/tool/docgen/test/Checker.test.ts",
+      "testName": "Checker checkNamespaces should raise an error if `@since` tag is missing on a nested namespace",
+      "ms": 335.78581100000065
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "package": "@beep/uspto-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:26:12.184199+00:00",
+  "totalMs": 5567.82080078125,
+  "testCount": 11,
+  "files": [
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "ms": 71.82080078125,
+      "tests": 11
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp fixture proofs imports the bin module without launching the stdio server",
+      "ms": 71.82075900000018
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp fixture proofs reshapes a large documentBag response under a configured budget via a named field tier",
+      "ms": 68.51177999999982
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp fixture proofs returns real @beep/uspto data when USPTO_API_KEY is present",
+      "ms": 67.39548000000013
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp fixture proofs returns the api_key_required envelope when USPTO_API_KEY is absent",
+      "ms": 56.61903100000018
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp schema-derived arbitraries only generates UsptoApplicationMetadata values that round-trip through their schema",
+      "ms": 19.63754400000016
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp schema parity keeps explicit get-documents parameter wire shape and defaults missing budget in the schema",
+      "ms": 14.039988999999878
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp schema-derived arbitraries only generates DocumentsProjectionOutput values that round-trip through their schema",
+      "ms": 10.21307700000034
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp schema-derived arbitraries only generates package-owned tool schemas that round-trip through themselves",
+      "ms": 8.749074000000292
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp schema parity keeps failure and projection encoded shapes byte-identical",
+      "ms": 0.946089000000029
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+      "testName": "uspto-mcp schema parity supports data-last document projection without changing the two-argument form",
+      "ms": 0.49809300000015355
+    }
+  ]
+}

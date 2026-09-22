@@ -1,0 +1,66 @@
+{
+  "package": "@beep/colors",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:17:38.646534+00:00",
+  "totalMs": 3653.579833984375,
+  "testCount": 15,
+  "files": [
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "ms": 21.579833984375,
+      "tests": 15
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor allows FORCE_COLOR to enable colors without a TTY",
+      "ms": 18.579817999999705
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor enables colors in CI environments",
+      "ms": 18.563642999999956
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor decodes process-like inputs through the schema model",
+      "ms": 18.556000999999924
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor round-trips generated process-like values through the schema",
+      "ms": 18.550202000000354
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor honors disable overrides for generated process-like values",
+      "ms": 18.544944999999643
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "supportsColor enables colors for TTY terminals with a non-dumb TERM",
+      "ms": 1.1464490000003025
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "createColors returns plain string coercion when disabled",
+      "ms": 1.0919859999999062
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "createColors returns ANSI-wrapped values when enabled",
+      "ms": 1.0661560000003192
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "createColors reopens nested styles after a child formatter closes",
+      "ms": 1.0511929999997847
+    },
+    {
+      "file": "packages/foundation/capability/colors/test/index.test.ts",
+      "testName": "@beep/colors exports a shared Colors instance",
+      "ms": 1.043040000000019
+    }
+  ]
+}

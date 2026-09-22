@@ -1,0 +1,71 @@
+{
+  "package": "@beep/gov-legal-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:27:44.163720+00:00",
+  "totalMs": 16954.09521484375,
+  "testCount": 18,
+  "files": [
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/GovLegalMcp.equivalence.test.ts",
+      "ms": 14.275634765625,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "ms": 81.09521484375,
+      "tests": 14
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "gov-legal MCP frozen contract with the GovInfo hard-gate key keeps HTTP tracing enabled while suppressing request parameters from every completed span",
+      "ms": 49.7698249999994
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "gov-legal MCP frozen contract with the GovInfo hard-gate key decodes installed MCP definitions, listing, call envelopes, results, and source-schema round trips",
+      "ms": 49.23949300000095
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "gov-legal MCP frozen contract with only the keyless eCFR source composed mounts and calls all three eCFR tools without credentials",
+      "ms": 48.84562899999946
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "tool-name report determinism with platform filesystem services renders identical temporary bytes matching the checked-in sorted artifact",
+      "ms": 34.0951750000022
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "gov-legal MCP frozen contract with the GovInfo hard-gate key mounts govinfo_search and decodes its fixture result as Search.Success",
+      "ms": 29.79001099999732
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "gov-legal MCP frozen contract fails closed on cross-driver normalization collisions",
+      "ms": 26.170607000000018
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "tool-name report determinism projects arbitrary candidates deterministically under the frozen cap and digest contract",
+      "ms": 25.78682900000058
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "gov-legal MCP frozen contract imports the guarded bin module without launching stdio",
+      "ms": 24.737661999999546
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
+      "testName": "gov-legal MCP frozen contract when GovInfo returns a raw transport failure returns only the package-local sanitized failure envelope",
+      "ms": 16.926095999999234
+    },
+    {
+      "file": "packages/drivers/gov-legal-mcp/test/GovLegalMcp.equivalence.test.ts",
+      "testName": "gov-legal-mcp declared-field equivalence treats field-equal GovinfoSearchFailure instances as equivalent and field-different ones as distinct",
+      "ms": 13.578247999997984
+    }
+  ]
+}

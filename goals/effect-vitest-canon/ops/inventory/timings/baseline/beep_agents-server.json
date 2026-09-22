@@ -1,0 +1,91 @@
+{
+  "package": "@beep/agents-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:50:28.014436+00:00",
+  "totalMs": 6620.78466796875,
+  "testCount": 24,
+  "files": [
+    {
+      "file": "packages/agents/server/test/AnthropicTurnCodec.test.ts",
+      "ms": 4.054443359375,
+      "tests": 5
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "ms": 18.406494140625,
+      "tests": 6
+    },
+    {
+      "file": "packages/agents/server/test/AssistantTurn.schema-parity.test.ts",
+      "ms": 19.683349609375,
+      "tests": 2
+    },
+    {
+      "file": "packages/agents/server/test/BlockRepair.test.ts",
+      "ms": 9.373046875,
+      "tests": 5
+    },
+    {
+      "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
+      "ms": 1346.78466796875,
+      "tests": 4
+    },
+    {
+      "file": "packages/agents/server/test/scanChunk.test.ts",
+      "ms": 40.91748046875,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
+      "testName": "ProviderInstance PGLite integration persists an authenticated probe snapshot and lists it",
+      "ms": 1280.2705969999997
+    },
+    {
+      "file": "packages/agents/server/test/scanChunk.test.ts",
+      "testName": "scanChunk any envelope x any chunking yields exactly the elements",
+      "ms": 40.9174579999999
+    },
+    {
+      "file": "packages/agents/server/test/ProviderInstance.integration.test.ts",
+      "testName": "ProviderInstance PGLite integration isolates organizations and attributes writes to the trusted actor scope",
+      "ms": 40.784631999999874
+    },
+    {
+      "file": "packages/agents/server/test/scanChunk.test.ts",
+      "testName": "scanChunk single-character chunking",
+      "ms": 40.72712500000034
+    },
+    {
+      "file": "packages/agents/server/test/AssistantTurn.schema-parity.test.ts",
+      "testName": "@beep/agents-server schema parity keeps touched encoded shapes stable",
+      "ms": 19.683469000000514
+    },
+    {
+      "file": "packages/agents/server/test/AssistantTurn.schema-parity.test.ts",
+      "testName": "@beep/agents-server schema parity round-trips touched schemas with schema-derived arbitraries",
+      "ms": 19.5049140000001
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "testName": "AnthropicTurnKernel with a deterministic provider stream captures finish usage and response metadata, then finalizes after every block",
+      "ms": 16.62992200000008
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "testName": "AnthropicTurnKernel with a deterministic provider stream fails after emitted blocks when provider usage and metadata parts are absent",
+      "ms": 16.448483000000124
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "testName": "AnthropicTurnKernel with a deterministic provider stream repairs an invalid block and adds repair-call usage to finalization",
+      "ms": 16.431587000000036
+    },
+    {
+      "file": "packages/agents/server/test/AnthropicTurnKernel.test.ts",
+      "testName": "AnthropicTurnKernel with a deterministic provider stream translates repair failures at the kernel boundary",
+      "ms": 16.42087999999967
+    }
+  ]
+}

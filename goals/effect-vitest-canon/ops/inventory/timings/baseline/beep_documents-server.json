@@ -1,0 +1,116 @@
+{
+  "package": "@beep/documents-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:34:23.088163+00:00",
+  "totalMs": 6611.717529296875,
+  "testCount": 94,
+  "files": [
+    {
+      "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
+      "ms": 46.290283203125,
+      "tests": 24
+    },
+    {
+      "file": "packages/documents/server/test/DocumentIntake.test.ts",
+      "ms": 37.1845703125,
+      "tests": 6
+    },
+    {
+      "file": "packages/documents/server/test/FilingDecisionLlm.test.ts",
+      "ms": 27.510986328125,
+      "tests": 5
+    },
+    {
+      "file": "packages/documents/server/test/SyncConflictServer.test.ts",
+      "ms": 27.46337890625,
+      "tests": 7
+    },
+    {
+      "file": "packages/documents/server/test/SyncCursorServer.test.ts",
+      "ms": 18.531982421875,
+      "tests": 4
+    },
+    {
+      "file": "packages/documents/server/test/SyncItemServer.test.ts",
+      "ms": 25.2587890625,
+      "tests": 6
+    },
+    {
+      "file": "packages/documents/server/test/SyncOperationServer.test.ts",
+      "ms": 27.024169921875,
+      "tests": 7
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "ms": 96.47265625,
+      "tests": 6
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "ms": 154.315673828125,
+      "tests": 15
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "ms": 141.960205078125,
+      "tests": 8
+    },
+    {
+      "file": "packages/documents/server/test/integration/SyncRepositoriesDrizzle.pglite.test.ts",
+      "ms": 1510.717529296875,
+      "tests": 6
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/documents/server/test/integration/SyncRepositoriesDrizzle.pglite.test.ts",
+      "testName": "Documents sync repositories Drizzle PgLite integration creates, deduplicates, updates, and finds sync items",
+      "ms": 1332.2954829999999
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine review regressions uploads a new file created at a previously vacated path",
+      "ms": 140.96014399999967
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine review regressions does not self-conflict when a file is moved and renamed between scans",
+      "ms": 130.20866099999967
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine converges a nested local tree into the remote mirror",
+      "ms": 124.55722700000024
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine converges a local move by repointing the remote parent",
+      "ms": 120.99491299999954
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine review regressions revives terminally failed operations once the mirror is reachable again",
+      "ms": 113.69238200000018
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncReviewRegressions.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine review regressions surfaces a foreign in-place remote edit as drift even when name and parent match",
+      "ms": 106.3245710000001
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine drift detection survives an engine restart without duplicate pushes and resumes the stored cursor",
+      "ms": 96.47258500000044
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncDrift.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine drift detection classifies foreign remote events, ignores echoes, and dedupes across polls",
+      "ms": 96.22681900000043
+    },
+    {
+      "file": "packages/documents/server/test/VaultSyncEngine.test.ts",
+      "testName": "@beep/documents-server VaultSyncEngine converges a local rename without re-uploading content",
+      "ms": 94.8598949999996
+    }
+  ]
+}

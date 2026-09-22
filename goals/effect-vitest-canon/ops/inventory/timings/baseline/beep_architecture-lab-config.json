@@ -1,0 +1,31 @@
+{
+  "package": "@beep/architecture-lab-config",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:20:08.015241+00:00",
+  "totalMs": 5705.90625,
+  "testCount": 3,
+  "files": [
+    {
+      "file": "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
+      "ms": 13.90625,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
+      "testName": "WorkItem configuration provides client-safe and server configuration",
+      "ms": 13.906213999999636
+    },
+    {
+      "file": "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
+      "testName": "WorkItem configuration round-trips schema-derived WorkItem config values",
+      "ms": 13.662229999999909
+    },
+    {
+      "file": "packages/architecture-lab/config/test/WorkItemConfig.test.ts",
+      "testName": "WorkItem configuration keeps default encoded configuration shape byte-identical",
+      "ms": 13.647977999999966
+    }
+  ]
+}

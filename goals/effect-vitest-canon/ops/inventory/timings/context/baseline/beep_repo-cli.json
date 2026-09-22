@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/repo-cli",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "1d1c26a7ab27c2ab607ff9fd61dffceeb681ce72120cbd999b5446476286f372",
+  "rawLogSha256": "3d14715fc8653643fe41f3ae708c8b1a167261d6009765d8ac64a2d4e552131d",
+  "rawReceiptSha256": "5b604afb764ad1b1820b0d690fa3b8daa85c42f54d1ec5bfeebe48a88350f5c7",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 915.3968116320002,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 3748
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 184,
+  "maxLoad1": 69.6220703125,
+  "minimumMemAvailableGiB": 50.59280014038086,
+  "maxPressureAvg10": {
+    "cpu": 38.41,
+    "memory": 0.36,
+    "io": 0.51
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+      "ms": 22117.920166015625,
+      "tests": 19
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "ms": 16862.4814453125,
+      "tests": 132
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/native-runtime-prefix.test.ts",
+      "ms": 15319.100830078125,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/corpus-command.test.ts",
+      "ms": 14737.908203125,
+      "tests": 54
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "ms": 13505.1201171875,
+      "tests": 166
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/knowledge-semantic-delta.test.ts",
+      "ms": 8967.257080078125,
+      "tests": 64
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ai-metrics-command.test.ts",
+      "ms": 8294.5107421875,
+      "tests": 43
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
+      "ms": 7364.92431640625,
+      "tests": 30
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
+      "ms": 5347.3408203125,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/lint-command.test.ts",
+      "ms": 3781.961669921875,
+      "tests": 58
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

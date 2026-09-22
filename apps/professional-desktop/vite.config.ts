@@ -103,9 +103,10 @@ export default defineConfig({
   plugins: [resolveUniformTypeScriptSourceSpecifiers(), stripMisplacedLexicalPureAnnotations(), react()],
   optimizeDeps: {
     // @cosmos.gl/graph imports CJS/UMD deps that need explicit handling:
-    // keep cosmos itself un-prebundled, interop-wrap seedrandom, and route
-    // gl-bench at its shipped ESM build (the package's `module` field is
-    // ignored by the optimizer, which picks the default-less UMD `main`).
+    // keep cosmos itself un-prebundled and interop-wrap seedrandom. Since
+    // @cosmos.gl/graph 3.4.2 it imports gl-bench's shipped ESM build by its
+    // deep path, so no gl-bench alias is needed (and a bare alias would be
+    // prefix-rewritten into a doubled, nonexistent path).
     // Oxigraph is a WASM-backed sidecar driver; do not let the web optimizer
     // initialize or prebundle it if a future webview path imports the package.
     exclude: ["@cosmos.gl/graph", "oxigraph"],
@@ -131,7 +132,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
-      "gl-bench": fileURLToPath(new URL("../../node_modules/gl-bench/dist/gl-bench.module.js", import.meta.url)),
       // micromark dependency whose `browser` build calls document.createElement
       // at module top level — a ReferenceError if any barrel leaks it into a
       // module worker (vite resolves workers with browser conditions). The
