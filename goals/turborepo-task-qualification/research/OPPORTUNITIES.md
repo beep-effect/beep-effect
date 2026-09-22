@@ -1650,3 +1650,16 @@ artifacts to a private durable directory and verify the inventory. A Git residue
 manifest alone is insufficient. Do not reconstruct missing files and label them
 as original evidence. This is a qualification evidence-retention correction;
 it does not change Yeet proof ownership or qualify the pilot.
+
+## 2026-09-22 — successful tracing leaves indirect I/O undecoded
+
+The fresh isolated lint capture passed, but its trace contains five successful
+`io_uring_setup` and five `io_uring_enter` calls. Scalar reads are attributable;
+ring submissions are not decoded by the current observer. Reporting no decoded
+network calls or a complete explicit input map would not resolve that gap.
+Receipt: `current-profile-capture-2026-09-22.json`.
+
+Capture the submitted operation metadata without payloads, or establish a
+separately named supported profile with the relevant mechanism constrained and
+run its complete comparison matrix. A diagnostic fallback cannot silently stand
+in for the ordinary runtime. Retain the current trace as partial evidence.

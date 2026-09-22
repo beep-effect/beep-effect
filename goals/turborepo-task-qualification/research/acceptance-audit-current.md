@@ -60,8 +60,25 @@ that worktree. Published digests retain their historical meaning, but the
 missing original bytes cannot now be independently rechecked. The surviving
 capture worktree has a fresh native plan at `3f1d2a8a08`: both task input maps
 and hashes match the retained baseline, and all 789 input blobs match source.
-This establishes plan/content parity only. Fresh runtime observation remains
-pending. The retention correction is recorded in `OPPORTUNITIES.md`.
+This establishes plan/content parity only. The retention correction is recorded
+in `OPPORTUNITIES.md`.
+
+[Fresh isolated capture](./current-profile-capture-2026-09-22.json) then passed
+actual lint execution and dependency/toolchain verification before and after.
+Its independent reviewer verified the original capture hashes and reconstructed
+31,259 positive scalar reads with no unmatched unfinished calls or captured
+read-buffer contents. Of 428 repository paths read, 427 occur in the native
+input map; `.git` remains separately attributed. No repository-backed memory
+mappings were detected. The recorded write-related operations concern a private
+`/tmp/biome` directory and device opens; no decoded network operations appear.
+
+Five successful `io_uring_setup` and five `io_uring_enter` calls remain undecoded.
+Raw write arguments and vectored I/O also prevent a complete destination claim.
+The network namespace and read-only mounts constrain this execution, but they do
+not prove ordinary execution has no external effects. This observation therefore
+does not establish semantic closure, replay correctness or signed transport.
+Sixteen original capture, preparation and review files were copied outside the
+worktree and verified byte-for-byte; the receipt records hashes and retention.
 
 ## Execution order and ownership
 
