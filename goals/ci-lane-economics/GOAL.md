@@ -15,11 +15,11 @@ Current phase: P3 repair path. Two admission windows are denied:
   shard pickup 7m47s p95. `Check` recovered to 8m22s. See
   `research/admission-week-2-p95.md`.
 
-The repair path is signed in `research/repair-decision-2.md`. Moves landed
-or in flight: #1195 (`Test Unit` shard split: `repo-cli` becomes
-`repo-cli-1`/`repo-cli-2` via an optional `shard {index,total}` partition
-field; free hosted runners stay the placement) and #1194 (refs-check quiet
-listing). `Lint Policy` is measured, not repaired, here; its wall-clock debt
+The repair path is signed in `research/repair-decision-2.md`. Moves: #1195
+(`Test Unit` shard split: `repo-cli` becomes `repo-cli-1`/`repo-cli-2` via
+an optional `shard {index,total}` partition field; free hosted runners stay
+the placement) merged 2026-09-22; #1194 (refs-check quiet listing) in
+flight. `Lint Policy` is measured, not repaired, here; its wall-clock debt
 is handed to `goals/time-to-certainty` C4 and the window-3 verdict decides
 whether C4 is pulled forward. Do not add a shard or a fleet move without a
 new signed decision.
