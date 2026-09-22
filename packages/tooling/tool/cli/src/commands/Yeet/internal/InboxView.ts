@@ -343,7 +343,7 @@ export const loadYeetInboxView = Effect.fn("Yeet.loadYeetInboxView")(function* (
     (row) =>
       yeetInboxExpectedRowId(row).pipe(
         Effect.map((expected) => row.id === expected),
-        Effect.orElseSucceed(() => false)
+        Effect.orElseSucceed(thunkFalse)
       ),
     { concurrency: 1 }
   );

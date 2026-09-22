@@ -995,6 +995,7 @@
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
+        "@effect/platform-node-shared": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1065,6 +1066,7 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-node-shared": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
@@ -1307,6 +1309,7 @@
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
+        "@effect/platform-node-shared": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
@@ -2885,6 +2888,7 @@
       },
       "devDependencies": {
         "@commitlint/is-ignored": "catalog:",
+        "@effect/platform-node-shared": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
