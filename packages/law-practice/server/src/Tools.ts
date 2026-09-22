@@ -7,10 +7,15 @@
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server";
-import { composeGatedLayers, gatedLayer, SourceAuthRegistration, sanitizedToolkit } from "@beep/mcp-kit";
+import {
+  composeGatedLayers,
+  gatedLayer,
+  SourceAuthRegistration,
+  sanitizedToolkit,
+  statelessMcpProtocols,
+} from "@beep/mcp-kit";
 import { Layer } from "effect";
 import * as S from "effect/Schema";
-import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { PracticeKgToolkitHandlersLive } from "./PracticeKg.tool-handlers.ts";
 import type { DuckDb } from "@beep/duckdb";
@@ -108,18 +113,44 @@ export const PracticeKgToolkitLayer = composeGatedLayers(
 );
 
 /**
- * Compose the stdio MCP server while leaving both databases host-injected.
+ * Instructions the host advertises through `server/discover`.
  *
- * **Example** (Compose host-injected server layer)
+ * **Example** (Reading the advertised instructions)
+ *
+ * ```ts
+ * import { PRACTICE_KG_MCP_INSTRUCTIONS } from "@beep/law-practice-server"
+ *
+ * console.log(PRACTICE_KG_MCP_INSTRUCTIONS.startsWith("Local practice knowledge graph"))
+ * // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const PRACTICE_KG_MCP_INSTRUCTIONS =
+  "Local practice knowledge graph over a pre-built bundle: look up clients, docket families and applications, search corpus text and emails, read documents by digest and trace provenance. Every result names its bundle_version. Call tools directly; the host is stateless and needs no initialize handshake.";
+
+/**
+ * Build the stdio MCP server layer from the toolkit registration.
+ *
+ * **Details**
+ *
+ * The host serves `[McpProtocol.v2026_07_28]` only, pinned through the kit's
+ * `statelessMcpProtocols` (D-posture): clients open with `server/discover`
+ * and call tools with request metadata; a legacy `initialize` is answered
+ * with `-32022` and the supported list. There is no session. The kit
+ * conformance runner mounts {@link PracticeKgToolkitLayer} on its own
+ * transport, which is how the host proves the protocol.
+ *
+ * **Example** (Build the server layer)
  *
  * ```ts
  * import { makePracticeKgServerLayer, PracticeKgMcpServerConfig } from "@beep/law-practice-server"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
- * const layer = makePracticeKgServerLayer(
- *   PracticeKgMcpServerConfig.make({ name: "beep-practice-kg", version: "0.0.0" })
- * )
+ * const layer = makePracticeKgServerLayer(PracticeKgMcpServerConfig.make({ name: "beep-practice-kg", version: "0.0.0" }))
  * console.log(Layer.isLayer(layer))
+ * // true
  * ```
  *
  * @category layers
@@ -130,7 +161,12 @@ export const makePracticeKgServerLayer = (
 ): Layer.Layer<never, never, DuckDb | Path.Path | PracticeKgBundle | SqlClient | Stdio> =>
   PracticeKgToolkitLayer.pipe(
     Layer.provide(
-      McpServer.layerStdio({ name: config.name, version: config.version, protocols: [McpProtocol.v2025_06_18] })
+      McpServer.layerStdio({
+        name: config.name,
+        version: config.version,
+        instructions: PRACTICE_KG_MCP_INSTRUCTIONS,
+        protocols: statelessMcpProtocols,
+      })
     ),
     Layer.orDie
   );

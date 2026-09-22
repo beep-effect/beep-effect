@@ -4,6 +4,7 @@ import {
   ModelsCheckLive,
   ModelsCheckOptions,
   ModelsCheckReport,
+  ModelsLedger,
   ModelsLedgerLive,
   ModelsLocatorReaderLive,
   ModelsManifestStore,
@@ -50,18 +51,21 @@ const stageWorkspace = Effect.fnUntraced(function* (manifestFixture = "manifest.
   return { root, manifestPath };
 });
 
-const runCheck = Effect.fnUntraced(function* (manifestFixture: string) {
+const runCheckIn = Effect.fnUntraced(function* (manifestFixture: string, offline: boolean) {
   const workspace = yield* stageWorkspace(manifestFixture);
   const check = yield* ModelsCheck;
-  return yield* check.run(
+  const report = yield* check.run(
     ModelsCheckOptions.make({
       home: workspace.root,
       repo: workspace.root,
       manifestPath: workspace.manifestPath,
-      offline: false,
+      offline,
     })
   );
+  return { workspace, report };
 });
+
+const runCheck = (manifestFixture: string) => Effect.map(runCheckIn(manifestFixture, false), (run) => run.report);
 
 const kindsOf = (report: ModelsCheckReport): ReadonlyArray<string> =>
   A.dedupe(A.map(report.findings, (entry) => `${entry.targetId}:${entry.kind}`));
@@ -99,6 +103,21 @@ layer(Layer.mergeAll(platform, models))((it) => {
     assertNone(at("repo", "docs/../../x"));
     assertNone(at("repo", "/etc/passwd"));
   });
+
+  it.effect("records only an online snapshot as the ledger baseline", () =>
+    Effect.gen(function* () {
+      const ledger = yield* ModelsLedger;
+
+      // An offline snapshot has no upstream layer; recording it would turn the
+      // next online run into a wall of phantom `added` models.
+      const offline = yield* runCheckIn("manifest.yaml", true);
+      assertNone(yield* ledger.latest(offline.workspace.root));
+
+      const online = yield* runCheckIn("manifest.yaml", false);
+      const recorded = yield* ledger.latest(online.workspace.root);
+      strictEqual(O.isSome(recorded), true);
+    })
+  );
 
   it.effect("reports one finding per drift kind and stays clean where the file agrees", () =>
     Effect.gen(function* () {
