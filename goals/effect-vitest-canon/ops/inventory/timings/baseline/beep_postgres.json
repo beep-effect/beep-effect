@@ -1,0 +1,76 @@
+{
+  "package": "@beep/postgres",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:23:42.277060+00:00",
+  "totalMs": 8434.0908203125,
+  "testCount": 43,
+  "files": [
+    {
+      "file": "packages/drivers/postgres/test/Postgres.equivalence.test.ts",
+      "ms": 3.682373046875,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "ms": 107.427490234375,
+      "tests": 34
+    },
+    {
+      "file": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts",
+      "ms": 3491.0908203125,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts",
+      "testName": "Postgres PgLite integration provides PostgresClient over the PgLite PgClient",
+      "ms": 1291.3029390000002
+    },
+    {
+      "file": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts",
+      "testName": "Postgres PgLite integration continues a folder-migrated journal from an in-memory bundle",
+      "ms": 786.8136330000007
+    },
+    {
+      "file": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts",
+      "testName": "Postgres PgLite integration runs Drizzle migrations from a fixture folder through PgLite",
+      "ms": 773.9480490000005
+    },
+    {
+      "file": "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts",
+      "testName": "Postgres PgLite integration runs Drizzle CRUD and transactions through makeDrizzleLayer",
+      "ms": 590.0292730000001
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "testName": "Postgres interop exports native PgClient interop",
+      "ms": 58.75790400000005
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "testName": "Postgres Drizzle migrations normalizes synchronous native migrator setup failures",
+      "ms": 58.7388549999996
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "testName": "Postgres Drizzle migrations validates and prepares in-memory migration bundles before native execution",
+      "ms": 58.72981199999958
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "testName": "Postgres client provides all client service keys from an existing PgClient",
+      "ms": 58.72428200000013
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "testName": "PostgresError round-trips schema-derived SQLSTATE and Postgres error values",
+      "ms": 58.71073199999955
+    },
+    {
+      "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
+      "testName": "Postgres formatting formats SQL and parameters with a disabled color palette",
+      "ms": 30.963600000000042
+    }
+  ]
+}

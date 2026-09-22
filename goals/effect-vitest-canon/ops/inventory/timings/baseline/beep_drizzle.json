@@ -1,0 +1,76 @@
+{
+  "package": "@beep/drizzle",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:20:56.484766+00:00",
+  "totalMs": 7448.775146484375,
+  "testCount": 25,
+  "files": [
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.equivalence.test.ts",
+      "ms": 1.328125,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "ms": 36.55712890625,
+      "tests": 23
+    },
+    {
+      "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
+      "ms": 918.775146484375,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/drizzle/test/integration/Drizzle.pglite.test.ts",
+      "testName": "Drizzle PgLite integration runs execute and transaction flows against a PgLite-backed adapter",
+      "ms": 918.7750459999997
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "testName": "DrizzleError keeps normalized error wire shape while enforcing redacted params",
+      "ms": 24.557059000000663
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "testName": "DrizzleError decodes product-neutral row arrays from the schema value",
+      "ms": 24.543368999999984
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "testName": "DrizzleError round-trips exported schemas with schema-derived arbitraries",
+      "ms": 24.536619000000428
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "testName": "Drizzle exposes adapter execute failures as DrizzleError",
+      "ms": 5.594978000000083
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "testName": "Drizzle provides execute and transaction through Drizzle.makeLayer",
+      "ms": 5.55869199999961
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "testName": "Drizzle preserves callback failures inside transactions",
+      "ms": 5.544030000000021
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "testName": "Drizzle preserves adapter failures from transactions",
+      "ms": 5.535858000000189
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "testName": "Drizzle uses explicit Effect-native transaction callbacks",
+      "ms": 5.496877999999924
+    },
+    {
+      "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+      "testName": "DrizzleError constructs the single public tagged driver error",
+      "ms": 3.409117000000151
+    }
+  ]
+}

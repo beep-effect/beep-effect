@@ -1,0 +1,61 @@
+{
+  "package": "@beep/hubspot",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:22:07.484469+00:00",
+  "totalMs": 7118.65869140625,
+  "testCount": 8,
+  "files": [
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.equivalence.test.ts",
+      "ms": 1.616455078125,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "ms": 64.65869140625,
+      "tests": 6
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "testName": "@beep/hubspot keeps encoded HubSpot schema wire shapes byte-identical",
+      "ms": 62.50381800000014
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "testName": "@beep/hubspot round-trips schema-derived HubSpot payloads through encoded form",
+      "ms": 62.2050390000004
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "testName": "@beep/hubspot upserts contacts through the CRM batch endpoint",
+      "ms": 62.05352700000003
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "testName": "@beep/hubspot submits a form through the secure Forms API endpoint",
+      "ms": 62.02482299999974
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "testName": "@beep/hubspot maps non-success responses to typed driver errors",
+      "ms": 61.894013000000086
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+      "testName": "@beep/hubspot maps upsert response status failures with email context",
+      "ms": 1.6587119999994684
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.equivalence.test.ts",
+      "testName": "HubSpot declared-field equivalence treats field-equal HubSpotError instances as equivalent and field-different ones as distinct",
+      "ms": 1.61635699999988
+    },
+    {
+      "file": "packages/drivers/hubspot/test/HubSpot.equivalence.test.ts",
+      "testName": "HubSpot declared-field equivalence treats defect-only differences as equivalent",
+      "ms": 1.4072269999996934
+    }
+  ]
+}

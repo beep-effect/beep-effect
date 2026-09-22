@@ -1,0 +1,36 @@
+{
+  "package": "@beep/shared-tables",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:31:05.697875+00:00",
+  "totalMs": 6511.3271484375,
+  "testCount": 4,
+  "files": [
+    {
+      "file": "packages/shared/tables/test/OrganizationTable.test.ts",
+      "ms": 3.3271484375,
+      "tests": 4
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/shared/tables/test/OrganizationTable.test.ts",
+      "testName": "OrganizationTable aggregates every shared table under its stable schema key",
+      "ms": 2.5619839999999385
+    },
+    {
+      "file": "packages/shared/tables/test/OrganizationTable.test.ts",
+      "testName": "OrganizationTable materializes shared Organization metadata without executing a live database",
+      "ms": 2.3272040000001653
+    },
+    {
+      "file": "packages/shared/tables/test/OrganizationTable.test.ts",
+      "testName": "OrganizationTable maps Organization profile fields to the expected Postgres column metadata",
+      "ms": 2.3057210000006307
+    },
+    {
+      "file": "packages/shared/tables/test/OrganizationTable.test.ts",
+      "testName": "OrganizationTable builds slug uniqueness and license-tier lookup indexes",
+      "ms": 2.2916299999997136
+    }
+  ]
+}

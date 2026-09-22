@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/repo-ai-metrics",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "d3a50bd8140c10cf9695fdfff8258b705e79c5c0ccb4478e6bf97e498b49f835",
+  "rawLogSha256": "75614bf9b8346a855fa565b6eae1d2e541a3e0e543c530b80ed3607c2dd7aa4e",
+  "rawReceiptSha256": "1de2962cc3c2f58d363f88e120cec516f777c7bb9b28bb4f6c8c5aa4c84bb3c4",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 20.174015497000255,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 333
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 6,
+  "maxLoad1": 93.61572265625,
+  "minimumMemAvailableGiB": 57.82040023803711,
+  "maxPressureAvg10": {
+    "cpu": 28.28,
+    "memory": 0.02,
+    "io": 0.12
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
+      "ms": 9906.080322265625,
+      "tests": 52
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts",
+      "ms": 1297.296630859375,
+      "tests": 64
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
+      "ms": 1295.27880859375,
+      "tests": 24
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/FlightRecordGeneration.test.ts",
+      "ms": 1279.49609375,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts",
+      "ms": 544.863037109375,
+      "tests": 17
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/sequence-break.test.ts",
+      "ms": 462.32861328125,
+      "tests": 13
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/config-snapshot-bounds.test.ts",
+      "ms": 421.331298828125,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/hook-pulse.test.ts",
+      "ms": 226.296142578125,
+      "tests": 29
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/session-lease.test.ts",
+      "ms": 154.8896484375,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/test/file-inventory.test.ts",
+      "ms": 139.260009765625,
+      "tests": 3
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

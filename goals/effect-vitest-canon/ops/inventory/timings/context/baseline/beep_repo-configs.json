@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/repo-configs",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "7f6ca5334604b03dcb688fb4f87ba7cddace5505d501a9d5f6b2edee14bc2f24",
+  "rawLogSha256": "55f1a15750d83d1cee8c06a788a83b55c3b302e22bbc8dcd0b7bc47a66faa897",
+  "rawReceiptSha256": "88e662ddbd6585160e19aa710b727da7c3c3a17dbd5f30e81e8f4b78bbfaba2f",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 6.119237976999557,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 76
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 51.1953125,
+  "minimumMemAvailableGiB": 77.9068489074707,
+  "maxPressureAvg10": {
+    "cpu": 5.32,
+    "memory": 0.0,
+    "io": 0.0
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts",
+      "ms": 329.8173828125,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextModels.schema.test.ts",
+      "ms": 39.005126953125,
+      "tests": 14
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+      "ms": 27.853515625,
+      "tests": 27
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts",
+      "ms": 24.8525390625,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/SharedNextConfig.model.test.ts",
+      "ms": 20.52734375,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.schemas.test.ts",
+      "ms": 7.574951171875,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-first-regressions.test.ts",
+      "ms": 7.376953125,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NextConfig.model.test.ts",
+      "ms": 6.921875,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/NoNativeRuntimeHotspots.test.ts",
+      "ms": 2.43896484375,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/policy-pack/repo-configs/test/effect-steering-guidance.test.ts",
+      "ms": 1.82421875,
+      "tests": 1
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

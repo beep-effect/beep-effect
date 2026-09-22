@@ -1,0 +1,96 @@
+{
+  "package": "@beep/box-provisioning",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:48.939621+00:00",
+  "totalMs": 4142.100341796875,
+  "testCount": 53,
+  "files": [
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
+      "ms": 56.100341796875,
+      "tests": 9
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts",
+      "ms": 36.623046875,
+      "tests": 7
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "ms": 33.5791015625,
+      "tests": 5
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningArtifactPrivacy.test.ts",
+      "ms": 1.447265625,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningIntent.test.ts",
+      "ms": 15.9140625,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningInventory.test.ts",
+      "ms": 22.032470703125,
+      "tests": 7
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningPlanner.test.ts",
+      "ms": 35.06982421875,
+      "tests": 17
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
+      "testName": "@beep/box-provisioning orchestration keeps reconcile dry-run-only and requires explicit apply",
+      "ms": 33.94015500000023
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
+      "testName": "@beep/box-provisioning orchestration returns every created folder adoption and replans them as Noop",
+      "ms": 33.75240699999995
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
+      "testName": "@beep/box-provisioning orchestration rejects reviewed-plan content tampering even when the digest field is retained",
+      "ms": 33.73468999999977
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
+      "testName": "@beep/box-provisioning orchestration compares the complete reviewed plan with the freshly reproduced plan",
+      "ms": 33.72379299999966
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioning.test.ts",
+      "testName": "@beep/box-provisioning orchestration rejects a policy blocker before invoking the mutation service",
+      "ms": 33.71441899999991
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "testName": "@beep/box-provisioning apply journal retains every prior Applied entry and the failed folder when folder N fails",
+      "ms": 33.57902100000001
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "testName": "@beep/box-provisioning apply journal generates a distinct attempt id for each apply invocation",
+      "ms": 33.45293800000036
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "testName": "@beep/box-provisioning apply journal retains applied folders and the failed collaboration after collaboration rejection",
+      "ms": 33.40085799999997
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "testName": "@beep/box-provisioning apply journal recovers exactly the folders applied before folder N fails",
+      "ms": 33.35593900000049
+    },
+    {
+      "file": "packages/drivers/box-provisioning/test/BoxProvisioningApplyJournal.test.ts",
+      "testName": "@beep/box-provisioning apply journal uses only the latest attempt for one plan during recovery",
+      "ms": 33.35572899999988
+    }
+  ]
+}

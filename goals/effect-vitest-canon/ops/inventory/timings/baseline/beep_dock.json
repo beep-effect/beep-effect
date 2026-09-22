@@ -1,0 +1,121 @@
+{
+  "package": "@beep/dock",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:53.646426+00:00",
+  "totalMs": 4577.809326171875,
+  "testCount": 112,
+  "files": [
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "ms": 25.587158203125,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "ms": 256.809326171875,
+      "tests": 19
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockPolicy.test.ts",
+      "ms": 18.658935546875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "ms": 37.5986328125,
+      "tests": 18
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Geometry.test.ts",
+      "ms": 9.8984375,
+      "tests": 22
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/GestureParity.test.ts",
+      "ms": 16.963623046875,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/HiddenMaximize.test.ts",
+      "ms": 14.562255859375,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Minima.test.ts",
+      "ms": 10.806884765625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/PanelGroupUpdates.test.ts",
+      "ms": 16.753173828125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Recency.test.ts",
+      "ms": 1.775390625,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/TaggedErrors.equivalence.test.ts",
+      "ms": 1.72607421875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/dockview-anchored-box.test.ts",
+      "ms": 2.54931640625,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "testName": "DockEngine owns discriminants, defaults, and pure queries on model companions",
+      "ms": 242.71774800000003
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockEngine.test.ts",
+      "testName": "dock snapshot codec properties round-trips arbitrary snapshots through the JSON codec",
+      "ms": 240.68097699999998
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "testName": "floating dock topology clamps anchored boxes to a sensible minimum inside the container",
+      "ms": 24.99284500000067
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms owns one registry lifetime and refreshes service-backed persistence",
+      "ms": 24.882646000000022
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "testName": "floating dock topology schema-rejects duplicate identities across docked and floating roots",
+      "ms": 24.78909300000032
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/Floating.test.ts",
+      "testName": "anchored box codec properties round-trips arbitrary anchored boxes through their codec",
+      "ms": 24.776593000000503
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms serializes rapid typed and unknown commands without cancellation or stale writes",
+      "ms": 24.688799000000472
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms publishes every rapid completion to the ordered host feed",
+      "ms": 24.67005000000063
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms does not publish live state for an explicit unchanged outcome",
+      "ms": 24.657360000000153
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/test/DockAtoms.test.ts",
+      "testName": "DockAtoms keeps state unchanged for malformed input and a missing snapshot",
+      "ms": 24.646163000000342
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "package": "@beep/skill-contract",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:31:12.893653+00:00",
+  "totalMs": 6968.340576171875,
+  "testCount": 46,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "ms": 43.0712890625,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "ms": 27.700439453125,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Gate.test.ts",
+      "ms": 13.24853515625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
+      "ms": 25.997802734375,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Recovery.test.ts",
+      "ms": 16.866943359375,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillCompletion.test.ts",
+      "ms": 21.74853515625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillContract.test.ts",
+      "ms": 8.289306640625,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "ms": 76.340576171875,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "testName": "@beep/skill-contract SkillProjection refuses allowed verdicts that lack both passed checks and denied verdicts without a failure",
+      "ms": 59.34047399999963
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "testName": "@beep/skill-contract SkillProjection allows every schema-derived contract after render and verification",
+      "ms": 59.290767000000415
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder maps transport completion to Accepted and exposes only immediate monotonic transitions",
+      "ms": 43.07126900000003
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder enforces every rung's cumulative predicate-type demands",
+      "ms": 42.87290500000017
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder gives each contract-bound ladder schema a distinct identity",
+      "ms": 42.854167000000416
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "testName": "@beep/skill-contract EvidenceLadder round-trips schema-derived arbitrary structural ladder states",
+      "ms": 42.84145699999954
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "testName": "@beep/skill-contract EvidenceReceipt round-trips an unsigned digest-bound typed receipt with a pinned predicate identity",
+      "ms": 27.142186000000038
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "testName": "@beep/skill-contract EvidenceReceipt rejects an unrelated predicate type, empty subjects, and malformed digests",
+      "ms": 26.779970999999932
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "testName": "@beep/skill-contract EvidenceReceipt round-trips schema-derived arbitrary receipts",
+      "ms": 26.70049900000049
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "testName": "@beep/skill-contract EvidenceReceipt gives every pinned factory instance a distinct schema identity and supports data-last construction",
+      "ms": 26.696513999999297
+    }
+  ]
+}

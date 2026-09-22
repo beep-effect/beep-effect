@@ -1,0 +1,31 @@
+{
+  "package": "@beep/todox",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:14:23.793479+00:00",
+  "totalMs": 762.498779296875,
+  "testCount": 3,
+  "files": [
+    {
+      "file": "apps/todox/test/app.test.tsx",
+      "ms": 54.498779296875,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/todox/test/app.test.tsx",
+      "testName": "@beep/todox renders the starter page",
+      "ms": 54.498785999999996
+    },
+    {
+      "file": "apps/todox/test/app.test.tsx",
+      "testName": "@beep/todox declares the application metadata",
+      "ms": 54.312089000000014
+    },
+    {
+      "file": "apps/todox/test/app.test.tsx",
+      "testName": "@beep/todox renders the shared document shell",
+      "ms": 54.29322000000002
+    }
+  ]
+}

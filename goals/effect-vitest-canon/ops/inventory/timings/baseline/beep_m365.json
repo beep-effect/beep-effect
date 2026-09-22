@@ -1,0 +1,71 @@
+{
+  "package": "@beep/m365",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:22:36.867424+00:00",
+  "totalMs": 6683.175537109375,
+  "testCount": 12,
+  "files": [
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "ms": 84.175537109375,
+      "tests": 11
+    },
+    {
+      "file": "packages/drivers/m365/test/integration/M365.live.test.ts",
+      "ms": 1.2431640625,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "testName": "@beep/m365 service decodes Graph fixtures for each read verb and sends bearer auth to Graph",
+      "ms": 78.47232499999973
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "testName": "@beep/m365 service rejects untrusted deltaLink values before sending signed continuation requests",
+      "ms": 67.56736099999944
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "testName": "@beep/m365 service preserves auth failures before HTTP execution",
+      "ms": 66.89307699999972
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "testName": "@beep/m365 service keeps encoded schema wire shapes byte-identical",
+      "ms": 66.31168600000001
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "testName": "@beep/m365 service round-trips schema-derived m365 models through their encoded shape",
+      "ms": 66.1373080000003
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "testName": "@beep/m365 service downloads file content from the preauthenticated URL without forwarding Authorization",
+      "ms": 13.220374000000447
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "testName": "@beep/m365 service rejects path-segment injection in Graph identifier request fields before HTTP",
+      "ms": 13.04088800000045
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "testName": "@beep/m365 service skips protected/encrypted items by extension without fetching content",
+      "ms": 12.50850199999968
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "testName": "@beep/m365 service maps Retry-After throttles to typed driver errors",
+      "ms": 11.545466000000488
+    },
+    {
+      "file": "packages/drivers/m365/test/M365.service.test.ts",
+      "testName": "@beep/m365 service retries throttled requests with a default delay when Retry-After is absent",
+      "ms": 3.175427000000127
+    }
+  ]
+}

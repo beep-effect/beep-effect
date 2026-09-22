@@ -1,0 +1,76 @@
+{
+  "package": "@beep/oip-web",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:25:42.999948+00:00",
+  "totalMs": 5934.48681640625,
+  "testCount": 54,
+  "files": [
+    {
+      "file": "apps/oip-web/test/TaggedErrors.equivalence.test.ts",
+      "ms": 1.455322265625,
+      "tests": 3
+    },
+    {
+      "file": "apps/oip-web/test/oip-seo.test.ts",
+      "ms": 4.808837890625,
+      "tests": 9
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "ms": 501.48681640625,
+      "tests": 42
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web round-trips generated OIP site content",
+      "ms": 114.08495700000003
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web logs and rejects contact submissions when the provider fails",
+      "ms": 103.52970499999992
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web renders brand-compliant footer social links",
+      "ms": 96.90002899999945
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web renders a shared @beep/ui button",
+      "ms": 49.186077000000296
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web renders the OIP public headline and contact CTA",
+      "ms": 34.46908900000017
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web provides an optional OIP MUI theme override provider",
+      "ms": 19.550833999999668
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web renders the progressive theme toggle hook for the static layout script",
+      "ms": 11.20341500000086
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web renders a server-seeded contact timestamp for progressive form posts",
+      "ms": 8.316101000000344
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web drives the back-to-top control from Atom-managed scroll state",
+      "ms": 6.427727999999661
+    },
+    {
+      "file": "apps/oip-web/test/oip-web.test.tsx",
+      "testName": "@beep/oip-web round-trips generated contact submissions",
+      "ms": 6.275634999999966
+    }
+  ]
+}

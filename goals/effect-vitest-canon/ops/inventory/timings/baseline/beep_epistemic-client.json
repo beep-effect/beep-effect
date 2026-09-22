@@ -1,0 +1,71 @@
+{
+  "package": "@beep/epistemic-client",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:34:30.383997+00:00",
+  "totalMs": 4591.091552734375,
+  "testCount": 17,
+  "files": [
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "ms": 25.091552734375,
+      "tests": 12
+    },
+    {
+      "file": "packages/epistemic/client/test/Protocol.test.ts",
+      "ms": 1.048583984375,
+      "tests": 5
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "testName": "@beep/epistemic-client contradiction atoms initializes both temporal axes from the Effect TestClock",
+      "ms": 23.400480000000243
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "testName": "@beep/epistemic-client contradiction atoms preserves temporal runtime initialization failures",
+      "ms": 22.73316799999975
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "testName": "@beep/epistemic-client contradiction atoms resets both temporal axes from the Effect TestClock and returns to the first page",
+      "ms": 17.59475999999995
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "testName": "@beep/epistemic-client contradiction atoms carries both active temporal axes into the selected candidate detail request",
+      "ms": 11.482281000000512
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "testName": "@beep/epistemic-client contradiction atoms round-trips schema-derived detail and source payloads",
+      "ms": 10.877015000000029
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "testName": "@beep/epistemic-client contradiction atoms starts with an open queue and explicit unselected resource states",
+      "ms": 10.674073999999564
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "testName": "@beep/epistemic-client contradiction atoms clears candidate-bound source and review state when selecting another candidate",
+      "ms": 8.51287400000001
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "testName": "@beep/epistemic-client contradiction atoms issues a distinct candidate detail query after either temporal axis changes",
+      "ms": 7.091648999999961
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "testName": "@beep/epistemic-client contradiction atoms surfaces a typed review failure through the mutation AsyncResult",
+      "ms": 2.792746000000079
+    },
+    {
+      "file": "packages/epistemic/client/test/ContradictionTriage.atoms.test.ts",
+      "testName": "@beep/epistemic-client contradiction atoms advances transaction time before refreshing a successful review",
+      "ms": 1.1786149999998088
+    }
+  ]
+}

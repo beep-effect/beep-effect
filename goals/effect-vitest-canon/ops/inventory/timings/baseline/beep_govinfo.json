@@ -1,0 +1,66 @@
+{
+  "package": "@beep/govinfo",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:25:09.267852+00:00",
+  "totalMs": 5172.794189453125,
+  "testCount": 8,
+  "files": [
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.equivalence.test.ts",
+      "ms": 1.462646484375,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.generated.test.ts",
+      "ms": 154.794189453125,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "ms": 85.8388671875,
+      "tests": 5
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.generated.test.ts",
+      "testName": "GovInfo generated drift oracle is current and retains every operation without unsafe number or never schemas",
+      "ms": 154.79410199999984
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "testName": "@beep/govinfo attaches api.data.gov api_key and parses X-RateLimit-* headers offline",
+      "ms": 85.83882100000028
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "testName": "@beep/govinfo serves a repeat identical search from cache (transport call-count == 1)",
+      "ms": 85.8289649999997
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "testName": "@beep/govinfo omits auth gracefully when no API key is configured (keyless-safe)",
+      "ms": 85.82013199999983
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "testName": "@beep/govinfo keeps crispened schema encoded shapes stable",
+      "ms": 85.36411299999963
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+      "testName": "@beep/govinfo round-trips hand-authored schema-derived values through encoded form",
+      "ms": 85.17506400000002
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.equivalence.test.ts",
+      "testName": "Govinfo declared-field equivalence treats field-equal GovinfoError instances as equivalent and field-different ones as distinct",
+      "ms": 1.462720999999874
+    },
+    {
+      "file": "packages/drivers/govinfo/test/Govinfo.equivalence.test.ts",
+      "testName": "Govinfo declared-field equivalence derives declared-field equivalence for each Search failure member",
+      "ms": 1.2732910000004267
+    }
+  ]
+}

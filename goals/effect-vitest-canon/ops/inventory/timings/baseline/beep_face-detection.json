@@ -1,0 +1,76 @@
+{
+  "package": "@beep/face-detection",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:21:30.613165+00:00",
+  "totalMs": 6607.75537109375,
+  "testCount": 14,
+  "files": [
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.equivalence.test.ts",
+      "ms": 1.799072265625,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+      "ms": 45.75537109375,
+      "tests": 6
+    },
+    {
+      "file": "packages/drivers/face-detection/test/OnnxRuntimeInstall.test.ts",
+      "ms": 36.441162109375,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+      "testName": "@beep/face-detection preserves encoded schema wire shapes",
+      "ms": 44.643928000000415
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+      "testName": "@beep/face-detection round-trips schema-derived face-detection values through encoded form",
+      "ms": 44.47266599999966
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+      "testName": "@beep/face-detection runs workflows through the service contract",
+      "ms": 44.45003100000031
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+      "testName": "@beep/face-detection normalizes raw model confidence at the schema boundary",
+      "ms": 44.405103000000054
+    },
+    {
+      "file": "packages/drivers/face-detection/test/FaceDetection.service.test.ts",
+      "testName": "@beep/face-detection computes padded and fixed-model preprocessing geometry",
+      "ms": 44.3935249999995
+    },
+    {
+      "file": "packages/drivers/face-detection/test/OnnxRuntimeInstall.test.ts",
+      "testName": "ONNX Runtime's patched NuGet installer does not follow a symlink planted at the former predictable extraction path",
+      "ms": 35.441102
+    },
+    {
+      "file": "packages/drivers/face-detection/test/OnnxRuntimeInstall.test.ts",
+      "testName": "ONNX Runtime's patched NuGet installer replaces a destination symlink without overwriting the linked file",
+      "ms": 34.98124699999994
+    },
+    {
+      "file": "packages/drivers/face-detection/test/OnnxRuntimeInstall.test.ts",
+      "testName": "ONNX Runtime's patched NuGet installer installs the selected binary and replaces an existing binary",
+      "ms": 32.140131999999994
+    },
+    {
+      "file": "packages/drivers/face-detection/test/OnnxRuntimeInstall.test.ts",
+      "testName": "ONNX Runtime's patched NuGet installer ignores archive paths outside the selected manifest entry",
+      "ms": 30.555180999999948
+    },
+    {
+      "file": "packages/drivers/face-detection/test/OnnxRuntimeInstall.test.ts",
+      "testName": "ONNX Runtime's patched NuGet installer loads fflate through the narrowly scoped installer dependency",
+      "ms": 24.271758999999975
+    }
+  ]
+}

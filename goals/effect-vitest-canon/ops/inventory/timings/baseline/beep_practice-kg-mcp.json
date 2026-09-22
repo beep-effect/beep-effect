@@ -1,0 +1,51 @@
+{
+  "package": "@beep/practice-kg-mcp",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:51:16.696765+00:00",
+  "totalMs": 7927.94921875,
+  "testCount": 6,
+  "files": [
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "ms": 7.94921875,
+      "tests": 3
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "ms": 1.4375,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host loads a portable bundle manifest and preserves an optional corpus root",
+      "ms": 7.949187000000165
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host maps missing and invalid manifests to sanitized typed host errors",
+      "ms": 7.873550999999679
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/Host.test.ts",
+      "testName": "@beep/practice-kg-mcp runtime host omits the corpus root when the caller does not provide one",
+      "ms": 7.807789999999841
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "testName": "practice KG MCP tagged-error declared equivalence ignores PackageFailure cause and compares diagnostic fields",
+      "ms": 1.4375249999993684
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "testName": "practice KG MCP tagged-error declared equivalence ignores PracticeKgHostError cause and compares diagnostic fields",
+      "ms": 1.2518890000001193
+    },
+    {
+      "file": "apps/practice-kg-mcp/test/TaggedError.equivalence.test.ts",
+      "testName": "practice KG MCP tagged-error declared equivalence ignores SmokeFailure cause and compares diagnostic fields",
+      "ms": 1.2341420000002472
+    }
+  ]
+}

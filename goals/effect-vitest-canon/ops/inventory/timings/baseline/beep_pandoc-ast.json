@@ -1,0 +1,106 @@
+{
+  "package": "@beep/pandoc-ast",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:29:55.194425+00:00",
+  "totalMs": 17464.9462890625,
+  "testCount": 97,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/ConformanceLedger.test.ts",
+      "ms": 56.463134765625,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "ms": 207.9462890625,
+      "tests": 48
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-annotation.test.ts",
+      "ms": 19.79052734375,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.conformance-strict-failure.test.ts",
+      "ms": 3.85791015625,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "ms": 110.59619140625,
+      "tests": 30
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "ms": 91.344970703125,
+      "tests": 12
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/TaggedError.equivalence.test.ts",
+      "ms": 1.4013671875,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Version.test.ts",
+      "ms": 1.910400390625,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/integration/Pandoc.integration.test.ts",
+      "ms": 34.62109375,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping maps md-core Pandoc JSON to @beep/md with a supported report",
+      "ms": 106.97565299999769
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "testName": "Pandoc.mapping records DOCX-origin compatibility gaps while producing partial Md output",
+      "ms": 103.5961470000002
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec round-trips supported wire objects through the internal model",
+      "ms": 98.94638699999996
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec decodes committed Pandoc JSON fixtures without a pandoc executable",
+      "ms": 97.11399000000165
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "testName": "Pandoc current constructor semantic conformance strictly round-trips all eleven newly modeled pandoc-types constructors",
+      "ms": 76.84532899999977
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "testName": "Pandoc current constructor semantic conformance reports malformed Quoted Cite LineBlock DefinitionList and Figure payloads losslessly",
+      "ms": 76.54055200000221
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "testName": "Pandoc current constructor semantic conformance retains RawInline and RawBlock format and text exactly",
+      "ms": 76.50840299999982
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "testName": "Pandoc current constructor semantic conformance rejects malformed raw format and text payloads",
+      "ms": 76.4904060000008
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.semantic-conformance.test.ts",
+      "testName": "Pandoc current constructor semantic conformance discriminates finite ColWidth from nullary ColWidthDefault",
+      "ms": 76.47558200000276
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts",
+      "testName": "Pandoc.codec round-trips blocked object names as safe own metadata keys",
+      "ms": 67.65449299999818
+    }
+  ]
+}

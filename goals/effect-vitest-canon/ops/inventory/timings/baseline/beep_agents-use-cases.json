@@ -1,0 +1,86 @@
+{
+  "package": "@beep/agents-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:33:48.671490+00:00",
+  "totalMs": 4493.1220703125,
+  "testCount": 33,
+  "files": [
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "ms": 24.02685546875,
+      "tests": 7
+    },
+    {
+      "file": "packages/agents/use-cases/test/Chat.test.ts",
+      "ms": 10.935791015625,
+      "tests": 4
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProfessionalRuntime.test.ts",
+      "ms": 38.1220703125,
+      "tests": 9
+    },
+    {
+      "file": "packages/agents/use-cases/test/ProviderInstance.test.ts",
+      "ms": 9.252197265625,
+      "tests": 5
+    },
+    {
+      "file": "packages/agents/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 2.646240234375,
+      "tests": 8
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/agents/use-cases/test/ProfessionalRuntime.test.ts",
+      "testName": "@beep/agents-use-cases round-trips bounded runtime schemas with schema-derived arbitraries",
+      "ms": 24.12211600000046
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "testName": "@beep/agents-use-cases AssistantTurn models history as a role-tagged union of user and assistant items",
+      "ms": 22.552703000000292
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "testName": "@beep/agents-use-cases AssistantTurn round-trips provider usage through its JSON-safe encoded boundary",
+      "ms": 22.500824000000648
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "testName": "@beep/agents-use-cases AssistantTurn keeps touched encoded shapes stable",
+      "ms": 22.369912000000113
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "testName": "@beep/agents-use-cases AssistantTurn round-trips touched schemas with schema-derived arbitraries",
+      "ms": 22.35216600000058
+    },
+    {
+      "file": "packages/agents/use-cases/test/AssistantTurn.test.ts",
+      "testName": "@beep/agents-use-cases AssistantTurn derives the deterministic scripted block sequence from the last user prompt",
+      "ms": 22.332446000000346
+    },
+    {
+      "file": "packages/agents/use-cases/test/Chat.test.ts",
+      "testName": "@beep/agents-use-cases Chat exposes exactly the six chat rpcs",
+      "ms": 10.168048999999883
+    },
+    {
+      "file": "packages/agents/use-cases/test/Chat.test.ts",
+      "testName": "@beep/agents-use-cases Chat flags only SendMessage and EditMessage as streaming",
+      "ms": 9.935903999999937
+    },
+    {
+      "file": "packages/agents/use-cases/test/Chat.test.ts",
+      "testName": "@beep/agents-use-cases Chat carries the client-safe ChatActionError",
+      "ms": 9.914811999999984
+    },
+    {
+      "file": "packages/agents/use-cases/test/Chat.test.ts",
+      "testName": "@beep/agents-use-cases Chat rejects every unsafe user-content class at the send RPC schema boundary",
+      "ms": 9.901450999999724
+    }
+  ]
+}

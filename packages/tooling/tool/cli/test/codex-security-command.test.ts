@@ -84,3 +84,19 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("security scan command guards
     })
   );
 });
+
+it.layer(NodeTestLayer, { timeout: "30 seconds" })("security output disappearance", (it) => {
+  it.effect(
+    "rejects output removed before receipt validation",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repo = yield* repoFixture();
+      const error = yield* assertPrivateOutputDirectory(repo, path.join(repo, "missing")).pipe(Effect.flip);
+      expect(error.message).toBe(
+        "Scan output directory was replaced or linked into the repository; the scan is not usable."
+      );
+      expect(yield* fs.exists(path.join(repo, "missing"))).toBe(false);
+    })
+  );
+});

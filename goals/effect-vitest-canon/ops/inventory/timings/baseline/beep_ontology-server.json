@@ -1,0 +1,81 @@
+{
+  "package": "@beep/ontology-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:34:51.057697+00:00",
+  "totalMs": 5277.636962890625,
+  "testCount": 26,
+  "files": [
+    {
+      "file": "packages/ontology/server/test/OntoauthorMatCompetency.test.ts",
+      "ms": 255.491943359375,
+      "tests": 1
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyPublishTools.test.ts",
+      "ms": 16.317138671875,
+      "tests": 5
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "ms": 945.636962890625,
+      "tests": 7
+    },
+    {
+      "file": "packages/ontology/server/test/SessionServer.test.ts",
+      "ms": 172.670166015625,
+      "tests": 13
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "testName": "ontology agent toolkit real-engine handlers CAS-saves real deltas and rejects a stale semantic fingerprint recoverably",
+      "ms": 917.6066820000005
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "testName": "ontology agent toolkit real-engine handlers runs open, snapshot, search, SPARQL, validation, provenance, and capability metadata",
+      "ms": 887.2771940000002
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "testName": "ontology agent toolkit real-engine handlers refuses canonical provenance path aliases",
+      "ms": 509.15307399999983
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "testName": "ontology agent toolkit real-engine handlers enforces the operation budget and reasoner drift cap before engine work",
+      "ms": 486.4921770000001
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "testName": "ontology agent toolkit real-engine handlers refuses to overwrite an unrelated existing Turtle file during provenance export",
+      "ms": 483.06983599999967
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "testName": "ontology agent toolkit real-engine handlers applies a P0-registry verified repair and revalidates through real SHACL",
+      "ms": 461.63698999999997
+    },
+    {
+      "file": "packages/ontology/server/test/OntoauthorMatCompetency.test.ts",
+      "testName": "OntoAuthor-Mat competency fixtures executes t1-t6 through Turtle, Oxigraph ASK, structural inference, and SHACL validation",
+      "ms": 255.49195400000008
+    },
+    {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "testName": "ontology agent toolkit real-engine handlers returns plain literals from a real-engine SELECT through the ontology tool path",
+      "ms": 251.5553460000001
+    },
+    {
+      "file": "packages/ontology/server/test/SessionServer.test.ts",
+      "testName": "Ontology server Turtle round-trip round-trips fixture ontologies by canonical fingerprint with preserved prefixes",
+      "ms": 171.67013099999986
+    },
+    {
+      "file": "packages/ontology/server/test/SessionServer.test.ts",
+      "testName": "Ontology file-store security boundary reads and atomically writes root-relative Turtle documents",
+      "ms": 110.21766799999932
+    }
+  ]
+}

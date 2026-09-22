@@ -1,0 +1,71 @@
+{
+  "package": "@beep/tailscale",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:18:06.760574+00:00",
+  "totalMs": 3661.568359375,
+  "testCount": 19,
+  "files": [
+    {
+      "file": "packages/drivers/tailscale/test/Tailscale.equivalence.test.ts",
+      "ms": 1.64404296875,
+      "tests": 5
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "ms": 14.568359375,
+      "tests": 14
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale detects Tailnet IPv4 addresses",
+      "ms": 6.612215000000106
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale parses MagicDNS names from tailscale status",
+      "ms": 6.400680000000193
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale parses status facts",
+      "ms": 6.380728999999974
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale preserves status decoding failures without exposing cause text",
+      "ms": 6.369312000000264
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale rejects malformed MagicDNS status fields",
+      "ms": 6.358165000000099
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale rejects malformed Tailscale IP status fields",
+      "ms": 4.154603999999836
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale builds clean HTTPS base URLs",
+      "ms": 4.122213999999985
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale with a non-terminating tailscale status process times out tailscale status through TestClock",
+      "ms": 3.5682839999999487
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale with a successful tailscale status process reads tailscale status through the process spawner service",
+      "ms": 2.803531000000021
+    },
+    {
+      "file": "packages/drivers/tailscale/test/tailscale.test.ts",
+      "testName": "tailscale with a failing tailscale process spawn preserves tailscale spawn failures as causes",
+      "ms": 2.775357999999869
+    }
+  ]
+}

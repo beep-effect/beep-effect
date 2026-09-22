@@ -1,0 +1,86 @@
+{
+  "package": "@beep/law-practice-domain",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:28:02.844886+00:00",
+  "totalMs": 27096.1767578125,
+  "testCount": 69,
+  "files": [
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "ms": 289.818115234375,
+      "tests": 15
+    },
+    {
+      "file": "packages/law-practice/domain/test/Footnote.test.ts",
+      "ms": 4.322021484375,
+      "tests": 4
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "ms": 701.1767578125,
+      "tests": 22
+    },
+    {
+      "file": "packages/law-practice/domain/test/LegalPositionTransitions.test.ts",
+      "ms": 99.0869140625,
+      "tests": 20
+    },
+    {
+      "file": "packages/law-practice/domain/test/PatentDocument.test.ts",
+      "ms": 33.830322265625,
+      "tests": 8
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "testName": "@beep/law-practice-domain round-trips leaf citation value schemas through encoded form",
+      "ms": 488.1539899999989
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "testName": "@beep/law-practice-domain constructs citation values with schema-owned definitive defaults",
+      "ms": 487.9054999999971
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "testName": "@beep/law-practice-domain decodes sparse citation values and materializes definitive defaults when encoded",
+      "ms": 487.87131699999736
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "testName": "@beep/law-practice-domain preserves explicit nondefault citation values",
+      "ms": 487.8611920000003
+    },
+    {
+      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+      "testName": "@beep/law-practice-domain formats full case citation option values without leaking Option representations",
+      "ms": 487.8533900000002
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "testName": "CourtReporterVocabulary accepts future nested artifact headers before classifying contract drift",
+      "ms": 279.1005499999992
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "testName": "CourtReporterVocabulary classifies nested header drift and rejects incoherent nested artifact identities",
+      "ms": 279.0455359999978
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "testName": "CourtReporterVocabulary classifies every ratified lifecycle and incompatibility change",
+      "ms": 279.02678800000285
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "testName": "CourtReporterVocabulary reports an unchanged artifact as compatible with no drift",
+      "ms": 279.0166019999997
+    },
+    {
+      "file": "packages/law-practice/domain/test/CourtReporterVocabulary.test.ts",
+      "testName": "CourtReporterVocabulary rejects retained identities whose semantic fields or range boundaries drift",
+      "ms": 278.968066999998
+    }
+  ]
+}

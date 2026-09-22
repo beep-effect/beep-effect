@@ -1,0 +1,66 @@
+{
+  "package": "@beep/phoenix",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:23:35.821887+00:00",
+  "totalMs": 5872.47607421875,
+  "testCount": 9,
+  "files": [
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts",
+      "ms": 1.453369140625,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "ms": 40.47607421875,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix keeps Phoenix config encoded shape stable while normalizing base URLs",
+      "ms": 38.772877999999764
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix delegates dataset, prompt, and doctor operations through the Effect service",
+      "ms": 38.61429500000031
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix writes annotations through the injected SDK adapter",
+      "ms": 38.598581000000195
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix maps SDK promise failures into PhoenixError",
+      "ms": 38.58987799999977
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix round-trips schema-derived Phoenix values through their encoded shapes",
+      "ms": 38.58585200000016
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix reads back dataset, prompt, and experiment summaries",
+      "ms": 1.4761220000000321
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts",
+      "testName": "Phoenix declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+      "ms": 1.4533470000005764
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+      "testName": "@beep/phoenix rejects empty prompt selectors before calling the SDK",
+      "ms": 1.4342880000003788
+    },
+    {
+      "file": "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts",
+      "testName": "Phoenix declared-field equivalence treats defect-only differences as equivalent",
+      "ms": 1.262866000000031
+    }
+  ]
+}

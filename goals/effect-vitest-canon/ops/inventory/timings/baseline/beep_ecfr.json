@@ -1,0 +1,71 @@
+{
+  "package": "@beep/ecfr",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:58.808236+00:00",
+  "totalMs": 3872.147705078125,
+  "testCount": 10,
+  "files": [
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
+      "ms": 1.406005859375,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "ms": 100.147705078125,
+      "tests": 8
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "testName": "@beep/ecfr round-trips representative generated models through encoded form",
+      "ms": 99.14763499999981
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "testName": "@beep/ecfr covers the admin operations with encoded paths and queries",
+      "ms": 50.312179000000015
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "testName": "@beep/ecfr decodes a keyless listTitles response offline via mapRequest base-URL prefixing",
+      "ms": 48.89498700000013
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "testName": "@beep/ecfr keeps hand-authored schema encoded shapes stable",
+      "ms": 48.22570199999973
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "testName": "@beep/ecfr round-trips hand-authored schema-derived values through encoded form",
+      "ms": 48.09159699999964
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "testName": "@beep/ecfr covers the search operations with encoded queries",
+      "ms": 12.102944000000207
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "testName": "@beep/ecfr covers the versioner operations with encoded paths and queries",
+      "ms": 11.962840000000142
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+      "testName": "@beep/ecfr streams successive search-result pages offline",
+      "ms": 11.120159000000058
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
+      "testName": "eCFR declared-field equivalence treats field-equal EcfrError instances as equivalent and field-different ones as distinct",
+      "ms": 1.40596400000004
+    },
+    {
+      "file": "packages/drivers/ecfr/test/Ecfr.equivalence.test.ts",
+      "testName": "eCFR declared-field equivalence treats defect-only differences as equivalent",
+      "ms": 1.2188470000000962
+    }
+  ]
+}

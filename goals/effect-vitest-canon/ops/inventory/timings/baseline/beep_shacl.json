@@ -1,0 +1,46 @@
+{
+  "package": "@beep/shacl",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:30:59.235987+00:00",
+  "totalMs": 5836.94873046875,
+  "testCount": 4,
+  "files": [
+    {
+      "file": "packages/drivers/shacl/test/Shacl.equivalence.test.ts",
+      "ms": 0.92919921875,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/shacl/test/ShaclEngineValidation.test.ts",
+      "ms": 172.94873046875,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/shacl/test/ShaclLazyImport.test.ts",
+      "ms": 2.816650390625,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/shacl/test/ShaclEngineValidation.test.ts",
+      "testName": "@beep/shacl real shacl-engine validation reports focusNode and path for hasValue plus minCount violations",
+      "ms": 172.9487769999996
+    },
+    {
+      "file": "packages/drivers/shacl/test/ShaclEngineValidation.test.ts",
+      "testName": "@beep/shacl real shacl-engine validation returns zero violations for a conforming data graph",
+      "ms": 172.76092900000003
+    },
+    {
+      "file": "packages/drivers/shacl/test/ShaclLazyImport.test.ts",
+      "testName": "@beep/shacl lazy service surface imports the live layer without constructing a SHACL validator",
+      "ms": 2.816544000000249
+    },
+    {
+      "file": "packages/drivers/shacl/test/Shacl.equivalence.test.ts",
+      "testName": "SHACL declared-field equivalence treats field-equal errors as equivalent and field-different errors as distinct",
+      "ms": 0.9293129999996381
+    }
+  ]
+}

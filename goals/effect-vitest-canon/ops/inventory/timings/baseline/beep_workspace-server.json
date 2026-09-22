@@ -1,0 +1,81 @@
+{
+  "package": "@beep/workspace-server",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:50:12.594846+00:00",
+  "totalMs": 7715.6474609375,
+  "testCount": 27,
+  "files": [
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "ms": 98.8115234375,
+      "tests": 12
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
+      "ms": 82.74560546875,
+      "tests": 9
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceVaultStore.test.ts",
+      "ms": 12.670166015625,
+      "tests": 3
+    },
+    {
+      "file": "packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts",
+      "ms": 1040.6474609375,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts",
+      "testName": "Workspace ThreadStore Drizzle repository PgLite integration persists a thread, ordered turns, and projects a timeline through Drizzle",
+      "ms": 963.8221920000005
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "testName": "ThreadStore in-memory atomically persists concurrent threads and turns while public-id generation yields",
+      "ms": 97.81163900000047
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "testName": "ThreadStore in-memory stamps rows from the clock, and a rename advances updatedAt without restamping createdAt",
+      "ms": 72.25629500000014
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "testName": "ThreadStore in-memory round-trips crispened construction schemas from derived arbitraries",
+      "ms": 69.46357900000021
+    },
+    {
+      "file": "packages/workspace/server/test/ThreadStore.test.ts",
+      "testName": "ThreadStore in-memory fails with ThreadStoreNotFound when setting the title for an unknown thread",
+      "ms": 69.45363399999951
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
+      "testName": "@beep/workspace-server WorkspaceSourceTextResolver extracts complete DOCX text through the file-processing driver and verifies its version",
+      "ms": 57.85001600000032
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
+      "testName": "@beep/workspace-server WorkspaceSourceTextResolver rejects absolute, traversal, and symlink locators outside the configured vault",
+      "ms": 55.264351999999235
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
+      "testName": "@beep/workspace-server WorkspaceSourceTextResolver reuses canonical document text while rechecking pinned source bytes",
+      "ms": 49.74567400000069
+    },
+    {
+      "file": "packages/workspace/server/test/WorkspaceSourceTextResolver.test.ts",
+      "testName": "@beep/workspace-server WorkspaceSourceTextResolver resolves complete UTF-8 text after verifying source, extractor, and text digests",
+      "ms": 47.957226999999875
+    },
+    {
+      "file": "packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts",
+      "testName": "Workspace ThreadStore Drizzle repository PgLite integration persists multiple threads and appends with distinct canonical public ids",
+      "ms": 47.67024299999957
+    }
+  ]
+}
