@@ -1,7 +1,7 @@
 {
   "name": "@beep/mcp-kit",
   "version": "0.0.0",
-  "description": "Reusable MCP host-construction kit: credential-keyed toolkit composition, api_key_required envelope, tier-gate dispatch, progressive field-tier projection, span hygiene.",
+  "description": "Reusable MCP host-construction kit: credential-keyed toolkit composition, api_key_required envelope, tier-gate dispatch, progressive field-tier projection, span hygiene, and the 2026-07-28 stateless client.",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -45,6 +45,9 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./client.node": "./src/client.node.ts",
+    "./test/*": "./src/test/*.test-kit.ts",
     "./*": "./src/*.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -62,6 +65,9 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.ts",
+      "./client": "./dist/client.js",
+      "./client.node": "./dist/client.node.js",
+      "./test/*": "./dist/test/*.test-kit.js",
       "./*": "./dist/*.js",
       "./internal/*": null,
       "./package.json": "./package.json"

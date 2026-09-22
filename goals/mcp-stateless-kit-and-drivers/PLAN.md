@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending` (P1 not started; graduated 2026-09-22).
+Status: `in-progress` (P1 started 2026-09-22 with PR 1; graduated 2026-09-22).
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Done in the exploration (ten lanes, Gate B, Gate C; rc.117 on `main`). | `explorations/effect-mcp-2026-07-28/RESEARCH.md` and `research/verification/README.md`. |
-| P1 Implement | pending | Four PRs below. | Acceptance criteria met per PR. |
+| P1 Implement | in-progress | Four PRs below; PR 1 published 2026-09-22 from lane `mcp-stateless-kit` (branch `feat/mcp-stateless-kit-pr1`). | Acceptance criteria met per PR. |
 | P2 Verify | pending | package-verify per package, conformance per host, capture record. | Green or blockers documented. |
 | P3 Yeet: PR to mergeable | pending | `bun run beep yeet publish --start-pr-early --monitor --pr` per PR; goal slug in each commit. | `mergeStateStatus` CLEAN; zero unresolved threads. |
 | P4 Close | pending | Reflection and status flip in the final PR. | Reflection exists; `bun run beep goals set-status mcp-stateless-kit-and-drivers completed-retained`. |
@@ -43,6 +43,35 @@ Status: `pending` (P1 not started; graduated 2026-09-22).
 - [ ] `bun run beep goals set-status mcp-stateless-kit-and-drivers completed-retained` in the final PR.
 - [ ] `goals/ontology-sidecar-stateless-identity` unblocked after PR 1 merges (note it in its README).
 - [ ] Exploration README Trail updated; Atlas regenerated.
+
+## PR 1 Decisions (2026-09-22, measured against the installed rc.117)
+
+- `withTopLevelObjectInputSchema` is **kept**, re-shaped: rc.117 inlines a top-level `$ref`
+  (Effect#8326) but an empty parameter class still renders as `{ not: { type: "null" } }` with
+  no `type`, which `McpSchema.ToolJson` rejects and upstream `registerToolkit` dies on. The kit
+  patches the root after the inlining; `ref_tool` now registers with an object root and no
+  `$ref`.
+- Invalid arguments: at the kit adapter they are JSON-RPC `InvalidParams` (D-projection,
+  proven through `server.callTool`); on the `2026-07-28` wire rc.117's adapter projects a tool
+  validation failure as `isError: true` with a scrubbed message and reserves `-32602` for
+  malformed `arguments` (upstream ToolsTest "distinguishes malformed requests from tool
+  validation errors by protocol revision"). The conformance port asserts the upstream wire
+  shape.
+- Declared failures drop `structuredContent` (it must conform to the advertised
+  `outputSchema`); the encoded failure travels in `content[].text`. `api_key_required` keeps
+  `structuredContent` because the envelope is the tool's `failureMode: "return"` value. The
+  one host test that asserted the old shape (`gov-legal-mcp` "returns only the package-local
+  sanitized failure envelope") now decodes the envelope from `content[].text`; host sources
+  are untouched in PR 1.
+- `Mcp-Name` is sent as the literal routing name; rc.117's Base64 wrapper for non-token names
+  is internal. Every in-repo tool name is a token; resource URIs are header-safe.
+- The conformance runner is a source-only test kit (`src/test/Conformance.test-kit.ts`,
+  `@beep/mcp-kit/test/Conformance`) following the `@beep/repo-cli/test/*` precedent; the
+  alias is registered in `TsconfigSync.schemas.ts` and mirrored into
+  `vitest.aliases.generated.json`.
+- Client protocol layers must be built into the caller's scope (`Layer.build` +
+  `Effect.provideContext`), never `Effect.provide`d around `connect` alone: the NDJSON router
+  fiber lives in the layer scope and a closed scope silently drops every later response.
 
 ## Execution Notes
 

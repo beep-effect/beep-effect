@@ -9,15 +9,18 @@
  * @since 0.0.0
  */
 import { CurrentMcpCaller, sanitizedToolkit } from "@beep/mcp-kit";
+import { connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
 import { assert, describe, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Tracer from "effect/Tracer";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import { McpServerClient } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { HttpServerRequest } from "effect/unstable/http";
+import { fixtureHost } from "./fixtures/FixtureHost.ts";
 import { makeStubMcpClient, StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const FixtureTool = Tool.make("fixture_tool", {
@@ -108,15 +111,18 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
   return { captured, tracer };
 };
 
-// The tool's success payload is JSON-encoded into the first text content part.
-const callerReport = (result: { readonly content: ReadonlyArray<unknown> }): string => {
+// The tool's payload (success or encoded declared failure) is JSON-encoded
+// into the first text content part.
+const callerReport = <A = string>(result: { readonly content: ReadonlyArray<unknown> }): A => {
   const [first] = result.content;
-  return JSON.parse((first as { readonly text: string }).text) as string;
+  return JSON.parse((first as { readonly text: string }).text) as A;
 };
 
-// `sanitizedToolkit` mints a caller identity only when `McpServerClient` is in
-// scope — the HTTP transport's own middleware provides it per request. Overriding
-// the suite-level stub is what makes the session assertions below non-vacuous.
+// Direct `server.callTool` is rc.117's stateful-only seam: it mints a caller
+// identity from `McpServerClient`, which a legacy (2025) transport provides
+// per initialized session. Overriding the suite-level stub is what makes the
+// session assertions below non-vacuous; the 2026 path is proven through the
+// HTTP transport at the end of this file.
 const withMcpClient = (clientId: number) => Effect.provideService(McpServerClient, makeStubMcpClient(clientId));
 
 const withSessionHeader = (sessionId: string) =>
@@ -160,13 +166,14 @@ describe("sanitizedToolkit", () => {
     );
 
     it.effect(
-      "registers described tools with their wire description and _meta",
+      "registers described tools with their wire description, _meta and outputSchema",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const entry = server.tools.find((candidate) => candidate.tool.name === "annotated_tool");
 
         assert.strictEqual(entry?.tool.description, "Annotated fixture tool");
         assert.deepStrictEqual(entry?.tool._meta, { fixture: true });
+        assert.deepStrictEqual(entry?.tool.outputSchema, { type: "string" });
 
         const result = yield* server.callTool({ name: "annotated_tool", arguments: {} });
         assert.isFalse(result.isError);
@@ -191,32 +198,32 @@ describe("sanitizedToolkit", () => {
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ name: "expected_failure_tool", arguments: {} });
-        const failure = yield* decodeUnknownExpectedFixtureFailure(result.structuredContent);
+        // rc.117 projects declared failures as tool errors whose encoded payload
+        // travels in `content[].text`; `structuredContent` describes successes
+        // only (it must conform to the advertised `outputSchema`).
+        const failure = yield* decodeUnknownExpectedFixtureFailure(callerReport(result));
 
         assert.isTrue(result.isError);
+        assert.isUndefined(result.structuredContent);
         assert.strictEqual(failure._tag, "ExpectedFixtureFailure");
         assert.strictEqual(failure.message, "expected refusal");
       })
     );
 
     it.effect(
-      "does not expose schema stacks or local paths in boundary error text",
+      "invalid arguments surface as InvalidParams",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
-        const result = yield* server.callTool({ name: "fixture_tool", arguments: { secret: 1 } });
-        const [first] = result.content;
+        const error = yield* Effect.flip(server.callTool({ name: "fixture_tool", arguments: { secret: 1 } }));
 
-        assert.isTrue(result.isError);
-        assert.strictEqual(first?.type, "text");
-        assert.strictEqual(
-          (first as { readonly text: string }).text,
-          "Tool call failed before producing a structured result."
-        );
+        // Parameter validation is protocol-native under strict 2026 tools:
+        // upstream classifies it as JSON-RPC `InvalidParams`, no canned result.
+        assert.isTrue(P.isTagged(error, "InvalidParams"));
       })
     );
 
     it.effect(
-      "reports no session id when the dispatch carries no HTTP request",
+      "dispatches tools/call on a 2025 host through McpServerClient and reports no session id without an HTTP request",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ name: "caller_tool", arguments: {} }).pipe(withMcpClient(7));
@@ -268,15 +275,22 @@ describe("sanitizedToolkit", () => {
 
   layer(refFullLayer)("with a named schema parameter toolkit registered via sanitizedToolkit", (it) => {
     it.effect(
-      "adds a top-level object type to ref-backed input schemas for strict MCP clients",
+      "inlines a ref-backed input schema to an object root for strict MCP clients",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const registered = server.tools.find(({ tool }) => tool.name === "ref_tool");
 
+        // rc.117 inlines the top-level `$ref` (Effect#8326); the root is the
+        // object itself and the definition stays under `$defs`.
         assert.isDefined(registered);
-        const inputSchema = registered?.tool.inputSchema as { readonly $ref?: unknown; readonly type?: unknown };
+        const inputSchema = registered?.tool.inputSchema as {
+          readonly $ref?: unknown;
+          readonly type?: unknown;
+          readonly properties?: Record<string, unknown>;
+        };
         assert.strictEqual(inputSchema.type, "object");
-        assert.strictEqual(inputSchema.$ref, "#/$defs/RefParametersEncoded");
+        assert.isUndefined(inputSchema.$ref);
+        assert.isDefined(inputSchema.properties?.secret);
       })
     );
 
@@ -293,6 +307,23 @@ describe("sanitizedToolkit", () => {
         const inputSchema = registered?.tool.inputSchema as { readonly type?: unknown };
         assert.strictEqual(inputSchema.type, "object");
       })
+    );
+  });
+
+  layer(layerConformanceHttp(fixtureHost))("on a 2026-only host over streamable HTTP", (it) => {
+    it.effect("dispatches tools/call on a 2026-only host with McpRequestContext and no McpServerClient", () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          // The stateless transport provides `McpRequestContext` only; the
+          // dual-read still yields a caller (the per-POST client id) and never a
+          // session, whatever headers the POST carried.
+          const { rpc } = yield* connectHttp();
+          const result = yield* rpc["tools/call"]({ name: "caller_report", arguments: {} });
+
+          assert.notStrictEqual(result.isError, true);
+          assert.match(callerReport(result), /^client=\d+;session=none$/);
+        })
+      )
     );
   });
 });

@@ -15196,26 +15196,26 @@
     },
     "@beep/mcp-kit": {
       "path": "packages/foundation/capability/mcp-kit",
-      "lines": 92,
-      "statements": 90.42,
-      "branches": 93.1,
-      "functions": 79.51,
+      "lines": 95.52,
+      "statements": 94.69,
+      "branches": 77.04,
+      "functions": 91.7,
       "uncovered": {
-        "lines": 14,
-        "statements": 18,
-        "branches": 4,
-        "functions": 17
+        "lines": 24,
+        "statements": 30,
+        "branches": 42,
+        "functions": 18
       },
       "files": {
         "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 100,
+          "branches": 75,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 0,
-            "branches": 0,
+            "branches": 1,
             "functions": 0
           }
         },
@@ -15244,15 +15244,15 @@
           }
         },
         "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts": {
-          "lines": 86.36,
-          "statements": 86.76,
-          "branches": 89.65,
-          "functions": 76.31,
+          "lines": 90.59,
+          "statements": 89.34,
+          "branches": 67.5,
+          "functions": 84.31,
           "uncovered": {
-            "lines": 9,
-            "statements": 9,
-            "branches": 3,
-            "functions": 9
+            "lines": 11,
+            "statements": 13,
+            "branches": 26,
+            "functions": 8
           }
         },
         "packages/foundation/capability/mcp-kit/src/SourceAuth.ts": {
@@ -15303,6 +15303,42 @@
             "functions": 0
           }
         },
+        "packages/foundation/capability/mcp-kit/src/Version.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/mcp-kit/src/client.node.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/mcp-kit/src/client.ts": {
+          "lines": 93.39,
+          "statements": 93.69,
+          "branches": 80,
+          "functions": 97.36,
+          "uncovered": {
+            "lines": 7,
+            "statements": 7,
+            "branches": 11,
+            "functions": 1
+          }
+        },
         "packages/foundation/capability/mcp-kit/src/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -15313,6 +15349,18 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts": {
+          "lines": 99.47,
+          "statements": 99.49,
+          "branches": 80,
+          "functions": 98.73,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 3,
+            "functions": 1
           }
         }
       }

@@ -75,7 +75,7 @@ const decodeSearchSuccess = S.decodeEffect(Search.Success);
 const decodeSearchResultsResponse = S.decodeEffect(SearchResultsResponse);
 const decodeStructureNode = S.decodeEffect(StructureNode);
 const decodeTitlesResponse = S.decodeEffect(TitlesResponse);
-const decodeUnknownGovinfoSearchFailure = S.decodeUnknownEffect(GovinfoSearchFailure);
+const decodeGovinfoSearchFailureFromJson = S.decodeEffect(S.fromJsonString(GovinfoSearchFailure));
 const decodeUnknownMcpSchemaCallToolResult = S.decodeUnknownEffect(McpSchema.CallToolResult);
 const decodeUnknownMcpSchemaTool = S.decodeUnknownEffect(McpSchema.Tool);
 const decodeUnknownMcpSchemaToolAnnotations = S.decodeUnknownEffect(McpSchema.ToolAnnotations);
@@ -488,9 +488,14 @@ describe("gov-legal MCP frozen contract", () => {
         const result = yield* server.callTool({ name: "govinfo_search", arguments: govinfoArguments });
 
         assert.isTrue(result.isError);
-        const failure = yield* decodeUnknownGovinfoSearchFailure(result.structuredContent);
+        // rc.117 projects declared failures as tool errors whose encoded payload
+        // travels in `content[].text`; `structuredContent` describes successes
+        // only, since it must conform to the advertised `outputSchema`.
+        assert.isUndefined(result.structuredContent);
+        const [first] = result.content;
+        const failure = yield* decodeGovinfoSearchFailureFromJson(first?.type === "text" ? first.text : "");
+        assert.strictEqual(failure._tag, "GovinfoSearchFailure");
         assert.strictEqual(failure.reason, "transport");
-        assert.deepEqual(result.structuredContent, { _tag: "GovinfoSearchFailure", reason: "transport" });
         assert.isFalse(containsSensitiveValue(result));
       })
     );

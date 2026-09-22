@@ -85,7 +85,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, n
 describe("api_key_required envelope", () => {
   layer(buildLayer({}))("when the credential is absent", (it) => {
     it.effect(
-      "returns isError:false with the envelope mirrored into content[].text",
+      "api_key_required stays a non-error result with the envelope mirrored into content[].text",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ arguments: {}, name: "soft_source_tool" });

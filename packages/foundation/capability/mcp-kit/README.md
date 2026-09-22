@@ -2,28 +2,37 @@
 
 Reusable MCP host-construction kit: credential-keyed toolkit composition, the
 `api_key_required` envelope, tier-gate dispatch, progressive field-tier
-projection, and span hygiene — built natively on `effect/unstable/ai`
-(`Tool`, `Toolkit`, `McpServer`, `McpSchema`), pinned to `effect@4.0.0-beta.92`
-and MCP protocol `2025-06-18`.
+projection, span hygiene, and the in-repo MCP `2026-07-28` client — built
+natively on `effect/unstable/ai` (`Tool`, `Toolkit`, `McpServer`, `McpSchema`)
+at `effect@4.0.0-rc.117`. The kit pins one protocol revision, the stateless
+`2026-07-28` adapter (`statelessMcpProtocols`); hosts move to it one at a time
+(`goals/mcp-stateless-kit-and-drivers`).
 
-## Consumer plan (`foundation/capability` ≥2-consumer gate)
+## Consumers (`foundation/capability` ≥2-consumer gate)
 
-Per `standards/architecture/07-non-slice-families.md:56`, `foundation/capability`
-requires ≥2 named consumers. The `mcp-host-retrofit` goal landed two real,
-grep-verifiable importers; `uspto-mcp` is in progress as the third.
+Per `standards/architecture/07-non-slice-families.md`, `foundation/capability`
+requires ≥2 named consumers. Every importer today, with what it uses and the
+protocol its host serves (`rg -n '"@beep/mcp-kit' --glob package.json`):
 
-| Consumer | Status | Uses it for |
+| Consumer | Uses it for | Protocol state |
 | --- | --- | --- |
-| `packages/drivers/nlp-mcp` | **Landed** (`mcp-host-retrofit`) | `Server.ts` mounts `NlpToolkit`/`StreamingToolkit` via `sanitizedToolkit` (replacing `McpServer.toolkit`); `StreamingTools.ts`'s 17 tools carry `annotateFourHints(..., readOnlyToolHints)`. |
-| `packages/drivers/m365-mcp` | **Landed** (`mcp-host-retrofit`) | `Server.ts` mounts `M365Toolkit` via `sanitizedToolkit`; `M365Tools.ts`'s 11 tools use `annotateFourHints(..., readOnlyToolHints)` in place of inline `.annotate(...)` chains. |
-| `packages/drivers/uspto-mcp` | In progress (`uspto-mcp` goal) | The thin USPTO MCP proving host — exercises the `SourceAuth` gate registry, credential-keyed composition, and the `api_key_required` envelope against USPTO's `soft`-gated credential. |
-| `packages/epistemic/server` | **Landed** (`agent-execution-authority` PR 5) | `GovernedTierGateLive` implements `TierGateShape` — `evaluate` freezes a per-session grant set on first dispatch and writes a write-ahead ledger decision before any effect runs (no record, no action); `recordOutcome` persists the bounded settlement. This is foundation-mediated port inversion: `ontology/server` keeps consuming `TierGate`, `epistemic/server` implements it, and neither names the other; the binding happens at `apps/professional-desktop/server/OntologyMcpTransport.ts`. |
+| `packages/drivers/m365-mcp` | `sanitizedToolkit` (`Server.ts`), `annotateFourHints` (`M365Tools.ts`); stdio conversation test | `v2025_06_18` (flips in PR 2 of the goal) |
+| `packages/drivers/uspto-mcp` | `SourceAuth` registry, `composeGatedLayers`, `api_key_required` envelope, `FieldTier` document tiers, `sanitizedToolkit` | `v2025_06_18` (flips in PR 2) |
+| `packages/drivers/gov-legal-mcp` | `SourceAuth`, `composeGatedLayers`, `annotateFourHints`, `sanitizedToolkit` | `v2025_06_18` (flips in PR 3) |
+| `packages/law-practice/server` (+ `apps/practice-kg-mcp`) | `composeGatedLayers`, `SourceAuthRegistration`, `sanitizedToolkit`, `CurrentMcpCaller` in tool handlers | `v2025_06_18` (flips in PR 3) |
+| `packages/law-practice/use-cases` | `annotateFourHints` on the practice-kg toolkit | n/a (toolkit definitions) |
+| `packages/drivers/nlp-mcp` | `sanitizedToolkit`, `annotateFourHints` | `v2025_06_18` (held behind the D-cli-contract capture, PR 4) |
+| `packages/ontology/use-cases` | `annotateFourHints` on the ontology toolkit | n/a (toolkit definitions) |
+| `packages/ontology/server` | `TierGate`, `dispatchWithTierGate`, `CurrentMcpCaller` in tool handlers | served by the desktop sidecar |
+| `packages/epistemic/server` | implements `TierGateShape` (`GovernedTierGate`), reads `CurrentMcpCaller` and, after the sibling goal, the dispatch anchor | served by the desktop sidecar |
+| `apps/professional-desktop` | `sanitizedToolkit` in `server/OntologyMcpTransport.ts`; integration harness | `v2025_06_18` (`goals/ontology-sidecar-stateless-identity`) |
 
-**Removal condition status**: two of the three named consumers are landed
-with grep-verifiable `@beep/mcp-kit` imports (`rg -n "@beep/mcp-kit"
-packages/drivers/{nlp-mcp,m365-mcp}/src`), matching the `@beep/api-transport`
-promotion-record precedent; the `SPEC.md` exception ledger entry is discharged
-once `uspto-mcp` also lands.
+Foundation-mediated port inversion: `ontology/server` consumes `TierGate`,
+`epistemic/server` implements it, and neither names the other; the binding
+happens at `apps/professional-desktop/server/OntologyMcpTransport.ts`. The
+dispatch anchor (`CurrentMcpDispatchAnchor`) follows the same pattern: app
+composition provides it, `epistemic/server` and `ontology/server` read it, the
+kit never interprets it.
 
 ## Deliverables
 
@@ -34,7 +43,11 @@ once `uspto-mcp` also lands.
    sources vanish at composition when their key is absent, `none`/`soft`
    sources always mount.
 3. **`ApiKeyRequired`** — the typed `failureMode: "return"` envelope for
-   `soft`/`none`-gated tools whose credential is absent at call time.
+   `soft`/`none`-gated tools whose credential is absent at call time, and
+   `translateApiKeyRequired`, the named error translator that keeps it a
+   non-error `CallToolResult` at the kit protocol adapter. Every other
+   failure follows rc.117 upstream: declared failures are tool errors,
+   invalid arguments are JSON-RPC `InvalidParams`.
 4. **`TierGate`** — the fail-closed, refusal-as-value `tools/call` dispatch
    wrapper (the real security boundary), its sanitized audit record schema,
    the `recordOutcome` settlement hook (a bounded `TierGateSettlement`
@@ -45,11 +58,33 @@ once `uspto-mcp` also lands.
    tiers, null-stripping, columnar reshaping, and fetchable handles for
    oversized payloads.
 6. **`SanitizedSpan`** — suppresses raw tool `parameters` from span
-   attributes; `sanitizedToolkit` is a drop-in replacement for
-   `McpServer.toolkit(...)` with this wrapping already applied (upstream
-   offers no dispatch-wrapping seam otherwise).
-7. **`ToolAnnotations`** — the four-hint (`readOnly`/`destructive`/
+   attributes; `sanitizedToolkit` mirrors rc.117 `McpServer.registerToolkit`
+   (strict decode, `inputSchema`/`outputSchema`, upstream failure
+   classification) with dispatch wrapped in `withSanitizedToolSpan`, the
+   caller dual-read below, and the `api_key_required` translation.
+7. **`McpCaller`** — `McpCallerIdentity` (transport facts: the per-exchange
+   `clientId`, an optional `mcp-session-id` echoed only by stateful
+   transports) on `CurrentMcpCaller`, dual-read from `McpRequestContext`
+   (every rc.117 dispatch) or `McpServerClient` (initialized legacy
+   sessions); on a stateless dispatch the identity is `clientId` plus
+   `sessionId: None`. `CurrentMcpDispatchAnchor` is the product-neutral,
+   absent-by-default dispatch anchor app composition may provide.
+8. **`ToolAnnotations`** — the four-hint (`readOnly`/`destructive`/
    `idempotent`/`openWorld`) annotation helper.
+9. **`Version`** — `VERSION`, `MCP_PROTOCOL_VERSION` (`2026-07-28`) and
+   `statelessMcpProtocols`, the one protocol list every kit host passes to
+   `McpServer.layerStdio` / `McpServer.layerHttp`.
+10. **`@beep/mcp-kit/client`** — the kit-owned `2026-07-28` client:
+    `McpClientRpcs` (`server/discover`, `tools/list`, `tools/call`,
+    `prompts/list`, `prompts/get`, `resources/read`), the `_meta` keys and
+    `MCP-Protocol-Version` / `Mcp-Method` / `Mcp-Name` injector, the
+    `text/event-stream` unwrap, `layerProtocolHttp`, `layerProtocolNdjson`
+    and `connect` (sends `server/discover` first). `@beep/mcp-kit/client.node`
+    binds the NDJSON protocol to a spawned host process.
+11. **`@beep/mcp-kit/test/Conformance`** (test-only) — `conformance2026(host)`,
+    the port of Effect's `2026-07-28` conformance arms a host is responsible
+    for, run over HTTP and stdio through the kit client; plus the raw
+    `ConformanceHttp` / `withStdioHost` harnesses.
 
 ## Installation
 
@@ -65,7 +100,7 @@ import * as O from "effect/Option"
 import * as S from "effect/Schema"
 import { Tool, Toolkit } from "effect/unstable/ai"
 import * as McpServer from "effect/unstable/ai/McpServer"
-import { composeGatedLayers, gatedLayer, SourceAuthRegistration } from "@beep/mcp-kit"
+import { composeGatedLayers, gatedLayer, sanitizedToolkit, SourceAuthRegistration, statelessMcpProtocols } from "@beep/mcp-kit"
 
 const registration = SourceAuthRegistration.make({
   name: "Example Source",
@@ -77,12 +112,30 @@ const registration = SourceAuthRegistration.make({
 const ExampleTool = Tool.make("example_tool", { success: S.String })
 const ExampleToolkit = Toolkit.make(ExampleTool)
 const exampleHandlers = ExampleToolkit.toLayer({ example_tool: () => Effect.succeed("ok") })
-const exampleSourceLayer = McpServer.toolkit(ExampleToolkit).pipe(Layer.provide(exampleHandlers))
+const exampleSourceLayer = sanitizedToolkit(ExampleToolkit).pipe(Layer.provide(exampleHandlers))
 
 // Vanishes entirely when EXAMPLE_API_KEY is unset; mounts when present.
-const hostLayer = composeGatedLayers(gatedLayer(registration, exampleSourceLayer))
+const registrations = composeGatedLayers(gatedLayer(registration, exampleSourceLayer))
+
+// One protocol list for every kit host: the stateless 2026-07-28 adapter.
+const hostLayer = registrations.pipe(
+  Layer.provide(McpServer.layerStdio({ name: "example", version: "0.0.0", protocols: statelessMcpProtocols }))
+)
 
 void hostLayer
+```
+
+Proving a host from a test:
+
+```ts
+import { conformance2026 } from "@beep/mcp-kit/test/Conformance"
+
+conformance2026({
+  name: "example",
+  version: "0.0.0",
+  registrations,
+  tool: { name: "example_tool", arguments: {}, invalidArguments: { extra: 1 } }
+})
 ```
 
 ## Development
