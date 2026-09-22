@@ -54,7 +54,8 @@ import {
   turboEnvironmentHealthWarnings,
   turboEnvOverrides,
 } from "@beep/repo-cli/test/SharedInternals";
-import { describe, expect, it } from "@effect/vitest";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { ConfigProvider, Data, Effect, FileSystem, Layer, Path, Redacted, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -490,7 +491,7 @@ describe("readOptionalRedactedConfigString", () => {
   );
 });
 
-describe("canUseTurboCacheSecretSession", () => {
+layer(BunCrypto.layer)("canUseTurboCacheSecretSession", (it) => {
   const stubHandle = (exitCode: number) =>
     ChildProcessSpawner.makeHandle({
       all: Stream.empty,

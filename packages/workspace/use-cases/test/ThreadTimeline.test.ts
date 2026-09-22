@@ -6,6 +6,7 @@ import { Thread as ServerThread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -14,8 +15,8 @@ const decodeThreadTimelineTurn = S.decodeEffect(Thread.TimelineTurn);
 const decodeWorkspaceIdentityThreadId = S.decodeEffect(WorkspaceIdentity.ThreadId);
 const decodeWorkspaceIdentityTurnId = S.decodeEffect(WorkspaceIdentity.TurnId);
 const decodeWorkspaceIdentityWorkspaceId = S.decodeEffect(WorkspaceIdentity.WorkspaceId);
-const decodeThreadTimelineMessageItemSync = S.decodeSync(Thread.TimelineMessageItem);
-const decodeThreadTimelineToolCallItemSync = S.decodeSync(Thread.TimelineToolCallItem);
+const decodeThreadTimelineMessageItem = S.decodeUnknownEffect(Thread.TimelineMessageItem);
+const decodeThreadTimelineToolCallItem = S.decodeUnknownEffect(Thread.TimelineToolCallItem);
 const decodeUnknownThreadThreadTimeline = S.decodeUnknownEffect(Thread.ThreadTimeline);
 const encodeDocument = S.encodeEffect(Document);
 const encodeServerThreadAppendTurnInput = S.encodeEffect(ServerThread.AppendTurnInput);
@@ -125,16 +126,19 @@ describe("ThreadTimeline", () => {
     })
   );
 
-  it("union-derived guards discriminate timeline items by kind", () => {
-    const content = Document.encodeSync(Document.make({ children: [] }));
-    const message = decodeThreadTimelineMessageItemSync({ kind: "message", role: "user", content });
-    const toolCall = decodeThreadTimelineToolCallItemSync({ kind: "tool_call", name: "search" });
+  it.effect(
+    "union-derived guards discriminate timeline items by kind",
+    Effect.fnUntraced(function* () {
+      const content = yield* encodeDocument(Document.make({ children: [] }));
+      const message = yield* decodeThreadTimelineMessageItem({ kind: "message", role: "user", content });
+      const toolCall = yield* decodeThreadTimelineToolCallItem({ kind: "tool_call", name: "search" });
 
-    expect(Thread.TimelineItem.guards.message(message)).toBe(true);
-    expect(Thread.TimelineItem.guards.message(toolCall)).toBe(false);
-    expect(Thread.TimelineItem.guards.tool_call(toolCall)).toBe(true);
-    expect(Thread.TimelineItem.guards.tool_call(message)).toBe(false);
-  });
+      expect(Thread.TimelineItem.guards.message(message)).toBe(true);
+      expect(Thread.TimelineItem.guards.message(toolCall)).toBe(false);
+      expect(Thread.TimelineItem.guards.tool_call(toolCall)).toBe(true);
+      expect(Thread.TimelineItem.guards.tool_call(message)).toBe(false);
+    })
+  );
 
   it("schema-derived arbitraries round-trip through exported schemas", () => {
     const schemas: ReadonlyArray<S.Codec<unknown>> = [
@@ -153,14 +157,24 @@ describe("ThreadTimeline", () => {
     ];
 
     for (const schema of schemas) {
-      const decode = S.decodeUnknownSync(schema);
-      const encode = S.encodeSync(schema);
+      const decode = S.decodeUnknownResult(schema);
+      const encode = S.encodeResult(schema);
       const equivalent = S.toEquivalence(schema);
       expect(
         Effect.runSync(
           Arbitrary.checkEffect(
             Arbitrary.schema(schema),
-            (value) => equivalent(decode(encode(value)), value),
+            (value) => {
+              const encoded = encode(value);
+              if (Result.isFailure(encoded)) {
+                return false;
+              }
+              const decoded = decode(encoded.success);
+              if (Result.isFailure(decoded)) {
+                return false;
+              }
+              return equivalent(decoded.success, value);
+            },
             fcRuns(5)
           )
         )._tag

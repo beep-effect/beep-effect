@@ -21,15 +21,15 @@ const createRuntimeLiteralKit = (
 ): unknown => Function.prototype.apply.call(LiteralKit, undefined, [{ literals, enumMapping }]);
 
 const Status = LiteralKit([1, 20n, true, false, "hello"]);
-const decodeUnknownStatusSync = S.decodeUnknownSync(Status);
-const encodeStatusSync = S.encodeSync(Status);
+const decodeUnknownStatusEffect = S.decodeUnknownEffect(Status);
+const encodeStatusEffect = S.encodeEffect(Status);
 const Direction = LiteralKit(["up", "down", "left", "right"]);
 const EventKind = LiteralKit(["created", "deleted"]);
 const Event = EventKind.toTaggedUnion("kind")({
   created: { value: S.Literal(1) },
   deleted: { value: S.Literal(2) },
 });
-const decodeEventSync = S.decodeSync(Event);
+const decodeEventEffect = S.decodeEffect(Event);
 
 describe("LiteralKit", () => {
   it("exposes Options with the original literal tuple", () => {
@@ -49,23 +49,20 @@ describe("LiteralKit", () => {
     expect(Reattached.HashSet).toBe(Status.HashSet);
   });
 
-  it("round-trips schema-derived literal samples", () => {
+  {
     const arbitrary = Arbitrary.schema(Status);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([literal]) => {
-            expect(Status.Options).toContain(literal);
-            expect(decodeUnknownStatusSync(encodeStatusSync(literal))).toBe(literal);
+    it.effect.prop(
+      "round-trips schema-derived literal samples",
+      [arbitrary],
+      Effect.fnUntraced(function* ([literal]) {
+        expect(Status.Options).toContain(literal);
+        expect(yield* decodeUnknownStatusEffect(yield* encodeStatusEffect(literal))).toBe(literal);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        return true;
+      }),
+      { arbitrary: fcRuns(25) }
+    );
+  }
 
   it("creates an Enum map with LiteralToKey keys", () => {
     expect(Status.Enum.number1).toBe(1);
@@ -197,28 +194,31 @@ describe("LiteralKit (string-only)", () => {
     expect(result).toBe(0);
   });
 
-  it("builds tagged unions from literal members", () => {
-    expect(
-      decodeEventSync({
+  it.effect(
+    "builds tagged unions from literal members",
+    Effect.fnUntraced(function* () {
+      expect(
+        yield* decodeEventEffect({
+          kind: "created",
+          value: 1,
+        })
+      ).toEqual({
         kind: "created",
         value: 1,
-      })
-    ).toEqual({
-      kind: "created",
-      value: 1,
-    });
-    expect(Event.guards.created({ kind: "created", value: 1 })).toBe(true);
-    expect(Event.guards.deleted({ kind: "created", value: 1 })).toBe(false);
-    expect(
-      Event.match(
-        { kind: "deleted", value: 2 },
-        {
-          created: () => "created" as const,
-          deleted: () => "deleted" as const,
-        }
-      )
-    ).toBe("deleted");
-  });
+      });
+      expect(Event.guards.created({ kind: "created", value: 1 })).toBe(true);
+      expect(Event.guards.deleted({ kind: "created", value: 1 })).toBe(false);
+      expect(
+        Event.match(
+          { kind: "deleted", value: 2 },
+          {
+            created: () => "created" as const,
+            deleted: () => "deleted" as const,
+          }
+        )
+      ).toBe("deleted");
+    })
+  );
 });
 
 describe("LiteralKit (manual Enum mapping)", () => {

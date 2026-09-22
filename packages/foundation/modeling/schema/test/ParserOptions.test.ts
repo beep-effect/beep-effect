@@ -1,9 +1,10 @@
 import { ParserOptions, ParserOptionsError } from "@beep/schema/ParserOptions";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const decodeParserOptionsSync = S.decodeSync(ParserOptions);
+const decodeParserOptionsEffect = S.decodeEffect(ParserOptions);
 
 describe("ParserOptions", () => {
   it("decodes defaults that match the original parser options behavior", () => {
@@ -55,18 +56,21 @@ describe("ParserOptions", () => {
     expect(options.NEXT_TOKEN_REGEXP.test("|")).toBe(true);
   });
 
-  it("still supports direct schema decoding from unknown input", () => {
-    const options = decodeParserOptionsSync({
-      delimiter: ";",
-      headers: true,
-      quote: null,
-    });
+  it.effect(
+    "still supports direct schema decoding from unknown input",
+    Effect.fnUntraced(function* () {
+      const options = yield* decodeParserOptionsEffect({
+        delimiter: ";",
+        headers: true,
+        quote: null,
+      });
 
-    expect(options).toBeInstanceOf(ParserOptions);
-    expect(options.delimiter).toBe(";");
-    expect(options.headers).toEqual(O.some(true));
-    expect(options.escapeChar).toEqual(O.none());
-  });
+      expect(options).toBeInstanceOf(ParserOptions);
+      expect(options.delimiter).toBe(";");
+      expect(options.headers).toEqual(O.some(true));
+      expect(options.escapeChar).toEqual(O.none());
+    })
+  );
 
   it("wraps invalid delimiter input in ParserOptionsError", () => {
     expect(() => ParserOptions.new({ delimiter: "::" })).toThrow(ParserOptionsError);

@@ -101,11 +101,11 @@ const decodeInputResult = S.decodeResult(Input);
 const decodeLinkResult = S.decodeResult(Link);
 const decodeLinkRelationListResult = S.decodeResult(LinkRelationList);
 const decodeMetaResult = S.decodeResult(Meta);
-const decodeLinkSync = S.decodeSync(Link);
-const decodeLinkRelationListSync = S.decodeSync(LinkRelationList);
+const decodeLink = S.decodeUnknownEffect(Link);
+const decodeLinkRelationList = S.decodeUnknownEffect(LinkRelationList);
 const decodeUnknownTemplateResult = S.decodeUnknownResult(Template);
 const encodeHtmlElementMetaResult = S.encodeResult(HtmlElementMeta);
-const encodeLinkRelationListSync = S.encodeSync(LinkRelationList);
+const encodeLinkRelationList = S.encodeEffect(LinkRelationList);
 const isHtmlElementMeta = S.is(HtmlElementMeta);
 const AsciiK = makeAsciiCaseInsensitiveEnumerated(["k"]);
 const decodeAsciiKResult = S.decodeResult(AsciiK);
@@ -980,7 +980,6 @@ describe("@beep/html generated special-child grammars", () => {
       expect(inspectConformance(root)).toContainEqual(expect.objectContaining({ rule: "attributeRelationship" }));
       expect(Exit.isFailure(Effect.runSyncExit(conform(root)))).toBe(true);
     }
-    expect(() => decodeLinkSync({ _tag: "link", as: "video", href: "/resource", rel: "preload" })).toThrow();
     const uppercaseCharset = decodeMetaResult({ _tag: "meta", charset: "UTF-8" });
     expect(Result.isSuccess(uppercaseCharset) && O.contains(uppercaseCharset.success.charset, "utf-8")).toBe(true);
     expect(Result.isFailure(decodeMetaResult({ _tag: "meta", charset: "iso-8859-1" }))).toBe(true);
@@ -991,6 +990,13 @@ describe("@beep/html generated special-child grammars", () => {
       )
     ).toContainEqual(expect.objectContaining({ path: ["attributes"], rule: "attributeRelationship" }));
   });
+
+  it.effect("rejects invalid preload destination tokens at decode time", () =>
+    Effect.gen(function* () {
+      const invalid = yield* Effect.exit(decodeLink({ _tag: "link", as: "video", href: "/resource", rel: "preload" }));
+      expect(Exit.isFailure(invalid)).toBe(true);
+    })
+  );
 
   it("keeps browser-safe production URL validation aligned with the WHATWG oracle", () => {
     const representative = [
@@ -1254,21 +1260,23 @@ describe("@beep/html generated special-child grammars", () => {
 });
 
 describe("@beep/html exact attribute domains", () => {
-  it("keeps schema-derived open relation lists at their canonical fixed point", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([LinkRelationListArbitrary]),
-          ([relation]) => {
-            expect(encodeLinkRelationListSync(relation)).toBe(relation);
-            expect(decodeLinkRelationListSync(relation)).toBe(relation);
+  it.effect("keeps schema-derived open relation lists at their canonical fixed point", () =>
+    Effect.gen(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([LinkRelationListArbitrary]),
+        ([relation]) =>
+          Effect.gen(function* () {
+            expect(yield* encodeLinkRelationList(relation)).toBe(relation);
+            expect(yield* decodeLinkRelationList(relation)).toBe(relation);
 
             return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
+          }),
+        fcRuns(100)
+      );
+
+      expect(result._tag).toBe("Passed");
+    })
+  );
 
   it("rejects ambiguous factories and uses HTML ASCII case folding", () => {
     expect(() => makeAsciiCaseInsensitiveEnumerated(["foo", "FOO"])).toThrow();

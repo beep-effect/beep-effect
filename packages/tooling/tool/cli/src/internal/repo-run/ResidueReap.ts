@@ -44,6 +44,7 @@ import {
   ResidueReapHomeRoot,
   ResidueReapReport,
 } from "./ResidueReap.schemas.ts";
+import type * as Crypto from "effect/Crypto";
 import type * as Scope from "effect/Scope";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { BoundRemovalOutcome, DirectoryIdentity } from "./DirectoryHandle.ts";
@@ -415,7 +416,7 @@ const canonicalDirectoryShape = Effect.fnUntraced(function* (
 
 const gitCleanSkip = Effect.fnUntraced(function* (
   gitMarkers: ReadonlyArray<string>
-): Effect.fn.Return<O.Option<ResidueReapSkipReason>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<ResidueReapSkipReason>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const readings = yield* Effect.forEach(
     gitMarkers,
     (marker) =>
@@ -456,7 +457,7 @@ const directoryCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ResidueReapCandidate,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const shape = yield* canonicalDirectoryShape(root, candidatePath);
@@ -527,7 +528,7 @@ const topLevelDirectoryCandidates = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<ResidueReapCandidate>,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -564,7 +565,7 @@ const turboCandidates = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<ResidueReapCandidate>,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -641,7 +642,7 @@ const reassessTurboEntry = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ResidueReapCandidate,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -675,7 +676,7 @@ const reassessCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ResidueReapCandidate,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   if (Str.Equivalence(assessed.action, "skip")) {
@@ -769,7 +770,7 @@ const applyCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   AppliedCandidate,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   // Reports keep speaking the operator's lexical path even though the checks and the
   // removal below run on the resolved one.

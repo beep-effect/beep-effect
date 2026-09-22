@@ -29,7 +29,6 @@ import * as S from "effect/Schema";
 import type { Dataset } from "@beep/rdf/Rdf";
 
 const decodeSessionId = S.decodeEffect(SessionId);
-const decodeOntologyFilePathSync = S.decodeSync(OntologyFilePath);
 
 type TaskFixture = {
   readonly id: string;
@@ -100,7 +99,7 @@ const taskFixtures: ReadonlyArray<TaskFixture> = [
   },
 ];
 
-const fixturePath = (relativePath: string): OntologyFilePath => decodeOntologyFilePathSync(relativePath);
+const fixturePath = (relativePath: string): OntologyFilePath => OntologyFilePath.make(relativePath);
 
 const fixtureFilePath = (relativePath: string): string =>
   fileURLToPath(new URL(`./fixtures/ontoauthor-mat/${relativePath}`, import.meta.url));

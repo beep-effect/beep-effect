@@ -1,9 +1,9 @@
 import { Buffer } from "node:buffer";
-import { Readable } from "node:stream";
 import { text as readableText } from "node:stream/consumers";
 import * as B from "@beep/box";
 import { HttpsUrl, NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
+import * as NodeStream from "@effect/platform-node-shared/NodeStream";
 import { describe, expect, it, layer } from "@effect/vitest";
 import {
   Cause,
@@ -34,7 +34,7 @@ type FakeUploadRequestBody = {
       readonly id: string;
     };
   };
-  readonly file: Readable;
+  readonly file: NodeJS.ReadableStream;
   readonly fileContentType?: string;
   readonly fileFileName?: string;
 };
@@ -77,31 +77,70 @@ type PromiseController<A> = {
   readonly resolve: (value: A | PromiseLike<A>) => void;
 };
 
-class FakeEventStream extends Readable {
+type FakeEventListener = (payload?: unknown) => void;
+
+class FakeEventStream {
   readonly emissions: ReadonlyArray<unknown>;
   wasClosed = false;
-  private emitted = false;
+  readableEnded = false;
+  closed = false;
+  private index = 0;
+  private readonly listeners: {
+    readonly end: Array<FakeEventListener>;
+    readonly error: Array<FakeEventListener>;
+    readonly readable: Array<FakeEventListener>;
+  } = { end: [], error: [], readable: [] };
 
   constructor(emissions: ReadonlyArray<unknown>) {
-    super({ objectMode: true });
     this.emissions = emissions;
   }
 
-  override _read(): void {
-    if (this.emitted) {
-      return;
+  read(): unknown {
+    if (this.index < this.emissions.length) {
+      const emission = this.emissions[this.index];
+      this.index += 1;
+      return emission;
     }
-
-    this.emitted = true;
-    for (const emission of this.emissions) {
-      this.push(emission);
+    if (!this.readableEnded) {
+      this.readableEnded = true;
+      this.emit("end");
     }
-    this.push(null);
+    return null;
   }
 
-  override _destroy(error: Error | null, callback: (error?: Error | null) => void): void {
+  on(event: "end" | "error" | "readable", listener: FakeEventListener): this {
+    this.listeners[event].push(listener);
+    return this;
+  }
+
+  once(event: "end" | "error" | "readable", listener: FakeEventListener): this {
+    const wrapped: FakeEventListener = (payload) => {
+      this.off(event, wrapped);
+      listener(payload);
+    };
+    return this.on(event, wrapped);
+  }
+
+  off(event: "end" | "error" | "readable", listener: FakeEventListener): this {
+    const retained = this.listeners[event].filter((candidate) => candidate !== listener);
+    this.listeners[event].splice(0, this.listeners[event].length, ...retained);
+    return this;
+  }
+
+  pipe(): this {
+    return this;
+  }
+
+  destroy(): this {
     this.wasClosed = true;
-    callback(error);
+    this.closed = true;
+    return this;
+  }
+
+  private emit(event: "end" | "error" | "readable", payload?: unknown): void {
+    for (const listener of [...this.listeners[event]]) {
+      listener(payload);
+    }
   }
 }
 
@@ -126,7 +165,8 @@ const files = {
 const makeFakeClient = (overrides: FakeBoxClientOverrides = {}): FakeBoxClient => {
   const defaults: FakeBoxClient = {
     downloads: {
-      downloadFile: (_fileId, _optionalsInput) => Promise.resolve(Readable.from([Buffer.from("downloaded")])),
+      downloadFile: (_fileId, _optionalsInput) =>
+        Promise.resolve(NodeStream.toReadableNever(Stream.make(new Uint8Array(Buffer.from("downloaded"))))),
       getDownloadFileUrl: (fileId, _optionalsInput) => Promise.resolve(`https://box.example/files/${fileId}/download`),
     },
     events: {

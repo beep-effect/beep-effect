@@ -24,6 +24,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str, thunkFalse } from "@beep/utils";
 import { Context, Effect, FileSystem, Layer, Match, Order, Path } from "effect";
+import * as Crypto from "effect/Crypto";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { assertJournalFileLockOwned, withJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
@@ -149,12 +150,12 @@ export const withPacketEventLock: {
   <Success, Failure, Requirements>(
     locator: PacketStreamLocator,
     operation: (
-      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem | Crypto.Crypto>
     ) => Effect.Effect<Success, Failure, Requirements>
   ): Effect.Effect<Success, Failure | PacketStreamError, FileSystem.FileSystem | Path.Path | Requirements>;
   <Success, Failure, Requirements>(
     operation: (
-      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem | Crypto.Crypto>
     ) => Effect.Effect<Success, Failure, Requirements>
   ): (
     locator: PacketStreamLocator
@@ -164,7 +165,7 @@ export const withPacketEventLock: {
   Effect.fn("PacketEventStore.withLock")(function* <Success, Failure, Requirements>(
     locator: PacketStreamLocator,
     operation: (
-      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+      assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem | Crypto.Crypto>
     ) => Effect.Effect<Success, Failure, Requirements>
   ) {
     const path = yield* Path.Path;
@@ -383,6 +384,7 @@ export const foldUnambiguousStream: {
 const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const crypto = yield* Crypto.Crypto;
 
   const eventsDir = (packetPath: string): string => path.join(packetPath, ...PACKET_EVENTS_SEGMENTS);
 
@@ -418,7 +420,10 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     if (O.isNone(event)) {
       return issueOutcome(issue("event-invalid", fileName, "event file does not decode as PacketEvent."));
     }
-    const digest = yield* packetEventDigest(event.value).pipe(Effect.option);
+    const digest = yield* packetEventDigest(event.value).pipe(
+      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.option
+    );
     if (O.isNone(digest)) {
       return issueOutcome(issue("event-invalid", fileName, "decoded PacketEvent could not be canonically encoded."));
     }
@@ -457,7 +462,7 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
   const appendLocked = Effect.fn("PacketEventStore.appendLocked")(function* (
     locator: PacketStreamLocator,
     event: PacketEvent,
-    assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+    assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem | Crypto.Crypto>
   ) {
     const directory = eventsDir(locator.packetPath);
     const entries = yield* fs
@@ -495,6 +500,7 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
       });
     }
     const digest = yield* packetEventDigest(event).pipe(
+      Effect.provideService(Crypto.Crypto, crypto),
       Effect.mapError((error) => PacketStreamError.new(locator.packet, `event could not be encoded: ${error.message}`))
     );
     const content = yield* renderPacketEventFile(event).pipe(
@@ -525,7 +531,8 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
     return yield* withPacketEventLock(locator, (assertOwned) => appendLocked(locator, event, assertOwned)).pipe(
       Effect.catchTag("QualitySchedulerError", (error) => PacketStreamError.new(locator.packet, error.message)),
       Effect.provideService(FileSystem.FileSystem, fs),
-      Effect.provideService(Path.Path, path)
+      Effect.provideService(Path.Path, path),
+      Effect.provideService(Crypto.Crypto, crypto)
     );
   });
 
@@ -546,5 +553,8 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
  * @category constructors
  * @since 0.0.0
  */
-export const PacketEventStoreLive: Layer.Layer<PacketEventStore, never, FileSystem.FileSystem | Path.Path> =
-  Layer.effect(PacketEventStore, makePacketEventStore());
+export const PacketEventStoreLive: Layer.Layer<
+  PacketEventStore,
+  never,
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+> = Layer.effect(PacketEventStore, makePacketEventStore());

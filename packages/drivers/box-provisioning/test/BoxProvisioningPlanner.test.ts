@@ -19,7 +19,8 @@ import {
 } from "@beep/box-provisioning";
 import { HttpsUrl } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { expect, layer } from "@effect/vitest";
 import { Effect, Equal } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -28,31 +29,29 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 
 const decodeBoxDesiredStateOption = S.decodeOption(BoxDesiredState);
-const decodeUnknownBoxObservedFolderSync = S.decodeUnknownSync(BoxObservedFolder);
 const encodeBoxProvisioningPlanJson = S.encodeEffect(S.fromJsonString(BoxProvisioningPlan));
-const encodeBoxDesiredStateSync = S.encodeSync(BoxDesiredState);
-const encodeBoxObservedFolderSync = S.encodeSync(BoxObservedFolder);
+const encodeBoxDesiredState = S.encodeEffect(BoxDesiredState);
 
-describe("@beep/box-provisioning planner", () => {
-  it("round-trips schema-derived observed folders", () => {
-    const equivalent = S.toEquivalence(BoxObservedFolder);
+layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
+  it.effect(
+    "round-trips schema-derived observed folders",
+    Effect.fnUntraced(function* () {
+      const equivalent = S.toEquivalence(BoxObservedFolder);
+      const encode = S.encodeEffect(BoxObservedFolder);
+      const decode = S.decodeEffect(BoxObservedFolder);
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(BoxObservedFolder)]),
+        ([folder]) =>
+          encode(folder).pipe(
+            Effect.flatMap(decode),
+            Effect.map((decoded) => equivalent(decoded, folder))
+          ),
+        fcRuns(10)
+      );
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(BoxObservedFolder)]),
-          ([folder]) => {
-            expect(equivalent(decodeUnknownBoxObservedFolderSync(encodeBoxObservedFolderSync(folder)), folder)).toBe(
-              true
-            );
-
-            return true;
-          },
-          fcRuns(10)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      expect(result).toMatchObject({ _tag: "Passed" });
+    })
+  );
 
   it.effect(
     "emits a deterministic redacted plan with foreign and capability evidence",
@@ -208,35 +207,40 @@ describe("@beep/box-provisioning planner", () => {
     expect(O.isNone(decoded)).toBe(true);
   });
 
-  it("rejects duplicate provider natural keys before inventory or planning", () => {
-    const encoded = encodeBoxDesiredStateSync(desiredFixture);
-    const folders = O.getOrElse(O.fromUndefinedOr(encoded.folders), A.empty);
-    const collaborations = O.getOrElse(O.fromUndefinedOr(encoded.collaborations), A.empty);
-    const webhooks = O.getOrElse(O.fromUndefinedOr(encoded.webhooks), A.empty);
-    const duplicateFolder = {
-      ...O.getOrThrow(A.head(folders)),
-      logicalKey: "folder.duplicate",
-    };
-    const duplicateCollaboration = {
-      ...O.getOrThrow(A.head(collaborations)),
-      logicalKey: "collaboration.duplicate",
-    };
-    const duplicateWebhook = {
-      ...O.getOrThrow(A.head(webhooks)),
-      logicalKey: "webhook.duplicate",
-    };
+  it.effect(
+    "rejects duplicate provider natural keys before inventory or planning",
+    Effect.fnUntraced(function* () {
+      const encoded = yield* encodeBoxDesiredState(desiredFixture);
+      const folders = O.getOrElse(O.fromUndefinedOr(encoded.folders), A.empty);
+      const collaborations = O.getOrElse(O.fromUndefinedOr(encoded.collaborations), A.empty);
+      const webhooks = O.getOrElse(O.fromUndefinedOr(encoded.webhooks), A.empty);
+      const duplicateFolder = {
+        ...O.getOrThrow(A.head(folders)),
+        logicalKey: "folder.duplicate",
+      };
+      const duplicateCollaboration = {
+        ...O.getOrThrow(A.head(collaborations)),
+        logicalKey: "collaboration.duplicate",
+      };
+      const duplicateWebhook = {
+        ...O.getOrThrow(A.head(webhooks)),
+        logicalKey: "webhook.duplicate",
+      };
 
-    expect(O.isNone(decodeBoxDesiredStateOption({ ...encoded, folders: [...folders, duplicateFolder] }))).toBe(true);
-    expect(
-      O.isNone(
-        decodeBoxDesiredStateOption({
-          ...encoded,
-          collaborations: [...collaborations, duplicateCollaboration],
-        })
-      )
-    ).toBe(true);
-    expect(O.isNone(decodeBoxDesiredStateOption({ ...encoded, webhooks: [...webhooks, duplicateWebhook] }))).toBe(true);
-  });
+      expect(O.isNone(decodeBoxDesiredStateOption({ ...encoded, folders: [...folders, duplicateFolder] }))).toBe(true);
+      expect(
+        O.isNone(
+          decodeBoxDesiredStateOption({
+            ...encoded,
+            collaborations: [...collaborations, duplicateCollaboration],
+          })
+        )
+      ).toBe(true);
+      expect(O.isNone(decodeBoxDesiredStateOption({ ...encoded, webhooks: [...webhooks, duplicateWebhook] }))).toBe(
+        true
+      );
+    })
+  );
 
   it.effect(
     "blocks an unallowlisted exact-name folder and its dependents while retaining it as foreign",

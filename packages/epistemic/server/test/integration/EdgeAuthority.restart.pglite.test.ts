@@ -46,13 +46,13 @@ const makePersistentLayer = (dataDir: string) =>
     Layer.provideMerge(Pglite.makeLayer({ dataDir, extensions: { btree_gist }, relaxedDurability: true }))
   );
 
-const decodeClaim = S.decodeUnknownSync(CandidateClaim);
-const decodeEvidence = S.decodeUnknownSync(Evidence);
-const decodeIdentity = S.decodeUnknownSync(LogicalEdgeIdentity);
-const decodeRecord = S.decodeUnknownSync(RecordEdgeFact);
-const decodeSupersede = S.decodeUnknownSync(SupersedeEdgeFact);
-const decodeAsOf = S.decodeUnknownSync(EdgeAsOfQuery);
-const decodeOutcomeInput = S.decodeUnknownSync(ClaimGateOutcomeInput);
+const decodeClaim = S.decodeUnknownEffect(CandidateClaim);
+const decodeEvidence = S.decodeUnknownEffect(Evidence);
+const decodeIdentity = S.decodeUnknownEffect(LogicalEdgeIdentity);
+const decodeRecord = S.decodeUnknownEffect(RecordEdgeFact);
+const decodeSupersede = S.decodeUnknownEffect(SupersedeEdgeFact);
+const decodeAsOf = S.decodeUnknownEffect(EdgeAsOfQuery);
+const decodeOutcomeInput = S.decodeUnknownEffect(ClaimGateOutcomeInput);
 
 const systemPrincipal = { component: "Runtime", kind: "System" } as const;
 const resolvedAtMillis = 1_500;
@@ -78,8 +78,13 @@ const encodedIdentity = (claimId: number, evidenceId: number) =>
     target: { evidenceId, kind: "evidence" },
   }) as const;
 
-const asOf = (identity: typeof LogicalEdgeIdentity.Encoded, validAt: number, knownAt: number) =>
-  decodeAsOf({ knownAt, logicalKey: logicalEdgeKey(decodeIdentity(identity)), validAt });
+const asOf = Effect.fnUntraced(function* (
+  identity: typeof LogicalEdgeIdentity.Encoded,
+  validAt: number,
+  knownAt: number
+) {
+  return yield* decodeAsOf({ knownAt, logicalKey: logicalEdgeKey(yield* decodeIdentity(identity)), validAt });
+});
 
 const factOf = (version: O.Option<{ readonly fact: Record<string, unknown> }>, key: string): O.Option<unknown> =>
   O.map(version, (value) => value.fact[key]);
@@ -96,13 +101,15 @@ const writeHistory = Effect.fnUntraced(function* () {
   const claimRows = yield* db
     .insert(DbSchema.candidateClaim)
     .values(
-      toCandidateClaimInsert(
-        decodeClaim({
-          ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
-          fixtureKey: "claim.restart",
-          lifecycle: "candidate",
-          snapshot: {},
-        })
+      yield* Effect.fromResult(
+        toCandidateClaimInsert(
+          yield* decodeClaim({
+            ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
+            fixtureKey: "claim.restart",
+            lifecycle: "candidate",
+            snapshot: {},
+          })
+        )
       )
     )
     .returning();
@@ -110,7 +117,7 @@ const writeHistory = Effect.fnUntraced(function* () {
     .insert(DbSchema.evidence)
     .values(
       toEvidenceInsert(
-        decodeEvidence({
+        yield* decodeEvidence({
           ...productEntityFixtureInput("EpistemicEvidence", 1),
           artifactFixtureKey: "artifact.restart",
           span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
@@ -125,7 +132,7 @@ const writeHistory = Effect.fnUntraced(function* () {
 
   const repository = yield* makeDrizzleEdgeAuthorityRepository();
   const former = yield* repository.record(
-    decodeRecord({
+    yield* decodeRecord({
       fact: { amount: "100" },
       identity,
       orgId: 1,
@@ -138,7 +145,7 @@ const writeHistory = Effect.fnUntraced(function* () {
     })
   );
   const corrected = yield* repository.supersede(
-    decodeSupersede({
+    yield* decodeSupersede({
       expectedVersion: 1,
       fact: { amount: "150" },
       identity,
@@ -158,7 +165,7 @@ const writeHistory = Effect.fnUntraced(function* () {
   const dispositions = yield* makeDrizzleClaimDispositionRepository();
   const resolver = makeClaimGateOutcomeResolver(dispositions, makeClaimTransition());
   const outcome = yield* resolver.resolve(
-    decodeOutcomeInput({
+    yield* decodeOutcomeInput({
       claim: {
         ...productEntityFixtureInput("EpistemicCandidateClaim", claimRow.id),
         fixtureKey: "claim.restart",
@@ -213,8 +220,8 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* makeDrizzleEdgeAuthorityRepository();
           const dispositions = yield* makeDrizzleClaimDispositionRepository();
 
-          const before = yield* repository.readAsOf(asOf(written.identity, 1_500, 1_500));
-          const after = yield* repository.readAsOf(asOf(written.identity, 1_500, 2_500));
+          const before = yield* repository.readAsOf(yield* asOf(written.identity, 1_500, 1_500));
+          const after = yield* repository.readAsOf(yield* asOf(written.identity, 1_500, 2_500));
           expect(factOf(before, "amount")).toStrictEqual(O.some("100"));
           expect(factOf(after, "amount")).toStrictEqual(O.some("150"));
 
@@ -244,7 +251,7 @@ if (!shouldRunPgliteIntegration) {
           // LAST — it aborts the surrounding transaction chain.
           const conflict = yield* Effect.flip(
             repository.record(
-              decodeRecord({
+              yield* decodeRecord({
                 fact: { amount: "999" },
                 identity: written.identity,
                 orgId: 1,

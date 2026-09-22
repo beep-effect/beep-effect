@@ -1,3 +1,4 @@
+import { EvidenceSpan } from "@beep/epistemic-domain";
 import {
   ClaimEvidenceBasis,
   ClaimEvidenceExplanation,
@@ -6,44 +7,51 @@ import {
   ClaimEvidenceVerification,
 } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import { ClaimEvidenceReviewPanel } from "@beep/epistemic-ui";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { NonNegativeInt } from "@beep/schema";
+import { PosixPath } from "@beep/schema/PosixPath";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
+import { UserId } from "@beep/shared-domain/identity/Shared";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as DateTime from "effect/DateTime";
 import { constVoid } from "effect/Function";
-import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { renderToStaticMarkup } from "react-dom/server";
 
-const decodeExplanation = S.decodeUnknownSync(ClaimEvidenceExplanation);
-const decodeCurrentSource = S.decodeUnknownSync(ClaimEvidenceExplanation.fields.currentSource);
-const decodeReview = S.decodeUnknownSync(ClaimEvidenceReview);
-const encodeBasis = S.encodeSync(ClaimEvidenceBasis);
 const digest = "sha256:1e7dc6d6c16565406afd121a89164b990879f5f47695e03b9c3fd0f07395a4ca";
-const source = {
+const source = SourceTextIdentity.make({
   scopeRef: "project:example",
   sourceRef: "document:example",
-  locator: "documents/example.txt",
-  sourceDigest: digest,
-  textDigest: digest,
-  extractor: { name: "utf8", version: "1" },
+  locator: PosixPath.make("documents/example.txt"),
+  sourceDigest: SourceTextDigest.make(digest),
+  textDigest: SourceTextDigest.make(digest),
+  extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
   normalizationVersion: "1",
-};
-const explanation = decodeExplanation({
-  basis: {
+});
+const explanation = ClaimEvidenceExplanation.make({
+  basis: ClaimEvidenceBasis.make({
     claimRef: "claim:fact",
     assertion: "The source states fact.",
     subject: "Example source",
-    evidence: { startChar: 0, endChar: 4, quote: "fact", confidence: 0.82 },
+    evidence: EvidenceSpan.make({
+      startChar: NonNegativeInt.make(0),
+      endChar: NonNegativeInt.make(4),
+      quote: "fact",
+      confidence: UnitInterval.make(0.82),
+    }),
     source,
-  },
+  }),
   currentSource: source,
   sourceText: "fact remains open to interpretation.",
-  verification: { _tag: "Verified" },
-  review: { _tag: "Pending" },
+  verification: ClaimEvidenceVerification.cases.Verified.make({}),
+  review: ClaimEvidenceReviewStatus.cases.Pending.make({}),
 });
-const review = decodeReview({
-  basis: encodeBasis(explanation.basis),
-  reviewedBy: { kind: "User", userId: 1 },
-  reviewedAt: 0,
+const review = ClaimEvidenceReview.make({
+  basis: explanation.basis,
+  reviewedBy: UserPrincipal.make({ kind: "User", userId: UserId.make(1) }),
+  reviewedAt: DateTime.makeUnsafe(0),
 });
 const confidenceArbitrary = Arbitrary.schema(ClaimEvidenceBasis.fields.evidence.fields.confidence);
 
@@ -132,10 +140,10 @@ describe("ClaimEvidenceReviewPanel", () => {
   it("shows unverified source text without a verified highlight or transferable approval", () => {
     const unverified = ClaimEvidenceExplanation.make({
       ...explanation,
-      currentSource: decodeCurrentSource({
+      currentSource: SourceTextIdentity.make({
         ...explanation.currentSource,
         sourceRef: "document:replacement",
-        locator: "documents/replacement.txt",
+        locator: PosixPath.make("documents/replacement.txt"),
       }),
       verification: ClaimEvidenceVerification.cases.Unverified.make({ reason: "stale-source" }),
       review: ClaimEvidenceReviewStatus.cases.Stale.make({ review, reason: "source-unverified" }),

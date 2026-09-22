@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
+import { dual } from "effect/Function";
 import { A, O, P, pipe, Str } from "@beep/utils";
 import { parse } from "acorn";
 import { Cause, Effect, Result as Rs, Scope } from "effect";
@@ -76,144 +77,164 @@ const encodeUnknownDiagnosticModelResult = S.encodeUnknownResult(DiagnosticModel
  * @since 0.0.0
  */
 // biome-ignore lint/suspicious/noExplicitAny: Effect v4 models Toolkit's invariant tool record with Toolkit<any>; narrowing it erases the concrete handler service requirements.
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Required execution options plus limits and an optional prepared index leave no unambiguous curried arity.
-export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
-  options: ExecuteOptions<ToolkitType>,
-  limits: ExecutionLimits,
-  preparedIndex?: ReadonlyArray<ToolRuntime.SearchEntry>
-): Effect.Effect<ResultModel, never, Services<ToolkitType>> => {
-  if (Str.isEmpty(Str.trim(options.code))) {
-    return Effect.succeed(
-      FailureModel.make({
-        error: DiagnosticModel.new("ParseError", "Code cannot be empty."),
-        logs: O.none(),
-        truncated: O.none(),
-        toolCalls: A.empty(),
-      })
-    );
-  }
+export const executeWithLimits: {
+  (
+    limits: ExecutionLimits,
+    preparedIndex?: ReadonlyArray<ToolRuntime.SearchEntry>
+  ): <ToolkitType extends Toolkit.Toolkit<any>>(
+    options: ExecuteOptions<ToolkitType>
+  ) => Effect.Effect<ResultModel, never, Services<ToolkitType>>;
+  <ToolkitType extends Toolkit.Toolkit<any>>(
+    options: ExecuteOptions<ToolkitType>,
+    limits: ExecutionLimits,
+    preparedIndex?: ReadonlyArray<ToolRuntime.SearchEntry>
+  ): Effect.Effect<ResultModel, never, Services<ToolkitType>>;
+} = dual(
+  (args) => P.hasProperty(args[0], "code"),
+  <ToolkitType extends Toolkit.Toolkit<any>>(
+    options: ExecuteOptions<ToolkitType>,
+    limits: ExecutionLimits,
+    preparedIndex?: ReadonlyArray<ToolRuntime.SearchEntry>
+  ): Effect.Effect<ResultModel, never, Services<ToolkitType>> => {
+    if (Str.isEmpty(Str.trim(options.code))) {
+      return Effect.succeed(
+        FailureModel.make({
+          error: DiagnosticModel.new("ParseError", "Code cannot be empty."),
+          logs: O.none(),
+          truncated: O.none(),
+          toolCalls: A.empty(),
+        })
+      );
+    }
 
-  // Allocate execution state inside suspension so reused Effects never share it.
-  return Effect.suspend(() => {
-    const toolkit = options.toolkit ?? ToolRuntime.emptyToolkit;
-    const logs = A.empty<string>();
-    const logged = () => (A.isReadonlyArrayNonEmpty(logs) ? O.some(A.copy(logs)) : O.none<ReadonlyArray<string>>());
-    // Set only after copy-out so timeouts cannot report invalid values as completed.
-    let returned: { value: DataValueType; promises: PromiseRuntime<Services<ToolkitType>> } | undefined;
-    let toolRuntime: ToolRuntime.ToolRuntime<Services<ToolkitType>> | undefined;
+    // Allocate execution state inside suspension so reused Effects never share it.
+    return Effect.suspend(() => {
+      const toolkit = options.toolkit ?? ToolRuntime.emptyToolkit;
+      const logs = A.empty<string>();
+      const logged = () => (A.isReadonlyArrayNonEmpty(logs) ? O.some(A.copy(logs)) : O.none<ReadonlyArray<string>>());
+      // Set only after copy-out so timeouts cannot report invalid values as completed.
+      let returned: { value: DataValueType; promises: PromiseRuntime<Services<ToolkitType>> } | undefined;
+      let toolRuntime: ToolRuntime.ToolRuntime<Services<ToolkitType>> | undefined;
 
-    const base = Effect.acquireUseRelease(
-      Scope.make("parallel"),
-      (scope) =>
-        Effect.gen(function* () {
-          const prepared = P.isUndefined(preparedIndex)
-            ? yield* Effect.fromResult(ToolRuntime.prepare(toolkit))
-            : ToolRuntime.DiscoveryPlan.new(A.empty(), preparedIndex);
-          const handlers = yield* toolkit;
-          const tools = yield* ToolRuntime.make(toolkit, handlers as never, limits.maxToolCalls, prepared.searchIndex, {
-            ...(P.isUndefined(options.onToolCallStart) ? {} : { onToolCallStart: options.onToolCallStart }),
-            ...(P.isUndefined(options.onToolCallEnd) ? {} : { onToolCallEnd: options.onToolCallEnd }),
-          });
-          toolRuntime = tools;
-          const program = yield* parseProgram(options.code);
-          const promises = new PromiseRuntime<Services<ToolkitType>>(scope);
-          const interpreter = new Interpreter<Services<ToolkitType>>(
-            tools.execute,
-            tools.search,
-            tools.keys,
-            promises,
-            logs
-          );
-          const value = yield* interpreter.run(program);
-          const copied = yield* Effect.fromResult(
-            tryInterpreter(() => copyOut(copyIn(value, "Execution result"), "nullify"))
-          );
-          const result = yield* decodeUnknownDataValue(copied).pipe(
-            Effect.mapError((cause) =>
-              InterpreterRuntimeError.new(
-                `Execution result is not a data value: ${cause.message}`,
-                undefined,
-                DiagnosticKind.Enum.InvalidDataValue
+      const base = Effect.acquireUseRelease(
+        Scope.make("parallel"),
+        (scope) =>
+          Effect.gen(function* () {
+            const prepared = P.isUndefined(preparedIndex)
+              ? yield* Effect.fromResult(ToolRuntime.prepare(toolkit))
+              : ToolRuntime.DiscoveryPlan.new(A.empty(), preparedIndex);
+            const handlers = yield* toolkit;
+            const tools = yield* ToolRuntime.make(
+              toolkit,
+              handlers as never,
+              limits.maxToolCalls,
+              prepared.searchIndex,
+              {
+                ...(P.isUndefined(options.onToolCallStart) ? {} : { onToolCallStart: options.onToolCallStart }),
+                ...(P.isUndefined(options.onToolCallEnd) ? {} : { onToolCallEnd: options.onToolCallEnd }),
+              }
+            );
+            toolRuntime = tools;
+            const program = yield* parseProgram(options.code);
+            const promises = new PromiseRuntime<Services<ToolkitType>>(scope);
+            const interpreter = new Interpreter<Services<ToolkitType>>(
+              tools.execute,
+              tools.search,
+              tools.keys,
+              promises,
+              logs
+            );
+            const value = yield* interpreter.run(program);
+            const copied = yield* Effect.fromResult(
+              tryInterpreter(() => copyOut(copyIn(value, "Execution result"), "nullify"))
+            );
+            const result = yield* decodeUnknownDataValue(copied).pipe(
+              Effect.mapError((cause) =>
+                InterpreterRuntimeError.new(
+                  `Execution result is not a data value: ${cause.message}`,
+                  undefined,
+                  DiagnosticKind.Enum.InvalidDataValue
+                )
               )
-            )
-          );
-          returned = { value: result, promises };
-          const warnings = yield* promises.interrupt();
-          const toolCalls = yield* tools.calls;
-          return SuccessModel.make({
-            value: result,
-            warnings: A.isReadonlyArrayNonEmpty(warnings) ? O.some(warnings) : O.none(),
-            logs: logged(),
-            truncated: O.none(),
-            toolCalls,
-          });
-        }),
-      (scope, exit) => Scope.close(scope, exit)
-    );
-    const operation = pipe(
-      limits.timeoutMs,
-      O.match({
-        onNone: () => base,
-        onSome: (timeoutMs) =>
-          base.pipe(
-            Effect.timeoutOrElse({
-              duration: timeoutMs,
-              orElse: Effect.fnUntraced(function* () {
-                const toolCalls = P.isUndefined(toolRuntime) ? A.empty() : yield* toolRuntime.calls;
-                if (P.isUndefined(returned)) {
-                  return FailureModel.make({
-                    error: DiagnosticModel.new("TimeoutExceeded", `Execution timed out after ${timeoutMs}ms.`),
+            );
+            returned = { value: result, promises };
+            const warnings = yield* promises.interrupt();
+            const toolCalls = yield* tools.calls;
+            return SuccessModel.make({
+              value: result,
+              warnings: A.isReadonlyArrayNonEmpty(warnings) ? O.some(warnings) : O.none(),
+              logs: logged(),
+              truncated: O.none(),
+              toolCalls,
+            });
+          }),
+        (scope, exit) => Scope.close(scope, exit)
+      );
+      const operation = pipe(
+        limits.timeoutMs,
+        O.match({
+          onNone: () => base,
+          onSome: (timeoutMs) =>
+            base.pipe(
+              Effect.timeoutOrElse({
+                duration: timeoutMs,
+                orElse: Effect.fnUntraced(function* () {
+                  const toolCalls = P.isUndefined(toolRuntime) ? A.empty() : yield* toolRuntime.calls;
+                  if (P.isUndefined(returned)) {
+                    return FailureModel.make({
+                      error: DiagnosticModel.new("TimeoutExceeded", `Execution timed out after ${timeoutMs}ms.`),
+                      logs: logged(),
+                      truncated: O.none(),
+                      toolCalls,
+                    });
+                  }
+                  // Keep the timeout warning first so truncation preserves it.
+                  return SuccessModel.make({
+                    value: returned.value,
+                    warnings: O.some([
+                      DiagnosticModel.new(
+                        "TimeoutExceeded",
+                        `The program returned, but background work was still running at the ${timeoutMs}ms timeout and was interrupted. Await all started promises.`
+                      ),
+                      ...returned.promises.diagnostics(),
+                    ]),
                     logs: logged(),
                     truncated: O.none(),
                     toolCalls,
                   });
-                }
-                // Keep the timeout warning first so truncation preserves it.
-                return SuccessModel.make({
-                  value: returned.value,
-                  warnings: O.some([
-                    DiagnosticModel.new(
-                      "TimeoutExceeded",
-                      `The program returned, but background work was still running at the ${timeoutMs}ms timeout and was interrupted. Await all started promises.`
-                    ),
-                    ...returned.promises.diagnostics(),
-                  ]),
+                }),
+              })
+            ),
+        })
+      );
+
+      return operation.pipe(
+        Effect.catchCause((cause) =>
+          Cause.hasInterruptsOnly(cause)
+            ? Effect.interrupt
+            : Effect.gen(function* () {
+                const toolCalls = P.isUndefined(toolRuntime) ? A.empty() : yield* toolRuntime.calls;
+                return FailureModel.make({
+                  error: normalizeError(Cause.squash(cause)),
                   logs: logged(),
                   truncated: O.none(),
                   toolCalls,
                 });
-              }),
+              })
+        ),
+        Effect.map((result) =>
+          pipe(
+            limits.maxOutputBytes,
+            O.match({
+              onNone: () => result,
+              onSome: (maxOutputBytes) => boundOutput(result, maxOutputBytes),
             })
-          ),
-      })
-    );
-
-    return operation.pipe(
-      Effect.catchCause((cause) =>
-        Cause.hasInterruptsOnly(cause)
-          ? Effect.interrupt
-          : Effect.gen(function* () {
-              const toolCalls = P.isUndefined(toolRuntime) ? A.empty() : yield* toolRuntime.calls;
-              return FailureModel.make({
-                error: normalizeError(Cause.squash(cause)),
-                logs: logged(),
-                truncated: O.none(),
-                toolCalls,
-              });
-            })
-      ),
-      Effect.map((result) =>
-        pipe(
-          limits.maxOutputBytes,
-          O.match({
-            onNone: () => result,
-            onSome: (maxOutputBytes) => boundOutput(result, maxOutputBytes),
-          })
+          )
         )
-      )
-    );
-  });
-};
+      );
+    });
+  }
+);
 
 const parseProgram = (code: string): Effect.Effect<ProgramNode, InterpreterRuntimeError> =>
   Effect.gen(function* () {

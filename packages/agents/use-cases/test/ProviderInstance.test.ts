@@ -26,8 +26,8 @@ const probedAt = DateTime.makeUnsafe("2026-07-12T00:00:00.000Z");
 const isProviderInstanceNotFound = S.is(ProviderInstanceNotFound);
 const isProviderUnauthenticated = S.is(ProviderUnauthenticated);
 
-const makeInstance = (kind: Domain.ProviderKind = "claude"): Domain.ProviderInstance =>
-  Domain.ProviderInstance.decodeUnknownSync({
+const makeInstance = (kind: Domain.ProviderKind = "claude") =>
+  S.decodeUnknownEffect(Domain.ProviderInstance)({
     ...productEntityFixtureInput("AgentsProviderInstance", 1),
     binaryPath: kind === "claude" ? "/usr/bin/claude" : "/usr/bin/codex",
     envVars: {},
@@ -66,7 +66,7 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
   it.effect(
     "runs add, update, list, get, and remove command/query logic",
     Effect.fnUntraced(function* () {
-      const initial = makeInstance();
+      const initial = yield* makeInstance();
       const state = makeRepository([initial]);
       const repository: ProviderInstanceRepositoryShape = {
         ...state.repository,
@@ -105,7 +105,7 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
   it.effect(
     "persists an authenticated probe snapshot",
     Effect.fnUntraced(function* () {
-      const state = makeRepository([makeInstance()]);
+      const state = makeRepository([yield* makeInstance()]);
       const snapshot = Domain.AuthenticatedSnapshot.make({ probedAt });
       const useCases = ProviderInstance.makeProviderInstanceUseCases(state.repository, {
         probe: () => Effect.succeed(snapshot),
@@ -123,7 +123,7 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
     it.effect(
       `persists ${kind} logged-out snapshots and returns exact login guidance`,
       Effect.fnUntraced(function* () {
-        const state = makeRepository([makeInstance(kind)]);
+        const state = makeRepository([yield* makeInstance(kind)]);
         const snapshot = Domain.UnauthenticatedSnapshot.make({ probedAt });
         const useCases = ProviderInstance.makeProviderInstanceUseCases(state.repository, {
           probe: () => Effect.succeed(snapshot),

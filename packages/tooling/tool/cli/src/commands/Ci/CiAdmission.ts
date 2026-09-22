@@ -34,6 +34,7 @@ import {
   renderHeavyAdmissionGithubOutput,
   renderHeavyAdmissionSummary,
 } from "./HeavyAdmission.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Ci/CiAdmission");
@@ -118,7 +119,11 @@ const decodeEventName = S.decodeUnknownEffect(HeavyAdmissionEventName);
 export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
   input: CiAdmissionInput,
   capture: typeof runRepoCommandCapture = runRepoCommandCapture
-): Effect.fn.Return<HeavyAdmission, CiCommandError, FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  HeavyAdmission,
+  CiCommandError,
+  FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const rawEventName = yield* Effect.fromOption(input.eventName, () =>
     CiCommandError.make({ message: "ci admission needs an event name: set GITHUB_EVENT_NAME or pass --event-name." })
   );

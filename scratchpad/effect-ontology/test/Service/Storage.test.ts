@@ -1,7 +1,8 @@
 import { PathSafetyError } from "@beep/file-processing/PathSafety";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, it } from "@effect/vitest";
 import { Context, Duration, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -11,6 +12,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { describe } from "vitest";
 import { ConfigService, DEFAULT_CONFIG } from "../../Service/Config.ts";
 import type { StorageServiceMethods } from "../../Service/Storage.ts";
 import {
@@ -20,7 +22,7 @@ import {
   StorageServiceTest,
 } from "../../Service/Storage.ts";
 
-const PlatformLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
+const PlatformLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer, BunCrypto.layer);
 const isPathSafetyError = S.is(PathSafetyError);
 const sqliteWriteLockHolder = `
 import { Database } from "bun:sqlite";
@@ -110,7 +112,7 @@ const assertLocalPathRejected = (error: unknown): void => {
   );
 };
 
-describe.sequential("effect-ontology local StorageService", () => {
+describe("effect-ontology local StorageService", { concurrent: false }, () => {
   it.layer(makeStorageTestLayer("tenant-a"))("with tenant-prefixed local storage", (it) => {
     it.effect(
       "round-trips nested keys beneath the configured local root",

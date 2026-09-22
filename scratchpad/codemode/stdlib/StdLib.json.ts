@@ -7,6 +7,7 @@
  */
 
 import type { SafeObject } from "@beep/schema";
+import { dual } from "effect/Function";
 import { A, P, pipe, R } from "@beep/utils";
 import { DateTime, Effect, MutableHashSet, Result } from "effect";
 import * as S from "effect/Schema";
@@ -68,20 +69,34 @@ const isFinite2 = S.is(S.Finite);
  * @category serialization
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeJsonMethod = <R>(
-  runner: CallbackRunner<R>,
-  ref: JsonMethodReference | JsonMethodName,
-  args: Array<unknown>,
-  node: AstNode
-): Effect.Effect<unknown, InterpreterFailure, R> => {
-  const reference = P.isString(ref) ? JsonMethodReference.new(ref) : ref;
+export const invokeJsonMethod: {
+  (
+    ref: JsonMethodReference | JsonMethodName,
+    args: Array<unknown>,
+    node: AstNode
+  ): <R>(runner: CallbackRunner<R>) => Effect.Effect<unknown, InterpreterFailure, R>;
+  <R>(
+    runner: CallbackRunner<R>,
+    ref: JsonMethodReference | JsonMethodName,
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<unknown, InterpreterFailure, R>;
+} = dual(
+  4,
+  <R>(
+    runner: CallbackRunner<R>,
+    ref: JsonMethodReference | JsonMethodName,
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<unknown, InterpreterFailure, R> => {
+    const reference = P.isString(ref) ? JsonMethodReference.new(ref) : ref;
 
-  return JsonMethodName.$match(reference.name, {
-    parse: () => parse(runner, args, node),
-    stringify: () => stringify(runner, args, node),
-  });
-};
+    return JsonMethodName.$match(reference.name, {
+      parse: () => parse(runner, args, node),
+      stringify: () => stringify(runner, args, node),
+    });
+  }
+);
 
 const parse = <R>(
   runner: CallbackRunner<R>,

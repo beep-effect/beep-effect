@@ -41,12 +41,11 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-
-const decodeUnknownSafeMetadataKeySync = S.decodeUnknownSync(SafeMetadataKey);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -54,26 +53,26 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const encoder = new TextEncoder();
-const decodeFramesAtManifest = S.decodeUnknownSync(S.fromJsonString(ExtractFramesAtManifest));
+const decodeFramesAtManifest = S.decodeUnknownEffect(S.fromJsonString(ExtractFramesAtManifest));
 
-const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schema): void => {
-  const encode = S.encodeSync(schema);
-  const decode = S.decodeUnknownSync(schema);
+const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(
+  schema: Schema
+) {
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.all([Arbitrary.schema(schema)]),
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(schema)(value);
+        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+        expect(Equal.equals(decoded, value)).toBe(true);
 
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+        return true;
+      }),
+    fcRuns(25)
+  );
 
-          return true;
-        },
-        fcRuns(25)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
+  expect(result).toMatchObject({ _tag: "Passed" });
+});
 
 const ffprobeJson = UnknownFromJsonString.encodeUnknownSync({
   format: { duration: "2.0", start_time: "0.000000" },
@@ -177,42 +176,47 @@ const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, 
   );
 
 describe("@beep/ffmpeg capture", () => {
-  it("round-trips schema-modeled capture payloads", () => {
-    assertRoundTrip(PositiveSeconds);
-    assertRoundTrip(FileSizeBytes);
-    assertRoundTrip(TileCount);
-    assertRoundTrip(JpegQuality);
-    assertRoundTrip(PixelOffset);
-    assertRoundTrip(LumaValue);
-    assertRoundTrip(SafeMetadataKey);
-    assertRoundTrip(GifDither);
-    assertRoundTrip(ClipCodec);
-    assertRoundTrip(MetadataPair);
-    assertRoundTrip(ExtractFrameAtRequest);
-    assertRoundTrip(TimestampedFrame);
-    assertRoundTrip(ExtractFramesAtRequest);
-    assertRoundTrip(ExtractFramesAtManifest);
-    assertRoundTrip(ExtractFramesAtResult);
-    assertRoundTrip(ExtractClipRequest);
-    assertRoundTrip(ExtractClipResult);
-    assertRoundTrip(RenderGifRequest);
-    assertRoundTrip(RenderGifResult);
-    assertRoundTrip(RenderContactSheetRequest);
-    assertRoundTrip(RenderContactSheetResult);
-    assertRoundTrip(WriteContainerMetadataRequest);
-    assertRoundTrip(WriteContainerMetadataResult);
-    assertRoundTrip(ProbeRegionLuminanceRequest);
-    assertRoundTrip(LuminanceSample);
-    assertRoundTrip(ProbeRegionLuminanceResult);
-  });
+  it.effect("round-trips schema-modeled capture payloads", () =>
+    Effect.gen(function* () {
+      yield* assertRoundTrip(PositiveSeconds);
+      yield* assertRoundTrip(FileSizeBytes);
+      yield* assertRoundTrip(TileCount);
+      yield* assertRoundTrip(JpegQuality);
+      yield* assertRoundTrip(PixelOffset);
+      yield* assertRoundTrip(LumaValue);
+      yield* assertRoundTrip(SafeMetadataKey);
+      yield* assertRoundTrip(GifDither);
+      yield* assertRoundTrip(ClipCodec);
+      yield* assertRoundTrip(MetadataPair);
+      yield* assertRoundTrip(ExtractFrameAtRequest);
+      yield* assertRoundTrip(TimestampedFrame);
+      yield* assertRoundTrip(ExtractFramesAtRequest);
+      yield* assertRoundTrip(ExtractFramesAtManifest);
+      yield* assertRoundTrip(ExtractFramesAtResult);
+      yield* assertRoundTrip(ExtractClipRequest);
+      yield* assertRoundTrip(ExtractClipResult);
+      yield* assertRoundTrip(RenderGifRequest);
+      yield* assertRoundTrip(RenderGifResult);
+      yield* assertRoundTrip(RenderContactSheetRequest);
+      yield* assertRoundTrip(RenderContactSheetResult);
+      yield* assertRoundTrip(WriteContainerMetadataRequest);
+      yield* assertRoundTrip(WriteContainerMetadataResult);
+      yield* assertRoundTrip(ProbeRegionLuminanceRequest);
+      yield* assertRoundTrip(LuminanceSample);
+      yield* assertRoundTrip(ProbeRegionLuminanceResult);
+    })
+  );
 
-  it("rejects unsafe metadata keys", () => {
-    expect(decodeUnknownSafeMetadataKeySync("BEEP_QA_SESSION_ID")).toBe("BEEP_QA_SESSION_ID");
-    expect(() => decodeUnknownSafeMetadataKeySync("BEEP QA")).toThrow();
-    expect(() => decodeUnknownSafeMetadataKeySync("BEEP=QA")).toThrow();
-    expect(() => decodeUnknownSafeMetadataKeySync("1BEEP")).toThrow();
-    expect(() => decodeUnknownSafeMetadataKeySync("")).toThrow();
-  });
+  it.effect("rejects unsafe metadata keys", () =>
+    Effect.gen(function* () {
+      const decode = S.decodeUnknownEffect(SafeMetadataKey);
+      expect(yield* decode("BEEP_QA_SESSION_ID")).toBe("BEEP_QA_SESSION_ID");
+      expect(Exit.isFailure(yield* Effect.exit(decode("BEEP QA")))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decode("BEEP=QA")))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decode("1BEEP")))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decode("")))).toBe(true);
+    })
+  );
 
   it("builds single-frame timestamp extraction arguments", () => {
     expect(
@@ -510,7 +514,7 @@ describe("@beep/ffmpeg capture", () => {
             "sample_at_00001.png",
           ]);
 
-          const manifest = decodeFramesAtManifest(
+          const manifest = yield* decodeFramesAtManifest(
             yield* fs.readFileString(path.join(outDir, "extract-frames-at-manifest.json"))
           );
           expect(manifest.schemaVersion).toBe("beep.ffmpeg.extract-frames-at.v1");

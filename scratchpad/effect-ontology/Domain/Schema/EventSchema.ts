@@ -17,7 +17,7 @@ import { NamedNode } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
-import * as Event from "effect/unstable/eventlog/Event";
+import type * as Event from "effect/unstable/eventlog/Event";
 import * as EventGroup from "effect/unstable/eventlog/EventGroup";
 import { BatchId, GcsUri, OntologyName } from "../Identity.ts";
 import { BatchState } from "../Model/index.ts";
@@ -147,10 +147,10 @@ export const CurationEventGroup = EventGroup.empty
 export type CurationEvent = EventGroup.Events<typeof CurationEventGroup>;
 
 const ExtractionOutcome = LiteralKit(["success", "partial", "failed"]).annotate(
-    $I.annote("ExtractionOutcome", {
-      description: "Terminal extraction outcome stored in an EventLog payload.",
-    })
-  );
+  $I.annote("ExtractionOutcome", {
+    description: "Terminal extraction outcome stored in an EventLog payload.",
+  })
+);
 
 const ExtractionCompletedPayloadDefinition = S.Struct({
   batchId: BatchId,
@@ -197,10 +197,10 @@ const BatchStateChangedPayloadDefinition: S.Struct<BatchStateChangedPayloadField
   timestamp: S.DateTimeUtcFromString,
 });
 const BatchStateChangedPayload: typeof BatchStateChangedPayloadDefinition = BatchStateChangedPayloadDefinition.pipe(
-    $I.annoteSchema("BatchStateChangedPayload", {
-      description: "Journal payload carrying the complete schema-validated batch workflow state.",
-    })
-  );
+  $I.annoteSchema("BatchStateChangedPayload", {
+    description: "Journal payload carrying the complete schema-validated batch workflow state.",
+  })
+);
 
 const EventEntryFields = {
   id: S.NonEmptyString,
@@ -309,7 +309,7 @@ const OntologyEventEntryDefinition: S.toTaggedUnion<"event", OntologyEventEntryM
  * @since 0.0.0
  */
 export const OntologyEventEntry = OntologyEventEntryDefinition.pipe(
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
+  SchemaUtils.withStatics((schema) => ({ decodeUnknownEffect: S.decodeUnknownEffect(schema) })),
   $I.annoteSchema("OntologyEventEntry", {
     description: "Schema-validated journal entry whose event tag determines its canonical payload.",
   })

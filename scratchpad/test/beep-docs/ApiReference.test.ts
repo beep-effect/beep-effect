@@ -1,5 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ReflectionKind } from "typedoc";
@@ -16,13 +17,14 @@ import {
   SearchMetadata,
   StagedSearchMetadata,
 } from "../../beep-docs/domain/SearchMetadata.ts";
+
 const decodeModulePathFromExportPathOption = S.decodeOption(ModulePathFromExportPath);
 const decodePackageSlugFromPackageNameOption = S.decodeOption(PackageSlugFromPackageName);
-const decodeDocumentationSearchMetadataSync = S.decodeSync(DocumentationSearchMetadata);
-const decodeModulePathFromExportPathSync = S.decodeSync(ModulePathFromExportPath);
-const encodeModulePathFromExportPathSync = S.encodeSync(ModulePathFromExportPath);
+const decodeDocumentationSearchMetadata = S.decodeEffect(DocumentationSearchMetadata);
+const decodeModulePathFromExportPath = S.decodeEffect(ModulePathFromExportPath);
+const encodeModulePathFromExportPath = S.encodeEffect(ModulePathFromExportPath);
 
-const decodeReflection = S.decodeUnknownSync(TypeDocProjectReflection);
+const decodeReflection = S.decodeUnknownEffect(TypeDocProjectReflection);
 
 const numberModule = decodeReflection({
   schemaVersion: "2.0",
@@ -152,78 +154,88 @@ const duplicateModule = decodeReflection({
 });
 
 describe("ApiReference.moduleView", () => {
-  it("renders GFM module comments without empty table rows", () => {
-    const view = ApiReference.moduleView(numberModule, {
-      moduleHref: (modulePath) => `/docs/v3/api/effect/${modulePath}`,
-      modulePath: "Number",
-    });
-    const html = O.getOrThrow(view.commentHtml);
-    assert.equal(A.length(A.fromIterable(html.matchAll(/<tr>/g))), 3);
-    assert.match(html, /<td><a href="\/docs\/v3\/api\/effect\/Number#parse"><code>parse<\/code><\/a><\/td>/);
-    assert.match(html, /<td><code>Missing<\/code><\/td>/);
-    assert.match(html, /<h2>Composition Patterns<\/h2>/);
-    assert.match(html, /See also <a href="\/docs\/v3\/api\/effect\/Number#sum"><code>sum<\/code><\/a>\./);
-    assert.match(html, /<ul>\s*<li>Chain operations<\/li>\s*<li>Handle failures<\/li>\s*<\/ul>/);
-    assert.match(html, /<a href="\/docs\/v3\/api\/effect\/BigInt"><code>BigInt<\/code><\/a> for integer operations/);
-    assert.match(
-      html,
-      /<a href="\/docs\/v3\/api\/effect\/BigDecimal"><code>BigDecimal<\/code><\/a> for decimal operations/
-    );
-    assert.isFalse(/<li>\s*<ul>/.test(html));
-    assert.isFalse(/module:/.test(html));
-  });
+  it.effect("renders GFM module comments without empty table rows", () =>
+    Effect.gen(function* () {
+      const view = ApiReference.moduleView(yield* numberModule, {
+        moduleHref: (modulePath) => `/docs/v3/api/effect/${modulePath}`,
+        modulePath: "Number",
+      });
+      const html = O.getOrThrow(view.commentHtml);
+      assert.equal(A.length(A.fromIterable(html.matchAll(/<tr>/g))), 3);
+      assert.match(html, /<td><a href="\/docs\/v3\/api\/effect\/Number#parse"><code>parse<\/code><\/a><\/td>/);
+      assert.match(html, /<td><code>Missing<\/code><\/td>/);
+      assert.match(html, /<h2>Composition Patterns<\/h2>/);
+      assert.match(html, /See also <a href="\/docs\/v3\/api\/effect\/Number#sum"><code>sum<\/code><\/a>\./);
+      assert.match(html, /<ul>\s*<li>Chain operations<\/li>\s*<li>Handle failures<\/li>\s*<\/ul>/);
+      assert.match(html, /<a href="\/docs\/v3\/api\/effect\/BigInt"><code>BigInt<\/code><\/a> for integer operations/);
+      assert.match(
+        html,
+        /<a href="\/docs\/v3\/api\/effect\/BigDecimal"><code>BigDecimal<\/code><\/a> for decimal operations/
+      );
+      assert.isFalse(/<li>\s*<ul>/.test(html));
+      assert.isFalse(/module:/.test(html));
+    })
+  );
 
-  it("supports the pipeable form", () => {
-    const view = ApiReference.moduleView({ modulePath: "Number" })(numberModule);
-    assert.equal(view.declarationCount, 2);
-  });
+  it.effect("supports the pipeable form", () =>
+    Effect.gen(function* () {
+      const view = ApiReference.moduleView({ modulePath: "Number" })(yield* numberModule);
+      assert.equal(view.declarationCount, 2);
+    })
+  );
 
-  it("groups declarations by category, renders signatures, and folds the earliest since", () => {
-    const view = ApiReference.moduleView(numberModule, { modulePath: "Number" });
-    assert.deepEqual(
-      A.map(view.groups, (group) => [group.name, group.slug]),
-      [
-        ["Other", "category-other"],
-        ["Parsing", "category-parsing"],
-      ]
-    );
-    assert.equal(O.getOrThrow(view.since).minor, 5);
-    const parse = O.getOrThrow(
-      A.findFirst(
-        A.flatMap(view.groups, (group) => group.declarations),
-        (declaration) => declaration.name === "parse"
-      )
-    );
-    assert.equal(O.getOrThrow(parse.signature), "declare function parse(input: string): number");
-    assert.equal(A.length(parse.examples), 1);
-    assert.deepEqual(
-      A.map(parse.examples, (example) => O.getOrUndefined(example.title)),
-      ["Parse ten"]
-    );
-  });
+  it.effect("groups declarations by category, renders signatures, and folds the earliest since", () =>
+    Effect.gen(function* () {
+      const view = ApiReference.moduleView(yield* numberModule, { modulePath: "Number" });
+      assert.deepEqual(
+        A.map(view.groups, (group) => [group.name, group.slug]),
+        [
+          ["Other", "category-other"],
+          ["Parsing", "category-parsing"],
+        ]
+      );
+      assert.equal(O.getOrThrow(view.since).minor, 5);
+      const parse = O.getOrThrow(
+        A.findFirst(
+          A.flatMap(view.groups, (group) => group.declarations),
+          (declaration) => declaration.name === "parse"
+        )
+      );
+      assert.equal(O.getOrThrow(parse.signature), "declare function parse(input: string): number");
+      assert.equal(A.length(parse.examples), 1);
+      assert.deepEqual(
+        A.map(parse.examples, (example) => O.getOrUndefined(example.title)),
+        ["Parse ten"]
+      );
+    })
+  );
 
-  it("dedupes anchors by kind and orders value declarations before type declarations", () => {
-    const view = ApiReference.moduleView(duplicateModule, { modulePath: "Dup" });
-    assert.deepEqual(
-      A.map(
-        A.flatMap(view.groups, (group) => group.declarations),
-        (declaration) => [declaration.anchor, declaration.kind, O.getOrUndefined(declaration.typeKind)]
-      ),
-      [
-        ["make-function", "function", undefined],
-        ["make-namespace", "namespace", undefined],
-        ["Make", "interface", "interface"],
-      ]
-    );
-  });
+  it.effect("dedupes anchors by kind and orders value declarations before type declarations", () =>
+    Effect.gen(function* () {
+      const view = ApiReference.moduleView(yield* duplicateModule, { modulePath: "Dup" });
+      assert.deepEqual(
+        A.map(
+          A.flatMap(view.groups, (group) => group.declarations),
+          (declaration) => [declaration.anchor, declaration.kind, O.getOrUndefined(declaration.typeKind)]
+        ),
+        [
+          ["make-function", "function", undefined],
+          ["make-namespace", "namespace", undefined],
+          ["Make", "interface", "interface"],
+        ]
+      );
+    })
+  );
 
-  it("collects code examples across the reflection tree", () => {
-    const examples = ApiReference.codeExamples(numberModule);
-    assert.deepEqual(
-      A.map(examples, (example) => [example.ownerName, example.language, O.getOrUndefined(example.title)]),
-      [["parse", "typescript", "Parse ten"]]
-    );
-  });
+  it.effect("collects code examples across the reflection tree", () =>
+    Effect.gen(function* () {
+      const examples = ApiReference.codeExamples(yield* numberModule);
+      assert.deepEqual(
+        A.map(examples, (example) => [example.ownerName, example.language, O.getOrUndefined(example.title)]),
+        [["parse", "typescript", "Parse ten"]]
+      );
+    })
+  );
 });
 
 describe("CodeSnippet", () => {
@@ -245,50 +257,60 @@ describe("CodeSnippet", () => {
 });
 
 describe("domain codecs", () => {
-  it("derives module paths from export paths and back", () => {
-    assert.equal(decodeModulePathFromExportPathSync("."), "index");
-    assert.equal(decodeModulePathFromExportPathSync("./unstable/http/HttpClient"), "unstable/http/HttpClient");
-    assert.equal(encodeModulePathFromExportPathSync(decodeModulePathFromExportPathSync(".")), ".");
-    assert.equal(encodeModulePathFromExportPathSync(decodeModulePathFromExportPathSync("./Option")), "./Option");
-    assert.isTrue(O.isNone(decodeModulePathFromExportPathOption("./../escape")));
-    assert.isTrue(O.isNone(decodeModulePathFromExportPathOption("./a//b")));
-  });
+  it.effect("derives module paths from export paths and back", () =>
+    Effect.gen(function* () {
+      assert.equal(yield* decodeModulePathFromExportPath("."), "index");
+      assert.equal(yield* decodeModulePathFromExportPath("./unstable/http/HttpClient"), "unstable/http/HttpClient");
+      assert.equal(yield* encodeModulePathFromExportPath(yield* decodeModulePathFromExportPath(".")), ".");
+      assert.equal(
+        yield* encodeModulePathFromExportPath(yield* decodeModulePathFromExportPath("./Option")),
+        "./Option"
+      );
+      assert.isTrue(O.isNone(decodeModulePathFromExportPathOption("./../escape")));
+      assert.isTrue(O.isNone(decodeModulePathFromExportPathOption("./a//b")));
+    })
+  );
 
   it("derives package slugs", () => {
-    assert.deepEqual(O.getOrUndefined(decodePackageSlugFromPackageNameOption("@effect/platform-node")), "platform-node");
+    assert.deepEqual(
+      O.getOrUndefined(decodePackageSlugFromPackageNameOption("@effect/platform-node")),
+      "platform-node"
+    );
     assert.deepEqual(O.getOrUndefined(decodePackageSlugFromPackageNameOption("effect")), "effect");
     assert.isTrue(O.isNone(decodePackageSlugFromPackageNameOption("@other/Pkg")));
   });
 
-  it("discriminates search metadata by content source", () => {
-    const staged = BlogStagedSearchMetadata.make({
-      schema_version: 1,
-      content_source: "blog",
-      page_href: "/blog/effect-4",
-      page_title: "Effect 4",
-      description: "What changed.",
-      published_at: "2026-01-01",
-      authors: [],
-      tags: [],
-      sections: [],
-    });
-    assert.isTrue(StagedSearchMetadata.guards.blog(staged));
-    const stored = decodeDocumentationSearchMetadataSync({
-      schema_version: 1,
-      content_source: "documentation",
-      docs_version: "v4",
-      breadcrumbs: [],
-      page_href: "/docs/v4/option",
-      page_label: "Option",
-      page_title: "Option",
-      sections: ['{"line":1,"level":1,"title":"Option","anchor":"option","parent_anchor":"","excerpt":""}'],
-    });
-    assert.isTrue(SearchMetadata.guards.documentation(stored));
-    assert.deepEqual(
-      A.map(stored.sections, (section) => section.anchor),
-      ["option"]
-    );
-  });
+  it.effect("discriminates search metadata by content source", () =>
+    Effect.gen(function* () {
+      const staged = BlogStagedSearchMetadata.make({
+        schema_version: 1,
+        content_source: "blog",
+        page_href: "/blog/effect-4",
+        page_title: "Effect 4",
+        description: "What changed.",
+        published_at: "2026-01-01",
+        authors: [],
+        tags: [],
+        sections: [],
+      });
+      assert.isTrue(StagedSearchMetadata.guards.blog(staged));
+      const stored = yield* decodeDocumentationSearchMetadata({
+        schema_version: 1,
+        content_source: "documentation",
+        docs_version: "v4",
+        breadcrumbs: [],
+        page_href: "/docs/v4/option",
+        page_label: "Option",
+        page_title: "Option",
+        sections: ['{"line":1,"level":1,"title":"Option","anchor":"option","parent_anchor":"","excerpt":""}'],
+      });
+      assert.isTrue(SearchMetadata.guards.documentation(stored));
+      assert.deepEqual(
+        A.map(stored.sections, (section) => section.anchor),
+        ["option"]
+      );
+    })
+  );
 });
 
 const configModule = decodeReflection({
@@ -428,47 +450,53 @@ const configModule = decodeReflection({
 });
 
 describe("ApiReference signatures and cross-module links", () => {
-  it("renders interface signatures with generics, unions, quoted keys, and object literals", () => {
-    const view = ApiReference.moduleView(configModule, { modulePath: "Config" });
-    const config = O.getOrThrow(
-      A.findFirst(
-        A.flatMap(view.groups, (group) => group.declarations),
-        (declaration) => declaration.name === "Config"
-      )
-    );
-    assert.equal(
-      O.getOrThrow(config.signature),
-      [
-        "interface Config<A extends string> extends Base {",
-        "  readonly items: ReadonlyArray<Option<string>>;",
-        '  mode?: "fast" | "safe";',
-        '  "content-type": string;',
-        "  run(input: {",
-        "    value: number;",
-        "  }): void;",
-        "}",
-      ].join("\n")
-    );
-    assert.deepEqual(O.getOrUndefined(config.typeKind), "interface");
-  });
+  it.effect("renders interface signatures with generics, unions, quoted keys, and object literals", () =>
+    Effect.gen(function* () {
+      const view = ApiReference.moduleView(yield* configModule, { modulePath: "Config" });
+      const config = O.getOrThrow(
+        A.findFirst(
+          A.flatMap(view.groups, (group) => group.declarations),
+          (declaration) => declaration.name === "Config"
+        )
+      );
+      assert.equal(
+        O.getOrThrow(config.signature),
+        [
+          "interface Config<A extends string> extends Base {",
+          "  readonly items: ReadonlyArray<Option<string>>;",
+          '  mode?: "fast" | "safe";',
+          '  "content-type": string;',
+          "  run(input: {",
+          "    value: number;",
+          "  }): void;",
+          "}",
+        ].join("\n")
+      );
+      assert.deepEqual(O.getOrUndefined(config.typeKind), "interface");
+    })
+  );
 
-  it("links cross-module references without anchors and falls back to inline code without an href", () => {
-    const html = O.getOrThrow(
-      ApiReference.moduleView(configModule, {
-        moduleHref: (modulePath) => (modulePath === "Missing" ? undefined : `/api/${modulePath}`),
-        modulePath: "Config",
-      }).commentHtml
-    );
-    assert.match(html, /<a href="\/api\/Other"><code>thing<\/code><\/a>/);
-    assert.match(html, /<a href="\/api\/Other"><code>Other<\/code><\/a>/);
-    assert.match(html, /(?<!<a href="[^"]*">)<code>thing<\/code>;/);
-    assert.isFalse(/module:/.test(html));
-  });
+  it.effect("links cross-module references without anchors and falls back to inline code without an href", () =>
+    Effect.gen(function* () {
+      const html = O.getOrThrow(
+        ApiReference.moduleView(yield* configModule, {
+          moduleHref: (modulePath) => (modulePath === "Missing" ? undefined : `/api/${modulePath}`),
+          modulePath: "Config",
+        }).commentHtml
+      );
+      assert.match(html, /<a href="\/api\/Other"><code>thing<\/code><\/a>/);
+      assert.match(html, /<a href="\/api\/Other"><code>Other<\/code><\/a>/);
+      assert.match(html, /(?<!<a href="[^"]*">)<code>thing<\/code>;/);
+      assert.isFalse(/module:/.test(html));
+    })
+  );
 
-  it("anchors cross-module declaration links when no current module is given", () => {
-    const html = O.getOrThrow(
-      ApiReference.moduleView(configModule, { moduleHref: (modulePath) => `/api/${modulePath}` }).commentHtml
-    );
-    assert.match(html, /<a href="\/api\/Other#thing"><code>thing<\/code><\/a>/);
-  });
+  it.effect("anchors cross-module declaration links when no current module is given", () =>
+    Effect.gen(function* () {
+      const html = O.getOrThrow(
+        ApiReference.moduleView(yield* configModule, { moduleHref: (modulePath) => `/api/${modulePath}` }).commentHtml
+      );
+      assert.match(html, /<a href="\/api\/Other#thing"><code>thing<\/code><\/a>/);
+    })
+  );
 });

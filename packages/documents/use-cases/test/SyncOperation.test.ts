@@ -22,8 +22,6 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { SyncOperationRepositoryShape } from "@beep/documents-use-cases/entities/SyncOperation/server";
 
-const decodeVaultRelPathSync = S.decodeSync(VaultRelPath);
-
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -45,11 +43,11 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   ).toBe("Passed");
 };
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
-const syncItemId = S.decodeSync(Documents.SyncItemId)(1);
-const zero = S.decodeSync(NonNegativeInt)(0);
-const decodeSyncOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperation);
-const encodeSyncOperation = S.encodeSync(DomainSyncOperation.SyncOperation);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
+const syncItemId = Documents.SyncItemId.make(1);
+const zero = NonNegativeInt.make(0);
+const decodeSyncOperation = (input: unknown) =>
+  S.decodeUnknownEffect(DomainSyncOperation.SyncOperation)(input).pipe(Effect.orDie);
 
 const uploadSeed = (idempotencyKey: string, targetRelPath: string) =>
   SyncOperationSeed.make({
@@ -61,7 +59,7 @@ const uploadSeed = (idempotencyKey: string, targetRelPath: string) =>
     status: "queued",
     syncItemId,
     targetName: "complaint.pdf",
-    targetRelPath: decodeVaultRelPathSync(targetRelPath),
+    targetRelPath: VaultRelPath.make(targetRelPath),
     workspaceId,
   });
 
@@ -85,7 +83,7 @@ const syncOperationRow = (seed: SyncOperationSeed, id: number) => ({
 const withStatus = (
   operation: DomainSyncOperation.SyncOperation,
   status: DomainSyncOperation.SyncOperationStatus
-): DomainSyncOperation.SyncOperation => decodeSyncOperation({ ...encodeSyncOperation(operation), status });
+): DomainSyncOperation.SyncOperation => DomainSyncOperation.SyncOperation.make({ ...operation, status });
 
 const makeRepository = (): SyncOperationRepositoryShape => {
   let operations: ReadonlyArray<DomainSyncOperation.SyncOperation> = A.empty();
@@ -105,8 +103,8 @@ const makeRepository = (): SyncOperationRepositoryShape => {
               reason: "operation already enqueued for key",
             })
           )
-        : Effect.sync(() => {
-            const created = decodeSyncOperation(syncOperationRow(seed, nextId));
+        : Effect.gen(function* () {
+            const created = yield* decodeSyncOperation(syncOperationRow(seed, nextId));
             nextId = nextId + 1;
             operations = A.append(operations, created);
             return created;
@@ -208,7 +206,7 @@ describe("SyncOperation repository port", () => {
     "fails update with not-found for unknown operations",
     Effect.fnUntraced(function* () {
       const repository = makeRepository();
-      const unknown = decodeSyncOperation(
+      const unknown = yield* decodeSyncOperation(
         syncOperationRow(uploadSeed("sync-item-1:uploadFile:9", "matters/a/complaint.pdf"), 99)
       );
       const error = yield* repository.update(unknown).pipe(Effect.flip);

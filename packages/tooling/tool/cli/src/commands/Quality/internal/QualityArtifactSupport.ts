@@ -12,6 +12,7 @@ import * as S from "effect/Schema";
 import { Node } from "ts-morph";
 import { fencedLineState } from "../../../internal/jsdoc/JSDocSections.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 export { fencedLineState, jsdocCommentsFromSource } from "../../../internal/jsdoc/JSDocSections.ts";
@@ -502,7 +503,7 @@ export const topoSortPackageNames = Effect.fn("QualityArtifactSupport.topoSortPa
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   QualityArtifactGeneratorError,
-  FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const command = "bun run topo-sort";
   const result = yield* runCaptured({

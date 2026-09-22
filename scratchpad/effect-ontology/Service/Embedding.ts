@@ -1,3 +1,5 @@
+import * as Crypto from "effect/Crypto";
+import { flow } from "effect/Function";
 /**
  * Service: Embedding
  *
@@ -16,7 +18,7 @@ import * as O from "effect/Option";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { MetricsService } from "../Telemetry/Metrics.ts";
-import { hashVersionedEmbeddingKey } from "../Utils/Hash.ts";
+import { hashVersionedEmbeddingKey as hashVersionedEmbeddingKeyEffect } from "../Utils/Hash.ts";
 import { EmbeddingCache } from "./EmbeddingCache.ts";
 import type { Embedding, EmbeddingTaskType, ProviderMetadata } from "./EmbeddingProvider.ts";
 import { cosineSimilarity as cosineSim, EmbeddingProvider } from "./EmbeddingProvider.ts";
@@ -166,11 +168,16 @@ export class EmbeddingService extends Context.Service<EmbeddingService, Embeddin
 export const EmbeddingServiceLive: Layer.Layer<
   EmbeddingService,
   never,
-  EmbeddingProvider | EmbeddingCache | MetricsService
+  EmbeddingProvider | EmbeddingCache | MetricsService | Crypto.Crypto
 > = Layer.effect(
   EmbeddingService,
   Effect.gen(function* () {
     const provider = yield* EmbeddingProvider;
+    const crypto = yield* Crypto.Crypto;
+    const hashVersionedEmbeddingKey = flow(
+      hashVersionedEmbeddingKeyEffect,
+      Effect.provideService(Crypto.Crypto, crypto)
+    );
     const cache = yield* EmbeddingCache;
     const metrics = yield* MetricsService;
 
@@ -283,5 +290,5 @@ export const EmbeddingServiceLive: Layer.Layer<
 export const EmbeddingServiceDefault: Layer.Layer<
   EmbeddingService,
   never,
-  EmbeddingProvider | EmbeddingCache | MetricsService
+  EmbeddingProvider | EmbeddingCache | MetricsService | Crypto.Crypto
 > = EmbeddingServiceLive;

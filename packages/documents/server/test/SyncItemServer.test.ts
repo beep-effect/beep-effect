@@ -45,16 +45,15 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   ).toBe("Passed");
 };
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
-const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
-const remoteId = S.decodeSync(RemoteItemId)("9001");
-const localGeneration = S.decodeSync(NonNegativeInt)(1);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
+const remoteId = RemoteItemId.make("9001");
+const localGeneration = NonNegativeInt.make(1);
 
 const itemSeed = (localRelPath: string) =>
   SyncItemSeed.make({
     itemKind: "file",
     localGeneration,
-    localRelPath: decodeVaultRelPath(localRelPath),
+    localRelPath: VaultRelPath.make(localRelPath),
     provider: "box",
     syncState: "pending",
     workspaceId,
@@ -62,7 +61,7 @@ const itemSeed = (localRelPath: string) =>
 
 const byWorkspace = ListSyncItemsByWorkspaceInput.make({ provider: "box", workspaceId });
 
-const detachedItem = S.decodeUnknownSync(DomainSyncItem.SyncItem)({
+const detachedItemRow = {
   ...productEntityFixtureInput(DocumentsIdentity.SyncItemId.entityType, 99),
   contentDigest: null,
   contentSizeBytes: null,
@@ -78,7 +77,7 @@ const detachedItem = S.decodeUnknownSync(DomainSyncItem.SyncItem)({
   remoteParentId: null,
   syncState: "pending",
   workspaceId: 2,
-});
+};
 
 describe("SyncItem server repository", () => {
   it.effect(
@@ -139,6 +138,7 @@ describe("SyncItem server repository", () => {
     "fails update for an untracked item with not-found",
     Effect.fnUntraced(function* () {
       const repository = yield* makeInMemorySyncItemRepository();
+      const detachedItem = yield* S.decodeUnknownEffect(DomainSyncItem.SyncItem)(detachedItemRow);
 
       const error = yield* Effect.flip(repository.update(detachedItem));
       expect(SyncItemRepositoryNotFound.is(error)).toBe(true);

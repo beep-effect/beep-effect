@@ -12,25 +12,25 @@ import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import type { ProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance";
 
-const decodeUnknownDomainProviderInstanceProviderInstanceSync = S.decodeUnknownSync(
-  DomainProviderInstance.ProviderInstance
-);
-
-const ProviderInstanceArbitrary = Arbitrary.schema(DomainProviderInstance.ProviderInstance);
 const ProviderInstanceEquivalence = S.toEquivalence(DomainProviderInstance.ProviderInstance);
+
+const providerInstanceEnvVars: ProviderInstanceRow["envVars"] = {};
 
 const providerInstanceRow = {
   ...productEntityFixtureInput("AgentsProviderInstance", 10),
   binaryPath: "/usr/local/bin/codex",
-  envVars: {},
+  entityType: "AgentsProviderInstance" as const,
+  envVars: providerInstanceEnvVars,
   homePath: null,
-  kind: "codex",
+  kind: "codex" as const,
   label: "Work Codex",
   lastProbe: null,
-};
+  schemaVersion: "0.0.0" as const,
+} satisfies ProviderInstanceRow;
 
 describe("ProviderInstance table", () => {
   it("materializes ProviderInstance metadata without executing a live database", () => {
@@ -99,45 +99,52 @@ describe("ProviderInstance table", () => {
     expect(Entities.ProviderInstance.providerInstanceTable).toBe(providerInstanceTable);
   });
 
-  it("round-trips ProviderInstance rows through the converters", () => {
-    const providerInstance = decodeUnknownDomainProviderInstanceProviderInstanceSync(providerInstanceRow);
-    const insert = toProviderInstanceInsert(providerInstance);
+  it.effect(
+    "round-trips ProviderInstance rows through the converters",
+    Effect.fnUntraced(function* () {
+      const providerInstance = yield* Effect.fromResult(fromProviderInstanceRow(providerInstanceRow));
+      const insert = yield* Effect.fromResult(toProviderInstanceInsert(providerInstance));
 
-    expect("id" in insert).toBe(false);
-    expect(insert.binaryPath).toBe("/usr/local/bin/codex");
-    expect(insert.kind).toBe("codex");
-    expect(insert.entityType).toBe("AgentsProviderInstance");
+      expect("id" in insert).toBe(false);
+      expect(insert.binaryPath).toBe("/usr/local/bin/codex");
+      expect(insert.kind).toBe("codex");
+      expect(insert.entityType).toBe("AgentsProviderInstance");
 
-    const roundTripped = fromProviderInstanceRow({
-      ...insert,
-      id: 10,
-      homePath: insert.homePath ?? null,
-      lastProbe: insert.lastProbe ?? null,
-    });
+      const roundTripped = yield* Effect.fromResult(
+        fromProviderInstanceRow({
+          ...insert,
+          id: 10,
+          homePath: insert.homePath ?? null,
+          lastProbe: insert.lastProbe ?? null,
+        })
+      );
 
-    expect(ProviderInstanceEquivalence(roundTripped, providerInstance)).toBe(true);
-  });
+      expect(ProviderInstanceEquivalence(roundTripped, providerInstance)).toBe(true);
+    })
+  );
 
-  it("round-trips schema-derived ProviderInstances through the row converters", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ProviderInstanceArbitrary]),
-          ([providerInstance]) => {
-            const insert = toProviderInstanceInsert(providerInstance);
-            const decoded = fromProviderInstanceRow({
-              ...insert,
-              id: providerInstance.id,
-              homePath: insert.homePath ?? null,
-              lastProbe: insert.lastProbe ?? null,
-            });
+  it.prop(
+    "round-trips schema-derived ProviderInstances through the row converters",
+    [S.toType(DomainProviderInstance.ProviderInstance)],
+    ([providerInstance]) => {
+      const insert = toProviderInstanceInsert(providerInstance);
+      expect(Result.isSuccess(insert)).toBe(true);
+      if (!Result.isSuccess(insert)) {
+        return;
+      }
+      const decoded = fromProviderInstanceRow({
+        ...insert.success,
+        id: providerInstance.id,
+        homePath: insert.success.homePath ?? null,
+        lastProbe: insert.success.lastProbe ?? null,
+      });
+      expect(Result.isSuccess(decoded)).toBe(true);
+      if (!Result.isSuccess(decoded)) {
+        return;
+      }
 
-            expect(ProviderInstanceEquivalence(decoded, providerInstance)).toBe(true);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      expect(ProviderInstanceEquivalence(decoded.success, providerInstance)).toBe(true);
+    },
+    { arbitrary: fcRuns(50) }
+  );
 });

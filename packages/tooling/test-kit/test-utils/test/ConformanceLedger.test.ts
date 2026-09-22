@@ -1,17 +1,16 @@
 import { pathToFileURL } from "node:url";
 import * as Conformance from "@beep/schema/Conformance";
-import { provideScopedLayer } from "@beep/test-utils";
 import {
   validateConformanceAnnotationAgainstLedgerArtifacts,
   validateConformanceLedgerArtifacts,
 } from "@beep/test-utils/ConformanceLedger";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const packageName = "@beep/example";
 const profileId = "example-profile";
 const secondaryProfileId = "example-secondary-profile";
@@ -198,18 +197,18 @@ const encodeCoverageArtifact = (options: FixtureOptions, primaryEvidence: Return
     ],
   });
 
-const fixtureFiles = (options: FixtureOptions) => {
+const fixtureFiles = Effect.fn("ConformanceLedgerTest.fixtureFiles")(function* (options: FixtureOptions) {
   const primaryEvidence = primaryEvidenceFrom(options);
 
   return [
-    ["data/conformance/sources.json", encodeSourcesArtifact(options)],
-    ["data/conformance/inventory.json", encodeInventoryArtifact(options)],
-    ["data/conformance/invariants.json", encodeInvariantsArtifact(options, primaryEvidence)],
-    ["data/conformance/coverage.json", encodeCoverageArtifact(options, primaryEvidence)],
+    ["data/conformance/sources.json", yield* encodeSourcesArtifact(options)],
+    ["data/conformance/inventory.json", yield* encodeInventoryArtifact(options)],
+    ["data/conformance/invariants.json", yield* encodeInvariantsArtifact(options, primaryEvidence)],
+    ["data/conformance/coverage.json", yield* encodeCoverageArtifact(options, primaryEvidence)],
     ["data/conformance/SOURCES.md", "# Example conformance sources\n"],
     ["test/ConformanceEvidence.test.ts", options.evidenceSource ?? evidenceTestSource],
   ] as const;
-};
+});
 
 const validateFixtureArtifacts = (root: string, options: FixtureOptions) => {
   const packageRoot = pathToFileURL(`${root}/`);
@@ -227,7 +226,7 @@ const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(funct
     fileSystem.makeDirectory(`${root}/test`, { recursive: true }),
   ]);
   yield* Effect.forEach(
-    fixtureFiles(options),
+    yield* fixtureFiles(options),
     ([relativePath, contents]) => fileSystem.writeFileString(`${root}/${relativePath}`, contents),
     { concurrency: "unbounded" }
   );
@@ -235,9 +234,9 @@ const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(funct
   return yield* validateFixtureArtifacts(root, options);
 });
 
-const runFixture = (options: FixtureOptions) => validateFixture(options).pipe(provideScopedLayer(BunFileSystem.layer));
+const runFixture = (options: FixtureOptions) => Effect.scoped(validateFixture(options));
 
-describe("conformance-ledger validation", () => {
+it.layer(BunFileSystem.layer)("conformance-ledger validation", (it) => {
   it.effect("matches a published annotation against its profile-selected ledger records", () =>
     Effect.gen(function* () {
       const annotation = Conformance.makeAnnotation({

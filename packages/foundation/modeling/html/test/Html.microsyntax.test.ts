@@ -18,25 +18,25 @@ import { tokenizeHtmlSpaceSeparated } from "@beep/html/Html.attributes";
 import { A as Anchor, Area, Audio, Button, HtmlNode, Li, Link, Meta, Ol } from "@beep/html/Html.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Effect, Exit, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeGlobalAttributesStructResult = S.decodeResult(GlobalAttributesStruct);
 const decodeOlResult = S.decodeResult(Ol);
-const decodeAnchorSync = S.decodeSync(Anchor);
-const decodeAutocompleteAttributeSync = S.decodeSync(AutocompleteAttribute);
-const decodeLiSync = S.decodeSync(Li);
-const decodePopoverSync = S.decodeSync(Popover);
+const decodeAnchor = S.decodeUnknownEffect(Anchor);
+const decodeAutocompleteAttribute = S.decodeUnknownEffect(AutocompleteAttribute);
+const decodeLi = S.decodeUnknownEffect(Li);
+const decodePopover = S.decodeUnknownEffect(Popover);
 const decodeUnknownHtmlNodeResult = S.decodeUnknownResult(HtmlNode);
-const decodeUnknownLiSync = S.decodeUnknownSync(Li);
-const decodeUnknownOlSync = S.decodeUnknownSync(Ol);
+const decodeUnknownLi = S.decodeUnknownEffect(Li);
+const decodeUnknownOl = S.decodeUnknownEffect(Ol);
 const encodeGlobalAttributesStructResult = S.encodeResult(GlobalAttributesStruct);
 const encodeHtmlNodeResult = S.encodeResult(HtmlNode);
 const encodeOlResult = S.encodeResult(Ol);
-const encodeAnchorSync = S.encodeSync(Anchor);
-const encodeAutocompleteAttributeSync = S.encodeSync(AutocompleteAttribute);
+const encodeAnchor = S.encodeEffect(Anchor);
+const encodeAutocompleteAttribute = S.encodeEffect(AutocompleteAttribute);
 const isAutocompleteAttribute = S.is(AutocompleteAttribute);
 const isBooleanAttribute = S.is(BooleanAttribute);
 const isDatasetKey = S.is(DatasetKey);
@@ -50,8 +50,8 @@ const isHtmlPositiveNumber = S.is(HtmlPositiveNumber);
 const isPopover = S.is(Popover);
 
 const Rel = makeSpaceSeparatedTokenList(["noopener", "noreferrer"]);
-const decodeRelSync = S.decodeSync(Rel);
-const encodeRelSync = S.encodeSync(Rel);
+const decodeRel = S.decodeUnknownEffect(Rel);
+const encodeRel = S.encodeEffect(Rel);
 const Enumerated = makeAsciiCaseInsensitiveEnumerated(["image", "script"]);
 const decodeEnumeratedResult = S.decodeResult(Enumerated);
 const encodeEnumeratedResult = S.encodeResult(Enumerated);
@@ -89,37 +89,42 @@ describe("@beep/html attribute microsyntaxes", () => {
     expect(isBooleanAttribute("false")).toBe(false);
   });
 
-  it("models heading and popover global microsyntaxes canonically", () => {
-    expect(isHeadingOffset(0)).toBe(true);
-    expect(isHeadingOffset(8)).toBe(true);
-    expect(isHeadingOffset(-1)).toBe(false);
-    expect(isHeadingOffset(9)).toBe(false);
-    expect(decodePopoverSync("")).toBe("auto");
-    expect(decodePopoverSync("auto")).toBe("auto");
-    expect(isPopover("")).toBe(false);
-  });
+  it.effect("models heading and popover global microsyntaxes canonically", () =>
+    Effect.gen(function* () {
+      expect(isHeadingOffset(0)).toBe(true);
+      expect(isHeadingOffset(8)).toBe(true);
+      expect(isHeadingOffset(-1)).toBe(false);
+      expect(isHeadingOffset(9)).toBe(false);
+      expect(yield* decodePopover("")).toBe("auto");
+      expect(yield* decodePopover("auto")).toBe("auto");
+      expect(isPopover("")).toBe(false);
+    })
+  );
 
-  it("models non-negative and positive integer domains", () => {
-    expect(isHtmlNonNegativeInteger(0)).toBe(true);
-    expect(isHtmlNonNegativeInteger(-1)).toBe(false);
-    expect(isHtmlNonNegativeInteger(1.5)).toBe(false);
-    expect(isHtmlPositiveInteger(1)).toBe(true);
-    expect(isHtmlPositiveInteger(0)).toBe(false);
-    expect(
-      decodeLiSync({
-        _tag: "li",
-        children: [],
-        value: -2,
-      }).value
-    ).toStrictEqual(expect.objectContaining({ value: -2 }));
-    expect(() =>
-      decodeUnknownLiSync({
-        _tag: "li",
-        children: [],
-        value: "-2",
-      })
-    ).toThrow();
-  });
+  it.effect("models non-negative and positive integer domains", () =>
+    Effect.gen(function* () {
+      expect(isHtmlNonNegativeInteger(0)).toBe(true);
+      expect(isHtmlNonNegativeInteger(-1)).toBe(false);
+      expect(isHtmlNonNegativeInteger(1.5)).toBe(false);
+      expect(isHtmlPositiveInteger(1)).toBe(true);
+      expect(isHtmlPositiveInteger(0)).toBe(false);
+      expect(
+        (yield* decodeLi({
+          _tag: "li",
+          children: [],
+          value: -2,
+        })).value
+      ).toStrictEqual(expect.objectContaining({ value: -2 }));
+      const encodedStringValue = yield* Effect.exit(
+        decodeUnknownLi({
+          _tag: "li",
+          children: [],
+          value: "-2",
+        })
+      );
+      expect(Exit.isFailure(encodedStringValue)).toBe(true);
+    })
+  );
 
   it("models finite, non-negative, and positive floating-point domains", () => {
     expect(isHtmlFiniteNumber(1.5)).toBe(true);
@@ -148,34 +153,39 @@ describe("@beep/html attribute microsyntaxes", () => {
       )._tag
     ).toBe("Passed"));
 
-  it("normalizes token lists to lowercase registry order and one space", () => {
-    expect(decodeRelSync("  NOREFERRER   noopener ")).toBe("noopener noreferrer");
-    expect(encodeRelSync("noopener noreferrer")).toBe("noopener noreferrer");
-    expect(() => Rel.make("noreferrer noopener")).toThrow();
+  it.effect("normalizes token lists to lowercase registry order and one space", () =>
+    Effect.gen(function* () {
+      expect(yield* decodeRel("  NOREFERRER   noopener ")).toBe("noopener noreferrer");
+      expect(yield* encodeRel("noopener noreferrer")).toBe("noopener noreferrer");
+      expect(() => Rel.make("noreferrer noopener")).toThrow();
 
-    const decoded = decodeAnchorSync({
-      _tag: "a",
-      rel: "NOREFERRER  noopener",
-      children: [],
-    });
-    expect(encodeAnchorSync(decoded)).toStrictEqual({
-      _tag: "a",
-      rel: "noopener noreferrer",
-      children: [],
-    });
-  });
+      const decoded = yield* decodeAnchor({
+        _tag: "a",
+        rel: "NOREFERRER  noopener",
+        children: [],
+      });
+      expect(yield* encodeAnchor(decoded)).toStrictEqual({
+        _tag: "a",
+        rel: "noopener noreferrer",
+        children: [],
+      });
+    })
+  );
 
-  it("uses only the five HTML ASCII whitespace code points as token separators", () => {
-    for (const separator of [" ", "\t", "\n", "\f", "\r"]) {
-      expect(tokenizeHtmlSpaceSeparated(`noopener${separator}noreferrer`)).toStrictEqual(["noopener", "noreferrer"]);
-    }
-    for (const separator of ["\u00a0", "\u2003", "\u202f"]) {
-      const value = `noopener${separator}noreferrer`;
-      expect(tokenizeHtmlSpaceSeparated(value)).toStrictEqual([value]);
-      expect(() => decodeRelSync(value)).toThrow();
-      expect(() => Rel.make(value)).toThrow();
-    }
-  });
+  it.effect("uses only the five HTML ASCII whitespace code points as token separators", () =>
+    Effect.gen(function* () {
+      for (const separator of [" ", "\t", "\n", "\f", "\r"]) {
+        expect(tokenizeHtmlSpaceSeparated(`noopener${separator}noreferrer`)).toStrictEqual(["noopener", "noreferrer"]);
+      }
+      for (const separator of ["\u00a0", "\u2003", "\u202f"]) {
+        const value = `noopener${separator}noreferrer`;
+        expect(tokenizeHtmlSpaceSeparated(value)).toStrictEqual([value]);
+        const invalidRel = yield* Effect.exit(decodeRel(value));
+        expect(Exit.isFailure(invalidRel)).toBe(true);
+        expect(() => Rel.make(value)).toThrow();
+      }
+    })
+  );
 
   it("canonicalizes encoded enumerated keywords while preserving fixed-point Types", () => {
     const cases = [
@@ -212,13 +222,16 @@ describe("@beep/html attribute microsyntaxes", () => {
     expect(Meta.make({ "http-equiv": O.some("content-type") })["http-equiv"]).toStrictEqual(O.some("content-type"));
   });
 
-  it("keeps the case-distinguishing ol type keyword contract", () => {
-    for (const value of ["a", "A", "i", "I"] as const) {
-      const decoded = Result.getOrThrow(decodeOlResult({ _tag: "ol", children: [], type: value }));
-      expect(Result.getOrThrow(encodeOlResult(decoded)).type).toBe(value);
-    }
-    expect(() => decodeUnknownOlSync({ _tag: "ol", children: [], type: "ALPHA" })).toThrow();
-  });
+  it.effect("keeps the case-distinguishing ol type keyword contract", () =>
+    Effect.gen(function* () {
+      for (const value of ["a", "A", "i", "I"] as const) {
+        const decoded = Result.getOrThrow(decodeOlResult({ _tag: "ol", children: [], type: value }));
+        expect(Result.getOrThrow(encodeOlResult(decoded)).type).toBe(value);
+      }
+      const invalidOlType = yield* Effect.exit(decodeUnknownOl({ _tag: "ol", children: [], type: "ALPHA" }));
+      expect(Exit.isFailure(invalidOlType)).toBe(true);
+    })
+  );
 
   it("obeys the enumerated-attribute ASCII-case fixed-point law", () => {
     expect(
@@ -283,50 +296,56 @@ describe("@beep/html attribute microsyntaxes", () => {
     });
   });
 
-  it("keeps token normalization decode/encode idempotent", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(
-              S.Literals([
-                "noopener",
-                "noreferrer",
-                "noopener noreferrer",
-                "noreferrer noopener",
-                "  NOOPENER   noreferrer ",
-              ])
-            ),
-          ]),
-          ([input]) => {
-            const canonical = decodeRelSync(input);
-            expect(decodeRelSync(encodeRelSync(canonical))).toBe(canonical);
+  it.effect("keeps token normalization decode/encode idempotent", () =>
+    Effect.gen(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([
+          Arbitrary.schema(
+            S.Literals([
+              "noopener",
+              "noreferrer",
+              "noopener noreferrer",
+              "noreferrer noopener",
+              "  NOOPENER   noreferrer ",
+            ])
+          ),
+        ]),
+        ([input]) =>
+          Effect.gen(function* () {
+            const canonical = yield* decodeRel(input);
+            expect(yield* decodeRel(yield* encodeRel(canonical))).toBe(canonical);
 
             return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+          }),
+        fcRuns(50)
+      );
 
-  it("validates autocomplete and dataset-key grammars", () => {
-    expect(isAutocompleteAttribute("section-checkout shipping email")).toBe(true);
-    expect(isAutocompleteAttribute("shipping unknown-field")).toBe(false);
-    expect(isAutocompleteAttribute("shipping\u00a0email")).toBe(false);
-    expect(decodeAutocompleteAttributeSync(" SECTION-Checkout   SHIPPING Email ")).toBe(
-      "section-checkout shipping email"
-    );
-    expect(encodeAutocompleteAttributeSync("section-checkout shipping email")).toBe("section-checkout shipping email");
-    expect(() => AutocompleteAttribute.make("SHIPPING email")).toThrow();
-    expect(isDatasetKey("testid")).toBe(true);
-    expect(isDatasetKey("1")).toBe(true);
-    expect(isDatasetKey("-x")).toBe(true);
-    expect(isDatasetKey("méta")).toBe(true);
-    expect(isDatasetKey("TestId")).toBe(false);
-    expect(isDatasetKey('x" onclick')).toBe(false);
-    expect(isHtmlIdValue("section-1")).toBe(true);
-    expect(isHtmlIdValue("")).toBe(false);
-    expect(isHtmlIdValue("two ids")).toBe(false);
-    expect(isHtmlIdValue("two\tids")).toBe(false);
-  });
+      expect(result._tag).toBe("Passed");
+    })
+  );
+
+  it.effect("validates autocomplete and dataset-key grammars", () =>
+    Effect.gen(function* () {
+      expect(isAutocompleteAttribute("section-checkout shipping email")).toBe(true);
+      expect(isAutocompleteAttribute("shipping unknown-field")).toBe(false);
+      expect(isAutocompleteAttribute("shipping\u00a0email")).toBe(false);
+      expect(yield* decodeAutocompleteAttribute(" SECTION-Checkout   SHIPPING Email ")).toBe(
+        "section-checkout shipping email"
+      );
+      expect(yield* encodeAutocompleteAttribute("section-checkout shipping email")).toBe(
+        "section-checkout shipping email"
+      );
+      expect(() => AutocompleteAttribute.make("SHIPPING email")).toThrow();
+      expect(isDatasetKey("testid")).toBe(true);
+      expect(isDatasetKey("1")).toBe(true);
+      expect(isDatasetKey("-x")).toBe(true);
+      expect(isDatasetKey("méta")).toBe(true);
+      expect(isDatasetKey("TestId")).toBe(false);
+      expect(isDatasetKey('x" onclick')).toBe(false);
+      expect(isHtmlIdValue("section-1")).toBe(true);
+      expect(isHtmlIdValue("")).toBe(false);
+      expect(isHtmlIdValue("two ids")).toBe(false);
+      expect(isHtmlIdValue("two\tids")).toBe(false);
+    })
+  );
 });

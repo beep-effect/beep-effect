@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { dual } from "effect/Function";
 import { LiteralKit } from "@beep/schema";
 import { A, P } from "@beep/utils";
 import { Effect } from "effect";
@@ -83,8 +84,10 @@ type DirectMathMethod = Exclude<MathMethod, "random" | "sumPrecise">;
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, node: AstNode): number => {
+export const invokeMathMethod: {
+  (args: Array<unknown>, node: AstNode): (name: DirectMathMethod) => number;
+  (name: DirectMathMethod, args: Array<unknown>, node: AstNode): number;
+} = dual(3, (name: DirectMathMethod, args: Array<unknown>, node: AstNode): number => {
   // Validate only the arguments the method consumes; like JS, extras are ignored
   // (so built-ins work as callbacks receiving (element, index, array)).
   const num = (index: number): number => {
@@ -137,7 +140,7 @@ export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, n
     clz32: () => Math.clz32(a),
     imul: () => Math.imul(a, b()),
   });
-};
+});
 
 /**
  * Sums a synchronous iterable of numbers using host `Math.sumPrecise`.
@@ -178,13 +181,16 @@ export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, n
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest iterable, AST context, and callback runner are co-primary interpreter protocol inputs.
-export const invokeMathSumPrecise = <R>(
-  runner: SyncIteratorRunner<R>,
-  source: unknown,
-  node: AstNode
-): Effect.Effect<number, InterpreterFailure, R> =>
-  Effect.gen(function* () {
+export const invokeMathSumPrecise: {
+  (source: unknown, node: AstNode): <R>(runner: SyncIteratorRunner<R>) => Effect.Effect<number, InterpreterFailure, R>;
+  <R>(runner: SyncIteratorRunner<R>, source: unknown, node: AstNode): Effect.Effect<number, InterpreterFailure, R>;
+} = dual(
+  3,
+  Effect.fnUntraced(function* <R>(
+    runner: SyncIteratorRunner<R>,
+    source: unknown,
+    node: AstNode
+  ): Effect.fn.Return<number, InterpreterFailure, R> {
     const cursor = yield* runner.syncIterator(source, node);
     if (P.isUndefined(cursor)) {
       throw InterpreterRuntimeError.new("Math.sumPrecise expects a synchronous iterable.", node).as("TypeError");
@@ -203,4 +209,5 @@ export const invokeMathSumPrecise = <R>(
         })
       );
     }
-  });
+  })
+);

@@ -1,3 +1,5 @@
+import * as Crypto from "effect/Crypto";
+import { flow } from "effect/Function";
 /**
  * ImageFetcher Service
  *
@@ -31,7 +33,7 @@ import {
 } from "../Domain/Error/Image.ts";
 import type { ImageCandidate } from "../Domain/Model/Image.ts";
 import { ImageFetchResult } from "../Domain/Model/Image.ts";
-import { sha256Bytes } from "../Utils/Hash.ts";
+import { sha256Bytes as sha256BytesEffect } from "../Utils/Hash.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ImageFetcher");
 
@@ -280,6 +282,8 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
   static readonly Live = Layer.effect(
     ImageFetcher,
     Effect.gen(function* () {
+      const crypto = yield* Crypto.Crypto;
+      const sha256Bytes = flow(sha256BytesEffect, Effect.provideService(Crypto.Crypto, crypto));
       const httpClient = yield* HttpClient.HttpClient;
 
       const fetchAttempt = Effect.fn("ImageFetcher.fetchAttempt")(function* (
@@ -321,15 +325,16 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
 
         // Execute with timeout
         const response = yield* httpClient.execute(requestWithReferrer).pipe(
-          Effect.timeout(timeout),
-          Effect.catchTag("TimeoutError", () =>
-            Effect.fail(
-              ImageTimeoutError.make({
-                url: candidate.sourceUrl,
-                timeoutMs: Milliseconds.make(Duration.toMillis(timeout)),
-              })
-            )
-          ),
+          Effect.timeoutOrElse({
+            duration: timeout,
+            orElse: () =>
+              Effect.fail(
+                ImageTimeoutError.make({
+                  url: candidate.sourceUrl,
+                  timeoutMs: Milliseconds.make(Duration.toMillis(timeout)),
+                })
+              ),
+          }),
           Effect.mapError((error) => {
             if (ImageTimeoutError.is(error)) return error;
             return ImageFetchError.make({

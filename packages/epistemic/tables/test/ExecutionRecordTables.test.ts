@@ -17,9 +17,11 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type {
   ExecutionDecisionInsert,
@@ -45,8 +47,8 @@ const asSelectedOutcomeRow = (insert: ExecutionOutcomeInsert): ExecutionOutcomeR
   decisionVerdict: insert.decisionVerdict ?? "allowed",
 });
 
-const decodeDecision = S.decodeUnknownSync(ExecutionDecisionRecord);
-const decodeOutcome = S.decodeUnknownSync(ExecutionOutcomeRecord);
+const decodeDecision = S.decodeUnknownEffect(ExecutionDecisionRecord);
+const decodeOutcome = S.decodeUnknownEffect(ExecutionOutcomeRecord);
 const decisionEquivalence = S.toEquivalence(ExecutionDecisionRecord);
 const outcomeEquivalence = S.toEquivalence(ExecutionOutcomeRecord);
 
@@ -148,55 +150,85 @@ describe("ExecutionRecordTables", () => {
     }
   });
 
-  it("round-trips an allowed decision through insert and select rows", () => {
-    const insert = toExecutionDecisionInsert(allowedDecision);
+  it.effect(
+    "round-trips an allowed decision through insert and select rows",
+    Effect.fnUntraced(function* () {
+      const decision = yield* allowedDecision;
+      const insert = yield* Effect.fromResult(toExecutionDecisionInsert(decision));
 
-    expect(decisionEquivalence(fromExecutionDecisionRow(asSelectedRow(insert)), allowedDecision)).toBe(true);
-  });
+      expect(
+        decisionEquivalence(yield* Effect.fromResult(fromExecutionDecisionRow(asSelectedRow(insert))), decision)
+      ).toBe(true);
+    })
+  );
 
-  it("round-trips a denied decision with its bounded reason", () => {
-    const insert = toExecutionDecisionInsert(deniedDecision);
+  it.effect(
+    "round-trips a denied decision with its bounded reason",
+    Effect.fnUntraced(function* () {
+      const decision = yield* deniedDecision;
+      const insert = yield* Effect.fromResult(toExecutionDecisionInsert(decision));
 
-    expect(insert.reason).toBe("destination-not-granted");
-    expect(decisionEquivalence(fromExecutionDecisionRow(asSelectedRow(insert)), deniedDecision)).toBe(true);
-  });
+      expect(insert.reason).toBe("destination-not-granted");
+      expect(
+        decisionEquivalence(yield* Effect.fromResult(fromExecutionDecisionRow(asSelectedRow(insert))), decision)
+      ).toBe(true);
+    })
+  );
 
-  it("round-trips an outcome record", () => {
-    const insert = toExecutionOutcomeInsert(outcome);
+  it.effect(
+    "round-trips an outcome record",
+    Effect.fnUntraced(function* () {
+      const recorded = yield* outcome;
+      const insert = yield* Effect.fromResult(toExecutionOutcomeInsert(recorded));
 
-    expect(outcomeEquivalence(fromExecutionOutcomeRow(asSelectedOutcomeRow(insert)), outcome)).toBe(true);
-  });
+      expect(
+        outcomeEquivalence(yield* Effect.fromResult(fromExecutionOutcomeRow(asSelectedOutcomeRow(insert))), recorded)
+      ).toBe(true);
+    })
+  );
 
-  it("keeps sealed records and their row projections in agreement", () => {
-    const sealed = sealExecutionDecision({
-      audience: allowedDecision.audience,
-      decidedAt: allowedDecision.decidedAt,
-      destinationDigest: allowedDecision.destinationDigest,
-      grantSetDigest: allowedDecision.grantSetDigest,
-      operationDigest: allowedDecision.operationDigest,
-      policyRevision: allowedDecision.policyRevision,
-      prevHash: O.none(),
-      runKey: allowedDecision.runKey,
-      seq: allowedDecision.seq,
-      sinkClass: allowedDecision.sinkClass,
-      verdict: "allowed",
-    });
-    const rebuilt = fromExecutionDecisionRow(asSelectedRow(toExecutionDecisionInsert(sealed)));
+  it.effect(
+    "keeps sealed records and their row projections in agreement",
+    Effect.fnUntraced(function* () {
+      const decision = yield* allowedDecision;
+      const recorded = yield* outcome;
+      const sealed = sealExecutionDecision({
+        audience: decision.audience,
+        decidedAt: decision.decidedAt,
+        destinationDigest: decision.destinationDigest,
+        grantSetDigest: decision.grantSetDigest,
+        operationDigest: decision.operationDigest,
+        policyRevision: decision.policyRevision,
+        prevHash: O.none(),
+        runKey: decision.runKey,
+        seq: decision.seq,
+        sinkClass: decision.sinkClass,
+        verdict: "allowed",
+      });
+      const rebuilt = yield* Effect.fromResult(
+        toExecutionDecisionInsert(sealed).pipe(Result.map(asSelectedRow), Result.flatMap(fromExecutionDecisionRow))
+      );
 
-    expect(decisionEquivalence(rebuilt, sealed)).toBe(true);
+      expect(decisionEquivalence(rebuilt, sealed)).toBe(true);
 
-    const sealedOutcome = sealExecutionOutcome({
-      decisionHash: sealed.hash,
-      recordedAt: outcome.recordedAt,
-      runKey: sealed.runKey,
-      settlement: "completed",
-    });
+      const sealedOutcome = sealExecutionOutcome({
+        decisionHash: sealed.hash,
+        recordedAt: recorded.recordedAt,
+        runKey: sealed.runKey,
+        settlement: "completed",
+      });
 
-    expect(
-      outcomeEquivalence(
-        fromExecutionOutcomeRow(asSelectedOutcomeRow(toExecutionOutcomeInsert(sealedOutcome))),
-        sealedOutcome
-      )
-    ).toBe(true);
-  });
+      expect(
+        outcomeEquivalence(
+          yield* Effect.fromResult(
+            toExecutionOutcomeInsert(sealedOutcome).pipe(
+              Result.map(asSelectedOutcomeRow),
+              Result.flatMap(fromExecutionOutcomeRow)
+            )
+          ),
+          sealedOutcome
+        )
+      ).toBe(true);
+    })
+  );
 });

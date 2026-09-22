@@ -16,14 +16,21 @@ const ClaimGateSeverityBase = LiteralKit(["info", "warning", "violation"]);
  * vocabulary as a product-agnostic domain literal so the verdict carries no
  * dependency on the semantic-web engine.
  *
+ * **Details**
+ *
+ * `fromUnknown` returns an Effect with schema failures in its error channel;
+ * `decodeOption` remains available for non-throwing synchronous checks.
+ *
  * **Example** (Decode severity value)
  *
  * ```ts
  * import { ClaimGateSeverity } from "@beep/epistemic-domain"
- * import * as S from "effect/Schema"
+ * import { Effect } from "effect"
  *
- * const severity = S.decodeUnknownSync(ClaimGateSeverity)("violation")
- * console.log(severity)
+ * const program = Effect.gen(function* () {
+ *   const severity = yield* ClaimGateSeverity.fromUnknown("violation")
+ *   console.log(severity) // "violation"
+ * })
  * ```
  *
  * @category schemas
@@ -35,7 +42,7 @@ export const ClaimGateSeverity = ClaimGateSeverityBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(ClaimGateSeverityBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

@@ -66,7 +66,7 @@ const AcpErrorArbitrary = Arbitrary.schema(AcpError.AcpError).pipe(
   )
 );
 const childProcessProtocolTestTimeout = 30_000;
-const decodeJsonWithHostParser = Schema.decodeSync(Schema.fromJsonString(Schema.Json));
+const decodeJsonWithHostParser = Schema.decodeUnknownEffect(Schema.fromJsonString(Schema.Json));
 const mockPeerPath = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(import.meta.dirname, "fixtures/acp-mock-peer.ts")
 );
@@ -128,7 +128,7 @@ it.prop(
 it.effect(
   "keeps escaped _meta keys after the host materialised a backslash key at the same position",
   Effect.fnUntraced(function* () {
-    assert.deepEqual(decodeJsonWithHostParser('{" ":0,"\\\\":0}'), { " ": 0, "\\": 0 });
+    assert.deepEqual(yield* decodeJsonWithHostParser('{" ":0,"\\\\":0}'), { " ": 0, "\\": 0 });
     const notification = {
       jsonrpc: "2.0" as const,
       method: "session/cancel" as const,
@@ -146,77 +146,80 @@ it.effect(
   })
 );
 
-it("keeps handwritten ACP schema encoded shapes byte-identical", () => {
-  assert.deepEqual(
-    encode(AcpError.AcpRequestError, AcpError.AcpRequestError.parseError("Parse error", { issue: "bad" })),
-    {
+it.effect(
+  "keeps handwritten ACP schema encoded shapes byte-identical",
+  Effect.fnUntraced(function* () {
+    assert.deepEqual(
+      encode(AcpError.AcpRequestError, AcpError.AcpRequestError.parseError("Parse error", { issue: "bad" })),
+      {
+        _tag: "AcpRequestError",
+        code: -32700,
+        data: { issue: "bad" },
+        errorMessage: "Parse error",
+      }
+    );
+    assert.deepEqual(encode(AcpError.AcpRequestError, AcpError.AcpRequestError.methodNotFound("x/test")), {
       _tag: "AcpRequestError",
-      code: -32700,
-      data: { issue: "bad" },
-      errorMessage: "Parse error",
-    }
-  );
-  assert.deepEqual(encode(AcpError.AcpRequestError, AcpError.AcpRequestError.methodNotFound("x/test")), {
-    _tag: "AcpRequestError",
-    code: -32601,
-    errorMessage: "Method not found: x/test",
-  });
-  assert.deepEqual(encode(AcpError.AcpProcessExitedError, AcpError.AcpProcessExitedError.make({ code: O.some(7) })), {
-    _tag: "AcpProcessExitedError",
-    code: 7,
-  });
-  assert.deepEqual(encode(AcpError.AcpProcessExitedError, AcpError.AcpProcessExitedError.make({})), {
-    _tag: "AcpProcessExitedError",
-  });
-  assert.deepEqual(
-    encode(AcpError.AcpProtocolParseError, AcpError.AcpProtocolParseError.make({ detail: "bad json" })),
-    {
-      _tag: "AcpProtocolParseError",
-      detail: "bad json",
-    }
-  );
-  assert.deepEqual(encode(AcpError.AcpTransportError, AcpError.AcpTransportError.make({ detail: "stream closed" })), {
-    _tag: "AcpTransportError",
-    detail: "stream closed",
-  });
-  assert.deepEqual(encode(AcpProtocol.AcpProtocolLoggingOptions, AcpProtocol.AcpProtocolLoggingOptions.make({})), {});
-  assert.deepEqual(
-    encode(AcpProtocol.AcpProtocolLoggingOptions, AcpProtocol.AcpProtocolLoggingOptions.make({ logIncoming: true })),
-    {
-      logIncoming: true,
-    }
-  );
-  assert.deepEqual(
-    encode(
-      AcpProtocol.AcpProtocolLogEvent,
-      AcpProtocol.AcpProtocolLogEvent.decodeUnknownSync({
+      code: -32601,
+      errorMessage: "Method not found: x/test",
+    });
+    assert.deepEqual(encode(AcpError.AcpProcessExitedError, AcpError.AcpProcessExitedError.make({ code: O.some(7) })), {
+      _tag: "AcpProcessExitedError",
+      code: 7,
+    });
+    assert.deepEqual(encode(AcpError.AcpProcessExitedError, AcpError.AcpProcessExitedError.make({})), {
+      _tag: "AcpProcessExitedError",
+    });
+    assert.deepEqual(
+      encode(AcpError.AcpProtocolParseError, AcpError.AcpProtocolParseError.make({ detail: "bad json" })),
+      {
+        _tag: "AcpProtocolParseError",
+        detail: "bad json",
+      }
+    );
+    assert.deepEqual(encode(AcpError.AcpTransportError, AcpError.AcpTransportError.make({ detail: "stream closed" })), {
+      _tag: "AcpTransportError",
+      detail: "stream closed",
+    });
+    assert.deepEqual(encode(AcpProtocol.AcpProtocolLoggingOptions, AcpProtocol.AcpProtocolLoggingOptions.make({})), {});
+    assert.deepEqual(
+      encode(AcpProtocol.AcpProtocolLoggingOptions, AcpProtocol.AcpProtocolLoggingOptions.make({ logIncoming: true })),
+      {
+        logIncoming: true,
+      }
+    );
+    assert.deepEqual(
+      encode(
+        AcpProtocol.AcpProtocolLogEvent,
+        yield* Schema.decodeEffect(AcpProtocol.AcpProtocolLogEvent)({
+          direction: "incoming",
+          payload: "{}",
+          stage: "raw",
+        })
+      ),
+      {
         direction: "incoming",
         payload: "{}",
         stage: "raw",
-      })
-    ),
-    {
-      direction: "incoming",
-      payload: "{}",
-      stage: "raw",
-    }
-  );
-  assert.deepEqual(
-    encode(
-      AcpProtocol.AcpIncomingNotification,
-      AcpProtocol.AcpIncomingNotification.decodeUnknownSync({
+      }
+    );
+    assert.deepEqual(
+      encode(
+        AcpProtocol.AcpIncomingNotification,
+        yield* Schema.decodeEffect(AcpProtocol.AcpIncomingNotification)({
+          _tag: "ExtNotification",
+          method: "x/custom",
+          params: { ok: true },
+        })
+      ),
+      {
         _tag: "ExtNotification",
         method: "x/custom",
         params: { ok: true },
-      })
-    ),
-    {
-      _tag: "ExtNotification",
-      method: "x/custom",
-      params: { ok: true },
-    }
-  );
-});
+      }
+    );
+  })
+);
 
 it.prop(
   "round-trips handwritten ACP schemas through encoded form",
@@ -304,7 +307,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
   it.effect(
     "decodes escaped _meta keys on inbound frames after the host materialised a backslash key",
     Effect.fnUntraced(function* () {
-      assert.deepEqual(decodeJsonWithHostParser('{"beep-acp-regression":0,"\\\\":0}'), {
+      assert.deepEqual(yield* decodeJsonWithHostParser('{"beep-acp-regression":0,"\\\\":0}'), {
         "beep-acp-regression": 0,
         "\\": 0,
       });

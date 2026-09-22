@@ -128,7 +128,7 @@ export class DraftGrantSet extends S.Class<DraftGrantSet>($I`DraftGrantSet`)(
  * **Example** (Usage)
  * ```ts
  * import { DraftGrantSet, freezeGrantSet } from "@beep/epistemic-domain"
- * import { DateTime } from "effect"
+ * import { DateTime, Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const draft = S.decodeUnknownSync(DraftGrantSet)({
@@ -136,7 +136,7 @@ export class DraftGrantSet extends S.Class<DraftGrantSet>($I`DraftGrantSet`)(
  *   policyRevision: "1.0.0",
  *   state: "draft"
  * })
- * const frozen = freezeGrantSet(draft, DateTime.makeUnsafe(0))
+ * const frozen = Result.getOrThrow(freezeGrantSet(draft, DateTime.makeUnsafe(0)))
  * console.log(frozen.state)
  * ```
  *
@@ -329,11 +329,11 @@ export class GrantSetDigestInput extends S.Class<GrantSetDigestInput>($I`GrantSe
   static readonly is = S.is(GrantSetDigestInput);
 }
 
-const encodeDigestInput = S.encodeSync(GrantSetDigestInput);
+const encodeDigestInput = S.encodeResult(GrantSetDigestInput);
 
-const computeGrantSetDigest = (input: GrantSetDigestInput): GrantSetDigest =>
-  GrantSetDigest.make(
-    bytesToHex(sha256(utf8ToBytes(`${grantSetEncodingVersion}\n${canonicalJson(encodeDigestInput(input))}`)))
+const computeGrantSetDigest = (input: GrantSetDigestInput): Result.Result<GrantSetDigest, S.SchemaError> =>
+  Result.map(encodeDigestInput(input), (encoded) =>
+    GrantSetDigest.make(bytesToHex(sha256(utf8ToBytes(`${grantSetEncodingVersion}\n${canonicalJson(encoded)}`))))
   );
 
 /**
@@ -346,11 +346,11 @@ const computeGrantSetDigest = (input: GrantSetDigestInput): GrantSetDigest =>
  * **Example** (Usage)
  * ```ts
  * import { emptyDraftGrantSet, freezeGrantSet, PolicyRevision } from "@beep/epistemic-domain"
- * import { DateTime } from "effect"
+ * import { DateTime, Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const revision = S.decodeUnknownSync(PolicyRevision)("1.0.0")
- * const frozen = freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0))
+ * const frozen = Result.getOrThrow(freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0)))
  * console.log(frozen.digest.length)
  * // 64
  * ```
@@ -359,19 +359,23 @@ const computeGrantSetDigest = (input: GrantSetDigestInput): GrantSetDigest =>
  * @since 0.0.0
  */
 export const freezeGrantSet: {
-  (frozenAt: DateTime.Utc): (draft: DraftGrantSet) => FrozenGrantSet;
-  (draft: DraftGrantSet, frozenAt: DateTime.Utc): FrozenGrantSet;
+  (frozenAt: DateTime.Utc): (draft: DraftGrantSet) => Result.Result<FrozenGrantSet, S.SchemaError>;
+  (draft: DraftGrantSet, frozenAt: DateTime.Utc): Result.Result<FrozenGrantSet, S.SchemaError>;
 } = dual(
   2,
-  (draft: DraftGrantSet, frozenAt: DateTime.Utc): FrozenGrantSet =>
-    FrozenGrantSet.make({
-      grants: draft.grants,
-      policyRevision: draft.policyRevision,
-      frozenAt,
-      digest: computeGrantSetDigest(
+  (draft: DraftGrantSet, frozenAt: DateTime.Utc): Result.Result<FrozenGrantSet, S.SchemaError> =>
+    Result.map(
+      computeGrantSetDigest(
         GrantSetDigestInput.make({ frozenAt, grants: draft.grants, policyRevision: draft.policyRevision })
       ),
-    })
+      (digest) =>
+        FrozenGrantSet.make({
+          grants: draft.grants,
+          policyRevision: draft.policyRevision,
+          frozenAt,
+          digest,
+        })
+    )
 );
 
 /**
@@ -382,11 +386,11 @@ export const freezeGrantSet: {
  * **Example** (Usage)
  * ```ts
  * import { emptyDraftGrantSet, freezeGrantSet, PolicyRevision, verifyFrozenGrantSetDigest } from "@beep/epistemic-domain"
- * import { DateTime } from "effect"
+ * import { DateTime, Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const revision = S.decodeUnknownSync(PolicyRevision)("1.0.0")
- * const frozen = freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0))
+ * const frozen = Result.getOrThrow(freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0)))
  * console.log(verifyFrozenGrantSetDigest(frozen))
  * // true
  * ```
@@ -395,13 +399,19 @@ export const freezeGrantSet: {
  * @since 0.0.0
  */
 export const verifyFrozenGrantSetDigest = (frozen: FrozenGrantSet): boolean =>
-  computeGrantSetDigest(
-    GrantSetDigestInput.make({
-      frozenAt: frozen.frozenAt,
-      grants: frozen.grants,
-      policyRevision: frozen.policyRevision,
-    })
-  ) === frozen.digest;
+  Result.getOrElse(
+    Result.map(
+      computeGrantSetDigest(
+        GrantSetDigestInput.make({
+          frozenAt: frozen.frozenAt,
+          grants: frozen.grants,
+          policyRevision: frozen.policyRevision,
+        })
+      ),
+      (digest) => digest === frozen.digest
+    ),
+    () => false
+  );
 
 /**
  * Time and policy context used to evaluate one execution request.
@@ -463,11 +473,11 @@ const principalsEqual = S.toEquivalence(Principal);
  * **Example** (Usage)
  * ```ts
  * import { emptyDraftGrantSet, evaluateExecutionRequest, ExecutionRequest, ExecutionRequestEvaluationOptions, freezeGrantSet, PolicyRevision } from "@beep/epistemic-domain"
- * import { DateTime } from "effect"
+ * import { DateTime, Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const revision = S.decodeUnknownSync(PolicyRevision)("1.0.0")
- * const frozen = freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0))
+ * const frozen = Result.getOrThrow(freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0)))
  * const request = S.decodeUnknownSync(ExecutionRequest)({
  *   destination: "https://registry.example",
  *   operation: "ontology_publish_provenance",

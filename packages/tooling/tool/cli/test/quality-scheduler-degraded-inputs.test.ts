@@ -7,6 +7,7 @@ import {
   RuntimeRootChoice,
 } from "@beep/repo-cli/test/RepoRun";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -34,7 +35,8 @@ const meminfoReadError = PlatformError.systemError({
 
 const memoryStatsFrom = (
   readFileString: (path: string) => Effect.Effect<string, PlatformError.PlatformError>
-): Layer.Layer<MemoryStats> => MemoryStatsLive.pipe(Layer.provide(FileSystem.layerNoop({ readFileString })));
+): Layer.Layer<MemoryStats> =>
+  MemoryStatsLive.pipe(Layer.provide(Layer.mergeAll(FileSystem.layerNoop({ readFileString }), BunCrypto.layer)));
 
 const readMemoryStats = Effect.gen(function* () {
   const stats = yield* MemoryStats;
@@ -76,7 +78,7 @@ describe("quality scheduler memory stats", () => {
 });
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
+  Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 
 const FixedMemoryStatsLayer = Layer.succeed(

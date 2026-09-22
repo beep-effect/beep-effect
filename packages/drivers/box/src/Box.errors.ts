@@ -14,6 +14,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { BoxMethodName } from "./_generated/Box.models.gen.ts";
 import { BOX_SDK_VERSION } from "./internal/Box.constants.ts";
+import type { Effect } from "effect";
 import type { BoxMethodName as BoxMethodNameType } from "./_generated/Box.models.gen.ts";
 
 const $I = $BoxId.create("Box.errors");
@@ -24,11 +25,11 @@ const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unkn
 ): Sch & {
   // fallow-ignore-next-line code-duplication -- driver-local codec statics avoid cross-driver coupling
   readonly decodeOption: (input: unknown) => O.Option<Sch["Type"]>;
-  readonly fromUnknown: (input: unknown) => Sch["Type"];
+  readonly fromUnknown: (input: unknown) => Effect.Effect<Sch["Type"], S.SchemaError, Sch["DecodingServices"]>;
 } =>
   SchemaUtils.withStatics((self: Sch) => ({
     decodeOption: S.decodeUnknownOption(self),
-    fromUnknown: S.decodeUnknownSync(self),
+    fromUnknown: S.decodeUnknownEffect(self),
   }))(schema);
 
 const BoxErrorReasonBase = LiteralKit([

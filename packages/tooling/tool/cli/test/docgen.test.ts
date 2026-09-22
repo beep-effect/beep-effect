@@ -80,7 +80,7 @@ import type {
   DocgenQualityWorkerEvalRunner,
 } from "@beep/repo-cli/test/Docgen";
 
-const encodeDocgenQualityWorkerEvalReportJsonSync = S.encodeSync(S.fromJsonString(DocgenQualityWorkerEvalReport));
+const encodeDocgenQualityWorkerEvalReportJsonEffect = S.encodeEffect(S.fromJsonString(DocgenQualityWorkerEvalReport));
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -103,11 +103,11 @@ const CommandTestLayer = Layer.mergeAll(
   TestConsole.layer
 );
 const runDocgenCommand = Command.runWith(docgenCommand, { version: "0.0.0" });
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownSync;
-const encodeDocgenConfigDocument = S.encodeSync(DocgenConfigDocument);
-const decodeDocgenConfigDocument = S.decodeUnknownSync(DocgenConfigDocument);
-const decodeWorkerEvalReportJson = S.decodeUnknownSync(S.fromJsonString(DocgenQualityWorkerEvalReport));
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
+const encodeDocgenConfigDocument = S.encodeEffect(DocgenConfigDocument);
+const decodeDocgenConfigDocument = S.decodeUnknownEffect(DocgenConfigDocument);
+const decodeWorkerEvalReportJson = S.decodeUnknownEffect(S.fromJsonString(DocgenQualityWorkerEvalReport));
 const isString = (value: unknown): value is string => typeof value === "string";
 const DOCGEN_COMMAND_TEST_TIMEOUT = 30_000;
 const DOCTEST_FIXTURE_DIR = new URL("./fixtures/doctest/", import.meta.url).pathname;
@@ -256,7 +256,7 @@ const seedDocgenPackage = Effect.fn("DocgenTest.seedDocgenPackage")(function* ()
   const tmpDir = process.cwd();
   yield* fs.writeFileString(
     path.join(tmpDir, "package.json"),
-    encodeJson({
+    yield* encodeJson({
       name: "@beep/test-root",
       private: true,
       workspaces: ["packages/foundation/*/*"],
@@ -267,9 +267,9 @@ const seedDocgenPackage = Effect.fn("DocgenTest.seedDocgenPackage")(function* ()
   yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
   yield* fs.writeFileString(
     path.join(packageDir, "package.json"),
-    encodeJson({ name: "@beep/schema", version: "0.0.0" })
+    yield* encodeJson({ name: "@beep/schema", version: "0.0.0" })
   );
-  yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+  yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
 });
 
 const schemaPackageSourcePath = (path: Path.Path): string =>
@@ -304,7 +304,7 @@ const writeSchemaTsconfig = Effect.fn("DocgenTest.writeSchemaTsconfig")(function
   const path = yield* Path.Path;
   yield* fs.writeFileString(
     path.join(process.cwd(), "tsconfig.json"),
-    encodeJson({
+    yield* encodeJson({
       compilerOptions: {
         module: "es2022",
         target: "es2022",
@@ -538,12 +538,12 @@ const writeDoctestCommandFixtureRepo = Effect.fn("DocgenTest.writeDoctestCommand
 
   yield* fs.writeFileString(
     path.join(repoRoot, "package.json"),
-    encodeJson({ name: "@beep/doctest-test-root", private: true, workspaces: ["packages/*"] })
+    yield* encodeJson({ name: "@beep/doctest-test-root", private: true, workspaces: ["packages/*"] })
   );
   yield* fs.makeDirectory(srcDir, { recursive: true });
   yield* fs.writeFileString(
     path.join(packageDir, "package.json"),
-    encodeJson({ name: "@beep/doctest-fixture", version: "0.0.0" })
+    yield* encodeJson({ name: "@beep/doctest-fixture", version: "0.0.0" })
   );
   yield* Effect.forEach(
     ["assertions", "console-rewrites", "markers", "purity"],
@@ -605,32 +605,37 @@ export const markerFixture = true;
 });
 
 describe("Docgen operations", () => {
-  it("defaults docgen config source fields in the schema without changing explicit wire shape", () => {
-    const explicitConfig = DocgenConfigDocument.make({
-      srcDir: "custom-src",
-      exclude: ["dist", "coverage"],
-    });
-    expect(encodeDocgenConfigDocument(explicitConfig)).toEqual({
-      srcDir: "custom-src",
-      exclude: ["dist", "coverage"],
-    });
+  it.effect("defaults docgen config source fields in the schema without changing explicit wire shape", () =>
+    Effect.gen(function* () {
+      const explicitConfig = DocgenConfigDocument.make({
+        srcDir: "custom-src",
+        exclude: ["dist", "coverage"],
+      });
+      expect(yield* encodeDocgenConfigDocument(explicitConfig)).toEqual({
+        srcDir: "custom-src",
+        exclude: ["dist", "coverage"],
+      });
 
-    const decoded = decodeDocgenConfigDocument({});
-    expect(decoded.srcDir).toBe("src");
-    expect(decoded.exclude).toEqual([]);
+      const decoded = yield* decodeDocgenConfigDocument({});
+      expect(decoded.srcDir).toBe("src");
+      expect(decoded.exclude).toEqual([]);
+    })
+  );
 
+  {
     const arbitrary = Arbitrary.schema(DocgenConfigDocument);
     const sameConfig = S.toEquivalence(DocgenConfigDocument);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([config]) => sameConfig(config, decodeDocgenConfigDocument(encodeDocgenConfigDocument(config))),
-          fcRuns(16)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+    it.effect.prop(
+      "round-trips schema-derived docgen configuration",
+      [arbitrary],
+      Effect.fnUntraced(function* ([config]) {
+        expect(sameConfig(config, yield* decodeDocgenConfigDocument(yield* encodeDocgenConfigDocument(config)))).toBe(
+          true
+        );
+      }),
+      { arbitrary: fcRuns(16) }
+    );
+  }
 
   it("aggregates only canonical Docgen output configurations during scoped runs", () => {
     expect(isCanonicalDocgenAggregateConfigForTesting(DocgenConfigDocument.make({ srcDir: "src" }))).toBe(true);
@@ -653,7 +658,7 @@ describe("Docgen operations", () => {
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -666,20 +671,20 @@ describe("Docgen operations", () => {
           yield* fs.makeDirectory(focusedDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(canonicalDir, "package.json"),
-            encodeJson({ name: "@beep/schema", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/schema", version: "0.0.0" })
           );
-          yield* fs.writeFileString(path.join(canonicalDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(canonicalDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(canonicalDir, "docs", "modules", "Schema.md"),
             `---\nparent: Modules\ntitle: Schema\n---\n\ncontent\n`
           );
           yield* fs.writeFileString(
             path.join(focusedDir, "package.json"),
-            encodeJson({ name: "@beep/types", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/types", version: "0.0.0" })
           );
           yield* fs.writeFileString(
             path.join(focusedDir, "docgen.json"),
-            encodeJson({ srcDir: ".", outDir: ".jsdoc-loop/generated-docs" })
+            yield* encodeJson({ srcDir: ".", outDir: ".jsdoc-loop/generated-docs" })
           );
 
           const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
@@ -707,7 +712,7 @@ describe("Docgen operations", () => {
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -720,14 +725,14 @@ describe("Docgen operations", () => {
           yield* fs.makeDirectory(path.join(utilsDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(schemaDir, "package.json"),
-            encodeJson({ name: "@beep/schema", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/schema", version: "0.0.0" })
           );
-          yield* fs.writeFileString(path.join(schemaDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(schemaDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(utilsDir, "package.json"),
-            encodeJson({ name: "@beep/utils", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/utils", version: "0.0.0" })
           );
-          yield* fs.writeFileString(path.join(utilsDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(utilsDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
 
           const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
           const selected = selectDocgenLocalPackagesForTesting(packages, [
@@ -832,12 +837,12 @@ describe("Docgen operations", () => {
           yield* fs.makeDirectory(path.dirname(docsPath), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               homepage: "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/schema",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             srcPath,
             `/**
@@ -910,7 +915,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -921,9 +926,9 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({ name: "@beep/schema", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/schema", version: "0.0.0" })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
 
           const plan = yield* buildDocgenLocalPlan({
             allowFull: false,
@@ -1001,7 +1006,7 @@ export const ProofFixture = 1;
             const tmpDir = process.cwd();
             yield* fs.writeFileString(
               path.join(tmpDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/test-root",
                 private: true,
                 workspaces: ["packages/foundation/*/*"],
@@ -1012,9 +1017,9 @@ export const ProofFixture = 1;
             yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
             yield* fs.writeFileString(
               path.join(packageDir, "package.json"),
-              encodeJson({ name: "@beep/schema", version: "0.0.0" })
+              yield* encodeJson({ name: "@beep/schema", version: "0.0.0" })
             );
-            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
 
             yield* runDocgenCommand(["local", "--plan", "-p", "@beep/schema"]);
 
@@ -1172,11 +1177,11 @@ export const ProofFixture = 1;
         yield* fs.makeDirectory(path.join(probeDir, "src"), { recursive: true });
         yield* fs.writeFileString(
           path.join(probeDir, "package.json"),
-          encodeJson({ name: "@beep/probe", version: "0.0.0" })
+          yield* encodeJson({ name: "@beep/probe", version: "0.0.0" })
         );
         yield* fs.writeFileString(
           path.join(probeDir, "docgen.json"),
-          encodeJson({ srcDir: "src", outDir: ".jsdoc-loop/generated-docs" })
+          yield* encodeJson({ srcDir: "src", outDir: ".jsdoc-loop/generated-docs" })
         );
         yield* fs.writeFileString(path.join(probeDir, "src", "index.ts"), invalidCategorySource);
 
@@ -1232,7 +1237,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -1243,14 +1248,14 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
           yield* fs.writeFileString(
             path.join(packageDir, "docgen.json"),
-            encodeJson({
+            yield* encodeJson({
               $schema: "../../../../packages/tooling/tool/docgen/schema.json",
               enforceDescriptions: true,
               enforceExamples: true,
@@ -1281,7 +1286,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -1293,12 +1298,12 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(docsModulesDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(docsModulesDir, "Schema.md"),
             `---\nparent: Modules\ntitle: Schema\n---\n\ncontent\n`
@@ -1322,7 +1327,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -1333,7 +1338,7 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(path.join(schemaDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(schemaDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
               exports: {
@@ -1347,7 +1352,7 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(path.join(identityDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(identityDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/identity",
               version: "0.0.0",
               dependencies: {
@@ -1413,7 +1418,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*", "packages/example/*"],
@@ -1424,7 +1429,7 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(path.join(schemaDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(schemaDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
               exports: {
@@ -1438,7 +1443,7 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(path.join(runtimeDir, "src", "internal"), { recursive: true });
           yield* fs.writeFileString(
             path.join(runtimeDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/example-server",
               version: "0.0.0",
               dependencies: {
@@ -1476,7 +1481,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -1487,23 +1492,26 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(path.join(workspacePackageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(workspacePackageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(workspacePackageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(
+            path.join(workspacePackageDir, "docgen.json"),
+            yield* encodeJson({ srcDir: "src" })
+          );
 
           const vendoredPackageDir = path.join(tmpDir, ".repos", "effect-v4", "packages", "effect");
           yield* fs.makeDirectory(path.join(vendoredPackageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(vendoredPackageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "effect",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(vendoredPackageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(vendoredPackageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
 
           const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
 
@@ -1522,7 +1530,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -1534,12 +1542,12 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(docsModulesDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(docsModulesDir, "Schema.md"),
             `---\nparent: Modules\ntitle: Schema\n---\n\ncontent\n`
@@ -1584,7 +1592,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["scratchpad"],
@@ -1596,11 +1604,11 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(privateModulesDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({ name: "@beep/scratchpad", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/scratchpad", version: "0.0.0" })
           );
           yield* fs.writeFileString(
             path.join(packageDir, "docgen.json"),
-            encodeJson({ srcDir: ".", outDir: ".jsdoc-loop/generated-docs" })
+            yield* encodeJson({ srcDir: ".", outDir: ".jsdoc-loop/generated-docs" })
           );
           yield* fs.writeFileString(
             path.join(privateModulesDir, "Scratchpad.md"),
@@ -1626,7 +1634,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -1639,12 +1647,12 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(docsModulesDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(docsModulesDir, "Schema.md"),
             `---\nparent: Modules\ntitle: Schema\n---\n\ncontent\n`
@@ -1683,7 +1691,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -1698,12 +1706,12 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(externalDocsModulesDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(externalDocsModulesDir, "Schema.md"),
             `---\nparent: Modules\ntitle: Schema\n---\n\ncontent\n`
@@ -1729,7 +1737,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -1740,7 +1748,7 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
@@ -1748,13 +1756,13 @@ export const ProofFixture = 1;
 
           const staleDocgenPath = path.join(tmpDir, "packages", "retired", "runtime", "docgen.json");
           yield* fs.makeDirectory(path.dirname(staleDocgenPath), { recursive: true });
-          yield* fs.writeFileString(staleDocgenPath, encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(staleDocgenPath, yield* encodeJson({ srcDir: "src" }));
 
           // A stray docgen.json below the ceremony-exempt labs root must stay
           // invisible to the orphan scan (goals/lab-apps-lifecycle D2).
           const labsDocgenPath = path.join(tmpDir, "apps", "labs", "demo", "docgen.json");
           yield* fs.makeDirectory(path.dirname(labsDocgenPath), { recursive: true });
-          yield* fs.writeFileString(labsDocgenPath, encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(labsDocgenPath, yield* encodeJson({ srcDir: "src" }));
 
           const orphaned = yield* discoverOrphanDocgenConfigPaths(tmpDir);
           const error = yield* aggregateGeneratedDocs().pipe(Effect.flip);
@@ -1774,7 +1782,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*", "apps/labs/*"],
@@ -1786,9 +1794,9 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(packageDocsModulesDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({ name: "@beep/schema", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/schema", version: "0.0.0" })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDocsModulesDir, "Schema.md"),
             `---\nparent: Modules\ntitle: Schema\n---\n\ncontent\n`
@@ -1803,9 +1811,9 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(labsDocsModulesDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(labsAppDir, "package.json"),
-            encodeJson({ name: "@beep/api-docs", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/api-docs", version: "0.0.0" })
           );
-          yield* fs.writeFileString(path.join(labsAppDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(labsAppDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(labsDocsModulesDir, "ApiDocs.md"),
             `---\nparent: Modules\ntitle: ApiDocs\n---\n\ncontent\n`
@@ -1831,7 +1839,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/example/*"],
@@ -1843,12 +1851,12 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(docsModulesDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/example-store",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(docsModulesDir, "Store.md"),
             `---\nparent: Modules\ntitle: Store\n---\n\ncontent\n`
@@ -1945,7 +1953,7 @@ export const ProofFixture = 1;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -1953,7 +1961,7 @@ export const ProofFixture = 1;
           );
           yield* fs.writeFileString(
             path.join(tmpDir, "tsconfig.json"),
-            encodeJson({
+            yield* encodeJson({
               compilerOptions: {
                 module: "es2022",
                 target: "es2022",
@@ -1967,8 +1975,8 @@ export const ProofFixture = 1;
 
           const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
-          yield* fs.writeFileString(path.join(packageDir, "package.json"), encodeJson({ name: "@beep/schema" }));
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ name: "@beep/schema" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -2022,7 +2030,7 @@ export const parseValue = (value: string): string => value.trim();
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2033,12 +2041,12 @@ export const parseValue = (value: string): string => value.trim();
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `const parseValue = (value: string): string => value.trim();
@@ -2098,7 +2106,7 @@ export { parseValue };
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2109,12 +2117,12 @@ export { parseValue };
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -2174,7 +2182,7 @@ export const ChatSchema = { fields: { id: "string" } };
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2185,12 +2193,12 @@ export const ChatSchema = { fields: { id: "string" } };
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -2258,7 +2266,7 @@ export const formatValue = (value: string): string => \`value: \${value}\`;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2269,12 +2277,12 @@ export const formatValue = (value: string): string => \`value: \${value}\`;
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -2361,7 +2369,7 @@ export type Elem<T> = T extends readonly (infer U)[] ? U : never;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2372,12 +2380,12 @@ export type Elem<T> = T extends readonly (infer U)[] ? U : never;
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/** @internal */
@@ -2427,7 +2435,7 @@ export const publicHelper = "shown";
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2438,12 +2446,12 @@ export const publicHelper = "shown";
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -2491,7 +2499,7 @@ export function display(value: string | number): string {
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2502,12 +2510,12 @@ export function display(value: string | number): string {
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -2569,7 +2577,7 @@ Alert.Title = AlertTitle;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2580,12 +2588,12 @@ Alert.Title = AlertTitle;
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -2643,7 +2651,7 @@ export { Display };
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2652,8 +2660,8 @@ export { Display };
 
           const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
-          yield* fs.writeFileString(path.join(packageDir, "package.json"), encodeJson({ name: "@beep/schema" }));
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ name: "@beep/schema" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `import * as S from "effect/Schema";
@@ -2709,7 +2717,7 @@ export class TaggedValue extends S.TaggedClass<TaggedValue>("TaggedValue")(
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2720,12 +2728,12 @@ export class TaggedValue extends S.TaggedClass<TaggedValue>("TaggedValue")(
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -2775,7 +2783,7 @@ export { Canonical as Schema };
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2786,12 +2794,12 @@ export { Canonical as Schema };
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "DefaultFunction.ts"),
             `/**
@@ -2944,7 +2952,7 @@ export default trimNamedDefault;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -2955,12 +2963,12 @@ export default trimNamedDefault;
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "Value.ts"),
             `/**
@@ -3017,7 +3025,7 @@ export * as Value from "./Value.ts";
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -3028,12 +3036,12 @@ export * as Value from "./Value.ts";
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(path.join(packageDir, "src", "index.ts"), `export const parseValue = "skip";\n`);
 
           const packages = yield* discoverDocgenWorkspacePackages(tmpDir);
@@ -3048,7 +3056,7 @@ export * as Value from "./Value.ts";
             targets: [target!],
           });
           const json = yield* generateQualityJson(report);
-          const decoded = decodeUnknownJson(json) as {
+          const decoded = (yield* decodeUnknownJson(json)) as {
             readonly schemaVersion?: unknown;
             readonly packages?: ReadonlyArray<{
               readonly durationMs?: unknown;
@@ -3076,7 +3084,7 @@ export * as Value from "./Value.ts";
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -3087,14 +3095,14 @@ export * as Value from "./Value.ts";
           yield* fs.makeDirectory(path.join(packageDir, "src", "internal"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
           yield* fs.writeFileString(
             path.join(packageDir, "docgen.json"),
-            encodeJson({
+            yield* encodeJson({
               srcDir: "src",
               exclude: ["src/internal/**/*.ts", "src/*.generated.ts"],
             })
@@ -3162,7 +3170,7 @@ export const parseValue = (value: string): string => value.trim();
           yield* runCommand("git", ["init"], tmpDir);
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -3173,12 +3181,12 @@ export const parseValue = (value: string): string => value.trim();
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -3200,7 +3208,7 @@ export const parseValue = (value: string): string => value.trim();
           yield* runDocgenCommand(["quality", "--changed-files", "--json"]);
 
           const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          const decoded = decodeUnknownJson(output) as {
+          const decoded = (yield* decodeUnknownJson(output)) as {
             readonly scope?: string;
             readonly packages?: ReadonlyArray<{
               readonly packageName?: string;
@@ -3225,7 +3233,7 @@ export const parseValue = (value: string): string => value.trim();
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -3233,7 +3241,7 @@ export const parseValue = (value: string): string => value.trim();
           );
           yield* fs.writeFileString(
             path.join(tmpDir, "tsconfig.json"),
-            encodeJson({
+            yield* encodeJson({
               compilerOptions: {
                 module: "es2022",
                 target: "es2022",
@@ -3249,12 +3257,12 @@ export const parseValue = (value: string): string => value.trim();
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -3284,7 +3292,7 @@ export const parseValue = (value: string): string => value.trim();
           });
           const markdown = generateQualityReport(report);
           const json = yield* generateQualityJson(report);
-          const decoded = decodeUnknownJson(json) as Record<string, unknown>;
+          const decoded = (yield* decodeUnknownJson(json)) as Record<string, unknown>;
 
           expect(report.scorer).toBe("codex-advisory-packet-v1");
           expect(report.summary.failures).toBeGreaterThan(0);
@@ -3320,7 +3328,7 @@ export const parseValue = (value: string): string => value.trim();
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -3331,12 +3339,12 @@ export const parseValue = (value: string): string => value.trim();
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             A.join(
@@ -3398,7 +3406,7 @@ export const value${index} = ${index};
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -3411,14 +3419,14 @@ export const value${index} = ${index};
           yield* fs.makeDirectory(path.join(typesDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(schemaDir, "package.json"),
-            encodeJson({ name: "@beep/schema", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/schema", version: "0.0.0" })
           );
           yield* fs.writeFileString(
             path.join(typesDir, "package.json"),
-            encodeJson({ name: "@beep/types", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/types", version: "0.0.0" })
           );
-          yield* fs.writeFileString(path.join(schemaDir, "docgen.json"), encodeJson({ srcDir: "src" }));
-          yield* fs.writeFileString(path.join(typesDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(schemaDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(typesDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(schemaDir, "src", "index.ts"),
             `/**
@@ -3450,18 +3458,18 @@ export type TypeValue = string;
             targets,
           });
           let observedWorkingDirectories = A.empty<string>();
-          const runner: DocgenQualityWorkerEvalRunner = (input) => {
+          const runner: DocgenQualityWorkerEvalRunner = Effect.fnUntraced(function* (input) {
             observedWorkingDirectories = A.append(observedWorkingDirectories, input.workingDirectory);
-            return Effect.succeed({
-              finalResponse: encodeJson({
+            return yield* Effect.succeed({
+              finalResponse: yield* encodeJson({
                 localScore: 8,
                 rationale: "The draft adds an observable example and keeps required tags.",
                 draftJsDoc: "/**\\n * Demonstrates the exported symbol.\\n */",
                 policyViolationCodes: [],
                 reviewDisposition: "candidate",
-              }),
+              }).pipe(Effect.orDie),
             });
-          };
+          });
 
           const workerReport = yield* analyzeDocgenQualityWorkerEval({
             codexSdkVersion: "test-sdk",
@@ -3475,7 +3483,7 @@ export type TypeValue = string;
             sourceQualityReport: "quality.json",
           });
           const json = yield* generateQualityWorkerEvalJson(workerReport);
-          const decoded = decodeWorkerEvalReportJson(json);
+          const decoded = yield* decodeWorkerEvalReportJson(json);
           const packetPackages = pipe(
             decoded.packets,
             A.map((packet) => packet.packageName),
@@ -3508,18 +3516,18 @@ export type TypeValue = string;
           expect(localProviderReport.reasoningEffort).toBeNull();
 
           let observedBaseUrl = O.none<string>();
-          const baseUrlRunner: DocgenQualityWorkerEvalRunner = (input) => {
+          const baseUrlRunner: DocgenQualityWorkerEvalRunner = Effect.fnUntraced(function* (input) {
             observedBaseUrl = O.fromUndefinedOr(input.baseUrl);
-            return Effect.succeed({
-              finalResponse: encodeJson({
+            return yield* Effect.succeed({
+              finalResponse: yield* encodeJson({
                 localScore: 8,
                 rationale: "The draft adds an observable example and keeps required tags.",
                 draftJsDoc: "/**\\n * Demonstrates the exported symbol.\\n */",
                 policyViolationCodes: [],
                 reviewDisposition: "candidate",
-              }),
+              }).pipe(Effect.orDie),
             });
-          };
+          });
           const baseUrlReport = yield* analyzeDocgenQualityWorkerEval({
             baseUrl: "  https://pod-11434.proxy.runpod.net/v1  ",
             codexSdkVersion: "test-sdk",
@@ -3535,16 +3543,17 @@ export type TypeValue = string;
           expect(baseUrlReport.summary.completed).toBe(1);
           expect(O.getOrNull(observedBaseUrl)).toBe("https://pod-11434.proxy.runpod.net/v1");
 
-          const outOfRangeScoreRunner: DocgenQualityWorkerEvalRunner = () =>
-            Effect.succeed({
-              finalResponse: encodeJson({
+          const outOfRangeScoreRunner: DocgenQualityWorkerEvalRunner = Effect.fnUntraced(function* () {
+            return yield* Effect.succeed({
+              finalResponse: yield* encodeJson({
                 localScore: 11,
                 rationale: "The worker returned an out-of-range score.",
                 draftJsDoc: "/**\\n * Demonstrates the exported symbol.\\n */",
                 policyViolationCodes: [],
                 reviewDisposition: "candidate",
-              }),
+              }).pipe(Effect.orDie),
             });
+          });
           const outOfRangeScoreReport = yield* analyzeDocgenQualityWorkerEval({
             codexSdkVersion: "test-sdk",
             model: "gpt-5.4-mini",
@@ -3575,7 +3584,7 @@ export type TypeValue = string;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -3587,12 +3596,12 @@ export type TypeValue = string;
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             A.join(
@@ -3624,7 +3633,7 @@ export const cliValue${index} = ${index};
             outputPath,
           ]);
 
-          const decoded = decodeUnknownJson(yield* fs.readFileString(outputPath)) as {
+          const decoded = (yield* decodeUnknownJson(yield* fs.readFileString(outputPath))) as {
             readonly packages?: ReadonlyArray<{
               readonly omittedPacketCount?: unknown;
               readonly summary?: { readonly remediationPackets?: unknown };
@@ -3654,7 +3663,7 @@ export const cliValue${index} = ${index};
             const tmpDir = process.cwd();
             yield* fs.writeFileString(
               path.join(tmpDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/test-root",
                 private: true,
                 workspaces: ["packages/foundation/*/*"],
@@ -3667,12 +3676,12 @@ export const cliValue${index} = ${index};
             yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
             yield* fs.writeFileString(
               path.join(packageDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/schema",
                 version: "0.0.0",
               })
             );
-            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
             yield* fs.writeFileString(
               path.join(packageDir, "src", "index.ts"),
               `/**
@@ -3711,7 +3720,7 @@ export const workerEvalValue = 1;
               evalPath,
             ]);
 
-            const decoded = decodeWorkerEvalReportJson(yield* fs.readFileString(evalPath));
+            const decoded = yield* decodeWorkerEvalReportJson(yield* fs.readFileString(evalPath));
             const logLines = A.filter(yield* TestConsole.logLines, isString);
 
             expect(decoded.schemaVersion).toBe(1);
@@ -3787,7 +3796,7 @@ export const workerEvalValue = 1;
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -3795,9 +3804,9 @@ export const workerEvalValue = 1;
           );
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({ name: "@beep/schema", version: "0.0.0" })
+            yield* encodeJson({ name: "@beep/schema", version: "0.0.0" })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -3920,7 +3929,7 @@ export const parseValue = (value: string): string => value.trim();
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -3931,12 +3940,12 @@ export const parseValue = (value: string): string => value.trim();
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -3977,7 +3986,7 @@ export const parseValue = (value: string): string => value.trim();
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -3988,7 +3997,7 @@ export const parseValue = (value: string): string => value.trim();
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
@@ -4016,7 +4025,7 @@ export const parseValue = (value: string): string => value.trim();
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -4027,12 +4036,12 @@ export const parseValue = (value: string): string => value.trim();
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `export const MissingMetadata = "nope";\n`
@@ -4064,7 +4073,7 @@ export const parseValue = (value: string): string => value.trim();
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -4076,8 +4085,8 @@ export const parseValue = (value: string): string => value.trim();
           const docsPath = path.join(packageDir, "docs", "modules", "Schema.md");
           yield* fs.makeDirectory(path.dirname(srcPath), { recursive: true });
           yield* fs.makeDirectory(path.dirname(docsPath), { recursive: true });
-          yield* fs.writeFileString(path.join(packageDir, "package.json"), encodeJson({ name: "@beep/schema" }));
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "package.json"), yield* encodeJson({ name: "@beep/schema" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             srcPath,
             `/**
@@ -4136,7 +4145,7 @@ export const ProofFixture = 1;
           ]);
 
           const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          const decoded = decodeUnknownJson(output) as {
+          const decoded = (yield* decodeUnknownJson(output)) as {
             readonly analyses?: ReadonlyArray<unknown>;
             readonly proofManifests?: ReadonlyArray<{ readonly status?: string }>;
             readonly summary?: {
@@ -4174,7 +4183,7 @@ export const ProofFixture = 1;
             const tmpDir = process.cwd();
             yield* fs.writeFileString(
               path.join(tmpDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/test-root",
                 private: true,
                 workspaces: ["packages/foundation/*/*"],
@@ -4185,12 +4194,12 @@ export const ProofFixture = 1;
             yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
             yield* fs.writeFileString(
               path.join(packageDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/schema",
                 version: "0.0.0",
               })
             );
-            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
             yield* fs.writeFileString(
               path.join(packageDir, "src", "index.ts"),
               `/**
@@ -4241,7 +4250,7 @@ export const RejectedCategory = "nope";
             const tmpDir = process.cwd();
             yield* fs.writeFileString(
               path.join(tmpDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/test-root",
                 private: true,
                 workspaces: ["packages/foundation/*/*"],
@@ -4250,10 +4259,13 @@ export const RejectedCategory = "nope";
 
             const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
             yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
-            yield* fs.writeFileString(path.join(packageDir, "package.json"), encodeJson({ name: "@beep/schema" }));
+            yield* fs.writeFileString(
+              path.join(packageDir, "package.json"),
+              yield* encodeJson({ name: "@beep/schema" })
+            );
             yield* fs.writeFileString(
               path.join(packageDir, "docgen.json"),
-              encodeJson({ srcDir: "src", enforceExamples: true })
+              yield* encodeJson({ srcDir: "src", enforceExamples: true })
             );
             yield* fs.writeFileString(
               path.join(packageDir, "src", "index.ts"),
@@ -4302,7 +4314,7 @@ export const parseValue = (value: string): string => value.trim();
             const tmpDir = process.cwd();
             yield* fs.writeFileString(
               path.join(tmpDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/test-root",
                 private: true,
                 workspaces: ["packages/foundation/*/*"],
@@ -4310,7 +4322,7 @@ export const parseValue = (value: string): string => value.trim();
             );
             yield* fs.writeFileString(
               path.join(tmpDir, "tsconfig.json"),
-              encodeJson({
+              yield* encodeJson({
                 compilerOptions: {
                   module: "es2022",
                   target: "es2022",
@@ -4327,12 +4339,12 @@ export const parseValue = (value: string): string => value.trim();
             yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
             yield* fs.writeFileString(
               path.join(packageDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/schema",
                 version: "0.0.0",
               })
             );
-            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
             yield* fs.writeFileString(
               path.join(packageDir, "src", "index.ts"),
               `/**
@@ -4357,7 +4369,7 @@ export const parseValue = (value: string): string => value.trim();
             ]);
 
             const output = yield* fs.readFileString(outputPath);
-            const decoded = decodeUnknownJson(output) as {
+            const decoded = (yield* decodeUnknownJson(output)) as {
               readonly schemaVersion?: unknown;
               readonly scorer?: unknown;
               readonly remediationPackets?: ReadonlyArray<{ readonly prompt?: string }>;
@@ -4388,7 +4400,7 @@ export const parseValue = (value: string): string => value.trim();
             const tmpDir = process.cwd();
             yield* fs.writeFileString(
               path.join(tmpDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/test-root",
                 private: true,
                 workspaces: ["packages/foundation/*/*"],
@@ -4396,7 +4408,7 @@ export const parseValue = (value: string): string => value.trim();
             );
             yield* fs.writeFileString(
               path.join(tmpDir, "tsconfig.json"),
-              encodeJson({
+              yield* encodeJson({
                 compilerOptions: {
                   module: "es2022",
                   target: "es2022",
@@ -4411,8 +4423,11 @@ export const parseValue = (value: string): string => value.trim();
             const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
             const outputPath = path.join(tmpDir, "quality.json");
             yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
-            yield* fs.writeFileString(path.join(packageDir, "package.json"), encodeJson({ name: "@beep/schema" }));
-            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+            yield* fs.writeFileString(
+              path.join(packageDir, "package.json"),
+              yield* encodeJson({ name: "@beep/schema" })
+            );
+            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
             yield* fs.writeFileString(
               path.join(packageDir, "src", "index.ts"),
               `/**
@@ -4461,7 +4476,7 @@ export const parseValue = (value: string): string => value.trim();
             const tmpDir = process.cwd();
             yield* fs.writeFileString(
               path.join(tmpDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/test-root",
                 private: true,
                 workspaces: ["packages/foundation/*/*"],
@@ -4469,7 +4484,7 @@ export const parseValue = (value: string): string => value.trim();
             );
             yield* fs.writeFileString(
               path.join(tmpDir, "tsconfig.json"),
-              encodeJson({
+              yield* encodeJson({
                 compilerOptions: {
                   module: "es2022",
                   target: "es2022",
@@ -4484,8 +4499,11 @@ export const parseValue = (value: string): string => value.trim();
             const packageDir = path.join(tmpDir, "packages", "foundation", "modeling", "schema");
             const outputPath = path.join(tmpDir, "quality.json");
             yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
-            yield* fs.writeFileString(path.join(packageDir, "package.json"), encodeJson({ name: "@beep/schema" }));
-            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+            yield* fs.writeFileString(
+              path.join(packageDir, "package.json"),
+              yield* encodeJson({ name: "@beep/schema" })
+            );
+            yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
             yield* fs.writeFileString(
               path.join(packageDir, "src", "index.ts"),
               `/**
@@ -4516,7 +4534,7 @@ export const parseValue = (value: string): string => value.trim();
                 outputPath,
               ])
             );
-            const output = decodeUnknownJson(yield* fs.readFileString(outputPath)) as {
+            const output = (yield* decodeUnknownJson(yield* fs.readFileString(outputPath))) as {
               readonly summary?: { readonly warnings?: number; readonly failures?: number };
             };
 
@@ -4537,7 +4555,7 @@ export const parseValue = (value: string): string => value.trim();
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -4548,12 +4566,12 @@ export const parseValue = (value: string): string => value.trim();
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -4601,7 +4619,7 @@ export const RejectedCategory = "nope";
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -4612,12 +4630,12 @@ export const RejectedCategory = "nope";
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
             })
           );
-          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), encodeJson({ srcDir: "src" }));
+          yield* fs.writeFileString(path.join(packageDir, "docgen.json"), yield* encodeJson({ srcDir: "src" }));
           yield* fs.writeFileString(
             path.join(packageDir, "src", "index.ts"),
             `/**
@@ -4673,7 +4691,7 @@ export const ValidExport = packageDocAnchor;
             const tmpDir = process.cwd();
             yield* fs.writeFileString(
               path.join(tmpDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/test-root",
                 private: true,
                 workspaces: ["packages/foundation/*/*"],
@@ -4684,7 +4702,7 @@ export const ValidExport = packageDocAnchor;
             yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
             yield* fs.writeFileString(
               path.join(packageDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/schema",
                 version: "0.0.0",
               })
@@ -4719,7 +4737,7 @@ export const ValidExport = packageDocAnchor;
             const tmpDir = process.cwd();
             yield* fs.writeFileString(
               path.join(tmpDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/test-root",
                 private: true,
                 workspaces: ["packages/foundation/*/*"],
@@ -4730,7 +4748,7 @@ export const ValidExport = packageDocAnchor;
             yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
             yield* fs.writeFileString(
               path.join(packageDir, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/schema",
                 version: "0.0.0",
               })
@@ -4760,7 +4778,7 @@ export const ValidExport = packageDocAnchor;
           const tmpDir = process.cwd();
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -4798,7 +4816,7 @@ export const ValidExport = packageDocAnchor;
 
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/foundation/*/*"],
@@ -4810,7 +4828,7 @@ export const ValidExport = packageDocAnchor;
           yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/schema",
               version: "0.0.0",
               exports: {
@@ -4823,7 +4841,7 @@ export const ValidExport = packageDocAnchor;
           yield* runDocgenCommand(["init", "-p", "packages/foundation/modeling/schema"]);
 
           const docgenText = yield* fs.readFileString(docgenPath);
-          const docgenConfig = decodeUnknownJson(docgenText) as {
+          const docgenConfig = (yield* decodeUnknownJson(docgenText)) as {
             readonly examplesCompilerOptions?: Record<string, unknown>;
           };
 
@@ -4980,19 +4998,21 @@ export const ValidExport = packageDocAnchor;
 });
 
 describe("DocgenQualityWorkerEvalReport schema", () => {
-  it("every schema-derived report round-trips through its JSON codec", () => {
+  {
     const arbitrary = Arbitrary.schema(DocgenQualityWorkerEvalReport);
     const sameReport = S.toEquivalence(DocgenQualityWorkerEvalReport);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([report]) =>
-            sameReport(report, decodeWorkerEvalReportJson(encodeDocgenQualityWorkerEvalReportJsonSync(report))),
-          fcRuns(16)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+    it.effect.prop(
+      "every schema-derived report round-trips through its JSON codec",
+      [arbitrary],
+      Effect.fnUntraced(function* ([report]) {
+        expect(
+          sameReport(
+            report,
+            yield* decodeWorkerEvalReportJson(yield* encodeDocgenQualityWorkerEvalReportJsonEffect(report))
+          )
+        ).toBe(true);
+      }),
+      { arbitrary: fcRuns(16) }
+    );
+  }
 });

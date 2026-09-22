@@ -7,7 +7,9 @@
  */
 
 import { SyncItem } from "@beep/documents-domain/entities/SyncItem";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { SyncItemConverterError } from "./SyncItem.errors.ts";
 import type { syncItemTable } from "./SyncItem.table.ts";
 
 /**
@@ -48,8 +50,8 @@ export type SyncItemRow = typeof syncItemTable.$inferSelect;
  */
 export type SyncItemInsert = typeof syncItemTable.$inferInsert;
 
-const encodeSyncItem = S.encodeSync(SyncItem);
-const decodeSyncItemRow = S.decodeUnknownSync(SyncItem);
+const encodeSyncItem = S.encodeResult(SyncItem);
+const decodeSyncItemRow = S.decodeUnknownResult(SyncItem);
 
 /**
  * Convert a SyncItem entity into its persistence insert row.
@@ -66,6 +68,7 @@ const decodeSyncItemRow = S.decodeUnknownSync(SyncItem);
  * ```ts
  * import { fromSyncItemRow, toSyncItemInsert } from "@beep/documents-tables/entities/SyncItem"
  * import type { SyncItemRow } from "@beep/documents-tables/entities/SyncItem"
+ * import { Result } from "effect"
  *
  * const row = {
  *   contentDigest: "abc123",
@@ -95,17 +98,21 @@ const decodeSyncItemRow = S.decodeUnknownSync(SyncItem);
  *   workspaceId: 2
  * } satisfies SyncItemRow
  *
- * const insert = toSyncItemInsert(fromSyncItemRow(row))
- * console.log("id" in insert) // false
+ * const insert = Result.flatMap(fromSyncItemRow(row), toSyncItemInsert)
+ * console.log(Result.isSuccess(insert) && !("id" in insert.success))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toSyncItemInsert = (syncItem: SyncItem): SyncItemInsert => {
-  const { id: _id, ...rest } = encodeSyncItem(syncItem);
-  return rest as SyncItemInsert;
-};
+export const toSyncItemInsert = (syncItem: SyncItem): Result.Result<SyncItemInsert, SyncItemConverterError> =>
+  Result.mapError(
+    Result.map(encodeSyncItem(syncItem), (encoded): SyncItemInsert => {
+      const { id: _id, ...insert } = encoded;
+      return insert;
+    }),
+    SyncItemConverterError.fromSchemaError
+  );
 
 /**
  * Convert a selected persistence row into a SyncItem entity.
@@ -115,6 +122,7 @@ export const toSyncItemInsert = (syncItem: SyncItem): SyncItemInsert => {
  * ```ts
  * import { fromSyncItemRow } from "@beep/documents-tables/entities/SyncItem"
  * import type { SyncItemRow } from "@beep/documents-tables/entities/SyncItem"
+ * import { Result } from "effect"
  *
  * const row = {
  *   contentDigest: null,
@@ -145,10 +153,11 @@ export const toSyncItemInsert = (syncItem: SyncItem): SyncItemInsert => {
  * } satisfies SyncItemRow
  *
  * const syncItem = fromSyncItemRow(row)
- * console.log(syncItem.syncState)
+ * console.log(Result.isSuccess(syncItem) && syncItem.success.syncState)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromSyncItemRow = (row: SyncItemRow): SyncItem => decodeSyncItemRow(row);
+export const fromSyncItemRow = (row: SyncItemRow): Result.Result<SyncItem, SyncItemConverterError> =>
+  Result.mapError(decodeSyncItemRow(row), SyncItemConverterError.fromSchemaError);

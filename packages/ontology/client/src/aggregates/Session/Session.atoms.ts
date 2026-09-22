@@ -1656,6 +1656,8 @@ const graphRequestAtom = Atom.make((get) => ({
 const GRAPH_WORKER_UNAVAILABLE_MESSAGE = "Graph projection is unavailable: this environment has no web worker.";
 
 const GRAPH_WORKER_UNREADABLE_RESULT_MESSAGE = "The graph worker returned a result this app could not read.";
+const GRAPH_WORKER_UNENCODABLE_COMMAND_MESSAGE =
+  "The graph worker command could not be encoded for the worker boundary.";
 
 const GRAPH_WORKER_MESSAGE_ERROR = "Ontology graph worker message failed to deserialize.";
 
@@ -1898,7 +1900,17 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   const dispatchWorkerCommand = (command: WorkerCommand): void => {
     get.set(graphWorkerBoundaryRequestAtom, [
       get.registry.get(graphWorkerBoundaryRequestAtom)[0] + 1,
-      O.some<GraphWorkerBoundary>([() => currentWorker().postMessage(encodeWorkerCommand(command)), failWorkerCause]),
+      O.some<GraphWorkerBoundary>([
+        () => {
+          const encoded = encodeWorkerCommand(command);
+          if (!Result.isSuccess(encoded)) {
+            failWorkerCause(encoded.failure, O.some(GRAPH_WORKER_UNENCODABLE_COMMAND_MESSAGE));
+            return;
+          }
+          currentWorker().postMessage(encoded.success);
+        },
+        failWorkerCause,
+      ]),
     ]);
   };
 

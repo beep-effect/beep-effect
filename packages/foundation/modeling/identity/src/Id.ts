@@ -53,8 +53,8 @@ type DefaultIdentityPrefix = "beep";
 const isBeepNamespace = S.is(BeepNamespace);
 const isBeepBase = S.is(BeepBase);
 
-const beepNamespace = S.decodeSync(BeepNamespace)("@beep");
-const beepBase = S.decodeSync(BeepBase)("beep");
+const beepNamespace = BeepNamespace.make("@beep");
+const beepBase = BeepBase.make("beep");
 const MODULE_CHARACTERS = /^[A-Za-z0-9_-]+$/;
 const MODULE_LEADING_ALPHA = /^[A-Za-z]/;
 const BASE_CHARACTERS = /^[A-Za-z0-9](?:[A-Za-z0-9_-]*[A-Za-z0-9])?$/;
@@ -206,7 +206,7 @@ export class IdentitySegmentCountError extends S.TaggedError<IdentitySegmentCoun
  * @since 0.0.0
  * @category configuration
  */
-export const VERSION = S.decodeSync(IdentityVersion)("0.0.0");
+export const VERSION = IdentityVersion.make("0.0.0");
 
 /**
  * Type-level constraint ensuring an identity segment does not start or end with a slash.
@@ -1548,7 +1548,6 @@ const SegmentCheck = S.makeFilterGroup(
 );
 
 const SegmentSchema = S.String.check(SegmentCheck);
-const decodeUnknownSegmentSchemaSync = S.decodeUnknownSync(SegmentSchema);
 
 const ModuleSegmentCheck = S.makeFilterGroup(
   [
@@ -1568,8 +1567,6 @@ const ModuleSegmentCheck = S.makeFilterGroup(
 );
 
 const ModuleSegmentSchema = SegmentSchema.check(ModuleSegmentCheck);
-const decodeUnknownModuleSegmentSchemaSync = S.decodeUnknownSync(ModuleSegmentSchema);
-const decodeModuleSegmentSchemaSync = S.decodeSync(ModuleSegmentSchema);
 
 const BaseSegmentSchema = S.String.check(
   S.isNonEmpty({
@@ -1654,8 +1651,6 @@ export const BaseIdentityInput = S.String.pipe(
  */
 export type BaseIdentityInput = typeof BaseIdentityInput.Type;
 
-const decodeBaseIdentityInput = S.decodeUnknownSync(BaseIdentityInput);
-
 const toIdentityString = <Value extends string>(value: Value): IdentityString<Value> => value as IdentityString<Value>;
 
 const toIdentitySymbol = <Value extends string>(value: Value): IdentitySymbol<Value> =>
@@ -1717,12 +1712,12 @@ const toTaggedKey = <const Segment extends TString.NonEmpty>(segment: Segment): 
   `$${toPascalIdentifier(segment)}Id` as TaggedAccessor<Segment>;
 
 const validateSegment = <const Segment extends TString.NonEmpty>(segment: Segment): Segment => {
-  decodeUnknownSegmentSchemaSync(segment);
+  SegmentSchema.make(segment);
   return segment;
 };
 
 const validateModuleSegment = <const Segment extends TString.NonEmpty>(segment: Segment): Segment => {
-  decodeUnknownModuleSegmentSchemaSync(segment);
+  ModuleSegmentSchema.make(segment);
   return segment;
 };
 
@@ -1749,7 +1744,7 @@ const validateTemplateSegmentCount = (strings: TemplateStringsArray): void =>
   });
 
 const normalizeBase = <const Base extends TString.NonEmpty>(base: Base): NormalizedBase<Base> =>
-  decodeBaseIdentityInput(base) as NormalizedBase<Base>;
+  BaseSegmentSchema.make(normalizeBaseValue(base)) as NormalizedBase<Base>;
 
 const createBaseIdentity = <const Base extends TString.NonEmpty>(base: NormalizedBase<Base>): BaseIdentity<Base> =>
   O.match(O.liftPredicate(isBeepBase)(base), {
@@ -1789,9 +1784,12 @@ const createComposer = <
     validateTemplateInterpolations(values);
     validateTemplateSegmentCount(strings);
 
-    return pipe(strings[0], decodeModuleSegmentSchemaSync, (segment) =>
-      toIdentityString(appendIdentityValue(value, segment))
-    );
+    const segment = strings[0];
+    if (segment === undefined) {
+      throw IdentitySegmentCountError.make({});
+    }
+
+    return toIdentityString(appendIdentityValue(value, ModuleSegmentSchema.make(segment)));
   }
 
   function toTaggedComposerEntry(segment: ModuleSegmentValue<TString.NonEmpty>) {

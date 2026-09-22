@@ -21,6 +21,21 @@
  */
 export * from "./Message.converters.ts";
 /**
+ * Message converter error exports.
+ *
+ * **Example** (Import Message converter error)
+ *
+ * ```ts
+ * import * as Message from "@beep/workspace-tables/entities/Message"
+ *
+ * console.log(Message.MessageConverterError._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./Message.errors.ts";
+/**
  * Message table exports.
  *
  * **Example** (Log Message entity type)

@@ -19,6 +19,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { CandorRecordReadError } from "./CandorPolicy.errors.ts";
 import { CandorPolicy, CandorPolicyShape, CandorRecordReader } from "./CandorPolicy.ports.ts";
 import { CandorGateVerdict, UncoveredEvent } from "./CandorPolicy.values.ts";
 import type { CandorDisposition, PatentCitationEvent } from "@beep/law-practice-domain";
@@ -42,7 +43,7 @@ const IdentifiedPatentReference = PatentReference.pipe(
 const isIdentifiedPatentReference = S.is(IdentifiedPatentReference);
 const samePatentReference = S.toEquivalence(PatentReference);
 const CitationLineageKey = S.Struct({ reference: PatentReference, sourceRef: S.String });
-const encodeCitationLineageKey = S.encodeSync(S.fromJsonString(CitationLineageKey));
+const encodeCitationLineageKey = S.encodeEffect(S.fromJsonString(CitationLineageKey));
 const sameIdentifiedPatentReference = (head: PatentReference, candidate: PatentReference): boolean =>
   isIdentifiedPatentReference(head) && samePatentReference(head, candidate);
 
@@ -258,14 +259,33 @@ export const makeCandorPolicy = (): CandorPolicyShape =>
       const snapshot = yield* reader.snapshotForFiling(scope);
 
       const events = A.dedupeWith(snapshot.events, (left, right) => left.id === right.id);
-      const groups = A.groupBy(events, (event) =>
-        encodeCitationLineageKey({
-          reference: event.reference,
-          sourceRef: event.grounding.source.sourceRef,
-        })
+      const keyedEvents = yield* Effect.forEach(
+        events,
+        (event) =>
+          encodeCitationLineageKey({
+            reference: event.reference,
+            sourceRef: event.grounding.source.sourceRef,
+          }).pipe(Effect.map((key) => ({ key, event }))),
+        { concurrency: 1 }
+      ).pipe(
+        Effect.mapError(() =>
+          CandorRecordReadError.fromReason(
+            "snapshot-unavailable",
+            "Candor record snapshot contains a citation lineage that cannot be encoded."
+          )
+        )
       );
+      const groups = A.groupBy(keyedEvents, (entry) => entry.key);
 
-      const uncovered = yield* Effect.forEach(R.values(groups), (group) => evaluateGroup(group, snapshot.dispositions));
+      const uncovered = yield* Effect.forEach(
+        R.values(groups),
+        (group) =>
+          evaluateGroup(
+            A.map(group, (entry) => entry.event),
+            snapshot.dispositions
+          ),
+        { concurrency: 1 }
+      );
 
       return CandorGateVerdict.make({
         scope,

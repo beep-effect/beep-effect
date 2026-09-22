@@ -30,6 +30,7 @@ import {
   TypeOnlyFence,
 } from "../Doctest.schemas.ts";
 import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "../Doctest.service.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { DoctestCliConfig, ImpurityReason, PurityVerdict } from "../Doctest.schemas.ts";
@@ -1087,7 +1088,7 @@ export const DoctestFenceAnalyzerLive = Layer.effect(
   DoctestFenceAnalyzer,
   Effect.gen(function* () {
     const context = yield* Effect.context<
-      FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner.ChildProcessSpawner
+      FileSystem.FileSystem | Path.Path | FsUtils | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
     >();
     return {
       analyze: Effect.fn("DoctestFenceAnalyzer.analyze")((config) =>

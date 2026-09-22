@@ -10,12 +10,11 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-
-const decodeUnknownDomainSyncOperationSyncOperationSync = S.decodeUnknownSync(DomainSyncOperation.SyncOperation);
 
 const SyncOperationEquivalence = S.toEquivalence(DomainSyncOperation.SyncOperation);
 
@@ -83,46 +82,59 @@ describe("SyncOperation table", () => {
     expect(O.getOrThrow(workspaceIdBtree).config.columns[0]).toMatchObject({ name: "workspace_id" });
   });
 
-  it("round-trips SyncOperation rows through the converters", () => {
-    const syncOperation = decodeUnknownDomainSyncOperationSyncOperationSync(uploadRow);
-    const insert = toSyncOperationInsert(syncOperation);
+  it.effect(
+    "round-trips SyncOperation rows through the converters",
+    Effect.fnUntraced(function* () {
+      const syncOperation = yield* S.decodeUnknownEffect(DomainSyncOperation.SyncOperation)(uploadRow);
+      const insert = yield* Effect.fromResult(toSyncOperationInsert(syncOperation));
 
-    expect("id" in insert).toBe(false);
-    expect(insert.idempotencyKey).toBe("sync-item-1:uploadFile:4");
-    expect(insert.status).toBe("queued");
-    expect(insert.syncItemId).toBe(1);
-    expect(insert.entityType).toBe("DocumentsSyncOperation");
+      expect("id" in insert).toBe(false);
+      expect(insert.idempotencyKey).toBe("sync-item-1:uploadFile:4");
+      expect(insert.status).toBe("queued");
+      expect(insert.syncItemId).toBe(1);
+      expect(insert.entityType).toBe("DocumentsSyncOperation");
 
-    const roundTripped = fromSyncOperationRow({
-      ...insert,
-      id: 20,
-      // $inferInsert types nullable columns as `value | null | undefined`; the
-      // select-row converter expects `value | null`, so resolve absent
-      // optionals to their concrete nulls before round-tripping.
-      inputContentDigest: insert.inputContentDigest ?? null,
-      lastError: insert.lastError ?? null,
-      targetParentRelPath: insert.targetParentRelPath ?? null,
-    });
+      const roundTripped = yield* Effect.fromResult(
+        fromSyncOperationRow({
+          ...insert,
+          id: 20,
+          // $inferInsert types nullable columns as `value | null | undefined`; the
+          // select-row converter expects `value | null`, so resolve absent
+          // optionals to their concrete nulls before round-tripping.
+          inputContentDigest: insert.inputContentDigest ?? null,
+          lastError: insert.lastError ?? null,
+          targetParentRelPath: insert.targetParentRelPath ?? null,
+        })
+      );
 
-    expect(roundTripped.inputContentDigest).toEqual(O.some("abc123"));
-    expect(roundTripped.lastError).toEqual(O.none());
-    expect(SyncOperationEquivalence(roundTripped, syncOperation)).toBe(true);
-  });
+      expect(roundTripped.inputContentDigest).toEqual(O.some("abc123"));
+      expect(roundTripped.lastError).toEqual(O.none());
+      expect(SyncOperationEquivalence(roundTripped, syncOperation)).toBe(true);
+    })
+  );
 
   it.prop(
     "round-trips schema-derived SyncOperations through the row converters",
     [S.toType(DomainSyncOperation.SyncOperation)],
     ([syncOperation]) => {
       const insert = toSyncOperationInsert(syncOperation);
+      expect(Result.isSuccess(insert)).toBe(true);
+      if (!Result.isSuccess(insert)) {
+        return;
+      }
       const decoded = fromSyncOperationRow({
-        ...insert,
+        ...insert.success,
         id: syncOperation.id,
-        inputContentDigest: insert.inputContentDigest ?? null,
-        lastError: insert.lastError ?? null,
-        targetParentRelPath: insert.targetParentRelPath ?? null,
+        inputContentDigest: insert.success.inputContentDigest ?? null,
+        lastError: insert.success.lastError ?? null,
+        targetParentRelPath: insert.success.targetParentRelPath ?? null,
       });
+      expect(Result.isSuccess(decoded)).toBe(true);
+      if (!Result.isSuccess(decoded)) {
+        return;
+      }
 
-      expect(SyncOperationEquivalence(decoded, syncOperation)).toBe(true);
+      expect(SyncOperationEquivalence(decoded.success, syncOperation)).toBe(true);
     },
     { arbitrary: fcRuns(50) }
   );

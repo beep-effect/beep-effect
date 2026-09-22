@@ -47,9 +47,9 @@ const violation = {
   severity: "violation",
 };
 
-const decodeOutcomeInput = S.decodeUnknownSync(ClaimGateOutcomeInput);
+const decodeOutcomeInput = S.decodeUnknownEffect(ClaimGateOutcomeInput);
 
-const rejectedInput = decodeOutcomeInput({
+const rejectedEncoded = {
   claim: claimInput(1, "claim.patentability"),
   dispositionId: 1,
   dispositionPublicId: "epistemic_claim_disposition_a1",
@@ -57,9 +57,9 @@ const rejectedInput = decodeOutcomeInput({
   resolvedBy: { kind: "System", component: "Runtime" },
   schemaVersion: "0.0.0",
   source: "Agent",
-});
+};
 
-const admittedInput = decodeOutcomeInput({
+const admittedEncoded = {
   claim: claimInput(2, "claim.novelty"),
   dispositionId: 2,
   dispositionPublicId: "epistemic_claim_disposition_a2",
@@ -67,13 +67,14 @@ const admittedInput = decodeOutcomeInput({
   resolvedBy: { kind: "System", component: "Runtime" },
   schemaVersion: "0.0.0",
   source: "Agent",
-});
+};
 
 describe("@beep/epistemic-use-cases claim disposition", () => {
   it.layer(inMemoryClaimDispositions, { timeout: "10 seconds" })("rejections without violations", (it) => {
     it.effect(
       "persists an explanatory fallback without advancing the claim",
       Effect.fnUntraced(function* () {
+        const rejectedInput = yield* decodeOutcomeInput(rejectedEncoded);
         const dispositions = yield* ClaimDispositionRepository;
         const resolver = makeClaimGateOutcomeResolver(dispositions, makeClaimTransition());
         const input = ClaimGateOutcomeInput.make({
@@ -102,6 +103,7 @@ describe("@beep/epistemic-use-cases claim disposition", () => {
     it.effect(
       "records a durable rejection carrying the violations and returns the claim unchanged",
       Effect.fnUntraced(function* () {
+        const rejectedInput = yield* decodeOutcomeInput(rejectedEncoded);
         const dispositions = yield* ClaimDispositionRepository;
         const resolver = makeClaimGateOutcomeResolver(dispositions, makeClaimTransition());
 
@@ -126,6 +128,7 @@ describe("@beep/epistemic-use-cases claim disposition", () => {
     it.effect(
       "advances an admitted claim to shape_valid and persists nothing",
       Effect.fnUntraced(function* () {
+        const admittedInput = yield* decodeOutcomeInput(admittedEncoded);
         const dispositions = yield* ClaimDispositionRepository;
         const resolver = makeClaimGateOutcomeResolver(dispositions, makeClaimTransition());
 

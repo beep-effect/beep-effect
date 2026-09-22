@@ -136,9 +136,10 @@ export const UsageRecordSinkInMemory: Layer.Layer<UsageRecordSink> = Layer.unwra
  * via {@link UsageRecordTable.toUsageRecordInsert} (which drops the SERIAL `id`)
  * and inserted into the epistemic `epistemic_usage_record` table.
  *
- * Appends stay total: a driver-level insert failure is logged and dropped so the
- * sink never fails the calling turn pipeline, matching the in-memory sink's
- * contract and the {@link UsageRecordSinkShape} signature.
+ * Appends stay total: a converter failure or a driver-level insert failure is
+ * logged and dropped so the sink never fails the calling turn pipeline,
+ * matching the in-memory sink's contract and the {@link UsageRecordSinkShape}
+ * signature.
  *
  * @category constructors
  * @since 0.0.0
@@ -148,34 +149,32 @@ const makeDrizzleUsageRecordSink: Effect.Effect<UsageRecordSinkShape, never, Pos
     const db = yield* PostgresDrizzle;
     const sink: UsageRecordSinkShape = {
       append: (record) =>
-        db
-          .insert(UsageRecordTable.Table)
-          .values(UsageRecordTable.toUsageRecordInsert(record))
-          .pipe(
-            Effect.asVoid,
-            Effect.tapCause((cause) =>
-              Metric.update(Metric.withAttributes(usagePersistenceFailures, { provider: record.provider }), 1).pipe(
-                Effect.andThen(
-                  logRedactedCause(
-                    cause,
-                    LogRedactedCauseOptions.make({
-                      message: "usage record persistence failed",
-                      level: "Error",
-                      attributes: {
-                        provider: record.provider,
-                        subsystem: "usage_record",
-                        table: UsageRecordTable.TABLE_NAME,
-                      },
-                    })
-                  )
+        Effect.fromResult(UsageRecordTable.toUsageRecordInsert(record)).pipe(
+          Effect.flatMap((insert) => db.insert(UsageRecordTable.Table).values(insert)),
+          Effect.asVoid,
+          Effect.tapCause((cause) =>
+            Metric.update(Metric.withAttributes(usagePersistenceFailures, { provider: record.provider }), 1).pipe(
+              Effect.andThen(
+                logRedactedCause(
+                  cause,
+                  LogRedactedCauseOptions.make({
+                    message: "usage record persistence failed",
+                    level: "Error",
+                    attributes: {
+                      provider: record.provider,
+                      subsystem: "usage_record",
+                      table: UsageRecordTable.TABLE_NAME,
+                    },
+                  })
                 )
               )
-            ),
-            Effect.ignore,
-            Effect.withSpan("UsageRecordSink.appendDrizzle", {
-              attributes: { provider: record.provider, model: record.model },
-            })
+            )
           ),
+          Effect.ignore,
+          Effect.withSpan("UsageRecordSink.appendDrizzle", {
+            attributes: { provider: record.provider, model: record.model },
+          })
+        ),
     };
     return sink;
   }

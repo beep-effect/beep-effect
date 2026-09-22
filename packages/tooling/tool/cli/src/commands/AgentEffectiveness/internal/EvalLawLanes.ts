@@ -20,6 +20,7 @@ import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.
 import { AgentEffectivenessEvalViolation } from "../AgentEffectiveness.schemas.ts";
 import { sortViolations } from "./EvalScoring.ts";
 import type { Scope } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { SchemaFirstPolicyFinding } from "../../../internal/quality/SchemaFirstPolicyFinding.ts";
 import type { LawEvaluation } from "./EvalScoring.ts";
@@ -48,7 +49,11 @@ const runSubprocess = Effect.fn("AgentEffectivenessEvalScorer.runSubprocess")(fu
   command: string,
   args: ReadonlyArray<string>,
   cwd: string
-): Effect.fn.Return<SubprocessResult, AgentEffectivenessEvalScorerError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  SubprocessResult,
+  AgentEffectivenessEvalScorerError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const commandText = formatCommandLine(command, args);
   const result = yield* runCaptured({
     command,
@@ -162,7 +167,7 @@ const evaluateSchemaFirst = Effect.fn("AgentEffectivenessEvalScorer.evaluateSche
 ): Effect.fn.Return<
   ReadonlyArray<AgentEffectivenessEvalViolation>,
   AgentEffectivenessEvalScorerError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* Effect.scoped(
     Effect.gen(function* () {
@@ -249,7 +254,7 @@ const evaluateTsgo = Effect.fn("AgentEffectivenessEvalScorer.evaluateTsgo")(func
 ): Effect.fn.Return<
   ReadonlyArray<AgentEffectivenessEvalViolation>,
   AgentEffectivenessEvalScorerError,
-  Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const tsgoPath = path.join(repoRoot, "node_modules", ".bin", "tsgo");
@@ -357,7 +362,7 @@ const evaluateBiome = Effect.fn("AgentEffectivenessEvalScorer.evaluateBiome")(fu
 ): Effect.fn.Return<
   ReadonlyArray<AgentEffectivenessEvalViolation>,
   AgentEffectivenessEvalScorerError,
-  Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const biomePath = path.join(repoRoot, "node_modules", ".bin", "biome");
@@ -396,7 +401,7 @@ export const evaluateLaw = Effect.fn("AgentEffectivenessEvalScorer.evaluateLaw")
 ): Effect.fn.Return<
   LawEvaluation,
   AgentEffectivenessEvalScorerError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const schemaFirst = yield* evaluateSchemaFirst(fixtureDir, repoRoot);
   const tsgo = yield* evaluateTsgo(fixtureDir, repoRoot, sourceFiles);

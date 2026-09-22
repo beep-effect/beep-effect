@@ -58,7 +58,7 @@ const SH_DATATYPE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}DatatypeConstrain
 const SH_CLASS_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}ClassConstraintComponent`);
 const SH_HAS_VALUE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}HasValueConstraintComponent`);
 
-const sessionId = S.decodeSync(SessionId)("session-validation");
+const sessionId = SessionId.make("session-validation");
 const material = makeNamedNode("https://example.test/materials#Material");
 const marker = makeNamedNode("https://example.test/marker");
 const markerValue = makeNamedNode("https://example.test/marker-value");
@@ -97,9 +97,12 @@ const testSession = (): Session =>
 describe("Ontology validation and provenance", () => {
   const writes = new Map<string, string>();
   const turtle = TurtleCodec.of({
-    parse: Effect.fn("TurtleCodec.parse")(() =>
-      Effect.succeed(ParseTurtleResult.make({ dataset: makeDataset([]), prefixes: PrefixMap.decodeUnknownSync({}) }))
-    ),
+    parse: Effect.fn("TurtleCodec.parse")(function* () {
+      return ParseTurtleResult.make({
+        dataset: makeDataset([]),
+        prefixes: yield* Effect.orDie(S.decodeEffect(PrefixMap)({})),
+      });
+    }),
     serialize: Effect.fn("TurtleCodec.serialize")((request) =>
       Effect.succeed(SerializeTurtleResult.make({ source: request.dataset.quads.map(serializeQuad).join("\n") }))
     ),
@@ -419,8 +422,8 @@ describe("Ontology validation and provenance", () => {
           const exported = yield* runner.exportProvenance(
             ExportOntologyProvenanceCommand.make({
               session: repaired,
-              provPath: OntologyFilePath.decodeUnknownSync("tmp/session-validation.prov.ttl"),
-              datasetPath: OntologyFilePath.decodeUnknownSync("tmp/session-validation.dataset.ttl"),
+              provPath: OntologyFilePath.make("tmp/session-validation.prov.ttl"),
+              datasetPath: OntologyFilePath.make("tmp/session-validation.dataset.ttl"),
             })
           );
 

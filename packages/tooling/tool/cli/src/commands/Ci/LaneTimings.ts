@@ -49,11 +49,12 @@ import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { Command, Flag } from "effect/unstable/cli";
-import { ChildProcessSpawner } from "effect/unstable/process";
 import { detectGithubJobShapeClass, GithubJobRecord, GithubJobStepRecord } from "../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
+import type * as Crypto from "effect/Crypto";
 import type * as SchemaAST from "effect/SchemaAST";
+import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Ci/LaneTimings");
 
@@ -727,7 +728,7 @@ const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
   repoRoot: string,
   endpoint: string,
   jqProjection: O.Option<string>
-): Effect.fn.Return<string, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const args = A.appendAll(
     ["api", endpoint],
     A.flatMap(O.toArray(jqProjection), (projection) => ["--jq", projection])
@@ -760,7 +761,7 @@ const fetchLegacyCiWorkflowJobsPage = Effect.fn("Ci.fetchLegacyCiWorkflowJobsPag
   runId: number,
   perPage: number,
   pageNumber: number
-): Effect.fn.Return<string, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* ghApiJson(
     repoRoot,
     ciWorkflowJobsEndpoint(runId, perPage, pageNumber),
@@ -831,7 +832,7 @@ const collectCiWorkflowJobPages = Effect.fn("Ci.collectCiWorkflowJobPages")(func
 export const collectCiLaneTimings = Effect.fn("Ci.collectCiLaneTimings")(function* (
   repoRoot: string,
   runLimit: number
-): Effect.fn.Return<CiLaneTimingsReport, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<CiLaneTimingsReport, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   if (runLimit < 1 || runLimit > 100) {
     return yield* CiCommandError.make({ message: `--runs must be between 1 and 100; received ${runLimit}.` });
   }
@@ -1417,12 +1418,10 @@ export class CiLaneTimingGithubClient extends Context.Service<
 >()($I`CiLaneTimingGithubClient`) {}
 
 const makeCiLaneTimingGithubClient = Effect.fn("CiLaneTimingGithubClient.make")(function* () {
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
   return CiLaneTimingGithubClient.of({
     getJson: Effect.fn("CiLaneTimingGithubClient.getJson")((repoRoot, endpoint, jqProjection) =>
-      ghApiJson(repoRoot, endpoint, jqProjection).pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-      )
+      ghApiJson(repoRoot, endpoint, jqProjection).pipe(Effect.provide(context))
     ),
   });
 });

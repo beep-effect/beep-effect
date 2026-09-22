@@ -330,7 +330,7 @@ class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSp
   static readonly deadlineVerified = EvidenceSpecification.make({
     artifactFixtureKey: "qa.contradiction.deadline.executed-amendment",
     createdAt: 1_767_225_600_100,
-    publicIdSuffix: Cuid.decodeUnknownSync("deadline"),
+    publicIdSuffix: Cuid.make("deadline"),
     span: {
       confidence: 0.99,
       endChar: CONTRADICTION_QA_ANCHOR_START + Str.length(CONTRADICTION_QA_ANCHOR_QUOTE),
@@ -343,7 +343,7 @@ class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSp
   static readonly deadlineUnverified = EvidenceSpecification.make({
     artifactFixtureKey: "qa.contradiction.deadline.renewal-notice",
     createdAt: 1_767_225_600_200,
-    publicIdSuffix: Cuid.decodeUnknownSync("notice"),
+    publicIdSuffix: Cuid.make("notice"),
     span: {
       confidence: 0.91,
       endChar: Str.length("The renewal notice lists 15 July 2027."),
@@ -356,7 +356,7 @@ class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSp
   static readonly capAgreement = EvidenceSpecification.make({
     artifactFixtureKey: "qa.contradiction.liability-cap.executed-agreement",
     createdAt: 1_767_225_601_100,
-    publicIdSuffix: Cuid.decodeUnknownSync("agreement"),
+    publicIdSuffix: Cuid.make("agreement"),
     span: {
       confidence: 0.97,
       endChar: Str.length("Liability is capped at USD 1,000,000."),
@@ -369,7 +369,7 @@ class EvidenceSpecification extends S.Class<EvidenceSpecification>($I`EvidenceSp
   static readonly capEmail = EvidenceSpecification.make({
     artifactFixtureKey: "qa.contradiction.liability-cap.negotiation-email",
     createdAt: 1_767_225_601_200,
-    publicIdSuffix: Cuid.decodeUnknownSync("email"),
+    publicIdSuffix: Cuid.make("email"),
     span: {
       confidence: 0.88,
       endChar: Str.length("The negotiated cap is USD 750,000."),
@@ -538,7 +538,7 @@ const systemPrincipal = SystemPrincipal.make({
 const schemaVersion = "0.0.0";
 const pendingEvidenceId = EpistemicIdentity.EvidenceId.make(1);
 const pendingVerificationId = Epistemic.EvidenceVerificationId.make(1);
-const verificationPublicIdSuffix = Cuid.decodeUnknownSync("anchor");
+const verificationPublicIdSuffix = Cuid.make("anchor");
 const instant = DateTime.makeUnsafe;
 const decodeEvidence = S.decodeUnknownEffect(Evidence);
 const decodeWorkspaceVaultRootPath = S.decodeUnknownEffect(WorkspaceVaultRootPath);
@@ -683,11 +683,10 @@ const ensureBelief = Effect.fn("ContradictionQaSeed.ensureBelief")(function* (sp
   );
   const expectedLogicalKey = logicalEdgeKey(identity);
   const selected = yield* db.select().from(edgeVersionTable).pipe(storageUnavailable("select edge versions"));
-  const sameLogicalEdge = pipe(
-    selected,
-    A.map(fromEdgeVersionRow),
-    A.filter((row) => Eq.equals(row.logicalKey, expectedLogicalKey))
-  );
+  const decodedEdges = yield* Effect.forEach(selected, (row) => Effect.fromResult(fromEdgeVersionRow(row)), {
+    concurrency: 1,
+  }).pipe(storageUnavailable("decode selected edge versions"));
+  const sameLogicalEdge = A.filter(decodedEdges, (row) => Eq.equals(row.logicalKey, expectedLogicalKey));
   const exact = A.findFirst(sameLogicalEdge, (row) => edgeMatches(row, expectedLogicalKey, specification));
 
   if (O.isSome(exact)) {

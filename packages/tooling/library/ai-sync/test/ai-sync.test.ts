@@ -99,41 +99,44 @@ const repoSafeClaudePermissions = {
 };
 const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
-const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(
+const expectSchemaRoundTrip = Effect.fn("expectSchemaRoundTrip")(function* <Schema extends S.Codec<unknown>>(
   schema: Schema,
   arbitrary = Arbitrary.schema(schema)
-): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          expect(Equal.equals(S.decodeUnknownSync(schema)(S.encodeSync(schema)(value)), value)).toBe(true);
+) {
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.all([arbitrary]),
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(schema)(value);
+        const decoded = yield* S.decodeEffect(schema)(encoded);
+        expect(Equal.equals(decoded, value)).toBe(true);
 
-          return true;
-        },
-        fcRuns(25)
-      )
-    )._tag
-  ).toBe("Passed");
-};
+        return true;
+      }),
+    fcRuns(25)
+  );
 
-const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          const encoded = S.encodeSync(schema)(value);
-          expect(S.encodeSync(schema)(S.decodeUnknownSync(schema)(encoded))).toEqual(encoded);
+  expect(result._tag).toBe("Passed");
+});
 
-          return true;
-        },
-        fcRuns(25)
-      )
-    )._tag
-  ).toBe("Passed");
-};
+const expectEncodedRoundTrip = Effect.fn("expectEncodedRoundTrip")(function* <Schema extends S.Codec<unknown>>(
+  schema: Schema
+) {
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.all([Arbitrary.schema(schema)]),
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(schema)(value);
+        const decoded = yield* S.decodeEffect(schema)(encoded);
+        expect(yield* S.encodeEffect(schema)(decoded)).toEqual(encoded);
+
+        return true;
+      }),
+    fcRuns(25)
+  );
+
+  expect(result._tag).toBe("Passed");
+});
 
 const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -303,20 +306,20 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
   it.effect(
     "round-trips crispened schemas with schema-derived arbitraries",
     Effect.fn(function* () {
-      expectSchemaRoundTrip(AiSyncSourceId);
-      expectSchemaRoundTrip(AiSyncSourceUrl);
-      expectSchemaRoundTrip(AiSyncVersionPin);
-      expectSchemaRoundTrip(AiSyncContentHash);
-      expectSchemaRoundTrip(AiSyncSourceMetadata);
-      expectSchemaRoundTrip(AiSyncSchemaCell);
-      expectSchemaRoundTrip(AiSyncDriftFinding);
-      expectSchemaRoundTrip(AiSyncDriftReport);
-      expectSchemaRoundTrip(AiSyncValidationResult);
-      expectEncodedRoundTrip(AiSyncError);
-      expectSchemaRoundTrip(AgentCommandMetadata);
-      expectSchemaRoundTrip(AgentPluginManifestMetadata);
-      expectSchemaRoundTrip(UnknownNativeSchemaCell);
-      expectSchemaRoundTrip(NormalizedAgentInstructionDocument, NormalizedAgentInstructionDocumentArbitrary);
+      yield* expectSchemaRoundTrip(AiSyncSourceId);
+      yield* expectSchemaRoundTrip(AiSyncSourceUrl);
+      yield* expectSchemaRoundTrip(AiSyncVersionPin);
+      yield* expectSchemaRoundTrip(AiSyncContentHash);
+      yield* expectSchemaRoundTrip(AiSyncSourceMetadata);
+      yield* expectSchemaRoundTrip(AiSyncSchemaCell);
+      yield* expectSchemaRoundTrip(AiSyncDriftFinding);
+      yield* expectSchemaRoundTrip(AiSyncDriftReport);
+      yield* expectSchemaRoundTrip(AiSyncValidationResult);
+      yield* expectEncodedRoundTrip(AiSyncError);
+      yield* expectSchemaRoundTrip(AgentCommandMetadata);
+      yield* expectSchemaRoundTrip(AgentPluginManifestMetadata);
+      yield* expectSchemaRoundTrip(UnknownNativeSchemaCell);
+      yield* expectSchemaRoundTrip(NormalizedAgentInstructionDocument, NormalizedAgentInstructionDocumentArbitrary);
     })
   );
 

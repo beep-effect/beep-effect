@@ -7,7 +7,6 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-
 import * as Elicitation from "../../../../claudecode/Hook/Events/Elicitation.ts";
 import * as FileChanged from "../../../../claudecode/Hook/Events/FileChanged.ts";
 import * as Notification from "../../../../claudecode/Hook/Events/Notification.ts";

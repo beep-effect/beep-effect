@@ -2,16 +2,18 @@ import { fcRuns } from "@beep/fc-runs";
 import * as GraphSchema from "@beep/schema/Graph";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as Graph_ from "effect/Graph";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeGraphSchemaEdgeIndexSync = S.decodeSync(GraphSchema.EdgeIndex);
-const decodeGraphSchemaEdgeIndexFromStringSync = S.decodeSync(GraphSchema.EdgeIndexFromString);
-const decodeGraphSchemaGraphKindSync = S.decodeSync(GraphSchema.GraphKind);
-const decodeGraphSchemaNodeIndexSync = S.decodeSync(GraphSchema.NodeIndex);
-const decodeGraphSchemaNodeIndexFromStringSync = S.decodeSync(GraphSchema.NodeIndexFromString);
+const decodeGraphSchemaEdgeIndex = S.decodeUnknownEffect(GraphSchema.EdgeIndex);
+const decodeGraphSchemaEdgeIndexFromString = S.decodeUnknownEffect(GraphSchema.EdgeIndexFromString);
+const decodeGraphSchemaGraphKind = S.decodeUnknownEffect(GraphSchema.GraphKind);
+const decodeGraphSchemaNodeIndex = S.decodeUnknownEffect(GraphSchema.NodeIndex);
+const decodeGraphSchemaNodeIndexFromString = S.decodeUnknownEffect(GraphSchema.NodeIndexFromString);
 const isGraphSchemaEdgeIndex = S.is(GraphSchema.EdgeIndex);
 const isGraphSchemaGraphKind = S.is(GraphSchema.GraphKind);
 const isGraphSchemaNodeIndex = S.is(GraphSchema.NodeIndex);
@@ -21,40 +23,50 @@ const EdgeIndexArbitrary = Arbitrary.schema(GraphSchema.EdgeIndex);
 const GraphKindArbitrary = Arbitrary.schema(GraphSchema.GraphKind);
 
 describe("Graph indices", () => {
-  it("brands non-negative integer node and edge indices", () => {
-    expect(decodeGraphSchemaNodeIndexSync(0)).toBe(0);
-    expect(decodeGraphSchemaNodeIndexFromStringSync("2")).toBe(2);
-    expect(decodeGraphSchemaEdgeIndexSync(1)).toBe(1);
-    expect(decodeGraphSchemaEdgeIndexFromStringSync("3")).toBe(3);
-  });
+  it.effect(
+    "brands non-negative integer node and edge indices",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeGraphSchemaNodeIndex(0)).toBe(0);
+      expect(yield* decodeGraphSchemaNodeIndexFromString("2")).toBe(2);
+      expect(yield* decodeGraphSchemaEdgeIndex(1)).toBe(1);
+      expect(yield* decodeGraphSchemaEdgeIndexFromString("3")).toBe(3);
+    })
+  );
 
-  it("rejects invalid indices", () => {
-    expect(() => decodeGraphSchemaNodeIndexSync(-1)).toThrow("Expected a value greater than or equal to 0");
-    expect(() => decodeGraphSchemaEdgeIndexFromStringSync("-1")).toThrow("Expected a value greater than or equal to 0");
-  });
+  it.effect(
+    "rejects invalid indices",
+    Effect.fnUntraced(function* () {
+      const failure1 = yield* Effect.result(decodeGraphSchemaNodeIndex(-1));
+      const isFailure1 = Result.isFailure(failure1);
+      assertTrue(isFailure1);
+      expect(failure1.failure.message).toContain("Expected a value greater than or equal to 0");
+      const failure2 = yield* Effect.result(decodeGraphSchemaEdgeIndexFromString("-1"));
+      const isFailure2 = Result.isFailure(failure2);
+      assertTrue(isFailure2);
+      expect(failure2.failure.message).toContain("Expected a value greater than or equal to 0");
+    })
+  );
 
-  it("decodes graph kind discriminators", () => {
-    expect(decodeGraphSchemaGraphKindSync("directed")).toBe("directed");
-    expect(decodeGraphSchemaGraphKindSync("undirected")).toBe("undirected");
-  });
+  it.effect(
+    "decodes graph kind discriminators",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeGraphSchemaGraphKind("directed")).toBe("directed");
+      expect(yield* decodeGraphSchemaGraphKind("undirected")).toBe("undirected");
+    })
+  );
 
-  it("derives valid graph primitives from their source schemas", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([NodeIndexArbitrary, EdgeIndexArbitrary, GraphKindArbitrary]),
-          ([nodeIndex, edgeIndex, graphKind]) => {
-            expect(isGraphSchemaNodeIndex(nodeIndex)).toBe(true);
-            expect(isGraphSchemaEdgeIndex(edgeIndex)).toBe(true);
-            expect(isGraphSchemaGraphKind(graphKind)).toBe(true);
+  it.effect.prop(
+    "derives valid graph primitives from their source schemas",
+    [NodeIndexArbitrary, EdgeIndexArbitrary, GraphKindArbitrary],
+    Effect.fnUntraced(function* ([nodeIndex, edgeIndex, graphKind]) {
+      expect(isGraphSchemaNodeIndex(nodeIndex)).toBe(true);
+      expect(isGraphSchemaEdgeIndex(edgeIndex)).toBe(true);
+      expect(isGraphSchemaGraphKind(graphKind)).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 describe("Graph edge schemas", () => {
@@ -65,45 +77,63 @@ describe("Graph edge schemas", () => {
     expect(schema.annotate({}).data).toBe(S.FiniteFromString);
   });
 
-  it("transforms encoded edges into Graph.Edge values and back", () => {
-    const schema = GraphSchema.EdgeTransform(S.FiniteFromString);
-    const decoded = S.decodeUnknownSync(schema)({ source: 0, target: 1, data: "1" });
+  it.effect(
+    "transforms encoded edges into Graph.Edge values and back",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.EdgeTransform(S.FiniteFromString);
+      const decoded = yield* S.decodeUnknownEffect(schema)({ source: 0, target: 1, data: "1" });
 
-    expect(GraphSchema.isEdge(decoded)).toBe(true);
-    expect(decoded.source).toBe(0);
-    expect(decoded.target).toBe(1);
-    expect(decoded.data).toBe(1);
-    expect(S.encodeSync(schema)(decoded)).toEqual({ source: 0, target: 1, data: "1" });
-  });
+      expect(GraphSchema.isEdge(decoded)).toBe(true);
+      expect(decoded.source).toBe(0);
+      expect(decoded.target).toBe(1);
+      expect(decoded.data).toBe(1);
+      expect(yield* S.encodeEffect(schema)(decoded)).toEqual({ source: 0, target: 1, data: "1" });
+    })
+  );
 
-  it("exposes Edge as the public edge transform alias", () => {
-    const schema = GraphSchema.Edge(S.FiniteFromString);
-    const decoded = S.decodeUnknownSync(schema)({ source: 0, target: 1, data: "1" });
+  it.effect(
+    "exposes Edge as the public edge transform alias",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.Edge(S.FiniteFromString);
+      const decoded = yield* S.decodeUnknownEffect(schema)({ source: 0, target: 1, data: "1" });
 
-    expect(GraphSchema.isEdge(decoded)).toBe(true);
-    expect(decoded.data).toBe(1);
-  });
+      expect(GraphSchema.isEdge(decoded)).toBe(true);
+      expect(decoded.data).toBe(1);
+    })
+  );
 
-  it("validates existing Graph.Edge values with nested transforms", () => {
-    const schema = GraphSchema.EdgeFromSelf(S.FiniteFromString);
-    const decoded = S.decodeSync(schema)({ source: 0, target: 1, data: "1" });
+  it.effect(
+    "validates existing Graph.Edge values with nested transforms",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.EdgeFromSelf(S.FiniteFromString);
+      const decoded = yield* S.decodeEffect(schema)({ source: 0, target: 1, data: "1" });
 
-    expect(GraphSchema.isEdge(decoded)).toBe(true);
-    expect(decoded.data).toBe(1);
-    expect(() => S.decodeUnknownSync(schema)({ source: 0, target: 1, data: null })).toThrow("Expected string");
-  });
+      expect(GraphSchema.isEdge(decoded)).toBe(true);
+      expect(decoded.data).toBe(1);
+      const failure3 = yield* Effect.result(S.decodeUnknownEffect(schema)({ source: 0, target: 1, data: null }));
+      const isFailure3 = Result.isFailure(failure3);
+      assertTrue(isFailure3);
+      expect(failure3.failure.message).toContain("Expected string");
+    })
+  );
 
-  it("rejects malformed edge values and derives edge equivalence", () => {
-    const schema = GraphSchema.EdgeFromSelf(S.String);
-    const equivalent = S.toEquivalence(schema);
-    const edge = { source: 0, target: 1, data: "x" };
+  it.effect(
+    "rejects malformed edge values and derives edge equivalence",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.EdgeFromSelf(S.String);
+      const equivalent = S.toEquivalence(schema);
+      const edge = { source: 0, target: 1, data: "x" };
 
-    expect(() => S.decodeSync(schema)({ source: -1, target: 1, data: "x" })).toThrow();
-    expect(equivalent(edge, { source: 0, target: 1, data: "x" })).toBe(true);
-    expect(equivalent(edge, { source: 1, target: 1, data: "x" })).toBe(false);
-    expect(equivalent(edge, { source: 0, target: 2, data: "x" })).toBe(false);
-    expect(equivalent(edge, { source: 0, target: 1, data: "y" })).toBe(false);
-  });
+      const isFailure4 = Result.isFailure(
+        yield* Effect.result(S.decodeEffect(schema)({ source: -1, target: 1, data: "x" }))
+      );
+      assertTrue(isFailure4);
+      expect(equivalent(edge, { source: 0, target: 1, data: "x" })).toBe(true);
+      expect(equivalent(edge, { source: 1, target: 1, data: "x" })).toBe(false);
+      expect(equivalent(edge, { source: 0, target: 2, data: "x" })).toBe(false);
+      expect(equivalent(edge, { source: 0, target: 1, data: "y" })).toBe(false);
+    })
+  );
 });
 
 describe("Graph encoded schemas", () => {
@@ -118,304 +148,359 @@ describe("Graph encoded schemas", () => {
 });
 
 describe("DirectedGraph", () => {
-  it("decodes encoded payloads into immutable directed graphs and sorts nodes by index", () => {
-    const schema = GraphSchema.DirectedGraph({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const decoded = S.decodeUnknownSync(schema)({
-      _tag: "Graph",
-      type: "directed",
-      nodes: [
-        [1, "2"],
-        [0, "1"],
-      ],
-      edges: [{ index: 0, source: 0, target: 1, data: "a" }],
-    });
+  it.effect(
+    "decodes encoded payloads into immutable directed graphs and sorts nodes by index",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.DirectedGraph({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const decoded = yield* S.decodeUnknownEffect(schema)({
+        _tag: "Graph",
+        type: "directed",
+        nodes: [
+          [1, "2"],
+          [0, "1"],
+        ],
+        edges: [{ index: 0, source: 0, target: 1, data: "a" }],
+      });
 
-    expect(schema.node).toBe(S.FiniteFromString);
-    expect(schema.edge).toBe(S.String);
-    expect(GraphSchema.isGraph(decoded)).toBe(true);
-    expect(decoded.type).toBe("directed");
-    expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
-      [0, 1],
-      [1, 2],
-    ]);
-    expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([[0, { source: 0, target: 1, data: "a" }]]);
-  });
+      expect(schema.node).toBe(S.FiniteFromString);
+      expect(schema.edge).toBe(S.String);
+      expect(GraphSchema.isGraph(decoded)).toBe(true);
+      expect(decoded.type).toBe("directed");
+      expect(decoded.mutable).toBe(false);
+      expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
+        [0, 1],
+        [1, 2],
+      ]);
+      expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([[0, { source: 0, target: 1, data: "a" }]]);
+    })
+  );
 
-  it("encodes immutable directed graphs back to the wire shape", () => {
-    const schema = GraphSchema.DirectedGraph({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const graph = Graph_.directed<number, string>((mutable) => {
-      const a = Graph_.addNode(mutable, 1);
-      const b = Graph_.addNode(mutable, 2);
-      Graph_.addEdge(mutable, a, b, "a");
-    });
+  it.effect(
+    "encodes immutable directed graphs back to the wire shape",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.DirectedGraph({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const graph = Graph_.directed<number, string>((mutable) => {
+        const a = Graph_.addNode(mutable, 1);
+        const b = Graph_.addNode(mutable, 2);
+        Graph_.addEdge(mutable, a, b, "a");
+      });
 
-    expect(S.encodeSync(schema)(graph)).toEqual({
-      _tag: "Graph",
-      type: "directed",
-      nodes: [
-        [0, "1"],
-        [1, "2"],
-      ],
-      edges: [{ index: 0, source: 0, target: 1, data: "a" }],
-    });
-  });
+      expect(yield* S.encodeEffect(schema)(graph)).toEqual({
+        _tag: "Graph",
+        type: "directed",
+        nodes: [
+          [0, "1"],
+          [1, "2"],
+        ],
+        edges: [{ index: 0, source: 0, target: 1, data: "a" }],
+      });
+    })
+  );
 
-  it("rejects the wrong graph kind and malformed topology", () => {
-    const schema = GraphSchema.DirectedGraph({
-      node: S.String,
-      edge: S.String,
-    });
+  it.effect(
+    "rejects the wrong graph kind and malformed topology",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.DirectedGraph({
+        node: S.String,
+        edge: S.String,
+      });
 
-    expect(() =>
-      S.decodeSync(schema)({
+      const failure4 = yield* Effect.result(
+        S.decodeEffect(schema)({
+          _tag: "Graph",
+          type: "undirected",
+          nodes: [],
+          edges: [],
+        })
+      );
+      const isFailure5 = Result.isFailure(failure4);
+      assertTrue(isFailure5);
+      expect(failure4.failure.message).toContain("Expected directed graph, got undirected");
+
+      const failure5 = yield* Effect.result(
+        S.decodeUnknownEffect(schema)({
+          _tag: "Graph",
+          type: "directed",
+          nodes: [[0, "a"]],
+          edges: [{ index: 0, source: 0, target: 1, data: "x" }],
+        })
+      );
+      const isFailure6 = Result.isFailure(failure5);
+      assertTrue(isFailure6);
+      expect(failure5.failure.message).toContain("Node 1 does not exist");
+
+      const failure6 = yield* Effect.result(
+        S.decodeUnknownEffect(schema)({
+          _tag: "Graph",
+          type: "directed",
+          nodes: [[1, "a"]],
+          edges: [],
+        })
+      );
+      const isFailure7 = Result.isFailure(failure6);
+      assertTrue(isFailure7);
+      expect(failure6.failure.message).toContain("Expected node index 1, got 0");
+
+      const failure7 = yield* Effect.result(
+        S.decodeUnknownEffect(schema)({
+          _tag: "Graph",
+          type: "directed",
+          nodes: [
+            [0, "a"],
+            [1, "b"],
+          ],
+          edges: [{ index: 1, source: 0, target: 1, data: "x" }],
+        })
+      );
+      const isFailure8 = Result.isFailure(failure7);
+      assertTrue(isFailure8);
+      expect(failure7.failure.message).toContain("Expected edge index 1, got 0");
+    })
+  );
+});
+
+describe("UndirectedGraph", () => {
+  it.effect(
+    "decodes encoded payloads into immutable undirected graphs",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.UndirectedGraph({
+        node: S.String,
+        edge: S.FiniteFromString,
+      });
+      const decoded = yield* S.decodeUnknownEffect(schema)({
         _tag: "Graph",
         type: "undirected",
-        nodes: [],
-        edges: [],
-      })
-    ).toThrow("Expected directed graph, got undirected");
-
-    expect(() =>
-      S.decodeUnknownSync(schema)({
-        _tag: "Graph",
-        type: "directed",
-        nodes: [[0, "a"]],
-        edges: [{ index: 0, source: 0, target: 1, data: "x" }],
-      })
-    ).toThrow("Node 1 does not exist");
-
-    expect(() =>
-      S.decodeUnknownSync(schema)({
-        _tag: "Graph",
-        type: "directed",
-        nodes: [[1, "a"]],
-        edges: [],
-      })
-    ).toThrow("Expected node index 1, got 0");
-
-    expect(() =>
-      S.decodeUnknownSync(schema)({
-        _tag: "Graph",
-        type: "directed",
         nodes: [
           [0, "a"],
           [1, "b"],
         ],
-        edges: [{ index: 1, source: 0, target: 1, data: "x" }],
-      })
-    ).toThrow("Expected edge index 1, got 0");
-  });
-});
+        edges: [{ index: 0, source: 0, target: 1, data: "1" }],
+      });
 
-describe("UndirectedGraph", () => {
-  it("decodes encoded payloads into immutable undirected graphs", () => {
-    const schema = GraphSchema.UndirectedGraph({
-      node: S.String,
-      edge: S.FiniteFromString,
-    });
-    const decoded = S.decodeUnknownSync(schema)({
-      _tag: "Graph",
-      type: "undirected",
-      nodes: [
-        [0, "a"],
-        [1, "b"],
-      ],
-      edges: [{ index: 0, source: 0, target: 1, data: "1" }],
-    });
+      expect(decoded.type).toBe("undirected");
+      expect(decoded.mutable).toBe(false);
+      expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([[0, { source: 0, target: 1, data: 1 }]]);
+    })
+  );
 
-    expect(decoded.type).toBe("undirected");
-    expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([[0, { source: 0, target: 1, data: 1 }]]);
-  });
-
-  it("validates existing immutable undirected graphs with nested transforms", () => {
-    const schema = GraphSchema.UndirectedGraphFromSelf({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const graph = Graph_.undirected<string, string>((mutable) => {
-      const a = Graph_.addNode(mutable, "1");
-      const b = Graph_.addNode(mutable, "2");
-      Graph_.addEdge(mutable, a, b, "x");
-    });
-
-    const decoded = S.decodeSync(schema)(graph);
-
-    expect(decoded.type).toBe("undirected");
-    expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
-      [0, 1],
-      [1, 2],
-    ]);
-  });
-});
-
-describe("Graph FromSelf schemas", () => {
-  it("validates existing immutable directed graphs with nested transforms", () => {
-    const schema = GraphSchema.DirectedGraphFromSelf({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const graph = Graph_.directed<string, string>((mutable) => {
-      const a = Graph_.addNode(mutable, "1");
-      const b = Graph_.addNode(mutable, "2");
-      Graph_.addEdge(mutable, a, b, "x");
-    });
-    const decoded = S.decodeSync(schema)(graph);
-
-    expect(decoded.type).toBe("directed");
-    expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
-      [0, 1],
-      [1, 2],
-    ]);
-  });
-
-  it("reports nested node decode failures on existing graphs", () => {
-    const schema = GraphSchema.DirectedGraphFromSelf({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const graph = Graph_.directed<string | null, string>((mutable) => {
-      const a = Graph_.addNode(mutable, "1");
-      const b = Graph_.addNode(mutable, null);
-      Graph_.addEdge(mutable, a, b, "x");
-    });
-
-    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow(`Expected string
-  at ["nodes"][1][1]`);
-  });
-
-  it("rejects mutable graphs when the schema expects immutable ones", () => {
-    const schema = GraphSchema.GraphFromSelf({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const graph = Graph_.beginMutation(
-      Graph_.directed<string, string>((mutable) => {
+  it.effect(
+    "validates existing immutable undirected graphs with nested transforms",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.UndirectedGraphFromSelf({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const graph = Graph_.undirected<string, string>((mutable) => {
         const a = Graph_.addNode(mutable, "1");
         const b = Graph_.addNode(mutable, "2");
         Graph_.addEdge(mutable, a, b, "x");
-      })
-    );
+      });
 
-    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow("Expected @beep/schema/Graph/GraphFromSelf");
-  });
+      const decoded = yield* S.decodeEffect(schema)(graph);
 
-  it("validates existing mutable directed graphs and preserves mutability", () => {
-    const schema = GraphSchema.MutableDirectedGraphFromSelf({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const graph = Graph_.beginMutation(Graph_.directed<string, string>());
-    const a = Graph_.addNode(graph, "1");
-    const b = Graph_.addNode(graph, "2");
-    Graph_.addEdge(graph, a, b, "x");
+      expect(decoded.type).toBe("undirected");
+      expect(decoded.mutable).toBe(false);
+      expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
+        [0, 1],
+        [1, 2],
+      ]);
+    })
+  );
+});
 
-    const decoded = S.decodeSync(schema)(graph);
+describe("Graph FromSelf schemas", () => {
+  it.effect(
+    "validates existing immutable directed graphs with nested transforms",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.DirectedGraphFromSelf({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const graph = Graph_.directed<string, string>((mutable) => {
+        const a = Graph_.addNode(mutable, "1");
+        const b = Graph_.addNode(mutable, "2");
+        Graph_.addEdge(mutable, a, b, "x");
+      });
+      const decoded = yield* S.decodeEffect(schema)(graph);
 
-    expect(decoded.type).toBe("directed");
-    expect(decoded.mutable).toBe(true);
-    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
-      [0, 1],
-      [1, 2],
-    ]);
-  });
+      expect(decoded.type).toBe("directed");
+      expect(decoded.mutable).toBe(false);
+      expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
+        [0, 1],
+        [1, 2],
+      ]);
+    })
+  );
 
-  it("validates generic and undirected mutable graphs", () => {
-    const genericSchema = GraphSchema.MutableGraphFromSelf({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const undirectedSchema = GraphSchema.MutableUndirectedGraphFromSelf({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const directedSchema = GraphSchema.MutableDirectedGraphFromSelf({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const graph = Graph_.beginMutation(Graph_.undirected<string, string>());
-    const a = Graph_.addNode(graph, "1");
-    const b = Graph_.addNode(graph, "2");
-    Graph_.addEdge(graph, a, b, "x");
+  it.effect(
+    "reports nested node decode failures on existing graphs",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.DirectedGraphFromSelf({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const graph = Graph_.directed<string | null, string>((mutable) => {
+        const a = Graph_.addNode(mutable, "1");
+        const b = Graph_.addNode(mutable, null);
+        Graph_.addEdge(mutable, a, b, "x");
+      });
 
-    const generic = S.decodeSync(genericSchema)(graph);
-    const undirected = S.decodeSync(undirectedSchema)(graph);
+      const failure8 = yield* Effect.result(S.decodeUnknownEffect(schema)(graph));
+      const isFailure9 = Result.isFailure(failure8);
+      assertTrue(isFailure9);
+      expect(failure8.failure.message).toContain(`Expected string
+  at ["nodes"][1][1]`);
+    })
+  );
 
-    expect(generic.type).toBe("undirected");
-    expect(generic.mutable).toBe(true);
-    expect(undirected.type).toBe("undirected");
-    expect(undirected.mutable).toBe(true);
-    expect(() => S.decodeUnknownSync(directedSchema)(graph)).toThrow();
-  });
+  it.effect(
+    "rejects mutable graphs when the schema expects immutable ones",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.GraphFromSelf({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const graph = Graph_.beginMutation(
+        Graph_.directed<string, string>((mutable) => {
+          const a = Graph_.addNode(mutable, "1");
+          const b = Graph_.addNode(mutable, "2");
+          Graph_.addEdge(mutable, a, b, "x");
+        })
+      );
+
+      const failure9 = yield* Effect.result(S.decodeUnknownEffect(schema)(graph));
+      const isFailure10 = Result.isFailure(failure9);
+      assertTrue(isFailure10);
+      expect(failure9.failure.message).toContain("Expected @beep/schema/Graph/GraphFromSelf");
+    })
+  );
+
+  it.effect(
+    "validates existing mutable directed graphs and preserves mutability",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.MutableDirectedGraphFromSelf({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const graph = Graph_.beginMutation(Graph_.directed<string, string>());
+      const a = Graph_.addNode(graph, "1");
+      const b = Graph_.addNode(graph, "2");
+      Graph_.addEdge(graph, a, b, "x");
+
+      const decoded = yield* S.decodeEffect(schema)(graph);
+
+      expect(decoded.type).toBe("directed");
+      expect(decoded.mutable).toBe(true);
+      expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
+        [0, 1],
+        [1, 2],
+      ]);
+    })
+  );
+
+  it.effect(
+    "validates generic and undirected mutable graphs",
+    Effect.fnUntraced(function* () {
+      const genericSchema = GraphSchema.MutableGraphFromSelf({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const undirectedSchema = GraphSchema.MutableUndirectedGraphFromSelf({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const directedSchema = GraphSchema.MutableDirectedGraphFromSelf({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const graph = Graph_.beginMutation(Graph_.undirected<string, string>());
+      const a = Graph_.addNode(graph, "1");
+      const b = Graph_.addNode(graph, "2");
+      Graph_.addEdge(graph, a, b, "x");
+
+      const generic = yield* S.decodeEffect(genericSchema)(graph);
+      const undirected = yield* S.decodeEffect(undirectedSchema)(graph);
+
+      expect(generic.type).toBe("undirected");
+      expect(generic.mutable).toBe(true);
+      expect(undirected.type).toBe("undirected");
+      expect(undirected.mutable).toBe(true);
+      const isFailure11 = Result.isFailure(yield* Effect.result(S.decodeUnknownEffect(directedSchema)(graph)));
+      assertTrue(isFailure11);
+    })
+  );
 });
 
 describe("MutableDirectedGraph", () => {
-  it("decodes encoded payloads into mutable directed graphs", () => {
-    const schema = GraphSchema.MutableDirectedGraph({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const decoded = S.decodeUnknownSync(schema)({
-      _tag: "Graph",
-      type: "directed",
-      nodes: [
-        [0, "1"],
-        [1, "2"],
-      ],
-      edges: [{ index: 0, source: 0, target: 1, data: "a" }],
-    });
+  it.effect(
+    "decodes encoded payloads into mutable directed graphs",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.MutableDirectedGraph({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const decoded = yield* S.decodeUnknownEffect(schema)({
+        _tag: "Graph",
+        type: "directed",
+        nodes: [
+          [0, "1"],
+          [1, "2"],
+        ],
+        edges: [{ index: 0, source: 0, target: 1, data: "a" }],
+      });
 
-    expect(decoded.type).toBe("directed");
-    expect(decoded.mutable).toBe(true);
-    expect(S.encodeSync(schema)(decoded)).toEqual({
-      _tag: "Graph",
-      type: "directed",
-      nodes: [
-        [0, "1"],
-        [1, "2"],
-      ],
-      edges: [{ index: 0, source: 0, target: 1, data: "a" }],
-    });
-  });
+      expect(decoded.type).toBe("directed");
+      expect(decoded.mutable).toBe(true);
+      expect(yield* S.encodeEffect(schema)(decoded)).toEqual({
+        _tag: "Graph",
+        type: "directed",
+        nodes: [
+          [0, "1"],
+          [1, "2"],
+        ],
+        edges: [{ index: 0, source: 0, target: 1, data: "a" }],
+      });
+    })
+  );
 });
 
 describe("MutableUndirectedGraph", () => {
-  it("decodes encoded payloads into mutable undirected graphs", () => {
-    const schema = GraphSchema.MutableUndirectedGraph({
-      node: S.FiniteFromString,
-      edge: S.String,
-    });
-    const decoded = S.decodeUnknownSync(schema)({
-      _tag: "Graph",
-      type: "undirected",
-      nodes: [
-        [0, "1"],
-        [1, "2"],
-      ],
-      edges: [{ index: 0, source: 0, target: 1, data: "a" }],
-    });
+  it.effect(
+    "decodes encoded payloads into mutable undirected graphs",
+    Effect.fnUntraced(function* () {
+      const schema = GraphSchema.MutableUndirectedGraph({
+        node: S.FiniteFromString,
+        edge: S.String,
+      });
+      const decoded = yield* S.decodeUnknownEffect(schema)({
+        _tag: "Graph",
+        type: "undirected",
+        nodes: [
+          [0, "1"],
+          [1, "2"],
+        ],
+        edges: [{ index: 0, source: 0, target: 1, data: "a" }],
+      });
 
-    expect(decoded.type).toBe("undirected");
-    expect(decoded.mutable).toBe(true);
-    expect(S.encodeSync(schema)(decoded)).toEqual({
-      _tag: "Graph",
-      type: "undirected",
-      nodes: [
-        [0, "1"],
-        [1, "2"],
-      ],
-      edges: [{ index: 0, source: 0, target: 1, data: "a" }],
-    });
-  });
+      expect(decoded.type).toBe("undirected");
+      expect(decoded.mutable).toBe(true);
+      expect(yield* S.encodeEffect(schema)(decoded)).toEqual({
+        _tag: "Graph",
+        type: "undirected",
+        nodes: [
+          [0, "1"],
+          [1, "2"],
+        ],
+        edges: [{ index: 0, source: 0, target: 1, data: "a" }],
+      });
+    })
+  );
 });
 
 describe("Graph formatting and equivalence", () => {

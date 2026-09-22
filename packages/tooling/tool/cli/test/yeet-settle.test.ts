@@ -52,6 +52,7 @@ import {
   yeetSettleVerdictIsTerminal,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -165,6 +166,7 @@ const spawner = (exitCode: number, output: string) =>
     })
   );
 const platform = Layer.mergeAll(
+  BunCrypto.layer,
   NodeFileSystem.layer,
   NodePath.layer,
   Layer.succeed(
@@ -653,7 +655,7 @@ describe("B7 settle contracts", () => {
           assertNone(result);
           expect(yield* TestConsole.errorLines).toHaveLength(1);
         }
-      }).pipe(provideScopedLayer(spawner(code, output)))
+      }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, spawner(code, output))))
     );
   }
 });

@@ -12,10 +12,18 @@
  * @since 0.0.0
  */
 
-import { ExecutionGrant, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant";
+import {
+  ExecutionGrant,
+  ExecutionSink,
+  GrantBudget,
+  GrantOperation,
+  GrantPurpose,
+  GrantResource,
+  SinkDestination,
+} from "@beep/epistemic-domain/values/ExecutionGrant";
 import { addGrant, emptyDraftGrantSet, freezeGrantSet } from "@beep/epistemic-domain/values/GrantSet";
 import { DateTime, Layer, Result } from "effect";
-import * as S from "effect/Schema";
+import * as O from "effect/Option";
 import { defaultPolicyRevision, EpistemicConfig, EpistemicServerConfig } from "./ServerConfig.ts";
 import type { FrozenGrantSet } from "@beep/epistemic-domain/values/GrantSet";
 
@@ -33,7 +41,7 @@ import type { FrozenGrantSet } from "@beep/epistemic-domain/values/GrantSet";
  * @category fixtures
  * @since 0.0.0
  */
-export const fixtureAllowedDestination = SinkDestination.decodeUnknownSync("https://registry.example");
+export const fixtureAllowedDestination = SinkDestination.make("https://registry.example");
 
 /**
  * Destination the fixture grant deliberately omits, so a denial has something
@@ -50,7 +58,7 @@ export const fixtureAllowedDestination = SinkDestination.decodeUnknownSync("http
  * @category fixtures
  * @since 0.0.0
  */
-export const fixtureDeniedDestination = SinkDestination.decodeUnknownSync("https://attacker.example");
+export const fixtureDeniedDestination = SinkDestination.make("https://attacker.example");
 
 /**
  * Instant the fixture grant set is sealed at. Pinned so the digest is stable.
@@ -69,19 +77,19 @@ export const fixtureDeniedDestination = SinkDestination.decodeUnknownSync("https
  */
 export const fixtureFrozenAt = DateTime.makeUnsafe(0);
 
-const fixtureGrant = S.decodeSync(ExecutionGrant)({
-  budget: { maxToolCalls: null },
-  expiresAt: 86_400_000,
-  operation: "ontology_publish_provenance",
+const fixtureGrant = ExecutionGrant.make({
+  budget: GrantBudget.make({ maxToolCalls: O.none() }),
+  expiresAt: DateTime.makeUnsafe(86_400_000),
+  operation: GrantOperation.make("ontology_publish_provenance"),
   policyRevision: defaultPolicyRevision,
   principal: { component: "Runtime", kind: "System" },
-  purpose: "provenance-publication",
-  resource: "ontology-workspace",
-  sink: {
+  purpose: GrantPurpose.make("provenance-publication"),
+  resource: GrantResource.make("ontology-workspace"),
+  sink: ExecutionSink.make({
     audience: "external-network",
     destination: fixtureAllowedDestination,
     sinkClass: "network-egress",
-  },
+  }),
 });
 
 /**
@@ -100,9 +108,8 @@ const fixtureGrant = S.decodeSync(ExecutionGrant)({
  * @category fixtures
  * @since 0.0.0
  */
-export const fixtureFrozenGrantSet: FrozenGrantSet = freezeGrantSet(
-  Result.getOrThrow(addGrant(emptyDraftGrantSet(defaultPolicyRevision), fixtureGrant)),
-  fixtureFrozenAt
+export const fixtureFrozenGrantSet: FrozenGrantSet = Result.getOrThrow(
+  freezeGrantSet(Result.getOrThrow(addGrant(emptyDraftGrantSet(defaultPolicyRevision), fixtureGrant)), fixtureFrozenAt)
 );
 
 /**

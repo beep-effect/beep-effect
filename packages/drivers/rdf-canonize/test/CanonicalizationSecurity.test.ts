@@ -13,9 +13,7 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { afterEach, vi } from "vitest";
 
-const decodeCanonicalizeDatasetRequestSync = S.decodeSync(CanonicalizeDatasetRequest);
 const encodeDataset = S.encodeEffect(Dataset);
-const encodeCanonicalizeDatasetRequestSync = S.encodeSync(CanonicalizeDatasetRequest);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -32,9 +30,6 @@ vi.mock("rdf-canonize", (importOriginal) =>
     canonize: canonizeMock,
   }))
 );
-
-const decodeUnknownSync = <Schema extends S.ConstraintDecoder<unknown, never>>(schema: Schema) =>
-  S.decodeUnknownSync(schema);
 
 const expectEncodedRoundTrip = <Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
   schema: Schema,
@@ -69,7 +64,7 @@ const expectSemanticBudgetFailure = (error: Error) => {
       Effect.gen(function* () {
         const service = yield* CanonicalizationService;
         return yield* service.canonicalize(
-          decodeUnknownSync(CanonicalizeDatasetRequest)({
+          yield* S.decodeEffect(CanonicalizeDatasetRequest)({
             algorithm: "rdfc-1.0",
             dataset: yield* encodeDataset(dataset),
           })
@@ -105,7 +100,7 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
             Effect.gen(function* () {
               const service = yield* CanonicalizationService;
               return yield* service.canonicalize(
-                decodeUnknownSync(CanonicalizeDatasetRequest)({
+                yield* S.decodeEffect(CanonicalizeDatasetRequest)({
                   algorithm: "rdfc-1.0",
                   dataset: yield* encodeDataset(dataset),
                 })
@@ -157,7 +152,7 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
           Effect.gen(function* () {
             const service = yield* CanonicalizationService;
             return yield* service.canonicalize(
-              decodeUnknownSync(CanonicalizeDatasetRequest)({
+              yield* S.decodeEffect(CanonicalizeDatasetRequest)({
                 algorithm: "lexical-sort-v1",
                 dataset: yield* encodeDataset(dataset),
               })
@@ -198,36 +193,36 @@ describe("Canonicalization security hardening", { concurrent: false }, () => {
     ).toMatchObject({ _tag: "Passed" });
   });
 
-  it("derives canonicalization requests from the source schema and proves an encode/decode round-trip", {
-    timeout: 30000,
-  }, () => {
-    // Bound the generated RDF dataset to a small collection so deriving + encoding/decoding
-    // stays fast and reliable. The round-trip law holds regardless of dataset size.
-    const arbitrary = Arbitrary.schema(CanonicalizeDatasetRequest).pipe(
-      Arbitrary.map((request) =>
-        CanonicalizeDatasetRequest.make({
-          ...request,
-          dataset: makeDataset(request.dataset.quads.slice(0, 3)),
-        })
-      )
-    );
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
+  it.effect(
+    "derives canonicalization requests from the source schema and proves an encode/decode round-trip",
+    () =>
+      Effect.gen(function* () {
+        // Bound the generated RDF dataset to a small collection so deriving + encoding/decoding
+        // stays fast and reliable. The round-trip law holds regardless of dataset size.
+        const arbitrary = Arbitrary.schema(CanonicalizeDatasetRequest).pipe(
+          Arbitrary.map((request) =>
+            CanonicalizeDatasetRequest.make({
+              ...request,
+              dataset: makeDataset(request.dataset.quads.slice(0, 3)),
+            })
+          )
+        );
+        const result = yield* Arbitrary.checkEffect(
           Arbitrary.all([arbitrary]),
-          ([request]) => {
-            const encoded = encodeCanonicalizeDatasetRequestSync(request);
+          ([request]) =>
+            Effect.gen(function* () {
+              const encoded = yield* S.encodeEffect(CanonicalizeDatasetRequest)(request);
+              const decoded = yield* S.decodeEffect(CanonicalizeDatasetRequest)(encoded);
 
-            expect(encodeCanonicalizeDatasetRequestSync(decodeCanonicalizeDatasetRequestSync(encoded))).toEqual(
-              encoded
-            );
+              expect(yield* S.encodeEffect(CanonicalizeDatasetRequest)(decoded)).toEqual(encoded);
 
-            return true;
-          },
+              return true;
+            }),
           fcRuns(5)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        );
+
+        expect(result).toMatchObject({ _tag: "Passed" });
+      }),
+    { timeout: 30000 }
+  );
 });

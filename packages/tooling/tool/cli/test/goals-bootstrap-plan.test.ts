@@ -21,6 +21,7 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { assertExitSuccess, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
@@ -31,7 +32,6 @@ import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
-import { describe, expect, it } from "vitest";
 import {
   expectReportedExit,
   permutedDirectoryReadsFileSystem,
@@ -39,10 +39,11 @@ import {
   writeProjectFile,
 } from "./support/CommandTest.ts";
 import type { Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 
-const decodeGoalSlugSync = S.decodeSync(GoalSlug);
+const decodeGoalSlugEffect = S.decodeEffect(GoalSlug);
 const decodeUnknownGoalSlug = S.decodeUnknownEffect(GoalSlug);
-const encodeGoalSlugSync = S.encodeSync(GoalSlug);
+const encodeGoalSlugEffect = S.encodeEffect(GoalSlug);
 const encodeUnknownMaterializationPlan = S.encodeUnknownEffect(MaterializationPlan);
 const isMaterializationPlan2 = S.is(MaterializationPlan);
 
@@ -95,7 +96,7 @@ const expectGolden = Effect.fn("expectGolden")(function* (name: string, plan: Ma
   expect(rendered).toBe(golden);
 });
 
-const run = <A, E>(effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>
+const run = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto | FileSystem.FileSystem | Path.Path>) =>
   Effect.runPromise(effect.pipe(provideScopedLayer(NodeServices.layer)));
 
 const commandTestLayer = Layer.mergeAll(
@@ -104,30 +105,35 @@ const commandTestLayer = Layer.mergeAll(
 );
 
 describe("goals bootstrap --plan golden fixtures", () => {
-  it("round-trips arbitrary goal slugs through the schema codec", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(GoalSlug)]),
-          ([slug]) => {
-            expect(decodeGoalSlugSync(encodeGoalSlugSync(slug))).toBe(slug);
-
-            return true;
-          },
-          { runs: 32 }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "round-trips arbitrary goal slugs through the schema codec",
+    [Arbitrary.schema(GoalSlug)],
+    Effect.fnUntraced(function* ([slug]) {
+      expect(yield* decodeGoalSlugEffect(yield* encodeGoalSlugEffect(slug))).toBe(slug);
+    }),
+    { arbitrary: { runs: 32 } }
+  );
 
   it("pins the minimal standard-delivery plan byte-for-byte", () =>
-    run(expectGolden("bootstrap-minimal", compileMaterializationPlan(minimalInput, []))));
+    run(
+      Effect.gen(function* () {
+        yield* expectGolden("bootstrap-minimal", yield* compileMaterializationPlan(minimalInput, []));
+      })
+    ));
 
   it("pins the fully populated plan with capabilities and exploration provenance", () =>
-    run(expectGolden("bootstrap-full", compileMaterializationPlan(fullInput, []))));
+    run(
+      Effect.gen(function* () {
+        yield* expectGolden("bootstrap-full", yield* compileMaterializationPlan(fullInput, []));
+      })
+    ));
 
   it("pins the report-first archetype plan", () =>
-    run(expectGolden("bootstrap-report-first", compileMaterializationPlan(reportFirstInput, []))));
+    run(
+      Effect.gen(function* () {
+        yield* expectGolden("bootstrap-report-first", yield* compileMaterializationPlan(reportFirstInput, []));
+      })
+    ));
 });
 
 describe("goals bootstrap --plan determinism", () => {
@@ -140,9 +146,9 @@ describe("goals bootstrap --plan determinism", () => {
           title: "Example Goal",
           slug: "example-goal",
         });
-        const first = compileMaterializationPlan(minimalInput, []);
-        const second = compileMaterializationPlan(minimalInput, []);
-        const third = compileMaterializationPlan(permuted, []);
+        const first = yield* compileMaterializationPlan(minimalInput, []);
+        const second = yield* compileMaterializationPlan(minimalInput, []);
+        const third = yield* compileMaterializationPlan(permuted, []);
         expect(second.planId).toBe(first.planId);
         expect(third.planId).toBe(first.planId);
         const firstBytes = yield* encodePlan(first);
@@ -151,26 +157,24 @@ describe("goals bootstrap --plan determinism", () => {
       })
     ));
 
-  it("property: schema-generated inputs compile deterministic schema-valid plans", () => {
-    const BootstrapInputArbitrary = Arbitrary.schema(BootstrapInput);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([BootstrapInputArbitrary]),
-          ([input]) => {
-            const first = compileMaterializationPlan(input, []);
-            const second = compileMaterializationPlan(input, []);
+  it.effect("property: schema-generated inputs compile deterministic schema-valid plans", () =>
+    Effect.gen(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(BootstrapInput)]),
+        ([input]) =>
+          Effect.gen(function* () {
+            const first = yield* compileMaterializationPlan(input, []);
+            const second = yield* compileMaterializationPlan(input, []);
             expect(isMaterializationPlan2(first)).toBe(true);
             expect(second.planId).toBe(first.planId);
             expect(second.entries).toStrictEqual(first.entries);
-
             return true;
-          },
-          fcRuns(32)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+          }),
+        fcRuns(32)
+      );
+      expect(result._tag).toBe("Passed");
+    }).pipe(provideScopedLayer(NodeServices.layer))
+  );
 });
 
 describe("goals bootstrap --plan input rejection", () => {
@@ -185,13 +189,16 @@ describe("goals bootstrap --plan input rejection", () => {
       )
   );
 
-  it("fails closed with a slug-exists conflict and no entries", () => {
-    const plan = compileMaterializationPlan(minimalInput, ["example-goal"]);
-    expect(A.length(plan.conflicts)).toBe(1);
-    expect(plan.conflicts[0]?.reason).toBe("slug-exists");
-    expect(A.length(plan.entries)).toBe(0);
-    expect(A.length(plan.validations)).toBe(0);
-  });
+  it("fails closed with a slug-exists conflict and no entries", () =>
+    run(
+      Effect.gen(function* () {
+        const plan = yield* compileMaterializationPlan(minimalInput, ["example-goal"]);
+        expect(A.length(plan.conflicts)).toBe(1);
+        expect(plan.conflicts[0]?.reason).toBe("slug-exists");
+        expect(A.length(plan.entries)).toBe(0);
+        expect(A.length(plan.validations)).toBe(0);
+      })
+    ));
 });
 
 describe("goals adopt --plan evergreen pilot", () => {
@@ -203,7 +210,7 @@ describe("goals adopt --plan evergreen pilot", () => {
           const repoRoot = yield* findRepoRoot();
           const snapshot = yield* readPacketSnapshot(PILOT_SLUG, repoRoot);
           expect(snapshot.exists).toBe(true);
-          const plan = compileAdoptionPlan(snapshot, O.none());
+          const plan = yield* compileAdoptionPlan(snapshot, O.none());
 
           expect(A.length(plan.conflicts)).toBe(0);
           expect(plan.towardArchetype).toBe("report-first");
@@ -253,8 +260,8 @@ describe("goals adopt --plan evergreen pilot", () => {
         Effect.gen(function* () {
           const repoRoot = yield* findRepoRoot();
           const snapshot = yield* readPacketSnapshot(PILOT_SLUG, repoRoot);
-          const first = compileAdoptionPlan(snapshot, O.none());
-          const second = compileAdoptionPlan(snapshot, O.none());
+          const first = yield* compileAdoptionPlan(snapshot, O.none());
+          const second = yield* compileAdoptionPlan(snapshot, O.none());
           expect(second.planId).toBe(first.planId);
 
           const overlayFiles = A.appendAll(
@@ -279,7 +286,7 @@ describe("goals adopt --plan evergreen pilot", () => {
             templateFiles: snapshot.templateFiles,
             templateSnapshotHash: snapshot.templateSnapshotHash,
           });
-          const fixedPoint = compileAdoptionPlan(overlay, O.none());
+          const fixedPoint = yield* compileAdoptionPlan(overlay, O.none());
           const creates = A.filter(fixedPoint.entries, (entry) => entry.action === "create");
           expect(A.length(creates)).toBe(0);
         })
@@ -340,7 +347,7 @@ describe("goals adopt --plan manifest-less packet", () => {
             yield* writeProjectFile("goals/hand-rolled/SPEC.md", "# Hand Rolled Spec\n");
 
             const snapshot = yield* readPacketSnapshot("hand-rolled");
-            const plan = compileAdoptionPlan(snapshot, O.none());
+            const plan = yield* compileAdoptionPlan(snapshot, O.none());
 
             const creates = A.filter(plan.entries, (entry) => entry.action === "create");
             const manifestCreate = A.filter(creates, (entry) => entry.path === "goals/hand-rolled/ops/manifest.json");
@@ -376,7 +383,7 @@ describe("goals adopt --plan manifest-less packet", () => {
           Effect.gen(function* () {
             yield* writeProjectFile("goals/_template/README.md", "# <Goal Title>\n");
             const snapshot = yield* readPacketSnapshot("missing-goal");
-            const plan = compileAdoptionPlan(snapshot, O.none());
+            const plan = yield* compileAdoptionPlan(snapshot, O.none());
             expect(plan.conflicts[0]?.reason).toBe("packet-not-found");
             expect(A.length(plan.entries)).toBe(0);
           })
@@ -394,7 +401,7 @@ describe("goals adopt --plan manifest-less packet", () => {
             yield* writeProjectFile("goals/_template/README.md", "# <Goal Title>\n");
             yield* writeProjectFile("goals/broken/ops/manifest.json", "{ not json");
             const snapshot = yield* readPacketSnapshot("broken");
-            const plan = compileAdoptionPlan(snapshot, O.none());
+            const plan = yield* compileAdoptionPlan(snapshot, O.none());
             expect(plan.conflicts[0]?.reason).toBe("manifest-unparseable");
             expect(A.length(plan.entries)).toBe(0);
           })
@@ -413,7 +420,7 @@ describe("goals adopt --plan index parity", () => {
           const fs = yield* FileSystem.FileSystem;
           const repoRoot = yield* findRepoRoot();
           const snapshot = yield* readPacketSnapshot(PILOT_SLUG, repoRoot);
-          const plan = compileAdoptionPlan(snapshot, O.none());
+          const plan = yield* compileAdoptionPlan(snapshot, O.none());
           const manifestWrites = A.filter(
             plan.entries,
             (entry) => entry.path === `${snapshot.packetPath}/ops/manifest.json` && entry.action !== "preserve"
@@ -604,8 +611,8 @@ describe("goals plan zero-write proof", () => {
             }).stdout.toString();
           const before = porcelain();
           const snapshot = yield* readPacketSnapshot(PILOT_SLUG, repoRoot);
-          compileAdoptionPlan(snapshot, O.none());
-          compileMaterializationPlan(minimalInput, []);
+          yield* compileAdoptionPlan(snapshot, O.none());
+          yield* compileMaterializationPlan(minimalInput, []);
           expect(porcelain()).toBe(before);
         })
       ),

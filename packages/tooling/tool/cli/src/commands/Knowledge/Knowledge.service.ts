@@ -65,7 +65,7 @@ import {
   KnowledgeSemanticDeltaReport,
   KnowledgeTrackedEntry,
 } from "./Knowledge.schemas.ts";
-import type { Crypto } from "effect/Crypto";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
@@ -1037,7 +1037,7 @@ export const guardKnowledgeCloneAttributes = (
 ): Effect.Effect<
   void,
   KnowledgeOperationalError | KnowledgeCloneAttributesError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > =>
   guardCloneLocalGitAttributes(repoRoot, gitAdapter, KnowledgeCloneAttributesError.at, (attributesPath) =>
     KnowledgeOperationalError.new(`Failed to stat clone-local git attributes "${attributesPath}".`)
@@ -1302,7 +1302,9 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const runtime = yield* Effect.context<FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner>();
+  const runtime = yield* Effect.context<
+    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  >();
   yield* fs
     .makeDirectory(scratchRoot, { recursive: true })
     .pipe(KnowledgeOperationalError.mapError("Failed to create an archive scratch root."));
@@ -1686,7 +1688,7 @@ const refsTreeLive = (treeish: string) =>
   Effect.scoped(Effect.flatMap(makeKnowledgeTreeOracle(treeish), scanKnowledgeRefsTree));
 
 type KnowledgeServiceRequirements =
-  | Crypto
+  | Crypto.Crypto
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner;

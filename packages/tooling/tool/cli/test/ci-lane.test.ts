@@ -23,6 +23,7 @@ import {
 import { FsUtilsLive, findRepoRoot, resolveWorkspacePackages } from "@beep/repo-utils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, HashMap, Layer, Order, Path, pipe, Sink, Stream } from "effect";
@@ -113,6 +114,7 @@ const ciExecutionLayer = (
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
   return Layer.mergeAll(
+    BunCrypto.layer,
     fileSystemAndPath,
     FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
     processLayer,
@@ -1342,6 +1344,7 @@ const storybookCiLayer = (dryRunOutput: string, spawned: Array<StorybookSpawn>, 
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
   return Layer.mergeAll(
+    BunCrypto.layer,
     fileSystemAndPath,
     FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
     processLayer,

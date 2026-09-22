@@ -23,6 +23,7 @@ import {
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { emptyTurboPlanSnapshot, YEET_FEEDBACK_TASKS, YeetRunMode } from "./Planner.ts";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { YeetRunOptions } from "../Yeet.schemas.ts";
 
@@ -147,7 +148,7 @@ const runTurboQueryJson = Effect.fn("Yeet.runTurboQueryJson")(function* (
 ): Effect.fn.Return<
   string,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const turbo = yield* resolveLocalRepoBinary(repoRoot, "turbo");
   const result = yield* runRepoCommandCapture(turbo, args, repoRoot).pipe(
@@ -185,7 +186,7 @@ const collectTurboVersion = Effect.fn("Yeet.collectTurboVersion")(function* (
 ): Effect.fn.Return<
   O.Option<string>,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const turbo = yield* resolveLocalRepoBinary(repoRoot, "turbo");
   const result = yield* runRepoCommandCapture(turbo, ["--version"], repoRoot).pipe(Effect.option);
@@ -241,7 +242,7 @@ const collectAffectedFeedbackTasks = Effect.fn("Yeet.collectAffectedFeedbackTask
 ): Effect.fn.Return<
   ReadonlyArray<TurboPlanTask>,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (!shouldCollectAffectedFeedbackTasks(options.mode)) {
     return [];
@@ -299,7 +300,7 @@ export const collectTurboPlanSnapshot = Effect.fn("Yeet.collectTurboPlanSnapshot
 ): Effect.fn.Return<
   TurboPlanSnapshot,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const turboVersion = yield* collectTurboVersion(repoRoot);
   const packageJson = yield* runTurboQueryJson(repoRoot, ["query", "ls", "--output", "json"], "turbo query ls");

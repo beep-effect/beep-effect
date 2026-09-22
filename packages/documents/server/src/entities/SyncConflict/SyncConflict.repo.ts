@@ -24,11 +24,12 @@ import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.ts";
 import type { SyncConflictSeed } from "@beep/documents-use-cases/entities/SyncConflict/server";
 
-const decodeSyncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
+const decodeSyncConflict = S.decodeUnknownEffect(DomainSyncConflict.SyncConflict);
 
 /**
  * Build a full SyncConflict entity from a drift seed and an assigned id.
@@ -37,29 +38,31 @@ const decodeSyncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
-const syncConflictFromSeed = (id: number, seed: SyncConflictSeed): DomainSyncConflict.SyncConflict =>
-  decodeSyncConflict({
-    conflictKind: seed.conflictKind,
-    createdAt: 0,
-    createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DocumentsIdentity.SyncConflictId.entityType,
-    id,
-    localRelPath: O.getOrNull(seed.localRelPath),
-    orgId: 1,
-    provider: seed.provider,
-    publicId: `${SYNC_CONFLICT_TABLE_NAME}_a${id}`,
-    remoteEventId: O.getOrNull(seed.remoteEventId),
-    remoteId: O.getOrNull(seed.remoteId),
-    remotePayload: seed.remotePayload,
-    resolutionStatus: seed.resolutionStatus,
-    rowVersion: 1,
-    schemaVersion: "0.1.0",
-    source: "Application",
-    syncItemId: O.getOrNull(seed.syncItemId),
-    updatedAt: 0,
-    updatedByPrincipal: SYSTEM_PRINCIPAL,
-    workspaceId: seed.workspaceId,
-  });
+const syncConflictFromSeed = Effect.fn("Documents.SyncConflictRepository.fromSeed")(
+  (id: number, seed: SyncConflictSeed) =>
+    decodeSyncConflict({
+      conflictKind: seed.conflictKind,
+      createdAt: 0,
+      createdByPrincipal: SYSTEM_PRINCIPAL,
+      entityType: DocumentsIdentity.SyncConflictId.entityType,
+      id,
+      localRelPath: O.getOrNull(seed.localRelPath),
+      orgId: 1,
+      provider: seed.provider,
+      publicId: `${SYNC_CONFLICT_TABLE_NAME}_a${id}`,
+      remoteEventId: O.getOrNull(seed.remoteEventId),
+      remoteId: O.getOrNull(seed.remoteId),
+      remotePayload: seed.remotePayload,
+      resolutionStatus: seed.resolutionStatus,
+      rowVersion: 1,
+      schemaVersion: "0.1.0",
+      source: "Application",
+      syncItemId: O.getOrNull(seed.syncItemId),
+      updatedAt: 0,
+      updatedByPrincipal: SYSTEM_PRINCIPAL,
+      workspaceId: seed.workspaceId,
+    }).pipe(repositoryUnavailable("construct SyncConflict"))
+);
 
 /**
  * Mark one drift record as reviewed, leaving every other field unchanged.
@@ -134,7 +137,7 @@ export const makeInMemorySyncConflictRepository = Effect.fn("Documents.SyncConfl
           return existing.value;
         }
         const id = yield* Ref.getAndUpdate(counter, N.increment);
-        const conflict = syncConflictFromSeed(id, seed);
+        const conflict = yield* syncConflictFromSeed(id, seed);
         yield* Ref.update(store, HashMap.set(conflict.id, conflict));
         return conflict;
       }),
@@ -193,7 +196,9 @@ export const makeDrizzleSyncConflictRepository = Effect.fn("Documents.SyncConfli
           )
           .orderBy(asc(syncConflictTable.id))
           .pipe(repositoryUnavailable("list open SyncConflict"));
-        return A.map(rows, fromSyncConflictRow);
+        return yield* Effect.fromResult(Result.all(A.map(rows, fromSyncConflictRow))).pipe(
+          repositoryUnavailable("decode SyncConflict")
+        );
       }),
       markReviewed: Effect.fn("Documents.SyncConflictRepository.drizzleMarkReviewed")(function* (input) {
         const rows = yield* db
@@ -202,22 +207,30 @@ export const makeDrizzleSyncConflictRepository = Effect.fn("Documents.SyncConfli
           .where(eq(syncConflictTable.id, input.conflictId))
           .limit(1)
           .pipe(repositoryUnavailable("select SyncConflict"));
-        const existing = pipe(rows, A.head, O.map(fromSyncConflictRow));
-        if (O.isNone(existing)) {
+        const existingRow = A.head(rows);
+        if (O.isNone(existingRow)) {
           return yield* SyncConflictRepositoryNotFound.make({ conflictId: input.conflictId });
         }
-        const reviewed = reviewedConflict(existing.value);
+        const existing = yield* Effect.fromResult(fromSyncConflictRow(existingRow.value)).pipe(
+          repositoryUnavailable("decode SyncConflict")
+        );
+        const reviewed = reviewedConflict(existing);
+        const insert = yield* Effect.fromResult(toSyncConflictInsert(reviewed)).pipe(
+          repositoryUnavailable("encode SyncConflict insert")
+        );
         const updatedRows = yield* db
           .update(syncConflictTable)
-          .set(toSyncConflictInsert(reviewed))
+          .set(insert)
           .where(eq(syncConflictTable.id, reviewed.id))
           .returning()
           .pipe(repositoryUnavailable("update SyncConflict"));
-        return pipe(
-          updatedRows,
-          A.head,
-          O.map(fromSyncConflictRow),
-          O.getOrElse(() => reviewed)
+        return yield* pipe(
+          A.head(updatedRows),
+          O.match({
+            onNone: () => Effect.succeed(reviewed),
+            onSome: (row) =>
+              Effect.fromResult(fromSyncConflictRow(row)).pipe(repositoryUnavailable("decode SyncConflict")),
+          })
         );
       }),
       record: Effect.fn("Documents.SyncConflictRepository.drizzleRecord")(function* (seed) {
@@ -234,23 +247,30 @@ export const makeDrizzleSyncConflictRepository = Effect.fn("Documents.SyncConfli
             )
             .limit(1)
             .pipe(repositoryUnavailable("select SyncConflict by remote event"));
-          const existing = pipe(existingRows, A.head, O.map(fromSyncConflictRow));
-          if (O.isSome(existing)) {
-            return existing.value;
+          const existingRow = A.head(existingRows);
+          if (O.isSome(existingRow)) {
+            return yield* Effect.fromResult(fromSyncConflictRow(existingRow.value)).pipe(
+              repositoryUnavailable("decode SyncConflict")
+            );
           }
         }
         const currentRows = yield* db.select().from(syncConflictTable).pipe(repositoryUnavailable("list SyncConflict"));
-        const conflict = syncConflictFromSeed(nextEntityId(currentRows), seed);
+        const conflict = yield* syncConflictFromSeed(nextEntityId(currentRows), seed);
+        const insert = yield* Effect.fromResult(toSyncConflictInsert(conflict)).pipe(
+          repositoryUnavailable("encode SyncConflict insert")
+        );
         const rows = yield* db
           .insert(syncConflictTable)
-          .values(toSyncConflictInsert(conflict))
+          .values(insert)
           .returning()
           .pipe(repositoryUnavailable("insert SyncConflict"));
-        return pipe(
-          rows,
-          A.head,
-          O.map(fromSyncConflictRow),
-          O.getOrElse(() => conflict)
+        return yield* pipe(
+          A.head(rows),
+          O.match({
+            onNone: () => Effect.succeed(conflict),
+            onSome: (row) =>
+              Effect.fromResult(fromSyncConflictRow(row)).pipe(repositoryUnavailable("decode SyncConflict")),
+          })
         );
       }),
     });

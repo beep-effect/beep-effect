@@ -21,6 +21,7 @@ import { getTableName } from "drizzle-orm";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 
@@ -170,12 +171,14 @@ if (!shouldRunPgliteIntegration) {
           });
           const edgeVersion = yield* decodeEdgeVersion(edgeVersionFixture(1, 1_000));
 
-          yield* db.insert(EpistemicDbSchema.candidateClaim).values(toCandidateClaimInsert(claim));
+          const claimInsert = yield* Effect.fromResult(toCandidateClaimInsert(claim));
+          yield* db.insert(EpistemicDbSchema.candidateClaim).values(claimInsert);
           yield* db.insert(EpistemicDbSchema.evidence).values(toEvidenceInsert(evidence));
-          yield* db.insert(EpistemicDbSchema.edgeVersion).values(toEdgeVersionInsert(edgeVersion));
+          const edgeInsert = yield* Effect.fromResult(toEdgeVersionInsert(edgeVersion));
+          yield* db.insert(EpistemicDbSchema.edgeVersion).values(edgeInsert);
 
           const edgeRows = yield* db.select().from(EpistemicDbSchema.edgeVersion);
-          const edges = A.map(edgeRows, fromEdgeVersionRow);
+          const edges = yield* Effect.fromResult(Result.all(A.map(edgeRows, fromEdgeVersionRow)));
           const head = yield* pipe(
             edges,
             A.head,
@@ -197,14 +200,13 @@ if (!shouldRunPgliteIntegration) {
           expect(O.isNone(head.expiredAt)).toBe(true);
 
           const secondHead = yield* decodeEdgeVersion(edgeVersionFixture(2, 2_000));
+          const secondInsert = yield* Effect.fromResult(toEdgeVersionInsert(secondHead));
 
           // The adversarial probe stays LAST: implicit-transaction pglite hosts
           // roll the whole session chain back after an intentional failure, so
           // no statement may follow it. A second open head for one logical key
           // is rejected by whichever backstop the planner checks first.
-          const openHeadViolation = yield* Effect.flip(
-            db.insert(EpistemicDbSchema.edgeVersion).values(toEdgeVersionInsert(secondHead))
-          );
+          const openHeadViolation = yield* Effect.flip(db.insert(EpistemicDbSchema.edgeVersion).values(secondInsert));
 
           expect(inspect(openHeadViolation, { depth: 10 })).toMatch(/epistemic_edge_(?:open_head_idx|no_overlap)/u);
         }),

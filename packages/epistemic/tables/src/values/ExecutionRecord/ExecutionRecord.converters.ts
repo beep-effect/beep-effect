@@ -17,7 +17,9 @@
  */
 
 import { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
+import { Result } from "effect";
 import * as S from "effect/Schema";
+import { ExecutionRecordConverterError } from "./ExecutionRecord.errors.ts";
 import type { executionDecisionTable, executionOutcomeTable } from "./ExecutionRecord.table.ts";
 
 /**
@@ -88,10 +90,10 @@ export type ExecutionOutcomeRow = typeof executionOutcomeTable.$inferSelect;
  */
 export type ExecutionOutcomeInsert = typeof executionOutcomeTable.$inferInsert;
 
-const encodeExecutionDecision = S.encodeSync(ExecutionDecisionRecord);
-const decodeExecutionDecisionRow = S.decodeUnknownSync(ExecutionDecisionRecord);
-const encodeExecutionOutcome = S.encodeSync(ExecutionOutcomeRecord);
-const decodeExecutionOutcomeRow = S.decodeUnknownSync(ExecutionOutcomeRecord);
+const encodeExecutionDecision = S.encodeResult(ExecutionDecisionRecord);
+const decodeExecutionDecisionRow = S.decodeUnknownResult(ExecutionDecisionRecord);
+const encodeExecutionOutcome = S.encodeResult(ExecutionOutcomeRecord);
+const decodeExecutionOutcomeRow = S.decodeUnknownResult(ExecutionOutcomeRecord);
 
 /**
  * Project a sealed decision record onto its insert row.
@@ -101,6 +103,7 @@ const decodeExecutionOutcomeRow = S.decodeUnknownSync(ExecutionOutcomeRecord);
  * ```ts
  * import { ExecutionDecisionRecord } from "@beep/epistemic-domain/values/ExecutionRecord"
  * import { toExecutionDecisionInsert } from "@beep/epistemic-tables/values/ExecutionRecord"
+ * import { Result } from "effect"
  * import * as S from "effect/Schema"
  *
  * const digest = "a".repeat(64)
@@ -119,14 +122,18 @@ const decodeExecutionOutcomeRow = S.decodeUnknownSync(ExecutionOutcomeRecord);
  *   verdict: "allowed"
  * })
  *
- * console.log(toExecutionDecisionInsert(record).seq) // 0
+ * console.log(Result.getOrThrow(toExecutionDecisionInsert(record)).seq) // 0
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toExecutionDecisionInsert = (record: ExecutionDecisionRecord): ExecutionDecisionInsert =>
-  encodeExecutionDecision(record);
+export const toExecutionDecisionInsert = (
+  record: ExecutionDecisionRecord
+): Result.Result<ExecutionDecisionInsert, ExecutionRecordConverterError> =>
+  Result.mapError(encodeExecutionDecision(record), (error) =>
+    ExecutionRecordConverterError.fromSchema("toDecisionInsert", error)
+  );
 
 /**
  * Decode a decision row back into the domain record.
@@ -150,9 +157,13 @@ export const toExecutionDecisionInsert = (record: ExecutionDecisionRecord): Exec
  * @category tables
  * @since 0.0.0
  */
-export const fromExecutionDecisionRow = (row: ExecutionDecisionRow): ExecutionDecisionRecord => {
+export const fromExecutionDecisionRow = (
+  row: ExecutionDecisionRow
+): Result.Result<ExecutionDecisionRecord, ExecutionRecordConverterError> => {
   const { reason, ...allowedShape } = row;
-  return decodeExecutionDecisionRow(reason === null ? allowedShape : row);
+  return Result.mapError(decodeExecutionDecisionRow(reason === null ? allowedShape : row), (error) =>
+    ExecutionRecordConverterError.fromSchema("fromDecisionRow", error)
+  );
 };
 
 /**
@@ -169,8 +180,12 @@ export const fromExecutionDecisionRow = (row: ExecutionDecisionRow): ExecutionDe
  * @category tables
  * @since 0.0.0
  */
-export const toExecutionOutcomeInsert = (record: ExecutionOutcomeRecord): ExecutionOutcomeInsert =>
-  encodeExecutionOutcome(record);
+export const toExecutionOutcomeInsert = (
+  record: ExecutionOutcomeRecord
+): Result.Result<ExecutionOutcomeInsert, ExecutionRecordConverterError> =>
+  Result.mapError(encodeExecutionOutcome(record), (error) =>
+    ExecutionRecordConverterError.fromSchema("toOutcomeInsert", error)
+  );
 
 /**
  * Decode an outcome row back into the domain record.
@@ -186,7 +201,11 @@ export const toExecutionOutcomeInsert = (record: ExecutionOutcomeRecord): Execut
  * @category tables
  * @since 0.0.0
  */
-export const fromExecutionOutcomeRow = (row: ExecutionOutcomeRow): ExecutionOutcomeRecord => {
+export const fromExecutionOutcomeRow = (
+  row: ExecutionOutcomeRow
+): Result.Result<ExecutionOutcomeRecord, ExecutionRecordConverterError> => {
   const { decisionVerdict: _decisionVerdict, ...domainRow } = row;
-  return decodeExecutionOutcomeRow(domainRow);
+  return Result.mapError(decodeExecutionOutcomeRow(domainRow), (error) =>
+    ExecutionRecordConverterError.fromSchema("fromOutcomeRow", error)
+  );
 };

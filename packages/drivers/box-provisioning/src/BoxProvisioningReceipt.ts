@@ -7,7 +7,7 @@
 
 import { $BoxProvisioningId } from "@beep/identity";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { Equal, HashMap } from "effect";
+import { Effect, Equal, HashMap } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -16,6 +16,8 @@ import { BoxAdoption, BoxAdoptions, mergeBoxAdoptions } from "./BoxProvisioningI
 import { BoxProviderId } from "./BoxProvisioningObserved.ts";
 import { BoxProvisioningPlan, BoxResourceKind } from "./BoxProvisioningPlan.ts";
 import { digestText } from "./internal/canonical.ts";
+import type * as Crypto from "effect/Crypto";
+import type * as PlatformError from "effect/PlatformError";
 import type { BoxDesiredState } from "./BoxProvisioningIntent.ts";
 
 const $I = $BoxProvisioningId.create("BoxProvisioningReceipt");
@@ -238,55 +240,78 @@ export type BoxApplyJournalEntry = typeof BoxApplyJournalEntry.Type;
  *   sourceRevision: BoxSourceRevision.make("intent-1"),
  *   webhooks: []
  * })
- * console.log(recoverBoxAdoptions(desired, []).entries.length)
+ * console.log(recoverBoxAdoptions(desired, []))
  * ```
  *
  * @category workflows
  * @since 0.0.0
  */
 export const recoverBoxAdoptions: {
-  (journalEntries: ReadonlyArray<BoxApplyJournalEntry>): (desired: BoxDesiredState) => BoxAdoptions;
-  (desired: BoxDesiredState, journalEntries: ReadonlyArray<BoxApplyJournalEntry>): BoxAdoptions;
-} = dual(2, (desired: BoxDesiredState, journalEntries: ReadonlyArray<BoxApplyJournalEntry>): BoxAdoptions => {
-  const latestAttemptByPlan = A.reduce(
-    journalEntries,
-    HashMap.empty<Sha256Hex, BoxApplyAttemptId>(),
-    (attempts, entry) =>
-      entry.phase === "Started" && Equal.equals(entry.sequence, 0)
-        ? HashMap.set(attempts, entry.planDigest, entry.attemptId)
-        : attempts
-  );
-  const recovered = A.getSomes(
-    A.map(journalEntries, (entry) => {
-      if (
-        entry.phase !== "Applied" ||
-        entry.resourceKind !== "folder" ||
-        !O.exists(HashMap.get(latestAttemptByPlan, entry.planDigest), (attemptId) =>
-          Equal.equals(attemptId, entry.attemptId)
-        )
-      ) {
-        return O.none<BoxAdoption>();
-      }
-      return O.flatMap(
-        O.all({ expectedParentProviderId: entry.parentProviderId, expectedProviderId: entry.providerId }),
-        ({ expectedParentProviderId, expectedProviderId }) =>
-          O.map(
-            A.findFirst(desired.folders, (folder) =>
-              Equal.equals(digestText(folder.logicalKey), entry.logicalKeyDigest)
-            ),
-            (folder) =>
+  (
+    journalEntries: ReadonlyArray<BoxApplyJournalEntry>
+  ): (desired: BoxDesiredState) => Effect.Effect<BoxAdoptions, PlatformError.PlatformError, Crypto.Crypto>;
+  (
+    desired: BoxDesiredState,
+    journalEntries: ReadonlyArray<BoxApplyJournalEntry>
+  ): Effect.Effect<BoxAdoptions, PlatformError.PlatformError, Crypto.Crypto>;
+} = dual(
+  2,
+  (
+    desired: BoxDesiredState,
+    journalEntries: ReadonlyArray<BoxApplyJournalEntry>
+  ): Effect.Effect<BoxAdoptions, PlatformError.PlatformError, Crypto.Crypto> =>
+    Effect.gen(function* () {
+      const latestAttemptByPlan = A.reduce(
+        journalEntries,
+        HashMap.empty<Sha256Hex, BoxApplyAttemptId>(),
+        (attempts, entry) =>
+          entry.phase === "Started" && Equal.equals(entry.sequence, 0)
+            ? HashMap.set(attempts, entry.planDigest, entry.attemptId)
+            : attempts
+      );
+      const recovered = A.getSomes(
+        yield* Effect.forEach(
+          journalEntries,
+          Effect.fnUntraced(function* (entry) {
+            if (
+              entry.phase !== "Applied" ||
+              entry.resourceKind !== "folder" ||
+              !O.exists(HashMap.get(latestAttemptByPlan, entry.planDigest), (attemptId) =>
+                Equal.equals(attemptId, entry.attemptId)
+              )
+            ) {
+              return O.none<BoxAdoption>();
+            }
+            const identity = O.all({
+              expectedParentProviderId: entry.parentProviderId,
+              expectedProviderId: entry.providerId,
+            });
+            if (O.isNone(identity)) {
+              return O.none<BoxAdoption>();
+            }
+            const matches = yield* Effect.forEach(
+              desired.folders,
+              Effect.fnUntraced(function* (folder) {
+                const digest = yield* digestText(folder.logicalKey);
+                return Equal.equals(digest, entry.logicalKeyDigest) ? O.some(folder) : O.none();
+              }),
+              { concurrency: 1 }
+            );
+            return O.map(A.head(A.getSomes(matches)), (folder) =>
               BoxAdoption.make({
-                expectedParentProviderId,
-                expectedProviderId,
+                expectedParentProviderId: identity.value.expectedParentProviderId,
+                expectedProviderId: identity.value.expectedProviderId,
                 logicalKey: folder.logicalKey,
                 resourceKind: "folder",
               })
-          )
+            );
+          }),
+          { concurrency: 1 }
+        )
       );
+      return mergeBoxAdoptions(desired.adoptions, recovered);
     })
-  );
-  return mergeBoxAdoptions(desired.adoptions, recovered);
-});
+);
 
 /**
  * Successful mutation outcome for one reviewed plan action.

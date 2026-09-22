@@ -72,10 +72,15 @@ const collectSiftRow = Effect.fnUntraced(function* (
   }
 });
 
-const historyStubCard = (candidate: SiftCandidate, capturedAt: string, relativePath: string): CardPersistRow => {
+const historyStubCard = Effect.fnUntraced(function* (
+  candidate: SiftCandidate,
+  capturedAt: string,
+  relativePath: string
+) {
+  const urlHash = yield* sha256HexOf(candidate.url);
   const frontmatter = KnowledgeCardFrontmatter.make({
     capturedAt,
-    id: `kb-link-${sha256HexOf(candidate.url).slice(0, 16)}`,
+    id: `kb-link-${urlHash.slice(0, 16)}`,
     related: [],
     sourceType: "link",
     status: "inbox",
@@ -94,7 +99,7 @@ const historyStubCard = (candidate: SiftCandidate, capturedAt: string, relativeP
     "Triage: keep (capture it), file it under a topic, or delete this stub.",
   ].join("\n");
   return { body, frontmatter, relativePath };
-};
+});
 
 /**
  * Sift browser history into inbox link cards.
@@ -150,8 +155,13 @@ export const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
   );
 
   const capturedAt = DateTime.formatIso(yield* DateTime.now);
-  const cards: Array<CardPersistRow> = A.map(A.fromIterable(MutableHashMap.values(collection.byUrlNorm)), (candidate) =>
-    historyStubCard(candidate, capturedAt, path.join(VAULT_DIRS.inbox, `${slugFor(candidate.title, candidate.url)}.md`))
+  const cards: Array<CardPersistRow> = yield* Effect.forEach(
+    A.fromIterable(MutableHashMap.values(collection.byUrlNorm)),
+    (candidate) =>
+      Effect.gen(function* () {
+        const slug = yield* slugFor(candidate.title, candidate.url);
+        return yield* historyStubCard(candidate, capturedAt, path.join(VAULT_DIRS.inbox, `${slug}.md`));
+      })
   );
 
   yield* persistCards(options.vaultRoot, databasePath, "history-sift", cards);

@@ -8,9 +8,10 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { proofCoordinatorLockPath } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Path } from "effect";
+import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
 
 const uid = userInfo().uid;
 const canonicalRoot = canonicalRuntimeRootForTesting(process.platform, userInfo().homedir);
@@ -64,7 +65,7 @@ describe("per-user runtime root", () => {
 
       const lock = yield* proofCoordinatorLockPath("https://github.com/acme/repo.git").pipe(
         provideRuntimeRootForTesting(configured),
-        provideScopedLayer(FileSystem.layerNoop({}))
+        provideScopedLayer(Layer.mergeAll(FileSystem.layerNoop({}), BunCrypto.layer))
       );
       expect(lock.startsWith("/configured/runtime/beep-yeet-proof-locks-")).toBe(true);
       expect(lock).not.toContain("/beep/admit/");

@@ -36,6 +36,7 @@ import * as O from "@beep/utils/Option";
 import * as R from "@beep/utils/Record";
 import * as Str from "@beep/utils/Str";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Crypto, Effect, Encoding, pipe, Result } from "effect";
 import * as P from "effect/Predicate";
@@ -119,8 +120,11 @@ const runCaptured = Effect.fnUntraced(function* (command: ChildProcess.Command) 
     })
   );
 });
+const runCrypto = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto>) =>
+  Effect.runSync(effect.pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make)));
+
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
-const defaultGeneration = makeOpenClawGeneration(defaultArgs);
+const defaultGeneration = runCrypto(makeOpenClawGeneration(defaultArgs));
 const parseDocument = (json: string): { readonly [key: string]: unknown } =>
   O.getOrThrow(pipe(Result.getOrThrow(UnknownFromJsonString.decodeResult(json)), O.liftPredicate(P.isObject)));
 
@@ -219,8 +223,8 @@ describe("@beep/infra OpenClaw", () => {
   });
 
   it("renders exactly two providers, hosted primary, DM-only Telegram, and loopback Control UI", () => {
-    const intent = makeOpenClawDeploymentIntent(deploymentConfig);
-    const intentFromExplicitDefault = makeOpenClawDeploymentIntent(undefined)(deploymentConfig);
+    const intent = runCrypto(makeOpenClawDeploymentIntent(deploymentConfig));
+    const intentFromExplicitDefault = runCrypto(makeOpenClawDeploymentIntent(undefined)(deploymentConfig));
     const document = parseDocument(defaultGeneration.canonicalJson);
 
     expect(intentFromExplicitDefault).toEqual(intent);
@@ -410,14 +414,16 @@ describe("@beep/infra OpenClaw", () => {
           expect(defaultGeneration.configHash).toBe(yield* sha256Hex(defaultGeneration.canonicalJson));
           expect(defaultGeneration.generationId).not.toBe(defaultGeneration.configHash);
           expect(defaultGeneration.generationId).toMatch(/^[0-9a-f]{64}$/u);
-          expect(makeOpenClawGeneration(defaultArgs).generationId).toBe(defaultGeneration.generationId);
+          expect((yield* makeOpenClawGeneration(defaultArgs)).generationId).toBe(defaultGeneration.generationId);
         })
       )
   );
 
   it("re-addresses the generation when the deployment intent changes", () => {
-    const other = makeOpenClawGeneration(
-      OpenClawStackArgs.new(identity, OpenClawDeploymentConfig.make({ ...deploymentConfig, gatewayPort: 19_040 }))
+    const other = runCrypto(
+      makeOpenClawGeneration(
+        OpenClawStackArgs.new(identity, OpenClawDeploymentConfig.make({ ...deploymentConfig, gatewayPort: 19_040 }))
+      )
     );
 
     expect(other.generationId).not.toBe(defaultGeneration.generationId);
@@ -430,7 +436,7 @@ describe("@beep/infra OpenClaw", () => {
         const changedSoulHash = OpenclawSha256Hex.make(yield* sha256Hex(`${openClawLegalSoulMarkdown}\n`));
 
         expect(
-          makeOpenClawBundleHash({
+          yield* makeOpenClawBundleHash({
             configHash: defaultGeneration.configHash,
             proofSkillHash: defaultGeneration.proofSkillHash,
             soulHash: changedSoulHash,

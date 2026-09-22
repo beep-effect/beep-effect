@@ -10,10 +10,9 @@ import { UUID } from "@beep/schema/String";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 
 const ATTEMPT_ID_TEXT = "550e8400-e29b-41d4-a716-446655440000";
-const ATTEMPT_ID = S.decodeSync(UUID)(ATTEMPT_ID_TEXT);
+const ATTEMPT_ID = UUID.make(ATTEMPT_ID_TEXT);
 
 const verdict = YeetVerdict.make({
   schemaVersion: "yeet-verdict/v2",

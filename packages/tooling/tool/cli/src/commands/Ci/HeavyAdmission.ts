@@ -35,6 +35,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Ci/HeavyAdmission");
@@ -476,7 +477,7 @@ export const readHeavyAdmissionChangedPaths = Effect.fn("Ci.readHeavyAdmissionCh
   branch: string,
   cwd: string,
   capture: typeof runRepoCommandCapture = runRepoCommandCapture
-): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const safe = yield* safeBranch(branch);
   yield* capture(
     "git",
@@ -526,7 +527,7 @@ export const readHeavyAdmissionEvent = Effect.fn("Ci.readHeavyAdmissionEvent")(f
 ): Effect.fn.Return<
   HeavyAdmissionEvent,
   CiCommandError,
-  FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (!HeavyAdmissionEventName.is.pull_request(input.eventName)) {
     return HeavyAdmissionEvent.make({ eventName: input.eventName });

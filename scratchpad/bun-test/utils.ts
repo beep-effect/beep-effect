@@ -11,14 +11,15 @@
  *
  * @since 0.0.0
  */
-import * as A from "effect/Array"
-import type * as Cause from "effect/Cause"
-import * as Equal from "effect/Equal"
-import * as Exit from "effect/Exit"
-import * as O from "effect/Option"
-import * as P from "effect/Predicate"
-import * as Result from "effect/Result"
-import * as assert from "node:assert"
+import * as A from "effect/Array";
+import type * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
+import * as assert from "node:assert";
 
 // ----------------------------
 // Primitives
@@ -39,7 +40,7 @@ import * as assert from "node:assert"
  * @since 0.0.0
  */
 export function fail(message: string) {
-  assert.fail(message)
+  assert.fail(message);
 }
 
 /**
@@ -57,7 +58,7 @@ export function fail(message: string) {
  * @since 0.0.0
  */
 export function deepStrictEqual<A>(actual: A, expected: A, message?: string, ..._: Array<never>) {
-  assert.deepStrictEqual(actual, expected, message as string)
+  assert.deepStrictEqual(actual, expected, message as string);
 }
 
 /**
@@ -75,7 +76,7 @@ export function deepStrictEqual<A>(actual: A, expected: A, message?: string, ...
  * @since 0.0.0
  */
 export function notDeepStrictEqual<A>(actual: A, expected: A, message?: string, ..._: Array<never>) {
-  assert.notDeepStrictEqual(actual, expected, message as string)
+  assert.notDeepStrictEqual(actual, expected, message as string);
 }
 
 /**
@@ -94,9 +95,9 @@ export function notDeepStrictEqual<A>(actual: A, expected: A, message?: string, 
  */
 export function strictEqual<A>(actual: A, expected: A, message?: string, ..._: Array<never>) {
   if (message !== undefined) {
-    assert.strictEqual(actual, expected, message)
+    assert.strictEqual(actual, expected, message);
   } else {
-    assert.strictEqual(actual, expected)
+    assert.strictEqual(actual, expected);
   }
 }
 
@@ -117,8 +118,8 @@ export function strictEqual<A>(actual: A, expected: A, message?: string, ..._: A
  */
 export function assertEquals<A>(actual: A, expected: A, message?: string, ..._: Array<never>) {
   if (!Equal.equals(actual, expected)) {
-    deepStrictEqual(actual, expected, message) // show diff
-    fail(message ?? "Expected values to be Equal.equals")
+    deepStrictEqual(actual, expected, message); // show diff
+    fail(message ?? "Expected values to be Equal.equals");
   }
 }
 
@@ -137,7 +138,7 @@ export function assertEquals<A>(actual: A, expected: A, message?: string, ..._: 
  * @since 0.0.0
  */
 export function doesNotThrow(thunk: () => void, message?: string, ..._: Array<never>) {
-  assert.doesNotThrow(thunk, message)
+  assert.doesNotThrow(thunk, message);
 }
 
 // ----------------------------
@@ -158,14 +159,14 @@ export function doesNotThrow(thunk: () => void, message?: string, ..._: Array<ne
  * @category testing
  * @since 0.0.0
  */
-export function assertInstanceOf<C extends abstract new(...args: any) => any>(
+export function assertInstanceOf<C extends abstract new (...args: any) => any>(
   value: unknown,
   constructor: C,
   message?: string,
   ..._: Array<never>
 ): asserts value is InstanceType<C> {
   if (!(value instanceof constructor)) {
-    fail(message ?? `Expected value to be an instance of ${constructor.name}`)
+    fail(message ?? `Expected value to be an instance of ${constructor.name}`);
   }
 }
 
@@ -184,7 +185,7 @@ export function assertInstanceOf<C extends abstract new(...args: any) => any>(
  * @since 0.0.0
  */
 export function assertTrue(self: unknown, message?: string, ..._: Array<never>): asserts self {
-  strictEqual(self, true, message)
+  strictEqual(self, true, message);
 }
 
 /**
@@ -202,7 +203,7 @@ export function assertTrue(self: unknown, message?: string, ..._: Array<never>):
  * @since 0.0.0
  */
 export function assertFalse(self: boolean, message?: string, ..._: Array<never>) {
-  strictEqual(self, false, message)
+  strictEqual(self, false, message);
 }
 
 /**
@@ -226,17 +227,17 @@ export function assertInclude(
 ) {
   if (P.isString(actual)) {
     if (!P.isString(expected) || !actual.includes(expected)) {
-      fail(`Expected\n\n${actual}\n\nto include\n\n${expected}`)
+      fail(`Expected\n\n${actual}\n\nto include\n\n${expected}`);
     }
-    return
+    return;
   }
   if (A.isArray(actual)) {
     if (!actual.includes(expected)) {
-      fail(`Expected\n\n${JSON.stringify(actual)}\n\nto include\n\n${JSON.stringify(expected)}`)
+      fail(`Expected\n\n${JSON.stringify(actual)}\n\nto include\n\n${JSON.stringify(expected)}`);
     }
-    return
+    return;
   }
-  fail(`Expected\n\n${actual}\n\nto include\n\n${expected}`)
+  fail(`Expected\n\n${actual}\n\nto include\n\n${expected}`);
 }
 
 /**
@@ -255,7 +256,7 @@ export function assertInclude(
  */
 export function assertMatch(actual: string, regExp: RegExp, ..._: Array<never>) {
   if (!regExp.test(actual)) {
-    fail(`Expected\n\n${actual}\n\nto match\n\n${regExp}`)
+    fail(`Expected\n\n${actual}\n\nto match\n\n${regExp}`);
   }
 }
 
@@ -275,20 +276,18 @@ export function assertMatch(actual: string, regExp: RegExp, ..._: Array<never>) 
  */
 export function throws(thunk: () => void, error?: Error | ((u: unknown) => undefined), ..._: Array<never>) {
   try {
-    thunk()
+    thunk();
   } catch (e) {
     if (error !== undefined) {
       if (P.isFunction(error)) {
-        error(e)
-      } else if (error) {
-        deepStrictEqual(e, error)
+        error(e);
       } else {
-        throw e
+        deepStrictEqual(e, error);
       }
     }
-    return
+    return;
   }
-  fail("Expected to throw an error")
+  fail("Expected to throw an error");
 }
 
 /**
@@ -305,24 +304,26 @@ export function throws(thunk: () => void, error?: Error | ((u: unknown) => undef
  * @category testing
  * @since 0.0.0
  */
-export async function throwsAsync(
+export function throwsAsync(
   thunk: () => Promise<void>,
   error?: Error | ((u: unknown) => undefined),
   ..._: Array<never>
-) {
-  try {
-    await thunk()
-  } catch (e) {
-    if (error !== undefined) {
-      if (P.isFunction(error)) {
-        error(e)
-      } else {
-        deepStrictEqual(e, error)
-      }
-    }
-    return
-  }
-  fail("Expected to throw an error")
+): Promise<void> {
+  return Effect.tryPromise(thunk).pipe(
+    Effect.match({
+      onFailure: ({ cause: e }) => {
+        if (error !== undefined) {
+          if (P.isFunction(error)) {
+            error(e);
+          } else {
+            deepStrictEqual(e, error);
+          }
+        }
+      },
+      onSuccess: () => fail("Expected to throw an error"),
+    }),
+    Effect.runPromise
+  );
 }
 
 // ----------------------------
@@ -345,7 +346,7 @@ export async function throwsAsync(
  * @since 0.0.0
  */
 export function assertNone<A>(option: O.Option<A>, ..._: Array<never>): asserts option is O.None<never> {
-  deepStrictEqual(option, O.none())
+  deepStrictEqual(option, O.none());
 }
 
 /**
@@ -362,12 +363,9 @@ export function assertNone<A>(option: O.Option<A>, ..._: Array<never>): asserts 
  * @category testing
  * @since 0.0.0
  */
-export function assertDefined<A>(
-  a: A | undefined,
-  ..._: Array<never>
-): asserts a is Exclude<A, undefined> {
+export function assertDefined<A>(a: A | undefined, ..._: Array<never>): asserts a is Exclude<A, undefined> {
   if (a === undefined) {
-    fail("Expected value to be defined")
+    fail("Expected value to be defined");
   }
 }
 
@@ -385,12 +383,9 @@ export function assertDefined<A>(
  * @category testing
  * @since 0.0.0
  */
-export function assertUndefined<A>(
-  a: A | undefined,
-  ..._: Array<never>
-): asserts a is undefined {
+export function assertUndefined<A>(a: A | undefined, ..._: Array<never>): asserts a is undefined {
   if (a !== undefined) {
-    fail("Expected value to be undefined")
+    fail("Expected value to be undefined");
   }
 }
 
@@ -409,12 +404,8 @@ export function assertUndefined<A>(
  * @category testing
  * @since 0.0.0
  */
-export function assertSome<A>(
-  option: O.Option<A>,
-  expected: A,
-  ..._: Array<never>
-): asserts option is O.Some<A> {
-  deepStrictEqual(option, O.some(expected))
+export function assertSome<A>(option: O.Option<A>, expected: A, ..._: Array<never>): asserts option is O.Some<A> {
+  deepStrictEqual(option, O.some(expected));
 }
 
 // ----------------------------
@@ -441,7 +432,7 @@ export function assertSuccess<A, E>(
   expected: A,
   ..._: Array<never>
 ): asserts result is Result.Success<A, never> {
-  deepStrictEqual(result, Result.succeed(expected))
+  deepStrictEqual(result, Result.succeed(expected));
 }
 
 /**
@@ -464,7 +455,7 @@ export function assertFailure<A, E>(
   expected: E,
   ..._: Array<never>
 ): asserts result is Result.Failure<never, E> {
-  deepStrictEqual(result, Result.fail(expected))
+  deepStrictEqual(result, Result.fail(expected));
 }
 
 // ----------------------------
@@ -493,7 +484,7 @@ export function assertExitFailure<A, E>(
   expected: Cause.Cause<E>,
   ..._: Array<never>
 ): asserts exit is Exit.Failure<never, E> {
-  deepStrictEqual(exit, Exit.failCause(expected))
+  deepStrictEqual(exit, Exit.failCause(expected));
 }
 
 /**
@@ -516,5 +507,5 @@ export function assertExitSuccess<A, E>(
   expected: A,
   ..._: Array<never>
 ): asserts exit is Exit.Success<A, never> {
-  deepStrictEqual(exit, Exit.succeed(expected))
+  deepStrictEqual(exit, Exit.succeed(expected));
 }

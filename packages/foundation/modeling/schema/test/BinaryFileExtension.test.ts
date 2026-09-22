@@ -5,18 +5,27 @@ import {
   isBinaryFileExtension,
 } from "@beep/schema/BinaryFileExtension";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-const decodeUnknownBinaryFileExtensionSync = S.decodeUnknownSync(BinaryFileExtension);
+const decodeUnknownBinaryFileExtensionEffect = S.decodeUnknownEffect(BinaryFileExtension);
 
 describe("BinaryFileExtension", () => {
-  it("accepts dotted binary file extensions", () => {
-    expect(decodeUnknownBinaryFileExtensionSync(".png")).toBe(".png");
-  });
+  it.effect(
+    "accepts dotted binary file extensions",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeUnknownBinaryFileExtensionEffect(".png")).toBe(".png");
+    })
+  );
 
-  it("rejects undotted values", () => {
-    expect(() => decodeUnknownBinaryFileExtensionSync("png")).toThrow();
-  });
+  it.effect(
+    "rejects undotted values",
+    Effect.fnUntraced(function* () {
+      const failure1 = yield* Effect.result(decodeUnknownBinaryFileExtensionEffect("png"));
+      expect(Result.isFailure(failure1)).toBe(true);
+    })
+  );
 
   it("derives a schema-backed guard", () => {
     expect(isBinaryFileExtension(".pdf")).toBe(true);

@@ -7,6 +7,9 @@
  */
 
 import { Turn } from "@beep/workspace-domain/entities/Turn";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import { TurnConverterError } from "./Turn.errors.ts";
 import type { Table } from "./Turn.table.ts";
 
 /**
@@ -47,6 +50,9 @@ export type TurnRow = typeof Table.$inferSelect;
  */
 export type TurnInsert = typeof Table.$inferInsert;
 
+const encodeTurn = S.encodeResult(Turn);
+const decodeTurnRow = S.decodeUnknownResult(Turn);
+
 /**
  * Convert a Turn entity into its persistence insert row.
  *
@@ -62,9 +68,11 @@ export type TurnInsert = typeof Table.$inferInsert;
  * ```ts
  * import { Turn } from "@beep/workspace-domain/entities/Turn"
  * import { toTurnInsert } from "@beep/workspace-tables/entities/Turn"
+ * import * as Result from "effect/Result"
+ * import * as S from "effect/Schema"
  *
  * const principal = { component: "Runtime", kind: "System" }
- * const turn = Turn.decodeUnknownSync({
+ * const turn = Result.getOrThrow(S.decodeUnknownResult(Turn)({
  *   createdAt: 1,
  *   createdByPrincipal: principal,
  *   entityType: "WorkspaceTurn",
@@ -80,35 +88,38 @@ export type TurnInsert = typeof Table.$inferInsert;
  *   turnIndex: 0,
  *   updatedAt: 2,
  *   updatedByPrincipal: principal
- * })
+ * }))
  *
  * const insert = toTurnInsert(turn)
- * console.log(insert.parentTurnId)
+ * console.log(Result.getOrThrow(insert).parentTurnId)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toTurnInsert = (turn: Turn): TurnInsert => {
-  const encoded = Turn.encodeSync(turn);
-
-  return {
-    createdAt: encoded.createdAt,
-    createdByPrincipal: encoded.createdByPrincipal,
-    entityType: encoded.entityType,
-    items: encoded.items,
-    orgId: encoded.orgId,
-    parentTurnId: encoded.parentTurnId,
-    publicId: encoded.publicId,
-    rowVersion: encoded.rowVersion,
-    schemaVersion: encoded.schemaVersion,
-    source: encoded.source,
-    threadId: encoded.threadId,
-    turnIndex: encoded.turnIndex,
-    updatedAt: encoded.updatedAt,
-    updatedByPrincipal: encoded.updatedByPrincipal,
-  } satisfies TurnInsert;
-};
+export const toTurnInsert = (turn: Turn): Result.Result<TurnInsert, TurnConverterError> =>
+  Result.mapError(
+    Result.map(
+      encodeTurn(turn),
+      (encoded): TurnInsert => ({
+        createdAt: encoded.createdAt,
+        createdByPrincipal: encoded.createdByPrincipal,
+        entityType: encoded.entityType,
+        items: encoded.items,
+        orgId: encoded.orgId,
+        parentTurnId: encoded.parentTurnId,
+        publicId: encoded.publicId,
+        rowVersion: encoded.rowVersion,
+        schemaVersion: encoded.schemaVersion,
+        source: encoded.source,
+        threadId: encoded.threadId,
+        turnIndex: encoded.turnIndex,
+        updatedAt: encoded.updatedAt,
+        updatedByPrincipal: encoded.updatedByPrincipal,
+      })
+    ),
+    TurnConverterError.fromSchemaError
+  );
 
 /**
  * Convert a selected persistence row into a Turn entity.
@@ -117,6 +128,7 @@ export const toTurnInsert = (turn: Turn): TurnInsert => {
  *
  * ```ts
  * import { fromTurnRow, type TurnRow } from "@beep/workspace-tables/entities/Turn"
+ * import { Result } from "effect"
  *
  * const row = {
  *   createdAt: 1,
@@ -137,10 +149,11 @@ export const toTurnInsert = (turn: Turn): TurnInsert => {
  * } satisfies TurnRow
  *
  * const turn = fromTurnRow(row)
- * console.log(turn.items[0]?.itemType)
+ * console.log(Result.getOrThrow(turn).items[0]?.itemType)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromTurnRow = (row: TurnRow): Turn => Turn.decodeUnknownSync(row);
+export const fromTurnRow = (row: TurnRow): Result.Result<Turn, TurnConverterError> =>
+  Result.mapError(decodeTurnRow(row), TurnConverterError.fromSchemaError);

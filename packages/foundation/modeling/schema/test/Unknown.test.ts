@@ -10,15 +10,18 @@ const input = { name: "Ada", active: true };
 const compactJson = '{"name":"Ada","active":true}';
 const formattedJson = '{\n  "name": "Ada",\n  "active": true\n}';
 const PrettyUnknownFromJsonString = S.fromJsonString(Unknown, { space: 2 });
-const decodeUnknown = S.decodeSync(Unknown);
+const decodeUnknown = S.decodeEffect(Unknown);
 const encodePrettyUnknownEffect = S.encodeUnknownEffect(PrettyUnknownFromJsonString);
 
 describe("Unknown", () => {
-  it("exports the plain schema and explicit JSON boundary from the package root", () => {
-    expect(RootUnknown).toBe(Unknown);
-    expect(RootUnknownFromJsonString).toBe(UnknownFromJsonString);
-    expect(decodeUnknown(input)).toBe(input);
-  });
+  it.effect(
+    "exports the plain schema and explicit JSON boundary from the package root",
+    Effect.fnUntraced(function* () {
+      expect(RootUnknown).toBe(Unknown);
+      expect(RootUnknownFromJsonString).toBe(UnknownFromJsonString);
+      expect(yield* decodeUnknown(input)).toBe(input);
+    })
+  );
 
   it("exposes only selected compact JSON runners", () => {
     expect(UnknownFromJsonString.decodeUnknownSync(compactJson)).toEqual(input);

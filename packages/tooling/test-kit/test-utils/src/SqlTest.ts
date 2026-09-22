@@ -5,13 +5,14 @@
  * @since 0.0.0
  */
 
-import { randomUUID } from "node:crypto";
 import { $TestUtilsId } from "@beep/identity/packages";
 import { Defect, LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { Config, Context, Duration, Effect, FileSystem, Layer, Path, pipe, Redacted, Schedule } from "effect";
+import * as Crypto from "effect/Crypto";
 import * as S from "effect/Schema";
 import * as Reactivity from "effect/unstable/reactivity/Reactivity";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
@@ -239,12 +240,12 @@ export class TestDatabaseInfoShape extends S.Class<TestDatabaseInfoShape>($I`Tes
 /**
  * Runtime configuration for the PGLite Testcontainers SQL test driver.
  *
- * **Example** (Make default driver config)
+ * **Example** (Make driver config)
  *
  * ```ts
  * import { PgliteTestcontainersTestDriverConfig } from "@beep/test-utils"
  * const config = PgliteTestcontainersTestDriverConfig.make({})
- * console.log(config.maxConnections)
+ * console.log(config.password.length > 20)
  * ```
  *
  * @category models
@@ -276,10 +277,10 @@ export class PgliteTestcontainersTestDriverConfig extends S.Class<PgliteTestcont
       })
     ),
     password: S.String.pipe(
-      S.withConstructorDefault(Effect.sync(randomUUID)),
-      S.withDecodingDefaultKey(Effect.sync(randomUUID)),
+      S.withConstructorDefault(Effect.succeed("pglite-test-generated-password")),
       $I.annoteKey("PgliteTestcontainersTestDriverConfig.password", {
-        description: "Generated PostgreSQL password configured for the PGLite test driver.",
+        description:
+          "PostgreSQL password for the PGLite test driver. The driver Layer generates a unique value when constructor input omits it.",
       })
     ),
     startupTimeoutMs: PglitePositiveInteger.pipe(
@@ -861,10 +862,33 @@ const loadPgModule = Effect.tryPromise({
 // keep `recurs` from ever bounding the policy; the delay must ride on `recurs` itself.
 const PgConnectRetryPolicy = Schedule.recurs(20).pipe(Schedule.addDelay(() => Effect.succeed(Duration.millis(250))));
 
+const generateCryptoUuid = Effect.fn("SqlTest.generateCryptoUuid")(function* (
+  driver: typeof TestDatabaseDriver.Type,
+  failureMessage: string
+) {
+  const context = yield* Layer.build(NodeCrypto.layer);
+  const cryptoService = Context.get(context, Crypto.Crypto);
+  return yield* cryptoService.randomUUIDv4.pipe(
+    Effect.mapError((cause) => toHarnessError(driver, "provision", failureMessage, cause))
+  );
+});
+
 const makePgliteConfig = Effect.fn("SqlTest.PgliteTestcontainersTestDriver.makeConfig")(function* (
   configInput: PgliteTestcontainersTestDriverConfigInput
 ) {
-  return yield* PgliteTestcontainersTestDriverConfig.decodeEffect(configInput === undefined ? {} : configInput).pipe(
+  const input = configInput === undefined ? {} : configInput;
+  const password = yield* pipe(
+    O.fromUndefinedOr(input.password),
+    O.map(Effect.succeed),
+    O.getOrElse(() =>
+      generateCryptoUuid("pglite-testcontainers", "Failed to generate a PGLite Testcontainers SQL test password.")
+    )
+  );
+
+  return yield* PgliteTestcontainersTestDriverConfig.decodeEffect({
+    ...input,
+    password,
+  }).pipe(
     Effect.mapError((cause) =>
       toHarnessError("pglite-testcontainers", "provision", "Invalid PGLite Testcontainers SQL test config.", cause)
     )
@@ -1059,7 +1083,7 @@ const parsePgExternalConnectionUri = Effect.fn("SqlTest.PgExternalTestDriver.par
 });
 
 const makePgExternalSchemaName = Effect.fn("SqlTest.PgExternalTestDriver.makeSchemaName")(function* (prefix: string) {
-  const uuid = randomUUID();
+  const uuid = yield* generateCryptoUuid("pg-external", "Failed to generate an external PostgreSQL test schema name.");
   return `${prefix}_${pipe(uuid, Str.replaceAll("-", "_"))}`;
 });
 

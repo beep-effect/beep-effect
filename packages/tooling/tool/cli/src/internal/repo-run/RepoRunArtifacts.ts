@@ -5,9 +5,11 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
-import { flow, pipe } from "effect";
+import { Effect, flow } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import * as Str from "effect/String";
+import { QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 
 /**
  * Convert an arbitrary branch or step name into a stable artifact file segment.
@@ -31,7 +33,13 @@ export const repoRunSafeArtifactName: (value: string) => string = flow(
   (name) => (Str.isNonEmpty(name) ? name : "repo")
 );
 
-const artifactNameHash = (value: string): string => createHash("sha256").update(value).digest("hex").slice(0, 12);
+const artifactNameHash = Effect.fnUntraced(function* (value: string) {
+  const crypto = yield* Crypto.Crypto;
+  const bytes = yield* crypto
+    .digest("SHA-256", new TextEncoder().encode(value))
+    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to hash run artifact identity.")));
+  return Str.takeLeft(12)(Encoding.encodeHex(bytes));
+});
 
 /**
  * Derive the stable run-artifact directory name for a branch.
@@ -41,7 +49,10 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
  * ```ts
  * import { repoRunArtifactId } from "@beep/repo-cli/test/RepoRun"
  *
- * console.log(repoRunArtifactId("main").startsWith("main-")) // true
+ * import { Effect } from "effect"
+ *
+ * const program = repoRunArtifactId("main").pipe(Effect.map((id) => id.startsWith("main-")))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param branch - Git branch whose run artifacts are being named.
@@ -49,5 +60,6 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
  * @category utilities
  * @since 0.0.0
  */
-export const repoRunArtifactId = (branch: string): string =>
-  pipe(branch, repoRunSafeArtifactName, (name) => `${name}-${artifactNameHash(branch)}`);
+export const repoRunArtifactId = Effect.fn("RepoRunArtifacts.artifactId")(function* (branch: string) {
+  return `${repoRunSafeArtifactName(branch)}-${yield* artifactNameHash(branch)}`;
+});

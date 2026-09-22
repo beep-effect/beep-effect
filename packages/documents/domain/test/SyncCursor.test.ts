@@ -4,13 +4,10 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-
-const decodeUnknownSyncCursorSyncCursorSync = S.decodeUnknownSync(SyncCursor.SyncCursor);
-const decodeUnknownSyncCursorSyncCursorStatusSync = S.decodeUnknownSync(SyncCursor.SyncCursorStatus);
-const encodeSyncCursorSyncCursorSync = S.encodeSync(SyncCursor.SyncCursor);
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
@@ -60,36 +57,43 @@ describe("SyncCursor entity", () => {
     ]);
   });
 
-  it("decodes and encodes a fresh cursor row", () => {
-    const decoded = decodeUnknownSyncCursorSyncCursorSync(freshCursorRow);
+  it.effect("decodes and encodes a fresh cursor row", () =>
+    Effect.gen(function* () {
+      const decoded = yield* S.decodeUnknownEffect(SyncCursor.SyncCursor)(freshCursorRow);
 
-    expect(decoded).toBeInstanceOf(SyncCursor.SyncCursor);
-    expect(decoded.lastEventId).toEqual(O.none());
-    expect(decoded.lastError).toEqual(O.none());
-    expect(decoded.status).toBe("active");
-    expect(encodeSyncCursorSyncCursorSync(decoded)).toStrictEqual(freshCursorRow);
-  });
+      expect(decoded).toBeInstanceOf(SyncCursor.SyncCursor);
+      expect(decoded.lastEventId).toEqual(O.none());
+      expect(decoded.lastError).toEqual(O.none());
+      expect(decoded.status).toBe("active");
+      expect(yield* S.encodeEffect(SyncCursor.SyncCursor)(decoded)).toStrictEqual(freshCursorRow);
+    })
+  );
 
-  it("decodes advanced cursors with recorded event and error state", () => {
-    const decoded = decodeUnknownSyncCursorSyncCursorSync({
-      ...freshCursorRow,
-      lastError: "box stream returned 429",
-      lastEventId: "evt-9",
-      status: "error",
-      streamPosition: "1746000000000",
-    });
+  it.effect("decodes advanced cursors with recorded event and error state", () =>
+    Effect.gen(function* () {
+      const decoded = yield* S.decodeUnknownEffect(SyncCursor.SyncCursor)({
+        ...freshCursorRow,
+        lastError: "box stream returned 429",
+        lastEventId: "evt-9",
+        status: "error",
+        streamPosition: "1746000000000",
+      });
 
-    expect(decoded.lastEventId).toEqual(O.some("evt-9"));
-    expect(decoded.lastError).toEqual(O.some("box stream returned 429"));
-    expect(decoded.status).toBe("error");
-  });
+      expect(decoded.lastEventId).toEqual(O.some("evt-9"));
+      expect(decoded.lastError).toEqual(O.some("box stream returned 429"));
+      expect(decoded.status).toBe("error");
+    })
+  );
 
-  it("exposes the SyncCursorStatus literal family", () => {
-    expect(SyncCursor.SyncCursorStatus.is.active("active")).toBe(true);
-    expect(SyncCursor.SyncCursorStatus.is.error("active")).toBe(false);
-    expect(SyncCursor.SyncCursorStatus.Enum.error).toBe("error");
-    expect(() => decodeUnknownSyncCursorSyncCursorStatusSync("paused")).toThrow();
-  });
+  it.effect("exposes the SyncCursorStatus literal family", () =>
+    Effect.gen(function* () {
+      expect(SyncCursor.SyncCursorStatus.is.active("active")).toBe(true);
+      expect(SyncCursor.SyncCursorStatus.is.error("active")).toBe(false);
+      expect(SyncCursor.SyncCursorStatus.Enum.error).toBe("error");
+      const statusExit = yield* Effect.exit(S.decodeUnknownEffect(SyncCursor.SyncCursorStatus)("paused"));
+      expect(Exit.isFailure(statusExit)).toBe(true);
+    })
+  );
 
   it("round-trips schema-derived sync cursor values", () => {
     assertSchemaArbitraryRoundTrip(SyncCursor.SyncCursorStatus);

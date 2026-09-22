@@ -8,7 +8,8 @@ import {
 } from "@beep/box-provisioning";
 import { BoxProvisioningApplier } from "@beep/box-provisioning/BoxProvisioningApplier";
 import { provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { expect, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import { desiredFixture, observedFixture } from "./fixtures.ts";
@@ -72,7 +73,7 @@ const mutationClient = {
 
 const ApplierTestLayer = BoxProvisioningApplier.layer.pipe(Layer.provide(B.Box.makeLayerFromClient(mutationClient)));
 
-describe("@beep/box-provisioning applier", () => {
+layer(BunCrypto.layer)("@beep/box-provisioning applier", (it) => {
   it.effect(
     "performs zero dependent mutations for an unallowlisted exact-name collision",
     Effect.fnUntraced(function* () {

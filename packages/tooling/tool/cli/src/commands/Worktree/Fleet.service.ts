@@ -59,6 +59,7 @@ import {
   FleetSnapshot,
   parseWorktreePorcelain,
 } from "./Worktree.schemas.ts";
+import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { FleetLiveness, FleetLivenessProbe, FleetProbeReading, WorktreeListEntry } from "./Worktree.schemas.ts";
@@ -414,7 +415,11 @@ export interface FleetMirrorServiceShape {
   readonly scan: (options?: FleetScanOptions) => Effect.Effect<FleetSnapshot, WorktreeCommandError>;
 }
 
-type FleetMirrorServiceRequirements = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type FleetMirrorServiceRequirements =
+  | FileSystem.FileSystem
+  | Path.Path
+  | Crypto.Crypto
+  | ChildProcessSpawner.ChildProcessSpawner;
 
 /**
  * Service tag for the fleet-mirror derivation scan.
@@ -475,7 +480,7 @@ const runGitProbe = Effect.fn("Fleet.runGitProbe")(function* (
   cwd: string,
   args: ReadonlyArray<string>,
   env?: Record<string, string>
-): Effect.fn.Return<O.Option<GitProbeResult>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<GitProbeResult>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const captured = yield* runCapturedStreams({
     command: "git",
     args,
@@ -887,7 +892,7 @@ const materializeTarget = Effect.fn("Fleet.materializeTarget")(function* (
   const hasObject = Effect.fnUntraced(function* (): Effect.fn.Return<
     boolean,
     never,
-    ChildProcessSpawner.ChildProcessSpawner
+    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
   > {
     const probe = yield* runGitProbe(scanner.scannerDir, ["cat-file", "-e", `${sha.value}^{commit}`], scanner.env);
     return O.match(probe, { onNone: () => false, onSome: (result) => result.exitCode === 0 });

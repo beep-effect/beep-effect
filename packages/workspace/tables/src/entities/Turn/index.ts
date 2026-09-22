@@ -21,6 +21,21 @@
  */
 export * from "./Turn.converters.ts";
 /**
+ * Turn converter error exports.
+ *
+ * **Example** (Import Turn converter error)
+ *
+ * ```ts
+ * import * as Turn from "@beep/workspace-tables/entities/Turn"
+ *
+ * console.log(Turn.TurnConverterError._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./Turn.errors.ts";
+/**
  * Turn table exports.
  *
  * **Example** (Log table entity type)

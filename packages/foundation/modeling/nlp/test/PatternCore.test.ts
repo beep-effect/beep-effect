@@ -38,10 +38,10 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
-import { Chunk, Effect, Schema } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { Chunk, Effect, Exit, Schema } from "effect";
 import * as O from "effect/Option";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { describe, expect, it } from "vitest";
 import type { PatternElement } from "@beep/nlp/Core/index";
 
 const decodeBracketStringToEntityPatternElement = Schema.decodeEffect(BracketStringToEntityPatternElement);
@@ -51,10 +51,6 @@ const decodeEntityPatternOption = Schema.decodeEffect(EntityPatternOption);
 const decodeLiteralPatternOption = Schema.decodeEffect(LiteralPatternOption);
 const decodePOSPatternOption = Schema.decodeEffect(POSPatternOption);
 const decodePatternElement = Schema.decodeEffect(Pattern.Element);
-const decodeBracketStringToLiteralPatternElementSync = Schema.decodeSync(BracketStringToLiteralPatternElement);
-const decodeEntityPatternOptionSync = Schema.decodeSync(EntityPatternOption);
-const decodeLiteralPatternOptionSync = Schema.decodeSync(LiteralPatternOption);
-const decodePOSPatternOptionSync = Schema.decodeSync(POSPatternOption);
 const encodePatternElement = Schema.encodeEffect(Pattern.Element);
 
 const POSPatternOptionArbitrary = Arbitrary.schema(POSPatternOption);
@@ -67,8 +63,7 @@ const firstIncludes = (values: ReadonlyArray<string>, searchString: string): boo
   const first = values[0];
   return first !== undefined && Str.includes(searchString)(first);
 };
-const nonNegativeInt = Schema.decodeUnknownSync(NonNegativeInt);
-const mark = (start: number, end: number) => [nonNegativeInt(start), nonNegativeInt(end)] as const;
+const mark = (start: number, end: number) => [NonNegativeInt.make(start), NonNegativeInt.make(end)] as const;
 
 describe("Core Pattern", () => {
   it("creates element builders with optional values", () => {
@@ -209,16 +204,26 @@ describe("Core Pattern", () => {
     expect(nounElement[0]?._tag).toBe("POSPatternElement");
   });
 
-  it("rejects all-empty pattern options at the schema boundary", () => {
-    expect(() => decodePOSPatternOptionSync([""])).toThrow();
-    expect(() => decodeEntityPatternOptionSync([""])).toThrow();
-    expect(() => decodeLiteralPatternOptionSync([""])).toThrow();
-  });
+  it.effect(
+    "rejects all-empty pattern options at the schema boundary",
+    Effect.fnUntraced(function* () {
+      const emptyPos = yield* Effect.exit(decodePOSPatternOption([""]));
+      const emptyEntity = yield* Effect.exit(decodeEntityPatternOption([""]));
+      const emptyLiteral = yield* Effect.exit(decodeLiteralPatternOption([""]));
+      expect(Exit.isFailure(emptyPos)).toBe(true);
+      expect(Exit.isFailure(emptyEntity)).toBe(true);
+      expect(Exit.isFailure(emptyLiteral)).toBe(true);
+    })
+  );
 
-  it("rejects reserved literal choices that would collide with typed bracket syntax", () => {
-    expect(() => literal("DATE")).toThrow();
-    expect(() => decodeBracketStringToLiteralPatternElementSync("[DATE]")).toThrow();
-  });
+  it.effect(
+    "rejects reserved literal choices that would collide with typed bracket syntax",
+    Effect.fnUntraced(function* () {
+      expect(() => literal("DATE")).toThrow();
+      const reservedLiteral = yield* Effect.exit(decodeBracketStringToLiteralPatternElement("[DATE]"));
+      expect(Exit.isFailure(reservedLiteral)).toBe(true);
+    })
+  );
 
   it("supports Pattern schema helpers", () => {
     const pattern = make("money-amount", [literal("$"), entity("CARDINAL"), literal("million", "billion")]);

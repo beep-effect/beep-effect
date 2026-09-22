@@ -39,7 +39,6 @@ import type { Dataset } from "@beep/rdf/Rdf";
 
 const decodeOntologyFilePath = S.decodeEffect(OntologyFilePath);
 const decodeSessionId = S.decodeEffect(SessionId);
-const decodeOntologyFilePathSync = S.decodeSync(OntologyFilePath);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -77,7 +76,7 @@ const ontologyFileStoreLayerForConfiguration = (configuration: Readonly<Record<s
     Layer.provide(NodeServices.layer)
   );
 
-const fixturePath = (relativePath: string): OntologyFilePath => decodeOntologyFilePathSync(relativePath);
+const fixturePath = (relativePath: string): OntologyFilePath => OntologyFilePath.make(relativePath);
 
 const turtleFixtures = [
   "foaf-social-network/graph.ttl",

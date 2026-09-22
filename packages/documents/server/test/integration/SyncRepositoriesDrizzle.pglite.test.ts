@@ -70,18 +70,17 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   ).toBe("Passed");
 };
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
-const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
-const remoteId = S.decodeSync(RemoteItemId)("9001");
-const syncItemOne = S.decodeSync(Documents.SyncItemId)(1);
-const zeroAttempts = S.decodeSync(NonNegativeInt)(0);
-const generationOne = S.decodeSync(NonNegativeInt)(1);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
+const remoteId = RemoteItemId.make("9001");
+const syncItemOne = Documents.SyncItemId.make(1);
+const zeroAttempts = NonNegativeInt.make(0);
+const generationOne = NonNegativeInt.make(1);
 
 const itemSeed = (localRelPath: string) =>
   SyncItemSeed.make({
     itemKind: "file",
     localGeneration: generationOne,
-    localRelPath: decodeVaultRelPath(localRelPath),
+    localRelPath: VaultRelPath.make(localRelPath),
     provider: "box",
     syncState: "pending",
     workspaceId,
@@ -97,7 +96,7 @@ const operationSeed = (idempotencyKey: string) =>
     status: "queued",
     syncItemId: syncItemOne,
     targetName: "complaint.pdf",
-    targetRelPath: decodeVaultRelPath("matters/client-default/complaint.pdf"),
+    targetRelPath: VaultRelPath.make("matters/client-default/complaint.pdf"),
     workspaceId,
   });
 

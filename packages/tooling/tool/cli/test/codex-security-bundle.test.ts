@@ -309,7 +309,11 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       const imported = yield* readSecurityBundle(root);
       expect(imported.evidenceJson).toContain(token);
       const plan = yield* planPacket(imported.payload, {});
-      const docs = renderPacketDocuments({ plan, rawPayloadJson: imported.evidenceJson, rawReports: imported.reports });
+      const docs = yield* renderPacketDocuments({
+        plan,
+        rawPayloadJson: imported.evidenceJson,
+        rawReports: imported.reports,
+      });
       for (const document of A.filter(docs, (document) => document.tracked)) {
         expect(document.contents).not.toContain(token);
       }
@@ -385,7 +389,11 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       const imported = yield* readSecurityBundle(root);
       expect(imported.evidenceJson).toContain("private-owner");
       const plan = yield* planPacket(imported.payload, {});
-      const docs = renderPacketDocuments({ plan, rawPayloadJson: imported.evidenceJson, rawReports: imported.reports });
+      const docs = yield* renderPacketDocuments({
+        plan,
+        rawPayloadJson: imported.evidenceJson,
+        rawReports: imported.reports,
+      });
       for (const document of A.filter(docs, (document) => document.tracked)) {
         expect(document.contents).not.toContain("private-owner");
       }
@@ -402,7 +410,11 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       expect(imported.evidenceJson).toContain("occ_bbbbbbbbbbbbbbbbbbbbbbbb");
       expect(imported.evidenceJson).toContain("manifestSha256");
       const plan = yield* planPacket(imported.payload, {});
-      const docs = renderPacketDocuments({ plan, rawPayloadJson: imported.evidenceJson, rawReports: imported.reports });
+      const docs = yield* renderPacketDocuments({
+        plan,
+        rawPayloadJson: imported.evidenceJson,
+        rawReports: imported.reports,
+      });
       for (const document of A.filter(docs, (document) => document.tracked)) {
         expect(document.contents).not.toContain("signed-in CSV export");
         expect(document.contents).not.toContain("close as `Already fixed`");

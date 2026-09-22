@@ -43,7 +43,7 @@ export const UsptoErrorReason = UsptoErrorReasonKit.pipe(
   SchemaUtils.withLiteralKitStatics(UsptoErrorReasonKit),
   SchemaUtils.withStatics((schema: typeof UsptoErrorReasonKit) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
   }))
 );
 

@@ -20,7 +20,6 @@ import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
-
 import * as ClaudeProject from "../../claudecode/ClaudeProject.ts";
 import * as ClaudeRuntime from "../../claudecode/ClaudeRuntime.ts";
 import * as Plugin from "../../claudecode/Plugin.ts";
@@ -32,9 +31,9 @@ import * as Testing from "../../claudecode/Testing.ts";
 // ---------------------------------------------------------------------------
 
 interface WriteCapture {
-  readonly writes: Map<string, string>;
   readonly dirs: Set<string>;
   readonly layer: Layer.Layer<FileSystem.FileSystem | Path.Path>;
+  readonly writes: Map<string, string>;
 }
 
 const HOME = "/home/user";
@@ -44,6 +43,17 @@ const PLUGIN_ROOT = "/plugin";
 const SKILL_PATH = `${PLUGIN_ROOT}/skills/review/SKILL.md`;
 const $I = $ScratchpadId.create("test/claudecode/ClaudeRuntime.test");
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+
+const provideLayer = <A, E, R, ROut, E2, RIn>(
+  self: Effect.Effect<A, E, R>,
+  layer: Layer.Layer<ROut, E2, RIn>
+): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const context = yield* Layer.build(layer);
+      return yield* Effect.provideContext(self, context);
+    })
+  );
 
 const permissionDeniedError = (path: string) =>
   PlatformError.systemError({
@@ -123,10 +133,13 @@ describe("ClaudeRuntime", () => {
     );
 
     const viaLayer = Effect.runPromise(
-      Effect.gen(function* () {
-        const project = yield* ClaudeProject.Service;
-        return project.cwd;
-      }).pipe(Effect.provide(runtime.layer))
+      provideLayer(
+        Effect.gen(function* () {
+          const project = yield* ClaudeProject.Service;
+          return project.cwd;
+        }),
+        runtime.layer
+      )
     );
 
     return Promise.all([result, viaLayer])
@@ -170,33 +183,35 @@ describe("ClaudeRuntime", () => {
       .finally(() => runtime.dispose());
   });
 
-  it("accepts a replacement platform layer and merged extra services", () => {
-    const capture = makeCapture();
-    const runtime = ClaudeRuntime.default({
-      platformLayer: capture.layer,
-      layer: Layer.succeed(ExtraService, ExtraService.of({ value: "extra-runtime-service" })),
-    });
+  it.effect("accepts a replacement platform layer and merged extra services", () =>
+    Effect.gen(function* () {
+      const capture = makeCapture();
+      const runtime = ClaudeRuntime.default({
+        platformLayer: capture.layer,
+        layer: Layer.succeed(ExtraService, ExtraService.of({ value: "extra-runtime-service" })),
+      });
 
-    return runtime
-      .runPromise(
-        Effect.gen(function* () {
-          const extra = yield* ExtraService;
-          yield* Plugin.write(
-            Plugin.define({
-              manifest: { name: "runtime-plugin", version: "0.1.0" },
-            }),
-            "/dest"
-          );
-          return extra.value;
-        })
-      )
-      .then((extraValue) => {
-        expect(extraValue).toBe("extra-runtime-service");
-        expect(capture.dirs.has("/dest/.claude-plugin")).toBe(true);
-        expect(capture.writes.get("/dest/.claude-plugin/plugin.json")).toContain('"name": "runtime-plugin"');
-      })
-      .finally(() => runtime.dispose());
-  });
+      const extraValue = yield* Effect.promise(() =>
+        runtime
+          .runPromise(
+            Effect.gen(function* () {
+              const extra = yield* ExtraService;
+              yield* Plugin.write(
+                yield* Plugin.define({
+                  manifest: { name: "runtime-plugin", version: "0.1.0" },
+                }),
+                "/dest"
+              );
+              return extra.value;
+            })
+          )
+          .finally(() => runtime.dispose())
+      );
+      expect(extraValue).toBe("extra-runtime-service");
+      expect(capture.dirs.has("/dest/.claude-plugin")).toBe(true);
+      expect(capture.writes.get("/dest/.claude-plugin/plugin.json")).toContain('"name": "runtime-plugin"');
+    })
+  );
 
   it("suppresses logs when logger is none", () => {
     const messages: Array<string> = [];
@@ -215,4 +230,3 @@ describe("ClaudeRuntime", () => {
       .finally(() => runtime.dispose());
   });
 });
-/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

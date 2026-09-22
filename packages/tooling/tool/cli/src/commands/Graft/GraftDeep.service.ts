@@ -24,7 +24,6 @@ import * as Result from "effect/Result";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcessSpawner } from "effect/unstable/process";
 import { ensureZeroExit, formatCommandLine, OutputBound, runCaptured } from "../../internal/process/StepExec.ts";
 import {
   readInstalledSystemdUnit,
@@ -43,6 +42,8 @@ import {
   parseDeepCoverage,
 } from "./Graft.schemas.ts";
 import { GraftCacheSync, GraftCacheSyncLive } from "./Graft.service.ts";
+import type * as Crypto from "effect/Crypto";
+import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CapturedStep } from "../../internal/process/StepExec.ts";
 import type { GraftCacheSourceError, GraftCacheTargetError } from "./Graft.errors.ts";
 import type {
@@ -282,7 +283,7 @@ export interface GraftDeepRunnerShape {
 export class GraftDeepRunner extends Context.Service<GraftDeepRunner, GraftDeepRunnerShape>()($I`GraftDeepRunner`) {}
 
 const makeGraftDeepRunner = Effect.fnUntraced(function* () {
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
   const run: GraftDeepRunnerShape["run"] = Effect.fn("GraftDeepRunner.run")(function* (step) {
     // Only the meaning-tier build needs provider credentials; the owner
     // pull, the dependency install, and the structural sibling rebuild run
@@ -312,7 +313,7 @@ const makeGraftDeepRunner = Effect.fnUntraced(function* () {
       env: maintenance ? { ...maintenanceEnv, CI: "true" } : step.env,
       timeout: step.timeout,
     }).pipe(
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      Effect.provide(context),
       Effect.mapError((cause) =>
         GraftDeepStepError.make({
           cause,
@@ -359,8 +360,11 @@ const makeGraftDeepRunner = Effect.fnUntraced(function* () {
  * @category layers
  * @since 0.0.0
  */
-export const GraftDeepRunnerLive: Layer.Layer<GraftDeepRunner, never, ChildProcessSpawner.ChildProcessSpawner> =
-  Layer.effect(GraftDeepRunner, makeGraftDeepRunner());
+export const GraftDeepRunnerLive: Layer.Layer<
+  GraftDeepRunner,
+  never,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> = Layer.effect(GraftDeepRunner, makeGraftDeepRunner());
 
 /**
  * Sink that receives the status after every phase transition of a run.
@@ -1230,5 +1234,5 @@ export const GraftDeepRefreshLayer: Layer.Layer<
 export const GraftDeepRefreshLive: Layer.Layer<
   GraftDeepRefresh,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > = GraftDeepRefreshLayer.pipe(Layer.provide(Layer.mergeAll(GraftDeepRunnerLive, GraftCacheSyncLive)));

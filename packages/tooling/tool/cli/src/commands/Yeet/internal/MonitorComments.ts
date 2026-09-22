@@ -30,6 +30,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import type { Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -353,7 +354,9 @@ export const YEET_MONITOR_COMMENT_STATE_FILE_NAME = "monitor-comments.json";
  * @category utilities
  * @since 0.0.0
  */
-export const yeetMonitorCommentStatePath = (context: RepoRunContext): Effect.Effect<string, never, Path.Path> =>
+export const yeetMonitorCommentStatePath = (
+  context: RepoRunContext
+): Effect.Effect<string, YeetCommandError, Crypto.Crypto | Path.Path> =>
   runArtifactPathForContext(context, YEET_MONITOR_COMMENT_STATE_FILE_NAME);
 
 const commentCursorOrder: Order.Order<YeetMonitorCommentCursor> = Order.combine(
@@ -541,7 +544,7 @@ const fetchComments = Effect.fn("YeetMonitor.fetchComments")(function* <Comment>
   endpoint: string,
   since: string,
   decode: (text: string) => Effect.Effect<ReadonlyArray<Comment>, S.SchemaError>
-): Effect.fn.Return<ReadonlyArray<Comment>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<Comment>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runRepoCommandCapture(
     "gh",
     ["api", "--method", "GET", endpoint, "-f", "per_page=100", "-f", `since=${since}`],
@@ -573,7 +576,7 @@ const writeCommentState = Effect.fn("YeetMonitor.writeCommentState")(function* (
   context: RepoRunContext,
   pullRequestNumber: number,
   watermark: YeetMonitorCommentWatermark
-): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const statePath = yield* yeetMonitorCommentStatePath(context);
   const updatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const json = yield* YeetMonitorCommentStateJson.encode(
@@ -613,7 +616,7 @@ const persistCommentState = (
   context: RepoRunContext,
   pullRequestNumber: number,
   watermark: YeetMonitorCommentWatermark
-): Effect.Effect<void, never, FileSystem.FileSystem | Path.Path> =>
+): Effect.Effect<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
   writeCommentState(context, pullRequestNumber, watermark).pipe(
     Effect.catch((error) => Console.warn(renderYeetMonitorCommentStateWarning(error.message)))
   );
@@ -646,10 +649,11 @@ const persistCommentState = (
 export const loadYeetMonitorCommentWatermark = Effect.fn("YeetMonitor.loadCommentWatermark")(function* (
   context: RepoRunContext,
   pullRequestNumber: number
-): Effect.fn.Return<O.Option<YeetMonitorCommentWatermark>, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<O.Option<YeetMonitorCommentWatermark>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
-  const statePath = yield* yeetMonitorCommentStatePath(context);
-  const text = yield* Effect.option(fs.readFileString(statePath));
+  const statePath = yield* yeetMonitorCommentStatePath(context).pipe(Effect.option);
+  if (O.isNone(statePath)) return O.none();
+  const text = yield* Effect.option(fs.readFileString(statePath.value));
   return pipe(
     text,
     O.flatMap(YeetMonitorCommentStateJson.decodeOption),
@@ -691,7 +695,11 @@ export const collectNewYeetMonitorComments = Effect.fn("YeetMonitor.collectNewCo
   context: RepoRunContext,
   pullRequestNumber: number,
   watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>
-): Effect.fn.Return<ReadonlyArray<YeetMonitorComment>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<YeetMonitorComment>,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const watermark = yield* Ref.get(watermarkRef);
   const [reviewPayload, issuePayload] = yield* Effect.all(
     [
@@ -749,7 +757,7 @@ export const acknowledgeYeetMonitorComments = Effect.fn("YeetMonitor.acknowledge
   pullRequestNumber: number,
   watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>,
   comments: ReadonlyArray<YeetMonitorComment>
-): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   if (A.isReadonlyArrayEmpty(comments)) {
     return;
   }
@@ -771,7 +779,7 @@ const pollComments = Effect.fn("YeetMonitor.pollComments")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const newComments = yield* collectNewYeetMonitorComments(context, pullRequestNumber, watermarkRef);
   yield* Effect.forEach(newComments, (comment) => Console.log(renderYeetMonitorComment(comment)), {
@@ -836,7 +844,11 @@ const pollTick = Effect.fn("YeetMonitor.pollTick")(function* (
   watermarkRef: Ref.Ref<YeetMonitorCommentWatermark>,
   failuresRef: Ref.Ref<number>,
   budget: number
-): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  never,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> {
   const polled = yield* Effect.result(pollComments(context, pullRequestNumber, watermarkRef));
   if (Result.isSuccess(polled)) {
     return yield* Ref.set(failuresRef, 0);
@@ -910,7 +922,7 @@ export const renderYeetMonitorCommentStreamStart: (resumedFrom: O.Option<string>
 export const openYeetMonitorCommentStream = Effect.fn("YeetMonitor.openCommentStream")(function* (
   context: RepoRunContext,
   pullRequestNumber: number
-): Effect.fn.Return<Ref.Ref<YeetMonitorCommentWatermark>, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<Ref.Ref<YeetMonitorCommentWatermark>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const initialCursor = YeetMonitorCommentCursor.make({ createdAt: startedAt, id: 0 });
   const persisted = yield* loadYeetMonitorCommentWatermark(context, pullRequestNumber);
@@ -978,7 +990,11 @@ export const runYeetPullRequestCommentMonitor = Effect.fn("Yeet.runPullRequestCo
   context: RepoRunContext,
   pullRequestNumber: number,
   budget: number = YEET_MONITOR_COMMENT_FAILURE_BUDGET
-): Effect.fn.Return<never, never, ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  never,
+  never,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> {
   // The earlier of the two persisted cursors is where the stream genuinely
   // resumes: the collections advance independently, so quoting one of them
   // would understate how far back the other still reaches.

@@ -30,8 +30,6 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEvidenceSpanResult = S.decodeResult(EvidenceSpan);
 const decodeTextAnchorResult = S.decodeResult(TextAnchor);
-const decodeUnknownCandidateClaimSync = S.decodeUnknownSync(CandidateClaim);
-const decodeUnknownTurnFinalizationUsageAppendSync = S.decodeUnknownSync(TurnFinalizationUsageAppend);
 
 const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, encoded: Schema["Encoded"]): void => {
   const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
@@ -175,47 +173,51 @@ describe("@beep/epistemic-domain", () => {
     expect(EvidenceSpan.matchesAnchor(span, unrelated)).toBe(false);
   });
 
-  it("decodes and constructs a CandidateClaim row", () => {
-    const decoded = decodeUnknownCandidateClaimSync({
-      ...productEntityFixtureInput("EpistemicCandidateClaim", 3),
-      fixtureKey: "claim.patentability",
-      lifecycle: "candidate",
-      snapshot: { confidence: 0.92, label: "Patentability" },
-    });
-    const constructed = CandidateClaim.make(decoded);
+  it.effect("decodes and constructs a CandidateClaim row", () =>
+    Effect.gen(function* () {
+      const decoded = yield* S.decodeUnknownEffect(CandidateClaim)({
+        ...productEntityFixtureInput("EpistemicCandidateClaim", 3),
+        fixtureKey: "claim.patentability",
+        lifecycle: "candidate",
+        snapshot: { confidence: 0.92, label: "Patentability" },
+      });
+      const constructed = CandidateClaim.make(decoded);
 
-    expect(decoded).toBeInstanceOf(CandidateClaim);
-    expect(constructed).toBeInstanceOf(CandidateClaim);
-    expect(constructed.entityType).toBe("EpistemicCandidateClaim");
-    expect(constructed.lifecycle).toBe("candidate");
-    expect(constructed.snapshot).toEqual({ confidence: 0.92, label: "Patentability" });
-  });
+      expect(decoded).toBeInstanceOf(CandidateClaim);
+      expect(constructed).toBeInstanceOf(CandidateClaim);
+      expect(constructed.entityType).toBe("EpistemicCandidateClaim");
+      expect(constructed.lifecycle).toBe("candidate");
+      expect(constructed.snapshot).toEqual({ confidence: 0.92, label: "Patentability" });
+    })
+  );
 
-  it("appends a UsageRecord from turn-finalization activity", () => {
-    const decoded = decodeUnknownTurnFinalizationUsageAppendSync({
-      ...productEntityFixtureInput("EpistemicUsageRecord", 7),
-      activityId: 5,
-      actor: systemPrincipal,
-      costUsdApproxMicros: 3000,
-      credentialReference: "op://Private/Claude/token",
-      inputTokens: 120,
-      latencyMillis: 1420,
-      metadata: { threadId: 9, turnId: 12 },
-      model: "claude-opus-4-6",
-      outputTokens: 80,
-      provider: "anthropic",
-      totalTokens: 200,
-      unitCount: null,
-    });
-    const appended = appendTurnFinalizationUsageRecord(decoded);
+  it.effect("appends a UsageRecord from turn-finalization activity", () =>
+    Effect.gen(function* () {
+      const decoded = yield* S.decodeUnknownEffect(TurnFinalizationUsageAppend)({
+        ...productEntityFixtureInput("EpistemicUsageRecord", 7),
+        activityId: 5,
+        actor: systemPrincipal,
+        costUsdApproxMicros: 3000,
+        credentialReference: "op://Private/Claude/token",
+        inputTokens: 120,
+        latencyMillis: 1420,
+        metadata: { threadId: 9, turnId: 12 },
+        model: "claude-opus-4-6",
+        outputTokens: 80,
+        provider: "anthropic",
+        totalTokens: 200,
+        unitCount: null,
+      });
+      const appended = appendTurnFinalizationUsageRecord(decoded);
 
-    expect(appended).toBeInstanceOf(UsageRecord);
-    expect(O.getOrThrow(appended.activityId)).toBe(5);
-    expect(appended.entityType).toBe("EpistemicUsageRecord");
-    expect(O.getOrElse(appended.credentialReference, () => "")).toBe("op://Private/Claude/token");
-    expect(O.getOrElse(appended.unitCount, () => 0)).toBe(0);
-    expect(appended.metadata).toEqual({ threadId: 9, turnId: 12 });
-  });
+      expect(appended).toBeInstanceOf(UsageRecord);
+      expect(O.getOrThrow(appended.activityId)).toBe(5);
+      expect(appended.entityType).toBe("EpistemicUsageRecord");
+      expect(O.getOrElse(appended.credentialReference, () => "")).toBe("op://Private/Claude/token");
+      expect(O.getOrElse(appended.unitCount, () => 0)).toBe(0);
+      expect(appended.metadata).toEqual({ threadId: 9, turnId: 12 });
+    })
+  );
 
   it("preserves encoded wire shapes for crispened schemas", () => {
     expectMadeValueEncodedRoundTrip(Activity, {

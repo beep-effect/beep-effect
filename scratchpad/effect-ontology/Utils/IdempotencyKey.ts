@@ -108,25 +108,30 @@ export const normalizeText = flow(
  * **Details**
  *
  * Keys are sorted so object insertion order cannot change the digest. An
- * empty parameter set hashes to sixteen zeros.
+ * parameter set with no entries hashes to sixteen zeros. Schema defaults are
+ * represented as Option values and participate in hashing.
  *
  * **Example** (Hash empty and temperature params)
  *
  * ```ts
  * import { ExtractionParams, hashParams } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
+ * import { Effect } from "effect"
  *
- * const empty = S.decodeUnknownSync(ExtractionParams)({})
- * const withTemp = S.decodeUnknownSync(ExtractionParams)({ temperature: 0.1 })
- * console.log(hashParams(empty).length) // 16
- * console.log(hashParams(withTemp) !== hashParams(empty)) // true
+ * const program = Effect.gen(function* () {
+ *   const empty = ExtractionParams.make({})
+ *   const withTemp = yield* S.decodeEffect(ExtractionParams)({ temperature: 0.1 })
+ *   console.log((yield* hashParams(empty)).length) // 16
+ *   console.log((yield* hashParams(withTemp)) !== (yield* hashParams(empty))) // true
+ * })
+ * console.log(program)
  * ```
  *
- * @returns 16-character hex hash of sorted defined parameters.
+ * @returns An Effect producing the 16-character hex hash of sorted defined parameters.
  * @category utilities
  * @since 0.0.0
  */
-export const hashParams = (params: ExtractionParams): string => {
+export const hashParams = Effect.fn("IdempotencyKey.hashParams")(function* (params: ExtractionParams) {
   const defined = pipe(
     Struct.entries(params),
     A.filter(([, value]) => P.isNotUndefined(value))
@@ -135,15 +140,15 @@ export const hashParams = (params: ExtractionParams): string => {
     defined,
     Order.mapInput(Order.String, (entry: (typeof defined)[number]) => entry[0])
   );
-  return A.match(sortedDefined, {
-    onEmpty: () => Str.repeat(16)("0"),
+  return yield* A.match(sortedDefined, {
+    onEmpty: () => Effect.succeed(Str.repeat(16)("0")),
     onNonEmpty: flow(
       A.map(([key, value]) => `${key}:${Inspectable.toStringUnknown(value)}`),
       A.join("|"),
       sha256Sync
     ),
   });
-};
+});
 
 /**
  * Content-hashes serialized ontology text into a 16-character version token.
@@ -152,17 +157,21 @@ export const hashParams = (params: ExtractionParams): string => {
  *
  * ```ts
  * import { computeOntologyVersion } from "@effect-ontology/Utils/IdempotencyKey"
+ * import { Effect } from "effect"
  *
- * const version = computeOntologyVersion("@prefix foaf: <http://xmlns.com/foaf/0.1/> .")
- * console.log(version.length) // 16
+ * const program = Effect.gen(function* () {
+ *   const version = yield* computeOntologyVersion("@prefix foaf: <http://xmlns.com/foaf/0.1/> .")
+ *   console.log(version.length) // 16
+ * })
+ * console.log(program)
  * ```
  *
- * @returns 16-character hex hash of ontology content.
+ * @returns An Effect producing the 16-character hex hash of ontology content.
  * @see {@link computeIdempotencyKey} for combining this version with source text.
  * @category utilities
  * @since 0.0.0
  */
-export const computeOntologyVersion = (ontologyContent: string): string => sha256Sync(ontologyContent);
+export const computeOntologyVersion = sha256Sync;
 
 /**
  * Compute unified idempotency key
@@ -179,14 +188,15 @@ export const computeOntologyVersion = (ontologyContent: string): string => sha25
  *
  * ```ts
  * import { computeIdempotencyKey, ExtractionParams } from "@effect-ontology/Utils/IdempotencyKey"
- * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
+ * import { Effect } from "effect"
  *
- * const key = O.map(
- *   S.decodeUnknownOption(ExtractionParams)({ temperature: 0.1 }),
- *   (params) => computeIdempotencyKey("John works at Apple.", "foaf", "abc123", params)
- * )
- * console.log(O.isSome(key)) // true
+ * const program = Effect.gen(function* () {
+ *   const params = yield* S.decodeEffect(ExtractionParams)({ temperature: 0.1 })
+ *   const key = yield* computeIdempotencyKey("John works at Apple.", "foaf", "abc123", params)
+ *   console.log(key.length) // 64
+ * })
+ * console.log(program)
  * ```
  *
  * @see {@link computeIdempotencyKeyEffect} for the Effect-returning twin.
@@ -194,48 +204,46 @@ export const computeOntologyVersion = (ontologyContent: string): string => sha25
  * @since 0.0.0
  */
 export const computeIdempotencyKey = dual4(
-  (text: string, ontologyId: string, ontologyVersion: string, params: ExtractionParams): IdempotencyKey => {
+  Effect.fn("IdempotencyKey.compute")(function* (
+    text: string,
+    ontologyId: string,
+    ontologyVersion: string,
+    params: ExtractionParams
+  ) {
     const normalized = normalizeText(text);
-    const paramsHash = hashParams(params);
+    const paramsHash = yield* hashParams(params);
 
     const input = `${normalized}|${ontologyId}|${ontologyVersion}|${paramsHash}`;
-    const hash = sha256SyncFull(input);
+    const hash = yield* sha256SyncFull(input);
 
     return IdempotencyKey.make(hash);
-  }
+  })
 );
 
 /**
  * Effect-returning twin of {@link computeIdempotencyKey}.
  *
- * **Example** (Match the synchronous constructor)
+ * **Example** (Match the compatibility alias)
  *
  * ```ts
  * import { computeIdempotencyKey, computeIdempotencyKeyEffect, ExtractionParams } from "@effect-ontology/Utils/IdempotencyKey"
- * import { Effect } from "effect"
  * import * as S from "effect/Schema"
+ * import { Effect } from "effect"
  *
- * const params = S.decodeUnknownSync(ExtractionParams)({ temperature: 0.1 })
- * const syncKey = computeIdempotencyKey("Ada works at Apple.", "foaf", "abc123", params)
- * const effectKey = Effect.runSync(
- *   computeIdempotencyKeyEffect("Ada works at Apple.", "foaf", "abc123", params)
- * )
- * console.log(syncKey === effectKey) // true
+ * const program = Effect.gen(function* () {
+ *   const params = yield* S.decodeEffect(ExtractionParams)({ temperature: 0.1 })
+ *   const originalKey = yield* computeIdempotencyKey("Ada works at Apple.", "foaf", "abc123", params)
+ *   const effectKey = yield* computeIdempotencyKeyEffect("Ada works at Apple.", "foaf", "abc123", params)
+ *   console.log(originalKey === effectKey) // true
+ * })
+ * console.log(program)
  * ```
  *
- * @see {@link computeIdempotencyKey} for the synchronous constructor.
+ * @see {@link computeIdempotencyKey} for the primary Effect constructor.
  * @category utilities
  * @since 0.0.0
  */
-export const computeIdempotencyKeyEffect = dual4(
-  (
-    text: string,
-    ontologyId: string,
-    ontologyVersion: string,
-    params: ExtractionParams
-  ): Effect.Effect<IdempotencyKey> =>
-    Effect.sync(() => computeIdempotencyKey(text, ontologyId, ontologyVersion, params))
-);
+export const computeIdempotencyKeyEffect = computeIdempotencyKey;
 
 // =============================================================================
 // Validation
@@ -249,15 +257,19 @@ export const computeIdempotencyKeyEffect = dual4(
  * ```ts
  * import { computeIdempotencyKey, ExtractionParams, isValidIdempotencyKey } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
+ * import { Effect } from "effect"
  *
- * const key = computeIdempotencyKey(
- *   "Ada works at Apple.",
- *   "foaf",
- *   "abc123",
- *   S.decodeUnknownSync(ExtractionParams)({})
- * )
- * console.log(isValidIdempotencyKey(key)) // true
- * console.log(isValidIdempotencyKey("not-a-key")) // false
+ * const program = Effect.gen(function* () {
+ *   const key = yield* computeIdempotencyKey(
+ *     "Ada works at Apple.",
+ *     "foaf",
+ *     "abc123",
+ *     ExtractionParams.make({})
+ *   )
+ *   console.log(isValidIdempotencyKey(key)) // true
+ *   console.log(isValidIdempotencyKey("not-a-key")) // false
+ * })
+ * console.log(program)
  * ```
  *
  * @see {@link parseIdempotencyKey} for Effect decoding that fails on invalid input.
@@ -273,16 +285,19 @@ export const isValidIdempotencyKey = IdempotencyKey.is;
  *
  * ```ts
  * import { computeIdempotencyKey, ExtractionParams, parseIdempotencyKey } from "@effect-ontology/Utils/IdempotencyKey"
- * import { Effect } from "effect"
  * import * as S from "effect/Schema"
+ * import { Effect } from "effect"
  *
- * const key = computeIdempotencyKey(
- *   "Ada works at Apple.",
- *   "foaf",
- *   "abc123",
- *   S.decodeUnknownSync(ExtractionParams)({})
- * )
- * console.log(Effect.runSync(parseIdempotencyKey(key)) === key) // true
+ * const program = Effect.gen(function* () {
+ *   const key = yield* computeIdempotencyKey(
+ *     "Ada works at Apple.",
+ *     "foaf",
+ *     "abc123",
+ *     ExtractionParams.make({})
+ *   )
+ *   console.log((yield* parseIdempotencyKey(key)) === key) // true
+ * })
+ * console.log(program)
  * ```
  *
  * @see {@link isValidIdempotencyKey} for the boolean guard.
@@ -303,15 +318,19 @@ export const parseIdempotencyKey = (input: unknown) => IdempotencyKey.decodeUnkn
  * ```ts
  * import { computeIdempotencyKey, ExtractionParams, shortKey } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
+ * import { Effect } from "effect"
  *
- * const key = computeIdempotencyKey(
- *   "Ada works at Apple.",
- *   "foaf",
- *   "abc123",
- *   S.decodeUnknownSync(ExtractionParams)({})
- * )
- * console.log(shortKey(key).length) // 12
- * console.log(key.startsWith(shortKey(key))) // true
+ * const program = Effect.gen(function* () {
+ *   const key = yield* computeIdempotencyKey(
+ *     "Ada works at Apple.",
+ *     "foaf",
+ *     "abc123",
+ *     ExtractionParams.make({})
+ *   )
+ *   console.log(shortKey(key).length) // 12
+ *   console.log(key.startsWith(shortKey(key))) // true
+ * })
+ * console.log(program)
  * ```
  *
  * @see {@link formatKeyForLog} for the `run-` prefixed log form.
@@ -328,15 +347,19 @@ export const shortKey: (key: IdempotencyKey) => string = Str.slice(0, 12);
  * ```ts
  * import { computeIdempotencyKey, ExtractionParams, formatKeyForLog, shortKey } from "@effect-ontology/Utils/IdempotencyKey"
  * import * as S from "effect/Schema"
+ * import { Effect } from "effect"
  *
- * const key = computeIdempotencyKey(
- *   "Ada works at Apple.",
- *   "foaf",
- *   "abc123",
- *   S.decodeUnknownSync(ExtractionParams)({})
- * )
- * console.log(formatKeyForLog(key) === `run-${shortKey(key)}`) // true
- * console.log(formatKeyForLog(key).startsWith("run-")) // true
+ * const program = Effect.gen(function* () {
+ *   const key = yield* computeIdempotencyKey(
+ *     "Ada works at Apple.",
+ *     "foaf",
+ *     "abc123",
+ *     ExtractionParams.make({})
+ *   )
+ *   console.log(formatKeyForLog(key) === `run-${shortKey(key)}`) // true
+ *   console.log(formatKeyForLog(key).startsWith("run-")) // true
+ * })
+ * console.log(program)
  * ```
  *
  * @see {@link shortKey} for the unprefixed 12-character slice.

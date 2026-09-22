@@ -6,7 +6,7 @@ import {
   sanitizedToolkit,
 } from "@beep/mcp-kit";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, expect, it, layer } from "@effect/vitest";
+import { assert, describe, it, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -61,26 +61,14 @@ const decodeApiKeyRequiredFailureFromJson = S.decodeEffect(ApiKeyRequiredFailure
 const StringFromJson = S.fromJsonString(S.String);
 const decodeStringFromJson = S.decodeEffect(StringFromJson);
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = Arbitrary.schema(schema);
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeSync(schema);
-  const equals = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          assert.isTrue(equals(decode(encode(value)), value));
-
-          return true;
-        },
-        fcRuns(50)
-      )
-    )._tag
-  ).toBe("Passed");
-};
+const assertSchemaRoundTrip = Effect.fnUntraced(function* <Schema extends S.Codec<unknown, unknown, never, never>>(
+  schema: Schema,
+  value: Schema["Type"]
+) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  assert.isTrue(S.toEquivalence(schema)(decoded, value));
+});
 
 describe("api_key_required envelope", () => {
   layer(buildLayer({}))("when the credential is absent", (it) => {
@@ -127,14 +115,30 @@ describe("schema parity laws", () => {
       SourceAuthRegistration.make({ name: "No Signup", envVar: "NO_SIGNUP", gate: "none" }).signupUrl,
       O.none()
     );
-    assertSchemaRoundTrip(SourceAuthRegistration);
   });
+
+  it.effect.prop(
+    "round-trips schema-derived SourceAuthRegistration values",
+    [Arbitrary.schema(SourceAuthRegistration)],
+    Effect.fnUntraced(function* ([value]) {
+      yield* assertSchemaRoundTrip(SourceAuthRegistration, value);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 
   it("round-trips ApiKeyRequiredFailure with the tag default owned by the schema", () => {
     assert.strictEqual(
       ApiKeyRequiredFailure.forTool({ registration: softRegistration, tool: "soft_source_tool" }).error,
       "api_key_required"
     );
-    assertSchemaRoundTrip(ApiKeyRequiredFailure);
   });
+
+  it.effect.prop(
+    "round-trips schema-derived ApiKeyRequiredFailure values",
+    [Arbitrary.schema(ApiKeyRequiredFailure)],
+    Effect.fnUntraced(function* ([value]) {
+      yield* assertSchemaRoundTrip(ApiKeyRequiredFailure, value);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 });

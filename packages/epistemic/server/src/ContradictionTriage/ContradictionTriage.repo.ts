@@ -543,7 +543,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
           )
         )
         .pipe(repositoryUnavailable("get"));
-      const edges = yield* Effect.forEach(edgeRows, (row) => Effect.try(() => fromEdgeVersionRow(row)), {
+      const edges = yield* Effect.forEach(edgeRows, (row) => Effect.fromResult(fromEdgeVersionRow(row)), {
         concurrency: 1,
       }).pipe(repositoryUnavailable("get"));
       const left = A.findFirst(
@@ -832,7 +832,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                         reason: "belief-mismatch",
                       });
                     }
-                    const edge = yield* Effect.try(() => fromEdgeVersionRow(edgeRow.value)).pipe(
+                    const edge = yield* Effect.fromResult(fromEdgeVersionRow(edgeRow.value)).pipe(
                       repositoryUnavailable("review")
                     );
                     if (!edgeMatchesCandidateBelief(edge, proposal.value.losingBelief, candidate)) {
@@ -854,7 +854,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                       .for("update");
                     const survivingVersions = yield* Effect.forEach(
                       survivingRows,
-                      (row) => Effect.try(() => fromEdgeVersionRow(row)),
+                      (row) => Effect.fromResult(fromEdgeVersionRow(row)),
                       { concurrency: 1 }
                     ).pipe(repositoryUnavailable("review"));
                     if (!proposalsAreApplicable([proposal.value], survivingVersions)) {
@@ -947,7 +947,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 .where(
                   inArray(edgeTable.id, [normalized.pair.left.edgeVersionId, normalized.pair.right.edgeVersionId])
                 );
-              const versions = yield* Effect.forEach(versionRows, (row) => Effect.try(() => fromEdgeVersionRow(row)), {
+              const versions = yield* Effect.forEach(versionRows, (row) => Effect.fromResult(fromEdgeVersionRow(row)), {
                 concurrency: 1,
               }).pipe(repositoryUnavailable("submit"));
               yield* validateBeliefPair(command, versions, normalized.candidateKey);
@@ -968,7 +968,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 );
               const survivingVersions = yield* Effect.forEach(
                 survivingVersionRows,
-                (row) => Effect.try(() => fromEdgeVersionRow(row)),
+                (row) => Effect.fromResult(fromEdgeVersionRow(row)),
                 { concurrency: 1 }
               ).pipe(repositoryUnavailable("submit"));
               yield* validateProposals(normalized.assessment.proposals, survivingVersions, normalized.candidateKey);

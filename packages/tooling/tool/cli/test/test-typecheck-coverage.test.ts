@@ -3,6 +3,7 @@ import { checkScriptTestTypecheckCoverage } from "@beep/repo-cli/test/SharedInte
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -12,6 +13,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
+  BunCrypto.layer,
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   TestConsole.layer

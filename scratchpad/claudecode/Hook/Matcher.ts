@@ -18,6 +18,7 @@
 
 import * as A from "effect/Array";
 import type * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Str from "effect/String";
 
 // ---------------------------------------------------------------------------
@@ -96,8 +97,10 @@ export const matchValue = (pattern: string | RegExp): ((name: string) => boolean
  * @category predicates
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- `matchValue(pattern)` is the data-last form; this named direct compatibility helper intentionally preserves `(pattern, value)`.
-export const testValue = (pattern: string | RegExp, name: string): boolean => matchValue(pattern)(name);
+export const testValue: {
+  (pattern: string | RegExp, name: string): boolean;
+  (name: string): (pattern: string | RegExp) => boolean;
+} = dual(2, (pattern: string | RegExp, name: string): boolean => matchValue(pattern)(name));
 
 /**
  * Build a handler that runs only when the selected matcher value matches.
@@ -213,5 +216,4 @@ export const matchFileName = (pattern: string | RegExp): ((name: string) => bool
  * @category predicates
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- `matchTool(pattern)` is the data-last form; this alias intentionally preserves the direct compatibility call.
 export const testTool = testValue;

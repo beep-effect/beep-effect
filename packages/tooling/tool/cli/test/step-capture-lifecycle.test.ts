@@ -10,6 +10,7 @@ import {
 import { collectStepOutput, QualityTaskStep } from "@beep/repo-cli/test/Quality";
 import { PosInt } from "@beep/schema/Int";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -238,7 +239,7 @@ describe("StepExec capture pipe lifecycle", () => {
           })
       );
       expect(inherited.message).toContain("Inherited admission workload path and lease id");
-    })
+    }).pipe(provideScopedLayer(BunCrypto.layer))
   );
 
   it.live("reports workload write and process-generation registration failures", () =>
@@ -268,7 +269,7 @@ describe("StepExec capture pipe lifecycle", () => {
         Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore))
       );
       expect(registrationFailure.message).toContain("Failed to read process generation");
-    }).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)))
+    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer)))
   );
 
   it.live("preserves the exit result when a short-lived child is reaped before generation registration", () =>
@@ -285,7 +286,7 @@ describe("StepExec capture pipe lifecycle", () => {
       );
 
       expect(result).toMatchObject({ exitCode: 0, output: "done" });
-    }).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)))
+    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer)))
   );
 
   it.live("inherits a scoped admission workload and lets an explicit nested binding override it", () =>
@@ -325,7 +326,7 @@ describe("StepExec capture pipe lifecycle", () => {
           }),
         (root) => fs.remove(root, { recursive: true }).pipe(Effect.ignore)
       );
-    }).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)))
+    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer)))
   );
 
   it.live("distinguishes inherited, matching explicit, and owned explicit admission generations", () =>
@@ -381,7 +382,7 @@ describe("StepExec capture pipe lifecycle", () => {
             else Bun.env.BEEP_YEET_ADMISSION_LEASE_ID = previousLease;
           })
       ).pipe(Effect.ensuring(fs.remove(root, { recursive: true }).pipe(Effect.ignore)));
-    }).pipe(provideScopedLayer(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)))
+    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer)))
   );
 
   it.live(
@@ -462,6 +463,7 @@ BunRuntime.runMain(
         ).pipe(
           provideScopedLayer(
             Layer.mergeAll(
+              BunCrypto.layer,
               NodeFileSystem.layer,
               NodePath.layer,
               Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)
@@ -484,7 +486,9 @@ BunRuntime.runMain(
       const { killCount, spawner } = yield* makeStuckSpawner({ output: "partial output", killEndsStream: true });
       const fiber = yield* Effect.forkChild(
         runCaptured({ command: "fake-step", args: ["--flag"] }).pipe(
-          provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner))
+          provideScopedLayer(
+            Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
+          )
         )
       );
 
@@ -503,7 +507,9 @@ BunRuntime.runMain(
       const { killCount, spawner } = yield* makeStuckSpawner({ output: "partial", killEndsStream: false });
       const fiber = yield* Effect.forkChild(
         runCaptured({ command: "fake-step", args: ["--flag"] }).pipe(
-          provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner))
+          provideScopedLayer(
+            Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
+          )
         )
       );
 
@@ -526,7 +532,9 @@ BunRuntime.runMain(
       yield* Deferred.succeed(closed, void 0);
 
       const result = yield* runCaptured({ command: "fake-step", args: [] }).pipe(
-        provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner))
+        provideScopedLayer(
+          Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
+        )
       );
 
       expect(result.exitCode).toBe(0);
@@ -545,7 +553,11 @@ BunRuntime.runMain(
           args: ["--flag"],
           timeout: "1 minute",
           forceKillAfter: "1 second",
-        }).pipe(provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)))
+        }).pipe(
+          provideScopedLayer(
+            Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
+          )
+        )
       );
 
       yield* TestClock.adjust("1 minute");
@@ -571,7 +583,11 @@ BunRuntime.runMain(
             command: "fake-step",
             args: ["--flag"],
             abortWhen: Effect.sleep("1 minute").pipe(Effect.andThen(Effect.fail("watchdog tripped"))),
-          }).pipe(provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)))
+          }).pipe(
+            provideScopedLayer(
+              Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
+            )
+          )
         )
       );
 
@@ -593,7 +609,11 @@ BunRuntime.runMain(
             args: ["--flag"],
             timeout: "1 minute",
             forceKillAfter: "1 second",
-          }).pipe(provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)))
+          }).pipe(
+            provideScopedLayer(
+              Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
+            )
+          )
         )
       );
 
@@ -620,7 +640,11 @@ BunRuntime.runMain(
           args: ["--flag"],
           timeout: "1 minute",
           forceKillAfter: "1 second",
-        }).pipe(provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner)))
+        }).pipe(
+          provideScopedLayer(
+            Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
+          )
+        )
       );
 
       yield* TestClock.adjust("1 minute");

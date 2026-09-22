@@ -4,14 +4,10 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-
-const decodeUnknownSyncOperationSyncOperationSync = S.decodeUnknownSync(SyncOperation.SyncOperation);
-const decodeUnknownSyncOperationSyncOperationStatusSync = S.decodeUnknownSync(SyncOperation.SyncOperationStatus);
-const decodeUnknownSyncOperationSyncOperationTypeSync = S.decodeUnknownSync(SyncOperation.SyncOperationType);
-const encodeSyncOperationSyncOperationSync = S.encodeSync(SyncOperation.SyncOperation);
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
@@ -62,42 +58,50 @@ describe("SyncOperation entity", () => {
     expect(Object.keys(SyncOperation.SyncOperation.jsonUpdate.fields)).toHaveLength(13);
   });
 
-  it("decodes and encodes a full upload outbox row", () => {
-    const decoded = decodeUnknownSyncOperationSyncOperationSync(uploadRow);
+  it.effect("decodes and encodes a full upload outbox row", () =>
+    Effect.gen(function* () {
+      const decoded = yield* S.decodeUnknownEffect(SyncOperation.SyncOperation)(uploadRow);
 
-    expect(decoded).toBeInstanceOf(SyncOperation.SyncOperation);
-    expect(decoded.inputContentDigest).toEqual(O.some("abc123"));
-    expect(decoded.targetParentRelPath).toEqual(O.some("matters/client-default"));
-    expect(decoded.lastError).toEqual(O.none());
-    expect(decoded.status).toBe("queued");
-    expect(encodeSyncOperationSyncOperationSync(decoded)).toStrictEqual(uploadRow);
-  });
+      expect(decoded).toBeInstanceOf(SyncOperation.SyncOperation);
+      expect(decoded.inputContentDigest).toEqual(O.some("abc123"));
+      expect(decoded.targetParentRelPath).toEqual(O.some("matters/client-default"));
+      expect(decoded.lastError).toEqual(O.none());
+      expect(decoded.status).toBe("queued");
+      expect(yield* S.encodeEffect(SyncOperation.SyncOperation)(decoded)).toStrictEqual(uploadRow);
+    })
+  );
 
-  it("decodes folder creation rows targeting the mirror root", () => {
-    const decoded = decodeUnknownSyncOperationSyncOperationSync({
-      ...uploadRow,
-      inputContentDigest: null,
-      lastError: "box responded 503",
-      operationType: "createFolder",
-      status: "failed",
-      targetName: "matters",
-      targetParentRelPath: null,
-      targetRelPath: "matters",
-    });
+  it.effect("decodes folder creation rows targeting the mirror root", () =>
+    Effect.gen(function* () {
+      const decoded = yield* S.decodeUnknownEffect(SyncOperation.SyncOperation)({
+        ...uploadRow,
+        inputContentDigest: null,
+        lastError: "box responded 503",
+        operationType: "createFolder",
+        status: "failed",
+        targetName: "matters",
+        targetParentRelPath: null,
+        targetRelPath: "matters",
+      });
 
-    expect(decoded.inputContentDigest).toEqual(O.none());
-    expect(decoded.targetParentRelPath).toEqual(O.none());
-    expect(decoded.lastError).toEqual(O.some("box responded 503"));
-  });
+      expect(decoded.inputContentDigest).toEqual(O.none());
+      expect(decoded.targetParentRelPath).toEqual(O.none());
+      expect(decoded.lastError).toEqual(O.some("box responded 503"));
+    })
+  );
 
-  it("exposes the operation literal families", () => {
-    expect(SyncOperation.SyncOperationType.is.uploadFile("uploadFile")).toBe(true);
-    expect(SyncOperation.SyncOperationType.is.moveItem("uploadFile")).toBe(false);
-    expect(SyncOperation.SyncOperationStatus.is.queued("queued")).toBe(true);
-    expect(SyncOperation.SyncOperationStatus.Enum.leased).toBe("leased");
-    expect(() => decodeUnknownSyncOperationSyncOperationTypeSync("deleteItem")).toThrow();
-    expect(() => decodeUnknownSyncOperationSyncOperationStatusSync("cancelled")).toThrow();
-  });
+  it.effect("exposes the operation literal families", () =>
+    Effect.gen(function* () {
+      expect(SyncOperation.SyncOperationType.is.uploadFile("uploadFile")).toBe(true);
+      expect(SyncOperation.SyncOperationType.is.moveItem("uploadFile")).toBe(false);
+      expect(SyncOperation.SyncOperationStatus.is.queued("queued")).toBe(true);
+      expect(SyncOperation.SyncOperationStatus.Enum.leased).toBe("leased");
+      const typeExit = yield* Effect.exit(S.decodeUnknownEffect(SyncOperation.SyncOperationType)("deleteItem"));
+      const statusExit = yield* Effect.exit(S.decodeUnknownEffect(SyncOperation.SyncOperationStatus)("cancelled"));
+      expect(Exit.isFailure(typeExit)).toBe(true);
+      expect(Exit.isFailure(statusExit)).toBe(true);
+    })
+  );
 
   it("round-trips schema-derived sync operation values", () => {
     assertSchemaArbitraryRoundTrip(SyncOperation.SyncOperationType);

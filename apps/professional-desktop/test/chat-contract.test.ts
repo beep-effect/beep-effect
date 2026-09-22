@@ -73,7 +73,7 @@ describe("@beep/professional-desktop chat contract", () => {
     "happy path: send streams fixture blocks, persists user+assistant turns, appends one usage record",
     Effect.fnUntraced(function* () {
       const { operations, usageRef } = yield* makeStack;
-      const workspaceId = decodeWorkspaceId(1);
+      const workspaceId = yield* decodeWorkspaceId(1);
 
       const thread = yield* operations.createThread(workspaceId, "Contract");
       const content = userDocument("Hi");
@@ -134,7 +134,7 @@ describe("@beep/professional-desktop chat contract", () => {
     "derives a thread title from the first non-empty user line without overwriting existing titles",
     Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
-      const workspaceId = decodeWorkspaceId(1);
+      const workspaceId = yield* decodeWorkspaceId(1);
       const longTitle = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-title-that-will-be-truncated";
 
       const trimmed = yield* operations.createThread(workspaceId, "New thread");
@@ -178,7 +178,7 @@ describe("@beep/professional-desktop chat contract", () => {
         }),
       });
       const operations = yield* makeChatOperations(titleFailingStore, kernel, sink);
-      const workspaceId = decodeWorkspaceId(1);
+      const workspaceId = yield* decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "New thread");
       const content = userDocument("Best effort title");
 
@@ -197,7 +197,7 @@ describe("@beep/professional-desktop chat contract", () => {
     "derives a thread title when editing the first user turn from blank content",
     Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
-      const workspaceId = decodeWorkspaceId(1);
+      const workspaceId = yield* decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "New thread");
 
       yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("  \n  ")));
@@ -215,7 +215,7 @@ describe("@beep/professional-desktop chat contract", () => {
     "updates a derived thread title when editing the first user turn",
     Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
-      const workspaceId = decodeWorkspaceId(1);
+      const workspaceId = yield* decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "New thread");
 
       yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("Draft memo")));
@@ -234,7 +234,7 @@ describe("@beep/professional-desktop chat contract", () => {
     "does not derive a thread title when editing a later user turn",
     Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
-      const workspaceId = decodeWorkspaceId(1);
+      const workspaceId = yield* decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "New thread");
 
       yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("  \n  ")));
@@ -301,7 +301,7 @@ describe("@beep/professional-desktop chat contract", () => {
     "cancel records a stopped turn, keeps no partial content, and bills nothing",
     Effect.fnUntraced(function* () {
       const { operations, usageRef } = yield* makeStack;
-      const workspaceId = decodeWorkspaceId(1);
+      const workspaceId = yield* decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "Cancel");
 
       const firstBlockSeen = yield* Deferred.make<void>();
@@ -352,7 +352,7 @@ describe("@beep/professional-desktop chat contract", () => {
           ),
       });
       const operations = yield* makeChatOperations(store, kernel, sink);
-      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Redacted failure");
+      const thread = yield* operations.createThread(yield* decodeWorkspaceId(1), "Redacted failure");
       const error = yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("fail safely"))).pipe(
         Effect.flip
       );
@@ -385,7 +385,7 @@ describe("@beep/professional-desktop chat contract", () => {
         ),
       });
       const operations = yield* makeChatOperations(assistantFailingStore, capturingKernel, sink);
-      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Persistence failure");
+      const thread = yield* operations.createThread(yield* decodeWorkspaceId(1), "Persistence failure");
 
       yield* Stream.runDrain(
         operations.sendMessage(thread.id, userDocument("Keep the durable prompt"), "after-user-append")
@@ -423,7 +423,7 @@ describe("@beep/professional-desktop chat contract", () => {
         ),
       });
       const operations = yield* makeChatOperations(gatedStore, kernel, sink);
-      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Committed assistant");
+      const thread = yield* operations.createThread(yield* decodeWorkspaceId(1), "Committed assistant");
       const send = yield* operations
         .sendMessage(thread.id, userDocument("Keep the answer"), "assistant-committed")
         .pipe(Stream.runDrain, Effect.forkChild);
@@ -445,7 +445,7 @@ describe("@beep/professional-desktop chat contract", () => {
     "timeline ordering: a second send appends after the first assistant turn",
     Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
-      const workspaceId = decodeWorkspaceId(1);
+      const workspaceId = yield* decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "Ordering");
 
       yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("first")));
@@ -471,7 +471,7 @@ describe("@beep/professional-desktop chat contract", () => {
 
       yield* Effect.gen(function* () {
         const { operations } = yield* makeStack;
-        const workspaceId = decodeWorkspaceId(1);
+        const workspaceId = yield* decodeWorkspaceId(1);
         const thread = yield* operations.createThread(workspaceId, "History");
 
         yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("first")));
@@ -530,7 +530,7 @@ describe("@beep/professional-desktop chat contract", () => {
       });
 
       const operations = yield* makeChatOperations(store, gatedKernel, sink);
-      const workspaceId = decodeWorkspaceId(1);
+      const workspaceId = yield* decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "Concurrent");
 
       const first = yield* operations
@@ -579,7 +579,7 @@ describe("@beep/professional-desktop chat contract", () => {
           ),
       });
       const operations = yield* makeChatOperations(store, kernel, sink);
-      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Two windows");
+      const thread = yield* operations.createThread(yield* decodeWorkspaceId(1), "Two windows");
       const first = yield* operations
         .sendMessage(thread.id, userDocument("ALPHA"), "window-a")
         .pipe(Stream.runDrain, Effect.forkChild);
@@ -610,7 +610,7 @@ describe("@beep/professional-desktop chat contract", () => {
       const { sink } = yield* makeInMemoryUsageRecordSink;
       const first = yield* makeChatOperations(store, kernel, sink);
       const second = yield* makeChatOperations(store, kernel, sink);
-      const thread = yield* first.createThread(decodeWorkspaceId(1), "Isolated coordinators");
+      const thread = yield* first.createThread(yield* decodeWorkspaceId(1), "Isolated coordinators");
 
       yield* Stream.runDrain(first.sendMessage(thread.id, userDocument("ALPHA"), "isolated-request"));
 
@@ -623,7 +623,7 @@ describe("@beep/professional-desktop chat contract", () => {
     "expires terminal request receipts without detached cleanup fibers",
     Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
-      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Receipt expiry");
+      const thread = yield* operations.createThread(yield* decodeWorkspaceId(1), "Receipt expiry");
 
       yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("ALPHA"), "expiring-request"));
       expect(yield* operations.getTurnRequestStatus("expiring-request")).toBe("persisted");

@@ -84,10 +84,11 @@ export const notionPullImpl = Effect.fn("Research.notionPullImpl")(function* (
       "",
       `Open: <${urlNorm.value}>`,
     ].join("\n");
+    const slug = yield* slugFor(link.title, urlNorm.value);
     cards.push({
       body,
       frontmatter,
-      relativePath: path.join(VAULT_DIRS.xPosts, `${slugFor(link.title, urlNorm.value)}.md`),
+      relativePath: path.join(VAULT_DIRS.xPosts, `${slug}.md`),
     });
   }
 

@@ -22,6 +22,21 @@
  */
 export * from "./ClaimDisposition.converters.ts";
 /**
+ * ClaimDisposition converter error exports.
+ *
+ * **Example** (Access ClaimDispositionConverterError export)
+ *
+ * ```ts
+ * import * as ClaimDisposition from "@beep/epistemic-tables/entities/ClaimDisposition"
+ *
+ * console.log(ClaimDisposition.ClaimDispositionConverterError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./ClaimDisposition.errors.ts";
+/**
  * ClaimDisposition table exports.
  *
  * **Example** (Import table definition exports)

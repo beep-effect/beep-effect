@@ -510,31 +510,34 @@ export const decodeCodexTriageLedger: {
  *
  * ```ts
  * import { CodexTriageLedger, CodexTriageMeta, encodeCodexTriageLedger } from "@beep/repo-cli/commands/Codex/Findings.triage.schemas"
+ * import { Effect } from "effect"
  *
- * const encoded = encodeCodexTriageLedger(
- *   CodexTriageLedger.make({
- *     meta: CodexTriageMeta.make({
- *       schemaVersion: "codex-triage/v1",
- *       repository: "kriegcloud/beep-effect",
- *       findingsView: "repo-scoped, status=open",
- *       branch: "security/codex-findings-2026-08-04",
- *       expectedCount: 0,
- *       capturedCount: 0,
- *       capturedAt: "2026-08-04",
- *       captureMethod: "signed-in-csv-export",
- *     }),
- *     lanes: {},
- *     findings: [],
- *   })
+ * const encoded = Effect.runSync(
+ *   encodeCodexTriageLedger(
+ *     CodexTriageLedger.make({
+ *       meta: CodexTriageMeta.make({
+ *         schemaVersion: "codex-triage/v1",
+ *         repository: "kriegcloud/beep-effect",
+ *         findingsView: "repo-scoped, status=open",
+ *         branch: "security/codex-findings-2026-08-04",
+ *         expectedCount: 0,
+ *         capturedCount: 0,
+ *         capturedAt: "2026-08-04",
+ *         captureMethod: "signed-in-csv-export",
+ *       }),
+ *       lanes: {},
+ *       findings: [],
+ *     })
+ *   )
  * )
  *
- * console.log(JSON.stringify(encoded).includes("codex-triage/v1")) // true
+ * console.log(encoded.meta.schemaVersion) // "codex-triage/v1"
  * ```
  *
  * @category encoding
  * @since 0.0.0
  */
 export const encodeCodexTriageLedger: {
-  (options?: AST.ParseOptions): (input: unknown) => typeof CodexTriageLedger.Encoded;
-  (input: unknown, options?: AST.ParseOptions): typeof CodexTriageLedger.Encoded;
-} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownSync(CodexTriageLedger));
+  (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<typeof CodexTriageLedger.Encoded, S.SchemaError>;
+  (input: unknown, options?: AST.ParseOptions): Effect.Effect<typeof CodexTriageLedger.Encoded, S.SchemaError>;
+} = dual(SchemaUtils.isCodecDataFirst, S.encodeUnknownEffect(CodexTriageLedger));

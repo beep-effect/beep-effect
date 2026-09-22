@@ -1,12 +1,12 @@
 import "@testing-library/jest-dom/vitest";
 import { ThemeMode } from "@beep/ui/themes";
 import { RegistryProvider } from "@effect/atom-react";
-import { it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { AtomRegistry } from "effect/unstable/reactivity";
-import { afterEach, describe, expect, vi } from "vitest";
+import { afterEach, vi } from "vitest";
 import { ThemeToggle } from "@/chat/ui/ThemeToggle";
 import { ProfessionalStorageLive } from "@/runtime/ProfessionalAtomRuntime";
 import { migrateWorkbenchThemeMode, resolvedWorkbenchThemeModeAtom, workbenchThemeModeAtom } from "@/theme/Theme.atoms";
@@ -15,7 +15,7 @@ import { WorkbenchThemeProvider } from "@/theme/WorkbenchThemeProvider";
 const NEW_THEME_KEY = "professional-desktop:theme-mode";
 const LEGACY_THEME_KEY = "mui-mode";
 const ThemeModeJsonString = S.fromJsonString(ThemeMode);
-const encodeThemeMode = S.encodeSync(ThemeModeJsonString);
+const encodeThemeMode = S.encodeEffect(ThemeModeJsonString);
 
 const makeRegistry = Effect.acquireRelease(Effect.sync(AtomRegistry.make), (registry) =>
   Effect.sync(() => registry.dispose())
@@ -41,21 +41,21 @@ describe("Atom-owned workbench theme", { concurrent: false }, () => {
         registry.mount(workbenchThemeModeAtom);
 
         expect(registry.get(workbenchThemeModeAtom)).toBe(ThemeMode.Enum.dark);
-        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(encodeThemeMode(ThemeMode.Enum.dark));
+        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(yield* encodeThemeMode(ThemeMode.Enum.dark));
       })
     );
 
     it.effect(
       "keeps new-format state authoritative over a legacy value",
       Effect.fnUntraced(function* () {
-        localStorage.setItem(NEW_THEME_KEY, encodeThemeMode(ThemeMode.Enum.light));
+        localStorage.setItem(NEW_THEME_KEY, yield* encodeThemeMode(ThemeMode.Enum.light));
         localStorage.setItem(LEGACY_THEME_KEY, ThemeMode.Enum.dark);
         yield* migrateTheme;
         const registry = yield* makeRegistry;
         registry.mount(workbenchThemeModeAtom);
 
         expect(registry.get(workbenchThemeModeAtom)).toBe(ThemeMode.Enum.light);
-        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(encodeThemeMode(ThemeMode.Enum.light));
+        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(yield* encodeThemeMode(ThemeMode.Enum.light));
       })
     );
 
@@ -68,7 +68,7 @@ describe("Atom-owned workbench theme", { concurrent: false }, () => {
         registry.mount(workbenchThemeModeAtom);
 
         expect(registry.get(workbenchThemeModeAtom)).toBe(ThemeMode.Enum.system);
-        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(encodeThemeMode(ThemeMode.Enum.system));
+        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(yield* encodeThemeMode(ThemeMode.Enum.system));
       })
     );
 
@@ -92,14 +92,14 @@ describe("Atom-owned workbench theme", { concurrent: false }, () => {
         );
 
         expect(getByTestId("theme-child")).toBe(child);
-        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(encodeThemeMode(ThemeMode.Enum.dark));
+        expect(localStorage.getItem(NEW_THEME_KEY)).toBe(yield* encodeThemeMode(ThemeMode.Enum.dark));
       })
     );
 
     it.effect(
       "replaces the pre-paint root class when the live mode toggles",
       Effect.fnUntraced(function* () {
-        localStorage.setItem(NEW_THEME_KEY, encodeThemeMode(ThemeMode.Enum.dark));
+        localStorage.setItem(NEW_THEME_KEY, yield* encodeThemeMode(ThemeMode.Enum.dark));
         document.documentElement.classList.add("dark");
         const { getByLabelText } = render(
           <RegistryProvider>

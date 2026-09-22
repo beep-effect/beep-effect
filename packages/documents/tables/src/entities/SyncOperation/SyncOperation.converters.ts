@@ -7,7 +7,9 @@
  */
 
 import { SyncOperation } from "@beep/documents-domain/entities/SyncOperation";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { SyncOperationConverterError } from "./SyncOperation.errors.ts";
 import type { syncOperationTable } from "./SyncOperation.table.ts";
 
 /**
@@ -48,8 +50,8 @@ export type SyncOperationRow = typeof syncOperationTable.$inferSelect;
  */
 export type SyncOperationInsert = typeof syncOperationTable.$inferInsert;
 
-const encodeSyncOperation = S.encodeSync(SyncOperation);
-const decodeSyncOperationRow = S.decodeUnknownSync(SyncOperation);
+const encodeSyncOperation = S.encodeResult(SyncOperation);
+const decodeSyncOperationRow = S.decodeUnknownResult(SyncOperation);
 
 /**
  * Convert a SyncOperation entity into its persistence insert row.
@@ -66,6 +68,7 @@ const decodeSyncOperationRow = S.decodeUnknownSync(SyncOperation);
  * ```ts
  * import { fromSyncOperationRow, toSyncOperationInsert } from "@beep/documents-tables/entities/SyncOperation"
  * import type { SyncOperationRow } from "@beep/documents-tables/entities/SyncOperation"
+ * import { Result } from "effect"
  *
  * const row = {
  *   attemptCount: 0,
@@ -94,17 +97,23 @@ const decodeSyncOperationRow = S.decodeUnknownSync(SyncOperation);
  *   workspaceId: 2
  * } satisfies SyncOperationRow
  *
- * const insert = toSyncOperationInsert(fromSyncOperationRow(row))
- * console.log("id" in insert) // false
+ * const insert = Result.flatMap(fromSyncOperationRow(row), toSyncOperationInsert)
+ * console.log(Result.isSuccess(insert) && !("id" in insert.success))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toSyncOperationInsert = (syncOperation: SyncOperation): SyncOperationInsert => {
-  const { id: _id, ...rest } = encodeSyncOperation(syncOperation);
-  return rest as SyncOperationInsert;
-};
+export const toSyncOperationInsert = (
+  syncOperation: SyncOperation
+): Result.Result<SyncOperationInsert, SyncOperationConverterError> =>
+  Result.mapError(
+    Result.map(encodeSyncOperation(syncOperation), (encoded): SyncOperationInsert => {
+      const { id: _id, ...insert } = encoded;
+      return insert;
+    }),
+    SyncOperationConverterError.fromSchemaError
+  );
 
 /**
  * Convert a selected persistence row into a SyncOperation entity.
@@ -114,6 +123,7 @@ export const toSyncOperationInsert = (syncOperation: SyncOperation): SyncOperati
  * ```ts
  * import { fromSyncOperationRow } from "@beep/documents-tables/entities/SyncOperation"
  * import type { SyncOperationRow } from "@beep/documents-tables/entities/SyncOperation"
+ * import { Result } from "effect"
  *
  * const row = {
  *   attemptCount: 2,
@@ -143,10 +153,13 @@ export const toSyncOperationInsert = (syncOperation: SyncOperation): SyncOperati
  * } satisfies SyncOperationRow
  *
  * const syncOperation = fromSyncOperationRow(row)
- * console.log(syncOperation.status)
+ * console.log(Result.isSuccess(syncOperation) && syncOperation.success.status)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromSyncOperationRow = (row: SyncOperationRow): SyncOperation => decodeSyncOperationRow(row);
+export const fromSyncOperationRow = (
+  row: SyncOperationRow
+): Result.Result<SyncOperation, SyncOperationConverterError> =>
+  Result.mapError(decodeSyncOperationRow(row), SyncOperationConverterError.fromSchemaError);

@@ -7,7 +7,9 @@
  */
 
 import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { SyncConflictConverterError } from "./SyncConflict.errors.ts";
 import type { syncConflictTable } from "./SyncConflict.table.ts";
 
 /**
@@ -48,8 +50,8 @@ export type SyncConflictRow = typeof syncConflictTable.$inferSelect;
  */
 export type SyncConflictInsert = typeof syncConflictTable.$inferInsert;
 
-const encodeSyncConflict = S.encodeSync(SyncConflict);
-const decodeSyncConflictRow = S.decodeUnknownSync(SyncConflict);
+const encodeSyncConflict = S.encodeResult(SyncConflict);
+const decodeSyncConflictRow = S.decodeUnknownResult(SyncConflict);
 
 /**
  * Convert a SyncConflict entity into its persistence insert row.
@@ -66,6 +68,7 @@ const decodeSyncConflictRow = S.decodeUnknownSync(SyncConflict);
  * ```ts
  * import { fromSyncConflictRow, toSyncConflictInsert } from "@beep/documents-tables/entities/SyncConflict"
  * import type { SyncConflictRow } from "@beep/documents-tables/entities/SyncConflict"
+ * import { Result } from "effect"
  *
  * const row = {
  *   conflictKind: "remoteEdit",
@@ -90,17 +93,23 @@ const decodeSyncConflictRow = S.decodeUnknownSync(SyncConflict);
  *   workspaceId: 2
  * } satisfies SyncConflictRow
  *
- * const insert = toSyncConflictInsert(fromSyncConflictRow(row))
- * console.log("id" in insert) // false
+ * const insert = Result.flatMap(fromSyncConflictRow(row), toSyncConflictInsert)
+ * console.log(Result.isSuccess(insert) && !("id" in insert.success))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toSyncConflictInsert = (syncConflict: SyncConflict): SyncConflictInsert => {
-  const { id: _id, ...rest } = encodeSyncConflict(syncConflict);
-  return rest as SyncConflictInsert;
-};
+export const toSyncConflictInsert = (
+  syncConflict: SyncConflict
+): Result.Result<SyncConflictInsert, SyncConflictConverterError> =>
+  Result.mapError(
+    Result.map(encodeSyncConflict(syncConflict), (encoded): SyncConflictInsert => {
+      const { id: _id, ...insert } = encoded;
+      return insert;
+    }),
+    SyncConflictConverterError.fromSchemaError
+  );
 
 /**
  * Convert a selected persistence row into a SyncConflict entity.
@@ -110,6 +119,7 @@ export const toSyncConflictInsert = (syncConflict: SyncConflict): SyncConflictIn
  * ```ts
  * import { fromSyncConflictRow } from "@beep/documents-tables/entities/SyncConflict"
  * import type { SyncConflictRow } from "@beep/documents-tables/entities/SyncConflict"
+ * import { Result } from "effect"
  *
  * const row = {
  *   conflictKind: "remoteCreate",
@@ -135,10 +145,11 @@ export const toSyncConflictInsert = (syncConflict: SyncConflict): SyncConflictIn
  * } satisfies SyncConflictRow
  *
  * const syncConflict = fromSyncConflictRow(row)
- * console.log(syncConflict.conflictKind)
+ * console.log(Result.isSuccess(syncConflict) && syncConflict.success.conflictKind)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromSyncConflictRow = (row: SyncConflictRow): SyncConflict => decodeSyncConflictRow(row);
+export const fromSyncConflictRow = (row: SyncConflictRow): Result.Result<SyncConflict, SyncConflictConverterError> =>
+  Result.mapError(decodeSyncConflictRow(row), SyncConflictConverterError.fromSchemaError);

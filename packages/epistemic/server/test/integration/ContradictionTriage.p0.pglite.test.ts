@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { LogicalEdgeIdentity, logicalEdgeKey } from "@beep/epistemic-domain/values";
@@ -11,6 +10,7 @@ import * as Pglite from "@beep/pglite";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { makePgliteIntegrationGate, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -18,13 +18,15 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { and, eq, gt, isNull, lte, or, sql } from "drizzle-orm";
 import { bigint, jsonb, pgTable, serial, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { Data, Effect, FileSystem, flow, Layer, Order, Path, pipe } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
-const TempDirServices = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const TempDirServices = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer);
 
 const makePersistentLayer = (dataDir: string) =>
   makeDrizzleLayer().pipe(
@@ -73,11 +75,14 @@ class CandidatePayloadConflict extends Data.TaggedError("CandidatePayloadConflic
   readonly candidateKey: string;
 }> {}
 
-const digest = (value: string): string => createHash("sha256").update(value).digest("hex");
+const sha256Hex = Effect.fnUntraced(function* (value: string) {
+  const crypto = yield* Crypto.Crypto;
+  return Encoding.encodeHex(yield* crypto.digest("SHA-256", new TextEncoder().encode(value)));
+});
 const encodeBeliefRef = (ref: BeliefRef): string => `${ref.logicalKey}:${ref.edgeVersionId}:${ref.version}`;
 
-const evidenceDigest = (evidenceIds: ReadonlyArray<number>): string =>
-  digest(
+const evidenceDigest = Effect.fnUntraced(function* (evidenceIds: ReadonlyArray<number>) {
+  return yield* sha256Hex(
     pipe(
       evidenceIds,
       A.map((id) => `${id}`),
@@ -85,12 +90,13 @@ const evidenceDigest = (evidenceIds: ReadonlyArray<number>): string =>
       A.join("|")
     )
   );
+});
 
-const candidateKey = (
+const candidateKey = Effect.fnUntraced(function* (
   pair: readonly [BeliefRef, BeliefRef],
   basis: { readonly evidenceDigest: string; readonly kind: MatchBasisKind }
-): string =>
-  digest(
+) {
+  return yield* sha256Hex(
     [
       "v1",
       ...pipe(pair, A.fromIterable, A.map(encodeBeliefRef), A.sort(Order.String)),
@@ -98,6 +104,7 @@ const candidateKey = (
       basis.evidenceDigest,
     ].join("|")
   );
+});
 
 const decodeClaim = flow(S.decodeUnknownResult(CandidateClaim), Result.getOrThrow);
 const decodeEvidence = flow(S.decodeUnknownResult(Evidence), Result.getOrThrow);
@@ -217,24 +224,28 @@ const runFirstScope = Effect.fnUntraced(function* () {
 
   const claims = yield* db
     .insert(DbSchema.candidateClaim)
-    .values([
-      toCandidateClaimInsert(
-        decodeClaim({
-          ...productEntityFixtureInput("EpistemicCandidateClaim", 801),
-          fixtureKey: "claim-a",
-          lifecycle: "candidate",
-          snapshot: {},
-        })
-      ),
-      toCandidateClaimInsert(
-        decodeClaim({
-          ...productEntityFixtureInput("EpistemicCandidateClaim", 802),
-          fixtureKey: "claim-b",
-          lifecycle: "candidate",
-          snapshot: {},
-        })
-      ),
-    ])
+    .values(
+      yield* Effect.fromResult(
+        Result.all([
+          toCandidateClaimInsert(
+            decodeClaim({
+              ...productEntityFixtureInput("EpistemicCandidateClaim", 801),
+              fixtureKey: "claim-a",
+              lifecycle: "candidate",
+              snapshot: {},
+            })
+          ),
+          toCandidateClaimInsert(
+            decodeClaim({
+              ...productEntityFixtureInput("EpistemicCandidateClaim", 802),
+              fixtureKey: "claim-b",
+              lifecycle: "candidate",
+              snapshot: {},
+            })
+          ),
+        ])
+      )
+    )
     .returning();
   const evidence = yield* db
     .insert(DbSchema.evidence)
@@ -303,22 +314,22 @@ const runFirstScope = Effect.fnUntraced(function* () {
     version: beliefB.version,
   };
   const basis = {
-    evidenceDigest: evidenceDigest([evidenceA.id, evidenceB.id]),
+    evidenceDigest: yield* evidenceDigest([evidenceA.id, evidenceB.id]),
     kind: "independent-evidence" as const,
   };
-  const forwardKey = candidateKey([refA, refB], basis);
-  const backwardKey = candidateKey([refB, refA], basis);
+  const forwardKey = yield* candidateKey([refA, refB], basis);
+  const backwardKey = yield* candidateKey([refB, refA], basis);
   expect(forwardKey).toBe(backwardKey);
 
   const proposal = {
     fact: { amount: "125" },
     losingBelief: refA,
-    proposalId: digest("contradiction-p0.proposal-a"),
+    proposalId: yield* sha256Hex("contradiction-p0.proposal-a"),
     rationale: "Independent records disagree; the signed amendment controls.",
     validFrom: 1_000,
     validTo: null,
   };
-  const proposalDigest = digest(
+  const proposalDigest = yield* sha256Hex(
     [
       "v1",
       proposal.proposalId,
@@ -329,7 +340,7 @@ const runFirstScope = Effect.fnUntraced(function* () {
       proposal.rationale,
     ].join("|")
   );
-  const payloadDigest = digest(["v1", "0.95", proposalDigest].join("|"));
+  const payloadDigest = yield* sha256Hex(["v1", "0.95", proposalDigest].join("|"));
 
   const submit = Effect.fnUntraced(function* (key: string, candidatePayloadDigest: string, receivedAt: number) {
     const existing = yield* db.select().from(candidateTable).where(eq(candidateTable.candidateKey, key));
@@ -366,7 +377,7 @@ const runFirstScope = Effect.fnUntraced(function* () {
   expect(repeated.id).toBe(candidate.id);
   const receipts = yield* db.select().from(receiptTable).where(eq(receiptTable.candidateId, candidate.id));
   expect(receipts).toHaveLength(2);
-  const payloadConflict = yield* Effect.flip(submit(forwardKey, digest("materially-different"), 1_400));
+  const payloadConflict = yield* Effect.flip(submit(forwardKey, yield* sha256Hex("materially-different"), 1_400));
   expect(payloadConflict._tag).toBe("CandidatePayloadConflict");
 
   const openAt = (validAt: number, knownAt: number) =>
@@ -430,7 +441,7 @@ const runFirstScope = Effect.fnUntraced(function* () {
     O.some("150")
   );
 
-  const rejectedKey = candidateKey(
+  const rejectedKey = yield* candidateKey(
     [
       refA,
       {
@@ -440,11 +451,11 @@ const runFirstScope = Effect.fnUntraced(function* () {
       },
     ],
     {
-      evidenceDigest: evidenceDigest([evidenceA.id]),
+      evidenceDigest: yield* evidenceDigest([evidenceA.id]),
       kind: "same-source-overlap",
     }
   );
-  const rejected = yield* submit(rejectedKey, digest("rejected-payload"), 2_700);
+  const rejected = yield* submit(rejectedKey, yield* sha256Hex("rejected-payload"), 2_700);
   yield* db.insert(dispositionTable).values({
     candidateId: rejected.id,
     decision: { rationale: "Overlapping text is a quotation, not a factual conflict.", status: "rejected" },

@@ -23,6 +23,7 @@ import {
 } from "@beep/repo-cli/commands/Lint";
 import { FsUtils, FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodePath, NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
@@ -469,16 +470,16 @@ it("ignores unrelated line shifts but distinguishes same-fingerprint occurrences
   assertTrue(diffEffectVitestFindings([shifted], [before]).introduced.length === 0);
 });
 
-const occurrences = (body: string) => {
+const occurrences = Effect.fnUntraced(function* (body: string) {
   const source = new Project({ useInMemoryFileSystem: true }).createSourceFile(
     "identity.test.ts",
     `import { Effect } from "effect"; import { it } from "@effect/vitest"; ${body}`
   );
   return A.filter(
-    detectEffectVitestFindings(source, "packages/example/test/identity.test.ts", "@beep/example"),
+    yield* detectEffectVitestFindings(source, "packages/example/test/identity.test.ts", "@beep/example"),
     (row) => row.ruleId === "EV001"
   );
-};
+});
 const withException = (rows: ReadonlyArray<EffectVitestFinding>) =>
   EffectVitestInventoryDocument.make({
     schemaVersion: "effect-vitest-inventory/v1",
@@ -491,111 +492,129 @@ const withException = (rows: ReadonlyArray<EffectVitestFinding>) =>
     ),
   });
 
-it("keeps named occurrences stable across reordering and deletion without transferring exceptions", () => {
-  const a = 'it("first", () => { Effect.runSync(program); });';
-  const b = 'it("second", () => { Effect.runSync(program); });';
-  const before = occurrences(a + b);
-  const reordered = occurrences(`\n${b}\n${a}`);
-  assertTrue(diffEffectVitestFindings(reordered, before).introduced.length === 0);
-  const preserved = preserveEffectVitestExceptions(reordered, O.some(withException(before)));
-  assertTrue(preserved[0]?.status === "open");
-  assertTrue(preserved[1]?.status === "exception");
-  const remaining = preserveEffectVitestExceptions(occurrences(b), O.some(withException(before)));
-  assertTrue(remaining[0]?.status === "open");
-});
-
-it("refuses ambiguous duplicate exception inheritance even after the first duplicate disappears", () => {
-  const before = occurrences('it("same", () => { Effect.runSync(program); Effect.runSync(program); });');
-  const after = occurrences('it("same", () => { Effect.runSync(program); });');
-  assertTrue(before.length === 2 && after.length === 1);
-  assertTrue(
-    A.every(preserveEffectVitestExceptions(before, O.some(withException(before))), (row) => row.status === "open")
+it.layer(BunCrypto.layer)((it) => {
+  it.effect("keeps named occurrences stable across reordering and deletion without transferring exceptions", () =>
+    Effect.gen(function* () {
+      const a = 'it("first", () => { Effect.runSync(program); });';
+      const b = 'it("second", () => { Effect.runSync(program); });';
+      const before = yield* occurrences(a + b);
+      const reordered = yield* occurrences(`\n${b}\n${a}`);
+      assertTrue(diffEffectVitestFindings(reordered, before).introduced.length === 0);
+      const preserved = preserveEffectVitestExceptions(reordered, O.some(withException(before)));
+      assertTrue(preserved[0]?.status === "open");
+      assertTrue(preserved[1]?.status === "exception");
+      const remaining = preserveEffectVitestExceptions(yield* occurrences(b), O.some(withException(before)));
+      assertTrue(remaining[0]?.status === "open");
+    })
   );
-  assertTrue(preserveEffectVitestExceptions(after, O.some(withException(before)))[0]?.status === "open");
-});
 
-it("bridges only unique legacy fingerprints and keeps legacy duplicate migrations visible", () => {
-  const live = occurrences('it("same", () => { Effect.runSync(program); });');
-  const legacy = A.map(live, (row) => EffectVitestFinding.make({ ...row, occurrence: O.none() }));
-  assertTrue(diffEffectVitestFindings(live, legacy).introduced.length === 0);
-  assertTrue(preserveEffectVitestExceptions(live, O.some(withException(legacy)))[0]?.status === "open");
-  const duplicates = [
-    ...legacy,
-    ...A.map(legacy, (row) => EffectVitestFinding.make({ ...row, id: Str.replace("#1", "#2")(row.id) })),
-  ];
-  assertTrue(diffEffectVitestFindings(live, duplicates).introduced.length === 1);
-  assertTrue(preserveEffectVitestExceptions(live, O.some(withException(duplicates)))[0]?.status === "open");
-});
+  it.effect("refuses ambiguous duplicate exception inheritance even after the first duplicate disappears", () =>
+    Effect.gen(function* () {
+      const before = yield* occurrences('it("same", () => { Effect.runSync(program); Effect.runSync(program); });');
+      const after = yield* occurrences('it("same", () => { Effect.runSync(program); });');
+      assertTrue(before.length === 2 && after.length === 1);
+      assertTrue(
+        A.every(preserveEffectVitestExceptions(before, O.some(withException(before))), (row) => row.status === "open")
+      );
+      assertTrue(preserveEffectVitestExceptions(after, O.some(withException(before)))[0]?.status === "open");
+    })
+  );
 
-it("retains full token evidence beyond the display limit and significant literal whitespace", () => {
-  const prefix = "a".repeat(240);
-  const before = occurrences(`it("x", () => { Effect.runSync(subject("${prefix}a  b")); });`);
-  const after = occurrences(`it("x", () => { Effect.runSync(subject("${prefix}a b")); });`);
-  assertTrue(before[0]?.evidence === after[0]?.evidence);
-  assertTrue(diffEffectVitestFindings(after, before).introduced.length === 1);
-});
+  it.effect("bridges only unique legacy fingerprints and keeps legacy duplicate migrations visible", () =>
+    Effect.gen(function* () {
+      const live = yield* occurrences('it("same", () => { Effect.runSync(program); });');
+      const legacy = A.map(live, (row) => EffectVitestFinding.make({ ...row, occurrence: O.none() }));
+      assertTrue(diffEffectVitestFindings(live, legacy).introduced.length === 0);
+      assertTrue(preserveEffectVitestExceptions(live, O.some(withException(legacy)))[0]?.status === "open");
+      const duplicates = [
+        ...legacy,
+        ...A.map(legacy, (row) => EffectVitestFinding.make({ ...row, id: Str.replace("#1", "#2")(row.id) })),
+      ];
+      assertTrue(diffEffectVitestFindings(live, duplicates).introduced.length === 1);
+      assertTrue(preserveEffectVitestExceptions(live, O.some(withException(duplicates)))[0]?.status === "open");
+    })
+  );
 
-it("validates optional occurrence anchors without rejecting legacy inventory rows", () => {
-  const base = finding(4, "Fx.runSync(program)");
-  assertTrue(isEffectVitestFinding(base));
-  assertFalse(isEffectVitestFinding({ ...base, occurrence: O.some("v2:not-a-digest") }));
-  assertTrue(A.every(occurrences('it("x", () => Effect.runSync(program));'), isEffectVitestFinding));
-});
+  it.effect("retains full token evidence beyond the display limit and significant literal whitespace", () =>
+    Effect.gen(function* () {
+      const prefix = "a".repeat(240);
+      const before = yield* occurrences(`it("x", () => { Effect.runSync(subject("${prefix}a  b")); });`);
+      const after = yield* occurrences(`it("x", () => { Effect.runSync(subject("${prefix}a b")); });`);
+      assertTrue(before[0]?.evidence === after[0]?.evidence);
+      assertTrue(diffEffectVitestFindings(after, before).introduced.length === 1);
+    })
+  );
 
-it("requires re-review of a unique legacy exception when historical statement or context is unknowable", () => {
-  const prefix = "a".repeat(240);
-  const original = occurrences(`it("original", () => { Effect.runSync(subject("${prefix}before")); });`);
-  const legacy = A.map(original, (row) => EffectVitestFinding.make({ ...row, occurrence: O.none() }));
-  const document = O.some(withException(legacy));
-  const changedTail = occurrences(`it("original", () => { Effect.runSync(subject("${prefix}after")); });`);
-  const changedContext = occurrences(`it("different", () => { Effect.runSync(subject("${prefix}before")); });`);
-  for (const live of [original, changedTail, changedContext, legacy]) {
-    assertTrue(live.length === 1 && live[0]?.evidence === legacy[0]?.evidence);
-    assertTrue(diffEffectVitestFindings(live, legacy).introduced.length === 0);
-    const merged = preserveEffectVitestExceptions(live, document);
-    assertTrue(merged[0]?.status === "open");
-    assertTrue(O.isNone(merged[0]?.reason ?? O.none()), "Unproved legacy exception reasons must not transfer");
-  }
-});
+  it.effect("validates optional occurrence anchors without rejecting legacy inventory rows", () =>
+    Effect.gen(function* () {
+      const base = finding(4, "Fx.runSync(program)");
+      assertTrue(isEffectVitestFinding(base));
+      assertFalse(isEffectVitestFinding({ ...base, occurrence: O.some("v2:not-a-digest") }));
+      assertTrue(A.every(yield* occurrences('it("x", () => Effect.runSync(program));'), isEffectVitestFinding));
+    })
+  );
 
-it("preserves accepted full-token occurrence digests through iterative leaf traversal", () => {
-  // Digests were obtained from the immutable pre-performance occurrenceAnchor,
-  // including comment leaves, empty syntax lists, escapes, JSX and helper scope.
-  const vectors = [
-    {
-      body: 'it("empty", () => Effect.runSync({ empty: [], value: "a  b" }));',
-      expected: "v2:0a9fb46ffd8f8a490ca94483458b28ea9c1316850ae883d43155a5b5eb0e21db",
-    },
-    {
-      body: 'describe("outer", () => { it("comments", () => { return Effect.runSync(() => { /* retained comment */ return /a\\\\s+/u; }); }); });',
-      expected: "v2:768dd5d08992f9831bf31b535c059800f1f2e05004ce1f44c77228d7fb4d6743",
-    },
-    {
-      body: 'it("unicode", () => Effect.runSync(`π\\n${1} \\u{1F680}`));',
-      expected: "v2:5eb6f2963008dd966879c7531e091f81aa87e9affb4becd4121ec23160cc9098",
-    },
-    {
-      body: 'it("jsx", () => Effect.runSync(<Box title="a  b">{value}</Box>));',
-      expected: "v2:37380087a3bc39e9d9394fdb0476891ecc6f11cb1fedb8a3a6be4604681fb431",
-    },
-    {
-      body: 'function helper() { /** @type {string} */ const label = "kept"; return Effect.runSync(label); } it("helper", () => helper());',
-      expected: "v2:c1902c0f48558f336ed37ffc00467ea1452049e794451a458d5ae59d6fec45a0",
-    },
-  ];
-  const prefix = 'import { Effect } from "effect"; import { it, describe } from "@effect/vitest";\n';
-  for (const { body, expected } of vectors) {
-    const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-    const source = project.createSourceFile("anchor.test.tsx", prefix + body);
-    const row = A.findFirst(
-      detectEffectVitestFindings(source, "packages/example/test/anchor.test.tsx", "@beep/example"),
-      (finding) => finding.ruleId === "EV001"
-    );
-    assertSome(
-      O.flatMap(row, (finding) => finding.occurrence),
-      expected
-    );
-  }
+  it.effect("requires re-review of a unique legacy exception when historical statement or context is unknowable", () =>
+    Effect.gen(function* () {
+      const prefix = "a".repeat(240);
+      const original = yield* occurrences(`it("original", () => { Effect.runSync(subject("${prefix}before")); });`);
+      const legacy = A.map(original, (row) => EffectVitestFinding.make({ ...row, occurrence: O.none() }));
+      const document = O.some(withException(legacy));
+      const changedTail = yield* occurrences(`it("original", () => { Effect.runSync(subject("${prefix}after")); });`);
+      const changedContext = yield* occurrences(
+        `it("different", () => { Effect.runSync(subject("${prefix}before")); });`
+      );
+      for (const live of [original, changedTail, changedContext, legacy]) {
+        assertTrue(live.length === 1 && live[0]?.evidence === legacy[0]?.evidence);
+        assertTrue(diffEffectVitestFindings(live, legacy).introduced.length === 0);
+        const merged = preserveEffectVitestExceptions(live, document);
+        assertTrue(merged[0]?.status === "open");
+        assertTrue(O.isNone(merged[0]?.reason ?? O.none()), "Unproved legacy exception reasons must not transfer");
+      }
+    })
+  );
+
+  it.effect("preserves accepted full-token occurrence digests through iterative leaf traversal", () =>
+    Effect.gen(function* () {
+      // Digests were obtained from the immutable pre-performance occurrenceAnchor,
+      // including comment leaves, empty syntax lists, escapes, JSX and helper scope.
+      const vectors = [
+        {
+          body: 'it("empty", () => Effect.runSync({ empty: [], value: "a  b" }));',
+          expected: "v2:0a9fb46ffd8f8a490ca94483458b28ea9c1316850ae883d43155a5b5eb0e21db",
+        },
+        {
+          body: 'describe("outer", () => { it("comments", () => { return Effect.runSync(() => { /* retained comment */ return /a\\\\s+/u; }); }); });',
+          expected: "v2:768dd5d08992f9831bf31b535c059800f1f2e05004ce1f44c77228d7fb4d6743",
+        },
+        {
+          body: 'it("unicode", () => Effect.runSync(`π\\n${1} \\u{1F680}`));',
+          expected: "v2:5eb6f2963008dd966879c7531e091f81aa87e9affb4becd4121ec23160cc9098",
+        },
+        {
+          body: 'it("jsx", () => Effect.runSync(<Box title="a  b">{value}</Box>));',
+          expected: "v2:37380087a3bc39e9d9394fdb0476891ecc6f11cb1fedb8a3a6be4604681fb431",
+        },
+        {
+          body: 'function helper() { /** @type {string} */ const label = "kept"; return Effect.runSync(label); } it("helper", () => helper());',
+          expected: "v2:c1902c0f48558f336ed37ffc00467ea1452049e794451a458d5ae59d6fec45a0",
+        },
+      ];
+      const prefix = 'import { Effect } from "effect"; import { it, describe } from "@effect/vitest";\n';
+      for (const { body, expected } of vectors) {
+        const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
+        const source = project.createSourceFile("anchor.test.tsx", prefix + body);
+        const row = A.findFirst(
+          yield* detectEffectVitestFindings(source, "packages/example/test/anchor.test.tsx", "@beep/example"),
+          (finding) => finding.ruleId === "EV001"
+        );
+        assertSome(
+          O.flatMap(row, (finding) => finding.occurrence),
+          expected
+        );
+      }
+    })
+  );
 });
 
 it("retains unmatched duplicate payloads and stable equal-id order in both membership directions", () => {
@@ -681,7 +700,7 @@ it.layer(NodeServices.layer)("round 2 contextual graph routing", (it) => {
       vi.mock("@beep/codec", () => ({ decode: fake }));
     `
       );
-      const detected = detectEffectVitestFindings(source, "routing.test.ts", "@beep/example");
+      const detected = yield* detectEffectVitestFindings(source, "routing.test.ts", "@beep/example");
       const hydrated = yield* applyEffectVitestPrimitiveGraph(detected, graph);
       deepStrictEqual(
         A.map(hydrated, (row) => [row.id, row.class, row.mechanization, row.replacement.primitive]),

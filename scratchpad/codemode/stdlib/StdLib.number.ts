@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { dual } from "effect/Function";
 import { LiteralKit } from "@beep/schema";
 import { N, P } from "@beep/utils";
 import * as S from "effect/Schema";
@@ -80,8 +81,10 @@ export type numberConstants = typeof numberConstants.Type;
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeNumberMethod = (value: number, name: NumberMethod, args: Array<unknown>, node: AstNode): unknown => {
+export const invokeNumberMethod: {
+  (name: NumberMethod, args: Array<unknown>, node: AstNode): (value: number) => unknown;
+  (value: number, name: NumberMethod, args: Array<unknown>, node: AstNode): unknown;
+} = dual(4, (value: number, name: NumberMethod, args: Array<unknown>, node: AstNode): unknown => {
   const optNum = (index: number): number | undefined => {
     const arg = args[index];
     if (P.isUndefined(arg)) return undefined;
@@ -105,7 +108,7 @@ export const invokeNumberMethod = (value: number, name: NumberMethod, args: Arra
     valueOf: () => value,
   });
   return boundedData(result, `Number.${name} result`);
-};
+});
 
 /**
  * Dispatches guest Number statics such as `isFinite` and `parseInt`.
@@ -125,8 +128,10 @@ export const invokeNumberMethod = (value: number, name: NumberMethod, args: Arra
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeNumberStatic = (name: NumberStatic, args: Array<unknown>, node: AstNode): unknown => {
+export const invokeNumberStatic: {
+  (args: Array<unknown>, node: AstNode): (name: NumberStatic) => unknown;
+  (name: NumberStatic, args: Array<unknown>, node: AstNode): unknown;
+} = dual(3, (name: NumberStatic, args: Array<unknown>, node: AstNode): unknown => {
   const value = args[0];
   return numberStatics.$match(name, {
     isInteger: () => N.isInteger(value),
@@ -142,4 +147,4 @@ export const invokeNumberStatic = (name: NumberStatic, args: Array<unknown>, nod
     },
     parseFloat: () => parseFloat(coerceToString(value)),
   });
-};
+});

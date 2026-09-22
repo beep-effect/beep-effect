@@ -22,6 +22,7 @@ import { runCaptured } from "../../internal/process/index.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
 import type { R } from "@beep/utils";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const decodeRoundNumber = S.decodeEffect(RoundNumber);
@@ -560,7 +561,7 @@ export class CommitProvenance extends S.Class<CommitProvenance>($I`CommitProvena
  */
 export const readCommitProvenance = Effect.fn("QaSession.readCommitProvenance")(function* (
   cwd: string
-): Effect.fn.Return<CommitProvenance, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<CommitProvenance, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const [sha, status] = yield* Effect.all(
     [capturedText("git", ["-C", cwd, "rev-parse", "HEAD"]), capturedText("git", ["-C", cwd, "status", "--porcelain"])],
     { concurrency: 2 }
@@ -605,7 +606,7 @@ const toolVersion = (tool: string, output: O.Option<string>): R.ReadonlyRecord<s
 export const collectToolVersions = Effect.fn("QaSession.collectToolVersions")(function* (): Effect.fn.Return<
   Readonly<Record<string, string>>,
   never,
-  ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const [ffmpeg, exiftool] = yield* Effect.all(
     [capturedText("ffmpeg", ["-version"]), capturedText("exiftool", ["-ver"])],

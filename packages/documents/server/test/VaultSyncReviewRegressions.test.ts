@@ -26,7 +26,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const RegressionTestLayer = DocumentsSyncFixtureLive.pipe(
@@ -34,8 +33,7 @@ const RegressionTestLayer = DocumentsSyncFixtureLive.pipe(
   Layer.provideMerge(BunPath.layer)
 );
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(21);
-const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(21);
 const syncInput = (vaultRootPath: string) => SyncOnceInput.make({ vaultRootPath, workspaceId });
 const listConflictsInput = ListOpenConflictsInput.make({ workspaceId });
 
@@ -77,7 +75,7 @@ const findTrackedItem = (relPath: string) =>
   SyncItemRepository.pipe(
     Effect.flatMap((repository) =>
       repository.findByPath(
-        FindSyncItemByPathInput.make({ localRelPath: decodeVaultRelPath(relPath), provider: "box", workspaceId })
+        FindSyncItemByPathInput.make({ localRelPath: VaultRelPath.make(relPath), provider: "box", workspaceId })
       )
     ),
     Effect.flatMap(Effect.fromOption)
@@ -152,7 +150,7 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
         SyncItemSeed.make({
           itemKind: "file",
           localGeneration: NonNegativeInt.make(1),
-          localRelPath: decodeVaultRelPath("ghost.txt"),
+          localRelPath: VaultRelPath.make("ghost.txt"),
           provider: "box",
           syncState: "pending",
           workspaceId,
@@ -168,7 +166,7 @@ describe("@beep/documents-server VaultSyncEngine review regressions", () => {
           status: "queued",
           syncItemId: seeded.id,
           targetName: "ghost.txt",
-          targetRelPath: decodeVaultRelPath("ghost.txt"),
+          targetRelPath: VaultRelPath.make("ghost.txt"),
           workspaceId,
         })
       );

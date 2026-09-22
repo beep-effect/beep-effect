@@ -15,8 +15,6 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { SyncCursorRepositoryShape } from "@beep/documents-use-cases/entities/SyncCursor/server";
 
-const encodeDomainSyncCursorSyncCursorSync = S.encodeSync(DomainSyncCursor.SyncCursor);
-
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -38,8 +36,9 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   ).toBe("Passed");
 };
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
-const decodeSyncCursor = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
+const decodeSyncCursor = (input: unknown) =>
+  S.decodeUnknownEffect(DomainSyncCursor.SyncCursor)(input).pipe(Effect.orDie);
 
 const cursorSeed = (streamPosition: string) =>
   SyncCursorSeed.make({
@@ -70,27 +69,26 @@ const makeRepository = (): SyncCursorRepositoryShape => {
   return {
     find: (input) => Effect.sync(() => A.findFirst(cursors, matchesMirror(input))),
     upsert: (seed) =>
-      Effect.sync(() =>
-        O.match(A.findFirst(cursors, matchesMirror(seed)), {
-          onNone: () => {
-            const created = decodeSyncCursor(syncCursorRow(seed, nextId));
-            nextId = nextId + 1;
-            cursors = A.append(cursors, created);
-            return created;
-          },
-          onSome: (existing) => {
-            const replaced = decodeSyncCursor({
-              ...encodeDomainSyncCursorSyncCursorSync(existing),
-              lastError: O.getOrNull(seed.lastError),
-              lastEventId: O.getOrNull(seed.lastEventId),
+      O.match(A.findFirst(cursors, matchesMirror(seed)), {
+        onNone: Effect.fn("onNone")(function* () {
+          const created = yield* decodeSyncCursor(syncCursorRow(seed, nextId));
+          nextId = nextId + 1;
+          cursors = A.append(cursors, created);
+          return created;
+        }),
+        onSome: (existing) =>
+          Effect.sync(() => {
+            const replaced = DomainSyncCursor.SyncCursor.make({
+              ...existing,
+              lastError: seed.lastError,
+              lastEventId: seed.lastEventId,
               status: seed.status,
               streamPosition: seed.streamPosition,
             });
             cursors = A.map(cursors, (cursor) => (cursor.id === existing.id ? replaced : cursor));
             return replaced;
-          },
-        })
-      ),
+          }),
+      }),
   };
 };
 

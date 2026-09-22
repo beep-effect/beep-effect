@@ -14,7 +14,7 @@ const environmentOnlyAckForm = '--environment-only --reason "<text>"';
 const wontfixAckForm = '--wontfix --reason "<text>"';
 
 const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
-const decodeObject = S.decodeUnknownSync(JsonObject);
+const decodeObject = S.decodeUnknownEffect(JsonObject);
 const encodeUnknown = UnknownFromJsonString.encodeUnknownEffect;
 const itEffect = <E>(name: string, program: () => Effect.Effect<unknown, E>, timeout?: number): void =>
   it(name, () => Effect.runPromise(program()), timeout);
@@ -187,7 +187,7 @@ describe("Yeet inbox harness adapter", () => {
           expect(first.stdout).toContain("P1 thread-1 [thread-live]");
           expect(first.stdout).toContain("P2 origin/main [drift-live]");
           expect(first.stdout).not.toContain("lint-stale");
-          expect(decodeObject(first.stdout)).toMatchObject({
+          expect(yield* decodeObject(first.stdout)).toMatchObject({
             hookSpecificOutput: { additionalContext: expect.stringContaining(wontfixAckForm) },
           });
           expect(second.stdout).toBe("");
@@ -202,7 +202,7 @@ describe("Yeet inbox harness adapter", () => {
       withInbox(({ ack, root }) =>
         Effect.gen(function* () {
           for (const toolName of ["Read", "Skill", "EnterPlanMode", "ToolSearch", "mcp__x__y"]) {
-            const available = decodeObject(
+            const available = yield* decodeObject(
               (yield* runHook(root, "codex", {
                 cwd: root,
                 hook_event_name: "PreToolUse",
@@ -225,8 +225,8 @@ describe("Yeet inbox harness adapter", () => {
               tool_input: { command: "bun run test" },
               tool_name: toolName,
             };
-            const first = decodeObject((yield* runHook(root, "codex", payload)).stdout);
-            const second = decodeObject((yield* runHook(root, "codex", payload)).stdout);
+            const first = yield* decodeObject((yield* runHook(root, "codex", payload)).stdout);
+            const second = yield* decodeObject((yield* runHook(root, "codex", payload)).stdout);
             expect(first).toMatchObject({
               hookSpecificOutput: {
                 hookEventName: "PreToolUse",
@@ -250,7 +250,7 @@ describe("Yeet inbox harness adapter", () => {
             { toolInput: {}, toolName: "spawn_agent" },
           ].entries()) {
             const sessionId = `new-work-${index}`;
-            const newWorkResult = decodeObject(
+            const newWorkResult = yield* decodeObject(
               (yield* runHook(root, "codex", {
                 cwd: root,
                 hook_event_name: "PreToolUse",
@@ -267,7 +267,7 @@ describe("Yeet inbox harness adapter", () => {
             });
             expect(newWorkResult).not.toHaveProperty("hookSpecificOutput.permissionDecision");
 
-            const repair = decodeObject(
+            const repair = yield* decodeObject(
               (yield* runHook(root, "codex", {
                 cwd: root,
                 hook_event_name: "PreToolUse",
@@ -285,7 +285,7 @@ describe("Yeet inbox harness adapter", () => {
             expect(repair).not.toHaveProperty("hookSpecificOutput.permissionDecision");
           }
 
-          const stop = decodeObject(
+          const stop = yield* decodeObject(
             (yield* runHook(root, "codex", {
               cwd: root,
               hook_event_name: "Stop",
@@ -302,7 +302,7 @@ describe("Yeet inbox harness adapter", () => {
           });
 
           yield* ack("coverage-live");
-          const clearStop = decodeObject(
+          const clearStop = yield* decodeObject(
             (yield* runHook(root, "codex", {
               cwd: root,
               hook_event_name: "Stop",
@@ -324,7 +324,7 @@ describe("Yeet inbox harness adapter", () => {
             },
           });
           yield* ack("coverage-live", expiredAck);
-          const expiredStop = decodeObject(
+          const expiredStop = yield* decodeObject(
             (yield* runHook(root, "codex", {
               cwd: root,
               hook_event_name: "Stop",
@@ -373,7 +373,7 @@ esac
           });
           yield* ack("coverage-live", waiver);
 
-          const stop = decodeObject(
+          const stop = yield* decodeObject(
             (yield* runHook(
               root,
               "codex",
@@ -447,7 +447,7 @@ itEffect("renders merge-ready as good news with a PR ack and no denial", () =>
         tool_input: {},
       });
       expect(result.exitCode).toBe(0);
-      const output = decodeObject(result.stdout);
+      const output = yield* decodeObject(result.stdout);
       expect(output).toMatchObject({
         hookSpecificOutput: { additionalContext: expect.stringContaining("Good news, not incident work:") },
       });

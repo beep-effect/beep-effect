@@ -27,14 +27,14 @@ const encodeOptionalPatch = S.encodeEffect(OptionalPatch);
 const EmptyArraySettings = S.Struct({
   tags: S.String.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults<string>()),
 });
-const decodeEmptyArraySettingsSync = S.decodeSync(EmptyArraySettings);
+const decodeEmptyArraySettingsEffect = S.decodeEffect(EmptyArraySettings);
 const DataFirstEmptyArrayTags = SchemaUtils.withEmptyArrayDefaults(S.String.pipe(S.Array));
 const DataFirstEmptyArraySettings = S.Struct({ tags: DataFirstEmptyArrayTags });
-const decodeDataFirstEmptyArraySettingsSync = S.decodeSync(DataFirstEmptyArraySettings);
+const decodeDataFirstEmptyArraySettingsEffect = S.decodeEffect(DataFirstEmptyArraySettings);
 const OptionalLabelNode = S.Struct({
   label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
 });
-const decodeOptionalLabelNodeSync = S.decodeSync(OptionalLabelNode);
+const decodeOptionalLabelNodeEffect = S.decodeEffect(OptionalLabelNode);
 const NullableDirectionNode = S.Struct({
   direction: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
 });
@@ -45,8 +45,8 @@ const ConstantDefaultsNode = S.Struct({
 const RequiredVersionNode = S.Struct({
   version: S.Literal(1).pipe(SchemaUtils.withConstantDefault(1)),
 });
-const decodeRequiredVersionNodeSync = S.decodeSync(RequiredVersionNode);
-const decodeUnknownRequiredVersionNodeSync = S.decodeUnknownSync(RequiredVersionNode);
+const decodeRequiredVersionNodeEffect = S.decodeEffect(RequiredVersionNode);
+const decodeUnknownRequiredVersionNodeEffect = S.decodeUnknownEffect(RequiredVersionNode);
 
 describe("optionalKeyWithDefault", () => {
   it.effect(
@@ -68,23 +68,29 @@ describe("optionalKeyWithDefault", () => {
 });
 
 describe("pluck", () => {
-  it("decodes a one-property struct into the selected field value", () => {
-    const schema = S.Struct({
-      column1: S.FiniteFromString,
-      column2: S.String,
-    }).pipe(pluck("column1"));
+  it.effect(
+    "decodes a one-property struct into the selected field value",
+    Effect.fnUntraced(function* () {
+      const schema = S.Struct({
+        column1: S.FiniteFromString,
+        column2: S.String,
+      }).pipe(pluck("column1"));
 
-    expect(S.decodeSync(schema)({ column1: "1" })).toBe(1);
-  });
+      expect(yield* S.decodeEffect(schema)({ column1: "1" })).toBe(1);
+    })
+  );
 
-  it("encodes the selected field value back into a one-property struct", () => {
-    const schema = S.Struct({
-      column1: S.FiniteFromString,
-      column2: S.String,
-    }).pipe(pluck("column1"));
+  it.effect(
+    "encodes the selected field value back into a one-property struct",
+    Effect.fnUntraced(function* () {
+      const schema = S.Struct({
+        column1: S.FiniteFromString,
+        column2: S.String,
+      }).pipe(pluck("column1"));
 
-    expect(S.encodeSync(schema)(2)).toEqual({ column1: "2" });
-  });
+      expect(yield* S.encodeEffect(schema)(2)).toEqual({ column1: "2" });
+    })
+  );
 });
 
 describe("encoding adapters", () => {
@@ -111,8 +117,16 @@ describe("encoding adapters", () => {
     expect(O.isSome(Encoders.encodeUnknownOption(NumberFromString)(42))).toBe(true);
     expect(Result.isSuccess(Encoders.encodeResult(NumberFromString)(42))).toBe(true);
     expect(Result.isSuccess(Encoders.encodeUnknownResult(NumberFromString)(42))).toBe(true);
-    expect(Encoders.encodeSync(NumberFromString)(42)).toBe("42");
-    expect(Encoders.encodeUnknownSync(NumberFromString)(42)).toBe("42");
+    const encoded = Encoders.encodeResult(NumberFromString)(42);
+    expect(Result.isSuccess(encoded)).toBe(true);
+    if (Result.isSuccess(encoded)) {
+      expect(encoded.success).toBe("42");
+    }
+    const encodedUnknown = Encoders.encodeUnknownResult(NumberFromString)(42);
+    expect(Result.isSuccess(encodedUnknown)).toBe(true);
+    if (Result.isSuccess(encodedUnknown)) {
+      expect(encodedUnknown.success).toBe("42");
+    }
   });
 
   it.effect(
@@ -160,39 +174,59 @@ describe("encoding adapters", () => {
         Encoders.encodeUnknownResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)
       )
     ).toBe(true);
-    expect(Encoders.encodeSync(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)).toEqual({
-      value: "ok",
-    });
-    expect(Encoders.encodeUnknownSync(Struct, creationOptions)(inputWithExcessProperty, applicationOptions)).toEqual({
-      value: "ok",
-    });
+    const encoded = Encoders.encodeResult(Struct, creationOptions)(inputWithExcessProperty, applicationOptions);
+    expect(Result.isSuccess(encoded)).toBe(true);
+    if (Result.isSuccess(encoded)) {
+      expect(encoded.success).toEqual({
+        value: "ok",
+      });
+    }
+    const encodedUnknown = Encoders.encodeUnknownResult(Struct, creationOptions)(
+      inputWithExcessProperty,
+      applicationOptions
+    );
+    expect(Result.isSuccess(encodedUnknown)).toBe(true);
+    if (Result.isSuccess(encodedUnknown)) {
+      expect(encodedUnknown.success).toEqual({
+        value: "ok",
+      });
+    }
   });
 
   it("exports the encoding adapters from the SchemaUtils barrel", () => {
     expect(SchemaUtils.encodeEffect).toBe(Encoders.encodeEffect);
-    expect(SchemaUtils.encodeSync).toBe(Encoders.encodeSync);
+    expect(SchemaUtils.encodeResult).toBe(Encoders.encodeResult);
   });
 });
 
 describe("split", () => {
-  it("decodes delimited strings into readonly string arrays", () => {
-    const schema = split(",");
+  it.effect(
+    "decodes delimited strings into readonly string arrays",
+    Effect.fnUntraced(function* () {
+      const schema = split(",");
 
-    expect(S.decodeSync(schema)("red,green,blue")).toEqual(["red", "green", "blue"]);
-  });
+      expect(yield* S.decodeEffect(schema)("red,green,blue")).toEqual(["red", "green", "blue"]);
+    })
+  );
 
-  it("encodes readonly string arrays back into delimited strings", () => {
-    const schema = split(",");
+  it.effect(
+    "encodes readonly string arrays back into delimited strings",
+    Effect.fnUntraced(function* () {
+      const schema = split(",");
 
-    expect(S.encodeSync(schema)(["red", "green", "blue"])).toBe("red,green,blue");
-  });
+      expect(yield* S.encodeEffect(schema)(["red", "green", "blue"])).toBe("red,green,blue");
+    })
+  );
 
-  it("preserves empty segments instead of normalizing them away", () => {
-    const schema = split(",");
+  it.effect(
+    "preserves empty segments instead of normalizing them away",
+    Effect.fnUntraced(function* () {
+      const schema = split(",");
 
-    expect(S.decodeSync(schema)("red,,blue")).toEqual(["red", "", "blue"]);
-    expect(S.encodeSync(schema)(["red", "", "blue"])).toBe("red,,blue");
-  });
+      expect(yield* S.decodeEffect(schema)("red,,blue")).toEqual(["red", "", "blue"]);
+      expect(yield* S.encodeEffect(schema)(["red", "", "blue"])).toBe("red,,blue");
+    })
+  );
 });
 
 describe("toEquivalence", () => {
@@ -278,13 +312,21 @@ describe("withStatics", () => {
 });
 
 describe("withEmptyArrayDefaults", () => {
-  it("defaults missing array fields to an empty readonly array", () => {
-    expect(A.isReadonlyArrayEmpty(decodeEmptyArraySettingsSync({}).tags)).toBe(true);
-  });
+  it.effect(
+    "defaults missing array fields to an empty readonly array",
+    Effect.fnUntraced(function* () {
+      expect(A.isReadonlyArrayEmpty((yield* decodeEmptyArraySettingsEffect({})).tags)).toBe(true);
+    })
+  );
 
-  it("supports the data-first call style", () => {
-    expect(A.isReadonlyArrayEmpty(decodeDataFirstEmptyArraySettingsSync({ tags: undefined }).tags)).toBe(true);
-  });
+  it.effect(
+    "supports the data-first call style",
+    Effect.fnUntraced(function* () {
+      expect(A.isReadonlyArrayEmpty((yield* decodeDataFirstEmptyArraySettingsEffect({ tags: undefined })).tags)).toBe(
+        true
+      );
+    })
+  );
 });
 
 describe("withNoneDefault", () => {
@@ -297,10 +339,13 @@ describe("withNoneDefault", () => {
     expect(O.isNone(NullableDirectionNode.make({}).direction)).toBe(true);
   });
 
-  it("leaves the decode contract intact (missing optional key still decodes to None)", () => {
-    expect(O.isNone(decodeOptionalLabelNodeSync({}).label)).toBe(true);
-    expect(decodeOptionalLabelNodeSync({ label: "x" }).label).toStrictEqual(O.some("x"));
-  });
+  it.effect(
+    "leaves the decode contract intact (missing optional key still decodes to None)",
+    Effect.fnUntraced(function* () {
+      expect(O.isNone((yield* decodeOptionalLabelNodeEffect({})).label)).toBe(true);
+      expect((yield* decodeOptionalLabelNodeEffect({ label: "x" })).label).toStrictEqual(O.some("x"));
+    })
+  );
 });
 
 describe("withConstantDefault", () => {
@@ -311,32 +356,31 @@ describe("withConstantDefault", () => {
     expect(made.format).toBe("");
   });
 
-  it("leaves the encoded contract required (the key is still mandatory on decode)", () => {
-    expect(() => decodeUnknownRequiredVersionNodeSync({})).toThrow();
-    expect(decodeRequiredVersionNodeSync({ version: 1 }).version).toBe(1);
-  });
+  it.effect(
+    "leaves the encoded contract required (the key is still mandatory on decode)",
+    Effect.fnUntraced(function* () {
+      const failure1 = yield* Effect.result(decodeUnknownRequiredVersionNodeEffect({}));
+      expect(Result.isFailure(failure1)).toBe(true);
+      expect((yield* decodeRequiredVersionNodeEffect({ version: 1 })).version).toBe(1);
+    })
+  );
 });
 
 describe("withCodecStatics", () => {
   const Slug = S.NonEmptyString.pipe(SchemaUtils.withCodecStatics(["decodeUnknownOption", "decodeUnknownSync", "is"]));
 
-  it("attached statics agree with the raw schema codecs over schema-derived samples", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(S.NonEmptyString)]),
-          ([sampled]) => {
-            expect(Slug.is(sampled)).toBe(isNonEmptyString(sampled));
-            expect(Slug.decodeUnknownSync(sampled)).toBe(sampled);
-            expect(O.isSome(Slug.decodeUnknownOption(sampled))).toBe(true);
+  it.effect.prop(
+    "attached statics agree with the raw schema codecs over schema-derived samples",
+    [Arbitrary.schema(S.NonEmptyString)],
+    Effect.fnUntraced(function* ([sampled]) {
+      expect(Slug.is(sampled)).toBe(isNonEmptyString(sampled));
+      expect(Slug.decodeUnknownSync(sampled)).toBe(sampled);
+      expect(O.isSome(Slug.decodeUnknownOption(sampled))).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 
   it("attaches a working `is` guard", () => {
     expect(Slug.is("post")).toBe(true);

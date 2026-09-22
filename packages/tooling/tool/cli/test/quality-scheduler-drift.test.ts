@@ -12,6 +12,7 @@ import {
   withQualityAdmission,
 } from "@beep/repo-cli/test/RepoRun";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -56,7 +57,7 @@ inspector.Session.prototype.post = function (this: inspector.Session, method: st
 } as typeof originalInspectorPost;
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
+  Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 
 const request = AdmissionRequest.make({
@@ -96,7 +97,7 @@ describe("QualityScheduler deterministic memory readings", () => {
       const stats = yield* readMemoryStatsFrom("MemTotal: 134217728 kB\nMemAvailable: 52428800 kB\n");
 
       expect(stats).toEqual({ availableGib: 50, totalGib: 128 });
-    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer)))
   );
 
   it.effect("falls back to finite system readings for malformed procfs fields", () =>
@@ -107,7 +108,7 @@ describe("QualityScheduler deterministic memory readings", () => {
       expect(Number.isFinite(stats.totalGib)).toBe(true);
       expect(stats.availableGib).toBeGreaterThanOrEqual(0);
       expect(stats.totalGib).toBeGreaterThan(0);
-    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+    }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer)))
   );
 
   it.effect("rolls back a staged lease when memory drops before publication", () =>

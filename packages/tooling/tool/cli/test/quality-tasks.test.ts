@@ -156,6 +156,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe, expect, it } from "@effect/vitest";
@@ -199,23 +200,23 @@ const encodeQualityTaskLaneRunReportJson = S.encodeEffect(S.fromJsonString(Quali
 const decodeCoverageComparisonFailure = S.decodeEffect(CoverageComparisonFailure);
 const decodeGithubCheckFailurePolicy = S.decodeEffect(GithubCheckFailurePolicy);
 const decodeGithubCheckRunReport = S.decodeEffect(GithubCheckRunReport);
-const decodeGithubCheckRunReportSync = S.decodeSync(GithubCheckRunReport);
+const decodeGithubCheckRunReportEffect = S.decodeEffect(GithubCheckRunReport);
 const decodeUnknownCoverageRegressionBaseline = S.decodeUnknownEffect(CoverageRegressionBaseline);
-const encodeCoverageFileBaselineSync = S.encodeSync(CoverageFileBaseline);
-const encodeCoverageSelfJudgeScopeSync = S.encodeSync(CoverageSelfJudgeScope);
-const decodeCoverageFileBaselineUnknownSync = S.decodeUnknownSync(CoverageFileBaseline);
+const encodeCoverageFileBaselineJson = S.encodeEffect(S.fromJsonString(CoverageFileBaseline));
+const encodeCoverageSelfJudgeScopeEffect = S.encodeEffect(CoverageSelfJudgeScope);
+const decodeCoverageFileBaselineJson = S.decodeUnknownEffect(S.fromJsonString(CoverageFileBaseline));
 const encodeCoverageRegressionBaseline = S.encodeEffect(CoverageRegressionBaseline);
-const encodeGithubCheckRunReportSync = S.encodeSync(GithubCheckRunReport);
+const encodeGithubCheckRunReportEffect = S.encodeEffect(GithubCheckRunReport);
 const decodeTurboLaneLedgerRow = S.decodeUnknownEffect(S.fromJsonString(TurboLaneLedgerRow));
 const encodeTurboRunSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
 
-const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer);
 const PlatformLayer = Layer.mergeAll(
   FileSystemLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
   TestConsole.layer
 );
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
 const decodeCoverageRegressionBaselineJsoncForTesting = decodeJsoncTextAs(CoverageRegressionBaseline);
 const isDomainError = S.is(DomainError);
@@ -1328,7 +1329,7 @@ describe("quality task adapter", () => {
           Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length),
           decodeQualityTaskLaneRunReportJson
         );
-        const expected = foldTurboLaneDigests([
+        const expected = yield* foldTurboLaneDigests([
           TurboLaneDigest.make({
             digest: "declared",
             summaryIds: ["run-1"],
@@ -1419,7 +1420,7 @@ describe("quality task adapter", () => {
           ledger,
           runQualityTaskStreamingLaneGroup("ci:local", [["lint", direct, O.none()]])
         );
-        const expected = yield* Effect.fromOption(turboLaneDigestFromSummary(summary, ["lint:typos"]));
+        const expected = yield* Effect.fromOption(yield* turboLaneDigestFromSummary(summary, ["lint:typos"]));
         // The child declared the step's digest and closed the ledger with that one attempt.
         assertSome(
           O.map(yield* readTurboLaneLedger(ledger), (digest) => digest.digest),
@@ -1672,25 +1673,20 @@ describe("quality task adapter", () => {
       }).pipe(provideScopedLayer(PlatformLayer))
     ));
 
-  it("property: the wave report schema round-trips arbitrary reports", () => {
+  {
     const ReportArbitrary = Arbitrary.schema(GithubCheckRunReport);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ReportArbitrary]),
-          ([report]) => {
-            const decoded = decodeGithubCheckRunReportSync(encodeGithubCheckRunReportSync(report));
-            expect(decoded.schemaVersion).toBe("github-check-run/v1");
-            expect(decoded.failurePolicy).toBe(report.failurePolicy);
-            expect(A.map(decoded.lanes, (lane) => lane.id)).toEqual(A.map(report.lanes, (lane) => lane.id));
-
-            return true;
-          },
-          fcRuns(32)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+    it.effect.prop(
+      "property: the wave report schema round-trips arbitrary reports",
+      [ReportArbitrary],
+      Effect.fnUntraced(function* ([report]) {
+        const decoded = yield* decodeGithubCheckRunReportEffect(yield* encodeGithubCheckRunReportEffect(report));
+        expect(decoded.schemaVersion).toBe("github-check-run/v1");
+        expect(decoded.failurePolicy).toBe(report.failurePolicy);
+        expect(A.map(decoded.lanes, (lane) => lane.id)).toEqual(A.map(report.lanes, (lane) => lane.id));
+      }),
+      { arbitrary: fcRuns(32) }
+    );
+  }
 
   it.effect(
     "must-fail fixture: changing the seed changes order and unknown lanes retain declaration order",
@@ -2711,47 +2707,48 @@ describe("quality task adapter", () => {
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([]);
   });
 
-  it("falls back to diff-scoped audit when Fallow cannot create the base worktree", () => {
-    expect(
-      fallowAuditNeedsDiffFallbackForTesting({
-        exitCode: 2,
-        stdout: JSON.stringify({
-          error: true,
-          message: "could not create a temporary worktree for base ref 'origin/main'",
-          exit_code: 2,
-        }),
-      })
-    ).toBe(true);
-    expect(
-      fallowAuditNeedsDiffFallbackForTesting({
-        exitCode: 2,
-        stdout: "",
-        stderr: JSON.stringify({
-          error: true,
-          message: "could not create a temporary worktree for base ref 'origin/main'",
-          exit_code: 2,
-        }),
-      })
-    ).toBe(true);
-    expect(fallowAuditNeedsDiffFallbackForTesting({ exitCode: 2, stdout: '{"error":true}' })).toBe(false);
-    expect(fallowAuditDiffFallbackArgsForTesting({ diffPath: "/tmp/audit.diff", quiet: true })("origin/main")).toEqual([
-      "run",
-      "fallow",
-      "--",
-      "audit",
-      "--config",
-      ".fallowrc.jsonc",
-      "--format",
-      "json",
-      "--quiet",
-      "--base",
-      "origin/main",
-      "--diff-file",
-      "/tmp/audit.diff",
-      "--gate",
-      "all",
-    ]);
-  });
+  it.effect("falls back to diff-scoped audit when Fallow cannot create the base worktree", () =>
+    Effect.gen(function* () {
+      const worktreeError = yield* encodeJson({
+        error: true,
+        message: "could not create a temporary worktree for base ref 'origin/main'",
+        exit_code: 2,
+      });
+      expect(
+        fallowAuditNeedsDiffFallbackForTesting({
+          exitCode: 2,
+          stdout: worktreeError,
+        })
+      ).toBe(true);
+      expect(
+        fallowAuditNeedsDiffFallbackForTesting({
+          exitCode: 2,
+          stdout: "",
+          stderr: worktreeError,
+        })
+      ).toBe(true);
+      expect(fallowAuditNeedsDiffFallbackForTesting({ exitCode: 2, stdout: '{"error":true}' })).toBe(false);
+      expect(
+        fallowAuditDiffFallbackArgsForTesting({ diffPath: "/tmp/audit.diff", quiet: true })("origin/main")
+      ).toEqual([
+        "run",
+        "fallow",
+        "--",
+        "audit",
+        "--config",
+        ".fallowrc.jsonc",
+        "--format",
+        "json",
+        "--quiet",
+        "--base",
+        "origin/main",
+        "--diff-file",
+        "/tmp/audit.diff",
+        "--gate",
+        "all",
+      ]);
+    })
+  );
 
   it("includes untracked files in the diff-scoped audit input", () =>
     Effect.runPromise(
@@ -3107,7 +3104,7 @@ describe("quality task adapter", () => {
     Effect.runPromise(
       Effect.gen(function* () {
         const findings = yield* normalizeKnipReportForTesting(
-          encodeJson({
+          yield* encodeJson({
             issues: [
               {
                 file: "b.ts",
@@ -3935,7 +3932,7 @@ describe("quality task adapter", () => {
       const baseline = yield* coveragePackageBaselineFromSummaryForTesting(
         "/repo",
         "/repo/packages/existing",
-        encodeJson({
+        yield* encodeJson({
           total: vitestCoverageMetrics(20, 15, 75),
           "/repo/packages/existing/src/Absolute.ts": vitestCoverageMetrics(10, 10, 100),
           "src/Relative.ts": vitestCoverageMetrics(10, 5, 50),
@@ -3958,7 +3955,7 @@ describe("quality task adapter", () => {
       const baseline = yield* coveragePackageBaselineFromSummaryForTesting(
         "/repo",
         "/repo/packages/existing",
-        encodeJson({
+        yield* encodeJson({
           total: vitestCoverageMetrics(10, 0, 100),
           "src/Fractional.ts": vitestCoverageMetrics(134, 115, 100),
           "src/NoSubjects.ts": vitestCoverageMetrics(0, 0, "Unknown"),
@@ -3991,7 +3988,7 @@ describe("quality task adapter", () => {
             coveragePackageBaselineFromSummaryForTesting(
               "/repo",
               "/repo/packages/existing",
-              encodeJson({
+              yield* encodeJson({
                 total: vitestCoverageMetrics(10, 10, 100),
                 ...R.fromEntries(A.map(rawPaths, (rawPath) => [rawPath, vitestCoverageMetrics(10, 10, 100)])),
               })
@@ -4017,7 +4014,7 @@ describe("quality task adapter", () => {
             coveragePackageBaselineFromSummaryForTesting(
               "/repo",
               "/repo/packages/existing",
-              encodeJson({
+              yield* encodeJson({
                 total: vitestCoverageMetrics(10, 10, 100),
                 [`src/Unsafe${control}Name.ts`]: vitestCoverageMetrics(10, 10, 100),
               })
@@ -4040,7 +4037,7 @@ describe("quality task adapter", () => {
         coveragePackageBaselineFromSummaryForTesting(
           "/repo",
           "/repo/packages/existing",
-          encodeJson({
+          yield* encodeJson({
             total: {
               ...vitestCoverageMetrics(10, 10, 100),
               lines: { total: 10, covered: 10, skipped: 0, pct: invalidPct },
@@ -4081,7 +4078,7 @@ describe("quality task adapter", () => {
             coveragePackageBaselineFromSummaryForTesting(
               "/repo",
               "/repo/packages/existing",
-              encodeJson({ total: valid, "src/Index.ts": summary })
+              yield* encodeJson({ total: valid, "src/Index.ts": summary })
             ).pipe(provideScopedLayer(NodePath.layer))
           );
           assert.isTrue(Exit.isFailure(decoded), `Expected ${label} to fail summary decoding`);
@@ -4262,18 +4259,18 @@ describe("quality task adapter", () => {
           yield* fs.makeDirectory(standardsDirectory, { recursive: true });
           yield* fs.writeFileString(
             path.join(repoRoot, "package.json"),
-            encodeJson({ name: "@beep/existing", scripts: { coverage: "vitest" } })
+            yield* encodeJson({ name: "@beep/existing", scripts: { coverage: "vitest" } })
           );
           yield* fs.writeFileString(
             path.join(coverageDirectory, "coverage-summary.json"),
-            encodeJson({
+            yield* encodeJson({
               total: vitestCoverageMetrics(10, 8, 80),
               "src/Index.ts": vitestCoverageMetrics(10, 8, 80),
             })
           );
           yield* fs.writeFileString(
             baselinePath,
-            encodeJson({
+            yield* encodeJson({
               schema_version: 1,
               generated_at: "2026-07-06T00:00:00.000Z",
               git_sha: "legacy-sha",
@@ -4291,7 +4288,7 @@ describe("quality task adapter", () => {
 
           yield* fs.writeFileString(
             baselinePath,
-            encodeJson({
+            yield* encodeJson({
               schema_version: 1,
               generated_at: "2026-07-06T00:00:00.000Z",
               git_sha: "legacy-sha",
@@ -4360,23 +4357,23 @@ describe("quality task adapter", () => {
           yield* fs.makeDirectory(standardsDirectory, { recursive: true });
           yield* fs.writeFileString(
             path.join(repoRoot, "package.json"),
-            encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
+            yield* encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
           );
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({ name: "@beep/existing", private: true, scripts: { coverage: "vitest" } })
+            yield* encodeJson({ name: "@beep/existing", private: true, scripts: { coverage: "vitest" } })
           );
           yield* fs.writeFileString(sourcePath, "export const value = 1;\n");
           yield* fs.writeFileString(
             path.join(coverageDirectory, "coverage-summary.json"),
-            encodeJson({
+            yield* encodeJson({
               total: vitestCoverageMetrics(10, 9, 90),
               "src/Index.ts": vitestCoverageMetrics(10, 9, 90),
             })
           );
           yield* fs.writeFileString(
             baselinePath,
-            encodeJson({
+            yield* encodeJson({
               schema_version: 2,
               generated_at: "2026-07-06T00:00:00.000Z",
               git_sha: "committed-sha",
@@ -4676,19 +4673,22 @@ describe("quality task adapter", () => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const repoRoot = process.cwd();
-            const writePackage = (dir: string, manifest: Record<string, unknown>) =>
-              fs
+            const writePackage = Effect.fnUntraced(function* (dir: string, manifest: Record<string, unknown>) {
+              return yield* fs
                 .makeDirectory(path.join(repoRoot, dir), { recursive: true })
                 .pipe(
-                  Effect.andThen(fs.writeFileString(path.join(repoRoot, dir, "package.json"), encodeJson(manifest)))
+                  Effect.andThen(
+                    fs.writeFileString(path.join(repoRoot, dir, "package.json"), yield* encodeJson(manifest))
+                  )
                 );
+            });
 
             // The root carries the aggregate `coverage` script and a workspace
             // dependency, exactly the shape that would otherwise make it a
             // dependent of nearly every package.
             yield* fs.writeFileString(
               path.join(repoRoot, "package.json"),
-              encodeJson({
+              yield* encodeJson({
                 name: "@beep/root",
                 private: true,
                 workspaces: ["packages/*"],
@@ -4849,27 +4849,29 @@ describe("quality task adapter", () => {
       expect(coverageDependentOwners(owners, ["@beep/x", "@beep/y"])).toEqual(["@beep/z"]);
     });
 
-    it("names one changed file per package and every dependent in package-name order", () => {
-      const owners = [owner("x"), owner("y", { dependsOn: ["x"] }), owner("z", { dependsOn: ["x"] }), owner("w")];
-      // Two changed files in @beep/x: the first path in sorted order is the one
-      // the witness names, so the diagnostic is stable across runs.
-      const scope = planCoverageSelfJudgeScope(owners, [
-        "packages/x/src/Index.ts",
-        "packages/x/src/Alpha.ts",
-        "packages/w/src/Index.ts",
-      ]);
+    it.effect("names one changed file per package and every dependent in package-name order", () =>
+      Effect.gen(function* () {
+        const owners = [owner("x"), owner("y", { dependsOn: ["x"] }), owner("z", { dependsOn: ["x"] }), owner("w")];
+        // Two changed files in @beep/x: the first path in sorted order is the one
+        // the witness names, so the diagnostic is stable across runs.
+        const scope = planCoverageSelfJudgeScope(owners, [
+          "packages/x/src/Index.ts",
+          "packages/x/src/Alpha.ts",
+          "packages/w/src/Index.ts",
+        ]);
 
-      // Dependents are assigned first, in package-name order, then direct
-      // ownership overwrites any dependency witness for the same package.
-      expect(R.keys(scope.packageExclusions)).toEqual(["@beep/y", "@beep/z", "@beep/w", "@beep/x"]);
-      expect(encodeCoverageSelfJudgeScopeSync(scope).packageExclusions).toEqual({
-        "@beep/y": { _tag: "dependent-of-changed-package", packageName: "@beep/x" },
-        "@beep/z": { _tag: "dependent-of-changed-package", packageName: "@beep/x" },
-        "@beep/x": { _tag: "owns-changed-file", filePath: "packages/x/src/Alpha.ts" },
-        "@beep/w": { _tag: "owns-changed-file", filePath: "packages/w/src/Index.ts" },
-      });
-      expect(O.isNone(scope.globalExclusion)).toBe(true);
-    });
+        // Dependents are assigned first, in package-name order, then direct
+        // ownership overwrites any dependency witness for the same package.
+        expect(R.keys(scope.packageExclusions)).toEqual(["@beep/y", "@beep/z", "@beep/w", "@beep/x"]);
+        expect((yield* encodeCoverageSelfJudgeScopeEffect(scope)).packageExclusions).toEqual({
+          "@beep/y": { _tag: "dependent-of-changed-package", packageName: "@beep/x" },
+          "@beep/z": { _tag: "dependent-of-changed-package", packageName: "@beep/x" },
+          "@beep/x": { _tag: "owns-changed-file", filePath: "packages/x/src/Alpha.ts" },
+          "@beep/w": { _tag: "owns-changed-file", filePath: "packages/w/src/Index.ts" },
+        });
+        expect(O.isNone(scope.globalExclusion)).toBe(true);
+      })
+    );
 
     it("weighs a selection with the shard planner's per-package seconds, counting duplicates once", () => {
       expect(coverageScopeWeightSeconds(["@beep/repo-cli", "@beep/repo-cli"])).toBe(720.62);
@@ -5024,7 +5026,11 @@ describe("quality task adapter", () => {
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             const writeBaseline = (document: CoverageRegressionBaseline) =>
               encodeCoverageRegressionBaseline(document).pipe(
-                Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+                Effect.flatMap(
+                  Effect.fnUntraced(function* (encoded) {
+                    return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                  })
+                )
               );
 
             yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
@@ -5084,7 +5090,11 @@ describe("quality task adapter", () => {
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             const writeBaseline = (document: CoverageRegressionBaseline) =>
               encodeCoverageRegressionBaseline(document).pipe(
-                Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+                Effect.flatMap(
+                  Effect.fnUntraced(function* (encoded) {
+                    return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                  })
+                )
               );
 
             yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
@@ -5157,7 +5167,13 @@ describe("quality task adapter", () => {
             yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
             yield* encodeCoverageRegressionBaseline(
               CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, generated_at: "workspace" })
-            ).pipe(Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded))));
+            ).pipe(
+              Effect.flatMap(
+                Effect.fnUntraced(function* (encoded) {
+                  return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                })
+              )
+            );
 
             const selected = yield* readCoverageComparisonBaselineForTesting(repoRoot).pipe(
               Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
@@ -5178,7 +5194,11 @@ describe("quality task adapter", () => {
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
             yield* encodeCoverageRegressionBaseline(coverageRegressionBaseline).pipe(
-              Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+              Effect.flatMap(
+                Effect.fnUntraced(function* (encoded) {
+                  return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                })
+              )
             );
             yield* runGit(repoRoot, ["init"]);
 
@@ -5510,35 +5530,39 @@ describe("quality task adapter", () => {
         );
       });
 
-      it("passes the #1076 shape when the package total is lowered with its file rows", () => {
-        const firstFile = "packages/existing/src/code-block-node.tsx";
-        const secondFile = "packages/existing/src/mermaid-node.tsx";
-        const withEditorFiles = (metric: number, uncovered: number, fileMetric: number, fileUncovered: number) =>
-          packageRow(metric, uncovered, {
-            [firstFile]: coverageFileBaseline(fileMetric, fileUncovered),
-            [secondFile]: coverageFileBaseline(fileMetric, fileUncovered),
-          });
-        const editorBase = withEditorFiles(80, 20, 27.27, 8);
-        const editorLowered = withEditorFiles(60, 30, 0, 11);
+      it.effect("passes the #1076 shape when the package total is lowered with its file rows", () =>
+        Effect.gen(function* () {
+          const firstFile = "packages/existing/src/code-block-node.tsx";
+          const secondFile = "packages/existing/src/mermaid-node.tsx";
+          const withEditorFiles = (metric: number, uncovered: number, fileMetric: number, fileUncovered: number) =>
+            packageRow(metric, uncovered, {
+              [firstFile]: coverageFileBaseline(fileMetric, fileUncovered),
+              [secondFile]: coverageFileBaseline(fileMetric, fileUncovered),
+            });
+          const editorBase = withEditorFiles(80, 20, 27.27, 8);
+          const editorLowered = withEditorFiles(60, 30, 0, 11);
 
-        const adopted = judge(editorBase, editorBase, editorLowered, editorLowered);
-        expect(adopted.failures).toEqual([]);
-        expect(A.length(adopted.loweredFloors)).toBe(12);
+          const adopted = judge(editorBase, editorBase, editorLowered, editorLowered);
+          expect(adopted.failures).toEqual([]);
+          expect(A.length(adopted.loweredFloors)).toBe(12);
 
-        // The file rows are lowered but the package total is left at the base
-        // floor, so the package comparison still fails.
-        const packageStillHigh = judge(
-          editorBase,
-          editorBase,
-          withEditorFiles(80, 20, 0, 11),
-          withEditorFiles(60, 30, 0, 11)
-        );
-        expect(A.map(packageStillHigh.failures, (failure) => failure._tag)).toEqual(A.makeBy(4, () => "baseline-drop"));
-        expect(A.every(packageStillHigh.failures, (failure) => O.isNone(failure.filePath))).toBe(true);
-        expect(renderCoverageMeasuredRowProposals(packageStillHigh)[1]).toBe(
-          `  "@beep/existing" totals: ${JSON.stringify(encodeCoverageFileBaselineSync(coverageFileBaseline(60, 30)))}`
-        );
-      });
+          // The file rows are lowered but the package total is left at the base
+          // floor, so the package comparison still fails.
+          const packageStillHigh = judge(
+            editorBase,
+            editorBase,
+            withEditorFiles(80, 20, 0, 11),
+            withEditorFiles(60, 30, 0, 11)
+          );
+          expect(A.map(packageStillHigh.failures, (failure) => failure._tag)).toEqual(
+            A.makeBy(4, () => "baseline-drop")
+          );
+          expect(A.every(packageStillHigh.failures, (failure) => O.isNone(failure.filePath))).toBe(true);
+          expect(renderCoverageMeasuredRowProposals(packageStillHigh)[1]).toBe(
+            `  "@beep/existing" totals: ${yield* encodeCoverageFileBaselineJson(coverageFileBaseline(60, 30))}`
+          );
+        })
+      );
 
       it("passes the #1090 shape where every lowered row equals the hosted value", () => {
         const paths = A.makeBy(6, (index) => `packages/existing/src/Row${index}.ts`);
@@ -5594,24 +5618,29 @@ describe("quality task adapter", () => {
         expect(A.map(result.packageRowRemovals, (removal) => removal.packagePath)).toEqual(["packages/existing"]);
       });
 
-      it("proposes the measured row for every reported path and round-trips it", () => {
-        const result = judge(base, base, lowered, lowered, [filePath]);
-        const lines = renderCoverageMeasuredRowProposals(result);
+      it.effect("proposes the measured row for every reported path and round-trips it", () =>
+        Effect.gen(function* () {
+          const result = judge(base, base, lowered, lowered, [filePath]);
+          const lines = renderCoverageMeasuredRowProposals(result);
 
-        expect(lines[0]).toBe(
-          "[coverage-ratchet] measured rows for the reported paths (hosted evidence; paste into standards/coverage.regression-baseline.jsonc):"
-        );
-        expect(lines[1]).toBe(
-          `  "@beep/existing" totals: ${JSON.stringify(encodeCoverageFileBaselineSync(coverageFileBaseline(70, 30)))}`
-        );
-        expect(lines[2]).toBe(
-          `  "@beep/existing" files["${filePath}"]: ${JSON.stringify(encodeCoverageFileBaselineSync(coverageFileBaseline(70, 30)))}`
-        );
-        const decoded = A.map(A.drop(lines, 1), (line) =>
-          decodeCoverageFileBaselineUnknownSync(JSON.parse(O.getOrElse(A.last(Str.split(": ")(line)), () => "")))
-        );
-        expect(A.map(decoded, (row) => row.lines)).toEqual([70, 70]);
-      });
+          expect(lines[0]).toBe(
+            "[coverage-ratchet] measured rows for the reported paths (hosted evidence; paste into standards/coverage.regression-baseline.jsonc):"
+          );
+          expect(lines[1]).toBe(
+            `  "@beep/existing" totals: ${yield* encodeCoverageFileBaselineJson(coverageFileBaseline(70, 30))}`
+          );
+          expect(lines[2]).toBe(
+            `  "@beep/existing" files["${filePath}"]: ${yield* encodeCoverageFileBaselineJson(coverageFileBaseline(70, 30))}`
+          );
+          const decoded = yield* Effect.forEach(
+            A.drop(lines, 1),
+            Effect.fnUntraced(function* (line) {
+              return yield* decodeCoverageFileBaselineJson(O.getOrElse(A.last(Str.split(": ")(line)), () => ""));
+            })
+          );
+          expect(A.map(decoded, (row) => row.lines)).toEqual([70, 70]);
+        })
+      );
 
       it("names the writer only for a new file, never for a drop on an existing row", () => {
         const droppedRemediation = A.join(
@@ -5655,7 +5684,11 @@ describe("quality task adapter", () => {
               const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
               const writeBaseline = (document: CoverageRegressionBaseline) =>
                 encodeCoverageRegressionBaseline(document).pipe(
-                  Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+                  Effect.flatMap(
+                    Effect.fnUntraced(function* (encoded) {
+                      return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                    })
+                  )
                 );
               const workspaceRow = (packageName: string, metric: number, uncovered: number) =>
                 CoveragePackageBaseline.make({
@@ -5669,16 +5702,19 @@ describe("quality task adapter", () => {
               yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
               yield* fs.writeFileString(
                 path.join(repoRoot, "package.json"),
-                encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
+                yield* encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
               );
-              yield* Effect.forEach(["touched", "untouched"], (name) =>
-                Effect.all([
-                  fs.writeFileString(
-                    path.join(repoRoot, `packages/${name}/package.json`),
-                    encodeJson({ name: `@beep/${name}`, private: true, scripts: { coverage: "vitest" } })
-                  ),
-                  fs.writeFileString(path.join(repoRoot, `packages/${name}/src/Index.ts`), "export const v = 1;\n"),
-                ])
+              yield* Effect.forEach(
+                ["touched", "untouched"],
+                Effect.fnUntraced(function* (name) {
+                  return yield* Effect.all([
+                    fs.writeFileString(
+                      path.join(repoRoot, `packages/${name}/package.json`),
+                      yield* encodeJson({ name: `@beep/${name}`, private: true, scripts: { coverage: "vitest" } })
+                    ),
+                    fs.writeFileString(path.join(repoRoot, `packages/${name}/src/Index.ts`), "export const v = 1;\n"),
+                  ]);
+                })
               );
               yield* writeBaseline(
                 withRows({
@@ -5753,18 +5789,22 @@ describe("quality task adapter", () => {
             const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
             const writeBaseline = (document: CoverageRegressionBaseline) =>
               encodeCoverageRegressionBaseline(document).pipe(
-                Effect.flatMap((encoded) => fs.writeFileString(baselinePath, encodeJson(encoded)))
+                Effect.flatMap(
+                  Effect.fnUntraced(function* (encoded) {
+                    return yield* fs.writeFileString(baselinePath, yield* encodeJson(encoded));
+                  })
+                )
               );
 
             yield* fs.makeDirectory(path.join(repoRoot, "packages/existing/src"), { recursive: true });
             yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
             yield* fs.writeFileString(
               path.join(repoRoot, "package.json"),
-              encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
+              yield* encodeJson({ name: "@beep/test-root", private: true, workspaces: ["packages/*"] })
             );
             yield* fs.writeFileString(
               path.join(repoRoot, "packages/existing/package.json"),
-              encodeJson({ name: "@beep/existing", private: true, scripts: { coverage: "vitest" } })
+              yield* encodeJson({ name: "@beep/existing", private: true, scripts: { coverage: "vitest" } })
             );
             yield* fs.writeFileString(path.join(repoRoot, "packages/existing/src/Index.ts"), "export const v = 1;\n");
             yield* writeBaseline(
@@ -7349,7 +7389,7 @@ describe("quality task adapter", () => {
 
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: {
@@ -7360,7 +7400,7 @@ describe("quality task adapter", () => {
           yield* fs.makeDirectory(plainPackageDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(plainPackageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/plain",
               private: true,
               scripts: {
@@ -7371,7 +7411,7 @@ describe("quality task adapter", () => {
           yield* fs.makeDirectory(integrationPackageDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(integrationPackageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/integration",
               private: true,
               scripts: {
@@ -7398,7 +7438,7 @@ describe("quality task adapter", () => {
 
           yield* fs.writeFileString(
             path.join(tmpDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/test-root",
               private: true,
               workspaces: ["packages/*"],
@@ -7407,7 +7447,7 @@ describe("quality task adapter", () => {
           yield* fs.makeDirectory(packageDir, { recursive: true });
           yield* fs.writeFileString(
             path.join(packageDir, "package.json"),
-            encodeJson({
+            yield* encodeJson({
               name: "@beep/empty",
               private: true,
               scripts: {

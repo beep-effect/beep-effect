@@ -488,16 +488,17 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
     });
 
     return yield* runner(request).pipe(
-      Effect.timeout(timeout),
-      Effect.catchTag("TimeoutError", () =>
-        Effect.fail(
-          OpenclawCommandTimeoutError.make({
-            executable: ctx.binaryPath,
-            subcommand,
-            timeoutMs,
-          })
-        )
-      )
+      Effect.timeoutOrElse({
+        duration: timeout,
+        orElse: () =>
+          Effect.fail(
+            OpenclawCommandTimeoutError.make({
+              executable: ctx.binaryPath,
+              subcommand,
+              timeoutMs,
+            })
+          ),
+      })
     );
   });
 

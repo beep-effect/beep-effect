@@ -17,6 +17,7 @@ import { repoCardImpl } from "./internal/RepoCardRun.ts";
 import { statusImpl } from "./internal/Status.ts";
 import { resolveVaultRoot } from "./internal/Vault.ts";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type * as HttpClient from "effect/unstable/http/HttpClient";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ResearchCommandError } from "./Research.errors.ts";
@@ -59,6 +60,7 @@ const $I = $RepoCliId.create("commands/Research/Research.service");
  */
 export type ResearchCommandServiceRequirements =
   | ChildProcessSpawner.ChildProcessSpawner
+  | Crypto.Crypto
   | FileSystem.FileSystem
   | HttpClient.HttpClient
   | Path.Path;

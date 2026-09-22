@@ -53,8 +53,8 @@ const makeTestHook = <E>(
   handler,
 });
 
-const encodeTestInput = S.encodeSync(S.fromJsonString(TestInput));
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeTestInput = S.encodeEffect(S.fromJsonString(TestInput));
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 const validInput = encodeTestInput(
   TestInput.make({
@@ -85,7 +85,7 @@ describe("Hook.runHookProgram", () => {
         })
       );
 
-      const result = yield* Testing.runHookWithMockStdin(hook, validInput);
+      const result = yield* Testing.runHookWithMockStdin(hook, (yield* validInput));
 
       expect(result.exitCode).toBe(0);
       expect(result.errorTag).toBeUndefined();
@@ -115,13 +115,13 @@ describe("Hook.runHookProgram", () => {
     Effect.gen(function* () {
       const hook = makeTestHook((input) => Effect.succeed(TestOutput.make({ echoed: input.value, sessionId: "x" })));
 
-      const badInput = encodeJson({
+      const badInput = (yield* encodeJson({
         session_id: "x",
         transcript_path: "/tmp/t",
         cwd: "/tmp",
         hook_event_name: "TestEvent",
         // missing: value
-      });
+      }));
 
       const result = yield* Testing.runHookWithMockStdin(hook, badInput);
 
@@ -134,7 +134,7 @@ describe("Hook.runHookProgram", () => {
     Effect.gen(function* () {
       const hook = makeTestHook(() => Effect.fail(TestFailure.make({ message: "kaboom" })));
 
-      const result = yield* Testing.runHookWithMockStdin(hook, validInput);
+      const result = yield* Testing.runHookWithMockStdin(hook, (yield* validInput));
 
       expect(result.exitCode).toBe(1);
       expect(result.errorTag).toBe("HookHandlerError");
@@ -161,7 +161,7 @@ describe("HookContext", () => {
         })
       );
 
-      const result = yield* Testing.runHookWithMockStdin(hook, validInput);
+      const result = yield* Testing.runHookWithMockStdin(hook, (yield* validInput));
 
       expect(result.exitCode).toBe(0);
       expect(result.output).toMatchObject({

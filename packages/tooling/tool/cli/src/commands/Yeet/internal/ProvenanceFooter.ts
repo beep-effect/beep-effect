@@ -33,6 +33,7 @@ import {
 } from "./Provenance.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
 import type { DomainError } from "@beep/repo-utils";
+import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber, PrProvenanceRole } from "./Provenance.ts";
@@ -211,7 +212,12 @@ const writePrBody = Effect.fn("ProvenanceFooter.writePrBody")(function* (
   }
 });
 
-type ReconcileRequirements = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type ReconcileRequirements =
+  | Crypto.Crypto
+  | FileSystem.FileSystem
+  | Path.Path
+  | Crypto.Crypto
+  | ChildProcessSpawner.ChildProcessSpawner;
 
 const yieldToConcurrentEdit = Effect.fn("ProvenanceFooter.yieldToConcurrentEdit")(function* (
   capture: typeof runRepoCommandCapture,
@@ -476,7 +482,7 @@ export const makeCurrentPrSessionRecord = Effect.fn("ProvenanceFooter.makeRecord
     prNumber,
     prUrl,
     headSha,
-    runId: runIdForContext(context),
+    runId: yield* runIdForContext(context),
     role,
     recordedAt,
   });
@@ -604,7 +610,10 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
 ): Effect.fn.Return<
   O.Option<string>,
   never,
-  FileSystem.FileSystem | Path.Path | import("effect/unstable/process").ChildProcessSpawner.ChildProcessSpawner
+  | Crypto.Crypto
+  | FileSystem.FileSystem
+  | Path.Path
+  | import("effect/unstable/process").ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* Effect.gen(function* () {
     const registry = registryOverride ?? (yield* makePrSessionRegistryLive());

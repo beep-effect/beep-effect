@@ -1,4 +1,5 @@
 import { IRI } from "@beep/rdf/Iri";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Stream } from "effect";
 import * as O from "effect/Option";
@@ -29,6 +30,7 @@ const IncompleteLanguageModel = Layer.effect(
 );
 
 const GrounderIncompleteBatch = Grounder.Default.pipe(
+  Layer.provide(BunCrypto.layer),
   Layer.provide(Layer.merge(Layer.succeed(ConfigService, DEFAULT_CONFIG), IncompleteLanguageModel))
 );
 

@@ -10,7 +10,7 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
-const decodeGuardOutput = S.decodeSync(S.fromJsonString(S.Struct({ platform: S.String, arch: S.String })));
+const decodeGuardOutput = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ platform: S.String, arch: S.String })));
 
 describe("HostProcess", () => {
   it("reads the real host platform and architecture on a Node-compatible runtime", () => {
@@ -59,7 +59,7 @@ it.layer(NodeServices.layer)("HostProcess browser-eval guard", (it) => {
         stderr: "inherit",
       });
       const output = yield* spawner.string(command);
-      expect(decodeGuardOutput(output.trim())).toEqual({ platform: "browser", arch: "unknown" });
+      expect(yield* decodeGuardOutput(output.trim())).toEqual({ platform: "browser", arch: "unknown" });
     }),
     30_000
   );

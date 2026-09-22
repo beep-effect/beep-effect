@@ -23,8 +23,6 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownMdYouTube = S.decodeUnknownEffect(Md.YouTube);
-const encodePandocCompatibilityReportSync = S.encodeSync(PandocCompatibilityReport);
-const encodePandocMappingIssueSync = S.encodeSync(PandocMappingIssue);
 
 const JsonPathArbitrary = Arbitrary.schema(JsonPath);
 const JsonPathSegmentArbitrary = Arbitrary.schema(JsonPathSegment);
@@ -380,12 +378,12 @@ describe("Pandoc.mapping", () => {
       })
     ));
 
-  it("derives JSON pointer and default severity behavior from report schemas", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([JsonPathArbitrary]),
-          ([path]) => {
+  it.effect("derives JSON pointer and default severity behavior from report schemas", () =>
+    Effect.gen(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([JsonPathArbitrary]),
+        ([path]) =>
+          Effect.gen(function* () {
             const issue = PandocMappingIssue.fromPath({
               construct: "Generated",
               direction: "pandoc-to-md",
@@ -396,18 +394,19 @@ describe("Pandoc.mapping", () => {
             expect(issue.pointer).toBe(JsonPath.toPointer(path));
             expect(issue.pointer).toBe(jsonPointerFromPath(path));
             expect(issue.severity).toBe("unsupported");
-            expect(encodePandocMappingIssueSync(issue)).not.toHaveProperty("pointer");
+            expect(yield* S.encodeEffect(PandocMappingIssue)(issue)).not.toHaveProperty("pointer");
 
             const report = PandocCompatibilityReport.fromIssues([issue]);
             expect(report.profile).toBe("gap");
-            expect(encodePandocCompatibilityReportSync(report)).not.toHaveProperty("profile");
+            expect(yield* S.encodeEffect(PandocCompatibilityReport)(report)).not.toHaveProperty("profile");
 
             return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+          }),
+        fcRuns(50)
+      );
+      expect(result._tag).toBe("Passed");
+    })
+  );
 
   it("generates only non-negative numeric JSON path segments", () =>
     expect(

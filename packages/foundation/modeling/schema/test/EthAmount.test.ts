@@ -1,25 +1,39 @@
 import { EthAmount } from "@beep/schema/EthAmount";
 import { describe, expect, it } from "@effect/vitest";
-import { BigDecimal } from "effect";
+import { BigDecimal, Effect } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-const decodeUnknownEthAmountSync = S.decodeUnknownSync(EthAmount);
-const encodeEthAmountSync = S.encodeSync(EthAmount);
+const decodeUnknownEthAmountEffect = S.decodeUnknownEffect(EthAmount);
+const encodeEthAmountEffect = S.encodeEffect(EthAmount);
 
 describe("EthAmount", () => {
-  it("decodes non-negative ETH JSON numbers into BigDecimal", () => {
-    const amount = decodeUnknownEthAmountSync(7.220045);
+  it.effect(
+    "decodes non-negative ETH JSON numbers into BigDecimal",
+    Effect.fnUntraced(function* () {
+      const amount = yield* decodeUnknownEthAmountEffect(7.220045);
 
-    expect(BigDecimal.format(amount)).toBe("7.220045");
-  });
+      expect(BigDecimal.format(amount)).toBe("7.220045");
+    })
+  );
 
-  it("encodes decoded ETH amounts back to JSON numbers", () => {
-    const encoded = encodeEthAmountSync(decodeUnknownEthAmountSync(24));
+  it.effect(
+    "encodes decoded ETH amounts back to JSON numbers",
+    Effect.fnUntraced(function* () {
+      const encoded = yield* encodeEthAmountEffect(yield* decodeUnknownEthAmountEffect(24));
 
-    expect(encoded).toBe(24);
-  });
+      expect(encoded).toBe(24);
+    })
+  );
 
-  it("rejects negative ETH amounts", () => {
-    expect(() => decodeUnknownEthAmountSync(-0.000001)).toThrow("EthAmount must be greater than or equal to 0");
-  });
+  it.effect(
+    "rejects negative ETH amounts",
+    Effect.fnUntraced(function* () {
+      const failure1 = yield* Effect.result(decodeUnknownEthAmountEffect(-0.000001));
+      expect(Result.isFailure(failure1)).toBe(true);
+      if (Result.isFailure(failure1)) {
+        expect(failure1.failure.message).toContain("EthAmount must be greater than or equal to 0");
+      }
+    })
+  );
 });

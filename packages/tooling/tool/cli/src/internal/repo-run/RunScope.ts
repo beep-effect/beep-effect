@@ -24,6 +24,7 @@ import {
   RunScopeSupport,
   RunScopeTelemetry,
 } from "./RunScope.schemas.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const SYSTEMD_DESTINATION = "org.freedesktop.systemd1";
@@ -46,7 +47,7 @@ const runScopeCommand = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   O.Option<{ readonly exitCode: number; readonly output: string; readonly truncated: boolean }>,
   never,
-  ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* runRepoCommandCapture(command, args, tmpdir(), yield* commandEnvironment()).pipe(Effect.option);
 });
@@ -96,7 +97,7 @@ const escapeUnitNameForDbusPath = (unitName: string): string =>
 
 const verifyRunScopeAdoption = Effect.fnUntraced(function* (
   unitName: string
-): Effect.fn.Return<RunScopeRecord, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<RunScopeRecord, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const verified = yield* runScopeCommand("busctl", getUnitByPidArguments());
   const adopted = O.exists(
     verified,
@@ -147,7 +148,7 @@ const makeRunScopeRecord = Effect.fnUntraced(function* (
 export const detectRunScopeSupport = Effect.fn("RunScope.detectRunScopeSupport")(function* (): Effect.fn.Return<
   RunScopeSupport,
   never,
-  ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const configured = yield* configStringOption("BEEP_RUN_SCOPES");
   if (O.exists(configured, (value) => A.contains(["0", "false"], value))) {
@@ -191,7 +192,7 @@ export const detectRunScopeSupport = Effect.fn("RunScope.detectRunScopeSupport")
 export const enterRunScope = Effect.fn("RunScope.enterRunScope")(function* (
   ticketId: string,
   ownerRoot: string
-): Effect.fn.Return<RunScopeRecord, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<RunScopeRecord, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const jobUnit = yield* configStringOption("BEEP_YEET_JOB_UNIT");
   if (O.isSome(jobUnit) && isProofJobUnitName(jobUnit.value)) return yield* makeRunScopeRecord(jobUnit.value, "active");
   const unitName = runScopeUnitName(ticketId);
@@ -274,7 +275,7 @@ const ownerRootFromDescription: (description: string) => O.Option<string> = flow
  */
 export const readRunScopeOwnerRoot = Effect.fn("RunScope.readRunScopeOwnerRoot")(function* (
   unitName: string
-): Effect.fn.Return<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const shown = yield* runScopeCommand("systemctl", ["--user", "show", unitName, "-p", "Description"]);
   if (O.isNone(shown) || shown.value.exitCode !== 0) {
     return O.none();
@@ -320,7 +321,7 @@ const telemetryProperty = (lines: ReadonlyArray<string>, property: string): O.Op
  */
 export const readRunScopeTelemetry = Effect.fn("RunScope.readRunScopeTelemetry")(function* (
   unitName: string
-): Effect.fn.Return<RunScopeTelemetry, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<RunScopeTelemetry, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const shown = yield* runScopeCommand("systemctl", ["--user", "show", unitName, "-p", "MemoryPeak,TasksCurrent"]);
   if (O.isNone(shown) || shown.value.exitCode !== 0) {
     return RunScopeTelemetry.make({});
@@ -356,7 +357,7 @@ export const readRunScopeTelemetry = Effect.fn("RunScope.readRunScopeTelemetry")
  */
 export const stopRunScopeForReap = Effect.fn("RunScope.stopRunScopeForReap")(function* (
   unitName: string
-): Effect.fn.Return<RunScopeStopOutcome, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<RunScopeStopOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const stopped = yield* runScopeCommand("systemctl", ["--user", "stop", unitName]);
   return yield* O.match(stopped, {
     onNone: () => Effect.succeed(RunScopeStopOutcome.Enum["spawn-failed"]),

@@ -14,10 +14,11 @@ import { $createListItemNode, $createListNode } from "@lexical/list";
 import { $createHeadingNode, $createQuoteNode } from "@lexical/rich-text";
 import { $createTableCellNode, $createTableNode, $createTableRowNode, TableCellHeaderStates } from "@lexical/table";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { $createParagraphNode, $createTextNode, $getRoot } from "lexical";
 
-const decodeUnknownSerializedEditorStateSync = S.decodeUnknownSync(SerializedEditorState);
+const decodeUnknownSerializedEditorState = S.decodeUnknownEffect(SerializedEditorState);
 
 // The five inline marks under test. Bit values come from the schema package's
 // TextFormatBits (the wire vocabulary's source of truth), never hand-rolled.
@@ -137,27 +138,29 @@ describe("@beep/editor style × node matrix", () => {
   for (const context of CONTEXTS) {
     describe(context.key, () => {
       for (const combo of MARK_COMBOS) {
-        it(`marks: ${combo.label}`, () => {
-          const editor = newEditor();
-          editor.update(() => context.build(combo.mask), { discrete: true });
-          const wire = editor.getEditorState().toJSON();
+        it.effect(`marks: ${combo.label}`, () =>
+          Effect.gen(function* () {
+            const editor = newEditor();
+            editor.update(() => context.build(combo.mask), { discrete: true });
+            const wire = editor.getEditorState().toJSON();
 
-          // (1) The built state decodes through the @beep/lexical-schema wire
-          // vocabulary — the same decode editor-nodes.test.ts asserts against.
-          const decoded = decodeUnknownSerializedEditorStateSync(wire);
+            // (1) The built state decodes through the @beep/lexical-schema wire
+            // vocabulary — the same decode editor-nodes.test.ts asserts against.
+            const decoded = yield* decodeUnknownSerializedEditorState(wire);
 
-          // The text leaf's format bitmask carries this case's exact mark set
-          // (no context silently drops or rewrites the marks). If a context
-          // ever normalized marks away, this fails loudly with the combo label
-          // rather than skipping the case.
-          expect(collectTextFormats(decoded.root)).toEqual([combo.mask]);
+            // The text leaf's format bitmask carries this case's exact mark set
+            // (no context silently drops or rewrites the marks). If a context
+            // ever normalized marks away, this fails loudly with the combo label
+            // rather than skipping the case.
+            expect(collectTextFormats(decoded.root)).toEqual([combo.mask]);
 
-          // (2) export → import → export is a fixed point, so the node
-          // structure and every text format bitmask survive the round-trip.
-          const reimported = newEditor();
-          reimported.setEditorState(reimported.parseEditorState(wire));
-          expect(reimported.getEditorState().toJSON()).toEqual(wire);
-        });
+            // (2) export → import → export is a fixed point, so the node
+            // structure and every text format bitmask survive the round-trip.
+            const reimported = newEditor();
+            reimported.setEditorState(reimported.parseEditorState(wire));
+            expect(reimported.getEditorState().toJSON()).toEqual(wire);
+          })
+        );
       }
     });
   }

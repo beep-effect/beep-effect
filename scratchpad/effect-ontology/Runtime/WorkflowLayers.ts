@@ -309,13 +309,12 @@ const ExtractionWorkflowBundle = ExtractionWorkflowLive.pipe(
 const ReasonerBundle = Reasoner.Default;
 
 const ActivityCoreLayer = Layer.mergeAll(
-  StorageBundle,
   CoreDependenciesLayer,
   LlmExtractionBundle,
   OntologyBundle,
   ReasonerBundle,
   EventBusServiceMemory
-);
+).pipe(Layer.provideMerge(StorageBundle));
 
 const ActivityEmbeddingLayer = EmbeddingBundle.pipe(Layer.provideMerge(ActivityCoreLayer));
 const ActivityShaclLayer = ShaclBundle.pipe(Layer.provideMerge(ActivityEmbeddingLayer));

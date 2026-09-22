@@ -416,14 +416,16 @@ const ErrorBrand: unique symbol = Symbol("codemode.error");
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Error constructor name and message are co-primary inputs for a newly allocated guest value.
-export const createErrorValue = (name: ErrorConstructorName, message: string): SafeObject => {
+export const createErrorValue: {
+  (message: string): (name: ErrorConstructorName) => SafeObject;
+  (name: ErrorConstructorName, message: string): SafeObject;
+} = dual(2, (name: ErrorConstructorName, message: string): SafeObject => {
   const value = makeEmptySafeObject();
   Reflect.set(value, "name", name);
   Reflect.set(value, "message", message);
   Object.defineProperty(value, ErrorBrand, { value: name });
   return value;
-};
+});
 
 /**
  * Allocates a guest AggregateError as a branded error with an `errors` array.
@@ -441,12 +443,14 @@ export const createErrorValue = (name: ErrorConstructorName, message: string): S
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Aggregate members and message are co-primary inputs for a newly allocated guest error.
-export const createAggregateErrorValue = (errors: Array<unknown>, message: string): SafeObject => {
+export const createAggregateErrorValue: {
+  (message: string): (errors: Array<unknown>) => SafeObject;
+  (errors: Array<unknown>, message: string): SafeObject;
+} = dual(2, (errors: Array<unknown>, message: string): SafeObject => {
   const value = createErrorValue("AggregateError", message);
   Reflect.set(value, "errors", errors);
   return value;
-};
+});
 
 /**
  * Reads the guest Error constructor name stored on an error brand, if present.
@@ -616,8 +620,10 @@ export const coerceToNumber = (value: unknown): number => {
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeCoercion = (ref: CoercionFunction, args: Array<unknown>, node: AstNode): unknown => {
+export const invokeCoercion: {
+  (args: Array<unknown>, node: AstNode): (ref: CoercionFunction) => unknown;
+  (ref: CoercionFunction, args: Array<unknown>, node: AstNode): unknown;
+} = dual(3, (ref: CoercionFunction, args: Array<unknown>, node: AstNode): unknown => {
   const withoutArguments = A.isArrayEmpty(args);
   const raw = args[0];
 
@@ -640,4 +646,4 @@ export const invokeCoercion = (ref: CoercionFunction, args: Array<unknown>, node
     },
     parseFloat: () => parseFloat(coerceToString(value())),
   });
-};
+});

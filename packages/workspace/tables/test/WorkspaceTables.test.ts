@@ -15,13 +15,10 @@ import * as Workspace from "@beep/workspace-tables/entities/Workspace";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
+import { Effect } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-
-const decodeUnknownMessageModelSync = S.decodeUnknownSync(MessageModel);
-const decodeUnknownThreadModelSync = S.decodeUnknownSync(ThreadModel);
-const decodeUnknownTurnModelSync = S.decodeUnknownSync(TurnModel);
-const decodeUnknownWorkspaceModelSync = S.decodeUnknownSync(WorkspaceModel);
 
 const ThreadEquivalence = S.toEquivalence(ThreadModel);
 
@@ -108,85 +105,97 @@ describe("WorkspaceTables", () => {
     expect(getColumns(Workspace.Table).vaultRootPath.name).toBe("vault_root_path");
   });
 
-  it("round-trips Thread, Turn, and Message rows through the converters", () => {
-    const thread = decodeUnknownThreadModelSync({
-      ...productEntityFixtureInput("WorkspaceThread", 10),
-      title: "Matter intake",
-      workspaceId: 2,
-    });
-    const threadInsert = Thread.toThreadInsert(thread);
-    expect("id" in threadInsert).toBe(false);
-    expect(threadInsert.title).toBe("Matter intake");
-    expect(threadInsert.workspaceId).toBe(2);
-    expect(threadInsert.entityType).toBe("WorkspaceThread");
-    expect(Thread.fromThreadRow({ ...threadInsert, id: 10 }).title).toBe("Matter intake");
+  it.effect(
+    "round-trips Thread, Turn, and Message rows through the converters",
+    Effect.fnUntraced(function* () {
+      const thread = yield* S.decodeUnknownEffect(ThreadModel)({
+        ...productEntityFixtureInput("WorkspaceThread", 10),
+        title: "Matter intake",
+        workspaceId: 2,
+      });
+      const threadInsert = yield* Effect.fromResult(Thread.toThreadInsert(thread));
+      expect("id" in threadInsert).toBe(false);
+      expect(threadInsert.title).toBe("Matter intake");
+      expect(threadInsert.workspaceId).toBe(2);
+      expect(threadInsert.entityType).toBe("WorkspaceThread");
+      const roundTrippedThread = yield* Effect.fromResult(Thread.fromThreadRow({ ...threadInsert, id: 10 }));
+      expect(roundTrippedThread.title).toBe("Matter intake");
 
-    const message = decodeUnknownMessageModelSync({
-      ...productEntityFixtureInput("WorkspaceMessage", 20),
-      content: { _tag: "document", children: [] },
-      role: "user",
-      threadId: 10,
-      turnId: 30,
-    });
-    const messageInsert = Message.toMessageInsert(message);
-    expect("id" in messageInsert).toBe(false);
-    expect(messageInsert.role).toBe("user");
-    expect(messageInsert.threadId).toBe(10);
-    expect(Message.fromMessageRow({ ...messageInsert, id: 20 }).role).toBe("user");
+      const message = yield* S.decodeUnknownEffect(MessageModel)({
+        ...productEntityFixtureInput("WorkspaceMessage", 20),
+        content: { _tag: "document", children: [] },
+        role: "user",
+        threadId: 10,
+        turnId: 30,
+      });
+      const messageInsert = yield* Effect.fromResult(Message.toMessageInsert(message));
+      expect("id" in messageInsert).toBe(false);
+      expect(messageInsert.role).toBe("user");
+      expect(messageInsert.threadId).toBe(10);
+      const roundTrippedMessage = yield* Effect.fromResult(Message.fromMessageRow({ ...messageInsert, id: 20 }));
+      expect(roundTrippedMessage.role).toBe("user");
 
-    const turn = decodeUnknownTurnModelSync({
-      ...productEntityFixtureInput("WorkspaceTurn", 30),
-      items: [{ itemType: "message", messageId: 20 }],
-      parentTurnId: null,
-      threadId: 10,
-      turnIndex: 0,
-    });
-    const turnInsert = Turn.toTurnInsert(turn);
-    expect("id" in turnInsert).toBe(false);
-    expect(turnInsert.threadId).toBe(10);
-    expect(turnInsert.turnIndex).toBe(0);
-    expect(turnInsert.parentTurnId).toBe(null);
-    const roundTripped = Turn.fromTurnRow({
-      ...turnInsert,
-      id: 30,
-      // $inferInsert types parentTurnId as optional (number | null | undefined);
-      // the select-row converter expects number | null, so resolve the absent
-      // optional to its concrete null before round-tripping.
-      parentTurnId: turnInsert.parentTurnId ?? null,
-    });
-    expect(roundTripped.items[0]?.itemType).toBe("message");
-    expect(O.isNone(roundTripped.parentTurnId)).toBe(true);
-  });
+      const turn = yield* S.decodeUnknownEffect(TurnModel)({
+        ...productEntityFixtureInput("WorkspaceTurn", 30),
+        items: [{ itemType: "message", messageId: 20 }],
+        parentTurnId: null,
+        threadId: 10,
+        turnIndex: 0,
+      });
+      const turnInsert = yield* Effect.fromResult(Turn.toTurnInsert(turn));
+      expect("id" in turnInsert).toBe(false);
+      expect(turnInsert.threadId).toBe(10);
+      expect(turnInsert.turnIndex).toBe(0);
+      expect(turnInsert.parentTurnId).toBe(null);
+      const roundTripped = yield* Effect.fromResult(
+        Turn.fromTurnRow({
+          ...turnInsert,
+          id: 30,
+          // $inferInsert types parentTurnId as optional (number | null | undefined);
+          // the select-row converter expects number | null, so resolve the absent
+          // optional to its concrete null before round-tripping.
+          parentTurnId: turnInsert.parentTurnId ?? null,
+        })
+      );
+      expect(roundTripped.items[0]?.itemType).toBe("message");
+      expect(O.isNone(roundTripped.parentTurnId)).toBe(true);
+    })
+  );
 
-  it("round-trips Workspace rows through the converters", () => {
-    const workspace = decodeUnknownWorkspaceModelSync({
-      ...productEntityFixtureInput("WorkspaceWorkspace", 40),
-      fixtureKey: "workspace.default",
-      name: "Default Workspace",
-      organizationFixtureKey: "organization.default",
-      ownerPrincipalFixtureKey: "principal.default",
-      vaultRootPath: "/tmp/beep-workspace-vault",
-    });
+  it.effect(
+    "round-trips Workspace rows through the converters",
+    Effect.fnUntraced(function* () {
+      const workspace = yield* S.decodeUnknownEffect(WorkspaceModel)({
+        ...productEntityFixtureInput("WorkspaceWorkspace", 40),
+        fixtureKey: "workspace.default",
+        name: "Default Workspace",
+        organizationFixtureKey: "organization.default",
+        ownerPrincipalFixtureKey: "principal.default",
+        vaultRootPath: "/tmp/beep-workspace-vault",
+      });
 
-    const workspaceInsert = Workspace.toWorkspaceInsert(workspace);
+      const workspaceInsert = yield* Effect.fromResult(Workspace.toWorkspaceInsert(workspace));
 
-    expect("id" in workspaceInsert).toBe(false);
-    expect(workspaceInsert.entityType).toBe("WorkspaceWorkspace");
-    expect(workspaceInsert.fixtureKey).toBe("workspace.default");
-    expect(workspaceInsert.name).toBe("Default Workspace");
-    expect(workspaceInsert.organizationFixtureKey).toBe("organization.default");
-    expect(workspaceInsert.ownerPrincipalFixtureKey).toBe("principal.default");
-    expect(workspaceInsert.vaultRootPath).toBe("/tmp/beep-workspace-vault");
+      expect("id" in workspaceInsert).toBe(false);
+      expect(workspaceInsert.entityType).toBe("WorkspaceWorkspace");
+      expect(workspaceInsert.fixtureKey).toBe("workspace.default");
+      expect(workspaceInsert.name).toBe("Default Workspace");
+      expect(workspaceInsert.organizationFixtureKey).toBe("organization.default");
+      expect(workspaceInsert.ownerPrincipalFixtureKey).toBe("principal.default");
+      expect(workspaceInsert.vaultRootPath).toBe("/tmp/beep-workspace-vault");
 
-    const roundTripped = Workspace.fromWorkspaceRow({
-      ...workspaceInsert,
-      id: 40,
-      vaultRootPath: workspaceInsert.vaultRootPath ?? null,
-    });
+      const roundTripped = yield* Effect.fromResult(
+        Workspace.fromWorkspaceRow({
+          ...workspaceInsert,
+          id: 40,
+          vaultRootPath: workspaceInsert.vaultRootPath ?? null,
+        })
+      );
 
-    expect(roundTripped.name).toBe("Default Workspace");
-    expect(O.getOrUndefined(roundTripped.vaultRootPath)).toBe("/tmp/beep-workspace-vault");
-  });
+      expect(roundTripped.name).toBe("Default Workspace");
+      expect(O.getOrUndefined(roundTripped.vaultRootPath)).toBe("/tmp/beep-workspace-vault");
+    })
+  );
 
   it.prop(
     "round-trips schema-derived Thread, Message, Turn, and Workspace entities through the row converters",
@@ -196,29 +205,47 @@ describe("WorkspaceTables", () => {
       const messageInsert = Message.toMessageInsert(message);
       const turnInsert = Turn.toTurnInsert(turn);
       const workspaceInsert = Workspace.toWorkspaceInsert(workspace);
+      expect(Result.isSuccess(threadInsert)).toBe(true);
+      expect(Result.isSuccess(messageInsert)).toBe(true);
+      expect(Result.isSuccess(turnInsert)).toBe(true);
+      expect(Result.isSuccess(workspaceInsert)).toBe(true);
+      if (
+        !Result.isSuccess(threadInsert) ||
+        !Result.isSuccess(messageInsert) ||
+        !Result.isSuccess(turnInsert) ||
+        !Result.isSuccess(workspaceInsert)
+      ) {
+        return;
+      }
+      const roundTrippedThread = Thread.fromThreadRow({ ...threadInsert.success, id: thread.id });
+      const roundTrippedMessage = Message.fromMessageRow({ ...messageInsert.success, id: message.id });
+      const roundTrippedTurn = Turn.fromTurnRow({
+        ...turnInsert.success,
+        id: turn.id,
+        parentTurnId: turnInsert.success.parentTurnId ?? null,
+      });
+      const roundTrippedWorkspace = Workspace.fromWorkspaceRow({
+        ...workspaceInsert.success,
+        id: workspace.id,
+        vaultRootPath: workspaceInsert.success.vaultRootPath ?? null,
+      });
+      expect(Result.isSuccess(roundTrippedThread)).toBe(true);
+      expect(Result.isSuccess(roundTrippedMessage)).toBe(true);
+      expect(Result.isSuccess(roundTrippedTurn)).toBe(true);
+      expect(Result.isSuccess(roundTrippedWorkspace)).toBe(true);
+      if (
+        !Result.isSuccess(roundTrippedThread) ||
+        !Result.isSuccess(roundTrippedMessage) ||
+        !Result.isSuccess(roundTrippedTurn) ||
+        !Result.isSuccess(roundTrippedWorkspace)
+      ) {
+        return;
+      }
 
-      expect(ThreadEquivalence(Thread.fromThreadRow({ ...threadInsert, id: thread.id }), thread)).toBe(true);
-      expect(MessageEquivalence(Message.fromMessageRow({ ...messageInsert, id: message.id }), message)).toBe(true);
-      expect(
-        TurnEquivalence(
-          Turn.fromTurnRow({
-            ...turnInsert,
-            id: turn.id,
-            parentTurnId: turnInsert.parentTurnId ?? null,
-          }),
-          turn
-        )
-      ).toBe(true);
-      expect(
-        WorkspaceEquivalence(
-          Workspace.fromWorkspaceRow({
-            ...workspaceInsert,
-            id: workspace.id,
-            vaultRootPath: workspaceInsert.vaultRootPath ?? null,
-          }),
-          workspace
-        )
-      ).toBe(true);
+      expect(ThreadEquivalence(roundTrippedThread.success, thread)).toBe(true);
+      expect(MessageEquivalence(roundTrippedMessage.success, message)).toBe(true);
+      expect(TurnEquivalence(roundTrippedTurn.success, turn)).toBe(true);
+      expect(WorkspaceEquivalence(roundTrippedWorkspace.success, workspace)).toBe(true);
     },
     { arbitrary: fcRuns(50) }
   );

@@ -25,6 +25,7 @@ import {
 } from "@beep/repo-cli/commands/Ci";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, Exit, Layer, pipe, Sink, Stream } from "effect";
@@ -98,7 +99,10 @@ const laneTimingsSpawner = ChildProcessSpawner.make((command) => {
   return Effect.succeed(stubHandle(output));
 });
 
-const laneTimingsSpawnerLayer = Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner);
+const laneTimingsSpawnerLayer = Layer.mergeAll(
+  BunCrypto.layer,
+  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner)
+);
 
 const REQUIRED_CONTEXTS = [
   "Heavy / Check",

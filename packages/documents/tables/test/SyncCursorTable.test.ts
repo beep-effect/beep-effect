@@ -10,12 +10,11 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-
-const decodeUnknownDomainSyncCursorSyncCursorSync = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
 
 const SyncCursorEquivalence = S.toEquivalence(DomainSyncCursor.SyncCursor);
 
@@ -64,43 +63,56 @@ describe("SyncCursor table", () => {
     expect(O.getOrThrow(workspaceIdBtree).config.columns[0]).toMatchObject({ name: "workspace_id" });
   });
 
-  it("round-trips SyncCursor rows through the converters", () => {
-    const syncCursor = decodeUnknownDomainSyncCursorSyncCursorSync(activeCursorRow);
-    const insert = toSyncCursorInsert(syncCursor);
+  it.effect(
+    "round-trips SyncCursor rows through the converters",
+    Effect.fnUntraced(function* () {
+      const syncCursor = yield* S.decodeUnknownEffect(DomainSyncCursor.SyncCursor)(activeCursorRow);
+      const insert = yield* Effect.fromResult(toSyncCursorInsert(syncCursor));
 
-    expect("id" in insert).toBe(false);
-    expect(insert.status).toBe("active");
-    expect(insert.streamPosition).toBe("now");
-    expect(insert.entityType).toBe("DocumentsSyncCursor");
+      expect("id" in insert).toBe(false);
+      expect(insert.status).toBe("active");
+      expect(insert.streamPosition).toBe("now");
+      expect(insert.entityType).toBe("DocumentsSyncCursor");
 
-    const roundTripped = fromSyncCursorRow({
-      ...insert,
-      id: 30,
-      // $inferInsert types nullable columns as `value | null | undefined`; the
-      // select-row converter expects `value | null`, so resolve absent
-      // optionals to their concrete nulls before round-tripping.
-      lastError: insert.lastError ?? null,
-      lastEventId: insert.lastEventId ?? null,
-    });
+      const roundTripped = yield* Effect.fromResult(
+        fromSyncCursorRow({
+          ...insert,
+          id: 30,
+          // $inferInsert types nullable columns as `value | null | undefined`; the
+          // select-row converter expects `value | null`, so resolve absent
+          // optionals to their concrete nulls before round-tripping.
+          lastError: insert.lastError ?? null,
+          lastEventId: insert.lastEventId ?? null,
+        })
+      );
 
-    expect(roundTripped.lastError).toEqual(O.none());
-    expect(roundTripped.lastEventId).toEqual(O.some("evt-1"));
-    expect(SyncCursorEquivalence(roundTripped, syncCursor)).toBe(true);
-  });
+      expect(roundTripped.lastError).toEqual(O.none());
+      expect(roundTripped.lastEventId).toEqual(O.some("evt-1"));
+      expect(SyncCursorEquivalence(roundTripped, syncCursor)).toBe(true);
+    })
+  );
 
   it.prop(
     "round-trips schema-derived SyncCursors through the row converters",
     [S.toType(DomainSyncCursor.SyncCursor)],
     ([syncCursor]) => {
       const insert = toSyncCursorInsert(syncCursor);
+      expect(Result.isSuccess(insert)).toBe(true);
+      if (!Result.isSuccess(insert)) {
+        return;
+      }
       const decoded = fromSyncCursorRow({
-        ...insert,
+        ...insert.success,
         id: syncCursor.id,
-        lastError: insert.lastError ?? null,
-        lastEventId: insert.lastEventId ?? null,
+        lastError: insert.success.lastError ?? null,
+        lastEventId: insert.success.lastEventId ?? null,
       });
+      expect(Result.isSuccess(decoded)).toBe(true);
+      if (!Result.isSuccess(decoded)) {
+        return;
+      }
 
-      expect(SyncCursorEquivalence(decoded, syncCursor)).toBe(true);
+      expect(SyncCursorEquivalence(decoded.success, syncCursor)).toBe(true);
     },
     { arbitrary: fcRuns(50) }
   );

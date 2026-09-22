@@ -11,12 +11,11 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-
-const decodeUnknownDomainSyncItemSyncItemSync = S.decodeUnknownSync(DomainSyncItem.SyncItem);
 
 const SyncItemEquivalence = S.toEquivalence(DomainSyncItem.SyncItem);
 
@@ -91,56 +90,69 @@ describe("SyncItem table", () => {
     expect(Entities.SyncItem.syncItemTable).toBe(syncItemTable);
   });
 
-  it("round-trips SyncItem rows through the converters", () => {
-    const syncItem = decodeUnknownDomainSyncItemSyncItemSync(fileRow);
-    const insert = toSyncItemInsert(syncItem);
+  it.effect(
+    "round-trips SyncItem rows through the converters",
+    Effect.fnUntraced(function* () {
+      const syncItem = yield* S.decodeUnknownEffect(DomainSyncItem.SyncItem)(fileRow);
+      const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
 
-    expect("id" in insert).toBe(false);
-    expect(insert.localRelPath).toBe("matters/client-default/complaint.pdf");
-    expect(insert.syncState).toBe("pending");
-    expect(insert.workspaceId).toBe(2);
-    expect(insert.entityType).toBe("DocumentsSyncItem");
+      expect("id" in insert).toBe(false);
+      expect(insert.localRelPath).toBe("matters/client-default/complaint.pdf");
+      expect(insert.syncState).toBe("pending");
+      expect(insert.workspaceId).toBe(2);
+      expect(insert.entityType).toBe("DocumentsSyncItem");
 
-    const roundTripped = fromSyncItemRow({
-      ...insert,
-      id: 10,
-      // $inferInsert types nullable columns as `value | null | undefined`; the
-      // select-row converter expects `value | null`, so resolve absent
-      // optionals to their concrete nulls before round-tripping.
-      contentDigest: insert.contentDigest ?? null,
-      contentSizeBytes: insert.contentSizeBytes ?? null,
-      lastError: insert.lastError ?? null,
-      lastPushedDigest: insert.lastPushedDigest ?? null,
-      lastPushedGeneration: insert.lastPushedGeneration ?? null,
-      remoteId: insert.remoteId ?? null,
-      remoteName: insert.remoteName ?? null,
-      remoteParentId: insert.remoteParentId ?? null,
-    });
+      const roundTripped = yield* Effect.fromResult(
+        fromSyncItemRow({
+          ...insert,
+          id: 10,
+          // $inferInsert types nullable columns as `value | null | undefined`; the
+          // select-row converter expects `value | null`, so resolve absent
+          // optionals to their concrete nulls before round-tripping.
+          contentDigest: insert.contentDigest ?? null,
+          contentSizeBytes: insert.contentSizeBytes ?? null,
+          lastError: insert.lastError ?? null,
+          lastPushedDigest: insert.lastPushedDigest ?? null,
+          lastPushedGeneration: insert.lastPushedGeneration ?? null,
+          remoteId: insert.remoteId ?? null,
+          remoteName: insert.remoteName ?? null,
+          remoteParentId: insert.remoteParentId ?? null,
+        })
+      );
 
-    expect(roundTripped.contentDigest).toEqual(O.some("abc123"));
-    expect(roundTripped.lastError).toEqual(O.none());
-    expect(SyncItemEquivalence(roundTripped, syncItem)).toBe(true);
-  });
+      expect(roundTripped.contentDigest).toEqual(O.some("abc123"));
+      expect(roundTripped.lastError).toEqual(O.none());
+      expect(SyncItemEquivalence(roundTripped, syncItem)).toBe(true);
+    })
+  );
 
   it.prop(
     "round-trips schema-derived SyncItems through the row converters",
     [S.toType(DomainSyncItem.SyncItem)],
     ([syncItem]) => {
       const insert = toSyncItemInsert(syncItem);
+      expect(Result.isSuccess(insert)).toBe(true);
+      if (!Result.isSuccess(insert)) {
+        return;
+      }
       const decoded = fromSyncItemRow({
-        ...insert,
+        ...insert.success,
         id: syncItem.id,
-        contentDigest: insert.contentDigest ?? null,
-        contentSizeBytes: insert.contentSizeBytes ?? null,
-        lastError: insert.lastError ?? null,
-        lastPushedDigest: insert.lastPushedDigest ?? null,
-        lastPushedGeneration: insert.lastPushedGeneration ?? null,
-        remoteId: insert.remoteId ?? null,
-        remoteName: insert.remoteName ?? null,
-        remoteParentId: insert.remoteParentId ?? null,
+        contentDigest: insert.success.contentDigest ?? null,
+        contentSizeBytes: insert.success.contentSizeBytes ?? null,
+        lastError: insert.success.lastError ?? null,
+        lastPushedDigest: insert.success.lastPushedDigest ?? null,
+        lastPushedGeneration: insert.success.lastPushedGeneration ?? null,
+        remoteId: insert.success.remoteId ?? null,
+        remoteName: insert.success.remoteName ?? null,
+        remoteParentId: insert.success.remoteParentId ?? null,
       });
+      expect(Result.isSuccess(decoded)).toBe(true);
+      if (!Result.isSuccess(decoded)) {
+        return;
+      }
 
-      expect(SyncItemEquivalence(decoded, syncItem)).toBe(true);
+      expect(SyncItemEquivalence(decoded.success, syncItem)).toBe(true);
     },
     { arbitrary: fcRuns(50) }
   );
