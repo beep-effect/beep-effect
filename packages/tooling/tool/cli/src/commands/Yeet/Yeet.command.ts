@@ -56,7 +56,7 @@ import {
   proofJobUnitName,
 } from "./internal/ProofJob.ts";
 import { ProofJobLauncher, reportProofJobCommand } from "./internal/ProofJobLauncher.ts";
-import { runYeetProofReport } from "./internal/ProofShadow.ts";
+import { runYeetProofReport, YeetProofReportOptions } from "./internal/ProofShadow.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
 import { YeetCommandError } from "./Yeet.errors.ts";
@@ -1143,7 +1143,9 @@ const yeetInboxCommand = Command.make("inbox", inboxListFlags, runYeetInboxList)
   Command.withSubcommands([yeetInboxListCommand, yeetInboxAckCommand, yeetInboxAppendCommand])
 );
 
-const yeetProofReportCommand = Command.make("proof-report", { json: jsonFlag }, runYeetProofReport).pipe(
+const yeetProofReportCommand = Command.make("proof-report", { json: jsonFlag }, (options) =>
+  runYeetProofReport(YeetProofReportOptions.make(options))
+).pipe(
   Command.withDescription(
     "Print the proof-ledger shadow report: sample size, would-have-reused lanes, disagreements, and the enforcement bar"
   )

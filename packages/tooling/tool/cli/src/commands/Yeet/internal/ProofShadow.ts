@@ -9,7 +9,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ProofEnvProfile, ProofStage } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
+import { ProofEnvProfile, ProofStage, YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { GithubCheckLaneRunStatus } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -273,18 +273,40 @@ export class ProofShadowAttemptSummary extends S.Class<ProofShadowAttemptSummary
 /**
  * Attempt facts the shadow pass needs, resolved from the attempt-started row.
  *
+ * **Example** (Describe a pre-push attempt)
+ *
+ * ```ts
+ * import { ProofShadowAttemptFacts } from "@beep/repo-cli/test/Yeet"
+ *
+ * const facts = ProofShadowAttemptFacts.make({
+ *   attemptId: "attempt-1",
+ *   runId: "run-1",
+ *   branch: "feat/example",
+ *   headSha: "88fa371cb0",
+ *   tier: "full",
+ *   stage: "pre-push",
+ *   envProfile: "local",
+ * })
+ * console.log(facts.stage) // "pre-push"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export type ProofShadowAttemptFacts = {
-  readonly attemptId: string;
-  readonly runId: string;
-  readonly branch: string;
-  readonly headSha: string;
-  readonly tier: ProofProvenance["tier"];
-  readonly stage: ProofStage;
-  readonly envProfile: ProofEnvProfile;
-};
+export class ProofShadowAttemptFacts extends S.Class<ProofShadowAttemptFacts>($I`ProofShadowAttemptFacts`)(
+  {
+    attemptId: S.NonEmptyString,
+    runId: S.NonEmptyString,
+    branch: S.NonEmptyString,
+    headSha: S.NonEmptyString,
+    tier: YeetProofTier,
+    stage: ProofStage,
+    envProfile: ProofEnvProfile,
+  },
+  $I.annote("ProofShadowAttemptFacts", {
+    description: "Attempt identity, branch, head, tier, stage and env profile the shadow pass records against.",
+  })
+) {}
 
 /**
  * Resolve the shadow pass inputs from an attempt-started journal row.
@@ -295,18 +317,44 @@ export type ProofShadowAttemptFacts = {
  * (`full` tier, `pre-push` stage, `local` profile); the resolved head SHA wins
  * over the symbolic head when it was recorded.
  *
+ * **Example** (Resolve facts from an attempt row)
+ *
+ * ```ts
+ * import { proofShadowAttemptFacts, YeetAttemptStarted } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const facts = proofShadowAttemptFacts(
+ *   YeetAttemptStarted.make({
+ *     schemaVersion: "yeet-attempt-journal/v1",
+ *     _tag: "attempt-started",
+ *     attemptId: "7c9f5b1e-2d4a-4f6b-9a8c-1e2d3f4a5b6c",
+ *     runId: "run-1",
+ *     branch: "feat/example",
+ *     base: "main",
+ *     head: "feat/example",
+ *     mode: "verify",
+ *     startedAt: "2026-09-21T00:00:00.000Z",
+ *     resolvedHeadSha: O.some("88fa371cb0"),
+ *   })
+ * )
+ * console.log(facts.headSha) // "88fa371cb0"
+ * ```
+ *
+ * @param attempt - The attempt-started journal row of the running attempt.
+ * @returns The facts the shadow pass records, with pre-push defaults filled in.
  * @category utilities
  * @since 0.0.0
  */
-export const proofShadowAttemptFacts = (attempt: YeetAttemptStarted): ProofShadowAttemptFacts => ({
-  attemptId: attempt.attemptId,
-  runId: attempt.runId,
-  branch: attempt.branch,
-  headSha: O.getOrElse(attempt.resolvedHeadSha, () => attempt.head),
-  tier: O.getOrElse(attempt.proofTier, () => "full" as const),
-  stage: O.getOrElse(attempt.stage, () => "pre-push" as const),
-  envProfile: O.getOrElse(attempt.envProfile, () => "local" as const),
-});
+export const proofShadowAttemptFacts = (attempt: YeetAttemptStarted): ProofShadowAttemptFacts =>
+  ProofShadowAttemptFacts.make({
+    attemptId: attempt.attemptId,
+    runId: attempt.runId,
+    branch: attempt.branch,
+    headSha: O.getOrElse(attempt.resolvedHeadSha, () => attempt.head),
+    tier: O.getOrElse(attempt.proofTier, () => "full" as const),
+    stage: O.getOrElse(attempt.stage, () => "pre-push" as const),
+    envProfile: O.getOrElse(attempt.envProfile, () => "local" as const),
+  });
 
 /**
  * A lane that ran to a terminal outcome and can be shadowed.
@@ -344,6 +392,8 @@ const shadowableLane = (lane: QualityTaskLaneRun): O.Option<ShadowableLane> =>
  * console.log(shadowableLaneRuns([]).length) // 0
  * ```
  *
+ * @param reports - Durable inner-lane reports of one attempt.
+ * @returns The lanes that ran to `passed` or `failed` with their outcome and command line.
  * @category utilities
  * @since 0.0.0
  */
@@ -529,6 +579,8 @@ export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForA
  * console.log(line) // "proof shadow: 3 lane(s) recorded; would reuse 1; disagreements 0; undeclared inputs 2"
  * ```
  *
+ * @param summary - What one attempt's shadow pass recorded.
+ * @returns The one-line summary the verdict path logs.
  * @category rendering
  * @since 0.0.0
  */
@@ -573,6 +625,44 @@ const inBarSample = (row: ProofLedgerShadowRow): boolean =>
   ProofEnvProfile.is[PROOF_SHADOW_BAR_SAMPLE.envProfile](row.envProfile);
 
 /**
+ * Inputs {@link buildProofShadowReport} folds: the ledger's shadow rows and
+ * health counts, plus an optional bar override for fixtures.
+ *
+ * **Example** (Describe an empty ledger)
+ *
+ * ```ts
+ * import { ProofShadowReportInput } from "@beep/repo-cli/test/Yeet"
+ *
+ * const input = ProofShadowReportInput.make({
+ *   generatedAt: "2026-09-21T00:00:00.000Z",
+ *   ledgerPath: "/repo/.beep/yeet/proof-ledger.ndjson",
+ *   rows: [],
+ *   facts: 0,
+ *   expiredFacts: 0,
+ *   malformedRows: 0,
+ * })
+ * console.log(input.rows.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProofShadowReportInput extends S.Class<ProofShadowReportInput>($I`ProofShadowReportInput`)(
+  {
+    generatedAt: S.NonEmptyString,
+    ledgerPath: S.NonEmptyString,
+    rows: S.Array(ProofLedgerShadowRow),
+    facts: ProofCount,
+    expiredFacts: ProofCount,
+    malformedRows: ProofCount,
+    bar: S.optionalKey(ProofShadowEnforcementBar),
+  },
+  $I.annote("ProofShadowReportInput", {
+    description: "Shadow rows, ledger health counts, and an optional enforcement-bar override to fold into a report.",
+  })
+) {}
+
+/**
  * Fold shadow rows and ledger health into the disagreement report.
  *
  * **Details**
@@ -586,29 +676,25 @@ const inBarSample = (row: ProofLedgerShadowRow): boolean =>
  * ```ts
  * import { buildProofShadowReport } from "@beep/repo-cli/test/Yeet"
  *
- * const report = buildProofShadowReport({
- *   generatedAt: "2026-09-21T00:00:00.000Z",
- *   ledgerPath: "/repo/.beep/yeet/proof-ledger.ndjson",
- *   rows: [],
- *   facts: 0,
- *   expiredFacts: 0,
- *   malformedRows: 0,
- * })
+ * const report = buildProofShadowReport(
+ *   ProofShadowReportInput.make({
+ *     generatedAt: "2026-09-21T00:00:00.000Z",
+ *     ledgerPath: "/repo/.beep/yeet/proof-ledger.ndjson",
+ *     rows: [],
+ *     facts: 0,
+ *     expiredFacts: 0,
+ *     malformedRows: 0,
+ *   })
+ * )
  * console.log(report.enforcementReady) // false
  * ```
  *
+ * @param input - Shadow rows, ledger health counts, and an optional bar override.
+ * @returns The report with headline counts over every row and the bar verdict over the enforced pair.
  * @category utilities
  * @since 0.0.0
  */
-export const buildProofShadowReport = (input: {
-  readonly generatedAt: string;
-  readonly ledgerPath: string;
-  readonly rows: ReadonlyArray<ProofLedgerShadowRow>;
-  readonly facts: number;
-  readonly expiredFacts: number;
-  readonly malformedRows: number;
-  readonly bar?: ProofShadowEnforcementBar;
-}): ProofShadowReport => {
+export const buildProofShadowReport = (input: ProofShadowReportInput): ProofShadowReport => {
   const bar = input.bar ?? ProofShadowEnforcementBar.ratified;
   const hits = A.filter(input.rows, (row) => isHit(row.decision));
   const disagreements = pipe(
@@ -672,18 +758,22 @@ const formatMinutes = (ms: number): string => `${(ms / 60_000).toFixed(1)} min`;
  * import { buildProofShadowReport, renderProofShadowReport } from "@beep/repo-cli/test/Yeet"
  *
  * const text = renderProofShadowReport(
- *   buildProofShadowReport({
- *     generatedAt: "2026-09-21T00:00:00.000Z",
- *     ledgerPath: "/repo/.beep/yeet/proof-ledger.ndjson",
- *     rows: [],
- *     facts: 0,
- *     expiredFacts: 0,
- *     malformedRows: 0,
- *   })
+ *   buildProofShadowReport(
+ *     ProofShadowReportInput.make({
+ *       generatedAt: "2026-09-21T00:00:00.000Z",
+ *       ledgerPath: "/repo/.beep/yeet/proof-ledger.ndjson",
+ *       rows: [],
+ *       facts: 0,
+ *       expiredFacts: 0,
+ *       malformedRows: 0,
+ *     })
+ *   )
  * )
  * console.log(text.startsWith("proof shadow report")) // true
  * ```
  *
+ * @param report - The folded disagreement report.
+ * @returns The multi-line terminal rendering.
  * @category rendering
  * @since 0.0.0
  */
@@ -718,12 +808,27 @@ export const renderProofShadowReport = (report: ProofShadowReport): string => {
 /**
  * Options for `yeet proof-report`.
  *
+ * **Example** (Ask for JSON)
+ *
+ * ```ts
+ * import { YeetProofReportOptions } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetProofReportOptions.make({ json: true }).json) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export type YeetProofReportOptions = {
-  readonly json: boolean;
-};
+export class YeetProofReportOptions extends S.Class<YeetProofReportOptions>($I`YeetProofReportOptions`)(
+  { json: S.Boolean },
+  $I.annote("YeetProofReportOptions", {
+    description: "Parsed `yeet proof-report` flags: whether to print the report as JSON.",
+  })
+) {}
+
+const locateRepoRoot: Effect.Effect<string, YeetCommandError, FileSystem.FileSystem> = findRepoRoot().pipe(
+  Effect.mapError(YeetCommandError.new("Failed to locate repo root."))
+);
 
 /**
  * Build the disagreement report for one checkout from its proof ledger.
@@ -750,14 +855,16 @@ export const loadProofShadowReport = Effect.fn("Yeet.loadProofShadowReport")(fun
   const expiredFacts = yield* ledger.expire(now);
   const malformedRows = yield* ledger.malformedRows;
   const ledgerPath = yield* proofLedgerPathForCheckout(repoRoot);
-  return buildProofShadowReport({
-    generatedAt: DateTime.formatIso(now),
-    ledgerPath,
-    rows,
-    facts,
-    expiredFacts,
-    malformedRows,
-  });
+  return buildProofShadowReport(
+    ProofShadowReportInput.make({
+      generatedAt: DateTime.formatIso(now),
+      ledgerPath,
+      rows,
+      facts,
+      expiredFacts,
+      malformedRows,
+    })
+  );
 });
 
 /**
@@ -769,17 +876,20 @@ export const loadProofShadowReport = Effect.fn("Yeet.loadProofShadowReport")(fun
  * import { runYeetProofReport } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
  *
- * console.log(Effect.isEffect(runYeetProofReport({ json: false }))) // true
+ * console.log(Effect.isEffect(runYeetProofReport(YeetProofReportOptions.make({ json: false })))) // true
  * ```
  *
+ * @param options - Parsed `yeet proof-report` flags.
+ * @param repoRoot - Where the checkout root comes from; defaults to the git root of the working directory.
+ * @returns Void once the report was printed.
  * @category services
  * @since 0.0.0
  */
 export const runYeetProofReport = Effect.fn("Yeet.runProofReportCommand")(function* (
-  options: YeetProofReportOptions
+  options: YeetProofReportOptions,
+  repoRoot: Effect.Effect<string, YeetCommandError, FileSystem.FileSystem> = locateRepoRoot
 ): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
-  const report = yield* loadProofShadowReport(repoRoot);
+  const report = yield* loadProofShadowReport(yield* repoRoot);
   if (options.json) {
     const json = yield* ProofShadowReportJson.encode(report).pipe(
       Effect.mapError(YeetCommandError.new("Failed to encode the proof shadow report."))

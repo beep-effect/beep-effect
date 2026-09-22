@@ -3,13 +3,20 @@ import {
   buildProofShadowReport,
   loadProofShadowReport,
   ProofLedger,
+  ProofShadowAttemptFacts,
   ProofShadowEnforcementBar,
+  ProofShadowReportInput,
+  ProofShadowReportJson,
   proofLedgerPathForCheckout,
+  proofShadowAttemptFacts,
   recordProofShadowForAttempt,
   renderProofShadowAttemptSummary,
   renderProofShadowReport,
+  runYeetProofReport,
   shadowableLaneRuns,
   UNDECLARED_INPUT_DIGEST,
+  YeetAttemptStarted,
+  YeetProofReportOptions,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -20,20 +27,46 @@ import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import type { ProofShadowAttemptFacts } from "@beep/repo-cli/test/Yeet";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
-const facts = (overrides: Partial<ProofShadowAttemptFacts> = {}): ProofShadowAttemptFacts => ({
-  attemptId: "attempt-1",
-  runId: "run-1",
-  branch: "feat/example",
-  headSha: "88fa371cb0",
-  tier: "full",
-  stage: "pre-push",
-  envProfile: "local",
-  ...overrides,
-});
+const facts = (overrides: Partial<ProofShadowAttemptFacts> = {}): ProofShadowAttemptFacts =>
+  ProofShadowAttemptFacts.make({
+    attemptId: "attempt-1",
+    runId: "run-1",
+    branch: "feat/example",
+    headSha: "88fa371cb0",
+    tier: "full",
+    stage: "pre-push",
+    envProfile: "local",
+    ...overrides,
+  });
+
+const attemptStarted = (overrides: Partial<Parameters<typeof YeetAttemptStarted.make>[0]> = {}): YeetAttemptStarted =>
+  YeetAttemptStarted.make({
+    schemaVersion: "yeet-attempt-journal/v1",
+    _tag: "attempt-started",
+    attemptId: "7c9f5b1e-2d4a-4f6b-9a8c-1e2d3f4a5b6c",
+    runId: "run-9",
+    branch: "feat/facts",
+    base: "main",
+    head: "feat/facts",
+    mode: "verify",
+    startedAt: "2026-09-21T00:00:00.000Z",
+    ...overrides,
+  });
+
+const emptyInput = (bar?: ProofShadowEnforcementBar): ProofShadowReportInput =>
+  ProofShadowReportInput.make({
+    generatedAt: DateTime.formatIso(DateTime.makeUnsafe("2026-09-21T00:00:00.000Z")),
+    ledgerPath: "/repo/.beep/yeet/proof-ledger.ndjson",
+    rows: [],
+    facts: 0,
+    expiredFacts: 0,
+    malformedRows: 0,
+    ...(bar === undefined ? {} : { bar }),
+  });
 
 const lane = (
   id: string,
@@ -88,6 +121,35 @@ const inTempCheckout = Effect.fn("ProofShadowTest.inTempCheckout")(function* <Va
 });
 
 describe("proof shadow mode", () => {
+  it("resolves attempt facts with pre-push defaults and prefers the resolved head", () => {
+    const defaults = proofShadowAttemptFacts(attemptStarted());
+    expect(defaults).toStrictEqual(
+      ProofShadowAttemptFacts.make({
+        attemptId: "7c9f5b1e-2d4a-4f6b-9a8c-1e2d3f4a5b6c",
+        runId: "run-9",
+        branch: "feat/facts",
+        headSha: "feat/facts",
+        tier: "full",
+        stage: "pre-push",
+        envProfile: "local",
+      })
+    );
+    const resolved = proofShadowAttemptFacts(
+      attemptStarted({
+        resolvedHeadSha: O.some("88fa371cb0"),
+        proofTier: O.some("cheap-gates"),
+        stage: O.some("merged-preview"),
+        envProfile: O.some("pr-posture"),
+      })
+    );
+    expect(resolved).toMatchObject({
+      headSha: "88fa371cb0",
+      tier: "cheap-gates",
+      stage: "merged-preview",
+      envProfile: "pr-posture",
+    });
+  });
+
   it("selects only lanes that ran to a terminal outcome with a command line", () => {
     const selected = shadowableLaneRuns([
       report([
@@ -126,7 +188,13 @@ describe("proof shadow mode", () => {
           report([
             lane("quality:coverage", "passed", O.some("digest-a"), 600_000),
             lane("quality:check", "failed", O.some("digest-b")),
-            lane("quality:labs", "passed", O.none()),
+            QualityTaskLaneRun.make({
+              id: "quality:labs",
+              label: "labs",
+              status: "passed",
+              inputDigest: O.none(),
+              commandText: O.some("bun run beep ci lane labs"),
+            }),
           ]),
         ]);
         expect(summary).toMatchObject({ recorded: 3, wouldReuse: 0, disagreements: 0, undeclared: 1 });
@@ -139,6 +207,7 @@ describe("proof shadow mode", () => {
         ).toStrictEqual(["no-fact", "no-fact", "undeclared-inputs"]);
         expect(A.map(rows, (row) => row.laneId)).toStrictEqual(["quality:coverage", "quality:check", "quality:labs"]);
         expect(A.every(rows, (row) => row.branch === "feat/example" && row.stage === "pre-push")).toBe(true);
+        expect(A.map(rows, (row) => row.durationMs)).toStrictEqual([600_000, 1_000, 0]);
         expect(yield* ledger.facts).toBe(3);
         expect(yield* ledger.malformedRows).toBe(0);
       })
@@ -232,26 +301,13 @@ describe("proof shadow mode", () => {
   );
 
   it("declares enforcement ready only when the bar is met with zero disagreements", () => {
-    const empty = buildProofShadowReport({
-      generatedAt: DateTime.formatIso(DateTime.makeUnsafe("2026-09-21T00:00:00.000Z")),
-      ledgerPath: "/repo/.beep/yeet/proof-ledger.ndjson",
-      rows: [],
-      facts: 0,
-      expiredFacts: 0,
-      malformedRows: 0,
-    });
+    const empty = buildProofShadowReport(emptyInput());
     expect(empty.bar).toStrictEqual(ProofShadowEnforcementBar.ratified);
     expect(empty.enforcementReady).toBe(false);
 
-    const lowered = buildProofShadowReport({
-      generatedAt: empty.generatedAt,
-      ledgerPath: empty.ledgerPath,
-      rows: [],
-      facts: 0,
-      expiredFacts: 0,
-      malformedRows: 0,
-      bar: ProofShadowEnforcementBar.make({ attempts: 0, branches: 0, disagreements: 0 }),
-    });
+    const lowered = buildProofShadowReport(
+      emptyInput(ProofShadowEnforcementBar.make({ attempts: 0, branches: 0, disagreements: 0 }))
+    );
     expect(lowered.enforcementReady).toBe(true);
     expect(
       Str.includes("enforcement (attempt-to-attempt, pre-push, local): ready")(renderProofShadowReport(lowered))
@@ -272,13 +328,14 @@ describe("proof shadow mode", () => {
           facts({ attemptId: "preview-2", branch: "feat/b", stage: "merged-preview", envProfile: "pr-posture" }),
           [report(lanes)]
         );
-        const previewOnly = yield* loadProofShadowReport(root);
+        expect((yield* loadProofShadowReport(root)).enforcementReady).toBe(false);
         const bar = ProofShadowEnforcementBar.make({ attempts: 2, branches: 2, disagreements: 0 });
-        const judged = buildProofShadowReport({
-          ...previewOnly,
-          rows: yield* (yield* ProofLedger.make(root)).shadowRows,
-          bar,
-        });
+        const judged = buildProofShadowReport(
+          ProofShadowReportInput.make({
+            ...emptyInput(bar),
+            rows: yield* (yield* ProofLedger.make(root)).shadowRows,
+          })
+        );
         expect(judged).toMatchObject({
           attempts: 2,
           branches: 2,
@@ -289,11 +346,12 @@ describe("proof shadow mode", () => {
 
         yield* recordProofShadowForAttempt(root, facts({ attemptId: "push-1", branch: "feat/a" }), [report(lanes)]);
         yield* recordProofShadowForAttempt(root, facts({ attemptId: "push-2", branch: "feat/b" }), [report(lanes)]);
-        const mixed = buildProofShadowReport({
-          ...previewOnly,
-          rows: yield* (yield* ProofLedger.make(root)).shadowRows,
-          bar,
-        });
+        const mixed = buildProofShadowReport(
+          ProofShadowReportInput.make({
+            ...emptyInput(bar),
+            rows: yield* (yield* ProofLedger.make(root)).shadowRows,
+          })
+        );
         expect(mixed).toMatchObject({
           attempts: 4,
           branches: 2,
@@ -304,5 +362,22 @@ describe("proof shadow mode", () => {
         });
       })
     ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("prints the report as text or JSON from the checkout the locator names", () =>
+    inTempCheckout((root) =>
+      Effect.gen(function* () {
+        yield* recordProofShadowForAttempt(root, facts(), [
+          report([lane("quality:coverage", "passed", O.some("digest-a"))]),
+        ]);
+        yield* runYeetProofReport(YeetProofReportOptions.make({ json: false }), Effect.succeed(root));
+        yield* runYeetProofReport(YeetProofReportOptions.make({ json: true }), Effect.succeed(root));
+        const lines = yield* TestConsole.logLines;
+        expect(A.length(lines)).toBe(2);
+        expect(Str.startsWith("proof shadow report")(String(lines[0]))).toBe(true);
+        const decoded = yield* ProofShadowReportJson.decode(String(lines[1]));
+        expect(decoded).toMatchObject({ shadowRows: 1, attempts: 1, branches: 1, enforcementReady: false });
+      })
+    ).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, TestConsole.layer)))
   );
 });

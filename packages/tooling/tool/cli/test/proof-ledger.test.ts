@@ -17,7 +17,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
-import { constFalse } from "effect/Function";
+import { constFalse, constTrue } from "effect/Function";
 import * as Str from "effect/String";
 import type { ProofChangedPackageTripwire, ProofLedgerShape } from "@beep/repo-cli/test/Yeet";
 
@@ -262,6 +262,10 @@ describe("ProofLedger", () => {
             ProofReuseMiss.make({ key: "lint-key", reason: "no-fact" }),
           ]);
           expect(yield* ledger.lookupAll([], NOW)).toStrictEqual([]);
+          const tripped = yield* withLedger(root, (guarded) => guarded.lookupAll([input()], NOW), constTrue);
+          expect(tripped).toStrictEqual([
+            ProofReuseMiss.make({ key: "proof-key", reason: "changed-package-tripwire" }),
+          ]);
           yield* ledger.appendAll([]);
           expect(yield* ledger.facts).toBe(2);
         })
