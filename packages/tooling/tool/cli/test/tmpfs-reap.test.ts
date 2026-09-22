@@ -85,7 +85,18 @@ const makeClassificationFixture = Effect.fn("TmpfsReapTest.makeClassificationFix
   yield* runCommand("git", ["add", "tracked.txt"], fakeParent);
   yield* runCommand(
     "git",
-    ["-c", "user.email=fixture@local", "-c", "user.name=fixture", "commit", "-q", "-m", "seed"],
+    [
+      "-c",
+      "user.email=fixture@local",
+      "-c",
+      "user.name=fixture",
+      "-c",
+      "commit.gpgsign=false",
+      "commit",
+      "-q",
+      "-m",
+      "seed",
+    ],
     fakeParent
   );
   yield* runCommand("git", ["worktree", "add", "--detach", "-q", fakeWorktree], fakeParent);
@@ -1231,6 +1242,7 @@ describe("tmpfs reap", () => {
         yield* runCommand("git", ["init", "--quiet"], repo);
         yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
         yield* runCommand("git", ["config", "user.name", "Tmpfs Reap Test"], repo);
+        yield* runCommand("git", ["config", "commit.gpgsign", "false"], repo);
         yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
         yield* runCommand("git", ["add", "README.md"], repo);
         yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repo);
@@ -1279,6 +1291,7 @@ describe("tmpfs reap", () => {
         yield* runCommand("git", ["init", "--quiet"], repo);
         yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
         yield* runCommand("git", ["config", "user.name", "Tmpfs Reap Test"], repo);
+        yield* runCommand("git", ["config", "commit.gpgsign", "false"], repo);
         yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
         yield* runCommand("git", ["add", "README.md"], repo);
         yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repo);
@@ -1327,6 +1340,7 @@ describe("tmpfs reap", () => {
         yield* runCommand("git", ["init", "--quiet"], repo);
         yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
         yield* runCommand("git", ["config", "user.name", "Tmpfs Reap Test"], repo);
+        yield* runCommand("git", ["config", "commit.gpgsign", "false"], repo);
         yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
         yield* runCommand("git", ["add", "README.md"], repo);
         yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repo);
@@ -1370,6 +1384,7 @@ describe("tmpfs reap", () => {
         yield* runCommand("git", ["init", "--quiet"], repo);
         yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
         yield* runCommand("git", ["config", "user.name", "Tmpfs Reap Test"], repo);
+        yield* runCommand("git", ["config", "commit.gpgsign", "false"], repo);
         yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
         yield* runCommand("git", ["add", "README.md"], repo);
         yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repo);
@@ -1527,6 +1542,7 @@ describe("tmpfs reap", () => {
         yield* runCommand("git", ["init", "--quiet"], repo);
         yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
         yield* runCommand("git", ["config", "user.name", "Tmpfs Reap Test"], repo);
+        yield* runCommand("git", ["config", "commit.gpgsign", "false"], repo);
         yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
         yield* runCommand("git", ["add", "README.md"], repo);
         yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repo);
@@ -1557,6 +1573,7 @@ describe("tmpfs reap", () => {
         yield* runCommand("git", ["init", "--quiet"], repo);
         yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
         yield* runCommand("git", ["config", "user.name", "Tmpfs Reap Test"], repo);
+        yield* runCommand("git", ["config", "commit.gpgsign", "false"], repo);
         yield* fs.writeFileString(path.join(repo, "README.md"), "fixture\n");
         yield* runCommand("git", ["add", "README.md"], repo);
         yield* runCommand("git", ["commit", "--quiet", "-m", "fixture"], repo);
