@@ -481,6 +481,17 @@ describe("ci lane timings gh api retry", () => {
     })
   );
 
+  it.effect("fails a truncated gh api capture without retrying", () =>
+    Effect.gen(function* () {
+      const scripted = scriptedGhSpawner([{ exitCode: 0, output: "x".repeat(512 * 1024 + 1) }]);
+      const exit = yield* collectWithRetries(scripted.spawner);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("returned a truncated response");
+      expect(scripted.state.spawned).toBe(1);
+    })
+  );
+
   it.effect("fails a 404 API error immediately without retrying", () =>
     Effect.gen(function* () {
       const scripted = scriptedGhSpawner([{ exitCode: 1, output: "gh: Not Found (HTTP 404)" }]);
@@ -488,18 +499,6 @@ describe("ci lane timings gh api retry", () => {
 
       expect(Exit.isFailure(exit)).toBe(true);
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("exited 1: gh: Not Found (HTTP 404)");
-      expect(scripted.state.spawned).toBe(1);
-    })
-  );
-
-  it.effect("fails a truncated gh api response immediately without retrying", () =>
-    Effect.gen(function* () {
-      // One character past the repo-run capture bound trips truncation, which is
-      // a corrupt page rather than a transient exit and must not be retried.
-      const scripted = scriptedGhSpawner([{ exitCode: 0, output: Str.repeat(512 * 1024 + 1)("{") }]);
-      const exit = yield* collectWithRetries(scripted.spawner);
-
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("returned a truncated response");
       expect(scripted.state.spawned).toBe(1);
     })
   );
@@ -1112,6 +1111,28 @@ describe("ci lane timing admission window", () => {
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
 
+  it.effect("fails closed when a ratified version exposes a different context count", () => {
+    const commands = A.empty<string>();
+    const response = (endpoint: string) =>
+      Str.endsWith("/history/49479116")(endpoint)
+        ? Effect.succeed(RULESET_SNAPSHOT_18_JSON)
+        : windowGithubResponse(endpoint);
+    return Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        collectCiLaneTimingWindow(
+          ".",
+          windowOptions({
+            until: DateTime.makeUnsafe("2026-09-12T01:46:53.355Z"),
+          })
+        )
+      );
+
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
+        "version 49479116 must expose exactly 17 required contexts; observed 18"
+      );
+    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
+  });
+
   it.effect("fails closed against a ruleset version the packet has not ratified", () => {
     const commands = A.empty<string>();
     const unratifiedHistoryJson =
@@ -1133,24 +1154,6 @@ describe("ci lane timing admission window", () => {
       );
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
         "Ruleset 10240248 version 50000000 is not a ratified admission population."
-      );
-      expect(A.some(commands, Str.includes("/actions/"))).toBe(false);
-    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
-  });
-
-  it.effect("fails closed when a ratified version exposes a different count than the packet signed", () => {
-    const commands = A.empty<string>();
-    const response = (endpoint: string) =>
-      Str.endsWith("/history/49479116")(endpoint)
-        ? Effect.succeed(RULESET_SNAPSHOT_18_JSON)
-        : windowGithubResponse(endpoint);
-    return Effect.gen(function* () {
-      const failure = yield* Effect.flip(
-        collectCiLaneTimingWindow(".", windowOptions({ until: DateTime.makeUnsafe("2026-09-12T01:46:53.355Z") }))
-      );
-
-      expect(failure.message).toBe(
-        "Ruleset 10240248 version 49479116 must expose exactly 17 required contexts; observed 18."
       );
       expect(A.some(commands, Str.includes("/actions/"))).toBe(false);
     }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));

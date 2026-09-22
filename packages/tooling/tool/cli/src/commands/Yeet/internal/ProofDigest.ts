@@ -145,6 +145,35 @@ export const proofInputKey = Effect.fn("Yeet.proofInputKey")(function* (
 });
 
 /**
+ * Digest one lane's command text for the reuse key's `commandDigest` field.
+ *
+ * **Details**
+ *
+ * The command text is the rendered `command args...` string the inner-lane
+ * report carries; hashing it (rather than storing it) keeps the key fixed-width
+ * and lets two lanes with the same command line share a digest.
+ *
+ * **Example** (Derive a command digest effect)
+ *
+ * ```ts
+ * import { proofCommandDigest } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(proofCommandDigest("bun run check"))) // true
+ * ```
+ *
+ * @param commandText - Rendered lane command line.
+ * @returns Lowercase hexadecimal SHA-256 digest.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const proofCommandDigest = Effect.fn("Yeet.proofCommandDigest")(function* (
+  commandText: string
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  return yield* digestComponents([commandText], "proof command");
+});
+
+/**
  * Combine the six ordered epoch components into one invalidation digest.
  *
  * **Example** (Derive an epoch digest effect)
