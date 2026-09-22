@@ -21909,6 +21909,18 @@
             "functions": 14
           }
         },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts": {
+          "lines": 95.34,
+          "statements": 95.45,
+          "branches": 92.68,
+          "functions": 90.9,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 3,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts": {
           "lines": 100,
           "statements": 100,

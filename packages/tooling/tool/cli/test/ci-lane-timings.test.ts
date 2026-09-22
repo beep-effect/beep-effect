@@ -393,7 +393,18 @@ describe("ci lane timings attempt filter", () => {
   });
 
   it("reports no pickup median for an empty recent-run population", () => {
-    expect(ciLaneTimingsReport([]).medianAttemptOnePickupSeconds).toStrictEqual(O.none());
+    const report = ciLaneTimingsReport([]);
+
+    expect(report.medianAttemptOnePickupSeconds).toStrictEqual(O.none());
+    expect(renderCiLaneTimingsSummary(report)).toContain(
+      "- median attempt-1 pickup: no attempt-1 job carried both timestamps"
+    );
+  });
+
+  it("falls back to the job status when an unfinished job carries no conclusion", () => {
+    const row = ciLaneTimingRow(job({ completed_at: null, conclusion: null, status: "in_progress" }));
+
+    expect(row.conclusion).toBe("in_progress");
   });
 
   it("computes the midpoint for an even number of pickup samples", () => {
