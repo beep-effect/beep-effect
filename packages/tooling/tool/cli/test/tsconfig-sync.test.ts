@@ -368,7 +368,7 @@ describe("tsconfig-sync", () => {
             filter: "@beep/mcp-kit",
             verbose: false,
           });
-          const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
           assert.deepStrictEqual(paths.compilerOptions.paths["@beep/mcp-kit/test/Conformance"], [
             "./packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts",
           ]);
