@@ -39,8 +39,8 @@
 "@beep/face-detection": patch
 "@beep/ffmpeg": patch
 "@beep/firecrawl": patch
-"@beep/govinfo": patch
 "@beep/gov-legal-mcp": patch
+"@beep/govinfo": patch
 "@beep/html": patch
 "@beep/identity": patch
 "@beep/infra": patch
@@ -49,6 +49,7 @@
 "@beep/law-practice-use-cases": patch
 "@beep/lexical-schema": patch
 "@beep/lint-rules": patch
+"@beep/m365-mcp": patch
 "@beep/mcp-kit": patch
 "@beep/md": patch
 "@beep/nlp": patch
