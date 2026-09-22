@@ -1,0 +1,3 @@
+routing:
+  strategy: fill-first
+  default: grok-4.6

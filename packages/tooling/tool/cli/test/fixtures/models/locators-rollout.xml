@@ -1,0 +1,6 @@
+<application>
+  <component name="DefaultAgentRollout">
+    <option name="agent_id" value="acp.registry.codex-acp" />
+    <option name="options" value="[{&quot;model&quot;:&quot;gpt-5.6-luna&quot;,&quot;reasoning_effort&quot;:&quot;medium&quot;}]" />
+  </component>
+</application>

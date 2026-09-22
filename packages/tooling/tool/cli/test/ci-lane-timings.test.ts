@@ -3,6 +3,8 @@ import {
   buildCiLaneTimingWindowReport,
   CiLaneTimingGithubClient,
   CiLaneTimingWindowOptions,
+  CiLaneTimingWindowReport,
+  CiRulesetHistoryVersion,
   CiWorkflowJob,
   CiWorkflowJobsPage,
   CiWorkflowWindowRun,
@@ -37,7 +39,6 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import type { CiLaneTimingWindowReport } from "@beep/repo-cli/commands/Ci";
 
 // The Actions jobs endpoint returns snake_case wire fields; these fixtures keep
 // them so the derivations are exercised on the shape they actually receive.
@@ -875,6 +876,99 @@ describe("ci lane timing admission window", () => {
     })
   );
 
+  it.effect("attributes green effective components whose span cannot be measured as invalid", () =>
+    Effect.gen(function* () {
+      const negative = windowRun({ id: 190 });
+      const unstarted = windowRun({ id: 195 });
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        // The aggregator finished before its earliest shard started: a negative span.
+        windowRunJobs(negative, [
+          job({
+            completed_at: "2026-09-04T00:25:00Z",
+            id: 191,
+            name: "Lint (lint-a)",
+            run_id: negative.id,
+            started_at: "2026-09-04T00:20:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:26:00Z",
+            id: 192,
+            name: "Lint (lint-b)",
+            run_id: negative.id,
+            started_at: "2026-09-04T00:21:00Z",
+          }),
+          job({
+            completed_at: "2026-09-04T00:15:00Z",
+            id: 193,
+            name: "Lint",
+            run_id: negative.id,
+            started_at: "2026-09-04T00:10:00Z",
+          }),
+        ]),
+        // A green shard that never recorded a start cannot anchor the span.
+        windowRunJobs(unstarted, [
+          job({ id: 196, name: "Lint (lint-a)", run_id: unstarted.id, started_at: null }),
+          job({ id: 197, name: "Lint (lint-b)", run_id: unstarted.id }),
+          job({ id: 198, name: "Lint", run_id: unstarted.id }),
+        ]),
+      ]);
+
+      expect(laneStat(report, "Lint").n).toBe(0);
+      expect(attributionStat(report, "Lint").invalidSpans).toBe(2);
+      expect(attributionStat(report, "Lint").failures).toBe(0);
+    })
+  );
+
+  it.effect("attributes a later attempt to its shard when the aggregator never re-ran", () =>
+    Effect.gen(function* () {
+      const run = windowRun({ id: 210 });
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(run, [
+          job({ conclusion: "failure", id: 211, name: "Lint (lint-a)", run_id: run.id }),
+          job({ id: 212, name: "Lint (lint-b)", run_id: run.id }),
+          job({ conclusion: "failure", id: 213, name: "Lint", run_id: run.id }),
+          // Only the failed shard was re-run, and it is still in flight, so the
+          // attempt carries the shard's status rather than an invented conclusion.
+          job({
+            completed_at: null,
+            conclusion: null,
+            id: 214,
+            name: "Lint (lint-a)",
+            run_attempt: 2,
+            run_id: run.id,
+            status: "in_progress",
+          }),
+        ]),
+      ]);
+
+      const laterRows = A.filter(report.rows, (row) => row.runAttempt === 2);
+      expect(A.map(laterRows, (row) => [row.population, row.jobName, row.conclusion])).toStrictEqual([
+        ["attribution", "Lint (lint-a)", "in_progress"],
+      ]);
+      expect(attributionStat(report, "Lint").laterAttempts).toBe(1);
+      expect(attributionStat(report, "Lint").laterSuccesses).toBe(0);
+    })
+  );
+
+  it.effect("renders an unratified ruleset version instead of inventing an expected count", () =>
+    Effect.gen(function* () {
+      const ratified = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
+      const report = CiLaneTimingWindowReport.make({
+        ...ratified,
+        rulesetVersion: O.some(
+          CiRulesetHistoryVersion.make({
+            updated_at: DateTime.makeUnsafe("2026-09-15T00:00:00Z"),
+            version_id: 50000000,
+          })
+        ),
+      });
+
+      expect(renderCiLaneTimingWindowMarkdown(report)).toContain(
+        "- required contexts: 18 (expected an unratified version; ruleset 10240248 version 50000000 effective 2026-09-15T00:00:00.000Z)"
+      );
+    })
+  );
+
   it.effect("admits an effective Test Unit span only when every shard and the aggregator are green", () =>
     Effect.gen(function* () {
       const run = windowRun({ id: 200 });
@@ -1105,6 +1199,27 @@ describe("ci lane timing admission window", () => {
         "Ruleset 10240248 version 50000000 is not a ratified admission population."
       );
       expect(A.some(commands, Str.includes("/actions/"))).toBe(false);
+    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
+  });
+
+  it.effect("orders runs created in the same instant by id so page order cannot reorder the census", () => {
+    const commands = A.empty<string>();
+    const twinRunsJson =
+      '{"total_count":2,"workflow_runs":[{"created_at":"2026-09-05T00:00:00Z","event":"pull_request","head_sha":"twin-b","id":302,"run_attempt":1},{"created_at":"2026-09-05T00:00:00Z","event":"pull_request","head_sha":"twin-a","id":301,"run_attempt":1}]}';
+    const knipJobsJson = encodeCiWorkflowJobsPage(
+      CiWorkflowJobsPage.make({ jobs: [job({ id: 303, name: "Knip", run_id: 301 })], total_count: 1 })
+    ).pipe(Effect.orDie);
+    const response = (endpoint: string) =>
+      Str.includes("/actions/runs/")(endpoint)
+        ? knipJobsJson
+        : Str.includes("event=pull_request")(endpoint)
+          ? Effect.succeed(twinRunsJson)
+          : windowGithubResponse(endpoint);
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(".", windowOptions({ event: "pull_request" }));
+
+      expect(report.runCount).toBe(2);
+      expect(A.dedupe(A.map(report.rows, (row) => row.runId))).toStrictEqual([301, 302]);
     }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
 

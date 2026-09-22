@@ -11,6 +11,7 @@ import { expect } from "@effect/vitest";
  */
 
 import { composeGatedLayers, FetchableHandle, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
+import { conformance2026, connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
 import { PosInt } from "@beep/schema";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { Uspto, UsptoApplicationMetadata, UsptoConfigInput, UsptoDocumentReference } from "@beep/uspto";
@@ -19,8 +20,10 @@ import {
   MintFetchableHandle,
   ProjectDocumentsWithinBudgetOptions,
   projectDocumentsWithinBudget,
+  USPTO_MCP_INSTRUCTIONS,
   UsptoGetDocumentsParams,
   UsptoMcpFailure,
+  UsptoMcpRegistrationsLive,
   UsptoMcpServerConfig,
   UsptoSearchApplicationsParams,
   UsptoSourceAuthRegistration,
@@ -30,7 +33,7 @@ import {
   UsptoToolkitHandlersLive,
   usptoDocumentFieldTiers,
 } from "@beep/uspto-mcp";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, it, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, Equal, Layer, Redacted } from "effect";
 import * as S from "effect/Schema";
 import { McpServerClient } from "effect/unstable/ai/McpSchema";
@@ -339,5 +342,47 @@ describe("uspto-mcp schema-derived arbitraries", () => {
     assertSchemaArbitraryRoundTrips(UsptoGetDocumentsParams);
     assertSchemaArbitraryDecodesToSelf(UsptoMcpServerConfig);
     assertSchemaArbitraryRoundTrips(UsptoMcpServerConfig);
+  });
+});
+
+// The host as the kit conformance runner sees it: registrations only, with
+// the fixture `Uspto` client and a resolvable USPTO_API_KEY so the soft gate
+// answers with real data rather than the `api_key_required` envelope.
+const usptoConformanceHost = {
+  name: "beep-uspto-test",
+  version: "0.0.0",
+  instructions: USPTO_MCP_INSTRUCTIONS,
+  registrations: UsptoMcpRegistrationsLive.pipe(
+    Layer.provide(testUsptoLayer(respondWith(applicationEnvelope))),
+    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ USPTO_API_KEY: "fixture-secret" })))
+  ),
+  tool: {
+    name: "uspto_search_applications",
+    arguments: { query: "widget" },
+    invalidArguments: { query: "" },
+  },
+};
+
+conformance2026(usptoConformanceHost);
+
+describe("uspto-mcp through the kit client", () => {
+  layer(layerConformanceHttp(usptoConformanceHost))("over streamable HTTP", (it) => {
+    it.effect("carries an array success in text content and emits no structuredContent", () =>
+      Effect.gen(function* () {
+        // `uspto_search_applications` succeeds with an array. The 2026-07-28
+        // `structuredContent` field is an object by contract, so the kit's
+        // projection withholds it for non-object results and the array rides
+        // in the text content, where the kit client decodes it back verbatim.
+        const { discovery, rpc } = yield* connectHttp();
+        assert.strictEqual(discovery.instructions, USPTO_MCP_INSTRUCTIONS);
+        const result = yield* rpc["tools/call"]({ name: "uspto_search_applications", arguments: { query: "widget" } });
+        assert.notStrictEqual(result.isError, true);
+        assert.isUndefined(result.structuredContent);
+        const applications = yield* decodeApplicationMetadataArray(textOf(result));
+        assert.strictEqual(applications.length, 1);
+        assert.strictEqual(applications[0]?.applicationNumberText, "16138242");
+        assert.strictEqual(applications[0]?.inventionTitle, "Adjustable widget assembly");
+      })
+    );
   });
 });

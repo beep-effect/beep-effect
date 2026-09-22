@@ -23,6 +23,7 @@ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, describe, expect, it, vi } from "@effect/vitest";
+import { assertInstanceOf } from "@effect/vitest/utils";
 import { Duration, Effect, FileSystem, Layer, Path } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -384,6 +385,59 @@ it.layer(runtimeLayer, { timeout: "10 seconds" })("runtime native spawn", (it) =
       );
       const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
       yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]).pipe(Effect.flip);
+      expect(spawn).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("rejects a Turbo client override before reading the task selection", () =>
+    Effect.gen(function* () {
+      const select = vi.spyOn(Census, "collectCacheTaskSelection");
+      const spawn = vi.spyOn(StepExec, "runToExit");
+      vi.stubEnv("TURBO_BINARY_PATH", "/fixture/other-turbo");
+      const failure = yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]).pipe(Effect.flip);
+      assertInstanceOf(failure, CacheCommandError);
+      expect(failure.message).toBe("Runtime execution requires the installed native Turbo client, without overrides.");
+      expect(select).not.toHaveBeenCalled();
+      expect(spawn).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("treats an empty Turbo client override as absent", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("TURBO_BINARY_PATH", "");
+      vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed([runtimeNode]));
+      vi.spyOn(Census, "resolveCacheTurboBinary").mockReturnValue(Effect.succeed("/fixture/turbo"));
+      vi.spyOn(Fingerprint, "collectCacheToolchain").mockReturnValue(Effect.succeed(runtimeSnapshot));
+      vi.spyOn(FsGuards, "hashFileSha256").mockImplementation(
+        dual(2, (_filePath: string, _onError: (cause: unknown, filePath: string) => unknown) =>
+          Effect.succeed(runtimeDigest)
+        )
+      );
+      const spawn = vi.spyOn(StepExec, "runToExit").mockReturnValue(Effect.succeed(0));
+      expect(yield* runCacheRuntimeTasks("/fixture", ["run", "lint"])).toBe(0);
+      expect(spawn).toHaveBeenCalledWith(expect.objectContaining({ command: "/fixture/turbo", cwd: "/fixture" }));
+    })
+  );
+
+  it.effect("reports an unreadable execution client instead of spawning", () =>
+    Effect.gen(function* () {
+      vi.spyOn(Census, "collectCacheTaskSelection").mockReturnValue(Effect.succeed([runtimeNode]));
+      vi.spyOn(Census, "resolveCacheTurboBinary").mockReturnValue(Effect.succeed("/fixture/turbo"));
+      vi.spyOn(Fingerprint, "collectCacheToolchain").mockReturnValue(Effect.succeed(runtimeSnapshot));
+      const unreadable = new Error("EACCES: permission denied, open '/fixture/turbo'");
+      const hash = vi
+        .spyOn(FsGuards, "hashFileSha256")
+        .mockImplementation(
+          dual(2, <E>(filePath: string, onError: (cause: unknown, filePath: string) => E) =>
+            Effect.fail(onError(unreadable, filePath))
+          )
+        );
+      const spawn = vi.spyOn(StepExec, "runToExit");
+      const failure = yield* runCacheRuntimeTasks("/fixture", ["run", "lint"]).pipe(Effect.flip);
+      assertInstanceOf(failure, CacheCommandError);
+      expect(failure.message).toBe("Cannot verify the execution client.");
+      expect(failure.cause).toBe(unreadable);
+      expect(hash).toHaveBeenCalledWith("/fixture/turbo", expect.any(Function));
       expect(spawn).not.toHaveBeenCalled();
     })
   );

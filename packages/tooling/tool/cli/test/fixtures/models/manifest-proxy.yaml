@@ -1,0 +1,15 @@
+version: beep-models/v1
+bindings:
+  - role: graft.deep
+    surface: proxy-workflow
+    modelId: claude-sonnet-5
+targets:
+  - id: proxy.env
+    root: repo
+    path: locators.env
+    optional: false
+    locators:
+      - _tag: env-key
+        binding: { role: graft.deep, surface: proxy-workflow, field: model }
+        render: { _tag: verbatim }
+        key: GRAFT_MODEL_FALLBACK
