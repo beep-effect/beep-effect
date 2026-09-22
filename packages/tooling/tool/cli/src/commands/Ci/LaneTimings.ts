@@ -42,10 +42,12 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
-import { Console, Context, DateTime, Duration, Effect, Order, pipe } from "effect";
+import { Console, Context, DateTime, Duration, Effect, Order, pipe, Schedule } from "effect";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { Command, Flag } from "effect/unstable/cli";
@@ -723,6 +725,108 @@ const CI_WINDOW_WORKFLOW_JOBS_JQ =
   "{total_count,jobs:[.jobs[]|{completed_at,conclusion,created_at,id,name,run_attempt,run_id,started_at,status}]}";
 const CI_BRANCH_RULES_JQ = "[.[]|{ruleset_id,type}+(if .parameters==null then {} else {parameters} end)]";
 
+/**
+ * Number of retries after the first attempt, so a transient `gh api` failure is
+ * attempted five times in total before it becomes a {@link CiCommandError}.
+ */
+const GH_API_TRANSIENT_RETRY_COUNT = 4;
+
+const GhApiTransientKind = LiteralKit(["transport", "secondary-rate-limit"]).pipe(
+  $I.annoteSchema("GhApiTransientKind", {
+    description: "Which transient class a failed gh api exit belongs to; each class has its own backoff base.",
+  })
+);
+type GhApiTransientKind = typeof GhApiTransientKind.Type;
+
+/**
+ * Backoff base per transient class, doubled on every retry and jittered
+ * upward by 0–20% so a fan-out of eight concurrent page fetches does not retry
+ * in lockstep. The jitter is one-sided so the base is a floor: a secondary
+ * rate limit never retries before the full minute GitHub asks for.
+ * Transport blips clear in milliseconds (250ms → 2s); a secondary rate limit
+ * needs minutes (GitHub asks for at least one minute before the first retry,
+ * then exponential growth), so it waits 1m → 8m instead.
+ */
+const GH_API_TRANSIENT_BASE_DELAY: Record<GhApiTransientKind, Duration.Duration> = {
+  transport: Duration.millis(250),
+  "secondary-rate-limit": Duration.minutes(1),
+};
+
+/**
+ * Output fragments that mark a failed `gh api` exit as a transport-class
+ * transient failure: `bad record MAC`, connection resets, unexpected EOF, and
+ * timeouts (observed once per several thousand paginated GETs under a fan-out
+ * of eight) plus the 502/503/504 gateway statuses. Every other non-zero exit,
+ * including 4xx and other 5xx API errors, fails immediately.
+ */
+const GH_API_TRANSPORT_OUTPUT_PATTERNS: ReadonlyArray<RegExp> = [
+  /bad record MAC/iu,
+  /connection reset/iu,
+  /unexpected EOF/iu,
+  /\btimed out\b|\btimeout\b/iu,
+  /\(HTTP 50[234]\)/u,
+];
+
+/**
+ * A secondary rate limit is only trusted when GitHub's documented message
+ * arrives with the documented 403 or 429 status; the phrase alone under any
+ * other status is not a rate limit.
+ */
+const GH_API_SECONDARY_RATE_LIMIT_PATTERN = /secondary rate limit/iu;
+const GH_API_RATE_LIMIT_STATUS_PATTERN = /\(HTTP (?:403|429)\)/u;
+
+const classifyGhApiTransientOutput = (output: string): O.Option<GhApiTransientKind> =>
+  GH_API_SECONDARY_RATE_LIMIT_PATTERN.test(output) && GH_API_RATE_LIMIT_STATUS_PATTERN.test(output)
+    ? O.some("secondary-rate-limit")
+    : A.some(GH_API_TRANSPORT_OUTPUT_PATTERNS, (pattern) => pattern.test(output))
+      ? O.some("transport")
+      : O.none();
+
+class CiGhApiTransientExit extends S.TaggedError<CiGhApiTransientExit>($I`CiGhApiTransientExit`)(
+  "CiGhApiTransientExit",
+  { endpoint: S.String, exitCode: S.Finite, kind: GhApiTransientKind, output: S.String },
+  $I.annoteError<CiGhApiTransientExit>("CiGhApiTransientExit", {
+    description: "A non-zero gh api exit whose output matches a transient transport or rate-limit failure.",
+  })
+) {}
+
+const isCiGhApiTransientExit = P.isTagged("CiGhApiTransientExit");
+
+const ghApiTransientBaseDelay = (error: CiCommandError | CiGhApiTransientExit): Duration.Duration =>
+  isCiGhApiTransientExit(error) ? GH_API_TRANSIENT_BASE_DELAY[error.kind] : GH_API_TRANSIENT_BASE_DELAY.transport;
+
+const ghApiTransientRetrySchedule: Schedule.Schedule<Duration.Duration, CiCommandError | CiGhApiTransientExit> =
+  Schedule.fromStepWithMetadata(
+    Effect.succeed((meta: Schedule.InputMetadata<CiCommandError | CiGhApiTransientExit>) => {
+      const delay = Duration.millis(Duration.toMillis(ghApiTransientBaseDelay(meta.input)) * 2 ** (meta.attempt - 1));
+      return Effect.succeed<[Duration.Duration, Duration.Duration]>([delay, delay]);
+    })
+  ).pipe(
+    Schedule.modifyDelay(({ duration }) =>
+      Effect.map(Random.next, (random) => Duration.millis(Duration.toMillis(duration) * (1 + 0.2 * random)))
+    )
+  );
+
+const ghApiJsonAttempt = Effect.fn("Ci.laneTimingsGhApiAttempt")(function* (
+  repoRoot: string,
+  endpoint: string,
+  args: ReadonlyArray<string>
+): Effect.fn.Return<string, CiCommandError | CiGhApiTransientExit, ChildProcessSpawner.ChildProcessSpawner> {
+  const result = yield* runRepoCommandCapture("gh", args, repoRoot).pipe(
+    CiCommandError.mapError(`Failed to run gh api ${endpoint}.`)
+  );
+  if (result.truncated) {
+    return yield* CiCommandError.make({ message: `gh api ${endpoint} returned a truncated response.` });
+  }
+  if (result.exitCode !== 0) {
+    return yield* O.match(classifyGhApiTransientOutput(result.output), {
+      onNone: () => CiCommandError.make({ message: `gh api ${endpoint} exited ${result.exitCode}: ${result.output}` }),
+      onSome: (kind) => CiGhApiTransientExit.make({ endpoint, exitCode: result.exitCode, kind, output: result.output }),
+    });
+  }
+  return result.output;
+});
+
 const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
   repoRoot: string,
   endpoint: string,
@@ -732,17 +836,18 @@ const ghApiJson = Effect.fn("Ci.laneTimingsGhApi")(function* (
     ["api", endpoint],
     A.flatMap(O.toArray(jqProjection), (projection) => ["--jq", projection])
   );
-  const result = yield* runRepoCommandCapture("gh", args, repoRoot).pipe(
-    CiCommandError.mapError(`Failed to run gh api ${endpoint}.`)
+  return yield* ghApiJsonAttempt(repoRoot, endpoint, args).pipe(
+    Effect.retry({
+      schedule: ghApiTransientRetrySchedule,
+      times: GH_API_TRANSIENT_RETRY_COUNT,
+      while: isCiGhApiTransientExit,
+    }),
+    Effect.catchTag("CiGhApiTransientExit", (exit) =>
+      CiCommandError.make({
+        message: `gh api ${endpoint} exited ${exit.exitCode} on every one of ${GH_API_TRANSIENT_RETRY_COUNT + 1} attempts (${exit.kind}): ${exit.output}`,
+      })
+    )
   );
-  if (result.exitCode !== 0 || result.truncated) {
-    return yield* CiCommandError.make({
-      message: result.truncated
-        ? `gh api ${endpoint} returned a truncated response.`
-        : `gh api ${endpoint} exited ${result.exitCode}: ${result.output}`,
-    });
-  }
-  return result.output;
 });
 
 type CiWorkflowJobsPageFetcher<Requirements> = (
@@ -1282,11 +1387,72 @@ export class CiLaneTimingWindowReport extends S.Class<CiLaneTimingWindowReport>(
 ) {}
 
 const CI_LANE_TIMING_RULESET_ID = 10_240_248;
-const CI_LANE_TIMING_REQUIRED_CONTEXT_COUNT = 18;
 const CI_LANE_TIMING_CHARTER = Duration.minutes(20);
 const CI_LANE_TIMING_QUEUE_TRIPWIRE = Duration.minutes(5);
 const CI_LANE_TIMING_JOB_FETCH_CONCURRENCY = 8;
 const HEAVY_LANE_PREFIX = "Heavy / ";
+
+/**
+ * A ruleset version whose required-context population the `ci-lane-economics`
+ * packet has ratified as an admission denominator.
+ *
+ * **Details**
+ *
+ * The bounded census resolves the ruleset version effective at its exclusive
+ * window end and then fails closed unless that version is in the ratified
+ * table and exposes exactly `contextCount` normalized contexts. An admission
+ * week can therefore never be measured against a population the packet has
+ * not signed, and a live ruleset change after a window closes cannot rewrite
+ * the window's denominator.
+ *
+ * **Example** (Read the ratified count for a version)
+ *
+ * ```ts
+ * import { CiLaneTimingRatifiedPopulation } from "@beep/repo-cli/commands/Ci"
+ *
+ * const population = CiLaneTimingRatifiedPopulation.make({
+ *   contextCount: 17,
+ *   ratifiedOn: "2026-09-22",
+ *   versionId: 49479116,
+ * })
+ * console.log(population.contextCount)
+ * // 17
+ * ```
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export class CiLaneTimingRatifiedPopulation extends S.Class<CiLaneTimingRatifiedPopulation>(
+  $I`CiLaneTimingRatifiedPopulation`
+)(
+  {
+    contextCount: S.Int.check(S.isGreaterThan(0)),
+    ratifiedOn: S.String,
+    versionId: S.Int.check(S.isGreaterThan(0)),
+  },
+  $I.annote("CiLaneTimingRatifiedPopulation", {
+    description: "A ruleset history version and the exact required-context count the packet ratified for it.",
+  })
+) {}
+
+const CI_LANE_TIMING_RATIFIED_POPULATIONS: ReadonlyArray<CiLaneTimingRatifiedPopulation> = [
+  // JSDoc Ratchet promoted; goals/ci-lane-economics/research/admission-week-p95.md.
+  CiLaneTimingRatifiedPopulation.make({ contextCount: 18, ratifiedOn: "2026-09-03", versionId: 48_600_030 }),
+  // Heavy / Coverage Regression removed at 2026-09-12T01:46:53.354Z; ratified for the next window.
+  CiLaneTimingRatifiedPopulation.make({ contextCount: 17, ratifiedOn: "2026-09-22", versionId: 49_479_116 }),
+];
+
+const CI_LANE_TIMING_RATIFIED_CONTEXT_COUNTS = HashSet.fromIterable(
+  A.map(CI_LANE_TIMING_RATIFIED_POPULATIONS, (population) => population.contextCount)
+);
+
+const CI_LANE_TIMING_RATIFIED_COUNT_LABEL = A.join(
+  A.map(A.sort(A.fromIterable(CI_LANE_TIMING_RATIFIED_CONTEXT_COUNTS), Order.Number), String),
+  " or "
+);
+
+const ratifiedPopulationFor = (version: CiRulesetHistoryVersion): O.Option<CiLaneTimingRatifiedPopulation> =>
+  A.findFirst(CI_LANE_TIMING_RATIFIED_POPULATIONS, (population) => population.versionId === version.version_id);
 
 class CiEffectiveLaneSpec extends S.Class<CiEffectiveLaneSpec>($I`CiEffectiveLaneSpec`)(
   {
@@ -2003,12 +2169,33 @@ const timingPickupStat = (rows: ReadonlyArray<CiLaneTimingPickupRow>): CiLaneTim
   });
 };
 
-const assertRequiredContextCount = (requiredContexts: HashSet.HashSet<string>): Effect.Effect<void, CiCommandError> =>
-  HashSet.size(requiredContexts) === CI_LANE_TIMING_REQUIRED_CONTEXT_COUNT
-    ? Effect.void
-    : CiCommandError.make({
-        message: `Ruleset ${CI_LANE_TIMING_RULESET_ID} must expose exactly ${CI_LANE_TIMING_REQUIRED_CONTEXT_COUNT} required contexts; observed ${HashSet.size(requiredContexts)}.`,
-      });
+const assertRequiredContextCount = (
+  requiredContexts: HashSet.HashSet<string>,
+  version: O.Option<CiRulesetHistoryVersion> = O.none()
+): Effect.Effect<void, CiCommandError> => {
+  const observed = HashSet.size(requiredContexts);
+  return O.match(version, {
+    onNone: () =>
+      HashSet.has(CI_LANE_TIMING_RATIFIED_CONTEXT_COUNTS, observed)
+        ? Effect.void
+        : CiCommandError.make({
+            message: `Ruleset ${CI_LANE_TIMING_RULESET_ID} must expose a ratified required-context count (${CI_LANE_TIMING_RATIFIED_COUNT_LABEL}); observed ${observed}.`,
+          }),
+    onSome: (resolved) =>
+      O.match(ratifiedPopulationFor(resolved), {
+        onNone: () =>
+          CiCommandError.make({
+            message: `Ruleset ${CI_LANE_TIMING_RULESET_ID} version ${resolved.version_id} is not a ratified admission population.`,
+          }),
+        onSome: (population) =>
+          population.contextCount === observed
+            ? Effect.void
+            : CiCommandError.make({
+                message: `Ruleset ${CI_LANE_TIMING_RULESET_ID} version ${resolved.version_id} must expose exactly ${population.contextCount} required contexts; observed ${observed}.`,
+              }),
+      }),
+  });
+};
 
 const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* (
   requiredContextSet: HashSet.HashSet<string>,
@@ -2016,7 +2203,7 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
   rows: ReadonlyArray<CiLaneTimingWindowRow>,
   rulesetVersion: O.Option<CiRulesetHistoryVersion> = O.none()
 ): Effect.fn.Return<CiLaneTimingWindowReport, CiCommandError> {
-  yield* assertRequiredContextCount(requiredContextSet);
+  yield* assertRequiredContextCount(requiredContextSet, rulesetVersion);
   const requiredContexts = A.sort(A.fromIterable(requiredContextSet), Order.String);
   const durationRows = A.filter(rows, isDurationWindowRow);
   const attributionRows = A.filter(rows, isAttributionWindowRow);
@@ -2042,7 +2229,10 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
  * This is the deterministic test and offline-analysis seam. It normalizes the
  * reusable-workflow prefix, replaces sharded `Lint` and `Test Unit` aggregator
  * spans with their effective critical paths, and rejects any required-context
- * set whose normalized cardinality is not exactly 18.
+ * set whose normalized cardinality is not a ratified population size. With no
+ * ruleset version to look up, it accepts any count in the ratified table
+ * (17 or 18); the windowed collector pins the exact count for the resolved
+ * version.
  *
  * **Example** (Observe the fail-closed context assertion)
  *
@@ -2078,7 +2268,7 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
     return yield* CiCommandError.make({ message: "--since must be earlier than --until." });
   }
   const { requiredContextSet, version } = yield* resolveWindowPopulation(repoRoot, options.until);
-  yield* assertRequiredContextCount(requiredContextSet);
+  yield* assertRequiredContextCount(requiredContextSet, O.some(version));
   const runs = yield* collectCiWorkflowWindowRuns(repoRoot, options);
   const rows = yield* pipe(
     Stream.fromIterable(runs),
@@ -2158,14 +2348,18 @@ const renderMarkdownState = (state: CiLaneTimingWindowStat["state"]): string =>
   Str.equivalence(state, "Breach") ? "**Breach**" : state;
 
 const renderRequiredPopulation = (report: CiLaneTimingWindowReport): string =>
-  `- required contexts: ${report.contextCount} (expected ${CI_LANE_TIMING_REQUIRED_CONTEXT_COUNT}${O.match(
-    report.rulesetVersion,
-    {
-      onNone: () => "",
-      onSome: (version) =>
-        `; ruleset ${CI_LANE_TIMING_RULESET_ID} version ${version.version_id} effective ${DateTime.formatIso(version.updated_at)}`,
-    }
-  )})`;
+  `- required contexts: ${report.contextCount} (expected ${O.match(report.rulesetVersion, {
+    onNone: () => CI_LANE_TIMING_RATIFIED_COUNT_LABEL,
+    onSome: (version) =>
+      O.match(ratifiedPopulationFor(version), {
+        onNone: () => "an unratified version",
+        onSome: (population) => `${population.contextCount}`,
+      }),
+  })}${O.match(report.rulesetVersion, {
+    onNone: () => "",
+    onSome: (version) =>
+      `; ruleset ${CI_LANE_TIMING_RULESET_ID} version ${version.version_id} effective ${DateTime.formatIso(version.updated_at)}`,
+  })})`;
 
 const renderSuccessfulDurationsMarkdown = (report: CiLaneTimingWindowReport): ReadonlyArray<string> => [
   "## Successful attempt-one durations",

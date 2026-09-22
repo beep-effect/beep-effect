@@ -27,9 +27,10 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Effect, Exit, Layer, pipe, Sink, Stream } from "effect";
+import { DateTime, Effect, Exit, Fiber, Layer, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
@@ -70,10 +71,10 @@ const job = (overrides: Partial<CiWorkflowJob> = {}) =>
 const encoder = new TextEncoder();
 const encodeCiWorkflowJobsPage = S.encodeUnknownEffect(S.fromJsonString(CiWorkflowJobsPage));
 
-const stubHandle = (output: string) =>
+const stubHandle = (output: string, exitCode = 0) =>
   ChildProcessSpawner.makeHandle({
     all: Stream.make(encoder.encode(output)),
-    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
     getInputFd: () => Sink.drain,
     getOutputFd: () => Stream.empty,
     isRunning: Effect.succeed(false),
@@ -85,18 +86,86 @@ const stubHandle = (output: string) =>
     unref: Effect.succeed(Effect.void),
   });
 
-const laneTimingsSpawner = ChildProcessSpawner.make((command) => {
-  if (!ChildProcess.isStandardCommand(command)) {
-    return Effect.die("lane timings never spawns a piped command");
-  }
-  const rendered = A.join([command.command, ...command.args], " ");
-  const output = Str.includes("actions/runs?per_page=1")(rendered)
+const laneTimingsResponse = (rendered: string): string =>
+  Str.includes("actions/runs?per_page=1")(rendered)
     ? '{"workflow_runs":[{"id":42}]}'
     : Str.includes("per_page=100&page=1")(rendered)
       ? '{"jobs":[{"completed_at":"2026-08-06T12:10:00Z","conclusion":"success","created_at":"2026-08-06T12:00:00Z","id":991,"labels":["self-hosted"],"name":"Test Unit","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:00:30Z","status":"completed","steps":[]}],"total_count":2}'
       : '{"jobs":[{"completed_at":"2026-08-06T12:11:00Z","conclusion":"success","created_at":"2026-08-06T12:01:00Z","id":992,"labels":["self-hosted"],"name":"Test Unit 2","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:01:30Z","status":"completed","steps":[]}],"total_count":2}';
-  return Effect.succeed(stubHandle(output));
+
+const laneTimingsSpawner = ChildProcessSpawner.make((command) => {
+  if (!ChildProcess.isStandardCommand(command)) {
+    return Effect.die("lane timings never spawns a piped command");
+  }
+  return Effect.succeed(stubHandle(laneTimingsResponse(A.join([command.command, ...command.args], " "))));
 });
+
+interface ScriptedGhExit {
+  readonly exitCode: number;
+  readonly output: string;
+}
+
+/**
+ * Spawner that fails the first `exits.length` gh invocations with the scripted
+ * non-zero exits, then answers like {@link laneTimingsSpawner}. `spawned`
+ * counts every invocation so a test can prove how many attempts were made.
+ */
+const scriptedGhSpawner = (exits: ReadonlyArray<ScriptedGhExit>) => {
+  const pending = A.copy(exits);
+  const state = { spawned: 0 };
+  const spawner = ChildProcessSpawner.make((command) => {
+    if (!ChildProcess.isStandardCommand(command)) {
+      return Effect.die("lane timings never spawns a piped command");
+    }
+    state.spawned += 1;
+    const scripted = pending.shift();
+    return Effect.succeed(
+      scripted === undefined
+        ? stubHandle(laneTimingsResponse(A.join([command.command, ...command.args], " ")))
+        : stubHandle(scripted.output, scripted.exitCode)
+    );
+  });
+  return { spawner, state };
+};
+
+const BAD_RECORD_MAC: ScriptedGhExit = {
+  exitCode: 1,
+  output: 'error connecting to api.github.com\nPost "https://api.github.com/graphql": local error: tls: bad record MAC',
+};
+
+/**
+ * Run `collectCiLaneTimings` under the TestClock, advancing virtual time past
+ * every backoff sleep the retry schedule can request (250ms·2^n jittered,
+ * at most ~4.5s across four retries).
+ */
+const forkCollect = Effect.fn("TestCiLaneTimings.forkCollect")(
+  (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) =>
+    collectCiLaneTimings(".", 1).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      Effect.exit,
+      Effect.forkChild
+    )
+);
+
+/**
+ * Run `collectCiLaneTimings` under the TestClock, advancing virtual time past
+ * every backoff sleep the retry schedule can request: transport retries wait
+ * 250ms·2^n jittered upward (≤ ~4.5s across four retries), secondary rate limits wait
+ * 1m·2^n jittered upward (≤ 18m). Steps stay under the capture layer's 2-second
+ * drain grace so a clock jump cannot trip its pipe-wedge watchdog.
+ */
+const collectWithRetries = Effect.fn("TestCiLaneTimings.collectWithRetries")(function* (
+  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]
+) {
+  const fiber = yield* forkCollect(spawner);
+  yield* Effect.forEach(A.range(1, 1_200), () => TestClock.adjust("1 second"));
+  return yield* Fiber.join(fiber);
+});
+
+const SECONDARY_RATE_LIMIT: ScriptedGhExit = {
+  exitCode: 1,
+  output: "gh: You have exceeded a secondary rate limit. Please wait a few minutes before you try again. (HTTP 403)",
+};
 
 const laneTimingsSpawnerLayer = Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner);
 
@@ -382,6 +451,78 @@ describe("ci lane timings attempt filter", () => {
     expect(lines).toHaveLength(2);
     expect(Str.split("\t")(lines[1] ?? "")[3]).toBe("Test Unit");
   });
+});
+
+describe("ci lane timings gh api retry", () => {
+  it.effect("retries transport, 5xx gateway, and secondary-rate-limit exits with backoff", () =>
+    Effect.gen(function* () {
+      const scripted = scriptedGhSpawner([
+        BAD_RECORD_MAC,
+        { exitCode: 1, output: "read tcp 10.0.0.2:51234->140.82.112.6:443: read: connection reset by peer" },
+        { exitCode: 1, output: "gh: Bad Gateway (HTTP 502)" },
+        { exitCode: 1, output: "gh: secondary rate limit reached, retry later (HTTP 429)" },
+      ]);
+      const exit = yield* collectWithRetries(scripted.spawner);
+
+      expect(Exit.isSuccess(exit)).toBe(true);
+      expect(Exit.isSuccess(exit) ? exit.value.jobCount : -1).toBe(2);
+      expect(scripted.state.spawned).toBe(4 + 3);
+    })
+  );
+
+  it.effect("fails a 404 API error immediately without retrying", () =>
+    Effect.gen(function* () {
+      const scripted = scriptedGhSpawner([{ exitCode: 1, output: "gh: Not Found (HTTP 404)" }]);
+      const exit = yield* collectWithRetries(scripted.spawner);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("exited 1: gh: Not Found (HTTP 404)");
+      expect(scripted.state.spawned).toBe(1);
+    })
+  );
+
+  it.effect("does not treat the rate-limit phrase as transient under any other status", () =>
+    Effect.gen(function* () {
+      const scripted = scriptedGhSpawner([
+        { exitCode: 1, output: "gh: Validation Failed: secondary rate limit mentioned in a message (HTTP 422)" },
+      ]);
+      const exit = yield* collectWithRetries(scripted.spawner);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("(HTTP 422)");
+      expect(scripted.state.spawned).toBe(1);
+    })
+  );
+
+  it.effect("waits at least a minute before retrying a secondary rate limit", () =>
+    Effect.gen(function* () {
+      const scripted = scriptedGhSpawner([SECONDARY_RATE_LIMIT]);
+      const fiber = yield* forkCollect(scripted.spawner);
+
+      yield* Effect.forEach(A.range(1, 59), () => TestClock.adjust("1 second"));
+      expect(scripted.state.spawned).toBe(1);
+      yield* Effect.forEach(A.range(1, 14), () => TestClock.adjust("1 second"));
+      expect(scripted.state.spawned).toBeGreaterThanOrEqual(2);
+      yield* Effect.forEach(A.range(1, 180), () => TestClock.adjust("1 second"));
+      const exit = yield* Fiber.join(fiber);
+
+      expect(Exit.isSuccess(exit)).toBe(true);
+      expect(scripted.state.spawned).toBe(1 + 3);
+    })
+  );
+
+  it.effect("gives up after five transient attempts and reports the last output", () =>
+    Effect.gen(function* () {
+      const scripted = scriptedGhSpawner(A.replicate(BAD_RECORD_MAC, 6));
+      const exit = yield* collectWithRetries(scripted.spawner);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      const rendered = Exit.isFailure(exit) ? exit.cause.toString() : "";
+      expect(rendered).toContain("on every one of 5 attempts");
+      expect(rendered).toContain("bad record MAC");
+      expect(scripted.state.spawned).toBe(5);
+    })
+  );
 });
 
 describe("ci lane timings derivations", () => {
@@ -780,12 +921,14 @@ describe("ci lane timing admission window", () => {
     })
   );
 
-  it.effect("fails closed when ruleset 10240248 does not normalize to exactly 18 contexts", () =>
+  it.effect("fails closed when ruleset 10240248 does not normalize to a ratified context count", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(buildCiLaneTimingWindowReport(A.append(REQUIRED_CONTEXTS, "Extra Context"), []));
 
       expect(Exit.isFailure(exit)).toBe(true);
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("exactly 18 required contexts; observed 19");
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
+        "must expose a ratified required-context count (17 or 18); observed 19"
+      );
     })
   );
 
@@ -826,23 +969,50 @@ describe("ci lane timing admission window", () => {
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
 
-  it.effect("fails closed against the 17-context version after the removal", () => {
+  it.effect("admits the ratified 17-context version after the removal", () => {
     const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(
+        ".",
+        windowOptions({
+          until: DateTime.makeUnsafe("2026-09-12T01:46:53.355Z"),
+        })
+      );
+      expect(report.contextCount).toBe(17);
+      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(49479116));
+      expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(true);
+      expect(A.some(commands, Str.includes("/actions/"))).toBe(true);
+      const markdown = renderCiLaneTimingWindowMarkdown(report);
+      expect(markdown).toContain(
+        "- required contexts: 17 (expected 17; ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z)"
+      );
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("fails closed against a ruleset version the packet has not ratified", () => {
+    const commands = A.empty<string>();
+    const unratifiedHistoryJson =
+      '[{"version_id":50000000,"updated_at":"2026-09-15T00:00:00.000Z"},{"version_id":49479116,"updated_at":"2026-09-11T20:46:53.354-05:00"}]';
+    const response = (endpoint: string) =>
+      Str.includes("/history?")(endpoint)
+        ? Effect.succeed(unratifiedHistoryJson)
+        : Str.endsWith("/history/50000000")(endpoint)
+          ? Effect.succeed(RULESET_SNAPSHOT_17_JSON)
+          : windowGithubResponse(endpoint);
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(
         collectCiLaneTimingWindow(
           ".",
           windowOptions({
-            until: DateTime.makeUnsafe("2026-09-12T01:46:53.355Z"),
+            until: DateTime.makeUnsafe("2026-09-16T00:00:00.000Z"),
           })
         )
       );
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
-        "Ruleset 10240248 must expose exactly 18 required contexts; observed 17."
+        "Ruleset 10240248 version 50000000 is not a ratified admission population."
       );
-      expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(true);
       expect(A.some(commands, Str.includes("/actions/"))).toBe(false);
-    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
 
   it.effect("excludes a ruleset version effective exactly at the exclusive end", () => {
