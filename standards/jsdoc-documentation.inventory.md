@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-09-22T19:41:17.369Z
+Generated: 2026-09-22T20:58:11.535Z
 
 ## Scope
 
@@ -14,16 +14,16 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 117 |
-| publicModules | 2869 |
-| publicExports | 20302 |
+| publicModules | 2884 |
+| publicExports | 20439 |
 | openModules | 377 |
-| openExports | 3103 |
+| openExports | 3102 |
 | missingExportExamples | 5 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 3341 |
+| exampleImportFindings | 3340 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 12 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 3340 |
+| no-root-package-import | 3339 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -156,7 +156,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 98 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 10 | 110 | 5 | 54 |
 | 99 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | needs-remediation | 3 | 12 | 0 | 10 |
 | 100 | `@beep/drizzle` | `packages/drivers/drizzle` | needs-remediation | 3 | 11 | 0 | 3 |
-| 101 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 22 | 81 | 1 | 36 |
+| 101 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 22 | 82 | 1 | 35 |
 | 102 | `@beep/brand` | `packages/foundation/ui-system/brand` | needs-remediation | 7 | 50 | 0 | 43 |
 | 103 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 7 |
 | 104 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 36 | 211 | 13 | 14 |
@@ -169,9 +169,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 111 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | needs-remediation | 13 | 34 | 0 | 17 |
 | 112 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 2 |
 | 113 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 1 |
-| 114 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 38 | 6 | 3 |
+| 114 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 40 | 6 | 3 |
 | 115 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 4 |
-| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 261 | 2209 | 47 | 293 |
+| 116 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 276 | 2343 | 47 | 293 |
 | 117 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | needs-remediation | 10 | 87 | 0 | 18 |
 | 118 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 4 |
 | 119 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 9 | 32 | 1 | 0 |
@@ -3365,8 +3365,7 @@ Export findings:
 - `src/PracticeKg.schemas.ts:592` `encodePracticeKgNodePayloadJson` (const) - 1 example import violation(s)
 - `src/PracticeKg.schemas.ts:634` `encodePracticeKgSummaryJson` (const) - 2 example import violation(s)
 - `src/PracticeKg.tool-handlers.ts:137` `PracticeKgToolkitHandlersLive` (const) - 1 example import violation(s)
-- `src/Tools.ts:103` `PracticeKgToolkitLayer` (const) - 1 example import violation(s)
-- `src/Tools.ts:128` `makePracticeKgServerLayer` (const) - 1 example import violation(s)
+- `src/Tools.ts:108` `PracticeKgToolkitLayer` (const) - 1 example import violation(s)
 
 ### @beep/brand
 
@@ -3599,7 +3598,7 @@ Module findings:
 Export findings:
 - `src/Handlers.ts:88` `GovinfoToolkitHandlersLive` (const) - 1 example import violation(s)
 - `src/Handlers.ts:110` `EcfrToolkitHandlersLive` (const) - 1 example import violation(s)
-- `src/Server.ts:80` `makeServerLayer` (const) - 1 example import violation(s)
+- `src/Server.ts:140` `makeServerLayer` (const) - 1 example import violation(s)
 
 ### @beep/architecture-lab-client
 

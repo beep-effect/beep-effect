@@ -33,12 +33,12 @@ practice-kg, then nlp-mcp behind a live first-message capture of the vendor CLIs
 
 ## Current Phase
 
-P1 Implement, in progress. PR 1 (kit rebase on rc.117 `registerToolkit`, dual-read caller,
-dispatch anchor, `@beep/mcp-kit/client`, conformance port, README consumer table) merged as #1192
-on 2026-09-22. PR 2 (this lane, `mcp-hosts-pr2`): m365 and uspto serve `[McpProtocol.v2026_07_28]`
-only through `statelessMcpProtocols`, advertise `instructions`, expose a registrations-only layer
-and pass `conformance2026`; m365's stdio conversation test is framed by the kit client and uspto's
-array `structuredContent` is proven through it. Next: PR 3 (gov-legal, practice-kg).
+P1 Implement, in progress. PR 1 (kit rebase, dual-read caller, dispatch anchor,
+`@beep/mcp-kit/client`, conformance port) merged as #1192 and PR 2 (m365, uspto) merged as #1204,
+both on 2026-09-22. PR 3 (this lane, `mcp-hosts-pr3`): gov-legal and practice-kg serve
+`[McpProtocol.v2026_07_28]` only through `statelessMcpProtocols`, advertise `instructions`, expose
+registrations-only layers and pass `conformance2026` (practice-kg over a shared fixture bundle); the
+compiled `.mcpb` smoke sends `server/discover` first. Next: PR 4 (nlp-mcp capture).
 
 Goal B checkpoint: `goals/ontology-sidecar-stateless-identity` is unblocked since #1192 merged (it
 consumes `CurrentMcpDispatchAnchor`, the dual-read and `@beep/mcp-kit/client`; keep those

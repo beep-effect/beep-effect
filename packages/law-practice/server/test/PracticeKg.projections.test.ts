@@ -8,6 +8,7 @@ import {
 import {
   buildPracticeKgBundle,
   LawPracticeServerLive,
+  PRACTICE_KG_MCP_INSTRUCTIONS,
   PracticeKgBundle,
   PracticeKgBundleContext,
   PracticeKgBundleManifest,
@@ -28,14 +29,16 @@ import {
   PracticeKgToolError,
   PracticeKgToolResult,
 } from "@beep/law-practice-use-cases/server";
+import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
 import { Md } from "@beep/md";
 import * as Pglite from "@beep/pglite";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { afterAll, beforeAll, describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
-import { Config, ConfigProvider, Effect, FileSystem, Layer, Order, Path, Stream } from "effect";
+import { Config, ConfigProvider, Effect, Exit, FileSystem, Layer, Order, Path, Scope, Stream } from "effect";
 import * as A from "effect/Array";
+import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -1017,4 +1020,73 @@ describe("practice KG projections", () => {
     }, provideTestLayer),
     { timeout: 300_000 }
   );
+});
+
+// One fixture bundle for the conformance port, built once per file: the
+// runner mounts `registrations` for every arm, and rebuilding the corpus and
+// bundle each time would dominate the suite. The scope holds the temp
+// directories until `afterAll` closes it.
+interface ConformanceBundle {
+  readonly bundleOut: string;
+  readonly context: PracticeKgBundleContext;
+  readonly scope: Scope.Closeable;
+}
+
+const conformanceBundle = MutableRef.make<O.Option<ConformanceBundle>>(O.none());
+
+const buildConformanceBundle = Effect.fn("PracticeKgTest.buildConformanceBundle")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const scope = yield* Scope.make();
+  const corpusRoot = yield* makeFixtureCorpus().pipe(Scope.provide(scope));
+  const bundleOut = path.join(corpusRoot, "bundle-conformance");
+  yield* runBuild(graphOptions(corpusRoot, bundleOut), bundleOut);
+  const manifest = yield* fs
+    .readFileString(path.join(bundleOut, "bundle.manifest.json"))
+    .pipe(Effect.flatMap(decodeManifestJson));
+  const context = PracticeKgBundleContext.make({ bundleDir: bundleOut, corpusRoot, manifest });
+  MutableRef.set(conformanceBundle, O.some({ bundleOut, context, scope }));
+});
+
+beforeAll(() => Effect.runPromise(buildConformanceBundle().pipe(provideTestLayer)), 120_000);
+
+afterAll(() =>
+  Effect.runPromise(
+    O.match(MutableRef.get(conformanceBundle), {
+      onNone: () => Effect.void,
+      onSome: (bundle) => Scope.close(bundle.scope, Exit.void),
+    })
+  )
+);
+
+// Registrations only: the toolkit over the shared bundle's PGlite and DuckDB
+// resources, with the transport left to the runner.
+const practiceKgConformanceRegistrations = Layer.unwrap(
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    const bundle = yield* O.match(MutableRef.get(conformanceBundle), {
+      onNone: () => Effect.die("the conformance bundle is built in beforeAll"),
+      onSome: Effect.succeed,
+    });
+    const resources = Layer.mergeAll(
+      Pglite.makeLayer({ dataDir: path.join(bundle.bundleOut, "kg.pglite") }),
+      DuckDb.makeNodeLayer(
+        DuckDbConnectionOptions.make({ databasePath: path.join(bundle.bundleOut, "practice.duckdb") })
+      ),
+      Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(bundle.context))
+    );
+    return PracticeKgToolkitLayer.pipe(Layer.provide(resources));
+  })
+).pipe(Layer.provide(testLayer));
+
+conformance2026({
+  name: "beep-practice-kg-test",
+  version: "0.0.0",
+  instructions: PRACTICE_KG_MCP_INSTRUCTIONS,
+  registrations: practiceKgConformanceRegistrations,
+  tool: {
+    name: "corpus_search_text",
+    arguments: { query: "alpha" },
+    invalidArguments: { query: 1 },
+  },
 });
