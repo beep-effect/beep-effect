@@ -939,3 +939,17 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** resolve the population from the latest ruleset
   history version strictly before the window's exclusive end, retaining the
   ratified exact-18 assertion.
+
+## 2026-09-21 — one transient TLS failure aborted the whole admission census
+
+- **Doing:** running the canonical P3 census,
+  `beep ci lane-timings --window --workflow check.yml --event all --since 2026-09-04T00:00:00Z --until 2026-09-11T00:00:00Z --markdown`,
+  to ratify the admission week.
+- **Evidence:** after several minutes of pagination the command exited 1 with
+  `gh api repos/{owner}/{repo}/actions/runs/34317537061/jobs?filter=all&per_page=100&page=1 exited 1: local error: tls: bad record MAC`;
+  every page fetched before it was discarded and the census had to restart from
+  the first run page.
+- **Would have prevented it:** retry idempotent `gh api` page fetches on
+  transport errors (bounded backoff) inside the lane-timings collector, or
+  checkpoint fetched pages to the scratchpad so a rerun resumes instead of
+  restarting.
