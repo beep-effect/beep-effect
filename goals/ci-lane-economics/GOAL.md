@@ -15,21 +15,17 @@ Current phase: P3 repair path. Two admission windows are denied:
   shard pickup 7m47s p95. `Check` recovered to 8m22s. See
   `research/admission-week-2-p95.md`.
 
-Do not run another census first. Produce and land, in this order:
+The repair path is signed in `research/repair-decision-2.md`. Moves: #1195
+(`Test Unit` shard split: `repo-cli` becomes `repo-cli-1`/`repo-cli-2` via
+an optional `shard {index,total}` partition field; free hosted runners stay
+the placement) merged 2026-09-22; #1194 (refs-check quiet listing) in
+flight. `Lint Policy` is measured, not repaired, here; its wall-clock debt
+is handed to `goals/time-to-certainty` C4 and the window-3 verdict decides
+whether C4 is pulled forward. Do not add a shard or a fleet move without a
+new signed decision.
 
-1. A signed repair decision for `Test Unit` in `research/`: attribute the
-   median regression (12m20s → 17m54s) with step and cache evidence from the
-   window-2 tails, then re-shard or rebalance the committed LPT bins against
-   the current task universe. Free hosted runners stay the default placement.
-2. A signed repair decision for `Lint Policy` (the package-task migration C4
-   wall-clock debt): attribute, then shard or cache the dominant steps.
-3. A decision for the shard-pickup queue (breached 8m22s then 7m47s on free
-   hosted runners): concurrency, shard count, or placement, costed against
-   the fleet gates below.
-
-Each move rides its own `.github/workflows/**` PR through Yeet. After every
-move is merged, census the first complete half-open UTC week that starts
-after the last merge with exactly:
+After the last of the two merges, census the first complete half-open UTC
+week that starts after it with exactly:
 
 ```sh
 bun run beep ci lane-timings --window --workflow check.yml --event all --since <week-start>Z --until <week-end>Z --markdown
