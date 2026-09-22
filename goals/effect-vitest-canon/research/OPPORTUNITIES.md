@@ -2072,3 +2072,13 @@ check had passed; the separate package-test-typecheck command exposed the mismat
 The cleanup now uses Effect.orDie so removal failures fail the test without a typed
 release error. All six focused tests, package-test-typecheck, and the quick package
 proof pass. Include the package test typecheck before publishing new Effect tests.
+
+### Full docgen rejects compatibility re-export headers
+
+PR #1188 passed the JSDoc inventory ratchet but failed Heavy / Docgen because
+four re-export headers lacked `@category`. The headers were in the runner
+barrel and the three test-utils compatibility entrypoints. Added canonical
+`testing` / `errors` categories; both affected package lint/check proofs pass.
+The bounded docgen command refuses this branch because global inputs changed,
+so use full `bun run docgen` for the validation. Inventory-ratchet success does
+not establish the full docgen metadata contract.
