@@ -1429,3 +1429,14 @@ output guards, runtime deadlines, remote conversion, and artifact size budgets;
 it also supplies an explicit attached-monitor environment. The focused security
 coverage reports 100% lines and functions. Running the coverage ratchet against
 new main modules before the long proof would have exposed these gaps earlier.
+
+## Concurrent dependency merge invalidated a running proof, 2026-09-21
+
+Proof `5a512b43-db13-4a9f-b223-4aece3b68f1b` was running CLI tests when
+another session merged the rc.117 dependency refresh and replaced installed
+packages. Already-loaded code called `prettyGetter.run`, which rc.117 removed;
+the newly merged source already uses `SchemaGetter.run`. The proof was
+terminated. A fresh process passed all 216 tests across the seven relevant
+files, including every affected test file. Serializing checkout mutation and
+dependency installation against active proofs would have prevented the mixed
+runtime and lost verification work. The next proof must bind the new head.
