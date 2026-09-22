@@ -283,7 +283,9 @@ const runPilot = Effect.fn("CachePilot.run")(
     const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(Effect.flatMap(decodeGitObjectId));
     const commonGit = yield* captureHost(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
     const sourceRoots = yield* Effect.forEach(request.worktrees, (source) => fs.realPath(source), { concurrency: 1 });
-    if (sourceRoots[0] === sourceRoots[1])
+    const sourceRootA = O.getOrThrow(A.get(sourceRoots, 0));
+    const sourceRootB = O.getOrThrow(A.get(sourceRoots, 1));
+    if (sourceRootA === sourceRootB)
       return yield* CacheCommandError.new("Cross-root pilot observations require two distinct registered worktrees.");
     yield* Effect.forEach(
       sourceRoots,
@@ -307,7 +309,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         [biome, current.source.toolchain.biome.sha256],
         [node, current.source.toolchain.node.sha256],
         [turbo, request.client.sha256],
-      ]) {
+      ] as const) {
         if ((yield* hashExecutable(executable)) !== expected)
           return yield* CacheCommandError.new("A pilot executable differs from its exact content pin.");
       }
@@ -440,7 +442,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       for (const [directory, name] of [
         [identityDirectory, "identity-log"],
         [typesDirectory, "types-log"],
-      ])
+      ] as const)
         mounts.push("--bind", path.join(fixture.directory, name), path.join(guest, directory, ".turbo"));
       for (const parent of A.reverse(parents)) mounts.push("--remount-ro", parent);
       return mounts;
@@ -529,8 +531,8 @@ const runPilot = Effect.fn("CachePilot.run")(
       }).pipe(Effect.timeout(Duration.seconds(60)));
     });
     const roots = [
-      yield* prepare(sourceRoots[0], "root-a", "initial-a"),
-      yield* prepare(sourceRoots[1], "root-b", "initial-b"),
+      yield* prepare(sourceRootA, "root-a", "initial-a"),
+      yield* prepare(sourceRootB, "root-b", "initial-b"),
     ];
     const firstRoot = O.getOrThrow(A.head(roots));
     const verifySandboxLibraries = Effect.fn("CachePilot.verifySandboxLibraries")(function* () {
@@ -838,7 +840,10 @@ const runPilot = Effect.fn("CachePilot.run")(
           );
           runs.push(...paired);
           checks.push(
-            CacheSyntheticCheck.make({ name: `fresh-pair-${pair}`, passed: compare(paired[0], paired[1], true) })
+            CacheSyntheticCheck.make({
+              name: `fresh-pair-${pair}`,
+              passed: compare(O.getOrThrow(A.get(paired, 0)), O.getOrThrow(A.get(paired, 1)), true),
+            })
           );
         }
         const producer = yield* execute(firstRoot, "activation-producer", true, true);
@@ -847,7 +852,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         checks.push(
           CacheSyntheticCheck.make({
             name: "activation-capture-equivalence",
-            passed: compare(runs[0], producer, false),
+            passed: compare(O.getOrThrow(A.get(runs, 0)), producer, false),
           })
         );
         checks.push(
@@ -868,19 +873,22 @@ const runPilot = Effect.fn("CachePilot.run")(
         checks.push(
           CacheSyntheticCheck.make({
             name: "concurrent-fresh-equivalence",
-            passed: compare(concurrent[0], concurrent[1], true),
+            passed: compare(O.getOrThrow(A.get(concurrent, 0)), O.getOrThrow(A.get(concurrent, 1)), true),
           })
         );
         const otherRoot = yield* execute(firstRoot, "alternate-absolute-root", false, false, "/fixture-other");
         runs.push(otherRoot);
         checks.push(
-          CacheSyntheticCheck.make({ name: "absolute-root-equivalence", passed: compare(runs[0], otherRoot, true) })
+          CacheSyntheticCheck.make({
+            name: "absolute-root-equivalence",
+            passed: compare(O.getOrThrow(A.get(runs, 0)), otherRoot, true),
+          })
         );
         if (A.some(checks, (check) => !check.passed))
           return yield* CacheCommandError.new("Initial real-pilot comparisons diverged; local reuse has stopped.");
       });
       yield* runInitialComparisons();
-      const baseline = runs[0];
+      const baseline = O.getOrThrow(A.get(runs, 0));
       const applyShadowSource = Effect.fn("CachePilot.applyShadowSource")(function* (
         fixture: PilotRoot,
         scenario: PilotShadowScenario
@@ -958,8 +966,8 @@ const runPilot = Effect.fn("CachePilot.run")(
           PilotShadowScenario.make({ ...unchanged, id: "absolute-root", guest: "/fixture-other" }),
         ];
         for (const scenario of scenarios) {
-          const writer = yield* prepare(sourceRoots[0], "root-a", `shadow-${scenario.id}-a`);
-          const reader = yield* prepare(sourceRoots[1], "root-b", `shadow-${scenario.id}-b`);
+          const writer = yield* prepare(sourceRootA, "root-a", `shadow-${scenario.id}-a`);
+          const reader = yield* prepare(sourceRootB, "root-b", `shadow-${scenario.id}-b`);
           yield* Effect.forEach([writer, reader], (fixture) => applyShadowSource(fixture, scenario), {
             concurrency: 1,
             discard: true,

@@ -65,10 +65,9 @@ const collectLiteralKitConstAssertionViolations = Effect.fn(function* () {
       }
 
       const args = callExpression.getArguments();
-      for (let argumentIndex = 0; argumentIndex < args.length; argumentIndex += 1) {
-        const argument = args[argumentIndex];
+      A.forEach(args, (argument, argumentIndex) => {
         if (!isLiteralKitConstAssertionArgument(argument)) {
-          continue;
+          return;
         }
 
         A.appendInPlace(
@@ -79,7 +78,7 @@ const collectLiteralKitConstAssertionViolations = Effect.fn(function* () {
             argument: argumentIndex + 1,
           })
         );
-      }
+      });
     }
   }
 

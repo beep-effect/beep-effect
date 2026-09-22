@@ -632,6 +632,8 @@ interface ResolutionWalk {
   symbolicLinkTraversals: number;
 }
 
+const walkStackInode = (walk: ResolutionWalk): O.Option<Inode> => A.last(walk.stack);
+
 const navigatePathComponent = Effect.fnUntraced(function* (
   state: State,
   walk: ResolutionWalk,
@@ -639,12 +641,13 @@ const navigatePathComponent = Effect.fnUntraced(function* (
   method: string,
   path: string
 ) {
+  const stackInode = yield* Effect.fromOption(walkStackInode(walk), () => notFound(method, path));
   if (component.length === 0) {
-    if (walk.components.length === 0) yield* getDirectory(state, walk.stack[walk.stack.length - 1], method, path);
+    if (walk.components.length === 0) yield* getDirectory(state, stackInode, method, path);
     return true;
   }
   if (component !== "." && component !== "..") return false;
-  yield* getDirectory(state, walk.stack[walk.stack.length - 1], method, path);
+  yield* getDirectory(state, stackInode, method, path);
   if (component === ".." && walk.stack.length > 1) {
     walk.stack.pop();
     walk.names.pop();
@@ -679,7 +682,8 @@ const resolvePathComponent = Effect.fnUntraced(function* (
 ) {
   const { method, followFinalSymbolicLink } = policy;
   if (yield* navigatePathComponent(state, walk, component, method, path)) return;
-  const parent = yield* getDirectory(state, walk.stack[walk.stack.length - 1], method, path);
+  const stackInode = yield* Effect.fromOption(walkStackInode(walk), () => notFound(method, path));
+  const parent = yield* getDirectory(state, stackInode, method, path);
   const inode = yield* Effect.fromOption(findEntry(parent, component), () => notFound(method, path));
   const entry = yield* getInode(state, inode, method, path);
   if (isSymbolicLinkInode(entry) && (walk.components.length > 0 || followFinalSymbolicLink)) {
@@ -704,7 +708,7 @@ const resolve = Effect.fnUntraced(function* (state: State, path: string, options
     if (component === undefined) continue;
     yield* resolvePathComponent(state, walk, component, policy, path);
   }
-  const inode = walk.stack[walk.stack.length - 1];
+  const inode = yield* Effect.fromOption(walkStackInode(walk), () => notFound(method, path));
   const entry = yield* getInode(state, inode, method, path);
   return {
     inode,
@@ -2147,12 +2151,19 @@ const collectDirectoryEntries = (
   });
   const frames: Array<Frame> = [directoryFrame(directory, prefix)];
   while (frames.length > 0) {
-    const frame = frames[frames.length - 1];
+    const frameOption = A.last(frames);
+    if (O.isNone(frameOption)) break;
+    const frame = frameOption.value;
     if (frame.index >= frame.names.length) {
       frames.pop();
       continue;
     }
-    const name = frame.names[frame.index];
+    const nameOption = A.get(frame.names, frame.index);
+    if (O.isNone(nameOption)) {
+      frames.pop();
+      continue;
+    }
+    const name = nameOption.value;
     frame.index += 1;
     const relativePath = frame.prefix.length === 0 ? name : `${frame.prefix}/${name}`;
     output.push(relativePath);
@@ -2577,6 +2588,7 @@ const globSyntaxCharacters = HashSet.make("*", "?", "[", "]", "{", "}", ",", "\\
 const unescapedCharacters = function* (pattern: string, start = 0): Iterable<readonly [number, string]> {
   for (let index = start; index < pattern.length; index++) {
     const character = pattern[index];
+    if (P.isUndefined(character)) continue;
     if (character === "\\") index += 1;
     else yield Tuple.make(index, character);
   }
@@ -2675,7 +2687,9 @@ const expandBraces = Effect.fnUntraced(function* (method: string, pattern: strin
     const found = A.findFirstIndex(patterns, (pattern) => O.isSome(findBraceExpansion(pattern)));
     if (O.isNone(found)) return yield* Effect.succeed(patterns);
     const index = found.value;
-    const current = patterns[index];
+    const currentOption = A.get(patterns, index);
+    if (O.isNone(currentOption)) return yield* Effect.succeed(patterns);
+    const current = currentOption.value;
     const expansionOption = findBraceExpansion(current);
     if (O.isNone(expansionOption)) return yield* Effect.succeed(patterns);
     const expansion = expansionOption.value;
@@ -2698,7 +2712,10 @@ const readCharacterClassAtom = Effect.fnUntraced(function* (method: string, segm
   const escaped = segment[index] === "\\";
   const position = escaped ? index + 1 : index;
   if (position === segment.length) return yield* argumentError(method, "character classes must not end with an escape");
-  return Tuple.make({ value: segment[position], escaped } satisfies GlobCharacterClassAtom, position + 1);
+  const value = yield* Effect.fromOption(Str.charAt(segment, position), () =>
+    argumentError(method, "character classes must not end with an escape")
+  );
+  return Tuple.make({ value, escaped } satisfies GlobCharacterClassAtom, position + 1);
 });
 
 const readCharacterClassAtoms = Effect.fnUntraced(function* (method: string, segment: string, start: number) {
@@ -2718,9 +2735,11 @@ const readCharacterClassAtoms = Effect.fnUntraced(function* (method: string, seg
 
 const characterClassRangeEnd = (characters: ReadonlyArray<GlobCharacterClassAtom>, index: number): O.Option<string> => {
   if (index + 2 >= characters.length) return O.none();
-  const separator = characters[index + 1];
-  const end = characters[index + 2].value;
-  return separator.value === "-" && !separator.escaped && end !== "-" ? O.some(end) : O.none();
+  const separator = A.get(characters, index + 1);
+  const endAtom = A.get(characters, index + 2);
+  if (O.isNone(separator) || O.isNone(endAtom)) return O.none();
+  const end = endAtom.value.value;
+  return separator.value.value === "-" && !separator.value.escaped && end !== "-" ? O.some(end) : O.none();
 };
 
 const compileCharacterClass = Effect.fnUntraced(function* (
@@ -2731,14 +2750,18 @@ const compileCharacterClass = Effect.fnUntraced(function* (
   const literals: Array<string> = [];
   const ranges: Array<readonly [string, string]> = [];
   for (let index = 0; index < characters.length; index++) {
-    const character = characters[index];
-    const end = characterClassRangeEnd(characters, index);
-    if (O.isNone(end)) {
-      literals.push(character.value);
+    const character = A.get(characters, index);
+    if (O.isNone(character)) continue;
+    const endOption = characterClassRangeEnd(characters, index);
+    if (O.isNone(endOption)) {
+      literals.push(character.value.value);
       continue;
     }
-    if (character.value > end.value) return yield* argumentError(method, "character class ranges must be ascending");
-    ranges.push(Tuple.make(character.value, end.value));
+    const end = endOption.value;
+    if (character.value.value > end) {
+      return yield* argumentError(method, "character class ranges must be ascending");
+    }
+    ranges.push(Tuple.make(character.value.value, end));
     index += 2;
   }
   return GlobToken.cases.CharacterClass.make({ negated, ranges, literals });
@@ -2754,7 +2777,9 @@ const parseCharacterClass = Effect.fnUntraced(function* (method: string, segment
 const parseGlobEscape = Effect.fnUntraced(function* (method: string, segment: string, index: number) {
   const position = index + 1;
   if (position === segment.length) return yield* argumentError(method, "patterns must not end with an escape");
-  const value = segment[position];
+  const value = yield* Effect.fromOption(Str.charAt(segment, position), () =>
+    argumentError(method, "patterns must not end with an escape")
+  );
   return HashSet.has(globSyntaxCharacters, value)
     ? Tuple.make(GlobToken.cases.Literal.make({ value }), position + 1)
     : Tuple.make(GlobToken.cases.Literal.make({ value: "\\" }), position);
@@ -2765,7 +2790,10 @@ const parseGlobToken = Effect.fnUntraced(function* (
   segment: string,
   index: number
 ): Effect.fn.Return<readonly [GlobToken, number], PlatformError> {
-  return yield* Match.value(segment[index]).pipe(
+  const current = yield* Effect.fromOption(Str.charAt(segment, index), () =>
+    argumentError(method, "pattern segment index out of range")
+  );
+  return yield* Match.value(current).pipe(
     Match.when("\\", () => parseGlobEscape(method, segment, index)),
     Match.when("*", () => Effect.succeed(Tuple.make(GlobToken.cases.Star.make({}), index + 1))),
     Match.when("?", () => Effect.succeed(Tuple.make(GlobToken.cases.One.make({}), index + 1))),
@@ -2845,7 +2873,9 @@ const isStarGlobToken = GlobToken.isAnyOf(["Star"]);
 
 const advanceGlobSegment = (cursor: GlobMatchCursor, tokens: ReadonlyArray<GlobToken>, value: string): boolean => {
   const token = A.get(tokens, cursor.patternIndex);
-  if (O.exists(token, (token) => matchesGlobToken(token, value[cursor.valueIndex]))) {
+  const valueCharacter = Str.charAt(value, cursor.valueIndex);
+  if (O.isNone(valueCharacter)) return false;
+  if (O.exists(token, (token) => matchesGlobToken(token, valueCharacter.value))) {
     cursor.patternIndex += 1;
     cursor.valueIndex += 1;
     return true;
@@ -2878,7 +2908,12 @@ const matchesGlobSegment = (pattern: GlobSegment, value: string): boolean => {
 const matchGlobstarPaths = (path: ReadonlyArray<string>, next: ReadonlyArray<boolean>): A.NonEmptyArray<boolean> => {
   const current = A.makeBy(path.length + 1, () => false);
   for (let index = path.length; index >= 0; index--) {
-    current[index] = next[index] || (index < path.length && !Str.startsWith(".")(path[index]) && current[index + 1]);
+    const pathSegment = A.get(path, index);
+    current[index] =
+      (next[index] ?? false) ||
+      (index < path.length &&
+        O.exists(pathSegment, (segment) => !Str.startsWith(".")(segment)) &&
+        (current[index + 1] ?? false));
   }
   return current;
 };
@@ -2890,7 +2925,9 @@ const matchSegmentPaths = (
 ): A.NonEmptyArray<boolean> => {
   const current = A.makeBy(path.length + 1, () => false);
   for (let index = path.length - 1; index >= 0; index--) {
-    current[index] = matchesGlobSegment(segment, path[index]) && next[index + 1];
+    const pathSegment = A.get(path, index);
+    current[index] =
+      O.exists(pathSegment, (pathValue) => matchesGlobSegment(segment, pathValue)) && (next[index + 1] ?? false);
   }
   return current;
 };
@@ -2899,12 +2936,14 @@ const matchesGlob = (pattern: CompiledGlobPattern, path: ReadonlyArray<string>, 
   if (pattern.directoryOnly && !directory) return false;
   let next = A.makeBy(path.length + 1, (index) => index === path.length);
   for (let index = pattern.segments.length - 1; index >= 0; index--) {
-    next = CompiledGlobSegment.match(pattern.segments[index], {
+    const segment = A.get(pattern.segments, index);
+    if (O.isNone(segment)) break;
+    next = CompiledGlobSegment.match(segment.value, {
       Globstar: () => matchGlobstarPaths(path, next),
       Segment: (segment) => matchSegmentPaths(segment, path, next),
     });
   }
-  return next[0];
+  return next[0] ?? false;
 };
 
 class GlobSelection extends S.Class<GlobSelection>($I`GlobSelection`)(

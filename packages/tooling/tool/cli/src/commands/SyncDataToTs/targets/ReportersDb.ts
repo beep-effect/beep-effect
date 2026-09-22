@@ -288,10 +288,18 @@ export const readPreviousReporterVocabularyForTesting = Effect.fn("SyncDataToTs.
 const decodeArchiveEntry = <A, E>(
   targetId: string,
   file: string,
-  text: string,
+  text: string | undefined,
   decode: (input: string) => Effect.Effect<A, E>
 ): Effect.Effect<A, SyncDataToTsError> =>
-  decode(text).pipe(SyncDataToTsError.mapError(`Failed to decode ${file}`, targetId, file));
+  text === undefined
+    ? Effect.fail(
+        SyncDataToTsError.make({
+          message: `Missing archive entry "${file}".`,
+          targetId,
+          file,
+        })
+      )
+    : decode(text).pipe(SyncDataToTsError.mapError(`Failed to decode ${file}`, targetId, file));
 
 const recordArrayCount = <A>(record: Readonly<Record<string, ReadonlyArray<A>>>): number =>
   pipe(

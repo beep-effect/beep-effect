@@ -212,9 +212,15 @@ const parseBunSemver = (value: string): O.Option<BunSemver> => {
     return O.none();
   }
 
-  const major = parseBunVersionPart(match[1]);
-  const minor = parseBunVersionPart(match[2]);
-  const patch = parseBunVersionPart(match[3]);
+  const majorCapture = match[1];
+  const minorCapture = match[2];
+  const patchCapture = match[3];
+  if (majorCapture === undefined || minorCapture === undefined || patchCapture === undefined) {
+    return O.none();
+  }
+  const major = parseBunVersionPart(majorCapture);
+  const minor = parseBunVersionPart(minorCapture);
+  const patch = parseBunVersionPart(patchCapture);
 
   if (O.isNone(major) || O.isNone(minor) || O.isNone(patch)) {
     return O.none();
@@ -265,7 +271,12 @@ const comparePrerelease = (
 
   const length = Math.min(left.value.length, right.value.length);
   for (let index = 0; index < length; index += 1) {
-    const result = compareBunSemverIdentifier(left.value[index], right.value[index]);
+    const leftIdentifier = A.get(left.value, index);
+    const rightIdentifier = A.get(right.value, index);
+    if (O.isNone(leftIdentifier) || O.isNone(rightIdentifier)) {
+      continue;
+    }
+    const result = compareBunSemverIdentifier(leftIdentifier.value, rightIdentifier.value);
     if (result !== 0) {
       return result;
     }

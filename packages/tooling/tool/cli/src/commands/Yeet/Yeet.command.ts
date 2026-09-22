@@ -859,7 +859,7 @@ const jobFinalizeCommand = Command.make(
     for (const [name, expected] of [
       ["BEEP_YEET_JOB_ID", options.jobId],
       ["BEEP_YEET_JOB_UNIT", proofJobUnitName(options.jobId)],
-    ]) {
+    ] as const) {
       if (!O.contains(yield* configStringOption(name), expected))
         return yield* YeetCommandError.make({ message: `${name} does not match the proof job.` });
     }
