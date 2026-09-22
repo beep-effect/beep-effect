@@ -118,13 +118,15 @@ const seedScenario = Effect.fnUntraced(function* (scenario: string, fixture: num
   const evidenceRows = yield* db
     .insert(DbSchema.evidence)
     .values(
-      toEvidenceInsert(
-        yield* decodeEvidence({
-          ...productEntityFixtureInput("EpistemicEvidence", fixture),
-          artifactFixtureKey: `artifact.${scenario}`,
-          span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
-          spanFixtureKey: `span.${scenario}`,
-        })
+      yield* Effect.fromResult(
+        toEvidenceInsert(
+          yield* decodeEvidence({
+            ...productEntityFixtureInput("EpistemicEvidence", fixture),
+            artifactFixtureKey: `artifact.${scenario}`,
+            span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
+            spanFixtureKey: `span.${scenario}`,
+          })
+        )
       )
     )
     .returning();

@@ -173,7 +173,8 @@ if (!shouldRunPgliteIntegration) {
 
           const claimInsert = yield* Effect.fromResult(toCandidateClaimInsert(claim));
           yield* db.insert(EpistemicDbSchema.candidateClaim).values(claimInsert);
-          yield* db.insert(EpistemicDbSchema.evidence).values(toEvidenceInsert(evidence));
+          const evidenceInsert = yield* Effect.fromResult(toEvidenceInsert(evidence));
+          yield* db.insert(EpistemicDbSchema.evidence).values(evidenceInsert);
           const edgeInsert = yield* Effect.fromResult(toEdgeVersionInsert(edgeVersion));
           yield* db.insert(EpistemicDbSchema.edgeVersion).values(edgeInsert);
 

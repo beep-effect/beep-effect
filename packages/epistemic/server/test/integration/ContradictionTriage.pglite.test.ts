@@ -140,7 +140,7 @@ const insertVerification = Effect.fnUntraced(function* (
   sourceScopeRef = "workspace:1"
 ) {
   const db = yield* makeDrizzle();
-  const evidence = fromEvidenceRow(evidenceRow);
+  const evidence = yield* Effect.fromResult(fromEvidenceRow(evidenceRow));
   const verifiedAnchor = yield* verifiedAnchorFor(
     scenario,
     `${ordinal}`,
@@ -220,26 +220,30 @@ const seedScenario = Effect.fnUntraced(function* (
     .returning();
   const evidence = yield* db
     .insert(DbSchema.evidence)
-    .values([
-      toEvidenceInsert(
-        decodeEvidence({
-          ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 1),
-          artifactFixtureKey: `contradiction.source-${scenario}-a`,
-          orgId: organizationId,
-          span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
-          spanFixtureKey: `contradiction.span-${scenario}-a`,
-        })
-      ),
-      toEvidenceInsert(
-        decodeEvidence({
-          ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 2),
-          artifactFixtureKey: `contradiction.source-${scenario}-b`,
-          orgId: organizationId,
-          span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
-          spanFixtureKey: `contradiction.span-${scenario}-b`,
-        })
-      ),
-    ])
+    .values(
+      yield* Effect.fromResult(
+        Result.all([
+          toEvidenceInsert(
+            decodeEvidence({
+              ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 1),
+              artifactFixtureKey: `contradiction.source-${scenario}-a`,
+              orgId: organizationId,
+              span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
+              spanFixtureKey: `contradiction.span-${scenario}-a`,
+            })
+          ),
+          toEvidenceInsert(
+            decodeEvidence({
+              ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 2),
+              artifactFixtureKey: `contradiction.source-${scenario}-b`,
+              orgId: organizationId,
+              span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
+              spanFixtureKey: `contradiction.span-${scenario}-b`,
+            })
+          ),
+        ])
+      )
+    )
     .returning();
   const claimA = yield* requireHead(claims, "claim A");
   const claimB = yield* requireHead(A.drop(claims, 1), "claim B");
@@ -663,19 +667,21 @@ if (!shouldRunPgliteIntegration) {
           const crossOrgEvidenceRows = yield* db
             .insert(DbSchema.evidence)
             .values(
-              toEvidenceInsert(
-                decodeEvidence({
-                  ...productEntityFixtureInput("EpistemicEvidence", 10_503),
-                  artifactFixtureKey: "contradiction.source-105-cross-org",
-                  orgId: 2,
-                  span: {
-                    confidence: 0.93,
-                    endChar: 8,
-                    quote: "amount C",
-                    startChar: 0,
-                  },
-                  spanFixtureKey: "contradiction.span-105-cross-org",
-                })
+              yield* Effect.fromResult(
+                toEvidenceInsert(
+                  decodeEvidence({
+                    ...productEntityFixtureInput("EpistemicEvidence", 10_503),
+                    artifactFixtureKey: "contradiction.source-105-cross-org",
+                    orgId: 2,
+                    span: {
+                      confidence: 0.93,
+                      endChar: 8,
+                      quote: "amount C",
+                      startChar: 0,
+                    },
+                    spanFixtureKey: "contradiction.span-105-cross-org",
+                  })
+                )
               )
             )
             .returning();
@@ -826,7 +832,7 @@ if (!shouldRunPgliteIntegration) {
         "expands exact beliefs with organization- and source-scoped verification as of query transaction time",
         Effect.fnUntraced(function* () {
           const seeded = yield* seedScenario(106);
-          const decodedEvidenceA = fromEvidenceRow(seeded.evidenceA);
+          const decodedEvidenceA = yield* Effect.fromResult(fromEvidenceRow(seeded.evidenceA));
           const repository = yield* ContradictionTriageRepository;
           const db = yield* makeDrizzle();
           yield* insertVerification(106, 1, seeded.evidenceA, 1_100);

@@ -14,10 +14,25 @@ import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import type { SyncItemInsert, SyncItemRow } from "@beep/documents-tables/entities/SyncItem";
 
 const SyncItemEquivalence = S.toEquivalence(DomainSyncItem.SyncItem);
+
+const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
+
+const syncItemRow = (insert: SyncItemInsert, id: number): SyncItemRow => ({
+  ...insert,
+  id,
+  contentDigest: absentAsNull(insert.contentDigest),
+  contentSizeBytes: absentAsNull(insert.contentSizeBytes),
+  lastError: absentAsNull(insert.lastError),
+  lastPushedDigest: absentAsNull(insert.lastPushedDigest),
+  lastPushedGeneration: absentAsNull(insert.lastPushedGeneration),
+  remoteId: absentAsNull(insert.remoteId),
+  remoteName: absentAsNull(insert.remoteName),
+  remoteParentId: absentAsNull(insert.remoteParentId),
+});
 
 const indexConfigNamed = (name: string) =>
   pipe(
@@ -102,23 +117,7 @@ describe("SyncItem table", () => {
       expect(insert.workspaceId).toBe(2);
       expect(insert.entityType).toBe("DocumentsSyncItem");
 
-      const roundTripped = yield* Effect.fromResult(
-        fromSyncItemRow({
-          ...insert,
-          id: 10,
-          // $inferInsert types nullable columns as `value | null | undefined`; the
-          // select-row converter expects `value | null`, so resolve absent
-          // optionals to their concrete nulls before round-tripping.
-          contentDigest: insert.contentDigest ?? null,
-          contentSizeBytes: insert.contentSizeBytes ?? null,
-          lastError: insert.lastError ?? null,
-          lastPushedDigest: insert.lastPushedDigest ?? null,
-          lastPushedGeneration: insert.lastPushedGeneration ?? null,
-          remoteId: insert.remoteId ?? null,
-          remoteName: insert.remoteName ?? null,
-          remoteParentId: insert.remoteParentId ?? null,
-        })
-      );
+      const roundTripped = yield* Effect.fromResult(fromSyncItemRow(syncItemRow(insert, 10)));
 
       expect(roundTripped.contentDigest).toEqual(O.some("abc123"));
       expect(roundTripped.lastError).toEqual(O.none());
@@ -126,34 +125,15 @@ describe("SyncItem table", () => {
     })
   );
 
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived SyncItems through the row converters",
     [S.toType(DomainSyncItem.SyncItem)],
-    ([syncItem]) => {
-      const insert = toSyncItemInsert(syncItem);
-      expect(Result.isSuccess(insert)).toBe(true);
-      if (!Result.isSuccess(insert)) {
-        return;
-      }
-      const decoded = fromSyncItemRow({
-        ...insert.success,
-        id: syncItem.id,
-        contentDigest: insert.success.contentDigest ?? null,
-        contentSizeBytes: insert.success.contentSizeBytes ?? null,
-        lastError: insert.success.lastError ?? null,
-        lastPushedDigest: insert.success.lastPushedDigest ?? null,
-        lastPushedGeneration: insert.success.lastPushedGeneration ?? null,
-        remoteId: insert.success.remoteId ?? null,
-        remoteName: insert.success.remoteName ?? null,
-        remoteParentId: insert.success.remoteParentId ?? null,
-      });
-      expect(Result.isSuccess(decoded)).toBe(true);
-      if (!Result.isSuccess(decoded)) {
-        return;
-      }
+    Effect.fnUntraced(function* ([syncItem]) {
+      const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
+      const decoded = yield* Effect.fromResult(fromSyncItemRow(syncItemRow(insert, syncItem.id)));
 
-      expect(SyncItemEquivalence(decoded.success, syncItem)).toBe(true);
-    },
+      expect(SyncItemEquivalence(decoded, syncItem)).toBe(true);
+    }),
     { arbitrary: fcRuns(50) }
   );
 });

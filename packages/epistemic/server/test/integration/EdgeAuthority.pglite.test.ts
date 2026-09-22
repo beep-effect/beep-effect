@@ -110,7 +110,8 @@ const seedScenario = Effect.fnUntraced(function* (scenario: number) {
 
   const claimInsert = yield* Effect.fromResult(toCandidateClaimInsert(claim));
   const claimRows = yield* db.insert(DbSchema.candidateClaim).values(claimInsert).returning();
-  const evidenceRows = yield* db.insert(DbSchema.evidence).values(toEvidenceInsert(evidence)).returning();
+  const evidenceInsert = yield* Effect.fromResult(toEvidenceInsert(evidence));
+  const evidenceRows = yield* db.insert(DbSchema.evidence).values(evidenceInsert).returning();
   const claimRow = yield* requireHead(claimRows, "the seeded candidate claim row");
   const evidenceRow = yield* requireHead(evidenceRows, "the seeded evidence row");
 

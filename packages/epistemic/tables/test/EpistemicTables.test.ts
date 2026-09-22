@@ -35,6 +35,26 @@ const decodeUnknownUsageRecordModel = S.decodeUnknownEffect(UsageRecordModel);
 const UsageRecordArbitrary = Arbitrary.schema(UsageRecordModel);
 const UsageRecordEquivalence = S.toEquivalence(UsageRecordModel);
 
+const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
+
+const edgeVersionRow = (insert: EdgeVersion.EdgeVersionInsert, id: number): EdgeVersion.EdgeVersionRow => ({
+  ...insert,
+  id,
+  evidenceScope: absentAsNull(insert.evidenceScope),
+  expiredAt: absentAsNull(insert.expiredAt),
+  matterScope: absentAsNull(insert.matterScope),
+  sourceClaimId: absentAsNull(insert.sourceClaimId),
+  sourceEntityRef: absentAsNull(insert.sourceEntityRef),
+  sourceEvidenceId: absentAsNull(insert.sourceEvidenceId),
+  sourceObservationRef: absentAsNull(insert.sourceObservationRef),
+  supersedesId: absentAsNull(insert.supersedesId),
+  targetClaimId: absentAsNull(insert.targetClaimId),
+  targetEntityRef: absentAsNull(insert.targetEntityRef),
+  targetEvidenceId: absentAsNull(insert.targetEvidenceId),
+  targetObservationRef: absentAsNull(insert.targetObservationRef),
+  validTo: absentAsNull(insert.validTo),
+});
+
 const usageRecordInput = (id: number) => ({
   ...productEntityFixtureInput("EpistemicUsageRecord", id),
   activityId: 7,
@@ -381,7 +401,7 @@ describe("EpistemicTables", () => {
     Effect.fnUntraced(function* () {
       const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
 
-      const insert = Evidence.toEvidenceInsert(evidence);
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
       expect("id" in insert).toBe(false);
       expect(insert.entityType).toBe("EpistemicEvidence");
       expect(insert.artifactFixtureKey).toBe("artifact:oa-1");
@@ -393,78 +413,90 @@ describe("EpistemicTables", () => {
         startChar: 12,
       });
 
-      const decoded = Evidence.fromEvidenceRow({ ...insert, id: 10 });
+      const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow({ ...insert, id: 10 }));
       expect(decoded.id).toBe(10);
       expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
       expect(decoded.span.confidence).toBe(0.92);
     })
   );
 
-  it("normalizes legacy Evidence span widths on read and writes only the strict width", () => {
-    const evidence = Result.getOrThrow(decodeUnknownEvidenceModelResult(evidenceInput(10)));
-    const insert = Evidence.toEvidenceInsert(evidence);
-    const legacyRow = {
-      ...insert,
-      id: 10,
-      span: {
-        ...insert.span,
-        endChar: 48,
-      },
-      spanFixtureKey: "span:oa-1:12-48",
-    };
+  it.effect(
+    "normalizes legacy Evidence span widths on read and writes only the strict width",
+    Effect.fnUntraced(function* () {
+      const evidence = yield* Effect.fromResult(decodeUnknownEvidenceModelResult(evidenceInput(10)));
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
+      const legacyRow = {
+        ...insert,
+        id: 10,
+        span: {
+          ...insert.span,
+          endChar: 48,
+        },
+        spanFixtureKey: "span:oa-1:12-48",
+      };
 
-    expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
+      expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
 
-    const decoded = Evidence.fromEvidenceRow(legacyRow);
-    const canonicalInsert = Evidence.toEvidenceInsert(decoded);
+      const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow(legacyRow));
+      const canonicalInsert = yield* Effect.fromResult(Evidence.toEvidenceInsert(decoded));
 
-    expect(decoded.span.startChar).toBe(12);
-    expect(decoded.span.endChar).toBe(57);
-    expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
-    expect(decoded.spanFixtureKey).toBe("span:oa-1:12-48");
-    expect(canonicalInsert.span.endChar).toBe(57);
-  });
+      expect(decoded.span.startChar).toBe(12);
+      expect(decoded.span.endChar).toBe(57);
+      expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
+      expect(decoded.spanFixtureKey).toBe("span:oa-1:12-48");
+      expect(canonicalInsert.span.endChar).toBe(57);
+    })
+  );
 
-  it("preserves reads of legacy Evidence quotes above the current write bound", () => {
-    const evidence = Result.getOrThrow(decodeUnknownEvidenceModelResult(evidenceInput(10)));
-    const insert = Evidence.toEvidenceInsert(evidence);
-    const quote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1)("a");
-    const legacyRow = {
-      ...insert,
-      id: 10,
-      span: {
-        ...insert.span,
-        endChar: 12 + Str.length(quote),
-        quote,
-      },
-    };
+  it.effect(
+    "preserves reads of legacy Evidence quotes above the current write bound",
+    Effect.fnUntraced(function* () {
+      const evidence = yield* Effect.fromResult(decodeUnknownEvidenceModelResult(evidenceInput(10)));
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
+      const quote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1)("a");
+      const legacyRow = {
+        ...insert,
+        id: 10,
+        span: {
+          ...insert.span,
+          endChar: 12 + Str.length(quote),
+          quote,
+        },
+      };
 
-    expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
+      expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
 
-    const decoded = Evidence.fromEvidenceRow(legacyRow);
+      const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow(legacyRow));
 
-    expect(decoded.span.quote).toBe(quote);
-    expect(decoded.span.endChar).toBe(12 + Str.length(quote));
-    expect(() => Evidence.toEvidenceInsert(decoded)).toThrow(S.SchemaError);
-  });
+      expect(decoded.span.quote).toBe(quote);
+      expect(decoded.span.endChar).toBe(12 + Str.length(quote));
+
+      const reencoded = Evidence.toEvidenceInsert(decoded);
+      expect(Result.isFailure(reencoded)).toBe(true);
+      const encodeError = yield* reencoded.pipe(Result.flip, Effect.fromResult);
+      expect(encodeError._tag).toBe("EvidenceConverterError");
+      expect(encodeError.operation).toBe("toInsert");
+    })
+  );
 
   it.effect(
     "rejects malformed Evidence rows with a schema error",
     Effect.fnUntraced(function* () {
       const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
       const malformedRow = {
-        ...Evidence.toEvidenceInsert(evidence),
+        ...(yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence))),
         id: 10,
         span: null,
       } as unknown as Evidence.EvidenceRow;
 
-      expect(() => Evidence.fromEvidenceRow(malformedRow)).toThrow(S.SchemaError);
+      const decodeResult = Evidence.fromEvidenceRow(malformedRow);
+      expect(Result.isFailure(decodeResult)).toBe(true);
+      const decodeError = yield* decodeResult.pipe(Result.flip, Effect.fromResult);
+      expect(decodeError._tag).toBe("EvidenceConverterError");
+      expect(decodeError.operation).toBe("fromRow");
     })
   );
 
-  // Exhaustive per-column assertion walk over the widest table in the slice;
-  // branch count is the column count, not logic to simplify.
-  // fallow-ignore-next-line complexity -- exhaustive assertions cover every column of the slice's widest table
   it.effect(
     "round-trips an EdgeVersion row through the converters",
     Effect.fnUntraced(function* () {
@@ -489,25 +521,7 @@ describe("EpistemicTables", () => {
       expect(insert.expiredAt).toBeNull();
       expect(insert.supersedesId).toBeNull();
 
-      const decoded = yield* Effect.fromResult(
-        EdgeVersion.fromEdgeVersionRow({
-          ...insert,
-          id: 10,
-          evidenceScope: insert.evidenceScope ?? null,
-          expiredAt: insert.expiredAt ?? null,
-          matterScope: insert.matterScope ?? null,
-          sourceClaimId: insert.sourceClaimId ?? null,
-          sourceEntityRef: insert.sourceEntityRef ?? null,
-          sourceEvidenceId: insert.sourceEvidenceId ?? null,
-          sourceObservationRef: insert.sourceObservationRef ?? null,
-          supersedesId: insert.supersedesId ?? null,
-          targetClaimId: insert.targetClaimId ?? null,
-          targetEntityRef: insert.targetEntityRef ?? null,
-          targetEvidenceId: insert.targetEvidenceId ?? null,
-          targetObservationRef: insert.targetObservationRef ?? null,
-          validTo: insert.validTo ?? null,
-        })
-      );
+      const decoded = yield* Effect.fromResult(EdgeVersion.fromEdgeVersionRow(edgeVersionRow(insert, 10)));
       expect(decoded.id).toBe(10);
       expect(decoded.relation).toBe("supports");
       expect(O.getOrNull(decoded.sourceClaimId)).toBe(1);
@@ -520,8 +534,6 @@ describe("EpistemicTables", () => {
     })
   );
 
-  // Same exhaustive column walk for the closed/Option-some variant.
-  // fallow-ignore-next-line complexity -- exhaustive assertions cover the closed and Option-some column variant
   it.effect(
     "round-trips a closed EdgeVersion row through the converters",
     Effect.fnUntraced(function* () {
@@ -553,25 +565,7 @@ describe("EpistemicTables", () => {
       expect(insert.expiredAt).toBe(2_500);
       expect(insert.version).toBe(2);
 
-      const decoded = yield* Effect.fromResult(
-        EdgeVersion.fromEdgeVersionRow({
-          ...insert,
-          id: 11,
-          evidenceScope: insert.evidenceScope ?? null,
-          expiredAt: insert.expiredAt ?? null,
-          matterScope: insert.matterScope ?? null,
-          sourceClaimId: insert.sourceClaimId ?? null,
-          sourceEntityRef: insert.sourceEntityRef ?? null,
-          sourceEvidenceId: insert.sourceEvidenceId ?? null,
-          sourceObservationRef: insert.sourceObservationRef ?? null,
-          supersedesId: insert.supersedesId ?? null,
-          targetClaimId: insert.targetClaimId ?? null,
-          targetEntityRef: insert.targetEntityRef ?? null,
-          targetEvidenceId: insert.targetEvidenceId ?? null,
-          targetObservationRef: insert.targetObservationRef ?? null,
-          validTo: insert.validTo ?? null,
-        })
-      );
+      const decoded = yield* Effect.fromResult(EdgeVersion.fromEdgeVersionRow(edgeVersionRow(insert, 11)));
       expect(O.getOrNull(O.map(decoded.validTo, DateTime.toEpochMillis))).toBe(2_000);
       expect(O.getOrNull(O.map(decoded.expiredAt, DateTime.toEpochMillis))).toBe(2_500);
       expect(O.getOrNull(decoded.supersedesId)).toBe(10);
@@ -609,34 +603,36 @@ describe("EpistemicTables", () => {
     })
   );
 
-  it("round-trips schema-derived UsageRecords through the row converters", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([UsageRecordArbitrary]),
-          ([record]) => {
-            const insert = Result.getOrThrow(UsageRecord.toUsageRecordInsert(record));
-            const decoded = Result.getOrThrow(
-              UsageRecord.fromUsageRecordRow({
-                ...insert,
-                id: record.id,
-                activityId: insert.activityId ?? null,
-                costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
-                credentialReference: insert.credentialReference ?? null,
-                inputTokens: insert.inputTokens ?? null,
-                latencyMillis: insert.latencyMillis ?? null,
-                outputTokens: insert.outputTokens ?? null,
-                totalTokens: insert.totalTokens ?? null,
-                unitCount: insert.unitCount ?? null,
-              })
-            );
+  it.effect(
+    "round-trips schema-derived UsageRecords through the row converters",
+    Effect.fnUntraced(function* () {
+      const outcome = yield* Arbitrary.checkEffect(
+        Arbitrary.all([UsageRecordArbitrary]),
+        Effect.fnUntraced(function* ([record]) {
+          const insert = yield* Effect.fromResult(UsageRecord.toUsageRecordInsert(record));
+          const decoded = yield* Effect.fromResult(
+            UsageRecord.fromUsageRecordRow({
+              ...insert,
+              id: record.id,
+              activityId: insert.activityId ?? null,
+              costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
+              credentialReference: insert.credentialReference ?? null,
+              inputTokens: insert.inputTokens ?? null,
+              latencyMillis: insert.latencyMillis ?? null,
+              outputTokens: insert.outputTokens ?? null,
+              totalTokens: insert.totalTokens ?? null,
+              unitCount: insert.unitCount ?? null,
+            })
+          );
 
-            expect(UsageRecordEquivalence(decoded, record)).toBe(true);
+          expect(UsageRecordEquivalence(decoded, record)).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+          return true;
+        }),
+        fcRuns(50)
+      );
+
+      expect(outcome._tag).toBe("Passed");
+    })
+  );
 });

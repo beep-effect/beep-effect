@@ -637,12 +637,12 @@ const ensureEvidence = Effect.fn("ContradictionQaSeed.ensureEvidence")(function*
   const db = yield* PostgresDrizzle;
   const expected = yield* makeEvidence(specification);
   const selected = yield* db.select().from(evidenceTable).pipe(storageUnavailable("select evidence"));
-  const existing = pipe(
-    selected,
-    A.map(fromEvidenceRow),
-    A.findFirst(
-      (row) => Eq.equals(row.publicId, expected.publicId) || Eq.equals(row.spanFixtureKey, expected.spanFixtureKey)
-    )
+  const decodedSelected = yield* Effect.forEach(selected, (row) => Effect.fromResult(fromEvidenceRow(row)), {
+    concurrency: 1,
+  }).pipe(storageUnavailable("decode selected evidence"));
+  const existing = A.findFirst(
+    decodedSelected,
+    (row) => Eq.equals(row.publicId, expected.publicId) || Eq.equals(row.spanFixtureKey, expected.spanFixtureKey)
   );
 
   if (O.isSome(existing)) {
@@ -654,17 +654,19 @@ const ensureEvidence = Effect.fn("ContradictionQaSeed.ensureEvidence")(function*
         );
   }
 
+  const evidenceInsert = yield* Effect.fromResult(toEvidenceInsert(expected)).pipe(
+    storageUnavailable("encode evidence insert")
+  );
   yield* db
     .insert(evidenceTable)
-    .values(toEvidenceInsert(expected))
+    .values(evidenceInsert)
     .onConflictDoNothing({ target: evidenceTable.publicId })
     .pipe(storageUnavailable("insert evidence"));
   const persisted = yield* db.select().from(evidenceTable).pipe(storageUnavailable("reselect evidence"));
-  const inserted = pipe(
-    persisted,
-    A.map(fromEvidenceRow),
-    A.findFirst((row) => Eq.equals(row.publicId, expected.publicId))
-  );
+  const decodedPersisted = yield* Effect.forEach(persisted, (row) => Effect.fromResult(fromEvidenceRow(row)), {
+    concurrency: 1,
+  }).pipe(storageUnavailable("decode reselected evidence"));
+  const inserted = A.findFirst(decodedPersisted, (row) => Eq.equals(row.publicId, expected.publicId));
 
   if (O.isNone(inserted) || !evidenceMatches(inserted.value, expected)) {
     return yield* seedError(

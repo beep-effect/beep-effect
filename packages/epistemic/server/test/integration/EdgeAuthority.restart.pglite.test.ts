@@ -116,13 +116,15 @@ const writeHistory = Effect.fnUntraced(function* () {
   const evidenceRows = yield* db
     .insert(DbSchema.evidence)
     .values(
-      toEvidenceInsert(
-        yield* decodeEvidence({
-          ...productEntityFixtureInput("EpistemicEvidence", 1),
-          artifactFixtureKey: "artifact.restart",
-          span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
-          spanFixtureKey: "span.restart",
-        })
+      yield* Effect.fromResult(
+        toEvidenceInsert(
+          yield* decodeEvidence({
+            ...productEntityFixtureInput("EpistemicEvidence", 1),
+            artifactFixtureKey: "artifact.restart",
+            span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
+            spanFixtureKey: "span.restart",
+          })
+        )
       )
     )
     .returning();

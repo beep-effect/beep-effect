@@ -249,24 +249,28 @@ const runFirstScope = Effect.fnUntraced(function* () {
     .returning();
   const evidence = yield* db
     .insert(DbSchema.evidence)
-    .values([
-      toEvidenceInsert(
-        decodeEvidence({
-          ...productEntityFixtureInput("EpistemicEvidence", 801),
-          artifactFixtureKey: "contradiction-p0.source-a",
-          span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
-          spanFixtureKey: "span-a",
-        })
-      ),
-      toEvidenceInsert(
-        decodeEvidence({
-          ...productEntityFixtureInput("EpistemicEvidence", 802),
-          artifactFixtureKey: "contradiction-p0.source-b",
-          span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
-          spanFixtureKey: "span-b",
-        })
-      ),
-    ])
+    .values(
+      yield* Effect.fromResult(
+        Result.all([
+          toEvidenceInsert(
+            decodeEvidence({
+              ...productEntityFixtureInput("EpistemicEvidence", 801),
+              artifactFixtureKey: "contradiction-p0.source-a",
+              span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
+              spanFixtureKey: "span-a",
+            })
+          ),
+          toEvidenceInsert(
+            decodeEvidence({
+              ...productEntityFixtureInput("EpistemicEvidence", 802),
+              artifactFixtureKey: "contradiction-p0.source-b",
+              span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
+              spanFixtureKey: "span-b",
+            })
+          ),
+        ])
+      )
+    )
     .returning();
   const claimA = yield* requireHead(claims, "claim A");
   const claimB = yield* requireHead(A.drop(claims, 1), "claim B");

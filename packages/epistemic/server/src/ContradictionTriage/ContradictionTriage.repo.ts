@@ -570,7 +570,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
         .from(evidenceTable)
         .where(and(eq(evidenceTable.orgId, query.orgId), inArray(evidenceTable.id, evidenceIds)))
         .pipe(repositoryUnavailable("get"));
-      const evidence = yield* Effect.forEach(evidenceRows, (row) => Effect.try(() => fromEvidenceRow(row)), {
+      const evidence = yield* Effect.forEach(evidenceRows, (row) => Effect.fromResult(fromEvidenceRow(row)), {
         concurrency: 1,
       }).pipe(repositoryUnavailable("get"));
       const verificationEvidenceIds = O.match(query.evidenceId, {
@@ -978,7 +978,7 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
                 A.dedupe
               );
               const evidenceRows = yield* tx.select().from(evidenceTable).where(inArray(evidenceTable.id, evidenceIds));
-              const evidence = yield* Effect.forEach(evidenceRows, (row) => Effect.try(() => fromEvidenceRow(row)), {
+              const evidence = yield* Effect.forEach(evidenceRows, (row) => Effect.fromResult(fromEvidenceRow(row)), {
                 concurrency: 1,
               }).pipe(repositoryUnavailable("submit"));
               yield* validateEvidenceSet(command, evidence, normalized.candidateKey, evidenceIds);

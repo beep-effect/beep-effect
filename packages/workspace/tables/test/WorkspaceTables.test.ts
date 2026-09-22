@@ -17,7 +17,6 @@ import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect } from "effect";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const ThreadEquivalence = S.toEquivalence(ThreadModel);
@@ -27,6 +26,8 @@ const MessageEquivalence = S.toEquivalence(MessageModel);
 const TurnEquivalence = S.toEquivalence(TurnModel);
 
 const WorkspaceEquivalence = S.toEquivalence(WorkspaceModel);
+
+const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
 
 const expectBaseProjectionColumns = (table: typeof CandidateDraft.Table | typeof CandidateProject.Table) => {
   const columns = getColumns(table);
@@ -197,56 +198,38 @@ describe("WorkspaceTables", () => {
     })
   );
 
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived Thread, Message, Turn, and Workspace entities through the row converters",
     [S.Tuple([ThreadModel, MessageModel, TurnModel, WorkspaceModel])],
-    ([[thread, message, turn, workspace]]) => {
-      const threadInsert = Thread.toThreadInsert(thread);
-      const messageInsert = Message.toMessageInsert(message);
-      const turnInsert = Turn.toTurnInsert(turn);
-      const workspaceInsert = Workspace.toWorkspaceInsert(workspace);
-      expect(Result.isSuccess(threadInsert)).toBe(true);
-      expect(Result.isSuccess(messageInsert)).toBe(true);
-      expect(Result.isSuccess(turnInsert)).toBe(true);
-      expect(Result.isSuccess(workspaceInsert)).toBe(true);
-      if (
-        !Result.isSuccess(threadInsert) ||
-        !Result.isSuccess(messageInsert) ||
-        !Result.isSuccess(turnInsert) ||
-        !Result.isSuccess(workspaceInsert)
-      ) {
-        return;
-      }
-      const roundTrippedThread = Thread.fromThreadRow({ ...threadInsert.success, id: thread.id });
-      const roundTrippedMessage = Message.fromMessageRow({ ...messageInsert.success, id: message.id });
-      const roundTrippedTurn = Turn.fromTurnRow({
-        ...turnInsert.success,
-        id: turn.id,
-        parentTurnId: turnInsert.success.parentTurnId ?? null,
-      });
-      const roundTrippedWorkspace = Workspace.fromWorkspaceRow({
-        ...workspaceInsert.success,
-        id: workspace.id,
-        vaultRootPath: workspaceInsert.success.vaultRootPath ?? null,
-      });
-      expect(Result.isSuccess(roundTrippedThread)).toBe(true);
-      expect(Result.isSuccess(roundTrippedMessage)).toBe(true);
-      expect(Result.isSuccess(roundTrippedTurn)).toBe(true);
-      expect(Result.isSuccess(roundTrippedWorkspace)).toBe(true);
-      if (
-        !Result.isSuccess(roundTrippedThread) ||
-        !Result.isSuccess(roundTrippedMessage) ||
-        !Result.isSuccess(roundTrippedTurn) ||
-        !Result.isSuccess(roundTrippedWorkspace)
-      ) {
-        return;
-      }
+    Effect.fnUntraced(function* ([[thread, message, turn, workspace]]) {
+      const threadInsert = yield* Effect.fromResult(Thread.toThreadInsert(thread));
+      const messageInsert = yield* Effect.fromResult(Message.toMessageInsert(message));
+      const turnInsert = yield* Effect.fromResult(Turn.toTurnInsert(turn));
+      const workspaceInsert = yield* Effect.fromResult(Workspace.toWorkspaceInsert(workspace));
+      const roundTrippedThread = yield* Effect.fromResult(Thread.fromThreadRow({ ...threadInsert, id: thread.id }));
+      const roundTrippedMessage = yield* Effect.fromResult(
+        Message.fromMessageRow({ ...messageInsert, id: message.id })
+      );
+      const roundTrippedTurn = yield* Effect.fromResult(
+        Turn.fromTurnRow({
+          ...turnInsert,
+          id: turn.id,
+          parentTurnId: absentAsNull(turnInsert.parentTurnId),
+        })
+      );
+      const roundTrippedWorkspace = yield* Effect.fromResult(
+        Workspace.fromWorkspaceRow({
+          ...workspaceInsert,
+          id: workspace.id,
+          vaultRootPath: absentAsNull(workspaceInsert.vaultRootPath),
+        })
+      );
 
-      expect(ThreadEquivalence(roundTrippedThread.success, thread)).toBe(true);
-      expect(MessageEquivalence(roundTrippedMessage.success, message)).toBe(true);
-      expect(TurnEquivalence(roundTrippedTurn.success, turn)).toBe(true);
-      expect(WorkspaceEquivalence(roundTrippedWorkspace.success, workspace)).toBe(true);
-    },
+      expect(ThreadEquivalence(roundTrippedThread, thread)).toBe(true);
+      expect(MessageEquivalence(roundTrippedMessage, message)).toBe(true);
+      expect(TurnEquivalence(roundTrippedTurn, turn)).toBe(true);
+      expect(WorkspaceEquivalence(roundTrippedWorkspace, workspace)).toBe(true);
+    }),
     { arbitrary: fcRuns(50) }
   );
 });
