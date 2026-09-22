@@ -54,3 +54,30 @@
 - **Proposal:** Batch verification per lane (one refuter process checks all of a lane's claims,
   three independent processes per lane, bounded concurrency), and write verdicts incrementally so
   a restart resumes instead of starting over.
+
+## Semantic-delta gate reads Effect-clone paths as repo paths
+
+- **Work:** Publishing the packet; the local `knowledge:semantic-delta` gate went red while the
+  hosted Heavy / Lint Policy check on the same commit was green.
+- **Friction:** Nine `broken-tracked-path` findings, all on bare upstream paths such as
+  `packages/effect/MCP.md` in prompts, CAPTURE, and DECISIONS. The lane reports had already
+  adopted an `effect:` prefix and were not flagged, but nothing told the packet author that a
+  bare clone path counts as an introduced blocking finding, and the local and hosted verdicts
+  disagreed.
+- **Evidence:** publish job log lines `knowledge semantic-delta: 9 introduced blocking finding(s)`;
+  PR #1169 hosted checks all green on the same commit.
+- **Proposal:** Document the `effect:` / `repo:` path prefixes for cross-repo citations in the
+  explorations README, and have the gate name the accepted prefixes in its finding text.
+
+## The release vehicle decision was overtaken before the packet merged
+
+- **Work:** Grounding grill G1 chose a pkg.pr.new snapshot pin over waiting for the next RC, and
+  a whole research lane (23-r4) plus a disposable spike (25-r4) sized that pin.
+- **Friction:** rc.116 published two days after the research froze and rc.117 five days after;
+  #1173 moved `main` to rc.117 the day the capture PR merged, so S0, S5b, and D-pin-sha were dead
+  on arrival and the synthesis had to be re-annotated before its own PR could open.
+- **Evidence:** npm publish times `4.0.0-rc.116` 2026-09-18, `4.0.0-rc.117` 2026-09-21; #1173
+  merged 2026-09-21 with the harness SSE unwrap the spike had predicted.
+- **Proposal:** When a grill picks "pin a snapshot", record the upstream release cadence next to
+  the decision (Effect cut five RCs in the preceding five weeks) and make "wait for the RC" the
+  default whenever the research stage alone will outlast the median gap.

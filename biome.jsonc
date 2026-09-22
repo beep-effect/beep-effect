@@ -192,10 +192,20 @@
         // use is legitimate (see STYLE.md).
         "noConsole": "warn",
         "noVar": "error",
+        // Biome reads only turbo's legacy top-level `globalEnv`/`globalPassThroughEnv`
+        // keys. This repo runs `futureFlags.globalConfiguration`, so those declarations
+        // live under `global.env`/`global.passThroughEnv` and Biome cannot see them.
+        // Every name below IS declared there; list them one by one rather than allowing
+        // a `BEEP_.*` pattern, so a genuinely undeclared variable still warns.
         "noUndeclaredEnvVars": {
           "level": "warn",
           "options": {
-            "allowedEnvVars": ["BEEP_ESLINT_PROFILE"]
+            "allowedEnvVars": [
+              "BEEP_ESLINT_PROFILE",
+              "BEEP_NODE_BIN",
+              "BEEP_YEET_ADMISSION_LEASE_ID",
+              "BEEP_YEET_ADMISSION_WORKLOAD_PATH"
+            ]
           }
         },
         "noControlCharactersInRegex": "off",

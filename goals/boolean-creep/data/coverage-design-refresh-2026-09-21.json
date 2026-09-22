@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "boolean-creep-design-refresh/v1",
+  "id": "r28-cli-quality-coverage-resolved-operation",
+  "sourceSha": "7536a751b40b8560706dfe8cfa451591b11b025d",
+  "comparisonSource": "cecfb9f8e9a5f20d768666c65f89425349f7f9e6",
+  "beforeArchive": "history/designs/2026-09-21-before-coverage-refresh-r28-cli-quality-coverage-resolved-operation.md",
+  "beforeSha256": "f0318e57b96dd0a166841b0047c1277bca539d0ba035c3a1208cb01a07be4ed1",
+  "afterSha256": "1cb10d65bbf46f88cb4a59271dde3e0395b171c275fe6670206a48575c22ea61",
+  "sourceHashes": {
+    "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": "e813f6de7fde4bb1588dd8b87dce37e7d0bac03f5b9eafa84cd974df4b33320b",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts": "83ecc7398db34c8db8f47fdd602b63059cb7c053dbdbf47a665bb02b77194c38",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts": "68eeb73990fcc024618c520287c29dd7d64b85c63b19907f597b2b2a5ca5de8f",
+    "packages/tooling/tool/cli/src/test/Quality.test-kit.ts": "5f1b6dad7ae20d94f7002db5834bee869019d933fe8bb48cc747299e2cf2dc81",
+    "packages/tooling/tool/cli/test/quality-tasks.test.ts": "f157e55b9b5c2fe40aebb7609cc6a1c2199110d6fc6ace28c18b3394da1343f6"
+  },
+  "unchangedDependencyFiles": [
+    "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+    "packages/tooling/tool/cli/src/test/Quality.test-kit.ts"
+  ],
+  "exactLineMappings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "before": [249, 257],
+      "current": [249, 257],
+      "byteIdenticalLines": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "before": [637, 688],
+      "current": [637, 688],
+      "byteIdenticalLines": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "before": [855, 973],
+      "current": [855, 973],
+      "byteIdenticalLines": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "before": [2481, 2499],
+      "current": [2486, 2504],
+      "byteIdenticalLines": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "before": [3254, 3286],
+      "current": [3278, 3310],
+      "byteIdenticalLines": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "before": [3314, 3347],
+      "current": [3338, 3371],
+      "byteIdenticalLines": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "before": [3376, 3390],
+      "current": [3400, 3414],
+      "byteIdenticalLines": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "before": [3454, 3501],
+      "current": [3478, 3525],
+      "byteIdenticalLines": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "before": [3770, 3801],
+      "current": [3825, 3856],
+      "byteIdenticalLines": true
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "before": [6783, 6799],
+      "current": [6838, 6854],
+      "byteIdenticalLines": true
+    }
+  ],
+  "qualification": "16/9 unchanged; scoped and noop replacement retained",
+  "status": "designed",
+  "sharedPolicy": "Retain current REGEN_GOLDENS force handling and passthrough delimiter semantics.",
+  "testExecution": false,
+  "independentP3Approval": false,
+  "dryCredit": false,
+  "implementationStarted": false
+}

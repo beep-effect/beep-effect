@@ -38,10 +38,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-**Campaign execution is paused at Benjamin's request to save the current work
-in a draft PR.** The [pause handoff](./PAUSE.md) records the unfinished audits,
-two pending citation decisions and the order for resuming. Lifecycle remains
-`active`; the save PR grants no GATE 2 or implementation approval.
+**Campaign execution resumed at Benjamin's instruction on 2026-09-14.** Save
+PR #1069 merged as `65c29e5177293cfdacc47d3b33c64596a512e6a4`. The
+[handoff](./PAUSE.md) preserves the unfinished audits, two pending citation
+decisions and resume order. Work continues from main
+`cecfb9f8e9a5f20d768666c65f89425349f7f9e6`; lifecycle remains `active`, and
+the save PR grants no GATE 2 or implementation approval.
 
 The moving-main census and design refresh remain in progress. GATE 1 passed on
 2026-08-17. Benjamin's 2026-09-03 amendment revoked the stale zero-findings
@@ -53,6 +55,66 @@ introduced E1-E4 cases without another user gate; all original qualification
 and compatibility laws remain binding.
 
 ## Latest Evidence
+
+The [resolved test-selection refresh](./data/test-selection-design-refresh-2026-09-21.json)
+confirms the unchanged 4/3 normalized output, runtime ordering and cited
+compatibility fixtures at `7536a751b4`. Current known refresh progress is
+**three P2 refreshes complete and one qualification withdrawn**. The
+[backlog reconciliation](./data/pr1176-backlog-reconciliation-2026-09-21.json)
+derives **45 still pending from the saved 46-item September 14 subset** after
+the test-selection refresh. VersionSync, coverage, and the acknowledgement
+withdrawal are outside that subset. The unsupported 51-total/47-pending claim
+is withdrawn; the complete current-source backlog remains uncounted. This does
+not replace a current-corpus census or independent review. Inventory remains 754 records, including 144 qualified cases.
+
+The [coverage-operation refresh](./data/coverage-design-refresh-2026-09-21.json)
+rebinds the unchanged nine-state model, execution paths, dependencies and cited
+fixtures to `7536a751b4`. It preserves the newer shared golden-regeneration
+argument policy. Together with VersionSync and the acknowledgement withdrawal,
+that was the second completed September 21 P2 refresh.
+The latest remaining count is recorded above. No new census, independent
+review, or implementation credit is claimed.
+
+The [2026-09-21 acknowledgement boundary correction](./data/ack-request-boundary-correction-2026-09-21.json)
+reclassifies the raw acknowledgement request as D1. The application already
+receives the existing tagged resolution; conflicting flags produce supported
+parser diagnostics. Current inventory is **754 records: 144 qualified and
+610 disqualified**, with **112 Tier 1 /32 Tier 2**, 21 historical reviewed,
+123 designed, and zero applied. The prior row and design are archived. No
+independent-review or implementation credit follows from this correction.
+
+
+The [VersionSync selection design refresh](./data/version-sync-design-refresh-2026-09-21.json)
+now covers the six-category contract and current direct consumers, resolver
+behavior, report-driven updates, export routes, and test plan at `7536a751b4`.
+The 4/3 qualification and designed status remain unchanged; independent review
+and implementation remain pending. This was the first completed September 21 P2 owner refresh.
+The latest remaining count is recorded above; the list is not a new census.
+
+The [2026-09-21 bounded corrections](./data/bounded-design-corrections-2026-09-21.json)
+preserve command text in two lane-proof designs, current scheduler cleanup and
+journal contracts in two scheduler designs, and the sixth VersionSync category
+in its design and inventory citation. Exact prior files are archived. Inventory
+and design coverage validation passed at 754 records and 145 qualified cases,
+before the acknowledgement-boundary reclassification reduced the qualified set
+to 144.
+These are five partial design corrections, with no status changes, completed
+full refreshes, independent-review credit, or dry-round credit. The latest full
+Yeet proof failed in the unrelated UI coverage prebuild; see the opportunities
+ledger. Publication readiness remains unproved.
+
+The [resumption receipt](./data/resume-2026-09-14-source-forward.json) binds
+current main, the unchanged saved packet, the 3,114-file corpus plan and the
+465-file source-impact list. The [bounded audit](./data/resume-2026-09-14-bounded-audit.json)
+refreshes six qualified designs, preserves their exact predecessors, and corrects
+nine inventory rows. Coverage resolution now has nine legal states rather than
+seven because current main supports scoped and no-op replacement. The two
+MemoryFileSystem designs preserve the rc.113 seek and IO contract, Pincite's
+consumer map is corrected, and both Sweep designs include retirement consumers.
+One newly inspected independent baseline-write options model is recorded as D1.
+At that September 14 checkpoint, 46 qualified cases with changed source/evidence
+paths remained. The reconciliation above records the later test-selection refresh
+and the resulting 45 pending in that saved subset. This work supplies no dry-round or independent-review credit.
 
 Main `0c975f970b4ac4b101d7c1b11957a799d481af35` is merged through
 `8d4580ae820726732784562c1b6c1c913e5bba00`. The [latest merge receipt](./data/post-r31-main0c-source-forward.json)
@@ -68,9 +130,9 @@ merge; the final review-thread inspection found no threads. The recorded two
 Vercel failures are provider rate limits. The monitor is terminal and the merged
 scanner configuration is now available to the packet's eventual publication.
 
-The canonical inventory contains **753 records: 145 qualified and 608 disqualified**
-(D1 390 / D2 218). The qualified set is **113 Tier 1 and 32 Tier 2**; statuses are 21
-historically `reviewed`, 124 `designed`, and 0 `applied`. All await replacement
+The canonical inventory contains **754 records: 144 qualified and 610 disqualified**
+(D1 392 / D2 218). The qualified set is **112 Tier 1 and 32 Tier 2**; statuses are 21
+historically `reviewed`, 123 `designed`, and 0 `applied`. All await replacement
 independent review. Four additional owners remain in an [explicit unresolved hold](./data/r31-law-owner-holds.json).
 
 Before that merge, the branch included main `e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`
