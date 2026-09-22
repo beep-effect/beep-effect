@@ -8,10 +8,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { HashSet } from "effect";
+import { A } from "@beep/utils";
+import { Effect, HashMap, HashSet, Order } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import { topologicalSort } from "./Graph.ts";
+import type { CyclicDependencyError } from "./errors/index.ts";
 import type { PackageJson } from "./schemas/PackageJson.ts";
 import type { DependencyRecord, WorkspaceDeps } from "./schemas/WorkspaceDeps.ts";
 
@@ -101,3 +104,94 @@ export const extractWorkspaceDependencies: {
     },
   };
 });
+
+const uniqueSorted = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.sort(A.fromIterable(HashSet.fromIterable(values)), Order.String);
+
+/**
+ * Workspace package names a package depends on, across every dependency bucket.
+ *
+ * **Details**
+ *
+ * Callers that walk `WorkspaceDeps.workspace` itself see the bucket names
+ * (`dependencies`, `devDependencies`, `peerDependencies`, `optionalDependencies`).
+ * Those names are not packages. This reads the keys inside each bucket.
+ *
+ * **Example** (Collect workspace dependency names)
+ *
+ * ```ts
+ * import * as HashSet from "effect/HashSet"
+ * import { extractWorkspaceDependencies, workspaceDependencyNames } from "@beep/repo-utils/Dependencies"
+ * import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson"
+ *
+ * const names = HashSet.make("@beep/lib", "@beep/test-kit")
+ * const deps = extractWorkspaceDependencies(
+ *   decodePackageJson({
+ *     name: "@beep/app",
+ *     dependencies: { "@beep/lib": "workspace:*" },
+ *     devDependencies: { "@beep/test-kit": "workspace:*" },
+ *   }),
+ *   names
+ * )
+ * console.log(workspaceDependencyNames(deps))
+ * ```
+ *
+ * @param workspaceDeps - Classified dependencies for one package.
+ * @returns Sorted unique workspace package names from every bucket.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const workspaceDependencyNames = (workspaceDeps: WorkspaceDeps): ReadonlyArray<string> =>
+  uniqueSorted([
+    ...R.keys(workspaceDeps.workspace.dependencies),
+    ...R.keys(workspaceDeps.workspace.devDependencies),
+    ...R.keys(workspaceDeps.workspace.peerDependencies),
+    ...R.keys(workspaceDeps.workspace.optionalDependencies),
+  ]);
+
+/**
+ * Order workspace packages so each dependency prints before its dependents.
+ *
+ * **Details**
+ *
+ * Edges come from {@link workspaceDependencyNames}. A cycle fails with
+ * {@link CyclicDependencyError} and does not yield a partial order.
+ *
+ * **Example** (Sort a two-package workspace)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as HashSet from "effect/HashSet"
+ * import { extractWorkspaceDependencies, sortWorkspacePackages } from "@beep/repo-utils/Dependencies"
+ * import { decodePackageJson } from "@beep/repo-utils/schemas/PackageJson"
+ *
+ * const names = HashSet.make("@beep/lib")
+ * const lib = extractWorkspaceDependencies(decodePackageJson({ name: "@beep/lib" }), names)
+ * const app = extractWorkspaceDependencies(
+ *   decodePackageJson({
+ *     name: "@beep/app",
+ *     dependencies: { "@beep/lib": "workspace:*" },
+ *   }),
+ *   names
+ * )
+ * const program = sortWorkspacePackages([
+ *   ["@beep/app", app],
+ *   ["@beep/lib", lib],
+ * ])
+ * Effect.runPromise(program).then(console.log)
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const sortWorkspacePackages: (
+  entries: Iterable<readonly [string, WorkspaceDeps]>
+) => Effect.Effect<ReadonlyArray<string>, CyclicDependencyError> = Effect.fn("Dependencies.sortWorkspacePackages")(
+  function* (entries) {
+    let adjacency = HashMap.empty<string, HashSet.HashSet<string>>();
+    for (const [name, deps] of entries) {
+      adjacency = HashMap.set(adjacency, name, HashSet.fromIterable(workspaceDependencyNames(deps)));
+    }
+    return yield* topologicalSort(adjacency);
+  }
+);

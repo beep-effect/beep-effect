@@ -6,9 +6,9 @@
  */
 
 import { NonNegativeInt } from "@beep/schema";
-import { Console, Effect, Match, Order, pipe } from "effect";
+import { Console, Effect, HashMap, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
@@ -20,7 +20,9 @@ import {
 } from "./Knowledge.errors.ts";
 import {
   encodeKnowledgeRefsReportJson,
+  isKnowledgeRefQuietClassification,
   KnowledgeRefClassification,
+  KnowledgeRefQuietClassification,
   KnowledgeRefSurface,
   KnowledgeRefSurfaceFilter,
   knowledgeRefsLiveDebt,
@@ -60,7 +62,7 @@ const refsJsonFlag = Flag.Boolean("json").pipe(
 );
 const refsVerboseFlag = Flag.Boolean("verbose").pipe(
   Flag.withDefault(false),
-  Flag.withDescription("Include verified observations in the detailed listing")
+  Flag.withDescription("List every skipped blob and every informational-class observation instead of per-class counts")
 );
 const refsCheckFlag = Flag.Boolean("check").pipe(
   Flag.withDefault(false),
@@ -276,13 +278,65 @@ const topDocuments = (report: KnowledgeRefsReport): ReadonlyArray<string> =>
     A.map((row) => `  ${row.count} ${row.documentId}`)
   );
 
+const OMITTED_HINT = "row(s) omitted (--verbose lists them)";
+/** Fold label for the skipped-blob rows; distinct from the `skipped:` header total on purpose. */
+const SKIPPED_FOLD_LABEL = "skipped-blobs";
+
+// Per-class row counts of the quiet observations in one listing, keyed by quiet class.
+const quietClassCounts = (
+  observations: ReadonlyArray<KnowledgeRefObservation>
+): HashMap.HashMap<KnowledgeRefQuietClassification, number> =>
+  pipe(
+    observations,
+    A.map((observation) => observation.classification),
+    A.map(O.liftPredicate(isKnowledgeRefQuietClassification)),
+    A.getSomes,
+    A.reduce(HashMap.empty<KnowledgeRefQuietClassification, number>(), (counts, classification) =>
+      HashMap.modifyAt(
+        counts,
+        classification,
+        flow(
+          O.getOrElse(() => 0),
+          (count) => O.some(count + 1)
+        )
+      )
+    )
+  );
+
+// One omitted-count line per quiet class with rows in the listing, in classification-domain order.
+const quietClassLines = (observations: ReadonlyArray<KnowledgeRefObservation>): ReadonlyArray<string> => {
+  const counts = quietClassCounts(observations);
+  return A.getSomes(
+    A.map(KnowledgeRefQuietClassification.Options, (classification) =>
+      O.map(HashMap.get(counts, classification), (count) => `  ${classification}: ${count} ${OMITTED_HINT}`)
+    )
+  );
+};
+
+// The skipped-blob rows, or one omitted-count line standing in for them when the listing is quiet.
+const skippedLines = (report: KnowledgeRefsReport, options: { readonly verbose: boolean }): ReadonlyArray<string> =>
+  Match.value(options.verbose).pipe(
+    Match.when(true, () => A.map(report.skipped, (blob) => `  ${blob.reason} ${blob.path}`)),
+    Match.when(false, () =>
+      A.isReadonlyArrayNonEmpty(report.skipped)
+        ? [`  ${SKIPPED_FOLD_LABEL}: ${A.length(report.skipped)} ${OMITTED_HINT}`]
+        : []
+    ),
+    Match.exhaustive
+  );
+
 /**
- * Renders a reference census with verified observations summarized unless verbose output is requested.
+ * Renders a reference census with informational rows summarized unless verbose output is requested.
  *
  * **Details**
  *
- * The surface filter narrows the listing only; summary counts remain whole-corpus.
- * The listing header includes verified observations even when their rows are omitted.
+ * The surface filter narrows the listing only; summary counts remain whole-corpus. The listing
+ * header counts every observation in the requested surface, including the rows it folds. Without
+ * `--verbose`, rows in a quiet class ({@link KnowledgeRefQuietClassification}) and the skipped-blob
+ * rows collapse to one `<class>: N row(s) omitted` line per non-empty class (the skipped fold is
+ * labelled `skipped-blobs` so it never reads as the `skipped:` header total); rows in every other
+ * class always print, so a broken target is never hidden behind a count. Which rows the `--check`
+ * gate decides on is unaffected: it reads the report, never this listing.
  *
  * **Example** (Render an empty census)
  *
@@ -317,21 +371,20 @@ export const renderKnowledgeRefsReport: {
       : A.filter(report.observations, (observation) => observation.surface === surface);
     const visible = options.verbose
       ? listed
-      : A.filter(listed, (observation) => !KnowledgeRefClassification.is.verified(observation.classification));
-    const omitted = A.length(listed) - A.length(visible);
+      : A.filter(listed, (observation) => !isKnowledgeRefQuietClassification(observation.classification));
     return A.join(
       [
         `knowledge refs @ ${report.treeish} (${report.commit})`,
         `observations: ${A.length(report.observations)} (live ${live}, archival ${archival})`,
         `skipped: ${A.length(report.skipped)}`,
-        ...A.map(report.skipped, (blob) => `  ${blob.reason} ${blob.path}`),
+        ...skippedLines(report, options),
         "classification:",
         ...classificationCounts(report),
         "top documents:",
         ...topDocuments(report),
         `observations (${surface}) (${A.length(listed)}):`,
         ...A.map(visible, renderObservation),
-        ...(options.verbose ? [] : [`  verified: ${omitted} row(s) omitted (--verbose lists them)`]),
+        ...(options.verbose ? [] : quietClassLines(listed)),
       ],
       "\n"
     );
@@ -482,8 +535,10 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
  * that tree's tracked entries rather than against the working filesystem. `--tree` accepts any
  * commit-ish and defaults to `HEAD`; no fetch ever occurs. Human output prints the whole-corpus
  * totals, the count of every one of the twelve classes including the empty ones, the highest-density
- * documents, and then the per-observation listing, omitting verified rows unless `--verbose` is set.
- * `--json` emits the complete report on one line.
+ * documents, and then the per-observation listing. Rows in an informational class (`verified`,
+ * `archival-provenance`, `audit-pattern-literal`, and the documented home and temp conventions) and
+ * the skipped-blob rows collapse to one `<class>: N row(s) omitted` line each unless `--verbose` is
+ * set; every other class always lists its rows. `--json` emits the complete report on one line.
  *
  * **Gotchas**
  *
