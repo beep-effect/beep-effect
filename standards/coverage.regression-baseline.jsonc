@@ -22006,15 +22006,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts": {
-          "lines": 98.16,
-          "statements": 97.67,
-          "branches": 98.31,
+          "lines": 98.24,
+          "statements": 97.7,
+          "branches": 97.27,
           "functions": 95.26,
           "uncovered": {
-            "lines": 8,
-            "statements": 11,
-            "branches": 2,
-            "functions": 10
+            "lines": 7,
+            "statements": 10,
+            "branches": 3,
+            "functions": 9
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/index.ts": {
