@@ -413,7 +413,7 @@ const parseFindingItems = (body: string): FindingTally =>
   pipe(
     O.fromNullOr(newMarkerPattern.exec(body)),
     O.map((marker) => A.fromIterable(Str.slice(marker.index + marker[0].length)(body).matchAll(newItemPattern))),
-    O.getOrElse(() => A.empty<RegExpExecArray>()),
+    O.getOrElse(A.empty<RegExpExecArray>),
     A.reduce(noFindings, (counts, match) => {
       const count = parseCount(match.groups?.count);
       const level = match.groups?.level;
