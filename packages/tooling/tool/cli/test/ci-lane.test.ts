@@ -126,6 +126,7 @@ const firstOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.head(items));
 const stepAt = <T>(items: ReadonlyArray<T>, index: number): T => O.getOrThrow(A.get(items, index));
 const lastOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.last(items));
 const isLocalCiLaneId = S.is(CiLaneId);
+const decodeShard = S.decodeUnknownOption(CiLanePartitionShard);
 
 const baseOptions = CiLaneRunOptions.make({
   affected: false,
@@ -400,7 +401,6 @@ describe("CI lane partitions", () => {
   });
 
   it("rejects a shard whose index exceeds its total or whose total is below two", () => {
-    const decodeShard = S.decodeUnknownOption(CiLanePartitionShard);
     assertNone(decodeShard({ index: 3, total: 2 }));
     assertNone(decodeShard({ index: 1, total: 1 }));
     assertNone(decodeShard({ index: 0, total: 2 }));

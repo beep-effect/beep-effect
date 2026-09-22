@@ -1227,7 +1227,7 @@ export const ciLanePartitionArgsForTesting: {
     shard?: CiLanePartitionShard
   ): (laneId: PartitionedCiLane) => CiLanePartitionArgs;
 } = dual(
-  (args) => S.is(PartitionedCiLaneSchema)(args[0]),
+  (args) => isPartitionedCiLane(args[0]),
   (
     laneId: PartitionedCiLane,
     packages: ReadonlyArray<string>,
