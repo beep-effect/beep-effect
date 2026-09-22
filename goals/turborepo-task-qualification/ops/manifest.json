@@ -5,7 +5,7 @@
     "title": "Turborepo task qualification",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-11",
+    "updated": "2026-09-22",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-task-qualification",
@@ -325,7 +325,8 @@
     "research/profile-native-inputs-v2-review.json",
     "research/profile-generation-implementation.json",
     "research/profile-git-routing-attribution.json",
-    "research/profile-runtime-integration.json"
+    "research/profile-runtime-integration.json",
+    "research/profile-closure-refresh-2026-09-22.json"
   ],
   "agentLaunchers": [
     {
@@ -387,5 +388,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Checkpoint PR preparation requested before further qualification work. Merged origin/main at e7f185e233 through 593a000a41 (Effect rc.117); dependencies installed from the frozen lockfile. Qualification remains incomplete: no tuple is qualified and caching stays disabled. Earlier experiments retain their recorded source/tool pins; post-merge PR quality proof is pending."
+  "statusNote": "PR #1182 merged; resumed at 0be1f13d62. Stable 2.11.2 native input bytes, four file-addition controls, profile freshness and actual uncached identity/types execution pass. Historical trace paths are covered except separately attributed Git routing; fresh semantic/capture closure and signed evidence remain pending. No tuple is qualified."
 }
