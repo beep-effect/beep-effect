@@ -1974,5 +1974,10 @@
   ],
   "@beep/mcp-kit/test/Conformance": [
     "./packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts"
+  ],
+  "@beep/test-runner": ["./packages/tooling/test-kit/test-runner/src/index.ts"],
+  "@beep/test-runner/*": ["./packages/tooling/test-kit/test-runner/src/*"],
+  "@beep/test-runner/test/Vitest": [
+    "./packages/tooling/test-kit/test-runner/src/test/Vitest.test-kit.ts"
   ]
 }

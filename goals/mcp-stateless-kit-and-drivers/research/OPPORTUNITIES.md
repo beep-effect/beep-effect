@@ -92,3 +92,22 @@ no secrets, home paths as `~`, minimal error text.
 **Evidence:** `[coverage-ratchet]` reported two classes at once. (1) Rows this branch minted with a local `--write-baseline` sit above what the lane measures (`@beep/mcp-kit` totals / `client.ts` / `Conformance.test-kit.ts` functions rows). (2) `SanitizedSpan.ts` branches fell from the base floor 89.65 % (3 of 29 uncovered) to 69.73 % (23 of 76) because the sanitized-toolkit rewrite added the whole tool-failure classification path with no test exercising a failing tool; the package branch total fell from 93.1 % to 80 % the same way. The same run also listed `@beep/repo-cli` rows (`LaneTimings.ts`, `Cache.runtime.ts`, `TsconfigSync.schemas.ts`) that are main's own red, being fixed in PR #1201. A scoped `vitest run --coverage --coverage.reporter=lcov` from the package directory reproduced every mcp-kit number to two decimals in about forty seconds, which is the loop that should have run before the first push.
 
 **Prevented by:** a package-scoped coverage step in `package-verify` (or in the publish preflight) for every touched package, so a branch-floor drop surfaces in under a minute instead of at minute 53 of a full proof; and a ratchet message that separates inherited rows (already red on `origin/main`) from introduced ones instead of listing them in one block.
+
+### A property test exhausts its generator on the hosted shard and reads as a PR red
+
+**Doing:** first hosted tier 1 on the coverage-fix head of PR #1192.
+
+**Evidence:** `Test Unit (unit-a)` failed in `@beep/repo-utils` on `test/schemas/TSConfig.test.ts` ("round-trips schema-derived compiler options through the encoded wire shape") with `AssertionError: expected 'Exhausted' to be 'Passed'`. The branch does not touch that package or that test, main's own unit-a shard passed the identical file minutes earlier, and the merged tree passes all 229 repo-utils tests locally. The fast-check seed is not pinned on the hosted shard (`BEEP_FC_SEED` is unset in `check.yml`), so a filter-heavy arbitrary can exhaust on one seed and pass on the next. The job log was not downloadable through `gh run view --log` or the redirecting `gh api` call while the run was in progress; only a direct authenticated download of the logs endpoint returned it.
+
+**Prevented by:** treating `Exhausted` from `Arbitrary.checkEffect` as a generator-shape defect and fixing the arbitrary (fewer filters, or a `maxSkipsPerRun` sized to the filter rate) rather than an assertion, plus a pinned per-run seed on hosted shards so a red reproduces on rerun.
+
+**Addendum (17:35Z, head `48f5b65b74`):** two more heavy runners died the same way on the next head (`Heavy / Docgen` and `Heavy / Coverage Regression`, both spot, "Service initiated" six and eleven minutes after launch), bringing the day's count for this one PR to five spot reclaims across two heads. `gh run rerun <run> --failed` reran exactly the two dead jobs once the run had completed; the until-ready monitor still reported both as "red; failing-step log not available yet". A fleet-side mitigation (on-demand fallback after N reclaims in an hour, or a longer-lived instance class for the heavy pool) would have saved about ninety minutes of wall clock here.
+
+
+### A detached proof reads the lane's live tree, so a mid-proof merge poisons it
+
+**Doing:** while detached proof `4f0bcd8f` was running on head `48f5b65b74`, I merged `origin/main` into the same lane twice (once to reproduce a hosted unit-a red, once to clear new conflicts from #1188) and ran `bun install`.
+
+**Evidence:** the proof's `quality:coverage` lane (17:46Z–17:51Z) failed 8 of 10 shards with `Failed to load tsconfig ".../tsconfig.json": JSONError` because the root `tsconfig.json` held conflict markers at that moment; no `[coverage-ratchet]` finding was produced. Every earlier lane had passed. The verdict is environment-only and self-inflicted, but it cost the fifty-minute proof and left the coverage question unanswered for this head.
+
+**Prevented by:** `yeet verify --detach` snapshotting the head into a throwaway worktree (or refusing to start while the tree is dirty and fencing writes while it runs), and an agent rule: never merge, install, or regenerate in a lane that has a live detached proof; do that work after `job wait` or in a sibling lane.

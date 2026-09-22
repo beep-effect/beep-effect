@@ -13,6 +13,9 @@
     },
     {
       "path": "../fc-runs/tsconfig.json"
+    },
+    {
+      "path": "../test-runner/tsconfig.json"
     }
   ],
   "compilerOptions": {
