@@ -1,0 +1,32 @@
+{
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "status": "probe-rejected-before-execution",
+  "changedFields": [
+    "kernel",
+    "runtimeLinker"
+  ],
+  "kernel": {
+    "before": "Linux 7.2.2-1-cachyos",
+    "now": "Linux 6.18.52-1-lts"
+  },
+  "snapshotReferences": [
+    {
+      "path": ".beep/qualification-local-preflight/git-exclusion-activation.json",
+      "sha256": "4b46f5dd883308028ba68f8b434fe917eba376ad3ecc89b937cc00f6b1af99cd"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/git-config-current-toolchain.json",
+      "sha256": "4a5748dc06e35d5c7f6adbdfebaeb67a473e0e59fdc39c167fc4c2a6482a612d"
+    }
+  ],
+  "nextAction": "Finish the admitted stable Git configuration control using the refreshed activation. Prior pilot results remain historical.",
+  "installedDependenciesUnchanged": true,
+  "comparisonCorrection": "The diagnostic snapshot serialized decoded Effect Option values; unwrapping those values removes a representation-only difference in installedDependencies. The dependency archive SHA-256, file counts, byte count and links match.",
+  "refreshedActivation": {
+    "path": ".beep/qualification-local-preflight/lts-activation.json",
+    "sha256": "3fa2a6c1d70c795728aab8a70f64c7ebf6fb34498c8fbd08e6617a68bdf1208d",
+    "processExitCode": 0,
+    "activationConfigurationUnchanged": true,
+    "installedDependenciesUnchanged": true
+  }
+}

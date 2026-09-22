@@ -510,9 +510,7 @@
       {
         "id": "effect-drizzle-meta-column-flags",
         "status": "disqualified",
-        "files": [
-          "packages/ecosystem/effect-drizzle/src/core/Meta.ts"
-        ]
+        "files": ["packages/ecosystem/effect-drizzle/src/core/Meta.ts"]
       },
       {
         "id": "drivers-stream-state",
@@ -524,9 +522,7 @@
       {
         "id": "drivers-acp-protocol-logging-options",
         "status": "disqualified",
-        "files": [
-          "packages/drivers/acp/src/AcpProtocol.service.ts"
-        ]
+        "files": ["packages/drivers/acp/src/AcpProtocol.service.ts"]
       },
       {
         "id": "shacl-validation-result-flags",
@@ -545,9 +541,7 @@
       {
         "id": "rm-sync-options-flags",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/utils/src/FileSystem.ts"
-        ]
+        "files": ["packages/foundation/modeling/utils/src/FileSystem.ts"]
       },
       {
         "id": "json-schema-node-keywords",
@@ -566,9 +560,7 @@
       {
         "id": "allow-list-url-policy-relative-flags",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/md/src/Md.escape.ts"
-        ]
+        "files": ["packages/foundation/modeling/md/src/Md.escape.ts"]
       },
       {
         "id": "use-number-input-options",
@@ -622,23 +614,17 @@
       {
         "id": "tsconfig-compiler-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"
-        ]
+        "files": ["packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"]
       },
       {
         "id": "tsconfig-build-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"
-        ]
+        "files": ["packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"]
       },
       {
         "id": "ts-node-config",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"
-        ]
+        "files": ["packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"]
       },
       {
         "id": "create-package-template-type-flags",
@@ -678,9 +664,7 @@
       {
         "id": "yeet-command-shared-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"]
       },
       {
         "id": "yeet-run-plan-mode-options",
@@ -727,9 +711,7 @@
       {
         "id": "turbo-summary-task-cache",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts"]
       },
       {
         "id": "runners-aws-ebs-block-device",
@@ -769,23 +751,17 @@
       {
         "id": "laws-effect-imports-command-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts"]
       },
       {
         "id": "laws-terse-effect-command-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts"]
       },
       {
         "id": "laws-terse-effect-rules-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts"]
       },
       {
         "id": "docgen-local-allow-full",
@@ -797,30 +773,22 @@
       {
         "id": "ci-lane-run-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
       },
       {
         "id": "ci-local-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
       },
       {
         "id": "ci-local-step-plan",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
       },
       {
         "id": "quality-test-lane-selection",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
       },
       {
         "id": "fallow-command-options",
@@ -930,37 +898,27 @@
       {
         "id": "step-exec-run-captured-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/internal/process/StepExec.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/internal/process/StepExec.ts"]
       },
       {
         "id": "r2-apps-practice-kg-build-flags",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/build.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/build.ts"]
       },
       {
         "id": "r2-apps-oip-layout-script-gates",
         "status": "disqualified",
-        "files": [
-          "apps/oip-web/src/app/layout.tsx"
-        ]
+        "files": ["apps/oip-web/src/app/layout.tsx"]
       },
       {
         "id": "r2-apps-oip-metadata-robots",
         "status": "disqualified",
-        "files": [
-          "apps/oip-web/src/app/layout.tsx"
-        ]
+        "files": ["apps/oip-web/src/app/layout.tsx"]
       },
       {
         "id": "statutes-at-large-pincite-is-range",
         "status": "designed",
-        "files": [
-          "packages/law-practice/domain/test/LawPracticeDomain.test.ts"
-        ]
+        "files": ["packages/law-practice/domain/test/LawPracticeDomain.test.ts"]
       },
       {
         "id": "openai-compat-language-model-config",
@@ -986,9 +944,7 @@
       {
         "id": "r2-tooling-bin-main-fast-paths",
         "status": "reviewed",
-        "files": [
-          "packages/tooling/tool/cli/src/bin-main.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/bin-main.ts"]
       },
       {
         "id": "vault-sync-move-delta-axes",
@@ -1007,9 +963,7 @@
       {
         "id": "phoenix-prompt-read-exists",
         "status": "reviewed",
-        "files": [
-          "packages/drivers/phoenix/src/Phoenix.service.ts"
-        ]
+        "files": ["packages/drivers/phoenix/src/Phoenix.service.ts"]
       },
       {
         "id": "xai-sse-done-payload",
@@ -1044,9 +998,7 @@
       {
         "id": "xai-websocket-message-binary",
         "status": "designed",
-        "files": [
-          "packages/drivers/xai/src/XAi.service.ts"
-        ]
+        "files": ["packages/drivers/xai/src/XAi.service.ts"]
       },
       {
         "id": "goals-repair-fork-mode",
@@ -1065,9 +1017,7 @@
       {
         "id": "goals-set-status-input",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts"]
       },
       {
         "id": "codex-findings-ingest-command-force-refresh",
@@ -1079,65 +1029,47 @@
       {
         "id": "html-standard-global-boolean-attributes",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.attributes.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.attributes.ts"]
       },
       {
         "id": "html-picture-source-sizes-auto",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.conformance.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
       },
       {
         "id": "jsonc-parser-sdk-flags",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/schema/src/Jsonc.ts"
-        ]
+        "files": ["packages/foundation/modeling/schema/src/Jsonc.ts"]
       },
       {
         "id": "xml-parser-sdk-flags",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/schema/src/Xml.ts"
-        ]
+        "files": ["packages/foundation/modeling/schema/src/Xml.ts"]
       },
       {
         "id": "taxonomy-loader-manifest-presence",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/ontology/src/TaxonomyLoader.ts"
-        ]
+        "files": ["packages/foundation/modeling/ontology/src/TaxonomyLoader.ts"]
       },
       {
         "id": "identity-property-descriptor-flags",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/identity/src/Id.ts"
-        ]
+        "files": ["packages/foundation/modeling/identity/src/Id.ts"]
       },
       {
         "id": "tsconfig-compiler-options-export",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"
-        ]
+        "files": ["packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"]
       },
       {
         "id": "ts-node-compiler-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"
-        ]
+        "files": ["packages/tooling/library/repo-utils/src/schemas/TSConfig.ts"]
       },
       {
         "id": "yeet-monitor-command-route",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"]
       },
       {
         "id": "yeet-merge-ready-criterion-changed",
@@ -1178,16 +1110,12 @@
       {
         "id": "html-select-child-grammar",
         "status": "designed",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.conformance.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
       },
       {
         "id": "html-dl-child-grammar",
         "status": "designed",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.conformance.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
       },
       {
         "id": "r2-foundation-retry1-number-input-spin-disabled",
@@ -1199,16 +1127,12 @@
       {
         "id": "r3-apps-pglite-data-dir-probe",
         "status": "designed",
-        "files": [
-          "apps/professional-desktop/src/runtime/Pglite.ts"
-        ]
+        "files": ["apps/professional-desktop/src/runtime/Pglite.ts"]
       },
       {
         "id": "r3-apps-sidecar-devtools-gates",
         "status": "designed",
-        "files": [
-          "apps/professional-desktop/src/runtime/Observability.ts"
-        ]
+        "files": ["apps/professional-desktop/src/runtime/Observability.ts"]
       },
       {
         "id": "r3-tooling-ecosystem-polarity-specifier-call",
@@ -1234,9 +1158,7 @@
       {
         "id": "r2-apps-mcpb-user-config-required",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/package.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
       },
       {
         "id": "r2-domains-ontology-graph-fold-flags",
@@ -1248,44 +1170,32 @@
       {
         "id": "html-datalist-child-grammar",
         "status": "designed",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.conformance.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
       },
       {
         "id": "html-media-child-grammar",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.conformance.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
       },
       {
         "id": "r3-tooling-goal-doctor-supersession-loci",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Goals/Doctor.ts"]
       },
       {
         "id": "r2-apps-practice-kg-build-overwrite-phase",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/build.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/build.ts"]
       },
       {
         "id": "r2-apps-oip-route-instant-flags",
         "status": "disqualified",
-        "files": [
-          "apps/oip-web/src/app/layout.tsx"
-        ]
+        "files": ["apps/oip-web/src/app/layout.tsx"]
       },
       {
         "id": "r2-foundation-html-foreign-entry-flags",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.conformance.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
       },
       {
         "id": "r3-arch-ecosystem-internal-pg-timestamp-timezone",
@@ -1298,16 +1208,12 @@
       {
         "id": "chat-timeline-refresh-latch",
         "status": "disqualified",
-        "files": [
-          "packages/agents/client/src/Chat.atoms.ts"
-        ]
+        "files": ["packages/agents/client/src/Chat.atoms.ts"]
       },
       {
         "id": "r3-foundation-attribute-requirement-gates",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.conformance.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
       },
       {
         "id": "with-codec-statics-install-on-owned-schema",
@@ -1319,65 +1225,47 @@
       {
         "id": "acp-client-protocol-capabilities",
         "status": "disqualified",
-        "files": [
-          "packages/drivers/acp/src/AcpProtocol.service.ts"
-        ]
+        "files": ["packages/drivers/acp/src/AcpProtocol.service.ts"]
       },
       {
         "id": "acp-server-protocol-capabilities",
         "status": "disqualified",
-        "files": [
-          "packages/drivers/acp/src/AcpProtocol.service.ts"
-        ]
+        "files": ["packages/drivers/acp/src/AcpProtocol.service.ts"]
       },
       {
         "id": "openclaw-telegram-channel-document-flags",
         "status": "disqualified",
-        "files": [
-          "packages/drivers/openclaw/src/OpenclawRender.ts"
-        ]
+        "files": ["packages/drivers/openclaw/src/OpenclawRender.ts"]
       },
       {
         "id": "r2-apps-observability-exporter-gates",
         "status": "disqualified",
-        "files": [
-          "apps/professional-desktop/src/runtime/Observability.ts"
-        ]
+        "files": ["apps/professional-desktop/src/runtime/Observability.ts"]
       },
       {
         "id": "r2-apps-practice-kg-package-rm-opts",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/package.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
       },
       {
         "id": "r2-apps-root-layout-suppress-hydration",
         "status": "disqualified",
-        "files": [
-          "apps/oip-web/src/app/layout.tsx"
-        ]
+        "files": ["apps/oip-web/src/app/layout.tsx"]
       },
       {
         "id": "r2-foundation-iri-ipv6-segment-facts",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/rdf/src/Iri.ts"
-        ]
+        "files": ["packages/foundation/modeling/rdf/src/Iri.ts"]
       },
       {
         "id": "r2-foundation-float-fast-check-options",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/schema/src/Float.ts"
-        ]
+        "files": ["packages/foundation/modeling/schema/src/Float.ts"]
       },
       {
         "id": "r2-foundation-double-fast-check-options",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/schema/src/Double.ts"
-        ]
+        "files": ["packages/foundation/modeling/schema/src/Double.ts"]
       },
       {
         "id": "r3-foundation-verified-span-source-failure-facts",
@@ -1389,51 +1277,37 @@
       {
         "id": "r3-tooling-envconfig-unresolved-turbo-secrets",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts"]
       },
       {
         "id": "r3-apps-claims-directory-must-exist",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/claims.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/claims.ts"]
       },
       {
         "id": "r3-apps-bin-directory-must-exist",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/bin.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/bin.ts"]
       },
       {
         "id": "r3-apps-pglite-mkdir-recursive",
         "status": "disqualified",
-        "files": [
-          "apps/professional-desktop/src/runtime/Pglite.ts"
-        ]
+        "files": ["apps/professional-desktop/src/runtime/Pglite.ts"]
       },
       {
         "id": "r3-apps-package-assert-archive-force",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/package.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
       },
       {
         "id": "r3-apps-build-fs-recursive",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/build.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/build.ts"]
       },
       {
         "id": "r3-apps-tauri-ipc-incremental-metrics",
         "status": "disqualified",
-        "files": [
-          "apps/professional-desktop/src/transport/TauriIpcSocket.ts"
-        ]
+        "files": ["apps/professional-desktop/src/transport/TauriIpcSocket.ts"]
       },
       {
         "id": "r3-apps-contradiction-qa-mkdir-recursive",
@@ -1445,23 +1319,17 @@
       {
         "id": "r3-apps-package-mkdir-recursive",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/package.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
       },
       {
         "id": "r3-apps-package-prezip-force",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/package.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
       },
       {
         "id": "r3-apps-package-foreach-discard",
         "status": "disqualified",
-        "files": [
-          "apps/practice-kg-mcp/src/package.ts"
-        ]
+        "files": ["apps/practice-kg-mcp/src/package.ts"]
       },
       {
         "id": "r3-drivers-arch-folder-resolution-blocked-provider",
@@ -1473,51 +1341,37 @@
       {
         "id": "r3-tooling-pglite-integration-gate-flags",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/test-kit/test-utils/src/SqlTest.ts"
-        ]
+        "files": ["packages/tooling/test-kit/test-utils/src/SqlTest.ts"]
       },
       {
         "id": "r3-tooling-lint-tagged-union-pattern-gates",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts"]
       },
       {
         "id": "r24-foundation-modeling-rest-link-sizes-issue-flags",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.conformance.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
       },
       {
         "id": "r24-foundation-modeling-rest-recovery-budget-coherence",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/skill-contract/src/Recovery.ts"
-        ]
+        "files": ["packages/foundation/modeling/skill-contract/src/Recovery.ts"]
       },
       {
         "id": "html-img-sizes-disposition",
         "status": "designed",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.conformance.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
       },
       {
         "id": "r25-foundation-schema-n-z-semver-prerelease-numeric-flags",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/modeling/schema/src/Semver.ts"
-        ]
+        "files": ["packages/foundation/modeling/schema/src/Semver.ts"]
       },
       {
         "id": "html-link-imagesizes-disposition",
         "status": "designed",
-        "files": [
-          "packages/foundation/modeling/html/src/Html.conformance.ts"
-        ]
+        "files": ["packages/foundation/modeling/html/src/Html.conformance.ts"]
       },
       {
         "id": "r25-drivers-a-f-box-action-base-destructive-provider",
@@ -1536,37 +1390,27 @@
       {
         "id": "r25-drivers-n-r-runpod-raw-request-authenticated-body",
         "status": "disqualified",
-        "files": [
-          "packages/drivers/runpod/src/Runpod.service.ts"
-        ]
+        "files": ["packages/drivers/runpod/src/Runpod.service.ts"]
       },
       {
         "id": "r25-tool-docgen-cli-config-toggles",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/docgen/src/CLI.ts"
-        ]
+        "files": ["packages/tooling/tool/docgen/src/CLI.ts"]
       },
       {
         "id": "contained-file-read-outcome",
         "status": "designed",
-        "files": [
-          "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/internal/cli/FsGuards.ts"]
       },
       {
         "id": "r25-cli-internal-root-turbo-env-configured",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/internal/cli/TurboCache.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/internal/cli/TurboCache.ts"]
       },
       {
         "id": "r25-cli-commands-a-c-ci-lane-run-dry-run-force",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
       },
       {
         "id": "r25-cli-commands-a-c-architecture-ensure-absent-remove",
@@ -1578,9 +1422,7 @@
       {
         "id": "r25-cli-commands-l-q-coverage-replace-all-scoped",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
       },
       {
         "id": "r25-cli-commands-r-z-notion-query-has-more",
@@ -1620,16 +1462,12 @@
       {
         "id": "r25-cli-yeet-shared-options-ci-parity-no-fail-fast",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts"]
       },
       {
         "id": "coverage-baseline-write-mode",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
       },
       {
         "id": "yeet-prepared-publish-commit",
@@ -1656,9 +1494,7 @@
       {
         "id": "goals-packet-migration-kind",
         "status": "designed",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts"]
       },
       {
         "id": "worktree-fleet-epoch-target",
@@ -1684,9 +1520,7 @@
       {
         "id": "m365-tool-error-retryability",
         "status": "designed",
-        "files": [
-          "packages/drivers/m365-mcp/src/M365Handlers.ts"
-        ]
+        "files": ["packages/drivers/m365-mcp/src/M365Handlers.ts"]
       },
       {
         "id": "vault-sync-push-failure-disposition",
@@ -1698,9 +1532,7 @@
       {
         "id": "agents-chat-turn-surface",
         "status": "disqualified",
-        "files": [
-          "packages/agents/client/src/Chat.atoms.ts"
-        ]
+        "files": ["packages/agents/client/src/Chat.atoms.ts"]
       },
       {
         "id": "r26-cli-commands-d-k-seed-snapshot-prior-presence",
@@ -1726,9 +1558,7 @@
       {
         "id": "receipt-fallback-draft-occupancy",
         "status": "designed",
-        "files": [
-          "packages/agents/client/src/Chat.atoms.ts"
-        ]
+        "files": ["packages/agents/client/src/Chat.atoms.ts"]
       },
       {
         "id": "create-package-retired-name-reconciliation",
@@ -1775,16 +1605,12 @@
       {
         "id": "r27-cli-commands-l-q-github-check-lane-proof-reuse",
         "status": "designed",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
       },
       {
         "id": "r27-boolean-state-foundation-spinner-state",
         "status": "designed",
-        "files": [
-          "packages/foundation/ui-system/ui/src/hooks/useSpinner.ts"
-        ]
+        "files": ["packages/foundation/ui-system/ui/src/hooks/useSpinner.ts"]
       },
       {
         "id": "r28-tooling-library-support-tsmorph-project-options",
@@ -1796,9 +1622,7 @@
       {
         "id": "r28-tooling-library-support-pglite-container-stop-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/test-kit/test-utils/src/SqlTest.ts"
-        ]
+        "files": ["packages/tooling/test-kit/test-utils/src/SqlTest.ts"]
       },
       {
         "id": "r28-tooling-policy-jsonc-parse-options",
@@ -1810,9 +1634,7 @@
       {
         "id": "r28-tooling-library-observability-mechanical-terminal-consistency",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/library/ai-metrics/src/flight-record.ts"
-        ]
+        "files": ["packages/tooling/library/ai-metrics/src/flight-record.ts"]
       },
       {
         "id": "r28-cli-internal-root-tmpfs-discovered-classified-skip",
@@ -1852,9 +1674,7 @@
       {
         "id": "r28-cli-commands-a-c-ci-partition-dry-run-spawn-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
       },
       {
         "id": "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
@@ -1873,16 +1693,12 @@
       {
         "id": "r28-cli-quality-coverage-resolved-operation",
         "status": "designed",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
       },
       {
         "id": "r28-cli-quality-test-lane-resolved-selection",
         "status": "designed",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
       },
       {
         "id": "r28-cli-commands-r-z-write-remote-skill-remove-options",
@@ -1915,9 +1731,7 @@
       {
         "id": "r29-cli-internal-root-run-captured-streams-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/internal/process/StepExec.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/internal/process/StepExec.ts"]
       },
       {
         "id": "r29-cli-commands-a-c-mode-validation-request",
@@ -1978,16 +1792,12 @@
       {
         "id": "r29-cli-commands-l-q-collect-resolved-step-capture-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
       },
       {
         "id": "r29-cli-commands-l-q-quarantine-step-capture-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
       },
       {
         "id": "r29-cli-commands-l-q-tsgo-rules-root-tsconfig-jsonc-parse-options",
@@ -1999,30 +1809,22 @@
       {
         "id": "acp-patched-protocol-options",
         "status": "disqualified",
-        "files": [
-          "packages/drivers/acp/src/AcpProtocol.service.ts"
-        ]
+        "files": ["packages/drivers/acp/src/AcpProtocol.service.ts"]
       },
       {
         "id": "acp-client-options",
         "status": "disqualified",
-        "files": [
-          "packages/drivers/acp/src/AcpClient.service.ts"
-        ]
+        "files": ["packages/drivers/acp/src/AcpClient.service.ts"]
       },
       {
         "id": "acp-client-child-process-options",
         "status": "disqualified",
-        "files": [
-          "packages/drivers/acp/src/AcpClient.service.ts"
-        ]
+        "files": ["packages/drivers/acp/src/AcpClient.service.ts"]
       },
       {
         "id": "r29-acp-client-constructed-protocol-options",
         "status": "disqualified",
-        "files": [
-          "packages/drivers/acp/src/AcpClient.service.ts"
-        ]
+        "files": ["packages/drivers/acp/src/AcpClient.service.ts"]
       },
       {
         "id": "r29-yeet-sweep-worktree-probe-address",
@@ -2167,23 +1969,17 @@
       {
         "id": "r30-cli-commands-l-q-github-check-lane-outcome",
         "status": "designed",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"]
       },
       {
         "id": "r31-foundation-capability-mcp-wire-tool-annotations",
         "status": "disqualified",
-        "files": [
-          "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts"
-        ]
+        "files": ["packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts"]
       },
       {
         "id": "r31-cli-commands-a-c-storybook-affected-spawn-options",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts"]
       },
       {
         "id": "r31-cli-commands-d-k-person-match-commit-record",
@@ -2195,9 +1991,7 @@
       {
         "id": "r31-cli-internal-root-admitted-child-spawn-fields",
         "status": "disqualified",
-        "files": [
-          "packages/tooling/tool/cli/src/internal/process/StepExec.ts"
-        ]
+        "files": ["packages/tooling/tool/cli/src/internal/process/StepExec.ts"]
       },
       {
         "id": "id-citation-pincite-inherited-in-footnote",
@@ -2301,9 +2095,7 @@
         "status": "disqualified"
       }
     ],
-    "addedIds": [
-      "coverage-baseline-write-options"
-    ],
+    "addedIds": ["coverage-baseline-write-options"],
     "removedIds": [],
     "qualificationCountUnchanged": true,
     "cardinalityCorrections": [

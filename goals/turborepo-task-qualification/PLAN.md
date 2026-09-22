@@ -22,6 +22,230 @@ is needed.
 | P5 Yeet: PR to mergeable | pending | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
 | P6 Close | pending | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
 
+## Acceptance audit after host recovery: 2026-09-15
+
+Current implementation revision: `028262e8c0`. The reviewed census binds the
+same source bytes captured around the merge; both local pilot matrices now
+name this committed revision. Earlier checkpoints below remain historical.
+
+| SPEC criterion | Evidence and remaining work |
+| --- | --- |
+| Executable census | Reproducible operational attachment: 324 sources, six snapshots, five reviews, 143 workspaces, 1,957 executable and 1,492 graph-only nodes. Seven semantic/runtime obligations remain; completeness is not established. |
+| Policy and transitions | Pure tuple/lifecycle policy, drift detection and operational governance exist. Qualified-state audit and transition intentionally reject promotion pending the sibling-owned receipt importer and its operational negative tests. |
+| Synthetic fixture | Local success, invalidation and capture negatives have receipts. Signed transport/fault interpretation belongs to conformance; local fixture results cannot satisfy that part. |
+| Real pilot | Stable and canary each passed 67 local observations, 40 checks and ten shadows at `028262e8c0`; receipt relationships and runtime-key reconstruction also passed. Three wire-verified signed remote pairs and accepted trust/conformance evidence are missing. No real tuple qualifies. |
+| Legacy and unsafe entries | Ledger revision 3 preserves explicit exclusions; ordinary pilot reuse remains disabled. No broad activation is claimed. Final audit must still run against the final implementation head. |
+| Adoption handoff | Population, API and decomposition preparation are available. Validated pilot, signed references and accepted promotion/invalidation semantics remain incomplete. |
+| Package/protocol checks | CLI full audit/docgen passed for the merge repairs; final test-only changes passed focused suites and quick package verification. All 15 cheap gates passed. Imported protocol changes and final publication still require their own verification. |
+| Final merge-ready PR | No PR has been published for this resumed branch. Yeet repair/verify/publish/monitor remain required. Earlier merged PRs do not prove this final head. |
+| Same-PR closeout | Reflection and completed-retained lifecycle must accompany the eventual final implementation; completion is not authorized by this audit. |
+
+Next independent work is the remaining semantic census classification. P3's
+critical dependency remains the accepted versioned receipt contracts and passing
+signed-fixture/lab boundary. The local conformance and trust plans still say
+“Authored but not started” and require explicit launch. The pending launch
+question has no recorded answer; this audit neither launches those goals nor
+substitutes a qualification-owned implementation for their contracts.
+
+## Main integration checkpoint: 2026-09-15
+
+Merged main `1969de85bf` in `582502ed69`, preserving qualification routing
+and the upstream quality policy additions. Frozen dependency installation
+passed. Cache complexity repairs passed CLI package audit/docgen before the
+merge; the post-merge package result is recorded below.
+
+The initial post-merge cheap-gate run passed 14 lanes and failed only
+`lint:effect-vitest`. Migrated the affected tests to canonical suite layers
+and assertions, retaining one documented immediate-lifetime resource
+exception. Repaired eight stale launcher expectations introduced by the
+merge. All five affected suites now pass: 352 tests. Package verification
+passed (audit 637.5 seconds, docgen 20.5 seconds); all 15 aggregate cheap-gate
+lanes passed. Subsequent test-only lifecycle migrations passed the
+Effect Vitest ratchet with zero introduced findings and 17 resolved; their
+final Quality suite passed 242 tests and the quick CLI package check passed
+lint (6.4 seconds) and type checking (10.7 seconds). The local merge-repair gates are green; final full Yeet proof remains required.
+
+The merge changes census inputs and dependency identity: 65 of the 315
+previously bound source files now differ. The operational
+census and local pilot receipts above retain their original source identity;
+they must be refreshed before use as current-head evidence. Fresh workflow
+and local/hosted Ci/Quality/Yeet planner captures are available under the
+`post-main` suffix. The planner recipe now uses the public full-fleet doctest
+plan after main removed the marked-selection helper. Signed sibling
+receipt dependencies and qualification-state restrictions remain unchanged.
+
+The fresh base census contains 143 workspaces, 3,449 graph nodes and 1,957
+executable nodes. Compared with the prior reviewed census it adds 180 nodes
+(65 executable, 115 graph-only), removes none and changes no existing command
+strings. The added executables comprise 27 doctest and 38 root quality tasks.
+Its two base-only unresolved items do not discharge the seven obligations
+from the prior attached semantic review. The new boundary review covers those additions and the current doctest
+planner/workflow change. Operational attachment passed with 324 sources,
+six snapshots and five reviews; all 335 references matched their retained
+bytes. All seven prior semantic/runtime obligations are preserved. The two
+sibling manifests remain paused on reinspection; no signed receipt dependency
+is satisfied by this attachment.
+
+Implementation repairs are saved in `028262e8c0`. A fresh activation preview
+confirmed changed configuration/toolchain digests after main integration.
+Materialization copied 227,402 installed dependency files (5,426,694,501 bytes)
+and verified exact parity with the preview. Both clean pilot worktrees now
+point at that commit. The stable 2.10.12 pilot was launched with a new namespace
+and current request references. It passed 67 observations, 40 checks and ten
+shadow decisions with no failed checks. Receipt relationships and runtime-key
+reconstruction passed separately, including altered-loader rejection. The exact canary also passed 67 observations, 40 checks and ten shadows.
+Combined receipt reconstruction passed for both channels. No reuse is enabled;
+signed evidence remains required and deleted raw archives are not independently
+reviewable.
+
+The installed-lint syscall observation was also refreshed at `028262e8c0`.
+Command and wrapper exited zero; dependency/toolchain parity passed before
+and after. The retained trace is 13,542,137 compressed bytes and 246,818,555
+expanded bytes, within the existing bounds. Its 1,055,794 parsed syscall
+events have no unfinished calls. Direct write effects match the earlier
+observation: one device sink, four failed terminal opens, one creation of the
+`biome` directory in the experiment's temporary root and nine already-existing
+results. Five 256-entry non-SQPOLL rings
+and AF_UNIX socket families preserve the prior source-correlated interpretation;
+SQEs remain undecoded and complete input closure is not claimed.
+
+A joined-event review of that same retained trace found 8,457 distinct
+other-repository paths opened without `O_DIRECTORY` and 4,358 distinct
+other-repository directory paths, excluding identity and installed dependencies.
+No unfinished syscall remains in the reconstruction. Successful opens are not
+yet proven semantic reads; next vary out-of-input repository files and compare
+fresh results. This is an independent P2 gap even after signed sibling evidence
+arrives. See `postMainIoObservation.openFootprint` in the runtime receipt.
+
+The first five external-input controls completed: baseline and three separate
+invalid-syntax overlays in the API-docs app all returned zero with identical
+captured bytes; the identity syntax-error positive control returned one.
+Ten retained stream hashes and before/after dependency/toolchain parity passed.
+This narrows the input review for those exact files, without establishing all
+external inputs or Turbo hash behavior. Evidence: `postMainExternalInputControls`.
+
+
+A targeted workspace-dependency control established a semantic input beyond
+the identity subtree: adding `@deprecated` to the types package's `TString`
+export changed identity lint from exit zero to exit one. Pinned stable Turbo
+changed both task hashes while identity's own input map stayed identical;
+`src/index.ts` was the only changed input in the types map, and the declared
+`@beep/types#lint` dependency edge was present. Two retained native summaries
+and four stream hashes passed independent review. The admitted wrapper passed
+dependency/toolchain parity before and after. This demonstrates dependency
+invalidation for one semantic case, not replay or complete input closure.
+Exact canary 2.10.13-canary.1 independently reproduced the same result,
+including exit zero to one, unchanged identity inputs and both changed hashes.
+Versioned review confirmed strict mode and the exact client version in all four
+retained stable/canary summaries, plus eight stream hashes. Both admitted
+wrappers completed with before/after parity. See
+`postMainWorkspaceDependencyControl` and
+`postMainCanaryWorkspaceDependencyControl` in the runtime boundary record.
+
+The successor operational attachment now includes a reproducible nested-script
+graph: all 1,957 executable roots, 3,317 reachable definitions and 2,136 local
+script edges, including 140 resolved optional wrappers. There are no cycles
+or missing targets in the supported grammar. Twenty-one shell definitions
+remain uninterpreted, and 1,952 terminal steps retain tool-specific obligations.
+Byte-for-byte regeneration passed. All 338 attachment references matched;
+the executable population and seven unresolved obligations are unchanged.
+See `postMainNestedCensus` and [nested review](./research/nested-command-review.md).
+
+
+
+The Git local-exclusion control found a semantic identity mismatch at
+`028262e8c0`: the same invalid identity source returned exit one when visible
+and zero when added to Git `info/exclude`. Stable 2.10.12 in strict mode kept
+both identity and types input maps and task hashes unchanged. Independent
+review verified identical source bytes, two native summaries, four stream
+hashes and the exclusion overlay. The admitted wrapper passed before/after
+dependency/toolchain verification. This is a direct-execution counterexample,
+not a replay claim. Pilot reuse remains disabled and the tuple excluded.
+Next repair the runtime identity or enforce the supported Git exclusion
+boundary before qualification; affected matrices will need revalidation.
+See `postMainGitExcludeCounterexample` in the runtime boundary record.
+
+The Git-exclusion repair is committed as `0dca998780`. It resolves the common
+Git directory, reads `info/exclude` through the bounded no-follow guard, and
+includes its content hash under a portable logical label. Ten focused runtime
+tests pass, including real clone/worktree behavior and unsafe-file rejection.
+Full CLI package verification passed audit (872.3 seconds) and docgen (27.0
+seconds); the main checkout version check passed. The successor source
+attachment has 339 matching references with unchanged population and seven
+open obligations.
+
+Both clean pilot worktrees fast-forwarded to that commit. Fresh activation
+confirms unchanged computation configuration and retained dependency bytes,
+with `.git/info/exclude` added to the runtime sources. Stable 2.10.12 and canary
+2.10.13-canary.1 each completed their separate v11 namespace matrix with 67
+observations, 40 passing checks and ten shadow comparisons. Independent receipt
+relationship reconstruction passed for both, including altered loader and
+Git-exclusion identity rejection. Stable's runtime key is
+`277db60da42006a2a075bb443f2e757c778704d51f4e4e526d6086ba50de725f`;
+canary's is `c73d3e7e519774d600665df473ae8a06092118b5a6c206418607039b971cb124`.
+The targeted stable and canary follow-ups each passed: identical invalid source fails when
+visible and passes when excluded; the repaired runtime key changes identity's native task hash while its own input map and the types selection stay
+unchanged. Independent review checked two native summaries and four captured streams
+per client. The admitted wrapper verified dependency and toolchain parity before
+and after execution. Both admitted wrappers completed with exit zero. These are local evidence only: the deleted pilot raw archives
+were not independently reviewed, signed replay remains pending, and the tuple
+remains excluded with cache disabled.
+
+The post-main command boundary inventory now routes every executable root
+through the complete retained local-alias graph. It covers 1,973 step sites in
+16 review categories, with command text, defining script/step and inherited
+per-root categories. Byte-for-byte reproduction passed. The report is static
+review routing; runtime closure and the seven census obligations remain open.
+See `research/command-boundary-review.md` and `postMainCommandBoundaryInventory`.
+
+Source review now traces the 140 package test typecheck dispatch sites. The
+worker writes compiler status/output to a package result artifact; the root
+Quality runner owns failure interpretation. The review records discovery,
+config presence, forwarding, temporary/result writes and remaining runtime
+obligations. No compiler execution or new qualification is claimed.
+
+The package lint source review traces another 415 dispatch sites: deprecated
+APIs (140), laws (140), and JSDoc (135). It distinguishes inherited ESLint
+process environment/capture, typed project-service inputs, warning-failure
+rules, package law discovery, advisory findings and allowlist dependence.
+This is source interpretation; runtime input/write/capture closure is pending.
+
+A fresh census at `0dca998780` accepts the expanded command-boundary review:
+336 sources, six planner snapshots and ten reviews (352 references total).
+Regenerating the nested graph from that census exactly matches retained roots,
+definitions, counts and cycle results. Population remains 143 workspaces,
+1,957 executable computations and 1,492 graph-only nodes. The seven semantic
+and runtime obligations remain open; source attachment is not qualification.
+
+The file-entrypoint supplement resolves the twelve sites to their actual
+workspace scripts. It adds migration drift/bundle, Storybook browser-install
+and allowlist snapshot verdict boundaries to the six existing generator
+reviews. Docgen's downstream interpretation remains explicit. No script was
+executed or lifecycle state changed for this source review.
+
+Docgen source review now distinguishes rendering, example compilation and
+full-run proof writing. It records clock-dependent proof bytes, focused-run
+proof omission, stateful output preservation/deletion, concurrent writes during
+validation, and cleanup/capture limits. The 133 inherited cached docgen nodes
+remain unqualified; no settings changed and no stale replay is claimed.
+
+The compiler inventory resolves 420 sites to 418 configuration files and binds
+every declaration's original bytes. All leaf configs extend another config;
+268 carry project references. Literal no-emit/build-mode argv is retained.
+Byte-for-byte reproduction passed; compiler-specific inheritance, resolution
+and runtime effects remain separate proof obligations.
+
+The current operational `bun run beep quality cache-policy` audit passed at
+`0dca998780`: zero blocking findings, 1,386 unassessed cached computations.
+This verifies the reviewed posture gate without promoting legacy reuse or
+changing the excluded pilot. Receipt: `currentCachePolicyAudit`.
+
+The tool-boundary census attachment now incorporates the file-entrypoint,
+docgen and compiler reviews, including all 418 declared compiler config files.
+The census accepted 765 source references, six snapshots and 13 reviews
+(784 matching references) at `0dca998780`. Population and all seven unresolved
+obligations are unchanged. Receipt: `toolBoundaryCensusAttachment`.
+
 ## First action
 
 Refresh the executable census and define the qualification policy shared by the pilot, conformance runner and adoption audit.
@@ -684,3 +908,613 @@ source/evidence boundary and resume order, and
 [checkpoint validation](./research/paused-pr-verification.json) for checks.
 The v5 native matrices predate startup-library fingerprinting and remain
 historical. Final Yeet and hosted acceptance are deferred until resumption.
+
+## Operator resumption: 2026-09-11
+
+The operator explicitly resumed qualification after the PRs merged. PR #1068
+is merged, and the continuation branch starts at main `662823dd96`. The
+September 9 pause is superseded. The packet is active; all incomplete phase
+and evidence gates remain binding.
+
+The fresh executable census reports 143 workspaces, 3,269 graph nodes and
+1,892 executable computations. Nested command semantics and dynamic
+CI/Quality/Yeet branch review remain unresolved. Refresh the activation and
+runtime evidence before reusing historical pilot requests. Signed conformance
+and trust packets still register only their initial sources and opportunities;
+merged implementation alone does not satisfy their runtime-evidence gate.
+
+The resumed source audit finds `BEEP_CACHE_TOOLCHAIN_DIGEST` assignment only
+in the pilot. `Quality/Tasks.ts` already centralizes Turbo argument and
+environment construction in `turboRunArgs`, `withTurboSecretSession` and
+`runStep`. Review their consumers before adding runtime-key enforcement;
+preserve the existing secret posture and fresh hosted execution contract.
+
+Both refreshed native matrices passed on `662823dd96`: stable 2.10.12 and
+canary 2.10.13-canary.1 each produced 67 observations, 40 passing checks and
+ten shadow decisions. The runs exercised startup-library identity checks in
+separate namespaces. See [resumption preflight](./research/resumption-preflight.json)
+for bounded results and private receipt hashes. These are local observations;
+signed replay and real-computation qualification remain incomplete. Retaining
+the complete requested-client linkage snapshot is still required for independent
+reconstruction of the runtime digest.
+
+## Pilot receipt linkage retention: 2026-09-11
+
+`CachePilotReceipt.runtimeLinker` now preserves the complete snapshot collected
+for the requested client. It reuses `CacheRuntimeLinkerSnapshot`; historical
+v5 receipts decode to explicit absence. The producer always supplies the
+observation. Process-boundary tests cover a requested dynamic client against
+a reviewed static client, JSON round trips, and historical receipt decoding.
+All 14 focused tests pass, and `quality test-tsgo` passes for 220 test files.
+Full package verification passed: audit 543.8 seconds and docgen 24.3 seconds. The previously recorded native matrices
+predate this additive receipt field and are retained unchanged; do not claim
+those receipts contain the new observation.
+
+The next runtime-key integration must cover both `Quality/Tasks.ts` spawn
+paths (`runStep` and `runStepCapturedForQuarantine`) and the direct CI step
+runner. Each currently merges step-specific env after `turboEnvOverrides`,
+so verified digest enforcement must account for that override order. Keep
+collection in Cache ownership rather than adding filesystem inspection to
+the shared environment-configuration helper.
+
+## Native linkage reconstruction: 2026-09-11
+
+Fresh stable and canary full matrices each passed 67 observations, 40 checks
+and ten shadows with the retained linkage field. An independent Python check
+verified each activation reference, reconstructed the reviewed toolchain hash,
+substituted the receipt client pin and linkage snapshot, and reproduced each
+`runtimeKeyDigest`. Changing the retained loader hash changed the digest.
+The producer/fingerprint/linker source hashes stayed unchanged during both
+runs. Evidence is registered in [resumption preflight](./research/resumption-preflight.json).
+
+The initial runs rejected stale previews after Vitest updated its generated
+results cache in node_modules. Fresh activation and dependency materialization
+resolved this attributed invalidation. A search of 124 local clone/worktree
+roots found 78 sibling packet copies, all paused with only initial registered
+reports. Signed runtime evidence remains unavailable in that inspected scope.
+Ordinary runtime-key enforcement, semantic/capture coverage, signed replay,
+real-computation qualification and final handoff/verification remain open.
+
+## Runtime enforcement boundary proof: 2026-09-11
+
+The native dry-plan regression case in
+[runtime-enforcement-boundary.json](./research/runtime-enforcement-boundary.json)
+shows that arbitrary and SHA-256-shaped unverified values both alter the
+identity task hash. The types dependency is unaffected; a types-only native
+selection excludes identity. Both tasks remain cache-disabled. This proves
+that declaration and shape checks do not establish runtime provenance.
+
+Implementation must consume native task selection, calculate the key from the
+actual child runtime in Cache ownership, and apply it after per-step env
+merging. Do not make unrelated tasks require the pilot Linux profile. Cover
+normal and captured Quality execution and direct CI execution, preserving
+wrapped secret handling and fresh required hosted proof. The execution wiring
+is not yet implemented; this receipt is a regression case and boundary design,
+not an enforcement claim.
+
+#### Ordinary runtime input guard (2026-09-11)
+
+Cache now owns a typed rejection of caller-provided `BEEP_CACHE_TOOLCHAIN_DIGEST`
+values in ambient and step environments. Quality checks before secret-session
+probing and checks its resolved output-capture path; direct CI lane execution
+checks before spawn. Both generated `bunx turbo` commands and their `op run --`
+wrappers use the existing shared classifier. Empty and SHA-shaped values are
+rejected just like arbitrary values; step overrides cannot hide ambient input.
+
+This is an input guard, not completed runtime enforcement. It does not calculate
+or inject a digest, parse arbitrary shell commands, or inspect values introduced
+later by `op run`. Native task selection, identity calculation against the actual
+child environment/client, and post-merge injection remain required before
+activation. Cache remains disabled for the pilot computations.
+
+Next execution seam: reuse `resolveCacheTurboBinary` and `collectCacheToolchain`
+inside the final resolved child environment. An outer fingerprint before
+`op run` cannot establish the inner runtime identity. Native selection must
+precede the Linux-only toolchain collector so unrelated task selections remain
+portable. The existing collector also inventories installed dependencies via
+census; preserve that completeness when designing the bounded execution path.
+This seam is planned, not implemented by the input guard.
+
+Guard validation passed: two focused tests, test typechecking for 221 files,
+full `@beep/repo-cli` package verification (audit 689.9s; docgen 19.4s), and goal
+validation with no new blocking findings. The runtime boundary receipt retains
+private log paths and hashes. These checks do not promote any cache tuple.
+
+#### Native argument-selection probe (2026-09-11)
+
+The isolated native-client fixture verified dependency closure and preservation
+of arguments after `--`, with no task-execution markers. A selected workspace
+without the governed environment key can depend on one that declares it.
+Duplicate `--dry-run` and `--cache` options fail; `--graph` overrides JSON dry
+output while returning zero. Therefore the runtime selector must normalize or
+reject conflicting execution/output options and decode the actual plan before
+concluding no key is required. Exit zero or the entry workspace alone is not
+sufficient. The runtime boundary receipt retains the six cases and probe hashes.
+
+#### Native selector implementation (2026-09-11)
+
+`cacheTaskSelectionArgs` now prepares execution arguments for bounded native
+selection, preserving the task separator and replacing cache controls. Explicit
+non-execution modes and directory overrides are rejected. `collectCacheTaskSelection`
+uses the installed native client, decodes the plan, and joins its commands to
+workspace manifests through the existing census join. It does not require the
+Linux-only toolchain collector. The actual collector confirmed identity plus its
+types dependency, and a types-only selection with no governed-key computation.
+
+Eighteen focused tests and test typechecking pass. Full package verification is
+running. This collector is not yet wired into the final child environment; digest
+calculation, injection, and wrapped execution remain incomplete.
+
+#### Final child wrapper environment constraint (2026-09-11)
+
+The existing environment helpers recognize `op run -- bunx turbo`, but not a
+rewritten `op run -- bun ... cache execute` command. A synthetic-input probe
+confirmed that computing hygiene after rewriting would restore ambient extension
+and retain an unrelated secret reference. Compute `turboEnvOverrides` and
+`turboEnvExtendsAmbient` from the original resolved Turbo step, merge its step
+environment, then replace only the executable/arguments for the Cache-owned child.
+Calculate the runtime identity inside that child after `op run` resolution.
+This constraint applies to inherited and captured Quality execution and direct CI.
+No wrapper is implemented yet; the receipt retains the exact helper observations.
+
+#### Normal execution fingerprint scope (2026-09-11)
+
+The SPEC objective governs reuse, while initial enforcement preserves ordinary
+execution and does not disable legacy settings across the repo. For the pending
+normal execution wrapper, a selected executable computation needs a calculated
+runtime key when its effective result caching is enabled and its governed key is
+declared. Disabled-cache tasks cannot reuse their own result, so they do not by
+that fact require the supported Linux fingerprint profile. A cache-enabled task
+in the native dependency closure still requires enforcement even if the entry
+workspace has caching disabled. This is the implementation interpretation of
+SPEC's reuse boundary; the explicit pilot fresh/shadow experiments continue to
+collect their evidence independently. The caller-input guard remains in force.
+
+#### Cache-owned native execution (2026-09-11)
+
+The selector's full package verification passed (audit 491.6s; docgen 17.0s).
+`cache execute -- run ...` now owns native execution inside a resolved child
+environment. It selects tasks, observes and hashes the toolchain for enabled
+caching that declares the governed key, rechecks native client bytes, and injects
+the calculated key at spawn. The canonical hash helper is shared with computation
+fingerprinting. Caller keys/client overrides are rejected; native exit codes are
+preserved. Types lint ran successfully through the real command with caching
+disabled. The real command rejected both negative inputs before task execution.
+
+Thirty-two focused tests passed, including controlled-observation key injection
+and client drift rejection. Final test typechecking and full package verification
+are running. Ordinary Quality/captured/CI steps are not yet rewritten through
+this command. Real enabled-cache qualification and signed evidence remain pending.
+
+#### Native execution argument and failure checks (2026-09-11)
+
+Final test typechecking passed for 221 files. The actual Cache command ran an
+isolated disabled-cache fixture and preserved the second argument separator:
+`--filter=@qualification/a`, `--dry=false`, and an argument containing spaces
+reached the intended task unchanged. Only workspace c executed. A deliberately
+failing task returned exit 7 through both direct native Turbo and the Cache
+command. The probe and observations are hashed in the runtime boundary receipt.
+Full package verification remains running; enabled-cache qualification and
+ordinary runner wiring are not established by these fixture checks.
+
+#### Ordinary runner integration (2026-09-11)
+
+The Cache execution command passed full package verification (audit 466.6s;
+docgen 19.4s). Normal, captured, and resolved-output Quality execution plus direct
+CI lane execution now rewrite planned Turbo task executions through that command.
+They compute environment hygiene and ambient-extension behavior from the original
+step, preserving secret-session isolation. Explicit inspection modes and other
+commands remain unchanged. The Cache child invokes the checkout CLI directly
+with `bun --no-env-file`, avoiding a second script process that could reload env
+files after sanitization.
+
+The actual Quality runner completed types lint. An isolated fixture with a local
+`.env` runtime-key value ran through the no-env-file child; the control that
+reloaded env files failed before the task. The corrected focused suite passed
+317 tests. Final typechecking and full package verification are running. This
+wiring does not promote a tuple, prove remote signature behavior, or activate the
+pilot. The earlier command-only status is superseded by this integration step.
+
+#### Post-routing discovery gap (2026-09-11)
+
+Final runner test typechecking passed for 221 files. A fresh census still reports
+143 workspaces and 3,269 graph nodes, with the same unresolved semantic review
+items. Its 107 entrypoint sources omit the now-executed Cache runtime, command,
+selection and fingerprint modules. These are four confirmed omissions, not an
+exhaustive transitive closure. Extend the execution-source inventory and refresh
+its review evidence before P0/P1 closure; the runner integration cannot count as
+fully inventoried while its new authority sits outside the source inventory.
+The runtime boundary receipt records the current census hash and concrete gaps.
+
+#### Integration repair commit and inventory expansion (2026-09-11)
+
+Commit `2b9cbdd586` retains the runtime enforcement increment and repairs both P0
+findings from the full audit. The targeted lint-worker file passes all 19 tests
+from the package working directory, and docgen passes all 1,666 examples. Both
+P0 inbox rows are acknowledged against that commit. Full package verification is
+rerunning rather than being inferred from the targeted results.
+
+Entry-source discovery now includes the Cache command directory. A fresh native
+census reports 125 sources instead of 107: 18 Cache files were added, all old
+sources were retained, and the four confirmed missing execution sources are now
+present. Workspace and graph populations remain 143 and 3,269. This repairs the
+identified source-glob omission; it does not establish completed semantic review
+or a complete transitive dependency review. The runtime boundary receipt records
+the comparison and new census hash.
+
+#### Current command review inventory (2026-09-11)
+
+The existing command-group recipe was rerun against the 125-source census.
+Every one of the 1,892 executable computations occurs exactly once in its groups;
+1,377 graph-only nodes are excluded. There are 38 top-level command strings,
+70 distinct wrapper-definition strings across 1,240 wrapper definitions, and
+73 root scripts. A bounded, exact `bun run beep:*` alias expansion resolved
+1,038 computations without missing or cyclic local aliases. The remaining
+854 top-level commands were not expanded by that deliberately narrow syntax
+rule. Across the result there are 76 distinct terminal command strings.
+These are manifest facts, not semantic purity findings. Compound shell commands,
+external program behavior and dynamic dispatch still require review. Private full
+artifacts and their hashes are retained in the runtime boundary receipt.
+
+#### Runner verification and nested manifest boundaries (2026-09-11)
+
+The complete CLI package verification rerun passed: audit 437.3s and docgen
+17.0s under Node 22.22.3. This verifies the runner integration and source-inventory
+repairs together. The runtime boundary receipt retains the terminal log hash.
+
+The command decomposition review now records the current nested audit,
+generation, compiler, Lambda installation, cross-workspace glob, mutation and
+persistent-service boundaries. Selected nested manifest definitions are retained
+with a hash. This advances source review without treating command grouping as
+semantic qualification. Current runtime matrices, signed remote comparisons and
+complete operational source-review integration remain outstanding.
+
+#### Operational source-review refresh (2026-09-11)
+
+Fresh local and hosted planner recipes captured 72 CI plans, nine Quality modes,
+15 partition plans and four local dispatch shapes per context, plus 30 Yeet
+branch/mode plans and three hardware profiles per context. Ten local workflow
+and action documents were captured without executing their contents. The review
+recipe now also binds the runtime environment-policy helper, process runner and
+runtime tests.
+
+The native census accepted `entrypoint-review-runtime-routing.json`, binding
+299 current source files, six complete snapshots and the current command review.
+The manifest registers those artifacts and the runtime boundary receipt retains
+the accepted census hash. Six unresolved obligations remain in the operational
+census. This completes the current attachment refresh, while dynamic interpreter
+coverage, per-computation semantic evidence and signed/shadow runtime proof remain
+open. No source snapshot or planner scenario counts as an observed task execution.
+
+#### Native capture adversaries (2026-09-12)
+
+An isolated, network-unshared fixture exercised stable Turbo 2.10.12 through
+actual grouped output and the existing pilot parser. Five executions completed:
+normal fresh output, a verified local hit, carriage-return output, malformed
+UTF-8 and a task log exceeding 64 KiB. Fresh and replay text matched exactly,
+including task stderr, progress-looking text and a dependency-looking prefix.
+The three adversaries failed parser acceptance for their intended reasons.
+The runtime boundary receipt binds the raw observations, parser outcomes and
+recipes. This supplies stable native capture evidence; real lint read/write
+observation, canary capture and signed remote proof remain outstanding.
+
+The first full stable matrix attempt ended with exit 130 and no receipt. Its
+cause remains unestablished. A separately named retry is running against the
+same committed code; no completed matrix result is claimed for either attempt.
+
+#### Canary capture and mixed-stream counterexample (2026-09-12)
+
+Pinned canary 2.10.13-canary.1 passed the same five native capture cases in its
+own fixture/cache directory. Fresh output matched its verified local replay,
+and all three adversaries were rejected. Evidence remains separate from stable.
+
+Repeated fresh execution then exposed a limitation: ten identical mixed-stream
+executions on each pinned client produced three merged task-log orders per
+client. The producer writes sequentially, but native stdout/stderr aggregation
+does not preserve a deterministic combined order. Therefore replay equality
+alone cannot establish fresh/fresh log equivalence for this class of task.
+The synthetic fixture is ineligible for promotion under exact merged-log
+comparison. No live tuple was enabled. This counterexample does not prove
+divergence for the real lint task; its output behavior still needs direct proof.
+The runtime boundary receipt binds the separate canary observations and the
+twenty fresh executions. Real lint read/write coverage and signed remote proof
+remain outstanding.
+
+#### Committed-code stable matrix and I/O follow-up (2026-09-12)
+
+The stable retry at `d1d1d32378` completed with exit zero, 67 observations,
+40 passing checks and ten shadow decisions. Independent reconstruction matches
+the receipt's runtime toolchain digest; changing the loader digest breaks the
+match. The runtime boundary receipt binds this result. The separate canary full
+matrix remains running.
+
+The installed-lint observer is being refreshed against the same activation,
+dependency snapshot and clean source revision. It retains the installed Node
+launcher chain and read-only source/dependency mounts, with an expanded syscall
+trace covering file, network, process, descriptor and memory operations. Raw
+read/write formatting avoids recording buffer contents. This run is admitted
+through the existing quality scheduler. No complete I/O verdict is established
+until the bounded trace is collected and reviewed, including io_uring limits.
+
+The separate full canary matrix subsequently completed with exit zero, 67
+observations, 40 passing checks and ten shadow decisions. Both channel receipts
+at `d1d1d32378` pass independent runtime digest reconstruction and altered-loader
+controls. These committed-code local results supersede the earlier matrices for
+this implementation; signed remote qualification remains separate. A refresh of
+the recent Codex task list found no accepted signed sibling receipts.
+
+The first expanded I/O observation was rejected at its 8 MiB trace limit.
+The partial record is retained without completeness credit. A second admitted
+attempt uses compact directory-entry formatting and a 32 MiB bound; its result
+and detailed I/O review remain pending.
+
+The second attempt also reached its 32 MiB limit. Partial traces show broad
+directory and metadata access, including installed dependencies outside the
+identity package; this is not yet a semantic-input conclusion. The next attempt
+retains the full syscall selection with streaming gzip compression, a 32 MiB
+compressed bound and a 256 MiB expanded-read bound. It remains queued in the
+quality scheduler. Neither incomplete trace counts as a successful I/O audit.
+
+The separately registered `research/root-command-boundaries.md` now maps all
+73 root scripts exactly once to their manifest-level interpretation boundaries.
+It identifies preflight/install mutations, service lifecycle operations,
+environment wrappers, mutable Git selection and generated report/baseline
+writes. Dynamic CLI aliases and nested runtime behavior remain unresolved; this
+source-only mapping executes no root command and qualifies no computation.
+
+The operational census subsequently accepted `entrypoint-review-root-routing.json`
+with 303 source references, six snapshots and two authored reviews. The tracked
+`refresh-root-quality-dispatch.ts` recipe reproduces the thirteen pure parser
+observations. Seven unresolved obligations remain, including downstream root
+argument interpretation; this attachment supplies source integrity only.
+
+
+The compressed I/O attempt reached process exit but failed its 256 MiB expanded
+bound (275,653,259 bytes). Its rejected trace was reviewed with bounded streaming:
+the installed launcher invokes Node and `ldd --version`, then the installed Biome
+binary. Node submits io_uring operations that this trace does not decode. Biome
+creates a `biome` directory in the experiment's temporary root; repeated creation
+attempts return EEXIST. These are diagnostic
+observations, not complete input or side-effect evidence. The runtime boundary
+receipt binds the private diagnostics. A replacement admitted run uses a measured
+384 MiB expanded bound, preserving the 32 MiB compressed and 90-second limits.
+
+
+The replacement I/O observer completed with exit zero. The wrapper verified the
+retained dependency tree and full observed toolchain before and after execution.
+The 284,951,646-byte expanded trace passed its bounds and digest checks. Streaming
+review joined all unfinished calls and inventoried 1,180,896 syscall events,
+including ten io_uring operations, sixteen socket-related operations, five
+write-intent opens and ten filesystem mutations. These counts establish trace
+inventory only; indirect I/O and temporary-state semantics still require review.
+The runtime boundary receipt binds the completed observation and wrapper log.
+
+
+Eight synthetic native environment controls completed across stable and canary.
+Within loose mode, changed `BIOME_BINARY` and `npm_config_user_agent` values
+reached the task while its hash stayed unchanged. Strict mode removed the binary
+override and produced identical observed values across the two marker inputs.
+The runtime boundary receipt binds the experiment. Environment-mode enforcement
+must be checked before promotion; a toolchain digest alone cannot cover arbitrary
+loose-mode inputs. This control does not qualify the real lint computation.
+
+
+The runtime selection boundary now decodes native `envMode` and rejects a loose
+plan when it contains an executable, cache-enabled task declaring the governed
+runtime key. This uses the resolved native mode rather than parsing selected CLI
+spellings; selections without governed executable caching retain their behavior.
+Package verification and direct selection controls are pending. Prior committed
+matrix receipts remain historical evidence for their recorded source revision.
+
+
+Twelve direct native selection controls passed against the dirty guard source:
+six each on stable 2.10.12 and canary 2.10.13-canary.1. Governed enabled caching
+rejects loose mode and accepts strict mode; disabled and unkeyed task selections
+remain accepted in both modes. The fixture task deliberately fails if executed,
+while all controls use dry selection. Evidence hashes are in the runtime boundary
+receipt. Full package verification is still running; no final-source proof is
+claimed from these selection controls.
+
+
+Full CLI package verification passed for the environment-mode guard: audit
+502.4 seconds and docgen 22.8 seconds. The source change is committed as
+`9480eaf486`; pre-commit and commit-message checks passed. The runtime boundary
+receipt binds the verification log. A new clean source root and refreshed
+experiment prerequisites are required before continuing current-code pilots.
+
+
+At `9480eaf486`, the refreshed dependency copy and activation preview completed.
+Three installed-lint temporary-state controls then exited zero with identical
+stdout/stderr bytes: the temporary-root `biome` directory absent, an existing
+empty directory, and an existing sentinel file. Independent review verified stream hashes and retained
+state. The absent case creates an empty directory; the sentinel remains intact.
+The wrapper verified dependencies and toolchain before and after execution.
+This bounds three inputs only; shared-state concurrency and the relevance of the
+unreplayed directory-creation effect remain unresolved. The runtime boundary
+receipt binds the observation, review and wrapper log. No tuple is promoted.
+
+
+Six additional fresh runs scheduled in pairs against shared temporary directories
+completed with equal captured streams and zero exit codes. Final temporary state
+matches the sequential controls; dependency and toolchain postchecks passed.
+The recipe uses a two-worker executor but retains no child-lifetime intervals,
+so this is concurrent-scheduling evidence, not independently verified overlap or
+exhaustive race coverage. The runtime boundary receipt records this limitation.
+
+
+The overlap-instrumented repeat observed native Biome descendants for both
+executions in sixteen samples per state. Wrapper lifetime intersections were
+3.19, 3.24 and 3.49 seconds for absent, directory and file states. All six runs
+exited zero with identical captured streams; retained state matched the sequential
+controls and dependency/toolchain postchecks passed. Procfs samples are sequential,
+not an atomic kernel trace; one pair per state is bounded race evidence only.
+The runtime boundary receipt retains this repeat separately from scheduling-only
+results. Indirect I/O and the replay side-effect contract remain open.
+
+
+Temporary-state contract review records creation of the temporary-root `biome`
+directory as an observed write. Within the experiment boundary, the temporary
+tree is private, disposable and discarded; the empty directory is not a retained consumer result or declared
+task output. Its omission on a hypothetical hit is therefore non-semantic for
+that boundary. The three-state and overlapping-pair observations support this
+narrow disposition. They do not qualify persistent shared host temporary storage
+or settle indirect I/O. The runtime boundary records the scope and limitations.
+Current-head stable pilot refresh is running against clean `h1`/`h2` roots.
+
+
+The current-head census accepted the refreshed 303-source attachment: 143
+workspaces, 3,269 graph nodes, 1,892 executable nodes and seven unresolved review
+obligations. Only `Cache.census.ts` changed in the referenced source set, for the
+committed strict-mode guard. The runtime boundary binds the refreshed request
+and private census receipt. Source attachment integrity is current; dynamic
+runtime and signed evidence obligations remain open.
+
+
+Pinned Node v24.20.0 libuv source explains the retained io_uring trace shape:
+all five rings have 256 entries without SQPOLL, matching epoll-control batching;
+the filesystem path creates a 64-entry SQPOLL ring instead. None occurs in the
+trace. This is source-correlated inference about watcher administration, not
+direct SQE decoding or complete input closure. The runtime boundary records the
+upstream source, trace reference and earlier source revision.
+
+
+The identity worksheet now has a current `9480eaf486` checkpoint: the real quiet
+wrapper chain, 46 identity inputs, 28 predecessor inputs, governed environment
+key, disabled live reuse and explicit disposable-sandbox scope. Historical
+worksheet values are retained below that checkpoint. Stable and canary refreshes
+are submitted through admission with separate namespaces and experiment roots;
+final receipts remain pending. The sibling-launch question remains pending.
+
+
+The current-head stable matrix completed: 67 observations, 40 passing checks
+and ten shadows. Independent receipt review reconstructed runtime identity and
+checked comparison/negative relationships. The absent-script graph exits zero
+without executing the selected task; removing the child config removes its
+runtime-key declaration in that negative control. Canary was killed with
+SIGKILL during admission wait (exit 137), before a receipt was produced. The
+bounded journal query supplied no cause; this remains an unattributed process
+interruption, not a computation failure. Original evidence is retained.
+
+
+Resumed after the host filesystem stall: reads succeed, prior tool handles and
+canary process are absent, and attempt two has no receipt. Attempt three uses
+a distinct request, namespace and output path. Current-head stable evidence
+remains intact. Source review confirms local fixtures are scoped and removed;
+receipt relationship checks do not independently validate deleted raw archives.
+The runtime boundary records this retention limit for signed integration.
+
+
+Resume preflight also identified a kernel change from 7.2.0-1-cachyos to
+7.2.2-1-cachyos. A second refreshed activation matches the original dependency
+tree but has a new toolchain digest. Canary is submitted against that preview;
+a matching stable request is prepared. Prior stable evidence remains valid
+only for its recorded environment. No qualification or profile borrowing is
+claimed from version proximity.
+
+
+Canary 2.10.13-canary.1 completed on kernel 7.2.2 at source `9480eaf486`: 67
+observations, 40 passing checks and ten shadows. Independent receipt review
+reconstructed the runtime identity and checked fresh/replay and negative-case
+relationships. This is local evidence only. Matching stable evidence is pending;
+signed remote integration and final qualification remain open.
+
+
+Both kernel-7.2.2 matrices now completed at `9480eaf486`: stable 2.10.12 and
+canary 2.10.13-canary.1 each passed 67 observations, 40 checks and ten shadows.
+The combined independent review verifies original activation references, source
+revision, runtime identity and fresh/replay/negative relationships. A stale
+older stable receipt was rejected and preserved before the live result arrived.
+Signed remote evidence, promotion integration and final acceptance remain open.
+
+
+The operational census accepted the downstream Quality review: 304 source
+references, six snapshots and three reviews. Five pure test-lane selections
+complement eleven static root plans. Runtime source classification now records
+SQL resource acquisition, aggregated test verdicts, Git-selected coverage scope,
+output cleanup and baseline writes/comparison. Seven unresolved runtime
+obligations remain; these source observations do not count as executed branches.
+
+
+Six coverage argument-rejection controls passed at `9480eaf486`: replacement
+without write mode, replacement under each of three scopes, and affected scope
+combined with filter/since. These executed early failures without platform
+services; they do not prove coverage execution or output effects. All 115
+file/digest references in the runtime boundary receipt matched retained bytes.
+Signed sibling handoff and the remaining runtime obligations are still open.
+
+
+The generator review is now accepted by the operational census: 315 sources,
+six snapshots and four reviews, with unchanged executable population and seven
+unresolved obligations. It classifies all six matching generator entrypoints,
+shared write/check/refresh effects, Runpod original/patched document use and
+the government MCP literal collision registry. No generator was executed or
+qualified by this source review.
+
+
+Hosted source projection verifies all ten retained workflow/action files and
+records 27 job declarations, five matrix jobs and 77 uses occurrences. The
+mutable heavy-workflow reference requires run-resolved revision evidence;
+Lint/Test Unit aggregate verdicts depend on shard job state. The source review
+keeps hosted statuses and archive restoration separate from task qualification.
+No workflow, credentials or cache setting was changed.
+
+
+Checkpoint quality found three introduced complexity findings, now refactored
+with 23 focused tests passing and Fallow audit passing. Full CLI package
+verification is running; health and Effect Vitest ratchets are not yet clear.
+A fresh fetch found 46 base commits, including census capture and test-inventory
+changes. Complete the live package check, preserve the work, merge current main,
+then reattribute ratchets and refresh affected evidence before publication.
+Prior source-digest receipts describe their recorded revisions, not these new
+uncommitted refactors. The P0 inbox is acknowledged to this task for repair;
+it is not marked fixed.
+
+
+Main integration completed in `582502ed69` after pre-merge CLI package
+verification passed audit (488.1s) and docgen (24.1s). The single Quality test
+conflict preserves governed cache dispatch and main ordered-policy assertions.
+Pending edits and untracked packet files restored cleanly from the retained
+named stash; frozen-lockfile installation passed. Integrated cheap gates are
+running and currently report 21 Effect Vitest findings across five CLI test
+files, down from 110 before integration. This is not a completed proof.
+
+### Synthetic receipt recovery, 2026-09-21
+
+Both queued synthetic runs left complete receipts. Stable and canary each have
+60 runs, 30 passing checks, ten primary-runtime shadows and one absent-script
+observation. Independent retained-metadata review passed; the compact review
+and original receipts are registered in the manifest. Original process handles
+and exit statuses are unavailable. No raw archive or signed transport proof is
+claimed. Continue semantic closure and signed sibling integration.
+
+### Runtime refresh, 2026-09-21
+
+The kernel and runtime linker changed at the existing source revision. The
+installed dependency archive and activation configuration are unchanged.
+The fresh activation is bound by `research/toolchain-drift-2026-09-21.json`.
+The stable `core.excludesFile` comparison completed with identical lint exits
+and native task selections; `research/git-config-input-review.json` records its
+bounded meaning. Full stable and canary pilot refreshes used separate v12
+namespaces and the fresh activation. Both finished with exit zero, 67
+observations, 40 passing checks and ten shadows each. Independent retained
+metadata reconstruction passed for both; see `research/lts-pilot-review.json`.
+Signed remote pairs, complete semantic closure and final acceptance remain
+open.
+
+### Profile generation package gate — 2026-09-21
+
+The full `@beep/repo-cli` package verification rerun passed: audit 674.8s,
+docgen 25.3s, exit 0. All four implementation hashes matched after completion.
+The cheap-gate command normalization fix is therefore verified in the full
+package lane. Runtime/pilot profile integration and signed qualification remain
+open. Receipt: `research/profile-generation-implementation.json`.
+
+### Checkpoint PR and Effect RC sync — 2026-09-21
+
+At the operator request, pause qualification experiments and save the current
+implementation/evidence through a merge-ready PR before continuing the goal.
+Merged `origin/main` again in `e7f185e233` through `593a000a41`; the frozen dependency install now uses
+Effect and `@effect/vitest` rc.117. Resolve post-merge quality findings through
+Yeet repair, full verify, publish and hosted review/check closeout. This is an
+intermediate checkpoint: keep the goal active and retain the incomplete
+qualification and signed-evidence gates. Do not mark the packet completed.

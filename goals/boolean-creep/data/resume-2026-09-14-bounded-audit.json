@@ -134,73 +134,20 @@
     }
   ],
   "coverageStateCalculation": {
-    "order": [
-      "replaceAll",
-      "scoped",
-      "skip",
-      "writeBaseline"
-    ],
-    "constraints": [
-      "replaceAll implies writeBaseline",
-      "skip implies scoped"
-    ],
+    "order": ["replaceAll", "scoped", "skip", "writeBaseline"],
+    "constraints": ["replaceAll implies writeBaseline", "skip implies scoped"],
     "representable": 16,
     "legal": 9,
     "tuples": [
-      [
-        false,
-        false,
-        false,
-        false
-      ],
-      [
-        false,
-        false,
-        false,
-        true
-      ],
-      [
-        false,
-        true,
-        false,
-        false
-      ],
-      [
-        false,
-        true,
-        false,
-        true
-      ],
-      [
-        false,
-        true,
-        true,
-        false
-      ],
-      [
-        false,
-        true,
-        true,
-        true
-      ],
-      [
-        true,
-        false,
-        false,
-        true
-      ],
-      [
-        true,
-        true,
-        false,
-        true
-      ],
-      [
-        true,
-        true,
-        true,
-        true
-      ]
+      [false, false, false, false],
+      [false, false, false, true],
+      [false, true, false, false],
+      [false, true, false, true],
+      [false, true, true, false],
+      [false, true, true, true],
+      [true, false, false, true],
+      [true, true, false, true],
+      [true, true, true, true]
     ],
     "method": "Python enumeration of the source-established constraints; not TypeScript test execution."
   },
