@@ -18,8 +18,8 @@ Compact `/goal` launcher; the packet files are the contract:
 
 Read those first, then `AGENTS.md`, `CLAUDE.md`,
 `explorations/effect-mcp-2026-07-28/{BRIEF,MAP,DECISIONS}.md`, and
-`goals/agent-execution-authority/SPEC.md` (decision 10). Repo standards outrank
-packet prose.
+`goals/agent-execution-authority/SPEC.md`. Repo standards outrank packet
+prose.
 
 Precondition: `goals/mcp-stateless-kit-and-drivers` PR 1 is merged; stop and
 report otherwise.
