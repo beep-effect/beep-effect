@@ -13,6 +13,14 @@ Status: `active`
 
 ## Notes
 
+- Population ratification (2026-09-22): ruleset `10240248` version `49479116`,
+  effective 2026-09-12T01:46:53.354Z, is ratified at exactly 17 required
+  contexts (`Heavy / Coverage Regression` removed). The census command now
+  carries a ratified population table keyed by history version (48600030 at
+  18, 49479116 at 17) and fails closed by name on any version the packet has
+  not ratified. The first complete half-open UTC week under the 17-context
+  population is `2026-09-13T00:00:00Z` → `2026-09-20T00:00:00Z`.
+
 - Admission verdict (2026-09-21): the 2026-09-04 → 2026-09-11 week is denied;
   see `research/admission-week-p95.md`. `Check` breaches by 19s, the removed
   `Coverage Regression` lane breaches at 30m58s inside its ratified window,
