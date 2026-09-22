@@ -30,3 +30,9 @@ Effect Array.some form.
 Final package lint (3.4 seconds) and check (6.3 seconds) passed. The focused
 suite covers the revised fixture lifecycle; full publication proof remains
 required before merge readiness.
+
+Hosted Fallow and the full local proof attributed a new complexity finding to
+the inline AST traversal. The traversal now uses Option pipelines and typed
+AST kind narrowing. All six regression tests, package lint/check, Fallow audit,
+and Fallow health pass; introduced complexity findings are zero. No baseline
+or threshold was changed.

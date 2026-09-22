@@ -1990,3 +1990,12 @@ The early PR publication command rejected `--detach` because this session has no
 active systemd user manager. No fallback job started. Publication continues with
 the same canonical command attached to the live session, with its handle and log
 saved for resume. A user-manager preflight would avoid the failed detached launch.
+
+## Scanner traversal complexity feedback
+
+The inline annotation correction passed package audit and docgen but the full
+proof and hosted Fallow gate reported introduced complexity. An Option-based
+AST traversal retained the four regression cases while removing the finding.
+Running the affected Fallow audit before publication would expose this earlier.
+The direct quality command needs an explicit base; the root wrapper expects
+BEEP_PROOF_BASE to be populated by the proof environment.

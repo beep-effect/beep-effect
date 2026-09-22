@@ -763,27 +763,40 @@ const schemaAnnotationGaps = (name: string, node: Node, sourceFile: SourceFile):
 
   const gaps: Array<DocumentationIssue> = [];
   const text = getDocNode(node).getText();
-  const heritage = Node.isClassDeclaration(node) ? node.getExtends()?.getExpression() : undefined;
-  const constructor = heritage !== undefined && Node.isCallExpression(heritage) ? heritage.getExpression() : undefined;
-  const factory =
-    constructor !== undefined && Node.isCallExpression(constructor) ? constructor.getExpression() : undefined;
-  const inlineAnnotations =
-    factory !== undefined && Node.isPropertyAccessExpression(factory) && factory.getExpression().getText() === "S"
-      ? heritage?.asKind(SyntaxKind.CallExpression)?.getArguments()[factory.getName() === "TaggedError" ? 2 : 1]
-      : undefined;
-  const hasInlineClassAnnotation =
-    factory !== undefined &&
-    Node.isPropertyAccessExpression(factory) &&
-    A.contains(["Class", "TaggedError"], factory.getName()) &&
-    inlineAnnotations !== undefined &&
-    Node.isObjectLiteralExpression(inlineAnnotations) &&
-    A.some(
-      inlineAnnotations.getProperties(),
-      (property) =>
-        Node.isPropertyAssignment(property) &&
-        A.contains(["identifier", "description", "title", "schemaId"], property.getName()) &&
-        property.getInitializer() !== undefined
-    );
+  const hasInlineClassAnnotation = pipe(
+    O.fromNullishOr(
+      node.asKind(SyntaxKind.ClassDeclaration)?.getExtends()?.getExpression().asKind(SyntaxKind.CallExpression)
+    ),
+    O.flatMap((call) =>
+      pipe(
+        O.fromNullishOr(
+          call
+            .getExpression()
+            .asKind(SyntaxKind.CallExpression)
+            ?.getExpression()
+            .asKind(SyntaxKind.PropertyAccessExpression)
+        ),
+        O.filter(
+          (factory) =>
+            factory.getExpression().getText() === "S" && A.contains(["Class", "TaggedError"], factory.getName())
+        ),
+        O.flatMap((factory) =>
+          O.fromNullishOr(
+            call.getArguments()[factory.getName() === "TaggedError" ? 2 : 1]?.asKind(SyntaxKind.ObjectLiteralExpression)
+          )
+        )
+      )
+    ),
+    O.exists((annotations) =>
+      A.some(
+        annotations.getProperties(),
+        (property) =>
+          Node.isPropertyAssignment(property) &&
+          A.contains(["identifier", "description", "title", "schemaId"], property.getName()) &&
+          property.getInitializer() !== undefined
+      )
+    )
+  );
   const hasAnnotation =
     /\$I\.annote(?:Schema|Class|Error)?\s*(?:<[\s\S]*?>)?\s*\(/.test(text) ||
     /\.annotate\s*\(/.test(text) ||
