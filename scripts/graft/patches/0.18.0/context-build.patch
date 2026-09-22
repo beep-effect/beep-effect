@@ -1,6 +1,52 @@
 --- a/context/build.js
 +++ b/context/build.js
-@@ -162,10 +162,20 @@
+@@ -153,6 +153,45 @@
+     const batches = batchBySize(summarized, BATCH_CHAR_BUDGET);
+     result.batches = batches.length;
+     const synthNodes = [];
++    // Local patch (2026-09-22): synthesis is one sequential ~150 s model call per batch
++    // and -j only reaches the summary pass. Wrap the synthesizer so a bounded window of
++    // later batches is already in flight while the loop below awaits the current one.
++    // The loop itself is untouched: cache writes and synthNodes pushes stay in batch
++    // order on this task, so summaries.json is never raced and the graph is unchanged.
++    const SYNTH_JOBS = Math.max(1, Number(process.env.GRAFT_SYNTH_JOBS ?? 1));
++    if (SYNTH_JOBS > 1) {
++        const inner = opts.synthesizer;
++        const inflight = new Map();
++        const isCached = (batch) => {
++            const hit = cache.synth[batchKey(batch, hashByPath)];
++            return Array.isArray(hit) && hit.length > 0;
++        };
++        const start = (batch) => inner.synthesize(batch).then((v) => ({ v }), (e) => ({ e }));
++        const fill = (from) => {
++            for (let i = from; i < batches.length && inflight.size < SYNTH_JOBS; i++) {
++                if (inflight.has(batches[i]) || isCached(batches[i]))
++                    continue;
++                inflight.set(batches[i], start(batches[i]));
++            }
++        };
++        opts = {
++            ...opts,
++            synthesizer: {
++                synthesize: async (batch) => {
++                    const i = batches.indexOf(batch);
++                    if (!inflight.has(batch))
++                        inflight.set(batch, start(batch));
++                    fill(i + 1);
++                    const settled = await inflight.get(batch);
++                    inflight.delete(batch);
++                    fill(i + 1);
++                    if (settled.e)
++                        throw settled.e;
++                    return settled.v;
++                },
++            },
++        };
++    }
+     for (let b = 0; b < batches.length; b++) {
+         opts.onProgress?.({ phase: "synthesize", index: b, total: batches.length, file: `batch ${b + 1}` });
+         const key = batchKey(batches[b], hashByPath);
+@@ -162,10 +201,20 @@
          const cached = Array.isArray(nodes) && nodes.length > 0;
          if (!cached) {
              nodes = await opts.synthesizer.synthesize(batches[b]);

@@ -1,0 +1,14 @@
+--- a/ai/synthesize.js
++++ b/ai/synthesize.js
+@@ -94,7 +94,10 @@
+             return [];
+         const res = await this.model.create({
+             temperature: 0,
+-            maxTokens: 8192,
++            // Local patch (2026-09-22): claude-opus-5 through the proxy needs more than
++            // 8192 output tokens for most concept batches; every truncated answer costs
++            // a full ~80 s call and an empty tool call. GRAFT_SYNTH_MAX_TOKENS overrides.
++            maxTokens: Number(process.env.GRAFT_SYNTH_MAX_TOKENS ?? 8192),
+             tools: [
+                 {
+                     name: RECORD_TOOL,

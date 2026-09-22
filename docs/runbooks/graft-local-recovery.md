@@ -234,7 +234,17 @@ than from nothing.
 The provider keys live in `$HOME/.config/beep-graft/env`, which systemd reads as
 the unit's `EnvironmentFile`. It holds the same keys as the deep-build
 environment files below (`GRAFT_PROVIDER`, `GRAFT_BASE_URL`, `GRAFT_API_KEY`,
-`GRAFT_MODEL`, `GRAFT_LLM_RETRIES`). The CLI only checks that the file exists;
+`GRAFT_MODEL`, `GRAFT_LLM_RETRIES`), plus three keys this workstation's
+nightly adds. `GRAFT_DUMP_DIR` names a directory the patched OpenAI transport
+appends raw responses to; it is the only way to tell a truncated answer from a
+model that ignored the tool call. `GRAFT_SYNTH_MAX_TOKENS=32768` raises the
+synthesizer's output budget, which the stock dist hard-codes at 8192:
+`claude-opus-5` needs more than that for most concept batches on this repo, and
+a truncated answer arrives as an empty tool call after a full call of about
+80 s, so the default budget reads as repeated tool_choice misses rather than as
+a visible error. `GRAFT_SYNTH_JOBS=4` keeps a bounded window of synthesis
+batches in flight; cache writes and node order stay in batch order, so
+`summaries.json` and the graph are unchanged. The CLI only checks that the file exists;
 systemd loads its values into the refresh process and its build children.
 The rendered unit references it without
 a leading `-`, so a missing file fails the unit loudly instead of starting a
@@ -291,6 +301,13 @@ refresh` rather than whatever the clone held the day the timer was installed.
 That is also why the first scheduled run after this lands needs no manual pull:
 the unit updates the clone itself. The CLI repeats both steps once it starts;
 on an already-current clone they are no-ops.
+
+Preflight then runs `scripts/graft/apply-dist-patches.sh --check` from that
+owner clone, which is pinned to `origin/main`, so the installed `dist/` has to
+match the patch kit main carries. A hotfix written inside a recorded hunk makes
+the check report `CONFLICT` and the run ends at preflight with `outcome:
+failed`. Write a mid-run dist change outside the recorded hunks, or record it
+in the kit and merge it, before expecting the unit to start again.
 
 `TimeoutStartSec=8h` bounds the run above the sum of its own phase timeouts
 (a five-hour build plus fetch, install, and per-clone rebuilds).
@@ -403,8 +420,11 @@ Rules learned from that run:
   `scripts/graft/patches/<graft version>/`: `ai-crux` keeps the segment before
   the separator (352 of 352 fixture ids match after it, 84 before) and retries
   a prose answer a bounded number of times; `context-build` retries an empty
-  synthesis batch and checkpoints the synthesis cache after every batch;
-  `ai-llm-openai` adds the `GRAFT_DUMP_DIR` response dump used below.
+  synthesis batch, checkpoints the synthesis cache after every batch, and wraps
+  the synthesizer in the `GRAFT_SYNTH_JOBS` window; `ai-synthesize` puts the
+  synthesis output budget behind `GRAFT_SYNTH_MAX_TOKENS` instead of the
+  hard-coded 8192; `ai-llm-openai` adds the `GRAFT_DUMP_DIR` response dump used
+  below.
   `scripts/graft/apply-dist-patches.sh` applies whatever is missing and is
   safe to rerun; astra honors the id contract without the crux patch.
 - Never restart the crux pass to tune it. A file is skipped on resume only
@@ -435,8 +455,9 @@ workstation:
 npm install -g --prefix "$HOME/.local" @nanonets/graft@0.16.0
 graft --version
 ```
-The deep build depends on three workstation-local patches to the installed
-`dist/` (`ai/crux.js`, `ai/llm/openai.js`, `context/build.js`), recorded as
+The deep build depends on four workstation-local patches to the installed
+`dist/` (`ai/crux.js`, `ai/llm/openai.js`, `ai/synthesize.js`,
+`context/build.js`), recorded as
 unified diffs under `scripts/graft/patches/<graft version>/`. A reinstall or
 upgrade removes them, and a new Graft version needs them ported into a new
 version directory first. After the install, apply and verify them, then run
