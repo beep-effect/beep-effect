@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-09-21",
+  "generatedOn": "2026-09-22",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -352,12 +352,48 @@
       "reason": "Mixed service contract: FileProcessingEngineDescriptor is already schema-backed, while the remaining members are Effectful driver operations."
     },
     {
+      "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+      "symbol": "translateApiKeyRequired",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 180,
+      "owner": "@beep/mcp-kit",
+      "reason": "Adapter at the kit protocol boundary taking the Toolkit HandlerResult pair (result, encodedResult) that upstream defines as a plain object; the result it returns is the McpSchema CallToolResult class."
+    },
+    {
       "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
       "symbol": "ToolCallRequest",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/mcp-kit",
       "reason": "Mixed dispatch request: tool is a live Effect AI Tool handle, while toolCallId is already modeled by TierGateAuditRecord."
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
+      "symbol": "McpClientConnection",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/mcp-kit",
+      "reason": "Connection handle whose `rpc` half is a live RpcClient (runtime-bound request functions), which cannot be schema data; the data half (McpDiscoverResult) is an annotated S.Class."
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
+      "symbol": "McpNdjsonTransport",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/mcp-kit",
+      "reason": "Transport port carrying an Effect writer and a Stream of lines (runtime-bound), not data; the identity half (McpClientOptions) is an annotated S.Class."
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
+      "symbol": "layerProtocolHttp",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 829,
+      "owner": "@beep/mcp-kit",
+      "reason": "Layer constructor option bag holding an HttpClient-bound header record and an already schema-modeled McpClientOptions; the layer output is an RpcClient.Protocol service, not data."
     },
     {
       "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",

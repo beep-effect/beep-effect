@@ -333,6 +333,149 @@ const readCaller = (
   return O.map(clientId, (id) => McpCallerIdentity.make({ clientId: NonNegativeInt.make(id), sessionId }));
 };
 
+// What a handler can fail with: a declared failure (a tagged schema class or
+// an `Error`), or upstream's `AiError` for parameter validation. The
+// classifier below narrows with guards, so no wider channel is needed.
+type ToolHandlerError = Error | AiError.AiError | { readonly _tag: string };
+
+type ToolHandlerResult = {
+  readonly isFailure: boolean;
+  readonly failureOrigin?: AiTool.FailureOrigin | undefined;
+  readonly result: unknown;
+  readonly encodedResult: unknown;
+};
+
+const textContent = (encoded: unknown): CallToolResult["content"] =>
+  encoded === undefined ? [] : [{ type: "text", text: JSON.stringify(encoded) }];
+
+// Declared failures return their encoded payload; anything else is classified
+// by origin in `classifyToolFailure`. The `api_key_required` envelope is the
+// one declared failure translated to a non-error.
+const projectToolResult = (result: ToolHandlerResult): Effect.Effect<CallToolResult, ToolHandlerError> =>
+  result.isFailure && result.failureOrigin !== "handler"
+    ? Effect.failCause(
+        Cause.annotate(
+          Cause.fail(result.result as ToolHandlerError),
+          Context.make(Toolkit.FailureOrigin, result.failureOrigin ?? "result")
+        )
+      )
+    : Effect.succeed(
+        O.getOrElse(translateApiKeyRequired(result), () =>
+          CallToolResult.make({
+            isError: result.isFailure,
+            ...(result.isFailure || !isJsonObject(result.encodedResult)
+              ? {}
+              : { structuredContent: result.encodedResult }),
+            content: textContent(result.encodedResult),
+          })
+        )
+      );
+
+// Interruption propagates; anything else is logged, reported and scrubbed to
+// the boundary text so schema stacks and local paths never reach the wire.
+const makeInternalToolError =
+  (services: Context.Context<never>) =>
+  (cause: Cause.Cause<unknown>): Effect.Effect<CallToolResult, never> => {
+    const failure = Cause.findFail(cause);
+    return Result.isFailure(failure) && !Cause.hasDies(cause)
+      ? Effect.failCause(failure.failure)
+      : Effect.logError(cause).pipe(
+          Effect.andThen(Effect.provideContext(ErrorReporter.report(cause), services)),
+          Effect.as(boundaryFailureResult)
+        );
+  };
+
+// Upstream classification (rc.117 `registerToolkit` `handleCause`):
+// parameter-origin validation errors are JSON-RPC `InvalidParams`,
+// handler-origin declared failures are tool errors, the rest is internal.
+const makeToolFailureClassifier = <Tools extends Record<string, AiTool.Any>>(
+  tool: AiTool.Any,
+  internalToolError: (cause: Cause.Cause<unknown>) => Effect.Effect<CallToolResult, never>
+) => {
+  const isDeclaredFailure = S.is(tool.failureSchema);
+  const encodeFailure = S.encodeUnknownEffect(tool.failureSchema) as (
+    error: unknown
+  ) => Effect.Effect<unknown, S.SchemaError, AiTool.HandlerServices<Tools[keyof Tools]>>;
+  const declaredFailureResult = (error: unknown) =>
+    error instanceof Error
+      ? Effect.succeed(CallToolResult.make({ isError: true, content: [{ type: "text", text: error.message }] }))
+      : Effect.map(encodeFailure(error), (encoded) =>
+          CallToolResult.make({ isError: true, content: textContent(encoded) })
+        );
+  return (cause: Cause.Cause<unknown>) => {
+    const failure = Cause.findFail(cause);
+    if (Result.isFailure(failure)) {
+      return internalToolError(cause);
+    }
+    const error = failure.success.error;
+    const origin = Context.get(Cause.reasonAnnotations(failure.success), Toolkit.FailureOrigin);
+    if (origin === "parameters" && isParameterValidationError(error)) {
+      return Effect.fail(InvalidParams.make({ message: error.reason.message }));
+    }
+    return origin === "handler" && isDeclaredFailure(error)
+      ? Effect.catchCause(declaredFailureResult(error), internalToolError)
+      : internalToolError(cause);
+  };
+};
+
+// Wire schemas mirror rc.117: strict tools reject excess properties, dynamic
+// tools carry their raw JSON Schema, and the no-argument root patch applies
+// after upstream's top-level `$ref` inlining.
+const wireToolSchemas = Effect.fnUntraced(function* (tool: AiTool.Any) {
+  const strict = AiTool.getStrictMode(tool) === true;
+  const rawJsonSchema = AiTool.isDynamic(tool) ? tool.jsonSchema : undefined;
+  if (strict && rawJsonSchema !== undefined) {
+    return yield* Effect.die(
+      `sanitizedToolkit cannot strictly validate the raw JSON Schema for tool '${tool.name}'; use an Effect Schema instead`
+    );
+  }
+  const outputSchema = yield* decodeToolOutputJson(toolJsonSchema(tool.successSchema, false)).pipe(Effect.orDie);
+  const inputSchema = yield* decodeToolJson(
+    withTopLevelObjectInputSchema(rawJsonSchema ?? toolJsonSchema(tool.parametersSchema, strict))
+  ).pipe(Effect.orDie);
+  const decodeOptions: SchemaAST.ParseOptions | undefined = strict ? { onExcessProperty: "error" } : undefined;
+  return { inputSchema, outputSchema, decodeOptions };
+});
+
+const wireToolFor = (
+  tool: AiTool.Any,
+  schemas: { readonly inputSchema: ToolJson; readonly outputSchema: ToolOutputJson }
+) => {
+  const annotations = tool.annotations;
+  const toolMeta = Context.getOrUndefined(annotations, AiTool.Meta);
+  const description = AiTool.getDescription(tool);
+  return WireTool.make({
+    name: tool.name,
+    // Optional wire fields decode as absent-or-valued, never as an explicit
+    // undefined, so they are spread in conditionally.
+    ...(description === undefined ? {} : { description }),
+    inputSchema: schemas.inputSchema,
+    outputSchema: schemas.outputSchema,
+    annotations: {
+      ...Context.getOption(annotations, AiTool.Title).pipe(
+        O.map((title) => ({ title })),
+        O.getOrUndefined
+      ),
+      readOnlyHint: Context.get(annotations, AiTool.Readonly),
+      destructiveHint: Context.get(annotations, AiTool.Destructive),
+      idempotentHint: Context.get(annotations, AiTool.Idempotent),
+      openWorldHint: Context.get(annotations, AiTool.OpenWorld),
+    },
+    ...(toolMeta === undefined ? {} : { _meta: toolMeta }),
+  });
+};
+
+// Read the caller at the request boundary, not inside the handler:
+// `provideContext` below *merges* (provided services win on key collisions and
+// request-only services survive), so reading once here keeps the caller
+// identity a fact of the dispatch instead of something each handler rediscovers.
+const readRequestCaller = Effect.gen(function* () {
+  const requestContext = yield* Effect.serviceOption(McpRequestContext);
+  const client = yield* Effect.serviceOption(McpServerClient);
+  const httpRequest = yield* Effect.serviceOption(HttpServerRequest.HttpServerRequest);
+  return readCaller(requestContext, client, httpRequest);
+});
+
 const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Record<string, AiTool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>
 ) {
@@ -357,135 +500,30 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
     })
   );
   const services = omitRequestServices(yield* Effect.context<never>());
-  const reportCause = (cause: Cause.Cause<unknown>) => Effect.provideContext(ErrorReporter.report(cause), services);
-  // Interruption propagates; anything else is logged, reported and scrubbed
-  // to the boundary text so schema stacks and local paths never reach the wire.
-  const internalToolError = (cause: Cause.Cause<unknown>) => {
-    const failure = Cause.findFail(cause);
-    return Result.isFailure(failure) && !Cause.hasDies(cause)
-      ? Effect.failCause(failure.failure)
-      : Effect.logError(cause).pipe(Effect.andThen(reportCause(cause)), Effect.as(boundaryFailureResult));
-  };
+  const internalToolError = makeInternalToolError(services);
   for (const tool of R.values<string, AiTool.Any>(built.tools)) {
-    const strict = AiTool.getStrictMode(tool) === true;
-    const rawJsonSchema = AiTool.isDynamic(tool) ? tool.jsonSchema : undefined;
-    if (strict && rawJsonSchema !== undefined) {
-      return yield* Effect.die(
-        `sanitizedToolkit cannot strictly validate the raw JSON Schema for tool '${tool.name}'; use an Effect Schema instead`
-      );
-    }
-    const decodeOptions: SchemaAST.ParseOptions | undefined = strict ? { onExcessProperty: "error" } : undefined;
-    const annotations = tool.annotations;
-    const toolMeta = Context.getOrUndefined(annotations, AiTool.Meta);
-    const description = AiTool.getDescription(tool);
-    const isDeclaredFailure = S.is(tool.failureSchema);
-    const encodeFailure = S.encodeUnknownEffect(tool.failureSchema) as (
-      error: unknown
-    ) => Effect.Effect<unknown, S.SchemaError, AiTool.HandlerServices<Tools[keyof Tools]>>;
-    const declaredFailureResult = (error: unknown) =>
-      error instanceof Error
-        ? Effect.succeed(CallToolResult.make({ isError: true, content: [{ type: "text", text: error.message }] }))
-        : Effect.map(encodeFailure(error), (encoded) =>
-            CallToolResult.make({
-              isError: true,
-              content: encoded === undefined ? [] : [{ type: "text", text: JSON.stringify(encoded) }],
-            })
-          );
-    // Upstream classification (rc.117 `registerToolkit` `handleCause`):
-    // parameter-origin validation errors are JSON-RPC `InvalidParams`,
-    // handler-origin declared failures are tool errors, the rest is internal.
-    const handleCause = (cause: Cause.Cause<unknown>) => {
-      const failure = Cause.findFail(cause);
-      if (Result.isSuccess(failure)) {
-        const error = failure.success.error;
-        const origin = Context.get(Cause.reasonAnnotations(failure.success), Toolkit.FailureOrigin);
-        if (origin === "parameters" && isParameterValidationError(error)) {
-          return Effect.fail(InvalidParams.make({ message: error.reason.message }));
-        }
-        if (origin === "handler" && isDeclaredFailure(error)) {
-          return Effect.catchCause(declaredFailureResult(error), internalToolError);
-        }
-      }
-      return internalToolError(cause);
-    };
-    const outputSchema = yield* decodeToolOutputJson(toolJsonSchema(tool.successSchema, false)).pipe(Effect.orDie);
-    const inputSchema = yield* decodeToolJson(
-      withTopLevelObjectInputSchema(rawJsonSchema ?? toolJsonSchema(tool.parametersSchema, strict))
-    ).pipe(Effect.orDie);
-    const wireTool = WireTool.make({
-      name: tool.name,
-      // Optional wire fields decode as absent-or-valued, never as an explicit
-      // undefined, so they are spread in conditionally.
-      ...(description === undefined ? {} : { description }),
-      inputSchema,
-      outputSchema,
-      annotations: {
-        ...Context.getOption(annotations, AiTool.Title).pipe(
-          O.map((title) => ({ title })),
-          O.getOrUndefined
-        ),
-        readOnlyHint: Context.get(annotations, AiTool.Readonly),
-        destructiveHint: Context.get(annotations, AiTool.Destructive),
-        idempotentHint: Context.get(annotations, AiTool.Idempotent),
-        openWorldHint: Context.get(annotations, AiTool.OpenWorld),
-      },
-      ...(toolMeta === undefined ? {} : { _meta: toolMeta }),
-    });
+    const schemas = yield* wireToolSchemas(tool);
+    const classifyToolFailure = makeToolFailureClassifier<Tools>(tool, internalToolError);
     yield* registry.addTool({
-      tool: wireTool,
-      annotations,
+      tool: wireToolFor(tool, schemas),
+      annotations: tool.annotations,
       // Contextually typed from `addTool`'s own `handle: (payload: any) => ...`
       // parameter position (mirrors rc.117 McpServer.registerToolkit); dispatch
       // is looked up by tool name at runtime, so no narrower parameter type is
       // available here.
       handle: Effect.fn("McpKit.handle")(function* (payload) {
-        // Read the caller here, at the request boundary, rather than inside the
-        // handler. `provideContext` below *merges* — the provided services win
-        // on key collisions and request-only services survive — so reading
-        // once, here, keeps the caller identity a fact of the dispatch instead
-        // of something each handler rediscovers.
-        const requestContext = yield* Effect.serviceOption(McpRequestContext);
-        const client = yield* Effect.serviceOption(McpServerClient);
-        const httpRequest = yield* Effect.serviceOption(HttpServerRequest.HttpServerRequest);
-        const requestServices = Context.add(
-          services,
-          CurrentMcpCaller,
-          readCaller(requestContext, client, httpRequest)
-        ) as Context.Context<AiTool.HandlerServices<Tools[keyof Tools]>>;
+        const requestServices = Context.add(services, CurrentMcpCaller, yield* readRequestCaller) as Context.Context<
+          AiTool.HandlerServices<Tools[keyof Tools]>
+        >;
         return yield* withSanitizedToolSpan(
-          built.handle(tool.name as keyof Tools, payload ?? {}, undefined, decodeOptions),
+          built.handle(tool.name as keyof Tools, payload ?? {}, undefined, schemas.decodeOptions),
           `mcp.tool.call.${tool.name}`
         ).pipe(
           Stream.unwrap,
           Stream.runLast,
           Effect.flatMap(Effect.fromOption),
-          Effect.flatMap((result) =>
-            // Declared failures return their encoded payload; anything else is
-            // classified by origin in `handleCause`. The `api_key_required`
-            // envelope is the one declared failure translated to a non-error.
-            result.isFailure && result.failureOrigin !== "handler"
-              ? Effect.failCause(
-                  Cause.annotate(
-                    Cause.fail(result.result),
-                    Context.make(Toolkit.FailureOrigin, result.failureOrigin ?? "result")
-                  )
-                )
-              : Effect.succeed(
-                  O.getOrElse(translateApiKeyRequired(result), () =>
-                    CallToolResult.make({
-                      isError: result.isFailure,
-                      ...(result.isFailure || !isJsonObject(result.encodedResult)
-                        ? {}
-                        : { structuredContent: result.encodedResult }),
-                      content:
-                        result.encodedResult === undefined
-                          ? []
-                          : [{ type: "text", text: JSON.stringify(result.encodedResult) }],
-                    })
-                  )
-                )
-          ),
-          Effect.catchCause(handleCause),
+          Effect.flatMap(projectToolResult),
+          Effect.catchCause(classifyToolFailure),
           Effect.provideContext(requestServices)
         );
       }),

@@ -1,11 +1,10 @@
 /**
  * Request-local MCP caller identity and the dispatch anchor, both propagated
- * by sanitized toolkit dispatch.
- *
- * The identity carries transport facts only: the protocol exchange id the
- * server assigned and, when a stateful transport echoes one, its session
- * header. The anchor is an opaque, product-neutral slot that host composition
- * may fill; the kit never derives, names, or documents what fills it.
+ * by sanitized toolkit dispatch: the identity carries transport facts only
+ * (the protocol exchange id the server assigned and, when a stateful
+ * transport echoes one, its session header), and the anchor is an opaque,
+ * product-neutral slot that host composition may fill, which the kit never
+ * derives, names, or documents.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -86,7 +85,7 @@ export const CurrentMcpCaller = Context.Reference<O.Option<McpCallerIdentity>>($
  * **Example** (Brand an anchor value)
  *
  * ```ts
- * import { McpDispatchAnchor } from "@beep/mcp-kit"
+ * import { McpDispatchAnchor } from "@beep/mcp-kit/McpCaller"
  * import * as S from "effect/Schema"
  *
  * const anchor = S.decodeUnknownSync(McpDispatchAnchor)("anchor-1")
@@ -107,6 +106,16 @@ export const McpDispatchAnchor = S.NonEmptyString.pipe(
 /**
  * Branded dispatch anchor value.
  *
+ * **Example** (Accept an anchor by type)
+ *
+ * ```ts
+ * import type { McpDispatchAnchor } from "@beep/mcp-kit/McpCaller"
+ *
+ * const describe = (anchor: McpDispatchAnchor): string => anchor
+ * console.log(typeof describe)
+ * // "function"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -118,8 +127,8 @@ export type McpDispatchAnchor = typeof McpDispatchAnchor.Type;
  * **Example** (Read the anchor default)
  *
  * ```ts
- * import { CurrentMcpDispatchAnchor } from "@beep/mcp-kit"
- * import { Effect } from "effect"
+ * import { CurrentMcpDispatchAnchor } from "@beep/mcp-kit/McpCaller"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * console.log(O.isNone(Effect.runSync(CurrentMcpDispatchAnchor)))

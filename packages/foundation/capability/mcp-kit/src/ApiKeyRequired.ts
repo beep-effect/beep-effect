@@ -137,7 +137,7 @@ export const apiKeyRequiredFailure = (params: ApiKeyRequiredFailureParamsInput):
  * **Example** (Recognize the envelope)
  *
  * ```ts
- * import { isApiKeyRequiredFailure } from "@beep/mcp-kit"
+ * import { isApiKeyRequiredFailure } from "@beep/mcp-kit/ApiKeyRequired"
  *
  * console.log(isApiKeyRequiredFailure({ error: "other" }))
  * // false
@@ -165,7 +165,8 @@ export const isApiKeyRequiredFailure = S.is(ApiKeyRequiredFailure);
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { apiKeyRequiredFailure, SourceAuthRegistration, translateApiKeyRequired } from "@beep/mcp-kit"
+ * import { apiKeyRequiredFailure, translateApiKeyRequired } from "@beep/mcp-kit/ApiKeyRequired"
+ * import { SourceAuthRegistration } from "@beep/mcp-kit/SourceAuth"
  *
  * const registration = SourceAuthRegistration.make({ name: "Example", envVar: "EXAMPLE_KEY", gate: "soft" })
  * const failure = apiKeyRequiredFailure({ tool: "example_tool", registration })

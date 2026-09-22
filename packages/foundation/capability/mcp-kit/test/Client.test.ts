@@ -10,10 +10,12 @@ import {
   decodeHttpMessages,
   JsonRpcMessage,
   layerProtocolHttp,
+  layerProtocolNdjson,
   MCP_METHOD_HEADER,
   MCP_NAME_HEADER,
   MCP_PROTOCOL_VERSION_HEADER,
   McpClientOptions,
+  McpClientRpcs,
   PROTOCOL_VERSION_META_KEY,
   parseServerSentEvents,
   requestMetadata,
@@ -29,10 +31,11 @@ import {
   withStdioHost,
 } from "@beep/mcp-kit/test/Conformance";
 import { assert, describe, expect, it, layer } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { Deferred, Effect, Fiber, Layer, Queue, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
+import { RpcClient } from "effect/unstable/rpc";
 import { fixtureHost } from "./fixtures/FixtureHost.ts";
 
 describe("wire helpers", () => {
@@ -193,6 +196,36 @@ describe("layerProtocolNdjson", () => {
         assert.deepStrictEqual(discovery.supportedVersions, ["2026-07-28"]);
         const result = yield* rpc["tools/call"]({ name: "echo", arguments: { text: "stdio" } });
         assert.deepStrictEqual(result.structuredContent, { echoed: "stdio" });
+      })
+    )
+  );
+
+  it.effect("releases the pending waiter and sends notifications/cancelled when a request is interrupted", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        // A host that never answers: the only way the call ends is interruption.
+        const written = yield* Queue.unbounded<string>();
+        const protocol = yield* Layer.build(
+          layerProtocolNdjson({ write: (line) => Effect.asVoid(Queue.offer(written, line)), lines: Stream.never })
+        );
+        const rpc = yield* RpcClient.make(McpClientRpcs).pipe(Effect.provideContext(protocol));
+        const fiber = yield* Effect.forkScoped(rpc["tools/list"]({}));
+        const request = yield* Queue.take(written);
+        assert.include(request, '"method":"tools/list"');
+        yield* Fiber.interrupt(fiber);
+        const cancelled = yield* Queue.take(written);
+        assert.include(cancelled, '"method":"notifications/cancelled"');
+        // A second request after the interrupt still round-trips through the
+        // same protocol: the interrupted waiter left no residue that could
+        // shadow the new id, and the router keeps running.
+        const answered = yield* Deferred.make<void>();
+        const echo = yield* Effect.forkScoped(
+          rpc["tools/list"]({}).pipe(Effect.tap(() => Deferred.succeed(answered, undefined)))
+        );
+        const second = yield* Queue.take(written);
+        assert.include(second, '"method":"tools/list"');
+        yield* Fiber.interrupt(echo);
+        assert.isFalse(yield* Deferred.isDone(answered));
       })
     )
   );

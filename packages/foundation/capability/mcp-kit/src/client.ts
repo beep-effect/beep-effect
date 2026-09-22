@@ -1,6 +1,5 @@
 /**
- * `@beep/mcp-kit/client` — the kit-owned MCP `2026-07-28` client.
- *
+ * `@beep/mcp-kit/client`, the kit-owned MCP `2026-07-28` client:
  * rc.117 exposes no public typed client group for the stateless revision
  * (its `server/discover` group is `@internal`), so the kit re-declares the
  * request RPCs an in-repo proof needs and owns the wire details the revision
@@ -44,6 +43,15 @@ const $I = $McpKitId.create("client");
 /**
  * HTTP header carrying the protocol revision of a stateless request.
  *
+ * **Example** (Name the version header)
+ *
+ * ```ts
+ * import { MCP_PROTOCOL_VERSION_HEADER } from "@beep/mcp-kit/client"
+ *
+ * console.log(MCP_PROTOCOL_VERSION_HEADER)
+ * // "MCP-Protocol-Version"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -51,6 +59,15 @@ export const MCP_PROTOCOL_VERSION_HEADER = "MCP-Protocol-Version";
 
 /**
  * HTTP header mirroring the JSON-RPC method of a stateless request.
+ *
+ * **Example** (Name the method header)
+ *
+ * ```ts
+ * import { MCP_METHOD_HEADER } from "@beep/mcp-kit/client"
+ *
+ * console.log(MCP_METHOD_HEADER)
+ * // "Mcp-Method"
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -61,6 +78,15 @@ export const MCP_METHOD_HEADER = "Mcp-Method";
  * HTTP header mirroring the routing name of a stateless request: `params.name`
  * for `tools/call` and `prompts/get`, `params.uri` for `resources/read`.
  *
+ * **Example** (Name the routing-name header)
+ *
+ * ```ts
+ * import { MCP_NAME_HEADER } from "@beep/mcp-kit/client"
+ *
+ * console.log(MCP_NAME_HEADER)
+ * // "Mcp-Name"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -68,6 +94,16 @@ export const MCP_NAME_HEADER = "Mcp-Name";
 
 /**
  * Request `_meta` key carrying the protocol revision (must equal the header).
+ *
+ * **Example** (Read the version claim from request metadata)
+ *
+ * ```ts
+ * import { PROTOCOL_VERSION_META_KEY } from "@beep/mcp-kit/client"
+ *
+ * const meta = { [PROTOCOL_VERSION_META_KEY]: "2026-07-28" }
+ * console.log(meta[PROTOCOL_VERSION_META_KEY])
+ * // "2026-07-28"
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -77,6 +113,15 @@ export const PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersio
 /**
  * Request `_meta` key carrying the client capabilities object.
  *
+ * **Example** (Name the capabilities key)
+ *
+ * ```ts
+ * import { CLIENT_CAPABILITIES_META_KEY } from "@beep/mcp-kit/client"
+ *
+ * console.log(CLIENT_CAPABILITIES_META_KEY)
+ * // "io.modelcontextprotocol/clientCapabilities"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -84,6 +129,15 @@ export const CLIENT_CAPABILITIES_META_KEY = "io.modelcontextprotocol/clientCapab
 
 /**
  * Request `_meta` key carrying the client implementation info.
+ *
+ * **Example** (Name the client-info key)
+ *
+ * ```ts
+ * import { CLIENT_INFO_META_KEY } from "@beep/mcp-kit/client"
+ *
+ * console.log(CLIENT_INFO_META_KEY)
+ * // "io.modelcontextprotocol/clientInfo"
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -96,6 +150,15 @@ export const CLIENT_INFO_META_KEY = "io.modelcontextprotocol/clientInfo";
  * keeps the constant private; the stdio path also answers it to a legacy
  * `initialize`.
  *
+ * **Example** (Recognize the unsupported-version code)
+ *
+ * ```ts
+ * import { UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE } from "@beep/mcp-kit/client"
+ *
+ * console.log(UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE === -32022)
+ * // true
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -103,6 +166,16 @@ export const UNSUPPORTED_PROTOCOL_VERSION_ERROR_CODE = -32022;
 
 /**
  * Result `_meta` key under which a stateless server reports its implementation info.
+ *
+ * **Example** (Read server info from a result)
+ *
+ * ```ts
+ * import { SERVER_INFO_META_KEY } from "@beep/mcp-kit/client"
+ *
+ * const meta = { [SERVER_INFO_META_KEY]: { name: "host", version: "1.0.0" } }
+ * console.log(meta[SERVER_INFO_META_KEY].name)
+ * // "host"
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -185,10 +258,30 @@ export class JsonRpcError extends S.Class<JsonRpcError>($I`JsonRpcError`)(
 /**
  * JSON-RPC request id.
  *
+ * **Example** (Decode a request id)
+ *
+ * ```ts
+ * import { JsonRpcId } from "@beep/mcp-kit/client"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(JsonRpcId)(7))
+ * // 7
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export const JsonRpcId = S.Union([S.String, S.Finite]);
+export const JsonRpcId = S.Union([S.String, S.Finite]).pipe(
+  $I.annoteSchema("JsonRpcId", { description: "JSON-RPC request id: a string or a finite number." })
+);
+
+/**
+ * JSON-RPC request id value.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type JsonRpcId = typeof JsonRpcId.Type;
 
 /**
  * One JSON-RPC message (request, notification, result or error response).
@@ -278,6 +371,15 @@ const McpErrorSchema = McpSchema.McpError;
 /**
  * `server/discover` request.
  *
+ * **Example** (Read the request tag)
+ *
+ * ```ts
+ * import { ServerDiscover } from "@beep/mcp-kit/client"
+ *
+ * console.log(ServerDiscover._tag)
+ * // "server/discover"
+ * ```
+ *
  * @category rpcs
  * @since 0.0.0
  */
@@ -288,6 +390,15 @@ export class ServerDiscover extends Rpc.make("server/discover", {
 
 /**
  * `tools/list` request.
+ *
+ * **Example** (Read the request tag)
+ *
+ * ```ts
+ * import { ToolsList } from "@beep/mcp-kit/client"
+ *
+ * console.log(ToolsList._tag)
+ * // "tools/list"
+ * ```
  *
  * @category rpcs
  * @since 0.0.0
@@ -301,6 +412,15 @@ export class ToolsList extends Rpc.make("tools/list", {
 /**
  * `tools/call` request.
  *
+ * **Example** (Read the request tag)
+ *
+ * ```ts
+ * import { ToolsCall } from "@beep/mcp-kit/client"
+ *
+ * console.log(ToolsCall._tag)
+ * // "tools/call"
+ * ```
+ *
  * @category rpcs
  * @since 0.0.0
  */
@@ -312,6 +432,15 @@ export class ToolsCall extends Rpc.make("tools/call", {
 
 /**
  * `prompts/list` request.
+ *
+ * **Example** (Read the request tag)
+ *
+ * ```ts
+ * import { PromptsList } from "@beep/mcp-kit/client"
+ *
+ * console.log(PromptsList._tag)
+ * // "prompts/list"
+ * ```
  *
  * @category rpcs
  * @since 0.0.0
@@ -325,6 +454,15 @@ export class PromptsList extends Rpc.make("prompts/list", {
 /**
  * `prompts/get` request.
  *
+ * **Example** (Read the request tag)
+ *
+ * ```ts
+ * import { PromptsGet } from "@beep/mcp-kit/client"
+ *
+ * console.log(PromptsGet._tag)
+ * // "prompts/get"
+ * ```
+ *
  * @category rpcs
  * @since 0.0.0
  */
@@ -336,6 +474,15 @@ export class PromptsGet extends Rpc.make("prompts/get", {
 
 /**
  * `resources/read` request.
+ *
+ * **Example** (Read the request tag)
+ *
+ * ```ts
+ * import { ResourcesRead } from "@beep/mcp-kit/client"
+ *
+ * console.log(ResourcesRead._tag)
+ * // "resources/read"
+ * ```
  *
  * @category rpcs
  * @since 0.0.0
@@ -535,7 +682,7 @@ const encodeJsonRpcError = S.encodeSync(JsonRpcError);
  * **Example** (Decode a JSON body)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import { decodeHttpMessages } from "@beep/mcp-kit/client"
  *
  * const messages = Effect.runSync(decodeHttpMessages("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}", "application/json"))
@@ -565,6 +712,16 @@ export const decodeHttpMessages: {
 /**
  * One HTTP exchange with a stateless host: the status and every JSON-RPC
  * message the body carried (after the event-stream unwrap).
+ *
+ * **Example** (Build an exchange record)
+ *
+ * ```ts
+ * import { McpHttpExchange } from "@beep/mcp-kit/client"
+ *
+ * const exchange = McpHttpExchange.make({ status: 202, messages: [] })
+ * console.log(exchange.messages.length)
+ * // 0
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -652,7 +809,7 @@ const codecFor = S.toCodecJson as RpcSerialization.CodecFor;
  *
  * ```ts
  * import { layerProtocolHttp } from "@beep/mcp-kit/client"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * const protocol = layerProtocolHttp({ url: "http://localhost/mcp" })
  * console.log(Layer.isLayer(protocol))
@@ -733,6 +890,18 @@ export const layerProtocolHttp = (options: {
  * Newline-delimited JSON transport: one JSON-RPC message per line in each
  * direction, which is what a stdio host speaks.
  *
+ * **Example** (Describe an in-memory transport)
+ *
+ * ```ts
+ * import type { McpNdjsonTransport } from "@beep/mcp-kit/client"
+ * import * as Effect from "effect/Effect"
+ * import * as Stream from "effect/Stream"
+ *
+ * const transport: McpNdjsonTransport = { write: () => Effect.void, lines: Stream.empty }
+ * console.log(typeof transport.write)
+ * // "function"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -759,7 +928,8 @@ export interface McpNdjsonTransport {
  * **Example** (Split chunked bytes)
  *
  * ```ts
- * import { Effect, Stream } from "effect"
+ * import * as Effect from "effect/Effect"
+ * import * as Stream from "effect/Stream"
  * import { decodeLines } from "@beep/mcp-kit/client"
  *
  * const encoder = new TextEncoder()
@@ -783,7 +953,9 @@ export const decodeLines = <E, R>(bytes: Stream.Stream<Uint8Array, E, R>): Strea
  *
  * ```ts
  * import { layerProtocolNdjson } from "@beep/mcp-kit/client"
- * import { Effect, Layer, Stream } from "effect"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
+ * import * as Stream from "effect/Stream"
  *
  * const protocol = layerProtocolNdjson({ write: () => Effect.void, lines: Stream.empty })
  * console.log(Layer.isLayer(protocol))
@@ -820,9 +992,10 @@ export const layerProtocolNdjson = (transport: McpNdjsonTransport): Layer.Layer<
           send: (clientId, message) => {
             switch (message._tag) {
               case "Request": {
+                const key = requestKey(message.id);
                 return Effect.gen(function* () {
                   const waiter = yield* Deferred.make<JsonRpcMessage>();
-                  MutableHashMap.set(pending, requestKey(message.id), waiter);
+                  MutableHashMap.set(pending, key, waiter);
                   yield* writeMessage(
                     JsonRpcMessage.make({
                       id: message.id,
@@ -832,15 +1005,28 @@ export const layerProtocolNdjson = (transport: McpNdjsonTransport): Layer.Layer<
                   );
                   const response = yield* Deferred.await(waiter);
                   yield* writeResponse(clientId, responseExit(message.id, O.some(response), ""));
-                });
-              }
-              case "Interrupt":
-                return writeMessage(
-                  JsonRpcMessage.make({
-                    method: "notifications/cancelled",
-                    params: withRequestMetadata({ requestId: message.requestId }, metadata),
-                  })
+                }).pipe(
+                  // The waiter never outlives its send: a late response, an
+                  // interrupt, or a transport failure all release the entry.
+                  Effect.ensuring(Effect.sync(() => MutableHashMap.remove(pending, key)))
                 );
+              }
+              case "Interrupt": {
+                // Release the waiter first so the interrupted call settles even
+                // if the host never acknowledges the cancellation.
+                const key = requestKey(message.requestId);
+                const waiter = MutableHashMap.get(pending, key);
+                MutableHashMap.remove(pending, key);
+                return Effect.andThen(
+                  O.match(waiter, { onNone: () => Effect.void, onSome: Deferred.interrupt }),
+                  writeMessage(
+                    JsonRpcMessage.make({
+                      method: "notifications/cancelled",
+                      params: withRequestMetadata({ requestId: message.requestId }, metadata),
+                    })
+                  )
+                );
+              }
               default:
                 return Effect.void;
             }
@@ -856,6 +1042,16 @@ export const layerProtocolNdjson = (transport: McpNdjsonTransport): Layer.Layer<
 /**
  * Typed request client over {@link McpClientRpcs}.
  *
+ * **Example** (Type a connection's client)
+ *
+ * ```ts
+ * import type { McpRpcClient } from "@beep/mcp-kit/client"
+ *
+ * const describe = (client: McpRpcClient) => typeof client["tools/call"]
+ * console.log(typeof describe)
+ * // "function"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -864,6 +1060,16 @@ export type McpRpcClient = RpcClient.RpcClient<RpcGroup.Rpcs<typeof McpClientRpc
 /**
  * A connected kit client: the typed RPC client plus the `server/discover`
  * result that opened the conversation.
+ *
+ * **Example** (Type a connection)
+ *
+ * ```ts
+ * import type { McpClientConnection } from "@beep/mcp-kit/client"
+ *
+ * const versions = (connection: McpClientConnection) => connection.discovery.supportedVersions
+ * console.log(typeof versions)
+ * // "function"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -884,18 +1090,32 @@ export interface McpClientConnection {
  * `server/discover` first — the stateless revision's opening message, in
  * place of `initialize`.
  *
- * **Example** (Connect over HTTP)
+ * **Gotchas**
+ *
+ * The returned `rpc` client is only as alive as the `RpcClient.Protocol` it
+ * was built under. Keep the protocol layer's scope open for as long as you
+ * hold the connection (`Layer.build` in a scope you control), as below.
+ *
+ * **Example** (Connect over HTTP and call a tool)
  *
  * ```ts
  * import { connect, layerProtocolHttp } from "@beep/mcp-kit/client"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
  * import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient"
  *
- * const program = connect.pipe(
- *   Effect.map((connection) => connection.discovery.supportedVersions),
- *   Effect.scoped,
- *   Effect.provide(layerProtocolHttp({ url: "http://localhost/mcp" })),
- *   Effect.provide(FetchHttpClient.layer)
+ * // The protocol layer is built into the ambient scope, never `Effect.provide`d
+ * // around `connect` alone: the layer owns the response router, so a scope
+ * // that closes with `connect` would drop every later call's response.
+ * const program = Effect.scoped(
+ *   Effect.gen(function* () {
+ *     const protocol = yield* Layer.build(
+ *       layerProtocolHttp({ url: "http://localhost/mcp" }).pipe(Layer.provide(FetchHttpClient.layer))
+ *     )
+ *     const { discovery, rpc } = yield* connect.pipe(Effect.provideContext(protocol))
+ *     const result = yield* rpc["tools/call"]({ name: "echo", arguments: { text: "hi" } })
+ *     return { versions: discovery.supportedVersions, isError: result.isError }
+ *   })
  * )
  * console.log(typeof program)
  * // "object"
@@ -916,6 +1136,16 @@ export const connect: Effect.Effect<
 
 /**
  * Error type of the HTTP primitive, re-exported for callers that map it.
+ *
+ * **Example** (Type an HTTP failure handler)
+ *
+ * ```ts
+ * import type { McpHttpError } from "@beep/mcp-kit/client"
+ *
+ * const describe = (error: McpHttpError) => error._tag
+ * console.log(typeof describe)
+ * // "function"
+ * ```
  *
  * @category models
  * @since 0.0.0
