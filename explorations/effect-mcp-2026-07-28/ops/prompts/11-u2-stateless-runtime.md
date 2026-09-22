@@ -8,10 +8,10 @@ this lane's claims instead of re-deriving them.
 **Question:** Exactly how does an Effect MCP server configured with `McpProtocol.v2026_07_28`
 behave over stdio and Streamable HTTP, and what happens to traffic it does not accept?
 
-**Primary sources:** `packages/effect/src/unstable/ai/McpServer.ts`,
+**Primary sources:** `effect:packages/effect/src/unstable/ai/McpServer.ts`,
 `internal/{mcpRuntime,mcpStatefulRuntime,mcpProtocol,mcpProtocolRegistry,mcpCore}.ts`,
 `internal/mcpProtocol/v2026_07_28.ts`, `internal/mcpSchema/v2026_07_28.ts`,
-`unstable/rpc/RpcServer.ts`; tests under `packages/effect/test/unstable/ai/`: `McpSchema.test.ts`,
+`unstable/rpc/RpcServer.ts`; tests under `effect:packages/effect/test/unstable/ai/`: `McpSchema.test.ts`,
 `McpServer/McpProtocol.test.ts`, `McpServer/v2026_07_28.test.ts`, `McpServer/McpServer.test.ts`,
 `McpServer/ProtocolAdapters.test.ts`, `McpServer/McpConformance/TransportsTest.ts` (including the
 stateless and security suites), and the harnesses `McpServer/TestUtils/{McpStdioHarness,McpHttpHarness,McpHttpResponse,McpServerLayer}.ts`.

@@ -8,11 +8,11 @@ docs mention `instructions`, strictness, `isError`, and titles; API and runtime 
 migration notes, changesets, tests used as executable docs), and where is that guidance missing,
 stale, or contradicted by the code?
 
-**Primary sources:** `packages/effect/MCP.md`, `migration/v3-to-v4.md`,
+**Primary sources:** `effect:packages/effect/MCP.md`, `migration/v3-to-v4.md`,
 `migration/annotations/effect__ai__Mcp*.yaml`, JSDoc `**Example**` blocks on exports in
 `unstable/ai/{McpServer,McpSchema,McpProtocol,Tool,Toolkit}.ts`, `.changeset/*.md`,
-`.changeset/pre/*mcp*.md`, `packages/effect/test/unstable/ai/McpServer/**`, and
-`packages/effect/typetest/unstable/ai/McpServer.tst.ts`.
+`.changeset/pre/*mcp*.md`, `effect:packages/effect/test/unstable/ai/McpServer/**`, and
+`effect:packages/effect/typetest/unstable/ai/McpServer.tst.ts`.
 
 **Report sections:**
 1. Contradictions first: statements in `MCP.md`, `migration/v3-to-v4.md`, and JSDoc that
