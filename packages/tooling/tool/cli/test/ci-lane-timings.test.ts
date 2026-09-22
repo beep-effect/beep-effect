@@ -780,12 +780,14 @@ describe("ci lane timing admission window", () => {
     })
   );
 
-  it.effect("fails closed when ruleset 10240248 does not normalize to exactly 18 contexts", () =>
+  it.effect("fails closed when ruleset 10240248 does not normalize to a ratified context count", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(buildCiLaneTimingWindowReport(A.append(REQUIRED_CONTEXTS, "Extra Context"), []));
 
       expect(Exit.isFailure(exit)).toBe(true);
-      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("exactly 18 required contexts; observed 19");
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
+        "must expose a ratified required-context count (17 or 18); observed 19"
+      );
     })
   );
 
@@ -826,23 +828,50 @@ describe("ci lane timing admission window", () => {
     }).pipe(provideScopedLayer(windowGithubLayer(commands)));
   });
 
-  it.effect("fails closed against the 17-context version after the removal", () => {
+  it.effect("admits the ratified 17-context version after the removal", () => {
     const commands = A.empty<string>();
+    return Effect.gen(function* () {
+      const report = yield* collectCiLaneTimingWindow(
+        ".",
+        windowOptions({
+          until: DateTime.makeUnsafe("2026-09-12T01:46:53.355Z"),
+        })
+      );
+      expect(report.contextCount).toBe(17);
+      expect(O.map(report.rulesetVersion, (version) => version.version_id)).toStrictEqual(O.some(49479116));
+      expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(true);
+      expect(A.some(commands, Str.includes("/actions/"))).toBe(true);
+      const markdown = renderCiLaneTimingWindowMarkdown(report);
+      expect(markdown).toContain(
+        "- required contexts: 17 (expected 17; ruleset 10240248 version 49479116 effective 2026-09-12T01:46:53.354Z)"
+      );
+    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+  });
+
+  it.effect("fails closed against a ruleset version the packet has not ratified", () => {
+    const commands = A.empty<string>();
+    const unratifiedHistoryJson =
+      '[{"version_id":50000000,"updated_at":"2026-09-15T00:00:00.000Z"},{"version_id":49479116,"updated_at":"2026-09-11T20:46:53.354-05:00"}]';
+    const response = (endpoint: string) =>
+      Str.includes("/history?")(endpoint)
+        ? Effect.succeed(unratifiedHistoryJson)
+        : Str.endsWith("/history/50000000")(endpoint)
+          ? Effect.succeed(RULESET_SNAPSHOT_17_JSON)
+          : windowGithubResponse(endpoint);
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(
         collectCiLaneTimingWindow(
           ".",
           windowOptions({
-            until: DateTime.makeUnsafe("2026-09-12T01:46:53.355Z"),
+            until: DateTime.makeUnsafe("2026-09-16T00:00:00.000Z"),
           })
         )
       );
       expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain(
-        "Ruleset 10240248 must expose exactly 18 required contexts; observed 17."
+        "Ruleset 10240248 version 50000000 is not a ratified admission population."
       );
-      expect(A.some(commands, Str.endsWith("/history/49479116"))).toBe(true);
       expect(A.some(commands, Str.includes("/actions/"))).toBe(false);
-    }).pipe(provideScopedLayer(windowGithubLayer(commands)));
+    }).pipe(provideScopedLayer(windowGithubLayer(commands, response)));
   });
 
   it.effect("excludes a ruleset version effective exactly at the exclusive end", () => {
