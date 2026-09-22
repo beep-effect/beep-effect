@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/editor",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "0f8579540bb29821219c7e8d94bb632162deeb93333777e08f14f102ad7ba501",
+  "rawLogSha256": "b2baa9ac0a172b04bb86a0ac41e952fc7b6c479b72a6634c9080172376c463e2",
+  "rawReceiptSha256": "04816660f29eb5bedebce9eb1c0ad3454f5fdcc6778505b9218940516353135d",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 11.972097263999785,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 447
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 4,
+  "maxLoad1": 60.66162109375,
+  "minimumMemAvailableGiB": 78.96342086791992,
+  "maxPressureAvg10": {
+    "cpu": 8.87,
+    "memory": 0.0,
+    "io": 0.39
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/foundation/ui-system/editor/test/mermaid-race.test.tsx",
+      "ms": 4394.1005859375,
+      "tests": 22
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-runtime.test.tsx",
+      "ms": 145.26611328125,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/style-node-matrix.test.ts",
+      "ms": 116.4794921875,
+      "tests": 352
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/editor-nodes.test.ts",
+      "ms": 48.727294921875,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/chat-schema-parity.test.ts",
+      "ms": 18.101806640625,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-resolver.test.ts",
+      "ms": 17.68505859375,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-schemas.test.ts",
+      "ms": 14.074462890625,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-catalog.test.ts",
+      "ms": 12.63525390625,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/code-fence.test.ts",
+      "ms": 11.833984375,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/ui-system/editor/test/capability-projection.test.ts",
+      "ms": 8.313232421875,
+      "tests": 2
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

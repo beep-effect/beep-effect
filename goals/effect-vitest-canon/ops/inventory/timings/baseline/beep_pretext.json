@@ -1,0 +1,81 @@
+{
+  "package": "@beep/pretext",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:23:51.291032+00:00",
+  "totalMs": 4877.369140625,
+  "testCount": 25,
+  "files": [
+    {
+      "file": "packages/drivers/pretext/test/Pretext.equivalence.test.ts",
+      "ms": 0.9326171875,
+      "tests": 1
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "ms": 10.365234375,
+      "tests": 16
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "ms": 29.369140625,
+      "tests": 4
+    },
+    {
+      "file": "packages/drivers/pretext/test/browser.test.ts",
+      "ms": 30.66162109375,
+      "tests": 4
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/pretext/test/browser.test.ts",
+      "testName": "detectEngineProfile pins the non-browser fence values mirrored from upstream v0.0.8",
+      "ms": 30.661525999999867
+    },
+    {
+      "file": "packages/drivers/pretext/test/browser.test.ts",
+      "testName": "PretextCaptureLive rejects system-ui with a typed error in any runtime",
+      "ms": 30.399545000000217
+    },
+    {
+      "file": "packages/drivers/pretext/test/browser.test.ts",
+      "testName": "PretextCaptureLive fails typed, not thrown, when the runtime cannot measure",
+      "ms": 30.3763399999998
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "testName": "PretextCaptureFixture captures a snapshot DOM-free from the canned fixture",
+      "ms": 29.369095999999445
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "testName": "PretextCaptureFixture fails typed when the requested font is not the fixture font",
+      "ms": 29.125052000000323
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "testName": "PretextCaptureFixture fails typed when a requested word was never measured",
+      "ms": 29.10204700000031
+    },
+    {
+      "file": "packages/drivers/pretext/test/PretextCapture.test-layer.test.ts",
+      "testName": "PretextCaptureFixture answers with the fixture's own capture provenance",
+      "ms": 29.085591000000022
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "testName": "FontMetricsSnapshotV1 decodes the built-in fixture",
+      "ms": 5.682539000000361
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "testName": "FontMetricsSnapshotV1 round-trips encode after decode as identity",
+      "ms": 5.4937190000000555
+    },
+    {
+      "file": "packages/drivers/pretext/test/Pretext.models.test.ts",
+      "testName": "FontMetricsSnapshotV1 fails typed on unversioned input",
+      "ms": 5.475881999999729
+    }
+  ]
+}

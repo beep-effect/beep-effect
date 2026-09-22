@@ -1,0 +1,101 @@
+{
+  "package": "@beep/ontology-use-cases",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:33:16.679299+00:00",
+  "totalMs": 4650.236083984375,
+  "testCount": 59,
+  "files": [
+    {
+      "file": "packages/ontology/use-cases/test/BrowserWorkerImportGraph.test.ts",
+      "ms": 368.839111328125,
+      "tests": 1
+    },
+    {
+      "file": "packages/ontology/use-cases/test/GraphLayout.test.ts",
+      "ms": 18.011474609375,
+      "tests": 2
+    },
+    {
+      "file": "packages/ontology/use-cases/test/PizzaTutorial.e2e.test.ts",
+      "ms": 12.8994140625,
+      "tests": 1
+    },
+    {
+      "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
+      "ms": 377.236083984375,
+      "tests": 18
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.test.ts",
+      "ms": 57.61083984375,
+      "tests": 18
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
+      "ms": 178.298828125,
+      "tests": 4
+    },
+    {
+      "file": "packages/ontology/use-cases/test/TaggedError.equivalence.test.ts",
+      "ms": 3.3310546875,
+      "tests": 13
+    },
+    {
+      "file": "packages/ontology/use-cases/test/WorkerImportGraph.test.ts",
+      "ms": 3860.082763671875,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/ontology/use-cases/test/WorkerImportGraph.test.ts",
+      "testName": "@beep/ontology-use-cases worker import graph imports the ontology toolkit entrypoint without DOM globals",
+      "ms": 3859.082861
+    },
+    {
+      "file": "packages/ontology/use-cases/test/WorkerImportGraph.test.ts",
+      "testName": "@beep/ontology-use-cases worker import graph imports the visualizer worker entrypoint without DOM globals",
+      "ms": 533.20108
+    },
+    {
+      "file": "packages/ontology/use-cases/test/BrowserWorkerImportGraph.test.ts",
+      "testName": "@beep/ontology-use-cases worker import graph (browser conditions) bundles and evaluates the worker entrypoint under Vite-dev-like browser resolution",
+      "ms": 368.839212
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
+      "testName": "Ontology validation and provenance offers verified minCount, datatype, and class repairs from the real SHACL engine",
+      "ms": 178.2989379999999
+    },
+    {
+      "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
+      "testName": "Ontology validation and provenance verifies SHACL repairs, accepts undo, and exports provenance artifacts",
+      "ms": 175.79681600000004
+    },
+    {
+      "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/ontology-use-cases schema parity round-trips schema-derived OpenOntologyFileCommand samples",
+      "ms": 173.0505319999993
+    },
+    {
+      "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/ontology-use-cases schema parity round-trips schema-derived OpenOntologyDocumentResult samples",
+      "ms": 172.8587379999999
+    },
+    {
+      "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/ontology-use-cases schema parity round-trips schema-derived SaveOntologyDocumentResult samples",
+      "ms": 172.84058000000005
+    },
+    {
+      "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/ontology-use-cases schema parity round-trips schema-derived PreviewOntologyTurtleResult samples",
+      "ms": 172.8299739999993
+    },
+    {
+      "file": "packages/ontology/use-cases/test/SchemaParity.test.ts",
+      "testName": "@beep/ontology-use-cases schema parity round-trips schema-derived ApplyOntologyBatchCommand samples",
+      "ms": 172.8211199999996
+    }
+  ]
+}

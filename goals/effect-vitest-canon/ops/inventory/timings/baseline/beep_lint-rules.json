@@ -1,0 +1,81 @@
+{
+  "package": "@beep/lint-rules",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:22:15.331635+00:00",
+  "totalMs": 20904.975341796875,
+  "testCount": 66,
+  "files": [
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "ms": 19303.975341796875,
+      "tests": 48
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/registry.test.ts",
+      "ms": 20.960205078125,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/rules.test.ts",
+      "ms": 359.44873046875,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/schema-parity.test.ts",
+      "ms": 13.815673828125,
+      "tests": 3
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "testName": "oxlint rules no-js-extension-imports flags invalid case #1 (1 finding(s))",
+      "ms": 5351.08926
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "testName": "oxlint rules no-global-process-runtime ignores valid case #2",
+      "ms": 4868.254584
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "testName": "oxlint rules no-js-extension-imports flags invalid case #3 (2 finding(s))",
+      "ms": 3255.8645560000004
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "testName": "oxlint rules no-js-extension-imports flags invalid case #0 (4 finding(s))",
+      "ms": 3255.813076999999
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "testName": "oxlint rules no-js-extension-imports flags invalid case #2 (2 finding(s))",
+      "ms": 3255.2611800000004
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "testName": "oxlint rules no-js-extension-imports flags invalid case #4 (1 finding(s))",
+      "ms": 3255.088095000001
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "testName": "oxlint rules no-js-extension-imports ignores valid case #2",
+      "ms": 2788.3505920000007
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "testName": "oxlint rules no-inline-schema-compile flags invalid case #0 (1 finding(s))",
+      "ms": 2228.6310980000003
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "testName": "oxlint rules no-inline-schema-compile flags invalid case #2 (1 finding(s))",
+      "ms": 2227.7328809999995
+    },
+    {
+      "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-rules.test.ts",
+      "testName": "oxlint rules no-inline-schema-compile flags invalid case #3 (1 finding(s))",
+      "ms": 2226.8868350000002
+    }
+  ]
+}

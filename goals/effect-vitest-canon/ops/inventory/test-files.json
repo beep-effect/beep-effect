@@ -5761,6 +5761,13 @@
     "lines": 46
   },
   {
+    "file": "packages/tooling/policy-pack/repo-configs/test/CacheQualification.policy.test.ts",
+    "package": "@beep/repo-configs",
+    "kind": "test",
+    "bytes": 25094,
+    "lines": 607
+  },
+  {
     "file": "packages/tooling/policy-pack/repo-configs/test/EffectLawsAllowlistSchemas.test.ts",
     "package": "@beep/repo-configs",
     "kind": "test",
@@ -5995,8 +6002,8 @@
     "file": "packages/tooling/tool/cli/dist/test/Cache.test-kit.d.ts",
     "package": "@beep/repo-cli",
     "kind": "support",
-    "bytes": 228,
-    "lines": 8
+    "bytes": 1170,
+    "lines": 16
   },
   {
     "file": "packages/tooling/tool/cli/dist/test/Cli.test-kit.d.ts",
@@ -6170,8 +6177,8 @@
     "file": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
     "package": "@beep/repo-cli",
     "kind": "support",
-    "bytes": 185,
-    "lines": 8
+    "bytes": 1161,
+    "lines": 38
   },
   {
     "file": "packages/tooling/tool/cli/src/test/Cli.test-kit.ts",
@@ -6370,11 +6377,88 @@
     "lines": 204
   },
   {
+    "file": "packages/tooling/tool/cli/test/cache-census.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 22842,
+    "lines": 549
+  },
+  {
     "file": "packages/tooling/tool/cli/test/cache-command.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
     "bytes": 11830,
     "lines": 298
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 4843,
+    "lines": 96
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/cache-dispatch.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 13026,
+    "lines": 301
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/cache-entrypoints.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 10505,
+    "lines": 236
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/cache-evidence.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 2867,
+    "lines": 59
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/cache-experiment.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 3942,
+    "lines": 88
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/cache-linker.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 4821,
+    "lines": 100
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 21988,
+    "lines": 492
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/cache-pilot.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 3202,
+    "lines": 80
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/cache-qualification.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 10932,
+    "lines": 238
+  },
+  {
+    "file": "packages/tooling/tool/cli/test/cache-synthetic-orchestration.test.ts",
+    "package": "@beep/repo-cli",
+    "kind": "test",
+    "bytes": 12226,
+    "lines": 264
   },
   {
     "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
@@ -6632,8 +6716,8 @@
     "file": "packages/tooling/tool/cli/test/effect-vitest-contract.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 30585,
-    "lines": 682
+    "bytes": 35071,
+    "lines": 811
   },
   {
     "file": "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts",
@@ -7136,8 +7220,8 @@
     "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 255097,
-    "lines": 6316
+    "bytes": 255547,
+    "lines": 6327
   },
   {
     "file": "packages/tooling/tool/cli/test/quality-tmpfs-render.test.ts",
@@ -7640,8 +7724,8 @@
     "file": "packages/tooling/tool/cli/test/yeet.test.ts",
     "package": "@beep/repo-cli",
     "kind": "test",
-    "bytes": 219308,
-    "lines": 5393
+    "bytes": 219338,
+    "lines": 5394
   },
   {
     "file": "packages/tooling/tool/docgen/test/Checker.test.ts",

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/html",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "722a635ff118b9365b53a061e90b0b589bbda334d4547ff86bade5e511231d15",
+  "rawLogSha256": "d610d00e6b2411292af6b376091d0604868338fe0af8043ea6dc0e498d586c80",
+  "rawReceiptSha256": "8ffac74639a451d521b40407dcba22effad2227f5629b04c9e3763770220c0f0",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 13.978743455999847,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 190
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 4,
+  "maxLoad1": 49.603515625,
+  "minimumMemAvailableGiB": 59.35227966308594,
+  "maxPressureAvg10": {
+    "cpu": 17.28,
+    "memory": 0.0,
+    "io": 0.48
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/foundation/modeling/html/test/Html.browser-import.test.ts",
+      "ms": 4884.48046875,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.entrypoints.test.ts",
+      "ms": 4699.767333984375,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.conformance-hardening.test.ts",
+      "ms": 450.38037109375,
+      "tests": 42
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.test.ts",
+      "ms": 389.48876953125,
+      "tests": 15
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.browser-conformance.test.ts",
+      "ms": 292.0751953125,
+      "tests": 11
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.security.test.ts",
+      "ms": 107.302490234375,
+      "tests": 16
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.coverage-matrix.test.ts",
+      "ms": 91.318359375,
+      "tests": 16
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.source-size.test.ts",
+      "ms": 72.686279296875,
+      "tests": 15
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.responsive-image-conformance.test.ts",
+      "ms": 53.037109375,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/html/test/Html.srcset.test.ts",
+      "ms": 47.99658203125,
+      "tests": 11
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

@@ -10,6 +10,7 @@ import { O } from "@beep/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
+import * as F from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
@@ -287,7 +288,7 @@ const boundMessage = (values: RawScanOptions): string =>
       A.findFirst(scanOptionFailures, ([failed]) => failed(values)),
       ([, message]) => message
     ),
-    () => "Scan options failed validation."
+    F.constant("Scan options failed validation.")
   );
 
 /**

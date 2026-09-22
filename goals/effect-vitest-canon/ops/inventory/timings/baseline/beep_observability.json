@@ -1,0 +1,141 @@
+{
+  "package": "@beep/observability",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:23:00.506741+00:00",
+  "totalMs": 9905.1103515625,
+  "testCount": 80,
+  "files": [
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "ms": 2490.1103515625,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseDiagnostics.test.ts",
+      "ms": 3.63818359375,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "ms": 38.97265625,
+      "tests": 15
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevTools.test.ts",
+      "ms": 1.578857421875,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/DevToolsRelay.test.ts",
+      "ms": 2.8115234375,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "ms": 8.84228515625,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpApiTelemetry.test.ts",
+      "ms": 10.308349609375,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/HttpError.test.ts",
+      "ms": 2.212890625,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "ms": 21.398193359375,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "ms": 15.643798828125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "ms": 12.419677734375,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "ms": 19.099365234375,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/OtlpPacketLab.test.ts",
+      "ms": 4.782470703125,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "ms": 24.802001953125,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ServerUtilities.test.ts",
+      "ms": 1.2470703125,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/TaggedErrors.equivalence.test.ts",
+      "ms": 5.16796875,
+      "tests": 14
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/observability/test/Boundary.test.ts",
+      "testName": "Boundary typechecks browser-safe, server-safe, and experimental-server fixtures",
+      "ms": 2486.1104160000004
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "testName": "CauseRedaction honors generated redaction bounds and channel rules",
+      "ms": 15.972639999999956
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "testName": "PhaseProfiler round-trips schema-derived phase profiles",
+      "ms": 12.196482000000287
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Observed.test.ts",
+      "testName": "Observed schema-derived arbitrary values are members of ObservedCause",
+      "ms": 11.672829999999522
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Metric.test.ts",
+      "testName": "Metric round-trips schema-derived track duration options",
+      "ms": 9.19315000000006
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/Logging.test.ts",
+      "testName": "Logging round-trips schema-derived pretty logger configs",
+      "ms": 8.699002000000291
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/CauseRedaction.test.ts",
+      "testName": "CauseRedaction round-trips schema-derived redaction options",
+      "ms": 6.942089999999553
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/NodeSdk.test.ts",
+      "testName": "NodeSdk provides OpenTelemetry spans when processors are configured",
+      "ms": 6.317892000000029
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/ErrorReporting.test.ts",
+      "testName": "ErrorReporting round-trips schema-derived reporter options",
+      "ms": 5.345021999999517
+    },
+    {
+      "file": "packages/foundation/capability/observability/test/PhaseProfiler.test.ts",
+      "testName": "PhaseProfiler tracks failures with outcome attributes",
+      "ms": 4.989587000000029
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "package": "@beep/md",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:25:27.174663+00:00",
+  "totalMs": 5201.6474609375,
+  "testCount": 71,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/md/test/ConformanceLedger.test.ts",
+      "ms": 14.6640625,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.conformance-annotation.test.ts",
+      "ms": 17.174072265625,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.conformance.test.ts",
+      "ms": 18.11962890625,
+      "tests": 24
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "ms": 1051.6474609375,
+      "tests": 40
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/TaggedError.equivalence.test.ts",
+      "ms": 2.483154296875,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "testName": "@beep/md renders policy-denied top-level and nested YouTube blocks as inert text",
+      "ms": 613.5197689999995
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "testName": "@beep/md renders core parity, rich extension, frontmatter, and URL policy additions",
+      "ms": 613.4193949999999
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "testName": "@beep/md applies a custom URL policy across every recursive render fold",
+      "ms": 613.4043820000006
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "testName": "@beep/md refines user-authored documents without changing their encoded wire",
+      "ms": 607.1430690000007
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "testName": "@beep/md rejects documents above the global AST-node budget before HTML projection",
+      "ms": 607.1231889999999
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "testName": "@beep/md renders every schema-derived SafeDocument without failing",
+      "ms": 197.78043499999967
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "testName": "@beep/md builds and validates schema-first AST nodes",
+      "ms": 197.75759000000016
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "testName": "@beep/md round-trips schema-derived Markdown AST nodes",
+      "ms": 197.74637299999995
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "testName": "@beep/md rejects values that cannot complete the total SafeDocument to SafeHtml projection",
+      "ms": 128.02524099999937
+    },
+    {
+      "file": "packages/foundation/modeling/md/test/Md.test.ts",
+      "testName": "@beep/md does not reject frontmatter that the safe HTML projection never reads",
+      "ms": 127.99281200000041
+    }
+  ]
+}

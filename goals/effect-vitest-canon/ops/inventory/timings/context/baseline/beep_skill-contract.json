@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/skill-contract",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "dd1bd955943fd16a0fb1f85d2ae071af519c04d41dabea4d0a7318f01b5c2273",
+  "rawLogSha256": "40a0dc537f70c83a848dfa7cb95324f494b9b7156e9ee189e8e73a92b0275df1",
+  "rawReceiptSha256": "66a1c2d256e1d5e1f3312f19060855d889eca51a60d987a8dcf1d5a9acd4932c",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 7.42138862999991,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 46
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 3,
+  "maxLoad1": 82.68310546875,
+  "minimumMemAvailableGiB": 50.908939361572266,
+  "maxPressureAvg10": {
+    "cpu": 10.11,
+    "memory": 0.0,
+    "io": 0.0
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillProjection.test.ts",
+      "ms": 76.340576171875,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceLadder.test.ts",
+      "ms": 43.0712890625,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/EvidenceReceipt.test.ts",
+      "ms": 27.700439453125,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/GateSummary.test.ts",
+      "ms": 25.997802734375,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillCompletion.test.ts",
+      "ms": 21.74853515625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Recovery.test.ts",
+      "ms": 16.866943359375,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/Gate.test.ts",
+      "ms": 13.24853515625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/skill-contract/test/SkillContract.test.ts",
+      "ms": 8.289306640625,
+      "tests": 2
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

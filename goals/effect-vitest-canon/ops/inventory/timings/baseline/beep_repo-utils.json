@@ -1,0 +1,166 @@
+{
+  "package": "@beep/repo-utils",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:24:14.739137+00:00",
+  "totalMs": 6997.14404296875,
+  "testCount": 226,
+  "files": [
+    {
+      "file": "packages/tooling/library/repo-utils/test/Dependencies.test.ts",
+      "ms": 5.25732421875,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/DependencyIndex.test.ts",
+      "ms": 25.754638671875,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/FsUtils.test.ts",
+      "ms": 24.7353515625,
+      "tests": 28
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Graph.test.ts",
+      "ms": 13.482421875,
+      "tests": 20
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/JSDoc.model.test.ts",
+      "ms": 18.73828125,
+      "tests": 4
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/JSDocTagDefinition.golden.test.ts",
+      "ms": 22.77880859375,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Root.test.ts",
+      "ms": 6.91357421875,
+      "tests": 6
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.model.test.ts",
+      "ms": 38.636962890625,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.package-syntax.test.ts",
+      "ms": 4.807861328125,
+      "tests": 2
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "ms": 563.14404296875,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.shared.test.ts",
+      "ms": 6.39208984375,
+      "tests": 1
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TaggedErrors.equivalence.test.ts",
+      "ms": 4.3212890625,
+      "tests": 10
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TsConfig.test.ts",
+      "ms": 24.630859375,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/UniqueDeps.test.ts",
+      "ms": 30.540283203125,
+      "tests": 7
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/Workspaces.test.ts",
+      "ms": 37.105224609375,
+      "tests": 16
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/errors/errors.test.ts",
+      "ms": 7.31396484375,
+      "tests": 8
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
+      "ms": 259.44189453125,
+      "tests": 5
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts",
+      "ms": 58.34375,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/DocgenConfig.test.ts",
+      "ms": 2.236083984375,
+      "tests": 3
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts",
+      "ms": 35.07080078125,
+      "tests": 43
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts",
+      "ms": 92.75634765625,
+      "tests": 16
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "testName": "TSMorphService getSymbolById / readSymbolSource loads a normalized class symbol and its extracted source text",
+      "ms": 292.00628400000005
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "testName": "TSMorphService readSourceText reads source text for a known TypeScript file through the scoped project",
+      "ms": 97.76540000000023
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts",
+      "testName": "TSConfig schema valid structures round-trips schema-derived compiler options through the encoded wire shape",
+      "ms": 77.2423719999997
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
+      "testName": "integration (real monorepo) resolveWorkspaceDirs should discover @beep/repo-cli and @beep/repo-utils",
+      "ms": 74.35685100000046
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
+      "testName": "integration (real monorepo) buildRepoDependencyIndex should build the dependency map for the monorepo",
+      "ms": 62.71274799999992
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
+      "testName": "integration (real monorepo) collectTsConfigPaths should find tsconfig files in workspaces",
+      "ms": 61.617277999999715
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/integration/monorepo.test.ts",
+      "testName": "integration (real monorepo) collectUniqueNpmDependencies should list all NPM deps across the monorepo",
+      "ms": 57.44198099999994
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/schemas/BiomeJson.test.ts",
+      "testName": "renderBiomeJson formats JSON when the requested target is excluded by repository Biome rules",
+      "ms": 49.98341100000016
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "testName": "TSMorphService getDiagnostics returns no diagnostics for a known clean file in semantic mode",
+      "ms": 47.11649800000032
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/test/TSMorph.service.test.ts",
+      "testName": "TSMorphService getFileOutline extracts a non-empty outline for a known TypeScript file",
+      "ms": 36.97598999999991
+    }
+  ]
+}

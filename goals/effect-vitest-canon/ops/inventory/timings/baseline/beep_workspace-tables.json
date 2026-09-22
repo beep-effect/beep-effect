@@ -1,0 +1,51 @@
+{
+  "package": "@beep/workspace-tables",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:33:39.313557+00:00",
+  "totalMs": 4148.737060546875,
+  "testCount": 7,
+  "files": [
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "ms": 79.737060546875,
+      "tests": 7
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables round-trips schema-derived Thread, Message, Turn, and Workspace entities through the row converters",
+      "ms": 75.73698899999954
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables round-trips Workspace rows through the converters",
+      "ms": 38.910541000000194
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables materializes CandidateDraft metadata without executing a live database",
+      "ms": 4.2534129999999095
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables materializes CandidateProject metadata without executing a live database",
+      "ms": 4.05417800000032
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables exports the metadata aggregate and entity namespaces",
+      "ms": 4.034987999999885
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables materializes Thread, Turn, and Message metadata without executing a live database",
+      "ms": 4.023169999999936
+    },
+    {
+      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+      "testName": "WorkspaceTables round-trips Thread, Turn, and Message rows through the converters",
+      "ms": 4.012584000000061
+    }
+  ]
+}

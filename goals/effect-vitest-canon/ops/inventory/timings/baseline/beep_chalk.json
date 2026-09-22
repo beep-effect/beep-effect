@@ -1,0 +1,71 @@
+{
+  "package": "@beep/chalk",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:20:30.520591+00:00",
+  "totalMs": 7757.19140625,
+  "testCount": 18,
+  "files": [
+    {
+      "file": "packages/foundation/capability/chalk/test/TaggedError.equivalence.test.ts",
+      "ms": 1.247314453125,
+      "tests": 1
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "ms": 23.19140625,
+      "tests": 17
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "testName": "@beep/chalk backs public option models with Effect schemas",
+      "ms": 14.19148899999982
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "testName": "@beep/chalk round-trips schema-derived values through their encoded shapes",
+      "ms": 14.179270999999972
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "testName": "supportsColor detection honors force-color, no-color, tty, and CI rules",
+      "ms": 4.94434099999944
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "testName": "supportsColor detection covers platform, flag, and terminal-specific rules with explicit runtime fixtures",
+      "ms": 4.916779000000133
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "testName": "@beep/chalk browser entry remains usable in non-browser runtimes",
+      "ms": 4.903317999999672
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "testName": "@beep/chalk does not add styling when called as the base function",
+      "ms": 2.207914999999957
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "testName": "@beep/chalk supports automatic casting to string",
+      "ms": 1.9946689999997034
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "testName": "@beep/chalk styles strings with chained modifiers and colors",
+      "ms": 1.9762300000002142
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "testName": "@beep/chalk supports nested styles and same-type reopen behavior",
+      "ms": 1.9653739999994286
+    },
+    {
+      "file": "packages/foundation/capability/chalk/test/index.test.ts",
+      "testName": "@beep/chalk resets styles and preserves function prototype methods",
+      "ms": 1.9558589999996912
+    }
+  ]
+}

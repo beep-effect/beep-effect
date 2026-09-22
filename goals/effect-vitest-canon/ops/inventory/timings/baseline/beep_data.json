@@ -1,0 +1,86 @@
+{
+  "package": "@beep/data",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:17:26.020597+00:00",
+  "totalMs": 702.536376953125,
+  "testCount": 34,
+  "files": [
+    {
+      "file": "packages/foundation/primitive/data/test/currency-codes.test.ts",
+      "ms": 1.9921875,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts",
+      "ms": 10.19775390625,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/mime-types.test.ts",
+      "ms": 24.536376953125,
+      "tests": 21
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/territories.test.ts",
+      "ms": 1.4287109375,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/timezones.test.ts",
+      "ms": 1.753662109375,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/primitive/data/test/mime-types.test.ts",
+      "testName": "mimeTypes contains known MIME types",
+      "ms": 20.64734300000009
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/mime-types.test.ts",
+      "testName": "mimeTypes each entry has source and extensions",
+      "ms": 20.45292399999994
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/mime-types.test.ts",
+      "testName": "official IANA media types exports generated registry maps and metadata",
+      "ms": 20.436009000000013
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/mime-types.test.ts",
+      "testName": "getTypes returns a record mapping extensions to MIME types",
+      "ms": 20.42501100000004
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/mime-types.test.ts",
+      "testName": "getTypes maps common file extensions correctly",
+      "ms": 20.41187100000002
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts",
+      "testName": "KeyboardShortcuts combines every platform dataset into the public data array",
+      "ms": 9.107515000000035
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts",
+      "testName": "KeyboardShortcuts keeps each row inside the exported literal domains",
+      "ms": 8.890921999999932
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts",
+      "testName": "KeyboardShortcuts keeps source metadata reviewable",
+      "ms": 8.872054000000048
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts",
+      "testName": "KeyboardShortcuts keeps supported runtime chords backed by Tauri accelerators",
+      "ms": 8.860365000000002
+    },
+    {
+      "file": "packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts",
+      "testName": "KeyboardShortcuts keeps shortcut chords unique per platform, command, and scope",
+      "ms": 8.850750000000062
+    }
+  ]
+}

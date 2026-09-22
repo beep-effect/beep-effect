@@ -2,10 +2,10 @@
 
 ## Status
 
-Lifecycle: `active`. P0a through P0f are complete. P0g PR verification and
-ratification are in progress.
-Benjamin resumed PR #1067 closeout on 2026-09-09. Continue from
-history/2026-09-09-pr1067-resume.md; merge and later-phase gates remain.
+Lifecycle: `active`. P0a through P0g are complete. PR1067 is merged and
+Benjamin ratified continuation on 2026-09-11. P1 inventory is in progress;
+P2 waits for acknowledgement of the completed inventory. See
+[the ratification receipt](history/2026-09-11-p0g-ratification-p1-start.md).
 The machine-readable state is in [ops/manifest.json](./ops/manifest.json).
 
 ## Mission
@@ -28,7 +28,14 @@ and timing behavior, and enforce the result through a syntax-only lint ratchet.
 /goal follow the instructions in goals/effect-vitest-canon/GOAL.md
 ```
 
-## Latest evidence
+## P1 starting inventory
+
+The refreshed census has 1,122 files across 139 owners: 1,012 tests and 110
+support files. The 8,228 detector candidates include 90 inherited additions
+on starting main. The baseline remains unchanged; lens coverage and timings
+are being collected before the P1 acknowledgement gate.
+
+## Foundation evidence (P0)
 
 The proposal contains all 15 detector rules, the 100-entry rc113 API graph, four
 lens charters and the instrumented runner. Main through 8cb18e6, including #1060
@@ -58,5 +65,14 @@ aggregate run ended intentionally before edits and is not accepted proof.
 conformant MemoryFileSystem and was merged by Benjamin on 2026-09-09 after all
 18 required checks passed, Greptile reached 5/5, and every review thread closed.
 See PLAN.md and the dated receipts in history for current proof and limits.
-P0g plan ratification and merge are required before P1; Benjamin must acknowledge
-the full inventory before P2 begins.
+P0g ratification and merge are complete. Benjamin must acknowledge the full
+P1 inventory before P2 begins.
+
+## P1 evidence in progress
+
+The [timing baseline index](ops/inventory/timings/baseline-index.json) records all
+139 first attempts, including failures and configured runner subsets. The
+[hosted-history summary](ops/inventory/hosted-history-summary.json) contains
+package job links and explicit evidence gaps. Source-audit progress and the
+remaining human gate are tracked in [PLAN.md](PLAN.md); neither successful timing
+nor a decoded finding row completes the full P1 inventory.

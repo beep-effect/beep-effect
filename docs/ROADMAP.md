@@ -218,7 +218,7 @@ machinery-first holds):**
 1. [`ci-lane-economics`](../goals/ci-lane-economics/README.md) P3 — the
    2026-09-04 → 2026-09-11 admission census; its close fires
    [`ci-fleet-endgame`](../goals/ci-fleet-endgame/README.md) P6 (4/7).
-2. [`effect-vitest-canon`](../goals/effect-vitest-canon/README.md) (7/11) —
+2. [`effect-vitest-canon`](../goals/effect-vitest-canon/README.md) (8/11) —
    sequenced after time-to-certainty C3.4 merges; both edit
    `vitest.shared.ts`.
 3. [`runner-trust-boundary`](../goals/runner-trust-boundary/README.md) (8/9)

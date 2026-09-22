@@ -942,6 +942,21 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
     );
   }
   it.effect(
+    "preserves monitor failures without changing a job record when no job identity is configured",
+    Effect.fnUntraced(function* () {
+      const { root, launcher } = yield* CommandCheckout;
+      const record = yield* launcher.submit(submission(root));
+      for (const route of ["--until-ready", "--until-merged", "--watch"]) {
+        // This fixture has no repository or GitHub access. Attached monitor routes must
+        // propagate their hydration failure without finalizing an unrelated detached job.
+        const failure = yield* runJobCommand(["monitor", route]).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "YeetCommandError" });
+        const untouched = O.getOrThrow(yield* launcher.read(record.jobId));
+        expect(untouched).toStrictEqual(record);
+      }
+    })
+  );
+  it.effect(
     "leaves the job record untouched outside a job",
     Effect.fnUntraced(function* () {
       const { root, launcher } = yield* CommandCheckout;

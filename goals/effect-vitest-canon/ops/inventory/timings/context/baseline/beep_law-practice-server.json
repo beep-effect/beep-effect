@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/law-practice-server",
+  "headBefore": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "headAfter": "662823dd960367046ba7d73dd8fd25d15782865a",
+  "sourceManifestSha256": "a0e5ae40473df60ab7ec8fed8ddab2b4c2126e5f44ad8a631410315e2585b56d",
+  "rawReporterSha256": "f7589ddd37b03ccc0454b23f313214f82a30e77bd8d7d2848ecad12efb65a8c7",
+  "rawLogSha256": "7d957f4497894b64eace658389fa4b2beba9d61c869c954838378d7911b35927",
+  "rawReceiptSha256": "e91ca19e785b174399758c2e502f2b7b58a07afee8bd81b47b80f706656da771",
+  "sourceDrift": [],
+  "runtime": {
+    "node": "v22.22.3",
+    "bun": "1.4.2"
+  },
+  "vitest": "4.1.11",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Exact unredacted output path is retained privately; public path redaction does not change runner arguments.",
+  "wholeCommandSeconds": 17.071288049999566,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
+  "workerSettings": "../../worker-settings.json",
+  "registeredTestStatuses": {
+    "passed": 71,
+    "skipped": 1
+  },
+  "sourceTestCoverageComplete": true,
+  "parentProcessLimits": "Limit                     Soft Limit           Hard Limit           Units     \nMax cpu time              unlimited            unlimited            seconds   \nMax file size             unlimited            unlimited            bytes     \nMax data size             unlimited            unlimited            bytes     \nMax stack size            8388608              unlimited            bytes     \nMax core file size        unlimited            unlimited            bytes     \nMax resident set          unlimited            unlimited            bytes     \nMax processes             512263               512263               processes \nMax open files            1048576              1048576              files     \nMax locked memory         134217728            134217728            bytes     \nMax address space         unlimited            unlimited            bytes     \nMax file locks            unlimited            unlimited            locks     \nMax pending signals       512263               512263               signals   \nMax msgqueue size         819200               819200               bytes     \nMax nice priority         31                   31                   \nMax realtime priority     99                   99                   \nMax realtime timeout      unlimited            unlimited            us        \n",
+  "nice": -4,
+  "allowedLogicalCpuCount": 64,
+  "sampleCount": 5,
+  "maxLoad1": 36.4443359375,
+  "minimumMemAvailableGiB": 77.82696533203125,
+  "maxPressureAvg10": {
+    "cpu": 6.93,
+    "memory": 0.0,
+    "io": 0.04
+  },
+  "slowestFiles": [
+    {
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "ms": 9326.361572265625,
+      "tests": 8
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.pglite.test.ts",
+      "ms": 6347.4599609375,
+      "tests": 6
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.pglite.test.ts",
+      "ms": 3139.54248046875,
+      "tests": 4
+    },
+    {
+      "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+      "ms": 33.24560546875,
+      "tests": 5
+    },
+    {
+      "file": "packages/law-practice/server/test/LegalPositionRecord.test.ts",
+      "ms": 25.817626953125,
+      "tests": 5
+    },
+    {
+      "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
+      "ms": 24.581787109375,
+      "tests": 32
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorPromotionGate.test.ts",
+      "ms": 8.358154296875,
+      "tests": 5
+    },
+    {
+      "file": "packages/law-practice/server/test/CandorRecord.test.ts",
+      "ms": 7.200927734375,
+      "tests": 4
+    },
+    {
+      "file": "packages/law-practice/server/test/TaggedError.equivalence.test.ts",
+      "ms": 2.298583984375,
+      "tests": 3
+    }
+  ],
+  "acceptance": "Accepted as this exact configured Node command baseline. It is not compiler, coverage or package-verification proof. No workstation-load adjustment applied."
+}

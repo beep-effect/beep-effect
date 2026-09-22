@@ -1680,3 +1680,290 @@ manual `gh pr edit` repair while the PR body already carried the provenance foot
 log showed the stamp had preserved a concurrent body edit by Blacksmith. A stamp that
 lost a race but converged should record `passed` (or a distinct `raced` state), not a
 failure that invites an unnecessary repair.
+
+## 2026-09-11 — P1 dependency-order command needs attribution
+
+During P1 batch preparation, `bun run beep topo-sort` exited zero but emitted
+`devDependencies`, `peerDependencies`, `dependencies` and `optionalDependencies`
+as nodes and placed repo-cli before identity. Those dependency-section keys
+are not workspace package names. Root is validating actual workspace edges
+and SCCs before dispatch; no P1 audit assumes that this output is a valid
+dependency-first schedule. A graph-contract test rejecting non-workspace nodes
+and validating edge direction would have prevented this scheduling ambiguity.
+The planning lane owns attribution; this receipt does not authorize a P2 fix.
+
+## 2026-09-11 — Starting main has 90 new Effect Vitest findings
+
+The first ordinary P1 check, `bun run beep lint effect-vitest`, exited 1 on
+main `662823dd96`: `90 new finding(s)`. The current census is 1,012 tests plus
+110 support files, with 8,228 candidates against the 8,138-row baseline. All
+6,291 captured source inputs are unchanged and the source/package/config diff
+is empty, so this is inherited from the starting main, not a P1 audit edit.
+The refreshed census adds 12 recently merged cache-qualification tests. Root
+retains the new detector rows and the unchanged baseline; P1 does not authorize
+P2 remediation or a baseline increase. Requiring the normal detector ratchet
+on the upstream changes would have prevented this inherited red.
+
+This single ordinary check took 11.742 seconds wall time (scan 9.641 seconds).
+It is not a new benchmark cohort or proof of the 10-second command target.
+The prior accepted timing cohort remains historical; final performance needs
+new unchanged-input evidence after the authorized migration work.
+
+## 2026-09-11 — Hosted-history pagination and log-output guard
+
+The P1 trailing-30-day workflow query contained 4,303 runs, exceeding GitHub's
+1,000-result query cap. The collector partitioned the time window, paginated
+each leaf and probed split boundaries; distinct run IDs reconcile to the
+reported total. A single capped query would have silently omitted history.
+
+Initial `gh api` job-log requests exited one with “the response contains
+terminal escape sequences.” This was a local output guard, not missing hosted
+evidence. Relevant test logs were retried with `--allow-escape-sequences` only
+into private files, never to the terminal. Failed receipts remain preserved.
+A collector that partitions capped queries and captures logs directly into
+private files would have avoided both discovery delays. The first 30 failed
+runs are an explicitly bounded slice; older failed runs remain a separate
+attribution task, never evidence that those packages had no failures.
+
+## 2026-09-11 — CIops timing worker cannot start under Node 22
+
+The first plain Node 22 CIops timing invocation exited one with zero test
+bodies and a threads-worker startup/termination error. Its package config
+selects threads; shared config supplies `--js-float16array` for Node below24.
+A direct Node22.22.3 worker_threads probe rejects that flag with
+`ERR_WORKER_INVALID_EXEC_ARGV`. This is an inherited runtime/configuration
+incompatibility, not a failing test assertion or a useful zero-test baseline.
+Root retains the raw report and marks it ineligible pending qualification of
+a supported package-local invocation. No global configuration, timeout or
+property floor is changed. A runtime/pool compatibility check would have
+prevented measuring worker startup failure as package timing.
+
+## 2026-09-11 — No-findings rule IDs rejected by the public schema
+
+The first three-file, four-lens audit emitted the charter-required `L-RES-NONE`,
+`L-FLAKE-NONE`, `L-PROP-NONE` and `L-OBS-NONE` coverage IDs. The public finding
+schema accepts only numeric lens suffixes, so it rejected all 11 coverage-only
+rows; the one actionable row decoded. The exhaustive diagnostic command exited
+zero, but explicitly reported blocked validation. Root retains that distinction.
+A round-trip contract fixture for every charter no-findings shape would have
+caught this foundation gap. A narrow schema repair is being prepared privately;
+source bytes remain frozen during baseline timing. P1 acceptance stays pending.
+
+## 2026-09-11 — Effect-drizzle Node timing cannot load Bun SQLite
+
+The first plain Node timing for `@beep/effect-drizzle` exited one. Its reporter
+lists 101 tests and zero failed assertions, but the SQLite integration suite
+fails collection: “Cannot find package 'bun:sqlite'”. This inherited runtime
+boundary prevents accepting a complete package baseline. The raw failed attempt
+is retained; no suite is excluded and no runtime is silently substituted.
+Runtime-specific integration requirements should be identified before defining
+one package-wide timing command. Source remediation remains behind the P2 gate.
+
+## 2026-09-11 — QA-capture exposes incomplete Bun API shims under Node
+
+The Node baseline attempt passed 37 tests and failed four. Two collector cases
+reach a native Bun HTTP adapter with a shim missing `hostname` (and `reload`).
+A stale-owner fixture receives no child PID because the spawn shim discards it;
+the existing required integer schema correctly rejects that fixture. Witness
+bundle preparation references `fileURLToPath` before `build`, and neither API
+exists on the shim. The generic “Bun.build threw” wrapper does not prove that a
+native compiler executed. Raw evidence and separate causes are retained in the
+timing failure inventory. A complete compatibility contract and preserved error
+causes would have prevented collapsing these failures into one vague runtime
+problem. No source change, fake handle, test exclusion or schema weakening is
+used to obtain a passing baseline.
+
+
+## 2026-09-11 — Private validator copy omitted module resolution
+
+While validating the refreshed census with the repaired private helper, Root
+copied its source/configuration into a new evidence directory but omitted the
+existing workspace `node_modules` symlink. The bridge failed before decoding:
+`Cannot find module 'effect/Schema'`. Restoring only that private resolution
+symlink produced a valid partial result with no row or source changes. The
+failed attempt remains retained. Future private-helper copies should include
+an explicit module-resolution preflight and preserve the complete runtime
+layout, not only the source-file manifest. No repository dependency install or
+runtime reconfiguration was needed.
+
+
+## 2026-09-11 — Concurrent progress metadata invalidated an audit preflight
+
+The PACER/PGlite/Tailscale audit stopped before row decoding after Root updated
+PLAN.md with accepted results from a disjoint package group. Its assigned source,
+finding schema and P1/P2 gates were unchanged. The lane retained both plan
+versions and the failed preflight, reviewed the progress-only diff and rebound
+validation to the current hash. Parallel audit contracts should explicitly
+allow Root-owned progress metadata changes while requiring gate comparison and
+fresh validation hashes; they must not claim an unchanged whole-plan snapshot.
+Batching public progress updates also reduces this avoidable retry.
+
+
+## 2026-09-12 — Interrupted supervisors left stale audit status
+
+Three audit status files still said running after their processes and supervisors
+were absent and the original tool handle could no longer be joined. The retained
+CLI event streams distinguish a completed driver audit from two turns that ended
+with a usage-limit error. An absent supervisor leaves the outer exit unknown; it
+must not be reconstructed as zero from a report or manifest. Root preserved the
+original artifacts and terminal events, checked live account availability, and
+resumed each context into a separate recovery directory for fresh validation and
+terminal proof. A supervisor-independent terminal receipt and startup reconciliation
+would prevent stale running states from delaying recovery or being mistaken for
+live work. No failed or interrupted audit was promoted to accepted inventory.
+
+The same supervisor mismatch recurred on September 14 for the Law Practice/Skill
+Contract audit: the CLI stream completed and sealed its outputs, but the outer
+supervisor join returned 143 and left stale running metadata. Original evidence
+is preserved; a separate recovery directory obtains fresh validation and terminal
+proof before acceptance. Inner completion is not relabeled as outer exit zero.
+The Architecture Lab/Documents audit later showed the same outer143/inner-complete
+mismatch. Its original records are also preserved and a separate validation recovery
+is underway; the cause of the supervisor termination has not been established.
+
+
+## 2026-09-14 — Exact package test names missed by history attribution
+
+During the Tika source audit, the package history summary reported zero mapped
+observations, but the retained completion evidence contains four package-null
+property failures with test names beginning `@beep/tika` and the path
+`test/Tika.service.test.ts`. The package digest preserves their job links and
+historical heads. Root retained a separate attribution follow-up without
+rewriting immutable collection evidence or inferring a current defect or flake.
+An exact package-name fallback in test-name attribution, followed by a check
+against package ownership, would prevent a misleading zero-mapped summary.
+Historical source and counterexample comparison remains necessary before causal
+classification. No timing or history collection was rerun.
+
+## 2026-09-14 — Source-audit validation delayed by host waits
+
+Root Editor inventory validation and two concurrent audit decoders remained
+pending while their Bun processes were in uninterruptible `path_openat` waits.
+A read-only process snapshot also showed unrelated applications and system
+processes in uninterruptible waits. Memory pressure was elevated despite
+available memory; these observations do not identify a root cause. No pending
+validation was treated as a pass, retried concurrently or promoted to accepted
+inventory. Bounded process-wait diagnostics and a host-health admission signal
+would make this environmental delay easier to distinguish from decoder failure.
+Original processes and evidence are preserved.
+
+## 2026-09-15 — Progress-only PLAN drift repeated during strict audit validation
+
+- Work: closing the Agents client/server and Architecture Lab proof source audit
+  while Root accepted the disjoint Infra/Epistemic UI inventory.
+- Evidence: the audit reported "Validation stopped at the input-integrity check"
+  when PLAN advanced to 777 files across 130 packages. The reviewed diff changed
+  progress prose and table entries; phase gates stayed unchanged.
+- Response: retain the failed attempt and old input hashes, review the exact diff,
+  then run fresh strict validation with separate receipts. No failed attempt is
+  treated as a pass, and no input-integrity guard is disabled.
+- Prevention: batch progress publication between audit validation windows, or
+  separate frequently changing progress data from the immutable phase contract
+  in a future authorized workflow change. The existing gate remains enforced.
+
+## 2026-09-15 — Interrupted observation lost the audit supervisor
+
+- Work: waiting for CLI source-audit batch 08 to finish and seal its evidence.
+- Evidence: after an interrupted tool wait, the existing handle returned
+  "Unknown process id". A fresh process snapshot showed the Codex audit still
+  alive, with its Python supervisor absent and its recorded status still running.
+- Response: preserve the surviving process and all partial artifacts. Observe
+  completion directly; do not infer an exit code from the stale status file or
+  restart a live audit. If the original exit remains unavailable, run a separate
+  supervised recovery validation after it finishes and retain both histories.
+- Prevention: retain supervisor lifetime across observation cancellation, or use
+  durable process supervision that records the child exit independently of the
+  observing tool session. This incident does not establish an audit failure.
+
+## 2026-09-15 — Close-review bundle omitted cited evidence
+
+- Work: independent Grok review of the complete P1 inventory and 40 sampled files.
+- Evidence: findings P1-GROK-001 through 003 identified a missing timing source
+  manifest, no explicit Desktop chunk-union artifact, and a CLI union snapshot
+  whose acceptance flag predated whole-package acceptance. The later full strict
+  validator already covered all 1,122 files; the earlier Desktop partial receipt
+  was not a substitute for that proof.
+- Response: preserve the original review snapshot and prepare a separate sealed
+  supplement. Recover the timing manifest with its exact cited hash, verify the
+  disjoint Desktop union against all 59 source files and 236 canonical rows, run
+  fresh strict validation, and issue a CLI union successor linked to the accepted
+  receipt. The completed independent review accepted this supplement on 2026-09-16;
+  see `2026-09-16-p1-independent-review.md` for the dispositions.
+- Prevention: before dispatch, resolve every cited evidence hash to supplied
+  bytes and check that package-union receipts reflect the final accepted state.
+  Keep historical partial receipts labeled and separate from completeness proof.
+
+## 2026-09-16 — Consistency audit lacked helper implementation bytes
+
+- Work: classify native property callback normalization across 147 candidates.
+- Evidence: the first process exited zero after 24 inspections, with eight
+  helper-contract cases unresolved because the frozen corpus omitted `Result.ts`.
+  It also lacked the generator and run-count implementations needed for precise
+  preservation claims. The other 123 files remained explicitly uninspected.
+- Response: preserve that partial report, supply a separate hash-bound supplement
+  from the pinned Effect commit and original timing manifest, and resume the same
+  audit context. Exit zero is not semantic completion.
+- Prevention: include the referenced callback helper implementations when sealing
+  a focused review bundle; report assigned, inspected and resolved counts apart.
+
+## 2026-09-21 — P1 evidence references in publication proof
+
+- Work: publish the saved P1 inventory after integrating main and passing CLI audit/docgen.
+- Evidence: full Yeet publication rejected 14 introduced semantic references and nine
+  live host-path observations in the new inventory. The semantic report separately
+  retained 500 unchanged findings. The introduced references were historical hosted
+  coverage paths, generated declaration paths, and quoted test fixture literals.
+- Repair: retain the exact historical evidence under packet history; distinguish
+  captured paths from current source links and paraphrase fixture literals in live
+  human rows. Preserve finding identities, counts, judgments and exact test assertions.
+- Prevention: run knowledge reference checks on the assembled inventory before the
+  expensive publication proof, with historical evidence separated from live guidance.
+
+## 2026-09-21 — Inherited CLI coverage blocks the P1 checkpoint
+
+- Work: prove the progress commit after repairing its knowledge references.
+- Evidence: the second full Yeet publication passed the knowledge gates but failed
+  the coverage ratchet. Four Codex Security modules lacked baseline identities;
+  `Yeet.command.ts` measured branches 98.66 below 100 and statements 97.06 below
+  97.21. All five source blobs were identical to the integrated main revision.
+- Repair: add focused behavioral tests for uncovered Security paths and attached
+  monitor failure propagation. Keep the existing ratchet floors and production
+  behavior intact; root owns combined package verification and publication proof.
+- Prevention: require the package coverage ratchet when landing new CLI command
+  modules, and cover attached as well as detached command routing.
+
+### 2026-09-21 — Run cheap gates before expensive coverage-repair proof
+
+- While repairing inherited security coverage gaps, the new dispatch fixture passed
+  focused tests but introduced resource-ownership and complexity findings.
+- Evidence: `beep lint effect-vitest` initially found eight introduced rows; after
+  fixture ownership repair it reported zero. `beep yeet verify --tier cheap-gates`
+  then attributed two Fallow complexity findings to the new dispatch test.
+- The in-flight package audit was interrupted before changing its inputs; no pass
+  was claimed for that run. Simplify test setup and rerun cheap gates first.
+- Prevention: sequence focused behavior checks, all cheap gates, then the costly
+  package audit so newly authored fixtures do not invalidate an expensive proof.
+
+### 2026-09-21 — Package audit does not cover every root test policy
+
+- The full package audit and all cheap gates passed, but publication's root policy
+  lane found two inline schema compiler calls and three Effect test diagnostics.
+- Evidence: `beep(no-inline-schema-compile)`, `strictBooleanExpressions`, and
+  `preferTypedSchemaDecoder` in the new security regression tests.
+- Hoist compiled codecs, use the typed string decoder, and compare optional flags
+  explicitly. Run the affected root checks before retrying the full proof.
+- Prevention: include root test diagnostics and source-policy lint in the focused
+  test-authoring loop; a green package audit alone does not establish policy parity.
+
+### 2026-09-21 — New-file coverage requires every metric
+
+- Publication coverage passed all tests and reached 100% lines/functions in the
+  security bundle reader, but its new-file identity also required every statement
+  and branch. An internal missing-entry branch remained after earlier manifest
+  binding and digest checks had already guaranteed the required entries.
+- Evidence: `Security.bundle.ts` reported one uncovered branch and statement;
+  no other coverage regression remained in the full publication run.
+- Preserve the typed fallback through the standard Option fold and verify all
+  four metrics in the focused report before repeating full publication proof.
+- Prevention: inspect the ratchet's complete metric contract, not only the first
+  metrics reported in an earlier failed run. Do not lower or seed baseline floors.

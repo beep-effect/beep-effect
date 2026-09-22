@@ -1,0 +1,46 @@
+{
+  "package": "@beep/ontology-config",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:17:22.432435+00:00",
+  "totalMs": 392.85888671875,
+  "testCount": 6,
+  "files": [
+    {
+      "file": "packages/ontology/config/test/Config.test.ts",
+      "ms": 10.85888671875,
+      "tests": 6
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/ontology/config/test/Config.test.ts",
+      "testName": "OntologyConfigLive exposes static test layers and the package version",
+      "ms": 9.138492999999983
+    },
+    {
+      "file": "packages/ontology/config/test/Config.test.ts",
+      "testName": "OntologyConfigLive resolves the required ontology workspace root",
+      "ms": 8.957985999999948
+    },
+    {
+      "file": "packages/ontology/config/test/Config.test.ts",
+      "testName": "OntologyConfigLive keeps missing and empty configuration in the typed failure channel",
+      "ms": 8.938827000000003
+    },
+    {
+      "file": "packages/ontology/config/test/Config.test.ts",
+      "testName": "OntologyMcpConfigLive leaves mutation registration off when unset",
+      "ms": 8.80123500000002
+    },
+    {
+      "file": "packages/ontology/config/test/Config.test.ts",
+      "testName": "OntologyMcpConfigLive enables mutation registration when explicitly set",
+      "ms": 8.75481400000001
+    },
+    {
+      "file": "packages/ontology/config/test/Config.test.ts",
+      "testName": "OntologyMcpConfigLive keeps a malformed flag in the typed failure channel rather than defaulting to off",
+      "ms": 0.8587679999999978
+    }
+  ]
+}

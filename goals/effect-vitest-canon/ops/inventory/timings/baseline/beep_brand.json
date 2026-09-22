@@ -1,0 +1,76 @@
+{
+  "package": "@beep/brand",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-11T23:20:22.680760+00:00",
+  "totalMs": 7178.162353515625,
+  "testCount": 17,
+  "files": [
+    {
+      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
+      "ms": 36.477294921875,
+      "tests": 12
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
+      "ms": 12.987548828125,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/react.test.tsx",
+      "ms": 59.162353515625,
+      "tests": 2
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/ui-system/brand/test/react.test.tsx",
+      "testName": "BeepMark renders the five mark paths inside a labelled svg",
+      "ms": 59.162303999999494
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/react.test.tsx",
+      "testName": "BeepWordmark renders the brand name beside a hidden mark",
+      "ms": 58.975688000000446
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
+      "testName": "renderThemeCss puts the light scheme in @theme and the dark scheme under .dark",
+      "ms": 30.597616000000016
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
+      "testName": "renderThemeCss references the brand scale from glow layers instead of baking rgba",
+      "ms": 30.56220200000007
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
+      "testName": "renderThemeCss quotes named families and leaves generic keywords bare",
+      "ms": 30.544764999999643
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
+      "testName": "renderWordmarkSvg escaping escapes XML metacharacters in the name and quotes multi-word families",
+      "ms": 30.534740000000056
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/Brand.test.ts",
+      "testName": "BrandIdentity properties round-trips arbitrary identities through encode and decode",
+      "ms": 30.50444299999981
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
+      "testName": "generated assets match their render exactly (run `bun run render` after changing tokens)",
+      "ms": 12.987464000000728
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
+      "testName": "generated assets bridge.css only references custom properties that brand.css declares",
+      "ms": 11.567205999999715
+    },
+    {
+      "file": "packages/foundation/ui-system/brand/test/assets.test.ts",
+      "testName": "generated assets renders the favicon on a brand-900 ground with the mark scaled to 32 units",
+      "ms": 8.795837000000574
+    }
+  ]
+}

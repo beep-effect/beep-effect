@@ -2,6 +2,217 @@
 
 Status: `active`
 
+## Progress-save integration — 2026-09-21
+
+Benjamin requested merging main, restoring green repository checks, and publishing
+this progress as a PR before continuing the goal after that PR merges. Main was
+integrated at `593a000a41`; the installed runtime is now Effect rc.117 and Vitest
+5.0.1. The census, timing cohort, inventory rows and independent review below
+remain evidence of the frozen rc.113 source snapshot. They are not proof that
+new or changed main files have been audited. Refresh and reconcile that delta
+before P1 acknowledgement. P2 remains gated.
+
+The focused diagnostic audit finished its 147-candidate frozen-source pass during
+this integration. Its draft reports 131 proposed judgments, eight already-covered
+cases and eight detector-only cases. Root review and reconciliation remain pending;
+no provisional correction is applied to the canonical inventory in this
+progress-save step.
+
+## Current phase — 2026-09-16
+
+Benjamin ratified the plan after PR1067 merged. P1 is authorized and in progress;
+P2 still requires his inventory acknowledgement. The starting main, runtime
+qualification and preserved proof limits are recorded in
+[the ratification receipt](history/2026-09-11-p0g-ratification-p1-start.md).
+Earlier status entries below remain historical evidence.
+
+P1 starts with 1,122 census files, 8,228 detector candidates and 139 owners.
+The accepted dependency schedule has 159 bounded audit batches. See
+[the corpus and schedule receipt](history/2026-09-11-p1-corpus-and-schedule.md).
+Four-lens source coverage, package timing collection and hosted-history attribution
+are recorded below. Review corrections remain in progress.
+
+The accepted source inventory covers all 1,122 files across 139 complete packages.
+The four lens directories contain 4,526 human rows: 693 review items and 3,833
+coverage-only rows. Review items include native-boundary constraints and coordinated
+lens views, not only independent defects. All 12,754 supplied rows pass full strict
+inventory validation with no missing human file/lens pairs or validation errors.
+Repo-cli is accepted after all 13 chunks and exact whole-package assembly.
+Professional Desktop is accepted after its three chunks and whole-package validation.
+Original interruption records and separate successful recovery receipts remain
+preserved. No failed timing cohort has been promoted to a pass.
+SkillProjection plain-value adjudication remains recorded under D5; its detector
+rows stay open for coordinated P2 disposition. The independent Grok review is
+complete; its corrections and Benjamin's acknowledgement remain required before P2.
+
+Package timing collection is complete: 139 attempts, 136 successful and three
+failed. The [baseline index](ops/inventory/timings/baseline-index.json)
+distinguishes 132 accepted Node command baselines from four configured subsets
+and the failures. The [hosted summary](ops/inventory/hosted-history-summary.json)
+accounts for all 527 frozen failed runs while retaining 21 unavailable logs and
+one unresolved cause. The P1 inventory-schema correction passes normal repo-cli
+audit and docgen, 237 focused tests and 25 controlled validator checks.
+Full inventory completeness is verified. The required 40-file Grok review is complete;
+see the [review record](research/2026-09-16-p1-independent-review.md). A focused
+147-candidate consistency audit and the resulting inventory corrections remain
+in progress. Draft corrections have passed isolated strict validation but are
+not included in the canonical counts below. The earlier
+[progress receipt](history/2026-09-11-p1-inventory-progress.md) preserves its
+preceding snapshot and evidence limits.
+
+## P1 accepted package inventory
+
+This table counts human lens rows in accepted package inventories. Detector
+candidates are separate; uncovered packages are not represented as complete.
+
+| Package | Files | Resource | Flake | Property | Observability | Major | Minor | Info |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `@beep/fc-runs` | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 3 |
+| `@beep/todox` | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 4 |
+| `@beep/types` | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 4 |
+| `@beep/identity` | 12 | 12 | 12 | 19 | 16 | 20 | 2 | 37 |
+| `@beep/ontology-config` | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 3 |
+| `@beep/utils` | 15 | 16 | 15 | 17 | 15 | 7 | 2 | 54 |
+| `@beep/data` | 5 | 5 | 5 | 5 | 5 | 0 | 2 | 18 |
+| `@beep/schema` | 82 | 82 | 82 | 82 | 86 | 45 | 12 | 275 |
+| `@beep/codegen-kit` | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 3 |
+| `@beep/colors` | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 3 |
+| `@beep/cosmos` | 2 | 2 | 2 | 2 | 2 | 1 | 2 | 5 |
+| `@beep/graph-3d` | 2 | 2 | 2 | 2 | 2 | 1 | 2 | 5 |
+| `@beep/obs` | 4 | 4 | 4 | 4 | 4 | 2 | 4 | 10 |
+| `@beep/pacer` | 2 | 3 | 2 | 3 | 2 | 3 | 2 | 5 |
+| `@beep/pglite` | 3 | 3 | 3 | 3 | 3 | 0 | 5 | 7 |
+| `@beep/tailscale` | 2 | 2 | 2 | 2 | 2 | 0 | 2 | 6 |
+| `@beep/test-utils` | 20 | 20 | 20 | 20 | 20 | 7 | 4 | 69 |
+| `@beep/runpod` | 3 | 3 | 3 | 3 | 3 | 2 | 0 | 10 |
+| `@beep/acp` | 6 | 6 | 6 | 6 | 6 | 2 | 3 | 19 |
+| `@beep/ai-provider-cli` | 3 | 3 | 3 | 3 | 3 | 0 | 0 | 12 |
+| `@beep/ai-sync` | 2 | 2 | 2 | 2 | 2 | 0 | 1 | 7 |
+| `@beep/anthropic` | 3 | 3 | 3 | 3 | 3 | 0 | 0 | 12 |
+| `@beep/api-transport` | 3 | 3 | 3 | 3 | 3 | 0 | 0 | 12 |
+| `@beep/architecture-lab-config` | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 3 |
+| `@beep/effect-drizzle` | 15 | 18 | 15 | 15 | 15 | 3 | 10 | 50 |
+| `@beep/box` | 3 | 3 | 3 | 3 | 3 | 0 | 2 | 10 |
+| `@beep/brand` | 3 | 3 | 3 | 3 | 3 | 0 | 2 | 10 |
+| `@beep/chalk` | 2 | 2 | 2 | 2 | 2 | 0 | 1 | 7 |
+| `@beep/ciops` | 2 | 2 | 2 | 2 | 2 | 0 | 2 | 6 |
+| `@beep/discord` | 2 | 2 | 2 | 2 | 2 | 0 | 1 | 7 |
+| `@beep/drizzle` | 3 | 3 | 3 | 3 | 3 | 1 | 2 | 9 |
+| `@beep/duckdb` | 2 | 3 | 2 | 2 | 2 | 3 | 2 | 4 |
+| `@beep/html` | 18 | 18 | 18 | 18 | 18 | 2 | 4 | 66 |
+| `@beep/lint-rules` | 9 | 9 | 9 | 9 | 9 | 2 | 6 | 28 |
+| `@beep/mcp-kit` | 7 | 7 | 7 | 7 | 7 | 0 | 6 | 22 |
+| `@beep/openai-compat` | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 4 |
+| `@beep/phoenix` | 2 | 2 | 2 | 2 | 2 | 0 | 2 | 6 |
+| `@beep/exiftool` | 4 | 4 | 4 | 4 | 4 | 1 | 1 | 14 |
+| `@beep/face-detection` | 3 | 3 | 3 | 3 | 3 | 0 | 0 | 12 |
+| `@beep/firecrawl` | 3 | 3 | 3 | 3 | 3 | 0 | 1 | 11 |
+| `@beep/freshbooks` | 2 | 2 | 2 | 2 | 2 | 1 | 0 | 7 |
+| `@beep/hubspot` | 2 | 2 | 2 | 2 | 2 | 1 | 0 | 7 |
+| `@beep/m365` | 2 | 2 | 2 | 2 | 2 | 0 | 1 | 7 |
+| `@beep/openai` | 3 | 3 | 3 | 3 | 3 | 0 | 0 | 12 |
+| `@beep/observability` | 19 | 19 | 19 | 19 | 19 | 1 | 10 | 65 |
+| `@beep/postgres` | 3 | 3 | 3 | 3 | 3 | 0 | 2 | 10 |
+| `@beep/pretext` | 4 | 4 | 4 | 4 | 4 | 0 | 2 | 14 |
+| `@beep/provenance` | 3 | 3 | 3 | 3 | 3 | 0 | 0 | 12 |
+| `@beep/rdf` | 9 | 9 | 9 | 10 | 9 | 2 | 1 | 34 |
+| `@beep/nlp` | 10 | 10 | 10 | 10 | 10 | 0 | 13 | 27 |
+| `@beep/openclaw` | 9 | 9 | 9 | 9 | 9 | 1 | 8 | 27 |
+| `@beep/repo-configs` | 11 | 11 | 11 | 11 | 11 | 0 | 2 | 42 |
+| `@beep/sanity` | 2 | 2 | 2 | 2 | 2 | 1 | 2 | 5 |
+| `@beep/shared-use-cases` | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 4 |
+| `@beep/uspto` | 2 | 2 | 2 | 2 | 2 | 0 | 2 | 6 |
+| `@beep/ui` | 10 | 10 | 10 | 10 | 10 | 1 | 3 | 36 |
+| `@beep/ecfr` | 2 | 2 | 2 | 2 | 2 | 0 | 0 | 8 |
+| `@beep/govinfo` | 3 | 3 | 3 | 3 | 3 | 0 | 1 | 11 |
+| `@beep/shared-domain` | 9 | 9 | 9 | 9 | 9 | 0 | 1 | 35 |
+| `@beep/repo-utils` | 31 | 34 | 31 | 33 | 31 | 6 | 17 | 106 |
+| `@beep/dock` | 14 | 14 | 14 | 15 | 14 | 0 | 7 | 50 |
+| `@beep/md` | 5 | 5 | 5 | 5 | 5 | 0 | 1 | 19 |
+| `@beep/box-provisioning` | 8 | 8 | 8 | 8 | 8 | 2 | 5 | 25 |
+| `@beep/file-processing` | 4 | 4 | 4 | 4 | 4 | 0 | 5 | 11 |
+| `@beep/langextract` | 7 | 7 | 7 | 7 | 7 | 0 | 6 | 22 |
+| `@beep/n3` | 2 | 2 | 2 | 2 | 2 | 0 | 0 | 8 |
+| `@beep/nlp-processing` | 9 | 9 | 9 | 10 | 9 | 1 | 4 | 32 |
+| `@beep/ontology` | 4 | 4 | 4 | 4 | 4 | 1 | 1 | 14 |
+| `@beep/semantic-web` | 4 | 4 | 4 | 4 | 4 | 1 | 0 | 15 |
+| `@beep/architecture-lab-domain` | 4 | 4 | 4 | 4 | 4 | 0 | 2 | 14 |
+| `@beep/documents-domain` | 7 | 7 | 7 | 7 | 7 | 0 | 0 | 28 |
+| `@beep/epistemic-domain` | 7 | 7 | 7 | 7 | 7 | 0 | 1 | 27 |
+| `@beep/oip-web` | 4 | 4 | 5 | 4 | 4 | 2 | 4 | 11 |
+| `@beep/agents-domain` | 2 | 2 | 2 | 2 | 2 | 0 | 0 | 8 |
+| `@beep/doc-text` | 2 | 2 | 2 | 2 | 2 | 0 | 0 | 8 |
+| `@beep/dock-react` | 5 | 5 | 5 | 5 | 5 | 0 | 5 | 15 |
+| `@beep/ffmpeg` | 6 | 6 | 6 | 6 | 6 | 0 | 2 | 22 |
+| `@beep/workspace-domain` | 2 | 2 | 2 | 2 | 2 | 0 | 0 | 8 |
+| `@beep/pandoc-ast` | 9 | 9 | 9 | 9 | 9 | 0 | 6 | 30 |
+| `@beep/repo-docgen` | 9 | 9 | 9 | 9 | 9 | 1 | 3 | 32 |
+| `@beep/lexical-schema` | 7 | 7 | 7 | 8 | 7 | 0 | 3 | 26 |
+| `@beep/libpff` | 5 | 5 | 5 | 5 | 5 | 0 | 4 | 16 |
+| `@beep/tika` | 7 | 7 | 7 | 7 | 7 | 1 | 3 | 24 |
+| `@beep/m365-mcp` | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 4 |
+| `@beep/ontology-domain` | 2 | 2 | 2 | 2 | 2 | 0 | 1 | 7 |
+| `@beep/trustgraph-workbench` | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 3 |
+| `@beep/uspto-mcp` | 1 | 1 | 1 | 1 | 1 | 0 | 2 | 2 |
+| `@beep/venice-ai` | 3 | 3 | 3 | 3 | 3 | 0 | 2 | 10 |
+| `@beep/xai` | 2 | 2 | 2 | 2 | 2 | 0 | 1 | 7 |
+| `@beep/gov-legal-mcp` | 2 | 2 | 2 | 2 | 2 | 0 | 2 | 6 |
+| `@beep/onepassword-cli` | 2 | 2 | 2 | 2 | 2 | 0 | 1 | 7 |
+| `@beep/shared-tables` | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 4 |
+| `@beep/oxigraph` | 2 | 2 | 2 | 2 | 2 | 0 | 2 | 6 |
+| `@beep/rdf-canonize` | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 3 |
+| `@beep/shacl` | 3 | 3 | 3 | 3 | 3 | 0 | 1 | 11 |
+| `@beep/wink` | 11 | 11 | 11 | 11 | 11 | 0 | 6 | 38 |
+| `@beep/law-practice-domain` | 5 | 5 | 5 | 5 | 5 | 0 | 8 | 12 |
+| `@beep/skill-contract` | 8 | 8 | 8 | 8 | 8 | 0 | 10 | 22 |
+| `@beep/epistemic-config` | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 3 |
+| `@beep/epistemic-tables` | 4 | 4 | 4 | 4 | 4 | 0 | 0 | 16 |
+| `@beep/epistemic-use-cases` | 7 | 7 | 7 | 7 | 7 | 0 | 1 | 27 |
+| `@beep/agents-tables` | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 3 |
+| `@beep/qa-capture` | 9 | 9 | 9 | 9 | 9 | 0 | 10 | 26 |
+| `@beep/workspace-tables` | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 4 |
+| `@beep/workspace-use-cases` | 2 | 2 | 2 | 2 | 2 | 0 | 1 | 7 |
+| `@beep/architecture-lab-tables` | 2 | 2 | 2 | 2 | 2 | 0 | 0 | 8 |
+| `@beep/architecture-lab-ui` | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 4 |
+| `@beep/architecture-lab-use-cases` | 4 | 4 | 4 | 4 | 4 | 0 | 2 | 14 |
+| `@beep/documents-tables` | 4 | 4 | 4 | 4 | 4 | 0 | 0 | 16 |
+| `@beep/documents-use-cases` | 8 | 8 | 8 | 8 | 8 | 0 | 2 | 30 |
+| `@beep/editor` | 19 | 19 | 19 | 19 | 19 | 0 | 13 | 63 |
+| `@beep/law-practice-tables` | 3 | 3 | 3 | 3 | 3 | 1 | 0 | 11 |
+| `@beep/lejeune-bolt-workbench` | 3 | 3 | 3 | 3 | 3 | 2 | 0 | 10 |
+| `@beep/nlp-mcp` | 6 | 6 | 6 | 7 | 6 | 1 | 2 | 22 |
+| `@beep/ontology-use-cases` | 8 | 8 | 8 | 8 | 8 | 0 | 2 | 30 |
+| `@beep/semantica` | 17 | 17 | 17 | 17 | 17 | 0 | 22 | 46 |
+| `@beep/repo-ai-metrics` | 27 | 27 | 27 | 28 | 27 | 3 | 13 | 93 |
+| `@beep/law-practice-use-cases` | 5 | 5 | 5 | 5 | 5 | 0 | 2 | 18 |
+| `@beep/epistemic-client` | 2 | 2 | 2 | 2 | 2 | 2 | 0 | 6 |
+| `@beep/epistemic-server` | 14 | 14 | 14 | 14 | 14 | 3 | 2 | 51 |
+
+| `@beep/agents-use-cases` | 5 | 5 | 5 | 5 | 5 | 0 | 3 | 17 |
+| `@beep/api-docs` | 3 | 3 | 3 | 3 | 3 | 0 | 3 | 9 |
+| `@beep/architecture-lab-client` | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 3 |
+| `@beep/architecture-lab-server` | 3 | 3 | 3 | 3 | 3 | 0 | 3 | 9 |
+
+| `@beep/db-admin` | 10 | 10 | 10 | 10 | 10 | 0 | 3 | 37 |
+| `@beep/ontology-server` | 4 | 4 | 4 | 4 | 4 | 0 | 4 | 12 |
+| `@beep/workspace-server` | 4 | 4 | 4 | 4 | 4 | 0 | 5 | 11 |
+
+| `@beep/documents-server` | 11 | 11 | 11 | 12 | 11 | 0 | 8 | 37 |
+
+| `@beep/epistemic-ui` | 3 | 3 | 3 | 3 | 3 | 0 | 2 | 10 |
+| `@beep/infra` | 14 | 14 | 14 | 14 | 14 | 0 | 5 | 51 |
+| `@beep/agents-client` | 6 | 6 | 6 | 6 | 6 | 5 | 4 | 15 |
+| `@beep/agents-server` | 6 | 6 | 6 | 6 | 6 | 1 | 0 | 23 |
+| `@beep/architecture-lab-proof` | 1 | 1 | 1 | 1 | 1 | 0 | 1 | 3 |
+| `@beep/law-practice-server` | 10 | 10 | 10 | 11 | 10 | 0 | 5 | 36 |
+| `@beep/practice-kg-mcp` | 2 | 2 | 2 | 2 | 2 | 0 | 2 | 6 |
+| `@beep/ontology-client` | 11 | 11 | 11 | 11 | 11 | 5 | 7 | 32 |
+| `@beep/ontology-ui` | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 4 |
+
+| `@beep/professional-desktop` | 59 | 59 | 59 | 59 | 59 | 4 | 21 | 211 |
+
+| `@beep/repo-cli` | 249 | 249 | 249 | 249 | 249 | 51 | 52 | 893 |
+
 ## Phase gates
 
 | Phase | Status | Work | Exit criterion |
@@ -13,15 +224,15 @@ Status: `active`
 | P0e | complete | Charters and instrumented it | Pinned charters and Node/Bun runner proofs green. |
 | P0.5 | complete | MemoryFileSystem promotion | Node/Bun/Memory conformance and test-utils proof green; PR1047 merged by Benjamin after acceptance at 0fce23f. |
 | P0f | complete | Adversarial review | Three Grok rounds; no open blockers; majors fixed or waived. |
-| P0g | in-progress | Initial PR and ratification | Yeet merge-ready; Benjamin approves plan and merges before P1. |
-| P1 | pending | Inventory | All four lenses cover every file; timing evidence; Benjamin acknowledges before P2. |
+| P0g | complete | Initial PR and ratification | PR1067 merged; Benjamin ratified continuation on 2026-09-11. |
+| P1 | in-progress | Inventory | All four lenses cover every file; timing evidence; Benjamin acknowledges before P2. |
 | P2 | pending | Remediation waves | Each topological wave passes package proof and shrinks baseline exactly. |
 | P3 | pending | Close | Empty baseline; hosted proof; following-week p95; reflection and state flip in final PR. |
 
 P0a research and P0b packet setup overlap as authorized by the first-actions
 contract. Every subsequent phase waits for its predecessor's gate.
 
-## Current integration, 2026-09-10
+## Historical integration, 2026-09-10
 
 Main, including #1060 and #1082, is integrated through `8cb18e6` by merge `3630388`.
 The current source contract is rc113 at d3b837aee836f35d625d55205f7d6e61305fc198.

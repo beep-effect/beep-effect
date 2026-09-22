@@ -7,7 +7,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { SchemaGetter } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CodexFindingTitle, GitCommitSha, GitHubRepoSlug } from "./Findings.capture.schemas.ts";
@@ -54,12 +53,8 @@ export const SECURITY_PLUGIN_VERSION = "0.1.95";
  */
 const GITHUB_REMOTE = /^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|git@)github\.com[:/]([^?#]+?)(?:\.git)?\/?$/i;
 
-// Total on inputs that pass GITHUB_REMOTE; falls back to the input so the slug checks report the failure.
-const remoteSlug = (remote: string): string =>
-  O.getOrElse(
-    O.flatMap(Str.match(GITHUB_REMOTE)(remote), (found) => O.fromNullishOr(found[1])),
-    () => remote
-  );
+// The preceding pattern check guarantees the mandatory slug capture.
+const remoteSlug = Str.replace(GITHUB_REMOTE, "$1");
 
 /**
  * Codec from any credential-free GitHub remote URL to its `owner/repo` slug.
