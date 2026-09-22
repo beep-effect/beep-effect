@@ -534,6 +534,41 @@ describe("ci lane timings gh api retry", () => {
       expect(scripted.state.spawned).toBe(5);
     })
   );
+
+  it.effect("rejects a capture that overflowed the output bound instead of decoding it", () =>
+    Effect.gen(function* () {
+      // A zero-exit capture past the 512 KiB repo-run bound is a partial body:
+      // decoding it would read as a short run list rather than a failure.
+      const scripted = scriptedGhSpawner([{ exitCode: 0, output: Str.repeat(512 * 1024 + 1)("x") }]);
+      const exit = yield* collectWithRetries(scripted.spawner);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("returned a truncated response");
+      expect(scripted.state.spawned).toBe(1);
+    })
+  );
+});
+
+describe("ci lane timings jobs pagination", () => {
+  it.effect("fails when a jobs page stalls below its own total_count", () =>
+    Effect.gen(function* () {
+      // An empty page while `total_count` still promises more jobs would loop
+      // forever on the next page number; the command must stop and say so.
+      const stalledSpawner = ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) {
+          return Effect.die("lane timings never spawns a piped command");
+        }
+        const rendered = A.join([command.command, ...command.args], " ");
+        return Effect.succeed(
+          stubHandle(Str.includes("page=2")(rendered) ? '{"jobs":[],"total_count":2}' : laneTimingsResponse(rendered))
+        );
+      });
+      const exit = yield* collectWithRetries(stalledSpawner);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(Exit.isFailure(exit) ? exit.cause.toString() : "").toContain("ended after 1 of 2 jobs");
+    })
+  );
 });
 
 describe("ci lane timings derivations", () => {

@@ -191,8 +191,9 @@ export class CiLanePartition extends S.Class<CiLanePartition>($I`CiLanePartition
  * their 440 s weights are arithmetic halves of the measured 879 s serial body
  * (the split is by path hash, so the real halves are close but not equal),
  * per the `goals/ci-lane-economics` window-2 repair decision. The remaining
- * tasks are assigned to two bins. The weights are evidence, not runtime
- * scheduling inputs.
+ * tasks are assigned to two bins. The extracted `@beep/test-runner` stays
+ * beside `@beep/test-utils` in each lane so the moved workload retains its
+ * existing placement. The weights are evidence, not runtime scheduling inputs.
  *
  * **Example** (List the hosted partitions)
  *
@@ -292,6 +293,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/box-provisioning",
       "@beep/html",
       "@beep/ontology-server",
+      "@beep/test-runner",
       "@beep/test-utils",
       "@beep/acp",
       "@beep/agents-domain",
@@ -397,6 +399,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/workspace-server",
       "@beep/mcp-kit",
       "@beep/md",
+      "@beep/test-runner",
       "@beep/test-utils",
       "@beep/tika",
       "@beep/documents-tables",

@@ -1991,6 +1991,70 @@ active systemd user manager. No fallback job started. Publication continues with
 the same canonical command attached to the live session, with its handle and log
 saved for resume. A user-manager preflight would avoid the failed detached launch.
 
+## Runner leaf extraction verification
+
+Moving the runner unit suite requires carrying its serial execution order; the
+fresh scaffold otherwise inherits concurrent execution, and the lifecycle-end
+assertion reads unfinished shared test state. The new package preserves the old
+suite order. The test service key also follows its new compiler-required path.
+
+Native-runtime allowances are read from a generated repo-configs snapshot.
+Moving only the JSONC file paths left the same three findings active until
+`GenerateEffectLawsAllowlistSnapshot.ts` regenerated that snapshot. The exact
+allowance reasons and categories are preserved. The package scaffold also emitted
+an identity registry line requiring Biome formatting. These checks caught the
+migration issues before publication.
+
+## 2026-09-22: runner scaffold integration needs generated follow-through
+
+The runner extraction passed its package audit but the first cheap-gate wave
+stopped nine lanes at stale policy-fingerprint inputs. Regenerating those inputs
+exposed missing project references and a scaffold `bun-types` entry that Knip
+could not resolve. `beep tsconfig-sync` added the exact package references; the
+Node Vitest package now requests only Node ambient types. The cache-policy gate
+also required an explicit review of the added package and dependency edges,
+recorded in `runner-leaf-cache-review.md` without granting qualification.
+A create-package follow-through checklist covering these generated surfaces
+would have found the issues before the repo-wide cheap-gate pass.
+
+## 2026-09-22: attached prerequisite proof interrupted during coverage
+
+PR #1185 passed hosted checks and `yeet monitor --until-ready` reported
+`merge-ready: yes`. Its separate attached publication proof exited 130 during
+coverage, so the earlier passing lanes do not establish a completed local proof.
+A detached recovery attempt was rejected with `Detached proof jobs require an
+active systemd user manager`, although the direct user-manager status probe
+reported running. The supported attached verification fallback was started.
+Consistent manager capability detection and durable launch would avoid losing
+an otherwise progressing proof across session interruption.
+
+## Runner extraction publication runtime failure
+
+After restart, `beep yeet publish --start-pr-early --monitor --pr` failed in
+Bun 1.4.2 with `panic: Segmentation fault` after advisory feedback, before a
+commit or PR was created. The process remained in kernel core-dump handling;
+it was observed rather than duplicated. Runtime crash isolation and durable
+publication jobs would avoid losing the orchestration process before proof.
+The shell also lacked the user-session bus environment, so detached launch was
+unavailable and the supported attached route was used.
+
+## New package generated-boundary coverage
+
+The extraction passed all cheap gates, but full publication stopped at
+`repo-sanity:fallow-boundaries-config`: the generated boundary configuration
+did not yet include the new runner. `bun run fallow:boundaries:write` added
+only the runner package and its expected dependency edges. Including this
+generation in package scaffolding or its immediate verification would expose
+the missing artifact before a full publication attempt.
+
+## New package Vitest alias projection
+
+PR #1188 review identified three missing runner aliases in the generated Vitest
+alias data, although root tsconfig already carried them. Projecting root paths
+into the generated artifact produced exactly those three additions and passed
+the tsgo-rules check. Package creation should generate and verify this projection
+alongside the existing tsconfig and boundary artifacts.
+
 ## Scanner traversal complexity feedback
 
 The inline annotation correction passed package audit and docgen but the full
@@ -2008,3 +2072,13 @@ check had passed; the separate package-test-typecheck command exposed the mismat
 The cleanup now uses Effect.orDie so removal failures fail the test without a typed
 release error. All six focused tests, package-test-typecheck, and the quick package
 proof pass. Include the package test typecheck before publishing new Effect tests.
+
+### Full docgen rejects compatibility re-export headers
+
+PR #1188 passed the JSDoc inventory ratchet but failed Heavy / Docgen because
+four re-export headers lacked `@category`. The headers were in the runner
+barrel and the three test-utils compatibility entrypoints. Added canonical
+`testing` / `errors` categories; both affected package lint/check proofs pass.
+The bounded docgen command refuses this branch because global inputs changed,
+so use full `bun run docgen` for the validation. Inventory-ratchet success does
+not establish the full docgen metadata contract.
