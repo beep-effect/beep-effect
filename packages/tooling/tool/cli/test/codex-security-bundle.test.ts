@@ -487,7 +487,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const { root, manifest } = yield* fixture();
+      const { root, manifest, findings } = yield* fixture();
       yield* fs.remove(path.join(root, "findings.json"));
       yield* fs.makeDirectory(path.join(root, "findings.json"));
       expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toContain("regular file");
@@ -495,6 +495,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       const bytes = new Uint8Array(16 * 1024 * 1024 + 1);
       yield* fs.writeFile(path.join(root, "findings.json"), bytes);
       expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toContain("16 MiB");
+      yield* writeJson(root, "findings.json", findings);
       const large = new Uint8Array(16 * 1024 * 1024);
       const digest = yield* hash(large);
       const extra = yield* Effect.forEach(

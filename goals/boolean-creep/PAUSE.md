@@ -12,9 +12,12 @@ the branch's monitor timeout tests are preserved. The packet contains 754 invent
 design-coverage validators passed before the latest main merge. These structural checks do
 not establish current-source semantic review or publication readiness.
 
-The known source-refresh backlog has three completed P2 refreshes and one D1
-withdrawal out of 51 cases, leaving 47 pending. Two citation decisions remain
-open. No new dry census, replacement P3 review, or implementation is credited.
+Three September 21 P2 refreshes and one D1 withdrawal are recorded. The
+[backlog reconciliation](./data/pr1176-backlog-reconciliation-2026-09-21.json)
+derives 45 pending from the saved 46-item September 14 subset after the
+test-selection refresh. The other two refreshes and the withdrawal are outside
+that subset. The unsupported 51-total/47-pending claim is withdrawn; the complete
+current-source backlog remains uncounted. Two citation decisions remain open. No new dry census, replacement P3 review, or implementation is credited.
 Full local proof and hosted PR closeout must pass before this save is mergeable.
 
 Full local verification and CLI package verification passed on `df044dedd6`,

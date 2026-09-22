@@ -59,15 +59,19 @@ and compatibility laws remain binding.
 The [resolved test-selection refresh](./data/test-selection-design-refresh-2026-09-21.json)
 confirms the unchanged 4/3 normalized output, runtime ordering and cited
 compatibility fixtures at `7536a751b4`. Current known refresh progress is
-**three P2 refreshes complete, one qualification withdrawn, 47 pending** from
-the 51-case list. This does not replace a current-corpus census or independent
-review. Inventory remains 754 records, including 144 qualified cases.
+**three P2 refreshes complete and one qualification withdrawn**. The
+[backlog reconciliation](./data/pr1176-backlog-reconciliation-2026-09-21.json)
+derives **45 still pending from the saved 46-item September 14 subset** after
+the test-selection refresh. VersionSync, coverage, and the acknowledgement
+withdrawal are outside that subset. The unsupported 51-total/47-pending claim
+is withdrawn; the complete current-source backlog remains uncounted. This does
+not replace a current-corpus census or independent review. Inventory remains 754 records, including 144 qualified cases.
 
 The [coverage-operation refresh](./data/coverage-design-refresh-2026-09-21.json)
 rebinds the unchanged nine-state model, execution paths, dependencies and cited
 fixtures to `7536a751b4`. It preserves the newer shared golden-regeneration
 argument policy. Together with VersionSync and the acknowledgement withdrawal,
-that was the second completed P2 refresh from the known 51-case list.
+that was the second completed September 21 P2 refresh.
 The latest remaining count is recorded above. No new census, independent
 review, or implementation credit is claimed.
 
@@ -84,14 +88,16 @@ The [VersionSync selection design refresh](./data/version-sync-design-refresh-20
 now covers the six-category contract and current direct consumers, resolver
 behavior, report-driven updates, export routes, and test plan at `7536a751b4`.
 The 4/3 qualification and designed status remain unchanged; independent review
-and implementation remain pending. This was the first completed P2 owner refresh from the known 51-case list.
+and implementation remain pending. This was the first completed September 21 P2 owner refresh.
 The latest remaining count is recorded above; the list is not a new census.
 
 The [2026-09-21 bounded corrections](./data/bounded-design-corrections-2026-09-21.json)
 preserve command text in two lane-proof designs, current scheduler cleanup and
 journal contracts in two scheduler designs, and the sixth VersionSync category
 in its design and inventory citation. Exact prior files are archived. Inventory
-and design coverage validation pass at 754 records and 145 qualified cases.
+and design coverage validation passed at 754 records and 145 qualified cases,
+before the acknowledgement-boundary reclassification reduced the qualified set
+to 144.
 These are five partial design corrections, with no status changes, completed
 full refreshes, independent-review credit, or dry-round credit. The latest full
 Yeet proof failed in the unrelated UI coverage prebuild; see the opportunities
@@ -106,8 +112,9 @@ seven because current main supports scoped and no-op replacement. The two
 MemoryFileSystem designs preserve the rc.113 seek and IO contract, Pincite's
 consumer map is corrected, and both Sweep designs include retirement consumers.
 One newly inspected independent baseline-write options model is recorded as D1.
-The other 46 qualified cases with changed source/evidence paths still need their
-refresh. This work supplies no dry-round or independent-review credit.
+At that September 14 checkpoint, 46 qualified cases with changed source/evidence
+paths remained. The reconciliation above records the later test-selection refresh
+and the resulting 45 pending in that saved subset. This work supplies no dry-round or independent-review credit.
 
 Main `0c975f970b4ac4b101d7c1b11957a799d481af35` is merged through
 `8d4580ae820726732784562c1b6c1c913e5bba00`. The [latest merge receipt](./data/post-r31-main0c-source-forward.json)
