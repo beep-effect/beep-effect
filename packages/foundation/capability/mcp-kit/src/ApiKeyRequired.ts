@@ -205,7 +205,7 @@ export class ToolHandlerPayload extends S.Class<ToolHandlerPayload>($I`ToolHandl
  * // false
  * ```
  *
- * @category translators
+ * @category error-handling
  * @since 0.0.0
  */
 export const translateApiKeyRequired = (payload: ToolHandlerPayload): O.Option<CallToolResult> =>

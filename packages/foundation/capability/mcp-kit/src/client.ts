@@ -380,7 +380,7 @@ const McpErrorSchema = McpSchema.McpError;
  * // "server/discover"
  * ```
  *
- * @category rpcs
+ * @category schemas
  * @since 0.0.0
  */
 export class ServerDiscover extends Rpc.make("server/discover", {
@@ -400,7 +400,7 @@ export class ServerDiscover extends Rpc.make("server/discover", {
  * // "tools/list"
  * ```
  *
- * @category rpcs
+ * @category schemas
  * @since 0.0.0
  */
 export class ToolsList extends Rpc.make("tools/list", {
@@ -421,7 +421,7 @@ export class ToolsList extends Rpc.make("tools/list", {
  * // "tools/call"
  * ```
  *
- * @category rpcs
+ * @category schemas
  * @since 0.0.0
  */
 export class ToolsCall extends Rpc.make("tools/call", {
@@ -442,7 +442,7 @@ export class ToolsCall extends Rpc.make("tools/call", {
  * // "prompts/list"
  * ```
  *
- * @category rpcs
+ * @category schemas
  * @since 0.0.0
  */
 export class PromptsList extends Rpc.make("prompts/list", {
@@ -463,7 +463,7 @@ export class PromptsList extends Rpc.make("prompts/list", {
  * // "prompts/get"
  * ```
  *
- * @category rpcs
+ * @category schemas
  * @since 0.0.0
  */
 export class PromptsGet extends Rpc.make("prompts/get", {
@@ -484,7 +484,7 @@ export class PromptsGet extends Rpc.make("prompts/get", {
  * // "resources/read"
  * ```
  *
- * @category rpcs
+ * @category schemas
  * @since 0.0.0
  */
 export class ResourcesRead extends Rpc.make("resources/read", {
@@ -509,7 +509,7 @@ export class ResourcesRead extends Rpc.make("resources/read", {
  * // "object"
  * ```
  *
- * @category rpcs
+ * @category schemas
  * @since 0.0.0
  */
 export class McpClientRpcs extends RpcGroup.make(
@@ -537,7 +537,7 @@ const encodeImplementation = S.encodeSync(McpSchema.Implementation);
  * // "2026-07-28"
  * ```
  *
- * @category wire
+ * @category utilities
  * @since 0.0.0
  */
 export const requestMetadata = (options: McpClientOptions): JsonObject => ({
@@ -560,7 +560,7 @@ export const requestMetadata = (options: McpClientOptions): JsonObject => ({
  * // ["name", "_meta"]
  * ```
  *
- * @category wire
+ * @category utilities
  * @since 0.0.0
  */
 export const withRequestMetadata: {
@@ -586,7 +586,7 @@ export const withRequestMetadata: {
  * // { _id: "Option", _tag: "Some", value: "echo" }
  * ```
  *
- * @category wire
+ * @category utilities
  * @since 0.0.0
  */
 export const routingName = (message: JsonRpcMessage): O.Option<string> => {
@@ -624,7 +624,7 @@ const claimedProtocolVersion = (message: JsonRpcMessage): string =>
  * // { "MCP-Protocol-Version": "2026-07-28", "Mcp-Method": "tools/call", "Mcp-Name": "echo" }
  * ```
  *
- * @category wire
+ * @category utilities
  * @since 0.0.0
  */
 export const routingHeaders = (message: JsonRpcMessage): Readonly<Record<string, string>> => ({
@@ -651,7 +651,7 @@ export const routingHeaders = (message: JsonRpcMessage): Readonly<Record<string,
  * // ["{\"a\":1}", "{\"b\":2}"]
  * ```
  *
- * @category wire
+ * @category utilities
  * @since 0.0.0
  */
 export const parseServerSentEvents = (text: string): ReadonlyArray<string> =>
@@ -690,7 +690,7 @@ const encodeJsonRpcError = S.encodeSync(JsonRpcError);
  * // 1
  * ```
  *
- * @category wire
+ * @category utilities
  * @since 0.0.0
  */
 export const decodeHttpMessages: {
@@ -751,7 +751,7 @@ export class McpHttpExchange extends S.Class<McpHttpExchange>($I`McpHttpExchange
  * // "object"
  * ```
  *
- * @category transport
+ * @category utilities
  * @since 0.0.0
  */
 export const postJsonRpc = Effect.fn("McpKit.client.postJsonRpc")(function* (
@@ -961,7 +961,7 @@ export interface McpNdjsonTransport {
  * // ["{\"a\":1}"]
  * ```
  *
- * @category transport
+ * @category utilities
  * @since 0.0.0
  */
 export const decodeLines = <E, R>(bytes: Stream.Stream<Uint8Array, E, R>): Stream.Stream<string, E, R> =>
