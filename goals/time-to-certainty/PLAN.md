@@ -159,6 +159,14 @@ orchestrator owns schemas, contracts, and judgment.
       only after zero disagreements over a ratified sample; hosted reuse recorded as a separate
       decision. The PR that turns ledger reuse on also deletes `LaneProofReuse` and
       `.beep/yeet/lane-proofs.json`, with a retirement receipt (ruling 60).
+  - [x] C4.1 shadow mode — done 2026-09-21 (rulings 61–64): the verdict writer shadows every
+        inner lane that ran against the proof ledger (lookup, shadow row, fact) for both local
+        stages; `bun run beep yeet proof-report [--json]` prints the sample, misses by reason,
+        disagreements and the ruling-7 bar verdict. Lane id widened to the wave-qualified id;
+        shadow rows carry lane, branch, stage, profile and duration.
+  - [ ] C4.2 enforcement (attempt-to-attempt within pre-push) once `proof-report` reads `ready`
+        and every C5 fixture is green; deletes `LaneProofReuse` and `lane-proofs.json` with a
+        retirement receipt (ruling 60). Hosted reuse stays a separate decision.
 - [ ] C5 must-fail fixtures: changed package, epoch change, cross-profile reuse.
 
 ## P3 — Ordering handoff

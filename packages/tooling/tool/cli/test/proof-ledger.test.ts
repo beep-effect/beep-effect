@@ -237,8 +237,13 @@ describe("ProofLedger", () => {
           const disagreement = ProofLedgerShadowRow.make({
             schemaVersion: PROOF_FACT_SCHEMA_VERSION,
             attemptId: "attempt-1",
+            laneId: "quality:coverage",
+            branch: "feat/example",
+            stage: "pre-push",
+            envProfile: "local",
             decision: ProofReuseHit.make({ key: "proof-key", factRecordedAt: "2026-09-03T12:00:00.000Z" }),
             observed: "failed",
+            durationMs: 1_200,
             recordedAt: "2026-09-03T12:31:00.000Z",
           });
           yield* ledger.recordShadow(disagreement);
@@ -246,11 +251,16 @@ describe("ProofLedger", () => {
             ProofLedgerShadowRow.make({
               schemaVersion: PROOF_FACT_SCHEMA_VERSION,
               attemptId: "attempt-2",
+              laneId: "quality:coverage",
+              branch: "feat/example",
+              stage: "pre-push",
+              envProfile: "local",
               decision: ProofReuseHit.make({
                 key: "proof-key",
                 factRecordedAt: "2026-09-03T12:00:00.000Z",
               }),
               observed: "passed",
+              durationMs: 1_200,
               recordedAt: "2026-09-03T12:32:00.000Z",
             })
           );
@@ -258,8 +268,13 @@ describe("ProofLedger", () => {
             ProofLedgerShadowRow.make({
               schemaVersion: PROOF_FACT_SCHEMA_VERSION,
               attemptId: "attempt-3",
+              laneId: "quality:coverage",
+              branch: "feat/example",
+              stage: "pre-push",
+              envProfile: "local",
               decision: ProofReuseMiss.make({ key: "proof-key", reason: "no-fact" }),
               observed: "failed",
+              durationMs: 1_200,
               recordedAt: "2026-09-03T12:33:00.000Z",
             })
           );

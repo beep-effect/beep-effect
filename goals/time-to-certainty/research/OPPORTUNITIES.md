@@ -2250,3 +2250,26 @@ in the law command's flag help to prevent a vacuous success from looking like pr
   commit). Tracked as separate work; this packet only records the attribution cost, which was one
   eleven-minute coverage lane plus the read to prove the failures were environmental.
 
+
+## 2026-09-21 — the reuse key's lane vocabulary did not match the lanes that run
+
+- Doing: wiring C4 shadow mode into the verdict writer, the ledger's first production consumer.
+- Evidence: `ProofInputDigest.laneId` was typed as `CiLaneId` (`coverage`, `lint`, ...), but every
+  inner-lane report row on disk carries a wave-qualified id (`quality:coverage`,
+  `cheap-gates:tsgo-rules`, `repo-sanity:sherif`; 30 distinct ids in one pre-push report). A
+  schema decoded only by its own tests for eighteen days never met a real row, so the mismatch
+  surfaced at wiring time, not at C1. Fixed by ruling 61 (widen to the report's id).
+- Prevention: when a schema is landed ahead of its first producer, add one test that decodes a
+  real artifact from `.beep/` (or a checked-in copy of one) rather than only hand-built fixtures;
+  the inner-lane report existed since A5 and would have failed the `CiLaneId` decode on day one.
+
+## 2026-09-21 — a fresh sibling lane's `bun run check` is red until the graph builds upstream dist
+
+- Doing: first typecheck of the C4 shadow change in a just-created `worktree new` lane.
+- Evidence: `bun run check` in `packages/tooling/tool/cli` reported dozens of `TS6305 Output file
+  ... has not been built from source file` plus cascading `unknown`/`any` errors in untouched
+  files, because the new worktree had installed dependencies but built no workspace `dist`.
+  None of the errors named the changed files.
+- Prevention: `worktree new` could end by printing (or running) the B1 route,
+  `bun run beep quality package-verify <pkg> --quick`, which builds upstream through Turbo; a
+  bare package `check` in a fresh lane is never attributable and should not be the first command.

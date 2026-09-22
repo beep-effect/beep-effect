@@ -157,6 +157,7 @@ export type ProofChangedPackageTripwire = (key: ProofInputDigest) => boolean;
 export interface ProofLedgerShape {
   readonly disagreements: Effect.Effect<ReadonlyArray<ProofLedgerShadowRow>, YeetCommandError>;
   readonly expire: (now: DateTime.DateTime) => Effect.Effect<number, YeetCommandError>;
+  readonly facts: Effect.Effect<number, YeetCommandError>;
   readonly lookup: (
     key: ProofInputDigest,
     now: DateTime.DateTime
@@ -164,6 +165,7 @@ export interface ProofLedgerShape {
   readonly malformedRows: Effect.Effect<number, YeetCommandError>;
   readonly record: (fact: ProofFact) => Effect.Effect<void, YeetCommandError>;
   readonly recordShadow: (row: ProofLedgerShadowRow) => Effect.Effect<void, YeetCommandError>;
+  readonly shadowRows: Effect.Effect<ReadonlyArray<ProofLedgerShadowRow>, YeetCommandError>;
 }
 
 /**
@@ -173,7 +175,10 @@ export interface ProofLedgerShape {
  *
  * `expire` reports how many persisted facts are logically expired at the
  * supplied instant; it never rewrites history. `lookup` independently checks
- * expiry, so callers do not need to run expiration first.
+ * expiry, so callers do not need to run expiration first. `shadowRows` returns
+ * every shadow row in append order so the disagreement report can count
+ * attempts, branches and would-have-reused time; `disagreements` is the
+ * hit-versus-failed subset.
  *
  * **Example** (Construct a disconnected ledger service)
  *
@@ -252,6 +257,16 @@ export class ProofLedger extends Context.Service<ProofLedger, ProofLedgerShape>(
           )
         ),
         Effect.withSpan("Yeet.ProofLedger.disagreements")
+      ),
+      facts: loadProofLedger(repoRoot).pipe(
+        Effect.provide(runtimeContext),
+        Effect.map((loaded) => A.length(A.filter(loaded.rows, isFactRow))),
+        Effect.withSpan("Yeet.ProofLedger.facts")
+      ),
+      shadowRows: loadProofLedger(repoRoot).pipe(
+        Effect.provide(runtimeContext),
+        Effect.map((loaded) => A.filter(loaded.rows, isShadowRow)),
+        Effect.withSpan("Yeet.ProofLedger.shadowRows")
       ),
       malformedRows: loadProofLedger(repoRoot).pipe(
         Effect.provide(runtimeContext),
