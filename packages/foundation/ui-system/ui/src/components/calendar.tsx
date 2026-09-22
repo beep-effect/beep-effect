@@ -183,7 +183,7 @@ function CalendarDayButton({ className, day, modifiers, style, ...props }: React
   return (
     <Button
       ref={(button) => {
-        if (modifiers.focused) {
+        if (modifiers.focused === true) {
           button?.focus();
         }
       }}
@@ -192,7 +192,10 @@ function CalendarDayButton({ className, day, modifiers, style, ...props }: React
       size="icon"
       data-day={day.date.toLocaleDateString()}
       data-selected-single={
-        modifiers.selected && !modifiers.range_start && !modifiers.range_end && !modifiers.range_middle
+        modifiers.selected === true &&
+        modifiers.range_start !== true &&
+        modifiers.range_end !== true &&
+        modifiers.range_middle !== true
       }
       data-range-start={modifiers.range_start}
       data-range-end={modifiers.range_end}
