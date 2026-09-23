@@ -69,13 +69,13 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-effect-httpapi-parse | HttpApi.ParseOptions on main | #8269 MERGED Sep 17; **now in rc.116+** | Effect#8269; npm rc.117 | keep |
 | w-effect-http-query | HTTP QUERY method on main | #8261 MERGED Sep 17; **now in rc.116+** | Effect#8261; npm rc.117 | keep |
 | w-effect-rc117 | effect@4.0.0-rc.117 tip | tip still rc.117; watch #8336 → rc.118 (refreshed Sep 23) | effect@4.0.0-rc.117; Effect#8336 | keep |
-| w-effect-unstable-paths | Effect unstable path removal | #8354 MERGED Sep 22; no compat exports | Effect#8354 | add |
-| w-effect-http-api-rename | HttpApi module path rename | #8365 MERGED Sep 22; effect/httpapi → effect/http-api | Effect#8365 | add |
+| w-effect-unstable-paths | Effect unstable path removal | #8354 MERGED Sep 22; no compat exports | Effect#8354 | keep |
+| w-effect-http-api-rename | HttpApi module path rename | #8365 MERGED Sep 22; effect/httpapi → effect/http-api | Effect#8365 | keep |
 | w-openai-astra-law | OpenAI Astra for Law | Trusted Access still limited; soft press continues | Legal IT Insider 2026-09-17; NeoTeo 2026-09-23 | keep |
 | w-jazz-alpha-56 | jazz-tools@2.0.0-alpha.56 tip | tip still alpha.56 (reconfirmed Sep 23) | npm jazz-tools alpha.56 | keep |
 | w-sep3004-closed | SEP-3004 closed unmerged | remains closed unmerged (no reopen) | mcp#3004 closed | keep |
-| w-rac-auth-drift | RAC authorization drift | arXiv 2609.23498 controller pre-commit guard for MCP workflows | arXiv 2609.23498 | add |
-| w-everlaw-mcp-fabric | Everlaw multi-vendor MCP fall 2026 | Harvey + TR CoCounsel + Gemini + Copilot expected fall 2026 | Everlaw ILTACON press | add |
+| w-rac-auth-drift | RAC authorization drift | arXiv 2609.23498 controller pre-commit guard for MCP workflows | arXiv 2609.23498 | keep |
+| w-everlaw-mcp-fabric | Everlaw multi-vendor MCP fall 2026 | Harvey + TR CoCounsel + Gemini + Copilot expected fall 2026 | Everlaw ILTACON press | keep |
 | w-a2m-mcp-hijack | A2M Attraction-to-Manipulation | MCP registry/tool hijack threat on LiveMCPBench | arXiv 2609.26761; github.com/Lilaizhen/A2M | add |
 | w-paypal-zt-mcp | PayPal zero-trust MCP extensions | dual-persona + permission-filtered discovery | arXiv 2609.22573 | add |
 | w-graphskillevo | GraphSkillEvo graph skills | structured skill IR beyond flat SKILL.md | arXiv 2609.21749 | add |

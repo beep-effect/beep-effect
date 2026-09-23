@@ -24,7 +24,7 @@ Prior: `research/2026-09-22` / PR #1199 (merged). Status: **partial** (X client-
 ### Settled (unchanged from prior admit)
 
 - SEP-3004 remains **CLOSED unmerged** (no reopen in-window) — keep closed-unmerged framing; no dedicated re-cite this packet to protect novelty.
-- Prior retire-after-admit watchlist rows (jazz-wire-v1, effect-rc115/rc116, effect-mcp-adapter, schema-jit, sep2640-final-unmerged) still await human admit of #1199 ledger patch.
+- Prior retire-after-admit rows jazz-wire-v1, effect-rc115/rc116, effect-mcp-adapter, and sep2640-final-unmerged are **RETIRED** in `research/ledger/WATCHLIST.md` on this PR, pending human merge of #1215 (not #1199, which already merged). schema-jit stays `retire-after-admit` to watch npm inclusion via rc.118.
 
 ### Unchanged HOLDs (refute quota re-checked live)
 
@@ -50,8 +50,9 @@ Prior: `research/2026-09-22` / PR #1199 (merged). Status: **partial** (X client-
 | window_new | 14 |
 | refute | 12 |
 | law / effect / agents | 6 / 8 / 10 |
-| novelty (unique claim URL ∩ exclusion) | 37.5% (9/24) — gate ≤40% pass |
-| novelty among window_new | 0.0% (0/14) |
+| exclusion_collision_pct | 37.5% (9/24) — gate ≤40% pass |
+| unique-URL novelty | 62.5% (15/24) |
+| window_new collision | 0.0% (0/14) |
 
 ## Topical appendix
 
@@ -69,4 +70,4 @@ Security research spike: **A2M** (attack) + **PayPal zero-trust** (defense) book
 
 ## Watchlist patch note (publisher)
 
-See `WATCHLIST_PATCH.md` + `LEDGER_PATCH.md` sidecars. Propose retire-after-admit rows from prior (jazz-wire-v1, effect-rc115, effect-mcp-adapter, effect-rc116, schema-jit, sep2640-final-unmerged) once #1199 ledger admit lands; add A2M / zero-trust / GraphSkillEvo / Cimplifi / Zero-head watches; keep tip-rc117→rc.118 and SEP-2640 SDK ship.
+Ledger edits are inlined in `research/ledger/WATCHLIST.md` and `research/ledger/stamp.json` (draft until human merge of #1215). Retired jazz-wire-v1, effect-rc115, effect-mcp-adapter, effect-rc116, and sep2640-final-unmerged; schema-jit stays retire-after-admit (watch npm inclusion via rc.118). Added A2M / zero-trust / GraphSkillEvo / Cimplifi / Zero-head / MCP Infrastructure WG / SEP-3371. Kept tip-rc117→rc.118 and SEP-2640 SDK ship.
