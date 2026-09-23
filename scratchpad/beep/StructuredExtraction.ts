@@ -18,6 +18,7 @@ import * as P from "effect/Predicate";
 import * as Rec from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import {
@@ -78,17 +79,7 @@ const categoryField = S.String.pipe(
   pg.columnName("category"),
 );
 
-const durationMinutes = S.Finite.pipe(
-  S.decodeTo(
-    S.Int,
-    SchemaTransformation.transform({
-      decode: (value: number) => {
-        const minutes = Math.trunc(value);
-        return minutes > 0 ? minutes : 30;
-      },
-      encode: (minutes: number) => minutes,
-    }),
-  ),
+const durationMinutes = S.Int.pipe(
   S.withConstructorDefault(Effect.succeed(30)),
   S.withDecodingDefaultTypeKey(Effect.succeed(30)),
   pg.integer(),
@@ -540,27 +531,31 @@ export const defaultUnusableDuration = (data: unknown): unknown => {
  *
  * **Details**
  *
- * Title and start are required. Description defaults to empty. A positive
- * numeric duration is kept, truncating a fractional number toward zero. Zero
- * and negative numbers become 30 during decode. Strings and booleans are
- * handled by {@link defaultUnusableDuration} before decode.
+ * Title and start are required. Description defaults to empty. `duration` is
+ * an integer column that constructs and decodes as 30 when the key is
+ * missing. The Python `model_validator(mode="before")` that truncates a
+ * fractional duration and drops a non-positive one is class-level, so it lives
+ * on {@link ExtractedEventWire} and {@link defaultUnusableDuration}, not on the
+ * column.
  *
- * **Example** (Replace a zero duration)
+ * **Example** (Construct the default duration)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
- * import * as S from "effect/Schema"
+ * import * as DateTime from "effect/DateTime"
  * import { ExtractedEvent } from "@beep/scratchpad/beep/StructuredExtraction"
  *
- * const event = Effect.runSync(
- *   S.decodeUnknownEffect(ExtractedEvent)({
- *     title: "Standup",
- *     start: "2020-01-02T03:04:05.000Z",
- *     duration: 0,
- *   }),
- * )
+ * const event = ExtractedEvent.make({
+ *   title: "Standup",
+ *   start: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ * })
  * console.log(event.duration) // 30
  * ```
+ *
+ * **Gotchas**
+ *
+ * Decoding the class directly rejects `15.9`: the SQL integer domain check
+ * runs on the encoded value before any transform. Decode extractor output
+ * through {@link ExtractedEventWire} to get the Python truncation.
  *
  * @category models
  * @since 0.0.0
@@ -587,6 +582,45 @@ export class ExtractedEvent extends Model<ExtractedEvent>("ExtractedEvent")(
 export declare namespace ExtractedEvent {
   export type Encoded = S.Codec.Encoded<typeof ExtractedEvent>;
 }
+
+/**
+ * {@link ExtractedEvent} decoded the way the Python model validates.
+ *
+ * **Details**
+ *
+ * Runs {@link defaultUnusableDuration} on the raw record first, so a positive
+ * fractional duration is truncated toward zero, a boolean or integer string is
+ * coerced, and zero, a negative number, or an unparsable value is dropped so
+ * the 30 minute default applies. Encoding is the class encoding unchanged.
+ *
+ * **Example** (Truncate a fractional duration)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { ExtractedEventWire } from "@beep/scratchpad/beep/StructuredExtraction"
+ *
+ * const event = Effect.runSync(
+ *   S.decodeUnknownEffect(ExtractedEventWire)({
+ *     title: "Standup",
+ *     start: "2020-01-02T03:04:05.000Z",
+ *     duration: 15.9,
+ *   }),
+ * )
+ * console.log(event.duration) // 15
+ * ```
+ *
+ * @see {@link ExtractedEvent} for the persisted model.
+ * @category codecs
+ * @since 0.0.0
+ */
+export const ExtractedEventWire = S.Unknown.pipe(
+  S.decodeTo(S.Unknown, {
+    decode: SchemaGetter.transform(defaultUnusableDuration),
+    encode: SchemaGetter.passthrough(),
+  }),
+  S.decodeTo(ExtractedEvent),
+);
 
 /**
  * Copies an extracted event and forces `created` false.

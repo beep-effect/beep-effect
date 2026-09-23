@@ -20,7 +20,7 @@ import * as Predicate from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
-import { Model, NonNegativeInt, Table, UtcTimestamp, nonNegativeIntCheck, optionalNull, pg } from "./Kit.ts";
+import { Model, NonNegativeInt, Table, UtcTimestamp, nonNegativeIntCheck, optionalNull, optionalTimestamp, pg } from "./Kit.ts";
 
 const $I = $ScratchpadId.create("beep/MemoryImports");
 
@@ -77,11 +77,7 @@ const jsonDefault = (column: string) =>
 const count = (column: string) =>
   NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(0)), pg.integer(), pg.columnName(column));
 
-const optionalInstant = (column: string) =>
-  optionalNull(UtcTimestamp).pipe(
-    pg.timestamp({ mode: "string", withTimezone: true }),
-    pg.columnName(column),
-  );
+const optionalInstant = optionalTimestamp;
 
 const requiredInstant = (column: string) =>
   UtcTimestamp.pipe(pg.timestamp({ mode: "string", withTimezone: true }), pg.columnName(column));

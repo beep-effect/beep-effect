@@ -397,6 +397,11 @@ const optionalUtcTimestamp = optionalWire(S.String, UtcTimestamp);
  * Constructor calls may omit the field. Decode still requires the key to be
  * absent or null; it does not invent `None` from `undefined`.
  *
+ * The `decodeTo` target is `S.Option(S.toType(schema))`, not
+ * `S.Option(schema)`. The inner schema already ran inside `NullOr`, so the
+ * target must only validate the decoded type; a second decode pass fails for
+ * any nested model whose fields are themselves `Option`.
+ *
  * **Example** (Decode null and encode None)
  *
  * ```ts
@@ -417,7 +422,7 @@ const optionalUtcTimestamp = optionalWire(S.String, UtcTimestamp);
  * @since 0.0.0
  */
 export const optionalNull = <Sch extends S.ConstraintDecoder<unknown>>(schema: Sch) =>
-  optionalWire(schema, schema);
+  optionalWire(schema, S.toType(schema));
 
 /**
  * Required stable-id text column.

@@ -22,7 +22,7 @@ import {
   segmentsAsString,
 } from "../../beep/TranscriptSegment.ts";
 
-const decode = <A extends S.Top>(schema: A, input: unknown): A["Type"] =>
+const decode = <A extends S.Top>(schema: A & S.Codec<unknown, unknown, never, never>, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 const segment = (patch: {
@@ -43,9 +43,9 @@ const segment = (patch: {
     speakerId: patch.speakerId ?? 0,
     start: patch.start,
     end: patch.end,
-    speaker: patch.speaker,
-    personId: patch.personId,
-    sttProvider: patch.sttProvider,
+    speaker: patch.speaker ?? O.none(),
+    personId: patch.personId ?? O.none(),
+    sttProvider: patch.sttProvider ?? O.none(),
   });
 
 describe("TranscriptSegment", () => {
@@ -210,7 +210,7 @@ describe("TranscriptSegment", () => {
       ImprovedTranscriptSegment,
       ImprovedTranscript,
     ]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(schema.pipe(Arbitrary.schema, Arbitrary.isArbitrary), true);
     }
   });
 });

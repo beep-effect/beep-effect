@@ -1,4 +1,5 @@
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -31,50 +32,45 @@ import {
   ProactiveIntentOutcomeRequest,
 } from "../../beep/ChatFirst.ts";
 
+const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
+  Effect.runSync(S.decodeUnknownEffect(schema)(input));
+
+const decodeFails = (schema: S.ConstraintDecoder<unknown>, input: unknown): boolean =>
+  Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
+
 const goal = GoalLinkSpec.make({ type: "goalLink", goalId: "goal_1", title: "Ship" });
 
 describe("ChatFirst", () => {
   it("decodes every block generation", () => {
-    expect(Effect.runSync(S.decodeUnknownEffect(ChatFirstBlockSpec)({ type: "goalLink", goalId: "goal_1", title: "Ship" })).type).toBe(
-      "goalLink",
+    expect(decode(ChatFirstBlockSpec, { type: "goalLink", goalId: "goal_1", title: "Ship" }).type).toBe("goalLink");
+    expect(decode(ChatFirstBlockSpec, { type: "taskCard", taskId: "task_1", title: "Write" }).type).toBe("taskCard");
+    expect(decode(ChatFirstBlockSpec, { type: "captureLink", captureId: "cap_1", title: "Clip" }).type).toBe(
+      "captureLink",
     );
-    expect(
-      Effect.runSync(S.decodeUnknownEffect(ChatFirstBlockSpec)({ type: "taskCard", taskId: "task_1", title: "Write" })).type,
-    ).toBe("taskCard");
-    expect(
-      Effect.runSync(S.decodeUnknownEffect(ChatFirstBlockSpec)({ type: "captureLink", captureId: "cap_1", title: "Clip" })).type,
-    ).toBe("captureLink");
-    expect(
-      Effect.runSync(
-        S.decodeUnknownEffect(ChatFirstBlockSpec)({ type: "conversationLink", conversationId: "c1", title: "Talk" }),
-      ).type,
-    ).toBe("conversationLink");
-    expect(
-      Effect.runSync(S.decodeUnknownEffect(ChatFirstBlockSpec)({ type: "memoryLink", memoryId: "m1", title: "Fact" })).type,
-    ).toBe("memoryLink");
-    const question = Effect.runSync(
-      S.decodeUnknownEffect(ChatFirstJournalBlockSpec)({
-        type: "questionCard",
-        question: "When?",
-        options: [{ optionId: "a", label: "Now" }],
-        subject: { kind: "goal", id: "goal_1" },
-      }),
+    expect(decode(ChatFirstBlockSpec, { type: "conversationLink", conversationId: "c1", title: "Talk" }).type).toBe(
+      "conversationLink",
     );
+    expect(decode(ChatFirstBlockSpec, { type: "memoryLink", memoryId: "m1", title: "Fact" }).type).toBe("memoryLink");
+    const question = decode(ChatFirstJournalBlockSpec, {
+      type: "questionCard",
+      question: "When?",
+      options: [{ optionId: "a", label: "Now", defer: false }],
+      subject: { kind: "goal", id: "goal_1" },
+    });
     expect(question.type).toBe("questionCard");
     expect(
-      Effect.runSync(
-        S.decodeUnknownEffect(ChatFirstJournalBlockSpec)({
-          type: "memoryReviewCard",
-          memoryId: "m1",
-          content: "Seattle",
-        }),
-      ).type,
+      decode(ChatFirstJournalBlockSpec, {
+        type: "memoryReviewCard",
+        memoryId: "m1",
+        content: "Seattle",
+        category: "",
+      }).type,
     ).toBe("memoryReviewCard");
-    expect(Effect.runSync(S.decodeUnknownEffect(ChatFirstLegacyBlockSpec)({ type: "memoryLink", memoryId: "m1", title: "Fact" })).type).toBe(
+    expect(decode(ChatFirstLegacyBlockSpec, { type: "memoryLink", memoryId: "m1", title: "Fact" }).type).toBe(
       "memoryLink",
     );
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(ChatFirstLegacyBlockSpec)({ type: "conversationLink", conversationId: "c1", title: "Talk" }))._tag).toBe(
-      "Failure",
+    expect(decodeFails(ChatFirstLegacyBlockSpec, { type: "conversationLink", conversationId: "c1", title: "Talk" })).toBe(
+      true,
     );
   });
 
@@ -116,14 +112,14 @@ describe("ChatFirst", () => {
     const engaged = ChatFirstReceiptRequest.make({
       blockId: "b1",
       action: "engaged",
-      occurredAt: "2020-01-02T03:04:05.000Z",
+      occurredAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
     });
     expect(O.isSome(receiptRequestIssue(engaged))).toBe(true);
     const shown = ChatFirstReceiptRequest.make({
       blockId: "b1",
       action: "shown",
       optionId: O.some("a"),
-      occurredAt: "2020-01-02T03:04:05.000Z",
+      occurredAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
     });
     expect(O.isSome(receiptRequestIssue(shown))).toBe(true);
     expect(O.isSome(receiptResultIssue(ChatFirstReceiptResult.make({ blockId: "b1", accepted: false })))).toBe(true);
@@ -142,7 +138,7 @@ describe("ChatFirst", () => {
     expect(
       O.isSome(
         outcomeRequestIssue(
-          ProactiveIntentOutcomeRequest.make({ outcome: "suppressed", occurredAt: "2020-01-02T03:04:05.000Z" }),
+          ProactiveIntentOutcomeRequest.make({ outcome: "suppressed", occurredAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z") }),
         ),
       ),
     ).toBe(true);

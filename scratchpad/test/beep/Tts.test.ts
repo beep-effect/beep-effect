@@ -12,10 +12,10 @@ import {
   TtsVoiceSettings,
 } from "../../beep/Tts.ts";
 
-const decode = <A extends S.Top>(schema: A, input: unknown): A["Type"] =>
+const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
-const fails = (schema: S.Top, input: unknown): boolean =>
+const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
   Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
 
 describe("Tts", () => {
@@ -73,7 +73,7 @@ describe("Tts", () => {
 
   it("derives an arbitrary for every exported model", () => {
     for (const schema of [TtsVoiceSettings, TtsSynthesizeRequest]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });

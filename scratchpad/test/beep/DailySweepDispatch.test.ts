@@ -37,7 +37,7 @@ describe("DailySweepDispatch", () => {
     const dispatched = SweepDispatchScope.make({
       dispatched: true,
       issued: O.some(issued),
-      reason: O.some("source_lock_check_unavailable"),
+      reason: O.some<PreDispatchReason>("source_lock_check_unavailable"),
     });
     assert.strictEqual(provesPreDispatch(dispatched, issued), false);
     assert.strictEqual(O.isNone(preDispatchReason(dispatched, issued)), true);
@@ -94,7 +94,7 @@ describe("DailySweepDispatch", () => {
 
   it("derives an arbitrary for each model", () => {
     for (const schema of [PreDispatchReason, SweepPreDispatchError, SweepDispatchScope, CertifiedSweepFailure, MemoryExtractionFailure]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(schema.pipe(Arbitrary.schema, Arbitrary.isArbitrary), true);
     }
   });
 });

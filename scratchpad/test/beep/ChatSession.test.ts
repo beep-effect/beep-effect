@@ -37,16 +37,15 @@ describe("ChatSession", () => {
   });
 
   it("decodes the ack models", () => {
-    const saved = Effect.runSync(
-      S.decodeUnknownEffect(SaveMessageResponse)({
-        id: "m1",
-        createdAt: "2020-01-02T03:04:05.000Z",
-        sessionId: null,
-        created: false,
-        updated: false,
-        journalRevision: null,
-      }),
-    );
+    const savedInput: unknown = {
+      id: "m1",
+      createdAt: "2020-01-02T03:04:05.000Z",
+      sessionId: null,
+      created: false,
+      updated: false,
+      journalRevision: null,
+    };
+    const saved = Effect.runSync(S.decodeUnknownEffect(SaveMessageResponse)(savedInput));
     expect(saved.created).toBe(false);
     expect(O.isNone(saved.sessionId)).toBe(true);
     expect(O.isNone(saved.journalRevision)).toBe(true);

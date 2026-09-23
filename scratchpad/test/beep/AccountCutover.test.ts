@@ -16,7 +16,7 @@ import {
   persistedPayload,
 } from "../../beep/AccountCutover.ts";
 
-const decode = <A>(schema: S.Codec<A, unknown, never, unknown>, value: unknown): A =>
+const decode = <A>(schema: S.ConstraintDecoder<A>, value: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(value));
 
 const assertArbitrary = (schema: S.Top): void => {

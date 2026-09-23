@@ -1,73 +1,60 @@
 /**
- * Association, recurrence inbox, import, and artifact-status contracts.
+ * Versioned workflow association and recurrence-consumption contracts.
  *
  * **Details**
  *
- * `material` and `reason` constrain each other but do not partition the other
- * fields, so {@link AssociationJudgment} stays one struct. The rules are
- * {@link validateAssociationJudgment}.
+ * Workstream association is Workflow, not a memory layer. `material` and
+ * `reason` constrain each other on {@link AssociationJudgment} but do not
+ * partition the other fields, so the judgment stays one struct and the rules
+ * live in {@link validateAssociationJudgment}.
  *
  * @since 0.0.0
  */
-import * as A from "@beep/utils/Array";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { EvidenceRef } from "./ActionItem.ts";
 import {
   Model,
-  UtcTimestamp,
+  NonNegativeInt,
+  StableId,
   bool,
   boundedText,
-  confidence,
+  nonNegativeIntCheck,
   optionalBoundedText,
   optionalStableId,
-  optionalText,
   pg,
   stableId,
   stableIdCheck,
+  text,
   textBoundsCheck,
-  unitIntervalCheck,
+  timestamp,
 } from "./Kit.ts";
-import { atLeastCheck, boolDefault, intAtLeast, jsonbArrayLengthCheck, optionalNull } from "./Port.ts";
-import { EvidenceKind, EvidenceRef, EvidenceScope } from "./TaskRecommendation.ts";
+import { CanonicalRecurrenceSignal } from "./MemoryRecurrence.ts";
+import { atLeastCheck, jsonbArrayLengthCheck, optionalNull } from "./Port.ts";
 
 const $I = $ScratchpadId.create("beep/WorkstreamAssociation");
 
-const awareInstant = S.String.check(
-  S.isPattern(/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?(?:Z|[+-][0-9]{2}:[0-9]{2})$/),
-).pipe(S.decodeTo(UtcTimestamp));
+const emptyIds: ReadonlyArray<string> = [];
 
-const aware = (column: string) =>
-  awareInstant.pipe(pg.timestamp({ mode: "string", withTimezone: true }), pg.columnName(column));
+const schemaVersion = S.Literal(1)
+  .annotateKey({ description: "Contract schema version. Always 1." })
+  .pipe(S.withConstructorDefault(Effect.succeed<1>(1)), pg.integer(), pg.columnName("schema_version"));
 
-const kit = <const L extends A.NonEmptyReadonlyArray<string>>(name: string, description: string, literals: L) =>
-  LiteralKit(literals).pipe($I.annoteSchema(name, { description }));
+const policyVersion = S.Literal("association.v1")
+  .annotateKey({ description: "Association policy version. Always association.v1." })
+  .pipe(S.withConstructorDefault(Effect.succeed<"association.v1">("association.v1")), pg.text(), pg.columnName("policy_version"));
 
-const doc = (name: string, description: string) => $I.annote(name, { description });
-
-const boundedList = <A extends S.Top>(
-  item: A,
-  column: string,
-  bounds: { readonly minimum?: number; readonly maximum?: number },
-  emptyDefault: boolean,
-) => {
-  const base = S.Array(item);
-  const limited =
-    bounds.minimum !== undefined && bounds.maximum !== undefined
-      ? base.check(S.isMinLength(bounds.minimum), S.isMaxLength(bounds.maximum))
-      : bounds.minimum !== undefined
-        ? base.check(S.isMinLength(bounds.minimum))
-        : bounds.maximum !== undefined
-          ? base.check(S.isMaxLength(bounds.maximum))
-          : base;
-  const schema = emptyDefault ? limited.pipe(S.withConstructorDefault(Effect.sync(() => new Array<A["Type"]>()))) : limited;
-  return schema.pipe(pg.jsonb(), pg.columnName(column));
-};
+const stableIdList = (column: string, maximum: number, description: string) =>
+  S.Array(StableId)
+    .check(S.isMaxLength(maximum))
+    .annotateKey({ description })
+    .pipe(S.withConstructorDefault(Effect.succeed(emptyIds)), pg.jsonb(), pg.columnName(column));
 
 /**
- * Association validation failed.
+ * An association or recurrence rule failed.
  *
  * **Example** (Read the message)
  *
@@ -88,7 +75,134 @@ export class WorkstreamAssociationError extends S.TaggedError<WorkstreamAssociat
 
 /** @category type-level @since 0.0.0 */
 export declare namespace WorkstreamAssociationError {
+  /** Encoded form of {@link WorkstreamAssociationError}. */
   export type Encoded = S.Codec.Encoded<typeof WorkstreamAssociationError>;
+}
+
+/**
+ * Minimized evidence handed to the association adjudicator.
+ *
+ * **Details**
+ *
+ * `summary` is the minimized text. Raw private content never enters this
+ * contract; only evidence references do.
+ *
+ * **Example** (Construct one evidence record)
+ *
+ * ```ts
+ * import { EvidenceRef } from "./ActionItem.ts"
+ * import { AssociationEvidence } from "./WorkstreamAssociation.ts"
+ *
+ * const evidence = AssociationEvidence.make({
+ *   evidenceId: "e1",
+ *   summary: "Discussed the launch checklist",
+ *   evidenceRefs: [EvidenceRef.make({ kind: "conversation", id: "c1", scope: "canonical" })],
+ * })
+ * console.log(evidence.evidenceRefs.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AssociationEvidence extends Model<AssociationEvidence>("AssociationEvidence")(
+  {
+    evidenceId: stableId("evidence_id"),
+    summary: boundedText("summary", { minLength: 1, maxLength: 2000 }),
+    evidenceRefs: S.Array(EvidenceRef)
+      .check(S.isMinLength(1), S.isMaxLength(50))
+      .annotateKey({ description: "One to fifty evidence references." })
+      .pipe(pg.jsonb(), pg.columnName("evidence_refs")),
+  },
+  $I.annote("AssociationEvidence", { description: "Minimized evidence for association adjudication." }),
+  (columns) => [
+    stableIdCheck("evidence_id")(columns.evidenceId),
+    textBoundsCheck("summary", { minLength: 1, maxLength: 2000 })(columns.summary),
+    jsonbArrayLengthCheck("evidence_refs", { minimum: 1, maximum: 50 })(columns.evidenceRefs),
+  ],
+) {}
+
+/** @category type-level @since 0.0.0 */
+export declare namespace AssociationEvidence {
+  /** Encoded form of {@link AssociationEvidence}. */
+  export type Encoded = S.Codec.Encoded<typeof AssociationEvidence>;
+}
+
+/**
+ * Workstream candidate as the adjudicator sees it.
+ *
+ * **Example** (Allow an empty state summary)
+ *
+ * ```ts
+ * import { AssociationCandidateView } from "./WorkstreamAssociation.ts"
+ *
+ * const view = AssociationCandidateView.make({ workstreamId: "w1", objective: "Ship", currentStateSummary: "" })
+ * console.log(view.currentStateSummary) // ""
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AssociationCandidateView extends Model<AssociationCandidateView>("AssociationCandidateView")(
+  {
+    workstreamId: stableId("workstream_id"),
+    objective: boundedText("objective", { minLength: 1, maxLength: 2048 }),
+    currentStateSummary: S.String.check(S.isMaxLength(4000))
+      .annotateKey({ description: "Current state summary, at most 4000 characters. May be empty." })
+      .pipe(pg.text(), pg.columnName("current_state_summary")),
+  },
+  $I.annote("AssociationCandidateView", { description: "Candidate workstream projected for adjudication." }),
+  (columns) => [
+    stableIdCheck("workstream_id")(columns.workstreamId),
+    textBoundsCheck("objective", { minLength: 1, maxLength: 2048 })(columns.objective),
+    textBoundsCheck("current_state_summary", { maxLength: 4000 })(columns.currentStateSummary),
+  ],
+) {}
+
+/** @category type-level @since 0.0.0 */
+export declare namespace AssociationCandidateView {
+  /** Encoded form of {@link AssociationCandidateView}. */
+  export type Encoded = S.Codec.Encoded<typeof AssociationCandidateView>;
+}
+
+/**
+ * Input the adjudicator reads: one evidence summary and one to five candidates.
+ *
+ * **Example** (Defaults for the version fields)
+ *
+ * ```ts
+ * import { AssociationAdjudicationInput, AssociationCandidateView } from "./WorkstreamAssociation.ts"
+ *
+ * const input = AssociationAdjudicationInput.make({
+ *   evidenceSummary: "Launch checklist",
+ *   candidates: [AssociationCandidateView.make({ workstreamId: "w1", objective: "Ship", currentStateSummary: "" })],
+ * })
+ * console.log(input.schemaVersion, input.policyVersion) // 1 "association.v1"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AssociationAdjudicationInput extends Model<AssociationAdjudicationInput>("AssociationAdjudicationInput")(
+  {
+    schemaVersion,
+    policyVersion,
+    evidenceSummary: boundedText("evidence_summary", { minLength: 1, maxLength: 2000 }),
+    candidates: S.Array(AssociationCandidateView)
+      .check(S.isMinLength(1), S.isMaxLength(5))
+      .annotateKey({ description: "One to five candidate views." })
+      .pipe(pg.jsonb(), pg.columnName("candidates")),
+  },
+  $I.annote("AssociationAdjudicationInput", { description: "Adjudication input. Raw private content cannot be stored here." }),
+  (columns) => [
+    textBoundsCheck("evidence_summary", { minLength: 1, maxLength: 2000 })(columns.evidenceSummary),
+    jsonbArrayLengthCheck("candidates", { minimum: 1, maximum: 5 })(columns.candidates),
+  ],
+) {}
+
+/** @category type-level @since 0.0.0 */
+export declare namespace AssociationAdjudicationInput {
+  /** Encoded form of {@link AssociationAdjudicationInput}. */
+  export type Encoded = S.Codec.Encoded<typeof AssociationAdjudicationInput>;
 }
 
 /**
@@ -101,44 +215,41 @@ export declare namespace WorkstreamAssociationError {
  * import * as S from "effect/Schema"
  * import { AssociationReason } from "./WorkstreamAssociation.ts"
  *
- * const decoded = Effect.runSync(S.decodeUnknownEffect(AssociationReason)("selected"))
- * console.log(decoded) // "selected"
+ * console.log(Effect.runSync(S.decodeUnknownEffect(AssociationReason)("selected"))) // "selected"
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const AssociationReason = kit("AssociationReason", "Association reason.", [
-  "selected",
-  "none",
-  "ambiguous",
-  "immaterial",
-]);
+export const AssociationReason = LiteralKit(["selected", "no_match", "immaterial", "ambiguous", "model_unavailable"]).pipe(
+  $I.annoteSchema("AssociationReason", { description: "Association reason." }),
+);
 
 /** @category type-level @since 0.0.0 */
 export type AssociationReason = typeof AssociationReason.Type;
-/** @category type-level @since 0.0.0 */
-export declare namespace AssociationReason {
-  export type Encoded = S.Codec.Encoded<typeof AssociationReason>;
-}
 
 /**
  * Judgment of whether an event belongs to a workstream.
  *
- * **Gotchas**
+ * **Details**
  *
  * Material judgments require `workstreamId`, reason `selected`, and an event
  * summary. Non-material judgments cannot use `selected` or carry a summary.
  * `immaterial` requires a workstream id and is the only non-material reason
- * that may have one.
+ * that may have one. {@link validateAssociationJudgment} enforces those rules.
  *
- * **Example** (Construct a none judgment)
+ * **Gotchas**
+ *
+ * Decoding alone does not run the pairing rules; use
+ * {@link decodeAssociationJudgment} for the Python constructor behavior.
+ *
+ * **Example** (Construct a no_match judgment)
  *
  * ```ts
  * import { AssociationJudgment } from "./WorkstreamAssociation.ts"
  *
- * const judgment = AssociationJudgment.make({ material: false, reason: "none" })
- * console.log(judgment.material) // false
+ * const judgment = AssociationJudgment.make({ material: false, reason: "no_match" })
+ * console.log(judgment.policyVersion) // "association.v1"
  * ```
  *
  * @category models
@@ -146,12 +257,19 @@ export declare namespace AssociationReason {
  */
 export class AssociationJudgment extends Model<AssociationJudgment>("AssociationJudgment")(
   {
-    material: bool("material"),
-    reason: AssociationReason.pipe(pg.text(), pg.columnName("reason")),
+    schemaVersion,
+    policyVersion,
     workstreamId: optionalStableId("workstream_id"),
+    material: bool("material"),
+    reason: AssociationReason.annotateKey({ description: "Why the event was or was not associated." }).pipe(
+      pg.text(),
+      pg.columnName("reason"),
+    ),
     eventSummary: optionalBoundedText("event_summary", { minLength: 1, maxLength: 500 }),
   },
-  doc("AssociationJudgment", "Association judgment. The pair of material and reason is checked by validateAssociationJudgment."),
+  $I.annote("AssociationJudgment", {
+    description: "Association judgment. The pair of material and reason is checked by validateAssociationJudgment.",
+  }),
   (columns) => [
     stableIdCheck("workstream_id")(columns.workstreamId),
     textBoundsCheck("event_summary", { minLength: 1, maxLength: 500 })(columns.eventSummary),
@@ -160,6 +278,7 @@ export class AssociationJudgment extends Model<AssociationJudgment>("Association
 
 /** @category type-level @since 0.0.0 */
 export declare namespace AssociationJudgment {
+  /** Encoded form of {@link AssociationJudgment}. */
   export type Encoded = S.Codec.Encoded<typeof AssociationJudgment>;
 }
 
@@ -203,234 +322,262 @@ export const validateAssociationJudgment = Effect.fn("AssociationJudgment.valida
 });
 
 /**
- * Input the adjudicator reads. Raw private content is not a field.
+ * Decode a judgment and run the pairing rules, as the Python constructor does.
  *
- * **Example** (Construct one evidence ref)
- *
- * ```ts
- * import * as DateTime from "effect/DateTime"
- * import { AssociationAdjudicationInput, EvidenceRef } from "./WorkstreamAssociation.ts"
- *
- * const input = AssociationAdjudicationInput.make({
- *   taskId: "t1",
- *   sourceKind: "conversation",
- *   sourceId: "c1",
- *   occurredAt: DateTime.makeUnsafe("2020-01-02T03:04:05Z"),
- *   evidenceRefs: [EvidenceRef.make({ kind: "conversation", id: "c1", scope: "canonical" })],
- * })
- * console.log(input.taskId) // "t1"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class AssociationAdjudicationInput extends Model<AssociationAdjudicationInput>("AssociationAdjudicationInput")(
-  {
-    taskId: stableId("task_id"),
-    goalId: optionalStableId("goal_id"),
-    sourceKind: EvidenceKind.pipe(pg.text(), pg.columnName("source_kind")),
-    sourceId: stableId("source_id"),
-    occurredAt: aware("occurred_at"),
-    evidenceRefs: boundedList(EvidenceRef, "evidence_refs", { minimum: 1, maximum: 50 }, false),
-  },
-  doc("AssociationAdjudicationInput", "Adjudication input. Raw private content cannot be stored here."),
-  (columns) => [
-    stableIdCheck("task_id")(columns.taskId),
-    stableIdCheck("goal_id")(columns.goalId),
-    stableIdCheck("source_id")(columns.sourceId),
-    jsonbArrayLengthCheck("evidence_refs", { minimum: 1, maximum: 50 })(columns.evidenceRefs),
-  ],
-) {}
-
-/** @category type-level @since 0.0.0 */
-export declare namespace AssociationAdjudicationInput {
-  export type Encoded = S.Codec.Encoded<typeof AssociationAdjudicationInput>;
-}
-
-/**
- * Audit of one association decision.
- *
- * **Example** (Read the policy version)
+ * **Example** (Decode a material judgment)
  *
  * ```ts
- * import { AssociationDecisionRecord } from "./WorkstreamAssociation.ts"
- *
- * console.log(AssociationDecisionRecord.fields.policyVersion !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class AssociationDecisionRecord extends Model<AssociationDecisionRecord>("AssociationDecisionRecord")(
-  {
-    decisionId: stableId("decision_id"),
-    taskId: stableId("task_id"),
-    policyVersion: S.Literal("association.v1").pipe(
-      S.withConstructorDefault(Effect.succeed("association.v1")),
-      pg.text(),
-      pg.columnName("policy_version"),
-    ),
-    candidateWorkstreamIds: boundedList(stableId("candidate"), "candidate_workstream_ids", { maximum: 32 }, false),
-    judgment: AssociationJudgment.pipe(pg.jsonb(), pg.columnName("judgment")),
-    modelVersion: stableId("model_version"),
-    decidedAt: aware("decided_at"),
-  },
-  doc("AssociationDecisionRecord", "Audit of one association decision. policy_version is association.v1."),
-  (columns) => [
-    stableIdCheck("decision_id")(columns.decisionId),
-    stableIdCheck("task_id")(columns.taskId),
-    jsonbArrayLengthCheck("candidate_workstream_ids", { maximum: 32 })(columns.candidateWorkstreamIds),
-    stableIdCheck("model_version")(columns.modelVersion),
-  ],
-) {}
-
-/** @category type-level @since 0.0.0 */
-export declare namespace AssociationDecisionRecord {
-  export type Encoded = S.Codec.Encoded<typeof AssociationDecisionRecord>;
-}
-
-/**
- * Result of adjudicating one event.
- *
- * **Example** (Read the task id)
- *
- * ```ts
- * import { AssociationAdjudicationResult } from "./WorkstreamAssociation.ts"
- *
- * console.log(AssociationAdjudicationResult.fields.taskId !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class AssociationAdjudicationResult extends Model<AssociationAdjudicationResult>("AssociationAdjudicationResult")(
-  {
-    taskId: stableId("task_id"),
-    judgment: AssociationJudgment.pipe(pg.jsonb(), pg.columnName("judgment")),
-    decision: AssociationDecisionRecord.pipe(pg.jsonb(), pg.columnName("decision")),
-  },
-  doc("AssociationAdjudicationResult", "Judgment plus the audit record."),
-  (columns) => [stableIdCheck("task_id")(columns.taskId)],
-) {}
-
-/** @category type-level @since 0.0.0 */
-export declare namespace AssociationAdjudicationResult {
-  export type Encoded = S.Codec.Encoded<typeof AssociationAdjudicationResult>;
-}
-
-/**
- * Recurrence signal embedded from the memory-recurrence contract.
- *
- * **Example** (Require one occurrence)
- *
- * ```ts
- * import { CanonicalRecurrenceSignal } from "./WorkstreamAssociation.ts"
- *
- * console.log(CanonicalRecurrenceSignal.fields.occurrenceCount !== undefined) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CanonicalRecurrenceSignal extends Model<CanonicalRecurrenceSignal>("CanonicalRecurrenceSignal")(
-  {
-    signalId: stableId("signal_id"),
-    title: boundedText("title", { minLength: 1, maxLength: 256 }),
-    objective: boundedText("objective", { minLength: 1, maxLength: 2048 }),
-    anchorTaskDescription: boundedText("anchor_task_description", { minLength: 1, maxLength: 2000 }),
-    occurrenceCount: intAtLeast("occurrence_count", 1),
-    distinctDayCount: intAtLeast("distinct_day_count", 1),
-    unresolved: bool("unresolved"),
-    confidence: confidence("confidence"),
-    firstSeenAt: aware("first_seen_at"),
-    lastSeenAt: aware("last_seen_at"),
-    evidenceRefs: boundedList(EvidenceRef, "evidence_refs", { minimum: 1, maximum: 50 }, false),
-  },
-  doc("CanonicalRecurrenceSignal", "Canonical recurrence signal. Temporal rules are validateCanonicalRecurrenceSignal."),
-  (columns) => [
-    stableIdCheck("signal_id")(columns.signalId),
-    textBoundsCheck("title", { minLength: 1, maxLength: 256 })(columns.title),
-    textBoundsCheck("objective", { minLength: 1, maxLength: 2048 })(columns.objective),
-    textBoundsCheck("anchor_task_description", { minLength: 1, maxLength: 2000 })(columns.anchorTaskDescription),
-    atLeastCheck("occurrence_count", 1)(columns.occurrenceCount),
-    atLeastCheck("distinct_day_count", 1)(columns.distinctDayCount),
-    unitIntervalCheck("confidence")(columns.confidence),
-    jsonbArrayLengthCheck("evidence_refs", { minimum: 1, maximum: 50 })(columns.evidenceRefs),
-  ],
-) {}
-
-/** @category type-level @since 0.0.0 */
-export declare namespace CanonicalRecurrenceSignal {
-  export type Encoded = S.Codec.Encoded<typeof CanonicalRecurrenceSignal>;
-}
-
-const utcDay = (instant: DateTimeUtc): number => Math.floor(DateTime.toEpochMillis(instant) / 86_400_000);
-
-/**
- * Enforce recurrence evidence scope and the day-span bound.
- *
- * **Example** (Reject a reversed window)
- *
- * ```ts
- * import * as DateTime from "effect/DateTime"
  * import * as Effect from "effect/Effect"
- * import { CanonicalRecurrenceSignal, EvidenceRef, validateCanonicalRecurrenceSignal } from "./WorkstreamAssociation.ts"
+ * import { decodeAssociationJudgment } from "./WorkstreamAssociation.ts"
  *
- * const signal = CanonicalRecurrenceSignal.make({
- *   signalId: "s1",
- *   title: "T",
- *   objective: "O",
- *   anchorTaskDescription: "A",
- *   occurrenceCount: 1,
- *   distinctDayCount: 1,
- *   unresolved: true,
- *   confidence: 1,
- *   firstSeenAt: DateTime.makeUnsafe("2020-01-03T00:00:00Z"),
- *   lastSeenAt: DateTime.makeUnsafe("2020-01-02T00:00:00Z"),
- *   evidenceRefs: [EvidenceRef.make({ kind: "memory_item", id: "m1", scope: "canonical" })],
- * })
- * console.log(Effect.runSyncExit(validateCanonicalRecurrenceSignal(signal))._tag) // "Failure"
+ * const judgment = Effect.runSync(
+ *   decodeAssociationJudgment({
+ *     schemaVersion: 1,
+ *     policyVersion: "association.v1",
+ *     material: true,
+ *     reason: "selected",
+ *     workstreamId: "w1",
+ *     eventSummary: "Launch",
+ *   }),
+ * )
+ * console.log(judgment.material) // true
  * ```
  *
- * @category predicates
+ * @category decoding
  * @since 0.0.0
  */
-export const validateCanonicalRecurrenceSignal = Effect.fn("CanonicalRecurrenceSignal.validate")(function* (
-  signal: CanonicalRecurrenceSignal,
-) {
-  if (signal.distinctDayCount > signal.occurrenceCount) {
-    return yield*WorkstreamAssociationError.make({ message: "distinct_day_count cannot exceed occurrence_count" });
-  }
-  if (DateTime.toEpochMillis(signal.firstSeenAt) > DateTime.toEpochMillis(signal.lastSeenAt)) {
-    return yield*WorkstreamAssociationError.make({ message: "first_seen_at cannot be after last_seen_at" });
-  }
-  const span = utcDay(signal.lastSeenAt) - utcDay(signal.firstSeenAt) + 1;
-  if (signal.distinctDayCount > span) {
-    return yield*WorkstreamAssociationError.make({ message: "distinct_day_count exceeds the inclusive day span" });
-  }
-  for (const ref of signal.evidenceRefs) {
-    if (ref.scope !== "canonical") {
-      return yield* WorkstreamAssociationError.make({ message: "recurrence evidence must be canonical" });
-    }
-    if (ref.kind !== "memory_item" && ref.kind !== "conversation") {
-      return yield* WorkstreamAssociationError.make({ message: "recurrence evidence must be a memory item or conversation" });
-    }
-  }
-  return signal;
+export const decodeAssociationJudgment = Effect.fn("AssociationJudgment.decode")(function* (input: unknown) {
+  return yield* validateAssociationJudgment(yield* S.decodeUnknownEffect(AssociationJudgment)(input));
 });
 
-import * as DateTime from "effect/DateTime";
-type DateTimeUtc = DateTime.Utc;
+/**
+ * Terminal outcome of one association pass.
+ *
+ * **Example** (Decode appended)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { AssociationOutcomeKind } from "./WorkstreamAssociation.ts"
+ *
+ * console.log(Effect.runSync(S.decodeUnknownEffect(AssociationOutcomeKind)("appended"))) // "appended"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AssociationOutcomeKind = LiteralKit([
+  "workflow_disabled",
+  "no_candidates",
+  "no_match",
+  "immaterial",
+  "minimization_rejected",
+  "would_append",
+  "appended",
+]).pipe($I.annoteSchema("AssociationOutcomeKind", { description: "Association outcome kind." }));
+
+/** @category type-level @since 0.0.0 */
+export type AssociationOutcomeKind = typeof AssociationOutcomeKind.Type;
 
 /**
- * Receipt that a recurrence signal was accepted into the inbox.
+ * Result of one association pass with the candidate ids it touched.
  *
- * **Example** (Read the index version)
+ * **Example** (Defaults for the id lists)
+ *
+ * ```ts
+ * import { AssociationOutcome } from "./WorkstreamAssociation.ts"
+ *
+ * const outcome = AssociationOutcome.make({ outcome: "no_candidates" })
+ * console.log(outcome.retrievedCandidateIds.length, outcome.policyVersion) // 0 "association.v1"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AssociationOutcome extends Model<AssociationOutcome>("AssociationOutcome")(
+  {
+    outcome: AssociationOutcomeKind.annotateKey({ description: "Terminal outcome kind." }).pipe(
+      pg.text(),
+      pg.columnName("outcome"),
+    ),
+    retrievedCandidateIds: stableIdList("retrieved_candidate_ids", 20, "Retrieved candidate ids, at most 20."),
+    hydratedCandidateIds: stableIdList("hydrated_candidate_ids", 5, "Hydrated candidate ids, at most 5."),
+    workstreamId: optionalStableId("workstream_id"),
+    eventId: optionalStableId("event_id"),
+    judgmentReason: optionalNull(AssociationReason)
+      .annotateKey({ description: "Judgment reason when an adjudication ran." })
+      .pipe(pg.text(), pg.columnName("judgment_reason")),
+    policyVersion,
+  },
+  $I.annote("AssociationOutcome", { description: "Outcome of one association pass." }),
+  (columns) => [
+    jsonbArrayLengthCheck("retrieved_candidate_ids", { maximum: 20 })(columns.retrievedCandidateIds),
+    jsonbArrayLengthCheck("hydrated_candidate_ids", { maximum: 5 })(columns.hydratedCandidateIds),
+    stableIdCheck("workstream_id")(columns.workstreamId),
+    stableIdCheck("event_id")(columns.eventId),
+  ],
+) {}
+
+/** @category type-level @since 0.0.0 */
+export declare namespace AssociationOutcome {
+  /** Encoded form of {@link AssociationOutcome}. */
+  export type Encoded = S.Codec.Encoded<typeof AssociationOutcome>;
+}
+
+/**
+ * Report of one workstream association index rebuild.
+ *
+ * **Example** (Default index version)
+ *
+ * ```ts
+ * import { WorkstreamIndexRebuildReport } from "./WorkstreamAssociation.ts"
+ *
+ * const report = WorkstreamIndexRebuildReport.make({ uid: "u1", sourceCount: 3, indexedCount: 3 })
+ * console.log(report.indexVersion) // "workstream-association-v2"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WorkstreamIndexRebuildReport extends Model<WorkstreamIndexRebuildReport>("WorkstreamIndexRebuildReport")(
+  {
+    uid: text("uid"),
+    indexVersion: S.Literal("workstream-association-v2")
+      .annotateKey({ description: "Index version. Always workstream-association-v2." })
+      .pipe(
+        S.withConstructorDefault(Effect.succeed<"workstream-association-v2">("workstream-association-v2")),
+        pg.text(),
+        pg.columnName("index_version"),
+      ),
+    sourceCount: NonNegativeInt.annotateKey({ description: "Workstreams read from the source." }).pipe(
+      pg.integer(),
+      pg.columnName("source_count"),
+    ),
+    indexedCount: NonNegativeInt.annotateKey({ description: "Workstreams written to the index." }).pipe(
+      pg.integer(),
+      pg.columnName("indexed_count"),
+    ),
+    failedWorkstreamIds: S.Array(StableId)
+      .annotateKey({ description: "Workstreams that failed to index." })
+      .pipe(S.withConstructorDefault(Effect.succeed(emptyIds)), pg.jsonb(), pg.columnName("failed_workstream_ids")),
+  },
+  $I.annote("WorkstreamIndexRebuildReport", { description: "Index rebuild report." }),
+  (columns) => [
+    nonNegativeIntCheck("source_count")(columns.sourceCount),
+    nonNegativeIntCheck("indexed_count")(columns.indexedCount),
+  ],
+) {}
+
+/** @category type-level @since 0.0.0 */
+export declare namespace WorkstreamIndexRebuildReport {
+  /** Encoded form of {@link WorkstreamIndexRebuildReport}. */
+  export type Encoded = S.Codec.Encoded<typeof WorkstreamIndexRebuildReport>;
+}
+
+/**
+ * Outcome kind of consuming a recurrence signal.
+ *
+ * **Example** (Decode candidate_created)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { RecurrenceOutcomeKind } from "./WorkstreamAssociation.ts"
+ *
+ * console.log(Effect.runSync(S.decodeUnknownEffect(RecurrenceOutcomeKind)("candidate_created"))) // "candidate_created"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RecurrenceOutcomeKind = LiteralKit([
+  "workflow_disabled",
+  "below_threshold",
+  "would_create",
+  "candidate_created",
+]).pipe($I.annoteSchema("RecurrenceOutcomeKind", { description: "Recurrence consumption outcome kind." }));
+
+/** @category type-level @since 0.0.0 */
+export type RecurrenceOutcomeKind = typeof RecurrenceOutcomeKind.Type;
+
+/**
+ * Result of consuming one recurrence signal.
+ *
+ * **Example** (Leave the candidate empty)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { RecurrenceConsumptionOutcome } from "./WorkstreamAssociation.ts"
+ *
+ * const outcome = RecurrenceConsumptionOutcome.make({ outcome: "below_threshold", signalId: "s1" })
+ * console.log(O.isNone(outcome.candidateId)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RecurrenceConsumptionOutcome extends Model<RecurrenceConsumptionOutcome>("RecurrenceConsumptionOutcome")(
+  {
+    outcome: RecurrenceOutcomeKind.annotateKey({ description: "Consumption outcome kind." }).pipe(
+      pg.text(),
+      pg.columnName("outcome"),
+    ),
+    signalId: stableId("signal_id"),
+    candidateId: optionalStableId("candidate_id"),
+    idempotencyKey: optionalStableId("idempotency_key"),
+  },
+  $I.annote("RecurrenceConsumptionOutcome", { description: "Outcome of consuming one recurrence signal." }),
+  (columns) => [
+    stableIdCheck("signal_id")(columns.signalId),
+    stableIdCheck("candidate_id")(columns.candidateId),
+    stableIdCheck("idempotency_key")(columns.idempotencyKey),
+  ],
+) {}
+
+/** @category type-level @since 0.0.0 */
+export declare namespace RecurrenceConsumptionOutcome {
+  /** Encoded form of {@link RecurrenceConsumptionOutcome}. */
+  export type Encoded = S.Codec.Encoded<typeof RecurrenceConsumptionOutcome>;
+}
+
+/**
+ * Recurrence inbox row status.
+ *
+ * **Example** (Decode pending)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { RecurrenceInboxStatus } from "./WorkstreamAssociation.ts"
+ *
+ * console.log(Effect.runSync(S.decodeUnknownEffect(RecurrenceInboxStatus)("pending"))) // "pending"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RecurrenceInboxStatus = LiteralKit(["pending", "completed"]).pipe(
+  $I.annoteSchema("RecurrenceInboxStatus", { description: "Recurrence inbox status." }),
+);
+
+/** @category type-level @since 0.0.0 */
+export type RecurrenceInboxStatus = typeof RecurrenceInboxStatus.Type;
+
+/**
+ * Inbox receipt for a canonical recurrence signal awaiting or past consumption.
+ *
+ * **Details**
+ *
+ * `signal` embeds the canonical recurrence signal from the memory-recurrence
+ * contract. `attempts` constructs from zero. Timestamps are plain UTC
+ * instants without an aware-only rule.
+ *
+ * **Example** (Read the default attempts)
  *
  * ```ts
  * import { RecurrenceInboxReceipt } from "./WorkstreamAssociation.ts"
  *
- * console.log(RecurrenceInboxReceipt.fields.indexVersion !== undefined) // true
+ * console.log(RecurrenceInboxReceipt.fields.attempts !== undefined) // true
  * ```
  *
  * @category models
@@ -438,100 +585,42 @@ type DateTimeUtc = DateTime.Utc;
  */
 export class RecurrenceInboxReceipt extends Model<RecurrenceInboxReceipt>("RecurrenceInboxReceipt")(
   {
-    signalId: stableId("signal_id"),
-    indexVersion: S.Literal("recurrence-index.v1").pipe(
-      S.withConstructorDefault(Effect.succeed("recurrence-index.v1")),
-      pg.text(),
-      pg.columnName("index_version"),
+    receiptId: stableId("receipt_id"),
+    loopKey: stableId("loop_key"),
+    accountGeneration: NonNegativeInt.annotateKey({ description: "Account generation the receipt belongs to." }).pipe(
+      pg.integer(),
+      pg.columnName("account_generation"),
     ),
-    accountGeneration: intAtLeast("account_generation", 0),
-    sequence: intAtLeast("sequence", 1),
-    acceptedAt: aware("accepted_at"),
+    status: RecurrenceInboxStatus.annotateKey({ description: "Inbox row status." }).pipe(
+      pg.text(),
+      pg.columnName("status"),
+    ),
+    signal: CanonicalRecurrenceSignal.annotateKey({ description: "Embedded canonical recurrence signal." }).pipe(
+      pg.jsonb(),
+      pg.columnName("signal"),
+    ),
+    attempts: S.Int.check(S.isGreaterThanOrEqualTo(0))
+      .annotateKey({ description: "Consumption attempts. Constructs from zero." })
+      .pipe(S.withConstructorDefault(Effect.succeed(0)), pg.integer(), pg.columnName("attempts")),
+    lastOutcome: optionalNull(RecurrenceOutcomeKind)
+      .annotateKey({ description: "Outcome of the last consumption attempt." })
+      .pipe(pg.text(), pg.columnName("last_outcome")),
+    lastErrorCode: optionalStableId("last_error_code"),
+    createdAt: timestamp("created_at"),
+    updatedAt: timestamp("updated_at"),
   },
-  doc("RecurrenceInboxReceipt", "Inbox receipt. sequence starts at 1."),
+  $I.annote("RecurrenceInboxReceipt", { description: "Inbox receipt for one recurrence signal." }),
   (columns) => [
-    stableIdCheck("signal_id")(columns.signalId),
-    atLeastCheck("account_generation", 0)(columns.accountGeneration),
-    atLeastCheck("sequence", 1)(columns.sequence),
+    stableIdCheck("receipt_id")(columns.receiptId),
+    stableIdCheck("loop_key")(columns.loopKey),
+    nonNegativeIntCheck("account_generation")(columns.accountGeneration),
+    atLeastCheck("attempts", 0)(columns.attempts),
+    stableIdCheck("last_error_code")(columns.lastErrorCode),
   ],
 ) {}
 
 /** @category type-level @since 0.0.0 */
 export declare namespace RecurrenceInboxReceipt {
+  /** Encoded form of {@link RecurrenceInboxReceipt}. */
   export type Encoded = S.Codec.Encoded<typeof RecurrenceInboxReceipt>;
 }
-
-/**
- * Outcome of consuming a recurrence signal.
- *
- * **Example** (Decode created)
- *
- * ```ts
- * import * as Effect from "effect/Effect"
- * import * as S from "effect/Schema"
- * import { RecurrenceConsumptionOutcome } from "./WorkstreamAssociation.ts"
- *
- * const decoded = Effect.runSync(S.decodeUnknownEffect(RecurrenceConsumptionOutcome)("created"))
- * console.log(decoded) // "created"
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const RecurrenceConsumptionOutcome = kit("RecurrenceConsumptionOutcome", "Recurrence consumption outcome.", [
-  "created",
-  "merged",
-  "unchanged",
-  "deferred",
-]);
-
-/** @category type-level @since 0.0.0 */
-export type RecurrenceConsumptionOutcome = typeof RecurrenceConsumptionOutcome.Type;
-/** @category type-level @since 0.0.0 */
-export declare namespace RecurrenceConsumptionOutcome {
-  export type Encoded = S.Codec.Encoded<typeof RecurrenceConsumptionOutcome>;
-}
-
-/**
- * Result of consuming one recurrence signal.
- *
- * **Example** (Leave the workstream empty)
- *
- * ```ts
- * import * as O from "effect/Option"
- * import { RecurrenceConsumptionResult } from "./WorkstreamAssociation.ts"
- *
- * const result = RecurrenceConsumptionResult.make({ signalId: "s1", outcome: "deferred", attempts: 0 })
- * console.log(O.isNone(result.workstreamId)) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class RecurrenceConsumptionResult extends Model<RecurrenceConsumptionResult>("RecurrenceConsumptionResult")(
-  {
-    signalId: stableId("signal_id"),
-    outcome: RecurrenceConsumptionOutcome.pipe(pg.text(), pg.columnName("outcome")),
-    workstreamId: optionalStableId("workstream_id"),
-    goalId: optionalStableId("goal_id"),
-    attempts: intAtLeast("attempts", 0),
-    reason: optionalText("reason"),
-  },
-  doc("RecurrenceConsumptionResult", "Consumption result. attempts constructs from zero when supplied."),
-  (columns) => [
-    stableIdCheck("signal_id")(columns.signalId),
-    stableIdCheck("workstream_id")(columns.workstreamId),
-    stableIdCheck("goal_id")(columns.goalId),
-    atLeastCheck("attempts", 0)(columns.attempts),
-  ],
-) {}
-
-/** @category type-level @since 0.0.0 */
-export declare namespace RecurrenceConsumptionResult {
-  export type Encoded = S.Codec.Encoded<typeof RecurrenceConsumptionResult>;
-}
-
-void EvidenceScope;
-void optionalNull;
-void boolDefault;
-void optionalText;

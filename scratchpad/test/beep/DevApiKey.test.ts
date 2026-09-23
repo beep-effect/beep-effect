@@ -15,7 +15,7 @@ import {
   DevApiKeyWire,
 } from "../../beep/DevApiKey.ts";
 
-const decode = <A>(schema: S.Codec<A, unknown, never, unknown>, input: unknown): A =>
+const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 const row = {
@@ -49,7 +49,7 @@ describe("DevApiKey", () => {
 
   it("derives an arbitrary for each model", () => {
     for (const schema of [DevApiKey, DevApiKeyDb, DevApiKeyCreate, DevApiKeyCreated]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(schema.pipe(Arbitrary.schema, Arbitrary.isArbitrary), true);
     }
   });
 });

@@ -140,7 +140,7 @@ describe("Goal", () => {
 
   it("decodes response aliases and constructs suggestion defaults", () => {
     const response = Effect.runSync(
-      S.decodeUnknownEffect(GoalResponseWire)({
+      S.decodeEffect(GoalResponseWire)({
         id: "goal-1",
         goal_id: "goal-1",
         title: "Run",
@@ -173,9 +173,9 @@ describe("Goal", () => {
     });
     assert.strictEqual(suggestion.suggestedMin, 0);
     assert.strictEqual(suggestion.suggestedMax, 10);
-    const deleted = Effect.runSync(S.decodeUnknownEffect(GoalDeleteResponseWire)({ success: true, deleted_id: "goal-1" }));
+    const deleted = Effect.runSync(S.decodeEffect(GoalDeleteResponseWire)({ success: true, deleted_id: "goal-1" }));
     assert.strictEqual(deleted.deletedId, "goal-1");
-    const advice = Effect.runSync(S.decodeUnknownEffect(AdviceResponse)({ advice: "Keep going" }));
+    const advice = Effect.runSync(S.decodeEffect(AdviceResponse)({ advice: "Keep going" }));
     assert.strictEqual(advice.advice, "Keep going");
     const event = GoalProgressEventCreate.make({ kind: "milestone", summary: "Started" });
     assert.strictEqual(event.evidenceRefs.length, 0);
@@ -202,7 +202,7 @@ describe("Goal", () => {
       GoalSuggestionResponse,
       AdviceResponse,
     ]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });

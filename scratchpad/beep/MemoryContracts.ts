@@ -25,7 +25,7 @@ import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { Model, UtcTimestamp, optionalNull, pg } from "./Kit.ts";
+import { Model, UtcTimestamp, optionalNull, optionalTimestamp, pg } from "./Kit.ts";
 
 const $I = $ScratchpadId.create("beep/MemoryContracts");
 
@@ -66,8 +66,7 @@ const betweenCheck = (column: ExtraConfigColumn, name: string, minimum: number, 
 const instant = (column: string) =>
   UtcTimestamp.pipe(pg.timestamp({ mode: "string", withTimezone: true }), pg.columnName(column));
 
-const optionalInstant = (column: string) =>
-  optionalNull(UtcTimestamp).pipe(pg.timestamp({ mode: "string", withTimezone: true }), pg.columnName(column));
+const optionalInstant = optionalTimestamp;
 
 const closed = <const L extends readonly [string, ...ReadonlyArray<string>]>(
   literals: L,

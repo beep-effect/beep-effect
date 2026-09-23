@@ -18,6 +18,9 @@ import {
   stripRetiredChatFirstFlag,
 } from "../../beep/TaskIntelligence.ts";
 
+const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
+  Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
+
 const base = {
   schemaVersion: 1,
   eventId: "event-1",
@@ -47,7 +50,7 @@ describe("TaskIntelligence", () => {
     expect(decision.memoryCohortEligible).toBe(true);
     expect(decision.accountGeneration).toBe(0);
     expect(S.is(MemoryCohortEligible)(false)).toBe(false);
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(TaskIntelligenceRolloutDecision)({
+    expect(fails(TaskIntelligenceRolloutDecision, {
       uid: "",
       workflowMode: "off",
       memoryCohortEligible: true,
@@ -59,7 +62,7 @@ describe("TaskIntelligence", () => {
       canonicalReadsAuthoritative: false,
       compatibilityProjectionRequired: false,
       intelligenceProductEnabled: false,
-    }))._tag).toBe("Failure");
+    })).toBe(true);
     const control = TaskWorkflowControl.make({});
     expect(control.workflowMode).toBe("off");
     expect(control.chatFirstUi).toBe(false);
@@ -132,13 +135,16 @@ describe("TaskIntelligence", () => {
       artifactId: "artifact-1",
       outcomeCode: "artifact_approved",
     }))).toBe("");
-    const failed = Effect.runSync(Effect.flip(requireEventSpecificLinkage(event({ eventType: "candidate_captured" }))));
+    const failed = requireEventSpecificLinkage(event({ eventType: "candidate_captured" })).pipe(
+      Effect.flip,
+      Effect.runSync,
+    );
     expect(failed).toBeInstanceOf(TaskIntelligenceLinkageError);
     expect(failed.message).toBe("candidate_captured requires candidate_id");
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(TaskIntelligenceAttributionEventLinkage)({
+    expect(fails(TaskIntelligenceAttributionEventLinkage, {
       ...base,
       eventType: "candidate_captured",
-    }))._tag).toBe("Failure");
+    })).toBe(true);
   });
 
   it("decodes null optional ids as None and builds arbitraries", () => {

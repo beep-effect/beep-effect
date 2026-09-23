@@ -12,6 +12,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { EvidenceRefChecked, TaskChangePayload, TaskCreatePayload, type TaskStatus } from "./ActionItem.ts";
@@ -1322,26 +1323,42 @@ const optionalReason = optionalNull(S.String.check(S.isMaxLength(64)));
 const optionalId = optionalNull(StableId);
 const optionalInstant = optionalNull(S.DateTimeUtcFromString);
 
+// Optional-key codecs only decode inside a struct: a bare absent value has no
+// key to be missing, so the resolution tail is read as one struct.
+const StoredResolutionTail = S.Struct({
+  resolutionReason: optionalReason,
+  resultTaskId: optionalId,
+  resultWorkstreamId: optionalId,
+  resolvedAt: optionalInstant,
+  expiresAt: optionalInstant,
+});
+
 export const candidateRecordFromStorage = Effect.fn("CandidateRecord.fromStorage")(function* (value: unknown) {
   if (!P.isObject(value)) {
     return yield* CandidateShapeError.make({ message: "candidate record must be an object" });
   }
   const data: { [key: string]: unknown } = { ...value };
-  const proposalInput: unknown = {
-    subjectKind: omitNull(data.subjectKind),
-    proposedAction: omitNull(data.proposedAction),
-    taskId: omitNull(data.taskId),
-    taskChange: omitNull(data.taskChange),
-    workstreamProposal: omitNull(data.workstreamProposal),
-    captureConfidence: data.captureConfidence,
-    ownershipConfidence: data.ownershipConfidence,
-    goalId: omitNull(data.goalId),
-    workstreamId: omitNull(data.workstreamId),
-    evidenceRefs: data.evidenceRefs,
-    sourceSurface: data.sourceSurface,
-    compatibility: omitNull(data.compatibility),
-  };
+  // Absent and null arms must be missing keys, not `undefined` values:
+  // `CandidateCreate` decodes with `onExcessProperty: "error"`.
+  const proposalInput: unknown = R.filter(
+    {
+      subjectKind: omitNull(data.subjectKind),
+      proposedAction: omitNull(data.proposedAction),
+      taskId: omitNull(data.taskId),
+      taskChange: omitNull(data.taskChange),
+      workstreamProposal: omitNull(data.workstreamProposal),
+      captureConfidence: data.captureConfidence,
+      ownershipConfidence: data.ownershipConfidence,
+      goalId: omitNull(data.goalId),
+      workstreamId: omitNull(data.workstreamId),
+      evidenceRefs: data.evidenceRefs,
+      sourceSurface: data.sourceSurface,
+      compatibility: omitNull(data.compatibility),
+    },
+    P.isNotUndefined,
+  );
   const proposal = yield* S.decodeUnknownEffect(CandidateCreate)(proposalInput, { onExcessProperty: "error" });
+  const tail = yield* S.decodeEffect(StoredResolutionTail)(data);
   const record = CandidateRecord.make({
     candidateId: yield* S.decodeUnknownEffect(StableId)(data.candidateId),
     subjectKind: proposal.subjectKind,
@@ -1359,12 +1376,12 @@ export const candidateRecordFromStorage = Effect.fn("CandidateRecord.fromStorage
     status: data.status === undefined ? "pending" : yield* S.decodeUnknownEffect(CandidateStatus)(data.status),
     accountGeneration: yield* S.decodeUnknownEffect(NonNegativeInt)(data.accountGeneration),
     idempotencyKey: yield* S.decodeUnknownEffect(StableId)(data.idempotencyKey),
-    resolutionReason: yield* S.decodeUnknownEffect(optionalReason)(data.resolutionReason),
-    resultTaskId: yield* S.decodeUnknownEffect(optionalId)(data.resultTaskId),
-    resultWorkstreamId: yield* S.decodeUnknownEffect(optionalId)(data.resultWorkstreamId),
+    resolutionReason: tail.resolutionReason,
+    resultTaskId: tail.resultTaskId,
+    resultWorkstreamId: tail.resultWorkstreamId,
     createdAt: yield* S.decodeUnknownEffect(S.DateTimeUtcFromString)(data.createdAt),
-    resolvedAt: yield* S.decodeUnknownEffect(optionalInstant)(data.resolvedAt),
-    expiresAt: yield* S.decodeUnknownEffect(optionalInstant)(data.expiresAt),
+    resolvedAt: tail.resolvedAt,
+    expiresAt: tail.expiresAt,
   });
   const issue = candidateResolutionIssue(record);
   if (O.isSome(issue)) return yield* CandidateShapeError.make({ message: issue.value });

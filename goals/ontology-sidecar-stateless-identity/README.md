@@ -35,8 +35,8 @@ harness on the 2026 wire through `@beep/mcp-kit/client`, and the Origin allow-li
 
 ## Current Phase
 
-Waits for `goals/mcp-stateless-kit-and-drivers` PR 1 (kit dual-read, dispatch anchor,
-`@beep/mcp-kit/client`, conformance port). First action once it merges: provide the kit dispatch
+Unblocked 2026-09-22: `goals/mcp-stateless-kit-and-drivers` PR 1 (kit dual-read, dispatch anchor,
+`@beep/mcp-kit/client`, conformance port) merged as #1192. First action: provide the kit dispatch
 anchor as `launch:<digest>` from the desktop, retarget `runIdOf` and `OntologyChangeActor` to it,
 and land the launch-keyed tests.
 

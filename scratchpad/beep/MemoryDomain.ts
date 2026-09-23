@@ -9,9 +9,13 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
+import * as Predicate from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import { Model, UtcTimestamp, optionalNull, pg } from "./Kit.ts";
 
 const $I = $ScratchpadId.create("beep/MemoryDomain");
@@ -28,8 +32,31 @@ const stringList = (column: string, description: string) =>
 const optionalString = (column: string, description: string) =>
   described(optionalNull(S.String), description).pipe(pg.text(), pg.columnName(column));
 
+const optionalInstantSchema = S.NullOr(S.String).pipe(
+  S.optionalKey,
+  S.decodeTo(S.Option(UtcTimestamp), {
+    decode: SchemaGetter.transformOptional((present) =>
+      present.pipe(
+        O.flatMap((value) => (Predicate.isNull(value) ? O.none() : O.some(value))),
+        O.some,
+      ),
+    ),
+    encode: SchemaGetter.transformOptional((present) =>
+      present.pipe(
+        O.flatten,
+        O.match({
+          onNone: () => null,
+          onSome: (value) => value,
+        }),
+        O.some,
+      ),
+    ),
+  }),
+  SchemaUtils.withNoneDefault,
+);
+
 const optionalInstant = (column: string, description: string) =>
-  described(optionalNull(UtcTimestamp), description).pipe(
+  described(optionalInstantSchema, description).pipe(
     pg.timestamp({ mode: "string", withTimezone: true }),
     pg.columnName(column),
   );

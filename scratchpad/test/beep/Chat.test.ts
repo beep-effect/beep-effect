@@ -1,6 +1,9 @@
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { describe, expect, it } from "vitest";
 import {
   ChatEvidenceReference,
@@ -30,7 +33,7 @@ import {
 const human = Message.make({
   id: "m1",
   text: "Hello",
-  createdAt: "2020-01-02T03:04:05.000Z",
+  createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
   sender: "human",
   type: "text",
 });
@@ -47,25 +50,24 @@ describe("Chat", () => {
       name: "notes.pdf",
       mimeType: "application/pdf",
       openaiFileId: "file-1",
-      createdAt: "2020-01-02T03:04:05.000Z",
+      createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
     });
     expect(fileChatIsDocumentMessage(pdf)).toBe(true);
     expect(fileChatIsImage(pdf)).toBe(false);
     expect("thumb_name" in fileChatPayload(pdf)).toBe(false);
+    const humanWire = Effect.runSync(S.encodeEffect(Message)(human));
     const decoded = Effect.runSync(
       decodeMessage({
-        id: "m1",
-        text: "Hello",
+        ...Struct.omit(humanWire, ["contentBlocks"]),
         created_at: "2020-01-02T03:04:05.000Z",
         sender: "ai",
-        type: "text",
         plugin_id: "app-1",
         metadata: '{"content_blocks":[{"type":"text"}]}',
       }),
     );
     expect(O.getOrElse(decoded.appId, () => "")).toBe("app-1");
     expect(decoded.contentBlocks.length).toBe(1);
-    expect(deserializeManySafe([{ id: "bad" }, { id: "m1", text: "Hello", createdAt: "2020-01-02T03:04:05.000Z", sender: "human", type: "text" }]).length).toBe(1);
+    expect(deserializeManySafe([{ id: "bad" }, humanWire]).length).toBe(1);
   });
 
   it("formats messages and evidence branches", () => {
@@ -93,7 +95,7 @@ describe("Chat", () => {
     expect(O.isSome(evidenceEnvelopeIssue(duplicate))).toBe(true);
     const rewritten = settleEvidenceEnvelope(ChatEvidenceEnvelope.make({ schemaVersion: 2, references: [summary] }));
     expect(rewritten.references[0]?.kind).toBe("unknown");
-    const session = addFileIds(ChatSession.make({ id: "s1", createdAt: "2020-01-02T03:04:05.000Z" }), ["f1", "f1"]);
+    const session = addFileIds(ChatSession.make({ id: "s1", createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z") }), ["f1", "f1"]);
     expect(session.fileIds).toEqual(["f1"]);
     expect(retrieveNewFile(session, ["f1", "f2"])).toEqual(["f2"]);
     expect(Arbitrary.schema(Message)).toBeTruthy();

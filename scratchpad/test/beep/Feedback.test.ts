@@ -85,7 +85,7 @@ describe("Feedback", () => {
     const wrongTarget = MobileFeedbackRequest.make({
       feedbackId: "f1",
       kind: "summary_helpfulness",
-      targetKind: O.some("recording"),
+      targetKind: O.some<"recording">("recording"),
       targetId: "r1",
       value: -1,
     });
@@ -93,10 +93,10 @@ describe("Feedback", () => {
     const wrongReason = MobileFeedbackRequest.make({
       feedbackId: "f1",
       kind: "summary_helpfulness",
-      targetKind: O.some("conversation"),
+      targetKind: O.some<"conversation">("conversation"),
       targetId: "c1",
       value: -1,
-      reason: O.some("recording_other"),
+      reason: O.some<"recording_other">("recording_other"),
     });
     assert.strictEqual(Effect.runSyncExit(validateReasonSurface(wrongReason))._tag, "Failure");
     const ok = MobileFeedbackRequest.make({
@@ -104,7 +104,7 @@ describe("Feedback", () => {
       kind: "recording_quality",
       targetId: "r1",
       value: -1,
-      reason: O.some("recording_other"),
+      reason: O.some<"recording_other">("recording_other"),
     });
     assert.strictEqual(Effect.runSync(validateReasonSurface(ok)).reason, ok.reason);
     const memory = Effect.runSync(
@@ -162,7 +162,7 @@ describe("Feedback", () => {
       FeedbackContextTurnText,
       FeedbackContextHydrated,
     ]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });

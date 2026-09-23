@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -13,7 +13,7 @@ import {
   dumpImportJob,
 } from "../../beep/ImportJob.ts";
 
-const decode = <A>(schema: S.Codec<A, unknown, never, unknown>, input: unknown): A =>
+const decode = <A extends S.Top & S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 const decodeFails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
@@ -139,3 +139,4 @@ describe("ImportJobResponse", () => {
     assert.strictEqual(O.isNone(missing.error), true);
   });
 });
+

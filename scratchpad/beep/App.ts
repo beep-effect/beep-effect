@@ -28,6 +28,22 @@ const intDefault = (column: string, value: number) =>
 const textDefault = (column: string, value: string) =>
   S.String.pipe(S.withConstructorDefault(Effect.succeed(value)), pg.text(), pg.columnName(column));
 
+/**
+ * `HashSet<string>` stored as a JSON array.
+ *
+ * **Details**
+ *
+ * `S.HashSet` alone encodes as a `HashSet` declaration, which has no SQL
+ * carrier. Python `Set[str]` serialises as a list, so the wire form is a
+ * string array and decode rebuilds the set.
+ */
+const StringSet = S.Array(S.String).pipe(
+  S.decodeTo(S.HashSet(S.String), {
+    decode: SchemaGetter.transform(HashSet.fromIterable<string>),
+    encode: SchemaGetter.transform(A.fromIterable<string>),
+  }),
+);
+
 const optionDefault = <Sch extends S.ConstraintDecoder<unknown>>(schema: Sch, fallback: () => Sch["Type"]) =>
   S.NullOr(schema).pipe(
     S.optionalKey,
@@ -372,6 +388,8 @@ export declare namespace ChatTool {
   export type Encoded = S.Codec.Encoded<typeof ChatTool>;
 }
 
+const noChatTools = (): ReadonlyArray<ChatTool> => [];
+
 /**
  * Decodes a chat tool, accepting `parameters` as an object or a JSON string.
  *
@@ -505,7 +523,7 @@ export declare namespace ExternalIntegration {
  */
 export class ProactiveNotification extends Model<ProactiveNotification>("ProactiveNotification")(
   {
-    scopes: S.HashSet(S.String).pipe(pg.jsonb(), pg.columnName("scopes")),
+    scopes: StringSet.pipe(pg.jsonb(), pg.columnName("scopes")),
   },
   $I.annote("ProactiveNotification", { description: "Scopes a proactive notification is allowed to include." }),
 ) {}
@@ -570,7 +588,7 @@ const baseFields = {
   author: text("author"),
   description: text("description"),
   image: text("image"),
-  capabilities: S.HashSet(S.String).pipe(pg.jsonb(), pg.columnName("capabilities")),
+  capabilities: StringSet.pipe(pg.jsonb(), pg.columnName("capabilities")),
   username: optionalText("username"),
   connectedAccounts: stringList("connected_accounts"),
   externalIntegration: optionalNull(ExternalIntegration).pipe(pg.jsonb(), pg.columnName("external_integration")),
@@ -592,12 +610,7 @@ const baseFields = {
   isInfluencer: optionalFlag("is_influencer", false),
   isPopular: optionalFlag("is_popular", false),
   official: optionalFlag("official", false),
-  chatTools: ChatTool.pipe(
-    S.Array,
-    S.withConstructorDefault(Effect.sync(() => [])),
-    pg.jsonb(),
-    pg.columnName("chat_tools"),
-  ),
+  chatTools: optionDefault(S.Array(ChatTool), noChatTools).pipe(pg.jsonb(), pg.columnName("chat_tools")),
   sourceCodeUrl: optionalText("source_code_url"),
   disabled: optionalFlag("disabled", false),
   disabledReason: optionalText("disabled_reason"),
@@ -1265,7 +1278,7 @@ export class AppCreate extends Model<AppCreate>("AppCreate")(
     author: text("author"),
     description: text("description"),
     image: text("image"),
-    capabilities: S.HashSet(S.String).pipe(pg.jsonb(), pg.columnName("capabilities")),
+    capabilities: StringSet.pipe(pg.jsonb(), pg.columnName("capabilities")),
     memoryPrompt: optionalText("memory_prompt"),
     chatPrompt: optionalText("chat_prompt"),
     personaPrompt: optionalText("persona_prompt"),
@@ -1279,12 +1292,7 @@ export class AppCreate extends Model<AppCreate>("AppCreate")(
     price: optionalFiniteDefault("price", 0),
     paymentPlan: optionalText("payment_plan"),
     thumbnails: optionalStringList("thumbnails"),
-    chatTools: ChatTool.pipe(
-    S.Array,
-    S.withConstructorDefault(Effect.sync(() => [])),
-    pg.jsonb(),
-    pg.columnName("chat_tools"),
-  ),
+    chatTools: optionDefault(S.Array(ChatTool), noChatTools).pipe(pg.jsonb(), pg.columnName("chat_tools")),
     sourceCodeUrl: optionalText("source_code_url"),
   },
   $I.annote("AppCreate", { description: "Fields accepted when creating an app." }),
@@ -1328,7 +1336,7 @@ export class AppUpdate extends Model<AppUpdate>("AppUpdate")(
     author: optionalText("author"),
     description: optionalText("description"),
     image: optionalText("image"),
-    capabilities: S.String.pipe(S.HashSet, optionalNull, pg.jsonb(), pg.columnName("capabilities")),
+    capabilities: optionalNull(StringSet).pipe(pg.jsonb(), pg.columnName("capabilities")),
     memoryPrompt: optionalText("memory_prompt"),
     chatPrompt: optionalText("chat_prompt"),
     personaPrompt: optionalText("persona_prompt"),

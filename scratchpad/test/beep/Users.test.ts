@@ -32,10 +32,10 @@ import {
   webhookUrlFromSetting,
 } from "../../beep/Users.ts";
 
-const decode = <A extends S.Top>(schema: A, input: unknown): A["Type"] =>
+const decode = <A extends S.Top>(schema: A & S.Codec<unknown, unknown, never, never>, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
-const fails = (schema: S.Top, input: unknown): boolean =>
+const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
   Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
 
 const consentAt = (status: "granted" | "revoked", revoked = false) =>
@@ -158,7 +158,7 @@ describe("Users", () => {
       AvailableLanguage,
       AvailableLanguagesResponse,
     ]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(schema.pipe(Arbitrary.schema, Arbitrary.isArbitrary), true);
     }
   });
 });

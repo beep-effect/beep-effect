@@ -67,35 +67,32 @@ describe("Announcement", () => {
   });
 
   it("decodes each content arm", () => {
-    const log = Effect.runSync(
-      S.decodeUnknownEffect(Announcement)({
-        id: "log-1",
-        type: "changelog",
-        createdAt: "2020-01-02T03:04:05.000Z",
-        active: true,
-        content: { title: "January", changes: [{ title: "Fix", description: "Audio", indentLevel: 0 }] },
-      }),
-    );
+    const logInput: unknown = {
+      id: "log-1",
+      type: "changelog",
+      createdAt: "2020-01-02T03:04:05.000Z",
+      active: true,
+      content: { title: "January", changes: [{ title: "Fix", description: "Audio", indentLevel: 0 }] },
+    };
+    const log = Effect.runSync(S.decodeUnknownEffect(Announcement)(logInput));
     assert.strictEqual(log.type, "changelog");
-    const feature = Effect.runSync(
-      S.decodeUnknownEffect(Announcement)({
-        id: "feat-1",
-        type: "feature",
-        createdAt: "2020-01-02T03:04:05.000Z",
-        active: true,
-        content: { title: "Memory", steps: [{ title: "Open", description: "Tap" }] },
-      }),
-    );
+    const featureInput: unknown = {
+      id: "feat-1",
+      type: "feature",
+      createdAt: "2020-01-02T03:04:05.000Z",
+      active: true,
+      content: { title: "Memory", steps: [{ title: "Open", description: "Tap" }] },
+    };
+    const feature = Effect.runSync(S.decodeUnknownEffect(Announcement)(featureInput));
     assert.strictEqual(feature.type, "feature");
-    const general = Effect.runSync(
-      S.decodeUnknownEffect(Announcement)({
-        id: "note-1",
-        type: "announcement",
-        createdAt: "2020-01-02T03:04:05.000Z",
-        active: true,
-        content: { title: "Hello", body: "World" },
-      }),
-    );
+    const generalInput: unknown = {
+      id: "note-1",
+      type: "announcement",
+      createdAt: "2020-01-02T03:04:05.000Z",
+      active: true,
+      content: { title: "Hello", body: "World" },
+    };
+    const general = Effect.runSync(S.decodeUnknownEffect(Announcement)(generalInput));
     assert.strictEqual(general.type, "announcement");
   });
 
@@ -109,7 +106,7 @@ describe("Announcement", () => {
       }),
     });
     assert.strictEqual(Effect.runSync(getChangelogContent(log)).title, "January");
-    assert.strictEqual(Result.isFailure(Effect.runSync(Effect.result(getFeatureContent(log)))), true);
+    assert.strictEqual(getFeatureContent(log).pipe(Effect.result, Effect.runSync, Result.isFailure), true);
     const feature = FeatureAnnouncement.make({
       id: "feat-1",
       createdAt: created,
@@ -121,15 +118,15 @@ describe("Announcement", () => {
     assert.strictEqual(Effect.runSync(getFeatureContent(feature)).title, "Memory");
     const row = notice();
     assert.strictEqual(Effect.runSync(getAnnouncementContent(row)).body, "World");
-    assert.strictEqual(Result.isFailure(Effect.runSync(Effect.result(getChangelogContent(row)))), true);
+    assert.strictEqual(getChangelogContent(row).pipe(Effect.result, Effect.runSync, Result.isFailure), true);
   });
 
   it("falls back from a bad type and drops bad targeting", () => {
     const row = Effect.runSync(
       announcementFromDict({
-        type: "nope",
+      type: "nope",
         created_at: "",
-        content: { title: "Hello", body: "World" },
+      content: { title: "Hello", body: "World" },
         targeting: { trigger: "nope" },
         display: [],
       }),

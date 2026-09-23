@@ -42,10 +42,10 @@ import {
   validateFeedbackAction,
 } from "../../beep/TaskRecommendation.ts";
 
-const decode = <A extends S.Top>(schema: A, input: unknown): A["Type"] =>
+const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
-const fails = (schema: S.Top, input: unknown): boolean =>
+const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
   Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
 
 const evidence = EvidenceRef.make({ kind: "conversation", id: "c1", scope: "canonical" });
@@ -101,7 +101,7 @@ describe("TaskRecommendation", () => {
       subjectId: "t1",
       action: "dismiss",
       interventionId: O.some("i1"),
-      reason: O.some("not_mine"),
+      reason: O.some<TaskIntelligenceFeedbackReason>("not_mine"),
     });
     assert.strictEqual(Effect.runSync(validateFeedbackAction(dismiss)).action, "dismiss");
     const reason = FeedbackCreate.make({
@@ -109,7 +109,7 @@ describe("TaskRecommendation", () => {
       subjectId: "t1",
       action: "do_now",
       interventionId: O.some("i1"),
-      reason: O.some("not_mine"),
+      reason: O.some<TaskIntelligenceFeedbackReason>("not_mine"),
     });
     assert.strictEqual(Effect.runSyncExit(validateFeedbackAction(reason))._tag, "Failure");
     const later = FeedbackCreate.make({
@@ -204,7 +204,7 @@ describe("TaskRecommendation", () => {
       DecisionDebugProjection,
       SnapshotReceipt,
     ]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });

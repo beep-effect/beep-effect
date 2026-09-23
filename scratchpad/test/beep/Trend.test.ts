@@ -16,10 +16,10 @@ import {
   validItems,
 } from "../../beep/Trend.ts";
 
-const decode = <A extends S.Top>(schema: A, input: unknown): A["Type"] =>
+const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
-const fails = (schema: S.Top, input: unknown): boolean =>
+const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
   Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
 
 describe("Trend", () => {
@@ -51,7 +51,7 @@ describe("Trend", () => {
 
   it("derives an arbitrary for every exported schema", () => {
     for (const schema of [TrendEnum, TrendType, Trend]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });

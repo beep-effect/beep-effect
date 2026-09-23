@@ -5,7 +5,10 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ScreenActivityCoverage, ScreenActivitySource } from "../../beep/ScreenActivity.ts";
 
-const decode = <A, I>(schema: S.Codec<A, I>, input: unknown): A =>
+const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
+  Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
+
+const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 describe("ScreenActivity", () => {
@@ -43,12 +46,12 @@ describe("ScreenActivity", () => {
     expect(O.isNone(missing.firstObservedAt)).toBe(true);
     expect(O.isNone(nulled.lastObservedAt)).toBe(true);
     expect(O.isSome(present.firstObservedAt) && present.firstObservedAt.value).toBe("2020-01-02 03:04:05");
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(ScreenActivityCoverage)({
+    expect(fails(ScreenActivityCoverage, {
       source: "synced_screen_activity",
       rowLimit: 0,
       truncated: false,
       captureCompleteness: "unknown",
-    }))._tag).toBe("Failure");
+    })).toBe(true);
   });
 
   it("encodes an absent timestamp as null and builds an arbitrary", () => {

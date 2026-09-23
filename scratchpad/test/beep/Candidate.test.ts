@@ -3,7 +3,6 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { EvidenceRef, TaskCreatePayload } from "../../beep/ActionItem.ts";
 import {
@@ -168,7 +167,7 @@ describe("Candidate", () => {
         workstreamProposal: {
           title: "Launch",
           objective: "Ship the note",
-          anchorTask: { description: "Write the note" },
+          anchorTask: { description: "Write the note", owner: "unknown" },
         },
       }),
     );
@@ -205,7 +204,7 @@ describe("Candidate", () => {
       workstreamProposal: {
         title: "Launch",
         objective: "Ship the note",
-        anchorTask: { description: "Write the note" },
+        anchorTask: { description: "Write the note", owner: "unknown" },
       },
     });
     const stored = Effect.runSync(candidateRecordFromStorage(storedCreate));

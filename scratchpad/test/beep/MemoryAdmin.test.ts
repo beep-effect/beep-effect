@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
+import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -10,7 +10,7 @@ import {
   ShortTermLifecycleRunResponse,
 } from "../../beep/MemoryAdmin.ts";
 
-const decode = <A>(schema: S.Codec<A, unknown, never, unknown>, input: unknown): A =>
+const decode = <A extends S.Top & S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 const capabilities = {

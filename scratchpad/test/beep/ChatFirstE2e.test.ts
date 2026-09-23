@@ -11,30 +11,33 @@ import {
   ChatFirstE2EPrepareRequest,
 } from "../../beep/ChatFirstE2e.ts";
 
+const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
+  Effect.runSync(S.decodeUnknownEffect(schema)(input));
+
+const decodeFails = (schema: S.ConstraintDecoder<unknown>, input: unknown): boolean =>
+  Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
+
 describe("ChatFirstE2e", () => {
   it("decodes fixture cases and rejects an out-of-range advance", () => {
-    expect(Effect.runSync(S.decodeUnknownEffect(ChatFirstE2EPrepareRequest)({ fixtureCase: "question" })).fixtureCase).toBe(
-      "question",
-    );
-    expect(Effect.runSync(S.decodeUnknownEffect(ChatFirstE2EAdvanceRequest)({ seconds: 1 })).seconds).toBe(1);
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(ChatFirstE2EAdvanceRequest)({ seconds: 0 }))._tag).toBe("Failure");
-    const snapshot = Effect.runSync(
-      S.decodeUnknownEffect(ChatFirstE2EFixtureSnapshot)({
-        fixtureCase: "cold_start",
-        fixtureRevision: 1,
-        expectedShell: "chat_first",
-        controlEndpointMode: "reachable",
-        advancedSeconds: 0,
-        materializedIntentCount: 0,
-        readyIntentCount: 0,
-        proactiveIntentCount: 0,
-        pendingDeferralCount: 0,
-      }),
-    );
+    expect(decode(ChatFirstE2EPrepareRequest, { fixtureCase: "question" }).fixtureCase).toBe("question");
+    expect(decode(ChatFirstE2EAdvanceRequest, { seconds: 1 }).seconds).toBe(1);
+    expect(decodeFails(ChatFirstE2EAdvanceRequest, { seconds: 0 })).toBe(true);
+    const snapshot = decode(ChatFirstE2EFixtureSnapshot, {
+      fixtureCase: "cold_start",
+      fixtureRevision: 1,
+      expectedShell: "chat_first",
+      controlEndpointMode: "reachable",
+      advancedSeconds: 0,
+      materializedIntentCount: 0,
+      readyIntentCount: 0,
+      proactiveIntentCount: 0,
+      pendingDeferralCount: 0,
+    });
     expect(snapshot.expectedShell).toBe("chat_first");
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(ChatFirstE2EPrepareRequest)({ fixtureCase: "question", extra: true }, { onExcessProperty: "error" }))._tag).toBe(
-      "Failure",
-    );
+    const excess: unknown = { fixtureCase: "question", extra: true };
+    expect(
+      Effect.runSyncExit(S.decodeUnknownEffect(ChatFirstE2EPrepareRequest)(excess, { onExcessProperty: "error" }))._tag,
+    ).toBe("Failure");
   });
 
   it("derives arbitraries", () => {

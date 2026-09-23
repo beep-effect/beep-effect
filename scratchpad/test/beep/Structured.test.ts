@@ -17,6 +17,12 @@ import {
   setCategoryDefaultOnError,
 } from "../../beep/Structured.ts";
 
+const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
+  Effect.runSync(S.decodeUnknownEffect(schema)(input));
+
+const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
+  Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
+
 const instant = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z");
 
 describe("Structured", () => {
@@ -26,7 +32,7 @@ describe("Structured", () => {
     expect(setCategoryDefaultOnError("romantic")).toBe("romantic");
     expect(setCategoryDefaultOnError("romance")).toBe("other");
     expect(setCategoryDefaultOnError(1)).toBe("other");
-    const summary = Effect.runSync(S.decodeUnknownEffect(Structured)({
+    const summary = decode(Structured, {
       title: "hello",
       overview: "world",
       emoji: "🧠",
@@ -34,7 +40,7 @@ describe("Structured", () => {
       sections: [],
       actionItems: [],
       events: [],
-    }));
+    });
     expect(summary.category).toBe("other");
     expect(Structured.make({}).emoji).toBe("🧠");
   });
@@ -75,7 +81,7 @@ describe("Structured", () => {
 
   it("decodes null and missing optional action-item fields", () => {
     const missing = ActionItem.make({ description: "Send the notes" });
-    const nulled = Effect.runSync(S.decodeUnknownEffect(ActionItem)({
+    const nulled = decode(ActionItem, {
       description: "Send the notes",
       completed: false,
       createdAt: null,
@@ -84,12 +90,12 @@ describe("Structured", () => {
       ownerName: null,
       concreteDeliverable: null,
       sourceSegmentIds: [],
-    }));
+    });
     expect(missing.completed).toBe(false);
     expect(O.isNone(missing.captureKind)).toBe(true);
     expect(O.isNone(nulled.captureConfidence)).toBe(true);
     expect(O.isNone(nulled.concreteDeliverable)).toBe(true);
-    const present = Effect.runSync(S.decodeUnknownEffect(ActionItem)({
+    const present = decode(ActionItem, {
       description: "Send the notes",
       completed: false,
       captureKind: "explicit_command",
@@ -100,13 +106,13 @@ describe("Structured", () => {
       candidateAction: "create",
       concreteDeliverable: true,
       sourceSegmentIds: ["seg-1"],
-    }));
+    });
     expect(present.captureKind).toEqual(O.some("explicit_command"));
     expect(present.captureConfidence).toEqual(O.some(1));
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(ActionItem)({
+    expect(fails(ActionItem, {
       description: "Send the notes",
       captureConfidence: 1.1,
-    }))._tag).toBe("Failure");
+    })).toBe(true);
     expect(Section.make({ heading: "Notes", bodyMarkdown: "Shipped it." }).sourceSegmentIds).toEqual([]);
   });
 

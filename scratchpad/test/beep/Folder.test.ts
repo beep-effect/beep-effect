@@ -21,7 +21,7 @@ import {
   rejectDuplicateFolderIds,
 } from "../../beep/Folder.ts";
 
-const decode = <A>(schema: S.Codec<A, unknown, never, unknown>, input: unknown): A =>
+const decode = <A extends S.Top & S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
@@ -88,7 +88,8 @@ describe("Folder", () => {
       FolderMutationResponse,
       BulkMoveConversationsResponse,
     ]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });
+

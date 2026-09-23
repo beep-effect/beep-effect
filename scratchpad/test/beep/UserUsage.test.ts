@@ -14,7 +14,7 @@ import {
   utcNow,
 } from "../../beep/UserUsage.ts";
 
-const decode = <A extends S.Top>(schema: A, input: unknown): A["Type"] =>
+const decode = <A extends S.Top>(schema: A & S.Codec<unknown, unknown, never, never>, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 const stats = {
@@ -87,13 +87,13 @@ describe("UserUsage", () => {
       last_updated: "2020-01-02T03:04:05",
     });
     assert.strictEqual(DateTime.formatIso(decoded.lastUpdated), "2020-01-02T03:04:05.000Z");
-    assert.strictEqual(DateTime.isUtc(Effect.runSync(utcNow())), true);
+    assert.strictEqual(utcNow().pipe(Effect.runSync, DateTime.isUtc), true);
     assert.strictEqual(decode(UsagePeriod, "monthly"), "monthly");
   });
 
   it("derives an arbitrary for every exported model", () => {
     for (const schema of [UsagePeriod, UsageStats, UsageHistoryPoint, UserUsageResponse, HourlyUsage]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(schema.pipe(Arbitrary.schema, Arbitrary.isArbitrary), true);
     }
   });
 });

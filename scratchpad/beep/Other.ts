@@ -461,7 +461,7 @@ export const voiceReadiness = (data: unknown): VoiceReadiness => {
   if (A.isArrayEmpty(samples)) return "not_learned";
   if (P.isBoolean(version) || !P.isNumber(version) || !Number.isInteger(version) || version < 3) return "unknown";
   const vector = readKey(data, "speaker_embedding", "speakerEmbedding");
-  if (vector === undefined || (A.isArray(vector) && A.isArrayEmpty(vector))) return "saved_sample_awaiting_embedding";
+  if (P.isNullish(vector) || (A.isArray(vector) && A.isArrayEmpty(vector))) return "saved_sample_awaiting_embedding";
   if (
     !A.isArray(vector) ||
     A.isArrayEmpty(vector) ||

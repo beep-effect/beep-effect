@@ -9,6 +9,9 @@ import {
   calendarMeetingContextsFromRecords,
 } from "../../beep/CalendarContext.ts";
 
+const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
+  Effect.runSync(S.decodeUnknownEffect(schema)(input));
+
 const meeting = {
   calendarEventId: "evt-1",
   title: "Standup",
@@ -24,23 +27,23 @@ describe("CalendarContext", () => {
   });
 
   it("defaults the calendar source and keeps a present null", () => {
-    const decoded = Effect.runSync(S.decodeUnknownEffect(CalendarMeetingContext)(meeting));
+    const decoded = decode(CalendarMeetingContext, meeting);
     assert.strictEqual(O.getOrNull(decoded.calendarSource), "system_calendar");
     const cleared: unknown = { ...meeting, calendarSource: null, platform: null };
-    const none = Effect.runSync(S.decodeUnknownEffect(CalendarMeetingContext)(cleared));
+    const none = decode(CalendarMeetingContext, cleared);
     assert.strictEqual(O.isNone(none.calendarSource), true);
     assert.strictEqual(O.isNone(none.platform), true);
     const google: unknown = { ...meeting, calendarSource: "google" };
-    const named = Effect.runSync(S.decodeUnknownEffect(CalendarMeetingContext)(google));
+    const named = decode(CalendarMeetingContext, google);
     assert.strictEqual(O.getOrNull(named.calendarSource), "google");
   });
 
   it("accepts a participant with neither name nor email", () => {
-    const missing = Effect.runSync(S.decodeUnknownEffect(MeetingParticipant)({}));
+    const missing = decode(MeetingParticipant, {});
     assert.strictEqual(O.isNone(missing.name), true);
-    const cleared = Effect.runSync(S.decodeUnknownEffect(MeetingParticipant)({ name: null, email: null }));
+    const cleared = decode(MeetingParticipant, { name: null, email: null });
     assert.strictEqual(O.isNone(cleared.email), true);
-    const present = Effect.runSync(S.decodeUnknownEffect(MeetingParticipant)({ name: "Ada", email: "ada@example.com" }));
+    const present = decode(MeetingParticipant, { name: "Ada", email: "ada@example.com" });
     assert.strictEqual(O.getOrNull(present.name), "Ada");
   });
 

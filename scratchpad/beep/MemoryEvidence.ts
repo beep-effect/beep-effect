@@ -8,12 +8,15 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Predicate from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 import { Model, UtcTimestamp, optionalConfidence, optionalNull, pg, unitIntervalCheck } from "./Kit.ts";
 
@@ -45,6 +48,29 @@ const optionalNonBlank = (column: string, description: string) =>
 
 const optionalPlain = (column: string, description: string) =>
   described(optionalNull(S.String), description).pipe(pg.text(), pg.columnName(column));
+
+const optionalInstantSchema = S.NullOr(S.String).pipe(
+  S.optionalKey,
+  S.decodeTo(S.Option(UtcTimestamp), {
+    decode: SchemaGetter.transformOptional((present) =>
+      present.pipe(
+        O.flatMap((value) => (Predicate.isNull(value) ? O.none() : O.some(value))),
+        O.some,
+      ),
+    ),
+    encode: SchemaGetter.transformOptional((present) =>
+      present.pipe(
+        O.flatten,
+        O.match({
+          onNone: () => null,
+          onSome: (value) => value,
+        }),
+        O.some,
+      ),
+    ),
+  }),
+  SchemaUtils.withNoneDefault,
+);
 
 const jsonList = (column: string) =>
   S.Array(S.JsonObject).pipe(S.withConstructorDefault(Effect.succeed([])), pg.jsonb(), pg.columnName(column));
@@ -380,7 +406,7 @@ export class MemoryEvidence extends Model<MemoryEvidence>("MemoryEvidence")(
       "Optional capture device. Absent means unknown device. Not hashed into evidenceId.",
     ).pipe(pg.text(), pg.columnName("client_device_id")),
     capturedAt: described(
-      optionalNull(UtcTimestamp),
+      optionalInstantSchema,
       "Capture time. Missing metadata is unknown, never proof the user authored the capture.",
     ).pipe(pg.timestamp({ mode: "string", withTimezone: true }), pg.columnName("captured_at")),
     sourceSignal: optionalPlain("source_signal", "Signal that produced the evidence, when known."),

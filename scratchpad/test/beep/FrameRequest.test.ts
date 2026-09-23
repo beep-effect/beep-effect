@@ -53,18 +53,18 @@ describe("FrameRequest", () => {
     assert.strictEqual(Effect.runSyncExit(stripRequiredFrameString("  "))._tag, "Failure");
     assert.strictEqual(Effect.runSync(validateRequestId("abc")), "abc");
     assert.strictEqual(Effect.runSyncExit(validateRequestId("a/b"))._tag, "Failure");
-    assert.strictEqual(O.isNone(Effect.runSync(stripOptionalFrameString("  "))), true);
-    assert.strictEqual(O.isNone(Effect.runSync(stripOptionalFrameString(null))), true);
+    assert.strictEqual(stripOptionalFrameString("  ").pipe(Effect.runSync, O.isNone), true);
+    assert.strictEqual(stripOptionalFrameString(null).pipe(Effect.runSync, O.isNone), true);
     assert.strictEqual(Effect.runSyncExit(stripOptionalFrameString(2))._tag, "Failure");
-    assert.strictEqual(O.isNone(Effect.runSync(validateFrameStorageId(O.none()))), true);
-    assert.strictEqual(Effect.runSyncExit(validateFrameStorageId(O.some("https:abc")))._tag, "Failure");
-    assert.strictEqual(O.isNone(Effect.runSync(validateStateUpdateStorageId("   "))), true);
+    assert.strictEqual(O.none().pipe(validateFrameStorageId, Effect.runSync, O.isNone), true);
+    assert.strictEqual(O.some("https:abc").pipe(validateFrameStorageId, Effect.runSyncExit)._tag, "Failure");
+    assert.strictEqual(validateStateUpdateStorageId("   ").pipe(Effect.runSync, O.isNone), true);
     assert.strictEqual(O.getOrElse(Effect.runSync(validateStateUpdateStorageId(" sid ")), () => ""), "sid");
   });
 
   it("normalizes naive time and checks lifecycle branches", () => {
-    assert.strictEqual(O.isSome(Effect.runSync(normalizeFrameInstant(O.some("2020-01-02T03:04:05.000")))), true);
-    assert.strictEqual(O.isNone(Effect.runSync(normalizeFrameInstant(O.none()))), true);
+    assert.strictEqual(O.some("2020-01-02T03:04:05.000").pipe(normalizeFrameInstant, Effect.runSync, O.isSome), true);
+    assert.strictEqual(O.none().pipe(normalizeFrameInstant, Effect.runSync, O.isNone), true);
     const later = DateTime.makeUnsafe("2020-01-02T04:04:05.000Z");
     assert.strictEqual(Effect.runSync(validateFrameLifecycle(base())).state, "requested");
     assert.strictEqual(
@@ -156,7 +156,7 @@ describe("FrameRequest", () => {
       FrameRequestEnvelope,
       FrameRequestBatch,
     ]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });

@@ -7,10 +7,10 @@ import * as S from "effect/Schema";
 import { Task, TaskAction, TaskActionProvider, TaskStatus } from "../../beep/Task.ts";
 import { toWire } from "../../beep/Port.ts";
 
-const decode = <A extends S.Top>(schema: A, input: unknown): A["Type"] =>
+const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
-const fails = (schema: S.Top, input: unknown): boolean =>
+const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
   Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
 
 const present = {
@@ -93,7 +93,7 @@ describe("Task", () => {
   it("derives an arbitrary for every exported schema", () => {
     const schemas = [TaskActionProvider, TaskAction, TaskStatus, Task];
     for (const schema of schemas) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });

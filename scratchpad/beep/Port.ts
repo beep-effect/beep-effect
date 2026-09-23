@@ -7,6 +7,8 @@
  *
  * @since 0.0.0
  */
+import type { PatchedField } from "@beep/effect-drizzle";
+import type { Jsonb } from "@beep/effect-drizzle/pg";
 import type { ExtraConfigColumn } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -160,10 +162,14 @@ export const optionDefault = <Sch extends S.ConstraintDecoder<unknown>>(
 export type JsonSchema = S.Top & { readonly Encoded: object | null };
 
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Schema and column name are co-primary inputs, and neither is a pipeable value.
-export const jsonColumn = <Sch extends S.Top>(schema: Sch, column: string) =>
+export const jsonColumn = <Sch extends S.Top>(schema: Sch, column: string) => {
   // pg.jsonb's encoded-object proof does not survive a generic schema parameter.
-  // @ts-expect-error TS2345 — callers pass object or array schemas; the column is jsonb.
-  schema.pipe(pg.jsonb(), pg.columnName(column));
+  // The explicit annotation keeps the field type when the overload check fails.
+  const jsonb: PatchedField<Sch, { readonly column: Jsonb }> =
+    // @ts-expect-error TS2345 — callers pass object or array schemas; the column is jsonb.
+    pg.jsonb()(schema);
+  return jsonb.pipe(pg.columnName(column));
+};
 
 /**
  * Optional JSONB column. Missing and null become `None`.
@@ -188,9 +194,14 @@ export const jsonColumn = <Sch extends S.Top>(schema: Sch, column: string) =>
  * @since 0.0.0
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Schema and column name are co-primary inputs, and neither is a pipeable value.
-export const optionalJsonColumn = <Sch extends S.ConstraintDecoder<unknown>>(schema: Sch, column: string) =>
-  // @ts-expect-error TS2345 — optionalNull keeps an object or array carrier; the column is jsonb.
-  optionalNull(schema).pipe(pg.jsonb(), pg.columnName(column));
+export const optionalJsonColumn = <Sch extends S.ConstraintDecoder<unknown>>(schema: Sch, column: string) => {
+  const wrapped = optionalNull(schema);
+  // The explicit annotation keeps the field type when the overload check fails.
+  const jsonb: PatchedField<typeof wrapped, { readonly column: Jsonb }> =
+    // @ts-expect-error TS2345 — optionalNull keeps an object or array carrier; the column is jsonb.
+    pg.jsonb()(wrapped);
+  return jsonb.pipe(pg.columnName(column));
+};
 
 /**
  * JSONB array that constructs as `[]` when omitted.

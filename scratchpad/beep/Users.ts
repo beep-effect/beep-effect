@@ -15,6 +15,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
@@ -38,11 +39,15 @@ const planWire = LiteralKit(["basic", "unlimited", "architect", "operator", "plu
 const releasedMembers = LiteralKit(["basic", "unlimited", "architect", "operator"]);
 const releasedWire = LiteralKit(["basic", "unlimited", "architect", "operator", "pro"]);
 
-const aliasPro = <A extends S.Top>(target: A) =>
-  S.decodeTo(target, {
-    decode: SchemaGetter.transform((value: string) => (value === "pro" ? "architect" : value)),
-    encode: SchemaGetter.passthrough(),
-  });
+const aliasPlanPro = S.decodeTo<typeof planMembers, typeof planWire>(planMembers, {
+  decode: SchemaGetter.transform((value: typeof planWire.Type) => (value === "pro" ? "architect" : value)),
+  encode: SchemaGetter.passthrough(),
+});
+
+const aliasReleasedPro = S.decodeTo<typeof releasedMembers, typeof releasedWire>(releasedMembers, {
+  decode: SchemaGetter.transform((value: typeof releasedWire.Type) => (value === "pro" ? "architect" : value)),
+  encode: SchemaGetter.passthrough(),
+});
 
 /**
  * Plans the released subscription wire may name.
@@ -134,7 +139,7 @@ export const LOCATION_CONTEXT_DISCLOSED_PROVIDERS: readonly [string, string] = [
  * @since 0.0.0
  */
 export const PlanType = planWire.pipe(
-  aliasPro(planMembers),
+  aliasPlanPro,
   $I.annoteSchema("PlanType", { description: "Catalog plan id. The legacy alias pro decodes as architect." }),
 );
 
@@ -290,7 +295,10 @@ export declare namespace WebhookType {
  * @category formatting
  * @since 0.0.0
  */
-export const webhookUrlFromSetting = (wtype: string, value: O.Option<string>): string =>
+export const webhookUrlFromSetting: {
+  (value: O.Option<string>): (wtype: string) => string;
+  (wtype: string, value: O.Option<string>): string;
+} = dual(2, (wtype: string, value: O.Option<string>): string =>
   O.match(value, {
     onNone: () => "",
     onSome: (raw) => {
@@ -298,7 +306,8 @@ export const webhookUrlFromSetting = (wtype: string, value: O.Option<string>): s
       const selected = wtype === "audio_bytes" ? (A.head(Str.split(raw, ",")) ?? O.none()) : O.some(raw);
       return Str.trim(O.getOrElse(selected, () => ""));
     },
-  });
+  }),
+);
 
 /**
  * Consent state for location context.
@@ -708,7 +717,7 @@ export declare namespace ChatUsageQuota {
   export type Encoded = S.Codec.Encoded<typeof ChatUsageQuota>;
 }
 
-const ReleasedPlan = releasedWire.pipe(aliasPro(releasedMembers), S.withConstructorDefault(Effect.succeed("basic")));
+const ReleasedPlan = releasedWire.pipe(aliasReleasedPro, S.withConstructorDefault(Effect.succeed("basic")));
 
 /**
  * Subscription status shown to released clients.

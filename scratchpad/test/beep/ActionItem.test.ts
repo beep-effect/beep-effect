@@ -30,7 +30,7 @@ import {
 } from "../../beep/ActionItem.ts";
 
 const fail = <A>(effect: Effect.Effect<A, TaskFieldConflict>) => {
-  const result = Effect.runSync(Effect.result(effect));
+  const result = effect.pipe(Effect.result, Effect.runSync);
   assert.strictEqual(Result.isFailure(result), true);
 };
 
@@ -96,7 +96,7 @@ describe("ActionItem", () => {
       "end_seconds must be greater than or equal to start_seconds",
     );
     const input: unknown = { kind: "local_screen", id: "frame-1", scope: "canonical" };
-    const rejected = Effect.runSync(Effect.result(S.decodeUnknownEffect(EvidenceRefChecked)(input)));
+    const rejected = S.decodeUnknownEffect(EvidenceRefChecked)(input).pipe(Effect.result, Effect.runSync);
     assert.strictEqual(Result.isFailure(rejected), true);
   });
 
@@ -117,7 +117,7 @@ describe("ActionItem", () => {
       canonicalTaskCreateStoragePayload(
         CanonicalTaskCreate.make({
           description: "Ship the note",
-          status: O.some("active"),
+          status: O.some<TaskStatus>("active"),
           completed: O.some(true),
         }),
       ),
@@ -126,7 +126,7 @@ describe("ActionItem", () => {
 
   it("derives update status and rejects an empty patch", () => {
     const derived = Effect.runSync(
-      canonicalTaskUpdateStoragePayload(CanonicalTaskUpdate.make({ status: O.some("completed") })),
+      canonicalTaskUpdateStoragePayload(CanonicalTaskUpdate.make({ status: O.some<TaskStatus>("completed") })),
     );
     assert.strictEqual(derived.status, "completed");
     assert.strictEqual(derived.completed, true);
@@ -138,7 +138,7 @@ describe("ActionItem", () => {
     fail(canonicalTaskUpdateStoragePayload(CanonicalTaskUpdate.make({})));
     fail(
       canonicalTaskUpdateStoragePayload(
-        CanonicalTaskUpdate.make({ status: O.some("active"), completed: O.some(true) }),
+        CanonicalTaskUpdate.make({ status: O.some<TaskStatus>("active"), completed: O.some(true) }),
       ),
     );
   });

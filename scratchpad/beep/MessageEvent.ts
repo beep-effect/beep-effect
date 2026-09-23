@@ -78,7 +78,6 @@ const optionNullOrMissingDefault = <Sch extends S.ConstraintDecoder<unknown>>(sc
     S.withConstructorDefault(Effect.succeedSome(missing)),
   );
 
-const fixedType = <const L extends string>(literal: L) => pg.columnName("event_type")(pg.text()(S.Literal(literal)));
 
 const openType = S.String.check(S.isMinLength(1))
   .annotateKey({ description: "Caller-supplied event type. Serialized as type." })
@@ -351,7 +350,11 @@ export declare namespace MemoryBackwardSycnedEvent {
  */
 export class MessageServiceStatusEvent extends Model<MessageServiceStatusEvent>("MessageServiceStatusEvent")(
   {
-    eventType: fixedType("service_status"),
+    eventType: S.Literal("service_status").pipe(
+      S.withConstructorDefault(Effect.succeed<"service_status">("service_status")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ),
     status: S.String.annotateKey({ description: "Service status." }).pipe(pg.text(), pg.columnName("status")),
     statusText: optionalString("status_text", "Human status text."),
     outcome: optionalString("outcome", "Terminal outcome. Omitted from JSON when absent."),
@@ -388,7 +391,11 @@ export declare namespace MessageServiceStatusEvent {
  */
 export class ConversationSessionEvent extends Model<ConversationSessionEvent>("ConversationSessionEvent")(
   {
-    eventType: fixedType("conversation_session"),
+    eventType: S.Literal("conversation_session").pipe(
+      S.withConstructorDefault(Effect.succeed<"conversation_session">("conversation_session")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ),
     conversationId: S.String.annotateKey({ description: "Conversation id." }).pipe(
       pg.text(),
       pg.columnName("conversation_id"),
@@ -429,7 +436,11 @@ export declare namespace ConversationSessionEvent {
  * @since 0.0.0
  */
 export class PingEvent extends Model<PingEvent>("PingEvent")(
-  { eventType: fixedType("ping") },
+  { eventType: S.Literal("ping").pipe(
+      S.withConstructorDefault(Effect.succeed<"ping">("ping")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ) },
   $I.annote("PingEvent", { description: "Keepalive event." }),
 ) {
   static readonly thunkThis = () => PingEvent;
@@ -461,7 +472,11 @@ export declare namespace PingEvent {
  */
 export class LastConversationEvent extends Model<LastConversationEvent>("LastConversationEvent")(
   {
-    eventType: fixedType("last_memory"),
+    eventType: S.Literal("last_memory").pipe(
+      S.withConstructorDefault(Effect.succeed<"last_memory">("last_memory")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ),
     memoryId: S.String.annotateKey({ description: "Latest conversation id." }).pipe(pg.text(), pg.columnName("memory_id")),
   },
   $I.annote("LastConversationEvent", { description: "Pointer to the latest conversation. Wire type is last_memory." }),
@@ -491,7 +506,11 @@ export declare namespace LastConversationEvent {
  */
 export class TranslationEvent extends Model<TranslationEvent>("TranslationEvent")(
   {
-    eventType: fixedType("translating"),
+    eventType: S.Literal("translating").pipe(
+      S.withConstructorDefault(Effect.succeed<"translating">("translating")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ),
     segments: S.Array(S.JsonObject)
       .annotateKey({ description: "Untyped translation segment documents." })
       .pipe(S.withConstructorDefault(Effect.succeed(emptyObjects)), pg.jsonb(), pg.columnName("segments")),
@@ -523,7 +542,11 @@ export declare namespace TranslationEvent {
  */
 export class PhotoProcessingEvent extends Model<PhotoProcessingEvent>("PhotoProcessingEvent")(
   {
-    eventType: fixedType("photo_processing"),
+    eventType: S.Literal("photo_processing").pipe(
+      S.withConstructorDefault(Effect.succeed<"photo_processing">("photo_processing")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ),
     tempId: S.String.annotateKey({ description: "Temporary photo id." }).pipe(pg.text(), pg.columnName("temp_id")),
     photoId: S.String.annotateKey({ description: "Durable photo id." }).pipe(pg.text(), pg.columnName("photo_id")),
   },
@@ -554,7 +577,11 @@ export declare namespace PhotoProcessingEvent {
  */
 export class PhotoDescribedEvent extends Model<PhotoDescribedEvent>("PhotoDescribedEvent")(
   {
-    eventType: fixedType("photo_described"),
+    eventType: S.Literal("photo_described").pipe(
+      S.withConstructorDefault(Effect.succeed<"photo_described">("photo_described")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ),
     photoId: S.String.annotateKey({ description: "Durable photo id." }).pipe(pg.text(), pg.columnName("photo_id")),
     description: S.String.annotateKey({ description: "Model description." }).pipe(pg.text(), pg.columnName("description")),
     discarded: S.Boolean.annotateKey({ description: "Whether the photo was discarded." }).pipe(
@@ -595,7 +622,11 @@ export declare namespace PhotoDescribedEvent {
  */
 export class SpeakerLabelSuggestionEvent extends Model<SpeakerLabelSuggestionEvent>("SpeakerLabelSuggestionEvent")(
   {
-    eventType: fixedType("speaker_label_suggestion"),
+    eventType: S.Literal("speaker_label_suggestion").pipe(
+      S.withConstructorDefault(Effect.succeed<"speaker_label_suggestion">("speaker_label_suggestion")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ),
     speakerId: S.Int.annotateKey({ description: "Transcript speaker id." }).pipe(pg.integer(), pg.columnName("speaker_id")),
     personId: S.String.annotateKey({ description: "Suggested person id." }).pipe(pg.text(), pg.columnName("person_id")),
     personName: S.String.annotateKey({ description: "Suggested person name." }).pipe(
@@ -639,7 +670,11 @@ export class FreemiumThresholdReachedEvent extends Model<FreemiumThresholdReache
   "FreemiumThresholdReachedEvent",
 )(
   {
-    eventType: fixedType("freemium_threshold_reached"),
+    eventType: S.Literal("freemium_threshold_reached").pipe(
+      S.withConstructorDefault(Effect.succeed<"freemium_threshold_reached">("freemium_threshold_reached")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ),
     remainingSeconds: S.Int.annotateKey({ description: "Seconds remaining on the freemium budget." }).pipe(
       pg.integer(),
       pg.columnName("remaining_seconds"),
@@ -676,7 +711,11 @@ export declare namespace FreemiumThresholdReachedEvent {
  */
 export class SegmentsDeletedEvent extends Model<SegmentsDeletedEvent>("SegmentsDeletedEvent")(
   {
-    eventType: fixedType("segments_deleted"),
+    eventType: S.Literal("segments_deleted").pipe(
+      S.withConstructorDefault(Effect.succeed<"segments_deleted">("segments_deleted")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ),
     segmentIds: S.Array(S.String)
       .annotateKey({ description: "Deleted transcript segment ids." })
       .pipe(pg.jsonb(), pg.columnName("segment_ids")),
@@ -709,7 +748,11 @@ export declare namespace SegmentsDeletedEvent {
  */
 export class ProactiveMessageEvent extends Model<ProactiveMessageEvent>("ProactiveMessageEvent")(
   {
-    eventType: fixedType("proactive_message"),
+    eventType: S.Literal("proactive_message").pipe(
+      S.withConstructorDefault(Effect.succeed<"proactive_message">("proactive_message")),
+      pg.text(),
+      pg.columnName("event_type"),
+    ),
     appId: S.String.annotateKey({ description: "Sending app id." }).pipe(pg.text(), pg.columnName("app_id")),
     title: S.String.annotateKey({ description: "Proactive title." }).pipe(pg.text(), pg.columnName("title")),
     message: S.String.annotateKey({ description: "Proactive body." }).pipe(pg.text(), pg.columnName("message")),

@@ -10,7 +10,7 @@ import {
   syncLocalFilesV2Responses,
 } from "../../beep/SyncContract.ts";
 
-const decode = <A, I>(schema: S.Codec<A, I>, input: unknown): A =>
+const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 describe("SyncContract", () => {

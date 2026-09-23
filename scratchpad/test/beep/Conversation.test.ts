@@ -1,4 +1,5 @@
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -22,10 +23,18 @@ import {
 import { Structured } from "../../beep/Structured.ts";
 import { TranscriptSegment } from "../../beep/TranscriptSegment.ts";
 
-const base = {
+const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
+  Effect.runSync(S.decodeUnknownEffect(schema)(input));
+
+const wire = {
   id: "c1",
   createdAt: "2020-01-02T03:04:05.000Z",
   structured: Structured.make({ title: "Standup" }),
+};
+
+const base = {
+  ...wire,
+  createdAt: DateTime.makeUnsafe(wire.createdAt),
 };
 
 describe("Conversation", () => {
@@ -34,19 +43,24 @@ describe("Conversation", () => {
     expect(O.isNone(missing.language)).toBe(true);
     expect(O.isNone(missing.geolocation)).toBe(true);
     expect(missing.transcriptSegments).toEqual([]);
-    const nulled = Effect.runSync(
-      S.decodeUnknownEffect(Conversation)({ ...base, language: null, geolocation: null, processingState: null }),
-    );
+    const encoded = Effect.runSync(S.encodeEffect(Conversation)(missing));
+    const nulled = decode(Conversation, { ...encoded, language: null, geolocation: null, processingState: null });
     expect(O.isNone(nulled.language)).toBe(true);
     expect(O.isNone(nulled.geolocation)).toBe(true);
     expect(O.isNone(nulled.processingState)).toBe(true);
     const initialized = Effect.runSync(
       initializeConversation({
-        ...base,
-        processingConversationId: O.some("mem-1"),
-        appsResults: [AppResult.make({ appId: O.some("app"), content: "done" })],
-        pluginsResults: [PluginResult.make({ pluginId: O.none(), content: "stale" })],
-        transcriptSegments: [{ text: "Hi", isUser: true, speakerId: 0, start: 0, end: 1 }],
+        ...encoded,
+        processingConversationId: "mem-1",
+        appsResults: [Effect.runSync(S.encodeEffect(AppResult)(AppResult.make({ appId: O.some("app"), content: "done" })))],
+        pluginsResults: [Effect.runSync(S.encodeEffect(PluginResult)(PluginResult.make({ pluginId: O.none(), content: "stale" })))],
+        transcriptSegments: [
+          Effect.runSync(
+            S.encodeEffect(TranscriptSegment)(
+              TranscriptSegment.make({ id: "", text: "Hi", isUser: true, speakerId: 0, start: 0, end: 1 }),
+            ),
+          ),
+        ],
       }),
     );
     expect(O.getOrElse(initialized.processingMemoryId, () => "")).toBe("mem-1");
@@ -67,19 +81,15 @@ describe("Conversation", () => {
     expect(getPhotosDescription(conversation, false)).toBe("None");
     expect(projectSharedConversation(conversation, []).structured.title).toBe("Standup");
     expect(asDictCleanedDates(conversation).id).toBe("c1");
-    expect(Effect.runSync(S.decodeUnknownEffect(ConversationSyncOperation)({ type: "setTitle", title: "Next" })).type).toBe(
-      "setTitle",
-    );
-    expect(Effect.runSync(S.decodeUnknownEffect(ConversationSyncOperation)({ type: "setStarred", starred: true })).type).toBe(
-      "setStarred",
-    );
+    expect(decode(ConversationSyncOperation, { type: "setTitle", title: "Next" }).type).toBe("setTitle");
+    expect(decode(ConversationSyncOperation, { type: "setStarred", starred: true }).type).toBe("setStarred");
     const external = ExternalIntegrationCreateConversation.make({ text: " Hello ", textSource: "message" });
     expect(externalGetTranscript(external, true)).toBe("Hello");
     expect(externalGetPersonIds(external)).toEqual([]);
     expect(CreateConversation.make({
       text: "Hi",
-      startedAt: "2020-01-02T03:04:05.000Z",
-      finishedAt: "2020-01-02T03:05:05.000Z",
+      startedAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+      finishedAt: DateTime.makeUnsafe("2020-01-02T03:05:05.000Z"),
     }).textSource).toBe("audio_transcript");
     expect(Arbitrary.schema(Conversation)).toBeTruthy();
     expect(Arbitrary.schema(ConversationSyncOperation)).toBeTruthy();

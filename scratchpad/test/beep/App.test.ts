@@ -45,6 +45,31 @@ const base = {
   capabilities: HashSet.empty<string>(),
 };
 
+/** Wire-side keys the port requires on decode: non-null Python defaults are construction-only here. */
+const wireBase = {
+  ...base,
+  capabilities: [],
+  private: false,
+  approved: false,
+  status: "approved",
+  connectedAccounts: [],
+  ratingCount: 0,
+  enabled: false,
+  triggerWorkflowMemories: true,
+  installs: 0,
+  reviews: [],
+};
+
+const toolBase = {
+  name: "send",
+  description: "Send",
+  endpoint: "https://example.com/tool",
+  method: "POST",
+  authRequired: true,
+  isMcp: false,
+  transport: "streamable_http",
+};
+
 describe("App", () => {
   it("builds arbitrary values", () => {
     for (const schema of [
@@ -67,11 +92,11 @@ describe("App", () => {
   });
 
   it("defaults a missing paid flag and keeps a present null", () => {
-    const input: unknown = { ...base, capabilities: [] };
+    const input: unknown = wireBase;
     const missing = Effect.runSync(S.decodeUnknownEffect(App)(input));
     assert.strictEqual(O.getOrNull(missing.isPaid), false);
     assert.strictEqual(O.getOrNull(missing.ratingAvg), 0);
-    const cleared: unknown = { ...base, capabilities: [], isPaid: null, ratingAvg: null, price: null };
+    const cleared: unknown = { ...wireBase, isPaid: null, ratingAvg: null, price: null };
     const none = Effect.runSync(S.decodeUnknownEffect(App)(cleared));
     assert.strictEqual(O.isNone(none.isPaid), true);
     assert.strictEqual(O.isNone(none.ratingAvg), true);
@@ -109,7 +134,7 @@ describe("App", () => {
       proactiveNotification: O.some(ProactiveNotification.make({ scopes: HashSet.fromIterable(["calendar"]) })),
     });
     assert.deepStrictEqual(filterProactiveNotificationScopes(scoped, ["calendar", "mail"]), ["calendar"]);
-    const cleared: unknown = { ...base, capabilities: [], chatTools: null };
+    const cleared: unknown = { ...wireBase, chatTools: null };
     const none = Effect.runSync(S.decodeUnknownEffect(App)(cleared));
     assert.strictEqual(hasChatTools(none), false);
   });
@@ -117,27 +142,21 @@ describe("App", () => {
   it("parses chat-tool parameters from a string, an object, and bad json", () => {
     const fromString = Effect.runSync(
       decodeChatTool({
-        name: "send",
-        description: "Send",
-        endpoint: "https://example.com/tool",
+        ...toolBase,
         parameters: "{\"channel\":\"general\"}",
       }),
     );
     assert.strictEqual(O.isSome(fromString.parameters), true);
     const broken = Effect.runSync(
       decodeChatTool({
-        name: "send",
-        description: "Send",
-        endpoint: "https://example.com/tool",
+        ...toolBase,
         parameters: "not-json",
       }),
     );
     assert.strictEqual(O.isNone(broken.parameters), true);
     const object = Effect.runSync(
       decodeChatTool({
-        name: "send",
-        description: "Send",
-        endpoint: "https://example.com/tool",
+        ...toolBase,
         parameters: { channel: "general" },
       }),
     );

@@ -136,11 +136,15 @@ export const strippedText = (maxLength: number, minLength = 0) =>
 const optionalStripped = (column: string, maxLength: number, minLength = 0) =>
   optionalNull(strippedText(maxLength, minLength)).pipe(pg.text(), pg.columnName(column));
 
-const requiredStripped = (column: string, maxLength: number, minLength: number, fallback?: string) => {
-  const schema = strippedText(maxLength, minLength);
-  const withDefault = fallback === undefined ? schema : schema.pipe(S.withConstructorDefault(Effect.succeed(fallback)));
-  return withDefault.pipe(pg.text(), pg.columnName(column));
-};
+const requiredStripped = (column: string, maxLength: number, minLength: number) =>
+  strippedText(maxLength, minLength).pipe(pg.text(), pg.columnName(column));
+
+const defaultedStripped = (column: string, maxLength: number, minLength: number, fallback: string) =>
+  strippedText(maxLength, minLength).pipe(
+    S.withConstructorDefault(Effect.succeed(fallback)),
+    pg.text(),
+    pg.columnName(column),
+  );
 
 /**
  * Timezone-aware UTC instant. Naive strings and numbers fail.
@@ -252,8 +256,8 @@ const cappedList = <A extends S.Top>(schema: A, column: string, maximum: number)
 export class ClientSection extends Model<ClientSection>("ClientSection")(
   {
     title: requiredStripped("title", 200, 1),
-    overview: requiredStripped("overview", 2000, 0, ""),
-    emoji: requiredStripped("emoji", 32, 0, ""),
+    overview: defaultedStripped("overview", 2000, 0, ""),
+    emoji: defaultedStripped("emoji", 32, 0, ""),
   },
   $I.annote("ClientSection", { description: "Section of a client-owned summary." }),
   (columns) => [
@@ -320,7 +324,7 @@ export declare namespace ClientActionItem {
 export class ClientEvent extends Model<ClientEvent>("ClientEvent")(
   {
     title: requiredStripped("title", 200, 1),
-    description: requiredStripped("description", 2000, 0, ""),
+    description: defaultedStripped("description", 2000, 0, ""),
     start: requiredAware("start"),
     duration: intBetween("duration", 1, 1440),
     created: boolDefault("created", false),
@@ -381,8 +385,8 @@ export declare namespace ClientMemory {
 export class ClientSummary extends Model<ClientSummary>("ClientSummary")(
   {
     title: requiredStripped("title", 500, 1),
-    overview: requiredStripped("overview", 4000, 0, ""),
-    emoji: requiredStripped("emoji", 32, 0, ""),
+    overview: defaultedStripped("overview", 4000, 0, ""),
+    emoji: defaultedStripped("emoji", 32, 0, ""),
     category: categoryColumn("category"),
   },
   $I.annote("ClientSummary", { description: "Structured summary produced by the client." }),

@@ -35,21 +35,21 @@ describe("Geolocation", () => {
 
   it("drops invalid points and headers without logging them", () => {
     const wide = decode(GeolocationInputWire, { latitude: 1000, longitude: 0 });
-    assert.strictEqual(O.isNone(validatedGeolocationOrNone(O.none())), true);
-    assert.strictEqual(O.isNone(validatedGeolocationOrNone(O.some(wide))), true);
+    assert.strictEqual(O.none().pipe(validatedGeolocationOrNone, O.isNone), true);
+    assert.strictEqual(O.some(wide).pipe(validatedGeolocationOrNone, O.isNone), true);
     const kept = decode(GeolocationInputWire, { latitude: 1, longitude: 2 });
-    assert.strictEqual(O.isSome(validatedGeolocationOrNone(O.some(kept))), true);
-    assert.strictEqual(O.isSome(Effect.runSync(geolocationFromPrivateHeader('{"latitude":1,"longitude":2}'))), true);
-    assert.strictEqual(O.isNone(Effect.runSync(geolocationFromPrivateHeader(""))), true);
-    assert.strictEqual(O.isNone(Effect.runSync(geolocationFromPrivateHeader(1))), true);
-    assert.strictEqual(O.isNone(Effect.runSync(geolocationFromPrivateHeader("{"))), true);
-    assert.strictEqual(O.isNone(Effect.runSync(geolocationFromPrivateHeader('{"latitude":1000,"longitude":0}'))), true);
-    assert.strictEqual(O.isNone(Effect.runSync(geolocationFromPrivateHeader("x".repeat(4097)))), true);
+    assert.strictEqual(O.some(kept).pipe(validatedGeolocationOrNone, O.isSome), true);
+    assert.strictEqual(geolocationFromPrivateHeader('{"latitude":1,"longitude":2}').pipe(Effect.runSync, O.isSome), true);
+    assert.strictEqual(geolocationFromPrivateHeader("").pipe(Effect.runSync, O.isNone), true);
+    assert.strictEqual(geolocationFromPrivateHeader(1).pipe(Effect.runSync, O.isNone), true);
+    assert.strictEqual(geolocationFromPrivateHeader("{").pipe(Effect.runSync, O.isNone), true);
+    assert.strictEqual(geolocationFromPrivateHeader('{"latitude":1000,"longitude":0}').pipe(Effect.runSync, O.isNone), true);
+    assert.strictEqual(geolocationFromPrivateHeader("x".repeat(4097)).pipe(Effect.runSync, O.isNone), true);
   });
 
   it("derives an arbitrary for each model", () => {
     for (const schema of [CaptureSource, Geolocation, GeolocationInput]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });

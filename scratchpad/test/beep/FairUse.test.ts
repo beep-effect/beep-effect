@@ -24,7 +24,7 @@ const decode = <A>(schema: S.Codec<A, unknown, never, unknown>, input: unknown):
 describe("FairUse", () => {
   it("encodes a naive UTC stamp without a zone suffix", () => {
     const decoded = decode(NaiveUtcTimestamp, "2020-01-02T03:04:05.000");
-    const encoded = Effect.runSync(S.encodeEffect(NaiveUtcTimestamp)(decoded));
+    const encoded = decoded.pipe(S.encodeEffect(NaiveUtcTimestamp), Effect.runSync);
     assert.strictEqual(encoded, "2020-01-02T03:04:05.000");
     assert.strictEqual(typeof Effect.runSync(fairUseUtcNow()).epochMilliseconds, "number");
     assert.strictEqual(decode(SoftCapTrigger, "3day"), "3day");
@@ -49,7 +49,7 @@ describe("FairUse", () => {
       resolved_at: null,
       resolved_by: "",
     });
-    assert.strictEqual(O.isNone(event.classifier), true);
+    assert.strictEqual(O.isOption(event.classifier) && O.isNone(event.classifier), true);
     assert.strictEqual(event.trigger, "3day");
     assert.strictEqual(event.windowSpeechMs.daily, 1);
     const decodedState = decode(FairUseStateWire, {
@@ -78,7 +78,9 @@ describe("FairUse", () => {
       FairUseEvent,
       FairUseUserSummary,
     ]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });
+
+

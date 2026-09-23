@@ -419,6 +419,8 @@ export const coerceLogicalPayload = Effect.fn("MemoryOperations.coerceLogicalPay
     if (HashSet.has(camelKnown, camel)) known[camel] = item;
     else metadata[key] = item;
   });
+  if (!Rec.has(known, "supersedes")) known.supersedes = [];
+  if (!Rec.has(known, "arguments")) known.arguments = {};
   known.metadata = metadata;
   return yield* S.decodeUnknownEffect(OperationLogicalPayload)(known);
 });

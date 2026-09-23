@@ -16,10 +16,10 @@ protocol its host serves (`rg -n '"@beep/mcp-kit' --glob package.json`):
 
 | Consumer | Uses it for | Protocol state |
 | --- | --- | --- |
-| `packages/drivers/m365-mcp` | `sanitizedToolkit` (`Server.ts`), `annotateFourHints` (`M365Tools.ts`); stdio conversation test | `v2025_06_18` (flips in PR 2 of the goal) |
-| `packages/drivers/uspto-mcp` | `SourceAuth` registry, `composeGatedLayers`, `api_key_required` envelope, `FieldTier` document tiers, `sanitizedToolkit` | `v2025_06_18` (flips in PR 2) |
-| `packages/drivers/gov-legal-mcp` | `SourceAuth`, `composeGatedLayers`, `annotateFourHints`, `sanitizedToolkit` | `v2025_06_18` (flips in PR 3) |
-| `packages/law-practice/server` (+ `apps/practice-kg-mcp`) | `composeGatedLayers`, `SourceAuthRegistration`, `sanitizedToolkit`, `CurrentMcpCaller` in tool handlers | `v2025_06_18` (flips in PR 3) |
+| `packages/drivers/m365-mcp` | `statelessMcpProtocols` + `sanitizedToolkit` (`Server.ts`), `annotateFourHints` (`M365Tools.ts`); `conformance2026` and a kit-client-framed stdio test | `v2026_07_28` only (PR 2 of the goal) |
+| `packages/drivers/uspto-mcp` | `statelessMcpProtocols`, `SourceAuth` registry, `composeGatedLayers`, `api_key_required` envelope, `FieldTier` document tiers, `sanitizedToolkit`; `conformance2026` plus an array `structuredContent` proof through the kit client | `v2026_07_28` only (PR 2) |
+| `packages/drivers/gov-legal-mcp` | `statelessMcpProtocols`, `SourceAuth`, `composeGatedLayers`, `annotateFourHints`, `sanitizedToolkit`; `conformance2026` | `v2026_07_28` only (PR 3) |
+| `packages/law-practice/server` (+ `apps/practice-kg-mcp`) | `statelessMcpProtocols`, `composeGatedLayers`, `SourceAuthRegistration`, `sanitizedToolkit`, `CurrentMcpCaller` in tool handlers; `conformance2026` over a fixture bundle, compiled `.mcpb` smoke speaks `server/discover` | `v2026_07_28` only (PR 3) |
 | `packages/law-practice/use-cases` | `annotateFourHints` on the practice-kg toolkit | n/a (toolkit definitions) |
 | `packages/drivers/nlp-mcp` | `sanitizedToolkit`, `annotateFourHints` | `v2025_06_18` (held behind the D-cli-contract capture, PR 4) |
 | `packages/ontology/use-cases` | `annotateFourHints` on the ontology toolkit | n/a (toolkit definitions) |

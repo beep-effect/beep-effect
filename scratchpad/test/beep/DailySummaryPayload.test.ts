@@ -16,13 +16,16 @@ import {
 describe("DailySummaryPayload", () => {
   it("decodes present values and null optional fields", () => {
     const payload = Effect.runSync(
-      S.decodeUnknownEffect(DailySummaryPayload)({
+      S.decodeEffect(DailySummaryPayload)({
         headline: "Day",
-        highlights: [{ topic: "Ship", summary: "Left", conversationNumbers: [1] }],
+        highlights: [{ topic: "Ship", emoji: "", summary: "Left", conversationNumbers: [1] }],
         unresolvedQuestions: [{ question: "When?", conversationNumber: null }],
         decisionsMade: [],
         knowledgeNuggets: [{ insight: "Names stick" }],
         stats: null,
+        // Constructor defaults are construction-only: decode still needs the defaulted keys.
+        dayEmoji: "📅",
+        overview: "",
       }),
     );
     expect(payload.headline).toBe("Day");

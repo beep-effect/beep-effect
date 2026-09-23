@@ -45,7 +45,8 @@ describe("DailySummary", () => {
     assert.strictEqual(O.isNone(decoded.headline), true);
     assert.strictEqual(decoded.rest.bonus, "kept");
     const wire = Effect.runSync(flattenDailySummaryRest(decoded));
-    assert.strictEqual(wire.bonus, "kept");
+    const flat: { readonly [key: string]: unknown } = wire;
+    assert.strictEqual(flat.bonus, "kept");
     assert.strictEqual("rest" in wire, false);
   });
 
@@ -70,7 +71,7 @@ describe("DailySummary", () => {
       DailySummariesResponse,
     ];
     for (const schema of schemas) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(schema.pipe(Arbitrary.schema, Arbitrary.isArbitrary), true);
     }
   });
 });

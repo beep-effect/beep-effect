@@ -22,7 +22,10 @@ import {
   truncateCaption,
 } from "../../beep/ScreenFrame.ts";
 
-const decode = <A, I>(schema: S.Codec<A, I>, input: unknown): A =>
+const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
+  Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
+
+const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 const candidate = {
@@ -66,12 +69,12 @@ describe("ScreenFrame", () => {
     expect(approved.labels).toHaveLength(8);
     expect(approved.rejectReason).toEqual(O.some("other"));
     expect(O.isNone(rejected.rejectReason)).toBe(true);
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(ScreenFrameJudgement)({
+    expect(fails(ScreenFrameJudgement, {
       outcome: "approved_clean",
       caption: "ok",
       labels: ["one"],
       bannerSuitability: 1.1,
-    }))._tag).toBe("Failure");
+    })).toBe(true);
   });
 
   it("decodes both mime types, both attempt outcomes, and an open claim purpose", () => {
@@ -114,8 +117,7 @@ describe("ScreenFrame", () => {
     expect(claims.retention).toBe("custom-retention");
     const ground = decode(ScreenFrameGround, { stops: ["not-hex", "also"], isNeutral: true });
     expect(ground.stops).toEqual(["not-hex", "also"]);
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(ScreenFrameGround)({ stops: ["#000000"], isNeutral: false }))._tag)
-      .toBe("Failure");
+    expect(fails(ScreenFrameGround, { stops: ["#000000"], isNeutral: false })).toBe(true);
     const frame = decode(ConversationScreenFrame, {
       id: "frame-1",
       capturedAt: "2020-01-02T03:04:05.000Z",

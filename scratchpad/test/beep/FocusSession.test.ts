@@ -70,7 +70,7 @@ describe("FocusSession", () => {
 
   it("derives an arbitrary for each model", () => {
     for (const schema of [FocusSession, FocusDistraction, FocusStats]) {
-      assert.strictEqual(Arbitrary.isArbitrary(Arbitrary.schema(schema)), true);
+      assert.strictEqual(Arbitrary.isArbitrary(schema.pipe(Arbitrary.schema)), true);
     }
   });
 });

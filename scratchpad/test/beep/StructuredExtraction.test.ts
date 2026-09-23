@@ -11,6 +11,7 @@ import {
   ConversationStructureExtraction,
   ExtractedActionItem,
   ExtractedEvent,
+  ExtractedEventWire,
   ExtractedSection,
   StructuredExtraction,
   defaultUnusableDuration,
@@ -23,6 +24,12 @@ import {
   toStructured,
   usableElements,
 } from "../../beep/StructuredExtraction.ts";
+
+const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
+  Effect.runSync(S.decodeUnknownEffect(schema)(input));
+
+const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
+  Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
 
 const record = (value: unknown): { readonly [key: string]: unknown } => (P.isObject(value) ? value : {});
 
@@ -56,13 +63,13 @@ describe("StructuredExtraction", () => {
     ));
     expect(Array.isArray(kept) && kept).toHaveLength(1);
     expect(Effect.runSync(usableElements("not-a-list", ExtractedActionItem, "actionItems"))).toBe("not-a-list");
-    const cleared = record(Effect.runSync(keepUsableContent({
+    const cleared = keepUsableContent({
       title: null,
       actionItems: [{ description: "Send the notes" }, { nope: true }],
-    }, { actionItems: ExtractedActionItem })));
+    }, { actionItems: ExtractedActionItem }).pipe(Effect.runSync, record);
     expect(Rec.has(cleared, "title")).toBe(false);
     expect(Array.isArray(cleared.actionItems) && cleared.actionItems).toHaveLength(1);
-    const removed = record(Effect.runSync(keepUsableContent({ sections: null }, { sections: ExtractedSection })));
+    const removed = keepUsableContent({ sections: null }, { sections: ExtractedSection }).pipe(Effect.runSync, record);
     expect(Rec.has(removed, "sections")).toBe(false);
     expect(Effect.runSync(keepUsableContent("nope", {}))).toBe("nope");
   });
@@ -73,18 +80,20 @@ describe("StructuredExtraction", () => {
     expect(record(defaultUnusableDuration({ duration: " 15 " })).duration).toBe(15);
     expect(record(defaultUnusableDuration({ duration: true })).duration).toBe(1);
     expect(defaultUnusableDuration("nope")).toBe("nope");
-    const event = Effect.runSync(S.decodeUnknownEffect(ExtractedEvent)({
+    const event = decode(ExtractedEventWire, {
       title: "Standup",
       start: "2020-01-02T03:04:05.000Z",
       duration: 0,
-    }));
+    });
     expect(event.duration).toBe(30);
-    const fractional = Effect.runSync(S.decodeUnknownEffect(ExtractedEvent)({
+    const fractional = decode(ExtractedEventWire, {
       title: "Standup",
       start: "2020-01-02T03:04:05.000Z",
       duration: 15.9,
-    }));
+    });
     expect(fractional.duration).toBe(15);
+    expect(fails(ExtractedEvent, { title: "Standup", start: "2020-01-02T03:04:05.000Z", duration: 15.9 })).toBe(true);
+    expect(decode(ExtractedEvent, { title: "Standup", start: "2020-01-02T03:04:05.000Z" }).duration).toBe(30);
     const copied = toEvent(ExtractedEvent.make({
       title: "Standup",
       start: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
@@ -103,27 +112,27 @@ describe("StructuredExtraction", () => {
   });
 
   it("decodes an unknown category as other and missing optionals as None", () => {
-    const structure = Effect.runSync(S.decodeUnknownEffect(ConversationStructureExtraction)({
+    const structure = decode(ConversationStructureExtraction, {
       title: "hello",
       overview: "",
       emoji: "🧠",
       category: "romance",
-    }));
+    });
     expect(structure.category).toBe("other");
     const item = ExtractedActionItem.make({ description: "Send the notes" });
     expect(O.isNone(item.captureOwner)).toBe(true);
-    const present = Effect.runSync(S.decodeUnknownEffect(ExtractedActionItem)({
+    const present = decode(ExtractedActionItem, {
       description: "Send the notes",
       captureOwner: "other",
       captureConfidence: 0,
       sourceSegmentIds: ["seg-1"],
-    }));
+    });
     expect(present.captureOwner).toEqual(O.some("other"));
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(ExtractedActionItem)({
+    expect(fails(ExtractedActionItem, {
       description: "Send the notes",
       captureConfidence: 2,
       sourceSegmentIds: [],
-    }))._tag).toBe("Failure");
+    })).toBe(true);
     expect(ActionItemsExtraction.make({}).actionItems).toHaveLength(0);
   });
 

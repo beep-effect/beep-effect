@@ -15,7 +15,6 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
-import * as P from "@beep/utils/Predicate";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -355,7 +354,7 @@ export const prepareTranscriptSegment = Effect.fn("TranscriptSegment.prepare")(f
   input: TranscriptSegmentIngress,
 ) {
   const id =
-    input.id !== undefined && input.id !== null && !Str.isEmpty(input.id) ? input.id : yield* Effect.sync(uuidV4);
+    input.id !== undefined && input.id !== null && !Str.isEmpty(input.id) ? input.id : yield* Effect.sync(() => uuidV4());
   const speaker = input.speaker === undefined ? O.some("SPEAKER_00") : optionText(input.speaker);
   const speakerId =
     input.speakerId !== undefined && input.speakerId !== null
@@ -533,9 +532,9 @@ export const segmentsAsString: {
   userName?: string,
   people?: ReadonlyArray<TranscriptPerson>,
 ): (segments: ReadonlyArray<TranscriptSegment>) => string
-} = dual(4, (
+} = dual((args) => A.isArray(args[0]), (
   segments: ReadonlyArray<TranscriptSegment>,
-  includeTimestamps = false,
+  includeTimestamps: boolean = false,
   userName?: string,
   people?: ReadonlyArray<TranscriptPerson>,
 ): string => {
@@ -544,7 +543,7 @@ export const segmentsAsString: {
   const showTime = includeTimestamps && canDisplaySeconds(segments);
   const lines = segments.map((segment) => {
     const body = Str.trim(segment.text);
-    const timestamp = P.isNotNullish(showTime) ? `[${getTimestampString(segment)}] ` : "";
+    const timestamp = showTime ? `[${getTimestampString(segment)}] ` : "";
     const speaker = segment.isUser
       ? name
       : O.getOrElse(
@@ -729,10 +728,10 @@ export const combineSegments: {
   deltaSeconds?: number,
   protectedSegmentIds?: HashSet.HashSet<string>,
 ): (segments: ReadonlyArray<TranscriptSegment>) => CombineSegmentsResult
-} = dual(4, (
+} = dual((args) => A.isArray(args[1]), (
   segments: ReadonlyArray<TranscriptSegment>,
   newSegments: ReadonlyArray<TranscriptSegment>,
-  deltaSeconds = 0,
+  deltaSeconds: number = 0,
   protectedSegmentIds?: HashSet.HashSet<string>,
 ): CombineSegmentsResult => {
   if (newSegments.length === 0) {

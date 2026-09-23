@@ -27,7 +27,7 @@ describe("Advice", () => {
   });
 
   it("decodes a present note and a null note", () => {
-    const present: unknown = {
+    const base = {
       id: "advice-1",
       content: "Take a break",
       category: "focus",
@@ -38,9 +38,10 @@ describe("Advice", () => {
       isRead: false,
       isDismissed: false,
     };
+    const present: unknown = base;
     const decoded = Effect.runSync(S.decodeUnknownEffect(Advice)(present));
     assert.strictEqual(O.getOrNull(decoded.reasoning), "You have been at it for hours");
-    const cleared: unknown = { ...present, reasoning: null, sourceApp: null };
+    const cleared: unknown = { ...base, reasoning: null, sourceApp: null };
     const none = Effect.runSync(S.decodeUnknownEffect(Advice)(cleared));
     assert.strictEqual(O.isNone(none.reasoning), true);
     assert.strictEqual(O.isNone(none.sourceApp), true);

@@ -8,19 +8,25 @@ import { ConversationPhoto, photosAsString, readContentType, readStorageId } fro
 describe("ConversationPhoto", () => {
   it("decodes null and missing optional fields", () => {
     const present = Effect.runSync(
-      S.decodeUnknownEffect(ConversationPhoto)({
+      S.decodeEffect(ConversationPhoto)({
         base64: "pixels",
         storageId: " frame-1 ",
         contentType: " Image/PNG ",
         description: "desk",
+        createdAt: "2020-01-02T03:04:05.000Z",
+        discarded: false,
       }),
     );
     expect(O.getOrElse(present.storageId, () => "")).toBe("frame-1");
     expect(O.getOrElse(present.contentType, () => "")).toBe("image/png");
-    const missing = Effect.runSync(S.decodeUnknownEffect(ConversationPhoto)({ base64: "pixels" }));
+    // Constructor defaults are construction-only: decode still needs the defaulted keys.
+    const wireDefaults = { createdAt: "2020-01-02T03:04:05.000Z", discarded: false };
+    const missing = Effect.runSync(S.decodeEffect(ConversationPhoto)({ base64: "pixels", ...wireDefaults }));
     expect(O.isNone(missing.storageId)).toBe(true);
     expect(O.isNone(missing.description)).toBe(true);
-    const nulled = Effect.runSync(S.decodeUnknownEffect(ConversationPhoto)({ base64: "pixels", storageId: null, description: null }));
+    const nulled = Effect.runSync(
+      S.decodeEffect(ConversationPhoto)({ base64: "pixels", storageId: null, description: null, ...wireDefaults }),
+    );
     expect(O.isNone(nulled.storageId)).toBe(true);
     expect(O.isNone(nulled.description)).toBe(true);
     expect(Arbitrary.schema(ConversationPhoto)).toBeTruthy();
@@ -42,10 +48,11 @@ describe("ConversationPhoto", () => {
     const blank = ConversationPhoto.make({ base64: "pixels", description: O.some("   ") });
     expect(photosAsString([blank], false)).toBe("None");
     const dated = Effect.runSync(
-      S.decodeUnknownEffect(ConversationPhoto)({
+      S.decodeEffect(ConversationPhoto)({
         base64: "pixels",
         description: "desk",
         createdAt: "2020-01-02T03:04:05.000Z",
+        discarded: false,
       }),
     );
     expect(photosAsString([dated], false)).toBe('- "desk"');

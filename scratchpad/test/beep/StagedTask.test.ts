@@ -11,6 +11,9 @@ import {
   StagedTaskListResponse,
 } from "../../beep/StagedTask.ts";
 
+const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
+  Effect.runSync(S.decodeUnknownEffect(schema)(input));
+
 const present = {
   id: "staged-1",
   description: "Send the notes",
@@ -27,7 +30,7 @@ const present = {
 
 describe("StagedTask", () => {
   it("decodes present values, including an unconstrained relevance score", () => {
-    const task = Effect.runSync(S.decodeUnknownEffect(StagedTask)(present));
+    const task = decode(StagedTask, present);
     expect(task.priority).toEqual(O.some("urgent"));
     expect(task.relevanceScore).toEqual(O.some(1001));
     expect(task.metadata).toEqual(O.some("opaque"));
@@ -41,8 +44,8 @@ describe("StagedTask", () => {
       createdAt: "2020-01-02T03:04:05.000Z",
       updatedAt: "2020-01-02T03:04:05.000Z",
     };
-    const missing = Effect.runSync(S.decodeUnknownEffect(StagedTask)(required));
-    const nulled = Effect.runSync(S.decodeUnknownEffect(StagedTask)({
+    const missing = decode(StagedTask, required);
+    const nulled = decode(StagedTask, {
       ...required,
       dueAt: null,
       source: null,
@@ -50,7 +53,7 @@ describe("StagedTask", () => {
       metadata: null,
       category: null,
       relevanceScore: null,
-    }));
+    });
     for (const task of [missing, nulled]) {
       expect(O.isNone(task.dueAt)).toBe(true);
       expect(O.isNone(task.priority)).toBe(true);
@@ -59,16 +62,16 @@ describe("StagedTask", () => {
   });
 
   it("decodes promotion and constructs the retired migration defaults", () => {
-    const skipped = Effect.runSync(S.decodeUnknownEffect(PromoteStagedTaskResponse)({
+    const skipped = decode(PromoteStagedTaskResponse, {
       promoted: false,
       reason: null,
       promotedTask: null,
-    }));
-    const promoted = Effect.runSync(S.decodeUnknownEffect(PromoteStagedTaskResponse)({
+    });
+    const promoted = decode(PromoteStagedTaskResponse, {
       promoted: true,
       reason: "done",
       promotedTask: { id: "action-1", extra: true },
-    }));
+    });
     expect(O.isNone(skipped.promotedTask)).toBe(true);
     expect(O.isSome(promoted.promotedTask) && promoted.promotedTask.value.id).toBe("action-1");
     const migrated = MigrateConversationItemsResponse.make({});
@@ -80,16 +83,16 @@ describe("StagedTask", () => {
     const restored = RestoreLegacyConversationItemsResponse.make({});
     expect(restored.restored).toBe(0);
     expect(restored.hasMore).toBe(false);
-    const page = Effect.runSync(S.decodeUnknownEffect(RestoreLegacyConversationItemsResponse)({
+    const page = decode(RestoreLegacyConversationItemsResponse, {
       status: "ok",
       restored: 1,
       skippedExisting: 2,
       hasMore: true,
       nextCursor: "cursor-1",
-    }));
+    });
     expect(page.hasMore).toBe(true);
     expect(page.nextCursor).toEqual(O.some("cursor-1"));
-    const list = Effect.runSync(S.decodeUnknownEffect(StagedTaskListResponse)({ items: [], hasMore: false }));
+    const list = decode(StagedTaskListResponse, { items: [], hasMore: false });
     expect(list.items).toHaveLength(0);
   });
 

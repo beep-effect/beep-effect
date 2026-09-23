@@ -1,5 +1,4 @@
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import * as O from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { ConversationMetadata, ConversationMetadataKeys, metadataList, toVectorMetadata } from "../../beep/ConversationMetadata.ts";
 
@@ -16,6 +15,6 @@ describe("ConversationMetadata", () => {
     expect(metadataList({ topics: ["shipping", 2] }, "topics")).toEqual(["shipping", "2"]);
     expect(metadataList({ topics: "shipping" }, "topics")).toEqual([]);
     expect(metadataList(null, "topics")).toEqual([]);
-    expect(O.isNone(ConversationMetadata.make({}).people) || Array.isArray(ConversationMetadata.make({}).people)).toBe(true);
+    expect(ConversationMetadata.make({}).people).toEqual([]);
   });
 });
