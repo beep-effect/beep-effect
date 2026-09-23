@@ -25,7 +25,7 @@ import { A } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { DateTime, Result, Tuple } from "effect";
-import { dual } from "effect/Function";
+import { constFalse, dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { ExecutionGrant, PolicyRevision } from "../ExecutionGrant/index.ts";
 import { ExecutionVerdict } from "../ExecutionVerdict/index.ts";
@@ -410,7 +410,7 @@ export const verifyFrozenGrantSetDigest = (frozen: FrozenGrantSet): boolean =>
       ),
       (digest) => digest === frozen.digest
     ),
-    () => false
+    constFalse
   );
 
 /**
