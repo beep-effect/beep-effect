@@ -1736,7 +1736,8 @@ const singleTemplateSegment = (strings: TemplateStringsArray): string =>
     },
     onNonEmpty: (segments) =>
       A.match(A.drop(segments, 1), {
-        onEmpty: () => A.headNonEmpty(segments),
+        onEmpty: () =>
+          O.getOrThrowWith(O.fromUndefinedOr(A.headNonEmpty(segments)), () => IdentitySegmentCountError.make({})),
         onNonEmpty: () => {
           throw IdentitySegmentCountError.make({});
         },
