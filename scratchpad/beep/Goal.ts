@@ -52,7 +52,13 @@ export const GoalType = LiteralKit(["boolean", "scale", "numeric"]).pipe(
   $I.annoteSchema("GoalType", { description: "How a goal metric is measured." }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link GoalType}.
+ *
+ * @see {@link GoalType} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type GoalType = typeof GoalType.Type;
 
 const decodeGoalType = S.decodeUnknownEffect(GoalType);
@@ -82,7 +88,13 @@ export const GoalStatus = LiteralKit(["background", "focused", "paused", "achiev
   $I.annoteSchema("GoalStatus", { description: "Workflow status of a goal, from background through ended." }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link GoalStatus}.
+ *
+ * @see {@link GoalStatus} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type GoalStatus = typeof GoalStatus.Type;
 
 /**
@@ -110,7 +122,13 @@ export const GoalSource = LiteralKit(["user", "ai_suggested", "imported"]).pipe(
   $I.annoteSchema("GoalSource", { description: "Who created the goal after legacy source strings are rewritten." }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link GoalSource}.
+ *
+ * @see {@link GoalSource} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type GoalSource = typeof GoalSource.Type;
 
 /**
@@ -133,7 +151,13 @@ export const GoalRelationshipDisposition = LiteralKit(["retain", "detach"]).pipe
   $I.annoteSchema("GoalRelationshipDisposition", { description: "Whether related rows stay attached when a goal ends." }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link GoalRelationshipDisposition}.
+ *
+ * @see {@link GoalRelationshipDisposition} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type GoalRelationshipDisposition = typeof GoalRelationshipDisposition.Type;
 
 /**
@@ -156,7 +180,13 @@ export const GoalProgressEventKind = LiteralKit(["evidence", "metric_update", "m
   $I.annoteSchema("GoalProgressEventKind", { description: "Kind of goal progress event." }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link GoalProgressEventKind}.
+ *
+ * @see {@link GoalProgressEventKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type GoalProgressEventKind = typeof GoalProgressEventKind.Type;
 
 /**
@@ -182,7 +212,13 @@ export class GoalContractError extends S.TaggedError<GoalContractError>()(
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalContractError}.
+ *
+ * @see {@link GoalContractError} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalContractError {
   export type Encoded = S.Codec.Encoded<typeof GoalContractError>;
 }
@@ -233,12 +269,36 @@ export class GoalMetric extends Model<GoalMetric>("GoalMetric")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalMetric}.
+ *
+ * @see {@link GoalMetric} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalMetric {
   export type Encoded = S.Codec.Encoded<typeof GoalMetric>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for a goal metric; identical to {@link GoalMetric} because every metric key is already one word.
+ *
+ * **Example** (Decode a numeric metric)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GoalMetricWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const metric = S.decodeUnknownSync(GoalMetricWire)({ type: "numeric", current: 2, target: 10, unit: "km" })
+ * console.log(metric.target) // 10
+ * console.log(O.getOrNull(metric.unit)) // "km"
+ * ```
+ *
+ * @see {@link GoalMetric} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalMetricWire = GoalMetric;
 
 /**
@@ -272,9 +332,12 @@ export const validateMetricBounds = Effect.fn("GoalMetric.validateBounds")(funct
  * **Example** (Fill desired outcome from description)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { normalizeLegacyDescription } from "@beep/scratchpad/beep/Goal"
  *
- * const prepared = normalizeLegacyDescription({ title: "Run", description: "5k" })
+ * const prepared = S.decodeUnknownSync(S.Record(S.String, S.Unknown))(
+ *   normalizeLegacyDescription({ title: "Run", description: "5k" }),
+ * )
  * console.log(prepared.desired_outcome) // "5k"
  * ```
  *
@@ -416,12 +479,40 @@ export class GoalCreate extends Model<GoalCreate>("GoalCreate")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalCreate}.
+ *
+ * @see {@link GoalCreate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalCreate {
   export type Encoded = S.Codec.Encoded<typeof GoalCreate>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for a goal create body that maps camelCase fields to the released snake_case keys.
+ *
+ * **Details**
+ *
+ * This codec only renames keys. Request bodies go through {@link decodeGoalCreate}, which also trims, fills, and rejects.
+ *
+ * **Example** (Encode snake_case keys)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GoalCreate, GoalCreateWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const encoded = S.encodeSync(GoalCreateWire)(GoalCreate.make({ title: "Run a 5k", targetValue: O.some(5) }))
+ * console.log(encoded.target_value) // 5
+ * console.log(encoded.success_criteria) // []
+ * ```
+ *
+ * @see {@link GoalCreate} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalCreateWire = GoalCreate.pipe(
   S.encodeKeys({
     desiredOutcome: "desired_outcome",
@@ -507,7 +598,9 @@ export const normalizeLegacyMetric = Effect.fn("GoalCreate.normalizeLegacyMetric
  * import * as Effect from "effect/Effect"
  * import { decodeGoalCreate } from "@beep/scratchpad/beep/Goal"
  *
- * const created = Effect.runSync(decodeGoalCreate({ title: "Run", source: "ai" }))
+ * const created = Effect.runSync(
+ *   decodeGoalCreate({ title: "Run", source: "ai", status: "background", success_criteria: [] }),
+ * )
  * console.log(created.source) // "ai_suggested"
  * ```
  *
@@ -583,12 +676,38 @@ export class GoalUpdate extends Model<GoalUpdate>("GoalUpdate")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalUpdate}.
+ *
+ * @see {@link GoalUpdate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalUpdate {
   export type Encoded = S.Codec.Encoded<typeof GoalUpdate>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for a goal patch that maps camelCase fields to the released snake_case keys.
+ *
+ * **Details**
+ *
+ * This codec only renames keys. Request bodies go through {@link decodeGoalUpdate}, which rejects explicit null on protected fields.
+ *
+ * **Example** (Encode a clear-metric patch)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GoalUpdate, GoalUpdateWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const encoded = S.encodeSync(GoalUpdateWire)(GoalUpdate.make({ clearMetric: true }))
+ * console.log(encoded.clear_metric) // true
+ * ```
+ *
+ * @see {@link GoalUpdate} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalUpdateWire = GoalUpdate.pipe(
   S.encodeKeys({
     desiredOutcome: "desired_outcome",
@@ -662,7 +781,7 @@ export const protectRequiredFields = Effect.fn("GoalUpdate.protectRequiredFields
  * import * as O from "effect/Option"
  * import { decodeGoalUpdate } from "@beep/scratchpad/beep/Goal"
  *
- * const updated = Effect.runSync(decodeGoalUpdate({}))
+ * const updated = Effect.runSync(decodeGoalUpdate({ clear_metric: false }))
  * console.log(O.isNone(updated.title)) // true
  * ```
  *
@@ -713,12 +832,36 @@ export class GoalFocusRequest extends Model<GoalFocusRequest>("GoalFocusRequest"
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalFocusRequest}.
+ *
+ * @see {@link GoalFocusRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalFocusRequest {
   export type Encoded = S.Codec.Encoded<typeof GoalFocusRequest>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for a focus request that maps `focusRank` and `replacementGoalId` to snake_case keys.
+ *
+ * **Example** (Encode a rank-two focus)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GoalFocusRequest, GoalFocusRequestWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const encoded = S.encodeSync(GoalFocusRequestWire)(GoalFocusRequest.make({ focusRank: O.some(2) }))
+ * console.log(encoded.focus_rank) // 2
+ * console.log(encoded.replacement_goal_id) // null
+ * ```
+ *
+ * @see {@link GoalFocusRequest} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalFocusRequestWire = GoalFocusRequest.pipe(
   S.encodeKeys({ replacementGoalId: "replacement_goal_id", focusRank: "focus_rank" }),
 );
@@ -754,12 +897,40 @@ export class GoalLifecycleRequest extends Model<GoalLifecycleRequest>("GoalLifec
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalLifecycleRequest}.
+ *
+ * @see {@link GoalLifecycleRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalLifecycleRequest {
   export type Encoded = S.Codec.Encoded<typeof GoalLifecycleRequest>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for a pause or end request that maps `relationshipDisposition` to `relationship_disposition`.
+ *
+ * **Details**
+ *
+ * This codec accepts any goal status. {@link decodeGoalLifecycleRequest} adds the terminal-status rule.
+ *
+ * **Example** (Encode a pause)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GoalLifecycleRequest, GoalLifecycleRequestWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const encoded = S.encodeSync(GoalLifecycleRequestWire)(
+ *   GoalLifecycleRequest.make({ status: "paused", relationshipDisposition: "retain" }),
+ * )
+ * console.log(encoded) // { status: "paused", relationship_disposition: "retain" }
+ * ```
+ *
+ * @see {@link GoalLifecycleRequest} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalLifecycleRequestWire = GoalLifecycleRequest.pipe(
   S.encodeKeys({ relationshipDisposition: "relationship_disposition" }),
 );
@@ -865,12 +1036,37 @@ export class GoalProgressEventCreate extends Model<GoalProgressEventCreate>("Goa
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalProgressEventCreate}.
+ *
+ * @see {@link GoalProgressEventCreate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalProgressEventCreate {
   export type Encoded = S.Codec.Encoded<typeof GoalProgressEventCreate>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for a progress event to append, mapping `evidenceRefs` to `evidence_refs`.
+ *
+ * **Example** (Encode a milestone)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GoalProgressEventCreate, GoalProgressEventCreateWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const encoded = S.encodeSync(GoalProgressEventCreateWire)(
+ *   GoalProgressEventCreate.make({ kind: "milestone", summary: "Ran the first 2k" }),
+ * )
+ * console.log(encoded.evidence_refs) // []
+ * console.log(encoded.summary) // "Ran the first 2k"
+ * ```
+ *
+ * @see {@link GoalProgressEventCreate} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalProgressEventCreateWire = GoalProgressEventCreate.pipe(
   S.encodeKeys({ evidenceRefs: "evidence_refs" }),
 );
@@ -929,12 +1125,44 @@ export class GoalProgressEvent extends Model<GoalProgressEvent>("GoalProgressEve
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalProgressEvent}.
+ *
+ * @see {@link GoalProgressEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalProgressEvent {
   export type Encoded = S.Codec.Encoded<typeof GoalProgressEvent>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for a stored progress event with snake_case id, evidence, and timestamp keys.
+ *
+ * **Example** (Round-trip a stored event)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GoalProgressEventWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const event = S.decodeUnknownSync(GoalProgressEventWire)({
+ *   event_id: "event-1",
+ *   goal_id: "goal-1",
+ *   sequence: 2,
+ *   kind: "metric_update",
+ *   summary: "Logged 3 km",
+ *   evidence_refs: [],
+ *   created_at: "2020-01-02T03:04:05.000Z",
+ * })
+ * const encoded = S.encodeSync(GoalProgressEventWire)(event)
+ * console.log(event.goalId) // "goal-1"
+ * console.log(encoded.goal_id) // "goal-1"
+ * ```
+ *
+ * @see {@link GoalProgressEvent} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalProgressEventWire = GoalProgressEvent.pipe(
   S.encodeKeys({
     eventId: "event_id",
@@ -1030,12 +1258,54 @@ export class GoalResponse extends Model<GoalResponse>("GoalResponse")(
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalResponse}.
+ *
+ * @see {@link GoalResponse} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalResponse {
   export type Encoded = S.Codec.Encoded<typeof GoalResponse>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for the goal response sent to released clients, with snake_case keys for every multi-word field.
+ *
+ * **Example** (Round-trip the alias floats)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GoalResponseWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const goal = S.decodeUnknownSync(GoalResponseWire)({
+ *   id: "goal-1",
+ *   goal_id: "goal-1",
+ *   title: "Run a 5k",
+ *   desired_outcome: "Finish under 30 minutes",
+ *   success_criteria: [],
+ *   status: "focused",
+ *   focus_rank: 0,
+ *   source: "user",
+ *   created_at: "2020-01-02T03:04:05.000Z",
+ *   updated_at: "2020-01-02T03:04:05.000Z",
+ *   latest_progress_sequence: 1,
+ *   goal_type: "numeric",
+ *   target_value: 5,
+ *   current_value: 2,
+ *   min_value: 0,
+ *   max_value: 5,
+ *   is_active: true,
+ * })
+ * const encoded = S.encodeSync(GoalResponseWire)(goal)
+ * console.log(encoded.current_value) // 2
+ * console.log(encoded.focus_rank) // 0
+ * ```
+ *
+ * @see {@link GoalResponse} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalResponseWire = GoalResponse.pipe(
   S.encodeKeys({
     goalId: "goal_id",
@@ -1089,12 +1359,40 @@ export class GoalHistoryEntryResponse extends Model<GoalHistoryEntryResponse>("G
   $I.annote("GoalHistoryEntryResponse", { description: "One goal history point. date is a string." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalHistoryEntryResponse}.
+ *
+ * @see {@link GoalHistoryEntryResponse} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalHistoryEntryResponse {
   export type Encoded = S.Codec.Encoded<typeof GoalHistoryEntryResponse>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for one goal history point, mapping `recordedAt` to `recorded_at`.
+ *
+ * **Example** (Round-trip a history point)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GoalHistoryEntryResponseWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const entry = S.decodeUnknownSync(GoalHistoryEntryResponseWire)({
+ *   date: "2020-01-02",
+ *   value: 3,
+ *   recorded_at: "2020-01-02T03:04:05.000Z",
+ * })
+ * const encoded = S.encodeSync(GoalHistoryEntryResponseWire)(entry)
+ * console.log(encoded.value) // 3
+ * console.log("recorded_at" in encoded) // true
+ * ```
+ *
+ * @see {@link GoalHistoryEntryResponse} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalHistoryEntryResponseWire = GoalHistoryEntryResponse.pipe(S.encodeKeys({ recordedAt: "recorded_at" }));
 
 /**
@@ -1122,12 +1420,34 @@ export class GoalDeleteResponse extends Model<GoalDeleteResponse>("GoalDeleteRes
   $I.annote("GoalDeleteResponse", { description: "Whether a goal delete succeeded and which id was removed." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalDeleteResponse}.
+ *
+ * @see {@link GoalDeleteResponse} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalDeleteResponse {
   export type Encoded = S.Codec.Encoded<typeof GoalDeleteResponse>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for a goal delete result, mapping `deletedId` to `deleted_id`.
+ *
+ * **Example** (Encode a deletion)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GoalDeleteResponse, GoalDeleteResponseWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const encoded = S.encodeSync(GoalDeleteResponseWire)(GoalDeleteResponse.make({ success: true, deletedId: "goal-1" }))
+ * console.log(encoded) // { success: true, deleted_id: "goal-1" }
+ * ```
+ *
+ * @see {@link GoalDeleteResponse} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalDeleteResponseWire = GoalDeleteResponse.pipe(S.encodeKeys({ deletedId: "deleted_id" }));
 
 /**
@@ -1163,12 +1483,42 @@ export class GoalSuggestionResponse extends Model<GoalSuggestionResponse>("GoalS
   $I.annote("GoalSuggestionResponse", { description: "Suggested goal. suggested_type stays an open string." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalSuggestionResponse}.
+ *
+ * @see {@link GoalSuggestionResponse} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalSuggestionResponse {
   export type Encoded = S.Codec.Encoded<typeof GoalSuggestionResponse>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for a suggested goal, mapping every `suggested*` field to its snake_case key.
+ *
+ * **Example** (Encode the default bounds)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GoalSuggestionResponse, GoalSuggestionResponseWire } from "@beep/scratchpad/beep/Goal"
+ *
+ * const encoded = S.encodeSync(GoalSuggestionResponseWire)(
+ *   GoalSuggestionResponse.make({
+ *     suggestedTitle: "Run a 5k",
+ *     suggestedType: "numeric",
+ *     suggestedTarget: 5,
+ *     reasoning: "You mentioned training for a race",
+ *   }),
+ * )
+ * console.log(encoded.suggested_min) // 0
+ * console.log(encoded.suggested_max) // 10
+ * ```
+ *
+ * @see {@link GoalSuggestionResponse} for the decoded model.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const GoalSuggestionResponseWire = GoalSuggestionResponse.pipe(
   S.encodeKeys({
     suggestedTitle: "suggested_title",
@@ -1207,7 +1557,13 @@ export class AdviceResponse extends Model<AdviceResponse>("AdviceResponse")(
   $I.annote("AdviceResponse", { description: "Advice string returned with a goal. Not the proactive advice model." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link AdviceResponse}.
+ *
+ * @see {@link AdviceResponse} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace AdviceResponse {
   export type Encoded = S.Codec.Encoded<typeof AdviceResponse>;
 }

@@ -265,6 +265,13 @@ export const GeolocationInputWire = GeolocationInput.pipe(
 const encodeGeolocationInputWire = S.encodeEffect(GeolocationInputWire);
 const decodeGeolocationInputWire = S.decodeUnknownEffect(GeolocationInputWire);
 
+const boundGeolocationInput = Effect.fn("Geolocation.boundInput")(function* (value: GeolocationInput) {
+  const encoded = yield* Effect.result(encodeGeolocationInputWire(value));
+  if (Result.isFailure(encoded)) return O.none<Geolocation>();
+  // @effect-diagnostics-next-line preferTypedSchemaDecoder:off -- The released wire and the bounded value are different schemas.
+  return yield* Effect.option(decodeGeolocationWire(encoded.success));
+});
+
 /**
  * Converts a released coordinate into the bounded server value.
  *
@@ -286,17 +293,24 @@ const decodeGeolocationInputWire = S.decodeUnknownEffect(GeolocationInputWire);
  * console.log(O.isNone(validatedGeolocationOrNone(O.some(input)))) // true
  * ```
  *
+ * **Example** (Keep an in-range point)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GeolocationInputWire, validatedGeolocationOrNone } from "@beep/scratchpad/beep/Geolocation"
+ *
+ * const input = Effect.runSync(S.decodeUnknownEffect(GeolocationInputWire)({ latitude: 38.72, longitude: -9.14 }))
+ * const bounded = validatedGeolocationOrNone(O.some(input))
+ *
+ * console.log(O.getOrNull(O.map(bounded, (point) => point.latitude))) // 38.72
+ * ```
+ *
  * @see {@link geolocationFromPrivateHeader} for the header parser.
  * @category validators
  * @since 0.0.0
  */
-const boundGeolocationInput = Effect.fn("Geolocation.boundInput")(function* (value: GeolocationInput) {
-  const encoded = yield* Effect.result(encodeGeolocationInputWire(value));
-  if (Result.isFailure(encoded)) return O.none<Geolocation>();
-  // @effect-diagnostics-next-line preferTypedSchemaDecoder:off -- The released wire and the bounded value are different schemas.
-  return yield* Effect.option(decodeGeolocationWire(encoded.success));
-});
-
 export const validatedGeolocationOrNone = (geolocation: O.Option<GeolocationInput>): O.Option<Geolocation> =>
   Effect.runSync(
     O.match(geolocation, {

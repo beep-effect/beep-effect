@@ -1,6 +1,8 @@
 /**
  * Trusted canonical fields on a `memory_state/head` document.
  *
+ * **Details**
+ *
  * The head also carries legacy-ledger metadata. Writers must preserve these
  * fields instead of replacing the document with only their own metadata.
  *

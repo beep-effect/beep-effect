@@ -1,6 +1,8 @@
 /**
  * Content-free durable receipts for explicit JIT trigger feedback.
  *
+ * **Details**
+ *
  * `action` changes whether `snoozedUntil` is required. Snooze is the only
  * action that carries it, and that instant must be after `recordedAt`.
  *

@@ -1,6 +1,8 @@
 /**
  * Stable slot and rendering policy for `knowledge_ledger.v1` facts.
  *
+ * **Details**
+ *
  * The policy is pure: models, prompt projections, and tests share one
  * contract without a database or runtime client. Canonical slot names stay
  * snake_case because that is the released wire shape. New names are

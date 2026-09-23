@@ -1,6 +1,8 @@
 /**
  * AI-generated tasks awaiting promotion to action items.
  *
+ * **Details**
+ *
  * Response wire shapes for `/v1/staged-tasks*`. Collection:
  * `users/{uid}/staged_tasks`.
  *

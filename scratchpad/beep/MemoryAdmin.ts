@@ -1,6 +1,8 @@
 /**
  * Wire shapes for `/memory/admin/*`.
  *
+ * **Details**
+ *
  * Routers build dicts that match these fields. They are response models, not
  * the memory write path. Conversation remains upstream of memory, and the
  * short-term lifecycle report counts Workflow-adjacent adjudication of

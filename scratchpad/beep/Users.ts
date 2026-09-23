@@ -353,6 +353,8 @@ export declare namespace LocationContextConsentStatus {
 /**
  * Clock passed to {@link isLocationContextConsentActive}.
  *
+ * **Details**
+ *
  * `"naive"` stands for a datetime whose tzinfo is missing. Python returns false.
  *
  * @category type-level
@@ -370,18 +372,28 @@ export type ConsentClock = "naive" | DateTime.Utc | undefined;
  * or a stored instant that cannot be placed in UTC, returns false. An omitted
  * clock reads the current UTC instant.
  *
- * **Example** (Reject a naive clock)
+ * **Example** (Accept an in-window clock and reject a naive one)
  *
  * ```ts
  * import * as DateTime from "effect/DateTime"
  * import * as Effect from "effect/Effect"
- * import { LocationContextConsent, isLocationContextConsentActive } from "./Users.ts"
+ * import {
+ *   LOCATION_CONTEXT_DISCLOSED_PROVIDERS,
+ *   LOCATION_CONTEXT_PURPOSE,
+ *   LocationContextConsent,
+ *   isLocationContextConsentActive,
+ * } from "./Users.ts"
  *
  * const consent = LocationContextConsent.make({
  *   status: "granted",
+ *   purpose: LOCATION_CONTEXT_PURPOSE,
+ *   disclosedProviders: LOCATION_CONTEXT_DISCLOSED_PROVIDERS,
  *   grantedAt: DateTime.makeUnsafe("2020-01-01T00:00:00Z"),
  *   expiresAt: DateTime.makeUnsafe("2020-02-01T00:00:00Z"),
  * })
+ * const inWindow = DateTime.makeUnsafe("2020-01-15T00:00:00Z")
+ *
+ * console.log(Effect.runSync(isLocationContextConsentActive(consent, inWindow))) // true
  * console.log(Effect.runSync(isLocationContextConsentActive(consent, "naive"))) // false
  * ```
  *
@@ -413,14 +425,18 @@ export const isLocationContextConsentActive = Effect.fn("LocationContextConsent.
  *
  * ```ts
  * import * as DateTime from "effect/DateTime"
- * import { LocationContextConsent } from "./Users.ts"
+ * import * as O from "effect/Option"
+ * import { LOCATION_CONTEXT_DISCLOSED_PROVIDERS, LOCATION_CONTEXT_PURPOSE, LocationContextConsent } from "./Users.ts"
  *
  * const consent = LocationContextConsent.make({
  *   status: "granted",
+ *   purpose: LOCATION_CONTEXT_PURPOSE,
+ *   disclosedProviders: LOCATION_CONTEXT_DISCLOSED_PROVIDERS,
  *   grantedAt: DateTime.makeUnsafe("2020-01-01T00:00:00Z"),
  *   expiresAt: DateTime.makeUnsafe("2020-02-01T00:00:00Z"),
  * })
- * console.log(consent.purpose) // "chat_city_context"
+ * console.log(consent.disclosedProviders[0]) // "Google Maps"
+ * console.log(O.isNone(consent.revokedAt)) // true
  * ```
  *
  * @category models
@@ -953,7 +969,7 @@ export declare namespace PhoneCallQuota {
  * import { toWire } from "./Port.ts"
  * import { TranscriptionAllowanceSnapshot } from "./Users.ts"
  *
- * const decoded = Effect.runSync(S.decodeUnknownEffect(toWire(TranscriptionAllowanceSnapshot))({ mode: "blocked" }))
+ * const decoded = Effect.runSync(S.decodeUnknownEffect(toWire(TranscriptionAllowanceSnapshot))({ mode: "blocked", reason: "" }))
  * console.log(decoded.mode) // "blocked"
  * console.log(O.isNone(decoded.remainingSeconds)) // true
  * ```

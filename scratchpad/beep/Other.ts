@@ -1,6 +1,8 @@
 /**
  * FCM, people, and voice-readiness requests that do not belong to a larger domain.
  *
+ * **Details**
+ *
  * Person photos are intentionally absent. Speech samples are audio, and the
  * app uses local speaker icons.
  *

@@ -1,6 +1,8 @@
 /**
  * Codecs shared by the OMI scratchpad port.
  *
+ * **Details**
+ *
  * Column factories that are repeated across models stay in {@link ./Kit.ts}.
  * These helpers cover wire-key renaming, optional fields whose missing key
  * is a non-null default, and JSON columns.
@@ -43,6 +45,11 @@ type FieldRecord = { readonly [key: string]: unknown };
 
 const isFieldKey = (fields: FieldRecord, key: string): key is string => R.has(fields, key);
 
+type Renamable = {
+  readonly fields: FieldRecord;
+  pipe(f: (self: Renamable) => Renamable): Renamable;
+};
+
 /**
  * Renames camelCase fields to snake_case on the encoded wire.
  *
@@ -51,6 +58,12 @@ const isFieldKey = (fields: FieldRecord, key: string): key is string => R.has(fi
  * SQL names stay on `pg.columnName`. This helper is the JSON name. Keys that
  * are already a single word are left unchanged. An empty rename returns the
  * schema itself.
+ *
+ * **Gotchas**
+ *
+ * The return type is the input schema type, so the static `Encoded` type
+ * still shows camelCase keys. Only the runtime codec reads and writes
+ * snake_case.
  *
  * **Example** (Decode a snake_case key)
  *
@@ -69,11 +82,6 @@ const isFieldKey = (fields: FieldRecord, key: string): key is string => R.has(fi
  * @category codecs
  * @since 0.0.0
  */
-type Renamable = {
-  readonly fields: FieldRecord;
-  pipe(f: (self: Renamable) => Renamable): Renamable;
-};
-
 export function toWire<S extends Renamable>(schema: S): S;
 export function toWire(schema: Renamable): Renamable {
   const mapping: Record<string, string> = {};
@@ -147,22 +155,40 @@ export const optionDefault = <Sch extends S.ConstraintDecoder<unknown>>(
   );
 
 /**
- * JSONB column for a nested model or object.
+ * Schema whose encoded side is an object or null, the shape a JSONB column stores.
+ *
+ * @see {@link jsonColumn} for the column factory.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type JsonSchema = S.Top & { readonly Encoded: object | null };
+
+/**
+ * JSONB column for a nested model or object, named by the given SQL column.
+ *
+ * **Details**
+ *
+ * The schema is used as-is for decoding. Only the Drizzle column metadata
+ * changes, so the field stays required.
  *
  * **Example** (Store a nested object)
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { jsonColumn } from "./Port.ts"
+ * import { jsonColumn, Model } from "./Port.ts"
  *
- * console.log(jsonColumn(S.Struct({ id: S.String }), "payload").meta.column?.kind) // "jsonb"
+ * class Row extends Model<Row>("JsonColumnRow")({
+ *   payload: jsonColumn(S.Struct({ id: S.String }), "payload"),
+ * }) {}
+ * const decoded = S.decodeUnknownSync(Row)({ payload: { id: "p1" } })
+ *
+ * console.log(decoded.payload.id) // "p1"
  * ```
  *
+ * @see {@link optionalJsonColumn} when missing and null become `None`.
  * @category factories
  * @since 0.0.0
  */
-export type JsonSchema = S.Top & { readonly Encoded: object | null };
-
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Schema and column name are co-primary inputs, and neither is a pipeable value.
 export const jsonColumn = <Sch extends S.Top>(schema: Sch, column: string) => {
   // pg.jsonb's encoded-object proof does not survive a generic schema parameter.
@@ -333,12 +359,21 @@ const checkedName = (column: string, suffix: string): string => `${column}_${suf
 /**
  * SQL check `minimum <= column <= maximum`.
  *
- * **Example** (Name a between check)
+ * **Example** (Bound an integer column)
  *
  * ```ts
- * import { betweenCheck } from "./Port.ts"
+ * import { toPgTable } from "@beep/effect-drizzle/pg"
+ * import { getTableConfig, PgDialect } from "drizzle-orm/pg-core"
+ * import * as S from "effect/Schema"
+ * import { betweenCheck, Model, pg } from "./Port.ts"
  *
- * console.log(typeof betweenCheck("count", 1, 3)) // "function"
+ * class Row extends Model<Row>("CountRow")({ count: S.Int.pipe(pg.integer(), pg.columnName("count")) }, (columns) => [
+ *   betweenCheck("count", 1, 3)(columns.count),
+ * ]) {}
+ * const [check] = getTableConfig(Row.pipe(toPgTable)).checks
+ *
+ * console.log(check?.name) // "count_between"
+ * console.log(check && new PgDialect().sqlToQuery(check.value).sql) // "count_row"."count" >= 1 and "count_row"."count" <= 3
  * ```
  *
  * @category constructors
@@ -356,12 +391,21 @@ export const betweenCheck = (columnName: string, minimum: number, maximum: numbe
 /**
  * SQL check `column >= minimum`.
  *
- * **Example** (Name a lower-bound check)
+ * **Example** (Keep a count non-negative)
  *
  * ```ts
- * import { atLeastCheck } from "./Port.ts"
+ * import { toPgTable } from "@beep/effect-drizzle/pg"
+ * import { getTableConfig, PgDialect } from "drizzle-orm/pg-core"
+ * import * as S from "effect/Schema"
+ * import { atLeastCheck, Model, pg } from "./Port.ts"
  *
- * console.log(typeof atLeastCheck("count", 0)) // "function"
+ * class Row extends Model<Row>("CountRow")({ count: S.Int.pipe(pg.integer(), pg.columnName("count")) }, (columns) => [
+ *   atLeastCheck("count", 0)(columns.count),
+ * ]) {}
+ * const [check] = getTableConfig(Row.pipe(toPgTable)).checks
+ *
+ * console.log(check?.name) // "count_min"
+ * console.log(check && new PgDialect().sqlToQuery(check.value).sql) // "count_row"."count" >= 0
  * ```
  *
  * @category constructors
@@ -379,9 +423,18 @@ export const atLeastCheck = (columnName: string, minimum: number) => {
  * **Example** (Cap an array column)
  *
  * ```ts
- * import { jsonbArrayLengthCheck } from "./Port.ts"
+ * import { toPgTable } from "@beep/effect-drizzle/pg"
+ * import { getTableConfig, PgDialect } from "drizzle-orm/pg-core"
+ * import * as S from "effect/Schema"
+ * import { jsonbArrayLengthCheck, jsonColumn, Model } from "./Port.ts"
  *
- * console.log(typeof jsonbArrayLengthCheck("sections", { maximum: 12 })) // "function"
+ * class Row extends Model<Row>("SectionRow")({ sections: jsonColumn(S.Array(S.String), "sections") }, (columns) => [
+ *   jsonbArrayLengthCheck("sections", { maximum: 12 })(columns.sections),
+ * ]) {}
+ * const [check] = getTableConfig(Row.pipe(toPgTable)).checks
+ *
+ * console.log(check?.name) // "sections_alen"
+ * console.log(check && new PgDialect().sqlToQuery(check.value).sql) // jsonb_array_length("section_row"."sections") <= 12
  * ```
  *
  * @category constructors

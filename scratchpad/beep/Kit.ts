@@ -1,6 +1,8 @@
 /**
  * Shared OMI field factories for persisted scratchpad models.
  *
+ * **Details**
+ *
  * Repeated identifiers, timestamps, user ids, unit-interval scores, optional
  * text, and non-negative counters are built here once. A field shape that
  * appears once stays inline in its model file.
@@ -45,7 +47,6 @@ const KitFieldProblem = LiteralKit([
  * **Example** (Reject a lookahead pattern)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  * import { KitFieldError, boundedText } from "@beep/scratchpad/beep"
@@ -57,7 +58,7 @@ const KitFieldProblem = LiteralKit([
  * const problem = Result.isFailure(attempted) && S.is(KitFieldError)(attempted.failure)
  *   ? attempted.failure.problem
  *   : "absent"
- * Effect.runSync(Effect.log(problem)) // "lookaround"
+ * console.log(problem) // "lookaround"
  * ```
  *
  * @category errors
@@ -243,6 +244,8 @@ export type UtcTimestamp = typeof UtcTimestamp.Type;
 
 /**
  * Length and pattern limits copied from a Python `Field`.
+ *
+ * **Details**
  *
  * At least one limit is required. `pattern` is a JavaScript regular expression
  * source with no flags, and the same source is copied into the SQL check.
@@ -885,13 +888,19 @@ export const optionalBool = (column: string) => optionalNull(S.Boolean).pipe(pg.
  * The check name is `${column}_sid`. Null passes, so the same check covers
  * optional columns. The expression has no bound parameters.
  *
- * **Example** (Name the stable-id check)
+ * **Example** (Attach the stable-id check)
  *
  * ```ts
- * import { stableIdCheck } from "@beep/scratchpad/beep"
+ * import { toPgTable } from "@beep/effect-drizzle/pg"
+ * import { getTableConfig } from "drizzle-orm/pg-core"
+ * import { Model, stableId, stableIdCheck } from "@beep/scratchpad/beep"
  *
- * const build = stableIdCheck("goal_id")
- * console.log(typeof build) // "function"
+ * class Row extends Model<Row>("GoalRow")({ goalId: stableId("goal_id") }, (columns) => [
+ *   stableIdCheck("goal_id")(columns.goalId),
+ * ]) {}
+ * const [check] = getTableConfig(Row.pipe(toPgTable)).checks
+ *
+ * console.log(check?.name) // "goal_id_sid"
  * ```
  *
  * @category constructors
@@ -908,13 +917,20 @@ export const stableIdCheck = (columnName: string) => {
 /**
  * SQL check for a {@link confidence} column: `0 <= value <= 1`.
  *
- * **Example** (Build the check from a column name)
+ * **Example** (Bound a confidence column)
  *
  * ```ts
- * import { unitIntervalCheck } from "@beep/scratchpad/beep"
+ * import { toPgTable } from "@beep/effect-drizzle/pg"
+ * import { getTableConfig, PgDialect } from "drizzle-orm/pg-core"
+ * import { confidence, Model, unitIntervalCheck } from "@beep/scratchpad/beep"
  *
- * const build = unitIntervalCheck("confidence")
- * console.log(typeof build) // "function"
+ * class Row extends Model<Row>("ScoreRow")({ confidence: confidence("confidence") }, (columns) => [
+ *   unitIntervalCheck("confidence")(columns.confidence),
+ * ]) {}
+ * const [check] = getTableConfig(Row.pipe(toPgTable)).checks
+ *
+ * console.log(check?.name) // "confidence_unit"
+ * console.log(check && new PgDialect().sqlToQuery(check.value).sql) // "score_row"."confidence" >= 0 and "score_row"."confidence" <= 1
  * ```
  *
  * @see {@link confidence} for the schema half of the same bound.
@@ -929,13 +945,20 @@ export const unitIntervalCheck = (columnName: string) => {
 /**
  * SQL check for a {@link nonNegativeInt} column: `value >= 0`.
  *
- * **Example** (Build the non-negative check)
+ * **Example** (Keep an attempt counter non-negative)
  *
  * ```ts
- * import { nonNegativeIntCheck } from "@beep/scratchpad/beep"
+ * import { toPgTable } from "@beep/effect-drizzle/pg"
+ * import { getTableConfig, PgDialect } from "drizzle-orm/pg-core"
+ * import { Model, nonNegativeInt, nonNegativeIntCheck } from "@beep/scratchpad/beep"
  *
- * const build = nonNegativeIntCheck("account_generation")
- * console.log(typeof build) // "function"
+ * class Row extends Model<Row>("AttemptRow")({ attempt: nonNegativeInt("attempt") }, (columns) => [
+ *   nonNegativeIntCheck("attempt")(columns.attempt),
+ * ]) {}
+ * const [check] = getTableConfig(Row.pipe(toPgTable)).checks
+ *
+ * console.log(check?.name) // "attempt_nn"
+ * console.log(check && new PgDialect().sqlToQuery(check.value).sql) // "attempt_row"."attempt" >= 0
  * ```
  *
  * @see {@link nonNegativeInt} for the schema half of the same bound.
@@ -955,13 +978,20 @@ export const nonNegativeIntCheck = (columnName: string) => {
  * Empty bounds throw {@link KitFieldError}. The rendered SQL inlines digits and
  * the pattern literal, so the check has no parameters.
  *
- * **Example** (Build a length check)
+ * **Example** (Bound a title column)
  *
  * ```ts
- * import { textBoundsCheck } from "@beep/scratchpad/beep"
+ * import { toPgTable } from "@beep/effect-drizzle/pg"
+ * import { getTableConfig, PgDialect } from "drizzle-orm/pg-core"
+ * import { boundedText, Model, textBoundsCheck } from "@beep/scratchpad/beep"
  *
- * const build = textBoundsCheck("title", { minLength: 1, maxLength: 256 })
- * console.log(typeof build) // "function"
+ * class Row extends Model<Row>("TitleRow")({ title: boundedText("title", { minLength: 1, maxLength: 256 }) }, (columns) => [
+ *   textBoundsCheck("title", { minLength: 1, maxLength: 256 })(columns.title),
+ * ]) {}
+ * const [check] = getTableConfig(Row.pipe(toPgTable)).checks
+ *
+ * console.log(check?.name) // "title_text"
+ * console.log(check && new PgDialect().sqlToQuery(check.value).sql) // char_length("title_row"."title") >= 1 and char_length("title_row"."title") <= 256
  * ```
  *
  * @see {@link boundedText} for the schema half of the same limits.

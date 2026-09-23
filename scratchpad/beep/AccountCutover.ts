@@ -1,6 +1,8 @@
 /**
  * Whole-account cohort cutover contracts.
  *
+ * **Details**
+ *
  * Server-authoritative cutover state is distinct from universal memory
  * membership and task-intelligence workflow mode. This module owns the
  * account-wide legacy, migrating, and new transition, plus the accepted lossy

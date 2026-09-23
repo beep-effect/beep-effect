@@ -1,6 +1,8 @@
 /**
  * Push notification that can materialize a chat message on the client.
  *
+ * **Details**
+ *
  * FCM rejects a data payload over 4KB, so an oversized content card is dropped
  * instead of taking the whole message down with it.
  *

@@ -1,6 +1,8 @@
 /**
  * Memory operation journal.
  *
+ * **Details**
+ *
  * Operation ids ignore the observed head and the model output index. Account
  * and source generations are part of the id so a purge starts a new space.
  *

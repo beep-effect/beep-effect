@@ -71,7 +71,13 @@ export const FeedbackSurface = LiteralKit([
   "recording_quality",
 ]).pipe($I.annoteSchema("FeedbackSurface", { description: "Where the rating was given. Distinct from platform." }));
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link FeedbackSurface}.
+ *
+ * @see {@link FeedbackSurface} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FeedbackSurface = typeof FeedbackSurface.Type;
 
 /**
@@ -94,7 +100,13 @@ export const FeedbackTargetKind = LiteralKit(["chat_message", "conversation", "m
   $I.annoteSchema("FeedbackTargetKind", { description: "Which collection target_id points into." }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link FeedbackTargetKind}.
+ *
+ * @see {@link FeedbackTargetKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FeedbackTargetKind = typeof FeedbackTargetKind.Type;
 
 /**
@@ -131,7 +143,13 @@ export const FeedbackReason = LiteralKit([
   "not_useful",
 ]).pipe($I.annoteSchema("FeedbackReason", { description: "Structured reason for a thumbs-down." }));
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link FeedbackReason}.
+ *
+ * @see {@link FeedbackReason} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FeedbackReason = typeof FeedbackReason.Type;
 
 /**
@@ -144,7 +162,7 @@ export type FeedbackReason = typeof FeedbackReason.Type;
  * import * as S from "effect/Schema"
  * import { MobileFeedbackKind } from "@beep/scratchpad/beep/Feedback"
  *
- * console.log(Effect.runSync(S.decodeUnknownEffect(MobileFeedbackKind)("summary_helpfulness")))
+ * console.log(Effect.runSync(S.decodeUnknownEffect(MobileFeedbackKind)("summary_helpfulness"))) // "summary_helpfulness"
  * ```
  *
  * @category schemas
@@ -154,7 +172,13 @@ export const MobileFeedbackKind = LiteralKit(["summary_helpfulness", "recording_
   $I.annoteSchema("MobileFeedbackKind", { description: "Explicit mobile feedback surfaces." }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link MobileFeedbackKind}.
+ *
+ * @see {@link MobileFeedbackKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MobileFeedbackKind = typeof MobileFeedbackKind.Type;
 
 /**
@@ -187,7 +211,13 @@ export const MobileFeedbackReason = LiteralKit([
   "recording_other",
 ]).pipe($I.annoteSchema("MobileFeedbackReason", { description: "Closed reasons for explicit mobile output feedback." }));
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link MobileFeedbackReason}.
+ *
+ * @see {@link MobileFeedbackReason} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MobileFeedbackReason = typeof MobileFeedbackReason.Type;
 
 /**
@@ -235,7 +265,13 @@ export const AnyFeedbackReason = LiteralKit([
   "recording_other",
 ]).pipe($I.annoteSchema("AnyFeedbackReason", { description: "Ledger or mobile feedback reason." }));
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link AnyFeedbackReason}.
+ *
+ * @see {@link AnyFeedbackReason} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type AnyFeedbackReason = typeof AnyFeedbackReason.Type;
 
 /**
@@ -325,7 +361,13 @@ export class FeedbackContractError extends S.TaggedError<FeedbackContractError>(
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackContractError}.
+ *
+ * @see {@link FeedbackContractError} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackContractError {
   export type Encoded = S.Codec.Encoded<typeof FeedbackContractError>;
 }
@@ -454,7 +496,13 @@ export class FeedbackEvent extends Model<FeedbackEvent>("FeedbackEvent")(
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackEvent}.
+ *
+ * @see {@link FeedbackEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackEvent {
   export type Encoded = S.Codec.Encoded<typeof FeedbackEvent>;
 }
@@ -539,6 +587,7 @@ export const FeedbackEventWire = FeedbackEvent.pipe(
  *
  * const decoded = Effect.runSync(
  *   decodeMobileFeedbackRequest({
+ *     schema_version: "mobile_feedback.v1",
  *     feedback_id: "f1",
  *     kind: "recording_quality",
  *     target_id: "t1",
@@ -579,7 +628,13 @@ export class MobileFeedbackRequest extends Model<MobileFeedbackRequest>("MobileF
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MobileFeedbackRequest}.
+ *
+ * @see {@link MobileFeedbackRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MobileFeedbackRequest {
   export type Encoded = S.Codec.Encoded<typeof MobileFeedbackRequest>;
 }
@@ -635,15 +690,20 @@ const decodeMobileFeedbackRequestWire = S.decodeUnknownEffect(MobileFeedbackRequ
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
- * import { MobileFeedbackRequest, validateReasonSurface } from "@beep/scratchpad/beep/Feedback"
+ * import {
+ *   FeedbackTargetKind,
+ *   MobileFeedbackReason,
+ *   MobileFeedbackRequest,
+ *   validateReasonSurface,
+ * } from "@beep/scratchpad/beep/Feedback"
  *
  * const request = MobileFeedbackRequest.make({
  *   feedbackId: "f1",
  *   kind: "summary_helpfulness",
- *   targetKind: O.some("conversation"),
+ *   targetKind: O.some(FeedbackTargetKind.Enum.conversation),
  *   targetId: "c1",
  *   value: -1,
- *   reason: O.some("recording_other"),
+ *   reason: O.some(MobileFeedbackReason.Enum.recording_other),
  * })
  * const failed = Effect.runSyncExit(validateReasonSurface(request))
  * console.log(failed._tag) // "Failure"
@@ -682,6 +742,7 @@ export const validateReasonSurface = Effect.fn("MobileFeedbackRequest.validateRe
  *
  * const decoded = Effect.runSync(
  *   decodeMobileFeedbackRequest({
+ *     schema_version: "mobile_feedback.v1",
  *     feedback_id: "  f1  ",
  *     kind: "summary_helpfulness",
  *     target_kind: "conversation",
@@ -739,7 +800,13 @@ export class MobileFeedbackReceipt extends Model<MobileFeedbackReceipt>("MobileF
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MobileFeedbackReceipt}.
+ *
+ * @see {@link MobileFeedbackReceipt} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MobileFeedbackReceipt {
   export type Encoded = S.Codec.Encoded<typeof MobileFeedbackReceipt>;
 }
@@ -795,6 +862,7 @@ export const MobileFeedbackReceiptWire = MobileFeedbackReceipt.pipe(
  *
  * const decoded = Effect.runSync(
  *   decodeMemoryUseFeedback({
+ *     schema_version: "memory_use_feedback.v1",
  *     uid: " user-1 ",
  *     feedback_id: "f1",
  *     target_memory_id: "mem-1",
@@ -827,7 +895,13 @@ export class MemoryUseFeedback extends Model<MemoryUseFeedback>("MemoryUseFeedba
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MemoryUseFeedback}.
+ *
+ * @see {@link MemoryUseFeedback} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MemoryUseFeedback {
   export type Encoded = S.Codec.Encoded<typeof MemoryUseFeedback>;
 }
@@ -952,12 +1026,44 @@ export class FeedbackContextTurn extends Model<FeedbackContextTurn>("FeedbackCon
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackContextTurn}.
+ *
+ * @see {@link FeedbackContextTurn} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackContextTurn {
   export type Encoded = S.Codec.Encoded<typeof FeedbackContextTurn>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Snake_case codec for {@link FeedbackContextTurn}.
+ *
+ * **Example** (Encode a preceding turn)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import * as S from "effect/Schema"
+ * import { FeedbackContextTurn, FeedbackContextTurnWire } from "@beep/scratchpad/beep/Feedback"
+ *
+ * const turn = FeedbackContextTurn.make({
+ *   messageId: "m1",
+ *   sender: "user",
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ *   position: "before",
+ *   secondsFromRated: -3,
+ * })
+ * const encoded = S.encodeSync(FeedbackContextTurnWire)(turn)
+ *
+ * console.log(encoded.seconds_from_rated) // -3
+ * console.log(encoded.chat_session_id) // null
+ * ```
+ *
+ * @see {@link FeedbackContextTurn} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const FeedbackContextTurnWire = FeedbackContextTurn.pipe(
   S.encodeKeys({
     messageId: "message_id",
@@ -1019,12 +1125,47 @@ export class FeedbackContextPointer extends Model<FeedbackContextPointer>("Feedb
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackContextPointer}.
+ *
+ * @see {@link FeedbackContextPointer} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackContextPointer {
   export type Encoded = S.Codec.Encoded<typeof FeedbackContextPointer>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Snake_case codec for {@link FeedbackContextPointer}.
+ *
+ * **Details**
+ *
+ * Nested `turns` already encode through {@link FeedbackContextTurnWire}, so the whole document is snake_case.
+ *
+ * **Example** (Encode a truncated window)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FeedbackContextPointer, FeedbackContextPointerWire } from "@beep/scratchpad/beep/Feedback"
+ *
+ * const pointer = FeedbackContextPointer.make({
+ *   eventId: "e1",
+ *   uid: "user-1",
+ *   targetKind: "chat_message",
+ *   targetId: "m1",
+ *   truncatedBefore: true,
+ * })
+ * const encoded = S.encodeSync(FeedbackContextPointerWire)(pointer)
+ *
+ * console.log(encoded.truncated_before) // true
+ * console.log(encoded.target_kind) // "chat_message"
+ * ```
+ *
+ * @see {@link FeedbackContextPointer} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const FeedbackContextPointerWire = FeedbackContextPointer.pipe(
   S.encodeKeys({
     eventId: "event_id",
@@ -1086,12 +1227,59 @@ export class FeedbackReportEntry extends Model<FeedbackReportEntry>("FeedbackRep
   $I.annote("FeedbackReportEntry", { description: "One thumbs-down in a daily report, event plus pointer." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackReportEntry}.
+ *
+ * @see {@link FeedbackReportEntry} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackReportEntry {
   export type Encoded = S.Codec.Encoded<typeof FeedbackReportEntry>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for {@link FeedbackReportEntry}, reused as-is because its nested event and context fields already encode to snake_case.
+ *
+ * **Example** (Encode nested snake_case keys)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import * as S from "effect/Schema"
+ * import {
+ *   FeedbackContextPointer,
+ *   FeedbackEvent,
+ *   FeedbackReportEntry,
+ *   FeedbackReportEntryWire,
+ * } from "@beep/scratchpad/beep/Feedback"
+ *
+ * const entry = FeedbackReportEntry.make({
+ *   event: FeedbackEvent.make({
+ *     id: "e1",
+ *     uid: "user-1",
+ *     surface: "chat_text",
+ *     targetKind: "chat_message",
+ *     targetId: "m1",
+ *     value: -1,
+ *     createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ *   }),
+ *   context: FeedbackContextPointer.make({
+ *     eventId: "e1",
+ *     uid: "user-1",
+ *     targetKind: "chat_message",
+ *     targetId: "m1",
+ *   }),
+ * })
+ * const encoded = S.encodeSync(FeedbackReportEntryWire)(entry)
+ *
+ * console.log(encoded.event.target_id) // "m1"
+ * console.log(encoded.context.follow_up_count) // 0
+ * ```
+ *
+ * @see {@link FeedbackReportEntry} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const FeedbackReportEntryWire = FeedbackReportEntry;
 
 const noEntries = (): ReadonlyArray<FeedbackReportEntry> => [];
@@ -1143,12 +1331,43 @@ export class FeedbackReport extends Model<FeedbackReport>("FeedbackReport")(
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackReport}.
+ *
+ * @see {@link FeedbackReport} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackReport {
   export type Encoded = S.Codec.Encoded<typeof FeedbackReport>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Snake_case codec for {@link FeedbackReport}.
+ *
+ * **Example** (Encode the daily total)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import * as S from "effect/Schema"
+ * import { FeedbackReport, FeedbackReportWire } from "@beep/scratchpad/beep/Feedback"
+ *
+ * const report = FeedbackReport.make({
+ *   date: "2020-01-02",
+ *   generatedAt: DateTime.makeUnsafe("2020-01-03T00:00:00.000Z"),
+ *   totalNegative: 4,
+ *   countsBySurface: { chat_text: 3, memory: 1 },
+ * })
+ * const encoded = S.encodeSync(FeedbackReportWire)(report)
+ *
+ * console.log(encoded.total_negative) // 4
+ * console.log(encoded.counts_by_surface.chat_text) // 3
+ * ```
+ *
+ * @see {@link FeedbackReport} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const FeedbackReportWire = FeedbackReport.pipe(
   S.encodeKeys({
     generatedAt: "generated_at",
@@ -1204,12 +1423,45 @@ export class FeedbackContextTurnText extends Model<FeedbackContextTurnText>("Fee
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackContextTurnText}.
+ *
+ * @see {@link FeedbackContextTurnText} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackContextTurnText {
   export type Encoded = S.Codec.Encoded<typeof FeedbackContextTurnText>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Snake_case codec for {@link FeedbackContextTurnText}.
+ *
+ * **Example** (Encode a hydrated turn)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import * as S from "effect/Schema"
+ * import { FeedbackContextTurnText, FeedbackContextTurnTextWire } from "@beep/scratchpad/beep/Feedback"
+ *
+ * const turn = FeedbackContextTurnText.make({
+ *   messageId: "m1",
+ *   sender: "human",
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ *   position: "rated",
+ *   secondsFromRated: 0,
+ *   text: "That answer was wrong.",
+ * })
+ * const encoded = S.encodeSync(FeedbackContextTurnTextWire)(turn)
+ *
+ * console.log(encoded.message_id) // "m1"
+ * console.log(encoded.text) // "That answer was wrong."
+ * ```
+ *
+ * @see {@link FeedbackContextTurnText} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const FeedbackContextTurnTextWire = FeedbackContextTurnText.pipe(
   S.encodeKeys({
     messageId: "message_id",
@@ -1270,12 +1522,42 @@ export class FeedbackContextHydrated extends Model<FeedbackContextHydrated>("Fee
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackContextHydrated}.
+ *
+ * @see {@link FeedbackContextHydrated} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackContextHydrated {
   export type Encoded = S.Codec.Encoded<typeof FeedbackContextHydrated>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Snake_case codec for {@link FeedbackContextHydrated}.
+ *
+ * **Example** (Encode unavailable message ids)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FeedbackContextHydrated, FeedbackContextHydratedWire } from "@beep/scratchpad/beep/Feedback"
+ *
+ * const hydrated = FeedbackContextHydrated.make({
+ *   eventId: "e1",
+ *   targetKind: "chat_message",
+ *   targetId: "m1",
+ *   unavailable: ["m0"],
+ * })
+ * const encoded = S.encodeSync(FeedbackContextHydratedWire)(hydrated)
+ *
+ * console.log(encoded.event_id) // "e1"
+ * console.log(encoded.unavailable) // ["m0"]
+ * ```
+ *
+ * @see {@link FeedbackContextHydrated} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const FeedbackContextHydratedWire = FeedbackContextHydrated.pipe(
   S.encodeKeys({
     eventId: "event_id",

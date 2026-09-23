@@ -1,6 +1,8 @@
 /**
  * Legacy memory rows, capture context, and evidence.
  *
+ * **Details**
+ *
  * Conversation is upstream of memory and is not a memory. Category is
  * metadata, not a layer. `memoryTier` is the product layer axis
  * (`short_term`, `long_term`, `archive`). `context_only` is not a tier.
@@ -517,7 +519,7 @@ const quoteRefs = quoteItem.pipe(
  * import { MemoryCaptureContext } from "@beep/scratchpad/beep/Memories"
  *
  * const decoded = Effect.runSync(
- *   S.decodeUnknownEffect(MemoryCaptureContext)({ sourceType: "conversation" }),
+ *   S.decodeUnknownEffect(MemoryCaptureContext)({ sourceType: "conversation", quoteRefs: [] }),
  * )
  * console.log(decoded.sourceType) // "conversation"
  * ```
@@ -665,7 +667,7 @@ const half = S.Finite.pipe(S.withConstructorDefault(Effect.succeed(0.5)));
  *   extractorId: "memory_extractor",
  *   extractorVersion: "v1",
  *   independenceGroup: "src",
- *   capturedAt: DateTime.unsafeMake("2020-01-02T03:04:05.000Z"),
+ *   capturedAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  * })
  * console.log(evidence.redactionStatus) // "active"
  * ```
@@ -750,6 +752,32 @@ const memoryDbOnly = () => ({
 });
 
 /**
+ * Field set of the stored legacy memory row: the shared memory fields, a
+ * `visibility` that defaults to `public` when missing, and the stored-only
+ * review, tier, and ledger columns.
+ *
+ * **Example** (Inspect the stored-only fields)
+ *
+ * ```ts
+ * import { memoryDbFields } from "@beep/scratchpad/beep/Memories"
+ *
+ * const fields = memoryDbFields()
+ *
+ * console.log("visibility" in fields) // true
+ * console.log("curationWeight" in fields) // true
+ * ```
+ *
+ * @see {@link MemoryDB} for the model built from these fields.
+ * @category schemas
+ * @since 0.0.0
+ */
+export const memoryDbFields = () => ({
+  ...memoryFields(),
+  visibility: optionMissingDefault(S.String, publicVisibility).pipe(pg.text(), pg.columnName("visibility")),
+  ...memoryDbOnly(),
+});
+
+/**
  * Stored legacy memory row.
  *
  * **Details**
@@ -770,6 +798,7 @@ const memoryDbOnly = () => ({
  *
  * ```ts
  * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  * import { decodeMemoryDb } from "@beep/scratchpad/beep/Memories"
  *
  * const decoded = Effect.runSync(
@@ -778,22 +807,29 @@ const memoryDbOnly = () => ({
  *     uid: "user-1",
  *     memoryId: "conversation-1",
  *     content: "Ada",
+ *     category: "interesting",
+ *     tags: [],
+ *     arguments: {},
+ *     subjectAttribution: "user",
+ *     objectEntityIds: [],
+ *     qualifiers: {},
+ *     uncertaintyReasons: [],
+ *     manuallyAdded: false,
+ *     reviewed: false,
+ *     evidence: [],
+ *     curationWeight: 0,
  *     createdAt: "2020-01-02T03:04:05.000Z",
  *     updatedAt: "2020-01-02T03:04:05.000Z",
  *   }),
  * )
- * console.log(decoded.memoryId._tag === "Some" && decoded.memoryId.value === "mem-1") // true
+ * console.log(O.getOrNull(decoded.memoryId)) // "mem-1"
+ * console.log(O.getOrNull(decoded.visibility)) // "public"
  * ```
  *
- * @category schemas
+ * @see {@link memoryDbFields} for the field set.
+ * @category models
  * @since 0.0.0
  */
-export const memoryDbFields = () => ({
-  ...memoryFields(),
-  visibility: optionMissingDefault(S.String, publicVisibility).pipe(pg.text(), pg.columnName("visibility")),
-  ...memoryDbOnly(),
-});
-
 export class MemoryDB extends Model<MemoryDB>("MemoryDB")(
   memoryDbFields(),
   $I.annote("MemoryDB", {
@@ -1036,7 +1072,7 @@ const readField = (row: object, key: string): unknown => (key in row ? Reflect.g
  *   artifactRef: O.none(),
  *   captureConfidence: O.none(),
  *   independenceGroup: O.none(),
- *   createdAt: DateTime.unsafeMake("2020-01-02T03:04:05.000Z"),
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  *   clientDeviceId: O.none(),
  * })
  * console.log(evidence.evidenceId) // "d02cdbee-985f-41b4-a7b1-a212c0271f9a"
@@ -1437,7 +1473,7 @@ const categoryBoost = (category: string): O.Option<number> => {
  * const score = calculateScore({
  *   category: "interesting",
  *   manuallyAdded: true,
- *   createdAt: DateTime.unsafeMake("2020-01-02T03:04:05.000Z"),
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  * })
  * console.log(score.startsWith("01_998_")) // true
  * ```
@@ -1517,6 +1553,17 @@ export const isActive = (memory: { readonly invalidAt: O.Option<DateTime.Utc> })
  *     uid: "user-1",
  *     memoryId: "conversation-1",
  *     content: "Ada",
+ *     category: "interesting",
+ *     tags: [],
+ *     arguments: {},
+ *     subjectAttribution: "user",
+ *     objectEntityIds: [],
+ *     qualifiers: {},
+ *     uncertaintyReasons: [],
+ *     manuallyAdded: false,
+ *     reviewed: false,
+ *     evidence: [],
+ *     curationWeight: 0,
  *     createdAt: "2020-01-02T03:04:05.000Z",
  *     updatedAt: "2020-01-02T03:04:05.000Z",
  *   }),
@@ -1532,20 +1579,6 @@ export const decodeMemoryDb = Effect.fn("MemoryDB.decode")(function* (input: unk
   return MemoryDB.make({ ...decoded, memoryId: O.some(decoded.id) });
 });
 
-/**
- * Formats memories as a prompt list.
- *
- * **Example** (Format one line)
- *
- * ```ts
- * import { getMemoriesAsStr } from "@beep/scratchpad/beep/Memories"
- *
- * console.log(getMemoriesAsStr([{ content: "Ada" }])) // "- Ada\n"
- * ```
- *
- * @category formatting
- * @since 0.0.0
- */
 const resolveSubject = (input: {
   readonly memory: Memory;
   readonly subjectEntityId: O.Option<string>;
@@ -1580,8 +1613,9 @@ const resolveSubject = (input: {
  *
  * const stored = memoryDbFromMemory({
  *   memory: Memory.make({ content: "hello world" }),
+ *   manuallyAdded: false,
  *   uid: "user-1",
- *   now: DateTime.unsafeMake("2020-01-02T03:04:05.000Z"),
+ *   now: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  *   sourceId: O.none(),
  *   sourceType: O.none(),
  *   sourceSignal: O.none(),
@@ -1702,9 +1736,10 @@ export const memoryDbFromMemory = (input: {
  *
  * const stored = shortTermFromMemory({
  *   memory: Memory.make({ content: "Ada" }),
+ *   manuallyAdded: false,
  *   uid: "user-1",
  *   sourceId: O.some("src"),
- *   now: DateTime.unsafeMake("2020-01-02T03:04:05.000Z"),
+ *   now: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  *   sourceType: O.none(),
  *   sourceSignal: O.none(),
  *   scope: O.none(),
@@ -1787,6 +1822,32 @@ export const shortTermFromMemory = (input: {
   });
 };
 
+/**
+ * Formats memories as a prompt list, one `- content` line per memory.
+ *
+ * **Details**
+ *
+ * Each line gets a UTC timestamp suffix from `asOf`, falling back to
+ * `createdAt`, when either is a `DateTime`. A missing or non-string `content`
+ * prints as an empty line body.
+ *
+ * **Example** (Format dated and undated memories)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import { getMemoriesAsStr } from "@beep/scratchpad/beep/Memories"
+ *
+ * const prompt = getMemoriesAsStr([
+ *   { content: "Prefers tea", createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z") },
+ *   { content: "Lives in Lisbon" },
+ * ])
+ *
+ * console.log(prompt) // "- Prefers tea (2020-01-02 03:04:05 UTC)\n- Lives in Lisbon\n"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
 export const getMemoriesAsStr = (memories: ReadonlyArray<object>): string =>
   A.join("")(
     A.map(memories, (memory) => {

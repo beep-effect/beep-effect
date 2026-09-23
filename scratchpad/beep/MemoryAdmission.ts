@@ -1,6 +1,8 @@
 /**
  * Canonical durable-memory admission receipt contract.
  *
+ * **Details**
+ *
  * The check is a boolean. Callers learn only whether the promotion dict is
  * bound to the current content lineage, not which clause failed.
  *

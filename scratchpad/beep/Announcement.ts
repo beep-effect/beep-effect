@@ -1,6 +1,8 @@
 /**
  * Admin announcements, changelogs, and feature callouts.
  *
+ * **Details**
+ *
  * `type` chooses the content shape. The shell fields stay on every arm.
  *
  * @since 0.0.0

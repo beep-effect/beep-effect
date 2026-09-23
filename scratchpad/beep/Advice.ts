@@ -1,6 +1,8 @@
 /**
  * Proactive coaching items returned by `/v1/advice*`.
  *
+ * **Details**
+ *
  * Routers and the database construct documents matching these fields.
  * The collection is `users/{uid}/advice`.
  *

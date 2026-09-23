@@ -1,6 +1,8 @@
 /**
  * Deterministic canonical-memory review queue records.
  *
+ * **Details**
+ *
  * Both the legacy and canonical review paths write this document. There is no
  * Python model; the builder below is the contract.
  *

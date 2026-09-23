@@ -1,6 +1,8 @@
 /**
  * External integration payloads and API response rows.
  *
+ * **Details**
+ *
  * Conversation items are upstream session records, not memories. The local
  * action item is nested conversation structure, not a workflow action item.
  * {@link IntegrationMemoryItem} is the integration response form of a stored

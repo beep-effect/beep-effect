@@ -187,16 +187,17 @@ const requiredAware = (column: string) =>
   AwareInstant.pipe(pg.timestamp({ mode: "string", withTimezone: true }), pg.columnName(column));
 
 /**
- * IANA timezone name. Blank strings and numbers fail.
+ * IANA timezone name, trimmed on decode. Blank strings, unknown zones, and numbers fail.
  *
- * **Example** (Accept UTC)
+ * **Example** (Accept a trimmed zone and reject an unknown one)
  *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
  * import { IanaTimezone } from "./ClientProcessing.ts"
  *
- * console.log(Effect.runSync(S.decodeUnknownEffect(IanaTimezone)(" UTC "))) // "UTC"
+ * console.log(Effect.runSync(S.decodeUnknownEffect(IanaTimezone)(" Europe/Lisbon "))) // "Europe/Lisbon"
+ * console.log(Effect.runSyncExit(S.decodeUnknownEffect(IanaTimezone)("Mars/Olympus"))._tag) // "Failure"
  * ```
  *
  * @category schemas
@@ -219,6 +220,15 @@ export const IanaTimezone = S.String.pipe(
     description: "IANA timezone name. Blank strings and numeric timestamps are rejected.",
   }),
 );
+
+/**
+ * Decoded type of {@link IanaTimezone}.
+ *
+ * @see {@link IanaTimezone} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type IanaTimezone = typeof IanaTimezone.Type;
 
 const categoryColumn = (column: string) =>
   CategoryEnum.pipe(
@@ -246,7 +256,7 @@ const cappedList = <A extends S.Top>(schema: A, column: string, maximum: number)
  * import * as S from "effect/Schema"
  * import { ClientSection } from "./ClientProcessing.ts"
  *
- * const decoded = Effect.runSync(S.decodeUnknownEffect(ClientSection)({ title: "  Notes  ", overview: "" }))
+ * const decoded = Effect.runSync(S.decodeUnknownEffect(ClientSection)({ title: "  Notes  ", overview: "", emoji: "" }))
  * console.log(decoded.title) // "Notes"
  * ```
  *
@@ -267,6 +277,13 @@ export class ClientSection extends Model<ClientSection>("ClientSection")(
   ],
 ) {}
 
+/**
+ * Encoded shape of {@link ClientSection}.
+ *
+ * @see {@link ClientSection} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ClientSection {
   export type Encoded = S.Codec.Encoded<typeof ClientSection>;
 }
@@ -294,6 +311,13 @@ export class ClientActionItem extends Model<ClientActionItem>("ClientActionItem"
   (columns) => [textBoundsCheck("description", { minLength: 1, maxLength: 500 })(columns.description)],
 ) {}
 
+/**
+ * Encoded shape of {@link ClientActionItem}.
+ *
+ * @see {@link ClientActionItem} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ClientActionItem {
   export type Encoded = S.Codec.Encoded<typeof ClientActionItem>;
 }
@@ -313,7 +337,7 @@ export declare namespace ClientActionItem {
  * import { ClientEvent } from "./ClientProcessing.ts"
  *
  * const decoded = Effect.runSync(
- *   S.decodeUnknownEffect(ClientEvent)({ title: "Standup", start: "2020-01-02T03:04:05Z", duration: 30 }),
+ *   S.decodeUnknownEffect(ClientEvent)({ title: "Standup", description: "", start: "2020-01-02T03:04:05Z", duration: 30, created: false }),
  * )
  * console.log(decoded.duration) // 30
  * ```
@@ -337,6 +361,13 @@ export class ClientEvent extends Model<ClientEvent>("ClientEvent")(
   ],
 ) {}
 
+/**
+ * Encoded shape of {@link ClientEvent}.
+ *
+ * @see {@link ClientEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ClientEvent {
   export type Encoded = S.Codec.Encoded<typeof ClientEvent>;
 }
@@ -364,6 +395,13 @@ export class ClientMemory extends Model<ClientMemory>("ClientMemory")(
   (columns) => [textBoundsCheck("content", { minLength: 1, maxLength: 2000 })(columns.content)],
 ) {}
 
+/**
+ * Encoded shape of {@link ClientMemory}.
+ *
+ * @see {@link ClientMemory} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ClientMemory {
   export type Encoded = S.Codec.Encoded<typeof ClientMemory>;
 }
@@ -397,6 +435,13 @@ export class ClientSummary extends Model<ClientSummary>("ClientSummary")(
   ],
 ) {}
 
+/**
+ * Encoded shape of {@link ClientSummary}.
+ *
+ * @see {@link ClientSummary} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ClientSummary {
   export type Encoded = S.Codec.Encoded<typeof ClientSummary>;
 }
@@ -501,6 +546,13 @@ export class ClientProcessing extends Model<ClientProcessing>("ClientProcessing"
   ],
 ) {}
 
+/**
+ * Encoded shape of {@link ClientProcessing}.
+ *
+ * @see {@link ClientProcessing} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ClientProcessing {
   export type Encoded = S.Codec.Encoded<typeof ClientProcessing>;
 }

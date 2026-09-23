@@ -1,6 +1,8 @@
 /**
  * Canonical memory-domain vocabulary.
  *
+ * **Details**
+ *
  * Short-term, Long-term, and Archive are the only product layers. Conversation
  * and capture session stay upstream of memory. Action items and goals are
  * Workflow, not layers.

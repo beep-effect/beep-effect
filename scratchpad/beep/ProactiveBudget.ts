@@ -1,6 +1,8 @@
 /**
  * Pure budget arithmetic for Chat-first agent-initiated turns.
  *
+ * **Details**
+ *
  * Outstanding reservations count against both limits. A receipt is the only
  * moment that records a consumed turn, including a receipt that arrives after
  * the reservation TTL.

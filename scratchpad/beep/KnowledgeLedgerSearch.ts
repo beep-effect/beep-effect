@@ -1,6 +1,8 @@
 /**
  * Fail-closed search contract for `knowledge_ledger.v1` rows.
  *
+ * **Details**
+ *
  * `current` searches open, intent-backed rows. Unslotted facts are searchable
  * but are not profile inputs. Documents expose their handle and triggers
  * expose their description, never a private payload. `history` is an explicit

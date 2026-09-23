@@ -1,6 +1,8 @@
 /**
  * Server-owned canonical promotion and graph-admission contracts.
  *
+ * **Details**
+ *
  * Long-term memory is a state transition, never a create-time option. The
  * promotion planner may propose a compact structured graph plan, but
  * deterministic code binds that plan to the current short-term item revision,

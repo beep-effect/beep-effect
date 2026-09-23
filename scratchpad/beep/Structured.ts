@@ -1,6 +1,8 @@
 /**
  * Conversation summary shapes.
  *
+ * **Details**
+ *
  * The live Python module prefers `omi_plugin_sdk` and falls back to these
  * classes. The fallback is the port. Do not import the plugin SDK. The shapes
  * matched on 2026-09-22, including `romance` encoding as `romantic`.
@@ -377,6 +379,16 @@ export declare namespace ActionItem {
   export type Encoded = S.Codec.Encoded<typeof ActionItem>;
 }
 
+const joinWith = (lines: ReadonlyArray<string>, separator: string): string => {
+  let result = "";
+  let index = 0;
+  for (const line of lines) {
+    result = index === 0 ? line : `${result}${separator}${line}`;
+    index += 1;
+  }
+  return result;
+};
+
 /**
  * Renders action items the way `ActionItem.actions_to_string` does.
  *
@@ -395,19 +407,24 @@ export declare namespace ActionItem {
  * console.log(actionsToString([])) // "None"
  * ```
  *
- * @category constructors
+ * **Example** (Render a dated pending item)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ * import { ActionItem, actionsToString } from "@beep/scratchpad/beep/Structured"
+ *
+ * const item = ActionItem.make({
+ *   description: "Send the notes",
+ *   dueAt: O.some(DateTime.makeUnsafe("2020-01-03T09:00:00.000Z")),
+ * })
+ *
+ * console.log(actionsToString([item])) // "- Send the notes (pending) [Due: 2020-01-03 09:00:00 UTC]"
+ * ```
+ *
+ * @category formatting
  * @since 0.0.0
  */
-const joinWith = (lines: ReadonlyArray<string>, separator: string): string => {
-  let result = "";
-  let index = 0;
-  for (const line of lines) {
-    result = index === 0 ? line : `${result}${separator}${line}`;
-    index += 1;
-  }
-  return result;
-};
-
 export const actionsToString = (actionItems: ReadonlyArray<ActionItem>): string => {
   if (actionItems.length === 0) return "None";
   return joinWith(

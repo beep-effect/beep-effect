@@ -126,9 +126,21 @@ export const RecommendationSubjectKind = kit("RecommendationSubjectKind", "Recom
   "agent_open_loop",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link RecommendationSubjectKind}.
+ *
+ * @see {@link RecommendationSubjectKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RecommendationSubjectKind = typeof RecommendationSubjectKind.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link RecommendationSubjectKind}.
+ *
+ * @see {@link RecommendationSubjectKind} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace RecommendationSubjectKind {
   /** @category type-level @since 0.0.0 */
   export type Encoded = S.Codec.Encoded<typeof RecommendationSubjectKind>;
@@ -159,9 +171,21 @@ export const FeedbackSubjectKind = kit("FeedbackSubjectKind", "Feedback subject 
   "decision",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link FeedbackSubjectKind}.
+ *
+ * @see {@link FeedbackSubjectKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FeedbackSubjectKind = typeof FeedbackSubjectKind.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackSubjectKind}.
+ *
+ * @see {@link FeedbackSubjectKind} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackSubjectKind {
   export type Encoded = S.Codec.Encoded<typeof FeedbackSubjectKind>;
 }
@@ -188,9 +212,21 @@ export const InterventionSurface = kit("InterventionSurface", "Intervention surf
   "what_matters_now",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link InterventionSurface}.
+ *
+ * @see {@link InterventionSurface} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type InterventionSurface = typeof InterventionSurface.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link InterventionSurface}.
+ *
+ * @see {@link InterventionSurface} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace InterventionSurface {
   export type Encoded = S.Codec.Encoded<typeof InterventionSurface>;
 }
@@ -222,9 +258,21 @@ export const ContextMatchSignal = kit("ContextMatchSignal", "Local context match
   "agent",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link ContextMatchSignal}.
+ *
+ * @see {@link ContextMatchSignal} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ContextMatchSignal = typeof ContextMatchSignal.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ContextMatchSignal}.
+ *
+ * @see {@link ContextMatchSignal} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ContextMatchSignal {
   export type Encoded = S.Codec.Encoded<typeof ContextMatchSignal>;
 }
@@ -254,9 +302,21 @@ export const OpenLoopKind = kit("OpenLoopKind", "Open loop kind.", [
   "external_wait",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link OpenLoopKind}.
+ *
+ * @see {@link OpenLoopKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type OpenLoopKind = typeof OpenLoopKind.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link OpenLoopKind}.
+ *
+ * @see {@link OpenLoopKind} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace OpenLoopKind {
   export type Encoded = S.Codec.Encoded<typeof OpenLoopKind>;
 }
@@ -285,9 +345,21 @@ export const OpenLoopStatus = kit("OpenLoopStatus", "Open loop status.", [
   "awaiting_external",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link OpenLoopStatus}.
+ *
+ * @see {@link OpenLoopStatus} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type OpenLoopStatus = typeof OpenLoopStatus.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link OpenLoopStatus}.
+ *
+ * @see {@link OpenLoopStatus} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace OpenLoopStatus {
   export type Encoded = S.Codec.Encoded<typeof OpenLoopStatus>;
 }
@@ -318,9 +390,21 @@ export const TaskIntelligenceFeedbackAction = kit("TaskIntelligenceFeedbackActio
   "complete",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link TaskIntelligenceFeedbackAction}.
+ *
+ * @see {@link TaskIntelligenceFeedbackAction} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type TaskIntelligenceFeedbackAction = typeof TaskIntelligenceFeedbackAction.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link TaskIntelligenceFeedbackAction}.
+ *
+ * @see {@link TaskIntelligenceFeedbackAction} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace TaskIntelligenceFeedbackAction {
   export type Encoded = S.Codec.Encoded<typeof TaskIntelligenceFeedbackAction>;
 }
@@ -348,9 +432,21 @@ export const TaskIntelligenceFeedbackReason = kit("TaskIntelligenceFeedbackReaso
   "not_useful",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link TaskIntelligenceFeedbackReason}.
+ *
+ * @see {@link TaskIntelligenceFeedbackReason} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type TaskIntelligenceFeedbackReason = typeof TaskIntelligenceFeedbackReason.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link TaskIntelligenceFeedbackReason}.
+ *
+ * @see {@link TaskIntelligenceFeedbackReason} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace TaskIntelligenceFeedbackReason {
   export type Encoded = S.Codec.Encoded<typeof TaskIntelligenceFeedbackReason>;
 }
@@ -381,9 +477,21 @@ export const TaskIntelligenceOutcomeCode = kit("TaskIntelligenceOutcomeCode", "O
   "workstream_advanced",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link TaskIntelligenceOutcomeCode}.
+ *
+ * @see {@link TaskIntelligenceOutcomeCode} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type TaskIntelligenceOutcomeCode = typeof TaskIntelligenceOutcomeCode.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link TaskIntelligenceOutcomeCode}.
+ *
+ * @see {@link TaskIntelligenceOutcomeCode} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace TaskIntelligenceOutcomeCode {
   export type Encoded = S.Codec.Encoded<typeof TaskIntelligenceOutcomeCode>;
 }
@@ -415,9 +523,21 @@ export const EvidenceKind = kit("EvidenceKind", "Evidence kind embedded from act
   "external",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link EvidenceKind}.
+ *
+ * @see {@link EvidenceKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EvidenceKind = typeof EvidenceKind.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link EvidenceKind}.
+ *
+ * @see {@link EvidenceKind} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace EvidenceKind {
   export type Encoded = S.Codec.Encoded<typeof EvidenceKind>;
 }
@@ -441,9 +561,21 @@ export declare namespace EvidenceKind {
  */
 export const EvidenceScope = kit("EvidenceScope", "Evidence scope.", ["canonical", "device_local"]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link EvidenceScope}.
+ *
+ * @see {@link EvidenceScope} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EvidenceScope = typeof EvidenceScope.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link EvidenceScope}.
+ *
+ * @see {@link EvidenceScope} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace EvidenceScope {
   export type Encoded = S.Codec.Encoded<typeof EvidenceScope>;
 }
@@ -585,7 +717,13 @@ export class DeterministicFacts extends Model<DeterministicFacts>("Deterministic
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link DeterministicFacts}.
+ *
+ * @see {@link DeterministicFacts} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace DeterministicFacts {
   export type Encoded = S.Codec.Encoded<typeof DeterministicFacts>;
 }
@@ -649,7 +787,13 @@ export class ShortlistEligibility extends Model<ShortlistEligibility>("Shortlist
   $I.annote("ShortlistEligibility", { description: "Shortlist gates. Every flag is required." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ShortlistEligibility}.
+ *
+ * @see {@link ShortlistEligibility} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ShortlistEligibility {
   export type Encoded = S.Codec.Encoded<typeof ShortlistEligibility>;
 }
@@ -727,7 +871,13 @@ export class Recommendation extends Model<Recommendation>("Recommendation")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link Recommendation}.
+ *
+ * @see {@link Recommendation} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace Recommendation {
   export type Encoded = S.Codec.Encoded<typeof Recommendation>;
 }
@@ -774,7 +924,13 @@ export class WhatMattersNowProjection extends Model<WhatMattersNowProjection>("W
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WhatMattersNowProjection}.
+ *
+ * @see {@link WhatMattersNowProjection} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WhatMattersNowProjection {
   export type Encoded = S.Codec.Encoded<typeof WhatMattersNowProjection>;
 }
@@ -825,7 +981,13 @@ export class FeedbackCreate extends Model<FeedbackCreate>("FeedbackCreate")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackCreate}.
+ *
+ * @see {@link FeedbackCreate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackCreate {
   export type Encoded = S.Codec.Encoded<typeof FeedbackCreate>;
 }
@@ -910,7 +1072,13 @@ export class InterventionCreate extends Model<InterventionCreate>("InterventionC
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link InterventionCreate}.
+ *
+ * @see {@link InterventionCreate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace InterventionCreate {
   export type Encoded = S.Codec.Encoded<typeof InterventionCreate>;
 }
@@ -962,7 +1130,13 @@ export class InterventionRecord extends Model<InterventionRecord>("InterventionR
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link InterventionRecord}.
+ *
+ * @see {@link InterventionRecord} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace InterventionRecord {
   export type Encoded = S.Codec.Encoded<typeof InterventionRecord>;
 }
@@ -1020,7 +1194,13 @@ export class FeedbackRecord extends Model<FeedbackRecord>("FeedbackRecord")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FeedbackRecord}.
+ *
+ * @see {@link FeedbackRecord} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FeedbackRecord {
   export type Encoded = S.Codec.Encoded<typeof FeedbackRecord>;
 }
@@ -1059,7 +1239,13 @@ export class OutcomeCreate extends Model<OutcomeCreate>("OutcomeCreate")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link OutcomeCreate}.
+ *
+ * @see {@link OutcomeCreate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace OutcomeCreate {
   export type Encoded = S.Codec.Encoded<typeof OutcomeCreate>;
 }
@@ -1104,7 +1290,13 @@ export class OutcomeRecord extends Model<OutcomeRecord>("OutcomeRecord")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link OutcomeRecord}.
+ *
+ * @see {@link OutcomeRecord} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace OutcomeRecord {
   export type Encoded = S.Codec.Encoded<typeof OutcomeRecord>;
 }
@@ -1145,7 +1337,13 @@ export class NormalizedContextMatch extends Model<NormalizedContextMatch>("Norma
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link NormalizedContextMatch}.
+ *
+ * @see {@link NormalizedContextMatch} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace NormalizedContextMatch {
   export type Encoded = S.Codec.Encoded<typeof NormalizedContextMatch>;
 }
@@ -1213,7 +1411,13 @@ export class NormalizedContextSnapshot extends Model<NormalizedContextSnapshot>(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link NormalizedContextSnapshot}.
+ *
+ * @see {@link NormalizedContextSnapshot} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace NormalizedContextSnapshot {
   export type Encoded = S.Codec.Encoded<typeof NormalizedContextSnapshot>;
 }
@@ -1261,7 +1465,13 @@ export class OpenLoopDescriptor extends Model<OpenLoopDescriptor>("OpenLoopDescr
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link OpenLoopDescriptor}.
+ *
+ * @see {@link OpenLoopDescriptor} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace OpenLoopDescriptor {
   export type Encoded = S.Codec.Encoded<typeof OpenLoopDescriptor>;
 }
@@ -1318,7 +1528,13 @@ export class OpenLoopSnapshot extends Model<OpenLoopSnapshot>("OpenLoopSnapshot"
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link OpenLoopSnapshot}.
+ *
+ * @see {@link OpenLoopSnapshot} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace OpenLoopSnapshot {
   export type Encoded = S.Codec.Encoded<typeof OpenLoopSnapshot>;
 }
@@ -1349,7 +1565,13 @@ export class EvaluationRequest extends Model<EvaluationRequest>("EvaluationReque
   (columns) => [stableIdCheck("device_id")(columns.deviceId), stableIdCheck("material_hint")(columns.materialHint)],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link EvaluationRequest}.
+ *
+ * @see {@link EvaluationRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace EvaluationRequest {
   export type Encoded = S.Codec.Encoded<typeof EvaluationRequest>;
 }
@@ -1408,7 +1630,13 @@ export class DecisionRecord extends Model<DecisionRecord>("DecisionRecord")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link DecisionRecord}.
+ *
+ * @see {@link DecisionRecord} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace DecisionRecord {
   export type Encoded = S.Codec.Encoded<typeof DecisionRecord>;
 }
@@ -1436,7 +1664,13 @@ export class DecisionDebugProjection extends Model<DecisionDebugProjection>("Dec
   doc("DecisionDebugProjection", "What Matters Now projection plus its debug decisions."),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link DecisionDebugProjection}.
+ *
+ * @see {@link DecisionDebugProjection} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace DecisionDebugProjection {
   export type Encoded = S.Codec.Encoded<typeof DecisionDebugProjection>;
 }
@@ -1477,7 +1711,13 @@ export class SnapshotReceipt extends Model<SnapshotReceipt>("SnapshotReceipt")(
   (columns) => [stableIdCheck("snapshot_id")(columns.snapshotId)],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link SnapshotReceipt}.
+ *
+ * @see {@link SnapshotReceipt} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace SnapshotReceipt {
   export type Encoded = S.Codec.Encoded<typeof SnapshotReceipt>;
 }

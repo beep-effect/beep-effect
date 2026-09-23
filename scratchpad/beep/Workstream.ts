@@ -100,7 +100,13 @@ export class WorkstreamContractError extends S.TaggedError<WorkstreamContractErr
   $I.annoteError("WorkstreamContractError", { description: "A workstream patch or contract rule failed." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamContractError}.
+ *
+ * @see {@link WorkstreamContractError} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamContractError {
   export type Encoded = S.Codec.Encoded<typeof WorkstreamContractError>;
 }
@@ -128,9 +134,21 @@ export const WorkstreamStatus = kit("WorkstreamStatus", "Workstream lifecycle st
   "archived",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link WorkstreamStatus}.
+ *
+ * @see {@link WorkstreamStatus} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type WorkstreamStatus = typeof WorkstreamStatus.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamStatus}.
+ *
+ * @see {@link WorkstreamStatus} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamStatus {
   export type Encoded = S.Codec.Encoded<typeof WorkstreamStatus>;
 }
@@ -164,9 +182,21 @@ export const WorkstreamEventKind = kit("WorkstreamEventKind", "Workstream journa
   "system",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link WorkstreamEventKind}.
+ *
+ * @see {@link WorkstreamEventKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type WorkstreamEventKind = typeof WorkstreamEventKind.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamEventKind}.
+ *
+ * @see {@link WorkstreamEventKind} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamEventKind {
   export type Encoded = S.Codec.Encoded<typeof WorkstreamEventKind>;
 }
@@ -193,9 +223,21 @@ export const WorkstreamSensitivity = kit("WorkstreamSensitivity", "Workstream ev
   "restricted",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link WorkstreamSensitivity}.
+ *
+ * @see {@link WorkstreamSensitivity} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type WorkstreamSensitivity = typeof WorkstreamSensitivity.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamSensitivity}.
+ *
+ * @see {@link WorkstreamSensitivity} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamSensitivity {
   export type Encoded = S.Codec.Encoded<typeof WorkstreamSensitivity>;
 }
@@ -224,9 +266,21 @@ export const ArtifactStatus = kit("ArtifactStatus", "Artifact review status.", [
   "superseded",
 ]);
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link ArtifactStatus}.
+ *
+ * @see {@link ArtifactStatus} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArtifactStatus = typeof ArtifactStatus.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ArtifactStatus}.
+ *
+ * @see {@link ArtifactStatus} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ArtifactStatus {
   export type Encoded = S.Codec.Encoded<typeof ArtifactStatus>;
 }
@@ -269,7 +323,13 @@ export class WorkstreamCreate extends Model<WorkstreamCreate>("WorkstreamCreate"
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamCreate}.
+ *
+ * @see {@link WorkstreamCreate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamCreate {
   export type Encoded = S.Codec.Encoded<typeof WorkstreamCreate>;
 }
@@ -356,7 +416,13 @@ export class WorkstreamUpdate extends Model<WorkstreamUpdate>("WorkstreamUpdate"
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamUpdate}.
+ *
+ * @see {@link WorkstreamUpdate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamUpdate {
   export type Encoded = S.Codec.Encoded<typeof WorkstreamUpdate>;
 }
@@ -484,7 +550,13 @@ export class Workstream extends Model<Workstream>("Workstream")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link Workstream}.
+ *
+ * @see {@link Workstream} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace Workstream {
   export type Encoded = S.Codec.Encoded<typeof Workstream>;
 }
@@ -528,7 +600,13 @@ export class WorkstreamEventCreate extends Model<WorkstreamEventCreate>("Workstr
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamEventCreate}.
+ *
+ * @see {@link WorkstreamEventCreate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamEventCreate {
   export type Encoded = S.Codec.Encoded<typeof WorkstreamEventCreate>;
 }
@@ -574,7 +652,13 @@ export class WorkstreamEvent extends Model<WorkstreamEvent>("WorkstreamEvent")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamEvent}.
+ *
+ * @see {@link WorkstreamEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamEvent {
   export type Encoded = S.Codec.Encoded<typeof WorkstreamEvent>;
 }
@@ -646,7 +730,13 @@ export class ArtifactDescriptorCreate extends Model<ArtifactDescriptorCreate>("A
   artifactDescriptorCreateChecks,
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ArtifactDescriptorCreate}.
+ *
+ * @see {@link ArtifactDescriptorCreate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ArtifactDescriptorCreate {
   export type Encoded = S.Codec.Encoded<typeof ArtifactDescriptorCreate>;
 }
@@ -698,7 +788,13 @@ export class ArtifactDescriptor extends Model<ArtifactDescriptor>("ArtifactDescr
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ArtifactDescriptor}.
+ *
+ * @see {@link ArtifactDescriptor} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ArtifactDescriptor {
   export type Encoded = S.Codec.Encoded<typeof ArtifactDescriptor>;
 }
@@ -732,7 +828,13 @@ export class ArtifactStatusTransitionRequest extends Model<ArtifactStatusTransit
   doc("ArtifactStatusTransitionRequest", "Artifact status transition request."),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ArtifactStatusTransitionRequest}.
+ *
+ * @see {@link ArtifactStatusTransitionRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ArtifactStatusTransitionRequest {
   export type Encoded = S.Codec.Encoded<typeof ArtifactStatusTransitionRequest>;
 }
@@ -783,7 +885,13 @@ export class ContinuationCheckpointUpsert extends Model<ContinuationCheckpointUp
   continuationCheckpointUpsertChecks,
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ContinuationCheckpointUpsert}.
+ *
+ * @see {@link ContinuationCheckpointUpsert} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ContinuationCheckpointUpsert {
   export type Encoded = S.Codec.Encoded<typeof ContinuationCheckpointUpsert>;
 }
@@ -822,7 +930,13 @@ export class ContinuationCheckpoint extends Model<ContinuationCheckpoint>("Conti
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ContinuationCheckpoint}.
+ *
+ * @see {@link ContinuationCheckpoint} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ContinuationCheckpoint {
   export type Encoded = S.Codec.Encoded<typeof ContinuationCheckpoint>;
 }
@@ -871,7 +985,13 @@ export class TaskOriginWorkIntent extends Model<TaskOriginWorkIntent>("TaskOrigi
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link TaskOriginWorkIntent}.
+ *
+ * @see {@link TaskOriginWorkIntent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace TaskOriginWorkIntent {
   export type Encoded = S.Codec.Encoded<typeof TaskOriginWorkIntent>;
 }
@@ -918,7 +1038,13 @@ export class GoalOriginWorkIntent extends Model<GoalOriginWorkIntent>("GoalOrigi
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalOriginWorkIntent}.
+ *
+ * @see {@link GoalOriginWorkIntent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalOriginWorkIntent {
   export type Encoded = S.Codec.Encoded<typeof GoalOriginWorkIntent>;
 }
@@ -963,9 +1089,21 @@ export const WorkIntentRequest = LiteralKit(["task", "goal"])
     }),
   );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link WorkIntentRequest}.
+ *
+ * @see {@link WorkIntentRequest} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type WorkIntentRequest = typeof WorkIntentRequest.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkIntentRequest}.
+ *
+ * @see {@link WorkIntentRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkIntentRequest {
   export type Encoded = S.Codec.Encoded<typeof WorkIntentRequest>;
 }
@@ -1020,7 +1158,13 @@ export class WorkIntentReceipt extends Model<WorkIntentReceipt>("WorkIntentRecei
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkIntentReceipt}.
+ *
+ * @see {@link WorkIntentReceipt} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkIntentReceipt {
   export type Encoded = S.Codec.Encoded<typeof WorkIntentReceipt>;
 }
@@ -1055,7 +1199,13 @@ export class GoalDetailProjection extends Model<GoalDetailProjection>("GoalDetai
   doc("GoalDetailProjection", "Goal detail projection with active workstreams, tasks, and progress events."),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link GoalDetailProjection}.
+ *
+ * @see {@link GoalDetailProjection} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GoalDetailProjection {
   export type Encoded = S.Codec.Encoded<typeof GoalDetailProjection>;
 }
@@ -1090,7 +1240,13 @@ export class WorkstreamDetailProjection extends Model<WorkstreamDetailProjection
   doc("WorkstreamDetailProjection", "Workstream detail projection with events, tasks, artifacts, and checkpoints."),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamDetailProjection}.
+ *
+ * @see {@link WorkstreamDetailProjection} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamDetailProjection {
   export type Encoded = S.Codec.Encoded<typeof WorkstreamDetailProjection>;
 }
@@ -1121,7 +1277,13 @@ export class TaskGoalLinkImport extends Model<TaskGoalLinkImport>("TaskGoalLinkI
   (columns) => [stableIdCheck("task_id")(columns.taskId), stableIdCheck("goal_id")(columns.goalId)],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link TaskGoalLinkImport}.
+ *
+ * @see {@link TaskGoalLinkImport} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace TaskGoalLinkImport {
   export type Encoded = S.Codec.Encoded<typeof TaskGoalLinkImport>;
 }
@@ -1156,7 +1318,13 @@ export class TaskGoalLinkImportRequest extends Model<TaskGoalLinkImportRequest>(
   (columns) => [jsonbArrayLengthCheck("links", { maximum: 500 })(columns.links)],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link TaskGoalLinkImportRequest}.
+ *
+ * @see {@link TaskGoalLinkImportRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace TaskGoalLinkImportRequest {
   export type Encoded = S.Codec.Encoded<typeof TaskGoalLinkImportRequest>;
 }
@@ -1195,7 +1363,13 @@ export class TaskGoalLinkImportReport extends Model<TaskGoalLinkImportReport>("T
   doc("TaskGoalLinkImportReport", "Task-to-goal link import counts. Unknown keys are tolerated."),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link TaskGoalLinkImportReport}.
+ *
+ * @see {@link TaskGoalLinkImportReport} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace TaskGoalLinkImportReport {
   export type Encoded = S.Codec.Encoded<typeof TaskGoalLinkImportReport>;
 }

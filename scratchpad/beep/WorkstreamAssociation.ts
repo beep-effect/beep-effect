@@ -73,7 +73,13 @@ export class WorkstreamAssociationError extends S.TaggedError<WorkstreamAssociat
   $I.annoteError("WorkstreamAssociationError", { description: "An association or recurrence rule failed." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamAssociationError}.
+ *
+ * @see {@link WorkstreamAssociationError} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamAssociationError {
   /** Encoded form of {@link WorkstreamAssociationError}. */
   export type Encoded = S.Codec.Encoded<typeof WorkstreamAssociationError>;
@@ -121,7 +127,13 @@ export class AssociationEvidence extends Model<AssociationEvidence>("Association
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link AssociationEvidence}.
+ *
+ * @see {@link AssociationEvidence} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace AssociationEvidence {
   /** Encoded form of {@link AssociationEvidence}. */
   export type Encoded = S.Codec.Encoded<typeof AssociationEvidence>;
@@ -158,7 +170,13 @@ export class AssociationCandidateView extends Model<AssociationCandidateView>("A
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link AssociationCandidateView}.
+ *
+ * @see {@link AssociationCandidateView} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace AssociationCandidateView {
   /** Encoded form of {@link AssociationCandidateView}. */
   export type Encoded = S.Codec.Encoded<typeof AssociationCandidateView>;
@@ -199,7 +217,13 @@ export class AssociationAdjudicationInput extends Model<AssociationAdjudicationI
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link AssociationAdjudicationInput}.
+ *
+ * @see {@link AssociationAdjudicationInput} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace AssociationAdjudicationInput {
   /** Encoded form of {@link AssociationAdjudicationInput}. */
   export type Encoded = S.Codec.Encoded<typeof AssociationAdjudicationInput>;
@@ -225,7 +249,13 @@ export const AssociationReason = LiteralKit(["selected", "no_match", "immaterial
   $I.annoteSchema("AssociationReason", { description: "Association reason." }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link AssociationReason}.
+ *
+ * @see {@link AssociationReason} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type AssociationReason = typeof AssociationReason.Type;
 
 /**
@@ -276,7 +306,13 @@ export class AssociationJudgment extends Model<AssociationJudgment>("Association
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link AssociationJudgment}.
+ *
+ * @see {@link AssociationJudgment} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace AssociationJudgment {
   /** Encoded form of {@link AssociationJudgment}. */
   export type Encoded = S.Codec.Encoded<typeof AssociationJudgment>;
@@ -378,7 +414,13 @@ export const AssociationOutcomeKind = LiteralKit([
   "appended",
 ]).pipe($I.annoteSchema("AssociationOutcomeKind", { description: "Association outcome kind." }));
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link AssociationOutcomeKind}.
+ *
+ * @see {@link AssociationOutcomeKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type AssociationOutcomeKind = typeof AssociationOutcomeKind.Type;
 
 /**
@@ -420,7 +462,13 @@ export class AssociationOutcome extends Model<AssociationOutcome>("AssociationOu
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link AssociationOutcome}.
+ *
+ * @see {@link AssociationOutcome} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace AssociationOutcome {
   /** Encoded form of {@link AssociationOutcome}. */
   export type Encoded = S.Codec.Encoded<typeof AssociationOutcome>;
@@ -470,7 +518,13 @@ export class WorkstreamIndexRebuildReport extends Model<WorkstreamIndexRebuildRe
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link WorkstreamIndexRebuildReport}.
+ *
+ * @see {@link WorkstreamIndexRebuildReport} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace WorkstreamIndexRebuildReport {
   /** Encoded form of {@link WorkstreamIndexRebuildReport}. */
   export type Encoded = S.Codec.Encoded<typeof WorkstreamIndexRebuildReport>;
@@ -499,7 +553,13 @@ export const RecurrenceOutcomeKind = LiteralKit([
   "candidate_created",
 ]).pipe($I.annoteSchema("RecurrenceOutcomeKind", { description: "Recurrence consumption outcome kind." }));
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link RecurrenceOutcomeKind}.
+ *
+ * @see {@link RecurrenceOutcomeKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RecurrenceOutcomeKind = typeof RecurrenceOutcomeKind.Type;
 
 /**
@@ -536,7 +596,13 @@ export class RecurrenceConsumptionOutcome extends Model<RecurrenceConsumptionOut
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link RecurrenceConsumptionOutcome}.
+ *
+ * @see {@link RecurrenceConsumptionOutcome} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace RecurrenceConsumptionOutcome {
   /** Encoded form of {@link RecurrenceConsumptionOutcome}. */
   export type Encoded = S.Codec.Encoded<typeof RecurrenceConsumptionOutcome>;
@@ -562,7 +628,13 @@ export const RecurrenceInboxStatus = LiteralKit(["pending", "completed"]).pipe(
   $I.annoteSchema("RecurrenceInboxStatus", { description: "Recurrence inbox status." }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link RecurrenceInboxStatus}.
+ *
+ * @see {@link RecurrenceInboxStatus} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RecurrenceInboxStatus = typeof RecurrenceInboxStatus.Type;
 
 /**
@@ -621,7 +693,13 @@ export class RecurrenceInboxReceipt extends Model<RecurrenceInboxReceipt>("Recur
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link RecurrenceInboxReceipt}.
+ *
+ * @see {@link RecurrenceInboxReceipt} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace RecurrenceInboxReceipt {
   /** Encoded form of {@link RecurrenceInboxReceipt}. */
   export type Encoded = S.Codec.Encoded<typeof RecurrenceInboxReceipt>;

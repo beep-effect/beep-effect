@@ -1,6 +1,8 @@
 /**
  * Lenient conversation-extraction shapes.
  *
+ * **Details**
+ *
  * One out-of-vocabulary token or one bad list element must not fail the whole
  * conversation. Unusable optional literals become absent. Unusable list
  * elements are dropped. A bad category becomes `other`. A bad event duration
@@ -208,11 +210,17 @@ export declare namespace ExtractedActionItem {
  * **Example** (Keep a speaker name)
  *
  * ```ts
+ * import * as O from "effect/Option"
+ * import * as P from "effect/Predicate"
  * import * as Rec from "effect/Record"
  * import { dropOutOfVocabularyLiterals } from "@beep/scratchpad/beep/StructuredExtraction"
  *
  * const cleared = dropOutOfVocabularyLiterals({ captureOwner: "Ada" })
- * console.log(Rec.isRecord(cleared) && Rec.get(cleared, "captureOwner"))
+ *
+ * if (P.isObject(cleared)) {
+ *   console.log(O.getOrNull(Rec.get(cleared, "captureOwner"))) // "other"
+ *   console.log(O.getOrNull(Rec.get(cleared, "ownerName"))) // "Ada"
+ * }
  * ```
  *
  * @category constructors
@@ -362,6 +370,17 @@ export const usableElements = Effect.fn("StructuredExtraction.usableElements")(f
   return kept;
 });
 
+const replaceUsableList = Effect.fn("StructuredExtraction.replaceUsableList")(function* <A>(
+  record: Record<string, unknown>,
+  field: string,
+  element: S.Codec<A, unknown, never, unknown>,
+  values: unknown,
+) {
+  if (values === null) return Rec.remove(record, field);
+  const usable = yield* usableElements(values, element, field);
+  return Rec.set(field, usable)(record);
+});
+
 /**
  * Deletes null summary text and keeps only decodable list elements.
  *
@@ -376,31 +395,33 @@ export const usableElements = Effect.fn("StructuredExtraction.usableElements")(f
  * Field names are camelCase. Direct schema decode does not call this
  * function. Run it before decode when the extractor may include a bad element.
  *
- * **Example** (Drop a null title)
+ * **Example** (Drop a null title and a bad action item)
  *
  * ```ts
  * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import * as P from "effect/Predicate"
  * import * as Rec from "effect/Record"
- * import { keepUsableContent } from "@beep/scratchpad/beep/StructuredExtraction"
+ * import { ExtractedActionItem, keepUsableContent } from "@beep/scratchpad/beep/StructuredExtraction"
  *
- * const kept = Effect.runSync(keepUsableContent({ title: null }, {}))
- * console.log(Rec.isRecord(kept) && Rec.has(kept, "title")) // false
+ * const kept = Effect.runSync(
+ *   keepUsableContent(
+ *     { title: null, actionItems: [{ description: "Send the notes" }, { description: 1 }] },
+ *     { actionItems: ExtractedActionItem },
+ *   ),
+ * )
+ *
+ * if (P.isObject(kept)) {
+ *   const items = O.getOrNull(Rec.get(kept, "actionItems"))
+ *
+ *   console.log(Rec.has(kept, "title")) // false
+ *   console.log(Array.isArray(items) && items.length) // 1
+ * }
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-const replaceUsableList = Effect.fn("StructuredExtraction.replaceUsableList")(function* <A>(
-  record: Record<string, unknown>,
-  field: string,
-  element: S.Codec<A, unknown, never, unknown>,
-  values: unknown,
-) {
-  if (values === null) return Rec.remove(record, field);
-  const usable = yield* usableElements(values, element, field);
-  return Rec.set(field, usable)(record);
-});
-
 export const keepUsableContent = Effect.fn("StructuredExtraction.keepUsableContent")(function* (
   data: unknown,
   elementModels: {
@@ -511,11 +532,12 @@ export declare namespace ConversationStructureExtraction {
  * **Example** (Remove a zero duration)
  *
  * ```ts
+ * import * as P from "effect/Predicate"
  * import * as Rec from "effect/Record"
  * import { defaultUnusableDuration } from "@beep/scratchpad/beep/StructuredExtraction"
  *
  * const cleared = defaultUnusableDuration({ duration: 0 })
- * console.log(Rec.isRecord(cleared) && Rec.has(cleared, "duration")) // false
+ * console.log(P.isObject(cleared) && Rec.has(cleared, "duration")) // false
  * ```
  *
  * @category constructors
@@ -543,6 +565,12 @@ export const defaultUnusableDuration = (data: unknown): unknown => {
  * on {@link ExtractedEventWire} and {@link defaultUnusableDuration}, not on the
  * column.
  *
+ * **Gotchas**
+ *
+ * Decoding the class directly rejects `15.9`: the SQL integer domain check
+ * runs on the encoded value before any transform. Decode extractor output
+ * through {@link ExtractedEventWire} to get the Python truncation.
+ *
  * **Example** (Construct the default duration)
  *
  * ```ts
@@ -555,12 +583,6 @@ export const defaultUnusableDuration = (data: unknown): unknown => {
  * })
  * console.log(event.duration) // 30
  * ```
- *
- * **Gotchas**
- *
- * Decoding the class directly rejects `15.9`: the SQL integer domain check
- * runs on the encoded value before any transform. Decode extractor output
- * through {@link ExtractedEventWire} to get the Python truncation.
  *
  * @category models
  * @since 0.0.0
@@ -625,7 +647,19 @@ export const ExtractedEventWire = S.Unknown.pipe(
     encode: SchemaGetter.passthrough(),
   }),
   S.decodeTo(ExtractedEvent),
+  $I.annoteSchema("ExtractedEventWire", {
+    description: "Extractor event decoded with Python duration truncation before the class decode.",
+  }),
 );
+
+/**
+ * Decoded type of {@link ExtractedEventWire}.
+ *
+ * @see {@link ExtractedEventWire} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ExtractedEventWire = typeof ExtractedEventWire.Type;
 
 /**
  * Copies an extracted event and forces `created` false.

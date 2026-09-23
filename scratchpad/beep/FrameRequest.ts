@@ -60,7 +60,13 @@ export const FrameRequestState = LiteralKit([
   "cancelled",
 ]).pipe($I.annoteSchema("FrameRequestState", { description: "Lifecycle state of a screen-frame request." }));
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link FrameRequestState}.
+ *
+ * @see {@link FrameRequestState} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FrameRequestState = typeof FrameRequestState.Type;
 
 /**
@@ -83,7 +89,13 @@ export const FrameRequestCleanupState = LiteralKit(["not_required", "pending", "
   $I.annoteSchema("FrameRequestCleanupState", { description: "External-pixel deletion state." }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link FrameRequestCleanupState}.
+ *
+ * @see {@link FrameRequestCleanupState} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type FrameRequestCleanupState = typeof FrameRequestCleanupState.Type;
 
 /**
@@ -134,7 +146,13 @@ export class FrameRequestContractError extends S.TaggedError<FrameRequestContrac
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FrameRequestContractError}.
+ *
+ * @see {@link FrameRequestContractError} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FrameRequestContractError {
   export type Encoded = S.Codec.Encoded<typeof FrameRequestContractError>;
 }
@@ -428,7 +446,13 @@ export class FrameRequest extends Model<FrameRequest>("FrameRequest")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FrameRequest}.
+ *
+ * @see {@link FrameRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FrameRequest {
   export type Encoded = S.Codec.Encoded<typeof FrameRequest>;
 }
@@ -640,7 +664,7 @@ export const decodeFrameRequest = Effect.fn("FrameRequest.decode")(function* (in
  * import { decodeCreateFrameRequest } from "@beep/scratchpad/beep/FrameRequest"
  *
  * const decoded = Effect.runSync(
- *   decodeCreateFrameRequest({ device_id: " d ", dedupe_key: "k", requested_ttl_seconds: null }),
+ *   decodeCreateFrameRequest({ device_id: " d ", account_generation: 0, dedupe_key: "k", requested_ttl_seconds: null }),
  * )
  * console.log(decoded.deviceId) // " d "
  * console.log(O.isNone(decoded.requestedTtlSeconds)) // true
@@ -680,12 +704,46 @@ export class CreateFrameRequest extends Model<CreateFrameRequest>("CreateFrameRe
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link CreateFrameRequest}.
+ *
+ * @see {@link CreateFrameRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace CreateFrameRequest {
   export type Encoded = S.Codec.Encoded<typeof CreateFrameRequest>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Snake_case codec for {@link CreateFrameRequest}.
+ *
+ * **Details**
+ *
+ * Decoding through this codec neither strips identifiers nor rejects extra keys; use {@link decodeCreateFrameRequest} at the request boundary.
+ *
+ * **Example** (Encode a create body)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { CreateFrameRequest, CreateFrameRequestWire } from "@beep/scratchpad/beep/FrameRequest"
+ *
+ * const body = CreateFrameRequest.make({
+ *   deviceId: "device-1",
+ *   dedupeKey: "k1",
+ *   requestedTtlSeconds: O.some(600),
+ * })
+ * const encoded = S.encodeSync(CreateFrameRequestWire)(body)
+ *
+ * console.log(encoded.requested_ttl_seconds) // 600
+ * console.log(encoded.conversation_id) // null
+ * ```
+ *
+ * @see {@link CreateFrameRequest} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const CreateFrameRequestWire = CreateFrameRequest.pipe(
   S.encodeKeys({
     deviceId: "device_id",
@@ -708,7 +766,7 @@ const decodeCreateFrameRequestWire = S.decodeUnknownEffect(CreateFrameRequestWir
  * import * as Effect from "effect/Effect"
  * import { decodeCreateFrameRequest } from "@beep/scratchpad/beep/FrameRequest"
  *
- * const decoded = Effect.runSync(decodeCreateFrameRequest({ device_id: " d ", dedupe_key: "k" }))
+ * const decoded = Effect.runSync(decodeCreateFrameRequest({ device_id: " d ", account_generation: 0, dedupe_key: "k" }))
  * console.log(decoded.deviceId) // " d "
  * ```
  *
@@ -729,16 +787,15 @@ export const decodeCreateFrameRequest = Effect.fn("CreateFrameRequest.decode")(f
  * {@link validateStateUpdateStorageId}. `byte_count` constructs as 0 and is
  * at most 10485760. `account_generation` constructs as 0.
  *
- * **Example** (Decode a claimed update)
+ * **Example** (Construct a claimed update)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
- * import { decodeFrameRequestStateUpdate } from "@beep/scratchpad/beep/FrameRequest"
+ * import { FrameRequestStateUpdate } from "@beep/scratchpad/beep/FrameRequest"
  *
- * const decoded = Effect.runSync(
- *   decodeFrameRequestStateUpdate({ state: "claimed", device_id: "device-1", storage_id: "  sid  " }),
- * )
- * console.log(decoded.storageId) // some sid after trim is applied by the decoder
+ * const update = FrameRequestStateUpdate.make({ state: "claimed", deviceId: "device-1" })
+ *
+ * console.log(update.byteCount) // 0
+ * console.log(update.accountGeneration) // 0
  * ```
  *
  * @category models
@@ -776,12 +833,47 @@ export class FrameRequestStateUpdate extends Model<FrameRequestStateUpdate>("Fra
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FrameRequestStateUpdate}.
+ *
+ * @see {@link FrameRequestStateUpdate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FrameRequestStateUpdate {
   export type Encoded = S.Codec.Encoded<typeof FrameRequestStateUpdate>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Snake_case codec for {@link FrameRequestStateUpdate}.
+ *
+ * **Details**
+ *
+ * The codec does not strip `storage_id`; {@link decodeFrameRequestStateUpdate} applies that rule.
+ *
+ * **Example** (Encode an upload update)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { FrameRequestStateUpdate, FrameRequestStateUpdateWire } from "@beep/scratchpad/beep/FrameRequest"
+ *
+ * const update = FrameRequestStateUpdate.make({
+ *   state: "uploaded",
+ *   deviceId: "device-1",
+ *   storageId: O.some("sid"),
+ *   byteCount: 2048,
+ * })
+ * const encoded = S.encodeSync(FrameRequestStateUpdateWire)(update)
+ *
+ * console.log(encoded.storage_id) // "sid"
+ * console.log(encoded.byte_count) // 2048
+ * ```
+ *
+ * @see {@link FrameRequestStateUpdate} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const FrameRequestStateUpdateWire = FrameRequestStateUpdate.pipe(
   S.encodeKeys({
     deviceId: "device_id",
@@ -806,7 +898,13 @@ const decodeFrameRequestStateUpdateWire = S.decodeUnknownEffect(FrameRequestStat
  * import { decodeFrameRequestStateUpdate } from "@beep/scratchpad/beep/FrameRequest"
  *
  * const decoded = Effect.runSync(
- *   decodeFrameRequestStateUpdate({ state: "uploaded", device_id: "device-1", storage_id: " sid " }),
+ *   decodeFrameRequestStateUpdate({
+ *     state: "uploaded",
+ *     device_id: "device-1",
+ *     account_generation: 0,
+ *     storage_id: " sid ",
+ *     byte_count: 0,
+ *   }),
  * )
  * console.log(O.getOrElse(decoded.storageId, () => "")) // "sid"
  * ```
@@ -858,12 +956,37 @@ export class FrameRequestPromotion extends Model<FrameRequestPromotion>("FrameRe
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FrameRequestPromotion}.
+ *
+ * @see {@link FrameRequestPromotion} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FrameRequestPromotion {
   export type Encoded = S.Codec.Encoded<typeof FrameRequestPromotion>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Snake_case codec for {@link FrameRequestPromotion}.
+ *
+ * **Example** (Encode a promotion)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FrameRequestPromotion, FrameRequestPromotionWire } from "@beep/scratchpad/beep/FrameRequest"
+ *
+ * const promotion = FrameRequestPromotion.make({ deviceId: "device-1", conversationId: "c1" })
+ * const encoded = S.encodeSync(FrameRequestPromotionWire)(promotion)
+ *
+ * console.log(encoded.conversation_id) // "c1"
+ * console.log(encoded.account_generation) // 0
+ * ```
+ *
+ * @see {@link FrameRequestPromotion} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const FrameRequestPromotionWire = FrameRequestPromotion.pipe(
   S.encodeKeys({
     deviceId: "device_id",
@@ -906,12 +1029,46 @@ export class FrameRequestEnvelope extends Model<FrameRequestEnvelope>("FrameRequ
   $I.annote("FrameRequestEnvelope", { description: "One frame request and whether the write was a duplicate." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FrameRequestEnvelope}.
+ *
+ * @see {@link FrameRequestEnvelope} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FrameRequestEnvelope {
   export type Encoded = S.Codec.Encoded<typeof FrameRequestEnvelope>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for {@link FrameRequestEnvelope}, reused as-is because its nested request already encodes through {@link FrameRequestWire}.
+ *
+ * **Example** (Encode a nested request)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import * as S from "effect/Schema"
+ * import { FrameRequest, FrameRequestEnvelope, FrameRequestEnvelopeWire } from "@beep/scratchpad/beep/FrameRequest"
+ *
+ * const at = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
+ * const request = FrameRequest.make({
+ *   requestId: "r1",
+ *   uid: "user-1",
+ *   deviceId: "device-1",
+ *   dedupeKey: "d1",
+ *   createdAt: at,
+ *   expiresAt: at,
+ * })
+ * const encoded = S.encodeSync(FrameRequestEnvelopeWire)(FrameRequestEnvelope.make({ request, deduplicated: true }))
+ *
+ * console.log(encoded.request.request_id) // "r1"
+ * console.log(encoded.deduplicated) // true
+ * ```
+ *
+ * @see {@link FrameRequestEnvelope} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const FrameRequestEnvelopeWire = FrameRequestEnvelope;
 
 const noRequests = (): ReadonlyArray<FrameRequest> => [];
@@ -939,10 +1096,44 @@ export class FrameRequestBatch extends Model<FrameRequestBatch>("FrameRequestBat
   $I.annote("FrameRequestBatch", { description: "Batch of at most 32 frame requests." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FrameRequestBatch}.
+ *
+ * @see {@link FrameRequestBatch} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FrameRequestBatch {
   export type Encoded = S.Codec.Encoded<typeof FrameRequestBatch>;
 }
 
-/** @category codecs @since 0.0.0 */
+/**
+ * Wire codec for {@link FrameRequestBatch}, reused as-is because each request already encodes through {@link FrameRequestWire}.
+ *
+ * **Example** (Encode a one-request batch)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import * as S from "effect/Schema"
+ * import { FrameRequest, FrameRequestBatch, FrameRequestBatchWire } from "@beep/scratchpad/beep/FrameRequest"
+ *
+ * const at = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
+ * const request = FrameRequest.make({
+ *   requestId: "r1",
+ *   uid: "user-1",
+ *   deviceId: "device-1",
+ *   dedupeKey: "d1",
+ *   createdAt: at,
+ *   expiresAt: at,
+ * })
+ * const encoded = S.encodeSync(FrameRequestBatchWire)(FrameRequestBatch.make({ requests: [request] }))
+ *
+ * console.log(encoded.requests.length) // 1
+ * console.log(encoded.requests[0]?.device_id) // "device-1"
+ * ```
+ *
+ * @see {@link FrameRequestBatch} for the decoded class.
+ * @category codecs
+ * @since 0.0.0
+ */
 export const FrameRequestBatchWire = FrameRequestBatch;

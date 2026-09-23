@@ -1,6 +1,8 @@
 /**
  * Wire types and internal models for meeting-note screenshot egress.
  *
+ * **Details**
+ *
  * The client uploads candidate bytes. The server canonicalises them, judges
  * those exact bytes, mints an internal approval, and only a holder of that
  * approval may write the screenshot bucket. {@link ScreenFrameApprovalClaims}

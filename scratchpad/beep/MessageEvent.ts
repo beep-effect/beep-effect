@@ -1,6 +1,8 @@
 /**
  * Listen and chat events delivered to the client.
  *
+ * **Details**
+ *
  * The Python field is `event_type`. `to_json` renames it to the wire key `type`.
  * Dart-only events that are absent from this module are not added.
  *
@@ -188,7 +190,13 @@ export class ConversationEvent extends Model<ConversationEvent>("ConversationEve
   $I.annote("ConversationEvent", { description: "Conversation lifecycle event for created or processing memory." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ConversationEvent}.
+ *
+ * @see {@link ConversationEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ConversationEvent {
   /** Encoded form of {@link ConversationEvent}. */
   export type Encoded = S.Codec.Encoded<typeof ConversationEvent>;
@@ -224,7 +232,13 @@ export class NewConversationCreated extends Model<NewConversationCreated>("NewCo
   $I.annote("NewConversationCreated", { description: "Event announcing a newly created conversation." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link NewConversationCreated}.
+ *
+ * @see {@link NewConversationCreated} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace NewConversationCreated {
   /** Encoded form of {@link NewConversationCreated}. */
   export type Encoded = S.Codec.Encoded<typeof NewConversationCreated>;
@@ -261,7 +275,13 @@ export class NewProcessingConversationCreated extends Model<NewProcessingConvers
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link NewProcessingConversationCreated}.
+ *
+ * @see {@link NewProcessingConversationCreated} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace NewProcessingConversationCreated {
   /** Encoded form of {@link NewProcessingConversationCreated}. */
   export type Encoded = S.Codec.Encoded<typeof NewProcessingConversationCreated>;
@@ -300,7 +320,13 @@ export class ProcessingConversationStatusChanged extends Model<ProcessingConvers
   $I.annote("ProcessingConversationStatusChanged", { description: "Processing-status change for a conversation." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ProcessingConversationStatusChanged}.
+ *
+ * @see {@link ProcessingConversationStatusChanged} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ProcessingConversationStatusChanged {
   /** Encoded form of {@link ProcessingConversationStatusChanged}. */
   export type Encoded = S.Codec.Encoded<typeof ProcessingConversationStatusChanged>;
@@ -318,6 +344,7 @@ const encodeProcessingConversationStatusChanged = S.encodeEffect(ProcessingConve
  * **Example** (Keep the typo class)
  *
  * ```ts
+ * import * as O from "effect/Option"
  * import { MemoryBackwardSycnedEvent } from "./MessageEvent.ts"
  *
  * const event = MemoryBackwardSycnedEvent.make({ eventType: "backward_sync", name: O.none() })
@@ -335,7 +362,13 @@ export class MemoryBackwardSycnedEvent extends Model<MemoryBackwardSycnedEvent>(
   $I.annote("MemoryBackwardSycnedEvent", { description: "Backward-sync event. The Sycned spelling is frozen." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MemoryBackwardSycnedEvent}.
+ *
+ * @see {@link MemoryBackwardSycnedEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MemoryBackwardSycnedEvent {
   /** Encoded form of {@link MemoryBackwardSycnedEvent}. */
   export type Encoded = S.Codec.Encoded<typeof MemoryBackwardSycnedEvent>;
@@ -383,7 +416,13 @@ export class MessageServiceStatusEvent extends Model<MessageServiceStatusEvent>(
   static readonly thunkThis = () => MessageServiceStatusEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MessageServiceStatusEvent}.
+ *
+ * @see {@link MessageServiceStatusEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MessageServiceStatusEvent {
   /** Encoded form of {@link MessageServiceStatusEvent}. */
   export type Encoded = S.Codec.Encoded<typeof MessageServiceStatusEvent>;
@@ -432,7 +471,13 @@ export class ConversationSessionEvent extends Model<ConversationSessionEvent>("C
   static readonly thunkThis = () => ConversationSessionEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ConversationSessionEvent}.
+ *
+ * @see {@link ConversationSessionEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ConversationSessionEvent {
   /** Encoded form of {@link ConversationSessionEvent}. */
   export type Encoded = S.Codec.Encoded<typeof ConversationSessionEvent>;
@@ -466,7 +511,13 @@ export class PingEvent extends Model<PingEvent>("PingEvent")(
   static readonly thunkThis = () => PingEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link PingEvent}.
+ *
+ * @see {@link PingEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace PingEvent {
   /** Encoded form of {@link PingEvent}. */
   export type Encoded = S.Codec.Encoded<typeof PingEvent>;
@@ -507,7 +558,13 @@ export class LastConversationEvent extends Model<LastConversationEvent>("LastCon
   static readonly thunkThis = () => LastConversationEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link LastConversationEvent}.
+ *
+ * @see {@link LastConversationEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace LastConversationEvent {
   /** Encoded form of {@link LastConversationEvent}. */
   export type Encoded = S.Codec.Encoded<typeof LastConversationEvent>;
@@ -546,7 +603,13 @@ export class TranslationEvent extends Model<TranslationEvent>("TranslationEvent"
   static readonly thunkThis = () => TranslationEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link TranslationEvent}.
+ *
+ * @see {@link TranslationEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace TranslationEvent {
   /** Encoded form of {@link TranslationEvent}. */
   export type Encoded = S.Codec.Encoded<typeof TranslationEvent>;
@@ -584,7 +647,13 @@ export class PhotoProcessingEvent extends Model<PhotoProcessingEvent>("PhotoProc
   static readonly thunkThis = () => PhotoProcessingEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link PhotoProcessingEvent}.
+ *
+ * @see {@link PhotoProcessingEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace PhotoProcessingEvent {
   /** Encoded form of {@link PhotoProcessingEvent}. */
   export type Encoded = S.Codec.Encoded<typeof PhotoProcessingEvent>;
@@ -626,7 +695,13 @@ export class PhotoDescribedEvent extends Model<PhotoDescribedEvent>("PhotoDescri
   static readonly thunkThis = () => PhotoDescribedEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link PhotoDescribedEvent}.
+ *
+ * @see {@link PhotoDescribedEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace PhotoDescribedEvent {
   /** Encoded form of {@link PhotoDescribedEvent}. */
   export type Encoded = S.Codec.Encoded<typeof PhotoDescribedEvent>;
@@ -675,7 +750,13 @@ export class SpeakerLabelSuggestionEvent extends Model<SpeakerLabelSuggestionEve
   static readonly thunkThis = () => SpeakerLabelSuggestionEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link SpeakerLabelSuggestionEvent}.
+ *
+ * @see {@link SpeakerLabelSuggestionEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace SpeakerLabelSuggestionEvent {
   /** Encoded form of {@link SpeakerLabelSuggestionEvent}. */
   export type Encoded = S.Codec.Encoded<typeof SpeakerLabelSuggestionEvent>;
@@ -727,7 +808,13 @@ export class FreemiumThresholdReachedEvent extends Model<FreemiumThresholdReache
   static readonly thunkThis = () => FreemiumThresholdReachedEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link FreemiumThresholdReachedEvent}.
+ *
+ * @see {@link FreemiumThresholdReachedEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FreemiumThresholdReachedEvent {
   /** Encoded form of {@link FreemiumThresholdReachedEvent}. */
   export type Encoded = S.Codec.Encoded<typeof FreemiumThresholdReachedEvent>;
@@ -766,7 +853,13 @@ export class SegmentsDeletedEvent extends Model<SegmentsDeletedEvent>("SegmentsD
   static readonly thunkThis = () => SegmentsDeletedEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link SegmentsDeletedEvent}.
+ *
+ * @see {@link SegmentsDeletedEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace SegmentsDeletedEvent {
   /** Encoded form of {@link SegmentsDeletedEvent}. */
   export type Encoded = S.Codec.Encoded<typeof SegmentsDeletedEvent>;
@@ -807,7 +900,13 @@ export class ProactiveMessageEvent extends Model<ProactiveMessageEvent>("Proacti
   static readonly thunkThis = () => ProactiveMessageEvent;
 }
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link ProactiveMessageEvent}.
+ *
+ * @see {@link ProactiveMessageEvent} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ProactiveMessageEvent {
   /** Encoded form of {@link ProactiveMessageEvent}. */
   export type Encoded = S.Codec.Encoded<typeof ProactiveMessageEvent>;
@@ -917,86 +1016,388 @@ export const messageEventToJson = jsonFrom<MessageEvent>("MessageEvent.toJson", 
   encodeMessageEvent(event),
 );
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a conversation lifecycle event as client JSON, renaming `eventType` to `type`.
+ *
+ * **Details**
+ *
+ * Nulls are kept: an absent optional field encodes as `null`, not as a missing key.
+ *
+ * **Example** (Keep a null message list)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import { ConversationEvent, conversationEventToJson } from "./MessageEvent.ts"
+ *
+ * const event = ConversationEvent.make({
+ *   eventType: "memory_processing_started",
+ *   memory: { id: "conversation-1" },
+ *   messages: O.none(),
+ * })
+ * const json = Effect.runSync(conversationEventToJson(event))
+ * console.log(json.type) // "memory_processing_started"
+ * console.log(json.messages) // null
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const conversationEventToJson = jsonFrom<ConversationEvent>("ConversationEvent.toJson", false)((event) =>
   encodeConversationEvent(event),
 );
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a new-conversation event as client JSON, renaming `eventType` to `type`.
+ *
+ * **Example** (Encode a created conversation)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { NewConversationCreated, newConversationCreatedToJson } from "./MessageEvent.ts"
+ *
+ * const event = NewConversationCreated.make({
+ *   eventType: "new_conversation",
+ *   memory: { id: "conversation-1" },
+ * })
+ * const json = Effect.runSync(newConversationCreatedToJson(event))
+ * console.log(json.type) // "new_conversation"
+ * console.log(json.memoryId) // null
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const newConversationCreatedToJson = jsonFrom<NewConversationCreated>("NewConversationCreated.toJson", false)(
   (event) => encodeNewConversationCreated(event),
 );
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a processing-conversation announcement as client JSON, renaming `eventType` to `type`.
+ *
+ * **Example** (Encode a processing announcement)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import { NewProcessingConversationCreated, newProcessingConversationCreatedToJson } from "./MessageEvent.ts"
+ *
+ * const event = NewProcessingConversationCreated.make({
+ *   eventType: "new_processing_memory_created",
+ *   processingMemoryId: O.some("proc-1"),
+ * })
+ * const json = Effect.runSync(newProcessingConversationCreatedToJson(event))
+ * console.log(json.processingMemoryId) // "proc-1"
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const newProcessingConversationCreatedToJson = jsonFrom<NewProcessingConversationCreated>(
   "NewProcessingConversationCreated.toJson",
   false,
 )((event) => encodeNewProcessingConversationCreated(event));
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a processing-status change as client JSON, renaming `eventType` to `type`.
+ *
+ * **Example** (Encode a finished status)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import {
+ *   ProcessingConversationStatusChanged,
+ *   processingConversationStatusChangedToJson,
+ * } from "./MessageEvent.ts"
+ *
+ * const event = ProcessingConversationStatusChanged.make({
+ *   eventType: "processing_memory_status_changed",
+ *   processingMemoryStatus: O.some("done"),
+ * })
+ * const json = Effect.runSync(processingConversationStatusChangedToJson(event))
+ * console.log(json.processingMemoryStatus) // "done"
+ * console.log(json.processingMemoryId) // null
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const processingConversationStatusChangedToJson = jsonFrom<ProcessingConversationStatusChanged>(
   "ProcessingConversationStatusChanged.toJson",
   false,
 )((event) => encodeProcessingConversationStatusChanged(event));
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a backward-sync event as client JSON, renaming `eventType` to `type`.
+ *
+ * **Example** (Encode a backward sync)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import { MemoryBackwardSycnedEvent, memoryBackwardSycnedEventToJson } from "./MessageEvent.ts"
+ *
+ * const event = MemoryBackwardSycnedEvent.make({ eventType: "memory_backward_synced", name: O.some("sync") })
+ * console.log(Effect.runSync(memoryBackwardSycnedEventToJson(event))) // { name: "sync", type: "memory_backward_synced" }
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const memoryBackwardSycnedEventToJson = jsonFrom<MemoryBackwardSycnedEvent>(
   "MemoryBackwardSycnedEvent.toJson",
   false,
 )((event) => encodeMemoryBackwardSycnedEvent(event));
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a service status event as client JSON, dropping every null field.
+ *
+ * **Details**
+ *
+ * Unlike most encoders here, this one omits null keys so legacy clients never see the outcome fields.
+ *
+ * **Example** (Drop absent outcome fields)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { MessageServiceStatusEvent, messageServiceStatusEventToJson } from "./MessageEvent.ts"
+ *
+ * const json = Effect.runSync(messageServiceStatusEventToJson(MessageServiceStatusEvent.make({ status: "ready" })))
+ * console.log(json) // { status: "ready", type: "service_status" }
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const messageServiceStatusEventToJson = jsonFrom<MessageServiceStatusEvent>(
   "MessageServiceStatusEvent.toJson",
   true,
 )((event) => encodeMessageServiceStatusEvent(event));
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a recording-session lifecycle event as client JSON, renaming `eventType` to `type`.
+ *
+ * **Example** (Encode a started session)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { ConversationSessionEvent, conversationSessionEventToJson } from "./MessageEvent.ts"
+ *
+ * const event = ConversationSessionEvent.make({ conversationId: "conversation-1" })
+ * const json = Effect.runSync(conversationSessionEventToJson(event))
+ * console.log(json.type) // "conversation_session"
+ * console.log(json.status) // "in_progress"
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const conversationSessionEventToJson = jsonFrom<ConversationSessionEvent>("ConversationSessionEvent.toJson", false)(
   (event) => encodeConversationSessionEvent(event),
 );
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a keepalive ping as client JSON.
+ *
+ * **Example** (Encode a ping)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { PingEvent, pingEventToJson } from "./MessageEvent.ts"
+ *
+ * console.log(Effect.runSync(pingEventToJson(PingEvent.make({})))) // { type: "ping" }
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const pingEventToJson = jsonFrom<PingEvent>("PingEvent.toJson", false)((event) => encodePingEvent(event));
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode the latest-conversation pointer as client JSON with wire type `last_memory`.
+ *
+ * **Example** (Point at the latest conversation)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { LastConversationEvent, lastConversationEventToJson } from "./MessageEvent.ts"
+ *
+ * const event = LastConversationEvent.make({ memoryId: "conversation-9" })
+ * console.log(Effect.runSync(lastConversationEventToJson(event))) // { memoryId: "conversation-9", type: "last_memory" }
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const lastConversationEventToJson = jsonFrom<LastConversationEvent>("LastConversationEvent.toJson", false)(
   (event) => encodeLastConversationEvent(event),
 );
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode partial translation segments as client JSON.
+ *
+ * **Example** (Encode a translated segment)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { TranslationEvent, translationEventToJson } from "./MessageEvent.ts"
+ *
+ * const event = TranslationEvent.make({ segments: [{ text: "hola" }] })
+ * const json = Effect.runSync(translationEventToJson(event))
+ * console.log(json.type) // "translating"
+ * console.log(json.segments) // [{ text: "hola" }]
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const translationEventToJson = jsonFrom<TranslationEvent>("TranslationEvent.toJson", false)((event) =>
   encodeTranslationEvent(event),
 );
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a still-processing photo notice as client JSON.
+ *
+ * **Example** (Encode a processing photo)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { PhotoProcessingEvent, photoProcessingEventToJson } from "./MessageEvent.ts"
+ *
+ * const event = PhotoProcessingEvent.make({ tempId: "t-1", photoId: "p-1" })
+ * console.log(Effect.runSync(photoProcessingEventToJson(event))) // { tempId: "t-1", photoId: "p-1", type: "photo_processing" }
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const photoProcessingEventToJson = jsonFrom<PhotoProcessingEvent>("PhotoProcessingEvent.toJson", false)(
   (event) => encodePhotoProcessingEvent(event),
 );
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a photo description result as client JSON.
+ *
+ * **Example** (Encode a described photo)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { PhotoDescribedEvent, photoDescribedEventToJson } from "./MessageEvent.ts"
+ *
+ * const event = PhotoDescribedEvent.make({ photoId: "p-1", description: "A desk", discarded: false })
+ * const json = Effect.runSync(photoDescribedEventToJson(event))
+ * console.log(json.type) // "photo_described"
+ * console.log(json.description) // "A desk"
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const photoDescribedEventToJson = jsonFrom<PhotoDescribedEvent>("PhotoDescribedEvent.toJson", false)((event) =>
   encodePhotoDescribedEvent(event),
 );
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a speaker label suggestion as client JSON.
+ *
+ * **Example** (Suggest a speaker label)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { SpeakerLabelSuggestionEvent, speakerLabelSuggestionEventToJson } from "./MessageEvent.ts"
+ *
+ * const event = SpeakerLabelSuggestionEvent.make({
+ *   speakerId: 2,
+ *   personId: "person-1",
+ *   personName: "Ada",
+ *   segmentId: "seg-1",
+ * })
+ * const json = Effect.runSync(speakerLabelSuggestionEventToJson(event))
+ * console.log(json.type) // "speaker_label_suggestion"
+ * console.log(json.personName) // "Ada"
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const speakerLabelSuggestionEventToJson = jsonFrom<SpeakerLabelSuggestionEvent>(
   "SpeakerLabelSuggestionEvent.toJson",
   false,
 )((event) => encodeSpeakerLabelSuggestionEvent(event));
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a freemium threshold notice as client JSON.
+ *
+ * **Example** (Ask the client to set up on-device STT)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import {
+ *   FREEMIUM_ACTION_SETUP_ON_DEVICE_STT,
+ *   FreemiumThresholdReachedEvent,
+ *   freemiumThresholdReachedEventToJson,
+ * } from "./MessageEvent.ts"
+ *
+ * const event = FreemiumThresholdReachedEvent.make({
+ *   remainingSeconds: 30,
+ *   action: FREEMIUM_ACTION_SETUP_ON_DEVICE_STT,
+ * })
+ * console.log(Effect.runSync(freemiumThresholdReachedEventToJson(event)))
+ * // { remainingSeconds: 30, action: "setup_on_device_stt", type: "freemium_threshold_reached" }
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const freemiumThresholdReachedEventToJson = jsonFrom<FreemiumThresholdReachedEvent>(
   "FreemiumThresholdReachedEvent.toJson",
   false,
 )((event) => encodeFreemiumThresholdReachedEvent(event));
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a deleted-segments notice as client JSON.
+ *
+ * **Example** (Report deleted segments)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { SegmentsDeletedEvent, segmentsDeletedEventToJson } from "./MessageEvent.ts"
+ *
+ * const event = SegmentsDeletedEvent.make({ segmentIds: ["seg-1", "seg-2"] })
+ * const json = Effect.runSync(segmentsDeletedEventToJson(event))
+ * console.log(json.segmentIds) // ["seg-1", "seg-2"]
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const segmentsDeletedEventToJson = jsonFrom<SegmentsDeletedEvent>("SegmentsDeletedEvent.toJson", false)(
   (event) => encodeSegmentsDeletedEvent(event),
 );
 
-/** @category serialization @since 0.0.0 */
+/**
+ * Encode a proactive chat message as client JSON, dropping every null field.
+ *
+ * **Details**
+ *
+ * An absent `conversationId` is omitted from the JSON instead of being sent as `null`.
+ *
+ * **Example** (Omit a missing conversation id)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { ProactiveMessageEvent, proactiveMessageEventToJson } from "./MessageEvent.ts"
+ *
+ * const event = ProactiveMessageEvent.make({ appId: "app-1", title: "Hi", message: "Body" })
+ * const json = Effect.runSync(proactiveMessageEventToJson(event))
+ * console.log("conversationId" in json) // false
+ * console.log(json.type) // "proactive_message"
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
 export const proactiveMessageEventToJson = jsonFrom<ProactiveMessageEvent>("ProactiveMessageEvent.toJson", true)(
   (event) => encodeProactiveMessageEvent(event),
 );

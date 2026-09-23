@@ -1,6 +1,8 @@
 /**
  * Limitless import jobs and the smaller response projection.
  *
+ * **Details**
+ *
  * The stored job keeps a user id, a datetime clock, and file counters. The
  * response renames `id` to `jobId` and exposes `createdAt` as a string.
  *

@@ -1,6 +1,8 @@
 /**
  * Neutral canonical-memory recurrence signal consumed by workflow orchestration.
  *
+ * **Details**
+ *
  * Memory may emit this evidence contract. It never writes a Candidate or
  * workstream. Workflow owns qualification and mutation.
  *
@@ -53,7 +55,13 @@ export const RecurrenceEvidenceKind = LiteralKit(["memory_item", "conversation"]
     description: "Canonical recurrence evidence is a memory item or a conversation.",
   }),
 );
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link RecurrenceEvidenceKind}.
+ *
+ * @see {@link RecurrenceEvidenceKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RecurrenceEvidenceKind = typeof RecurrenceEvidenceKind.Type;
 
 const AwareUtcTimestamp = S.String.check(S.isPattern(awareInstant)).pipe(
@@ -119,7 +127,13 @@ export class RecurrenceEvidenceRef extends Model<RecurrenceEvidenceRef>("Recurre
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link RecurrenceEvidenceRef}.
+ *
+ * @see {@link RecurrenceEvidenceRef} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace RecurrenceEvidenceRef {
   /** Encoded form of {@link RecurrenceEvidenceRef}. */
   export type Encoded = S.Codec.Encoded<typeof RecurrenceEvidenceRef>;
@@ -147,7 +161,13 @@ export class RecurrenceRejected extends S.TaggedError<RecurrenceRejected>()(
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link RecurrenceRejected}.
+ *
+ * @see {@link RecurrenceRejected} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace RecurrenceRejected {
   /** Encoded form of {@link RecurrenceRejected}. */
   export type Encoded = S.Codec.Encoded<typeof RecurrenceRejected>;
@@ -242,7 +262,13 @@ export class CanonicalRecurrenceSignal extends Model<CanonicalRecurrenceSignal>(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link CanonicalRecurrenceSignal}.
+ *
+ * @see {@link CanonicalRecurrenceSignal} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace CanonicalRecurrenceSignal {
   /** Encoded form of {@link CanonicalRecurrenceSignal}. */
   export type Encoded = S.Codec.Encoded<typeof CanonicalRecurrenceSignal>;

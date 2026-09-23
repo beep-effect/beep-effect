@@ -1,6 +1,8 @@
 /**
  * API response shapes for a reviewed day.
  *
+ * **Details**
+ *
  * The LLM payload in the sibling module counts conversations by number and
  * requires its strings. These responses use ids, leave almost every field
  * nullable, and keep unknown keys on {@link DailySummaryResponse}.

@@ -1,6 +1,8 @@
 /**
  * Content-free authority receipts for bounded JIT proactive work.
  *
+ * **Details**
+ *
  * Identifiers are SHA-256 digests, not raw content. `operation` changes which
  * sibling fields are required, so the receipt is a tagged union rather than
  * one struct with optional bags.

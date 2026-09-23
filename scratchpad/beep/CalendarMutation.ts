@@ -114,6 +114,10 @@ const primitiveText = (value: S.Json): string => {
   return "Untitled";
 };
 
+const SummaryField = S.Struct({ summary: S.Json });
+
+const isSummaryField = S.is(SummaryField);
+
 /**
  * Title used when listing a deleted event.
  *
@@ -130,15 +134,12 @@ const primitiveText = (value: S.Json): string => {
  * console.log(eventTitle({})) // "Untitled"
  * console.log(eventTitle({ summary: "Standup" })) // "Standup"
  * console.log(eventTitle({ summary: null })) // "None"
+ * console.log(eventTitle({ summary: false })) // "False"
  * ```
  *
  * @category getters
  * @since 0.0.0
  */
-const SummaryField = S.Struct({ summary: S.Json });
-
-const isSummaryField = S.is(SummaryField);
-
 export const eventTitle = (event: CalendarEvent): string =>
   isSummaryField(event) ? primitiveText(event.summary) : "Untitled";
 

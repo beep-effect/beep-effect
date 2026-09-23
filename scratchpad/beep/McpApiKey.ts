@@ -1,6 +1,8 @@
 /**
  * MCP API key metadata, the stored hash row, and the one-time created secret.
  *
+ * **Details**
+ *
  * The public key, the database row, and the creation response share the same
  * metadata fields. The raw key and the hash are siblings, not the same column.
  *

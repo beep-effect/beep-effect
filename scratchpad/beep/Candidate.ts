@@ -1,6 +1,8 @@
 /**
  * Universal candidate lifecycle for task and workstream proposals.
  *
+ * **Details**
+ *
  * `CandidateCreate` nests `subjectKind`, then `proposedAction` for tasks.
  * `CandidateRecord` stays the flat stored shape with optional arms.
  *
@@ -411,7 +413,7 @@ const isTaskUpdateCandidate = S.is(TaskUpdateCandidate);
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { EvidenceRef, TaskChangePayload } from "@beep/scratchpad/beep/ActionItem"
+ * import { EvidenceRef, TaskChangePayload, TaskStatus } from "@beep/scratchpad/beep/ActionItem"
  * import { TaskCompleteCandidate } from "@beep/scratchpad/beep/Candidate"
  *
  * const candidate = TaskCompleteCandidate.make({
@@ -420,7 +422,7 @@ const isTaskUpdateCandidate = S.is(TaskUpdateCandidate);
  *   evidenceRefs: [EvidenceRef.make({ kind: "conversation", id: "conv-1", scope: "canonical" })],
  *   sourceSurface: "chat",
  *   taskId: "task-1",
- *   taskChange: TaskChangePayload.make({ status: O.some("completed") }),
+ *   taskChange: TaskChangePayload.make({ status: O.some(TaskStatus.Enum.completed) }),
  * })
  * console.log(candidate.proposedAction) // "complete"
  * ```
@@ -464,7 +466,7 @@ const isTaskCompleteCandidate = S.is(TaskCompleteCandidate);
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { EvidenceRef, TaskChangePayload } from "@beep/scratchpad/beep/ActionItem"
+ * import { EvidenceRef, TaskChangePayload, TaskStatus } from "@beep/scratchpad/beep/ActionItem"
  * import { TaskCancelCandidate } from "@beep/scratchpad/beep/Candidate"
  *
  * const candidate = TaskCancelCandidate.make({
@@ -473,7 +475,7 @@ const isTaskCompleteCandidate = S.is(TaskCompleteCandidate);
  *   evidenceRefs: [EvidenceRef.make({ kind: "conversation", id: "conv-1", scope: "canonical" })],
  *   sourceSurface: "chat",
  *   taskId: "task-1",
- *   taskChange: TaskChangePayload.make({ status: O.some("cancelled") }),
+ *   taskChange: TaskChangePayload.make({ status: O.some(TaskStatus.Enum.cancelled) }),
  * })
  * console.log(candidate.proposedAction) // "cancel"
  * ```
@@ -521,7 +523,7 @@ const isTaskCancelCandidate = S.is(TaskCancelCandidate);
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { EvidenceRef, TaskChangePayload } from "@beep/scratchpad/beep/ActionItem"
+ * import { EvidenceRef, TaskChangePayload, TaskStatus } from "@beep/scratchpad/beep/ActionItem"
  * import { TaskSupersedeCandidate } from "@beep/scratchpad/beep/Candidate"
  *
  * const candidate = TaskSupersedeCandidate.make({
@@ -531,7 +533,7 @@ const isTaskCancelCandidate = S.is(TaskCancelCandidate);
  *   sourceSurface: "chat",
  *   taskId: "task-1",
  *   taskChange: TaskChangePayload.make({
- *     status: O.some("superseded"),
+ *     status: O.some(TaskStatus.Enum.superseded),
  *     supersededBy: O.some("task-2"),
  *   }),
  * })
@@ -749,7 +751,7 @@ export type TaskCandidate = typeof TaskCandidate.Type;
  *     workstreamProposal: {
  *       title: "Launch",
  *       objective: "Ship the note",
- *       anchorTask: { description: "Write the note" },
+ *       anchorTask: { description: "Write the note", owner: "unknown" },
  *     },
  *   }),
  * )
@@ -1026,7 +1028,7 @@ export const candidateWorkstreamId = (candidate: CandidateCreate): O.Option<stri
  *   sourceSurface: "chat",
  *   taskChange: TaskCreatePayload.make({ description: "Call back" }),
  * })
- * console.log(candidateEvidenceRefs(candidate)[0].id) // "conv-1"
+ * console.log(candidateEvidenceRefs(candidate)[0]?.id) // "conv-1"
  * ```
  *
  * @category getters
@@ -1306,6 +1308,22 @@ export declare namespace CandidateShapeError {
 
 const omitNull = (value: unknown): unknown => (value === null ? undefined : value);
 
+const optionalReason = optionalNull(S.String.check(S.isMaxLength(64)));
+const optionalId = optionalNull(StableId);
+const optionalInstant = optionalNull(S.DateTimeUtcFromString);
+
+// Optional-key codecs only decode inside a struct: a bare absent value has no
+// key to be missing, so the resolution tail is read as one struct.
+const StoredResolutionTail = S.Struct({
+  resolutionReason: optionalReason,
+  resultTaskId: optionalId,
+  resultWorkstreamId: optionalId,
+  resolvedAt: optionalInstant,
+  expiresAt: optionalInstant,
+});
+
+const decodeStoredResolutionTail = S.decodeEffect(StoredResolutionTail);
+
 /**
  * Rebuilds a stored candidate by validating its proposal arm and resolution.
  *
@@ -1333,32 +1351,41 @@ const omitNull = (value: unknown): unknown => (value === null ? undefined : valu
  *     ownershipConfidence: 0.5,
  *     evidenceRefs: [{ kind: "conversation", id: "conv-1", scope: "canonical" }],
  *     sourceSurface: "chat",
- *     taskChange: { description: "Call back" },
+ *     taskChange: { description: "Call back", owner: "unknown" },
  *     createdAt: "2020-01-02T03:04:05.000Z",
  *   }),
  * )._tag
  * console.log(failed) // "Failure"
  * ```
  *
+ * **Example** (Rebuild a pending create candidate)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { candidateRecordFromStorage } from "@beep/scratchpad/beep/Candidate"
+ *
+ * const record = Effect.runSync(
+ *   candidateRecordFromStorage({
+ *     candidateId: "cand-1",
+ *     subjectKind: "task",
+ *     proposedAction: "create",
+ *     taskId: null,
+ *     accountGeneration: 0,
+ *     idempotencyKey: "once",
+ *     captureConfidence: 0.5,
+ *     ownershipConfidence: 0.5,
+ *     evidenceRefs: [{ kind: "conversation", id: "conv-1", scope: "canonical" }],
+ *     sourceSurface: "chat",
+ *     taskChange: { description: "Call back", owner: "unknown" },
+ *     createdAt: "2020-01-02T03:04:05.000Z",
+ *   }),
+ * )
+ * console.log(record.status) // "pending"
+ * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
-const optionalReason = optionalNull(S.String.check(S.isMaxLength(64)));
-const optionalId = optionalNull(StableId);
-const optionalInstant = optionalNull(S.DateTimeUtcFromString);
-
-// Optional-key codecs only decode inside a struct: a bare absent value has no
-// key to be missing, so the resolution tail is read as one struct.
-const StoredResolutionTail = S.Struct({
-  resolutionReason: optionalReason,
-  resultTaskId: optionalId,
-  resultWorkstreamId: optionalId,
-  resolvedAt: optionalInstant,
-  expiresAt: optionalInstant,
-});
-
-const decodeStoredResolutionTail = S.decodeEffect(StoredResolutionTail);
-
 export const candidateRecordFromStorage = Effect.fn("CandidateRecord.fromStorage")(function* (value: unknown) {
   if (!P.isObject(value)) {
     return yield* CandidateShapeError.make({ message: "candidate record must be an object" });
@@ -1414,8 +1441,13 @@ export const candidateRecordFromStorage = Effect.fn("CandidateRecord.fromStorage
   return record;
 });
 
+const encodeTaskChange = (change: TaskCreatePayload | TaskChangePayload) =>
+  isTaskCreatePayload(change)
+    ? encodeTaskCreatePayload(change)
+    : encodeTaskChangePayload(change);
+
 /**
- * Validates the flat record's proposal fields as {@link CandidateCreate}.
+ * Re-validates a flat candidate record's proposal fields as {@link CandidateCreate}, encoding nested payloads first.
  *
  * **Example** (Read the create arm)
  *
@@ -1449,11 +1481,6 @@ export const candidateRecordFromStorage = Effect.fn("CandidateRecord.fromStorage
  * @category decoding
  * @since 0.0.0
  */
-const encodeTaskChange = (change: TaskCreatePayload | TaskChangePayload) =>
-  isTaskCreatePayload(change)
-    ? encodeTaskCreatePayload(change)
-    : encodeTaskChangePayload(change);
-
 export const candidateRecordAsProposal = Effect.fn("CandidateRecord.asProposal")(function* (record: CandidateRecord) {
   const input: { [key: string]: unknown } = {
     subjectKind: record.subjectKind,

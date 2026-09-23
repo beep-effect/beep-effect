@@ -1,6 +1,8 @@
 /**
  * Product Memories record: one store, layer-tagged.
  *
+ * **Details**
+ *
  * `tier` is the stored product field. Canonical vocabulary calls that axis
  * layer. `category` is not a layer, and Workflow is not a memory.
  *
@@ -67,17 +69,105 @@ export const DEFAULT_SHORT_TERM_TTL_HOURS = 48;
  */
 export const DEFAULT_SHORT_TERM_TTL_DAYS = 2;
 
-/** @category constants @since 0.0.0 */
+/**
+ * Maximum content length, in characters, that `normalizeMemoryItem` accepts for a `knowledge_ledger.v1` row.
+ *
+ * **Example** (Check a draft against the content limit)
+ *
+ * ```ts
+ * import { MAX_LEDGER_CONTENT_CHARACTERS } from "./ProductMemory.ts"
+ *
+ * const draft = "Prefers aisle seats on long flights."
+ *
+ * console.log(draft.length <= MAX_LEDGER_CONTENT_CHARACTERS) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const MAX_LEDGER_CONTENT_CHARACTERS = 4000;
-/** @category constants @since 0.0.0 */
+/**
+ * Maximum body length, in characters, for a `knowledge_ledger.v1` document row.
+ *
+ * **Example** (Reject an oversized playbook body)
+ *
+ * ```ts
+ * import { MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS } from "./ProductMemory.ts"
+ *
+ * const body = "x".repeat(MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS + 1)
+ *
+ * console.log(body.length > MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS = 24000;
-/** @category constants @since 0.0.0 */
+/**
+ * Maximum slot name length, in characters, for a `knowledge_ledger.v1` fact row.
+ *
+ * **Example** (Check a slot name)
+ *
+ * ```ts
+ * import { MAX_LEDGER_SLOT_CHARACTERS } from "./ProductMemory.ts"
+ *
+ * console.log("home_city".length <= MAX_LEDGER_SLOT_CHARACTERS) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const MAX_LEDGER_SLOT_CHARACTERS = 64;
-/** @category constants @since 0.0.0 */
+/**
+ * Maximum number of top-level keys a `knowledge_ledger.v1` trigger condition may carry.
+ *
+ * **Example** (Count trigger condition keys)
+ *
+ * ```ts
+ * import { MAX_LEDGER_TRIGGER_CONDITION_KEYS } from "./ProductMemory.ts"
+ *
+ * const condition = { weekday: "monday", place: "office" }
+ *
+ * console.log(Object.keys(condition).length <= MAX_LEDGER_TRIGGER_CONDITION_KEYS) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const MAX_LEDGER_TRIGGER_CONDITION_KEYS = 13;
-/** @category constants @since 0.0.0 */
+/**
+ * Maximum length, in characters, of a ledger trigger condition once serialized to JSON.
+ *
+ * **Example** (Measure a serialized trigger condition)
+ *
+ * ```ts
+ * import { MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS } from "./ProductMemory.ts"
+ *
+ * const serialized = JSON.stringify({ weekday: "monday" })
+ *
+ * console.log(serialized.length <= MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS = 8000;
-/** @category constants @since 0.0.0 */
+/**
+ * Byte budget for the serialized ledger `arguments` JSON object on a memory item.
+ *
+ * **Example** (Measure encoded argument bytes)
+ *
+ * ```ts
+ * import { MAX_MEMORY_ARGUMENTS_JSON_BYTES } from "./ProductMemory.ts"
+ *
+ * const bytes = new TextEncoder().encode(JSON.stringify({ city: "Lisbon" })).length
+ *
+ * console.log(bytes <= MAX_MEMORY_ARGUMENTS_JSON_BYTES) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const MAX_MEMORY_ARGUMENTS_JSON_BYTES = 8 * 1024;
 
 /**
@@ -136,9 +226,21 @@ export const MemoryLayer = LiteralKit(["short_term", "long_term", "archive"]).pi
   }),
 );
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link MemoryLayer}.
+ *
+ * @see {@link MemoryLayer} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MemoryLayer = typeof MemoryLayer.Type;
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MemoryLayer}.
+ *
+ * @see {@link MemoryLayer} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MemoryLayer {
   /** Encoded form of {@link MemoryLayer}. */
   export type Encoded = S.Codec.Encoded<typeof MemoryLayer>;
@@ -164,7 +266,13 @@ export declare namespace MemoryLayer {
  */
 export const MemoryTier = MemoryLayer;
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Alias of {@link MemoryLayer}.
+ *
+ * @see {@link MemoryLayer} for the aliased type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MemoryTier = MemoryLayer;
 
 /**
@@ -184,7 +292,13 @@ export type MemoryTier = MemoryLayer;
 export const MemoryKind = LiteralKit(["fact", "document", "trigger"]).pipe(
   $I.annoteSchema("MemoryKind", { description: "Semantic ledger kind. Tier remains the storage layer." }),
 );
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link MemoryKind}.
+ *
+ * @see {@link MemoryKind} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MemoryKind = typeof MemoryKind.Type;
 
 /**
@@ -207,7 +321,13 @@ export const MemorySubjectScope = LiteralKit([
   "user_relationship",
   "third_party",
 ]).pipe($I.annoteSchema("MemorySubjectScope", { description: "Subject the memory is about." }));
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link MemorySubjectScope}.
+ *
+ * @see {@link MemorySubjectScope} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MemorySubjectScope = typeof MemorySubjectScope.Type;
 
 /**
@@ -234,7 +354,13 @@ export const LedgerWriteReason = LiteralKit([
   "daily_reconciliation",
   "legacy_migration",
 ]).pipe($I.annoteSchema("LedgerWriteReason", { description: "Why a knowledge-ledger row was written." }));
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link LedgerWriteReason}.
+ *
+ * @see {@link LedgerWriteReason} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LedgerWriteReason = typeof LedgerWriteReason.Type;
 
 /**
@@ -259,7 +385,13 @@ export type LedgerWriteReason = typeof LedgerWriteReason.Type;
 export const MemoryItemStatus = LiteralKit(["active", "superseded", "hidden", "tombstoned"]).pipe(
   $I.annoteSchema("MemoryItemStatus", { description: "Record lifecycle, distinct from layer and processing state." }),
 );
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link MemoryItemStatus}.
+ *
+ * @see {@link MemoryItemStatus} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MemoryItemStatus = typeof MemoryItemStatus.Type;
 
 /**
@@ -279,7 +411,13 @@ export type MemoryItemStatus = typeof MemoryItemStatus.Type;
 export const ProcessingState = LiteralKit(["pending", "processed", "blocked"]).pipe(
   $I.annoteSchema("ProcessingState", { description: "Internal pipeline state. Not a product layer." }),
 );
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link ProcessingState}.
+ *
+ * @see {@link ProcessingState} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ProcessingState = typeof ProcessingState.Type;
 
 /**
@@ -306,7 +444,13 @@ export const MemoryConsumer = LiteralKit([
   "eval",
   "unknown",
 ]).pipe($I.annoteSchema("MemoryConsumer", { description: "Reader asking for a memory." }));
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link MemoryConsumer}.
+ *
+ * @see {@link MemoryConsumer} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MemoryConsumer = typeof MemoryConsumer.Type;
 
 const isMemoryConsumer = S.is(MemoryConsumer);
@@ -328,7 +472,13 @@ const isMemoryConsumer = S.is(MemoryConsumer);
 export const SourceState = LiteralKit(["active", "missing", "tombstoned", "purged"]).pipe(
   $I.annoteSchema("SourceState", { description: "Evidence source lifecycle embedded on a product memory." }),
 );
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link SourceState}.
+ *
+ * @see {@link SourceState} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SourceState = typeof SourceState.Type;
 
 const AwareUtcTimestamp = S.String.check(S.isPattern(awareInstant)).pipe(
@@ -368,7 +518,7 @@ const triggerWithinLimit = S.makeFilter((value: typeof triggerJson.Type) =>
  * ```ts
  * import { MemoryItemRejected } from "./ProductMemory.ts"
  *
- * console.log(MemoryItemRejected.make({ reason: "active memory requires content" }).reason)
+ * console.log(MemoryItemRejected.make({ reason: "active memory requires content" }).reason) // "active memory requires content"
  * ```
  *
  * @category errors
@@ -382,7 +532,13 @@ export class MemoryItemRejected extends S.TaggedError<MemoryItemRejected>()(
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MemoryItemRejected}.
+ *
+ * @see {@link MemoryItemRejected} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MemoryItemRejected {
   /** Encoded form of {@link MemoryItemRejected}. */
   export type Encoded = S.Codec.Encoded<typeof MemoryItemRejected>;
@@ -428,7 +584,13 @@ export class MemoryEvidenceLink extends Model<MemoryEvidenceLink>("MemoryEvidenc
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MemoryEvidenceLink}.
+ *
+ * @see {@link MemoryEvidenceLink} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MemoryEvidenceLink {
   /** Encoded form of {@link MemoryEvidenceLink}. */
   export type Encoded = S.Codec.Encoded<typeof MemoryEvidenceLink>;
@@ -459,7 +621,13 @@ export class AccessDecision extends Model<AccessDecision>("AccessDecision")(
   $I.annote("AccessDecision", { description: "Allow or deny a memory read." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link AccessDecision}.
+ *
+ * @see {@link AccessDecision} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace AccessDecision {
   /** Encoded form of {@link AccessDecision}. */
   export type Encoded = S.Codec.Encoded<typeof AccessDecision>;
@@ -506,7 +674,13 @@ export class MemoryAccessPolicy extends Model<MemoryAccessPolicy>("MemoryAccessP
   $I.annote("MemoryAccessPolicy", { description: "Reader and the memory grants they hold." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MemoryAccessPolicy}.
+ *
+ * @see {@link MemoryAccessPolicy} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MemoryAccessPolicy {
   /** Encoded form of {@link MemoryAccessPolicy}. */
   export type Encoded = S.Codec.Encoded<typeof MemoryAccessPolicy>;
@@ -595,7 +769,13 @@ export class MemoryItemAlias extends Model<MemoryItemAlias>("MemoryItemAlias")(
   $I.annote("MemoryItemAlias", { description: "Alias from an old memory id to a canonical id." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MemoryItemAlias}.
+ *
+ * @see {@link MemoryItemAlias} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MemoryItemAlias {
   /** Encoded form of {@link MemoryItemAlias}. */
   export type Encoded = S.Codec.Encoded<typeof MemoryItemAlias>;
@@ -671,32 +851,34 @@ const nullableText = (column: string, description: string) =>
  * layer/status/processing matrix, including archive requiring processed and
  * archive never being superseded, is owned by the memory-domain record.
  *
- * **Example** (Require content on the wire)
+ * **Example** (Decode null content as None)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
- * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
  * import { MemoryItem } from "./ProductMemory.ts"
  *
- * const decoded = Effect.runSync(
- *   S.decodeUnknownEffect(MemoryItem)({
- *     memoryId: "mem-1",
- *     uid: "user-1",
- *     version: 1,
- *     tier: "short_term",
- *     status: "active",
- *     processingState: "processed",
- *     content: null,
- *     sourceState: "active",
- *     sensitivityLabels: [],
- *     visibility: "private",
- *     userAsserted: true,
- *     capturedAt: "2020-01-02T03:04:05.000Z",
- *     updatedAt: "2020-01-02T03:04:05.000Z",
- *     expiresAt: "2020-01-04T03:04:05.000Z",
- *   }),
- * )
+ * const item = MemoryItem.make({
+ *   memoryId: "mem-1",
+ *   uid: "user-1",
+ *   version: 1,
+ *   tier: "short_term",
+ *   status: "active",
+ *   processingState: "processed",
+ *   content: O.none(),
+ *   sourceState: "active",
+ *   sensitivityLabels: [],
+ *   visibility: "private",
+ *   userAsserted: true,
+ *   capturedAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ *   updatedAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ *   expiresAt: O.some(DateTime.makeUnsafe("2020-01-04T03:04:05.000Z")),
+ * })
+ * const wire = S.encodeSync(MemoryItem)(item)
+ * const decoded = S.decodeUnknownSync(MemoryItem)(wire)
+ *
+ * console.log(wire.content) // null
  * console.log(O.isNone(decoded.content)) // true
  * ```
  *
@@ -833,7 +1015,13 @@ export class MemoryItem extends Model<MemoryItem>("MemoryItem")(
   ],
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link MemoryItem}.
+ *
+ * @see {@link MemoryItem} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MemoryItem {
   /** Encoded form of {@link MemoryItem}. */
   export type Encoded = S.Codec.Encoded<typeof MemoryItem>;
@@ -877,7 +1065,16 @@ const sha256Hex = Effect.fn("ProductMemory.sha256Hex")(function* (payload: strin
  * import * as O from "effect/Option"
  * import { normalizedMemoryContentKey } from "./ProductMemory.ts"
  *
- * const key = Effect.runPromise(normalizedMemoryContentKey(O.some("Hello   World")))
+ * const keys = Effect.all([
+ *   normalizedMemoryContentKey(O.some("Hello   World")),
+ *   normalizedMemoryContentKey(O.some("hello world")),
+ *   normalizedMemoryContentKey(O.some("   ")),
+ * ])
+ *
+ * void Effect.runPromise(keys).then(([spaced, plain, blank]) => {
+ *   console.log(O.getOrNull(spaced) === O.getOrNull(plain)) // true
+ *   console.log(O.isNone(blank)) // true
+ * })
  * ```
  *
  * @category constructors
@@ -925,7 +1122,12 @@ const reject = (reason: string) => MemoryItemRejected.make({ reason });
  *   capturedAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  *   updatedAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  * })
- * const failed = Effect.runPromise(Effect.match(normalizeMemoryItem(item), { onFailure: (error) => error.reason, onSuccess: () => "ok" }))
+ * const outcome = Effect.match(normalizeMemoryItem(item), {
+ *   onFailure: (error) => error.reason,
+ *   onSuccess: () => "ok",
+ * })
+ *
+ * void Effect.runPromise(outcome).then((reason) => console.log(reason)) // "active memory requires content"
  * ```
  *
  * @category validation
@@ -1013,30 +1215,37 @@ export const normalizeMemoryItem = Effect.fn("MemoryItem.normalizeMemoryItem")(f
 /**
  * Decode a product memory and apply its derived fields.
  *
- * **Example** (Derive a content key)
+ * **Example** (Normalize sensitivity labels)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
- * import { decodeMemoryItem } from "./ProductMemory.ts"
+ * import * as S from "effect/Schema"
+ * import { decodeMemoryItem, MemoryItem } from "./ProductMemory.ts"
  *
- * const item = Effect.runPromise(
- *   decodeMemoryItem({
+ * const wire = S.encodeSync(MemoryItem)(
+ *   MemoryItem.make({
  *     memoryId: "mem-1",
  *     uid: "user-1",
  *     version: 1,
  *     tier: "long_term",
  *     status: "superseded",
  *     processingState: "processed",
- *     content: "Hello",
+ *     content: O.some("Hello"),
  *     sourceState: "missing",
  *     sensitivityLabels: [" Health "],
  *     visibility: "private",
  *     userAsserted: true,
- *     capturedAt: "2020-01-02T03:04:05.000Z",
- *     updatedAt: "2020-01-02T03:04:05.000Z",
+ *     capturedAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ *     updatedAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  *   }),
  * )
+ *
+ * void Effect.runPromise(decodeMemoryItem(wire)).then((item) => {
+ *   console.log(item.sensitivityLabels) // ["health"]
+ *   console.log(O.isSome(item.normalizedContentKey)) // true
+ * })
  * ```
  *
  * @see {@link normalizeMemoryItem} for the invariant list.
@@ -1095,10 +1304,28 @@ export const sourceIds = (item: MemoryItem): ReadonlyArray<string> =>
  * **Example** (Treat an empty promotion document as present)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
- * import { memoryItemHasLifecycleMetadata } from "./ProductMemory.ts"
+ * import { MemoryItem, memoryItemHasLifecycleMetadata } from "./ProductMemory.ts"
  *
- * console.log(memoryItemHasLifecycleMetadata({ promotion: O.some({}) } as never))
+ * const item = MemoryItem.make({
+ *   memoryId: "mem-1",
+ *   uid: "user-1",
+ *   version: 1,
+ *   tier: "long_term",
+ *   status: "active",
+ *   processingState: "processed",
+ *   content: O.some("Prefers tea over coffee"),
+ *   sourceState: "active",
+ *   sensitivityLabels: [],
+ *   visibility: "private",
+ *   userAsserted: true,
+ *   capturedAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ *   updatedAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ *   promotion: O.some({}),
+ * })
+ *
+ * console.log(memoryItemHasLifecycleMetadata(item)) // true
  * ```
  *
  * @category predicates
@@ -1106,20 +1333,6 @@ export const sourceIds = (item: MemoryItem): ReadonlyArray<string> =>
  */
 export const memoryItemHasLifecycleMetadata = (item: MemoryItem): boolean => O.isSome(item.promotion);
 
-/**
- * Mint a memory id.
- *
- * **Example** (Prefix the id)
- *
- * ```ts
- * import { newMemoryId } from "./ProductMemory.ts"
- *
- * console.log(newMemoryId().startsWith("mem_")) // true
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
 const memoryIds = Crypto.make({
   randomBytes: (size) => {
     const bytes = new Uint8Array(size);
@@ -1129,6 +1342,23 @@ const memoryIds = Crypto.make({
   digest: (_algorithm, data) => Effect.succeed(data),
 });
 
+/**
+ * Mint a fresh `mem_`-prefixed memory id from a random UUIDv4 with the dashes removed.
+ *
+ * **Example** (Prefix the id)
+ *
+ * ```ts
+ * import { newMemoryId } from "./ProductMemory.ts"
+ *
+ * const id = newMemoryId()
+ *
+ * console.log(id.startsWith("mem_")) // true
+ * console.log(id.length) // 36
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const newMemoryId = (): string =>
   `mem_${memoryIds.randomUUIDv4.pipe(Effect.runSync, Str.replaceAll("-", ""))}`;
 
@@ -1231,7 +1461,7 @@ const basePolicyChecks = (item: MemoryItem, policy: MemoryAccessPolicy): O.Optio
  *   updatedAt: capturedAt,
  *   expiresAt: O.some(capturedAt),
  * })
- * console.log(isDefaultAccessEligible(item, memoryAccessPolicyForOmiChat(), DateTime.add(capturedAt, { hours: 1 })).reason)
+ * console.log(isDefaultAccessEligible(item, memoryAccessPolicyForOmiChat(), DateTime.add(capturedAt, { hours: 1 })).reason) // "short_term_expired_pending_adjudication"
  * ```
  *
  * @category policies
@@ -1268,9 +1498,30 @@ export const isDefaultAccessEligible: {
  * **Example** (Refuse a long-term row)
  *
  * ```ts
- * import { isArchiveAccessEligible } from "./ProductMemory.ts"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ * import { MemoryItem, isArchiveAccessEligible, memoryAccessPolicyForOmiChat } from "./ProductMemory.ts"
  *
- * console.log(isArchiveAccessEligible.length) // 2
+ * const at = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
+ * const item = MemoryItem.make({
+ *   memoryId: "mem-1",
+ *   uid: "user-1",
+ *   version: 1,
+ *   tier: "long_term",
+ *   status: "active",
+ *   processingState: "processed",
+ *   content: O.some("Prefers tea"),
+ *   sourceState: "active",
+ *   sensitivityLabels: [],
+ *   visibility: "private",
+ *   userAsserted: true,
+ *   capturedAt: at,
+ *   updatedAt: at,
+ * })
+ * const decision = isArchiveAccessEligible(item, memoryAccessPolicyForOmiChat(true))
+ *
+ * console.log(decision.allowed) // false
+ * console.log(decision.reason) // "not_archive"
  * ```
  *
  * @category policies
@@ -1302,9 +1553,29 @@ export const isArchiveAccessEligible: {
  * **Example** (Deny an unknown consumer)
  *
  * ```ts
- * import { derivedDefaultAccessAllowed } from "./ProductMemory.ts"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ * import { derivedDefaultAccessAllowed, MemoryItem } from "./ProductMemory.ts"
  *
- * console.log(typeof derivedDefaultAccessAllowed) // "function"
+ * const at = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
+ * const item = MemoryItem.make({
+ *   memoryId: "mem-1",
+ *   uid: "user-1",
+ *   version: 1,
+ *   tier: "long_term",
+ *   status: "active",
+ *   processingState: "processed",
+ *   content: O.some("Prefers tea"),
+ *   sourceState: "active",
+ *   sensitivityLabels: [],
+ *   visibility: "private",
+ *   userAsserted: true,
+ *   capturedAt: at,
+ *   updatedAt: at,
+ * })
+ *
+ * console.log(derivedDefaultAccessAllowed(item, "omi_chat")) // true
+ * console.log(derivedDefaultAccessAllowed(item, "mystery_bot")) // false
  * ```
  *
  * @category policies

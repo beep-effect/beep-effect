@@ -1,6 +1,8 @@
 /**
  * Canonical action-item contracts and legacy compatibility projections.
  *
+ * **Details**
+ *
  * Action items are Workflow, not a memory layer. They are extracted from the
  * same seam as Memories and stored separately. A long-term memory may absorb a
  * fact about a commitment; the task row stays in Workflow.

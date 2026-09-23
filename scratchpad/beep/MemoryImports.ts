@@ -1,6 +1,8 @@
 /**
  * Memory import runs, batches, and artifacts.
  *
+ * **Details**
+ *
  * Blank optional strings become absent. A batch item still needs an external
  * id, a content hash, or some text. Import datetimes may be naive; they are
  * read as UTC.

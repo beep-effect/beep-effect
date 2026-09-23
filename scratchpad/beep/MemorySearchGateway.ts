@@ -1,6 +1,8 @@
 /**
  * Fail-closed vector search gateway.
  *
+ * **Details**
+ *
  * Vector hits are never returned directly. Every hit hydrates against the
  * authoritative memory and passes projection freshness and access checks.
  *
@@ -37,7 +39,13 @@ const $I = $ScratchpadId.create("beep/MemorySearchGateway");
 export const SearchMode = LiteralKit(["default", "archive_explicit"]).pipe(
   $I.annoteSchema("SearchMode", { description: "Default read versus an explicit archive query." }),
 );
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link SearchMode}.
+ *
+ * @see {@link SearchMode} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SearchMode = typeof SearchMode.Type;
 
 /**
@@ -61,7 +69,13 @@ export const SearchDecision = LiteralKit([
   "stale_vector",
   "access_denied",
 ]).pipe($I.annoteSchema("SearchDecision", { description: "Gateway decision for one memory id." }));
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link SearchDecision}.
+ *
+ * @see {@link SearchDecision} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SearchDecision = typeof SearchDecision.Type;
 
 /**
@@ -89,7 +103,13 @@ export const VectorRepairPurgeReason = LiteralKit([
   "stale_content_hash",
   "stale_vector_updated_at",
 ]).pipe($I.annoteSchema("VectorRepairPurgeReason", { description: "Why a vector id should be repaired or purged." }));
-/** @category type-level @since 0.0.0 */
+/**
+ * Decoded type of {@link VectorRepairPurgeReason}.
+ *
+ * @see {@link VectorRepairPurgeReason} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type VectorRepairPurgeReason = typeof VectorRepairPurgeReason.Type;
 
 /**
@@ -151,7 +171,13 @@ export class SearchVectorHit extends Model<SearchVectorHit>("SearchVectorHit")(
   $I.annote("SearchVectorHit", { description: "One vector hit before authoritative hydration." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link SearchVectorHit}.
+ *
+ * @see {@link SearchVectorHit} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace SearchVectorHit {
   /** Encoded form of {@link SearchVectorHit}. */
   export type Encoded = S.Codec.Encoded<typeof SearchVectorHit>;
@@ -183,7 +209,13 @@ export class HydratedSearchResult extends Model<HydratedSearchResult>("HydratedS
   $I.annote("HydratedSearchResult", { description: "Authoritative memory that passed the gateway." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link HydratedSearchResult}.
+ *
+ * @see {@link HydratedSearchResult} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace HydratedSearchResult {
   /** Encoded form of {@link HydratedSearchResult}. */
   export type Encoded = S.Codec.Encoded<typeof HydratedSearchResult>;
@@ -256,7 +288,13 @@ export class VectorRepairPurgeCandidate extends Model<VectorRepairPurgeCandidate
   }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link VectorRepairPurgeCandidate}.
+ *
+ * @see {@link VectorRepairPurgeCandidate} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace VectorRepairPurgeCandidate {
   /** Encoded form of {@link VectorRepairPurgeCandidate}. */
   export type Encoded = S.Codec.Encoded<typeof VectorRepairPurgeCandidate>;
@@ -301,7 +339,13 @@ export class SearchGatewayResult extends Model<SearchGatewayResult>("SearchGatew
   $I.annote("SearchGatewayResult", { description: "Hydrated results, decisions, and purge candidates." }),
 ) {}
 
-/** @category type-level @since 0.0.0 */
+/**
+ * Encoded shape of {@link SearchGatewayResult}.
+ *
+ * @see {@link SearchGatewayResult} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace SearchGatewayResult {
   /** Encoded form of {@link SearchGatewayResult}. */
   export type Encoded = S.Codec.Encoded<typeof SearchGatewayResult>;

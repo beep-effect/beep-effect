@@ -401,6 +401,13 @@ export const MessageSender = LiteralKit(["ai", "human"]).pipe(
   $I.annoteSchema("MessageSender", { description: "Chat message sender: ai or human." }),
 );
 
+/**
+ * Decoded type of {@link MessageSender}.
+ *
+ * @see {@link MessageSender} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MessageSender = typeof MessageSender.Type;
 
 /**
@@ -423,6 +430,13 @@ export const MessageType = LiteralKit(["text", "day_summary"]).pipe(
   $I.annoteSchema("MessageType", { description: "Chat message type: text or day_summary." }),
 );
 
+/**
+ * Decoded type of {@link MessageType}.
+ *
+ * @see {@link MessageType} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type MessageType = typeof MessageType.Type;
 
 const FeedbackReason = LiteralKit([
@@ -459,6 +473,13 @@ export class MessageConversationStructured extends Model<MessageConversationStru
   $I.annote("MessageConversationStructured", { description: "Title and emoji of a conversation linked from chat." }),
 ) {}
 
+/**
+ * Encoded shape of {@link MessageConversationStructured}.
+ *
+ * @see {@link MessageConversationStructured} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MessageConversationStructured {
   export type Encoded = S.Codec.Encoded<typeof MessageConversationStructured>;
 }
@@ -469,12 +490,13 @@ export declare namespace MessageConversationStructured {
  * **Example** (Read the id)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import { MessageConversation, MessageConversationStructured } from "./Chat.ts"
  *
  * const card = MessageConversation.make({
  *   id: "c1",
  *   structured: MessageConversationStructured.make({ title: "Standup", emoji: "🧠" }),
- *   createdAt: "2020-01-02T03:04:05.000Z",
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  * })
  * console.log(card.id) // "c1"
  * ```
@@ -491,6 +513,13 @@ export class MessageConversation extends Model<MessageConversation>("MessageConv
   $I.annote("MessageConversation", { description: "Conversation card embedded in a chat message." }),
 ) {}
 
+/**
+ * Encoded shape of {@link MessageConversation}.
+ *
+ * @see {@link MessageConversation} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace MessageConversation {
   export type Encoded = S.Codec.Encoded<typeof MessageConversation>;
 }
@@ -501,6 +530,7 @@ export declare namespace MessageConversation {
  * **Example** (Treat a PDF as a document)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import { FileChat, fileChatIsDocumentMessage } from "./Chat.ts"
  *
  * const file = FileChat.make({
@@ -508,7 +538,7 @@ export declare namespace MessageConversation {
  *   name: "notes.pdf",
  *   mimeType: "application/pdf",
  *   openaiFileId: "file-1",
- *   createdAt: "2020-01-02T03:04:05.000Z",
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  * })
  * console.log(fileChatIsDocumentMessage(file)) // true
  * ```
@@ -529,6 +559,13 @@ export class FileChat extends Model<FileChat>("FileChat")(
   $I.annote("FileChat", { description: "File attached to a chat message. thumb_name is omitted from the dump." }),
 ) {}
 
+/**
+ * Encoded shape of {@link FileChat}.
+ *
+ * @see {@link FileChat} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace FileChat {
   export type Encoded = S.Codec.Encoded<typeof FileChat>;
 }
@@ -539,6 +576,7 @@ export declare namespace FileChat {
  * **Example** (Detect an image)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import { FileChat, fileChatIsImage } from "./Chat.ts"
  *
  * const file = FileChat.make({
@@ -546,7 +584,7 @@ export declare namespace FileChat {
  *   name: "a.png",
  *   mimeType: "image/png",
  *   openaiFileId: "file-1",
- *   createdAt: "2020-01-02T03:04:05.000Z",
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  * })
  * console.log(fileChatIsImage(file)) // true
  * ```
@@ -562,6 +600,7 @@ export const fileChatIsImage = (file: FileChat): boolean => Str.startsWith("imag
  * **Example** (Reject an image)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import { FileChat, fileChatIsDocumentMessage } from "./Chat.ts"
  *
  * const file = FileChat.make({
@@ -569,7 +608,7 @@ export const fileChatIsImage = (file: FileChat): boolean => Str.startsWith("imag
  *   name: "a.png",
  *   mimeType: "image/png",
  *   openaiFileId: "file-1",
- *   createdAt: "2020-01-02T03:04:05.000Z",
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  * })
  * console.log(fileChatIsDocumentMessage(file)) // false
  * ```
@@ -589,22 +628,22 @@ export const fileChatIsDocumentMessage = (file: FileChat): boolean => chatFileIs
  * **Example** (Omit the thumb name)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
  * import { FileChat, fileChatPayload } from "./Chat.ts"
  *
- * const payload = Effect.runSync(
- *   fileChatPayload(
- *     FileChat.make({
- *       id: "f1",
- *       name: "notes.pdf",
- *       mimeType: "application/pdf",
- *       openaiFileId: "file-1",
- *       createdAt: "2020-01-02T03:04:05.000Z",
- *       thumbName: O.some("thumb"),
- *     }),
- *   ),
+ * const payload = fileChatPayload(
+ *   FileChat.make({
+ *     id: "f1",
+ *     name: "notes.pdf",
+ *     mimeType: "application/pdf",
+ *     openaiFileId: "file-1",
+ *     createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ *     thumbName: O.some("thumb"),
+ *   }),
  * )
  * console.log("thumb_name" in payload) // false
+ * console.log(payload.created_at) // "2020-01-02T03:04:05.000Z"
  * ```
  *
  * @category serialization
@@ -619,15 +658,59 @@ export const fileChatPayload = (file: FileChat) => ({
   created_at: DateTime.formatIso(file.createdAt),
 });
 
+/**
+ * One labelled value on a chat chart series.
+ *
+ * **Example** (Plot a Monday value)
+ *
+ * ```ts
+ * import { ChartDataPoint } from "./Chat.ts"
+ *
+ * const point = ChartDataPoint.make({ label: "Mon", value: 2.5 })
+ * console.log(`${point.label}: ${point.value}`) // "Mon: 2.5"
+ * ```
+ *
+ * @see {@link ChartDataset} for the series that holds points.
+ * @category models
+ * @since 0.0.0
+ */
 export class ChartDataPoint extends Model<ChartDataPoint>("ChartDataPoint")(
   { label: text("label"), value: S.Finite.pipe(pg.doublePrecision(), pg.columnName("value")) },
   $I.annote("ChartDataPoint", { description: "One point on a chat chart." }),
 ) {}
 
+/**
+ * Encoded shape of {@link ChartDataPoint}.
+ *
+ * @see {@link ChartDataPoint} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ChartDataPoint {
   export type Encoded = S.Codec.Encoded<typeof ChartDataPoint>;
 }
 
+/**
+ * One named series of points on a chat chart, with an optional display color.
+ *
+ * **Example** (Encode a series without a color)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ChartDataPoint, ChartDataset } from "./Chat.ts"
+ *
+ * const series = ChartDataset.make({
+ *   label: "Focus hours",
+ *   dataPoints: [ChartDataPoint.make({ label: "Mon", value: 2.5 }), ChartDataPoint.make({ label: "Tue", value: 4 })],
+ * })
+ * console.log(series.dataPoints.length) // 2
+ * console.log(S.encodeSync(ChartDataset)(series).color) // null
+ * ```
+ *
+ * @see {@link ChartData} for the chart that holds series.
+ * @category models
+ * @since 0.0.0
+ */
 export class ChartDataset extends Model<ChartDataset>("ChartDataset")(
   {
     label: text("label"),
@@ -637,6 +720,13 @@ export class ChartDataset extends Model<ChartDataset>("ChartDataset")(
   $I.annote("ChartDataset", { description: "Named series on a chat chart." }),
 ) {}
 
+/**
+ * Encoded shape of {@link ChartDataset}.
+ *
+ * @see {@link ChartDataset} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ChartDataset {
   export type Encoded = S.Codec.Encoded<typeof ChartDataset>;
 }
@@ -671,6 +761,13 @@ export class ChartData extends Model<ChartData>("ChartData")(
   $I.annote("ChartData", { description: "Inline line or bar chart attached to a chat answer." }),
 ) {}
 
+/**
+ * Encoded shape of {@link ChartData}.
+ *
+ * @see {@link ChartData} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ChartData {
   export type Encoded = S.Codec.Encoded<typeof ChartData>;
 }
@@ -770,7 +867,7 @@ const optionalStrippedField = (column: string, maxLength: number) =>
  * import { ChatEvidenceReference } from "./Chat.ts"
  *
  * const decoded = Effect.runSync(
- *   S.decodeUnknownEffect(ChatEvidenceReference)({ id: " ev ", kind: "future", state: "nope" }),
+ *   S.decodeUnknownEffect(ChatEvidenceReference)({ id: " ev ", kind: "future", state: "nope", metadata: {} }),
  * )
  * console.log(decoded.kind) // "unknown"
  * ```
@@ -819,6 +916,13 @@ export class ChatEvidenceReference extends Model<ChatEvidenceReference>("ChatEvi
   ],
 ) {}
 
+/**
+ * Encoded shape of {@link ChatEvidenceReference}.
+ *
+ * @see {@link ChatEvidenceReference} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ChatEvidenceReference {
   export type Encoded = S.Codec.Encoded<typeof ChatEvidenceReference>;
 }
@@ -864,6 +968,33 @@ export const evidenceReferenceIssue = (reference: ChatEvidenceReference): O.Opti
   return O.none();
 };
 
+/**
+ * Evidence reference schema that also enforces the per-kind identity rules from {@link evidenceReferenceIssue}.
+ *
+ * **Details**
+ *
+ * A `screen` or `keyframe` reference needs `frameId`, a segment reference needs a
+ * conversation and segment id, `endMs` may not precede `startMs`, and metadata
+ * is capped at 16 keys and 2000 JSON characters.
+ *
+ * **Example** (Require a frame id for screen evidence)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ChatEvidenceReference, ChatEvidenceReferenceChecked } from "./Chat.ts"
+ *
+ * const isValid = S.is(ChatEvidenceReferenceChecked)
+ * const bare = ChatEvidenceReference.make({ id: "ev-1", kind: "screen", state: "available" })
+ * const framed = ChatEvidenceReference.make({ id: "ev-1", kind: "screen", state: "available", frameId: O.some("frame-9") })
+ * console.log(isValid(bare)) // false
+ * console.log(isValid(framed)) // true
+ * ```
+ *
+ * @see {@link ChatEvidenceReference} for the unchecked shape.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ChatEvidenceReferenceChecked = ChatEvidenceReference.check(
   S.makeFilter((reference: ChatEvidenceReference) => {
     const issue = evidenceReferenceIssue(reference);
@@ -906,6 +1037,13 @@ export class ChatEvidenceEnvelope extends Model<ChatEvidenceEnvelope>("ChatEvide
   $I.annote("ChatEvidenceEnvelope", { description: "Versioned transport envelope for chat evidence references." }),
 ) {}
 
+/**
+ * Encoded shape of {@link ChatEvidenceEnvelope}.
+ *
+ * @see {@link ChatEvidenceEnvelope} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ChatEvidenceEnvelope {
   export type Encoded = S.Codec.Encoded<typeof ChatEvidenceEnvelope>;
 }
@@ -963,6 +1101,26 @@ export const settleEvidenceEnvelope = (envelope: ChatEvidenceEnvelope): ChatEvid
   });
 };
 
+/**
+ * Evidence envelope schema that also rejects duplicate reference ids.
+ *
+ * **Example** (Reject a repeated reference)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ChatEvidenceEnvelope, ChatEvidenceEnvelopeChecked, ChatEvidenceReference } from "./Chat.ts"
+ *
+ * const isValid = S.is(ChatEvidenceEnvelopeChecked)
+ * const reference = ChatEvidenceReference.make({ id: "ev-1", kind: "screen", state: "available", frameId: O.some("frame-9") })
+ * console.log(isValid(ChatEvidenceEnvelope.make({ references: [reference] }))) // true
+ * console.log(isValid(ChatEvidenceEnvelope.make({ references: [reference, reference] }))) // false
+ * ```
+ *
+ * @see {@link evidenceEnvelopeIssue} for the rule this schema applies.
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ChatEvidenceEnvelopeChecked = ChatEvidenceEnvelope.check(
   S.makeFilter((envelope: ChatEvidenceEnvelope) => {
     const issue = evidenceEnvelopeIssue(envelope);
@@ -984,12 +1142,13 @@ const ChartOrObject = S.Union([ChartData, S.JsonObject]);
  * **Example** (Read the text)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import { Message } from "./Chat.ts"
  *
  * const message = Message.make({
  *   id: "m1",
  *   text: "Hello",
- *   createdAt: "2020-01-02T03:04:05.000Z",
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  *   sender: "human",
  *   type: "text",
  * })
@@ -1039,27 +1198,19 @@ export class Message extends Model<Message>("Message")(
   }),
 ) {}
 
+/**
+ * Encoded shape of {@link Message}.
+ *
+ * @see {@link Message} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace Message {
   export type Encoded = S.Codec.Encoded<typeof Message>;
 }
 
 const decodeUnknownEffectMessage = S.decodeUnknownEffect(Message);
 
-/**
- * Copies app and plugin ids and lifts legacy content blocks before decode.
- *
- * **Example** (Mirror a plugin id)
- *
- * ```ts
- * import { repairMessageRecord } from "./Chat.ts"
- *
- * const repaired = repairMessageRecord({ plugin_id: "app-1" })
- * console.log(repaired && typeof repaired === "object" && "app_id" in repaired && repaired.app_id) // "app-1"
- * ```
- *
- * @category decoding
- * @since 0.0.0
- */
 const camelKey = (key: string): string =>
   key.replace(/_([a-z])/g, (_all, letter: string) => letter.toUpperCase());
 
@@ -1070,6 +1221,44 @@ const camelizeTop = (input: unknown): unknown => {
   return out;
 };
 
+/**
+ * Copies app and plugin ids onto each other and lifts legacy content blocks before a message decode.
+ *
+ * **Details**
+ *
+ * The first present id among `app_id`/`appId` wins and is written to all four
+ * keys; otherwise `plugin_id`/`pluginId` is copied to the app keys. When no
+ * content-block key exists, a JSON `metadata` string with a `content_blocks`
+ * array fills `contentBlocks`. Non-record input is returned unchanged, and the
+ * input object itself is never mutated.
+ *
+ * **Example** (Mirror a plugin id)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { repairMessageRecord } from "./Chat.ts"
+ *
+ * const repaired = S.decodeUnknownSync(S.Record(S.String, S.Unknown))(repairMessageRecord({ plugin_id: "app-1" }))
+ * console.log(repaired.app_id) // "app-1"
+ * console.log(repaired.appId) // "app-1"
+ * ```
+ *
+ * **Example** (Lift legacy content blocks)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { repairMessageRecord } from "./Chat.ts"
+ *
+ * const repaired = S.decodeUnknownSync(S.Record(S.String, S.Unknown))(
+ *   repairMessageRecord({ metadata: "{\"content_blocks\":[{\"type\":\"text\"}]}" }),
+ * )
+ * console.log(repaired.contentBlocks) // [{ type: "text" }]
+ * ```
+ *
+ * @see {@link decodeMessage} for the decoder that applies this repair.
+ * @category decoding
+ * @since 0.0.0
+ */
 export const repairMessageRecord = (input: unknown): unknown => {
   if (!isRecord(input)) return input;
   const data: { [key: string]: unknown } = { ...input };
@@ -1113,6 +1302,12 @@ export const repairMessageRecord = (input: unknown): unknown => {
  *     created_at: "2020-01-02T03:04:05.000Z",
  *     sender: "ai",
  *     type: "text",
+ *     from_external_integration: false,
+ *     memories_id: [],
+ *     memories: [],
+ *     reported: false,
+ *     files_id: [],
+ *     files: [],
  *     metadata: "{\"content_blocks\":[{\"type\":\"text\"}]}",
  *   }),
  * )
@@ -1136,16 +1331,25 @@ export const decodeMessage = (input: unknown) =>
  * **Example** (Skip a broken record)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
  * import { deserializeManySafe } from "./Chat.ts"
  *
- * const messages = Effect.runSync(deserializeManySafe([{ id: "bad" }, {
- *   id: "m1",
- *   text: "Hello",
- *   created_at: "2020-01-02T03:04:05.000Z",
- *   sender: "human",
- *   type: "text",
- * }]))
+ * const messages = deserializeManySafe([
+ *   { id: "bad" },
+ *   {
+ *     id: "m1",
+ *     text: "Hello",
+ *     created_at: "2020-01-02T03:04:05.000Z",
+ *     sender: "human",
+ *     type: "text",
+ *     from_external_integration: false,
+ *     memories_id: [],
+ *     memories: [],
+ *     reported: false,
+ *     files_id: [],
+ *     files: [],
+ *     content_blocks: [],
+ *   },
+ * ])
  * console.log(messages.length) // 1
  * ```
  *
@@ -1212,13 +1416,14 @@ const resolveSenderName = (
  * **Example** (Render a human turn)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import { Message, messagesAsString } from "./Chat.ts"
  *
  * const text = messagesAsString([
  *   Message.make({
  *     id: "m1",
  *     text: "Hello",
- *     createdAt: "2020-01-02T03:04:05.000Z",
+ *     createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  *     sender: "human",
  *     type: "text",
  *   }),
@@ -1263,13 +1468,14 @@ export const messagesAsString = (
  * **Example** (Include the sender)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import { Message, messagesAsXml } from "./Chat.ts"
  *
  * const xml = messagesAsXml([
  *   Message.make({
  *     id: "m1",
  *     text: "Hello",
- *     createdAt: "2020-01-02T03:04:05.000Z",
+ *     createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  *     sender: "ai",
  *     type: "text",
  *   }),
@@ -1318,13 +1524,14 @@ ${fileSection}
  * **Example** (Default the flag to false)
  *
  * ```ts
+ * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  * import { ResponseMessage } from "./Chat.ts"
  *
  * const message = ResponseMessage.make({
  *   id: "m1",
  *   text: "Hello",
- *   createdAt: "2020-01-02T03:04:05.000Z",
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
  *   sender: "ai",
  *   type: "text",
  * })
@@ -1342,6 +1549,13 @@ export class ResponseMessage extends Model<ResponseMessage>("ResponseMessage")(
   $I.annote("ResponseMessage", { description: "Chat message response that may ask for an NPS rating." }),
 ) {}
 
+/**
+ * Encoded shape of {@link ResponseMessage}.
+ *
+ * @see {@link ResponseMessage} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ResponseMessage {
   export type Encoded = S.Codec.Encoded<typeof ResponseMessage>;
 }
@@ -1409,6 +1623,13 @@ export class PageContext extends Model<PageContext>("PageContext")(
   $I.annote("PageContext", { description: "Page the user is viewing. Scope dates must include a timezone offset." }),
 ) {}
 
+/**
+ * Encoded shape of {@link PageContext}.
+ *
+ * @see {@link PageContext} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace PageContext {
   export type Encoded = S.Codec.Encoded<typeof PageContext>;
 }
@@ -1453,10 +1674,37 @@ export class SendMessageRequest extends Model<SendMessageRequest>("SendMessageRe
   $I.annote("SendMessageRequest", { description: "Request to send one chat message." }),
 ) {}
 
+/**
+ * Encoded shape of {@link SendMessageRequest}.
+ *
+ * @see {@link SendMessageRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace SendMessageRequest {
   export type Encoded = S.Codec.Encoded<typeof SendMessageRequest>;
 }
 
+/**
+ * One earlier chat turn passed as context when generating a reply.
+ *
+ * **Details**
+ *
+ * `text` is 1 to 100000 characters on decode.
+ *
+ * **Example** (Record a human turn)
+ *
+ * ```ts
+ * import { GenerateReplyTurn } from "./Chat.ts"
+ *
+ * const turn = GenerateReplyTurn.make({ text: "What did I promise Sam yesterday?", sender: "human" })
+ * console.log(turn.sender) // "human"
+ * ```
+ *
+ * @see {@link GenerateReplyRequest} for the request that carries turns.
+ * @category models
+ * @since 0.0.0
+ */
 export class GenerateReplyTurn extends Model<GenerateReplyTurn>("GenerateReplyTurn")(
   {
     text: boundedText("text", { minLength: 1, maxLength: 100000 }),
@@ -1466,10 +1714,53 @@ export class GenerateReplyTurn extends Model<GenerateReplyTurn>("GenerateReplyTu
   (columns) => [textBoundsCheck("text", { minLength: 1, maxLength: 100000 })(columns.text)],
 ) {}
 
+/**
+ * Encoded shape of {@link GenerateReplyTurn}.
+ *
+ * @see {@link GenerateReplyTurn} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GenerateReplyTurn {
   export type Encoded = S.Codec.Encoded<typeof GenerateReplyTurn>;
 }
 
+/**
+ * Request to generate a chat reply from new text plus up to 50 prior turns.
+ *
+ * **Details**
+ *
+ * `text` is 1 to 100000 characters, `history` constructs as an empty list, and
+ * `appId` is at most 200 characters.
+ *
+ * **Example** (Ask with one prior turn)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { GenerateReplyRequest, GenerateReplyTurn } from "./Chat.ts"
+ *
+ * const request = GenerateReplyRequest.make({
+ *   text: "Draft a reply to Sam",
+ *   history: [GenerateReplyTurn.make({ text: "Sam asked about Friday", sender: "ai" })],
+ * })
+ * console.log(request.history.length) // 1
+ * console.log(O.isNone(request.appId)) // true
+ * ```
+ *
+ * **Example** (Reject empty text)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GenerateReplyRequest } from "./Chat.ts"
+ *
+ * const exit = S.decodeUnknownExit(GenerateReplyRequest)({ text: "", history: [] })
+ * console.log(exit._tag) // "Failure"
+ * ```
+ *
+ * @see {@link GenerateReplyResponse} for the reply.
+ * @category models
+ * @since 0.0.0
+ */
 export class GenerateReplyRequest extends Model<GenerateReplyRequest>("GenerateReplyRequest")(
   {
     text: boundedText("text", { minLength: 1, maxLength: 100000 }),
@@ -1482,15 +1773,46 @@ export class GenerateReplyRequest extends Model<GenerateReplyRequest>("GenerateR
   (columns) => [textBoundsCheck("text", { minLength: 1, maxLength: 100000 })(columns.text)],
 ) {}
 
+/**
+ * Encoded shape of {@link GenerateReplyRequest}.
+ *
+ * @see {@link GenerateReplyRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GenerateReplyRequest {
   export type Encoded = S.Codec.Encoded<typeof GenerateReplyRequest>;
 }
 
+/**
+ * Generated chat reply, tagged with the app that produced it when one did.
+ *
+ * **Example** (Encode a reply without an app)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GenerateReplyResponse } from "./Chat.ts"
+ *
+ * const reply = GenerateReplyResponse.make({ text: "Friday at 3 works for me." })
+ * console.log(S.encodeSync(GenerateReplyResponse)(reply)) // { text: "Friday at 3 works for me.", appId: null }
+ * ```
+ *
+ * @see {@link GenerateReplyRequest} for the request.
+ * @category models
+ * @since 0.0.0
+ */
 export class GenerateReplyResponse extends Model<GenerateReplyResponse>("GenerateReplyResponse")(
   { text: text("text"), appId: optionalText("app_id") },
   $I.annote("GenerateReplyResponse", { description: "Generated chat reply." }),
 ) {}
 
+/**
+ * Encoded shape of {@link GenerateReplyResponse}.
+ *
+ * @see {@link GenerateReplyResponse} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace GenerateReplyResponse {
   export type Encoded = S.Codec.Encoded<typeof GenerateReplyResponse>;
 }
@@ -1522,15 +1844,45 @@ export class RateMessageRequest extends Model<RateMessageRequest>("RateMessageRe
   (columns) => [textBoundsCheck("comment", { maxLength: 1000 })(columns.comment)],
 ) {}
 
+/**
+ * Encoded shape of {@link RateMessageRequest}.
+ *
+ * @see {@link RateMessageRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace RateMessageRequest {
   export type Encoded = S.Codec.Encoded<typeof RateMessageRequest>;
 }
 
+/**
+ * Request naming the chat messages to share.
+ *
+ * **Example** (Share two messages)
+ *
+ * ```ts
+ * import { ShareChatMessagesRequest } from "./Chat.ts"
+ *
+ * const request = ShareChatMessagesRequest.make({ messageIds: ["m1", "m2"] })
+ * console.log(request.messageIds.join(",")) // "m1,m2"
+ * console.log(ShareChatMessagesRequest.make({}).messageIds.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class ShareChatMessagesRequest extends Model<ShareChatMessagesRequest>("ShareChatMessagesRequest")(
   { messageIds: jsonList(S.String, "message_ids") },
   $I.annote("ShareChatMessagesRequest", { description: "Ids of chat messages to share." }),
 ) {}
 
+/**
+ * Encoded shape of {@link ShareChatMessagesRequest}.
+ *
+ * @see {@link ShareChatMessagesRequest} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ShareChatMessagesRequest {
   export type Encoded = S.Codec.Encoded<typeof ShareChatMessagesRequest>;
 }
@@ -1541,11 +1893,11 @@ export declare namespace ShareChatMessagesRequest {
  * **Example** (Add a file id once)
  *
  * ```ts
- * import * as O from "effect/Option"
+ * import * as DateTime from "effect/DateTime"
  * import { ChatSession, addFileIds } from "./Chat.ts"
  *
  * const session = addFileIds(
- *   ChatSession.make({ id: "s1", createdAt: "2020-01-02T03:04:05.000Z" }),
+ *   ChatSession.make({ id: "s1", createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z") }),
  *   ["f1", "f1"],
  * )
  * console.log(session.fileIds.length) // 1
@@ -1570,6 +1922,13 @@ export class ChatSession extends Model<ChatSession>("ChatSession")(
   }),
 ) {}
 
+/**
+ * Encoded shape of {@link ChatSession}.
+ *
+ * @see {@link ChatSession} for the runtime schema and decoded type.
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace ChatSession {
   export type Encoded = S.Codec.Encoded<typeof ChatSession>;
 }
@@ -1599,6 +1958,40 @@ export const repairLegacyChatSessionRecord = (input: unknown): unknown => {
   return data;
 };
 
+/**
+ * Decodes a legacy v1 chat session after the app/plugin id repair.
+ *
+ * **Gotchas**
+ *
+ * The decoder reads camelCase keys, but {@link repairLegacyChatSessionRecord}
+ * mirrors only the snake_case `app_id` and `plugin_id`. A camelCase `appId` is
+ * therefore not copied to `pluginId`, and snake_case ids are dropped by the
+ * decode. `messageIds` and `fileIds` are required on decode.
+ *
+ * **Example** (Decode a camelCase session)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import { decodeLegacyChatSession } from "./Chat.ts"
+ *
+ * const session = Effect.runSync(
+ *   decodeLegacyChatSession({
+ *     id: "s1",
+ *     createdAt: "2020-01-02T03:04:05.000Z",
+ *     appId: "app-1",
+ *     messageIds: ["m1"],
+ *     fileIds: [],
+ *   }),
+ * )
+ * console.log(O.getOrNull(session.appId)) // "app-1"
+ * console.log(O.isNone(session.pluginId)) // true
+ * ```
+ *
+ * @see {@link ChatSession} for the decoded model.
+ * @category decoding
+ * @since 0.0.0
+ */
 export const decodeLegacyChatSession = (input: unknown) =>
   decodeChatSession(repairLegacyChatSessionRecord(input));
 
@@ -1608,10 +2001,10 @@ export const decodeLegacyChatSession = (input: unknown) =>
  * **Example** (Skip an id that is already present)
  *
  * ```ts
- * import * as O from "effect/Option"
+ * import * as DateTime from "effect/DateTime"
  * import { ChatSession, addFileIds } from "./Chat.ts"
  *
- * const once = addFileIds(ChatSession.make({ id: "s1", createdAt: "2020-01-02T03:04:05.000Z", fileIds: ["f1"] }), ["f1", "f2"])
+ * const once = addFileIds(ChatSession.make({ id: "s1", createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"), fileIds: ["f1"] }), ["f1", "f2"])
  * console.log(once.fileIds.join(",")) // "f1,f2"
  * ```
  *
@@ -1637,11 +2030,11 @@ export const addFileIds = (session: ChatSession, newFileIds: ReadonlyArray<strin
  * **Example** (Drop an existing id)
  *
  * ```ts
- * import * as O from "effect/Option"
+ * import * as DateTime from "effect/DateTime"
  * import { ChatSession, retrieveNewFile } from "./Chat.ts"
  *
  * const fresh = retrieveNewFile(
- *   ChatSession.make({ id: "s1", createdAt: "2020-01-02T03:04:05.000Z", fileIds: ["f1"] }),
+ *   ChatSession.make({ id: "s1", createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"), fileIds: ["f1"] }),
  *   ["f1", "f2"],
  * )
  * console.log(fresh.includes("f2")) // true

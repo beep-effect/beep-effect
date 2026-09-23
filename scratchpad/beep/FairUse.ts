@@ -55,6 +55,9 @@ export const NaiveUtcTimestamp = S.String.pipe(
     decode: SchemaGetter.transform((value: string) => value),
     encode: SchemaGetter.transform(stripUtcSuffix),
   }),
+  $I.annoteSchema("NaiveUtcTimestamp", {
+    description: "UTC instant stored without a zone suffix. Zoneless input is read as UTC.",
+  }),
 );
 
 /**
@@ -585,6 +588,10 @@ export declare namespace FairUseEvent {
  *     new_stage: "none",
  *     resolved: false,
  *     resolved_at: null,
+ *     session_id: "",
+ *     enforcement_action: "",
+ *     admin_notes: "",
+ *     resolved_by: "",
  *   }),
  * )
  * console.log(decoded.trigger) // "3day"

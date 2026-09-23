@@ -1,6 +1,8 @@
 /**
  * Daily, weekly, and overall productivity scores for the score responses.
  *
+ * **Details**
+ *
  * Response wire shapes for `/v1/daily-score` and `/v1/scores`. The database
  * layer constructs records matching these fields.
  *

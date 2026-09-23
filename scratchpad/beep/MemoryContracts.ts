@@ -1,6 +1,8 @@
 /**
  * Extraction and durable-patch contracts.
  *
+ * **Details**
+ *
  * L1 archive items are pipeline artifacts, not the product Archive layer.
  * Working observations are short-term candidates. `LifecycleState.working` is
  * in-flight extraction, not a stored layer, and `context_only` is not a tier.
@@ -100,25 +102,6 @@ const aliasTo = (
     return HashSet.has(allowed, candidate) ? candidate : fallback;
   };
 
-/**
- * Compact JSON with sorted object keys.
- *
- * **Details**
- *
- * This is the byte format behind {@link deterministicContractId}. `null`,
- * booleans, numbers, strings, arrays, and objects are encoded without spaces.
- *
- * **Example** (Sort object keys)
- *
- * ```ts
- * import { canonicalJson } from "@beep/scratchpad/beep/MemoryContracts.ts"
- *
- * console.log(canonicalJson({ b: 1, a: "x" })) // "{\"a\":\"x\",\"b\":1}"
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
 const hex4 = (code: number): string => Str.padStart(4, "0")(code.toString(16));
 
 const jsonString = (value: string): string => {
@@ -157,6 +140,27 @@ const jsonNumber = (value: number): string => (Number.isFinite(value) ? String(v
 
 const jsonChild = (found: unknown): S.Json => (isJson(found) ? found : null);
 
+/**
+ * Compact JSON with sorted object keys.
+ *
+ * **Details**
+ *
+ * This is the byte format behind {@link deterministicContractId}. `null`,
+ * booleans, numbers, strings, arrays, and objects are encoded without spaces. Array order is preserved, and non-finite numbers
+ * and non-JSON children encode as `null`.
+ *
+ * **Example** (Sort object keys)
+ *
+ * ```ts
+ * import { canonicalJson } from "@beep/scratchpad/beep/MemoryContracts"
+ *
+ * console.log(canonicalJson({ b: 1, a: "x" })) // {"a":"x","b":1}
+ * console.log(canonicalJson({ tags: ["z", "a"], ok: true })) // {"ok":true,"tags":["z","a"]}
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const canonicalJson = (value: S.Json): string => {
   if (Predicate.isNull(value)) return "null";
   if (Predicate.isBoolean(value)) return value ? "true" : "false";
@@ -198,7 +202,7 @@ const privateVisibility = "private";
  * **Example** (Read the frozen source name)
  *
  * ```ts
- * import { DURABLE_MEMORY_PATCH_FACT_SOURCE } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { DURABLE_MEMORY_PATCH_FACT_SOURCE } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(DURABLE_MEMORY_PATCH_FACT_SOURCE) // "durable_memory_patch"
  * ```
@@ -214,7 +218,7 @@ export const DURABLE_MEMORY_PATCH_FACT_SOURCE = "durable_memory_patch";
  * **Example** (Read the content cap)
  *
  * ```ts
- * import { MAX_LEDGER_CONTENT_CHARACTERS } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { MAX_LEDGER_CONTENT_CHARACTERS } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(MAX_LEDGER_CONTENT_CHARACTERS) // 4000
  * ```
@@ -230,7 +234,7 @@ export const MAX_LEDGER_CONTENT_CHARACTERS = 4000;
  * **Example** (Read the body cap)
  *
  * ```ts
- * import { MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS) // 24000
  * ```
@@ -246,7 +250,7 @@ export const MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS = 24000;
  * **Example** (Read the slot cap)
  *
  * ```ts
- * import { MAX_LEDGER_SLOT_CHARACTERS } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { MAX_LEDGER_SLOT_CHARACTERS } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(MAX_LEDGER_SLOT_CHARACTERS) // 64
  * ```
@@ -262,7 +266,7 @@ export const MAX_LEDGER_SLOT_CHARACTERS = 64;
  * **Example** (Read the key cap)
  *
  * ```ts
- * import { MAX_LEDGER_TRIGGER_CONDITION_KEYS } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { MAX_LEDGER_TRIGGER_CONDITION_KEYS } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(MAX_LEDGER_TRIGGER_CONDITION_KEYS) // 13
  * ```
@@ -278,7 +282,7 @@ export const MAX_LEDGER_TRIGGER_CONDITION_KEYS = 13;
  * **Example** (Read the serialized cap)
  *
  * ```ts
- * import { MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS) // 8000
  * ```
@@ -301,7 +305,7 @@ export const MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS = 8000;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { MemoryTier } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { MemoryTier } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(MemoryTier)("short_term"))
  * console.log(decoded) // "short_term"
@@ -329,7 +333,7 @@ export type MemoryTier = typeof MemoryTier.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { MemoryKind } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { MemoryKind } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(MemoryKind)("fact"))
  * console.log(decoded) // "fact"
@@ -357,7 +361,7 @@ export type MemoryKind = typeof MemoryKind.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { MemorySubjectScope } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { MemorySubjectScope } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(MemorySubjectScope)("primary_user"))
  * console.log(decoded) // "primary_user"
@@ -389,7 +393,7 @@ export type MemorySubjectScope = typeof MemorySubjectScope.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { LedgerWriteReason } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { LedgerWriteReason } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(LedgerWriteReason)("legacy_migration"))
  * console.log(decoded) // "legacy_migration"
@@ -435,7 +439,7 @@ export type LedgerWriteReason = typeof LedgerWriteReason.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { LifecycleState } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { LifecycleState } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(LifecycleState)("working"))
  * console.log(decoded) // "working"
@@ -474,7 +478,7 @@ const isLifecycleState = S.is(LifecycleState);
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { DurablePatchDecision } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { DurablePatchDecision } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(DurablePatchDecision)("add"))
  * console.log(decoded) // "add"
@@ -506,7 +510,7 @@ export type DurablePatchDecision = typeof DurablePatchDecision.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { ConfidenceBand } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { ConfidenceBand } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(ConfidenceBand)("medium"))
  * console.log(decoded) // "medium"
@@ -534,7 +538,7 @@ export type ConfidenceBand = typeof ConfidenceBand.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { L1MemoryArchiveClass } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L1MemoryArchiveClass } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(L1MemoryArchiveClass)("general"))
  * console.log(decoded) // "general"
@@ -566,7 +570,7 @@ export type L1MemoryArchiveClass = typeof L1MemoryArchiveClass.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { L2DropReason } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L2DropReason } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(L2DropReason)("duplicate"))
  * console.log(decoded) // "duplicate"
@@ -610,7 +614,7 @@ export type L2DropReason = typeof L2DropReason.Type;
  * **Example** (Name the extractor)
  *
  * ```ts
- * import { memoryExtractionError } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { memoryExtractionError } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const error = memoryExtractionError("batch")
  * console.log(error.extractor) // "batch"
@@ -644,7 +648,7 @@ export declare namespace MemoryExtractionError {
  * **Example** (Use the default message)
  *
  * ```ts
- * import { memoryExtractionError } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { memoryExtractionError } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(memoryExtractionError("batch").message) // "batch failed before producing a valid extraction result"
  * ```
@@ -670,7 +674,7 @@ export const memoryExtractionError = (extractor: string, message?: string): Memo
  * **Example** (Name the stage)
  *
  * ```ts
- * import { workingObservationExtractionError } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { workingObservationExtractionError } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(workingObservationExtractionError("parse").stage) // "parse"
  * ```
@@ -703,7 +707,7 @@ export declare namespace WorkingObservationExtractionError {
  * **Example** (Include the stage in the message)
  *
  * ```ts
- * import { workingObservationExtractionError } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { workingObservationExtractionError } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const error = workingObservationExtractionError("parse")
  * console.log(error.extractor) // "working_observation_extractor"
@@ -725,9 +729,9 @@ export const workingObservationExtractionError = (stage: string): WorkingObserva
  * **Example** (Build a contract error)
  *
  * ```ts
- * import { MemoryContractError } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { MemoryContractError } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * console.log(MemoryContractError.make({ message: "unknown lifecycle status" }).message)
+ * console.log(MemoryContractError.make({ message: "unknown lifecycle status" }).message) // "unknown lifecycle status"
  * ```
  *
  * @category errors
@@ -765,7 +769,7 @@ export declare namespace MemoryContractError {
  *
  * ```ts
  * import * as Effect from "effect/Effect"
- * import { deriveAllowedUse } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { deriveAllowedUse } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(Effect.runSync(deriveAllowedUse("active", ["credential"]))) // "hidden"
  * ```
@@ -802,7 +806,7 @@ export const deriveAllowedUse = Effect.fn("MemoryContracts.deriveAllowedUse")(fu
  * **Example** (Hash a sorted object)
  *
  * ```ts
- * import { deterministicContractId } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { deterministicContractId } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const digest = deterministicContractId("ns", { b: 1, a: ["x", { c: true, d: null }] })
  * console.log(digest) // "7e1ebfaf1e083d7d76033d7199cc8f81eabd84525bdee981115eea2a4daac83a"
@@ -824,9 +828,9 @@ export const deterministicContractId = (namespace: string, payload: S.JsonObject
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { EvidenceRef } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { EvidenceRef } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * const decoded = Effect.runSync(S.decodeUnknownEffect(EvidenceRef)({ evidenceId: "ev-1", quote: null }))
+ * const decoded = Effect.runSync(S.decodeUnknownEffect(EvidenceRef)({ evidenceId: "ev-1", quote: null, artifactRef: {} }))
  * console.log(O.isNone(decoded.quote)) // true
  * ```
  *
@@ -873,14 +877,15 @@ const confidenceColumn = () => kitDefault(["high", "medium", "low"], medium, "co
  * the Python JSON schema and stay optional here. Empty `about` means the
  * subject is uncertain, not that the item is about the user.
  *
- * **Example** (Decode text)
+ * **Example** (Trim the archive text)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { L1MemoryArchiveItem } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L1MemoryArchiveItem } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * const decoded = Effect.runSync(S.decodeUnknownEffect(L1MemoryArchiveItem)({ text: "  a fact  " }))
+ * const wire = S.encodeSync(L1MemoryArchiveItem)(L1MemoryArchiveItem.make({ text: "a fact" }))
+ * const decoded = S.decodeUnknownSync(L1MemoryArchiveItem)({ ...wire, text: "  a fact  " })
+ *
  * console.log(decoded.text) // "a fact"
  * ```
  *
@@ -953,7 +958,7 @@ export declare namespace L1MemoryArchiveItem {
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { L1MemoryArchiveItem, L1MemoryArchiveItemWire } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L1MemoryArchiveItem, L1MemoryArchiveItemWire } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const item = L1MemoryArchiveItem.make({ text: "fact" })
  * const encoded = Effect.runSync(S.encodeEffect(L1MemoryArchiveItemWire)(item))
@@ -980,7 +985,7 @@ const decodeL1MemoryArchiveItemWire = S.decodeUnknownEffect(L1MemoryArchiveItemW
  * **Example** (Force a secret row to sensitive)
  *
  * ```ts
- * import { L1MemoryArchiveItem, deriveArchivePolicy } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L1MemoryArchiveItem, deriveArchivePolicy } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const item = deriveArchivePolicy(L1MemoryArchiveItem.make({ text: "secret", riskFlags: ["Secret"] }))
  * console.log(item.archiveClass) // "sensitive"
@@ -1027,9 +1032,19 @@ const renameArchiveClass = (input: unknown): unknown => {
  *
  * ```ts
  * import * as Effect from "effect/Effect"
- * import { decodeL1MemoryArchiveItem } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import * as S from "effect/Schema"
+ * import {
+ *   decodeL1MemoryArchiveItem,
+ *   L1MemoryArchiveItem,
+ *   L1MemoryArchiveItemWire,
+ * } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * const decoded = Effect.runSync(decodeL1MemoryArchiveItem({ text: "fact", archive_class: "sensitive" }))
+ * const { class: archiveClass, ...wire } = S.encodeSync(L1MemoryArchiveItemWire)(
+ *   L1MemoryArchiveItem.make({ text: "fact", archiveClass: "sensitive" }),
+ * )
+ * const decoded = Effect.runSync(decodeL1MemoryArchiveItem({ ...wire, archive_class: archiveClass }))
+ *
+ * console.log(decoded.archiveClass) // "sensitive"
  * console.log(decoded.normalSearchAllowed) // false
  * ```
  *
@@ -1055,7 +1070,7 @@ export const decodeL1MemoryArchiveItem = Effect.fn("MemoryContracts.decodeL1Memo
  * **Example** (Drop a sensitive row)
  *
  * ```ts
- * import { L1MemoryArchiveItem, deriveArchivePolicy, filterL1ArchiveForNormalSearch } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L1MemoryArchiveItem, deriveArchivePolicy, filterL1ArchiveForNormalSearch } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const kept = filterL1ArchiveForNormalSearch([
  *   deriveArchivePolicy(L1MemoryArchiveItem.make({ text: "cats", riskFlags: ["secret"] })),
@@ -1191,13 +1206,12 @@ const closedFromAlias = (normalize: (value: string) => string) =>
  * **Example** (Alias a speaker)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { WorkingMemoryObservation } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { WorkingMemoryObservation } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * const decoded = Effect.runSync(
- *   S.decodeUnknownEffect(WorkingMemoryObservation)({ content: "name", speakerAttribution: "ai" }),
- * )
+ * const wire = S.encodeSync(WorkingMemoryObservation)(WorkingMemoryObservation.make({ content: "My name is Ada" }))
+ * const decoded = S.decodeUnknownSync(WorkingMemoryObservation)({ ...wire, speakerAttribution: "ai" })
+ *
  * console.log(decoded.speakerAttribution) // "assistant"
  * ```
  *
@@ -1270,6 +1284,17 @@ export declare namespace WorkingMemoryObservation {
 /**
  * Canonical name for {@link WorkingMemoryObservation}.
  *
+ * **Example** (Construct a working observation)
+ *
+ * ```ts
+ * import { WorkingObservation } from "@beep/scratchpad/beep/MemoryContracts"
+ *
+ * const observation = WorkingObservation.make({ content: "Lives in Lisbon" })
+ *
+ * console.log(observation.status) // "working"
+ * console.log(observation.speakerAttribution) // "unknown"
+ * ```
+ *
  * @see {@link WorkingMemoryObservation} for the observation model.
  * @category models
  * @since 0.0.0
@@ -1282,6 +1307,17 @@ export const WorkingObservation = WorkingMemoryObservation;
  * **Gotchas**
  *
  * This alias is still the pipeline archive artifact, not product Archive.
+ *
+ * **Example** (Construct an archive item)
+ *
+ * ```ts
+ * import { WorkingObservationArchiveItem } from "@beep/scratchpad/beep/MemoryContracts"
+ *
+ * const item = WorkingObservationArchiveItem.make({ text: "Allergic to peanuts" })
+ *
+ * console.log(item.archiveClass) // "general"
+ * console.log(item.normalSearchAllowed) // true
+ * ```
  *
  * @see {@link L1MemoryArchiveItem} for the artifact model.
  * @category models
@@ -1297,7 +1333,7 @@ export const WorkingObservationArchiveItem = L1MemoryArchiveItem;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
- * import { WorkingMemoryObservation, deriveReadPolicy } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { WorkingMemoryObservation, deriveReadPolicy } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const item = Effect.runSync(
  *   deriveReadPolicy(WorkingMemoryObservation.make({ content: "secret", riskFlags: ["pii_secret"] })),
@@ -1331,7 +1367,7 @@ export const deriveReadPolicy = Effect.fn("MemoryContracts.deriveReadPolicy")(fu
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as DateTime from "effect/DateTime"
- * import { SourceBackedMemoryCandidate, normalizeSourceBackedCandidate } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { SourceBackedMemoryCandidate, normalizeSourceBackedCandidate } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const capturedAt = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
  * const expiresAt = DateTime.makeUnsafe("2020-01-03T03:04:05.000Z")
@@ -1403,7 +1439,7 @@ export declare namespace SourceBackedMemoryCandidate {
  * ```ts
  * import * as DateTime from "effect/DateTime"
  * import * as Effect from "effect/Effect"
- * import { SourceBackedMemoryCandidate, normalizeSourceBackedCandidate } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { SourceBackedMemoryCandidate, normalizeSourceBackedCandidate } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const instant = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z")
  * const candidate = SourceBackedMemoryCandidate.make({
@@ -1446,11 +1482,14 @@ export const normalizeSourceBackedCandidate = Effect.fn("MemoryContracts.normali
  * **Example** (Reject six results)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
+ * import * as Exit from "effect/Exit"
  * import * as S from "effect/Schema"
- * import { L2SearchRequest } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L2SearchRequest } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * console.log(Effect.runSyncExit(S.decodeUnknownEffect(L2SearchRequest)({ query: "q", reason: "r", maxResults: 6 }))._tag)
+ * const wire = S.encodeSync(L2SearchRequest)(L2SearchRequest.make({ query: "tea preference", reason: "confirm habit" }))
+ *
+ * console.log(wire.maxResults) // 5
+ * console.log(Exit.isFailure(S.decodeUnknownExit(L2SearchRequest)({ ...wire, maxResults: 6 }))) // true
  * ```
  *
  * @category models
@@ -1499,9 +1538,9 @@ const requiredQuotes = S.Array(S.String)
  * **Example** (Read the durable tag)
  *
  * ```ts
- * import { L2MemoryRouteDurable } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L2MemoryRouteDurable } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * console.log(L2MemoryRouteDurable.make({ memoryText: "fact", evidenceQuotes: ["q"], reason: "keep" }).route)
+ * console.log(L2MemoryRouteDurable.make({ memoryText: "fact", evidenceQuotes: ["q"], reason: "keep" }).route) // "durable"
  * ```
  *
  * @category models
@@ -1536,9 +1575,9 @@ export declare namespace L2MemoryRouteDurable {
  * **Example** (Read the review tag)
  *
  * ```ts
- * import { L2MemoryRouteReview } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L2MemoryRouteReview } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * console.log(L2MemoryRouteReview.make({ memoryText: "fact", evidenceQuotes: ["q"], reason: "check" }).route)
+ * console.log(L2MemoryRouteReview.make({ memoryText: "fact", evidenceQuotes: ["q"], reason: "check" }).route) // "review"
  * ```
  *
  * @category models
@@ -1573,7 +1612,7 @@ export declare namespace L2MemoryRouteReview {
  * **Example** (Require a drop reason)
  *
  * ```ts
- * import { L2MemoryRouteDiscard } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L2MemoryRouteDiscard } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(L2MemoryRouteDiscard.make({ reason: "noise", dropReason: "duplicate" }).route) // "discard"
  * ```
@@ -1615,7 +1654,7 @@ export declare namespace L2MemoryRouteDiscard {
  * **Example** (Pin the secret drop reason)
  *
  * ```ts
- * import { L2MemoryRouteHidden } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L2MemoryRouteHidden } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * console.log(L2MemoryRouteHidden.make({ reason: "secret" }).dropReason) // "secret_or_security_sensitive"
  * ```
@@ -1668,13 +1707,14 @@ const L2RouteKit = LiteralKit(["durable", "review", "discard", "hidden"]);
  * **Example** (Decode a discard route)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { L2MemoryRoute } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L2MemoryRoute, L2MemoryRouteDiscard } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * const decoded = Effect.runSync(
- *   S.decodeUnknownEffect(L2MemoryRoute)({ route: "discard", reason: "noise", dropReason: "duplicate" }),
+ * const wire = S.encodeSync(L2MemoryRouteDiscard)(
+ *   L2MemoryRouteDiscard.make({ reason: "already stored", dropReason: "duplicate" }),
  * )
+ * const decoded = S.decodeUnknownSync(L2MemoryRoute)(wire)
+ *
  * console.log(decoded.route) // "discard"
  * ```
  *
@@ -1707,7 +1747,7 @@ export type L2MemoryRoute = typeof L2MemoryRoute.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { L2SearchResult } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L2SearchResult } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(
  *   S.decodeUnknownEffect(L2SearchResult)({
@@ -1716,6 +1756,7 @@ export type L2MemoryRoute = typeof L2MemoryRoute.Type;
  *     status: "active",
  *     source: "chat",
  *     score: null,
+ *     metadata: {},
  *   }),
  * )
  * console.log(decoded.status) // "active"
@@ -1761,7 +1802,7 @@ export declare namespace L2SearchResult {
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { CheckedL2SearchPlan } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { CheckedL2SearchPlan } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const exit = Effect.runSyncExit(
  *   S.decodeUnknownEffect(CheckedL2SearchPlan)({
@@ -1810,7 +1851,7 @@ export declare namespace L2SearchPlan {
  * **Example** (Flag a write-capable plan)
  *
  * ```ts
- * import { L2SearchPlan, l2SearchPlanIssue } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { L2SearchPlan, l2SearchPlanIssue } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const plan = L2SearchPlan.make({ packetId: "p1", readOnly: false })
  * console.log(l2SearchPlanIssue(plan)) // "read_only must be true"
@@ -1832,11 +1873,12 @@ export const l2SearchPlanIssue = (plan: L2SearchPlan): string | undefined => {
  * **Example** (Accept an empty plan)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { CheckedL2SearchPlan } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { CheckedL2SearchPlan, L2SearchPlan } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * const decoded = Effect.runSync(S.decodeUnknownEffect(CheckedL2SearchPlan)({ packetId: "p1", searchBudget: 0 }))
+ * const wire = S.encodeSync(L2SearchPlan)(L2SearchPlan.make({ packetId: "p1", searchBudget: 0 }))
+ * const decoded = S.decodeUnknownSync(CheckedL2SearchPlan)(wire)
+ *
  * console.log(decoded.searches.length) // 0
  * ```
  *
@@ -1869,7 +1911,7 @@ export type CheckedL2SearchPlan = typeof CheckedL2SearchPlan.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { TargetVisibility } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { TargetVisibility } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(TargetVisibility)("private"))
  * console.log(decoded) // "private"
@@ -1908,27 +1950,25 @@ const zero = 0;
  * have a trigger condition, and a trigger must have one. A non-intent-backed
  * ledger row must use `legacy_migration`.
  *
- * **Example** (Reject a direct long-term add)
+ * **Example** (Construct a working patch)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
- * import * as S from "effect/Schema"
- * import { CheckedDurableMemoryPatch } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import * as O from "effect/Option"
+ * import { DurableMemoryPatch } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * const exit = Effect.runSyncExit(
- *   S.decodeUnknownEffect(CheckedDurableMemoryPatch)({
- *     patchId: "p1",
- *     packetId: "pkt",
- *     runId: "run",
- *     idempotencyKey: "k1",
- *     decision: "add",
- *     resultStatus: "working",
- *     observedHeadCommitId: null,
- *     initialTier: "long_term",
- *     memoryText: "fact",
- *   }),
- * )
- * console.log(exit._tag) // "Failure"
+ * const patch = DurableMemoryPatch.make({
+ *   patchId: "p1",
+ *   packetId: "pkt",
+ *   runId: "run",
+ *   idempotencyKey: "k1",
+ *   decision: "add",
+ *   resultStatus: "working",
+ *   memoryText: O.some("Prefers tea"),
+ *   observedHeadCommitId: O.none(),
+ * })
+ *
+ * console.log(patch.initialTier) // "short_term"
+ * console.log(patch.visibility) // "private"
  * ```
  *
  * @category models
@@ -2034,7 +2074,7 @@ const needsTarget = (decision: DurablePatchDecision): boolean =>
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { DurableMemoryPatch, durablePatchIssue } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { DurableMemoryPatch, durablePatchIssue } from "@beep/scratchpad/beep/MemoryContracts"
  *
  * const patch = DurableMemoryPatch.make({
  *   patchId: "p1",
@@ -2115,22 +2155,22 @@ export const durablePatchIssue = (patch: DurableMemoryPatch): string | undefined
  * **Example** (Accept a short-term add)
  *
  * ```ts
- * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { CheckedDurableMemoryPatch } from "@beep/scratchpad/beep/MemoryContracts.ts"
+ * import { CheckedDurableMemoryPatch, DurableMemoryPatch } from "@beep/scratchpad/beep/MemoryContracts"
  *
- * const decoded = Effect.runSync(
- *   S.decodeUnknownEffect(CheckedDurableMemoryPatch)({
- *     patchId: "p1",
- *     packetId: "pkt",
- *     runId: "run",
- *     idempotencyKey: "k1",
- *     decision: "add",
- *     resultStatus: "working",
- *     observedHeadCommitId: null,
- *     memoryText: "fact",
- *   }),
- * )
+ * const patch = DurableMemoryPatch.make({
+ *   patchId: "p1",
+ *   packetId: "pkt",
+ *   runId: "run",
+ *   idempotencyKey: "k1",
+ *   decision: "add",
+ *   resultStatus: "working",
+ *   memoryText: O.some("Prefers tea"),
+ *   observedHeadCommitId: O.none(),
+ * })
+ * const decoded = S.decodeUnknownSync(CheckedDurableMemoryPatch)(S.encodeSync(DurableMemoryPatch)(patch))
+ *
  * console.log(decoded.initialTier) // "short_term"
  * ```
  *

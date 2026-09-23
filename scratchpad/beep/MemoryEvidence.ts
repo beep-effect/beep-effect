@@ -1,6 +1,8 @@
 /**
  * Canonical memory evidence.
  *
+ * **Details**
+ *
  * This is the evidence record apply and JIT authority use. It is not the legacy
  * `memories.Evidence` row and not an import artifact.
  *

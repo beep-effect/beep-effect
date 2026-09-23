@@ -1,6 +1,8 @@
 /**
  * Legacy Hume processing task.
  *
+ * **Details**
+ *
  * This is not an action item. Action-item status is a different closed set.
  *
  * @since 0.0.0
@@ -212,6 +214,8 @@ export class Task extends Model<Task>("Task")(
 
 /**
  * Encoded Hume task row.
+ *
+ * **Details**
  *
  * The class encodes camelCase keys. `toWire` renames those keys to snake_case.
  *

@@ -1,6 +1,8 @@
 /**
  * Stable task-intelligence contracts shared by rollout and telemetry.
  *
+ * **Details**
+ *
  * Records are frozen and reject unknown keys in Python (`extra=forbid`).
  * Effect's default decode ignores unknown keys unless the caller passes
  * `onExcessProperty: "error"`.

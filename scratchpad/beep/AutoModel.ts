@@ -1,6 +1,8 @@
 /**
  * Response shape for `/v1/auto/model-pick`.
  *
+ * **Details**
+ *
  * The daily-cached pick is derived from Artificial Analysis quality and speed
  * data. Routers build a document matching these fields.
  *
