@@ -696,6 +696,11 @@ const mountRenderer = (
 
     visibleLabels = 0;
     let poolIndex = 0;
+    const neighborsOfSelected: ReadonlyArray<number> = pipe(
+      O.fromUndefinedOr(selectedIndex),
+      O.flatMap((index) => O.fromUndefinedOr(current.adjacency[index])),
+      O.getOrElse(A.empty<number>)
+    );
     const admit = (nodeIndex: number, rank: number): void => {
       const slot = current.labelPool[poolIndex];
       if (P.isUndefined(slot) || P.isUndefined(current.labels[nodeIndex])) {
@@ -713,10 +718,8 @@ const mountRenderer = (
       if (rank > opaqueBand && rank > budget * 0.5) {
         bandOpacity = Math.max(0.1, 1 - smoothstep01((rank - budget * 0.5) / (budget * 0.5)));
       }
-      const neighborsOfSelected = P.isNotUndefined(selectedIndex) ? current.adjacency[selectedIndex] : undefined;
-      const isNeighborOfSelected = P.isNotUndefined(neighborsOfSelected) && neighborsOfSelected.includes(nodeIndex);
       const dimmed =
-        P.isNotUndefined(selectedIndex) && nodeIndex !== selectedIndex && !isNeighborOfSelected
+        P.isNotUndefined(selectedIndex) && nodeIndex !== selectedIndex && !A.contains(neighborsOfSelected, nodeIndex)
           ? config.dimmedNodeOpacity
           : 1;
       const logical = logicalSize(current.importance[nodeIndex]!);

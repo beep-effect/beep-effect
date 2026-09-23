@@ -44,15 +44,26 @@ import type { ServerResponse } from "node:http";
 // reading Node's getter yields `undefined` and emits an ExperimentalWarning.
 // Replace that distinct non-enumerable Node descriptor with an isolated
 // in-memory Web Storage before any browser-facing module evaluates.
+// The configs typecheck unit has no DOM lib, so the Web Storage surface the shim
+// installs is declared locally instead of referencing lib.dom.
+interface WebStorageShim {
+  clear(): void;
+  getItem(key: string): string | null;
+  key(index: number): string | null;
+  readonly length: number;
+  removeItem(key: string): void;
+  setItem(key: string, value: string): void;
+}
+
 const localStorageDescriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
 if (
-  typeof window !== "undefined" &&
+  P.hasProperty(globalThis, "window") &&
   typeof globalThis.Bun === "undefined" &&
   localStorageDescriptor?.get !== undefined &&
   localStorageDescriptor.enumerable === false
 ) {
   const values = new Map<string, string>();
-  const localStorage: Storage = {
+  const localStorage: WebStorageShim = {
     get length(): number {
       return values.size;
     },

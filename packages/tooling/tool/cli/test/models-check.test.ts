@@ -116,6 +116,34 @@ layer(Layer.mergeAll(platform, models))((it) => {
       const online = yield* runCheckIn("manifest.yaml", false);
       const recorded = yield* ledger.latest(online.workspace.root);
       strictEqual(O.isSome(recorded), true);
+      strictEqual(online.report.diffScope, "full");
+
+      // Against that online baseline — the SAME workspace, so the offline run
+      // actually reads it — an offline run must not report the upstream-only
+      // models it never fetched as `removed`, and must say the diff is
+      // suppressed rather than leaving an empty diff to read as "catalog
+      // stable".
+      const check = yield* ModelsCheck;
+      const offlineAgain = yield* check.run(
+        ModelsCheckOptions.make({
+          home: online.workspace.root,
+          repo: online.workspace.root,
+          manifestPath: online.workspace.manifestPath,
+          offline: true,
+        })
+      );
+      strictEqual(A.length(offlineAgain.diff.added), 0);
+      strictEqual(A.length(offlineAgain.diff.removed), 0);
+      strictEqual(A.length(offlineAgain.diff.levelsChanged), 0);
+      strictEqual(offlineAgain.diffScope, "suppressed-offline");
+
+      // The offline run neither recorded nor cleared the baseline.
+      const afterOffline = yield* ledger.latest(online.workspace.root);
+      strictEqual(O.isSome(afterOffline), true);
+      strictEqual(
+        O.getOrUndefined(O.map(afterOffline, (entry) => entry.summary.contentSha256)),
+        O.getOrUndefined(O.map(recorded, (entry) => entry.summary.contentSha256))
+      );
     })
   );
 

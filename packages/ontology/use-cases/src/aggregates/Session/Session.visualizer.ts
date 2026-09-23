@@ -804,10 +804,8 @@ const pinnedPositionMap = (
             MutableHashMap.get(currentIndexByIri, node.iri),
             O.getOrElse(() => previousIndex)
           );
-          const z = pipe(
-            O.fromUndefinedOr(projection.pointDepths[previousIndex]),
-            O.getOrElse(() => deterministicDepth(node.iri, currentIndex))
-          );
+          const previousDepth = projection.pointDepths[previousIndex];
+          const z = P.isNotUndefined(previousDepth) ? previousDepth : deterministicDepth(node.iri, currentIndex);
           MutableHashMap.set(positions, node.iri, [node.x, node.y, z]);
         }
       },
@@ -883,15 +881,8 @@ const LINK_STRENGTH = 0.1;
 const VELOCITY_DAMPING = 0.6;
 const CONTAINMENT_RADIUS = 420;
 
-const float64At = (array: Float64Array, index: number): number => {
-  const value = array[index];
-
-  if (P.isNotUndefined(value)) {
-    return value;
-  }
-
-  throw new Error(`Float64Array index ${String(index)} is out of bounds`);
-};
+// Every typed array in the relaxation loops is sized from nodeCount, so an in-range index always holds a number.
+const float64At = (array: Float64Array, index: number): number => array[index]!;
 
 const spatialCellKey = (x: number, y: number, z: number): string =>
   `${Math.floor(x / FORCE_RANGE)}:${Math.floor(y / FORCE_RANGE)}:${Math.floor(z / FORCE_RANGE)}`;

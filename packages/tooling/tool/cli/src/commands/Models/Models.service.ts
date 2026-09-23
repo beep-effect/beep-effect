@@ -19,6 +19,7 @@ import { Effect, FileSystem, Layer, Match } from "effect";
 import * as Context from "effect/Context";
 import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
+import { CatalogDiff } from "./Models.catalog.schemas.ts";
 import {
   ModelsCatalog,
   ModelsCatalogLive,
@@ -146,6 +147,14 @@ export interface ModelsCheckShape {
 
 /**
  * The `check` orchestrator.
+ *
+ * **Gotchas**
+ *
+ * An offline run suppresses the catalog diff: the availability overlays report
+ * different effort ladders than upstream, so a projected diff would be a wall
+ * of phantom `levelsChanged`. Such a run returns an empty `diff` and reports
+ * `diffScope: "suppressed-offline"` — read that field before treating an empty
+ * diff as "no upstream churn".
  *
  * **Example** (Describe a check run)
  *
@@ -347,7 +356,12 @@ const makeCheck = (): ModelsCheckShape => ({
         yield* ledger.record(options.home, snapshot);
       }
 
-      const diff = diffSnapshots(previous, snapshot);
+      // An offline snapshot has no upstream layer, so comparing it with the
+      // online baseline would report every upstream-only model as `removed`.
+      // An offline run carries an empty catalog diff instead.
+      const diff = options.offline
+        ? CatalogDiff.make({ added: [], removed: [], levelsChanged: [] })
+        : diffSnapshots(previous, snapshot);
       const models = catalogModelsById(snapshot.models);
       const answered = snapshot.summary.sources;
       const bindings = HashMap.fromIterable(
@@ -396,6 +410,7 @@ const makeCheck = (): ModelsCheckShape => ({
       return ModelsCheckReport.make({
         catalog: snapshot.summary,
         diff,
+        diffScope: options.offline ? "suppressed-offline" : "full",
         findings,
         hasDrift: A.isReadonlyArrayNonEmpty(findings),
       });

@@ -73,7 +73,7 @@ const fixture = Effect.fn("SyntheticOrchestrationTest.fixture")(function* (fault
         const args = command.args;
         const bind = O.getOrThrow(A.findFirstIndex(args, Equal.equals("--bind")));
         const directory = O.getOrThrow(A.get(args, bind + 1));
-        const guest = O.getOrThrow(A.get(args, bind + 2));
+        const guest = args[bind + 2];
         const invocation = A.drop(args, O.getOrThrow(A.findFirstIndex(args, Equal.equals("--"))) + 1);
         const env = command.options.env ?? {};
         const version = env.QUALIFY_BUN_SHA256 === bun.pin.sha256 ? bun.pin.version : alternateBun.pin.version;

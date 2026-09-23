@@ -53,7 +53,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { pipe } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { constant, dual } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -329,12 +329,12 @@ const findingTripletPattern = /P0:\s*(?<p0>\d+)\s+P1:\s*(?<p1>\d+)\s+P2:\s*(?<p2
 const newMarkerPattern = /\*\*NEW:?\*\*:?|(?:^|\s)NEW:/mu;
 const newItemPattern = /(?<count>\d+)\s*[x×]\s*P(?<level>[012])\b/giu;
 
+// Every caller hands this a `\d+` capture, so the parse cannot yield NaN.
 const parseCount = (value: string | undefined): number =>
   pipe(
     O.fromUndefinedOr(value),
     O.map((raw) => Number.parseInt(raw, 10)),
-    O.filter((parsed) => !Number.isNaN(parsed)),
-    O.getOrElse(() => 0)
+    O.getOrElse(constant(0))
   );
 
 const sumPatternCounts = (body: string, pattern: RegExp): number =>

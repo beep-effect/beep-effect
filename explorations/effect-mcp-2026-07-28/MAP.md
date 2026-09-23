@@ -110,10 +110,14 @@ passes for 2026-07-28. Over HTTP the client sends `MCP-Protocol-Version`, `Mcp-M
 
 ## Re-entry gates
 
-- nlp-mcp flip: opens when a daily CLI (Claude Code first) sends `server/discover` first on
-  stdio, per the capture record in Goal A's `history/`. Until then nlp-mcp is the one host on
-  2025, recorded in Goal A's exception ledger; a fired gate reopens this packet at `decompose`
-  only if the flip needs more than the recorded PR 4.
+- nlp-mcp flip: **held 2026-09-22** by the capture in Goal A's
+  `history/nlp-mcp-capture.md`: Claude Code 2.1.275 sends a legacy `initialize` by default and
+  `server/discover` first only under `MCP_PROTOCOL_NEGOTIATION=auto`. Opens when Claude Code
+  defaults stdio negotiation to `auto`, or the operator pins that variable in the environment of
+  every daily launch, or a re-run of the capture shows a daily CLI opening with `server/discover`
+  by default. Until then nlp-mcp is the one host on 2025, recorded in Goal A's exception ledger;
+  a fired gate reopens this packet at `decompose` only if the flip needs more than the two-line
+  change the capture records.
 - `requestState` as a finer run key: opens if a client the sidecar serves echoes it; revisit in
   Goal B's exception ledger, never in the kit.
 

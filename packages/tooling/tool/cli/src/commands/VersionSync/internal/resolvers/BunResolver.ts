@@ -11,7 +11,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, identity, Path, pipe } from "effect";
+import { Effect, FileSystem, identity, Order, Path, pipe } from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -269,26 +269,12 @@ const comparePrerelease = (
     return -1;
   }
 
-  const length = Math.min(left.value.length, right.value.length);
-  for (let index = 0; index < length; index += 1) {
-    const leftIdentifier = A.get(left.value, index);
-    const rightIdentifier = A.get(right.value, index);
-    if (O.isNone(leftIdentifier) || O.isNone(rightIdentifier)) {
-      continue;
-    }
-    const result = compareBunSemverIdentifier(leftIdentifier.value, rightIdentifier.value);
+  for (const result of A.zipWith(left.value, right.value, compareBunSemverIdentifier)) {
     if (result !== 0) {
       return result;
     }
   }
-
-  if (left.value.length < right.value.length) {
-    return -1;
-  }
-  if (left.value.length > right.value.length) {
-    return 1;
-  }
-  return 0;
+  return Order.Number(left.value.length, right.value.length);
 };
 
 const compareBunSemver = (left: BunSemver, right: BunSemver): number => {

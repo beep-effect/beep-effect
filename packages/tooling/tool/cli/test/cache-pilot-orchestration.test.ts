@@ -324,9 +324,11 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
             expect(command.options.extendEnv).toBe(false);
             expect(args).toContain("--unshare-all");
             const invocation = A.drop(args, O.getOrThrow(A.findFirstIndex(args, Equal.equals("--"))) + 1);
-            const mounted = (guest: string) =>
-              O.getOrThrow(A.get(args, O.getOrThrow(A.findFirstIndex(args, Equal.equals(guest))) - 1));
-            const guest = O.getOrThrow(A.get(args, O.getOrThrow(A.findFirstIndex(args, Equal.equals("--chdir"))) + 1));
+            const mounted = (guest: string): string =>
+              O.getOrThrow(O.flatMap(A.findFirstIndex(args, Equal.equals(guest)), (index) => A.get(args, index - 1)));
+            const guest = O.getOrThrow(
+              O.flatMap(A.findFirstIndex(args, Equal.equals("--chdir")), (index) => A.get(args, index + 1))
+            );
             const identity = mounted(`${guest}/${identityDirectory}`);
             const types = mounted(`${guest}/${typesDirectory}`);
             const directory = path.dirname(identity);

@@ -24,6 +24,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -246,14 +247,13 @@ describe("executable cache census", () => {
   it.effect(
     "joins root tasks only against the explicit root manifest and preserves their dependencies",
     Effect.fnUntraced(function* () {
-      const rootScript = "bun run beep lint policy-fingerprint --check";
       const rootWorkspace = CacheCensusWorkspace.make({
         name: "//",
         directory: ".",
-        scripts: { "lint:policy-fingerprint": rootScript },
+        scripts: { "lint:policy-fingerprint": "bun run beep lint policy-fingerprint --check" },
       });
       const rootTask = {
-        ...node("lint:policy-fingerprint", rootScript),
+        ...node("lint:policy-fingerprint", O.getOrThrow(R.get(rootWorkspace.scripts, "lint:policy-fingerprint"))),
         taskId: "//#lint:policy-fingerprint",
         package: "//",
       };

@@ -160,15 +160,8 @@ const continueStdioConversation = Effect.fn("continueStdioConversation")(functio
 
   if (currentStage === 0 && Str.includes(`"id":1`)(output)) {
     yield* Ref.set(stage, 1);
-<<<<<<< HEAD
-    yield* Queue.offer(stdin, encodeRequest(initializedAndListRequests));
+    yield* Queue.offer(stdin, encodeRequest(listRequest));
   } else if (currentStage === 1 && Str.includes(`"id":2`)(output)) {
-=======
-    return yield* Queue.offer(stdin, encodeRequest(listRequest));
-  }
-
-  if (currentStage === 1 && Str.includes(`"id":2`)(output)) {
->>>>>>> origin/main
     yield* Ref.set(stage, 2);
     yield* Queue.offer(stdin, encodeRequest(callRequest));
   } else if (Str.includes(DriveId)(output)) {

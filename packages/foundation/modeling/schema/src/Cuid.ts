@@ -226,11 +226,8 @@ function createEntropy(length: number, random: Uint8Array): string {
   let offset = 0;
 
   while (entropy.length < length) {
-    const byte = O.fromUndefinedOr(random[offset]);
-    if (O.isNone(byte)) {
-      break;
-    }
-    entropy += Math.floor(byte.value % 36).toString(36);
+    const byte = O.getOrThrow(O.fromUndefinedOr(random[offset]));
+    entropy += Math.floor(byte % 36).toString(36);
     offset = (offset + 1) % random.length;
   }
 
@@ -263,7 +260,7 @@ const makeCuidFromSeed = Effect.fn("Schema.Cuid.cuidFromSeed")(function* ({
   const firstLetter = pipe(
     O.fromUndefinedOr(random[0]),
     O.map((byte) => String.fromCharCode((byte % ALPHABET_LENGTH) + ALPHABET_START_CODE)),
-    O.getOrThrowWith(() => new Error("CUID seed random bytes must be non-empty"))
+    O.getOrThrow
   );
 
   // Convert components to base36

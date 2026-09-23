@@ -20,7 +20,7 @@ import { dual } from "effect/Function";
 import {
   fromUndefinedOr,
   getOrElse,
-  getOrThrowWith,
+  getOrThrow,
   getOrUndefined,
   isSome,
   match,
@@ -746,12 +746,7 @@ export const makeModelClass: {
         ? extras
         : (columns) => [
             ...harvested.map(([key, intent, name]) => {
-              const column = getOrThrowWith(fromUndefinedOr(columns[key]), () =>
-                ModelInvariantError.make({
-                  message: `Model '${identifier}' colocated index references missing field '${key}'.`,
-                  fieldName: key,
-                })
-              );
+              const column = getOrThrow(fromUndefinedOr(columns[key]));
               return intent.unique ? TableExtras.uniqueIndex(name, [column]) : TableExtras.index(name, [column]);
             }),
             ...match(fromUndefinedOr(extras), {

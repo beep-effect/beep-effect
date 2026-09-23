@@ -23,6 +23,7 @@ import {
   yeetWatchCheckIsRequired,
   yeetWatchCommentEvent,
   yeetWatchEndReason,
+  yeetWatchThreadOutstanding,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -234,6 +235,17 @@ describe("diffYeetWatchSnapshots", () => {
       "merge-state-acceptable",
       "review-decision-acceptable",
     ]);
+  });
+});
+
+describe("yeetWatchThreadOutstanding", () => {
+  it("owes an answer on unresolved and follow-up threads only", () => {
+    const outstanding = (state: YeetReviewThreadStateTag) =>
+      yeetWatchThreadOutstanding(YeetWatchThread.make({ id: "T1", state }));
+    expect(outstanding("unresolved")).toBe(true);
+    expect(outstanding("resolved-follow-up")).toBe(true);
+    expect(outstanding("resolved-answered")).toBe(false);
+    expect(outstanding("resolved-acknowledged")).toBe(false);
   });
 });
 

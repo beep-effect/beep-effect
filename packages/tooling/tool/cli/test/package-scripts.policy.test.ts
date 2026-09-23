@@ -90,7 +90,7 @@ describe("package scripts policy", () => {
       Effect.gen(function* () {
         const policy = yield* PackageScriptsPolicy.make("/repo");
         for (const kind of ["app", "infra", "library"] as const) {
-          const codec = codecs[kind];
+          const codec = O.getOrThrow(R.get(codecs, kind));
           const actual = yield* codec.decode({
             ...base,
             docgen: "legacy docgen",
@@ -117,7 +117,7 @@ describe("package scripts policy", () => {
     run(
       Effect.gen(function* () {
         const policy = yield* PackageScriptsPolicy.make("/repo");
-        const actual = yield* codecs.lab.decode({
+        const actual = yield* O.getOrThrow(R.get(codecs, "lab")).decode({
           ...base,
           docgen: "forbidden",
           codegen: "echo 'no codegen needed'",
@@ -133,7 +133,7 @@ describe("package scripts policy", () => {
         expect(drift).toContainEqual({ _tag: "unexpected-task", name: "docgen" });
         expect(drift).toContainEqual({ _tag: "placeholder", name: "codegen", actual: "echo 'no codegen needed'" });
         expect(drift).toContainEqual({ _tag: "missing-impl", name: "beep:check" });
-        const record = yield* codecs.lab.encode(expected);
+        const record = yield* O.getOrThrow(R.get(codecs, "lab")).encode(expected);
         expect(record["lint:jsdoc"]).toBeUndefined();
         expect(record["beep:check"]).toBe("tsgo -p tsconfig.check.json");
       })
@@ -234,7 +234,7 @@ describe("package scripts policy", () => {
         expect(HashSet.size((yield* policy.write(root)).written)).toBe(0);
         expect(yield* fs.readFileString(file)).toBe(first);
         for (const scripts of [{}, { docgen: "bun run beep:docgen" }]) {
-          const codec = codecs.tool;
+          const codec = O.getOrThrow(R.get(codecs, "tool"));
           const actual = yield* codec.decode(scripts);
           const expected = yield* codec.encode(policy.expected("tool", actual, noEvidence));
           expect(expected["beep:docgen"]).toBe("bunx --bun --no-install docgen");

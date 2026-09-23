@@ -143,6 +143,58 @@ describe("review body signal parsing", () => {
     expect(yeetReviewBodyAdvisoryCount(parsed, [])).toBe(1);
   });
 
+  it("closes a fix-prompt path that names no line as a line-less item", () => {
+    // A path the prompt opens and then abandons for the next one is still a
+    // location the operator has not seen; it is kept with no line rather
+    // than dropped, and a trailing path with no line closes the same way.
+    const parsed = signal(
+      "coderabbitai[bot]",
+      [
+        "**Actionable comments posted: 3**",
+        "In `@src/a.ts`:",
+        "In `@src/b.ts`:",
+        "- Line 7: fix b",
+        "In `@src/c.ts`:",
+      ].join("\n")
+    );
+
+    expect(parsed.signal).toBe("coderabbit");
+    if (parsed.signal !== "coderabbit") {
+      return;
+    }
+    expect(parsed.items.map((item) => [item.path, O.getOrNull(item.line)])).toEqual([
+      ["src/a.ts", null],
+      ["src/b.ts", 7],
+      ["src/c.ts", null],
+    ]);
+  });
+
+  it("ignores a line item that precedes any path", () => {
+    const parsed = signal(
+      "coderabbitai[bot]",
+      ["**Actionable comments posted: 1**", "- Line 3: stray item", "In `@src/a.ts`:", "- Line 9: real item"].join("\n")
+    );
+
+    expect(parsed.signal).toBe("coderabbit");
+    if (parsed.signal !== "coderabbit") {
+      return;
+    }
+    expect(parsed.items.map((item) => [item.path, O.getOrNull(item.line)])).toEqual([["src/a.ts", 9]]);
+  });
+
+  it("sums NEW items per severity when a body lists several", () => {
+    const parsed = signal(
+      "kriegcloud",
+      ["## Review", "Confidence: 3/5", "**NEW:** 1×P0, 2×P1, 3×P2", "1 x P2 more in the same round"].join("\n")
+    );
+
+    expect(parsed.signal).toBe("greptile");
+    if (parsed.signal !== "greptile") {
+      return;
+    }
+    expect(parsed.newFindings).toMatchObject({ p0: 1, p1: 2, p2: 4 });
+  });
+
   it("leaves an unrecognised body plain", () => {
     const parsed = signal("kriegcloud", "Rebased onto main and pushed; checks are green.");
 
