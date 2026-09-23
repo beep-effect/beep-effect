@@ -14,12 +14,28 @@ import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { SyncItemInsert, SyncItemRow } from "@beep/documents-tables/entities/SyncItem";
 
 const decodeUnknownSyncItem = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
 
 const SyncItemEquivalence = S.toEquivalence(DomainSyncItem.SyncItem);
+
+// The row codec is a class schema, so an unencodable entity has to stay an
+// instance of its model: clone onto the same prototype and corrupt a single
+// column rather than handing the encoder a bare struct it would reject wholesale.
+const withUnencodablePublicId = <A extends object>(entity: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
+  expect(error._tag).toBe(tag);
+  expect(Str.isNonEmpty(error.message)).toBe(true);
+};
 
 const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
 
@@ -137,5 +153,24 @@ describe("SyncItem table", () => {
       expect(SyncItemEquivalence(decoded, syncItem)).toBe(true);
     }),
     { arbitrary: fcRuns(50) }
+  );
+
+  it.effect(
+    "reports a typed converter failure on both sides of the SyncItem boundary",
+    Effect.fnUntraced(function* () {
+      const syncItem = yield* decodeUnknownSyncItem(fileRow);
+      const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
+
+      expectConverterFailure(
+        yield* converterFailure(toSyncItemInsert(withUnencodablePublicId(syncItem))),
+        "SyncItemConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromSyncItemRow({ ...syncItemRow(insert, 10), publicId: 42 } as unknown as SyncItemRow)
+        ),
+        "SyncItemConverterError"
+      );
+    })
   );
 });

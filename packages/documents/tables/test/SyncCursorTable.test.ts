@@ -15,10 +15,26 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { SyncCursorRow } from "@beep/documents-tables/entities/SyncCursor";
 
 const decodeUnknownSyncCursor = S.decodeUnknownEffect(DomainSyncCursor.SyncCursor);
 
 const SyncCursorEquivalence = S.toEquivalence(DomainSyncCursor.SyncCursor);
+
+// The row codec is a class schema, so an unencodable entity has to stay an
+// instance of its model: clone onto the same prototype and corrupt a single
+// column rather than handing the encoder a bare struct it would reject wholesale.
+const withUnencodablePublicId = <A extends object>(entity: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
+  expect(error._tag).toBe(tag);
+  expect(Str.isNonEmpty(error.message)).toBe(true);
+};
 
 const indexConfigNamed = (name: string) =>
   pipe(
@@ -117,5 +133,30 @@ describe("SyncCursor table", () => {
       expect(SyncCursorEquivalence(decoded.success, syncCursor)).toBe(true);
     },
     { arbitrary: fcRuns(50) }
+  );
+
+  it.effect(
+    "reports a typed converter failure on both sides of the SyncCursor boundary",
+    Effect.fnUntraced(function* () {
+      const syncCursor = yield* decodeUnknownSyncCursor(activeCursorRow);
+      const insert = yield* Effect.fromResult(toSyncCursorInsert(syncCursor));
+
+      expectConverterFailure(
+        yield* converterFailure(toSyncCursorInsert(withUnencodablePublicId(syncCursor))),
+        "SyncCursorConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromSyncCursorRow({
+            ...insert,
+            id: 30,
+            lastError: insert.lastError ?? null,
+            lastEventId: insert.lastEventId ?? null,
+            publicId: 42,
+          } as unknown as SyncCursorRow)
+        ),
+        "SyncCursorConverterError"
+      );
+    })
   );
 });

@@ -14,9 +14,24 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { ProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance";
 
 const ProviderInstanceEquivalence = S.toEquivalence(DomainProviderInstance.ProviderInstance);
+
+// The row codec is a class schema, so an unencodable entity has to stay an
+// instance of its model: clone onto the same prototype and corrupt a single
+// column rather than handing the encoder a bare struct it would reject wholesale.
+const withUnencodablePublicId = <A extends object>(entity: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
+  expect(error._tag).toBe(tag);
+  expect(Str.isNonEmpty(error.message)).toBe(true);
+};
 
 const providerInstanceEnvVars: ProviderInstanceRow["envVars"] = {};
 
@@ -146,5 +161,30 @@ describe("ProviderInstance table", () => {
       expect(ProviderInstanceEquivalence(decoded.success, providerInstance)).toBe(true);
     },
     { arbitrary: fcRuns(50) }
+  );
+
+  it.effect(
+    "reports a typed converter failure on both sides of the ProviderInstance boundary",
+    Effect.fnUntraced(function* () {
+      const providerInstance = yield* Effect.fromResult(fromProviderInstanceRow(providerInstanceRow));
+      const insert = yield* Effect.fromResult(toProviderInstanceInsert(providerInstance));
+
+      expectConverterFailure(
+        yield* converterFailure(toProviderInstanceInsert(withUnencodablePublicId(providerInstance))),
+        "ProviderInstanceConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromProviderInstanceRow({
+            ...insert,
+            homePath: insert.homePath ?? null,
+            id: 10,
+            lastProbe: insert.lastProbe ?? null,
+            publicId: 42,
+          } as unknown as ProviderInstanceRow)
+        ),
+        "ProviderInstanceConverterError"
+      );
+    })
   );
 });

@@ -15,10 +15,26 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { SyncOperationRow } from "@beep/documents-tables/entities/SyncOperation";
 
 const decodeUnknownSyncOperation = S.decodeUnknownEffect(DomainSyncOperation.SyncOperation);
 
 const SyncOperationEquivalence = S.toEquivalence(DomainSyncOperation.SyncOperation);
+
+// The row codec is a class schema, so an unencodable entity has to stay an
+// instance of its model: clone onto the same prototype and corrupt a single
+// column rather than handing the encoder a bare struct it would reject wholesale.
+const withUnencodablePublicId = <A extends object>(entity: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
+  expect(error._tag).toBe(tag);
+  expect(Str.isNonEmpty(error.message)).toBe(true);
+};
 
 const indexConfigNamed = (name: string) =>
   pipe(
@@ -139,5 +155,31 @@ describe("SyncOperation table", () => {
       expect(SyncOperationEquivalence(decoded.success, syncOperation)).toBe(true);
     },
     { arbitrary: fcRuns(50) }
+  );
+
+  it.effect(
+    "reports a typed converter failure on both sides of the SyncOperation boundary",
+    Effect.fnUntraced(function* () {
+      const syncOperation = yield* decodeUnknownSyncOperation(uploadRow);
+      const insert = yield* Effect.fromResult(toSyncOperationInsert(syncOperation));
+
+      expectConverterFailure(
+        yield* converterFailure(toSyncOperationInsert(withUnencodablePublicId(syncOperation))),
+        "SyncOperationConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromSyncOperationRow({
+            ...insert,
+            id: 20,
+            inputContentDigest: insert.inputContentDigest ?? null,
+            lastError: insert.lastError ?? null,
+            publicId: 42,
+            targetParentRelPath: insert.targetParentRelPath ?? null,
+          } as unknown as SyncOperationRow)
+        ),
+        "SyncOperationConverterError"
+      );
+    })
   );
 });

@@ -15,10 +15,26 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { SyncConflictRow } from "@beep/documents-tables/entities/SyncConflict";
 
 const decodeUnknownSyncConflict = S.decodeUnknownEffect(DomainSyncConflict.SyncConflict);
 
 const SyncConflictEquivalence = S.toEquivalence(DomainSyncConflict.SyncConflict);
+
+// The row codec is a class schema, so an unencodable entity has to stay an
+// instance of its model: clone onto the same prototype and corrupt a single
+// column rather than handing the encoder a bare struct it would reject wholesale.
+const withUnencodablePublicId = <A extends object>(entity: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
+  expect(error._tag).toBe(tag);
+  expect(Str.isNonEmpty(error.message)).toBe(true);
+};
 
 const indexConfigNamed = (name: string) =>
   pipe(
@@ -135,5 +151,32 @@ describe("SyncConflict table", () => {
       expect(SyncConflictEquivalence(decoded.success, syncConflict)).toBe(true);
     },
     { arbitrary: fcRuns(50) }
+  );
+
+  it.effect(
+    "reports a typed converter failure on both sides of the SyncConflict boundary",
+    Effect.fnUntraced(function* () {
+      const syncConflict = yield* decodeUnknownSyncConflict(mappedDriftRow);
+      const insert = yield* Effect.fromResult(toSyncConflictInsert(syncConflict));
+
+      expectConverterFailure(
+        yield* converterFailure(toSyncConflictInsert(withUnencodablePublicId(syncConflict))),
+        "SyncConflictConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromSyncConflictRow({
+            ...insert,
+            id: 40,
+            localRelPath: insert.localRelPath ?? null,
+            publicId: 42,
+            remoteEventId: insert.remoteEventId ?? null,
+            remoteId: insert.remoteId ?? null,
+            syncItemId: insert.syncItemId ?? null,
+          } as unknown as SyncConflictRow)
+        ),
+        "SyncConflictConverterError"
+      );
+    })
   );
 });
