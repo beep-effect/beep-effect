@@ -4,14 +4,15 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeUnknownSyncConflictSyncConflictSync = S.decodeUnknownSync(SyncConflict.SyncConflict);
-const decodeUnknownSyncConflictSyncConflictKindSync = S.decodeUnknownSync(SyncConflict.SyncConflictKind);
-const decodeUnknownSyncConflictSyncConflictResolutionSync = S.decodeUnknownSync(SyncConflict.SyncConflictResolution);
-const encodeSyncConflictSyncConflictSync = S.encodeSync(SyncConflict.SyncConflict);
+const decodeUnknownSyncConflict = S.decodeUnknownEffect(SyncConflict.SyncConflict);
+const decodeUnknownSyncConflictKind = S.decodeUnknownEffect(SyncConflict.SyncConflictKind);
+const decodeUnknownSyncConflictResolution = S.decodeUnknownEffect(SyncConflict.SyncConflictResolution);
+const encodeSyncConflict = S.encodeEffect(SyncConflict.SyncConflict);
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
@@ -67,42 +68,50 @@ describe("SyncConflict entity", () => {
     ]);
   });
 
-  it("decodes and encodes a locally mapped drift row", () => {
-    const decoded = decodeUnknownSyncConflictSyncConflictSync(mappedDriftRow);
+  it.effect("decodes and encodes a locally mapped drift row", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decodeUnknownSyncConflict(mappedDriftRow);
 
-    expect(decoded).toBeInstanceOf(SyncConflict.SyncConflict);
-    expect(decoded.syncItemId).toEqual(O.some(1));
-    expect(decoded.remoteId).toEqual(O.some("9001"));
-    expect(decoded.remoteEventId).toEqual(O.some("evt-1"));
-    expect(decoded.localRelPath).toEqual(O.some("matters/client-default/complaint.pdf"));
-    expect(decoded.remotePayload).toEqual({ eventType: "ITEM_MODIFY", itemId: "9001" });
-    expect(encodeSyncConflictSyncConflictSync(decoded)).toStrictEqual(mappedDriftRow);
-  });
+      expect(decoded).toBeInstanceOf(SyncConflict.SyncConflict);
+      expect(decoded.syncItemId).toEqual(O.some(1));
+      expect(decoded.remoteId).toEqual(O.some("9001"));
+      expect(decoded.remoteEventId).toEqual(O.some("evt-1"));
+      expect(decoded.localRelPath).toEqual(O.some("matters/client-default/complaint.pdf"));
+      expect(decoded.remotePayload).toEqual({ eventType: "ITEM_MODIFY", itemId: "9001" });
+      expect(yield* encodeSyncConflict(decoded)).toStrictEqual(mappedDriftRow);
+    })
+  );
 
-  it("decodes drift for remote items unknown locally as none", () => {
-    const decoded = decodeUnknownSyncConflictSyncConflictSync({
-      ...mappedDriftRow,
-      conflictKind: "remoteCreate",
-      localRelPath: null,
-      remoteEventId: null,
-      remoteId: null,
-      syncItemId: null,
-    });
+  it.effect("decodes drift for remote items unknown locally as none", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decodeUnknownSyncConflict({
+        ...mappedDriftRow,
+        conflictKind: "remoteCreate",
+        localRelPath: null,
+        remoteEventId: null,
+        remoteId: null,
+        syncItemId: null,
+      });
 
-    expect(decoded.syncItemId).toEqual(O.none());
-    expect(decoded.remoteId).toEqual(O.none());
-    expect(decoded.remoteEventId).toEqual(O.none());
-    expect(decoded.localRelPath).toEqual(O.none());
-  });
+      expect(decoded.syncItemId).toEqual(O.none());
+      expect(decoded.remoteId).toEqual(O.none());
+      expect(decoded.remoteEventId).toEqual(O.none());
+      expect(decoded.localRelPath).toEqual(O.none());
+    })
+  );
 
-  it("exposes the conflict literal families", () => {
-    expect(SyncConflict.SyncConflictKind.is.remoteEdit("remoteEdit")).toBe(true);
-    expect(SyncConflict.SyncConflictKind.is.remoteDelete("remoteEdit")).toBe(false);
-    expect(SyncConflict.SyncConflictResolution.is.open("open")).toBe(true);
-    expect(SyncConflict.SyncConflictResolution.Enum.reviewed).toBe("reviewed");
-    expect(() => decodeUnknownSyncConflictSyncConflictKindSync("localEdit")).toThrow();
-    expect(() => decodeUnknownSyncConflictSyncConflictResolutionSync("dismissed")).toThrow();
-  });
+  it.effect("exposes the conflict literal families", () =>
+    Effect.gen(function* () {
+      expect(SyncConflict.SyncConflictKind.is.remoteEdit("remoteEdit")).toBe(true);
+      expect(SyncConflict.SyncConflictKind.is.remoteDelete("remoteEdit")).toBe(false);
+      expect(SyncConflict.SyncConflictResolution.is.open("open")).toBe(true);
+      expect(SyncConflict.SyncConflictResolution.Enum.reviewed).toBe("reviewed");
+      const kindExit = yield* Effect.exit(decodeUnknownSyncConflictKind("localEdit"));
+      const resolutionExit = yield* Effect.exit(decodeUnknownSyncConflictResolution("dismissed"));
+      expect(Exit.isFailure(kindExit)).toBe(true);
+      expect(Exit.isFailure(resolutionExit)).toBe(true);
+    })
+  );
 
   it("round-trips schema-derived sync conflict values", () => {
     assertSchemaArbitraryRoundTrip(SyncConflict.SyncConflictKind);

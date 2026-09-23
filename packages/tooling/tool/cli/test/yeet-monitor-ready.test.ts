@@ -25,6 +25,7 @@ import {
   yeetPrMergeReadyRowId,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -152,6 +153,7 @@ const options = {
 const platform = Layer.mergeAll(
   NodeFileSystem.layer,
   NodePath.layer,
+  NodeCrypto.layer,
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make((command) => {
@@ -278,11 +280,12 @@ it.layer(platform)("B7 readiness loop", (test) => {
           expect(yield* Ref.get(calls)).toBe(4);
           expect(yield* Ref.get(closeouts)).toBe(1);
           const observed = yield* rows(root);
+          const mergeReadyId = yield* yeetPrMergeReadyRowId({ prNumber: 7, headSha: head });
           expect(observed).toHaveLength(1);
           expect(observed[0]).toMatchObject({
             kind: "pr-merge-ready",
             severity: "P1",
-            id: yeetPrMergeReadyRowId({ prNumber: 7, headSha: head }),
+            id: mergeReadyId,
             capsule: {
               headSha: head,
               prNumber: 7,
@@ -333,7 +336,7 @@ it.layer(platform)("B7 readiness loop", (test) => {
           expect(yield* Ref.get(closes)).toBe(2);
           expect(yield* Ref.get(sweeps)).toBe(1);
           expect(yield* rows(root)).toHaveLength(2);
-          const ack = yield* readYeetAckState(root, yeetPrMergeReadyRowId({ prNumber: 7, headSha: head }));
+          const ack = yield* readYeetAckState(root, yield* yeetPrMergeReadyRowId({ prNumber: 7, headSha: head }));
           expect(ack.acked).toBe(true);
           expect(ack.receipt?.resolution).toMatchObject({ kind: "fix-sha", sha: nextHead });
           expect(A.filter(Str.split(yield* lines, "\n"), Str.includes("merge-ready announced"))).toHaveLength(2);
@@ -423,7 +426,8 @@ it.layer(platform)("B7 readiness loop", (test) => {
   );
 });
 
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeUnknownJsonString = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = (value: unknown) => encodeUnknownJsonString(value).pipe(Effect.orDie);
 const handle = (output: string, code = 0) =>
   ChildProcessSpawner.makeHandle({
     all: Stream.make(new TextEncoder().encode(output)),
@@ -446,36 +450,38 @@ describe("required red decisions", () => {
           Effect.gen(function* () {
             const polls = yield* Ref.make(0);
             const reruns = yield* Ref.make(0);
-            const runner = ChildProcessSpawner.make((command) => {
-              if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-              const [first, second] = command.args;
-              if (first === "run" && second === "list")
-                return Effect.succeed(
+            const runner = ChildProcessSpawner.make(
+              Effect.fnUntraced(function* (command) {
+                if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("unexpected pipe");
+                const [first, second] = command.args;
+                if (first === "run" && second === "list")
+                  return yield* Effect.succeed(
+                    handle(
+                      yield* encodeJson([
+                        { databaseId: 7, headSha: head, status: "completed", conclusion: "failure", name: "CI" },
+                      ])
+                    )
+                  );
+                if (second === "rerun") return yield* Ref.update(reruns, (n) => n + 1).pipe(Effect.as(handle("")));
+                if (A.contains(command.args, "--log-failed"))
+                  return yield* Effect.succeed(handle(flake ? "Test timed out in 5000ms" : "Assertion failed"));
+                return yield* Effect.succeed(
                   handle(
-                    encodeJson([
-                      { databaseId: 7, headSha: head, status: "completed", conclusion: "failure", name: "CI" },
-                    ])
+                    yield* encodeJson({
+                      jobs: [
+                        {
+                          databaseId: 991,
+                          name,
+                          status: "completed",
+                          conclusion: "failure",
+                          steps: [{ name: "Test", conclusion: "failure" }],
+                        },
+                      ],
+                    })
                   )
                 );
-              if (second === "rerun") return Ref.update(reruns, (n) => n + 1).pipe(Effect.as(handle("")));
-              if (A.contains(command.args, "--log-failed"))
-                return Effect.succeed(handle(flake ? "Test timed out in 5000ms" : "Assertion failed"));
-              return Effect.succeed(
-                handle(
-                  encodeJson({
-                    jobs: [
-                      {
-                        databaseId: 991,
-                        name,
-                        status: "completed",
-                        conclusion: "failure",
-                        steps: [{ name: "Test", conclusion: "failure" }],
-                      },
-                    ],
-                  })
-                )
-              );
-            });
+              })
+            );
             const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
               ...options,
               rulesetRead: () => rules([name === "Test Unit (unit-a)" ? "Test Unit" : "Lint"]),
@@ -580,31 +586,39 @@ for (const waiting of ["awaiting-log", "awaiting-run"])
     fixture((root) =>
       Effect.gen(function* () {
         const polls = yield* Ref.make(0);
-        const runner = ChildProcessSpawner.make((command) => {
-          if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-          if (command.args[1] === "list")
-            return Effect.succeed(
-              handle(encodeJson([{ databaseId: 7, headSha: head, status: "in_progress", conclusion: "", name: "CI" }]))
+        const runner = ChildProcessSpawner.make(
+          Effect.fnUntraced(function* (command) {
+            if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("unexpected pipe");
+            if (command.args[1] === "list")
+              return yield* Effect.succeed(
+                handle(
+                  yield* encodeJson([
+                    { databaseId: 7, headSha: head, status: "in_progress", conclusion: "", name: "CI" },
+                  ])
+                )
+              );
+            if (command.args[1] === "rerun") return yield* Effect.die("must not rerun an active parent");
+            if (A.contains(command.args, "--log-failed"))
+              return yield* Effect.succeed(
+                waiting === "awaiting-log" ? handle("", 1) : handle("Test timed out in 5000ms")
+              );
+            return yield* Effect.succeed(
+              handle(
+                yield* encodeJson({
+                  jobs: [
+                    {
+                      databaseId: 991,
+                      name: "Lint",
+                      status: "completed",
+                      conclusion: "failure",
+                      steps: [{ name: "Test", conclusion: "failure" }],
+                    },
+                  ],
+                })
+              )
             );
-          if (command.args[1] === "rerun") return Effect.die("must not rerun an active parent");
-          if (A.contains(command.args, "--log-failed"))
-            return Effect.succeed(waiting === "awaiting-log" ? handle("", 1) : handle("Test timed out in 5000ms"));
-          return Effect.succeed(
-            handle(
-              encodeJson({
-                jobs: [
-                  {
-                    databaseId: 991,
-                    name: "Lint",
-                    status: "completed",
-                    conclusion: "failure",
-                    steps: [{ name: "Test", conclusion: "failure" }],
-                  },
-                ],
-              })
-            )
-          );
-        });
+          })
+        );
         const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
           ...options,
           collectStatus: () =>

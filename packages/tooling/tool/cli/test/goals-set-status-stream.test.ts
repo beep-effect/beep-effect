@@ -24,7 +24,7 @@ import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTes
 const decodePacketTransitionRequest = S.decodeEffect(PacketTransitionRequest);
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketCoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
 
@@ -39,7 +39,7 @@ const COMPLETION_GATE = {
 const writeStreamPacket = Effect.fnUntraced(function* (slug: string) {
   yield* writeProjectFile(
     `goals/${slug}/ops/manifest.json`,
-    `${encodeJson({
+    `${yield* encodeJson({
       schemaVersion: "initiative-manifest/v2",
       initiative: { id: slug, title: slug, status: "active" },
       lifecycle: "active",

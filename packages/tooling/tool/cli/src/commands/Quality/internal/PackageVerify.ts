@@ -20,6 +20,7 @@ import { collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFil
 import { recordYeetLocalShardOutcome, YeetLocalShardOutcome } from "../../Yeet/internal/LocalShardPoison.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type { DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/PackageVerify");
@@ -253,7 +254,11 @@ const fail = (message: string): Effect.Effect<never, QualityScriptCommandError> 
 const runGitLines = Effect.fn("PackageVerify.runGitLines")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
-): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  QualityScriptCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runCaptured({
     command: "git",
     args,
@@ -425,7 +430,7 @@ const collectStepOutput = Effect.fn("PackageVerify.collectStepOutput")(function*
 ): Effect.fn.Return<
   { readonly exitCode: number; readonly output: string },
   QualityScriptCommandError,
-  ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* runCaptured({
     command,
@@ -468,7 +473,7 @@ const runPackageVerifyStepPlan = Effect.fn("PackageVerify.runPackageVerifyStepPl
 ): Effect.fn.Return<
   { readonly exitCode: number; readonly output: string },
   QualityScriptCommandError,
-  ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const result = yield* Effect.reduce(
     plan,
@@ -493,7 +498,11 @@ const runPackageVerifyStep = Effect.fn("PackageVerify.runPackageVerifyStep")(fun
   repoRoot: string,
   workspace: PackageVerifyWorkspace,
   spec: PackageVerifyStepSpec
-): Effect.fn.Return<PackageVerifyStepResult, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  PackageVerifyStepResult,
+  QualityScriptCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   if (O.isNone(R.get(workspace.scripts, spec.script))) {
     return PackageVerifyStepResult.make({
       step: spec.step,
@@ -533,7 +542,7 @@ const runPackageVerifyAtRoot = Effect.fn("PackageVerify.runPackageVerifyAtRoot")
 ): Effect.fn.Return<
   PackageVerifyReport,
   QualityScriptCommandError,
-  FsUtils | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FsUtils | FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const workspaces = yield* collectWorkspaces(repoRoot);
   const changedFiles = O.isSome(packageName) ? A.empty<string>() : yield* collectPackageVerifyChangedFiles(repoRoot);
@@ -589,7 +598,7 @@ export const runPackageVerify = Effect.fn("PackageVerify.runPackageVerify")(func
 }): Effect.fn.Return<
   PackageVerifyReport,
   QualityScriptCommandError,
-  FsUtils | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FsUtils | FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot(path.resolve(process.cwd())).pipe(
@@ -729,7 +738,7 @@ export const runPackageVerifyCli = Effect.fn("PackageVerify.runPackageVerifyCli"
 }): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FsUtils | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FsUtils | FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (A.length(packageArgs) > 1) {
     return yield* fail(`pkg-verify: expected at most one package argument, received ${A.length(packageArgs)}.`);

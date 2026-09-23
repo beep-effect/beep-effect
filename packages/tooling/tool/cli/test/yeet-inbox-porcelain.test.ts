@@ -33,9 +33,10 @@ import {
   yeetPrMergeReadyRowId,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -57,14 +58,15 @@ const capsule = (overrides: Partial<Parameters<typeof YeetFailureCapsule.make>[0
     ...overrides,
   });
 
-const row = (subject: YeetFailureCapsule, severity: "P0" | "P1" | "P2" = "P0"): YeetCheckFailedRow =>
-  YeetCheckFailedRow.make({
+const row = Effect.fnUntraced(function* (subject: YeetFailureCapsule, severity: "P0" | "P1" | "P2" = "P0") {
+  return YeetCheckFailedRow.make({
     capsule: subject,
     checkout: "/repo",
-    id: yeetInboxRowId(subject),
+    id: yield* yeetInboxRowId(subject),
     severity,
     ts: AT,
   });
+});
 
 const entry = (subject: YeetCheckFailedRow, acked = false): YeetInboxEntry =>
   YeetInboxEntry.make({
@@ -85,7 +87,7 @@ const noResolutionFlags = {
   wontfix: false,
 };
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requirements>(
   use: (root: string) => Effect.Effect<Value, Failure, Requirements>
@@ -97,66 +99,94 @@ const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requiremen
 });
 
 describe("filterYeetInboxEntries", () => {
-  const p0 = entry(row(capsule()));
-  const p1 = entry(row(capsule({ lane: "Check / Lint" }), "P1"));
-  const acked = entry(row(capsule({ lane: "Check / Docs" })), true);
-
-  it("keeps everything under the identity filter", () => {
-    expect(filterYeetInboxEntries([p0, p1, acked], { severity: "all", unacked: false })).toStrictEqual([p0, p1, acked]);
+  const fixtures = Effect.gen(function* () {
+    const p0 = entry(yield* row(capsule()));
+    const p1 = entry(yield* row(capsule({ lane: "Check / Lint" }), "P1"));
+    const acked = entry(yield* row(capsule({ lane: "Check / Docs" })), true);
+    return { acked, p0, p1 };
   });
 
-  it("selects by severity tier and by ack state", () => {
-    expect(filterYeetInboxEntries([p0, p1, acked], { severity: "P1", unacked: false })).toStrictEqual([p1]);
-    expect(filterYeetInboxEntries([p0, p1, acked], { severity: "all", unacked: true })).toStrictEqual([p0, p1]);
-  });
+  layer(BunCrypto.layer)((it) => {
+    it.effect("keeps everything under the identity filter", () =>
+      Effect.gen(function* () {
+        const { acked, p0, p1 } = yield* fixtures;
+        expect(filterYeetInboxEntries([p0, p1, acked], { severity: "all", unacked: false })).toStrictEqual([
+          p0,
+          p1,
+          acked,
+        ]);
+      })
+    );
 
-  it("supports the data-last pipeable form", () => {
-    expect(pipe([p0, acked], filterYeetInboxEntries({ severity: "P0", unacked: true }))).toStrictEqual([p0]);
+    it.effect("selects by severity tier and by ack state", () =>
+      Effect.gen(function* () {
+        const { acked, p0, p1 } = yield* fixtures;
+        expect(filterYeetInboxEntries([p0, p1, acked], { severity: "P1", unacked: false })).toStrictEqual([p1]);
+        expect(filterYeetInboxEntries([p0, p1, acked], { severity: "all", unacked: true })).toStrictEqual([p0, p1]);
+      })
+    );
+
+    it.effect("supports the data-last pipeable form", () =>
+      Effect.gen(function* () {
+        const { acked, p0 } = yield* fixtures;
+        expect(pipe([p0, acked], filterYeetInboxEntries({ severity: "P0", unacked: true }))).toStrictEqual([p0]);
+      })
+    );
   });
 });
 
 describe("renderYeetInboxEntryLine", () => {
-  it("phrases an unacked live row with its coordinates", () => {
-    const line = renderYeetInboxEntryLine(entry(row(capsule())));
+  layer(BunCrypto.layer)((it) => {
+    it.effect("phrases an unacked live row with its coordinates", () =>
+      Effect.gen(function* () {
+        const line = renderYeetInboxEntryLine(entry(yield* row(capsule())));
 
-    expect(line).toContain("P0 live unacked");
-    expect(line).toContain("Check / Coverage");
-    expect(line).toContain("pr #754 @ abc123d");
-  });
+        expect(line).toContain("P0 live unacked");
+        expect(line).toContain("Check / Coverage");
+        expect(line).toContain("pr #754 @ abc123d");
+      })
+    );
 
-  it("phrases an acked row with its resolution, or names an unreadable receipt", () => {
-    const subject = row(capsule());
-    const withReceipt = YeetInboxEntry.make({
-      ack: YeetAckState.make({
-        acked: true,
-        receipt: YeetAckReceipt.make({
-          ackedAt: AT,
-          id: subject.id,
-          resolution: YeetAckFixResolution.make({ sha: "2817f28" }),
-        }),
-      }),
-      liveness: "superseded",
-      row: subject,
-    });
+    it.effect("phrases an acked row with its resolution, or names an unreadable receipt", () =>
+      Effect.gen(function* () {
+        const subject = yield* row(capsule());
+        const withReceipt = YeetInboxEntry.make({
+          ack: YeetAckState.make({
+            acked: true,
+            receipt: YeetAckReceipt.make({
+              ackedAt: AT,
+              id: subject.id,
+              resolution: YeetAckFixResolution.make({ sha: "2817f28" }),
+            }),
+          }),
+          liveness: "superseded",
+          row: subject,
+        });
 
-    expect(renderYeetInboxEntryLine(withReceipt)).toContain("superseded acked fix-sha 2817f28");
-    expect(renderYeetInboxEntryLine(entry(subject, true))).toContain("acked (unreadable receipt)");
+        expect(renderYeetInboxEntryLine(withReceipt)).toContain("superseded acked fix-sha 2817f28");
+        expect(renderYeetInboxEntryLine(entry(subject, true))).toContain("acked (unreadable receipt)");
+      })
+    );
   });
 });
 
 describe("renderYeetInboxView", () => {
-  it("summarizes counts in the header and lists one line per entry", () => {
-    const view = YeetInboxView.make({
-      entries: [entry(row(capsule())), entry(row(capsule({ lane: "Check / Lint" })), true)],
-      skippedLines: 3,
-      unreadable: false,
-    });
+  layer(BunCrypto.layer)((it) => {
+    it.effect("summarizes counts in the header and lists one line per entry", () =>
+      Effect.gen(function* () {
+        const view = YeetInboxView.make({
+          entries: [entry(yield* row(capsule())), entry(yield* row(capsule({ lane: "Check / Lint" })), true)],
+          skippedLines: 3,
+          unreadable: false,
+        });
 
-    const rendered = renderYeetInboxView(view);
-    const lines = Str.split(rendered, "\n");
+        const rendered = renderYeetInboxView(view);
+        const lines = Str.split(rendered, "\n");
 
-    expect(A.headNonEmpty(lines)).toBe("[yeet] inbox: 2 row(s), 1 unacked, 3 skipped line(s)");
-    expect(A.length(lines)).toBe(3);
+        expect(A.headNonEmpty(lines)).toBe("[yeet] inbox: 2 row(s), 1 unacked, 3 skipped line(s)");
+        expect(A.length(lines)).toBe(3);
+      })
+    );
   });
 });
 
@@ -169,41 +199,44 @@ describe("renderYeetInboxView (unreadable)", () => {
 });
 
 describe("renderYeetInboxListOutput", () => {
-  const view = () =>
-    YeetInboxView.make({
-      entries: [entry(row(capsule())), entry(row(capsule({ lane: "Check / Lint" }), "P1"), true)],
+  const view = Effect.fnUntraced(function* () {
+    return YeetInboxView.make({
+      entries: [entry(yield* row(capsule())), entry(yield* row(capsule({ lane: "Check / Lint" }), "P1"), true)],
       skippedLines: 2,
       unreadable: false,
     });
+  });
 
-  it.effect("renders the filtered operator text", () =>
-    Effect.gen(function* () {
-      const output = yield* renderYeetInboxListOutput(view(), { json: false, severity: "all", unacked: true });
-      const lines = Str.split(output, "\n");
+  layer(BunCrypto.layer)((it) => {
+    it.effect("renders the filtered operator text", () =>
+      Effect.gen(function* () {
+        const output = yield* renderYeetInboxListOutput(yield* view(), { json: false, severity: "all", unacked: true });
+        const lines = Str.split(output, "\n");
 
-      expect(A.headNonEmpty(lines)).toBe("[yeet] inbox: 1 row(s), 1 unacked, 2 skipped line(s)");
-      expect(A.length(lines)).toBe(2);
-      expect(output).toContain("Check / Coverage");
-      expect(output).not.toContain("Check / Lint");
-    })
-  );
+        expect(A.headNonEmpty(lines)).toBe("[yeet] inbox: 1 row(s), 1 unacked, 2 skipped line(s)");
+        expect(A.length(lines)).toBe(2);
+        expect(output).toContain("Check / Coverage");
+        expect(output).not.toContain("Check / Lint");
+      })
+    );
 
-  it.effect("encodes a decodable JSON document carrying only the shown entries", () =>
-    Effect.gen(function* () {
-      const output = yield* renderYeetInboxListOutput(view(), { json: true, severity: "P1", unacked: false });
-      const decoded = yield* YeetInboxViewJson.decode(output);
+    it.effect("encodes a decodable JSON document carrying only the shown entries", () =>
+      Effect.gen(function* () {
+        const output = yield* renderYeetInboxListOutput(yield* view(), { json: true, severity: "P1", unacked: false });
+        const decoded = yield* YeetInboxViewJson.decode(output);
 
-      expect(decoded.schemaVersion).toBe("yeet-inbox-view/v1");
-      expect(
-        A.getSomes(
-          A.map(decoded.entries, ({ row }) =>
-            row.kind === "check-failed" ? O.some(row.capsule.lane) : O.none<string>()
+        expect(decoded.schemaVersion).toBe("yeet-inbox-view/v1");
+        expect(
+          A.getSomes(
+            A.map(decoded.entries, ({ row }) =>
+              row.kind === "check-failed" ? O.some(row.capsule.lane) : O.none<string>()
+            )
           )
-        )
-      ).toStrictEqual(["Check / Lint"]);
-      expect(decoded.skippedLines).toBe(2);
-    })
-  );
+        ).toStrictEqual(["Check / Lint"]);
+        expect(decoded.skippedLines).toBe(2);
+      })
+    );
+  });
 });
 
 describe("parseYeetAckResolution", () => {
@@ -311,7 +344,7 @@ describe("ackYeetInboxRow", () => {
   it.live("writes a decodable receipt for a known row", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         yield* appendYeetInboxRow(root, subject);
 
         const report = yield* ackYeetInboxRow(root, subject.id, YeetAckFixResolution.make({ sha: "2817f28" }), AT);
@@ -339,7 +372,7 @@ describe("ackYeetInboxRow", () => {
   it.live("reports when a re-ack replaced a prior receipt", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         yield* appendYeetInboxRow(root, subject);
         yield* writeYeetAckReceipt(
           root,
@@ -362,7 +395,7 @@ describe("ackYeetInboxRow", () => {
   it.live("re-arms a row after an attributed waiver expires", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         yield* appendYeetInboxRow(root, subject);
         yield* writeYeetAckReceipt(
           root,
@@ -380,7 +413,7 @@ describe("ackYeetInboxRow", () => {
 
         // Updating the bounded active index for unrelated evidence must not
         // discard a waived row that will become actionable again.
-        yield* appendYeetInboxRow(root, row(capsule({ lane: "Check / Lint" }), "P1"));
+        yield* appendYeetInboxRow(root, yield* row(capsule({ lane: "Check / Lint" }), "P1"));
 
         const state = yield* readYeetAckState(root, subject.id);
         expect(state.acked).toBe(false);
@@ -396,7 +429,7 @@ describe("appendYeetInboxRowFromText", () => {
   it.live("appends a valid row document to the inbox", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         const text = yield* YeetInboxRowJson.encode(subject);
 
         const appended = yield* appendYeetInboxRowFromText(root, `${text}\n`);
@@ -411,7 +444,8 @@ describe("appendYeetInboxRowFromText", () => {
   it.live("refuses a row whose id breaks the deterministic contract", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const forged = YeetCheckFailedRow.make({ ...row(capsule()), id: "forged-id" });
+        const forgedSource = yield* row(capsule());
+        const forged = YeetCheckFailedRow.make({ ...forgedSource, id: "forged-id" });
         const text = yield* YeetInboxRowJson.encode(forged);
 
         const failure = yield* Effect.flip(appendYeetInboxRowFromText(root, text));
@@ -469,7 +503,7 @@ describe("yeet inbox runners", () => {
   it.live("list prints the resolved checkout's inbox as text and as decodable JSON", () =>
     inTempCheckout((root) =>
       Effect.gen(function* () {
-        yield* appendYeetInboxRow(root, row(capsule()));
+        yield* appendYeetInboxRow(root, yield* row(capsule()));
 
         yield* runYeetInboxList({ json: false, severity: "all", unacked: false });
         yield* runYeetInboxList({ json: true, severity: "all", unacked: true });
@@ -488,7 +522,7 @@ describe("yeet inbox runners", () => {
   it.live("ack writes the receipt from the resolved checkout and reports a replacement on re-ack", () =>
     inTempCheckout((root) =>
       Effect.gen(function* () {
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         yield* appendYeetInboxRow(root, subject);
 
         yield* runYeetInboxAck({ ...noResolutionFlags, fixSha: "2817f28", id: subject.id });
@@ -507,7 +541,7 @@ describe("yeet inbox runners", () => {
   it.live("append reads the row document from stdin and appends it to the resolved checkout", () =>
     inTempCheckout((root) =>
       Effect.gen(function* () {
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         const text = yield* YeetInboxRowJson.encode(subject);
         yield* runYeetInboxAppend({ fromStdin: true }).pipe(providedStdin(`${text}\n`));
 
@@ -531,7 +565,7 @@ describe("yeet inbox runners", () => {
 });
 
 describe("observed acknowledgment of merge-ready rows (ruling 46)", () => {
-  const mergeReadyRow = () => {
+  const mergeReadyRow = Effect.fnUntraced(function* () {
     const subject = YeetPrMergeReadyCapsule.make({
       headSha: "abc123def456",
       prNumber: 1149,
@@ -545,15 +579,15 @@ describe("observed acknowledgment of merge-ready rows (ruling 46)", () => {
     return YeetPrMergeReadyRow.make({
       capsule: subject,
       checkout: "/repo",
-      id: yeetPrMergeReadyRowId(subject),
+      id: yield* yeetPrMergeReadyRowId(subject),
       severity: "P1",
       ts: AT,
     });
-  };
+  });
   it.live("accepts --observed for a merge-ready row and records the inbox-ack route", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const subject = mergeReadyRow();
+        const subject = yield* mergeReadyRow();
         yield* appendYeetInboxRow(root, subject);
         const report = yield* ackYeetInboxRow(
           root,
@@ -570,7 +604,7 @@ describe("observed acknowledgment of merge-ready rows (ruling 46)", () => {
   it.live("still refuses --observed for a check-failed row", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         yield* appendYeetInboxRow(root, subject);
         const failure = yield* Effect.flip(
           ackYeetInboxRow(root, subject.id, YeetAckObservedResolution.make({ via: "inbox-ack" }), AT)

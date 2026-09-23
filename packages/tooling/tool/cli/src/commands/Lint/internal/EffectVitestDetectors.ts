@@ -1,12 +1,14 @@
 /** Syntax-only EV001-EV015 detectors. @packageDocumentation @since 0.0.0 */
 
-import { createHash } from "node:crypto";
 import { A, Str } from "@beep/utils";
-import { HashMap, MutableHashMap } from "effect";
+import { Effect, HashMap, MutableHashMap } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
+import { EffectVitestLintError } from "../Lint.errors.ts";
 import { EffectVitestFinding, EffectVitestReplacement } from "../Lint.schemas.ts";
 import { EffectVitestRulePolicies } from "./EffectVitestPolicy.ts";
 import {
@@ -578,11 +580,9 @@ const appendTokenChildren = (pending: Array<MorphNode>, children: ReadonlyArray<
   }
 };
 
-const occurrenceAnchor = (
-  node: MorphNode,
-  imports: EffectVitestImports,
-  statements: MutableHashMap.MutableHashMap<number, string>
-): string => {
+// Length delimiters keep token and title boundaries unambiguous; literal text
+// is retained verbatim instead of collapsing significant string whitespace.
+const harnessLabelParts = (node: MorphNode, imports: EffectVitestImports): ReadonlyArray<string> => {
   const contexts = A.filter(
     node.getAncestors(),
     (ancestor) =>
@@ -593,37 +593,62 @@ const occurrenceAnchor = (
   const labels = A.map(contexts, (context) =>
     Node.isCallExpression(context)
       ? A.map(A.filter(context.getArguments(), Node.isStringLiteral), (name) => name.getText())
-      : []
+      : A.empty<string>()
   );
-  const statement = node.getFirstAncestor((ancestor) => Node.isStatement(ancestor)) ?? node;
-  const hash = createHash("sha256");
-  // Length delimiters keep token and title boundaries unambiguous; literal text
-  // is retained verbatim instead of collapsing significant string whitespace.
-  for (const label of A.flatten(labels)) hash.update(`${label.length}:${label}`);
-  const tokens = O.getOrElse(MutableHashMap.get(statements, statement.getStart()), () => {
-    const digest = createHash("sha256");
-    // Stream the same getChildren leaves in preorder, including ts-morph's
-    // synthetic comments and empty syntax lists, without materializing every
-    // descendant or resuming a generator at each ancestor level.
-    const pending = A.reverse(statement.getChildren());
-    const tokenParts = A.empty<string>();
-    while (pending.length > 0) {
-      const token = pending.pop();
-      if (token === undefined) continue;
-      const children = token.getChildren();
-      if (children.length === 0) {
-        const text = token.getText();
-        tokenParts.push(`${token.getKind()}:${text.length}:${text}`);
-      } else {
-        appendTokenChildren(pending, children);
-      }
-    }
-    const value = digest.update(A.join(tokenParts, "")).digest("hex");
-    MutableHashMap.set(statements, statement.getStart(), value);
-    return value;
-  });
-  return `v2:${hash.update(tokens).digest("hex")}`;
+  return A.map(A.flatten(labels), (label) => `${label.length}:${label}`);
 };
+
+// Stream the same getChildren leaves in preorder, including ts-morph's
+// synthetic comments and empty syntax lists, without materializing every
+// descendant or resuming a generator at each ancestor level.
+const statementTokenParts = (statement: MorphNode): Array<string> => {
+  const pending = A.reverse(statement.getChildren());
+  const tokenParts = A.empty<string>();
+  while (pending.length > 0) {
+    const token = pending.pop();
+    if (token === undefined) continue;
+    const children = token.getChildren();
+    if (children.length === 0) {
+      const text = token.getText();
+      tokenParts.push(`${token.getKind()}:${text.length}:${text}`);
+    } else {
+      appendTokenChildren(pending, children);
+    }
+  }
+  return tokenParts;
+};
+
+const statementTokenDigest = Effect.fnUntraced(function* (
+  statement: MorphNode,
+  statements: MutableHashMap.MutableHashMap<number, string>
+) {
+  const cached = MutableHashMap.get(statements, statement.getStart());
+  if (O.isSome(cached)) {
+    return cached.value;
+  }
+  const crypto = yield* Crypto.Crypto;
+  const tokens = Encoding.encodeHex(
+    yield* crypto
+      .digest("SHA-256", new TextEncoder().encode(A.join(statementTokenParts(statement), "")))
+      .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest statement tokens."))
+  );
+  MutableHashMap.set(statements, statement.getStart(), tokens);
+  return tokens;
+});
+
+const occurrenceAnchor = Effect.fnUntraced(function* (
+  node: MorphNode,
+  imports: EffectVitestImports,
+  statements: MutableHashMap.MutableHashMap<number, string>
+) {
+  const crypto = yield* Crypto.Crypto;
+  const statement = node.getFirstAncestor((ancestor) => Node.isStatement(ancestor)) ?? node;
+  const tokens = yield* statementTokenDigest(statement, statements);
+  const digest = yield* crypto
+    .digest("SHA-256", new TextEncoder().encode(`${A.join(harnessLabelParts(node, imports), "")}${tokens}`))
+    .pipe(EffectVitestLintError.mapError("Failed to hash Effect Vitest occurrence identity."));
+  return `v2:${Encoding.encodeHex(digest)}`;
+});
 
 const assignStableIds = (findings: ReadonlyArray<EffectVitestFinding>): ReadonlyArray<EffectVitestFinding> => {
   const counts = MutableHashMap.empty<string, number>();
@@ -1545,48 +1570,77 @@ const detectRetryLoop = (loop: MorphNode, state: DetectorState): void => {
  * @since 0.0.0
  */
 export const detectEffectVitestFindings: {
-  (sourceFile: SourceFile, file: string, owner: string): ReadonlyArray<EffectVitestFinding>;
-  (file: string, owner: string): (sourceFile: SourceFile) => ReadonlyArray<EffectVitestFinding>;
-} = dual(3, (sourceFile: SourceFile, file: string, owner: string) => {
-  const imports = collectEffectVitestImports(sourceFile);
-  const harness = createEffectVitestHarnessIndex(sourceFile, imports);
-  const statementDigests = MutableHashMap.empty<number, string>();
-  const makeFinding = (input: FindingInput): EffectVitestFinding =>
-    EffectVitestFinding.make({
-      ...initialFinding(input),
-      occurrence: O.some(occurrenceAnchor(input.node, imports, statementDigests)),
-    });
-  const findings = A.empty<EffectVitestFinding>();
-  const definitions = A.filter(
-    sourceFunctionDefinitions(sourceFile),
-    ({ node }) => functionHasResource(node, imports) || buildsAndProvidesLayer(node, imports)
-  );
-  const helperNames = A.map(definitions, ({ name }) => name);
-  const calls = imports.calls;
-  const state: DetectorState = {
-    imports,
-    harness,
-    makeFinding,
-    findings,
-    definitions,
-    helperNames,
-    providerNames: providerCandidateNames(imports),
-    calls,
-    file,
-    owner,
-  };
+  (
+    sourceFile: SourceFile,
+    file: string,
+    owner: string
+  ): Effect.Effect<ReadonlyArray<EffectVitestFinding>, EffectVitestLintError, Crypto.Crypto>;
+  (
+    file: string,
+    owner: string
+  ): (
+    sourceFile: SourceFile
+  ) => Effect.Effect<ReadonlyArray<EffectVitestFinding>, EffectVitestLintError, Crypto.Crypto>;
+} = dual(
+  3,
+  Effect.fnUntraced(function* (sourceFile: SourceFile, file: string, owner: string) {
+    const imports = collectEffectVitestImports(sourceFile);
+    const harness = createEffectVitestHarnessIndex(sourceFile, imports);
+    const statementDigests = MutableHashMap.empty<number, string>();
+    const occurrenceNodes = MutableHashMap.empty<EffectVitestFinding, MorphNode>();
+    const makeFinding = (input: FindingInput): EffectVitestFinding => {
+      const finding = initialFinding(input);
+      MutableHashMap.set(occurrenceNodes, finding, input.node);
+      return finding;
+    };
+    const findings = A.empty<EffectVitestFinding>();
+    const definitions = A.filter(
+      sourceFunctionDefinitions(sourceFile),
+      ({ node }) => functionHasResource(node, imports) || buildsAndProvidesLayer(node, imports)
+    );
+    const helperNames = A.map(definitions, ({ name }) => name);
+    const calls = imports.calls;
+    const state: DetectorState = {
+      imports,
+      harness,
+      makeFinding,
+      findings,
+      definitions,
+      helperNames,
+      providerNames: providerCandidateNames(imports),
+      calls,
+      file,
+      owner,
+    };
 
-  for (const call of calls) inspectCall(call, state);
+    for (const call of calls) inspectCall(call, state);
 
-  for (const definition of definitions) detectResourceDefinition(definition, state);
-  for (const declaration of imports.plainVitestImports) {
-    if (imports.hasEffectImport)
-      findings.push(makeFinding({ ruleId: "EV011", node: declaration, file, owner, symbol: "vitest-import" }));
-  }
+    for (const definition of definitions) detectResourceDefinition(definition, state);
+    for (const declaration of imports.plainVitestImports) {
+      if (imports.hasEffectImport)
+        findings.push(makeFinding({ ruleId: "EV011", node: declaration, file, owner, symbol: "vitest-import" }));
+    }
 
-  for (const declaration of sourceFile.getImportDeclarations()) detectPlatformImport(declaration, state);
+    for (const declaration of sourceFile.getImportDeclarations()) detectPlatformImport(declaration, state);
 
-  for (const call of calls) detectPlatformRequire(call, state);
-  for (const loop of imports.loops) detectRetryLoop(loop, state);
-  return assignStableIds(findings);
-});
+    for (const call of calls) detectPlatformRequire(call, state);
+    for (const loop of imports.loops) detectRetryLoop(loop, state);
+    const anchored = yield* Effect.forEach(
+      findings,
+      Effect.fnUntraced(function* (finding) {
+        const node = MutableHashMap.get(occurrenceNodes, finding);
+        if (O.isNone(node)) {
+          return yield* EffectVitestLintError.new(
+            "An Effect Vitest finding has no source node for its occurrence identity."
+          );
+        }
+        return EffectVitestFinding.make({
+          ...finding,
+          occurrence: O.some(yield* occurrenceAnchor(node.value, imports, statementDigests)),
+        });
+      }),
+      { concurrency: 1 }
+    );
+    return assignStableIds(anchored);
+  })
+);

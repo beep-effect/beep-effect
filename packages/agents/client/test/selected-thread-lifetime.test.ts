@@ -4,7 +4,6 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { AtomRegistry } from "effect/unstable/reactivity";
 
 // The desktop registry disposes any atom with no listeners and no dependents once
@@ -12,7 +11,7 @@ import { AtomRegistry } from "effect/unstable/reactivity";
 // app thirty seconds.
 const IDLE_TTL_MS = 40;
 
-const olderThread = S.decodeSync(WorkspaceIdentity.ThreadId)(7);
+const olderThread = WorkspaceIdentity.ThreadId.make(7);
 
 describe("selected thread lifetime", () => {
   it.live(

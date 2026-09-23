@@ -74,8 +74,21 @@ export const captureDateFromFileName = (fileName: string): O.Option<string> => {
   return match === null ? O.none() : O.fromUndefinedOr(match[1]);
 };
 
-const encodePayload = UnknownFromJsonString.encodeUnknownSync;
+const encodePayload = UnknownFromJsonString.encodeUnknownEffect;
 const parseJsonText = UnknownFromJsonString.decodeUnknownEffect;
+
+const encodeRawPayloadJson = Effect.fnUntraced(function* (payload: unknown) {
+  const encoded = yield* encodePayload(payload).pipe(
+    Effect.mapError((cause) =>
+      CodexFindingsIngestError.make({
+        reason: "payload-invalid",
+        message: "The capture payload could not be encoded for the raw evidence file.",
+        cause,
+      })
+    )
+  );
+  return `${encoded}\n`;
+});
 
 const readPriorIds = Effect.fnUntraced(function* (packetDir: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -240,16 +253,18 @@ const prepareCodexFindingsIngest = Effect.fn("CodexFindings.prepareIngest")(func
       branch: O.getOrUndefined(options.branch),
       expectedCount: O.getOrUndefined(options.expectedCount),
     });
+    const rawPayloadJson = yield* encodeRawPayloadJson(bundle.payload);
+    const documents = yield* renderPacketDocuments({
+      plan,
+      rawReports: bundle.reports,
+      rawPayloadJson,
+    });
     return {
       repoRoot,
       plan,
       refreshSource: O.none<CodexRefreshLedgerSource>(),
       documents: A.append(
-        renderPacketDocuments({
-          plan,
-          rawReports: bundle.reports,
-          rawPayloadJson: `${encodePayload(bundle.payload)}\n`,
-        }),
+        documents,
         // Raw upstream evidence legitimately carries secret-shaped text (that is
         // what a credential finding is); hits are reported, never a refusal.
         PacketDocument.make({
@@ -275,20 +290,22 @@ const prepareCodexFindingsIngest = Effect.fn("CodexFindings.prepareIngest")(func
     expectedCount: O.getOrUndefined(options.expectedCount),
     priorIds: provenance.priorIds,
   });
+  // Report bodies are the evidence P2 validates against. They only ever reach
+  // ignored `raw/reports/`; no tracked renderer accepts this shape.
+  // Raw evidence is the normalized capture, never the export itself: the CSV
+  // carries author email addresses and unsanitized report bodies.
+  const rawPayloadJson = yield* encodeRawPayloadJson(payload);
+  const documents = yield* renderPacketDocuments({
+    plan,
+    rawReports: parsed.reports,
+    rawPayloadJson,
+  });
 
   return {
     repoRoot,
     plan,
     refreshSource: provenance.refreshSource,
-    documents: renderPacketDocuments({
-      plan,
-      // Report bodies are the evidence P2 validates against. They only ever reach
-      // ignored `raw/reports/`; no tracked renderer accepts this shape.
-      rawReports: parsed.reports,
-      // Raw evidence is the normalized capture, never the export itself: the CSV
-      // carries author email addresses and unsanitized report bodies.
-      rawPayloadJson: `${encodePayload(payload)}\n`,
-    }),
+    documents,
   };
 });
 

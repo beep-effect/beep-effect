@@ -1,29 +1,25 @@
-import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import { GlobError, layer as GlobLayer, Glob as GlobService } from "@beep/utils/Glob";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import { expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Match } from "effect";
+import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { describe, expect, it } from "vitest";
 import type { GlobOptions, Pattern } from "@beep/utils/Glob";
 
 const isGlobError = S.is(GlobError);
 
 type TestEffect<A, E = never> = Effect.Effect<A, E, never>;
 
-const runTest = <A, E>(effect: TestEffect<A, E>): Promise<A> => Effect.runPromise(effect);
+const runTest = Effect.scoped;
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-type Fixture = {
-  readonly dir: string;
-  readonly cleanup: TestEffect<void>;
-};
 
 const platformLayer = GlobLayer;
 const joinPath = (base: string, ...segments: ReadonlyArray<string>): string =>
@@ -33,10 +29,9 @@ const joinPath = (base: string, ...segments: ReadonlyArray<string>): string =>
 const withFileSystem = <E>(use: (fs: FileSystem.FileSystem) => Effect.Effect<void, E>): TestEffect<void> =>
   provideScopedLayer(NodeServices.layer)(FileSystem.FileSystem.pipe(Effect.flatMap(use), Effect.orDie));
 const makeDirectory = (path: string) => withFileSystem((fs) => fs.makeDirectory(path, { recursive: true }));
-const makeTempDirectory: (prefix: string) => TestEffect<string> = Effect.fn("GlobTest.makeTempDirectory")(function* (
-  prefix: string
-) {
-  const suffix = randomUUID();
+const makeTempDirectory = Effect.fn("GlobTest.makeTempDirectory")(function* (prefix: string) {
+  const crypto = yield* Crypto.Crypto;
+  const suffix = yield* crypto.randomUUIDv4;
   const dir = joinPath(tmpdir(), `${prefix}${suffix}`);
   yield* makeDirectory(dir);
   return dir;
@@ -47,7 +42,7 @@ const chmodPath = (path: string, mode: number): TestEffect<void> => withFileSyst
 const removePath = (path: string) => withFileSystem((fs) => fs.remove(path, { recursive: true }));
 const makeSymlink = (target: string, path: string) => withFileSystem((fs) => fs.symlink(target, path));
 
-const acquireFixture: TestEffect<Fixture> = Effect.gen(function* () {
+const acquireFixture = Effect.gen(function* () {
   const dir = yield* makeTempDirectory("beep-utils-glob-");
 
   yield* makeDirectory(joinPath(dir, "src", "errors"));
@@ -124,16 +119,18 @@ const withBunGlobDisabled = (effect: GlobProgram) => {
   );
 };
 
-describe("@beep/utils Glob", () => {
-  it("accepts encoded optional causes in GlobError helpers", () => {
-    const error = GlobError.new("src/*.ts", undefined);
-    const thunkError = GlobError.newThunk("src/*.ts", undefined)();
+it.layer(NodeCrypto.layer)("@beep/utils Glob", (it) => {
+  it.effect("accepts encoded optional causes in GlobError helpers", () =>
+    Effect.sync(() => {
+      const error = GlobError.new("src/*.ts", undefined);
+      const thunkError = GlobError.newThunk("src/*.ts", undefined)();
 
-    expect(O.isNone(error.cause)).toBe(true);
-    expect(O.isNone(thunkError.cause)).toBe(true);
-  });
+      expect(O.isNone(error.cause)).toBe(true);
+      expect(O.isNone(thunkError.cause)).toBe(true);
+    })
+  );
 
-  it("supports array patterns, ignore filters, and deduped deterministic output", () =>
+  it.effect("supports array patterns, ignore filters, and deduped deterministic output", () =>
     runTest(
       Effect.gen(function* () {
         const program = Effect.acquireUseRelease(
@@ -149,9 +146,10 @@ describe("@beep/utils Glob", () => {
 
         expect(results).toEqual(["src/index.ts"]);
       })
-    ));
+    )
+  );
 
-  it("does not traverse unrelated directories for a statically rooted pattern", () =>
+  it.effect("does not traverse unrelated directories for a statically rooted pattern", () =>
     runTest(
       Effect.acquireUseRelease(
         acquireFixture,
@@ -169,9 +167,10 @@ describe("@beep/utils Glob", () => {
           }),
         (fixture) => fixture.cleanup
       )
-    ));
+    )
+  );
 
-  it("supports absolute paths and directory matches when nodir is false", () =>
+  it.effect("supports absolute paths and directory matches when nodir is false", () =>
     runTest(
       Effect.gen(function* () {
         const program = Effect.acquireUseRelease(
@@ -194,9 +193,10 @@ describe("@beep/utils Glob", () => {
         );
         yield* program;
       })
-    ));
+    )
+  );
 
-  it("supports nodir by returning only files", () =>
+  it.effect("supports nodir by returning only files", () =>
     runTest(
       Effect.gen(function* () {
         const program = Effect.acquireUseRelease(
@@ -212,9 +212,10 @@ describe("@beep/utils Glob", () => {
 
         expect(results).toEqual(["src/errors/problem.ts", "src/index.ts", "src/nested/deep.ts"]);
       })
-    ));
+    )
+  );
 
-  it("resolves an omitted cwd the same as an explicit current directory", () =>
+  it.effect("resolves an omitted cwd the same as an explicit current directory", () =>
     runTest(
       Effect.gen(function* () {
         const implicitResults = yield* runGlob("package.json");
@@ -227,9 +228,10 @@ describe("@beep/utils Glob", () => {
         expect(implicitNodeResults).toEqual(implicitResults);
         expect(explicitNodeResults).toEqual(implicitResults);
       })
-    ));
+    )
+  );
 
-  it("falls back to Node globbing when Bun.Glob is unavailable", () =>
+  it.effect("falls back to Node globbing when Bun.Glob is unavailable", () =>
     runTest(
       Effect.gen(function* () {
         const program = Effect.acquireUseRelease(
@@ -256,9 +258,10 @@ describe("@beep/utils Glob", () => {
         );
         yield* program;
       })
-    ));
+    )
+  );
 
-  it("treats percent-encoded and fragment characters as filesystem text across backends", () =>
+  it.effect("treats percent-encoded and fragment characters as filesystem text across backends", () =>
     runTest(
       Effect.gen(function* () {
         const program = Effect.acquireUseRelease(
@@ -286,9 +289,10 @@ describe("@beep/utils Glob", () => {
 
         yield* program;
       })
-    ));
+    )
+  );
 
-  it.each(["src/errors", "src/errors/", "src/errors/**"])(
+  it.effect.each(["src/errors", "src/errors/", "src/errors/**"])(
     "applies the %s directory ignore consistently across backends",
     (ignore) =>
       runTest(
@@ -322,7 +326,7 @@ describe("@beep/utils Glob", () => {
       )
   );
 
-  it("surfaces non-missing Node filesystem errors as GlobError", () =>
+  it.effect("surfaces non-missing Node filesystem errors as GlobError", () =>
     runTest(
       Effect.gen(function* () {
         const error = yield* withBunGlobDisabled(
@@ -334,9 +338,10 @@ describe("@beep/utils Glob", () => {
 
         expect(isGlobError(error)).toBe(true);
       })
-    ));
+    )
+  );
 
-  it("skips dangling symlinks in the Node fallback scanner", () =>
+  it.effect("skips dangling symlinks in the Node fallback scanner", () =>
     runTest(
       Effect.gen(function* () {
         const program = Effect.acquireUseRelease(
@@ -358,9 +363,10 @@ describe("@beep/utils Glob", () => {
 
         expect(results).toEqual(["src/errors/problem.ts", "src/index.ts", "src/nested/deep.ts"]);
       })
-    ));
+    )
+  );
 
-  it("does not recurse into symlinked directories", () =>
+  it.effect("does not recurse into symlinked directories", () =>
     runTest(
       Effect.gen(function* () {
         const program = Effect.acquireUseRelease(
@@ -384,5 +390,6 @@ describe("@beep/utils Glob", () => {
 
         expect(results).toEqual(["src/errors/problem.ts", "src/index.ts", "src/nested/deep.ts"]);
       })
-    ));
+    )
+  );
 });

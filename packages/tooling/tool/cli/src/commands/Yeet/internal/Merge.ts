@@ -41,6 +41,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { SweepReport } from "./Sweep.schemas.ts";
 import { executeSweep } from "./Sweep.ts";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -124,7 +125,7 @@ const decodePullRequestView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
 const readPullRequest = Effect.fn("Yeet.readMergePullRequest")(function* (
   context: RepoRunContext,
   selector: string
-): Effect.fn.Return<GhPrView, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<GhPrView, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const output = yield* ghOutput({
     args: ["pr", "view", selector, "--json", pullRequestViewFields],
     cwd: context.repoRoot,
@@ -144,7 +145,7 @@ const readPullRequest = Effect.fn("Yeet.readMergePullRequest")(function* (
 const confirmMerged = Effect.fn("Yeet.confirmPullRequestMerged")(function* (
   context: RepoRunContext,
   pullRequestNumber: number
-): Effect.fn.Return<GhPrView, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<GhPrView, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const view = yield* readPullRequest(context, `${pullRequestNumber}`);
   if (view.state !== mergedState) {
     return yield* YeetCommandError.make({
@@ -194,7 +195,7 @@ export const mergePr = Effect.fn("Yeet.mergePr")(function* (
 ): Effect.fn.Return<
   MergeOutcome,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const branch = yield* guardLiteralArg(context.branch).pipe(
     Effect.mapError(

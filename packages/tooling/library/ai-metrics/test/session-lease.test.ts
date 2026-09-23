@@ -3,6 +3,7 @@ import {
   SessionLease,
   SessionLeaseEvent,
   SessionLeaseExpiryCandidate,
+  SessionLeaseReconciliation,
   SessionLeaseReconciliationEvidence,
   transitionSessionLease,
 } from "@beep/repo-ai-metrics";
@@ -12,15 +13,16 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import type { SessionLeaseReconciliation, SessionLeaseTransition } from "@beep/repo-ai-metrics";
+import type { SessionLeaseTransition } from "@beep/repo-ai-metrics";
 
 const decodeSessionLeaseExpiryCandidateResult = S.decodeResult(SessionLeaseExpiryCandidate);
-const decodeSessionLeaseSync = S.decodeSync(SessionLease);
-const decodeSessionLeaseEventSync = S.decodeSync(SessionLeaseEvent);
-const encodeSessionLeaseSync = S.encodeSync(SessionLease);
-const encodeSessionLeaseEventSync = S.encodeSync(SessionLeaseEvent);
-const encodeSessionLeaseExpiryCandidateSync = S.encodeSync(SessionLeaseExpiryCandidate);
-const encodeSessionLeaseReconciliationEvidenceSync = S.encodeSync(SessionLeaseReconciliationEvidence);
+const decodeEvent = S.decodeUnknownEffect(SessionLeaseEvent);
+const encodeEvent = S.encodeUnknownEffect(SessionLeaseEvent);
+const decodeCandidate = S.decodeUnknownEffect(SessionLeaseExpiryCandidate);
+const encodeCandidate = S.encodeUnknownEffect(SessionLeaseExpiryCandidate);
+const decodeEvidence = S.decodeUnknownEffect(SessionLeaseReconciliationEvidence);
+const encodeCandidateJson = S.encodeUnknownEffect(S.fromJsonString(SessionLeaseExpiryCandidate));
+const encodeEvidenceJson = S.encodeUnknownEffect(S.fromJsonString(SessionLeaseReconciliationEvidence));
 
 const hashA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const hashB = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
@@ -29,9 +31,6 @@ const hashD = "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
 const hashE = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 const hashF = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
-const decodeEvent = S.decodeUnknownSync(SessionLeaseEvent);
-const decodeCandidate = S.decodeUnknownSync(SessionLeaseExpiryCandidate);
-const decodeEvidence = S.decodeUnknownSync(SessionLeaseReconciliationEvidence);
 const leaseEquivalent = S.toEquivalence(SessionLease);
 const eventEquivalent = S.toEquivalence(SessionLeaseEvent);
 
@@ -52,7 +51,9 @@ const activeLease = (transition: SessionLeaseTransition): SessionLease => {
   return transition.lease;
 };
 
-const startedLease = (): SessionLease => activeLease(transitionSessionLease(O.none(), startEvent));
+const startedLease = Effect.fnUntraced(function* () {
+  return activeLease(transitionSessionLease(O.none(), yield* startEvent));
+});
 
 const activityEvent = (observedAt = "2026-09-03T12:01:00.000Z", eventDigest = hashC, sessionId = hashA) =>
   decodeEvent({
@@ -80,15 +81,17 @@ const openWaitEvent = decodeEvent({
   },
 });
 
-const candidateFrom = (lease: SessionLease, leaseDigest = hashF) =>
-  decodeCandidate({
+const candidateFrom = Effect.fnUntraced(function* (lease: SessionLease, leaseDigest = hashF) {
+  const encodedLease = yield* SessionLease.encodeEffect(lease);
+  return yield* decodeCandidate({
     schemaVersion: "telemetry-v2/session-lease-expiry-candidate/v1",
-    lease: encodeSessionLeaseSync(lease),
+    lease: encodedLease,
     leaseDigest,
     evaluatedAt: "2026-09-03T12:11:00.000Z",
     ttlMs: 600_000,
     idleMs: 600_000,
   });
+});
 
 const reconciliationEvidence = (overrides: Record<string, unknown> = {}) =>
   decodeEvidence({
@@ -104,233 +107,262 @@ const reconciliationEvidence = (overrides: Record<string, unknown> = {}) =>
 const reconciliationStatus = (result: SessionLeaseReconciliation) => result.status;
 
 describe("telemetry-v2 session leases", () => {
-  it("round-trips schema-generated leases and liveness events", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(SessionLease), Arbitrary.schema(SessionLeaseEvent)]),
-          ([lease, event]) => {
-            const roundTrippedLease = decodeSessionLeaseSync(encodeSessionLeaseSync(lease));
-            const roundTrippedEvent = decodeSessionLeaseEventSync(encodeSessionLeaseEventSync(event));
+  it.effect("round-trips schema-generated leases and liveness events", () =>
+    Effect.gen(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(SessionLease), Arbitrary.schema(SessionLeaseEvent)]),
+        ([lease, event]) =>
+          Effect.gen(function* () {
+            const roundTrippedLease = yield* SessionLease.decodeEffect(yield* SessionLease.encodeEffect(lease));
+            const roundTrippedEvent = yield* decodeEvent(yield* encodeEvent(event));
             expect(leaseEquivalent(lease, roundTrippedLease)).toBe(true);
             expect(eventEquivalent(event, roundTrippedEvent)).toBe(true);
 
             return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+          }),
+        fcRuns(25)
+      );
 
-  it("creates a lease only from SessionStart and renews on ordinary activity", () => {
-    const started = transitionSessionLease(O.none(), startEvent);
-    const lease = activeLease(started);
-    const renewed = transitionSessionLease(O.some(lease), activityEvent());
-    const renewedLease = activeLease(renewed);
+      expect(result._tag).toBe("Passed");
+    })
+  );
 
-    expect(started.status === "active" && started.outcome).toBe("started");
-    expect(renewed.status === "active" && renewed.outcome).toBe("renewed");
-    expect(renewedLease.lastEventDigest).toBe(hashC);
-    expect(renewedLease.evidenceTier).toBe("derived");
-    expect(renewedLease.oipTaint).toBe("unknown");
-  });
+  it.effect("creates a lease only from SessionStart and renews on ordinary activity", () =>
+    Effect.gen(function* () {
+      const started = transitionSessionLease(O.none(), yield* startEvent);
+      const lease = activeLease(started);
+      const renewed = transitionSessionLease(O.some(lease), yield* activityEvent());
+      const renewedLease = activeLease(renewed);
 
-  it("quarantines missing, duplicate, and backwards transitions", () => {
-    const missing = transitionSessionLease(O.none(), activityEvent());
-    const missingOpen = transitionSessionLease(O.none(), openWaitEvent);
-    const missingClose = transitionSessionLease(
-      O.none(),
-      decodeEvent({
-        event: "wait-closed",
-        sessionId: hashA,
-        observedAt: "2026-09-03T12:03:00.000Z",
-        eventDigest: hashF,
-        waitId: hashE,
-        evidenceTier: "derived",
-        oipTaint: "clear",
-      })
-    );
-    const missingEnd = transitionSessionLease(
-      O.none(),
-      decodeEvent({
-        event: "session-end",
-        sessionId: hashA,
-        observedAt: "2026-09-03T12:05:00.000Z",
-        eventDigest: hashF,
-        evidenceTier: "derived",
-        oipTaint: "clear",
-      })
-    );
-    const lease = startedLease();
-    const duplicate = transitionSessionLease(O.some(lease), startEvent);
-    const backwards = transitionSessionLease(O.some(lease), activityEvent("2026-09-03T11:59:59.000Z", hashD));
-    const mismatched = transitionSessionLease(O.some(lease), activityEvent("2026-09-03T12:01:00.000Z", hashC, hashB));
+      expect(started.status === "active" && started.outcome).toBe("started");
+      expect(renewed.status === "active" && renewed.outcome).toBe("renewed");
+      expect(renewedLease.lastEventDigest).toBe(hashC);
+      expect(renewedLease.evidenceTier).toBe("derived");
+      expect(renewedLease.oipTaint).toBe("unknown");
+    })
+  );
 
-    expect(missing.status === "quarantined" && missing.reason).toBe("missing-lease");
-    expect(missingOpen.status === "quarantined" && missingOpen.reason).toBe("missing-lease");
-    expect(missingClose.status === "quarantined" && missingClose.reason).toBe("missing-lease");
-    expect(missingEnd.status === "quarantined" && missingEnd.reason).toBe("missing-lease");
-    expect(duplicate.status === "quarantined" && duplicate.reason).toBe("duplicate-start");
-    expect(backwards.status === "quarantined" && backwards.reason).toBe("time-regression");
-    expect(mismatched.status === "quarantined" && mismatched.reason).toBe("session-mismatch");
-  });
+  it.effect("quarantines missing, duplicate, and backwards transitions", () =>
+    Effect.gen(function* () {
+      const missing = transitionSessionLease(O.none(), yield* activityEvent());
+      const missingOpen = transitionSessionLease(O.none(), yield* openWaitEvent);
+      const missingClose = transitionSessionLease(
+        O.none(),
+        yield* decodeEvent({
+          event: "wait-closed",
+          sessionId: hashA,
+          observedAt: "2026-09-03T12:03:00.000Z",
+          eventDigest: hashF,
+          waitId: hashE,
+          evidenceTier: "derived",
+          oipTaint: "clear",
+        })
+      );
+      const missingEnd = transitionSessionLease(
+        O.none(),
+        yield* decodeEvent({
+          event: "session-end",
+          sessionId: hashA,
+          observedAt: "2026-09-03T12:05:00.000Z",
+          eventDigest: hashF,
+          evidenceTier: "derived",
+          oipTaint: "clear",
+        })
+      );
+      const lease = yield* startedLease();
+      const duplicate = transitionSessionLease(O.some(lease), yield* startEvent);
+      const backwards = transitionSessionLease(O.some(lease), yield* activityEvent("2026-09-03T11:59:59.000Z", hashD));
+      const mismatched = transitionSessionLease(
+        O.some(lease),
+        yield* activityEvent("2026-09-03T12:01:00.000Z", hashC, hashB)
+      );
 
-  it("closes only the exact pending wait and keeps an unmatched close open", () => {
-    const opened = transitionSessionLease(O.some(startedLease()), openWaitEvent);
-    const openedLease = activeLease(opened);
-    const duplicate = transitionSessionLease(O.some(openedLease), openWaitEvent);
-    const duplicateLease = activeLease(duplicate);
-    const unmatched = transitionSessionLease(
-      O.some(duplicateLease),
-      decodeEvent({
-        event: "wait-closed",
-        sessionId: hashA,
-        observedAt: "2026-09-03T12:03:00.000Z",
-        eventDigest: hashF,
-        waitId: hashB,
-        evidenceTier: "derived",
-        oipTaint: "clear",
-      })
-    );
-    const unmatchedLease = activeLease(unmatched);
-    const matched = transitionSessionLease(
-      O.some(unmatchedLease),
-      decodeEvent({
-        event: "wait-closed",
-        sessionId: hashA,
-        observedAt: "2026-09-03T12:04:00.000Z",
-        eventDigest: hashC,
-        waitId: hashE,
-        evidenceTier: "derived",
-        oipTaint: "clear",
-      })
-    );
+      expect(missing.status === "quarantined" && missing.reason).toBe("missing-lease");
+      expect(missingOpen.status === "quarantined" && missingOpen.reason).toBe("missing-lease");
+      expect(missingClose.status === "quarantined" && missingClose.reason).toBe("missing-lease");
+      expect(missingEnd.status === "quarantined" && missingEnd.reason).toBe("missing-lease");
+      expect(duplicate.status === "quarantined" && duplicate.reason).toBe("duplicate-start");
+      expect(backwards.status === "quarantined" && backwards.reason).toBe("time-regression");
+      expect(mismatched.status === "quarantined" && mismatched.reason).toBe("session-mismatch");
+    })
+  );
 
-    expect(opened.status === "active" && opened.outcome).toBe("wait-opened");
-    expect(duplicate.status === "active" && duplicate.outcome).toBe("wait-open-duplicate");
-    expect(duplicateLease.openWaits).toHaveLength(1);
-    expect(unmatched.status === "active" && unmatched.outcome).toBe("wait-close-unmatched");
-    expect(unmatchedLease.openWaits).toHaveLength(1);
-    expect(matched.status === "active" && matched.outcome).toBe("wait-closed");
-    expect(activeLease(matched).openWaits).toHaveLength(0);
-  });
+  it.effect("closes only the exact pending wait and keeps an unmatched close open", () =>
+    Effect.gen(function* () {
+      const opened = transitionSessionLease(O.some(yield* startedLease()), yield* openWaitEvent);
+      const openedLease = activeLease(opened);
+      const duplicate = transitionSessionLease(O.some(openedLease), yield* openWaitEvent);
+      const duplicateLease = activeLease(duplicate);
+      const unmatched = transitionSessionLease(
+        O.some(duplicateLease),
+        yield* decodeEvent({
+          event: "wait-closed",
+          sessionId: hashA,
+          observedAt: "2026-09-03T12:03:00.000Z",
+          eventDigest: hashF,
+          waitId: hashB,
+          evidenceTier: "derived",
+          oipTaint: "clear",
+        })
+      );
+      const unmatchedLease = activeLease(unmatched);
+      const matched = transitionSessionLease(
+        O.some(unmatchedLease),
+        yield* decodeEvent({
+          event: "wait-closed",
+          sessionId: hashA,
+          observedAt: "2026-09-03T12:04:00.000Z",
+          eventDigest: hashC,
+          waitId: hashE,
+          evidenceTier: "derived",
+          oipTaint: "clear",
+        })
+      );
 
-  it("carries pending waits into the observed terminal result for honest tombstoning", () => {
-    const openedLease = activeLease(transitionSessionLease(O.some(startedLease()), openWaitEvent));
-    const ended = transitionSessionLease(
-      O.some(openedLease),
-      decodeEvent({
-        event: "session-end",
-        sessionId: hashA,
-        observedAt: "2026-09-03T12:05:00.000Z",
-        eventDigest: hashF,
-        evidenceTier: "derived",
-        oipTaint: "clear",
-      })
-    );
+      expect(opened.status === "active" && opened.outcome).toBe("wait-opened");
+      expect(duplicate.status === "active" && duplicate.outcome).toBe("wait-open-duplicate");
+      expect(duplicateLease.openWaits).toHaveLength(1);
+      expect(unmatched.status === "active" && unmatched.outcome).toBe("wait-close-unmatched");
+      expect(unmatchedLease.openWaits).toHaveLength(1);
+      expect(matched.status === "active" && matched.outcome).toBe("wait-closed");
+      expect(activeLease(matched).openWaits).toHaveLength(0);
+    })
+  );
 
-    expect(ended.status).toBe("ended");
-    if (ended.status !== "ended") throw new Error("Expected ended session lease transition");
-    expect(ended.finalLease.openWaits).toHaveLength(1);
-    expect(ended.terminalEventDigest).toBe(hashF);
-  });
+  it.effect("carries pending waits into the observed terminal result for honest tombstoning", () =>
+    Effect.gen(function* () {
+      const openedLease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* openWaitEvent));
+      const ended = transitionSessionLease(
+        O.some(openedLease),
+        yield* decodeEvent({
+          event: "session-end",
+          sessionId: hashA,
+          observedAt: "2026-09-03T12:05:00.000Z",
+          eventDigest: hashF,
+          evidenceTier: "derived",
+          oipTaint: "clear",
+        })
+      );
 
-  it("requires expiry candidates to encode the exact elapsed idle interval", () => {
-    const lease = activeLease(transitionSessionLease(O.some(startedLease()), activityEvent()));
-    const candidate = candidateFrom(lease);
-    const invalid = {
-      ...encodeSessionLeaseExpiryCandidateSync(candidate),
-      idleMs: 599_999,
-    };
+      expect(ended.status).toBe("ended");
+      if (ended.status !== "ended") throw new Error("Expected ended session lease transition");
+      expect(ended.finalLease.openWaits).toHaveLength(1);
+      expect(ended.terminalEventDigest).toBe(hashF);
+    })
+  );
 
-    expect(candidate.idleMs).toBe(600_000);
-    expect(decodeSessionLeaseExpiryCandidateResult(invalid)._tag).toBe("Failure");
-  });
+  it.effect("requires expiry candidates to encode the exact elapsed idle interval", () =>
+    Effect.gen(function* () {
+      const lease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* activityEvent()));
+      const candidate = yield* candidateFrom(lease);
+      const encoded = yield* encodeCandidate(candidate);
+      const invalid = {
+        ...encoded,
+        idleMs: 599_999,
+      };
 
-  it("defers tombstones for a missing or renewed live lease", () => {
-    const lease = activeLease(transitionSessionLease(O.some(startedLease()), activityEvent()));
-    const candidate = candidateFrom(lease);
-    const evidence = reconciliationEvidence();
+      expect(candidate.idleMs).toBe(600_000);
+      expect(decodeSessionLeaseExpiryCandidateResult(invalid)._tag).toBe("Failure");
+    })
+  );
 
-    expect(reconciliationStatus(reconcileExpiredSessionLease(candidate, O.none(), evidence))).toBe("deferred");
-    const renewed = reconcileExpiredSessionLease(candidate, O.some(startEvent.sessionId), evidence);
-    expect(renewed.status === "deferred" && renewed.reason).toBe("lease-renewed");
-  });
+  it.effect("defers tombstones for a missing or renewed live lease", () =>
+    Effect.gen(function* () {
+      const lease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* activityEvent()));
+      const candidate = yield* candidateFrom(lease);
+      const evidence = yield* reconciliationEvidence();
 
-  it("defers tombstones for identity disagreement, later activity, or an open wait", () => {
-    const lease = activeLease(transitionSessionLease(O.some(startedLease()), activityEvent()));
-    const candidate = candidateFrom(lease);
-    const mismatch = reconcileExpiredSessionLease(
-      candidate,
-      O.some(candidate.leaseDigest),
-      reconciliationEvidence({ sessionId: hashB })
-    );
-    const later = reconcileExpiredSessionLease(
-      candidate,
-      O.some(candidate.leaseDigest),
-      reconciliationEvidence({ sourceLastObservedAt: "2026-09-03T12:01:00.001Z" })
-    );
-    const sourceOpen = reconcileExpiredSessionLease(
-      candidate,
-      O.some(candidate.leaseDigest),
-      reconciliationEvidence({ sourceOpenWaitIds: [hashE] })
-    );
-    const leaseOpen = activeLease(transitionSessionLease(O.some(startedLease()), openWaitEvent));
-    const leaseOpenCandidate = decodeCandidate({
-      schemaVersion: "telemetry-v2/session-lease-expiry-candidate/v1",
-      lease: encodeSessionLeaseSync(leaseOpen),
-      leaseDigest: hashF,
-      evaluatedAt: "2026-09-03T12:12:00.000Z",
-      ttlMs: 600_000,
-      idleMs: 600_000,
-    });
-    const open = reconcileExpiredSessionLease(
-      leaseOpenCandidate,
-      O.some(leaseOpenCandidate.leaseDigest),
-      reconciliationEvidence()
-    );
+      expect(reconciliationStatus(reconcileExpiredSessionLease(candidate, O.none(), evidence))).toBe("deferred");
+      const renewed = reconcileExpiredSessionLease(candidate, O.some((yield* startEvent).sessionId), evidence);
+      expect(renewed.status === "deferred" && renewed.reason).toBe("lease-renewed");
+    })
+  );
 
-    expect(mismatch.status === "deferred" && mismatch.reason).toBe("evidence-session-mismatch");
-    expect(later.status === "deferred" && later.reason).toBe("later-source-activity");
-    expect(sourceOpen.status === "deferred" && sourceOpen.reason).toBe("open-wait");
-    expect(open.status === "deferred" && open.reason).toBe("open-wait");
-  });
+  it.effect("defers tombstones for identity disagreement, later activity, or an open wait", () =>
+    Effect.gen(function* () {
+      const lease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* activityEvent()));
+      const candidate = yield* candidateFrom(lease);
+      const mismatch = reconcileExpiredSessionLease(
+        candidate,
+        O.some(candidate.leaseDigest),
+        yield* reconciliationEvidence({ sessionId: hashB })
+      );
+      const later = reconcileExpiredSessionLease(
+        candidate,
+        O.some(candidate.leaseDigest),
+        yield* reconciliationEvidence({ sourceLastObservedAt: "2026-09-03T12:01:00.001Z" })
+      );
+      const sourceOpen = reconcileExpiredSessionLease(
+        candidate,
+        O.some(candidate.leaseDigest),
+        yield* reconciliationEvidence({ sourceOpenWaitIds: [hashE] })
+      );
+      const leaseOpen = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* openWaitEvent));
+      const encodedLeaseOpen = yield* SessionLease.encodeEffect(leaseOpen);
+      const leaseOpenCandidate = yield* decodeCandidate({
+        schemaVersion: "telemetry-v2/session-lease-expiry-candidate/v1",
+        lease: encodedLeaseOpen,
+        leaseDigest: hashF,
+        evaluatedAt: "2026-09-03T12:12:00.000Z",
+        ttlMs: 600_000,
+        idleMs: 600_000,
+      });
+      const open = reconcileExpiredSessionLease(
+        leaseOpenCandidate,
+        O.some(leaseOpenCandidate.leaseDigest),
+        yield* reconciliationEvidence()
+      );
 
-  it("tombstones only after every veto clears and never guesses a semantic outcome", () => {
-    const lease = activeLease(transitionSessionLease(O.some(startedLease()), activityEvent()));
-    const candidate = candidateFrom(lease);
-    const result = reconcileExpiredSessionLease(candidate, O.some(candidate.leaseDigest), reconciliationEvidence());
+      expect(mismatch.status === "deferred" && mismatch.reason).toBe("evidence-session-mismatch");
+      expect(later.status === "deferred" && later.reason).toBe("later-source-activity");
+      expect(sourceOpen.status === "deferred" && sourceOpen.reason).toBe("open-wait");
+      expect(open.status === "deferred" && open.reason).toBe("open-wait");
+    })
+  );
 
-    expect(result.status).toBe("tombstoned");
-    if (result.status !== "tombstoned") throw new Error("Expected tombstoned reconciliation");
-    expect(result.tombstone.terminalOutcome).toBe("unknown");
-    expect(result.tombstone.evidenceTier).toBe("reconstructed");
-  });
+  it.effect("tombstones only after every veto clears and never guesses a semantic outcome", () =>
+    Effect.gen(function* () {
+      const lease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* activityEvent()));
+      const candidate = yield* candidateFrom(lease);
+      const result = reconcileExpiredSessionLease(
+        candidate,
+        O.some(candidate.leaseDigest),
+        yield* reconciliationEvidence()
+      );
 
-  it("keeps lease and reconciliation wire keys free of content-bearing fields", () => {
-    const lease = activeLease(transitionSessionLease(O.some(startedLease()), activityEvent()));
-    const candidate = candidateFrom(lease);
-    const result = reconcileExpiredSessionLease(candidate, O.some(candidate.leaseDigest), reconciliationEvidence());
-    const encoded = JSON.stringify({
-      candidate: encodeSessionLeaseExpiryCandidateSync(candidate),
-      result: encodeSessionLeaseReconciliationEvidenceSync(reconciliationEvidence()),
-      reconciliation: result,
-    });
+      expect(result.status).toBe("tombstoned");
+      if (result.status !== "tombstoned") throw new Error("Expected tombstoned reconciliation");
+      expect(result.tombstone.terminalOutcome).toBe("unknown");
+      expect(result.tombstone.evidenceTier).toBe("reconstructed");
+    })
+  );
 
-    for (const forbidden of [
-      "prompt",
-      "command",
-      "toolArgument",
-      "toolInput",
-      "toolResult",
-      "toolResponse",
-      "transcriptPath",
-      "cwd",
-      "content",
-      "message",
-    ]) {
-      expect(encoded).not.toContain(`"${forbidden}"`);
-    }
-  });
+  it.effect("keeps lease and reconciliation wire keys free of content-bearing fields", () =>
+    Effect.gen(function* () {
+      const lease = activeLease(transitionSessionLease(O.some(yield* startedLease()), yield* activityEvent()));
+      const candidate = yield* candidateFrom(lease);
+      const evidence = yield* reconciliationEvidence();
+      const result = reconcileExpiredSessionLease(candidate, O.some(candidate.leaseDigest), evidence);
+      const encoded = [
+        yield* encodeCandidateJson(candidate),
+        yield* encodeEvidenceJson(evidence),
+        yield* SessionLeaseReconciliation.encodeJsonEffect(result),
+      ].join("\n");
+
+      for (const forbidden of [
+        "prompt",
+        "command",
+        "toolArgument",
+        "toolInput",
+        "toolResult",
+        "toolResponse",
+        "transcriptPath",
+        "cwd",
+        "content",
+        "message",
+      ]) {
+        expect(encoded).not.toContain(`"${forbidden}"`);
+      }
+    })
+  );
 });

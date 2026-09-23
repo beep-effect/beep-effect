@@ -21,6 +21,7 @@ import {
   sharpFormatForNormalize,
 } from "../Files.media.ts";
 import { decodeFfprobeOutputJson, decodeImageSizeMetadata, MediaDimensions } from "../Files.schemas.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type {
   CropBordersPlanEntry,
@@ -123,7 +124,7 @@ const runFfprobe = Effect.fn("Files.runFfprobe")(function* (
 ): Effect.fn.Return<
   string,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const ffprobePath = yield* resolveTrustedMediaToolPath("ffprobe", "BEEP_FFPROBE_PATH");
@@ -162,7 +163,7 @@ const probeVideoDimensions = Effect.fn("Files.probeVideoDimensions")(function* (
 ): Effect.fn.Return<
   MediaDimensions,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const outputText = yield* runFfprobe(file);
   const output = yield* decodeFfprobeOutputJson(outputText).pipe(
@@ -202,7 +203,7 @@ export const probeMediaDimensions = Effect.fn("Files.probeMediaDimensions")(func
 ): Effect.fn.Return<
   MediaDimensions,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const mediaKind = yield* pipe(
     file.mediaKind,
@@ -338,7 +339,7 @@ const runFfmpegStripMetadata = Effect.fn("Files.runFfmpegStripMetadata")(functio
 ): Effect.fn.Return<
   string,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const ffmpegPath = yield* resolveTrustedMediaToolPath("ffmpeg", "BEEP_FFMPEG_PATH");
@@ -389,7 +390,7 @@ const stripVideoMetadataToTemp = Effect.fn("Files.stripVideoMetadataToTemp")(fun
 ): Effect.fn.Return<
   void,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   yield* runFfmpegStripMetadata(entry, tempPath);
 });
@@ -408,7 +409,7 @@ export const stripMetadataToTemp = Effect.fn("Files.stripMetadataToTemp")(functi
 ): Effect.fn.Return<
   void,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (entry.mediaKind === "image") {
     yield* stripImageMetadataToTemp(entry, tempPath);

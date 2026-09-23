@@ -115,7 +115,7 @@ export const layerAllowedRoots = (roots: ReadonlyArray<string>): Layer.Layer<nev
  * **Example** (Resolve path under allowed roots)
  *
  * ```ts
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
  * import * as NodePath from "@effect/platform-node/NodePath"
  * import { layerAllowedRoots, resolveLocalPath } from "@beep/nlp-mcp/Streaming/TextStream"
@@ -163,8 +163,12 @@ const TextEncodingBase = LiteralKit(["ascii", "latin1", "utf-8"]);
  * ```ts
  * import { TextEncoding } from "@beep/nlp-mcp/Streaming/TextStream"
  *
- * const encoding = TextEncoding.fromUnknown("utf-8")
- * console.log(encoding)
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const encoding = yield* TextEncoding.fromUnknown("utf-8")
+ *   console.log(encoding) // "utf-8"
+ * })
  * ```
  *
  * @category schemas
@@ -175,7 +179,7 @@ export const TextEncoding = TextEncodingBase.pipe(
     description: "Text decoding labels accepted by the streaming text helpers.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

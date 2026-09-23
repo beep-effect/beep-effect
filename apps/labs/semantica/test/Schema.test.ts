@@ -128,9 +128,9 @@ import type { EventBody as EventBodyValue } from "@/schema/Provenance";
 import type { RequestKind as RequestKindValue } from "@/schema/ProviderCache";
 
 const decodeGoldFile = S.decodeEffect(GoldFile);
-const decodeEvalRunTelemetrySync = S.decodeSync(EvalRunTelemetry);
+const decodeEvalRunTelemetryResult = S.decodeResult(EvalRunTelemetry);
 const encodeGoldFileResult = S.encodeResult(GoldFile);
-const encodeProvenanceEventSync = S.encodeSync(ProvenanceEvent);
+const encodeProvenanceEventResult = S.encodeResult(ProvenanceEvent);
 const isChunk = S.is(Chunk);
 const isClaimBody = S.is(ClaimBody);
 const isConflictWitness = S.is(ConflictWitness);
@@ -523,7 +523,8 @@ const reportBody = {
   metrics: metricScores as [MetricScore, ...Array<MetricScore>],
   unexpectedDegraded: NonNegativeInt.make(0),
 };
-const evalReport = S.decodeSync(EvalReport)(withReportDigest(reportBody));
+const decodeEvalReportResult = S.decodeResult(EvalReport);
+const evalReport = Result.getOrThrow(decodeEvalReportResult(withReportDigest(reportBody)));
 
 describe("C0 schema exports", () => {
   it("consumes every literal domain, branded type, guard, and type alias", () => {
@@ -668,20 +669,22 @@ describe("C0 schema round trips", () => {
     roundTrip(DocumentOutcome, documentOutcome);
     roundTrip(EvalReport, evalReport);
 
-    const telemetry = decodeEvalRunTelemetrySync({
-      schemaVersion: "eval-telemetry/v1",
-      reportDigest: evalReport.reportDigest,
-      runId: evalRun.id,
-      mode: "live",
-      startedAt: "2026-08-25T12:00:00.000Z",
-      wallClockMs: 10,
-      coldStartMs: 2,
-      p95Ms: 4,
-      rssBytes: 1_000,
-      diskGrowthBytes: 100,
-      dependencyBytes: 500,
-      modelBytes: 250,
-    });
+    const telemetry = Result.getOrThrow(
+      decodeEvalRunTelemetryResult({
+        schemaVersion: "eval-telemetry/v1",
+        reportDigest: evalReport.reportDigest,
+        runId: evalRun.id,
+        mode: "live",
+        startedAt: "2026-08-25T12:00:00.000Z",
+        wallClockMs: 10,
+        coldStartMs: 2,
+        p95Ms: 4,
+        rssBytes: 1_000,
+        diskGrowthBytes: 100,
+        dependencyBytes: 500,
+        modelBytes: 250,
+      })
+    );
     roundTrip(EvalRunTelemetry, telemetry);
   });
 
@@ -1105,7 +1108,7 @@ describe("provenance refinements", () => {
     expect(isProvenanceEvent(event)).toBe(true);
     expect(rejects(ProvenanceEvent, { ...event, id: acquired })).toBe(true);
     roundTrip(ProvenanceEvent, event);
-    expect(Object.hasOwn(encodeProvenanceEventSync(event), "timestamp")).toBe(false);
+    expect(Object.hasOwn(Result.getOrThrow(encodeProvenanceEventResult(event)), "timestamp")).toBe(false);
   });
 });
 

@@ -1,5 +1,8 @@
-import { privacySafeSystemTempRootForTesting } from "@beep/test-utils";
+import * as NodeProcess from "node:process";
+import { privacySafeSystemTempRoot, privacySafeSystemTempRootForTesting } from "@beep/test-utils";
+import { HostProcessPlatform } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 
 describe("privacy-safe system temp root", () => {
   it("ignores a private ambient TMPDIR on POSIX hosts", () => {
@@ -28,4 +31,14 @@ describe("privacy-safe system temp root", () => {
       "C:\\Windows\\Temp"
     );
   });
+
+  it.effect("resolves the current host root from ambient platform facts", () =>
+    Effect.gen(function* () {
+      const runtimePlatform = yield* HostProcessPlatform;
+
+      expect(privacySafeSystemTempRoot()).toBe(
+        privacySafeSystemTempRootForTesting({ environment: NodeProcess.env, runtimePlatform })
+      );
+    })
+  );
 });

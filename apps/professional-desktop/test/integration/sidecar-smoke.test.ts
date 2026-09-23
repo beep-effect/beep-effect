@@ -38,7 +38,7 @@ const shouldRun = Bun.env.BEEP_TEST_SIDECAR_SMOKE === "1";
 
 const smokeProgram = Effect.gen(function* () {
   const client = yield* RpcTest.makeClient(ChatRpcs);
-  const workspaceId = decodeWorkspaceId(1);
+  const workspaceId = yield* decodeWorkspaceId(1);
 
   const thread = yield* client.CreateThread({ workspaceId, title: "Smoke matter" });
   expect(thread.title).toBe("Smoke matter");

@@ -3,90 +3,98 @@ import { Sha256Hex, Sha256HexFromBytes, Sha256HexFromHexBytes } from "@beep/sche
 import { Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeSha256Hex = S.decodeEffect(Sha256Hex);
 const decodeUnknownSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeUnknownSha256HexFromHexBytes = S.decodeUnknownEffect(Sha256HexFromHexBytes);
-const decodeUnknownSha256HexSync = S.decodeUnknownSync(Sha256Hex);
+const decodeUnknownSha256HexEffect = S.decodeUnknownEffect(Sha256Hex);
 const encodeSha256HexFromBytes = S.encodeEffect(Sha256HexFromBytes);
 const encodeSha256HexFromHexBytes = S.encodeEffect(Sha256HexFromHexBytes);
 
 const knownDigest = "d01b7ce9154ef0264ce71e457ea81903b87a58d6cf2cd6be474886fdbc6f61d9";
 const emptyDigest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
-
 describe("Sha256Hex", () => {
   const arbitrary = Arbitrary.schema(Sha256Hex);
 
-  it("accepts canonical lowercase digests", () => {
-    expect(decodeUnknownSha256HexSync(knownDigest)).toBe(knownDigest);
-  });
+  it.effect(
+    "accepts canonical lowercase digests",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeUnknownSha256HexEffect(knownDigest)).toBe(knownDigest);
+    })
+  );
 
-  it("derives canonical digest examples from the source schema", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([digest]) => {
-            expect(decodeUnknownSha256HexSync(digest)).toBe(digest);
-            expect(digest).toHaveLength(64);
-            expect(digest).toMatch(/^[0-9a-f]{64}$/);
+  it.effect.prop(
+    "derives canonical digest examples from the source schema",
+    [arbitrary],
+    Effect.fnUntraced(function* ([digest]) {
+      expect(yield* decodeUnknownSha256HexEffect(digest)).toBe(digest);
+      expect(digest).toHaveLength(64);
+      expect(digest).toMatch(/^[0-9a-f]{64}$/);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(25) }
+  );
 
-  it("rejects uppercase digests", () => {
-    expect(() => decodeUnknownSha256HexSync(Str.toUpperCase(knownDigest))).toThrow(
-      "SHA-256 digest must contain only lowercase hexadecimal characters"
-    );
-  });
+  it.effect(
+    "rejects uppercase digests",
+    Effect.fnUntraced(function* () {
+      const failure1 = yield* Effect.result(decodeUnknownSha256HexEffect(Str.toUpperCase(knownDigest)));
+      expect(Result.isFailure(failure1)).toBe(true);
+      if (Result.isFailure(failure1)) {
+        expect(failure1.failure.message).toContain("SHA-256 digest must contain only lowercase hexadecimal characters");
+      }
+    })
+  );
 
-  it("rejects digests with the wrong length", () => {
-    expect(() => decodeUnknownSha256HexSync("abc123")).toThrow("SHA-256 digest must be exactly 64 characters long");
-  });
+  it.effect(
+    "rejects digests with the wrong length",
+    Effect.fnUntraced(function* () {
+      const failure2 = yield* Effect.result(decodeUnknownSha256HexEffect("abc123"));
+      expect(Result.isFailure(failure2)).toBe(true);
+      if (Result.isFailure(failure2)) {
+        expect(failure2.failure.message).toContain("SHA-256 digest must be exactly 64 characters long");
+      }
+    })
+  );
 
-  it("rejects 64-character strings with non-hex characters", () => {
-    expect(() => decodeUnknownSha256HexSync(`${Str.repeat("g", 63)}z`)).toThrow(
-      "SHA-256 digest must contain only lowercase hexadecimal characters"
-    );
-  });
+  it.effect(
+    "rejects 64-character strings with non-hex characters",
+    Effect.fnUntraced(function* () {
+      const failure3 = yield* Effect.result(decodeUnknownSha256HexEffect(`${Str.repeat("g", 63)}z`));
+      expect(Result.isFailure(failure3)).toBe(true);
+      if (Result.isFailure(failure3)) {
+        expect(failure3.failure.message).toContain("SHA-256 digest must contain only lowercase hexadecimal characters");
+      }
+    })
+  );
 });
 
-describe("Sha256HexFromBytes", () => {
-  it.effect("decodes bytes into a canonical lowercase SHA-256 hex digest", () =>
-    Effect.gen(function* () {
+it.layer(BunCrypto.layer)("Sha256HexFromBytes", (it) => {
+  it.effect(
+    "decodes bytes into a canonical lowercase SHA-256 hex digest",
+    Effect.fnUntraced(function* () {
       const input = new TextEncoder().encode("beep");
 
       expect(yield* decodeUnknownSha256HexFromBytes(input)).toBe(knownDigest);
-    }).pipe(provideBunCrypto)
+    })
   );
 
-  it.effect("hashes empty bytes to the canonical empty SHA-256 digest", () =>
-    Effect.promise(() =>
-      Promise.resolve(
-        expect(
-          Effect.runPromise(decodeUnknownSha256HexFromBytes(new Uint8Array()).pipe(provideBunCrypto))
-        ).resolves.toBe(emptyDigest)
-      )
-    )
+  it.effect(
+    "hashes empty bytes to the canonical empty SHA-256 digest",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeUnknownSha256HexFromBytes(new Uint8Array())).toBe(emptyDigest);
+    })
   );
 
-  it.effect("forbids encoding the digest back to source bytes", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "forbids encoding the digest back to source bytes",
+    Effect.fnUntraced(function* () {
       const digest = yield* decodeSha256Hex(knownDigest);
 
       expect((yield* Effect.exit(encodeSha256HexFromBytes(digest)))._tag).toBe("Failure");
@@ -94,29 +102,28 @@ describe("Sha256HexFromBytes", () => {
   );
 });
 
-describe("Sha256HexFromHexBytes", () => {
-  it.effect("decodes hex-encoded bytes into a canonical lowercase SHA-256 hex digest", () =>
-    Effect.promise(() =>
-      Promise.resolve(
-        expect(Effect.runPromise(decodeUnknownSha256HexFromHexBytes("62656570").pipe(provideBunCrypto))).resolves.toBe(
-          knownDigest
-        )
-      )
-    )
+it.layer(BunCrypto.layer)("Sha256HexFromHexBytes", (it) => {
+  it.effect(
+    "decodes hex-encoded bytes into a canonical lowercase SHA-256 hex digest",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeUnknownSha256HexFromHexBytes("62656570")).toBe(knownDigest);
+    })
   );
 
-  it.effect("preserves hex transport validation errors", () =>
-    Effect.promise(() =>
-      Promise.resolve(
-        expect(Effect.runPromise(decodeUnknownSha256HexFromHexBytes("0").pipe(provideBunCrypto))).rejects.toThrow(
-          "Expected a valid hexadecimal string"
-        )
-      )
-    )
+  it.effect(
+    "preserves hex transport validation errors",
+    Effect.fnUntraced(function* () {
+      const result = yield* Effect.result(decodeUnknownSha256HexFromHexBytes("0"));
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure.message).toContain("Expected a valid hexadecimal string");
+      }
+    })
   );
 
-  it.effect("forbids encoding the digest back to source hex bytes", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "forbids encoding the digest back to source hex bytes",
+    Effect.fnUntraced(function* () {
       const digest = yield* decodeSha256Hex(knownDigest);
 
       expect((yield* Effect.exit(encodeSha256HexFromHexBytes(digest)))._tag).toBe("Failure");

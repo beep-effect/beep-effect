@@ -25,6 +25,8 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
+const decodeUnknownSyncOperation = S.decodeUnknownEffect(DomainSyncOperation.SyncOperation);
+
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
   const decode = S.decodeUnknownResult(schema);
@@ -46,13 +48,12 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   ).toBe("Passed");
 };
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
-const decodeSyncItemId = S.decodeUnknownSync(Documents.SyncItemId);
-const itemOne = decodeSyncItemId(1);
-const itemTwo = decodeSyncItemId(2);
-const relPath = S.decodeSync(VaultRelPath)("matters/client-default/complaint.pdf");
-const zeroAttempts = S.decodeSync(NonNegativeInt)(0);
-const generationOne = S.decodeSync(NonNegativeInt)(1);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
+const itemOne = Documents.SyncItemId.make(1);
+const itemTwo = Documents.SyncItemId.make(2);
+const relPath = VaultRelPath.make("matters/client-default/complaint.pdf");
+const zeroAttempts = NonNegativeInt.make(0);
+const generationOne = NonNegativeInt.make(1);
 
 const operationSeed = (idempotencyKey: string, syncItemId: Documents.SyncItemId) =>
   SyncOperationSeed.make({
@@ -71,7 +72,7 @@ const operationSeed = (idempotencyKey: string, syncItemId: Documents.SyncItemId)
 const mirror = { provider: "box", workspaceId } as const;
 const queuedInput = ListQueuedSyncOperationsInput.make(mirror);
 
-const detachedOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperation)({
+const detachedOperationRow = {
   ...productEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, 99),
   attemptCount: 0,
   idempotencyKey: "ghost:uploadFile:1",
@@ -86,7 +87,7 @@ const detachedOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperation)
   targetParentRelPath: null,
   targetRelPath: "matters/client-default/ghost.pdf",
   workspaceId: 2,
-});
+};
 
 describe("SyncOperation server repository", () => {
   it.effect(
@@ -157,6 +158,7 @@ describe("SyncOperation server repository", () => {
     "fails update for an unknown operation with not-found",
     Effect.fnUntraced(function* () {
       const repository = yield* makeInMemorySyncOperationRepository();
+      const detachedOperation = yield* decodeUnknownSyncOperation(detachedOperationRow);
 
       const error = yield* Effect.flip(repository.update(detachedOperation));
       expect(SyncOperationRepositoryNotFound.is(error)).toBe(true);

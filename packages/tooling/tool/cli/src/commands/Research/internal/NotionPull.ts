@@ -24,6 +24,7 @@ import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { ResearchCommandError } from "../Research.errors.ts";
 import { asRecord } from "./UnknownRecord.ts";
 import { sha256HexOf } from "./Vault.ts";
+import type * as Crypto from "effect/Crypto";
 
 const $I = $RepoCliId.create("commands/Research/internal/NotionPull");
 
@@ -348,7 +349,7 @@ const decodeSavedLinkInputsJson = S.decodeEffect(S.fromJsonString(S.Array(SavedL
  */
 export const readLinksFile = Effect.fn("NotionPull.readLinksFile")(function* (
   filePath: string
-): Effect.fn.Return<ReadonlyArray<NotionSavedLink>, ResearchCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<ReadonlyArray<NotionSavedLink>, ResearchCommandError, Crypto.Crypto | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs
     .readFileString(filePath)
@@ -356,14 +357,16 @@ export const readLinksFile = Effect.fn("NotionPull.readLinksFile")(function* (
   const inputs = yield* decodeSavedLinkInputsJson(content).pipe(
     ResearchCommandError.mapError(`Links file "${filePath}" failed schema validation.`)
   );
-  return A.map(inputs, (input) =>
-    NotionSavedLink.make({
-      createdIso: input.createdIso ?? "",
-      pageId: sha256HexOf(input.url),
-      tags: input.tags ?? [],
-      title: Str.isEmpty(Str.trim(input.title)) ? input.url : Str.trim(input.title),
-      url: O.some(input.url),
-    })
+  return yield* Effect.forEach(inputs, (input) =>
+    Effect.map(sha256HexOf(input.url), (pageId) =>
+      NotionSavedLink.make({
+        createdIso: input.createdIso ?? "",
+        pageId,
+        tags: input.tags ?? [],
+        title: Str.isEmpty(Str.trim(input.title)) ? input.url : Str.trim(input.title),
+        url: O.some(input.url),
+      })
+    )
   );
 });
 

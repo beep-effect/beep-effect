@@ -30,9 +30,9 @@ const decodePrimitivesEncryptionKeyId = S.decodeEffect(primitives.EncryptionKeyI
 const decodePrimitivesHybridLogicalClock = S.decodeEffect(primitives.HybridLogicalClock);
 const decodePrimitivesSha256 = S.decodeEffect(primitives.Sha256);
 const decodePrimitivesVectorClock = S.decodeEffect(primitives.VectorClock);
-const decodeEntityRefEntityRefSync = S.decodeSync(EntityRef.EntityRef);
+const decodeEntityRefEntityRef = S.decodeEffect(EntityRef.EntityRef);
 const decodeUnknownEntityIdEntityIdValue = S.decodeUnknownEffect(EntityId.EntityIdValue);
-const encodeEntityRefEntityRefSync = S.encodeSync(EntityRef.EntityRef);
+const encodeEntityRefEntityRef = S.encodeEffect(EntityRef.EntityRef);
 const isPrincipalSystemPrincipal = S.is(Principal.SystemPrincipal);
 
 const $I = $SharedDomainId.create("entity/test/EntityKernel");
@@ -337,13 +337,13 @@ describe("EntityRef and shared entity primitives", () => {
     })
   );
 
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived document ids through entity references",
     [DocumentId],
-    ([id]) => {
+    Effect.fnUntraced(function* ([id]) {
       const ref = EntityRef.make(DocumentId, id);
-      const encodedRef = encodeEntityRefEntityRefSync(ref);
-      const decodedRef = decodeEntityRefEntityRefSync(encodedRef);
+      const encodedRef = yield* encodeEntityRefEntityRef(ref);
+      const decodedRef = yield* decodeEntityRefEntityRef(encodedRef);
 
       expect(encodedRef).toEqual({
         entityType: DocumentId.entityType,
@@ -352,7 +352,9 @@ describe("EntityRef and shared entity primitives", () => {
       expect(decodedRef.entityType).toBe(DocumentId.entityType);
       expect(DocumentId.equivalence(cast(decodedRef.id), cast(id))).toBe(true);
       expect(Result.isSuccess(EntityRef.makeResult(DocumentId, id))).toBe(true);
-    },
+
+      return true;
+    }),
     { arbitrary: fcRuns(50) }
   );
 

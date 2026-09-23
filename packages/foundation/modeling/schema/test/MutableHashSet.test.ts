@@ -5,34 +5,50 @@ import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as MutableHashSet_ from "effect/MutableHashSet";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 describe("MutableHashSetFromSelf", () => {
-  it("preserves schema metadata and validates existing mutable hash sets", () => {
-    const schema = MutableHashSetFromSelf(S.FiniteFromString);
-    const decoded = S.decodeSync(schema)(MutableHashSet_.make("1", "2", "1"));
+  it.effect(
+    "preserves schema metadata and validates existing mutable hash sets",
+    Effect.fnUntraced(function* () {
+      const schema = MutableHashSetFromSelf(S.FiniteFromString);
+      const decoded = yield* S.decodeEffect(schema)(MutableHashSet_.make("1", "2", "1"));
 
-    expect(schema.value).toBe(S.FiniteFromString);
-    expect(schema.annotate({}).value).toBe(S.FiniteFromString);
-    expect(isMutableHashSet(decoded)).toBe(true);
-    expect(A.fromIterable(decoded)).toEqual([1, 2]);
-  });
+      expect(schema.value).toBe(S.FiniteFromString);
+      expect(schema.annotate({}).value).toBe(S.FiniteFromString);
+      expect(isMutableHashSet(decoded)).toBe(true);
+      expect(A.fromIterable(decoded)).toEqual([1, 2]);
+    })
+  );
 
-  it("rejects non-mutable-hash-set inputs", () => {
-    const schema = MutableHashSetFromSelf(S.FiniteFromString);
+  it.effect(
+    "rejects non-mutable-hash-set inputs",
+    Effect.fnUntraced(function* () {
+      const schema = MutableHashSetFromSelf(S.FiniteFromString);
 
-    expect(() => S.decodeUnknownSync(schema)(null)).toThrow(
-      "Expected @beep/schema/MutableHashSet/MutableHashSetFromSelf"
-    );
-  });
+      const failure1 = yield* Effect.result(S.decodeUnknownEffect(schema)(null));
+      expect(Result.isFailure(failure1)).toBe(true);
+      if (Result.isFailure(failure1)) {
+        expect(failure1.failure.message).toContain("Expected @beep/schema/MutableHashSet/MutableHashSetFromSelf");
+      }
+    })
+  );
 
-  it("reports member decode failures at the values path", () => {
-    const schema = MutableHashSetFromSelf(S.FiniteFromString);
+  it.effect(
+    "reports member decode failures at the values path",
+    Effect.fnUntraced(function* () {
+      const schema = MutableHashSetFromSelf(S.FiniteFromString);
 
-    expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(`Expected string
+      const failure2 = yield* Effect.result(S.decodeUnknownEffect(schema)(MutableHashSet_.make("1", null)));
+      expect(Result.isFailure(failure2)).toBe(true);
+      if (Result.isFailure(failure2)) {
+        expect(failure2.failure.message).toContain(`Expected string
   at ["values"][1]`);
-  });
+      }
+    })
+  );
 
   it("derives formatter and equivalence instances", () => {
     const formatter = S.toFormatter(MutableHashSetFromSelf(S.String));
@@ -43,65 +59,77 @@ describe("MutableHashSetFromSelf", () => {
     expect(equivalence(MutableHashSet_.make("a"), MutableHashSet_.make("b"))).toBe(false);
   });
 
-  it("round-trips arbitrary sets derived from the source schema under the derived equivalence", () => {
+  {
     const schema = MutableHashSetFromSelf(S.String);
     const arbitrary = Arbitrary.schema(schema);
     const equivalence = S.toEquivalence(schema);
-    const decode = S.decodeSync(schema);
-    const encode = S.encodeSync(schema);
+    const decode = S.decodeEffect(schema);
+    const encode = S.encodeEffect(schema);
+    it.effect.prop(
+      "round-trips arbitrary sets derived from the source schema under the derived equivalence",
+      [arbitrary],
+      Effect.fnUntraced(function* ([set]) {
+        const encoded = yield* encode(set);
+        const decoded = yield* decode(encoded);
+        expect(equivalence(decoded, set)).toBe(true);
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([set]) => {
-            const encoded = encode(set);
-            const decoded = decode(encoded);
-            expect(equivalence(decoded, set)).toBe(true);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        return true;
+      }),
+      { arbitrary: fcRuns(50) }
+    );
+  }
 });
 
 describe("MutableHashSet", () => {
-  it("decodes arrays into mutable hash sets and removes duplicates", () => {
-    const schema = MutableHashSet(S.FiniteFromString);
-    const decoded = S.decodeSync(schema)(["1", "2", "1"]);
+  it.effect(
+    "decodes arrays into mutable hash sets and removes duplicates",
+    Effect.fnUntraced(function* () {
+      const schema = MutableHashSet(S.FiniteFromString);
+      const decoded = yield* S.decodeEffect(schema)(["1", "2", "1"]);
 
-    expect(schema.value).toBe(S.FiniteFromString);
-    expect(schema.annotate({}).value).toBe(S.FiniteFromString);
-    expect(isMutableHashSet(decoded)).toBe(true);
-    expect(A.fromIterable(decoded)).toEqual([1, 2]);
-  });
+      expect(schema.value).toBe(S.FiniteFromString);
+      expect(schema.annotate({}).value).toBe(S.FiniteFromString);
+      expect(isMutableHashSet(decoded)).toBe(true);
+      expect(A.fromIterable(decoded)).toEqual([1, 2]);
+    })
+  );
 
-  it("encodes mutable hash sets back to arrays", () => {
-    const schema = MutableHashSet(S.FiniteFromString);
+  it.effect(
+    "encodes mutable hash sets back to arrays",
+    Effect.fnUntraced(function* () {
+      const schema = MutableHashSet(S.FiniteFromString);
 
-    expect(S.encodeSync(schema)(MutableHashSet_.make(1, 2, 3))).toEqual(["1", "2", "3"]);
-  });
+      expect(yield* S.encodeEffect(schema)(MutableHashSet_.make(1, 2, 3))).toEqual(["1", "2", "3"]);
+    })
+  );
 
-  it("expects the encoded array form at the boundary", () => {
-    const schema = MutableHashSet(S.FiniteFromString);
+  it.effect(
+    "expects the encoded array form at the boundary",
+    Effect.fnUntraced(function* () {
+      const schema = MutableHashSet(S.FiniteFromString);
 
-    expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(`Expected array`);
-  });
+      const failure3 = yield* Effect.result(S.decodeUnknownEffect(schema)(MutableHashSet_.make("1", null)));
+      expect(Result.isFailure(failure3)).toBe(true);
+      if (Result.isFailure(failure3)) {
+        expect(failure3.failure.message).toContain(`Expected array`);
+      }
+    })
+  );
 
-  it("supports decoded mutable hash set defaults for missing struct keys", () => {
-    const schema = S.Struct({
-      values: MutableHashSet(S.String).pipe(withKeyDefaults(MutableHashSet_.empty<string>())),
-    });
+  it.effect(
+    "supports decoded mutable hash set defaults for missing struct keys",
+    Effect.fnUntraced(function* () {
+      const schema = S.Struct({
+        values: MutableHashSet(S.String).pipe(withKeyDefaults(MutableHashSet_.empty<string>())),
+      });
 
-    const constructed = schema.make({});
-    const decoded = S.decodeSync(schema)({});
+      const constructed = schema.make({});
+      const decoded = yield* S.decodeEffect(schema)({});
 
-    expect(isMutableHashSet(constructed.values)).toBe(true);
-    expect(isMutableHashSet(decoded.values)).toBe(true);
-    expect(A.fromIterable(constructed.values)).toEqual([]);
-    expect(A.fromIterable(decoded.values)).toEqual([]);
-  });
+      expect(isMutableHashSet(constructed.values)).toBe(true);
+      expect(isMutableHashSet(decoded.values)).toBe(true);
+      expect(A.fromIterable(constructed.values)).toEqual([]);
+      expect(A.fromIterable(decoded.values)).toEqual([]);
+    })
+  );
 });

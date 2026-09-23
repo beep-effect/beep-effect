@@ -40,7 +40,7 @@ const decodeBakeConfig = S.decodeEffect(BakeConfig);
 
 const digest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const bunArchiveDigest = Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f");
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 const encoder = new TextEncoder();
 
 const stubHandle = (output: string, exitCode = 0) =>
@@ -434,7 +434,8 @@ describe("runner bake planning and argv", () => {
         );
       });
       const output = yield* runAwsForTesting("us-east-1", ["ec2", "describe-images", "--image-ids", "ami-123"]).pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+        provideScopedLayer(NodeCrypto.layer)
       );
       expect(output).toBe('{"Images":[]}');
       expect(yield* Ref.get(commands)).toStrictEqual([
@@ -621,7 +622,8 @@ describe("runner bake planning and argv", () => {
       const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
       const pending = yield* Effect.flip(
         readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, makeBakeSpawner(commands, ""))
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, makeBakeSpawner(commands, "")),
+          provideScopedLayer(NodeCrypto.layer)
         )
       );
       expect(pending._tag).toBe("AwsResourcePending");
@@ -634,7 +636,8 @@ describe("runner bake planning and argv", () => {
           Effect.provideService(
             ChildProcessSpawner.ChildProcessSpawner,
             makeBakeSpawner(commands, "cloud-init boot noise without any marker")
-          )
+          ),
+          provideScopedLayer(NodeCrypto.layer)
         )
       );
       expect(partial._tag).toBe("AwsResourcePending");

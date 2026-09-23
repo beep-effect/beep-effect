@@ -3,13 +3,13 @@
   "initiative": {
     "id": "tsgo-045-effect-idiom-sweep",
     "title": "tsgo 0.45 Effect idiom sweep",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-09-12",
-    "updated": "2026-09-12",
+    "updated": "2026-09-22",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/tsgo-045-effect-idiom-sweep",
-  "lifecycle": "active",
+  "lifecycle": "superseded",
   "mission": "Bump @effect/tsgo to 0.45.0 with every rule at error, widen the directive gate to two declared exemptions, retire the redundant TaggedError equivalence hook, and restore idiomatic Match combinators repo-wide.",
   "executionCapable": true,
   "reflectionRequired": true,

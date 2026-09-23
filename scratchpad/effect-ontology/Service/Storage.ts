@@ -1,3 +1,5 @@
+import * as Crypto from "effect/Crypto";
+import { flow } from "effect/Function";
 /**
  * Public effect-ontology APIs for service/storage.
  *
@@ -38,7 +40,7 @@ import * as Str from "effect/String";
 import { KeyValueStore } from "effect/unstable/persistence";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import * as SqlError from "effect/unstable/sql/SqlError";
-import { sha256SyncFull } from "../Utils/Hash.ts";
+import { sha256SyncFull as sha256SyncFullEffect } from "../Utils/Hash.ts";
 import { ConfigService } from "./Config.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Storage");
@@ -592,6 +594,21 @@ const prepareLocalStore = Effect.fn("Storage.prepareLocalStore")(function* (conf
  * any directory beneath the root while an operation is running.
  */
 const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageConfigValue, canonicalRoot: string) {
+  const crypto = yield* Crypto.Crypto;
+  const sha256SyncFull = flow(
+    sha256SyncFullEffect,
+    Effect.provideService(Crypto.Crypto, crypto),
+    Effect.mapError(
+      (cause) =>
+        new SystemError({
+          _tag: "Unknown",
+          module: "KeyValueStore",
+          method: "hash",
+          description: "Failed to hash storage generation",
+          cause,
+        })
+    )
+  );
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const globalPrefix = config.pathPrefix ?? "";
@@ -683,7 +700,11 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   const generationRecordCandidate = Effect.fnUntraced(function* (key: string) {
     const resolved = yield* resolvePath(key).pipe(Effect.mapError(localPathError("generationRecordCandidate", key)));
     const storageIdentity = path.relative(canonicalRoot, resolved);
-    return path.join(localStorageMetadataDirectoryName, "generations", `${sha256SyncFull(storageIdentity)}.json`);
+    return path.join(
+      localStorageMetadataDirectoryName,
+      "generations",
+      `${yield* sha256SyncFull(storageIdentity)}.json`
+    );
   });
   const readGenerationRecord = Effect.fnUntraced(function* (key: string) {
     const candidate = yield* generationRecordCandidate(key);
@@ -718,36 +739,40 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
     });
   const previousGeneration = (record: O.Option<LocalGenerationRecord>): string =>
     O.getOrElse(O.map(record, generationOfRecord), () => "0");
-  const makePresentGeneration = (previous: O.Option<LocalGenerationRecord>, content: string): LocalGenerationRecord => {
-    const contentHash = Sha256Hex.make(sha256SyncFull(content));
+  const makePresentGeneration = Effect.fnUntraced(function* (
+    previous: O.Option<LocalGenerationRecord>,
+    content: string
+  ) {
+    const contentHash = Sha256Hex.make(yield* sha256SyncFull(content));
     return LocalGenerationRecord.cases.Present.make({
       contentHash,
-      generation: Sha256Hex.make(sha256SyncFull(`${previousGeneration(previous)}:present:${contentHash}`)),
+      generation: Sha256Hex.make(yield* sha256SyncFull(`${previousGeneration(previous)}:present:${contentHash}`)),
     });
-  };
-  const makeAbsentGeneration = (previous: O.Option<LocalGenerationRecord>): LocalGenerationRecord =>
-    LocalGenerationRecord.cases.Absent.make({
-      generation: Sha256Hex.make(sha256SyncFull(`${previousGeneration(previous)}:absent`)),
+  });
+  const makeAbsentGeneration = Effect.fnUntraced(function* (previous: O.Option<LocalGenerationRecord>) {
+    return LocalGenerationRecord.cases.Absent.make({
+      generation: Sha256Hex.make(yield* sha256SyncFull(`${previousGeneration(previous)}:absent`)),
     });
+  });
   const advancePresentGeneration = Effect.fnUntraced(function* (key: string, content: string) {
-    const record = makePresentGeneration(yield* readGenerationRecord(key), content);
+    const record = yield* makePresentGeneration(yield* readGenerationRecord(key), content);
     yield* writeGenerationRecord(key, record);
     return record;
   });
   const advanceAbsentGeneration = Effect.fnUntraced(function* (key: string) {
-    const record = makeAbsentGeneration(yield* readGenerationRecord(key));
+    const record = yield* makeAbsentGeneration(yield* readGenerationRecord(key));
     yield* writeGenerationRecord(key, record);
     return record;
   });
   const reconcilePresentGeneration = Effect.fnUntraced(function* (key: string, content: string) {
     const previous = yield* readGenerationRecord(key);
-    const contentHash = Sha256Hex.make(sha256SyncFull(content));
+    const contentHash = Sha256Hex.make(yield* sha256SyncFull(content));
     const matching = previous.pipe(
       O.filter(LocalGenerationRecord.guards.Present),
       O.filter((present) => Eq.equals(present.contentHash, contentHash))
     );
     if (O.isSome(matching)) return matching.value;
-    const record = makePresentGeneration(previous, content);
+    const record = yield* makePresentGeneration(previous, content);
     yield* writeGenerationRecord(key, record);
     return record;
   });

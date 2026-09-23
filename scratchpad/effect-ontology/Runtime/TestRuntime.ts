@@ -254,7 +254,7 @@ const EmbeddingInfraLayer = Layer.mergeAll(MockEmbeddingProvider, EmbeddingCache
 const ontologyLayer = OntologyService.Default.pipe(
   Layer.provide(EmbeddingInfraLayer),
   Layer.provide(StorageServiceTest),
-  Layer.provideMerge(BunServices.layer)
+  Layer.provide(BunServices.layer)
 );
 
 // NlpService bundle with embedding infrastructure provided
@@ -287,9 +287,12 @@ export const TestLayers = Layer.mergeAll(
   EntityExtractor.Test,
   RelationExtractor.Test,
   Grounder.Test,
-  LlmControlTestLayers,
-  BunServices.layer
-).pipe(Layer.provideMerge(ConfigServiceDefault), Layer.provideMerge(ConfigProvider.layer(TestConfigProvider)));
+  LlmControlTestLayers
+).pipe(
+  Layer.provideMerge(BunServices.layer),
+  Layer.provideMerge(ConfigServiceDefault),
+  Layer.provideMerge(ConfigProvider.layer(TestConfigProvider))
+);
 
 /**
  * Test Runtime

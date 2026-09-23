@@ -39,7 +39,7 @@ export const LicenseTier = LicenseTierBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(LicenseTierBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownResult(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

@@ -3,7 +3,11 @@
  *
  * @since 0.0.0
  */
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as Context from "effect/Context";
+import * as HashMap from "effect/HashMap";
+import * as Ref from "effect/Ref";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -40,46 +44,54 @@ const notFoundError = (path: string) =>
     pathOrDescriptor: path,
   });
 
-const directoryEntries = (files: ReadonlyMap<string, string>, directory: string): Array<string> => {
+const directoryEntries = (files: HashMap.HashMap<string, string>, directory: string): Array<string> => {
   const prefix = `${directory}/`;
-  const entries = A.map(
-    A.filter(A.fromIterable(files.keys()), (path) => Str.startsWith(prefix)(path)),
-    Str.replace(prefix, "")
+  const entries = files.pipe(
+    HashMap.keys,
+    A.fromIterable,
+    A.filter(Str.startsWith(prefix)),
+    A.map(Str.replace(prefix, ""))
   );
   return A.filter(entries, (entry) => !Str.includes("/")(entry));
 };
 
-const makeFileSystemLayer = (files: ReadonlyMap<string, string>): Layer.Layer<FileSystem.FileSystem> =>
-  FileSystem.layerNoop({
-    exists: (path: string) =>
-      Effect.succeed(files.has(path) || A.isReadonlyArrayNonEmpty(directoryEntries(files, path))),
-    readDirectory: (path: string) => Effect.succeed(directoryEntries(files, path)),
-    readFileString: (path: string) =>
-      Effect.fromOption(O.fromNullishOr(files.get(path)), () => notFoundError(path)),
+const $I = $ScratchpadId.create("test/claudecode/Settings/Loader.test");
+
+class TestFiles extends Context.Service<TestFiles, Ref.Ref<HashMap.HashMap<string, string>>>()($I`TestFiles`) {}
+
+const TestFilesLayer = Layer.effect(TestFiles, Ref.make(HashMap.empty<string, string>()));
+const TestFileSystemLayer = Layer.effect(FileSystem.FileSystem, Effect.gen(function* () {
+  const files = yield* TestFiles;
+  return FileSystem.makeNoop({
+    exists: (path) => Ref.get(files).pipe(Effect.map((entries) => HashMap.has(entries, path) || A.isReadonlyArrayNonEmpty(directoryEntries(entries, path)))),
+    readDirectory: (path) => Ref.get(files).pipe(Effect.map((entries) => directoryEntries(entries, path))),
+    readFileString: (path) => Ref.get(files).pipe(Effect.flatMap((entries) => Effect.fromOption(HashMap.get(entries, path), () => notFoundError(path)))),
   });
-
-const makeTestLayer = (files: ReadonlyMap<string, string>): Layer.Layer<FileSystem.FileSystem | Path.Path> =>
-  Layer.mergeAll(makeFileSystemLayer(files), Path.layer, ConfigProvider.layer(ConfigProvider.fromUnknown({ HOME })));
-
-const fsWith = (entries: ReadonlyArray<readonly [string, string]>): ReadonlyMap<string, string> => new Map(entries);
+})).pipe(Layer.provideMerge(TestFilesLayer));
+const TestLayer = Layer.mergeAll(TestFileSystemLayer, Path.layer, ConfigProvider.layer(ConfigProvider.fromUnknown({ HOME })));
 
 const SettingsJson = S.fromJsonString(SettingsRaw);
-const settingsJson = S.encodeSync(SettingsJson);
+const settingsJson = S.encodeEffect(SettingsJson);
 const encodeSettings = S.encodeEffect(SettingsFile);
 
-describe("Settings paths", () => {
-  it.effect("resolves user, project, and local settings paths", () =>
-    Effect.gen(function* () {
+it.layer(TestLayer)("Settings paths", (it) => {
+  it.effect("resolves user, project, and local settings paths", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([]));
+
       expect(yield* Loader.userSettingsPath).toBe(USER_PATH);
       expect(yield* Loader.projectSettingsPath(CWD)).toBe(PROJECT_PATH);
       expect(yield* Loader.localSettingsPath(CWD)).toBe(LOCAL_PATH);
-    }).pipe(Effect.provide(makeTestLayer(fsWith([]))))
+    
+})
   );
 });
 
-describe("Settings.load", () => {
-  it.effect("returns an Option-backed empty settings value", () =>
-    Effect.gen(function* () {
+it.layer(TestLayer)("Settings.load", (it) => {
+  it.effect("returns an Option-backed empty settings value", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([]));
+
       const settings = yield* Loader.load(CWD);
       expect(settings.model).toEqual(O.none());
       expect(settings.hooks).toEqual(O.none());
@@ -87,11 +99,22 @@ describe("Settings.load", () => {
       expect(settings.raw).toEqual(O.some({}));
       const encoded = yield* encodeSettings(settings);
       expect(encoded).toEqual({ raw: {} });
-    }).pipe(Effect.provide(makeTestLayer(fsWith([]))))
+    
+})
   );
 
-  it.effect("loads a single user settings source", () =>
-    Effect.gen(function* () {
+  it.effect("loads a single user settings source", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([
+            [
+              USER_PATH,
+              (yield* settingsJson({
+                model: "claude-opus-4-6",
+                theme: "dark",
+              })),
+            ],
+          ]));
+
       const settings = yield* Loader.load(CWD);
       expect(settings.model).toEqual(O.some("claude-opus-4-6"));
       expect(settings.theme).toEqual(O.some("dark"));
@@ -99,74 +122,92 @@ describe("Settings.load", () => {
         model: "claude-opus-4-6",
         theme: "dark",
       });
-    }).pipe(
-      Effect.provide(
-        makeTestLayer(
-          fsWith([
-            [
-              USER_PATH,
-              settingsJson({
-                model: "claude-opus-4-6",
-                theme: "dark",
-              }),
-            ],
-          ])
-        )
-      )
-    )
+    
+})
   );
 
-  it.effect("applies local over project over user precedence", () =>
-    Effect.gen(function* () {
+  it.effect("applies local over project over user precedence", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([
+            [
+              USER_PATH,
+              (yield* settingsJson({
+                model: "claude-opus-4-6",
+                language: "japanese",
+              })),
+            ],
+            [PROJECT_PATH, (yield* settingsJson({ model: "claude-sonnet-4-6" }))],
+            [LOCAL_PATH, (yield* settingsJson({ model: "claude-haiku-4-5" }))],
+          ]));
+
       const settings = yield* Loader.load(CWD);
       expect(settings.model).toEqual(O.some("claude-haiku-4-5"));
       expect(settings.language).toEqual(O.some("japanese"));
-    }).pipe(
-      Effect.provide(
-        makeTestLayer(
-          fsWith([
-            [
-              USER_PATH,
-              settingsJson({
-                model: "claude-opus-4-6",
-                language: "japanese",
-              }),
-            ],
-            [PROJECT_PATH, settingsJson({ model: "claude-sonnet-4-6" })],
-            [LOCAL_PATH, settingsJson({ model: "claude-haiku-4-5" })],
-          ])
-        )
-      )
-    )
+    
+})
   );
 
-  it.effect("applies CLI settings above local settings", () =>
-    Effect.gen(function* () {
+  it.effect("applies CLI settings above local settings", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([
+            [
+              LOCAL_PATH,
+              (yield* settingsJson({
+                model: "claude-haiku-4-5",
+                language: "spanish",
+              })),
+            ],
+            [CLI_PATH, (yield* settingsJson({ model: "claude-opus-4-6" }))],
+          ]));
+
       const settings = yield* Loader.load(CWD, {
         settingsPath: CLI_PATH,
       });
       expect(settings.model).toEqual(O.some("claude-opus-4-6"));
       expect(settings.language).toEqual(O.some("spanish"));
-    }).pipe(
-      Effect.provide(
-        makeTestLayer(
-          fsWith([
-            [
-              LOCAL_PATH,
-              settingsJson({
-                model: "claude-haiku-4-5",
-                language: "spanish",
-              }),
-            ],
-            [CLI_PATH, settingsJson({ model: "claude-opus-4-6" })],
-          ])
-        )
-      )
-    )
+    
+})
   );
 
-  it.effect("merges managed base and sorted drop-ins above CLI settings", () =>
-    Effect.gen(function* () {
+  it.effect("merges managed base and sorted drop-ins above CLI settings", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([
+            [
+              CLI_PATH,
+              (yield* settingsJson({
+                model: "claude-haiku-4-5",
+                allowedHttpHookUrls: ["https://cli.example/*"],
+              })),
+            ],
+            [
+              MANAGED_PATH,
+              (yield* settingsJson({
+                model: "claude-opus-4-6",
+                allowedHttpHookUrls: ["https://base.example/*"],
+              })),
+            ],
+            [
+              MANAGED_DROP_IN_20,
+              (yield* settingsJson({
+                model: "claude-sonnet-4-6",
+                allowedHttpHookUrls: ["https://twenty.example/*"],
+              })),
+            ],
+            [
+              MANAGED_DROP_IN_10,
+              (yield* settingsJson({
+                allowedHttpHookUrls: ["https://ten.example/*"],
+              })),
+            ],
+            [
+              MANAGED_HIDDEN_DROP_IN,
+              (yield* settingsJson({
+                model: "ignored-model",
+                allowedHttpHookUrls: ["https://ignored.example/*"],
+              })),
+            ],
+          ]));
+
       const settings = yield* Loader.load(CWD, {
         settingsPath: CLI_PATH,
         managedSettingsRoot: MANAGED_ROOT,
@@ -175,52 +216,44 @@ describe("Settings.load", () => {
       expect(settings.allowedHttpHookUrls).toEqual(
         O.some(["https://cli.example/*", "https://base.example/*", "https://ten.example/*", "https://twenty.example/*"])
       );
-    }).pipe(
-      Effect.provide(
-        makeTestLayer(
-          fsWith([
-            [
-              CLI_PATH,
-              settingsJson({
-                model: "claude-haiku-4-5",
-                allowedHttpHookUrls: ["https://cli.example/*"],
-              }),
-            ],
-            [
-              MANAGED_PATH,
-              settingsJson({
-                model: "claude-opus-4-6",
-                allowedHttpHookUrls: ["https://base.example/*"],
-              }),
-            ],
-            [
-              MANAGED_DROP_IN_20,
-              settingsJson({
-                model: "claude-sonnet-4-6",
-                allowedHttpHookUrls: ["https://twenty.example/*"],
-              }),
-            ],
-            [
-              MANAGED_DROP_IN_10,
-              settingsJson({
-                allowedHttpHookUrls: ["https://ten.example/*"],
-              }),
-            ],
-            [
-              MANAGED_HIDDEN_DROP_IN,
-              settingsJson({
-                model: "ignored-model",
-                allowedHttpHookUrls: ["https://ignored.example/*"],
-              }),
-            ],
-          ])
-        )
-      )
-    )
+    
+})
   );
 
-  it.effect("deep-merges objects and de-duplicates arrays", () =>
-    Effect.gen(function* () {
+  it.effect("deep-merges objects and de-duplicates arrays", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([
+            [
+              USER_PATH,
+              (yield* settingsJson({
+                permissions: {
+                  defaultMode: "default",
+                  allow: ["Read(./src/**)"],
+                  deny: ["Read(./.env)"],
+                  additionalDirectories: ["/shared"],
+                },
+                env: {
+                  SHARED: "user",
+                  USER_ONLY: "1",
+                },
+              })),
+            ],
+            [
+              PROJECT_PATH,
+              (yield* settingsJson({
+                permissions: {
+                  defaultMode: "manual",
+                  allow: ["Read(./src/**)", "Write(./tmp/**)"],
+                  additionalDirectories: ["/shared", "/project"],
+                },
+                env: {
+                  SHARED: "project",
+                  PROJECT_ONLY: "1",
+                },
+              })),
+            ],
+          ]));
+
       const settings = yield* Loader.load(CWD);
       expect(yield* encodeSettings(settings)).toMatchObject({
         permissions: {
@@ -235,47 +268,33 @@ describe("Settings.load", () => {
           PROJECT_ONLY: "1",
         },
       });
-    }).pipe(
-      Effect.provide(
-        makeTestLayer(
-          fsWith([
+    
+})
+  );
+
+  it.effect("preserves and deep-merges unknown top-level settings in raw", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([
             [
               USER_PATH,
-              settingsJson({
-                permissions: {
-                  defaultMode: "default",
-                  allow: ["Read(./src/**)"],
-                  deny: ["Read(./.env)"],
-                  additionalDirectories: ["/shared"],
+              (yield* settingsJson({
+                futureClaudeCodeSetting: {
+                  flags: ["user"],
+                  userOnly: true,
                 },
-                env: {
-                  SHARED: "user",
-                  USER_ONLY: "1",
-                },
-              }),
+              })),
             ],
             [
               PROJECT_PATH,
-              settingsJson({
-                permissions: {
-                  defaultMode: "manual",
-                  allow: ["Read(./src/**)", "Write(./tmp/**)"],
-                  additionalDirectories: ["/shared", "/project"],
+              (yield* settingsJson({
+                futureClaudeCodeSetting: {
+                  flags: ["project"],
+                  projectOnly: true,
                 },
-                env: {
-                  SHARED: "project",
-                  PROJECT_ONLY: "1",
-                },
-              }),
+              })),
             ],
-          ])
-        )
-      )
-    )
-  );
+          ]));
 
-  it.effect("preserves and deep-merges unknown top-level settings in raw", () =>
-    Effect.gen(function* () {
       const settings = yield* Loader.load(CWD);
       expect(settings.raw).toEqual(
         O.some({
@@ -286,36 +305,63 @@ describe("Settings.load", () => {
           },
         })
       );
-    }).pipe(
-      Effect.provide(
-        makeTestLayer(
-          fsWith([
-            [
-              USER_PATH,
-              settingsJson({
-                futureClaudeCodeSetting: {
-                  flags: ["user"],
-                  userOnly: true,
-                },
-              }),
-            ],
-            [
-              PROJECT_PATH,
-              settingsJson({
-                futureClaudeCodeSetting: {
-                  flags: ["project"],
-                  projectOnly: true,
-                },
-              }),
-            ],
-          ])
-        )
-      )
-    )
+    
+})
   );
 
-  it.effect("decodes current hooks and marketplace source shapes", () =>
-    Effect.gen(function* () {
+  it.effect("decodes current hooks and marketplace source shapes", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([
+            [
+              PROJECT_PATH,
+              (yield* settingsJson({
+                hooks: {
+                  PreToolUse: [
+                    {
+                      matcher: "Bash",
+                      hooks: [
+                        {
+                          type: "command",
+                          command: "bun hook.ts",
+                          args: ["--strict"],
+                          asyncRewake: true,
+                        },
+                        {
+                          type: "mcp_tool",
+                          server: "policy",
+                          tool: "check",
+                        },
+                      ],
+                    },
+                  ],
+                },
+                extraKnownMarketplaces: {
+                  company: {
+                    autoUpdate: true,
+                    source: {
+                      source: "git",
+                      url: "https://git.example.com/plugins.git",
+                      skipLfs: true,
+                    },
+                  },
+                  trustedHosts: {
+                    source: {
+                      source: "hostPattern",
+                      hostPattern: "^plugins\\.example\\.com$",
+                    },
+                  },
+                  inline: {
+                    source: {
+                      source: "settings",
+                      name: "inline",
+                      plugins: [],
+                    },
+                  },
+                },
+              })),
+            ],
+          ]));
+
       const settings = yield* Loader.load(CWD);
       expect(yield* encodeSettings(settings)).toMatchObject({
         hooks: {
@@ -362,119 +408,61 @@ describe("Settings.load", () => {
           },
         },
       });
-    }).pipe(
-      Effect.provide(
-        makeTestLayer(
-          fsWith([
-            [
-              PROJECT_PATH,
-              settingsJson({
-                hooks: {
-                  PreToolUse: [
-                    {
-                      matcher: "Bash",
-                      hooks: [
-                        {
-                          type: "command",
-                          command: "bun hook.ts",
-                          args: ["--strict"],
-                          asyncRewake: true,
-                        },
-                        {
-                          type: "mcp_tool",
-                          server: "policy",
-                          tool: "check",
-                        },
-                      ],
-                    },
-                  ],
-                },
-                extraKnownMarketplaces: {
-                  company: {
-                    autoUpdate: true,
-                    source: {
-                      source: "git",
-                      url: "https://git.example.com/plugins.git",
-                      skipLfs: true,
-                    },
-                  },
-                  trustedHosts: {
-                    source: {
-                      source: "hostPattern",
-                      hostPattern: "^plugins\\.example\\.com$",
-                    },
-                  },
-                  inline: {
-                    source: {
-                      source: "settings",
-                      name: "inline",
-                      plugins: [],
-                    },
-                  },
-                },
-              }),
-            ],
-          ])
-        )
-      )
-    )
+    
+})
   );
 });
 
-describe("Settings.load errors", () => {
-  it.effect("reports malformed JSON with its source path", () =>
-    Effect.gen(function* () {
+it.layer(TestLayer)("Settings.load errors", (it) => {
+  it.effect("reports malformed JSON with its source path", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([[USER_PATH, "this is not json"]]));
+
       const error = yield* Effect.flip(Loader.load(CWD));
       expect(error).toBeInstanceOf(SettingsParseError);
       expect(error).toMatchObject({
         _tag: "SettingsParseError",
         path: USER_PATH,
       });
-    }).pipe(Effect.provide(makeTestLayer(fsWith([[USER_PATH, "this is not json"]]))))
+    
+})
   );
 
-  it.effect("reports invalid known settings with their source path", () =>
-    Effect.gen(function* () {
+  it.effect("reports invalid known settings with their source path", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([
+            [
+              PROJECT_PATH,
+              (yield* settingsJson({
+                worktree: { bgIsolation: true },
+              })),
+            ],
+          ]));
+
       const error = yield* Effect.flip(Loader.load(CWD));
       expect(error).toBeInstanceOf(SettingsDecodeError);
       expect(error).toMatchObject({
         _tag: "SettingsDecodeError",
         path: PROJECT_PATH,
       });
-    }).pipe(
-      Effect.provide(
-        makeTestLayer(
-          fsWith([
-            [
-              PROJECT_PATH,
-              settingsJson({
-                worktree: { bgIsolation: true },
-              }),
-            ],
-          ])
-        )
-      )
-    )
+    
+})
   );
 
-  it.effect("aborts when a higher-priority source is malformed", () =>
-    Effect.gen(function* () {
+  it.effect("aborts when a higher-priority source is malformed", () => Effect.gen(function* () {
+ const files = yield* TestFiles;
+ yield* Ref.set(files, HashMap.fromIterable([
+            [USER_PATH, (yield* settingsJson({ model: "claude-opus-4-6" }))],
+            [LOCAL_PATH, "{ not valid"],
+          ]));
+
       const error = yield* Effect.flip(Loader.load(CWD));
       expect(error).toBeInstanceOf(SettingsParseError);
       expect(error).toMatchObject({
         _tag: "SettingsParseError",
         path: LOCAL_PATH,
       });
-    }).pipe(
-      Effect.provide(
-        makeTestLayer(
-          fsWith([
-            [USER_PATH, settingsJson({ model: "claude-opus-4-6" })],
-            [LOCAL_PATH, "{ not valid"],
-          ])
-        )
-      )
-    )
+    
+})
   );
 });
-/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

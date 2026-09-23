@@ -20,6 +20,7 @@ import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
 import { jsdocCommentsFromSource, tagsFromComment } from "./QualityArtifactSupport.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocRatchet");
@@ -557,7 +558,11 @@ export const isPackageSourceFileIncludingGenerated = (filePath: string): boolean
 const zeroLegacyCorpusFiles = Effect.fn("JSDocRatchet.zeroLegacyCorpusFiles")(function* (
   repoRoot: string,
   includeGenerated: boolean
-): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  QualityScriptCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const lines = yield* runGitLines(repoRoot, ["ls-files", "packages", "apps"], jsdocGitErrorAdapter);
   const predicate = includeGenerated ? isPackageSourceFileIncludingGenerated : isPackageSourceFile;
   return A.filter(lines, predicate);
@@ -569,7 +574,7 @@ const zeroLegacyFindings = Effect.fn("JSDocRatchet.zeroLegacyFindings")(function
 ): Effect.fn.Return<
   ReadonlyArray<JSDocLegacyFileFinding>,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -614,7 +619,7 @@ const enforceZeroLegacy = Effect.fn("JSDocRatchet.enforceZeroLegacy")(function* 
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const findings = yield* zeroLegacyFindings(repoRoot, includeGenerated);
   const scope = includeGenerated ? "include-generated" : "non-generated";
@@ -707,7 +712,7 @@ export const runJSDocRatchet = Effect.fn("JSDocRatchet.runJSDocRatchet")(functio
 }: RunJSDocRatchetOptions): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const currentTotals = yield* readCurrentInventoryTotals(repoRoot, inventoryPath);

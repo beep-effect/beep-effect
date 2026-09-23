@@ -87,6 +87,7 @@ type FilesProcessRequirements =
   | FileSystem.FileSystem
   | Path.Path
   | Crypto.Crypto
+  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner
   | HttpClient.HttpClient;
 
@@ -966,16 +967,14 @@ const processPreparedSource = Effect.fn("Files.processPreparedSource")(function*
         }),
       })
       .pipe(
-        Effect.matchEffect({
-          onFailure: (error) => Effect.succeed(processFailureOutcome(descriptor, prepared, error)),
+        Effect.match({
+          onFailure: (error) => processFailureOutcome(descriptor, prepared, error),
           onSuccess: (result) =>
-            Effect.succeed(
-              processArchiveSuccessOutcome(
-                descriptor,
-                prepared,
-                A.map(result.children, (child) => processChildRecord(options, prepared, child)),
-                A.length(result.warnings)
-              )
+            processArchiveSuccessOutcome(
+              descriptor,
+              prepared,
+              A.map(result.children, (child) => processChildRecord(options, prepared, child)),
+              A.length(result.warnings)
             ),
         })
       );
@@ -995,36 +994,32 @@ const processPreparedSource = Effect.fn("Files.processPreparedSource")(function*
       }),
     })
     .pipe(
-      Effect.matchEffect({
-        onFailure: (error) => Effect.succeed(processFailureOutcome(descriptor, prepared, error)),
+      Effect.match({
+        onFailure: (error) => processFailureOutcome(descriptor, prepared, error),
         onSuccess: (result) => {
           if (
             options.maxMaterializedBytes !== undefined &&
             result.text !== undefined &&
             processUtf8Encoder.encode(result.text).length > options.maxMaterializedBytes
           ) {
-            return Effect.succeed(
-              processFailureOutcome(
-                descriptor,
-                prepared,
-                FileProcessingOperationError.fromReason("output-limit-exceeded", {
-                  artifactId: prepared.artifactId,
-                  engine: descriptor.name,
-                  format: prepared.format,
-                  message: "Extracted text exceeded --max-materialized-bytes.",
-                  operationId: prepared.operationId,
-                })
-              )
+            return processFailureOutcome(
+              descriptor,
+              prepared,
+              FileProcessingOperationError.fromReason("output-limit-exceeded", {
+                artifactId: prepared.artifactId,
+                engine: descriptor.name,
+                format: prepared.format,
+                message: "Extracted text exceeded --max-materialized-bytes.",
+                operationId: prepared.operationId,
+              })
             );
           }
 
-          return Effect.succeed(
-            processExtractionSuccessOutcome(
-              descriptor,
-              prepared,
-              O.fromUndefinedOr(result.text),
-              A.length(result.warnings)
-            )
+          return processExtractionSuccessOutcome(
+            descriptor,
+            prepared,
+            O.fromUndefinedOr(result.text),
+            A.length(result.warnings)
           );
         },
       })

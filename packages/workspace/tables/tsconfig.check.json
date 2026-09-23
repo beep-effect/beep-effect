@@ -6,6 +6,9 @@
       "path": "../../ecosystem/effect-drizzle/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
     },
     {

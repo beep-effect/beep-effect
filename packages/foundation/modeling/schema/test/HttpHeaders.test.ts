@@ -33,6 +33,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { ContentSecurityPolicyOption } from "@beep/schema/Csp";
@@ -47,10 +48,10 @@ const decodePermissionsPolicyHeader = S.decodeEffect(PermissionsPolicyHeader);
 const decodePermittedCrossDomainPoliciesHeader = S.decodeEffect(PermittedCrossDomainPoliciesHeader);
 const decodeReferrerPolicyHeader = S.decodeEffect(ReferrerPolicyHeader);
 const decodeXSSProtectionHeader = S.decodeEffect(XSSProtectionHeader);
-const decodeCrossOriginEmbedderPolicyHeaderSync = S.decodeSync(CrossOriginEmbedderPolicyHeader);
-const decodeCrossOriginOpenerPolicyHeaderSync = S.decodeSync(CrossOriginOpenerPolicyHeader);
-const decodeCrossOriginResourcePolicyHeaderSync = S.decodeSync(CrossOriginResourcePolicyHeader);
-const encodeCrossOriginEmbedderPolicyHeaderSync = S.encodeSync(CrossOriginEmbedderPolicyHeader);
+const decodeCrossOriginEmbedderPolicyHeaderEffect = S.decodeEffect(CrossOriginEmbedderPolicyHeader);
+const decodeCrossOriginOpenerPolicyHeaderEffect = S.decodeEffect(CrossOriginOpenerPolicyHeader);
+const decodeCrossOriginResourcePolicyHeaderEffect = S.decodeEffect(CrossOriginResourcePolicyHeader);
+const encodeCrossOriginEmbedderPolicyHeaderEffect = S.encodeEffect(CrossOriginEmbedderPolicyHeader);
 
 type HeaderLike = {
   readonly name: string;
@@ -78,9 +79,9 @@ type CrossOriginCase = {
   readonly headerName: string;
   readonly validValue: string;
   readonly optionArbitrary: Arbitrary.Arbitrary<unknown>;
-  readonly decodeDisabled: (input: false | undefined) => HeaderLike;
-  readonly decodeOption: (input: unknown) => HeaderLike;
-  readonly decodeValid: () => HeaderLike;
+  readonly decodeDisabled: (input: false | undefined) => Effect.Effect<HeaderLike, S.SchemaError>;
+  readonly decodeOption: (input: unknown) => Effect.Effect<HeaderLike, S.SchemaError>;
+  readonly decodeValid: () => Effect.Effect<HeaderLike, S.SchemaError>;
   readonly createValueValid: () => Effect.Effect<O.Option<string>, never, never>;
   readonly createValid: () => Effect.Effect<O.Option<HeaderLike>, never, never>;
   readonly createInvalid: () => Effect.Effect<O.Option<string>, never, never>;
@@ -92,9 +93,9 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     headerName: "Cross-Origin-Embedder-Policy",
     validValue: "require-corp",
     optionArbitrary: Arbitrary.schema(CrossOriginEmbedderPolicyOption),
-    decodeDisabled: (input) => decodeCrossOriginEmbedderPolicyHeaderSync(input),
-    decodeOption: S.decodeUnknownSync(CrossOriginEmbedderPolicyHeader),
-    decodeValid: () => decodeCrossOriginEmbedderPolicyHeaderSync("require-corp"),
+    decodeDisabled: decodeCrossOriginEmbedderPolicyHeaderEffect,
+    decodeOption: S.decodeUnknownEffect(CrossOriginEmbedderPolicyHeader),
+    decodeValid: () => decodeCrossOriginEmbedderPolicyHeaderEffect("require-corp"),
     createValueValid: () => CrossOriginEmbedderPolicyHeader.createValue("require-corp").pipe(Effect.orDie),
     createValid: () => CrossOriginEmbedderPolicyHeader.create("require-corp").pipe(Effect.orDie),
     createInvalid: () => CrossOriginEmbedderPolicyHeader.createValue("invalid" as never).pipe(Effect.orDie),
@@ -104,9 +105,9 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     headerName: "Cross-Origin-Opener-Policy",
     validValue: "same-origin",
     optionArbitrary: Arbitrary.schema(CrossOriginOpenerPolicyOption),
-    decodeDisabled: (input) => decodeCrossOriginOpenerPolicyHeaderSync(input),
-    decodeOption: S.decodeUnknownSync(CrossOriginOpenerPolicyHeader),
-    decodeValid: () => decodeCrossOriginOpenerPolicyHeaderSync("same-origin"),
+    decodeDisabled: decodeCrossOriginOpenerPolicyHeaderEffect,
+    decodeOption: S.decodeUnknownEffect(CrossOriginOpenerPolicyHeader),
+    decodeValid: () => decodeCrossOriginOpenerPolicyHeaderEffect("same-origin"),
     createValueValid: () => CrossOriginOpenerPolicyHeader.createValue("same-origin").pipe(Effect.orDie),
     createValid: () => CrossOriginOpenerPolicyHeader.create("same-origin").pipe(Effect.orDie),
     createInvalid: () => CrossOriginOpenerPolicyHeader.createValue("invalid" as never).pipe(Effect.orDie),
@@ -116,9 +117,9 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
     headerName: "Cross-Origin-Resource-Policy",
     validValue: "same-origin",
     optionArbitrary: Arbitrary.schema(CrossOriginResourcePolicyOption),
-    decodeDisabled: (input) => decodeCrossOriginResourcePolicyHeaderSync(input),
-    decodeOption: S.decodeUnknownSync(CrossOriginResourcePolicyHeader),
-    decodeValid: () => decodeCrossOriginResourcePolicyHeaderSync("same-origin"),
+    decodeDisabled: decodeCrossOriginResourcePolicyHeaderEffect,
+    decodeOption: S.decodeUnknownEffect(CrossOriginResourcePolicyHeader),
+    decodeValid: () => decodeCrossOriginResourcePolicyHeaderEffect("same-origin"),
     createValueValid: () => CrossOriginResourcePolicyHeader.createValue("same-origin").pipe(Effect.orDie),
     createValid: () => CrossOriginResourcePolicyHeader.create("same-origin").pipe(Effect.orDie),
     createInvalid: () => CrossOriginResourcePolicyHeader.createValue("invalid" as never).pipe(Effect.orDie),
@@ -126,83 +127,72 @@ const crossOriginCases: ReadonlyArray<CrossOriginCase> = [
 ];
 
 describe("Secure header schemas", () => {
-  it("derives cross-origin option examples directly from the source schema", () => {
-    const optionArbitrary = Arbitrary.schema(CrossOriginEmbedderPolicyOption);
+  it.effect.prop(
+    "derives cross-origin option examples directly from the source schema",
+    [CrossOriginEmbedderPolicyOption],
+    Effect.fnUntraced(function* ([option]) {
+      expectHeader(
+        yield* decodeCrossOriginEmbedderPolicyHeaderEffect(option),
+        "Cross-Origin-Embedder-Policy",
+        P.isString(option) ? option : undefined
+      );
+    }),
+    { arbitrary: fcRuns(25) }
+  );
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([optionArbitrary]),
-          ([option]) => {
-            expectHeader(
-              decodeCrossOriginEmbedderPolicyHeaderSync(option),
-              "Cross-Origin-Embedder-Policy",
-              P.isString(option) ? option : undefined
-            );
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
-
-  it("rejects encoding a normalized COEP header back to its one-way input boundary", () => {
-    const header = decodeCrossOriginEmbedderPolicyHeaderSync("require-corp");
-
-    expect(() => encodeCrossOriginEmbedderPolicyHeaderSync(header)).toThrow(
-      "Encoding CrossOriginEmbedderPolicyHeader back to the original input is not supported"
-    );
-  });
+  it.effect(
+    "rejects encoding a normalized COEP header back to its one-way input boundary",
+    Effect.fnUntraced(function* () {
+      const header = yield* decodeCrossOriginEmbedderPolicyHeaderEffect("require-corp");
+      const result = yield* Effect.result(encodeCrossOriginEmbedderPolicyHeaderEffect(header));
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure.message).toContain(
+          "Encoding CrossOriginEmbedderPolicyHeader back to the original input is not supported"
+        );
+      }
+    })
+  );
 
   for (const testCase of crossOriginCases) {
     describe(testCase.label, () => {
-      it("decodes undefined and false to a disabled header", () => {
-        expectHeader(testCase.decodeDisabled(undefined), testCase.headerName, undefined);
-        expectHeader(testCase.decodeDisabled(false), testCase.headerName, undefined);
-      });
+      it.effect(
+        "decodes undefined and false to a disabled header",
+        Effect.fnUntraced(function* () {
+          expectHeader(yield* testCase.decodeDisabled(undefined), testCase.headerName, undefined);
+          expectHeader(yield* testCase.decodeDisabled(false), testCase.headerName, undefined);
+        })
+      );
 
-      it("decodes valid input and creates a matching header", () => {
-        expectHeader(testCase.decodeValid(), testCase.headerName, testCase.validValue);
-        const createdValue = Effect.runSync(
-          testCase.createValueValid() as unknown as Effect.Effect<O.Option<string>, never, never>
-        );
-        expect(createdValue).toEqual(O.some(testCase.validValue));
-        expectSomeHeader(
-          Effect.runSync(testCase.createValid() as unknown as Effect.Effect<O.Option<HeaderLike>, never, never>),
-          testCase.headerName,
-          testCase.validValue
-        );
-      });
+      it.effect(
+        "decodes valid input and creates a matching header",
+        Effect.fnUntraced(function* () {
+          expectHeader(yield* testCase.decodeValid(), testCase.headerName, testCase.validValue);
+          const createdValue = yield* testCase.createValueValid();
+          expect(createdValue).toEqual(O.some(testCase.validValue));
+          expectSomeHeader(yield* testCase.createValid(), testCase.headerName, testCase.validValue);
+        })
+      );
 
-      it("derives option examples from the source schema", () => {
-        expect(
-          Effect.runSync(
-            Arbitrary.checkEffect(
-              Arbitrary.all([testCase.optionArbitrary]),
-              ([option]) => {
-                expectHeader(
-                  testCase.decodeOption(option),
-                  testCase.headerName,
-                  P.isString(option) ? option : undefined
-                );
+      it.effect.prop(
+        "derives option examples from the source schema",
+        [testCase.optionArbitrary],
+        Effect.fnUntraced(function* ([option]) {
+          expectHeader(
+            yield* testCase.decodeOption(option),
+            testCase.headerName,
+            P.isString(option) ? option : undefined
+          );
+        }),
+        { arbitrary: fcRuns(25) }
+      );
 
-                return true;
-              },
-              fcRuns(25)
-            )
-          )
-        ).toMatchObject({ _tag: "Passed" });
-      });
-
-      it("fails on invalid createValue input", () => {
-        expect(
-          Exit.isFailure(
-            Effect.runSyncExit(testCase.createInvalid() as unknown as Effect.Effect<unknown, never, never>)
-          )
-        ).toBe(true);
-      });
+      it.effect(
+        "fails on invalid createValue input",
+        Effect.fnUntraced(function* () {
+          expect(Exit.isFailure(yield* Effect.exit(testCase.createInvalid()))).toBe(true);
+        })
+      );
     });
   }
 

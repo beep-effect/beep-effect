@@ -35,14 +35,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
 
+const decodeLocalDateFromString = S.decodeEffect(LocalDateFromString);
 const decodeModel = S.decodeEffect(Model);
-const decodeLocalDateFromStringSync = S.decodeSync(LocalDateFromString);
-const decodeModelSync = S.decodeSync(Model);
 const decodeUnknownLocalDateFromString = S.decodeUnknownEffect(LocalDateFromString);
 const encodeLocalDateFromString = S.encodeEffect(LocalDateFromString);
 const encodeModel = S.encodeEffect(Model);
-const encodeLocalDateFromStringSync = S.encodeSync(LocalDateFromString);
-const encodeModelSync = S.encodeSync(Model);
 
 const juneFifteenth = () => make({ year: 2024, month: 6, day: 15 });
 
@@ -96,20 +93,22 @@ describe("LocalDate.Model", () => {
     })
   );
 
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived values through the class and string codecs",
     [Model],
-    ([date]) => {
-      const encoded = encodeModelSync(date);
-      const decoded = decodeModelSync(encoded);
-      const encodedString = encodeLocalDateFromStringSync(date);
-      const decodedString = decodeLocalDateFromStringSync(encodedString);
+    Effect.fnUntraced(function* ([date]) {
+      const encoded = yield* encodeModel(date);
+      const decoded = yield* decodeModel(encoded);
+      const encodedString = yield* encodeLocalDateFromString(date);
+      const decodedString = yield* decodeLocalDateFromString(encodedString);
 
       assert.instanceOf(decoded, Model);
       assert.strictEqual(equals(decoded, date), true);
       assert.strictEqual(encodedString, date.toISOString());
       assert.strictEqual(equals(decodedString, date), true);
-    },
+
+      return true;
+    }),
     { arbitrary: fcRuns(50) }
   );
 

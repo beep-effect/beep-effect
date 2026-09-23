@@ -8,6 +8,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 
 import * as PreToolUse from "../../../claudecode/Hook/Events/PreToolUse.ts";
 import * as SessionStart from "../../../claudecode/Hook/Events/SessionStart.ts";
@@ -25,6 +26,13 @@ interface DispatchResult {
   readonly succeeded: boolean;
 }
 
+const provideBuiltLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scopedWith((scope) =>
+      Layer.buildWithScope(scope)(layer).pipe(Effect.flatMap((context) => Effect.provide(self, context)))
+    );
+
 const decodeJson = UnknownFromJsonString.decodeUnknownEffect;
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;
 
@@ -40,7 +48,7 @@ const runDispatchWithMockStdin = (
       stdoutBuffer,
       stderrBuffer,
     });
-    const exit = yield* Effect.exit(runDispatchProgram(hooks).pipe(Effect.provide(layer)));
+    const exit = yield* Effect.exit(runDispatchProgram(hooks).pipe(provideBuiltLayer(layer)));
     const stdout = stdoutBuffer.join("");
     const stderr = stderrBuffer.join("");
     const succeeded = Exit.isSuccess(exit);
@@ -128,4 +136,3 @@ describe("Hook.dispatch", () => {
     })
   );
 });
-/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

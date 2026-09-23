@@ -14,6 +14,11 @@ describe("identity template guards", () => {
     expect(() => $I(templateStrings())).toThrow(IdentitySegmentCountError);
   });
 
+  it("rejects a single missing literal segment", () => {
+    const missingSegment = Object.assign([undefined], { raw: [undefined] }) as unknown as TemplateStringsArray;
+    expect(() => $I(missingSegment)).toThrow(IdentitySegmentCountError);
+  });
+
   it("rejects a template with more than one literal segment", () => {
     expect(() => $I(templateStrings("Widget", "Error"))).toThrow(IdentitySegmentCountError);
   });

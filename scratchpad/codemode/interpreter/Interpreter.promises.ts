@@ -10,6 +10,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { dual } from "effect/Function";
 import { SafeObject } from "@beep/schema/SafeObject";
 import { A, Eq, O, P, pipe } from "@beep/utils";
 import {
@@ -391,38 +392,52 @@ export type PromiseIdentity = MutableRef.MutableRef<O.Option<CodeModePromise>>;
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
-export const resolvePromiseValue = <R>(
-  runner: CallbackRunner<R>,
-  value: unknown,
-  node: AstNode,
-  own: O.Option<PromiseIdentity> = O.none()
-): Effect.Effect<unknown, InterpreterFailure, R> => {
-  if (O.exists(own, (identity) => O.exists(MutableRef.get(identity), Eq.equals(value))))
-    return Effect.fail(selfResolutionError(node));
-  if (CodeModePromise.is(value)) return runner.settlePromise(value);
-  if (P.isNull(value) || !P.isObjectKeyword(value) || !P.hasProperty(value, "then")) return Effect.succeed(value);
-  const then = SafeObject.make(value).then;
-  if (typeofValue(then) !== "function") return Effect.succeed(value);
+export const resolvePromiseValue: {
+  (
+    value: unknown,
+    node: AstNode,
+    own?: O.Option<PromiseIdentity>
+  ): <R>(runner: CallbackRunner<R>) => Effect.Effect<unknown, InterpreterFailure, R>;
+  <R>(
+    runner: CallbackRunner<R>,
+    value: unknown,
+    node: AstNode,
+    own?: O.Option<PromiseIdentity>
+  ): Effect.Effect<unknown, InterpreterFailure, R>;
+} = dual(
+  (args) => P.hasProperty(args[2], "type"),
+  <R>(
+    runner: CallbackRunner<R>,
+    value: unknown,
+    node: AstNode,
+    own: O.Option<PromiseIdentity> = O.none()
+  ): Effect.Effect<unknown, InterpreterFailure, R> => {
+    if (O.exists(own, (identity) => O.exists(MutableRef.get(identity), Eq.equals(value))))
+      return Effect.fail(selfResolutionError(node));
+    if (CodeModePromise.is(value)) return runner.settlePromise(value);
+    if (P.isNull(value) || !P.isObjectKeyword(value) || !P.hasProperty(value, "then")) return Effect.succeed(value);
+    const then = SafeObject.make(value).then;
+    if (typeofValue(then) !== "function") return Effect.succeed(value);
 
-  return Effect.gen(function* () {
-    // Promise resolution invokes a thenable's method in a later job.
-    yield* Effect.yieldNow;
-    const deferred = Deferred.makeUnsafe<unknown, InterpreterFailure>();
-    const resolve = PromiseCapabilityFunction.new((result) => {
-      Deferred.doneUnsafe(deferred, Exit.succeed(result));
+    return Effect.gen(function* () {
+      // Promise resolution invokes a thenable's method in a later job.
+      yield* Effect.yieldNow;
+      const deferred = Deferred.makeUnsafe<unknown, InterpreterFailure>();
+      const resolve = PromiseCapabilityFunction.new((result) => {
+        Deferred.doneUnsafe(deferred, Exit.succeed(result));
+      });
+      const reject = PromiseCapabilityFunction.new((reason) => {
+        Deferred.doneUnsafe(deferred, Exit.fail(ProgramThrow.new(reason)));
+      });
+      const executed = yield* Effect.exit(runner.invokeCallable(then, [resolve, reject], node));
+      if (!Exit.isSuccess(executed)) {
+        if (Cause.hasInterruptsOnly(executed.cause)) return yield* Effect.failCause(executed.cause);
+        Deferred.doneUnsafe(deferred, Exit.fail(failureFromCause(executed.cause)));
+      }
+      return yield* resolvePromiseValue(runner, yield* Deferred.await(deferred), node, own);
     });
-    const reject = PromiseCapabilityFunction.new((reason) => {
-      Deferred.doneUnsafe(deferred, Exit.fail(ProgramThrow.new(reason)));
-    });
-    const executed = yield* Effect.exit(runner.invokeCallable(then, [resolve, reject], node));
-    if (!Exit.isSuccess(executed)) {
-      if (Cause.hasInterruptsOnly(executed.cause)) return yield* Effect.failCause(executed.cause);
-      Deferred.doneUnsafe(deferred, Exit.fail(failureFromCause(executed.cause)));
-    }
-    return yield* resolvePromiseValue(runner, yield* Deferred.await(deferred), node, own);
-  });
-};
+  }
+);
 
 /**
  * Adopts an existing guest promise or wraps a value in a new one.
@@ -463,20 +478,34 @@ export const resolvePromiseValue = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
-export const resolvePromise = <R>(
-  runner: CallbackRunner<R>,
-  promises: PromiseRuntime<R>,
-  value: unknown,
-  node: AstNode
-): Effect.Effect<CodeModePromise, never, R> => {
-  if (CodeModePromise.is(value)) return Effect.succeed(value);
-  const identity = MutableRef.make<O.Option<CodeModePromise>>(O.none());
-  return Effect.map(promises.create(resolvePromiseValue(runner, value, node, O.some(identity))), (promise) => {
-    MutableRef.set(identity, O.some(promise));
-    return promise;
-  });
-};
+export const resolvePromise: {
+  <R>(
+    promises: PromiseRuntime<R>,
+    value: unknown,
+    node: AstNode
+  ): (runner: CallbackRunner<R>) => Effect.Effect<CodeModePromise, never, R>;
+  <R>(
+    runner: CallbackRunner<R>,
+    promises: PromiseRuntime<R>,
+    value: unknown,
+    node: AstNode
+  ): Effect.Effect<CodeModePromise, never, R>;
+} = dual(
+  4,
+  <R>(
+    runner: CallbackRunner<R>,
+    promises: PromiseRuntime<R>,
+    value: unknown,
+    node: AstNode
+  ): Effect.Effect<CodeModePromise, never, R> => {
+    if (CodeModePromise.is(value)) return Effect.succeed(value);
+    const identity = MutableRef.make<O.Option<CodeModePromise>>(O.none());
+    return Effect.map(promises.create(resolvePromiseValue(runner, value, node, O.some(identity))), (promise) => {
+      MutableRef.set(identity, O.some(promise));
+      return promise;
+    });
+  }
+);
 
 /**
  * Dispatches a static `Promise.*` method on the guest Promise namespace.
@@ -551,110 +580,127 @@ export const resolvePromise = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
-export const invokePromiseMethod = <R>(
-  runner: CallbackRunner<R> & SyncIteratorRunner<R>,
-  promises: PromiseRuntime<R>,
-  ref: PromiseMethodReference,
-  args: Array<unknown>,
-  node: AstNode
-): Effect.Effect<unknown, InterpreterFailure, R> => {
-  const fromIterable = (
-    name: PromiseMethodReference["name"],
-    settle: (items: ReadonlyArray<CodeModePromise>) => Effect.Effect<unknown, InterpreterFailure, R>
-  ): Effect.Effect<CodeModePromise, never, R> =>
-    promises.create(
-      Effect.gen(function* () {
-        const cursor = yield* runner.syncIterator(args[0], node);
-        if (P.isUndefined(cursor)) {
-          throw InterpreterRuntimeError.new(`Promise.${name} expects an array or other synchronous iterable.`, node).as(
-            "TypeError"
-          );
-        }
-
-        const items = A.empty<CodeModePromise>();
-        while (true) {
-          const step = yield* cursor.next;
-          if (step.done) break;
-          const item = yield* resolvePromise(runner, promises, step.value, node);
-          promises.markObserved(item);
-          items.push(item);
-        }
-
-        return yield* settle(items);
-      })
-    );
-
-  return PromiseMethodName.$match(ref.name, {
-    resolve: () => resolvePromise(runner, promises, args[0], node),
-    reject: () => promises.create(Effect.fail(ProgramThrow.new(args[0]))),
-    all: () =>
-      fromIterable(ref.name, (items) =>
-        settleAfterTurn(
-          Effect.all(
-            A.map(items, (item) => Effect.flatten(promises.await(item))),
-            { concurrency: "unbounded" }
-          )
-        )
-      ),
-    allSettled: () =>
-      fromIterable(ref.name, (items) =>
+export const invokePromiseMethod: {
+  <R>(
+    promises: PromiseRuntime<R>,
+    ref: PromiseMethodReference,
+    args: Array<unknown>,
+    node: AstNode
+  ): (runner: CallbackRunner<R> & SyncIteratorRunner<R>) => Effect.Effect<unknown, InterpreterFailure, R>;
+  <R>(
+    runner: CallbackRunner<R> & SyncIteratorRunner<R>,
+    promises: PromiseRuntime<R>,
+    ref: PromiseMethodReference,
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<unknown, InterpreterFailure, R>;
+} = dual(
+  5,
+  <R>(
+    runner: CallbackRunner<R> & SyncIteratorRunner<R>,
+    promises: PromiseRuntime<R>,
+    ref: PromiseMethodReference,
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<unknown, InterpreterFailure, R> => {
+    const fromIterable = (
+      name: PromiseMethodReference["name"],
+      settle: (items: ReadonlyArray<CodeModePromise>) => Effect.Effect<unknown, InterpreterFailure, R>
+    ): Effect.Effect<CodeModePromise, never, R> =>
+      promises.create(
         Effect.gen(function* () {
-          const outcomes = A.empty<unknown>();
-          for (const item of items) {
-            const exit = yield* promises.await(item);
-            if (Exit.isSuccess(exit)) {
-              const outcome = makeEmptySafeObject();
-              Reflect.set(outcome, "status", "fulfilled");
-              Reflect.set(outcome, "value", exit.value);
-              outcomes.push(outcome);
-              continue;
-            }
-            if (Cause.hasInterruptsOnly(exit.cause)) return yield* Effect.failCause(exit.cause);
-            const outcome = makeEmptySafeObject();
-            Reflect.set(outcome, "status", "rejected");
-            Reflect.set(outcome, "reason", caughtErrorValue(Cause.squash(exit.cause)));
-            outcomes.push(outcome);
+          const cursor = yield* runner.syncIterator(args[0], node);
+          if (P.isUndefined(cursor)) {
+            throw InterpreterRuntimeError.new(
+              `Promise.${name} expects an array or other synchronous iterable.`,
+              node
+            ).as("TypeError");
           }
-          yield* Effect.yieldNow;
-          return outcomes;
-        })
-      ),
-    race: () =>
-      fromIterable(ref.name, (items) =>
-        A.isReadonlyArrayEmpty(items)
-          ? Effect.fail(
-              InterpreterRuntimeError.new(
-                "Promise.race([]) would never settle; provide at least one promise or value.",
-                node
-              )
-            )
-          : settleAfterTurn(Effect.flatten(Effect.raceAll(A.map(items, (item) => promises.await(item)))))
-      ),
-    any: () =>
-      fromIterable(ref.name, (items) => {
-        const flipped = A.map(items, (item) =>
-          Effect.flatMap(
-            promises.await(item),
-            (exit): Effect.Effect<unknown, PromiseAnyFulfilled | InterpreterFailure> => {
-              if (Exit.isSuccess(exit)) return Effect.fail(PromiseAnyFulfilled.new(exit.value));
-              if (Cause.hasInterruptsOnly(exit.cause)) return Effect.failCause(exit.cause);
-              return Effect.succeed(caughtErrorValue(Cause.squash(exit.cause)));
-            }
-          )
-        );
 
-        return settleAfterTurn(
-          Effect.all(flipped, { concurrency: "unbounded" }).pipe(
-            Effect.flatMap((reasons) =>
-              Effect.fail(ProgramThrow.new(createAggregateErrorValue(reasons, "All promises were rejected")))
-            ),
-            Effect.catchIf(PromiseAnyFulfilled.is, (error) => Effect.succeed(error.value))
+          const items = A.empty<CodeModePromise>();
+          while (true) {
+            const step = yield* cursor.next;
+            if (step.done) break;
+            const item = yield* resolvePromise(runner, promises, step.value, node);
+            promises.markObserved(item);
+            items.push(item);
+          }
+
+          return yield* settle(items);
+        })
+      );
+
+    return PromiseMethodName.$match(ref.name, {
+      resolve: () => resolvePromise(runner, promises, args[0], node),
+      reject: () => promises.create(Effect.fail(ProgramThrow.new(args[0]))),
+      all: () =>
+        fromIterable(ref.name, (items) =>
+          settleAfterTurn(
+            Effect.all(
+              A.map(items, (item) => Effect.flatten(promises.await(item))),
+              { concurrency: "unbounded" }
+            )
           )
-        );
-      }),
-  });
-};
+        ),
+      allSettled: () =>
+        fromIterable(ref.name, (items) =>
+          Effect.gen(function* () {
+            const outcomes = A.empty<unknown>();
+            for (const item of items) {
+              const exit = yield* promises.await(item);
+              if (Exit.isSuccess(exit)) {
+                const outcome = makeEmptySafeObject();
+                Reflect.set(outcome, "status", "fulfilled");
+                Reflect.set(outcome, "value", exit.value);
+                outcomes.push(outcome);
+                continue;
+              }
+              if (Cause.hasInterruptsOnly(exit.cause)) return yield* Effect.failCause(exit.cause);
+              const outcome = makeEmptySafeObject();
+              Reflect.set(outcome, "status", "rejected");
+              Reflect.set(outcome, "reason", caughtErrorValue(Cause.squash(exit.cause)));
+              outcomes.push(outcome);
+            }
+            yield* Effect.yieldNow;
+            return outcomes;
+          })
+        ),
+      race: () =>
+        fromIterable(ref.name, (items) =>
+          A.isReadonlyArrayEmpty(items)
+            ? Effect.fail(
+                InterpreterRuntimeError.new(
+                  "Promise.race([]) would never settle; provide at least one promise or value.",
+                  node
+                )
+              )
+            : settleAfterTurn(Effect.flatten(Effect.raceAll(A.map(items, (item) => promises.await(item)))))
+        ),
+      any: () =>
+        fromIterable(ref.name, (items) => {
+          const flipped = A.map(items, (item) =>
+            Effect.flatMap(
+              promises.await(item),
+              (exit): Effect.Effect<unknown, PromiseAnyFulfilled | InterpreterFailure> => {
+                if (Exit.isSuccess(exit)) return Effect.fail(PromiseAnyFulfilled.new(exit.value));
+                if (Cause.hasInterruptsOnly(exit.cause)) return Effect.failCause(exit.cause);
+                return Effect.succeed(caughtErrorValue(Cause.squash(exit.cause)));
+              }
+            )
+          );
+
+          return settleAfterTurn(
+            Effect.all(flipped, { concurrency: "unbounded" }).pipe(
+              Effect.flatMap((reasons) =>
+                Effect.fail(ProgramThrow.new(createAggregateErrorValue(reasons, "All promises were rejected")))
+              ),
+              Effect.catchIf(PromiseAnyFulfilled.is, (error) => Effect.succeed(error.value))
+            )
+          );
+        }),
+    });
+  }
+);
 
 /**
  * Dispatches `.then`, `.catch`, or `.finally` on a guest promise.
@@ -707,47 +753,63 @@ export const invokePromiseMethod = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
-export const invokePromiseInstanceMethod = <R>(
-  runner: CallbackRunner<R>,
-  promises: PromiseRuntime<R>,
-  ref: PromiseInstanceMethodReference,
-  args: Array<unknown>,
-  node: AstNode
-): Effect.Effect<CodeModePromise, never, R> => {
-  promises.markObserved(ref.promise);
-  return PromiseInstanceMethodName.$match(ref.name, {
-    // biome-ignore lint/suspicious/noThenProperty: This is a match-handler key for the guest Promise.prototype.then operation, not a thenable result.
-    then: () => {
-      const method = `Promise.prototype.${ref.name}`;
-      return chainReaction(
-        runner,
-        promises,
-        ref.promise,
-        reactionHandler(args[0], method, node),
-        reactionHandler(args[1], method, node),
-        method,
-        node
-      );
-    },
-    catch: () => {
-      const method = `Promise.prototype.${ref.name}`;
-      return chainReaction(
-        runner,
-        promises,
-        ref.promise,
-        O.none(),
-        reactionHandler(args[0], method, node),
-        method,
-        node
-      );
-    },
-    finally: () => {
-      const method = `Promise.prototype.${ref.name}`;
-      return chainFinally(runner, promises, ref.promise, reactionHandler(args[0], method, node), method, node);
-    },
-  });
-};
+export const invokePromiseInstanceMethod: {
+  <R>(
+    promises: PromiseRuntime<R>,
+    ref: PromiseInstanceMethodReference,
+    args: Array<unknown>,
+    node: AstNode
+  ): (runner: CallbackRunner<R>) => Effect.Effect<CodeModePromise, never, R>;
+  <R>(
+    runner: CallbackRunner<R>,
+    promises: PromiseRuntime<R>,
+    ref: PromiseInstanceMethodReference,
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<CodeModePromise, never, R>;
+} = dual(
+  5,
+  <R>(
+    runner: CallbackRunner<R>,
+    promises: PromiseRuntime<R>,
+    ref: PromiseInstanceMethodReference,
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<CodeModePromise, never, R> => {
+    promises.markObserved(ref.promise);
+    return PromiseInstanceMethodName.$match(ref.name, {
+      // biome-ignore lint/suspicious/noThenProperty: This is a match-handler key for the guest Promise.prototype.then operation, not a thenable result.
+      then: () => {
+        const method = `Promise.prototype.${ref.name}`;
+        return chainReaction(
+          runner,
+          promises,
+          ref.promise,
+          reactionHandler(args[0], method, node),
+          reactionHandler(args[1], method, node),
+          method,
+          node
+        );
+      },
+      catch: () => {
+        const method = `Promise.prototype.${ref.name}`;
+        return chainReaction(
+          runner,
+          promises,
+          ref.promise,
+          O.none(),
+          reactionHandler(args[0], method, node),
+          method,
+          node
+        );
+      },
+      finally: () => {
+        const method = `Promise.prototype.${ref.name}`;
+        return chainFinally(runner, promises, ref.promise, reactionHandler(args[0], method, node), method, node);
+      },
+    });
+  }
+);
 
 /**
  * Constructs a guest promise from a {@link CodeModeFunction} executor.
@@ -790,40 +852,54 @@ export const invokePromiseInstanceMethod = <R>(
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Promise executor, AST node, and runtime are co-primary inputs for a newly allocated guest promise.
-export const constructPromise = <R>(
-  runner: CallbackRunner<R>,
-  promises: PromiseRuntime<R>,
-  executor: unknown,
-  node: AstNode
-): Effect.Effect<CodeModePromise, InterpreterFailure, R> => {
-  if (!RuntimeReference.guards.CodeModeFunction(executor)) {
-    throw InterpreterRuntimeError.new(
-      "new Promise(...) expects an executor function (e.g. new Promise((resolve, reject) => { ... })).",
-      node
-    ).as("TypeError");
-  }
-  return Effect.gen(function* () {
-    const deferred = Deferred.makeUnsafe<unknown, InterpreterFailure>();
-    const identity = MutableRef.make<O.Option<CodeModePromise>>(O.none());
-    const promise = yield* promises.create(
-      Effect.flatMap(Deferred.await(deferred), (value) => resolvePromiseValue(runner, value, node, O.some(identity)))
-    );
-    MutableRef.set(identity, O.some(promise));
-    const resolve = PromiseCapabilityFunction.new((value) => {
-      Deferred.doneUnsafe(deferred, Exit.succeed(value));
-    });
-    const reject = PromiseCapabilityFunction.new((value) => {
-      Deferred.doneUnsafe(deferred, Exit.fail(ProgramThrow.new(value)));
-    });
-    const executed = yield* Effect.exit(runner.invokeFunction(executor, [resolve, reject]));
-    if (!Exit.isSuccess(executed)) {
-      if (Cause.hasInterruptsOnly(executed.cause)) return yield* Effect.failCause(executed.cause);
-      Deferred.doneUnsafe(deferred, Exit.fail(failureFromCause(executed.cause)));
+export const constructPromise: {
+  <R>(
+    promises: PromiseRuntime<R>,
+    executor: unknown,
+    node: AstNode
+  ): (runner: CallbackRunner<R>) => Effect.Effect<CodeModePromise, InterpreterFailure, R>;
+  <R>(
+    runner: CallbackRunner<R>,
+    promises: PromiseRuntime<R>,
+    executor: unknown,
+    node: AstNode
+  ): Effect.Effect<CodeModePromise, InterpreterFailure, R>;
+} = dual(
+  4,
+  <R>(
+    runner: CallbackRunner<R>,
+    promises: PromiseRuntime<R>,
+    executor: unknown,
+    node: AstNode
+  ): Effect.Effect<CodeModePromise, InterpreterFailure, R> => {
+    if (!RuntimeReference.guards.CodeModeFunction(executor)) {
+      throw InterpreterRuntimeError.new(
+        "new Promise(...) expects an executor function (e.g. new Promise((resolve, reject) => { ... })).",
+        node
+      ).as("TypeError");
     }
-    return promise;
-  });
-};
+    return Effect.gen(function* () {
+      const deferred = Deferred.makeUnsafe<unknown, InterpreterFailure>();
+      const identity = MutableRef.make<O.Option<CodeModePromise>>(O.none());
+      const promise = yield* promises.create(
+        Effect.flatMap(Deferred.await(deferred), (value) => resolvePromiseValue(runner, value, node, O.some(identity)))
+      );
+      MutableRef.set(identity, O.some(promise));
+      const resolve = PromiseCapabilityFunction.new((value) => {
+        Deferred.doneUnsafe(deferred, Exit.succeed(value));
+      });
+      const reject = PromiseCapabilityFunction.new((value) => {
+        Deferred.doneUnsafe(deferred, Exit.fail(ProgramThrow.new(value)));
+      });
+      const executed = yield* Effect.exit(runner.invokeFunction(executor, [resolve, reject]));
+      if (!Exit.isSuccess(executed)) {
+        if (Cause.hasInterruptsOnly(executed.cause)) return yield* Effect.failCause(executed.cause);
+        Deferred.doneUnsafe(deferred, Exit.fail(failureFromCause(executed.cause)));
+      }
+      return promise;
+    });
+  }
+);
 
 // Settle one reaction turn after the deciding member, after its existing reactions.
 const settleAfterTurn = <A, E, R>(body: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>

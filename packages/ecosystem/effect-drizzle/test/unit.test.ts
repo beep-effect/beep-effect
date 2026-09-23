@@ -6,15 +6,16 @@ import { describe, expect, it } from "@effect/vitest";
 import { defineRelations, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { findFirst, head, sort } from "effect/Array";
-import { catchTag, fail as failEffect, runSync, succeed } from "effect/Effect";
+import { catchTag, exit, fail as failEffect, fnUntraced, runSync, succeed } from "effect/Effect";
 import { equals } from "effect/Equal";
+import { isFailure } from "effect/Exit";
 import { flatMap, fromUndefinedOr, getOrThrowWith, getOrUndefined, none } from "effect/Option";
 import { String as StringOrder } from "effect/Order";
 import { hasProperty } from "effect/Predicate";
 import {
   Array as ArraySchema,
   Boolean as BooleanSchema,
-  decodeSync,
+  decodeEffect,
   FiniteFromString,
   is,
   isLengthBetween,
@@ -739,14 +740,17 @@ describe("varchar authoring modes", () => {
     expect(accepts("x".repeat(51))).toBe(false);
   });
 
-  it("injects varchar bounds on the encoded side of transformed schemas", () => {
-    const injected = FiniteFromString.pipe(pg.varchar(2));
-    if (!isSchema(injected.schema)) {
-      throw new Error("varchar injection unexpectedly produced a variant field");
-    }
-    expect(decodeSync(injected.schema)("42")).toBe(42);
-    expect(() => decodeSync(injected.schema)("123")).toThrow();
-  });
+  it.effect(
+    "injects varchar bounds on the encoded side of transformed schemas",
+    fnUntraced(function* () {
+      const injected = FiniteFromString.pipe(pg.varchar(2));
+      if (!isSchema(injected.schema)) {
+        return expect.fail("varchar injection unexpectedly produced a variant field");
+      }
+      expect(yield* decodeEffect(injected.schema)("42")).toBe(42);
+      expect(isFailure(yield* exit(decodeEffect(injected.schema)("123")))).toBe(true);
+    })
+  );
 
   it("verifies instead of double-injecting when the schema already carries a bound", () => {
     const verified = StringSchema.check(isMaxLength(50)).pipe(pg.varchar(80));

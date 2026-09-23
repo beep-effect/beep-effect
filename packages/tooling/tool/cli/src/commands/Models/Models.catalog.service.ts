@@ -143,6 +143,7 @@ const fetchUpstreamFrom = Effect.fnUntraced(function* (url: string) {
 });
 
 const makeCatalogSources = Effect.fnUntraced(function* () {
+  const crypto = yield* Crypto.Crypto;
   const httpClient = yield* HttpClient.HttpClient;
   const fs = yield* FileSystem.FileSystem;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -190,7 +191,11 @@ const makeCatalogSources = Effect.fnUntraced(function* () {
       source: "stdout",
       timeout: "60 seconds",
       trim: true,
-    }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner), Effect.option);
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.option
+    );
 
     return yield* pipe(
       captured,
@@ -264,7 +269,7 @@ const makeCatalogSources = Effect.fnUntraced(function* () {
 export const ModelsCatalogSourcesLive: Layer.Layer<
   ModelsCatalogSources,
   never,
-  HttpClient.HttpClient | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | HttpClient.HttpClient | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
 > = Layer.effect(ModelsCatalogSources, makeCatalogSources());
 
 // ── Catalog ─────────────────────────────────────────────────────────────────

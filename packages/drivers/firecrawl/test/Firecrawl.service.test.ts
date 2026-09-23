@@ -177,25 +177,25 @@ const makeFakeClient = (overrides: Partial<F.FirecrawlSdkClient> = {}): F.Firecr
   return { ...defaults, ...overrides };
 };
 
-const assertRoundTrip = <SchemaT extends S.Codec<unknown, unknown>>(schema: SchemaT): void => {
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeSync(schema);
+const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <SchemaT extends S.Codec<unknown, unknown>>(
+  schema: SchemaT
+) {
   const equivalent = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.all([Arbitrary.schema(schema)]),
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(schema)(value);
+        const decoded = yield* S.decodeEffect(schema)(encoded);
+        expect(equivalent(decoded, value)).toBe(true);
 
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          expect(equivalent(decode(encode(value)), value)).toBe(true);
+        return true;
+      }),
+    fcRuns(25)
+  );
 
-          return true;
-        },
-        fcRuns(25)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
+  expect(result).toMatchObject({ _tag: "Passed" });
+});
 
 describe("@beep/firecrawl", () => {
   it.effect(
@@ -255,24 +255,27 @@ describe("@beep/firecrawl", () => {
     })
   );
 
-  it("round-trips crispened schema invariants through derived arbitraries", () => {
-    assertRoundTrip(F.FirecrawlApiUrl);
-    assertRoundTrip(F.FirecrawlConfigInput);
-    assertRoundTrip(F.FirecrawlMethodName);
-    assertRoundTrip(F.FirecrawlErrorReason);
-    assertRoundTrip(F.FirecrawlCodecErrorReason);
-    assertRoundTrip(F.FirecrawlApiFailure);
-    assertRoundTrip(F.FirecrawlErrorOptions);
-    assertRoundTrip(F.FirecrawlError);
-    assertRoundTrip(F.FirecrawlFormatType);
-    assertRoundTrip(F.FirecrawlScrapeActionType);
-    assertRoundTrip(F.FirecrawlSearchSourceType);
-    assertRoundTrip(F.FirecrawlJobStatus);
-    assertRoundTrip(F.FirecrawlAgentStatus);
-    assertRoundTrip(F.FirecrawlBrowserLanguage);
-    assertRoundTrip(F.FirecrawlWatcherKind);
-    assertRoundTrip(F.FirecrawlWatcherEventType);
-  });
+  it.effect(
+    "round-trips crispened schema invariants through derived arbitraries",
+    Effect.fnUntraced(function* () {
+      yield* assertRoundTrip(F.FirecrawlApiUrl);
+      yield* assertRoundTrip(F.FirecrawlConfigInput);
+      yield* assertRoundTrip(F.FirecrawlMethodName);
+      yield* assertRoundTrip(F.FirecrawlErrorReason);
+      yield* assertRoundTrip(F.FirecrawlCodecErrorReason);
+      yield* assertRoundTrip(F.FirecrawlApiFailure);
+      yield* assertRoundTrip(F.FirecrawlErrorOptions);
+      yield* assertRoundTrip(F.FirecrawlError);
+      yield* assertRoundTrip(F.FirecrawlFormatType);
+      yield* assertRoundTrip(F.FirecrawlScrapeActionType);
+      yield* assertRoundTrip(F.FirecrawlSearchSourceType);
+      yield* assertRoundTrip(F.FirecrawlJobStatus);
+      yield* assertRoundTrip(F.FirecrawlAgentStatus);
+      yield* assertRoundTrip(F.FirecrawlBrowserLanguage);
+      yield* assertRoundTrip(F.FirecrawlWatcherKind);
+      yield* assertRoundTrip(F.FirecrawlWatcherEventType);
+    })
+  );
 
   it.effect(
     "rejects malformed SDK shapes while preserving future response fields",

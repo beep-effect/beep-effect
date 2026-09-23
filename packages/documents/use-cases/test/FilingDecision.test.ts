@@ -1,3 +1,4 @@
+import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
 import { FilingDecisionInput } from "@beep/documents-use-cases/aggregates/Document/server";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -7,14 +8,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeFilingDecisionInputFieldsContentDigestSync = S.decodeSync(FilingDecisionInput.fields.contentDigest);
 const decodeUnknownFilingDecisionInputResult = S.decodeUnknownResult(FilingDecisionInput);
 const encodeFilingDecisionInputResult = S.encodeResult(FilingDecisionInput);
 
 describe("@beep/documents-use-cases FilingDecision port", () => {
   it("defaults the text excerpt to none so filename-only callers stay valid", () => {
     const input = FilingDecisionInput.make({
-      contentDigest: decodeFilingDecisionInputFieldsContentDigestSync("abc123"),
+      contentDigest: DocumentContentDigest.make("abc123"),
       originalFileName: "complaint.pdf",
     });
 

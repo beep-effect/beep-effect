@@ -21,7 +21,7 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import type { MentionOption, MentionSource } from "@beep/editor/chat/config";
 import "@testing-library/jest-dom/vitest";
 import { RegistryContext, RegistryProvider, scheduleTask, useAtomSet } from "@effect/atom-react";
-import { it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as Deferred from "effect/Deferred";
@@ -32,7 +32,7 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity";
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from "lexical";
-import { afterEach, beforeEach, describe, expect, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 import {
   composerDocumentSafetyGateAtoms,
   composerSerializedChangeHandlerAtoms,
@@ -42,9 +42,9 @@ import { composerDocumentFromEditorState } from "@/chat/ui/ComposerPolicy";
 import type { Atom } from "effect/unstable/reactivity";
 
 const decodeYouTubeWatchRequestResult = S.decodeResult(YouTubeWatchRequest);
-const decodeComposerFeaturesSync = S.decodeSync(ComposerFeatures);
+const decodeComposerFeatures = S.decodeEffect(ComposerFeatures);
 const encodeSerializedEditorState = S.encodeEffect(SerializedEditorState);
-const encodeComposerFeaturesSync = S.encodeSync(ComposerFeatures);
+const encodeComposerFeatures = S.encodeEffect(ComposerFeatures);
 
 function SeedEditor({ label, text }: { readonly label: string; readonly text: string }) {
   const [editor] = useLexicalComposerContext();
@@ -1078,19 +1078,15 @@ describe("editor contract hardening", { concurrent: false }, () => {
     ).toBe(true);
   });
 
-  it("round-trips generated composer feature configurations through the production schema", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.schema(ComposerFeatures), (features) => {
-          const encoded = encodeComposerFeaturesSync(features);
-          expect(decodeComposerFeaturesSync(encoded)).toEqual(features);
-          expect(["enter", "modifierEnter"]).toContain(features.sendOn);
-
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "round-trips generated composer feature configurations through the production schema",
+    [Arbitrary.schema(ComposerFeatures)],
+    Effect.fnUntraced(function* ([features]) {
+      const encoded = yield* encodeComposerFeatures(features);
+      expect(yield* decodeComposerFeatures(encoded)).toEqual(features);
+      expect(["enter", "modifierEnter"]).toContain(features.sendOn);
+    })
+  );
 
   it("shows incompatible future wire as escaped read-only text", () => {
     const result = LexicalCompatibilityResult.make({

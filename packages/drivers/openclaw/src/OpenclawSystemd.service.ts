@@ -114,16 +114,17 @@ const makeService = (executable: string, runner: OpenclawCliRunner): OpenclawSys
     });
 
     return yield* runner(request).pipe(
-      Effect.timeout(OPENCLAW_SYSTEMCTL_TIMEOUT),
-      Effect.catchTag("TimeoutError", () =>
-        Effect.fail(
-          OpenclawCommandTimeoutError.make({
-            executable,
-            subcommand,
-            timeoutMs,
-          })
-        )
-      )
+      Effect.timeoutOrElse({
+        duration: OPENCLAW_SYSTEMCTL_TIMEOUT,
+        orElse: () =>
+          Effect.fail(
+            OpenclawCommandTimeoutError.make({
+              executable,
+              subcommand,
+              timeoutMs,
+            })
+          ),
+      })
     );
   });
 

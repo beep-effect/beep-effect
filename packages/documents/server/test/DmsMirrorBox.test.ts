@@ -28,7 +28,6 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import type { Readable } from "node:stream";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
@@ -72,7 +71,7 @@ type FakeUploadRequestBody = {
     readonly name: string;
     readonly parent?: FakeParentField | undefined;
   };
-  readonly file: Readable;
+  readonly file: NodeJS.ReadableStream;
 };
 
 type FakeEventsQueryParams = {
@@ -324,7 +323,7 @@ const folderSource = (id: string, name: string, parentId: string) => ({
   type: "folder",
 });
 
-const staleRemoteFileId = S.decodeSync(RemoteItemId)("file-9");
+const staleRemoteFileId = RemoteItemId.make("file-9");
 
 const boxEvent = (eventId: string, eventType: string, source?: Record<string, unknown>): Record<string, unknown> => ({
   eventId,

@@ -14,6 +14,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { pipe, Result } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { EvidenceConverterError } from "./Evidence.errors.ts";
 import type { Table } from "./Evidence.table.ts";
 
 const $I = $EpistemicTablesId.create("entities/Evidence/Evidence.converters");
@@ -161,6 +162,7 @@ const decodePersistedEvidence = (row: EvidenceRow): Result.Result<Evidence, S.Sc
  * ```ts
  * import { fromEvidenceRow, toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence"
  * import type { EvidenceRow } from "@beep/epistemic-tables/entities/Evidence"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   artifactFixtureKey: "artifact:oa-1",
@@ -184,17 +186,21 @@ const decodePersistedEvidence = (row: EvidenceRow): Result.Result<Evidence, S.Sc
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * } satisfies EvidenceRow
  *
- * const insert = toEvidenceInsert(fromEvidenceRow(row))
- * console.log("id" in insert) // false
+ * const insert = toEvidenceInsert(Result.getOrThrow(fromEvidenceRow(row)))
+ * console.log("id" in Result.getOrThrow(insert)) // false
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toEvidenceInsert = (evidence: Evidence): EvidenceInsert => {
-  const { id: _id, ...rest } = Result.getOrThrow(encodeEvidence(evidence));
-  return rest;
-};
+export const toEvidenceInsert = (evidence: Evidence): Result.Result<EvidenceInsert, EvidenceConverterError> =>
+  Result.mapError(
+    Result.map(encodeEvidence(evidence), (encoded): EvidenceInsert => {
+      const { id: _id, ...rest } = encoded;
+      return rest as EvidenceInsert;
+    }),
+    (error) => EvidenceConverterError.fromSchema("toInsert", error)
+  );
 
 /**
  * Convert a selected persistence row into an Evidence entity.
@@ -204,6 +210,7 @@ export const toEvidenceInsert = (evidence: Evidence): EvidenceInsert => {
  * ```ts
  * import { fromEvidenceRow } from "@beep/epistemic-tables/entities/Evidence"
  * import type { EvidenceRow } from "@beep/epistemic-tables/entities/Evidence"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   artifactFixtureKey: "artifact:oa-1",
@@ -227,11 +234,12 @@ export const toEvidenceInsert = (evidence: Evidence): EvidenceInsert => {
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * } satisfies EvidenceRow
  *
- * const evidence = fromEvidenceRow(row)
+ * const evidence = Result.getOrThrow(fromEvidenceRow(row))
  * console.log(evidence.span.quote)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromEvidenceRow = (row: EvidenceRow): Evidence => Result.getOrThrow(decodePersistedEvidence(row));
+export const fromEvidenceRow = (row: EvidenceRow): Result.Result<Evidence, EvidenceConverterError> =>
+  Result.mapError(decodePersistedEvidence(row), (error) => EvidenceConverterError.fromSchema("fromRow", error));

@@ -52,6 +52,7 @@ import {
 } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -334,7 +335,11 @@ const baseBranchName = (base: string): string => Str.replace(/^[^/]+\//u, "")(ba
  */
 export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRequiredContexts")(function* (
   context: RepoRunContext
-): Effect.fn.Return<O.Option<YeetRulesetRequiredContexts>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  O.Option<YeetRulesetRequiredContexts>,
+  never,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const base = baseBranchName(context.base);
   const readAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const read = runRepoCommandCapture(
@@ -407,7 +412,7 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
 export const readYeetChangedPaths = Effect.fn("Yeet.readYeetChangedPaths")(function* (
   context: RepoRunContext,
   capture: typeof runRepoCommandCapture = runRepoCommandCapture
-): Effect.fn.Return<ReadonlyArray<string>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* capture("git", ["diff", "--name-only", `${context.base}...HEAD`], context.repoRoot).pipe(
     Effect.map((result) =>
       result.exitCode === 0 && !result.truncated

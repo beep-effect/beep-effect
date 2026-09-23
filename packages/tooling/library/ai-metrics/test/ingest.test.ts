@@ -237,40 +237,40 @@ const spanIdsByName = (
     A.map((projection) => projection.spanId)
   );
 
-const assertEncodeDecodeRoundTrip = <A>(
+const assertEncodeDecodeRoundTrip = Effect.fn("assertEncodeDecodeRoundTrip")(function* <A>(
   law: {
     readonly arbitrary: Arbitrary.Arbitrary<A>;
-    readonly decode: (input: unknown) => A;
-    readonly encode: (value: A) => unknown;
+    readonly decode: (input: unknown) => Effect.Effect<A, S.SchemaError>;
+    readonly encode: (value: A) => Effect.Effect<unknown, S.SchemaError>;
     readonly equivalent: (self: A, that: A) => boolean;
   },
   options?: { readonly runs?: number }
-): void => {
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([law.arbitrary]),
-        ([value]) => {
-          const decoded = law.decode(law.encode(value));
+) {
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.all([law.arbitrary]),
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* law.encode(value);
+        const decoded = yield* law.decode(encoded);
 
-          return Equal.equals(decoded, value) || law.equivalent(decoded, value);
-        },
-        fcRuns(options?.runs ?? 12)
-      )
-    )._tag
-  ).toBe("Passed");
-};
+        return Equal.equals(decoded, value) || law.equivalent(decoded, value);
+      }),
+    fcRuns(options?.runs ?? 12)
+  );
+
+  expect(result._tag).toBe("Passed");
+});
 
 const transcriptTextSummaryInputLaw = {
   arbitrary: Arbitrary.schema(AiMetricsTranscriptTextSummaryInput),
-  decode: S.decodeUnknownSync(AiMetricsTranscriptTextSummaryInput),
-  encode: S.encodeUnknownSync(AiMetricsTranscriptTextSummaryInput),
+  decode: S.decodeUnknownEffect(AiMetricsTranscriptTextSummaryInput),
+  encode: S.encodeUnknownEffect(AiMetricsTranscriptTextSummaryInput),
   equivalent: S.toEquivalence(AiMetricsTranscriptTextSummaryInput),
 };
 const agentSessionLaw = {
   arbitrary: Arbitrary.schema(AgentSession),
-  decode: S.decodeUnknownSync(AgentSession),
-  encode: S.encodeUnknownSync(AgentSession),
+  decode: S.decodeUnknownEffect(AgentSession),
+  encode: S.encodeUnknownEffect(AgentSession),
   equivalent: S.toEquivalence(AgentSession),
 };
 const isAgentSession = S.is(AgentSession);
@@ -282,62 +282,62 @@ const AgentSessionSchemaProperty = (options: Arbitrary.CheckOptions) =>
   );
 const agentTurnLaw = {
   arbitrary: Arbitrary.schema(AgentTurn),
-  decode: S.decodeUnknownSync(AgentTurn),
-  encode: S.encodeUnknownSync(AgentTurn),
+  decode: S.decodeUnknownEffect(AgentTurn),
+  encode: S.encodeUnknownEffect(AgentTurn),
   equivalent: S.toEquivalence(AgentTurn),
 };
 const codexTranscriptLineLaw = {
   arbitrary: Arbitrary.schema(CodexTranscriptLine),
-  decode: S.decodeUnknownSync(CodexTranscriptLine),
-  encode: S.encodeUnknownSync(CodexTranscriptLine),
+  decode: S.decodeUnknownEffect(CodexTranscriptLine),
+  encode: S.encodeUnknownEffect(CodexTranscriptLine),
   equivalent: S.toEquivalence(CodexTranscriptLine),
 };
 const claudeTranscriptLineLaw = {
   arbitrary: Arbitrary.schema(ClaudeTranscriptLine),
-  decode: S.decodeUnknownSync(ClaudeTranscriptLine),
-  encode: S.encodeUnknownSync(ClaudeTranscriptLine),
+  decode: S.decodeUnknownEffect(ClaudeTranscriptLine),
+  encode: S.encodeUnknownEffect(ClaudeTranscriptLine),
   equivalent: S.toEquivalence(ClaudeTranscriptLine),
 };
 const openClawTranscriptLineLaw = {
   arbitrary: Arbitrary.schema(OpenClawTranscriptLine),
-  decode: S.decodeUnknownSync(OpenClawTranscriptLine),
-  encode: S.encodeUnknownSync(OpenClawTranscriptLine),
+  decode: S.decodeUnknownEffect(OpenClawTranscriptLine),
+  encode: S.encodeUnknownEffect(OpenClawTranscriptLine),
   equivalent: S.toEquivalence(OpenClawTranscriptLine),
 };
 const transcriptIngestSummaryLaw = {
   arbitrary: Arbitrary.schema(TranscriptIngestSummary),
-  decode: S.decodeUnknownSync(TranscriptIngestSummary),
-  encode: S.encodeUnknownSync(TranscriptIngestSummary),
+  decode: S.decodeUnknownEffect(TranscriptIngestSummary),
+  encode: S.encodeUnknownEffect(TranscriptIngestSummary),
   equivalent: S.toEquivalence(TranscriptIngestSummary),
 };
 const otlpAttributeValueLaw = {
   arbitrary: Arbitrary.schema(AiMetricsOtlpAttributeValue),
-  decode: S.decodeUnknownSync(AiMetricsOtlpAttributeValue),
-  encode: S.encodeUnknownSync(AiMetricsOtlpAttributeValue),
+  decode: S.decodeUnknownEffect(AiMetricsOtlpAttributeValue),
+  encode: S.encodeUnknownEffect(AiMetricsOtlpAttributeValue),
   equivalent: S.toEquivalence(AiMetricsOtlpAttributeValue),
 };
 const forwarderOtlpExportLaw = {
   arbitrary: Arbitrary.schema(AiMetricsForwarderOtlpExport),
-  decode: S.decodeUnknownSync(AiMetricsForwarderOtlpExport),
-  encode: S.encodeUnknownSync(AiMetricsForwarderOtlpExport),
+  decode: S.decodeUnknownEffect(AiMetricsForwarderOtlpExport),
+  encode: S.encodeUnknownEffect(AiMetricsForwarderOtlpExport),
   equivalent: S.toEquivalence(AiMetricsForwarderOtlpExport),
 };
 const effectivenessAnnotationValueLaw = {
   arbitrary: Arbitrary.schema(AgentEffectivenessAnnotationValue),
-  decode: S.decodeUnknownSync(AgentEffectivenessAnnotationValue),
-  encode: S.encodeUnknownSync(AgentEffectivenessAnnotationValue),
+  decode: S.decodeUnknownEffect(AgentEffectivenessAnnotationValue),
+  encode: S.encodeUnknownEffect(AgentEffectivenessAnnotationValue),
   equivalent: S.toEquivalence(AgentEffectivenessAnnotationValue),
 };
 const retentionMutationResultLaw = {
   arbitrary: Arbitrary.schema(AiMetricsRetentionMutationResult),
-  decode: S.decodeUnknownSync(AiMetricsRetentionMutationResult),
-  encode: S.encodeUnknownSync(AiMetricsRetentionMutationResult),
+  decode: S.decodeUnknownEffect(AiMetricsRetentionMutationResult),
+  encode: S.encodeUnknownEffect(AiMetricsRetentionMutationResult),
   equivalent: S.toEquivalence(AiMetricsRetentionMutationResult),
 };
 const nonEmptyTrimmedStringLaw = {
   arbitrary: Arbitrary.schema(NonEmptyTrimmedStr),
-  decode: S.decodeUnknownSync(NonEmptyTrimmedStr),
-  encode: S.encodeUnknownSync(NonEmptyTrimmedStr),
+  decode: S.decodeUnknownEffect(NonEmptyTrimmedStr),
+  encode: S.encodeUnknownEffect(NonEmptyTrimmedStr),
   equivalent: S.toEquivalence(NonEmptyTrimmedStr),
 };
 
@@ -430,30 +430,32 @@ layer(NodeServices.layer)("@beep/repo-ai-metrics", (it) => {
     })
   );
 
-  it("preserves crispened schema wire shapes and arbitrary round trips", () => {
-    expect(CodexTranscriptLine.encodeJsonSync(CodexTranscriptLine.make({ type: "event_msg" }))).toBe(
-      '{"type":"event_msg"}'
-    );
-    expect(ClaudeTranscriptLine.encodeJsonSync(ClaudeTranscriptLine.make({ type: O.some("message") }))).toBe(
-      '{"type":"message"}'
-    );
-    expect(OpenClawTranscriptLine.encodeJsonSync(OpenClawTranscriptLine.make({ event: O.some("message") }))).toBe(
-      '{"event":"message"}'
-    );
+  it.effect("preserves crispened schema wire shapes and arbitrary round trips", () =>
+    Effect.gen(function* () {
+      expect(yield* CodexTranscriptLine.encodeJsonEffect(CodexTranscriptLine.make({ type: "event_msg" }))).toBe(
+        '{"type":"event_msg"}'
+      );
+      expect(yield* ClaudeTranscriptLine.encodeJsonEffect(ClaudeTranscriptLine.make({ type: O.some("message") }))).toBe(
+        '{"type":"message"}'
+      );
+      expect(
+        yield* OpenClawTranscriptLine.encodeJsonEffect(OpenClawTranscriptLine.make({ event: O.some("message") }))
+      ).toBe('{"event":"message"}');
 
-    assertEncodeDecodeRoundTrip(transcriptTextSummaryInputLaw);
-    assertEncodeDecodeRoundTrip(agentSessionLaw, { runs: 8 });
-    assertEncodeDecodeRoundTrip(agentTurnLaw, { runs: 8 });
-    assertEncodeDecodeRoundTrip(codexTranscriptLineLaw, { runs: 8 });
-    assertEncodeDecodeRoundTrip(claudeTranscriptLineLaw, { runs: 8 });
-    assertEncodeDecodeRoundTrip(openClawTranscriptLineLaw, { runs: 8 });
-    assertEncodeDecodeRoundTrip(transcriptIngestSummaryLaw, { runs: 8 });
-    assertEncodeDecodeRoundTrip(otlpAttributeValueLaw);
-    assertEncodeDecodeRoundTrip(forwarderOtlpExportLaw);
-    assertEncodeDecodeRoundTrip(effectivenessAnnotationValueLaw);
-    assertEncodeDecodeRoundTrip(retentionMutationResultLaw);
-    assertEncodeDecodeRoundTrip(nonEmptyTrimmedStringLaw);
-  });
+      yield* assertEncodeDecodeRoundTrip(transcriptTextSummaryInputLaw);
+      yield* assertEncodeDecodeRoundTrip(agentSessionLaw, { runs: 8 });
+      yield* assertEncodeDecodeRoundTrip(agentTurnLaw, { runs: 8 });
+      yield* assertEncodeDecodeRoundTrip(codexTranscriptLineLaw, { runs: 8 });
+      yield* assertEncodeDecodeRoundTrip(claudeTranscriptLineLaw, { runs: 8 });
+      yield* assertEncodeDecodeRoundTrip(openClawTranscriptLineLaw, { runs: 8 });
+      yield* assertEncodeDecodeRoundTrip(transcriptIngestSummaryLaw, { runs: 8 });
+      yield* assertEncodeDecodeRoundTrip(otlpAttributeValueLaw);
+      yield* assertEncodeDecodeRoundTrip(forwarderOtlpExportLaw);
+      yield* assertEncodeDecodeRoundTrip(effectivenessAnnotationValueLaw);
+      yield* assertEncodeDecodeRoundTrip(retentionMutationResultLaw);
+      yield* assertEncodeDecodeRoundTrip(nonEmptyTrimmedStringLaw);
+    })
+  );
 
   it.effect(
     "normalizes Codex attribution metadata before hashing",

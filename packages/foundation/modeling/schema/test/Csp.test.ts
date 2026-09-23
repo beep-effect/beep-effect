@@ -4,28 +4,25 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeUnknownCspDirectivesSync = S.decodeUnknownSync(CspDirectives);
-const encodeCspDirectivesSync = S.encodeSync(CspDirectives);
+const decodeUnknownCspDirectivesEffect = S.decodeUnknownEffect(CspDirectives);
+const encodeCspDirectivesEffect = S.encodeEffect(CspDirectives);
 
 describe("CspDirectives", () => {
-  it("round-trips schema-derived directive-field samples through encode/decode", () => {
+  {
     const arbitrary = Arbitrary.schema(CspDirectives);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([directives]) => {
-            const encoded = encodeCspDirectivesSync(directives);
-            const decoded = decodeUnknownCspDirectivesSync(encoded);
-            expect(encodeCspDirectivesSync(decoded)).toEqual(encoded);
+    it.effect.prop(
+      "round-trips schema-derived directive-field samples through encode/decode",
+      [arbitrary],
+      Effect.fnUntraced(function* ([directives]) {
+        const encoded = yield* encodeCspDirectivesEffect(directives);
+        const decoded = yield* decodeUnknownCspDirectivesEffect(encoded);
+        expect(yield* encodeCspDirectivesEffect(decoded)).toEqual(encoded);
 
-            return true;
-          },
-          { runs: 25 }
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        return true;
+      }),
+      { arbitrary: { runs: 25 } }
+    );
+  }
 
   it("still supports mapFields after the S.Class conversion", () => {
     expect(typeof CspDirectives.mapFields).toBe("function");

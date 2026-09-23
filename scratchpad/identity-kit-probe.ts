@@ -35,7 +35,8 @@ import * as EntityId from "@beep/shared-domain/entity/EntityId";
 import { Effect } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Model as M, VariantSchema } from "effect/unstable/schema";
+import { Model as M } from "effect/unstable/schema";
+import type { VariantSchema } from "effect/unstable/schema";
 
 const $I = $ScratchpadId.create("identity-kit-probe");
 
@@ -79,6 +80,9 @@ class Probe extends Entity<Probe>()(ProbeId)({
   label: S.NonEmptyString.pipe(Pg.text()),
 }) {}
 
+const decodeProbe = S.decodeEffect(Probe);
+const decodeUnknownProbe = S.decodeUnknownEffect(Probe);
+
 // --- type-level assertions (all hold) ----------------------------------------
 type IsEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 type Expect<T extends true> = T;
@@ -90,19 +94,23 @@ export type BrandRejectsNumber = ExpectFalse<[number] extends [InstanceType<type
 export type JsonLiteralKept = Expect<IsEqual<(typeof Probe)["json"]["Type"]["entityType"], "ScratchProbe">>;
 
 // --- runtime assertions ------------------------------------------------------
-const decoded = S.decodeSync(Probe)({
-  id: 7,
-  entityType: "ScratchProbe",
-  label: "brand survives",
-});
-Effect.runSync(Effect.log("decoded id:", decoded.id, "entityType:", decoded.entityType));
-Effect.runSync(Effect.log("tableName static:", Probe.sql.tableName));
-Effect.runSync(Effect.log("insert fields:", R.keys(Probe.insert.fields)));
+const probe = Effect.gen(function* () {
+  const decoded = yield* decodeProbe({
+    id: 7,
+    entityType: "ScratchProbe",
+    label: "brand survives",
+  });
+  yield* Effect.log("decoded id:", decoded.id, "entityType:", decoded.entityType);
+  yield* Effect.log("tableName static:", Probe.sql.tableName);
+  yield* Effect.log("insert fields:", R.keys(Probe.insert.fields));
 
-// wrong entityType literal must fail at runtime:
-try {
-  S.decodeUnknownSync(Probe)({ id: 8, entityType: "WrongType", label: "x" });
-  Effect.runSync(Effect.log("ERROR: wrong entityType decoded"));
-} catch {
-  Effect.runSync(Effect.log("wrong entityType rejected (literal enforced)"));
-}
+  // wrong entityType literal must fail at runtime:
+  yield* decodeUnknownProbe({ id: 8, entityType: "WrongType", label: "x" }).pipe(
+    Effect.matchEffect({
+      onFailure: () => Effect.log("wrong entityType rejected (literal enforced)"),
+      onSuccess: () => Effect.log("ERROR: wrong entityType decoded"),
+    })
+  );
+});
+
+Effect.runPromise(probe);

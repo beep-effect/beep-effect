@@ -27,6 +27,7 @@ import {
   reviewThreadsPageQuery,
 } from "./Gh.schemas.ts";
 import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./WritePlan.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GhComment, GhPrView } from "../../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../../internal/repo-run/index.ts";
@@ -72,7 +73,7 @@ export const closeoutGhOutput = Effect.fn("YeetCloseout.ghOutput")(function* (
   context: RepoRunContext,
   args: ReadonlyArray<string>,
   label: string
-): Effect.fn.Return<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* ghOutput({
     args,
     cwd: context.repoRoot,
@@ -131,7 +132,7 @@ const ghGraphqlPage = Effect.fn("YeetCloseout.ghGraphqlPage")(function* (
   query: string,
   cursor: O.Option<string>,
   label: string
-): Effect.fn.Return<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* closeoutGhOutput(
     context,
     [
@@ -155,7 +156,11 @@ const collectCommentPages = Effect.fn("YeetCloseout.collectCommentPages")(functi
   context: RepoRunContext,
   repo: GhRepoView,
   pr: GhPrView
-): Effect.fn.Return<ReadonlyArray<GhComment>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<GhComment>,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   let cursor = O.none<string>();
   let comments: ReadonlyArray<GhComment> = [];
   let hasNextPage = true;
@@ -181,7 +186,11 @@ const collectReviewThreadPages = (
   context: RepoRunContext,
   repo: GhRepoView,
   pr: GhPrView
-): Effect.Effect<ReadonlyArray<GhReviewThread>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<
+  ReadonlyArray<GhReviewThread>,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> =>
   collectTruncatableThreadPages({
     advance: (pageInfo) => nextCursor("pull request review threads", pageInfo),
     fetchPage: (cursor) =>
@@ -201,7 +210,11 @@ const collectReviewPages = Effect.fn("YeetCloseout.collectReviewPages")(function
   context: RepoRunContext,
   repo: GhRepoView,
   pr: GhPrView
-): Effect.fn.Return<ReadonlyArray<GhReview>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<GhReview>,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   let cursor = O.none<string>();
   let reviews: ReadonlyArray<GhReview> = [];
   let hasNextPage = true;
@@ -268,7 +281,7 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
 ): Effect.fn.Return<
   { readonly pullRequest: GhCloseoutPullRequest; readonly pr: GhPrView },
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const pr = yield* closeoutGhOutput(
     context,
@@ -331,10 +344,18 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
 export const performCloseoutWriteActions = Effect.fn("YeetCloseout.performCloseoutWriteActions")(function* (
   context: RepoRunContext,
   intents: ReadonlyArray<CloseoutWriteIntent>
-): Effect.fn.Return<ReadonlyArray<PrCloseoutWriteAction>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<PrCloseoutWriteAction>,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const performWriteIntent = Effect.fnUntraced(function* (
     intent: CloseoutWriteIntent
-  ): Effect.fn.Return<PrCloseoutWriteAction, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  ): Effect.fn.Return<
+    PrCloseoutWriteAction,
+    YeetCommandError,
+    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  > {
     const args =
       intent.kind === "reply"
         ? [

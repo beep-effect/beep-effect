@@ -99,6 +99,7 @@ import {
   SweepStepSkipped,
 } from "./Sweep.schemas.ts";
 import type { FileSystem } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Sweep");
@@ -519,7 +520,7 @@ const captureCommand = (
   command: string,
   args: ReadonlyArray<string>,
   cwd: string
-): Effect.Effect<CommandProbe, never, ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<CommandProbe, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
   runRepoCommandCapture(command, args, cwd).pipe(
     Effect.map(
       (result): CommandProbe => ({
@@ -539,7 +540,8 @@ const probeUnreliable = (probe: CommandProbe): boolean => probe.truncated || pro
 const captureGit = (
   cwd: string,
   args: ReadonlyArray<string>
-): Effect.Effect<CommandProbe, never, ChildProcessSpawner.ChildProcessSpawner> => captureCommand("git", args, cwd);
+): Effect.Effect<CommandProbe, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+  captureCommand("git", args, cwd);
 
 const firstLine = (text: string): string =>
   pipe(
@@ -590,7 +592,7 @@ const heldByOtherWorktree = (worktrees: ReadonlyArray<WorktreeEntry>, branch: st
 const observeSha = (
   cwd: string,
   ref: string
-): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
   captureGit(cwd, ["rev-parse", "--verify", "--quiet", ref]).pipe(
     Effect.map((probe) => (probe.exitCode === 0 ? optionFromNonEmpty(probe.output) : O.none<string>()))
   );
@@ -600,7 +602,7 @@ const decodePullRequestView = S.decodeUnknownOption(S.fromJsonString(GhPrView));
 const observePullRequest = Effect.fn("Yeet.observeSweepPullRequest")(function* (
   context: RepoRunContext,
   branch: string
-): Effect.fn.Return<O.Option<GhPrView>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<GhPrView>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const output = yield* ghOutput({
     args: ["pr", "view", branch, "--json", "number,headRefName,state,headRefOid"],
     cwd: context.repoRoot,
@@ -711,7 +713,7 @@ export const overrideSweepBranch = Effect.fn("Yeet.overrideSweepBranch")(functio
  */
 export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(function* (
   context: RepoRunContext
-): Effect.fn.Return<SweepGitState, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<SweepGitState, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const branch = yield* refuseUnsafeName(context.branch, "branch");
   const mainBranch = yield* refuseUnsafeName(mainBranchFromContext(context), "base branch");
   const repoRoot = context.repoRoot;
@@ -797,7 +799,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
  */
 export const planSweep = Effect.fn("Yeet.planSweep")(function* (
   context: RepoRunContext
-): Effect.fn.Return<SweepPlan, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<SweepPlan, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const createdAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   return buildSweepPlan(yield* observeSweepGitState(context), createdAt);
 });
@@ -820,7 +822,7 @@ const runCommandStep = (
   args: ReadonlyArray<string>,
   cwd: string,
   action: string
-): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<SweepStepOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
   captureCommand(command, args, cwd).pipe(
     Effect.map((probe) => (probe.exitCode === 0 ? executedFrom(probe) : skippedFromFailure(action, probe)))
   );
@@ -841,7 +843,7 @@ const runRemoteDeletionStep = (
   state: SweepGitState,
   cwd: string,
   action: string
-): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<SweepStepOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
   captureGit(cwd, leasedRemoteDeletionArgs(state)).pipe(
     Effect.map((probe) => {
       if (probe.exitCode === 0) {
@@ -891,14 +893,17 @@ const runRemoteDeletionStep = (
 export const revalidateLocalDeletion: {
   (
     state: SweepGitState
-  ): (cwd: string) => Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>;
-  (cwd: string, state: SweepGitState): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>;
+  ): (cwd: string) => Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+  (
+    cwd: string,
+    state: SweepGitState
+  ): Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
 } = dual(
   2,
   (
     cwd: string,
     state: SweepGitState
-  ): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  ): Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
     observeSha(cwd, `refs/heads/${state.branch}`).pipe(
       Effect.map((fresh) =>
         tipsMatch(fresh, state.localTip)
@@ -945,14 +950,17 @@ export const revalidateLocalDeletion: {
 export const revalidateRemoteDeletion: {
   (
     state: SweepGitState
-  ): (cwd: string) => Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>;
-  (cwd: string, state: SweepGitState): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>;
+  ): (cwd: string) => Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+  (
+    cwd: string,
+    state: SweepGitState
+  ): Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
 } = dual(
   2,
   (
     cwd: string,
     state: SweepGitState
-  ): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  ): Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
     captureGit(cwd, ["ls-remote", "origin", `refs/heads/${state.branch}`]).pipe(
       Effect.map((probe) => {
         if (probeUnreliable(probe)) {
@@ -975,9 +983,9 @@ export const revalidateRemoteDeletion: {
 );
 
 const guardedDeletion = (
-  revalidate: Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner>,
-  runDeletion: Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner>
-): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  revalidate: Effect.Effect<O.Option<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>,
+  runDeletion: Effect.Effect<SweepStepOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>
+): Effect.Effect<SweepStepOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
   revalidate.pipe(
     Effect.flatMap(
       O.match({
@@ -1058,7 +1066,7 @@ const runLockfileInstallStep = (
   state: SweepGitState,
   cwd: string,
   action: string
-): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<SweepStepOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
   O.match(state.mainTip, {
     onNone: () => runCommandStep("bun", ["install"], cwd, action),
     onSome: (observedTip) =>
@@ -1104,7 +1112,7 @@ const runEndStateStep = (
   state: SweepGitState,
   cwd: string,
   action: string
-): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<SweepStepOutcome, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
   state.headBranch === state.mainBranch
     ? Effect.succeed(SweepStepExecuted.make({ detail: O.some(`already on ${state.mainBranch}`) }))
     : captureGit(cwd, ["switch", state.mainBranch]).pipe(
@@ -1144,7 +1152,7 @@ export const runTmpfsWorktreesStep = Effect.fn("Yeet.runTmpfsWorktreesStep")(fun
 ): Effect.fn.Return<
   SweepStepOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const probe = yield* captureGit(cwd, ["worktree", "list", "--porcelain"]);
   if (probeUnreliable(probe)) {
@@ -1190,7 +1198,7 @@ const performSweepStep = (
 ): Effect.Effect<
   SweepStepOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > =>
   SweepStepId.$match(planStep.id, {
     "fetch-prune": () => runCommandStep("git", ["fetch", "--prune", "origin"], context.repoRoot, planStep.action),
@@ -1235,7 +1243,7 @@ const runSweepStep = Effect.fn("Yeet.runSweepStep")(function* (
 ): Effect.fn.Return<
   SweepReportStep,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const startedAt = yield* Clock.currentTimeMillis;
   const blocked = sweepStepBlockers(planStep);
@@ -1314,7 +1322,7 @@ export const executeSweep = Effect.fn("Yeet.executeSweep")(function* (
 ): Effect.fn.Return<
   SweepReport,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const state = yield* observeSweepGitState(context);

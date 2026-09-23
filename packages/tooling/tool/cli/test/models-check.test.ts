@@ -26,8 +26,8 @@ import {
 } from "./helpers/models-fixtures.ts";
 import type { DriftKind } from "@beep/repo-cli/commands/Models";
 
-const encodeReport = S.encodeUnknownSync(ModelsCheckReport);
-const decodeReport = S.decodeUnknownSync(ModelsCheckReport);
+const encodeReport = S.encodeUnknownEffect(ModelsCheckReport);
+const decodeReport = S.decodeUnknownEffect(ModelsCheckReport);
 
 const stagedFixtures = ["locators.toml", "locators.xml", "locators.env", "locators.json", "locators.md", "locators.sh"];
 
@@ -184,7 +184,7 @@ layer(Layer.mergeAll(platform, models))((it) => {
     Effect.gen(function* () {
       const report = yield* runCheck("manifest.yaml");
 
-      const restored = decodeReport(encodeReport(report));
+      const restored = yield* decodeReport(yield* encodeReport(report));
       strictEqual(restored.hasDrift, report.hasDrift);
       strictEqual(A.length(restored.findings), A.length(report.findings));
       strictEqual(restored.catalog.contentSha256, report.catalog.contentSha256);

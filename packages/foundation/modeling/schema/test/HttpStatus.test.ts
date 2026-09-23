@@ -7,14 +7,14 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeHttpStatusHttpStatus1XXSync = S.decodeSync(HttpStatus.HttpStatus1XX);
-const decodeHttpStatusHttpStatus2XXSync = S.decodeSync(HttpStatus.HttpStatus2XX);
-const decodeHttpStatusHttpStatus3XXSync = S.decodeSync(HttpStatus.HttpStatus3XX);
-const decodeHttpStatusHttpStatus4XXSync = S.decodeSync(HttpStatus.HttpStatus4XX);
-const decodeHttpStatusHttpStatus5XXSync = S.decodeSync(HttpStatus.HttpStatus5XX);
-const decodeHttpStatusHttpStatusUnofficialSync = S.decodeSync(HttpStatus.HttpStatusUnofficial);
-const decodeHttpStatusSchemaSync = S.decodeSync(HttpStatus.Schema);
-const encodeHttpStatusSchemaSync = S.encodeSync(HttpStatus.Schema);
+const decodeHttpStatusHttpStatus1XXEffect = S.decodeEffect(HttpStatus.HttpStatus1XX);
+const decodeHttpStatusHttpStatus2XXEffect = S.decodeEffect(HttpStatus.HttpStatus2XX);
+const decodeHttpStatusHttpStatus3XXEffect = S.decodeEffect(HttpStatus.HttpStatus3XX);
+const decodeHttpStatusHttpStatus4XXEffect = S.decodeEffect(HttpStatus.HttpStatus4XX);
+const decodeHttpStatusHttpStatus5XXEffect = S.decodeEffect(HttpStatus.HttpStatus5XX);
+const decodeHttpStatusHttpStatusUnofficialEffect = S.decodeEffect(HttpStatus.HttpStatusUnofficial);
+const decodeHttpStatusSchemaEffect = S.decodeEffect(HttpStatus.Schema);
+const encodeHttpStatusSchemaEffect = S.encodeEffect(HttpStatus.Schema);
 
 describe("HttpStatus", () => {
   it("accepts the complete standard three-digit status range", () => {
@@ -25,37 +25,39 @@ describe("HttpStatus", () => {
     expect(O.isNone(HttpStatus.HttpStatusCode.decodeUnknownOption(600))).toBe(true);
   });
 
-  it("decodes and encodes status names through the canonical schema", () => {
-    expect(decodeHttpStatusSchemaSync("Ok")).toBe(200);
-    expect(encodeHttpStatusSchemaSync(404)).toBe("NotFound");
-  });
+  it.effect(
+    "decodes and encodes status names through the canonical schema",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeHttpStatusSchemaEffect("Ok")).toBe(200);
+      expect(yield* encodeHttpStatusSchemaEffect(404)).toBe("NotFound");
+    })
+  );
 
-  it("round-trips every status code derived from the source schema", () => {
+  {
     const arbitrary = Arbitrary.schema(HttpStatus.Schema);
+    it.effect.prop(
+      "round-trips every status code derived from the source schema",
+      [arbitrary],
+      Effect.fnUntraced(function* ([code]) {
+        const name = yield* encodeHttpStatusSchemaEffect(code);
+        expect(typeof name).toBe("string");
+        expect(yield* decodeHttpStatusSchemaEffect(name)).toBe(code);
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([code]) => {
-            const name = encodeHttpStatusSchemaSync(code);
-            expect(typeof name).toBe("string");
-            expect(decodeHttpStatusSchemaSync(name)).toBe(code);
+        return true;
+      }),
+      { arbitrary: fcRuns(50) }
+    );
+  }
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
-
-  it("keeps category aggregate schemas wired across role files", () => {
-    expect(decodeHttpStatusHttpStatus1XXSync("Continue")).toBe(100);
-    expect(decodeHttpStatusHttpStatus2XXSync("Created")).toBe(201);
-    expect(decodeHttpStatusHttpStatus3XXSync("TemporaryRedirect")).toBe(307);
-    expect(decodeHttpStatusHttpStatus4XXSync("TooManyRequests")).toBe(429);
-    expect(decodeHttpStatusHttpStatus5XXSync("ServiceUnavailable")).toBe(503);
-    expect(decodeHttpStatusHttpStatusUnofficialSync("ClientClosedRequest")).toBe(499);
-  });
+  it.effect(
+    "keeps category aggregate schemas wired across role files",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeHttpStatusHttpStatus1XXEffect("Continue")).toBe(100);
+      expect(yield* decodeHttpStatusHttpStatus2XXEffect("Created")).toBe(201);
+      expect(yield* decodeHttpStatusHttpStatus3XXEffect("TemporaryRedirect")).toBe(307);
+      expect(yield* decodeHttpStatusHttpStatus4XXEffect("TooManyRequests")).toBe(429);
+      expect(yield* decodeHttpStatusHttpStatus5XXEffect("ServiceUnavailable")).toBe(503);
+      expect(yield* decodeHttpStatusHttpStatusUnofficialEffect("ClientClosedRequest")).toBe(499);
+    })
+  );
 });

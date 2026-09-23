@@ -10,7 +10,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-
 import * as HookContext from "../../../../claudecode/Hook/Context.ts";
 import * as PreToolUse from "../../../../claudecode/Hook/Events/PreToolUse.ts";
 import * as Testing from "../../../../claudecode/Testing.ts";
@@ -20,8 +19,8 @@ import * as Testing from "../../../../claudecode/Testing.ts";
 // ---------------------------------------------------------------------------
 
 interface InputOverrides {
-  readonly tool_name?: string;
   readonly tool_input?: Readonly<Record<string, unknown>>;
+  readonly tool_name?: string;
 }
 
 const encodeJson = UnknownFromJsonString.encodeUnknownSync;

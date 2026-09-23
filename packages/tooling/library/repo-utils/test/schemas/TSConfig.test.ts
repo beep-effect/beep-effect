@@ -16,8 +16,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeTSConfigFieldsCompilerOptionsSync = S.decodeSync(TSConfig.fields.compilerOptions);
-const encodeTSConfigFieldsCompilerOptionsSync = S.encodeSync(TSConfig.fields.compilerOptions);
+const decodeTSConfigFieldsCompilerOptions = S.decodeEffect(TSConfig.fields.compilerOptions);
+const encodeTSConfigFieldsCompilerOptions = S.encodeEffect(TSConfig.fields.compilerOptions);
 
 const renderSchemaFailure = (exit: Exit.Exit<unknown, S.SchemaError>): string =>
   Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
@@ -34,24 +34,26 @@ describe("TSConfig schema", () => {
       expect(result.references).toEqual(O.none());
     });
 
-    it("round-trips schema-derived compiler options through the encoded wire shape", () => {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([TSConfigCompilerOptionsArbitrary]),
-            ([value]) => {
-              const encoded = encodeTSConfigFieldsCompilerOptionsSync(value);
-              const decoded = decodeTSConfigFieldsCompilerOptionsSync(encoded);
+    it.effect(
+      "round-trips schema-derived compiler options through the encoded wire shape",
+      Effect.fnUntraced(function* () {
+        const result = yield* Arbitrary.checkEffect(
+          Arbitrary.all([TSConfigCompilerOptionsArbitrary]),
+          ([value]) =>
+            Effect.gen(function* () {
+              const encoded = yield* encodeTSConfigFieldsCompilerOptions(value);
+              const decoded = yield* decodeTSConfigFieldsCompilerOptions(encoded);
 
               expect(decoded).toEqual(value);
 
               return true;
-            },
-            fcRuns(20)
-          )
-        )._tag
-      ).toBe("Passed");
-    });
+            }),
+          fcRuns(20)
+        );
+
+        expect(result._tag).toBe("Passed");
+      })
+    );
 
     it("decodes references and collapses nullable fields to Option.none", () => {
       const result = decodeTSConfig({

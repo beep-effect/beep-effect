@@ -22,6 +22,7 @@ import * as Events from "../../claudecode/Hook/Events/index.ts";
 import * as Hook from "../../claudecode/Hook.ts";
 import * as Plugin from "../../claudecode/Plugin.ts";
 import * as Testing from "../../claudecode/Testing.ts";
+
 const decodeEventsCwdChangedInputJson = S.decodeEffect(S.fromJsonString(Events.CwdChanged.Input));
 const decodeEventsFileChangedInputJson = S.decodeEffect(S.fromJsonString(Events.FileChanged.Input));
 const decodeEventsPreToolUseInputJson = S.decodeEffect(S.fromJsonString(Events.PreToolUse.Input));
@@ -212,7 +213,7 @@ describe("Testing.makeMockFileSystem", () => {
       // Reading a missing file surfaces a typed PlatformError
       const exit = yield* Effect.exit(fs.readFileString("/missing.txt"));
       expect(exit._tag).toBe("Failure");
-    }).pipe(Effect.provide(fileSystem.layer));
+    }).pipe(fileSystem.run);
   });
 
   it.effect("accepts a ReadonlyMap as well as a plain record", () => {
@@ -222,7 +223,7 @@ describe("Testing.makeMockFileSystem", () => {
       const fs = yield* FileSystem.FileSystem;
       const content = yield* fs.readFileString("/x");
       expect(content).toBe("X");
-    }).pipe(Effect.provide(fileSystem.layer));
+    }).pipe(fileSystem.run);
   });
 
   it.effect("supports targeted failure injection", () => {
@@ -238,24 +239,24 @@ describe("Testing.makeMockFileSystem", () => {
       yield* fs.makeDirectory("/dest", { recursive: true });
       const exit = yield* Effect.exit(fs.writeFileString("/dest/out.txt", "OUT"));
       expect(exit._tag).toBe("Failure");
-    }).pipe(Effect.provide(fileSystem.layer));
+    }).pipe(fileSystem.run);
   });
 });
 
 describe("Testing plugin helpers", () => {
   it.effect("writePluginToMemory materializes a complete plugin tree", () =>
     Effect.gen(function* () {
-      const plugin = Plugin.define({
+      const plugin = yield* Plugin.define({
         manifest: { name: "guardrails", version: "0.1.0" },
         commands: [
-          Plugin.command({
+          yield* Plugin.command({
             name: "review",
             description: "Review staged changes",
             body: "# Review\n",
           }),
         ],
         skills: [
-          Plugin.skill({
+          yield* Plugin.skill({
             name: "greet",
             description: "Say hi",
             body: "# Greet\n",
@@ -279,10 +280,10 @@ describe("Testing plugin helpers", () => {
 
   it.effect("roundTripPlugin writes and reloads the plugin from memory", () =>
     Effect.gen(function* () {
-      const plugin = Plugin.define({
+      const plugin = yield* Plugin.define({
         manifest: { name: "guardrails" },
         outputStyles: [
-          Plugin.outputStyle({
+          yield* Plugin.outputStyle({
             name: "terse",
             description: "Keep responses brief",
             body: "# Terse\n",
@@ -327,4 +328,3 @@ describe("Testing.fixtures + runHookWithMockStdin integration", () => {
     })
   );
 });
-/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

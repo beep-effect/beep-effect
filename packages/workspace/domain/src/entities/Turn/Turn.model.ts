@@ -50,7 +50,4 @@ export class Turn extends ProductEntity.Entity<Turn>()(WorkspaceIdentity.TurnId)
   $I.annote("Turn", {
     description: "Workspace turn aggregate with parent-turn lineage for branching.",
   })
-) {
-  static readonly decodeUnknownSync = S.decodeUnknownSync(Turn);
-  static readonly encodeSync = S.encodeSync(Turn);
-}
+) {}

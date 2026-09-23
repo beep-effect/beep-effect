@@ -1,11 +1,11 @@
 import { RULE_NAMES, RULES, RuleRegistrySchema, rulePath, rulesDir } from "@beep/lint-rules";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { describe, expect, it } from "vitest";
 import { provideScopedLayer } from "./harness.ts";
 
 const run = <A, E>(program: Effect.Effect<A, E, NodeServices.NodeServices>): Promise<A> =>
@@ -13,8 +13,8 @@ const run = <A, E>(program: Effect.Effect<A, E, NodeServices.NodeServices>): Pro
 
 const sortedRuleNames = [...RULE_NAMES].sort();
 const RuleRegistryArbitrary = Arbitrary.schema(RuleRegistrySchema);
-const decodeRuleRegistry = S.decodeUnknownSync(RuleRegistrySchema);
-const encodeRuleRegistry = S.encodeSync(RuleRegistrySchema);
+const decodeRuleRegistry = S.decodeUnknownEffect(RuleRegistrySchema);
+const encodeRuleRegistry = S.encodeEffect(RuleRegistrySchema);
 
 /** Repo root (five levels up from `test/registry.test.ts`). */
 const repoRoot = decodeURIComponent(new URL("../../../../../", import.meta.url).pathname);
@@ -63,9 +63,10 @@ describe("rule registry", () => {
     expect(O.isNone(RULES["no-bigint-literals"].replaces)).toBe(true);
   });
 
-  it("preserves the encoded rule registry wire shape", () => {
-    expect(JSON.stringify(encodeRuleRegistry(RULES))).toBe(
-      JSON.stringify({
+  it.effect(
+    "preserves the encoded rule registry wire shape",
+    Effect.fnUntraced(function* () {
+      expect(yield* encodeRuleRegistry(RULES)).toEqual({
         "no-native-error": {
           name: "no-native-error",
           severity: "error",
@@ -94,25 +95,18 @@ describe("rule registry", () => {
           summary: "Prefer `.flatMap(f)` over `.map(f).flat()`.",
           scope: null,
         },
-      })
-    );
-  });
+      });
+    })
+  );
 
-  it("round-trips schema-derived rule registries", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([RuleRegistryArbitrary]),
-          ([registry]) => {
-            expect(decodeRuleRegistry(encodeRuleRegistry(registry))).toEqual(registry);
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "round-trips schema-derived rule registries",
+    [RuleRegistryArbitrary],
+    Effect.fnUntraced(function* ([registry]) {
+      expect(yield* decodeRuleRegistry(yield* encodeRuleRegistry(registry))).toEqual(registry);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 
   it("every rule is wired into the repo-root biome.jsonc lint pass", () =>
     run(

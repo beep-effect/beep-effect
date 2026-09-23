@@ -75,7 +75,7 @@ export const SanityErrorReason = SanityErrorReasonBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(SanityErrorReasonBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

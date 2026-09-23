@@ -79,7 +79,7 @@ export const ReviewStatus = ReviewStatusBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(ReviewStatusBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

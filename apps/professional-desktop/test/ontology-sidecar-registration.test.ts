@@ -23,15 +23,17 @@ import * as S from "effect/Schema";
 import { RpcTest } from "effect/unstable/rpc";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 
-const sessionId = S.decodeSync(SessionId)("session-rpc-validation");
-const provPath = S.decodeSync(OntologyFilePath)("tmp/session-rpc-validation.prov.ttl");
-const datasetPath = S.decodeSync(OntologyFilePath)("tmp/session-rpc-validation.dataset.ttl");
 const decodeRunOntologyValidationResult = S.decodeUnknownEffect(RunOntologyValidationResult);
+const decodeSessionId = S.decodeEffect(SessionId);
+const decodeOntologyFilePath = S.decodeEffect(OntologyFilePath);
 
 describe("@beep/professional-desktop ontology sidecar registration", () => {
   it.effect(
     "serves validation and provenance RPCs through OntologyRpcs",
     Effect.fnUntraced(function* () {
+      const sessionId = yield* decodeSessionId("session-rpc-validation");
+      const provPath = yield* decodeOntologyFilePath("tmp/session-rpc-validation.prov.ttl");
+      const datasetPath = yield* decodeOntologyFilePath("tmp/session-rpc-validation.dataset.ttl");
       const material = makeNamedNode("http://example.org/materials#Material");
       const metal = makeNamedNode("http://example.org/materials#Metal");
       const subclassOf = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);

@@ -424,7 +424,7 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
   const project = new Project({ skipAddingFilesFromTsConfig: true, skipFileDependencyResolution: true });
   project.addSourceFilesAtPaths(sourcePaths);
   yield* Console.log(`[effect-vitest:phase] projectMs=${(performance.now() - started).toFixed(1)}`);
-  const collectSource = (sourceFile: SourceFile): void => {
+  const collectSource = Effect.fnUntraced(function* (sourceFile: SourceFile) {
     const absolute = sourceFile.getFilePath();
     const file = toPosixPath(path.relative(root, absolute));
     const owner = ownerOf(absolute);
@@ -439,10 +439,10 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
         lines: countEffectVitestSourceLines(text),
       })
     );
-    const detected = detectEffectVitestFindings(sourceFile, file, owner);
+    const detected = yield* detectEffectVitestFindings(sourceFile, file, owner);
     findings.push(...(kind === "test" ? detected : A.filter(detected, (finding) => finding.ruleId === "EV003")));
-  };
-  for (const sourceFile of project.getSourceFiles()) collectSource(sourceFile);
+  });
+  for (const sourceFile of project.getSourceFiles()) yield* collectSource(sourceFile);
   yield* Console.log(
     `[effect-vitest:phase] detectMs=${(performance.now() - started).toFixed(1)} findings=${findings.length}`
   );

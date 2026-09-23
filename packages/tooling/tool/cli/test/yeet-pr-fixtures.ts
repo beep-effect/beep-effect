@@ -1,4 +1,5 @@
 import { PrRepository, PrSessionRecord } from "@beep/repo-cli/test/Yeet";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -7,7 +8,7 @@ import * as O from "effect/Option";
 import type { PrProvenanceHarness, PrProvenanceNameSource, PrProvenanceRole } from "@beep/repo-cli/test/Yeet";
 
 export const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
+  Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 export const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 type MakeRecordOptions = {

@@ -11,6 +11,7 @@
  */
 
 import { LiteralKit, SafeObject } from "@beep/schema";
+import { dual } from "effect/Function";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, R } from "@beep/utils";
 import { Effect } from "effect";
@@ -215,53 +216,67 @@ export const isSupportedCallback = (value: unknown): value is SupportedCallback 
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
-export const invokeIntrinsic = <R>(
-  runner: CallbackRunner<R>,
-  ref: IntrinsicReference,
-  args: Array<unknown>,
-  node: AstNode
-): Effect.Effect<unknown, InterpreterFailure, R> =>
-  IntrinsicMethod.match(ref.method, {
-    String: ({ receiver, name }) => {
-      if (name === "replace" || name === "replaceAll") {
-        if (isSupportedCallback(args[1])) return invokeStringReplacer(runner, receiver, name, args, node);
-        if (typeofValue(args[1]) === "function") {
-          return Effect.fail(
-            InterpreterRuntimeError.new(
-              `String.${name} cannot use this callable as a replacer; wrap it in an arrow function, e.g. (match) => tools.ns.tool(match).`,
-              node
-            )
-          );
+export const invokeIntrinsic: {
+  (
+    ref: IntrinsicReference,
+    args: Array<unknown>,
+    node: AstNode
+  ): <R>(runner: CallbackRunner<R>) => Effect.Effect<unknown, InterpreterFailure, R>;
+  <R>(
+    runner: CallbackRunner<R>,
+    ref: IntrinsicReference,
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<unknown, InterpreterFailure, R>;
+} = dual(
+  4,
+  <R>(
+    runner: CallbackRunner<R>,
+    ref: IntrinsicReference,
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<unknown, InterpreterFailure, R> =>
+    IntrinsicMethod.match(ref.method, {
+      String: ({ receiver, name }) => {
+        if (name === "replace" || name === "replaceAll") {
+          if (isSupportedCallback(args[1])) return invokeStringReplacer(runner, receiver, name, args, node);
+          if (typeofValue(args[1]) === "function") {
+            return Effect.fail(
+              InterpreterRuntimeError.new(
+                `String.${name} cannot use this callable as a replacer; wrap it in an arrow function, e.g. (match) => tools.ns.tool(match).`,
+                node
+              )
+            );
+          }
         }
-      }
-      return Effect.fromResult(tryInterpreter(() => invokeStringMethod(receiver, name, args, node), node));
-    },
-    Number: ({ receiver, name }) =>
-      Effect.fromResult(tryInterpreter(() => invokeNumberMethod(receiver, name, args, node), node)),
-    Array: ({ receiver, name }) => invokeArrayMethod(runner, receiver, name, args, node),
-    Date: ({ receiver, name }) => {
-      const argumentCount = dateSetterArgumentCount(name);
-      if (O.isNone(argumentCount)) {
-        return Effect.fromResult(tryInterpreter(() => invokeDateMethod(receiver, name, [], node), node));
-      }
-      // Native setters read the current time before argument coercion, whose callbacks may mutate the Date.
-      const initialTime = receiver.time;
-      return Effect.flatMap(
-        Effect.forEach(args.slice(0, argumentCount.value), (arg) => coerceNumericArgument(runner, arg, node), {
-          concurrency: 1,
-        }),
-        (values) =>
-          Effect.fromResult(tryInterpreter(() => invokeDateMethod(receiver, name, values, node, initialTime), node))
-      );
-    },
-    RegExp: ({ receiver, name }) =>
-      Effect.fromResult(tryInterpreter(() => invokeRegExpMethod(receiver, name, args, node), node)),
-    Map: ({ receiver, name }) => invokeMapMethod(runner, receiver, name, args, node),
-    Set: ({ receiver, name }) => invokeSetMethod(runner, receiver, name, args, node),
-    URL: ({ receiver, name }) => Effect.fromResult(tryInterpreter(() => invokeURLMethod(receiver, name, node), node)),
-    URLSearchParams: ({ receiver, name }) => invokeURLSearchParamsMethod(runner, receiver, name, args, node),
-  });
+        return Effect.fromResult(tryInterpreter(() => invokeStringMethod(receiver, name, args, node), node));
+      },
+      Number: ({ receiver, name }) =>
+        Effect.fromResult(tryInterpreter(() => invokeNumberMethod(receiver, name, args, node), node)),
+      Array: ({ receiver, name }) => invokeArrayMethod(runner, receiver, name, args, node),
+      Date: ({ receiver, name }) => {
+        const argumentCount = dateSetterArgumentCount(name);
+        if (O.isNone(argumentCount)) {
+          return Effect.fromResult(tryInterpreter(() => invokeDateMethod(receiver, name, [], node), node));
+        }
+        // Native setters read the current time before argument coercion, whose callbacks may mutate the Date.
+        const initialTime = receiver.time;
+        return Effect.flatMap(
+          Effect.forEach(args.slice(0, argumentCount.value), (arg) => coerceNumericArgument(runner, arg, node), {
+            concurrency: 1,
+          }),
+          (values) =>
+            Effect.fromResult(tryInterpreter(() => invokeDateMethod(receiver, name, values, node, initialTime), node))
+        );
+      },
+      RegExp: ({ receiver, name }) =>
+        Effect.fromResult(tryInterpreter(() => invokeRegExpMethod(receiver, name, args, node), node)),
+      Map: ({ receiver, name }) => invokeMapMethod(runner, receiver, name, args, node),
+      Set: ({ receiver, name }) => invokeSetMethod(runner, receiver, name, args, node),
+      URL: ({ receiver, name }) => Effect.fromResult(tryInterpreter(() => invokeURLMethod(receiver, name, node), node)),
+      URLSearchParams: ({ receiver, name }) => invokeURLSearchParamsMethod(runner, receiver, name, args, node),
+    })
+);
 
 const coerceNumericArgument = <R>(
   runner: CallbackRunner<R>,
@@ -343,8 +358,10 @@ const coerceNumericArgument = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Interpreter dispatch uses co-primary reference/arguments/AST/runtime inputs; a data-last overload would misstate the protocol.
-export const invokeGlobalMethod = (ref: GlobalMethodReference, args: Array<unknown>, node: AstNode): unknown => {
+export const invokeGlobalMethod: {
+  (args: Array<unknown>, node: AstNode): (ref: GlobalMethodReference) => unknown;
+  (ref: GlobalMethodReference, args: Array<unknown>, node: AstNode): unknown;
+} = dual(3, (ref: GlobalMethodReference, args: Array<unknown>, node: AstNode): unknown => {
   const unavailable = (namespace: string, name: string): never => {
     throw InterpreterRuntimeError.new(`${namespace}.${name} is not available.`, node);
   };
@@ -363,7 +380,7 @@ export const invokeGlobalMethod = (ref: GlobalMethodReference, args: Array<unkno
     console: ({ name }) => unavailable("console", name),
     Map: ({ name }) => unavailable("Map", name),
   });
-};
+});
 
 const requireDataArgument = (name: StringMethod, index: number, arg: unknown, node: AstNode): unknown => {
   if (containsOpaqueReference(arg)) {
@@ -599,41 +616,57 @@ const arrayLikeSource = (
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest iterable, mapper, AST context, and callback runner are co-primary interpreter protocol inputs.
-export const invokeArrayFrom = <R>(
-  runner: CallbackRunner<R> & SyncIteratorRunner<R>,
-  args: Array<unknown>,
-  node: AstNode
-): Effect.Effect<unknown, InterpreterFailure, R> => {
-  const source = args[0];
-  const apply =
-    args.length < 2 || args[1] === undefined ? undefined : applyCollectionCallback(runner, args[1], "Array.from", node);
-  return Effect.gen(function* () {
-    const cursor = yield* runner.syncIterator(source, node);
-    if (P.isUndefined(cursor)) {
-      if (CodeModeGenerator.is(source)) {
-        throw InterpreterRuntimeError.new("Array.from expects a synchronous iterable or array-like value.", node).as(
-          "TypeError"
-        );
+export const invokeArrayFrom: {
+  (
+    args: Array<unknown>,
+    node: AstNode
+  ): <R>(runner: CallbackRunner<R> & SyncIteratorRunner<R>) => Effect.Effect<unknown, InterpreterFailure, R>;
+  <R>(
+    runner: CallbackRunner<R> & SyncIteratorRunner<R>,
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<unknown, InterpreterFailure, R>;
+} = dual(
+  3,
+  <R>(
+    runner: CallbackRunner<R> & SyncIteratorRunner<R>,
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<unknown, InterpreterFailure, R> => {
+    const source = args[0];
+    const apply =
+      args.length < 2 || args[1] === undefined
+        ? undefined
+        : applyCollectionCallback(runner, args[1], "Array.from", node);
+    return Effect.gen(function* () {
+      const cursor = yield* runner.syncIterator(source, node);
+      if (P.isUndefined(cursor)) {
+        if (CodeModeGenerator.is(source)) {
+          throw InterpreterRuntimeError.new("Array.from expects a synchronous iterable or array-like value.", node).as(
+            "TypeError"
+          );
+        }
+        const arrayLike = arrayLikeSource(source, node);
+        const values = A.empty<unknown>();
+        for (let index = 0; index < arrayLike.length; index += 1) {
+          const item = Reflect.get(arrayLike.source, index);
+          values.push(apply === undefined ? item : yield* apply([item, index]));
+        }
+        return values;
       }
-      const arrayLike = arrayLikeSource(source, node);
       const values = A.empty<unknown>();
-      for (let index = 0; index < arrayLike.length; index += 1) {
-        const item = Reflect.get(arrayLike.source, index);
-        values.push(apply === undefined ? item : yield* apply([item, index]));
+      let index = 0;
+      while (true) {
+        const step = yield* cursor.next;
+        if (step.done) return values;
+        values.push(
+          apply === undefined ? step.value : yield* preserveConsumerError(cursor, apply([step.value, index]))
+        );
+        index += 1;
       }
-      return values;
-    }
-    const values = A.empty<unknown>();
-    let index = 0;
-    while (true) {
-      const step = yield* cursor.next;
-      if (step.done) return values;
-      values.push(apply === undefined ? step.value : yield* preserveConsumerError(cursor, apply([step.value, index])));
-      index += 1;
-    }
-  });
-};
+    });
+  }
+);
 
 /**
  * Effect adapter for guest `Object.groupBy` and `Map.groupBy`.
@@ -682,69 +715,83 @@ export const invokeArrayFrom = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Collection selector, source, AST context, and callback runner are co-primary interpreter protocol inputs.
-export const invokeGroupBy = <R>(
-  runner: CallbackRunner<R> & SyncIteratorRunner<R>,
-  namespace: "Map" | "Object",
-  args: Array<unknown>,
-  node: AstNode
-): Effect.Effect<unknown, InterpreterFailure, R> => {
-  const source = args[0];
-  if (source === null || source === undefined) {
-    throw InterpreterRuntimeError.new(`${namespace}.groupBy expects an iterable collection.`, node).as("TypeError");
-  }
-  const apply = applyCollectionCallback(runner, args[1], `${namespace}.groupBy`, node);
-  return Effect.gen(function* () {
-    const cursor = yield* runner.syncIterator(source, node);
-    if (P.isUndefined(cursor)) {
+export const invokeGroupBy: {
+  (
+    namespace: "Map" | "Object",
+    args: Array<unknown>,
+    node: AstNode
+  ): <R>(runner: CallbackRunner<R> & SyncIteratorRunner<R>) => Effect.Effect<unknown, InterpreterFailure, R>;
+  <R>(
+    runner: CallbackRunner<R> & SyncIteratorRunner<R>,
+    namespace: "Map" | "Object",
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<unknown, InterpreterFailure, R>;
+} = dual(
+  4,
+  <R>(
+    runner: CallbackRunner<R> & SyncIteratorRunner<R>,
+    namespace: "Map" | "Object",
+    args: Array<unknown>,
+    node: AstNode
+  ): Effect.Effect<unknown, InterpreterFailure, R> => {
+    const source = args[0];
+    if (source === null || source === undefined) {
       throw InterpreterRuntimeError.new(`${namespace}.groupBy expects an iterable collection.`, node).as("TypeError");
     }
-    if (namespace === "Map") {
-      const result = CodeModeMap.new();
+    const apply = applyCollectionCallback(runner, args[1], `${namespace}.groupBy`, node);
+    return Effect.gen(function* () {
+      const cursor = yield* runner.syncIterator(source, node);
+      if (P.isUndefined(cursor)) {
+        throw InterpreterRuntimeError.new(`${namespace}.groupBy expects an iterable collection.`, node).as("TypeError");
+      }
+      if (namespace === "Map") {
+        const result = CodeModeMap.new();
+        let index = 0;
+        while (true) {
+          const step = yield* cursor.next;
+          if (step.done) return result;
+          const item = step.value;
+          const key = yield* preserveConsumerError(cursor, apply([item, index]));
+          const group = result.map.get(key);
+          if (group === undefined) result.map.set(key, [item]);
+          else if (A.isArray(group)) group.push(item);
+          else
+            return yield* Effect.die(
+              InterpreterRuntimeError.new("CodeMode Map.groupBy stored a non-array group.", node, "InvalidDataValue")
+            );
+          index += 1;
+        }
+      }
+
+      const result = SafeObject.make(R.empty<string, unknown>());
       let index = 0;
       while (true) {
         const step = yield* cursor.next;
         if (step.done) return result;
         const item = step.value;
-        const key = yield* preserveConsumerError(cursor, apply([item, index]));
-        const group = result.map.get(key);
-        if (group === undefined) result.map.set(key, [item]);
+        const key = yield* preserveConsumerError(
+          cursor,
+          Effect.flatMap(apply([item, index]), (value) => coerceGroupByPropertyKey(runner, value, node))
+        );
+        if (isBlockedMember(key)) {
+          return yield* preserveConsumerError(
+            cursor,
+            Effect.fail(InterpreterRuntimeError.new(`Property '${key}' is not available.`, node))
+          );
+        }
+        const group = result[key];
+        if (group === undefined) Reflect.set(result, key, [item]);
         else if (A.isArray(group)) group.push(item);
         else
           return yield* Effect.die(
-            InterpreterRuntimeError.new("CodeMode Map.groupBy stored a non-array group.", node, "InvalidDataValue")
+            InterpreterRuntimeError.new("CodeMode Object.groupBy stored a non-array group.", node, "InvalidDataValue")
           );
         index += 1;
       }
-    }
-
-    const result = SafeObject.make(R.empty<string, unknown>());
-    let index = 0;
-    while (true) {
-      const step = yield* cursor.next;
-      if (step.done) return result;
-      const item = step.value;
-      const key = yield* preserveConsumerError(
-        cursor,
-        Effect.flatMap(apply([item, index]), (value) => coerceGroupByPropertyKey(runner, value, node))
-      );
-      if (isBlockedMember(key)) {
-        return yield* preserveConsumerError(
-          cursor,
-          Effect.fail(InterpreterRuntimeError.new(`Property '${key}' is not available.`, node))
-        );
-      }
-      const group = result[key];
-      if (group === undefined) Reflect.set(result, key, [item]);
-      else if (A.isArray(group)) group.push(item);
-      else
-        return yield* Effect.die(
-          InterpreterRuntimeError.new("CodeMode Object.groupBy stored a non-array group.", node, "InvalidDataValue")
-        );
-      index += 1;
-    }
-  });
-};
+    });
+  }
+);
 
 const coerceGroupByPropertyKey = <R>(
   runner: CallbackRunner<R>,
@@ -886,24 +933,38 @@ const invokeStringReplacer = <R>(
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Collection, callback, index, and runtime runner are co-primary interpreter protocol inputs.
-export const applyCollectionCallback = <R>(
-  runner: CallbackRunner<R>,
-  callback: unknown,
-  name: string,
-  node: AstNode
-): ((args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>) => {
-  if (!isSupportedCallback(callback)) {
-    if (typeofValue(callback) === "function") {
-      throw InterpreterRuntimeError.new(
-        `${name} cannot use this callable as a callback; wrap it in an arrow function, e.g. (value) => tools.ns.tool(value).`,
-        node
-      );
+export const applyCollectionCallback: {
+  (
+    callback: unknown,
+    name: string,
+    node: AstNode
+  ): <R>(runner: CallbackRunner<R>) => (args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>;
+  <R>(
+    runner: CallbackRunner<R>,
+    callback: unknown,
+    name: string,
+    node: AstNode
+  ): (args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>;
+} = dual(
+  4,
+  <R>(
+    runner: CallbackRunner<R>,
+    callback: unknown,
+    name: string,
+    node: AstNode
+  ): ((args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>) => {
+    if (!isSupportedCallback(callback)) {
+      if (typeofValue(callback) === "function") {
+        throw InterpreterRuntimeError.new(
+          `${name} cannot use this callable as a callback; wrap it in an arrow function, e.g. (value) => tools.ns.tool(value).`,
+          node
+        );
+      }
+      throw InterpreterRuntimeError.new(`${name} expects a function callback.`, node).as("TypeError");
     }
-    throw InterpreterRuntimeError.new(`${name} expects a function callback.`, node).as("TypeError");
+    return (callbackArgs) => runner.invokeCallable(callback, callbackArgs, node);
   }
-  return (callbackArgs) => runner.invokeCallable(callback, callbackArgs, node);
-};
+);
 
 const invokeMapMethod = <R>(
   runner: CallbackRunner<R>,

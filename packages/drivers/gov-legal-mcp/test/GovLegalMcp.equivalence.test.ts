@@ -6,18 +6,15 @@ import {
 import { GovinfoSearchFailure } from "@beep/gov-legal-mcp/Tools";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { flow } from "effect";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeGovinfoSearchFailureSync = S.decodeSync(GovinfoSearchFailure);
-const decodeToolNameNormalizationErrorSync = S.decodeSync(ToolNameNormalizationError);
-const decodeToolNameRegistrationErrorFieldsExpectedWireNameSync = S.decodeSync(
-  ToolNameRegistrationError.fields.expectedWireName
-);
-const encodeGovinfoSearchFailureSync = S.encodeSync(GovinfoSearchFailure);
-const encodeToolNameNormalizationErrorSync = S.encodeSync(ToolNameNormalizationError);
+const decodeGovinfoSearchFailure = S.decodeEffect(GovinfoSearchFailure);
+const decodeToolNameNormalizationError = S.decodeEffect(ToolNameNormalizationError);
+const decodeExpectedWireName = S.decodeEffect(ToolNameRegistrationError.fields.expectedWireName);
+const encodeGovinfoSearchFailure = S.encodeEffect(GovinfoSearchFailure);
+const encodeToolNameNormalizationError = S.encodeEffect(ToolNameNormalizationError);
 
 const sameGovinfoSearchFailure = S.toEquivalence(GovinfoSearchFailure);
 const sameNormalizationError = S.toEquivalence(ToolNameNormalizationError);
@@ -57,63 +54,59 @@ describe("gov-legal-mcp declared-field equivalence", () => {
     expect(sameNormalizationError(a, c)).toBe(false);
   });
 
-  it("treats field-equal ToolNameRegistrationError instances as equivalent and field-different ones as distinct", () => {
-    const candidate = ToolNameCandidate.make({ operationId: "search", source: "govinfo" });
-    const a = ToolNameRegistrationError.make({
-      candidate,
-      expectedWireName: decodeToolNameRegistrationErrorFieldsExpectedWireNameSync("govinfo_search"),
-      message: "declaration missing from production report",
-      reason: "missing_candidate",
-    });
-    const b = ToolNameRegistrationError.make({
-      candidate,
-      expectedWireName: decodeToolNameRegistrationErrorFieldsExpectedWireNameSync("govinfo_search"),
-      message: "declaration missing from production report",
-      reason: "missing_candidate",
-    });
-    const c = ToolNameRegistrationError.make({
-      candidate,
-      expectedWireName: decodeToolNameRegistrationErrorFieldsExpectedWireNameSync("govinfo_search"),
-      message: "declaration missing from production report",
-      reason: "wire_name_drift",
-    });
+  it.effect(
+    "treats field-equal ToolNameRegistrationError instances as equivalent and field-different ones as distinct",
+    Effect.fnUntraced(function* () {
+      const candidate = ToolNameCandidate.make({ operationId: "search", source: "govinfo" });
+      const expectedWireName = yield* decodeExpectedWireName("govinfo_search");
+      const a = ToolNameRegistrationError.make({
+        candidate,
+        expectedWireName,
+        message: "declaration missing from production report",
+        reason: "missing_candidate",
+      });
+      const b = ToolNameRegistrationError.make({
+        candidate,
+        expectedWireName,
+        message: "declaration missing from production report",
+        reason: "missing_candidate",
+      });
+      const c = ToolNameRegistrationError.make({
+        candidate,
+        expectedWireName,
+        message: "declaration missing from production report",
+        reason: "wire_name_drift",
+      });
 
-    expect(sameRegistrationError(a, b)).toBe(true);
-    expect(sameRegistrationError(a, c)).toBe(false);
-  });
+      expect(sameRegistrationError(a, b)).toBe(true);
+      expect(sameRegistrationError(a, c)).toBe(false);
+    })
+  );
 
-  it("round-trips schema-derived error values under the declared comparator", () => {
-    const roundTripSearchFailure = flow(encodeGovinfoSearchFailureSync, decodeGovinfoSearchFailureSync);
-    const roundTripNormalizationError = flow(
-      encodeToolNameNormalizationErrorSync,
-      decodeToolNameNormalizationErrorSync
-    );
+  it.effect(
+    "round-trips schema-derived error values under the declared comparator",
+    Effect.fnUntraced(function* () {
+      const searchResult = yield* Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(GovinfoSearchFailure)]),
+        ([value]) =>
+          encodeGovinfoSearchFailure(value).pipe(
+            Effect.flatMap(decodeGovinfoSearchFailure),
+            Effect.map((decoded) => sameGovinfoSearchFailure(decoded, value))
+          ),
+        fcRuns(25)
+      );
+      const normalizationResult = yield* Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(ToolNameNormalizationError)]),
+        ([value]) =>
+          encodeToolNameNormalizationError(value).pipe(
+            Effect.flatMap(decodeToolNameNormalizationError),
+            Effect.map((decoded) => sameNormalizationError(decoded, value))
+          ),
+        fcRuns(25)
+      );
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(GovinfoSearchFailure)]),
-          ([value]) => {
-            expect(sameGovinfoSearchFailure(roundTripSearchFailure(value), value)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(ToolNameNormalizationError)]),
-          ([value]) => {
-            expect(sameNormalizationError(roundTripNormalizationError(value), value)).toBe(true);
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      expect(searchResult).toMatchObject({ _tag: "Passed" });
+      expect(normalizationResult).toMatchObject({ _tag: "Passed" });
+    })
+  );
 });

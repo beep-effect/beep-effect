@@ -63,11 +63,11 @@ import {
 import { PluginManifest } from "./Manifest.ts";
 const decodeHooksSectionOption = S.decodeOption(HooksSection);
 const decodeMcpJsonFileOption = S.decodeOption(McpJsonFile);
-const decodeCommandFrontmatterSync = S.decodeSync(CommandFrontmatter);
-const decodeOutputStyleFrontmatterSync = S.decodeSync(OutputStyleFrontmatter);
-const decodePluginManifestSync = S.decodeSync(PluginManifest);
-const decodeSkillFrontmatterSync = S.decodeSync(SkillFrontmatter);
-const decodeSubagentFrontmatterSync = S.decodeSync(SubagentFrontmatter);
+const decodeCommandFrontmatter = S.decodeEffect(CommandFrontmatter);
+const decodeOutputStyleFrontmatter = S.decodeEffect(OutputStyleFrontmatter);
+const decodePluginManifest = S.decodeEffect(PluginManifest);
+const decodeSkillFrontmatter = S.decodeEffect(SkillFrontmatter);
+const decodeSubagentFrontmatter = S.decodeEffect(SubagentFrontmatter);
 const decodeUnknownMcpJsonFileOption = S.decodeUnknownOption(McpJsonFile);
 const encodeHooksSection = S.encodeEffect(HooksSection);
 const encodePluginManifest = S.encodeEffect(PluginManifest);
@@ -90,9 +90,10 @@ const isStringArray = (value: unknown): value is ReadonlyArray<string> =>
  * **Example** (Construct a command entry)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
- * const entry = Plugin.command({ name: "review", body: "Review the change." })
+ * const entry = await Effect.runPromise(Plugin.command({ name: "review", body: "Review the change." }))
  * console.log(entry.name) // review
  * ```
  *
@@ -117,13 +118,14 @@ export class PluginCommandEntry extends S.Class<PluginCommandEntry>($I`PluginCom
  * **Example** (Construct a subagent entry)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
- * const entry = Plugin.agent({
+ * const entry = await Effect.runPromise(Plugin.agent({
  *   name: "reviewer",
  *   description: "Reviews changes",
  *   body: "Review changes."
- * })
+ * }))
  * console.log(entry.frontmatter.name) // reviewer
  * ```
  *
@@ -148,9 +150,10 @@ export class PluginAgentEntry extends S.Class<PluginAgentEntry>($I`PluginAgentEn
  * **Example** (Construct a skill entry)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
- * const entry = Plugin.skill({ name: "review", body: "Review changes." })
+ * const entry = await Effect.runPromise(Plugin.skill({ name: "review", body: "Review changes." }))
  * console.log(entry.name) // review
  * ```
  *
@@ -175,9 +178,10 @@ export class PluginSkillEntry extends S.Class<PluginSkillEntry>($I`PluginSkillEn
  * **Example** (Construct an output-style entry)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
- * const entry = Plugin.outputStyle({ name: "concise", body: "Be concise." })
+ * const entry = await Effect.runPromise(Plugin.outputStyle({ name: "concise", body: "Be concise." }))
  * console.log(entry.name) // concise
  * ```
  *
@@ -252,12 +256,13 @@ export type PluginOutputStyleConfig = Omit<OutputStyleFrontmatter.Encoded, "name
  * **Example** (Describe a plugin definition input)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  * import * as S from "effect/Schema"
  *
  * const config = S.decodeUnknownSync(Plugin.PluginConfig)({
  *   manifest: { name: "review-tools" },
- *   commands: [Plugin.command({ name: "review", body: "Review changes." })]
+ *   commands: [await Effect.runPromise(Plugin.command({ name: "review", body: "Review changes." }))]
  * })
  * console.log(config.manifest)
  * ```
@@ -294,9 +299,10 @@ export type PluginConfig = typeof PluginConfig.Type;
  * **Example** (Define a minimal plugin)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
- * const definition = Plugin.define({ manifest: { name: "review-tools" } })
+ * const definition = await Effect.runPromise(Plugin.define({ manifest: { name: "review-tools" } }))
  * console.log(definition.commands.length) // 0
  * ```
  *
@@ -328,24 +334,25 @@ export class PluginDefinition extends S.Class<PluginDefinition>($I`PluginDefinit
  * **Example** (Inspect command)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
- * const entry = Plugin.command({ name: "greet", body: "Say hello." })
+ * const entry = await Effect.runPromise(Plugin.command({ name: "greet", body: "Say hello." }))
  * console.log(entry.frontmatter)
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const command = (config: PluginCommandConfig): PluginCommandEntry => {
+export const command = Effect.fn("Plugin.command")(function* (config: PluginCommandConfig) {
   const { name, path, body, ...frontmatter } = config;
   return PluginCommandEntry.make({
     name,
     ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
-    frontmatter: decodeCommandFrontmatterSync(frontmatter),
+    frontmatter: yield* decodeCommandFrontmatter(frontmatter),
     body,
   });
-};
+});
 
 /**
  * Build a typed subagent entry.
@@ -353,31 +360,32 @@ export const command = (config: PluginCommandConfig): PluginCommandEntry => {
  * **Example** (Inspect agent)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
- * const entry = Plugin.agent({
+ * const entry = await Effect.runPromise(Plugin.agent({
  *   name: "reviewer",
  *   description: "Reviews changes",
  *   body: "Review the requested changes."
- * })
+ * }))
  * console.log(entry.frontmatter.name)
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const agent = (config: PluginAgentConfig): PluginAgentEntry => {
+export const agent = Effect.fn("Plugin.agent")(function* (config: PluginAgentConfig) {
   const { name, path, body, ...frontmatter } = config;
   return PluginAgentEntry.make({
     name,
     ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
-    frontmatter: decodeSubagentFrontmatterSync({
+    frontmatter: yield* decodeSubagentFrontmatter({
       name,
       ...frontmatter,
     }),
     body,
   });
-};
+});
 
 /**
  * Build a typed skill entry.
@@ -385,27 +393,28 @@ export const agent = (config: PluginAgentConfig): PluginAgentEntry => {
  * **Example** (Inspect skill)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
- * const entry = Plugin.skill({ name: "review", body: "Review the changes." })
+ * const entry = await Effect.runPromise(Plugin.skill({ name: "review", body: "Review the changes." }))
  * console.log(entry.frontmatter.name)
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const skill = (config: PluginSkillConfig): PluginSkillEntry => {
+export const skill = Effect.fn("Plugin.skill")(function* (config: PluginSkillConfig) {
   const { name, path, body, ...frontmatter } = config;
   return PluginSkillEntry.make({
     name,
     ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
-    frontmatter: decodeSkillFrontmatterSync({
+    frontmatter: yield* decodeSkillFrontmatter({
       name,
       ...frontmatter,
     }),
     body,
   });
-};
+});
 
 /**
  * Build a typed output-style entry.
@@ -413,27 +422,28 @@ export const skill = (config: PluginSkillConfig): PluginSkillEntry => {
  * **Example** (Inspect output style)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
- * const entry = Plugin.outputStyle({ name: "concise", body: "Be concise." })
+ * const entry = await Effect.runPromise(Plugin.outputStyle({ name: "concise", body: "Be concise." }))
  * console.log(entry.frontmatter.name)
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const outputStyle = (config: PluginOutputStyleConfig): PluginOutputStyleEntry => {
+export const outputStyle = Effect.fn("Plugin.outputStyle")(function* (config: PluginOutputStyleConfig) {
   const { name, path, body, ...frontmatter } = config;
   return PluginOutputStyleEntry.make({
     name,
     ...O.getSomesStruct({ path: O.fromUndefinedOr(path) }),
-    frontmatter: decodeOutputStyleFrontmatterSync({
+    frontmatter: yield* decodeOutputStyleFrontmatter({
       name,
       ...frontmatter,
     }),
     body,
   });
-};
+});
 
 const normalizeHooksConfig = (hooksConfig: HooksSection | HooksSectionEncoded | undefined): O.Option<HooksSection> =>
   hooksConfig === undefined
@@ -449,32 +459,26 @@ const normalizeMcpConfig = (mcpConfig: McpJsonFile | McpJsonFile.Encoded | undef
       ? O.some(mcpConfig)
       : decodeMcpJsonFileOption(mcpConfig);
 
-const validateNamedFrontmatter = (entryName: string, frontmatterName: O.Option<string>, kind: string): void => {
-  O.map(frontmatterName, (name) => {
-    if (entryName !== name) {
-      throw PluginDefinitionError.make({
-        kind,
-        entryName,
-        frontmatterName: name,
-      });
-    }
-  });
-};
+const validateNamedFrontmatter = Effect.fnUntraced(function* (entryName: string, frontmatterName: O.Option<string>, kind: string) {
+  if (O.isSome(frontmatterName) && entryName !== frontmatterName.value) {
+    return yield* PluginDefinitionError.make({ kind, entryName, frontmatterName: frontmatterName.value });
+  }
+});
 
-const normalizeAgentEntry = (entry: PluginAgentEntry): PluginAgentEntry => {
-  validateNamedFrontmatter(entry.name, O.some(entry.frontmatter.name), "agent");
+const normalizeAgentEntry = Effect.fnUntraced(function* (entry: PluginAgentEntry) {
+  yield* validateNamedFrontmatter(entry.name, O.some(entry.frontmatter.name), "agent");
   return entry;
-};
+});
 
-const normalizeSkillEntry = (entry: PluginSkillEntry): PluginSkillEntry => {
-  validateNamedFrontmatter(entry.name, entry.frontmatter.name, "skill");
+const normalizeSkillEntry = Effect.fnUntraced(function* (entry: PluginSkillEntry) {
+  yield* validateNamedFrontmatter(entry.name, entry.frontmatter.name, "skill");
   return entry;
-};
+});
 
-const normalizeOutputStyleEntry = (entry: PluginOutputStyleEntry): PluginOutputStyleEntry => {
-  validateNamedFrontmatter(entry.name, entry.frontmatter.name, "output style");
+const normalizeOutputStyleEntry = Effect.fnUntraced(function* (entry: PluginOutputStyleEntry) {
+  yield* validateNamedFrontmatter(entry.name, entry.frontmatter.name, "output style");
   return entry;
-};
+});
 
 const layoutError = (path: string, message: string): PluginWriteError =>
   PluginWriteError.make({ path, cause: message });
@@ -585,34 +589,36 @@ const resolveConfigRelativePath = (options: {
  * **Example** (Use define)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
- * const def = Plugin.define({
+ * const def = await Effect.runPromise(Plugin.define({
  *   manifest: { name: "my-plugin", version: "0.1.0" },
  *   commands: [
- *     Plugin.command({
+ *     await Effect.runPromise(Plugin.command({
  *       name: "greet",
  *       description: "Say hi",
  *       body: "# /greet\n\nSay hi.\n"
- *     })
+ *     }))
  *   ]
- * })
+ * }))
  * console.log(def.manifest.name)
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const define = (config: PluginConfig): PluginDefinition =>
-  PluginDefinition.make({
-    manifest: isPluginManifest(config.manifest) ? config.manifest : decodePluginManifestSync(config.manifest),
+export const define = Effect.fn("Plugin.define")(function* (config: PluginConfig) {
+  return PluginDefinition.make({
+    manifest: isPluginManifest(config.manifest) ? config.manifest : yield* decodePluginManifest(config.manifest),
     commands: config.commands ?? [],
-    agents: A.map(config.agents ?? [], normalizeAgentEntry),
-    skills: A.map(config.skills ?? [], normalizeSkillEntry),
-    outputStyles: A.map(config.outputStyles ?? [], normalizeOutputStyleEntry),
+    agents: yield* Effect.forEach(config.agents ?? [], normalizeAgentEntry),
+    skills: yield* Effect.forEach(config.skills ?? [], normalizeSkillEntry),
+    outputStyles: yield* Effect.forEach(config.outputStyles ?? [], normalizeOutputStyleEntry),
     hooksConfig: normalizeHooksConfig(config.hooksConfig),
     mcpConfig: normalizeMcpConfig(config.mcpConfig),
   });
+});
 
 // ---------------------------------------------------------------------------
 // write — internal helpers
@@ -765,9 +771,6 @@ const writeSkillEntries = (
  * @internal
  */
 const toJsonFileContent = (value: unknown): string =>
-  // eslint-disable-next-line avoid-direct-json -- writing the manifest IS
-  // the whole purpose of Plugin.write; there's no Schema-level pretty
-  // printer that preserves 2-space indent.
   `${JSON.stringify(value, null, 2)}\n`;
 
 const sourceRootDir = (definition: PluginDefinition): O.Option<string> => {
@@ -835,24 +838,15 @@ const copyLoadedStaticLayout = (
   });
 
 /** @internal */
-const manifestForWrite = (manifest: PluginManifest): PluginManifest =>
-  O.match(manifest.mcpServers, {
-    onNone: () => manifest,
-    onSome: (mcpServers) => {
-      if (P.isString(mcpServers) || A.isArray(mcpServers)) {
-        return manifest;
-      }
-      return decodeUnknownMcpJsonFileOption({ mcpServers }).pipe(
-        O.map((file) =>
-          PluginManifest.make({
-            ...manifest,
-            mcpServers: O.some(toClaudeCodeJson(file).mcpServers),
-          })
-        ),
-        O.getOrElse(() => manifest)
-      );
-    },
-  });
+const manifestForWrite = Effect.fnUntraced(function* (manifest: PluginManifest) {
+  if (O.isNone(manifest.mcpServers)) return manifest;
+  const mcpServers = manifest.mcpServers.value;
+  if (P.isString(mcpServers) || A.isArray(mcpServers)) return manifest;
+  const file = decodeUnknownMcpJsonFileOption({ mcpServers });
+  if (O.isNone(file)) return manifest;
+  const encoded = yield* toClaudeCodeJson(file.value);
+  return PluginManifest.make({ ...manifest, mcpServers: O.some(encoded.mcpServers) });
+});
 
 // ---------------------------------------------------------------------------
 // write
@@ -879,10 +873,10 @@ const manifestForWrite = (manifest: PluginManifest): PluginManifest =>
  * import { Plugin, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const definition = Plugin.define({
+ * const definition = await Effect.runPromise(Plugin.define({
  *   manifest: { name: "my-plugin" },
- *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
- * })
+ *   commands: [await Effect.runPromise(Plugin.command({ name: "hi", body: "# /hi\n" }))]
+ * }))
  * const fileSystem = await Effect.runPromise(
  *   Testing.writePluginToMemory(definition, "/tmp/my-plugin")
  * )
@@ -911,11 +905,13 @@ export const write: {
     Effect.gen(function* () {
       const path = yield* Path.Path;
       const manifest = syncManifest(definition);
-      const emittedManifest = manifestForWrite(manifest);
 
       // .claude-plugin/plugin.json
       const claudePluginDir = path.join(destDir, ".claude-plugin");
       const manifestPath = path.join(claudePluginDir, "plugin.json");
+      const emittedManifest = yield* manifestForWrite(manifest).pipe(
+        Effect.mapError((cause) => PluginWriteError.make({ path: manifestPath, cause }))
+      );
       const encodedManifest = yield* encodePluginManifest(emittedManifest).pipe(
         Effect.mapError((cause) => PluginWriteError.make({ path: manifestPath, cause }))
       );
@@ -969,10 +965,11 @@ export const write: {
           spec: manifest.mcpServers,
         });
         if (O.isSome(mcpPath)) {
-          yield* writeFile(
-            path.join(destDir, mcpPath.value),
-            toJsonFileContent(toClaudeCodeJson(definition.mcpConfig.value))
+          const outputPath = path.join(destDir, mcpPath.value);
+          const encoded = yield* toClaudeCodeJson(definition.mcpConfig.value).pipe(
+            Effect.mapError((cause) => PluginWriteError.make({ path: outputPath, cause }))
           );
+          yield* writeFile(outputPath, toJsonFileContent(encoded));
         }
       }
 

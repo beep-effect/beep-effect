@@ -63,60 +63,61 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeCitingApplicationIdentityOption = S.decodeOption(CitingApplicationIdentity);
-const decodeCitationSync = S.decodeSync(Citation);
-const decodeCitationBaseSync = S.decodeSync(CitationBase);
-const decodeContextOptionsSync = S.decodeSync(ContextOptions);
-const decodeDurableLocatorOptionsSync = S.decodeSync(DurableLocatorOptions);
-const decodeFullCaseCitationSync = S.decodeSync(FullCaseCitation);
-const decodeIdCitationSync = S.decodeSync(IdCitation);
-const decodeNeutralCitationSync = S.decodeSync(NeutralCitation);
-const decodeParentheticalSync = S.decodeSync(Parenthetical);
-const decodePinciteInfoSync = S.decodeSync(PinciteInfo);
-const decodeRegulationCitationSync = S.decodeSync(RegulationCitation);
-const decodeResolutionResultSync = S.decodeSync(ResolutionResult);
-const decodeShortFormCaseCitationSync = S.decodeSync(ShortFormCaseCitation);
-const decodeStatuteCitationSync = S.decodeSync(StatuteCitation);
-const decodeStatutesAtLargeCitationSync = S.decodeSync(StatutesAtLargeCitation);
-const decodeSupraCitationSync = S.decodeSync(SupraCitation);
+const decodeCitation = S.decodeEffect(Citation);
+const decodeCitationBase = S.decodeEffect(CitationBase);
+const decodeContextOptions = S.decodeEffect(ContextOptions);
+const decodeDurableLocatorOptions = S.decodeEffect(DurableLocatorOptions);
+const decodeFullCaseCitation = S.decodeEffect(FullCaseCitation);
+const decodeIdCitation = S.decodeEffect(IdCitation);
+const decodeNeutralCitation = S.decodeEffect(NeutralCitation);
+const decodeParenthetical = S.decodeEffect(Parenthetical);
+const decodePinciteInfo = S.decodeEffect(PinciteInfo);
+const decodeRegulationCitation = S.decodeEffect(RegulationCitation);
+const decodeResolutionResult = S.decodeEffect(ResolutionResult);
+const decodeShortFormCaseCitation = S.decodeEffect(ShortFormCaseCitation);
+const decodeStatuteCitation = S.decodeEffect(StatuteCitation);
+const decodeStatutesAtLargeCitation = S.decodeEffect(StatutesAtLargeCitation);
+const decodeSupraCitation = S.decodeEffect(SupraCitation);
 const decodeUnknownCitingApplicationIdentityOption = S.decodeUnknownOption(CitingApplicationIdentity);
-const decodeUnknownCitationSync = S.decodeUnknownSync(Citation);
-const decodeUnknownClaimSync = S.decodeUnknownSync(Claim);
-const decodeUnknownDistinctionSync = S.decodeUnknownSync(Distinction);
-const decodeUnknownLegalClientSync = S.decodeUnknownSync(LegalClient);
-const decodeUnknownLegalContactSync = S.decodeUnknownSync(LegalContact);
-const decodeUnknownMatterSync = S.decodeUnknownSync(Matter);
-const decodeUnknownOfficeActionSync = S.decodeUnknownSync(OfficeAction);
-const decodeUnknownPatentAssetSync = S.decodeUnknownSync(PatentAsset);
-const decodeUnknownPriorArtReferenceSync = S.decodeUnknownSync(PriorArtReference);
-const decodeUnknownRejectionSync = S.decodeUnknownSync(Rejection);
-const encodeCitationSync = S.encodeSync(Citation);
-const encodeCitationBaseSync = S.encodeSync(CitationBase);
-const encodeClaimSync = S.encodeSync(Claim);
-const encodeContextOptionsSync = S.encodeSync(ContextOptions);
-const encodeDistinctionSync = S.encodeSync(Distinction);
-const encodeDurableLocatorOptionsSync = S.encodeSync(DurableLocatorOptions);
-const encodeFullCaseCitationSync = S.encodeSync(FullCaseCitation);
-const encodeIdCitationSync = S.encodeSync(IdCitation);
-const encodeLegalClientSync = S.encodeSync(LegalClient);
-const encodeLegalContactSync = S.encodeSync(LegalContact);
-const encodeMatterSync = S.encodeSync(Matter);
-const encodeNeutralCitationSync = S.encodeSync(NeutralCitation);
-const encodeOfficeActionSync = S.encodeSync(OfficeAction);
-const encodeParentheticalSync = S.encodeSync(Parenthetical);
-const encodePatentAssetSync = S.encodeSync(PatentAsset);
-const encodePinciteInfoSync = S.encodeSync(PinciteInfo);
-const encodePriorArtReferenceSync = S.encodeSync(PriorArtReference);
-const encodeRegulationCitationSync = S.encodeSync(RegulationCitation);
-const encodeRejectionSync = S.encodeSync(Rejection);
-const encodeResolutionResultSync = S.encodeSync(ResolutionResult);
-const encodeShortFormCaseCitationSync = S.encodeSync(ShortFormCaseCitation);
-const encodeStatuteCitationSync = S.encodeSync(StatuteCitation);
-const encodeStatutesAtLargeCitationSync = S.encodeSync(StatutesAtLargeCitation);
-const encodeSupraCitationSync = S.encodeSync(SupraCitation);
+const decodeUnknownCitation = S.decodeUnknownEffect(Citation);
+const decodeUnknownClaim = S.decodeUnknownEffect(Claim);
+const decodeUnknownDistinction = S.decodeUnknownEffect(Distinction);
+const decodeUnknownLegalClient = S.decodeUnknownEffect(LegalClient);
+const decodeUnknownLegalContact = S.decodeUnknownEffect(LegalContact);
+const decodeUnknownMatter = S.decodeUnknownEffect(Matter);
+const decodeUnknownOfficeAction = S.decodeUnknownEffect(OfficeAction);
+const decodeUnknownPatentAsset = S.decodeUnknownEffect(PatentAsset);
+const decodeUnknownPriorArtReference = S.decodeUnknownEffect(PriorArtReference);
+const decodeUnknownRejection = S.decodeUnknownEffect(Rejection);
+const encodeCitation = S.encodeEffect(Citation);
+const encodeCitationBase = S.encodeEffect(CitationBase);
+const encodeClaim = S.encodeEffect(Claim);
+const encodeContextOptions = S.encodeEffect(ContextOptions);
+const encodeDistinction = S.encodeEffect(Distinction);
+const encodeDurableLocatorOptions = S.encodeEffect(DurableLocatorOptions);
+const encodeFullCaseCitation = S.encodeEffect(FullCaseCitation);
+const encodeIdCitation = S.encodeEffect(IdCitation);
+const encodeLegalClient = S.encodeEffect(LegalClient);
+const encodeLegalContact = S.encodeEffect(LegalContact);
+const encodeMatter = S.encodeEffect(Matter);
+const encodeNeutralCitation = S.encodeEffect(NeutralCitation);
+const encodeOfficeAction = S.encodeEffect(OfficeAction);
+const encodeParenthetical = S.encodeEffect(Parenthetical);
+const encodePatentAsset = S.encodeEffect(PatentAsset);
+const encodePinciteInfo = S.encodeEffect(PinciteInfo);
+const encodePriorArtReference = S.encodeEffect(PriorArtReference);
+const encodeRegulationCitation = S.encodeEffect(RegulationCitation);
+const encodeRejection = S.encodeEffect(Rejection);
+const encodeResolutionResult = S.encodeEffect(ResolutionResult);
+const encodeShortFormCaseCitation = S.encodeEffect(ShortFormCaseCitation);
+const encodeStatuteCitation = S.encodeEffect(StatuteCitation);
+const encodeStatutesAtLargeCitation = S.encodeEffect(StatutesAtLargeCitation);
+const encodeSupraCitation = S.encodeEffect(SupraCitation);
 const isApplicationNumber = S.is(ApplicationNumber);
 const isClaimNumber = S.is(ClaimNumber);
 const isKindCode = S.is(KindCode);
@@ -127,18 +128,23 @@ const isPatentDocumentTriplet = S.is(PatentDocumentTriplet);
 const isPatentNumber = S.is(PatentNumber);
 const isWipoSt13OfficeCode = S.is(WipoSt13OfficeCode);
 
-const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, runs = 10): void => {
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeSync(schema);
+const assertSchemaEncodedRoundTrips = Effect.fn("LawPracticeDomainTest.assertSchemaEncodedRoundTrips")(function* <
+  Schema extends S.Codec<unknown>,
+>(schema: Schema, runs = 10) {
+  const decode = S.decodeUnknownEffect(schema);
+  const encode = S.encodeEffect(schema);
   const equivalent = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.schema(schema),
+    (value) =>
+      Effect.gen(function* () {
+        return equivalent(yield* decode(yield* encode(value)), value);
+      }),
+    { runs }
+  );
 
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(Arbitrary.schema(schema), (value) => equivalent(decode(encode(value)), value), { runs })
-    ),
-    S.resolveAnnotations(schema)?.identifier
-  ).toMatchObject({ _tag: "Passed" });
-};
+  expect(result, S.resolveAnnotations(schema)?.identifier).toMatchObject({ _tag: "Passed" });
+});
 
 const span = (end: number) =>
   Span.make({
@@ -193,16 +199,16 @@ describe("@beep/law-practice-domain", () => {
 
   it("exports value schemas from the package identity", () => {
     expect(LegalClientStatus.is.active_client("active_client")).toBe(true);
-    expect(LegalClientStatus.fromUnknown("active_client")).toBe("active_client");
+    expect(LegalClientStatus.fromUnknown("active_client")).toEqual(Result.succeed("active_client"));
     expect(LegalClientStatus.decodeOption("active_client")._tag).toBe("Some");
     expect(LegalContactRole.is.founder("founder")).toBe(true);
-    expect(LegalContactRole.fromUnknown("founder")).toBe("founder");
+    expect(LegalContactRole.fromUnknown("founder")).toEqual(Result.succeed("founder"));
     expect(LegalContactRole.decodeOption("founder")._tag).toBe("Some");
     expect(MatterType.is.patent_application("patent_application")).toBe(true);
-    expect(MatterType.fromUnknown("patent_application")).toBe("patent_application");
+    expect(MatterType.fromUnknown("patent_application")).toEqual(Result.succeed("patent_application"));
     expect(MatterType.decodeOption("patent_application")._tag).toBe("Some");
     expect(PatentAssetStatus.is.pre_filing("pre_filing")).toBe(true);
-    expect(PatentAssetStatus.fromUnknown("pre_filing")).toBe("pre_filing");
+    expect(PatentAssetStatus.fromUnknown("pre_filing")).toEqual(Result.succeed("pre_filing"));
     expect(PatentAssetStatus.decodeOption("pre_filing")._tag).toBe("Some");
     expect(RejectionGround.is({ referenceFixtureKey: "prior-art.smith", statute: "102" })).toBe(true);
     expect(DistinctionDetail.is({ kind: "missing_limitation", limitation: "a hinge" })).toBe(true);
@@ -287,41 +293,47 @@ describe("@beep/law-practice-domain", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  it("round-trips schema-owned law-practice invariants through encoded form", () => {
-    for (const schema of [
-      LawPracticeFixtureKey,
-      LawPracticeText,
-      ClaimNumber,
-      LegalClientStatus,
-      LegalContactRole,
-      MatterType,
-      PatentAssetStatus,
-      RejectionGround,
-      DistinctionDetail,
-    ]) {
-      assertSchemaArbitraryDecodesToSelf(schema, { runs: 10 });
-      assertSchemaEncodedRoundTrips(schema, 10);
-    }
-  });
+  it.effect(
+    "round-trips schema-owned law-practice invariants through encoded form",
+    Effect.fnUntraced(function* () {
+      for (const schema of [
+        LawPracticeFixtureKey,
+        LawPracticeText,
+        ClaimNumber,
+        LegalClientStatus,
+        LegalContactRole,
+        MatterType,
+        PatentAssetStatus,
+        RejectionGround,
+        DistinctionDetail,
+      ]) {
+        assertSchemaArbitraryDecodesToSelf(schema, { runs: 10 });
+        yield* assertSchemaEncodedRoundTrips(schema, 10);
+      }
+    })
+  );
 
-  it("round-trips law-practice entity schemas through encoded form", () => {
-    for (const schema of [
-      LegalClient,
-      LegalContact,
-      Matter,
-      PatentAsset,
-      OfficeAction,
-      Claim,
-      PriorArtReference,
-      Rejection,
-      Distinction,
-      PatentCitationEvent,
-      CandorDisposition,
-      IdsSubmissionFact,
-    ]) {
-      assertSchemaEncodedRoundTrips(schema, 3);
-    }
-  });
+  it.effect(
+    "round-trips law-practice entity schemas through encoded form",
+    Effect.fnUntraced(function* () {
+      for (const schema of [
+        LegalClient,
+        LegalContact,
+        Matter,
+        PatentAsset,
+        OfficeAction,
+        Claim,
+        PriorArtReference,
+        Rejection,
+        Distinction,
+        PatentCitationEvent,
+        CandorDisposition,
+        IdsSubmissionFact,
+      ]) {
+        yield* assertSchemaEncodedRoundTrips(schema, 3);
+      }
+    })
+  );
 
   it("wires Matter to the law-practice product-entity identity", () => {
     expect(Matter.sql.tableName).toBe(LawPractice.MatterId.tableName);
@@ -344,132 +356,159 @@ describe("@beep/law-practice-domain", () => {
     ]);
   });
 
-  it("decodes and constructs a Matter row", () => {
-    const input = {
-      ...productEntityFixtureInput("LawPracticeMatter", 5),
-      displayName: "Patent Application",
-      fixtureKey: "matter.patent",
-      legalClientFixtureKey: "legal-client.acme",
-      matterType: "patent_application",
-    };
-    const decoded = decodeUnknownMatterSync(input);
-    const constructed = Matter.make(decoded);
+  it.effect(
+    "decodes and constructs a Matter row",
+    Effect.fnUntraced(function* () {
+      const input = {
+        ...productEntityFixtureInput("LawPracticeMatter", 5),
+        displayName: "Patent Application",
+        fixtureKey: "matter.patent",
+        legalClientFixtureKey: "legal-client.acme",
+        matterType: "patent_application",
+      };
+      const decoded = yield* decodeUnknownMatter(input);
+      const constructed = Matter.make(decoded);
 
-    expect(decoded).toBeInstanceOf(Matter);
-    expect(constructed).toBeInstanceOf(Matter);
-    expect(constructed.entityType).toBe("LawPracticeMatter");
-    expect(constructed.matterType).toBe("patent_application");
-    expect(constructed.legalClientFixtureKey).toBe("legal-client.acme");
-    expect(encodeMatterSync(decoded)).toStrictEqual(input);
-  });
+      expect(decoded).toBeInstanceOf(Matter);
+      expect(constructed).toBeInstanceOf(Matter);
+      expect(constructed.entityType).toBe("LawPracticeMatter");
+      expect(constructed.matterType).toBe("patent_application");
+      expect(constructed.legalClientFixtureKey).toBe("legal-client.acme");
+      expect(yield* encodeMatter(decoded)).toStrictEqual(input);
+    })
+  );
 
-  it("decodes an OfficeAction row", () => {
-    const input = {
-      ...productEntityFixtureInput("LawPracticeOfficeAction", 10),
-      applicationNumber: "16/123,456",
-      fixtureKey: "office-action.first",
-      matterFixtureKey: "matter.patent",
-      patentAssetFixtureKey: "patent-asset.widget",
-    };
-    const decoded = decodeUnknownOfficeActionSync(input);
+  it.effect(
+    "decodes an OfficeAction row",
+    Effect.fnUntraced(function* () {
+      const input = {
+        ...productEntityFixtureInput("LawPracticeOfficeAction", 10),
+        applicationNumber: "16/123,456",
+        fixtureKey: "office-action.first",
+        matterFixtureKey: "matter.patent",
+        patentAssetFixtureKey: "patent-asset.widget",
+      };
+      const decoded = yield* decodeUnknownOfficeAction(input);
 
-    expect(decoded).toBeInstanceOf(OfficeAction);
-    expect(decoded.entityType).toBe("LawPracticeOfficeAction");
-    expect(decoded.matterFixtureKey).toBe("matter.patent");
-    expect(encodeOfficeActionSync(decoded)).toStrictEqual(input);
-  });
+      expect(decoded).toBeInstanceOf(OfficeAction);
+      expect(decoded.entityType).toBe("LawPracticeOfficeAction");
+      expect(decoded.matterFixtureKey).toBe("matter.patent");
+      expect(yield* encodeOfficeAction(decoded)).toStrictEqual(input);
+    })
+  );
 
-  it("decodes a Claim row", () => {
-    const input = {
-      ...productEntityFixtureInput("LawPracticeClaim", 11),
-      claimNumber: 1,
-      fixtureKey: "claim.1",
-      independent: true,
-      patentAssetFixtureKey: "patent-asset.widget",
-      text: "A widget comprising a hinge.",
-    };
-    const decoded = decodeUnknownClaimSync(input);
+  it.effect(
+    "decodes a Claim row",
+    Effect.fnUntraced(function* () {
+      const input = {
+        ...productEntityFixtureInput("LawPracticeClaim", 11),
+        claimNumber: 1,
+        fixtureKey: "claim.1",
+        independent: true,
+        patentAssetFixtureKey: "patent-asset.widget",
+        text: "A widget comprising a hinge.",
+      };
+      const decoded = yield* decodeUnknownClaim(input);
 
-    expect(decoded).toBeInstanceOf(Claim);
-    expect(decoded.claimNumber).toBe(1);
-    expect(decoded.independent).toBe(true);
-    expect(encodeClaimSync(decoded)).toStrictEqual(input);
-  });
+      expect(decoded).toBeInstanceOf(Claim);
+      expect(decoded.claimNumber).toBe(1);
+      expect(decoded.independent).toBe(true);
+      expect(yield* encodeClaim(decoded)).toStrictEqual(input);
+    })
+  );
 
-  it("decodes a PriorArtReference row", () => {
-    const input = {
-      ...productEntityFixtureInput("LawPracticePriorArtReference", 12),
-      documentNumber: "US 9,999,999 B2",
-      fixtureKey: "prior-art.smith",
-      officeActionFixtureKey: "office-action.first",
-      title: "Foldable Widget",
-    };
-    const decoded = decodeUnknownPriorArtReferenceSync(input);
+  it.effect(
+    "decodes a PriorArtReference row",
+    Effect.fnUntraced(function* () {
+      const input = {
+        ...productEntityFixtureInput("LawPracticePriorArtReference", 12),
+        documentNumber: "US 9,999,999 B2",
+        fixtureKey: "prior-art.smith",
+        officeActionFixtureKey: "office-action.first",
+        title: "Foldable Widget",
+      };
+      const decoded = yield* decodeUnknownPriorArtReference(input);
 
-    expect(decoded).toBeInstanceOf(PriorArtReference);
-    expect(decoded.documentNumber).toBe("US 9,999,999 B2");
-    expect(encodePriorArtReferenceSync(decoded)).toStrictEqual(input);
-  });
+      expect(decoded).toBeInstanceOf(PriorArtReference);
+      expect(decoded.documentNumber).toBe("US 9,999,999 B2");
+      expect(yield* encodePriorArtReference(decoded)).toStrictEqual(input);
+    })
+  );
 
-  it("decodes a Rejection row with a §102 anticipation ground", () => {
-    const input = {
-      ...productEntityFixtureInput("LawPracticeRejection", 13),
-      claimFixtureKey: "claim.1",
-      fixtureKey: "rejection-one-zero-two",
-      ground: { referenceFixtureKey: "prior-art.smith", statute: "102" },
-      officeActionFixtureKey: "office-action.first",
-    };
-    const decoded = decodeUnknownRejectionSync(input);
+  it.effect(
+    "decodes a Rejection row with a §102 anticipation ground",
+    Effect.fnUntraced(function* () {
+      const input = {
+        ...productEntityFixtureInput("LawPracticeRejection", 13),
+        claimFixtureKey: "claim.1",
+        fixtureKey: "rejection-one-zero-two",
+        ground: { referenceFixtureKey: "prior-art.smith", statute: "102" },
+        officeActionFixtureKey: "office-action.first",
+      };
+      const decoded = yield* decodeUnknownRejection(input);
 
-    expect(decoded).toBeInstanceOf(Rejection);
-    expect(decoded.ground.statute).toBe("102");
-    expect(encodeRejectionSync(decoded)).toStrictEqual(input);
-  });
+      expect(decoded).toBeInstanceOf(Rejection);
+      expect(decoded.ground.statute).toBe("102");
+      expect(yield* encodeRejection(decoded)).toStrictEqual(input);
+    })
+  );
 
-  it("decodes a Distinction row anchored to the source text", () => {
-    const input = {
-      ...productEntityFixtureInput("LawPracticeDistinction", 14),
-      anchor: { endChar: 14, quote: "a claimed fact", startChar: 0 },
-      claimFixtureKey: "claim.1",
-      detail: { kind: "missing_limitation", limitation: "a hinge coupling the lid to the base" },
-      fixtureKey: "distinction.hinge",
-      lifecycleState: "candidate",
-      rejectionFixtureKey: "rejection-one-zero-two",
-    };
-    const decoded = decodeUnknownDistinctionSync(input);
+  it.effect(
+    "decodes a Distinction row anchored to the source text",
+    Effect.fnUntraced(function* () {
+      const input = {
+        ...productEntityFixtureInput("LawPracticeDistinction", 14),
+        anchor: { endChar: 14, quote: "a claimed fact", startChar: 0 },
+        claimFixtureKey: "claim.1",
+        detail: { kind: "missing_limitation", limitation: "a hinge coupling the lid to the base" },
+        fixtureKey: "distinction.hinge",
+        lifecycleState: "candidate",
+        rejectionFixtureKey: "rejection-one-zero-two",
+      };
+      const decoded = yield* decodeUnknownDistinction(input);
 
-    expect(decoded).toBeInstanceOf(Distinction);
-    expect(decoded.lifecycleState).toBe("candidate");
-    expect(decoded.anchor.quote).toBe("a claimed fact");
-    expect(encodeDistinctionSync(decoded)).toStrictEqual(input);
-  });
+      expect(decoded).toBeInstanceOf(Distinction);
+      expect(decoded.lifecycleState).toBe("candidate");
+      expect(decoded.anchor.quote).toBe("a claimed fact");
+      expect(yield* encodeDistinction(decoded)).toStrictEqual(input);
+    })
+  );
 
-  it("keeps untouched entity wire fixtures byte-identical after decode", () => {
-    const legalClientInput = {
-      ...productEntityFixtureInput("LawPracticeLegalClient", 20),
-      displayName: "Acme Robotics",
-      fixtureKey: "legal-client.acme",
-      status: "active_client",
-    };
-    const legalContactInput = {
-      ...productEntityFixtureInput("LawPracticeLegalContact", 21),
-      displayName: "Ada Founder",
-      fixtureKey: "contact.ada",
-      legalClientFixtureKey: "legal-client.acme",
-      role: "founder",
-    };
-    const patentAssetInput = {
-      ...productEntityFixtureInput("LawPracticePatentAsset", 22),
-      fixtureKey: "patent-asset.hinge",
-      matterFixtureKey: "matter.hinge",
-      status: "pre_filing",
-      title: "Hinged lid assembly",
-    };
+  it.effect(
+    "keeps untouched entity wire fixtures byte-identical after decode",
+    Effect.fnUntraced(function* () {
+      const legalClientInput = {
+        ...productEntityFixtureInput("LawPracticeLegalClient", 20),
+        displayName: "Acme Robotics",
+        fixtureKey: "legal-client.acme",
+        status: "active_client",
+      };
+      const legalContactInput = {
+        ...productEntityFixtureInput("LawPracticeLegalContact", 21),
+        displayName: "Ada Founder",
+        fixtureKey: "contact.ada",
+        legalClientFixtureKey: "legal-client.acme",
+        role: "founder",
+      };
+      const patentAssetInput = {
+        ...productEntityFixtureInput("LawPracticePatentAsset", 22),
+        fixtureKey: "patent-asset.hinge",
+        matterFixtureKey: "matter.hinge",
+        status: "pre_filing",
+        title: "Hinged lid assembly",
+      };
 
-    expect(encodeLegalClientSync(decodeUnknownLegalClientSync(legalClientInput))).toStrictEqual(legalClientInput);
-    expect(encodeLegalContactSync(decodeUnknownLegalContactSync(legalContactInput))).toStrictEqual(legalContactInput);
-    expect(encodePatentAssetSync(decodeUnknownPatentAssetSync(patentAssetInput))).toStrictEqual(patentAssetInput);
-  });
+      expect(yield* encodeLegalClient(yield* decodeUnknownLegalClient(legalClientInput))).toStrictEqual(
+        legalClientInput
+      );
+      expect(yield* encodeLegalContact(yield* decodeUnknownLegalContact(legalContactInput))).toStrictEqual(
+        legalContactInput
+      );
+      expect(yield* encodePatentAsset(yield* decodeUnknownPatentAsset(patentAssetInput))).toStrictEqual(
+        patentAssetInput
+      );
+    })
+  );
 
   it("constructs citation values with schema-owned definitive defaults", () => {
     const base = CitationBase.make(citationBaseInput("base"));
@@ -527,71 +566,74 @@ describe("@beep/law-practice-domain", () => {
     expect(locator.contextLength).toBe(32);
   });
 
-  it("decodes sparse citation values and materializes definitive defaults when encoded", () => {
-    const baseWire = citationBaseWire("citation");
-    const base = decodeCitationBaseSync(baseWire);
-    const fullCase = decodeFullCaseCitationSync({
-      ...baseWire,
-      type: "case",
-      volume: 410,
-      reporter: "U.S.",
-    });
-    const id = decodeIdCitationSync({ ...baseWire, type: "id" });
-    const supra = decodeSupraCitationSync({ ...baseWire, type: "supra" });
-    const shortForm = decodeShortFormCaseCitationSync({
-      ...baseWire,
-      type: "shortFormCase",
-      volume: 410,
-      reporter: "U.S.",
-    });
-    const neutral = decodeNeutralCitationSync({
-      ...baseWire,
-      type: "neutral",
-      year: 2023,
-      documentNumber: "128749",
-    });
-    const statute = decodeStatuteCitationSync({ ...baseWire, type: "statute" });
-    const regulation = decodeRegulationCitationSync({ ...baseWire, type: "regulation" });
-    const statutesAtLarge = decodeStatutesAtLargeCitationSync({
-      ...baseWire,
-      type: "statutesAtLarge",
-      volume: 100,
-      page: 3743,
-    });
-    const parenthetical = decodeParentheticalSync({ text: "holding", type: "holding" });
-    const pincite = decodePinciteInfoSync({ isRange: false, raw: "570" });
-    const resolution = decodeResolutionResultSync({ confidence: 1 });
-    const context = decodeContextOptionsSync({});
-    const locator = decodeDurableLocatorOptionsSync({});
+  it.effect(
+    "decodes sparse citation values and materializes definitive defaults when encoded",
+    Effect.fnUntraced(function* () {
+      const baseWire = citationBaseWire("citation");
+      const base = yield* decodeCitationBase(baseWire);
+      const fullCase = yield* decodeFullCaseCitation({
+        ...baseWire,
+        type: "case",
+        volume: 410,
+        reporter: "U.S.",
+      });
+      const id = yield* decodeIdCitation({ ...baseWire, type: "id" });
+      const supra = yield* decodeSupraCitation({ ...baseWire, type: "supra" });
+      const shortForm = yield* decodeShortFormCaseCitation({
+        ...baseWire,
+        type: "shortFormCase",
+        volume: 410,
+        reporter: "U.S.",
+      });
+      const neutral = yield* decodeNeutralCitation({
+        ...baseWire,
+        type: "neutral",
+        year: 2023,
+        documentNumber: "128749",
+      });
+      const statute = yield* decodeStatuteCitation({ ...baseWire, type: "statute" });
+      const regulation = yield* decodeRegulationCitation({ ...baseWire, type: "regulation" });
+      const statutesAtLarge = yield* decodeStatutesAtLargeCitation({
+        ...baseWire,
+        type: "statutesAtLarge",
+        volume: 100,
+        page: 3743,
+      });
+      const parenthetical = yield* decodeParenthetical({ text: "holding", type: "holding" });
+      const pincite = yield* decodePinciteInfo({ isRange: false, raw: "570" });
+      const resolution = yield* decodeResolutionResult({ confidence: 1 });
+      const context = yield* decodeContextOptions({});
+      const locator = yield* decodeDurableLocatorOptions({});
 
-    expect(encodeCitationBaseSync(base).warnings).toStrictEqual([]);
-    expect(encodeFullCaseCitationSync(fullCase)).toMatchObject({
-      unpublished: false,
-      hasBlankPage: false,
-      parentheticals: [],
-      subsequentHistoryEntries: [],
-      justices: [],
-    });
-    expect(encodeIdCitationSync(id).pinciteInherited).toBe(false);
-    expect(encodeSupraCitationSync(supra).pinciteInherited).toBe(false);
-    expect(encodeShortFormCaseCitationSync(shortForm).pinciteInherited).toBe(false);
-    expect(encodeNeutralCitationSync(neutral).unpublished).toBe(false);
-    expect(encodeStatuteCitationSync(statute).hasEtSeq).toBe(false);
-    expect(encodeRegulationCitationSync(regulation).hasEtSeq).toBe(false);
-    expect(encodeStatutesAtLargeCitationSync(statutesAtLarge).pinciteIsRange).toBe(false);
-    expect(encodeParentheticalSync(parenthetical).citations).toStrictEqual([]);
-    expect(encodePinciteInfoSync(pincite)).toMatchObject({
-      starPage: false,
-      additionalPincites: [],
-    });
-    expect(encodeResolutionResultSync(resolution).warnings).toStrictEqual([]);
-    expect(encodeContextOptionsSync(context).type).toBe("sentence");
-    expect(encodeDurableLocatorOptionsSync(locator)).toMatchObject({
-      space: "original",
-      fullSpan: false,
-      contextLength: 32,
-    });
-  });
+      expect((yield* encodeCitationBase(base)).warnings).toStrictEqual([]);
+      expect(yield* encodeFullCaseCitation(fullCase)).toMatchObject({
+        unpublished: false,
+        hasBlankPage: false,
+        parentheticals: [],
+        subsequentHistoryEntries: [],
+        justices: [],
+      });
+      expect((yield* encodeIdCitation(id)).pinciteInherited).toBe(false);
+      expect((yield* encodeSupraCitation(supra)).pinciteInherited).toBe(false);
+      expect((yield* encodeShortFormCaseCitation(shortForm)).pinciteInherited).toBe(false);
+      expect((yield* encodeNeutralCitation(neutral)).unpublished).toBe(false);
+      expect((yield* encodeStatuteCitation(statute)).hasEtSeq).toBe(false);
+      expect((yield* encodeRegulationCitation(regulation)).hasEtSeq).toBe(false);
+      expect((yield* encodeStatutesAtLargeCitation(statutesAtLarge)).pinciteIsRange).toBe(false);
+      expect((yield* encodeParenthetical(parenthetical)).citations).toStrictEqual([]);
+      expect(yield* encodePinciteInfo(pincite)).toMatchObject({
+        starPage: false,
+        additionalPincites: [],
+      });
+      expect((yield* encodeResolutionResult(resolution)).warnings).toStrictEqual([]);
+      expect((yield* encodeContextOptions(context)).type).toBe("sentence");
+      expect(yield* encodeDurableLocatorOptions(locator)).toMatchObject({
+        space: "original",
+        fullSpan: false,
+        contextLength: 32,
+      });
+    })
+  );
 
   it("preserves explicit nondefault citation values", () => {
     const warning = CitationWarning.make({
@@ -731,68 +773,77 @@ describe("@beep/law-practice-domain", () => {
     expect(FullCaseCitation.toBlueBook(rawCourtCitation)).toBe("410 U.S. 113 (D. Mass. 2021)");
   });
 
-  it("round-trips leaf citation value schemas through encoded form", () => {
-    for (const schema of [StatuteCitation, RegulationCitation, DocketCitation]) {
-      assertSchemaEncodedRoundTrips(schema, 10);
-    }
-  });
+  it.effect(
+    "round-trips leaf citation value schemas through encoded form",
+    Effect.fnUntraced(function* () {
+      for (const schema of [StatuteCitation, RegulationCitation, DocketCitation]) {
+        yield* assertSchemaEncodedRoundTrips(schema, 10);
+      }
+    })
+  );
 
-  it("round-trips the recursive citation unions via schema-derived arbitraries", () => {
-    for (const schema of [Citation, FullCitation, ShortFormCitation]) {
-      assertSchemaEncodedRoundTrips(schema, 5);
-    }
-  });
+  it.effect(
+    "round-trips the recursive citation unions via schema-derived arbitraries",
+    Effect.fnUntraced(function* () {
+      for (const schema of [Citation, FullCitation, ShortFormCitation]) {
+        yield* assertSchemaEncodedRoundTrips(schema, 5);
+      }
+    })
+  );
 
-  it("decodes and re-encodes a mutually-recursive Citation nesting", () => {
-    const leaf = (volume: number, reporter: string, text: string) => ({
-      type: "case" as const,
-      text,
-      span: { cleanStart: 0, cleanEnd: text.length, originalStart: 0, originalEnd: text.length },
-      confidence: 1,
-      matchedText: text,
-      processTimeMs: 0,
-      patternsChecked: 1,
-      volume,
-      reporter,
-    });
+  it.effect(
+    "decodes and re-encodes a mutually-recursive Citation nesting",
+    Effect.fnUntraced(function* () {
+      const leaf = (volume: number, reporter: string, text: string) => ({
+        type: "case" as const,
+        text,
+        span: { cleanStart: 0, cleanEnd: text.length, originalStart: 0, originalEnd: text.length },
+        confidence: 1,
+        matchedText: text,
+        processTimeMs: 0,
+        patternsChecked: 1,
+        volume,
+        reporter,
+      });
 
-    // case -> parentheticals -> case -> parentheticals -> case (three recursion levels)
-    const wire = {
-      ...leaf(410, "U.S.", "410 U.S. 113"),
-      parentheticals: [
-        {
-          text: "quoting Doe v. City, 100 F.2d 1 (citing Roe, 200 F.2d 2)",
-          type: "quoting",
-          citations: [
-            {
-              ...leaf(100, "F.2d", "100 F.2d 1"),
-              parentheticals: [
-                { text: "citing Roe, 200 F.2d 2", type: "citing", citations: [leaf(200, "F.2d", "200 F.2d 2")] },
-              ],
-            },
-          ],
-        },
-      ],
-    };
+      // case -> parentheticals -> case -> parentheticals -> case (three recursion levels)
+      const wire = {
+        ...leaf(410, "U.S.", "410 U.S. 113"),
+        parentheticals: [
+          {
+            text: "quoting Doe v. City, 100 F.2d 1 (citing Roe, 200 F.2d 2)",
+            type: "quoting",
+            citations: [
+              {
+                ...leaf(100, "F.2d", "100 F.2d 1"),
+                parentheticals: [
+                  { text: "citing Roe, 200 F.2d 2", type: "citing", citations: [leaf(200, "F.2d", "200 F.2d 2")] },
+                ],
+              },
+            ],
+          },
+        ],
+      };
 
-    const decoded = decodeUnknownCitationSync(wire);
-    expect(decoded.type).toBe("case");
-    if (decoded.type !== "case") return;
+      const decoded = yield* decodeUnknownCitation(wire);
+      expect(decoded.type).toBe("case");
+      if (decoded.type !== "case") return;
 
-    const level1 = O.getOrThrow(A.head(decoded.parentheticals));
-    expect(level1.type).toBe("quoting");
-    const child = O.getOrThrow(A.head(level1.citations));
-    expect(child.type).toBe("case");
-    if (child.type !== "case") return;
+      const level1 = O.getOrThrow(A.head(decoded.parentheticals));
+      expect(level1.type).toBe("quoting");
+      const child = O.getOrThrow(A.head(level1.citations));
+      expect(child.type).toBe("case");
+      if (child.type !== "case") return;
 
-    const childParenthetical = O.getOrThrow(A.head(child.parentheticals));
-    const grandchild = O.getOrThrow(A.head(childParenthetical.citations));
-    expect(grandchild.type).toBe("case");
-    if (grandchild.type !== "case") return;
-    expect(grandchild.reporter).toBe("F.2d");
+      const childParenthetical = O.getOrThrow(A.head(child.parentheticals));
+      const grandchild = O.getOrThrow(A.head(childParenthetical.citations));
+      expect(grandchild.type).toBe("case");
+      if (grandchild.type !== "case") return;
+      expect(grandchild.reporter).toBe("F.2d");
 
-    // encode -> decode is identity across the S.suspend recursion knot
-    const equivalent = S.toEquivalence(Citation);
-    expect(equivalent(decodeCitationSync(encodeCitationSync(decoded)), decoded)).toBe(true);
-  });
+      // encode -> decode is identity across the S.suspend recursion knot
+      const equivalent = S.toEquivalence(Citation);
+      expect(equivalent(yield* decodeCitation(yield* encodeCitation(decoded)), decoded)).toBe(true);
+    })
+  );
 });

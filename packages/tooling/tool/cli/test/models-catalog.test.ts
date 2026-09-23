@@ -4,6 +4,8 @@ import {
   diffSnapshots,
   ModelsCatalog,
   ModelsCatalogLive,
+  ModelsCatalogSources,
+  ModelsCatalogSourcesLive,
   ModelsLedger,
   ModelsLedgerLive,
   mergeLayers,
@@ -13,6 +15,7 @@ import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, HashMap, Layer, Option as O, Path } from "effect";
 import * as A from "effect/Array";
+import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { FixtureCatalogSources, readFixtureLayers } from "./helpers/models-fixtures.ts";
 
 const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
@@ -143,5 +146,24 @@ layer(Layer.mergeAll(platform, models))((it) => {
         path.join(home, ".local", "state", "beep", "models", "latest.json")
       );
     }).pipe(Effect.scoped)
+  );
+});
+
+// The live sources layer over real platform services: every source is absent,
+// so each reader answers `none` without a network call or a spawned process.
+const liveSources = ModelsCatalogSourcesLive.pipe(Layer.provide(Layer.mergeAll(platform, FetchHttpClient.layer)));
+
+layer(Layer.mergeAll(platform, liveSources), { timeout: "30 seconds" })((it) => {
+  it.effect("answers none for an absent codex cache, grok cache, and proxy token", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const sources = yield* ModelsCatalogSources;
+      const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-live-sources-" });
+
+      assertNone(yield* sources.readCodexCache(home));
+      assertNone(yield* sources.readGrokCache(home));
+      assertNone(yield* sources.listProxyModels("http://127.0.0.1:1", path.join(home, "client-token")));
+    })
   );
 });

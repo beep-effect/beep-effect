@@ -20,12 +20,14 @@ describe("Worker table", () => {
     Effect.fnUntraced(function* () {
       const id = yield* decodeWorkerId(1);
       const organizationId = yield* decodeOrganizationId(1);
-      const worker = DomainWorker.create(
-        DomainWorker.CreateWorkerInput.make({
-          id,
-          organizationId,
-          displayName: "Ada Lovelace",
-        })
+      const worker = yield* Effect.fromResult(
+        DomainWorker.create(
+          DomainWorker.CreateWorkerInput.make({
+            id,
+            organizationId,
+            displayName: "Ada Lovelace",
+          })
+        )
       );
       const row = toWorkerInsert(worker);
       const columns = getColumns(workerTable);

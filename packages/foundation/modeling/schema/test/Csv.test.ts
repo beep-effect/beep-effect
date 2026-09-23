@@ -151,35 +151,31 @@ describe("CSV", () => {
     })
   );
 
-  it("round-trips schema-derived rows with CSV null-byte normalization", () => {
+  {
     const csv = CSV(UserRow);
+    it.effect.prop(
+      "round-trips schema-derived rows with CSV null-byte normalization",
+      [Arbitrary.schema(S.Array(UserRow).check(S.isMaxLength(5)))],
+      Effect.fnUntraced(function* ([rows]) {
+        const encoded = yield* S.encodeEffect(csv)(rows);
+        const decoded = yield* S.decodeEffect(csv)(encoded);
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(S.Array(UserRow).check(S.isMaxLength(5)))]),
-          ([rows]) => {
-            const encoded = S.encodeSync(csv)(rows);
-            const decoded = S.decodeSync(csv)(encoded);
+        expect(decoded).toEqual(
+          A.map(rows, (row) =>
+            UserRow.make({
+              ...row,
+              first_name: Str.replaceAll("\0", "")(row.first_name),
+              last_name: Str.replaceAll("\0", "")(row.last_name),
+              address: Str.replaceAll("\0", "")(row.address),
+            })
+          )
+        );
 
-            expect(decoded).toEqual(
-              A.map(rows, (row) =>
-                UserRow.make({
-                  ...row,
-                  first_name: Str.replaceAll("\0", "")(row.first_name),
-                  last_name: Str.replaceAll("\0", "")(row.last_name),
-                  address: Str.replaceAll("\0", "")(row.address),
-                })
-              )
-            );
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        return true;
+      }),
+      { arbitrary: fcRuns(25) }
+    );
+  }
 
   it.effect(
     "renders missing optional encoded fields as empty cells",

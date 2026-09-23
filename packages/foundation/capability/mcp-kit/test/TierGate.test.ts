@@ -8,14 +8,15 @@ import {
   TierGateVerdict,
 } from "@beep/mcp-kit";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
 import { Effect, Fiber, Ref } from "effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeTierGateAuditRecordSync = S.decodeSync(TierGateAuditRecord);
+const decodeTierGateAuditRecord = S.decodeUnknownEffect(TierGateAuditRecord);
 
 const writeTool = Tool.make("delete_document", { success: S.String }).annotate(Tool.Destructive, true);
 const readTool = Tool.make("search_documents", { success: S.String })
@@ -24,26 +25,14 @@ const readTool = Tool.make("search_documents", { success: S.String })
 const nonReadOnlyWriteTool = Tool.make("write_cache", { success: S.String }).annotate(Tool.Destructive, false);
 const unannotatedTool = Tool.make("unannotated_tool", { success: S.String });
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = Arbitrary.schema(schema);
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeSync(schema);
-  const equals = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          assert.isTrue(equals(decode(encode(value)), value));
-
-          return true;
-        },
-        fcRuns(50)
-      )
-    )._tag
-  ).toBe("Passed");
-};
+const assertSchemaRoundTrip = Effect.fnUntraced(function* <Schema extends S.Codec<unknown, unknown, never, never>>(
+  schema: Schema,
+  value: Schema["Type"]
+) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  assert.isTrue(S.toEquivalence(schema)(decoded, value));
+});
 
 describe("dispatchWithTierGate", () => {
   it.effect(
@@ -227,7 +216,7 @@ describe("recordOutcome settlement", () => {
 });
 
 describe("tier-gate schema parity laws", () => {
-  it("round-trips TierGateAuditRecord with schema-owned toolCallId absence", () => {
+  it("owns toolCallId absence on constructed TierGateAuditRecord values", () => {
     const audit = TierGateAuditRecord.make({
       tool: "search_documents",
       outcome: "approved",
@@ -237,22 +226,59 @@ describe("tier-gate schema parity laws", () => {
     });
 
     assert.deepStrictEqual(audit.toolCallId, O.none());
-    assert.throws(() =>
-      decodeTierGateAuditRecordSync({
-        tool: "search_documents",
-        outcome: "approved",
-        reason: "Tool is read-only and non-destructive; no approval required.",
-        destructive: false,
-        toolCallId: "",
-        occurredAt: "2026-07-01T00:00:00.000Z",
-      })
-    );
-    assertSchemaRoundTrip(TierGateAuditRecord);
   });
 
-  it("round-trips TierGateVerdict and TierGatePolicy from their production schemas", () => {
-    assertSchemaRoundTrip(TierGateSettlement);
-    assertSchemaRoundTrip(TierGateVerdict);
-    assertSchemaRoundTrip(TierGatePolicy);
-  });
+  it.effect(
+    "rejects empty toolCallId while decoding TierGateAuditRecord",
+    Effect.fnUntraced(function* () {
+      const exit = yield* Effect.exit(
+        decodeTierGateAuditRecord({
+          tool: "search_documents",
+          outcome: "approved",
+          reason: "Tool is read-only and non-destructive; no approval required.",
+          destructive: false,
+          toolCallId: "",
+          occurredAt: "2026-07-01T00:00:00.000Z",
+        })
+      );
+
+      assert.isTrue(Exit.isFailure(exit));
+    })
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived TierGateAuditRecord values",
+    [Arbitrary.schema(TierGateAuditRecord)],
+    Effect.fnUntraced(function* ([value]) {
+      yield* assertSchemaRoundTrip(TierGateAuditRecord, value);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived TierGateSettlement values",
+    [Arbitrary.schema(TierGateSettlement)],
+    Effect.fnUntraced(function* ([value]) {
+      yield* assertSchemaRoundTrip(TierGateSettlement, value);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived TierGateVerdict values",
+    [Arbitrary.schema(TierGateVerdict)],
+    Effect.fnUntraced(function* ([value]) {
+      yield* assertSchemaRoundTrip(TierGateVerdict, value);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "round-trips schema-derived TierGatePolicy values",
+    [Arbitrary.schema(TierGatePolicy)],
+    Effect.fnUntraced(function* ([value]) {
+      yield* assertSchemaRoundTrip(TierGatePolicy, value);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 });

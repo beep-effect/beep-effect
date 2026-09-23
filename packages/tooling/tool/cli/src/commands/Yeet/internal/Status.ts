@@ -47,6 +47,7 @@ import {
   YeetVerdict,
 } from "./Verdict.ts";
 import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
+import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutReport } from "./Closeout.ts";
@@ -549,14 +550,14 @@ const pathListFromNulOutput: (output: string) => ReadonlyArray<string> = flow(St
  */
 const statusPathForContext = Effect.fn("YeetStatus.statusPathForContext")(function* (
   context: RepoRunContext
-): Effect.fn.Return<string, never, Path.Path> {
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | Path.Path> {
   return yield* runArtifactPathForContext(context, "status.json");
 });
 
 const runGitPaths = Effect.fn("YeetStatus.runGitPaths")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
-): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runRepoCommandCapture("git", args, repoRoot).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to run git ${A.join(args, " ")}.`))
   );
@@ -572,7 +573,7 @@ const runGitPaths = Effect.fn("YeetStatus.runGitPaths")(function* (
 
 const collectWorktreeStatus = Effect.fn("YeetStatus.collectWorktreeStatus")(function* (
   context: RepoRunContext
-): Effect.fn.Return<YeetStatusWorktree, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<YeetStatusWorktree, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const staged = yield* runGitPaths(context.repoRoot, ["diff", "--cached", "--name-only", "-z"]);
   const unstaged = yield* runGitPaths(context.repoRoot, ["diff", "--name-only", "-z"]);
   const untracked = yield* runGitPaths(context.repoRoot, ["ls-files", "--others", "--exclude-standard", "-z"]);
@@ -841,11 +842,19 @@ export const collectRemoteChecks: {
     required: boolean
   ): (
     context: RepoRunContext
-  ) => Effect.Effect<O.Option<ReadonlyArray<GhStatusCheck>>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner>;
+  ) => Effect.Effect<
+    O.Option<ReadonlyArray<GhStatusCheck>>,
+    YeetCommandError,
+    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  >;
   (
     context: RepoRunContext,
     required: boolean
-  ): Effect.Effect<O.Option<ReadonlyArray<GhStatusCheck>>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner>;
+  ): Effect.Effect<
+    O.Option<ReadonlyArray<GhStatusCheck>>,
+    YeetCommandError,
+    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  >;
 } = dual(
   2,
   Effect.fn("YeetStatus.collectRemoteChecks")(function* (
@@ -854,7 +863,7 @@ export const collectRemoteChecks: {
   ): Effect.fn.Return<
     O.Option<ReadonlyArray<GhStatusCheck>>,
     YeetCommandError,
-    ChildProcessSpawner.ChildProcessSpawner
+    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
   > {
     const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket"];
     const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
@@ -886,7 +895,11 @@ const pullRequestAuthorLogin = (node: GhStatusReviewThreadsNode): O.Option<strin
 const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThreads")(function* (
   context: RepoRunContext,
   pullRequestId: string
-): Effect.fn.Return<GhStatusReviewThreadPages, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  GhStatusReviewThreadPages,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const threads: Array<GhStatusReviewThread> = [];
   let pullRequestAuthor = O.none<string>();
   let cursor = O.none<string>();
@@ -967,7 +980,11 @@ const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThre
  */
 export const collectRemoteWorkflowRuns = Effect.fn("YeetStatus.collectRemoteWorkflowRuns")(function* (
   context: RepoRunContext
-): Effect.fn.Return<ReadonlyArray<GhStatusWorkflowRun>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<GhStatusWorkflowRun>,
+  never,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runRepoCommandCapture(
     "gh",
     ["run", "list", "--branch", context.branch, "--limit", "20", "--json", "databaseId,headSha,status,conclusion,name"],
@@ -1235,7 +1252,7 @@ export const yeetRerunDecisionText = (runName: string): string =>
 const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function* (
   context: RepoRunContext,
   remote: boolean
-): Effect.fn.Return<YeetStatusRemote, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<YeetStatusRemote, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   if (!remote) {
     return skippedRemote;
   }
@@ -1555,7 +1572,7 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
 ): Effect.fn.Return<
   YeetStatusSnapshot,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const verdictPath = yield* runArtifactPathForContext(context, "verdict.json");
   const closeoutPath = yield* runArtifactPathForContext(context, "pr-closeout.json");
@@ -1579,7 +1596,7 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
     head: context.head,
     nextCommand: nextCommandForStatus(worktree, verdict, closeout, remoteStatus),
     remote: remoteStatus,
-    runId: runIdForContext(context),
+    runId: yield* runIdForContext(context),
     schemaVersion: "yeet-status/v1",
     statusPath,
     verdict,
@@ -1788,7 +1805,7 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
  */
 export const writeYeetStatusSnapshot = Effect.fn("YeetStatus.writeYeetStatusSnapshot")(function* (
   snapshot: YeetStatusSnapshot
-): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const json = yield* YeetStatusSnapshotJson.encode(snapshot).pipe(

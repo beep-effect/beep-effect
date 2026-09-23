@@ -10,14 +10,31 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { SyncCursorRow } from "@beep/documents-tables/entities/SyncCursor";
 
-const decodeUnknownDomainSyncCursorSyncCursorSync = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
+const decodeUnknownSyncCursor = S.decodeUnknownEffect(DomainSyncCursor.SyncCursor);
 
 const SyncCursorEquivalence = S.toEquivalence(DomainSyncCursor.SyncCursor);
+
+// The row codec is a class schema, so an unencodable entity has to stay an
+// instance of its model: clone onto the same prototype and corrupt a single
+// column rather than handing the encoder a bare struct it would reject wholesale.
+const withUnencodablePublicId = <A extends object>(entity: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
+  expect(error._tag).toBe(tag);
+  expect(Str.isNonEmpty(error.message)).toBe(true);
+};
 
 const indexConfigNamed = (name: string) =>
   pipe(
@@ -64,44 +81,82 @@ describe("SyncCursor table", () => {
     expect(O.getOrThrow(workspaceIdBtree).config.columns[0]).toMatchObject({ name: "workspace_id" });
   });
 
-  it("round-trips SyncCursor rows through the converters", () => {
-    const syncCursor = decodeUnknownDomainSyncCursorSyncCursorSync(activeCursorRow);
-    const insert = toSyncCursorInsert(syncCursor);
+  it.effect(
+    "round-trips SyncCursor rows through the converters",
+    Effect.fnUntraced(function* () {
+      const syncCursor = yield* decodeUnknownSyncCursor(activeCursorRow);
+      const insert = yield* Effect.fromResult(toSyncCursorInsert(syncCursor));
 
-    expect("id" in insert).toBe(false);
-    expect(insert.status).toBe("active");
-    expect(insert.streamPosition).toBe("now");
-    expect(insert.entityType).toBe("DocumentsSyncCursor");
+      expect("id" in insert).toBe(false);
+      expect(insert.status).toBe("active");
+      expect(insert.streamPosition).toBe("now");
+      expect(insert.entityType).toBe("DocumentsSyncCursor");
 
-    const roundTripped = fromSyncCursorRow({
-      ...insert,
-      id: 30,
-      // $inferInsert types nullable columns as `value | null | undefined`; the
-      // select-row converter expects `value | null`, so resolve absent
-      // optionals to their concrete nulls before round-tripping.
-      lastError: insert.lastError ?? null,
-      lastEventId: insert.lastEventId ?? null,
-    });
+      const roundTripped = yield* Effect.fromResult(
+        fromSyncCursorRow({
+          ...insert,
+          id: 30,
+          // $inferInsert types nullable columns as `value | null | undefined`; the
+          // select-row converter expects `value | null`, so resolve absent
+          // optionals to their concrete nulls before round-tripping.
+          lastError: insert.lastError ?? null,
+          lastEventId: insert.lastEventId ?? null,
+        })
+      );
 
-    expect(roundTripped.lastError).toEqual(O.none());
-    expect(roundTripped.lastEventId).toEqual(O.some("evt-1"));
-    expect(SyncCursorEquivalence(roundTripped, syncCursor)).toBe(true);
-  });
+      expect(roundTripped.lastError).toEqual(O.none());
+      expect(roundTripped.lastEventId).toEqual(O.some("evt-1"));
+      expect(SyncCursorEquivalence(roundTripped, syncCursor)).toBe(true);
+    })
+  );
 
   it.prop(
     "round-trips schema-derived SyncCursors through the row converters",
     [S.toType(DomainSyncCursor.SyncCursor)],
     ([syncCursor]) => {
       const insert = toSyncCursorInsert(syncCursor);
+      expect(Result.isSuccess(insert)).toBe(true);
+      if (!Result.isSuccess(insert)) {
+        return;
+      }
       const decoded = fromSyncCursorRow({
-        ...insert,
+        ...insert.success,
         id: syncCursor.id,
-        lastError: insert.lastError ?? null,
-        lastEventId: insert.lastEventId ?? null,
+        lastError: insert.success.lastError ?? null,
+        lastEventId: insert.success.lastEventId ?? null,
       });
+      expect(Result.isSuccess(decoded)).toBe(true);
+      if (!Result.isSuccess(decoded)) {
+        return;
+      }
 
-      expect(SyncCursorEquivalence(decoded, syncCursor)).toBe(true);
+      expect(SyncCursorEquivalence(decoded.success, syncCursor)).toBe(true);
     },
     { arbitrary: fcRuns(50) }
+  );
+
+  it.effect(
+    "reports a typed converter failure on both sides of the SyncCursor boundary",
+    Effect.fnUntraced(function* () {
+      const syncCursor = yield* decodeUnknownSyncCursor(activeCursorRow);
+      const insert = yield* Effect.fromResult(toSyncCursorInsert(syncCursor));
+
+      expectConverterFailure(
+        yield* converterFailure(toSyncCursorInsert(withUnencodablePublicId(syncCursor))),
+        "SyncCursorConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromSyncCursorRow({
+            ...insert,
+            id: 30,
+            lastError: insert.lastError ?? null,
+            lastEventId: insert.lastEventId ?? null,
+            publicId: 42,
+          } as unknown as SyncCursorRow)
+        ),
+        "SyncCursorConverterError"
+      );
+    })
   );
 });

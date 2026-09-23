@@ -20,7 +20,7 @@ const serviceUnavailableBody = WorkItemUseCases.WorkItemActionFailed.make({
 const WorkItemHttpStatusBase = LiteralKit([200, 201, 404, 409, 422, 503]);
 const withWorkItemHttpStatusCodecStatics = SchemaUtils.withStatics((schema: typeof WorkItemHttpStatusBase) => ({
   decodeOption: S.decodeUnknownOption(schema),
-  fromUnknown: S.decodeUnknownSync(schema),
+  fromUnknown: S.decodeUnknownResult(schema),
 }));
 
 /**
@@ -33,8 +33,15 @@ const withWorkItemHttpStatusCodecStatics = SchemaUtils.withStatics((schema: type
  *   WorkItemHttpStatus,
  *   type WorkItemHttpStatus as WorkItemHttpStatusType
  * } from "@beep/architecture-lab-server/aggregates/WorkItem"
+ * import * as Result from "effect/Result"
  *
- * const created: WorkItemHttpStatusType = WorkItemHttpStatus.fromUnknown(201)
+ * const decoded = WorkItemHttpStatus.fromUnknown(201)
+ *
+ * if (Result.isFailure(decoded)) {
+ *   throw new Error("expected HTTP status")
+ * }
+ *
+ * const created: WorkItemHttpStatusType = decoded.success
  *
  * console.log(WorkItemHttpStatus.is.number201(created)) // true
  * ```

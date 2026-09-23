@@ -159,6 +159,7 @@ type FilesCommandPlatformRequirements =
   | FileSystem.FileSystem
   | Path.Path
   | Terminal.Terminal
+  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner
   | Crypto.Crypto
   | HttpClient.HttpClient;
@@ -1628,7 +1629,7 @@ const buildRenamePlan = Effect.fn("Files.buildRenamePlan")(function* (
 ): Effect.fn.Return<
   RenamePlan,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const collection = yield* collectSortableFiles(dir, withDimensions, "sort scan");
@@ -2101,7 +2102,7 @@ const detectFacesFilesImpl = Effect.fn("FilesCommandService.detectFacesFiles")(f
 ): Effect.fn.Return<
   DetectFacesReport,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const program = Effect.gen(function* () {
     const path = yield* Path.Path;

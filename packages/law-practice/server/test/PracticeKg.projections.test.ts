@@ -50,9 +50,6 @@ import * as Response from "effect/unstable/ai/Response";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { OFFICE_ACTION_FIXTURE } from "./fixture.ts";
 
-const decodePracticeKgOptionsSync = S.decodeSync(PracticeKgOptions);
-const decodePracticeKgToolResultSync = S.decodeSync(PracticeKgToolResult);
-const decodeUnknownPracticeKgToolResultSync = S.decodeUnknownSync(PracticeKgToolResult);
 const isPracticeKgCandidateClaimsNotLoadedResult = S.is(PracticeKgCandidateClaimsNotLoadedResult);
 const isString = S.is(S.String);
 
@@ -103,6 +100,9 @@ const decodeToolErrorJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToo
 const decodeToolResultJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToolResult));
 const decodeCandidateClaimsJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgCandidateClaimsResult));
 const decodeCandidateClaimRows = S.decodeUnknownEffect(S.Array(PracticeKgCandidateClaimToolRow));
+const decodePracticeKgOptions = S.decodeEffect(PracticeKgOptions);
+const decodePracticeKgToolResult = S.decodeEffect(PracticeKgToolResult);
+const decodeUnknownPracticeKgToolResult = S.decodeUnknownEffect(PracticeKgToolResult);
 const declaredColumnNames = (columns: Readonly<Record<string, { readonly name: string }>>): ReadonlyArray<string> =>
   A.sort(
     A.map(R.values(columns), (column) => column.name),
@@ -463,42 +463,46 @@ describe("practice KG projections", () => {
     { arbitrary: { runs: 10 } }
   );
 
-  it("pins the schema-absorbed defaults to their contract values", () => {
-    const options = PracticeKgOptions.make({
-      corpusRoot: "/corpus",
-      includeRefresh: false,
-      overwrite: false,
-      skipEmails: true,
-    });
-    expect(options.maxTextBytes).toBe(2_097_152);
-    expect(options.bundleOut).toBeUndefined();
-    const decoded = decodePracticeKgOptionsSync({
-      corpusRoot: "/corpus",
-      includeRefresh: false,
-      overwrite: false,
-      skipEmails: true,
-    });
-    expect(decoded.maxTextBytes).toBe(2_097_152);
-    const spineRow = decodePracticeKgToolResultSync({
-      bundle_version: "2026-07-27-01",
-      data: { columns: ["family"], rows: [["10008"]] },
-      epistemic_status: "derived-from-official-records",
-      tier: "minimal",
-      total: 1,
-      truncated: false,
-    });
-    expect(spineRow.epistemic_status).toBe("derived-from-official-records");
-    expect(() =>
-      decodeUnknownPracticeKgToolResultSync({
+  it.effect(
+    "pins the schema-absorbed defaults to their contract values",
+    Effect.fnUntraced(function* () {
+      const options = PracticeKgOptions.make({
+        corpusRoot: "/corpus",
+        includeRefresh: false,
+        overwrite: false,
+        skipEmails: true,
+      });
+      expect(options.maxTextBytes).toBe(2_097_152);
+      expect(options.bundleOut).toBeUndefined();
+      const decoded = yield* decodePracticeKgOptions({
+        corpusRoot: "/corpus",
+        includeRefresh: false,
+        overwrite: false,
+        skipEmails: true,
+      });
+      expect(decoded.maxTextBytes).toBe(2_097_152);
+      const spineRow = yield* decodePracticeKgToolResult({
         bundle_version: "2026-07-27-01",
-        data: { columns: [], rows: [] },
-        epistemic_status: "settled-fact",
+        data: { columns: ["family"], rows: [["10008"]] },
+        epistemic_status: "derived-from-official-records",
         tier: "minimal",
-        total: 0,
+        total: 1,
         truncated: false,
-      })
-    ).toThrow();
-  });
+      });
+      expect(spineRow.epistemic_status).toBe("derived-from-official-records");
+      const rejected = yield* Effect.exit(
+        decodeUnknownPracticeKgToolResult({
+          bundle_version: "2026-07-27-01",
+          data: { columns: [], rows: [] },
+          epistemic_status: "settled-fact",
+          tier: "minimal",
+          total: 0,
+          truncated: false,
+        })
+      );
+      expect(Exit.isFailure(rejected)).toBe(true);
+    })
+  );
 
   it.effect(
     "builds byte-identical ordered dumps with stable IRIs and complete provenance",

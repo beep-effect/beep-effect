@@ -249,7 +249,7 @@ describe("restoration archive boundary helpers", () => {
           signature
         );
 
-        expect(RA.reapedCoordinationPath("/tmp/claim")).toContain(".reaped-");
+        expect(yield* RA.reapedCoordinationPath("/tmp/claim")).toContain(".reaped-");
         const reapClaim = RA.writerReapClaimPath("/tmp/claim", "observed");
         expect(reapClaim).toContain(".reap-");
         expect(RA.writerReapClaimTombstonePath(reapClaim, "observed")).toContain(".claim.reap-");

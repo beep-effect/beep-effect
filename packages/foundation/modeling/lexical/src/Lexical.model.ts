@@ -2675,7 +2675,8 @@ export const LexicalNode = pipe(
       S.toTaggedUnion("type"),
       SchemaUtils.withStatics(() => ({
         decodeUnknownOption: S.decodeUnknownOption(schema, strictSemanticParseOptions),
-        decodeUnknownSync: S.decodeUnknownSync(schema, strictSemanticParseOptions),
+        decodeUnknownResult: S.decodeUnknownResult(schema, strictSemanticParseOptions),
+        decodeUnknownEffect: S.decodeUnknownEffect(schema, strictSemanticParseOptions),
       }))
     )
 );

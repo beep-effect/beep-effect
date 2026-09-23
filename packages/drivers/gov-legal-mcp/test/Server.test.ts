@@ -43,10 +43,12 @@ import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit"
 import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Crypto from "effect/Crypto";
 import * as FileSystem from "effect/FileSystem";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -293,6 +295,9 @@ const containsSensitiveValue = (value: unknown): boolean =>
     Match.orElse(() => false)
   );
 
+const withToolNameCrypto = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto>) =>
+  effect.pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make));
+
 const assertCollision = (
   result: Result.Result<ToolNameCollisionReport, ToolNameCollisionError | unknown>,
   reason: "duplicate_normalized" | "duplicate_final"
@@ -508,10 +513,14 @@ describe("gov-legal MCP frozen contract", () => {
     "fails closed on cross-driver normalization collisions",
     Effect.fnUntraced(function* () {
       const error = assertCollision(
-        buildToolNameCollisionReport([
-          ToolNameCandidate.make({ source: "agency.alpha", operationId: "search" }),
-          ToolNameCandidate.make({ source: "agency_alpha", operationId: "search" }),
-        ]),
+        yield* Effect.result(
+          withToolNameCrypto(
+            buildToolNameCollisionReport([
+              ToolNameCandidate.make({ source: "agency.alpha", operationId: "search" }),
+              ToolNameCandidate.make({ source: "agency_alpha", operationId: "search" }),
+            ])
+          )
+        ),
         "duplicate_normalized"
       );
       assert.deepEqual(error.collisionKeys, ["agency_alpha_search"]);
@@ -546,10 +555,14 @@ describe("gov-legal MCP frozen contract", () => {
     "marks punctuation normalization duplicates before failing",
     Effect.fnUntraced(function* () {
       const error = assertCollision(
-        buildToolNameCollisionReport([
-          ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
-          ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" }),
-        ]),
+        yield* Effect.result(
+          withToolNameCrypto(
+            buildToolNameCollisionReport([
+              ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
+              ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" }),
+            ])
+          )
+        ),
         "duplicate_normalized"
       );
       assert.isTrue(A.every(error.report.candidates, (row) => row.duplicateVerdict === "duplicate_normalized"));
@@ -569,8 +582,8 @@ describe("gov-legal MCP frozen contract", () => {
         source: "ecfr",
         operationId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_0000000011bm",
       });
-      const firstRow = Result.getOrThrow(projectToolNameCandidate(first));
-      const secondRow = Result.getOrThrow(projectToolNameCandidate(second));
+      const firstRow = yield* withToolNameCrypto(projectToolNameCandidate(first));
+      const secondRow = yield* withToolNameCrypto(projectToolNameCandidate(second));
 
       assert.strictEqual(firstRow.candidate, firstValue);
       assert.strictEqual(secondRow.candidate, secondValue);
@@ -578,7 +591,10 @@ describe("gov-legal MCP frozen contract", () => {
       assert.strictEqual(secondRow.digest, "a06e92ed");
       assert.strictEqual(firstRow.finalWireName.length, 64);
       assert.strictEqual(firstRow.finalWireName, secondRow.finalWireName);
-      const error = assertCollision(buildToolNameCollisionReport([first, second]), "duplicate_final");
+      const error = assertCollision(
+        yield* Effect.result(withToolNameCrypto(buildToolNameCollisionReport([first, second]))),
+        "duplicate_final"
+      );
       assert.isTrue(A.every(error.report.candidates, (row) => row.duplicateVerdict === "duplicate_final"));
     })
   );
@@ -616,31 +632,41 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 };
 
 describe("tool-name report determinism", () => {
-  it.prop(
+  it.effect(
     "projects arbitrary candidates deterministically under the frozen cap and digest contract",
-    [ToolNameCandidateArbitrary],
-    ([candidate]) => {
-      expectRoundTrip(ToolNameCandidate, candidate);
+    Effect.fnUntraced(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([ToolNameCandidateArbitrary]),
+        ([candidate]) =>
+          withToolNameCrypto(
+            Effect.gen(function* () {
+              expectRoundTrip(ToolNameCandidate, candidate);
 
-      const first = projectToolNameCandidate(candidate);
-      const second = projectToolNameCandidate(candidate);
-      assert.deepEqual(second, first);
-      if (Result.isFailure(first)) {
-        return;
-      }
+              const first = yield* Effect.result(projectToolNameCandidate(candidate));
+              const second = yield* Effect.result(projectToolNameCandidate(candidate));
+              assert.deepEqual(second, first);
+              if (Result.isFailure(first)) {
+                return true;
+              }
 
-      const row = Result.getOrThrow(first);
-      expectRoundTrip(ToolNameCollisionRow, row);
-      assert.isAtMost(Str.length(row.finalWireName), 64);
-      if (row.truncated) {
-        assert.strictEqual(Str.length(row.finalWireName), 64);
-        assert.isTrue(P.isNotNull(row.digest));
-      } else {
-        assert.strictEqual(row.finalWireName, row.normalized);
-        assert.isTrue(P.isNull(row.digest));
-      }
-    },
-    { arbitrary: fcRuns(50) }
+              const row = first.success;
+              expectRoundTrip(ToolNameCollisionRow, row);
+              assert.isAtMost(Str.length(row.finalWireName), 64);
+              if (row.truncated) {
+                assert.strictEqual(Str.length(row.finalWireName), 64);
+                assert.isTrue(P.isNotNull(row.digest));
+              } else {
+                assert.strictEqual(row.finalWireName, row.normalized);
+                assert.isTrue(P.isNull(row.digest));
+              }
+              return true;
+            })
+          ),
+        fcRuns(50)
+      );
+
+      assert.strictEqual(result._tag, "Passed");
+    })
   );
 
   layer(NodeServices.layer)("with platform filesystem services", (it) => {

@@ -1,6 +1,7 @@
 import { PosInt } from "@beep/schema/Int";
 import { UUID } from "@beep/schema/String";
 import { ISOStr } from "@beep/schema/Timestamp";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Result from "effect/Result";
@@ -10,6 +11,7 @@ import { EventId as CoreEventId } from "../../Domain/Model/CoreOntology.ts";
 import { EventId as KnowledgeEventId } from "../../Domain/Schema/KnowledgeModel.ts";
 import { getRunIdFromText } from "../../Service/ExtractionRun.ts";
 import { createExtractionStarted, makeProgressBuilder } from "../../Service/ProgressStreaming.ts";
+
 const decodePosIntResult = S.decodeResult(PosInt);
 const isISOStr = S.is(ISOStr);
 const isUUID = S.is(UUID);
@@ -35,12 +37,17 @@ describe("Round 5 canonical boundaries", () => {
     assert.isTrue(Result.isFailure(decodePosIntResult(0)));
   });
 
-  it("constructs deterministic extraction IDs through the canonical owner", () => {
-    const first = getRunIdFromText("canonical content");
-    const second = getRunIdFromText("canonical content");
+  it.layer(BunCrypto.layer)("with platform cryptography", (it) => {
+    it.effect(
+      "constructs deterministic extraction IDs through the canonical owner",
+      Effect.fnUntraced(function* () {
+        const first = yield* getRunIdFromText("canonical content");
+        const second = yield* getRunIdFromText("canonical content");
 
-    assert.isTrue(ExtractionRunId.is(first));
-    assert.strictEqual(first, second);
+        assert.isTrue(ExtractionRunId.is(first));
+        assert.strictEqual(first, second);
+      })
+    );
   });
 
   it("shares one EventId schema identity across both domain surfaces", () => {

@@ -3,70 +3,100 @@ import * as GlobModule from "@beep/schema/Glob";
 import { Glob } from "@beep/schema/Glob";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeGlobModuleSchemaSync = S.decodeSync(GlobModule.Schema);
-const decodeUnknownGlobSync = S.decodeUnknownSync(Glob);
+const decodeGlobModuleSchemaEffect = S.decodeEffect(GlobModule.Schema);
+const decodeUnknownGlobEffect = S.decodeUnknownEffect(Glob);
 const isGlob2 = S.is(Glob);
 const GlobPayload = S.Struct({ glob: Glob });
-const decodeGlobPayloadSync = S.decodeSync(GlobPayload);
+const decodeGlobPayloadEffect = S.decodeEffect(GlobPayload);
 
 describe("Glob", () => {
-  it("accepts portable glob patterns supported by the Bun parser", () => {
-    expect(decodeUnknownGlobSync("src/**/*.ts")).toBe("src/**/*.ts");
-    expect(decodeUnknownGlobSync("{src,test}/**/*.ts")).toBe("{src,test}/**/*.ts");
-    expect(decodeUnknownGlobSync("foo/bar")).toBe("foo/bar");
-    expect(decodeUnknownGlobSync("foo/[bar")).toBe("foo/[bar");
-    expect(decodeUnknownGlobSync("foo/{bar")).toBe("foo/{bar");
-    expect(decodeUnknownGlobSync("!index.ts")).toBe("!index.ts");
-  });
+  it.effect(
+    "accepts portable glob patterns supported by the Bun parser",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeUnknownGlobEffect("src/**/*.ts")).toBe("src/**/*.ts");
+      expect(yield* decodeUnknownGlobEffect("{src,test}/**/*.ts")).toBe("{src,test}/**/*.ts");
+      expect(yield* decodeUnknownGlobEffect("foo/bar")).toBe("foo/bar");
+      expect(yield* decodeUnknownGlobEffect("foo/[bar")).toBe("foo/[bar");
+      expect(yield* decodeUnknownGlobEffect("foo/{bar")).toBe("foo/{bar");
+      expect(yield* decodeUnknownGlobEffect("!index.ts")).toBe("!index.ts");
+    })
+  );
 
-  it("rejects empty input", () => {
-    expect(() => decodeUnknownGlobSync("")).toThrow("Glob pattern must not be empty");
-  });
+  it.effect(
+    "rejects empty input",
+    Effect.fnUntraced(function* () {
+      const failure1 = yield* Effect.result(decodeUnknownGlobEffect(""));
+      expect(Result.isFailure(failure1)).toBe(true);
+      if (Result.isFailure(failure1)) {
+        expect(failure1.failure.message).toContain("Glob pattern must not be empty");
+      }
+    })
+  );
 
-  it("rejects backslash-separated patterns", () => {
-    expect(() => decodeUnknownGlobSync("src\\**\\*.ts")).toThrow(
-      "Glob pattern must use forward slashes instead of backslashes"
-    );
-  });
+  it.effect(
+    "rejects backslash-separated patterns",
+    Effect.fnUntraced(function* () {
+      const failure2 = yield* Effect.result(decodeUnknownGlobEffect("src\\**\\*.ts"));
+      expect(Result.isFailure(failure2)).toBe(true);
+      if (Result.isFailure(failure2)) {
+        expect(failure2.failure.message).toContain("Glob pattern must use forward slashes instead of backslashes");
+      }
+    })
+  );
 
-  it("rejects patterns longer than the current matcher limit", () => {
-    const tooLong = "a".repeat(65_537);
+  it.effect(
+    "rejects patterns longer than the current matcher limit",
+    Effect.fnUntraced(function* () {
+      const tooLong = "a".repeat(65_537);
 
-    expect(() => decodeUnknownGlobSync(tooLong)).toThrow("Glob pattern must not exceed 65536 characters");
-  });
+      const failure3 = yield* Effect.result(decodeUnknownGlobEffect(tooLong));
+      expect(Result.isFailure(failure3)).toBe(true);
+      if (Result.isFailure(failure3)) {
+        expect(failure3.failure.message).toContain("Glob pattern must not exceed 65536 characters");
+      }
+    })
+  );
 
   it("supports guard-style schema checks", () => {
     expect(isGlob2("src/**/*.ts")).toBe(true);
     expect(isGlob2("src\\**\\*.ts")).toBe(false);
   });
 
-  it("reports nested field failures at the glob key", () => {
-    expect(() => decodeGlobPayloadSync({ glob: "src\\**\\*.ts" })).toThrow(`at ["glob"]`);
-  });
+  it.effect(
+    "reports nested field failures at the glob key",
+    Effect.fnUntraced(function* () {
+      const failure4 = yield* Effect.result(decodeGlobPayloadEffect({ glob: "src\\**\\*.ts" }));
+      expect(Result.isFailure(failure4)).toBe(true);
+      if (Result.isFailure(failure4)) {
+        expect(failure4.failure.message).toContain(`at ["glob"]`);
+      }
+    })
+  );
 
-  it("derives portable glob patterns from the source schema arbitrary", () => {
+  {
     const arbitrary = Arbitrary.schema(Glob);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([pattern]) => {
-            expect(isGlob2(pattern)).toBe(true);
-            expect(decodeUnknownGlobSync(pattern)).toBe(pattern);
+    it.effect.prop(
+      "derives portable glob patterns from the source schema arbitrary",
+      [arbitrary],
+      Effect.fnUntraced(function* ([pattern]) {
+        expect(isGlob2(pattern)).toBe(true);
+        expect(yield* decodeUnknownGlobEffect(pattern)).toBe(pattern);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        return true;
+      }),
+      { arbitrary: fcRuns(25) }
+    );
+  }
 
-  it("exposes the canonical namespace module schema role", () => {
-    expect(decodeGlobModuleSchemaSync("src/**/*.ts")).toBe("src/**/*.ts");
-    expect(GlobModule.Glob).toBe(GlobModule.Schema);
-  });
+  it.effect(
+    "exposes the canonical namespace module schema role",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeGlobModuleSchemaEffect("src/**/*.ts")).toBe("src/**/*.ts");
+      expect(GlobModule.Glob).toBe(GlobModule.Schema);
+    })
+  );
 });

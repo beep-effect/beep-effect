@@ -51,7 +51,7 @@ export const XAiHttpMethod = XAiHttpMethodBase.pipe(
     description: "HTTP method literals used by xAI REST endpoints.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   })),
   SchemaUtils.withLiteralKitStatics(XAiHttpMethodBase)
@@ -97,7 +97,7 @@ export const XAiAuthKind = XAiAuthKindBase.pipe(
     description: "Authentication channel required by an xAI endpoint.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   })),
   SchemaUtils.withLiteralKitStatics(XAiAuthKindBase)
@@ -143,7 +143,7 @@ export const XAiEndpointBase = XAiEndpointBaseBase.pipe(
     description: "xAI base URL family used by an endpoint.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   })),
   SchemaUtils.withLiteralKitStatics(XAiEndpointBaseBase)
@@ -189,7 +189,7 @@ export const XAiRequestBodyKind = XAiRequestBodyKindBase.pipe(
     description: "Request body encoding used by an xAI endpoint.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   })),
   SchemaUtils.withLiteralKitStatics(XAiRequestBodyKindBase)
@@ -235,7 +235,7 @@ export const XAiResponseBodyKind = XAiResponseBodyKindBase.pipe(
     description: "Response body encoding returned by an xAI endpoint.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   })),
   SchemaUtils.withLiteralKitStatics(XAiResponseBodyKindBase)
@@ -281,7 +281,7 @@ export const XAiEndpointStatus = XAiEndpointStatusBase.pipe(
     description: "Documentation status for an xAI endpoint.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   })),
   SchemaUtils.withLiteralKitStatics(XAiEndpointStatusBase)
@@ -414,7 +414,7 @@ export const XAiEndpointMethodName = XAiEndpointMethodNameBase.pipe(
     description: "Public XAi service method names that correspond to documented endpoints.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   })),
   SchemaUtils.withLiteralKitStatics(XAiEndpointMethodNameBase)
@@ -563,7 +563,7 @@ export const XAiEndpointId = XAiEndpointIdBase.pipe(
     description: "Stable endpoint identifiers in the checked-in xAI manifest.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   })),
   SchemaUtils.withLiteralKitStatics(XAiEndpointIdBase)

@@ -1,7 +1,7 @@
-import { assert, describe, it } from "@effect/vitest";
-import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { assert, describe, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Layer, Redacted } from "effect";
 import * as O from "effect/Option";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
@@ -90,7 +90,7 @@ describe("AuthRouter", () => {
     );
   });
 
-  it.layer(AnonymousAuthConfig)("with API authentication explicitly disabled", (it) => {
+  it.layer(Layer.merge(AnonymousAuthConfig, BunCrypto.layer))("with API authentication explicitly disabled", (it) => {
     it.effect(
       "does not grant system conflict authority",
       Effect.fnUntraced(function* () {
@@ -122,9 +122,7 @@ describe("AuthRouter", () => {
           ),
           Effect.fnUntraced(function* (webHandler) {
             const listResponse = yield* Effect.tryPromise(() =>
-              webHandler.handler(
-                new Request("http://effect-ontology.test/v1/timeline/conflicts?ontologyId=ontology-a")
-              )
+              webHandler.handler(new Request("http://effect-ontology.test/v1/timeline/conflicts?ontologyId=ontology-a"))
             );
             const transitionResponse = yield* Effect.tryPromise(() =>
               webHandler.handler(

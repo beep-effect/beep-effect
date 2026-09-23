@@ -9,7 +9,7 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeMarkdown2 = S.decodeEffect(Markdown);
 const decodeUnknownMarkdown = S.decodeUnknownEffect(Markdown);
-const decodeUnknownMarkdownSync = S.decodeUnknownSync(Markdown);
+const decodeUnknownMarkdownEffect = S.decodeUnknownEffect(Markdown);
 
 const replaceGlobalBunMarkdownHtml = (html: unknown) =>
   Effect.sync(() => {
@@ -49,21 +49,16 @@ describe("Markdown", () => {
     })
   );
 
-  it("derives accepted Markdown examples from the source schema", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([markdownArbitrary]),
-          ([document]) => {
-            expect(decodeUnknownMarkdownSync(document)).toBe(document);
+  it.effect.prop(
+    "derives accepted Markdown examples from the source schema",
+    [markdownArbitrary],
+    Effect.fnUntraced(function* ([document]) {
+      expect(yield* decodeUnknownMarkdownEffect(document)).toBe(document);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(25) }
+  );
 
   it("falls back to micromark with GFM extensions when Bun is unavailable", () => {
     const parseWithoutBun = makeParseMarkdownForSchema({}, loadMarkdownModule, {

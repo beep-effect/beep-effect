@@ -55,12 +55,12 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeAnchorSync = S.decodeSync(Anchor);
-const decodeForeignElementSync = S.decodeSync(ForeignElement);
-const decodeSafeImageUrlAttributeSync = S.decodeSync(SafeImageUrlAttribute);
-const decodeSafeUrlAttributeSync = S.decodeSync(SafeUrlAttribute);
-const encodeSafeImageUrlAttributeSync = S.encodeSync(SafeImageUrlAttribute);
-const encodeSafeUrlAttributeSync = S.encodeSync(SafeUrlAttribute);
+const decodeAnchor = S.decodeUnknownEffect(Anchor);
+const decodeForeignElement = S.decodeUnknownEffect(ForeignElement);
+const decodeSafeImageUrlAttribute = S.decodeUnknownEffect(SafeImageUrlAttribute);
+const decodeSafeUrlAttribute = S.decodeUnknownEffect(SafeUrlAttribute);
+const encodeSafeImageUrlAttribute = S.encodeEffect(SafeImageUrlAttribute);
+const encodeSafeUrlAttribute = S.encodeEffect(SafeUrlAttribute);
 const isConformantHtml = S.is(ConformantHtml);
 const isHtmlCommentData = S.is(HtmlCommentData);
 const isSafeHtml = S.is(SafeHtml);
@@ -173,21 +173,23 @@ describe("@beep/html conformance", () => {
 });
 
 describe("@beep/html safe policy", () => {
-  it("keeps schema-derived safe URL attributes at their codec fixed points", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([SafeUrlAttributeArbitrary, SafeImageUrlAttributeArbitrary]),
-          ([href, src]) => {
-            expect(decodeSafeUrlAttributeSync(encodeSafeUrlAttributeSync(href))).toBe(href);
-            expect(decodeSafeImageUrlAttributeSync(encodeSafeImageUrlAttributeSync(src))).toBe(src);
+  it.effect("keeps schema-derived safe URL attributes at their codec fixed points", () =>
+    Effect.gen(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([SafeUrlAttributeArbitrary, SafeImageUrlAttributeArbitrary]),
+        ([href, src]) =>
+          Effect.gen(function* () {
+            expect(yield* decodeSafeUrlAttribute(yield* encodeSafeUrlAttribute(href))).toBe(href);
+            expect(yield* decodeSafeImageUrlAttribute(yield* encodeSafeImageUrlAttribute(src))).toBe(src);
 
             return true;
-          },
-          fcRuns(100)
-        )
-      )._tag
-    ).toBe("Passed"));
+          }),
+        fcRuns(100)
+      );
+
+      expect(result._tag).toBe("Passed");
+    })
+  );
 
   it("applies element-aware URL policies", () => {
     for (const href of ["/docs", "#section", "https://example.com", "mailto:user@example.com", "tel:+15551212"]) {
@@ -272,28 +274,34 @@ describe("@beep/html safe policy", () => {
     expect(
       safeHtmlValue(Effect.runSync(conform(safe).pipe(Effect.flatMap(enforceSafeHtml), Effect.flatMap(serializeSafe))))
     ).toBe('<a href="https://example.com" rel="noopener noreferrer" target="_BLANK">link</a>');
-
-    for (const separator of [" ", "\t", "\n", "\f", "\r"]) {
-      const decoded = decodeAnchorSync({
-        _tag: "a",
-        children: [{ _tag: "#text", value: "link" }],
-        href: "https://example.com",
-        rel: `noopener${separator}noreferrer`,
-        target: "_blank",
-      });
-      expect(Exit.isSuccess(safeExit(fragment(decoded)))).toBe(true);
-    }
-    for (const separator of ["\u00a0", "\u2003", "\u202f"]) {
-      const decoded = decodeAnchorSync({
-        _tag: "a",
-        children: [{ _tag: "#text", value: "link" }],
-        href: "https://example.com",
-        rel: `noopener${separator}noreferrer`,
-        target: "_blank",
-      });
-      expect(Exit.isFailure(safeExit(fragment(decoded)))).toBe(true);
-    }
   });
+
+  it.effect("treats HTML ASCII whitespace as rel token separators for protected blank targets", () =>
+    Effect.gen(function* () {
+      const policyExit = (root: HtmlFragment) => Effect.exit(conform(root).pipe(Effect.flatMap(enforceSafeHtml)));
+
+      for (const separator of [" ", "\t", "\n", "\f", "\r"]) {
+        const decoded = yield* decodeAnchor({
+          _tag: "a",
+          children: [{ _tag: "#text", value: "link" }],
+          href: "https://example.com",
+          rel: `noopener${separator}noreferrer`,
+          target: "_blank",
+        });
+        expect(Exit.isSuccess(yield* policyExit(fragment(decoded)))).toBe(true);
+      }
+      for (const separator of ["\u00a0", "\u2003", "\u202f"]) {
+        const decoded = yield* decodeAnchor({
+          _tag: "a",
+          children: [{ _tag: "#text", value: "link" }],
+          href: "https://example.com",
+          rel: `noopener${separator}noreferrer`,
+          target: "_blank",
+        });
+        expect(Exit.isFailure(yield* policyExit(fragment(decoded)))).toBe(true);
+      }
+    })
+  );
 
   it("denies active, foreign, form, data, event, style, and broad global attributes", () => {
     const denied = [
@@ -435,15 +443,21 @@ describe("@beep/html canonical serialization", () => {
     expect(serializeSync(active)).toBe(
       '<svg href="javascript:alert(1)" onload="alert(&quot;x&quot;)" style="fill:red" xlink:href="data:image/svg+xml?a=1&amp;b=2"></svg>'
     );
-    expect(() =>
-      decodeForeignElementSync({
-        _tag: "#foreign",
-        namespace: "svg",
-        name: 'svg onload="x"',
-        children: [],
-      })
-    ).toThrow();
   });
+
+  it.effect("rejects hostile foreign element names at decode time", () =>
+    Effect.gen(function* () {
+      const hostile = yield* Effect.exit(
+        decodeForeignElement({
+          _tag: "#foreign",
+          namespace: "svg",
+          name: 'svg onload="x"',
+          children: [],
+        })
+      );
+      expect(Exit.isFailure(hostile)).toBe(true);
+    })
+  );
 
   it("rejects scalar hazards, ambiguous comments, raw end tags, and plaintext", () => {
     expect(Exit.isFailure(Effect.runSyncExit(serialize(text("\u0000"))))).toBe(true);

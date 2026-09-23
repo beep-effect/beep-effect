@@ -38,6 +38,8 @@ import {
   PacketTraceProjection,
 } from "./PacketCore.schemas.ts";
 import { canonicalJsonTextPretty, packetEventDigest } from "./PacketDigest.ts";
+import type * as Crypto from "effect/Crypto";
+import type * as PlatformError from "effect/PlatformError";
 import type {
   PacketRoot,
   PacketSlug,
@@ -613,10 +615,9 @@ const innermostPlannableFork = (
  * ```ts
  * import { planForkRepair } from "@beep/repo-cli/test/Goals"
  * import { Effect } from "effect"
- * import * as O from "effect/Option"
  *
  * const program = planForkRepair({ packet: "demo", root: "goals", events: [] })
- * Effect.runPromise(program).then((plan) => console.log(O.isNone(plan))) // true
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param input - Packet identity plus its stored events.
@@ -628,39 +629,40 @@ export const planForkRepair: (input: {
   readonly packet: PacketSlug;
   readonly root: PacketRoot;
   readonly events: ReadonlyArray<StoredPacketEvent>;
-}) => Effect.Effect<O.Option<PacketForkRepairPlan>, S.SchemaError> = Effect.fnUntraced(function* (input: {
-  readonly packet: PacketSlug;
-  readonly root: PacketRoot;
-  readonly events: ReadonlyArray<StoredPacketEvent>;
-}) {
-  const sorted = A.sort(input.events, storedBySeqThenId);
-  const index = buildChildIndex(sorted);
-  const verdicts = collectForkVerdicts(index);
-  const firstFork = A.head(verdicts);
-  if (O.isNone(firstFork)) {
-    return O.none<PacketForkRepairPlan>();
-  }
-  const plannable = innermostPlannableFork(sorted, index, verdicts, firstFork.value);
-  if (O.isNone(plannable)) {
-    return O.none<PacketForkRepairPlan>();
-  }
-  const { fork, survivorId, tip } = plannable.value;
-  const losingRoots = pipe(
-    A.drop(fork.children, 1),
-    A.map((id) => A.findFirst(sorted, (stored) => stored.id === id)),
-    A.getSomes
-  );
-  const losing = subtreeOf(index, losingRoots);
-  const rebaseDrafts = yield* rebaseDraftsOnto(input.packet, input.root, tip, losing);
-  return O.some(
-    PacketForkRepairPlan.make({
-      packet: input.packet,
-      root: input.root,
-      fork,
-      survivor: survivorId,
-      survivorTip: tip,
-      rebaseDrafts,
-      filesToRemove: A.map(losing, (stored) => stored.fileName),
-    })
-  );
-});
+}) => Effect.Effect<O.Option<PacketForkRepairPlan>, S.SchemaError | PlatformError.PlatformError, Crypto.Crypto> =
+  Effect.fnUntraced(function* (input: {
+    readonly packet: PacketSlug;
+    readonly root: PacketRoot;
+    readonly events: ReadonlyArray<StoredPacketEvent>;
+  }) {
+    const sorted = A.sort(input.events, storedBySeqThenId);
+    const index = buildChildIndex(sorted);
+    const verdicts = collectForkVerdicts(index);
+    const firstFork = A.head(verdicts);
+    if (O.isNone(firstFork)) {
+      return O.none<PacketForkRepairPlan>();
+    }
+    const plannable = innermostPlannableFork(sorted, index, verdicts, firstFork.value);
+    if (O.isNone(plannable)) {
+      return O.none<PacketForkRepairPlan>();
+    }
+    const { fork, survivorId, tip } = plannable.value;
+    const losingRoots = pipe(
+      A.drop(fork.children, 1),
+      A.map((id) => A.findFirst(sorted, (stored) => stored.id === id)),
+      A.getSomes
+    );
+    const losing = subtreeOf(index, losingRoots);
+    const rebaseDrafts = yield* rebaseDraftsOnto(input.packet, input.root, tip, losing);
+    return O.some(
+      PacketForkRepairPlan.make({
+        packet: input.packet,
+        root: input.root,
+        fork,
+        survivor: survivorId,
+        survivorTip: tip,
+        rebaseDrafts,
+        filesToRemove: A.map(losing, (stored) => stored.fileName),
+      })
+    );
+  });

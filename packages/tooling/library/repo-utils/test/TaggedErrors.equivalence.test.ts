@@ -11,7 +11,7 @@ import {
   TsMorphSourceFileError,
   TsMorphSymbolNotFoundError,
   TsMorphUnsupportedFileError,
-  TypeScriptFilePath,
+  TypeScriptImplementationFilePath,
 } from "@beep/repo-utils";
 import { OptionInjectionError } from "@beep/repo-utils/errors/OptionInjectionError";
 import { describe, expect, it } from "@effect/vitest";
@@ -28,8 +28,8 @@ const expectDeclaredEquivalence = <A>(schema: S.Schema<A>, a: A, b: A, different
 const scopeId = ProjectScopeId.fromString("tsconfig.json::syntax#workspaceOnly");
 const otherScopeId = ProjectScopeId.fromString("other/tsconfig.json::syntax#workspaceOnly");
 const tsConfigPath = TsConfigFilePath.make("tsconfig.json");
-const filePath = S.decodeSync(TypeScriptFilePath)("src/example.ts");
-const otherFilePath = S.decodeSync(TypeScriptFilePath)("src/other.ts");
+const filePath = TypeScriptImplementationFilePath.make("src/example.ts");
+const otherFilePath = TypeScriptImplementationFilePath.make("src/other.ts");
 const symbolId = SymbolId.fromString("src/example.ts::Example#ClassDeclaration");
 
 describe("repo-utils declared-field equivalence", () => {

@@ -20,6 +20,7 @@ import { printLines } from "../../internal/cli/Printer.ts";
 import { runCaptured } from "../../internal/process/index.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { FsUtils } from "@beep/repo-utils";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/CheckCensus");
@@ -290,7 +291,7 @@ const TsconfigReferences = S.Struct({
 );
 const decodeTsconfigReferences = S.decodeUnknownEffect(TsconfigReferences);
 
-type CensusEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type CensusEnvironment = FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner;
 
 const diagnosticLinePattern = /\berror TS\d+:/u;
 const isDiagnosticLine = (line: string): boolean => diagnosticLinePattern.test(line);
@@ -301,7 +302,11 @@ const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
   tsgoPath: string,
   configPath: string,
   cwd: string
-): Effect.fn.Return<ReadonlyArray<string>, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  QualityScriptCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runCaptured({
     command: tsgoPath,
     args: ["-p", configPath, "--listFilesOnly"],
@@ -323,7 +328,7 @@ const measureDiagnostics = Effect.fn("CheckCensus.measureDiagnostics")(function*
 ): Effect.fn.Return<
   { readonly wallMs: number; readonly diagnostics: number },
   QualityScriptCommandError,
-  ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const [elapsed, result] = yield* runCaptured({
     command: tsgoPath,
@@ -361,7 +366,7 @@ const measureProgram = Effect.fn("CheckCensus.measureProgram")(function* (
 ): Effect.fn.Return<
   { readonly program: CheckCensusProgram; readonly files: HashSet.HashSet<string> },
   QualityScriptCommandError,
-  ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const files = yield* listProgramFiles(tsgoPath, configPath, packageDir);
   const upstream = pipe(

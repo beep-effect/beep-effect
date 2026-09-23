@@ -85,7 +85,7 @@ export const ContactSubmissionStatus = ContactSubmissionStatusBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(ContactSubmissionStatusBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

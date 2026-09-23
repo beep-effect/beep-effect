@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { dual } from "effect/Function";
 import { LiteralKit, type SafeObject } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, P, pipe, R } from "@beep/utils";
@@ -144,26 +145,31 @@ export const escapeRegexHint =
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFlags = ""): RegExp => {
-  // Native parity: an undefined pattern behaves as an empty pattern.
-  if (P.isUndefined(arg)) return new RegExp("", extraFlags);
-  if (CodeModeRegExp.is(arg)) return arg.regex;
-  if (P.isString(arg)) {
-    try {
-      return new RegExp(arg, extraFlags);
-    } catch (error) {
-      throw InterpreterRuntimeError.new(
-        `String.${method} received the string ${encodeJson(arg)}, which is not a valid regular expression pattern (${regexFailureReason(error)}). ${escapeRegexHint}`,
-        node
-      ).as("SyntaxError");
+export const toHostRegex: {
+  (method: string, node: AstNode, extraFlags?: string): (arg: unknown) => RegExp;
+  (arg: unknown, method: string, node: AstNode, extraFlags?: string): RegExp;
+} = dual(
+  (args) => P.isString(args[1]),
+  (arg: unknown, method: string, node: AstNode, extraFlags = ""): RegExp => {
+    // Native parity: an undefined pattern behaves as an empty pattern.
+    if (P.isUndefined(arg)) return new RegExp("", extraFlags);
+    if (CodeModeRegExp.is(arg)) return arg.regex;
+    if (P.isString(arg)) {
+      try {
+        return new RegExp(arg, extraFlags);
+      } catch (error) {
+        throw InterpreterRuntimeError.new(
+          `String.${method} received the string ${encodeJson(arg)}, which is not a valid regular expression pattern (${regexFailureReason(error)}). ${escapeRegexHint}`,
+          node
+        ).as("SyntaxError");
+      }
     }
+    throw InterpreterRuntimeError.new(
+      `String.${method} expects a regular expression (a /pattern/flags literal or new RegExp(...)) or a string pattern, not ${arg === null ? "null" : typeof arg}.`,
+      node
+    );
   }
-  throw InterpreterRuntimeError.new(
-    `String.${method} expects a regular expression (a /pattern/flags literal or new RegExp(...)) or a string pattern, not ${arg === null ? "null" : typeof arg}.`,
-    node
-  );
-};
+);
 
 /**
  * Copies a native `RegExpMatchArray` into a guest array, dropping blocked
@@ -229,13 +235,15 @@ export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeRegExpStatic = (_name: RegExpStatic, args: Array<unknown>, node: AstNode): string => {
+export const invokeRegExpStatic: {
+  (args: Array<unknown>, node: AstNode): (_name: RegExpStatic) => string;
+  (_name: RegExpStatic, args: Array<unknown>, node: AstNode): string;
+} = dual(3, (_name: RegExpStatic, args: Array<unknown>, node: AstNode): string => {
   if (!P.isString(args[0])) {
     throw InterpreterRuntimeError.new("RegExp.escape expects a string.", node).as("TypeError");
   }
   return RegExp.escape(args[0]);
-};
+});
 
 /**
  * Dispatches guest `RegExp.prototype` `test`, `exec`, and `toString`.
@@ -263,13 +271,10 @@ export const invokeRegExpStatic = (_name: RegExpStatic, args: Array<unknown>, no
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeRegExpMethod = (
-  value: CodeModeRegExp,
-  name: RegExpMethod,
-  args: Array<unknown>,
-  _node: AstNode
-): unknown => {
+export const invokeRegExpMethod: {
+  (name: RegExpMethod, args: Array<unknown>, _node: AstNode): (value: CodeModeRegExp) => unknown;
+  (value: CodeModeRegExp, name: RegExpMethod, args: Array<unknown>, _node: AstNode): unknown;
+} = dual(4, (value: CodeModeRegExp, name: RegExpMethod, args: Array<unknown>, _node: AstNode): unknown => {
   const execute = (returnBoolean: boolean): unknown => {
     const input = coerceToString(args[0]);
     const lastIndex = value.lastIndex;
@@ -289,7 +294,7 @@ export const invokeRegExpMethod = (
     exec: () => execute(false),
     toString: () => coerceToString(value),
   });
-};
+});
 
 const toLength = (value: unknown): number => {
   const number = coerceToNumber(value);

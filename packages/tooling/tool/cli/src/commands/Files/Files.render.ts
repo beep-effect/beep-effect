@@ -18,6 +18,7 @@ import {
   encodeDetectFacesReport,
   encodeNormalizeManifest,
 } from "./Files.schemas.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type {
   ArchivePoorCandidatesEntry,
@@ -337,7 +338,7 @@ export const renderNormalizeManifest = Effect.fn("Files.renderNormalizeManifest"
 ): Effect.fn.Return<
   string,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const encoded = yield* encodeNormalizeManifest(manifest).pipe(
     FilesCommandError.mapError(`Failed to encode normalize manifest for "${manifestPath}"`)
@@ -446,7 +447,7 @@ export const renderArchivePoorCandidatesManifest = Effect.fn("Files.renderArchiv
 ): Effect.fn.Return<
   string,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const encoded = yield* encodeArchivePoorCandidatesManifest(manifest).pipe(
     FilesCommandError.mapError(`Failed to encode archive manifest for "${manifestPath}"`)
@@ -478,7 +479,7 @@ export const renderDetectBordersReportJson = Effect.fn("Files.renderDetectBorder
 ): Effect.fn.Return<
   string,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const encoded = yield* encodeDetectBordersReport(report).pipe(
     FilesCommandError.mapError("Failed to encode detect-borders report")
@@ -512,7 +513,7 @@ export const renderDetectFacesReportJson = Effect.fn("Files.renderDetectFacesRep
 ): Effect.fn.Return<
   string,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const encoded = yield* encodeDetectFacesReport(report).pipe(
     FilesCommandError.mapError(`Failed to encode detect-faces report for "${outputPath}"`)
@@ -543,7 +544,7 @@ export const writeDetectFacesManifest = Effect.fn("Files.writeDetectFacesManifes
 ): Effect.fn.Return<
   void,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

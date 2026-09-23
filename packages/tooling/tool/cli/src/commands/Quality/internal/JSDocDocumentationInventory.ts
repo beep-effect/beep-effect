@@ -38,6 +38,7 @@ import {
   topoSortPackageNames,
   valuesForTag,
 } from "./QualityArtifactSupport.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { SourceFile } from "ts-morph";
 import type { JSDocSectionName } from "../../../internal/jsdoc/JSDocSections.ts";
@@ -733,7 +734,7 @@ const categoryViolations = (commentText: string): ReadonlyArray<DocumentationIss
     })
   );
 
-const decodeTrimmedString = S.decodeSync(S.Trim);
+const decodeTrimmedString = S.decodeUnknownOption(S.Trim);
 
 const textLooksLikeSchemaExport = (name: string, node: Node): boolean => {
   if (Str.startsWith("$")(name)) {
@@ -747,13 +748,14 @@ const textLooksLikeSchemaExport = (name: string, node: Node): boolean => {
     return false;
   }
 
-  const initializer = decodeTrimmedString(node.getInitializer()?.getText() ?? "");
-  return (
-    /^(?:LiteralKit|DomainModel\.make|ProductEntity\.make|Table\.make)\s*\(/.test(initializer) ||
-    /^S\.(?:String|Number|Boolean|BigInt|Symbol|Object|Unknown|Any|Never|Void|Null|Undefined|Date|Array|Record|Struct|Union|Literal|TemplateLiteral|Tuple|Class|Enums|OptionFrom|NullOr|TaggedStruct|TaggedError)(?:\s*(?:[({[;,]|$)|\.pipe\s*\()/.test(
-      initializer
-    )
-  );
+  return O.match(decodeTrimmedString(node.getInitializer()?.getText() ?? ""), {
+    onNone: thunkFalse,
+    onSome: (initializer) =>
+      /^(?:LiteralKit|DomainModel\.make|ProductEntity\.make|Table\.make)\s*\(/.test(initializer) ||
+      /^S\.(?:String|Number|Boolean|BigInt|Symbol|Object|Unknown|Any|Never|Void|Null|Undefined|Date|Array|Record|Struct|Union|Literal|TemplateLiteral|Tuple|Class|Enums|OptionFrom|NullOr|TaggedStruct|TaggedError)(?:\s*(?:[({[;,]|$)|\.pipe\s*\()/.test(
+        initializer
+      ),
+  });
 };
 
 const schemaAnnotationGaps = (name: string, node: Node, sourceFile: SourceFile): ReadonlyArray<DocumentationIssue> => {
@@ -1593,7 +1595,7 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
 ): Effect.fn.Return<
   Inventory,
   QualityArtifactGeneratorError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const fs = yield* FileSystem.FileSystem;
@@ -1670,7 +1672,7 @@ export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
 ): Effect.fn.Return<
   JSDocDocumentationInventoryWriteResult,
   QualityArtifactGeneratorError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

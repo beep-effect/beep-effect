@@ -6,67 +6,65 @@ import { Effect, Encoding, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const encodeCuidSync = S.encodeSync(Cuid);
-const encodeCuidSeedSync = S.encodeSync(CuidSeed);
+const encodeCuidEffect = S.encodeEffect(Cuid);
+const encodeCuidSeedEffect = S.encodeEffect(CuidSeed);
 const isCuid = S.is(Cuid);
 
 const beepSha512Digest =
   "e6d9beb966c28eeb50c7162bbe1329b4ab3334ee1b2d3df4bd44334430347c0db4cbf8202a414e795cdc2facd37b3eb4ee8d8550969441dfecf8df4cdf582e03";
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(BunCrypto.layer));
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 describe("Cuid", () => {
-  it.effect("computes SHA-512 with the platform Crypto service", () =>
-    Effect.gen(function* () {
-      const digest = yield* sha512(new TextEncoder().encode("beep"));
-      expect(Encoding.encodeHex(digest)).toBe(beepSha512Digest);
-    }).pipe(provideScopedLayer(BunCrypto.layer))
-  );
+  it.layer(CuidTestLayer)((it) => {
+    it.effect(
+      "computes SHA-512 with the platform Crypto service",
+      Effect.fnUntraced(function* () {
+        const digest = yield* sha512(new TextEncoder().encode("beep"));
+        expect(Encoding.encodeHex(digest)).toBe(beepSha512Digest);
+      })
+    );
 
-  it.effect("generates CUID values with explicit platform crypto", () =>
-    Effect.gen(function* () {
-      const id = yield* cuid;
-      expect(isCuid(id)).toBe(true);
-    }).pipe(provideScopedLayer(CuidTestLayer))
-  );
+    it.effect(
+      "generates CUID values with explicit platform crypto",
+      Effect.fnUntraced(function* () {
+        const id = yield* cuid;
+        expect(isCuid(id)).toBe(true);
+      })
+    );
+  });
 
-  it("derives valid CUIDs from the schema arbitrary", () => {
+  {
     const arbitrary = Arbitrary.schema(Cuid);
+    it.effect.prop(
+      "derives valid CUIDs from the schema arbitrary",
+      [arbitrary],
+      Effect.fnUntraced(function* ([id]) {
+        expect(Cuid.is(id)).toBe(true);
+        expect(yield* encodeCuidEffect(id)).toBe(id);
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([id]) => {
-            expect(Cuid.is(id)).toBe(true);
-            expect(encodeCuidSync(id)).toBe(id);
+        return true;
+      }),
+      { arbitrary: fcRuns(25) }
+    );
+  }
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+  it.effect(
+    "keeps CuidSeed encoded shape byte-identical",
+    Effect.fnUntraced(function* () {
+      const random = new Uint8Array([1, 2, 3, 4]);
+      const seed = CuidSeed.make({
+        timestamp: 1,
+        counter: 0,
+        random,
+        fingerprint: "beep",
+      });
 
-  it("keeps CuidSeed encoded shape byte-identical", () => {
-    const random = new Uint8Array([1, 2, 3, 4]);
-    const seed = CuidSeed.make({
-      timestamp: 1,
-      counter: 0,
-      random,
-      fingerprint: "beep",
-    });
-
-    expect(encodeCuidSeedSync(seed)).toEqual({
-      timestamp: 1,
-      counter: 0,
-      random,
-      fingerprint: "beep",
-    });
-  });
+      expect(yield* encodeCuidSeedEffect(seed)).toEqual({
+        timestamp: 1,
+        counter: 0,
+        random,
+        fingerprint: "beep",
+      });
+    })
+  );
 });

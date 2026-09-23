@@ -4,13 +4,14 @@ import { makeDrizzleLayer } from "@beep/postgres";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { UUID } from "@beep/schema/String";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, it } from "@effect/vitest";
 import { Context, DateTime, Effect, Equal, Layer, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { HttpRouter } from "effect/unstable/http";
 import { SqlClient } from "effect/unstable/sql";
+import { describe } from "vitest";
 import {
   ConflictActor,
   ConflictsQuery,
@@ -22,6 +23,7 @@ import { ClaimRepository } from "../../Repository/Claim.ts";
 import { ConflictRepository, canonicalConflictPair, EqualConflictPairError } from "../../Repository/Conflict.ts";
 import { CurrentConflictActor } from "../../Runtime/HttpMiddleware.ts";
 import { TimelineRouter } from "../../Runtime/HttpServer.ts";
+
 const decodeTimelineEntityResponseJson = S.decodeEffect(S.fromJsonString(TimelineEntityResponse));
 const decodeUnknownConflictsQuery = S.decodeUnknownEffect(ConflictsQuery);
 const decodeUnknownStructInlineSchema = S.decodeUnknownEffect(S.Struct({ _tag: S.String }));
@@ -215,7 +217,7 @@ const TimelineHttpTestLayer = TimelineRouter.pipe(
   Layer.provideMerge(Layer.succeed(CurrentConflictActor, HttpActor))
 );
 
-describe.sequential("ConflictRepository", () => {
+describe("ConflictRepository", { concurrent: false }, () => {
   it.layer(RepositoryTestLayer)("with PGlite persistence", (it) => {
     it.effect(
       "persists canonical position and temporal conflicts transactionally",

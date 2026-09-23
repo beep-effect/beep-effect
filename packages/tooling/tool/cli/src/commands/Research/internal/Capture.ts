@@ -115,11 +115,13 @@ export const captureUrlImpl = Effect.fn("Research.captureUrlImpl")(function* (
   const title = documentTitle(success).pipe(O.getOrElse(() => urlNorm));
 
   const now = DateTime.formatIso(yield* DateTime.now);
-  const id = `kb-article-${sha256HexOf(urlNorm).slice(0, 16)}`;
+  const urlHash = yield* sha256HexOf(urlNorm);
+  const id = `kb-article-${urlHash.slice(0, 16)}`;
   const body = `# ${title}\n\n${markdown.value}`;
+  const contentHash = yield* sha256HexOf(body);
   const frontmatter = KnowledgeCardFrontmatter.make({
     capturedAt: now,
-    contentHash: sha256HexOf(body),
+    contentHash,
     id,
     related: [],
     sourceType: "article",
@@ -129,24 +131,15 @@ export const captureUrlImpl = Effect.fn("Research.captureUrlImpl")(function* (
     url: urlNorm,
     via: "capture",
   });
-  const cardRelativePath = path.join(VAULT_DIRS.articles, `${slugFor(title, urlNorm)}.md`);
+  const slug = yield* slugFor(title, urlNorm);
+  const cardRelativePath = path.join(VAULT_DIRS.articles, `${slug}.md`);
   yield* writeCard(options.vaultRoot, cardRelativePath, renderCard(frontmatter, body));
 
   yield* runWithResearchDb(
     Effect.gen(function* () {
       const db = yield* DuckDb;
       yield* db.run(INSERT_SEEN_URL, [urlNorm, now, "capture"]);
-      yield* db.run(UPSERT_CARD, [
-        id,
-        cardRelativePath,
-        urlNorm,
-        "article",
-        "inbox",
-        sha256HexOf(body),
-        now,
-        null,
-        title,
-      ]);
+      yield* db.run(UPSERT_CARD, [id, cardRelativePath, urlNorm, "article", "inbox", contentHash, now, null, title]);
       yield* db.run(INSERT_CAPTURE_LOG, [now, "capture", urlNorm, "captured"]);
     }),
     {

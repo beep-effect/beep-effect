@@ -9,7 +9,7 @@ import {
 } from "@beep/provenance";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { Option, Result } from "effect";
+import { Effect, Option, Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -18,12 +18,6 @@ import { ChunkId, DocumentId } from "@/schema/Ids";
 import { ModelIdentity } from "@/schema/Model";
 import { EventBody, makeProvenanceEventId, ProvenanceEvent } from "@/schema/Provenance";
 import { CrashProjectionInput } from "@/schema/Reasoning";
-
-const [mode] = A.drop(process.argv, 2);
-if (mode !== "fixture") {
-  process.stderr.write("Expected fixture mode.\n");
-  process.exit(2);
-}
 
 const model = ModelIdentity.make({
   artifactHash: Sha256Hex.make(Str.repeat(64)("f")),
@@ -92,10 +86,22 @@ const makeExtraction = (documentHash: string, chunkHash: string, textHash: strin
   return { event, outcome };
 };
 
-const first = makeExtraction(Str.repeat(64)("d"), Str.repeat(64)("e"), Str.repeat(64)("a"), "Effect");
-const second = makeExtraction(Str.repeat(64)("b"), Str.repeat(64)("c"), Str.repeat(64)("9"), "Schema");
-const fixture = S.encodeSync(S.fromJsonString(CrashProjectionInput))(
-  CrashProjectionInput.make({ events: [first.event, second.event], outcomes: [first.outcome, second.outcome] })
-);
+const encodeCrashProjectionInput = S.encodeEffect(S.fromJsonString(CrashProjectionInput));
 
-process.stdout.write(`${fixture}\n`);
+const probe = Effect.gen(function* () {
+  const [mode] = A.drop(process.argv, 2);
+  if (mode !== "fixture") {
+    process.stderr.write("Expected fixture mode.\n");
+    process.exit(2);
+  }
+
+  const first = makeExtraction(Str.repeat(64)("d"), Str.repeat(64)("e"), Str.repeat(64)("a"), "Effect");
+  const second = makeExtraction(Str.repeat(64)("b"), Str.repeat(64)("c"), Str.repeat(64)("9"), "Schema");
+  const fixture = yield* encodeCrashProjectionInput(
+    CrashProjectionInput.make({ events: [first.event, second.event], outcomes: [first.outcome, second.outcome] })
+  );
+
+  process.stdout.write(`${fixture}\n`);
+});
+
+await Effect.runPromise(probe);

@@ -19,7 +19,7 @@ import {
 import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
-import { Effect, Layer, pipe } from "effect";
+import { Effect, Layer, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -113,20 +113,25 @@ if (!shouldRunPgliteIntegration) {
             workspaceId: 2,
           });
 
-          yield* db.insert(DocumentsDbSchema.syncItem).values(toSyncItemInsert(syncItem));
-          yield* db.insert(DocumentsDbSchema.syncOperation).values(toSyncOperationInsert(syncOperation));
-          yield* db.insert(DocumentsDbSchema.syncCursor).values(toSyncCursorInsert(syncCursor));
-          yield* db.insert(DocumentsDbSchema.syncConflict).values(toSyncConflictInsert(syncConflict));
+          const syncItemInsert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
+          const syncOperationInsert = yield* Effect.fromResult(toSyncOperationInsert(syncOperation));
+          const syncCursorInsert = yield* Effect.fromResult(toSyncCursorInsert(syncCursor));
+          const syncConflictInsert = yield* Effect.fromResult(toSyncConflictInsert(syncConflict));
+
+          yield* db.insert(DocumentsDbSchema.syncItem).values(syncItemInsert);
+          yield* db.insert(DocumentsDbSchema.syncOperation).values(syncOperationInsert);
+          yield* db.insert(DocumentsDbSchema.syncCursor).values(syncCursorInsert);
+          yield* db.insert(DocumentsDbSchema.syncConflict).values(syncConflictInsert);
 
           const itemRows = yield* db.select().from(DocumentsDbSchema.syncItem);
           const operationRows = yield* db.select().from(DocumentsDbSchema.syncOperation);
           const cursorRows = yield* db.select().from(DocumentsDbSchema.syncCursor);
           const conflictRows = yield* db.select().from(DocumentsDbSchema.syncConflict);
 
-          const items = A.map(itemRows, fromSyncItemRow);
-          const operations = A.map(operationRows, fromSyncOperationRow);
-          const cursors = A.map(cursorRows, fromSyncCursorRow);
-          const conflicts = A.map(conflictRows, fromSyncConflictRow);
+          const items = yield* Effect.fromResult(Result.all(A.map(itemRows, fromSyncItemRow)));
+          const operations = yield* Effect.fromResult(Result.all(A.map(operationRows, fromSyncOperationRow)));
+          const cursors = yield* Effect.fromResult(Result.all(A.map(cursorRows, fromSyncCursorRow)));
+          const conflicts = yield* Effect.fromResult(Result.all(A.map(conflictRows, fromSyncConflictRow)));
 
           expect(A.map(items, (item) => item.localRelPath)).toEqual(["matters/client-default/complaint.pdf"]);
           expect(A.map(items, (item) => item.contentDigest)).toEqual([O.some("abc123")]);
@@ -137,8 +142,9 @@ if (!shouldRunPgliteIntegration) {
           ]);
 
           const duplicateOperation = yield* decodeSyncOperation(syncOperationFixture(2, "documents_sync_operation_a2"));
+          const duplicateInsert = yield* Effect.fromResult(toSyncOperationInsert(duplicateOperation));
           const uniqueViolation = yield* Effect.flip(
-            db.insert(DocumentsDbSchema.syncOperation).values(toSyncOperationInsert(duplicateOperation))
+            db.insert(DocumentsDbSchema.syncOperation).values(duplicateInsert)
           );
 
           // The duplicate probe stays LAST: the migration property under test

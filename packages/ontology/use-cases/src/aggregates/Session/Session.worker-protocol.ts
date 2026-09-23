@@ -249,12 +249,12 @@ export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
  */
 export type WorkerResult = typeof WorkerResult.Type;
 
-// The exported encoders below wrap these rather than being them: `S.encodeSync`
-// returns a function carrying an optional options parameter, which the repo's
-// This stays local because callers never need a data-last form.
-// Nobody passes encode options across a worker boundary.
-const encodeWorkerCommandSync = S.encodeSync(WorkerCommand);
-const encodeWorkerResultSync = S.encodeSync(WorkerResult);
+// The exported encoders below wrap these rather than being them: `S.encodeResult`
+// returns a function carrying an optional options parameter. This stays local
+// because callers never need a data-last form. Nobody passes encode options
+// across a worker boundary.
+const encodeWorkerCommandResult = S.encodeResult(WorkerCommand);
+const encodeWorkerResultResult = S.encodeResult(WorkerResult);
 
 /**
  * The worker boundary is a `structuredClone`, not a channel that carries types.
@@ -282,8 +282,9 @@ const encodeWorkerResultSync = S.encodeSync(WorkerResult);
  * @category codecs
  * @since 0.0.0
  */
-export const encodeWorkerCommand = (command: WorkerCommand): typeof WorkerCommand.Encoded =>
-  encodeWorkerCommandSync(command);
+export const encodeWorkerCommand = (
+  command: WorkerCommand
+): Result.Result<typeof WorkerCommand.Encoded, S.SchemaError> => encodeWorkerCommandResult(command);
 
 /**
  * Decode a `WorkerCommand` that has crossed the worker boundary.
@@ -322,7 +323,8 @@ export const decodeWorkerCommand: (input: unknown) => Result.Result<WorkerComman
  * @category codecs
  * @since 0.0.0
  */
-export const encodeWorkerResult = (result: WorkerResult): typeof WorkerResult.Encoded => encodeWorkerResultSync(result);
+export const encodeWorkerResult = (result: WorkerResult): Result.Result<typeof WorkerResult.Encoded, S.SchemaError> =>
+  encodeWorkerResultResult(result);
 
 /**
  * Decode a `WorkerResult` received from the worker.

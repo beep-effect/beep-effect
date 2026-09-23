@@ -42,12 +42,12 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   ).toBe("Passed");
 };
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
-const localRelPath = S.decodeSync(VaultRelPath)("matters/client-default/complaint.pdf");
-const localGeneration = S.decodeSync(NonNegativeInt)(1);
-const remoteId9001 = S.decodeSync(RemoteItemId)("9001");
-const decodeSyncItem = S.decodeUnknownSync(DomainSyncItem.SyncItem);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
+const localRelPath = VaultRelPath.make("matters/client-default/complaint.pdf");
+const localGeneration = NonNegativeInt.make(1);
+const remoteId9001 = RemoteItemId.make("9001");
 const decodeSyncItemEffect = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
+const decodeSyncItemRow = (input: unknown) => decodeSyncItemEffect(input).pipe(Effect.orDie);
 const encodeSyncItemEffect = S.encodeEffect(DomainSyncItem.SyncItem);
 
 const fileSeed = SyncItemSeed.make({
@@ -93,8 +93,8 @@ const makeRepository = (): SyncItemRepositoryShape => {
               reason: "sync item already tracked for path",
             })
           )
-        : Effect.sync(() => {
-            const created = decodeSyncItem(syncItemRow(seed, nextId));
+        : Effect.gen(function* () {
+            const created = yield* decodeSyncItemRow(syncItemRow(seed, nextId));
             nextId = nextId + 1;
             items = A.append(items, created);
             return created;
@@ -184,7 +184,7 @@ describe("SyncItem repository port", () => {
     "fails update with not-found for unknown rows",
     Effect.fnUntraced(function* () {
       const repository = makeRepository();
-      const unknown = decodeSyncItem(syncItemRow(fileSeed, 99));
+      const unknown = yield* decodeSyncItemRow(syncItemRow(fileSeed, 99));
       const error = yield* repository.update(unknown).pipe(Effect.flip);
 
       expect(SyncItemRepositoryNotFound.is(error)).toBe(true);

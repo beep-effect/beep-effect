@@ -43,7 +43,7 @@ import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { A, N, O } from "@beep/utils";
 import { and, eq, gt, isNull, lte, or } from "drizzle-orm";
-import { DateTime, Effect, Equal, Match, Order, pipe, Semaphore } from "effect";
+import { DateTime, Effect, Equal, Match, Order, pipe, Result, Semaphore } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { LogicalEdgeKey } from "@beep/epistemic-domain/values";
@@ -62,7 +62,6 @@ const EDGE_TABLE_NAME = "epistemic_edge_version" as const;
 const edgeTable = DbSchema.edgeVersion;
 
 const edgeVersionPublicId = PublicEntityId.factory(Epistemic.EdgeVersionId);
-const decodeEdgeVersionId = S.decodeUnknownSync(Epistemic.EdgeVersionId);
 const earlierThan = Order.isLessThan(DateTime.Order);
 const notLaterThan = Order.isLessThanOrEqualTo(DateTime.Order);
 const byVersion = Order.mapInput(Order.Number, (version: EdgeVersion) => version.version);
@@ -73,7 +72,7 @@ const byVersion = Order.mapInput(Order.Number, (version: EdgeVersion) => version
  * sequence assigns the real one, and the inserted row is decoded back before it
  * is returned.
  */
-const pendingEdgeVersionId = decodeEdgeVersionId(1);
+const pendingEdgeVersionId = Epistemic.EdgeVersionId.make(1);
 
 /**
  * Public handle for one edge version, derived from the pair that already
@@ -82,8 +81,10 @@ const pendingEdgeVersionId = decodeEdgeVersionId(1);
  * uniqueness instead of needing a generator and the CUID/crypto services one
  * would drag into the layer.
  */
-const publicIdFor = (logicalKey: LogicalEdgeKey, version: PosInt) =>
-  edgeVersionPublicId.decodeUnknownSync(`${Epistemic.EdgeVersionId.tableName}_a${logicalKey}v${version}`);
+const decodeEdgeVersionPublicId = S.decodeUnknownEffect(edgeVersionPublicId);
+const publicIdFor = Effect.fnUntraced(function* (logicalKey: LogicalEdgeKey, version: PosInt) {
+  return yield* decodeEdgeVersionPublicId(`${Epistemic.EdgeVersionId.tableName}_a${logicalKey}v${version}`);
+});
 
 type EdgeFactCommand = RecordEdgeFact | SupersedeEdgeFact;
 
@@ -100,8 +101,9 @@ type EdgeVersionShape = {
  * clock read here — and the transaction axis always opens (`expiredAt` absent),
  * because a row is current the moment it is written.
  */
-const buildEdgeVersion = (command: EdgeFactCommand, shape: EdgeVersionShape): EdgeVersion =>
-  EdgeVersion.make({
+const buildEdgeVersion = Effect.fnUntraced(function* (command: EdgeFactCommand, shape: EdgeVersionShape) {
+  const publicId = yield* publicIdFor(shape.logicalKey, shape.version);
+  return EdgeVersion.make({
     ...flattenEdgeSource(command.identity.source),
     ...flattenEdgeTarget(command.identity.target),
     createdAt: command.recordedAt,
@@ -114,7 +116,7 @@ const buildEdgeVersion = (command: EdgeFactCommand, shape: EdgeVersionShape): Ed
     logicalKey: shape.logicalKey,
     matterScope: command.identity.matterScope,
     orgId: command.orgId,
-    publicId: publicIdFor(shape.logicalKey, shape.version),
+    publicId,
     qualifiers: command.identity.qualifiers,
     recordedAt: command.recordedAt,
     relation: command.identity.relation,
@@ -128,6 +130,7 @@ const buildEdgeVersion = (command: EdgeFactCommand, shape: EdgeVersionShape): Ed
     validTo: shape.validTo,
     version: shape.version,
   });
+});
 
 /**
  * Canonical two-axis predicate: what was true at `validAt`, as far as anyone
@@ -279,12 +282,14 @@ const readUnavailable =
       )
     );
 
-const persistedOrSeed = (rows: ReadonlyArray<EdgeVersionRow>, seed: EdgeVersion): EdgeVersion =>
+const persistedOrSeed = (rows: ReadonlyArray<EdgeVersionRow>, seed: EdgeVersion) =>
   pipe(
     rows,
     A.head,
-    O.map(fromEdgeVersionRow),
-    O.getOrElse(() => seed)
+    O.match({
+      onNone: () => Effect.succeed(seed),
+      onSome: (row) => Effect.fromResult(fromEdgeVersionRow(row)),
+    })
   );
 
 type EdgeAuthorityTransaction = PgEffectTransaction<EffectPgQueryEffectHKT, EffectPgQueryResultHKT, EmptyRelations>;
@@ -346,7 +351,8 @@ export const supersedeEdgeFactInTransaction: SupersedeEdgeFactInTransaction = du
         .from(edgeTable)
         .where(and(eq(edgeTable.logicalKey, logicalKey), isNull(edgeTable.expiredAt)))
         .for("update");
-      const head = supersessionHeadOf(A.map(currentRows, fromEdgeVersionRow));
+      const current = yield* Effect.fromResult(Result.all(A.map(currentRows, fromEdgeVersionRow)));
+      const head = supersessionHeadOf(current);
       if (O.isNone(head)) {
         return yield* SupersessionConflict.lockLoser(logicalKey, command.expectedVersion);
       }
@@ -362,19 +368,20 @@ export const supersedeEdgeFactInTransaction: SupersedeEdgeFactInTransaction = du
       if (A.length(closed) === 0) {
         return yield* SupersessionConflict.lockLoser(logicalKey, command.expectedVersion);
       }
-      const former = persistedOrSeed(
+      const former = yield* persistedOrSeed(
         closed,
         EdgeVersion.make({ ...head.value, expiredAt: O.some(command.recordedAt) })
       );
 
-      const seed = buildEdgeVersion(command, {
+      const seed = yield* buildEdgeVersion(command, {
         logicalKey,
         supersedesId: O.some(head.value.id),
         validTo: command.validTo,
         version: PosInt.make(head.value.version + 1),
       });
-      const inserted = yield* tx.insert(edgeTable).values(toEdgeVersionInsert(seed)).returning();
-      return { former, replacement: persistedOrSeed(inserted, seed) };
+      const insert = yield* Effect.fromResult(toEdgeVersionInsert(seed));
+      const inserted = yield* tx.insert(edgeTable).values(insert).returning();
+      return { former, replacement: yield* persistedOrSeed(inserted, seed) };
     }).pipe(writeFailure("supersede", logicalKey, command.expectedVersion));
   }
 );
@@ -423,7 +430,14 @@ export const makeDrizzleEdgeAuthorityRepository = Effect.fn("Epistemic.EdgeAutho
       .from(edgeTable)
       .where(asOfWhere(logicalKey, validAt, knownAt))
       .pipe(readUnavailable(operation));
-    return pipe(rows, A.head, O.map(fromEdgeVersionRow));
+    return yield* pipe(
+      A.head(rows),
+      O.match({
+        onNone: () => Effect.succeed(O.none<EdgeVersion>()),
+        onSome: (row) => Effect.asSome(Effect.fromResult(fromEdgeVersionRow(row))),
+      }),
+      readUnavailable(operation)
+    );
   });
 
   return EdgeAuthorityRepository.of({
@@ -446,24 +460,25 @@ export const makeDrizzleEdgeAuthorityRepository = Effect.fn("Epistemic.EdgeAutho
           .transaction(
             Effect.fnUntraced(function* (tx) {
               const rows = yield* tx.select().from(edgeTable).where(eq(edgeTable.logicalKey, logicalKey)).for("update");
-              const versions = A.map(rows, fromEdgeVersionRow);
+              const versions = yield* Effect.fromResult(Result.all(A.map(rows, fromEdgeVersionRow)));
               const version = nextVersionAfter(versions);
-              const seed = buildEdgeVersion(command, {
+              const seed = yield* buildEdgeVersion(command, {
                 logicalKey,
                 supersedesId: O.none(),
                 validTo: recordValidTo(command, versions),
                 version,
               });
+              const insert = yield* Effect.fromResult(toEdgeVersionInsert(seed));
               const inserted = yield* tx
                 .insert(edgeTable)
-                .values(toEdgeVersionInsert(seed))
+                .values(insert)
                 .returning()
                 // A `record` carries no caller expectation about the head, so a
                 // backstop rejection reports the version this write attempted:
                 // that is what the losing writer must re-derive before it tries
                 // again.
                 .pipe(writeFailure("record", logicalKey, version));
-              return persistedOrSeed(inserted, seed);
+              return yield* persistedOrSeed(inserted, seed);
             })
           )
           // Residual transaction-level failures only; the statements inside

@@ -9,18 +9,23 @@ let aborted = false;
 // interrupt this fiber and await its finalizer before suite teardown.
 it.live.fails("qualification: default timeout interrupts and releases", (ctx) =>
   Effect.gen(function* () {
-    ctx.signal.addEventListener("abort", () => {
-      aborted = true;
-    }, { once: true });
+    ctx.signal.addEventListener(
+      "abort",
+      () => {
+        aborted = true;
+      },
+      { once: true }
+    );
     yield* Effect.acquireRelease(
       Effect.sync(() => {
         acquired = true;
       }),
-      () => Effect.sync(() => {
-        released = true;
-      })
+      () =>
+        Effect.sync(() => {
+          released = true;
+        })
     );
-    yield* Effect.never;
+    return yield* Effect.never;
   })
 );
 

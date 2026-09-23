@@ -217,6 +217,7 @@
   },
   "devDependencies": {
     "@commitlint/is-ignored": "catalog:",
+    "@effect/platform-node-shared": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"
   }

@@ -16,17 +16,16 @@ import { Composer } from "@/chat/ui/Composer";
 import { Thread } from "@/chat/ui/Thread";
 import "@testing-library/jest-dom/vitest";
 import { RegistryProvider, useAtomRefresh, useAtomSet } from "@effect/atom-react";
-import { it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { cleanup, render, waitFor, within } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { AsyncResult, Reactivity } from "effect/unstable/reactivity";
-import { afterEach, beforeAll, describe, expect, vi } from "vitest";
+import { afterEach, beforeAll, vi } from "vitest";
 import type { JSX } from "react";
 
-const threadId = S.decodeSync(WorkspaceIdentity.ThreadId)(1);
+const threadId = WorkspaceIdentity.ThreadId.make(1);
 
 const userMessage = MdModel.Document.make({
   children: [MdModel.P.make({ children: [MdModel.Text.make({ value: "what did I just ask?" })] })],
