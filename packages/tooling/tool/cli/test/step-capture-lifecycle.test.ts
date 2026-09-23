@@ -15,6 +15,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Deferred, Duration, Effect, Exit, Fiber, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
@@ -43,7 +44,7 @@ const decodeActiveAdmissionWorkload = S.decodeEffect(ActiveAdmissionWorkload);
 // A crypto service that mints no UUIDs, standing in for a platform whose
 // random-UUID source is unavailable.
 const uuidlessCrypto: Crypto.Crypto = {
-  ...Crypto.make({ randomBytes: (size) => new Uint8Array(size) }),
+  ...NodeCrypto.make,
   randomUUIDv4: Effect.fail(
     PlatformError.badArgument({
       module: "Crypto",

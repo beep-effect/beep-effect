@@ -11,10 +11,17 @@ vi.mock("@beep/repo-cli/commands/Codex/Findings.triage.schemas", (importOriginal
   Promise.all([
     importOriginal<typeof import("@beep/repo-cli/commands/Codex/Findings.triage.schemas")>(),
     import("effect/Effect"),
-  ]).then(([schemas, EffectModule]) => ({
-    ...schemas,
-    encodeCodexTriageLedger: () => EffectModule.fail(new Error("forced triage-ledger encode failure")),
-  }))
+    import("effect/Data"),
+  ]).then(([schemas, EffectModule, DataModule]) => {
+    class ForcedTriageLedgerEncodeFailure extends DataModule.TaggedError("ForcedTriageLedgerEncodeFailure")<{
+      readonly message: string;
+    }> {}
+    return {
+      ...schemas,
+      encodeCodexTriageLedger: () =>
+        EffectModule.fail(new ForcedTriageLedgerEncodeFailure({ message: "forced triage-ledger encode failure" })),
+    };
+  })
 );
 
 const planWith = (records: ReadonlyArray<CodexFindingRecord>) =>

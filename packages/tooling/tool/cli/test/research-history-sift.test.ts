@@ -131,9 +131,7 @@ describe("discoverProfiles", () => {
         const home = yield* makeHome([CHROME_CONFIG_DIR]);
         const profiles = yield* discoverProfiles("chrome").pipe(withHome({ HOME: home }));
 
-        expect(A.length(profiles)).toBe(1);
-        expect(A.headNonEmpty(profiles).browser).toBe("chrome");
-        expect(A.headNonEmpty(profiles).profile).toBe("Profile 1");
+        expect(profiles).toMatchObject([{ browser: "chrome", profile: "Profile 1" }]);
       })
     )
   );
@@ -146,8 +144,7 @@ describe("discoverProfiles", () => {
         const home = yield* makeHome([BRAVE_CONFIG_DIR]);
         const profiles = yield* discoverProfiles("all").pipe(withHome({ HOME: home }));
 
-        expect(A.length(profiles)).toBe(1);
-        expect(A.headNonEmpty(profiles).browser).toBe("brave");
+        expect(profiles).toMatchObject([{ browser: "brave" }]);
       })
     )
   );

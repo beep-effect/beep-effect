@@ -4,11 +4,13 @@ import {
   ResearchCommandServiceLive,
   ResearchNotionPullOptions,
 } from "@beep/repo-cli/commands/Research";
+import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FetchHttpClient } from "effect/unstable/http";
 
@@ -30,6 +32,7 @@ const testLayer = Layer.mergeAll(
 );
 
 const provideTestLayer = provideScopedLayer(testLayer);
+const encodeLinksFile = S.encodeEffect(UnknownFromJsonString);
 
 const LINKS = [
   { createdIso: "2026-07-08T12:00:00.000Z", tags: ["effect"], title: "Schema First", url: "https://example.com/a/" },
@@ -39,14 +42,12 @@ const LINKS = [
   { title: "Broken", url: "not-a-url" },
 ];
 
-const makeFixture = Effect.fn("ResearchNotionPullTest.makeFixture")(function* (
-  links: ReadonlyArray<Record<string, unknown>>
-) {
+const makeFixture = Effect.fn("ResearchNotionPullTest.makeFixture")(function* (links: ReadonlyArray<unknown>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const vaultRoot = yield* fs.makeTempDirectoryScoped({ prefix: "research-notion-" });
   const linksFile = path.join(vaultRoot, "links.json");
-  yield* fs.writeFileString(linksFile, JSON.stringify(links));
+  yield* fs.writeFileString(linksFile, yield* encodeLinksFile(links));
   return { linksFile, vaultRoot };
 });
 
@@ -80,7 +81,7 @@ describe("research notion-pull", () => {
   it.effect("skips a link the catalog has already seen on a second pull", () =>
     provideTestLayer(
       Effect.gen(function* () {
-        const { linksFile, vaultRoot } = yield* makeFixture([LINKS[0]]);
+        const { linksFile, vaultRoot } = yield* makeFixture(A.take(LINKS, 1));
         const options = ResearchNotionPullOptions.make({ database: "Reading List", linksFile, vaultRoot });
 
         const first = yield* pullResearchNotionLinks(options);
