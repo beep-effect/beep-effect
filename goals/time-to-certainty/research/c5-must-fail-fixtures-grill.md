@@ -52,7 +52,9 @@ ids name no package); a root-task rule (see ruling 70).
 **Ruling 69 (C5-2) — the change is the branch's diff against its base plus the dirty tree, mapped
 to workspaces.** The shadow pass receives the attempt's changed package set computed once per
 attempt in the verdict writer: `git diff --name-only <base>...HEAD` unioned with the working-tree
-changes the attempt verified, each path mapped to the deepest workspace containing it
+snapshot the attempt verified — every staged, unstaged and untracked path, read once from the same
+checkout snapshot as the committed diff, so a path the attempt ran against cannot fall out of the
+set between collection and mapping — each path mapped to the deepest workspace containing it
 (`workspaceForFile`, hoisted from `PackageVerify` into a shared helper); paths under no workspace
 (root config, `goals/`, `docs/`) contribute nothing, because root config is already the epoch
 (ruling 4) and docs are not package source. PR scope rather than the attempt-to-attempt delta on
