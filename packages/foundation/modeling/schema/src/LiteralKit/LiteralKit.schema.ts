@@ -592,13 +592,15 @@ function buildMatch<L extends Literals, M extends EnumMappings<L> | undefined = 
       const cases = args[0] as Record<string, (value: L[number]) => unknown>;
       return (value: L[number]) => {
         const key = helperKey(value, mapping);
-        return cases[key](value);
+        // The match cases are exhaustive by construction: every literal key has a handler.
+        return cases[key]!(value);
       };
     }
     const value = args[0] as L[number];
     const cases = args[1] as Record<string, (value: L[number]) => unknown>;
     const key = helperKey(value, mapping);
-    return cases[key](value);
+    // The match cases are exhaustive by construction: every literal key has a handler.
+    return cases[key]!(value);
   }
 
   return $match;

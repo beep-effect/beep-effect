@@ -129,6 +129,8 @@ const isSnapshotLockstepEffectPackage = (packageName: string): boolean => {
   );
 };
 
+const byPackageName = Order.mapInput(Order.String, ([packageName]: readonly [string, string]) => packageName);
+
 /**
  * Resolve the root package.json Effect catalog state.
  *
@@ -148,9 +150,7 @@ export const resolveEffectCatalog: (
     const canonicalSnapshot = splitSnapshotSpecifier(canonicalSpecifier);
     let packages = A.empty<EffectCatalogPackage>();
 
-    for (const packageName of A.sort(R.keys(pkgJson.catalog), Order.String)) {
-      const versionSpecifier = pkgJson.catalog[packageName];
-
+    for (const [packageName, versionSpecifier] of A.sort(R.toEntries(pkgJson.catalog), byPackageName)) {
       if (O.isSome(canonicalSnapshot)) {
         if (!isSnapshotLockstepEffectPackage(packageName)) {
           continue;

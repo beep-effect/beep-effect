@@ -176,7 +176,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
         yield* writeFile(root, file, `${original}\n`);
         const mutated = yield* lawHashes(root, binary);
         A.forEach(mutated, (task, index) => {
-          expect(task.hash === baseline[index]?.hash, `${file}: ${task.taskId}`).toBe(!changed[index]);
+          expect(task.hash === baseline[index]?.hash, `${file}: ${task.taskId}`).toBe(
+            !O.getOrThrow(A.get(changed, index))
+          );
         });
         yield* writeFile(root, file, original);
         expect(yield* lawHashes(root, binary)).toEqual(baseline);

@@ -52,5 +52,5 @@ export const leadingJsDocText = (node: Node): string =>
 export const topFileoverview = (sourceFile: SourceFile): O.Option<string> => {
   const text = sourceFile.getFullText();
   const match = /^(?:#![^\n]*\n)?\s*(\/\*\*[\s\S]*?\*\/)/.exec(text);
-  return match === null ? O.none() : O.some(match[1]);
+  return match === null ? O.none() : O.fromUndefinedOr(match[1]);
 };

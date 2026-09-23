@@ -133,7 +133,7 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
     expect(paragraph).toStrictEqual(
       ParagraphBlock.make({ children: [TextInline.make({ text: "You said: hello world" })] })
     );
-    expect(list.type).toBe("list");
+    expect(list?.type).toBe("list");
     expect(code).toStrictEqual(CodeBlock.make({ language: "text", code: "hello world" }));
   });
 

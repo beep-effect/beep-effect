@@ -180,6 +180,11 @@ const makeRandom = (seed: number): (() => number) => {
   };
 };
 
+// The synthetic generator allocates every typed array from nodeCount and edgeCount, so in-range reads always hold a number.
+const float32At = (buffer: Float32Array, index: number): number => buffer[index]!;
+
+const uint16At = (buffer: Uint16Array, index: number): number => buffer[index]!;
+
 /**
  * Generates a deterministic, community-clustered 3D graph projection.
  *
@@ -262,9 +267,9 @@ export const generateSyntheticGraph3DProjection = (options: SyntheticGraph3DOpti
 
     nodeIds[nodeIndex] = nodeIndex;
     nodeCommunities[nodeIndex] = community;
-    pointPositions[positionOffset] = centers[centerOffset] + gaussian() * scatterSigma;
-    pointPositions[positionOffset + 1] = centers[centerOffset + 1] + gaussian() * scatterSigma;
-    pointPositions[positionOffset + 2] = centers[centerOffset + 2] + gaussian() * scatterSigma;
+    pointPositions[positionOffset] = float32At(centers, centerOffset) + gaussian() * scatterSigma;
+    pointPositions[positionOffset + 1] = float32At(centers, centerOffset + 1) + gaussian() * scatterSigma;
+    pointPositions[positionOffset + 2] = float32At(centers, centerOffset + 2) + gaussian() * scatterSigma;
     nodeImportance[nodeIndex] = importance;
     maxImportance = N.max(maxImportance, importance);
     labels[nodeIndex] = pseudoWord();
@@ -276,11 +281,11 @@ export const generateSyntheticGraph3DProjection = (options: SyntheticGraph3DOpti
   nodeIndex = 0;
 
   while (nodeIndex < nodeCount) {
-    nodeImportance[nodeIndex] /= importanceDenominator;
+    nodeImportance[nodeIndex] = float32At(nodeImportance, nodeIndex) / importanceDenominator;
     nodeIndex += 1;
   }
 
-  const byImportanceDescending = Order.mapInput(Order.Number, (index: number) => -nodeImportance[index]);
+  const byImportanceDescending = Order.mapInput(Order.Number, (index: number) => -float32At(nodeImportance, index));
   const rankedNodes = A.sort(nodeIds, byImportanceDescending);
   communityIndex = 0;
 
@@ -296,7 +301,7 @@ export const generateSyntheticGraph3DProjection = (options: SyntheticGraph3DOpti
 
   while (edgeIndex < edgeCount) {
     const source = pickBiased(rankedNodes);
-    const sourceCommunity = nodeCommunities[source];
+    const sourceCommunity = uint16At(nodeCommunities, source);
     const intraCommunity = random() < 0.7 || communityCount === 1;
     const targetCommunity = intraCommunity
       ? sourceCommunity
@@ -319,7 +324,7 @@ export const generateSyntheticGraph3DProjection = (options: SyntheticGraph3DOpti
   edgeIndex = 0;
 
   while (edgeIndex < edgeCount) {
-    edgeWeights[edgeIndex] /= maxEdgeWeight;
+    edgeWeights[edgeIndex] = float32At(edgeWeights, edgeIndex) / maxEdgeWeight;
     edgeIndex += 1;
   }
 

@@ -102,7 +102,7 @@ const linkPreviewObserverAtom = Atom.family((instanceId: string) =>
 
       const observer = new IntersectionObserver(
         ([entry]) => {
-          if (entry?.isIntersecting) {
+          if (P.isNotUndefined(entry) && entry.isIntersecting === true) {
             const instanceAtom = linkPreviewInstanceStateAtom(instanceId);
             get.set(instanceAtom, { ...get.once(instanceAtom), isInView: true });
             observer.unobserve(element);

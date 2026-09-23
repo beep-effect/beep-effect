@@ -484,7 +484,8 @@ describe("LeJeune deterministic fixture bundle", () => {
       const bundle = yield* encodeImmutableDemoBundle(replay.bundle);
       const [firstField, ...remainingFields] = fixture.extractedFields;
       const [firstFixtureSource, secondFixtureSource] = fixture.sources;
-      const [firstManifestField, ...remainingManifestFields] = fixtureManifestJson.extractedFields;
+      const firstManifestField = O.getOrThrow(A.head(fixtureManifestJson.extractedFields));
+      const remainingManifestFields = A.drop(fixtureManifestJson.extractedFields, 1);
       const [firstBundleRule, secondBundleRule, thirdBundleRule, fourthBundleRule, fifthBundleRule, sixthBundleRule] =
         bundle.rules;
       const [firstBundleCertificate, secondBundleCertificate] = bundle.certificates;

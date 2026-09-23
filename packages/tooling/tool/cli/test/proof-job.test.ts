@@ -979,7 +979,7 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
       for (const [name, value] of [
         ["BEEP_YEET_JOB_ID", "wrong"],
         ["BEEP_YEET_JOB_UNIT", "wrong"],
-      ]) {
+      ] as const) {
         expect(
           yield* command.pipe(
             Effect.provideService(ConfigProvider.ConfigProvider, jobEnvironment(root, record, { [name]: value })),

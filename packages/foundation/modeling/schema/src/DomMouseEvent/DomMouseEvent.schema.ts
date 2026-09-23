@@ -6,6 +6,7 @@
  */
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
+import { instanceOfDomGlobal } from "../internal/domGlobal.ts";
 
 const $I = $SchemaId.create("DomMouseEvent");
 
@@ -23,7 +24,7 @@ const $I = $SchemaId.create("DomMouseEvent");
  * @category guards
  * @since 0.0.0
  */
-export const isMouseEvent = (u: unknown): u is MouseEvent => u instanceof MouseEvent;
+export const isMouseEvent: (u: unknown) => u is MouseEvent = instanceOfDomGlobal<MouseEvent>("MouseEvent");
 
 /**
  * A DOM mouse event.

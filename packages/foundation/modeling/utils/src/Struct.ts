@@ -811,7 +811,9 @@ export const reverse: {
     const symbolEntries = pipe(
       Reflect.ownKeys(self),
       A.filter(P.isSymbol),
-      A.map((key) => [self[key], key] as const)
+      // Reflect.ownKeys only yields present keys; the `| undefined` is the index-signature artifact,
+      // and an explicitly undefined value still inverts like the string-key path does.
+      A.map((key) => [self[key] as PropertyKey, key] as const)
     );
 
     return cast(fromEntries(A.appendAll(stringEntries, symbolEntries)));

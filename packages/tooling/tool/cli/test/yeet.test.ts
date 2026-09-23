@@ -3668,7 +3668,13 @@ describe("yeet attempt journal", () => {
           expect(receipts[0]?.evictedAttemptIds).toStrictEqual(A.take(firstBatch.attemptIds, 11));
           expect(receipts[0]?.evictedCount).toBe(24);
           expect(receipts[0]?.oldestEvictedRecordedAt).toBe("2026-09-03T00:00:00.000Z");
-          expect(pipe(receipts[0]?.terminalEvictionCutoffRecordedAt, O.getOrThrow)).toBe("2026-09-03T00:00:01.010Z");
+          expect(
+            pipe(
+              A.head(receipts),
+              O.flatMap((receipt) => receipt.terminalEvictionCutoffRecordedAt),
+              O.getOrThrow
+            )
+          ).toBe("2026-09-03T00:00:01.010Z");
         })
       )
     ));

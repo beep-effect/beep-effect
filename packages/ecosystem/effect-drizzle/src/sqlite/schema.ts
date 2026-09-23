@@ -23,6 +23,7 @@ import {
   flatMap as flatMapOption,
   fromUndefinedOr,
   getOrElse,
+  getOrThrow,
   isSome,
   map,
   match,
@@ -631,8 +632,9 @@ export function schema(models: ModelRecord): unknown {
             if (!isDrizzleEntity(targetColumn, DrizzleSqliteColumn)) {
               return fail("Resolved foreign-key target is not a SQLite column.", key, edge.sourceField, edge.targetKey);
             }
+            const sourceColumn = getOrThrow(fromUndefinedOr(columns[edge.sourceField]));
             const builder = foreignKey({
-              columns: [columns[edge.sourceField]],
+              columns: [sourceColumn],
               foreignColumns: [targetColumn],
             });
             const withDelete = match(fromUndefinedOr(edge.reference.onDelete), {

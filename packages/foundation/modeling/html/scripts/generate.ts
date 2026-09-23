@@ -847,6 +847,9 @@ export const assertReviewedCurrentAttributeGap = (input: ReviewedCurrentAttribut
   }
 };
 
+// A dfn's first linking text is its canonical name; dfns without one cannot name anything.
+const linkingName = (dfn: Dfn): O.Option<string> => A.head(dfn.linkingText);
+
 const buildModel = (
   data: RawData
 ): {
@@ -858,13 +861,13 @@ const buildModel = (
   const { classification, contentModel, dfns, elements: elementsData, obsoleteInterfaces } = data;
 
   const elementDfns = A.filter(dfns, (d) => d.type === "element");
-  const elementNames: ReadonlyArray<string> = A.map(elementDfns, (d) => d.linkingText[0]);
+  const elementNames: ReadonlyArray<string> = pipe(elementDfns, A.map(linkingName), A.getSomes);
   const elementNameSet = MutableHashSet.fromIterable(elementNames);
   const isObsolete = (d: Dfn | undefined): boolean => d !== undefined && /\/obsolete\.html/.test(d.href);
   const findElementDfn = (tag: string): Dfn | undefined =>
     pipe(
       elementDfns,
-      A.findFirst((entry) => entry.linkingText[0] === tag),
+      A.findFirst((entry) => O.contains(linkingName(entry), tag)),
       O.getOrUndefined
     );
 
@@ -874,11 +877,12 @@ const buildModel = (
   const elemAttrs = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
   for (const name of elementNames) MutableHashMap.set(elemAttrs, name, MutableHashSet.empty<string>());
   for (const ea of A.filter(dfns, (d) => d.type === "element-attr")) {
-    const attr = ea.linkingText[0];
+    const attr = linkingName(ea);
+    if (O.isNone(attr)) continue;
     for (const f of ea.for ?? []) {
       if (MutableHashSet.has(elementNameSet, f)) {
         const bucket = MutableHashMap.get(elemAttrs, f);
-        if (O.isSome(bucket)) MutableHashSet.add(bucket.value, attr);
+        if (O.isSome(bucket)) MutableHashSet.add(bucket.value, attr.value);
       }
     }
   }
@@ -886,9 +890,11 @@ const buildModel = (
   // "element/attr" (or "group/attr") -> permitted value keywords
   const enumValues = MutableHashMap.empty<string, Array<string>>();
   for (const av of A.filter(dfns, (d) => d.type === "attr-value")) {
+    const value = linkingName(av);
+    if (O.isNone(value)) continue;
     for (const f of av.for ?? []) {
       const arr = MutableHashMap.get(enumValues, f).pipe(O.getOrElse(A.empty<string>));
-      MutableHashMap.set(enumValues, f, A.append(arr, av.linkingText[0]));
+      MutableHashMap.set(enumValues, f, A.append(arr, value.value));
     }
   }
   for (const [key, values] of R.toEntries(classification.enumeratedAttributeValueOverrides)) {

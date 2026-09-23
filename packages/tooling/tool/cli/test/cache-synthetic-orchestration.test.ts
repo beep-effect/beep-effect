@@ -72,7 +72,7 @@ const fixture = Effect.fn("SyntheticOrchestrationTest.fixture")(function* (fault
         expect(command.args).toContain("--die-with-parent");
         const args = command.args;
         const bind = O.getOrThrow(A.findFirstIndex(args, Equal.equals("--bind")));
-        const directory = args[bind + 1];
+        const directory = O.getOrThrow(A.get(args, bind + 1));
         const guest = args[bind + 2];
         const invocation = A.drop(args, O.getOrThrow(A.findFirstIndex(args, Equal.equals("--"))) + 1);
         const env = command.options.env ?? {};
