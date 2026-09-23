@@ -1,3 +1,4 @@
+import { EvidenceSpan } from "@beep/epistemic-domain";
 import { ClaimEvidenceBasis, ClaimEvidenceReview } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import {
   ApproveClaimEvidence,
@@ -5,8 +6,12 @@ import {
   ExplainClaimEvidence,
   explainClaimEvidence,
 } from "@beep/epistemic-use-cases/ClaimEvidenceReview";
-import { SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { NonNegativeInt } from "@beep/schema";
+import { PosixPath } from "@beep/schema/PosixPath";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
+import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect, layer } from "@effect/vitest";
 import { DateTime, Effect } from "effect";
@@ -14,26 +19,30 @@ import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const decodeBasis = S.decodeUnknownSync(ClaimEvidenceBasis);
-const decodeUser = S.decodeUnknownSync(UserPrincipal);
+const sourceDigest = "sha256:1e7dc6d6c16565406afd121a89164b990879f5f47695e03b9c3fd0f07395a4ca";
 const isReview = S.is(ClaimEvidenceReview);
 const makeBasis = () =>
-  decodeBasis({
+  ClaimEvidenceBasis.make({
     claimRef: "claim:fact",
     assertion: "The source states fact.",
     subject: "Example source",
-    evidence: { startChar: 0, endChar: 4, quote: "fact", confidence: 0.82 },
-    source: {
+    evidence: EvidenceSpan.make({
+      startChar: NonNegativeInt.make(0),
+      endChar: NonNegativeInt.make(4),
+      quote: "fact",
+      confidence: UnitInterval.make(0.82),
+    }),
+    source: SourceTextIdentity.make({
       scopeRef: "project:example",
       sourceRef: "document:example",
-      locator: "documents/example.txt",
-      sourceDigest: "sha256:1e7dc6d6c16565406afd121a89164b990879f5f47695e03b9c3fd0f07395a4ca",
-      textDigest: "sha256:1e7dc6d6c16565406afd121a89164b990879f5f47695e03b9c3fd0f07395a4ca",
-      extractor: { name: "utf8", version: "1" },
+      locator: PosixPath.make("documents/example.txt"),
+      sourceDigest: SourceTextDigest.make(sourceDigest),
+      textDigest: SourceTextDigest.make(sourceDigest),
+      extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
       normalizationVersion: "1",
-    },
+    }),
   });
-const reviewer = decodeUser({ kind: "User", userId: 1 });
+const reviewer = UserPrincipal.make({ kind: "User", userId: SharedIdentity.UserId.make(1) });
 
 layer(BunCrypto.layer, { timeout: "5 seconds" })("claim evidence explanation and approval", (it) => {
   it.effect(
@@ -123,9 +132,9 @@ layer(BunCrypto.layer, { timeout: "5 seconds" })("claim evidence explanation and
         })
       );
       expect(crossScope.verification).toEqual({ _tag: "Unverified", reason: "cross-scope" });
-      const wrongQuote = decodeBasis({
+      const wrongQuote = ClaimEvidenceBasis.make({
         ...basis,
-        evidence: { ...basis.evidence, quote: "fake" },
+        evidence: EvidenceSpan.make({ ...basis.evidence, quote: "fake" }),
       });
       const mismatch = yield* explainClaimEvidence(
         ExplainClaimEvidence.make({
@@ -164,7 +173,7 @@ layer(BunCrypto.layer, { timeout: "5 seconds" })("claim evidence explanation and
     Effect.fnUntraced(function* () {
       const crypto = yield* Crypto.Crypto;
       const basis = makeBasis();
-      const human = decodeUser({ kind: "User", userId: 1 });
+      const human = UserPrincipal.make({ kind: "User", userId: SharedIdentity.UserId.make(1) });
       const mutatingCrypto = Crypto.Crypto.of({
         ...crypto,
         digest: Effect.fn("EvidenceReviewTest.mutatingDigest")((algorithm, data) =>

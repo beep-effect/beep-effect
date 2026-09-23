@@ -58,7 +58,7 @@ const runSpikeAtom = ipcSpikeRuntime.fn<void>()(
     });
     yield* Effect.gen(function* () {
       const client = yield* RpcClient.make(ChatRpcs);
-      const workspaceId = decodeWorkspaceId(1);
+      const workspaceId = yield* decodeWorkspaceId(1);
       yield* Effect.annotateCurrentSpan({
         "professional_desktop.ipc.workspace_id": workspaceId,
       });

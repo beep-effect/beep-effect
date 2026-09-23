@@ -970,12 +970,14 @@
         "allow": [
           "@beep/agents-domain",
           "@beep/agents-tables",
-          "@beep/effect-drizzle"
+          "@beep/effect-drizzle",
+          "@beep/identity"
         ],
         "allowTypeOnly": [
           "@beep/agents-domain",
           "@beep/agents-tables",
-          "@beep/effect-drizzle"
+          "@beep/effect-drizzle",
+          "@beep/identity"
         ]
       },
       {
@@ -1550,6 +1552,7 @@
           "@beep/documents-domain",
           "@beep/documents-tables",
           "@beep/effect-drizzle",
+          "@beep/identity",
           "@beep/shared-domain",
           "@beep/test-utils"
         ],
@@ -1557,6 +1560,7 @@
           "@beep/documents-domain",
           "@beep/documents-tables",
           "@beep/effect-drizzle",
+          "@beep/identity",
           "@beep/shared-domain",
           "@beep/test-utils"
         ]
@@ -3751,12 +3755,14 @@
         "from": "@beep/workspace-tables",
         "allow": [
           "@beep/effect-drizzle",
+          "@beep/identity",
           "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-tables"
         ],
         "allowTypeOnly": [
           "@beep/effect-drizzle",
+          "@beep/identity",
           "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-tables"

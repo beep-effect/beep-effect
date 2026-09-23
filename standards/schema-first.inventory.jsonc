@@ -71,7 +71,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 36,
+      "line": 37,
       "owner": "@beep/db-admin",
       "reason": "Migration regression decodes fixed fixture rows to prove the epistemic-edge target SQL, the constraint/index name catalog, and the open-head backstop; schema-derived arbitrary round-trips for the EdgeVersion entity live with the domain model tests."
     },
@@ -208,16 +208,6 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
-      "file": "packages/epistemic/config/test/Config.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 16,
-      "owner": "@beep/epistemic-config",
-      "reason": "Audience-routing regression over fixed loopback and external URL cases; schema-derived URL property coverage lives with the owning @beep/schema URL models, while arbitrary destinations would not prove these named security classifications."
-    },
-    {
       "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
       "symbol": "EdgeVersionSourceColumns",
       "kind": "exported-type-literal",
@@ -265,7 +255,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 102,
+      "line": 109,
       "owner": "@beep/epistemic-server",
       "reason": "P0 persistence spike decodes fixed commands and rows to prove duplicate suppression, visibility, ordering, and transactional boundaries against PGlite; schema law coverage lives in domain and use-case tests."
     },
@@ -285,7 +275,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 77,
+      "line": 79,
       "owner": "@beep/epistemic-server",
       "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
     },
@@ -318,6 +308,16 @@
       "line": 49,
       "owner": "@beep/epistemic-server",
       "reason": "Restart regression decodes fixed commands to write history in one PGlite scope and re-read it in a second over the same dataDir; what is under test is that the data files carry history, lineage, dispositions, and live constraints across a process boundary, not schema laws."
+    },
+    {
+      "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 52,
+      "owner": "@beep/epistemic-tables",
+      "reason": "Fixed-fixture suite: physical table and column pins, insert/select round-trips of an allowed decision, a denied decision, an outcome and a sealed pair, plus the converter failure paths (an unencodable record, a corrupted row on each ledger boundary, and the empty-message fromSchema fallback). Schema-derived property coverage for ExecutionDecisionRecord and ExecutionOutcomeRecord lives with the owning @beep/epistemic-domain value models; the table converters only project them across the persistence boundary."
     },
     {
       "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts",
@@ -445,7 +445,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 5,
+      "line": 7,
       "owner": "@beep/schema",
       "reason": "Exception: CurrencyCode/CurrencyName are LiteralKit unions over the generated ISO 4217 enumeration; example-based assertions cover representative decode/reject and `.Options` membership, and S.toArbitrary over a finite literal union only re-samples already-enumerated members, so schema-derived property coverage would be vacuous."
     },
@@ -455,7 +455,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 9,
+      "line": 10,
       "owner": "@beep/schema",
       "reason": "Exception: meta-test of the Fn/ThunkOf/AnyFn schema combinator over function values (declareConstructor with self-identity equivalence); no structural data for S.toArbitrary to generate or round-trip."
     },
@@ -465,7 +465,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 8,
+      "line": 9,
       "owner": "@beep/schema",
       "reason": "Exception: TerritoryCode/TerritoryName and their code<->name MappedLiteralKit codecs are finite literal-union schemas over the generated CLDR enumeration; representative decode/encode and reversible-mapping cases are covered by example assertions, and S.toArbitrary over the finite enumeration adds no coverage beyond the enumerated members."
     },
@@ -475,7 +475,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 9,
+      "line": 13,
       "owner": "@beep/schema",
       "reason": "Exception: meta-test of the destructiveTransform combinator using test-local illustrative schemas; lossy decode + passthrough encode has no round-trip law and no domain source schema."
     },
@@ -632,16 +632,6 @@
       "reason": "Deterministic policy fixtures decode exact anchored event and disposition wires so lineage, source-resolution, supersession, and fail-closed semantics remain observable; schema-derived round-trip coverage for these law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
     {
-      "file": "packages/ontology/use-cases/test/Session.validation.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 61,
-      "owner": "@beep/ontology-use-cases",
-      "reason": "End-to-end session orchestration regression uses deterministic file paths and prefix maps to prove validation, repair, and provenance output; schema-derived laws live with the owning modeling schemas."
-    },
-    {
       "file": "packages/shared/domain/src/entity/Principal.ts",
       "symbol": "PrincipalSchema",
       "kind": "exported-interface",
@@ -679,7 +669,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 15,
+      "line": 14,
       "owner": "@beep/repo-utils",
       "reason": "Golden fingerprint test replays captured wire values from its __golden__ fixture; native Arbitrary seeds cannot reproduce the recorded fast-check samples, so schema-derived generation would invalidate the goldens."
     },
@@ -795,7 +785,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 179,
+      "line": 180,
       "owner": "@beep/repo-cli",
       "reason": "Pure comparison over already schema-decoded record sets; the inline input trio groups arrays of S.Class rows at the call site rather than modeling an IO boundary, and the output is the annotated JSDocMigrateBindingReport class."
     },

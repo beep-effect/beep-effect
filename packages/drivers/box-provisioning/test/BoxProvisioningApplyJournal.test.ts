@@ -1,10 +1,11 @@
 import * as B from "@beep/box";
-import { BoxAdoptions, BoxDesiredState, recoverBoxAdoptions } from "@beep/box-provisioning";
+import { BoxAdoptions, BoxApplyJournalApplied, BoxDesiredState, recoverBoxAdoptions } from "@beep/box-provisioning";
 import { BoxProvisioningApplier, BoxProvisioningApplyJournal } from "@beep/box-provisioning/BoxProvisioningApplier";
 import { BoxObservedState } from "@beep/box-provisioning/BoxProvisioningObserved";
 import { planBoxProvisioning } from "@beep/box-provisioning/BoxProvisioningPlanner";
 import { provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { expect, layer } from "@effect/vitest";
 import { Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -88,7 +89,7 @@ const applyWithJournal = Effect.fn("BoxProvisioningApplyJournalTest.applyWithJou
   return { entries: yield* Ref.get(entries), error, plan };
 });
 
-describe("@beep/box-provisioning apply journal", () => {
+layer(BunCrypto.layer)("@beep/box-provisioning apply journal", (it) => {
   it.effect(
     "retains every prior Applied entry and the failed folder when folder N fails",
     Effect.fnUntraced(function* () {
@@ -142,11 +143,28 @@ describe("@beep/box-provisioning apply journal", () => {
     "recovers exactly the folders applied before folder N fails",
     Effect.fnUntraced(function* () {
       const result = yield* applyWithJournal(2, false);
-      const recovered = recoverBoxAdoptions(desiredFixture, result.entries);
+      const recovered = yield* recoverBoxAdoptions(desiredFixture, result.entries);
 
       expect(recovered.entries).toHaveLength(1);
       expect(recovered.entries[0]?.expectedProviderId).toBe("created-folder-1");
       expect(recovered.entries[0]?.expectedParentProviderId).toBe("0");
+    })
+  );
+
+  it.effect(
+    "skips a recovered folder whose journal entry carries no provider identity",
+    Effect.fnUntraced(function* () {
+      const result = yield* applyWithJournal(2, false);
+      const anonymized = A.map(result.entries, (entry) =>
+        entry.phase === "Applied"
+          ? BoxApplyJournalApplied.make({ ...entry, parentProviderId: O.none(), providerId: O.none() })
+          : entry
+      );
+      const recovered = yield* recoverBoxAdoptions(desiredFixture, anonymized);
+
+      // Only the adoption already declared in the desired state survives: the
+      // identity-less journal entry contributes nothing.
+      expect(A.map(recovered.entries, (adoption) => adoption.expectedProviderId)).toEqual(["100"]);
     })
   );
 
@@ -159,7 +177,7 @@ describe("@beep/box-provisioning apply journal", () => {
         ...desiredFixture,
         adoptions: BoxAdoptions.make({ entries: [] }),
       });
-      const recovered = recoverBoxAdoptions(desiredWithoutAdoptions, A.appendAll(first.entries, latest.entries));
+      const recovered = yield* recoverBoxAdoptions(desiredWithoutAdoptions, A.appendAll(first.entries, latest.entries));
 
       expect(recovered.entries).toHaveLength(0);
     })

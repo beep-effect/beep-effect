@@ -18,8 +18,8 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePatentApplicationDocumentResult = S.decodeResult(PatentApplicationDocument);
 const decodePatentApplicationSectionsResult = S.decodeResult(PatentApplicationSections);
-const decodeUnknownPatentApplicationSectionSync = S.decodeUnknownSync(PatentApplicationSection);
-const encodePatentApplicationSectionSync = S.encodeSync(PatentApplicationSection);
+const decodeUnknownPatentApplicationSection = S.decodeUnknownEffect(PatentApplicationSection);
+const encodePatentApplicationSection = S.encodeEffect(PatentApplicationSection);
 const isPatentClaims = S.is(PatentClaims);
 
 const patentFixture = Md.make([
@@ -75,20 +75,25 @@ const dependentClaim = (claimNumber: number, parentClaimNumber: number) =>
   });
 
 describe("PatentDocument", () => {
-  it("round-trips schema-derived patent application sections", () => {
-    const equivalent = S.toEquivalence(PatentApplicationSection);
+  it.effect(
+    "round-trips schema-derived patent application sections",
+    Effect.fnUntraced(function* () {
+      const equivalent = S.toEquivalence(PatentApplicationSection);
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.schema(PatentApplicationSection),
+        (section) =>
+          Effect.gen(function* () {
+            return equivalent(
+              yield* decodeUnknownPatentApplicationSection(yield* encodePatentApplicationSection(section)),
+              section
+            );
+          }),
+        { runs: 20 }
+      );
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(PatentApplicationSection),
-          (section) =>
-            equivalent(decodeUnknownPatentApplicationSectionSync(encodePatentApplicationSectionSync(section)), section),
-          { runs: 20 }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      expect(result._tag).toBe("Passed");
+    })
+  );
 
   it.effect(
     "normalizes one Markdown fixture into ordered sections and structured claims",

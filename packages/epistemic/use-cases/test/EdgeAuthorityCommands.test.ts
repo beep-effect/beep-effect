@@ -1,19 +1,20 @@
 import { EdgeAsOfQuery, RecordEdgeFact, SupersedeEdgeFact } from "@beep/epistemic-use-cases/EdgeAuthority";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeEdgeAsOfQuerySync = S.decodeSync(EdgeAsOfQuery);
 const decodeUnknownRecordEdgeFactOption = S.decodeUnknownOption(RecordEdgeFact);
 const decodeUnknownSupersedeEdgeFactOption = S.decodeUnknownOption(SupersedeEdgeFact);
-const decodeUnknownRecordEdgeFactSync = S.decodeUnknownSync(RecordEdgeFact);
-const decodeUnknownSupersedeEdgeFactSync = S.decodeUnknownSync(SupersedeEdgeFact);
-const encodeEdgeAsOfQuerySync = S.encodeSync(EdgeAsOfQuery);
-const encodeRecordEdgeFactSync = S.encodeSync(RecordEdgeFact);
-const encodeSupersedeEdgeFactSync = S.encodeSync(SupersedeEdgeFact);
+const decodeUnknownRecordEdgeFact = S.decodeUnknownEffect(RecordEdgeFact);
+const encodeRecordEdgeFact = S.encodeEffect(RecordEdgeFact);
+const decodeUnknownSupersedeEdgeFact = S.decodeUnknownEffect(SupersedeEdgeFact);
+const encodeSupersedeEdgeFact = S.encodeEffect(SupersedeEdgeFact);
+const decodeEdgeAsOfQuery = S.decodeEffect(EdgeAsOfQuery);
+const encodeEdgeAsOfQuery = S.encodeEffect(EdgeAsOfQuery);
 
 const identity = {
   evidenceScope: null,
@@ -59,33 +60,42 @@ const asOfEncoded = {
 
 const withoutValidFrom = ({ validFrom: _validFrom, ...rest }: { readonly validFrom: number }) => rest;
 
-// EdgeAsOfQuery carries both axes and no cross-field check, so its arbitrary generates
-// freely; the write commands require orgScope/orgId agreement, which a generate-and-filter
-// arbitrary would essentially never satisfy.
-const EdgeAsOfQueryArbitrary = Arbitrary.schema(EdgeAsOfQuery);
+const expectOrgScopeFailure = (exit: Exit.Exit<unknown, S.SchemaError>) => {
+  expect(Exit.isFailure(exit)).toBe(true);
+  if (Exit.isFailure(exit)) {
+    const error = Cause.squash(exit.cause);
+    expect(S.isSchemaError(error) ? error.message : "").toMatch(/\["identity"\]\["orgScope"\]/);
+  }
+};
 
 describe("@beep/epistemic-use-cases edge authority commands", () => {
-  it("round-trips RecordEdgeFact through its epoch-millis encoding", () => {
-    const decoded = decodeUnknownRecordEdgeFactSync(recordEncoded);
+  it.effect("round-trips RecordEdgeFact through its epoch-millis encoding", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decodeUnknownRecordEdgeFact(recordEncoded);
 
-    expect(O.isNone(decoded.validTo)).toBe(true);
-    expect(decoded.identity.relation).toBe("supports");
-    expect(encodeRecordEdgeFactSync(decoded)).toStrictEqual(recordEncoded);
-  });
+      expect(O.isNone(decoded.validTo)).toBe(true);
+      expect(decoded.identity.relation).toBe("supports");
+      expect(yield* encodeRecordEdgeFact(decoded)).toStrictEqual(recordEncoded);
+    })
+  );
 
-  it("round-trips SupersedeEdgeFact including the closed valid interval", () => {
-    const decoded = decodeUnknownSupersedeEdgeFactSync(supersedeEncoded);
+  it.effect("round-trips SupersedeEdgeFact including the closed valid interval", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decodeUnknownSupersedeEdgeFact(supersedeEncoded);
 
-    expect(decoded.expectedVersion).toBe(1);
-    expect(O.isSome(decoded.validTo)).toBe(true);
-    expect(encodeSupersedeEdgeFactSync(decoded)).toStrictEqual(supersedeEncoded);
-  });
+      expect(decoded.expectedVersion).toBe(1);
+      expect(O.isSome(decoded.validTo)).toBe(true);
+      expect(yield* encodeSupersedeEdgeFact(decoded)).toStrictEqual(supersedeEncoded);
+    })
+  );
 
-  it("round-trips EdgeAsOfQuery on both axes", () => {
-    const decoded = decodeEdgeAsOfQuerySync(asOfEncoded);
+  it.effect("round-trips EdgeAsOfQuery on both axes", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decodeEdgeAsOfQuery(asOfEncoded);
 
-    expect(encodeEdgeAsOfQuerySync(decoded)).toStrictEqual(asOfEncoded);
-  });
+      expect(yield* encodeEdgeAsOfQuery(decoded)).toStrictEqual(asOfEncoded);
+    })
+  );
 
   it("rejects a record command with no validFrom, so no edge can be asserted without a known valid time", () => {
     expect(O.isNone(decodeUnknownRecordEdgeFactOption(withoutValidFrom(recordEncoded)))).toBe(true);
@@ -95,40 +105,43 @@ describe("@beep/epistemic-use-cases edge authority commands", () => {
     expect(O.isNone(decodeUnknownSupersedeEdgeFactOption(withoutValidFrom(supersedeEncoded)))).toBe(true);
   });
 
-  it("round-trips schema-derived as-of queries without changing the encoded shape", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([EdgeAsOfQueryArbitrary]),
-          ([query]) => {
-            const encoded = encodeEdgeAsOfQuerySync(query);
-            const decoded = decodeEdgeAsOfQuerySync(encoded);
+  // EdgeAsOfQuery carries both axes and no cross-field check, so its arbitrary generates
+  // freely; the write commands require orgScope/orgId agreement, which a generate-and-filter
+  // arbitrary would essentially never satisfy.
+  it.effect.prop(
+    "round-trips schema-derived as-of queries without changing the encoded shape",
+    { query: EdgeAsOfQuery },
+    Effect.fnUntraced(function* ({ query }) {
+      const encoded = yield* encodeEdgeAsOfQuery(query);
+      const decoded = yield* decodeEdgeAsOfQuery(encoded);
 
-            // Both axes survive the millis boundary for every generated instant, not just the fixture.
-            expect(encodeEdgeAsOfQuerySync(decoded)).toStrictEqual(encoded);
-            expect(typeof encoded.knownAt).toBe("number");
-            expect(typeof encoded.validAt).toBe("number");
+      // Both axes survive the millis boundary for every generated instant, not just the fixture.
+      expect(yield* encodeEdgeAsOfQuery(decoded)).toStrictEqual(encoded);
+      expect(typeof encoded.knownAt).toBe("number");
+      expect(typeof encoded.validAt).toBe("number");
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 
-  it("rejects a record command whose identity org scope names a different organization", () => {
-    const mismatched = { ...recordEncoded, identity: { ...identity, orgScope: "2" } };
+  it.effect("rejects a record command whose identity org scope names a different organization", () =>
+    Effect.gen(function* () {
+      const mismatched = { ...recordEncoded, identity: { ...identity, orgScope: "2" } };
 
-    expect(O.isNone(decodeUnknownRecordEdgeFactOption(mismatched))).toBe(true);
-    expect(() => decodeUnknownRecordEdgeFactSync(mismatched)).toThrow(/\["identity"\]\["orgScope"\]/);
-  });
+      expect(O.isNone(decodeUnknownRecordEdgeFactOption(mismatched))).toBe(true);
+      expectOrgScopeFailure(yield* Effect.exit(decodeUnknownRecordEdgeFact(mismatched)));
+    })
+  );
 
-  it("rejects a supersede command whose identity org scope names a different organization", () => {
-    const mismatched = { ...supersedeEncoded, identity: { ...identity, orgScope: "2" } };
+  it.effect("rejects a supersede command whose identity org scope names a different organization", () =>
+    Effect.gen(function* () {
+      const mismatched = { ...supersedeEncoded, identity: { ...identity, orgScope: "2" } };
 
-    expect(O.isNone(decodeUnknownSupersedeEdgeFactOption(mismatched))).toBe(true);
-    expect(() => decodeUnknownSupersedeEdgeFactSync(mismatched)).toThrow(/\["identity"\]\["orgScope"\]/);
-  });
+      expect(O.isNone(decodeUnknownSupersedeEdgeFactOption(mismatched))).toBe(true);
+      expectOrgScopeFailure(yield* Effect.exit(decodeUnknownSupersedeEdgeFact(mismatched)));
+    })
+  );
 
   it("rejects an endpoint kind outside the bounded vocabulary", () => {
     expect(

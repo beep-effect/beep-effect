@@ -26,6 +26,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.ts";
@@ -33,7 +34,7 @@ import type { DmsProvider } from "@beep/documents-domain/values/Sync";
 import type { SyncOperationSeed } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
-const decodeSyncOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperation);
+const decodeSyncOperation = S.decodeUnknownEffect(DomainSyncOperation.SyncOperation);
 
 /**
  * Build a full SyncOperation entity from an enqueue seed and an assigned id.
@@ -42,33 +43,35 @@ const decodeSyncOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperatio
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
-const syncOperationFromSeed = (id: number, seed: SyncOperationSeed): DomainSyncOperation.SyncOperation =>
-  decodeSyncOperation({
-    attemptCount: seed.attemptCount,
-    createdAt: 0,
-    createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DocumentsIdentity.SyncOperationId.entityType,
-    id,
-    idempotencyKey: seed.idempotencyKey,
-    inputContentDigest: O.getOrNull(seed.inputContentDigest),
-    inputGeneration: seed.inputGeneration,
-    lastError: O.getOrNull(seed.lastError),
-    operationType: seed.operationType,
-    orgId: 1,
-    provider: seed.provider,
-    publicId: `${SYNC_OPERATION_TABLE_NAME}_a${id}`,
-    rowVersion: 1,
-    schemaVersion: "0.1.0",
-    source: "Application",
-    status: seed.status,
-    syncItemId: seed.syncItemId,
-    targetName: seed.targetName,
-    targetParentRelPath: O.getOrNull(seed.targetParentRelPath),
-    targetRelPath: seed.targetRelPath,
-    updatedAt: 0,
-    updatedByPrincipal: SYSTEM_PRINCIPAL,
-    workspaceId: seed.workspaceId,
-  });
+const syncOperationFromSeed = Effect.fn("Documents.SyncOperationRepository.fromSeed")(
+  (id: number, seed: SyncOperationSeed) =>
+    decodeSyncOperation({
+      attemptCount: seed.attemptCount,
+      createdAt: 0,
+      createdByPrincipal: SYSTEM_PRINCIPAL,
+      entityType: DocumentsIdentity.SyncOperationId.entityType,
+      id,
+      idempotencyKey: seed.idempotencyKey,
+      inputContentDigest: O.getOrNull(seed.inputContentDigest),
+      inputGeneration: seed.inputGeneration,
+      lastError: O.getOrNull(seed.lastError),
+      operationType: seed.operationType,
+      orgId: 1,
+      provider: seed.provider,
+      publicId: `${SYNC_OPERATION_TABLE_NAME}_a${id}`,
+      rowVersion: 1,
+      schemaVersion: "0.1.0",
+      source: "Application",
+      status: seed.status,
+      syncItemId: seed.syncItemId,
+      targetName: seed.targetName,
+      targetParentRelPath: O.getOrNull(seed.targetParentRelPath),
+      targetRelPath: seed.targetRelPath,
+      updatedAt: 0,
+      updatedByPrincipal: SYSTEM_PRINCIPAL,
+      workspaceId: seed.workspaceId,
+    }).pipe(repositoryUnavailable("construct SyncOperation"))
+);
 
 type MirrorScope = {
   readonly provider: DmsProvider;
@@ -118,7 +121,7 @@ export const makeInMemorySyncOperationRepository = Effect.fn("Documents.SyncOper
           return yield* duplicateIdempotencyKeyConflict(seed.idempotencyKey);
         }
         const id = yield* Ref.getAndUpdate(counter, N.increment);
-        const operation = syncOperationFromSeed(id, seed);
+        const operation = yield* syncOperationFromSeed(id, seed);
         yield* Ref.update(store, HashMap.set(operation.id, operation));
         return operation;
       }),
@@ -267,17 +270,22 @@ export const makeDrizzleSyncOperationRepository = Effect.fn("Documents.SyncOpera
           .select()
           .from(syncOperationTable)
           .pipe(repositoryUnavailable("list SyncOperation"));
-        const operation = syncOperationFromSeed(nextEntityId(currentRows), seed);
+        const operation = yield* syncOperationFromSeed(nextEntityId(currentRows), seed);
+        const insert = yield* Effect.fromResult(toSyncOperationInsert(operation)).pipe(
+          repositoryUnavailable("encode SyncOperation insert")
+        );
         const rows = yield* db
           .insert(syncOperationTable)
-          .values(toSyncOperationInsert(operation))
+          .values(insert)
           .returning()
           .pipe(translateEnqueueFailure(seed.idempotencyKey));
-        return pipe(
-          rows,
-          A.head,
-          O.map(fromSyncOperationRow),
-          O.getOrElse(() => operation)
+        return yield* pipe(
+          A.head(rows),
+          O.match({
+            onNone: () => Effect.succeed(operation),
+            onSome: (row) =>
+              Effect.fromResult(fromSyncOperationRow(row)).pipe(repositoryUnavailable("decode SyncOperation")),
+          })
         );
       }),
       listByStatus: Effect.fn("Documents.SyncOperationRepository.drizzleListByStatus")(function* (input) {
@@ -293,7 +301,9 @@ export const makeDrizzleSyncOperationRepository = Effect.fn("Documents.SyncOpera
           )
           .orderBy(asc(syncOperationTable.id))
           .pipe(repositoryUnavailable("list SyncOperation by status"));
-        return A.map(rows, fromSyncOperationRow);
+        return yield* Effect.fromResult(Result.all(A.map(rows, fromSyncOperationRow))).pipe(
+          repositoryUnavailable("decode SyncOperation")
+        );
       }),
       listQueued: Effect.fn("Documents.SyncOperationRepository.drizzleListQueued")(function* (input) {
         const rows = yield* db
@@ -308,7 +318,9 @@ export const makeDrizzleSyncOperationRepository = Effect.fn("Documents.SyncOpera
           )
           .orderBy(asc(syncOperationTable.id))
           .pipe(repositoryUnavailable("list queued SyncOperation"));
-        return A.map(rows, fromSyncOperationRow);
+        return yield* Effect.fromResult(Result.all(A.map(rows, fromSyncOperationRow))).pipe(
+          repositoryUnavailable("decode SyncOperation")
+        );
       }),
       listQueuedForItem: Effect.fn("Documents.SyncOperationRepository.drizzleListQueuedForItem")(function* (input) {
         const rows = yield* db
@@ -323,7 +335,9 @@ export const makeDrizzleSyncOperationRepository = Effect.fn("Documents.SyncOpera
           )
           .orderBy(asc(syncOperationTable.id))
           .pipe(repositoryUnavailable("list queued SyncOperation for item"));
-        return A.map(rows, fromSyncOperationRow);
+        return yield* Effect.fromResult(Result.all(A.map(rows, fromSyncOperationRow))).pipe(
+          repositoryUnavailable("decode SyncOperation")
+        );
       }),
       requeueLeased: Effect.fn("Documents.SyncOperationRepository.drizzleRequeueLeased")(function* (input) {
         const rows = yield* db
@@ -341,9 +355,12 @@ export const makeDrizzleSyncOperationRepository = Effect.fn("Documents.SyncOpera
         return A.length(rows);
       }),
       update: Effect.fn("Documents.SyncOperationRepository.drizzleUpdate")(function* (operation) {
+        const insert = yield* Effect.fromResult(toSyncOperationInsert(operation)).pipe(
+          repositoryUnavailable("encode SyncOperation insert")
+        );
         const rows = yield* db
           .update(syncOperationTable)
-          .set(toSyncOperationInsert(operation))
+          .set(insert)
           .where(eq(syncOperationTable.id, operation.id))
           .returning()
           .pipe(repositoryUnavailable("update SyncOperation"));
@@ -351,7 +368,9 @@ export const makeDrizzleSyncOperationRepository = Effect.fn("Documents.SyncOpera
         if (O.isNone(updated)) {
           return yield* SyncOperationRepositoryNotFound.make({ syncOperationId: operation.id });
         }
-        return fromSyncOperationRow(updated.value);
+        return yield* Effect.fromResult(fromSyncOperationRow(updated.value)).pipe(
+          repositoryUnavailable("decode SyncOperation")
+        );
       }),
     });
   }

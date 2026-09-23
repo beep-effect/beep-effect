@@ -142,7 +142,7 @@ const ipcStdioProgram = Effect.gen(function* () {
 
   const program = Effect.gen(function* () {
     const client = yield* RpcClient.make(ChatRpcs);
-    const workspaceId = decodeWorkspaceId(1);
+    const workspaceId = yield* decodeWorkspaceId(1);
 
     const thread = yield* client.CreateThread({ workspaceId, title: "ipc stdio" });
     expect(thread.title).toBe("ipc stdio");

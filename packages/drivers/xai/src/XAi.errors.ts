@@ -55,7 +55,7 @@ export const XAiErrorReason = XAiErrorReasonBase.pipe(
   }),
   SchemaUtils.withStatics((schema) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
   })),
   SchemaUtils.withLiteralKitStatics(XAiErrorReasonBase)
 );

@@ -25,6 +25,7 @@ import { digestImpl } from "./Digest.ts";
 import { historySiftImpl } from "./HistorySift.ts";
 import { notionPullImpl } from "./NotionPullRun.ts";
 import { VAULT_DIRS } from "./Vault.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ResearchDailyOptions } from "../Research.schemas.ts";
 import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
@@ -92,7 +93,7 @@ const stagePathspecs = (checkIgnoreExit: number): Effect.Effect<ReadonlyArray<st
  */
 export const commitVault = Effect.fn("Research.commitVault")(function* (
   vaultRoot: string
-): Effect.fn.Return<void, ResearchCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, ResearchCommandError, ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto> {
   const git = (args: ReadonlyArray<string>) =>
     runToExit({
       command: "git",

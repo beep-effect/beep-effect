@@ -7,7 +7,9 @@
  */
 
 import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { ProviderInstanceConverterError } from "./ProviderInstance.errors.ts";
 import type { providerInstanceTable } from "./ProviderInstance.table.ts";
 
 /**
@@ -48,8 +50,8 @@ export type ProviderInstanceRow = typeof providerInstanceTable.$inferSelect;
  */
 export type ProviderInstanceInsert = typeof providerInstanceTable.$inferInsert;
 
-const encodeProviderInstance = S.encodeSync(ProviderInstance);
-const decodeProviderInstanceRow = S.decodeUnknownSync(ProviderInstance);
+const encodeProviderInstance = S.encodeResult(ProviderInstance);
+const decodeProviderInstanceRow = S.decodeUnknownResult(ProviderInstance);
 
 /**
  * Convert a ProviderInstance entity into its persistence insert row.
@@ -68,38 +70,45 @@ const decodeProviderInstanceRow = S.decodeUnknownSync(ProviderInstance);
  * ```ts
  * import { fromProviderInstanceRow, toProviderInstanceInsert } from "@beep/agents-tables/entities/ProviderInstance"
  * import type { ProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   binaryPath: "/usr/local/bin/claude",
  *   createdAt: 1,
  *   createdByPrincipal: { kind: "System", component: "Runtime" },
  *   entityType: "AgentsProviderInstance",
- *   envVars: {},
- *   homePath: null,
+ *   envVars: { CLAUDE_CONFIG_DIR: "/home/beep/.beep/providers/personal-max/.claude" },
+ *   homePath: "/home/beep/.beep/providers/personal-max",
  *   id: 1,
  *   kind: "claude",
- *   label: "Personal Claude",
+ *   label: "personal-max",
  *   lastProbe: null,
  *   orgId: 1,
  *   publicId: "agents_provider_instance_a1",
  *   rowVersion: 1,
  *   schemaVersion: "0.0.0",
  *   source: "System",
- *   updatedAt: 2,
+ *   updatedAt: 1,
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * } satisfies ProviderInstanceRow
  *
- * const insert = toProviderInstanceInsert(fromProviderInstanceRow(row))
- * console.log("id" in insert) // false
+ * const insert = Result.flatMap(fromProviderInstanceRow(row), toProviderInstanceInsert)
+ * console.log(Result.isSuccess(insert) && !("id" in insert.success))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toProviderInstanceInsert = (providerInstance: ProviderInstance): ProviderInstanceInsert => {
-  const { id: _id, ...rest } = encodeProviderInstance(providerInstance);
-  return rest as ProviderInstanceInsert;
-};
+export const toProviderInstanceInsert = (
+  providerInstance: ProviderInstance
+): Result.Result<ProviderInstanceInsert, ProviderInstanceConverterError> =>
+  Result.mapError(
+    Result.map(encodeProviderInstance(providerInstance), (encoded): ProviderInstanceInsert => {
+      const { id: _id, ...insert } = encoded;
+      return insert;
+    }),
+    ProviderInstanceConverterError.fromSchemaError
+  );
 
 /**
  * Convert a selected persistence row into a ProviderInstance entity.
@@ -109,6 +118,7 @@ export const toProviderInstanceInsert = (providerInstance: ProviderInstance): Pr
  * ```ts
  * import { fromProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance"
  * import type { ProviderInstanceRow } from "@beep/agents-tables/entities/ProviderInstance"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   binaryPath: "/usr/local/bin/codex",
@@ -119,22 +129,25 @@ export const toProviderInstanceInsert = (providerInstance: ProviderInstance): Pr
  *   homePath: null,
  *   id: 1,
  *   kind: "codex",
- *   label: "Work Codex",
- *   lastProbe: { status: "unauthenticated", probedAt: "2026-07-11T00:00:00.000Z" },
+ *   label: "work-pro",
+ *   lastProbe: null,
  *   orgId: 1,
  *   publicId: "agents_provider_instance_a1",
  *   rowVersion: 1,
  *   schemaVersion: "0.0.0",
  *   source: "System",
- *   updatedAt: 2,
+ *   updatedAt: 1,
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * } satisfies ProviderInstanceRow
  *
  * const providerInstance = fromProviderInstanceRow(row)
- * console.log(providerInstance.label)
+ * console.log(Result.isSuccess(providerInstance) && providerInstance.success.kind)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromProviderInstanceRow = (row: ProviderInstanceRow): ProviderInstance => decodeProviderInstanceRow(row);
+export const fromProviderInstanceRow = (
+  row: ProviderInstanceRow
+): Result.Result<ProviderInstance, ProviderInstanceConverterError> =>
+  Result.mapError(decodeProviderInstanceRow(row), ProviderInstanceConverterError.fromSchemaError);

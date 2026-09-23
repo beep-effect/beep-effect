@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   FallowReportFinding,
   FallowReportOk,
@@ -151,8 +150,9 @@ import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, DateTime, Deferred, Effect, Fiber, FileSystem, Layer, Path, Ref } from "effect";
+import { ConfigProvider, DateTime, Deferred, Effect, Encoding, Fiber, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -167,10 +167,10 @@ const decodeQualityIssueIndexJson = S.decodeEffect(S.fromJsonString(QualityIssue
 const decodeYeetPublishIntent = S.decodeEffect(YeetPublishIntent);
 const decodeYeetStatusRemote = S.decodeEffect(YeetStatusRemote);
 const decodeYeetVerdict = S.decodeEffect(YeetVerdict);
-const decodeYeetVerdictSync = S.decodeSync(YeetVerdict);
+const decodeYeetVerdictEffect = S.decodeEffect(YeetVerdict);
 const encodeYeetStatusRemote = S.encodeEffect(YeetStatusRemote);
 const encodeYeetVerdict = S.encodeEffect(YeetVerdict);
-const encodeYeetVerdictSync = S.encodeSync(YeetVerdict);
+const encodeYeetVerdictEffect = S.encodeEffect(YeetVerdict);
 const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
 const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated));
 
@@ -178,7 +178,7 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
   Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
-const attemptUuid = S.decodeUnknownSync(UUID);
+const attemptUuid = S.decodeUnknownEffect(UUID);
 const DEAD_PID = 2_147_483_647;
 const liveAttemptOwner = Effect.fnUntraced(function* () {
   const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
@@ -186,8 +186,11 @@ const liveAttemptOwner = Effect.fnUntraced(function* () {
 });
 
 const encodedAttemptPairs = Effect.fnUntraced(function* (family: string, count: number, offset = 0) {
-  const attemptIds = A.makeBy(count, (index) =>
-    attemptUuid(`00000000-0000-4000-${family}-${Str.padStart(12, "0")(`${index + offset}`)}`)
+  const attemptIds = yield* Effect.forEach(
+    A.range(0, count - 1),
+    Effect.fnUntraced(function* (index) {
+      return yield* attemptUuid(`00000000-0000-4000-${family}-${Str.padStart(12, "0")(`${index + offset}`)}`);
+    })
   );
   const lines = A.flatten(
     yield* Effect.forEach(attemptIds, (attemptId, index) => {
@@ -220,10 +223,12 @@ const encodedAttemptPairs = Effect.fnUntraced(function* (family: string, count: 
   );
   return { attemptIds, lines };
 });
-const proofLockReapClaimPath = (lockPath: string, observedText: string): string =>
-  `${lockPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
-const proofLockReapClaimTombstonePath = (claimPath: string, observedText: string): string =>
-  `${claimPath}.reap-${createHash("sha256").update(observedText).digest("hex")}.claim`;
+const proofLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedText: string) {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(observedText));
+  return `${lockPath}.reap-${Encoding.encodeHex(digest)}.claim`;
+});
+const proofLockReapClaimTombstonePath = proofLockReapClaimPath;
 
 const encodeProofLockReapClaim = Effect.fn("test.encodeProofLockReapClaim")(function* (
   pid: number,
@@ -602,11 +607,11 @@ describe("yeet planner", () => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
-          const attempt = (suffix: string) =>
-            YeetAttemptStarted.make({
+          const attempt = Effect.fnUntraced(function* (suffix: string) {
+            return YeetAttemptStarted.make({
               schemaVersion: "yeet-attempt-journal/v1",
               _tag: "attempt-started",
-              attemptId: attemptUuid(`00000000-0000-4000-8020-${suffix}`),
+              attemptId: yield* attemptUuid(`00000000-0000-4000-8020-${suffix}`),
               runId: `terminal-${suffix}`,
               branch: tempContext.branch,
               base: tempContext.base,
@@ -619,10 +624,11 @@ describe("yeet planner", () => {
               envProfile: O.some("local"),
               stage: O.some("repair-loop"),
             });
+          });
           const cases = [
-            [attempt("000000000001"), yield* Effect.exit(Effect.void), "terminal-row-missing"],
-            [attempt("000000000002"), yield* Effect.exit(Effect.interrupt), "interrupted"],
-            [attempt("000000000003"), yield* Effect.exit(Effect.fail("boom")), "unrecorded-failure"],
+            [yield* attempt("000000000001"), yield* Effect.exit(Effect.void), "terminal-row-missing"],
+            [yield* attempt("000000000002"), yield* Effect.exit(Effect.interrupt), "interrupted"],
+            [yield* attempt("000000000003"), yield* Effect.exit(Effect.fail("boom")), "unrecorded-failure"],
           ] as const;
 
           yield* Effect.forEach(
@@ -672,7 +678,7 @@ describe("yeet planner", () => {
           const attempt = YeetAttemptStarted.make({
             schemaVersion: "yeet-attempt-journal/v1",
             _tag: "attempt-started",
-            attemptId: attemptUuid("00000000-0000-4000-8020-000000000004"),
+            attemptId: yield* attemptUuid("00000000-0000-4000-8020-000000000004"),
             runId: "full-proof-admission-facts",
             branch: tempContext.branch,
             base: tempContext.base,
@@ -1506,9 +1512,9 @@ describe("yeet planner", () => {
       )
     ));
 
-  it("decodes Turbo affected query JSON into plan task metadata", () => {
-    const tasks = Effect.runSync(
-      decodeTurboPlanTasksFromQueryJsonForTesting(
+  it.effect("decodes Turbo affected query JSON into plan task metadata", () =>
+    Effect.gen(function* () {
+      const tasks = yield* decodeTurboPlanTasksFromQueryJsonForTesting(
         `{
           "data": {
             "affectedTasks": {
@@ -1540,24 +1546,24 @@ describe("yeet planner", () => {
             ]
           }
         }`
-      )
-    );
+      );
 
-    expect(tasks).toEqual([
-      expect.objectContaining({
-        taskId: "@beep/repo-cli#check",
-        packageName: "@beep/repo-cli",
-        packagePath: "packages/tooling/tool/cli",
-        task: "check",
-      }),
-      expect.objectContaining({
-        taskId: "@beep/schema#lint",
-        packageName: "@beep/schema",
-        packagePath: "packages/foundation/modeling/schema",
-        task: "lint",
-      }),
-    ]);
-  });
+      expect(tasks).toEqual([
+        expect.objectContaining({
+          taskId: "@beep/repo-cli#check",
+          packageName: "@beep/repo-cli",
+          packagePath: "packages/tooling/tool/cli",
+          task: "check",
+        }),
+        expect.objectContaining({
+          taskId: "@beep/schema#lint",
+          packageName: "@beep/schema",
+          packagePath: "packages/foundation/modeling/schema",
+          task: "lint",
+        }),
+      ]);
+    })
+  );
 
   it("extracts the last decodable Turbo JSON object from mixed output", () => {
     const payload = `{"data":{"affectedTasks":{"items":[],"length":0},"message":"keeps } inside strings"}}`;
@@ -2688,13 +2694,13 @@ describe("yeet attempt journal", () => {
           const owner = yield* liveAttemptOwner();
           yield* Effect.forEach(
             A.makeBy(60, (index) => index),
-            (index) =>
-              appendYeetAttemptJournalEvent(
+            Effect.fnUntraced(function* (index) {
+              return yield* appendYeetAttemptJournalEvent(
                 tempContext,
                 YeetAttemptStarted.make({
                   schemaVersion: "yeet-attempt-journal/v1",
                   _tag: "attempt-started",
-                  attemptId: attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
+                  attemptId: yield* attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
                   runId: "repo-cli-yeet",
                   branch: "repo-cli-yeet",
                   base: "origin/main",
@@ -2703,7 +2709,8 @@ describe("yeet attempt journal", () => {
                   startedAt: "2026-08-04T00:00:00.000Z",
                   ...owner,
                 })
-              ),
+              );
+            }),
             { discard: true, concurrency: 1 }
           );
           const journalPath = yield* attemptJournalPath(tempContext);
@@ -2729,7 +2736,7 @@ describe("yeet attempt journal", () => {
           const path = yield* Path.Path;
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
-          const oldestAttemptId = attemptUuid("00000000-0000-4000-8010-000000000999");
+          const oldestAttemptId = yield* attemptUuid("00000000-0000-4000-8010-000000000999");
           const oldestStart = yield* encodeStarted(
             YeetAttemptStarted.make({
               schemaVersion: "yeet-attempt-journal/v1",
@@ -2810,7 +2817,7 @@ describe("yeet attempt journal", () => {
             YeetAttemptStarted.make({
               schemaVersion: "yeet-attempt-journal/v1",
               _tag: "attempt-started",
-              attemptId: attemptUuid("00000000-0000-4000-8000-000000000099"),
+              attemptId: yield* attemptUuid("00000000-0000-4000-8000-000000000099"),
               runId: "post-compaction",
               branch: "post-compaction",
               base: "origin/main",
@@ -2841,9 +2848,9 @@ describe("yeet attempt journal", () => {
           const owner = yield* liveAttemptOwner();
           yield* Effect.forEach(
             A.makeBy(60, (index) => index),
-            (index) => {
-              const attemptId = attemptUuid(`00000000-0000-4000-8001-${Str.padStart(12, "0")(`${index}`)}`);
-              return Effect.all(
+            Effect.fnUntraced(function* (index) {
+              const attemptId = yield* attemptUuid(`00000000-0000-4000-8001-${Str.padStart(12, "0")(`${index}`)}`);
+              return yield* Effect.all(
                 [
                   appendYeetAttemptJournalEvent(
                     tempContext,
@@ -2873,7 +2880,7 @@ describe("yeet attempt journal", () => {
                 ],
                 { concurrency: 1, discard: true }
               );
-            },
+            }),
             { concurrency: 1, discard: true }
           );
 
@@ -2907,8 +2914,8 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
-          const deadAttemptId = attemptUuid("00000000-0000-4000-8002-000000000001");
-          const liveAttemptId = attemptUuid("00000000-0000-4000-8002-000000000002");
+          const deadAttemptId = yield* attemptUuid("00000000-0000-4000-8002-000000000001");
+          const liveAttemptId = yield* attemptUuid("00000000-0000-4000-8002-000000000002");
           const started = (attemptId: UUID, ownerPid: number, procStart: string) =>
             YeetAttemptStarted.make({
               schemaVersion: "yeet-attempt-journal/v1",
@@ -2989,16 +2996,16 @@ describe("yeet attempt journal", () => {
           const path = yield* Path.Path;
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
-          const deadAttemptId = attemptUuid("00000000-0000-4000-8003-000000000000");
+          const deadAttemptId = yield* attemptUuid("00000000-0000-4000-8003-000000000000");
           const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
           const starts = yield* Effect.forEach(
             A.makeBy(55, (index) => index),
-            (index) =>
-              encodeStarted(
+            Effect.fnUntraced(function* (index) {
+              return yield* encodeStarted(
                 YeetAttemptStarted.make({
                   schemaVersion: "yeet-attempt-journal/v1",
                   _tag: "attempt-started",
-                  attemptId: attemptUuid(`00000000-0000-4000-8003-${Str.padStart(12, "0")(`${index}`)}`),
+                  attemptId: yield* attemptUuid(`00000000-0000-4000-8003-${Str.padStart(12, "0")(`${index}`)}`),
                   runId: `over-limit-${index}`,
                   branch: "over-limit-reconciliation",
                   base: "origin/main",
@@ -3014,7 +3021,8 @@ describe("yeet attempt journal", () => {
                   envProfile: index === 0 ? O.some("local") : O.none(),
                   stage: index === 0 ? O.some("repair-loop") : O.none(),
                 })
-              )
+              );
+            })
           );
           yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
           const writeOverLimitJournal = fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
@@ -3065,7 +3073,7 @@ describe("yeet attempt journal", () => {
             YeetAttemptStarted.make({
               schemaVersion: "yeet-attempt-journal/v1",
               _tag: "attempt-started",
-              attemptId: attemptUuid("00000000-0000-4000-8003-000000000099"),
+              attemptId: yield* attemptUuid("00000000-0000-4000-8003-000000000099"),
               runId: "append-trigger",
               branch: "over-limit-reconciliation",
               base: "origin/main",
@@ -3100,9 +3108,9 @@ describe("yeet attempt journal", () => {
           const priorPairs = A.flatten(
             yield* Effect.forEach(
               A.makeBy(59, (index) => index),
-              (index) => {
-                const attemptId = attemptUuid(`00000000-0000-4000-8004-${Str.padStart(12, "0")(`${index}`)}`);
-                return Effect.all([
+              Effect.fnUntraced(function* (index) {
+                const attemptId = yield* attemptUuid(`00000000-0000-4000-8004-${Str.padStart(12, "0")(`${index}`)}`);
+                return yield* Effect.all([
                   encodeStarted(
                     YeetAttemptStarted.make({
                       schemaVersion: "yeet-attempt-journal/v1",
@@ -3126,11 +3134,14 @@ describe("yeet attempt journal", () => {
                     })
                   ),
                 ]);
-              }
+              })
             )
           );
-          const deadAttemptIds = A.makeBy(30, (index) =>
-            attemptUuid(`00000000-0000-4000-8005-${Str.padStart(12, "0")(`${index}`)}`)
+          const deadAttemptIds = yield* Effect.forEach(
+            A.range(0, 30 - 1),
+            Effect.fnUntraced(function* (index) {
+              return yield* attemptUuid(`00000000-0000-4000-8005-${Str.padStart(12, "0")(`${index}`)}`);
+            })
           );
           const deadStarts = yield* Effect.forEach(deadAttemptIds, (attemptId, index) =>
             encodeStarted(
@@ -3190,11 +3201,17 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const ownerProcStart = pipe(yield* processStartIdentityForPid(process.pid), O.getOrThrow);
-          const deadAttemptIds = A.makeBy(50, (index) =>
-            attemptUuid(`00000000-0000-4000-8006-${Str.padStart(12, "0")(`${index}`)}`)
+          const deadAttemptIds = yield* Effect.forEach(
+            A.range(0, 50 - 1),
+            Effect.fnUntraced(function* (index) {
+              return yield* attemptUuid(`00000000-0000-4000-8006-${Str.padStart(12, "0")(`${index}`)}`);
+            })
           );
-          const liveAttemptIds = A.makeBy(2, (index) =>
-            attemptUuid(`00000000-0000-4000-8007-${Str.padStart(12, "0")(`${index}`)}`)
+          const liveAttemptIds = yield* Effect.forEach(
+            A.range(0, 2 - 1),
+            Effect.fnUntraced(function* (index) {
+              return yield* attemptUuid(`00000000-0000-4000-8007-${Str.padStart(12, "0")(`${index}`)}`);
+            })
           );
           const starts = yield* Effect.forEach(A.appendAll(deadAttemptIds, liveAttemptIds), (attemptId, index) =>
             encodeStarted(
@@ -3252,8 +3269,11 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const owner = yield* liveAttemptOwner();
-          const attemptIds = A.makeBy(55, (index) =>
-            attemptUuid(`00000000-0000-4000-8008-${Str.padStart(12, "0")(`${index}`)}`)
+          const attemptIds = yield* Effect.forEach(
+            A.range(0, 55 - 1),
+            Effect.fnUntraced(function* (index) {
+              return yield* attemptUuid(`00000000-0000-4000-8008-${Str.padStart(12, "0")(`${index}`)}`);
+            })
           );
           const starts = yield* Effect.forEach(attemptIds, (attemptId, index) =>
             encodeStarted(
@@ -3294,11 +3314,11 @@ describe("yeet attempt journal", () => {
           const fs = yield* FileSystem.FileSystem;
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const owner = yield* liveAttemptOwner();
-          const attemptStarted = (index: number) =>
-            YeetAttemptStarted.make({
+          const attemptStarted = Effect.fnUntraced(function* (index: number) {
+            return YeetAttemptStarted.make({
               schemaVersion: "yeet-attempt-journal/v1",
               _tag: "attempt-started",
-              attemptId: attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
+              attemptId: yield* attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
               runId: "repo-cli-yeet",
               branch: "repo-cli-yeet",
               base: "origin/main",
@@ -3307,15 +3327,18 @@ describe("yeet attempt journal", () => {
               startedAt: "2026-09-03T00:00:00.000Z",
               ...owner,
             });
-          yield* Effect.forEach(
-            A.makeBy(50, attemptStarted),
-            (event) => appendYeetAttemptJournalEvent(tempContext, event),
-            {
-              discard: true,
-              concurrency: 1,
-            }
+          });
+          const started = yield* Effect.forEach(A.range(0, 49), attemptStarted);
+          yield* Effect.forEach(started, (event) => appendYeetAttemptJournalEvent(tempContext, event), {
+            discard: true,
+            concurrency: 1,
+          });
+          const concurrent = yield* Effect.forEach(
+            A.range(0, 10 - 1),
+            Effect.fnUntraced(function* (offset) {
+              return yield* attemptStarted(100 + offset);
+            })
           );
-          const concurrent = A.makeBy(10, (offset) => attemptStarted(100 + offset));
           yield* Effect.forEach(concurrent, (event) => appendYeetAttemptJournalEvent(tempContext, event), {
             discard: true,
             concurrency: "unbounded",
@@ -3345,11 +3368,11 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const owner = yield* liveAttemptOwner();
-          const attemptStarted = (index: number) =>
-            YeetAttemptStarted.make({
+          const attemptStarted = Effect.fnUntraced(function* (index: number) {
+            return YeetAttemptStarted.make({
               schemaVersion: "yeet-attempt-journal/v1",
               _tag: "attempt-started",
-              attemptId: attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
+              attemptId: yield* attemptUuid(`00000000-0000-4000-8000-${Str.padStart(12, "0")(`${index}`)}`),
               runId: "repo-cli-yeet",
               branch: "repo-cli-yeet",
               base: "origin/main",
@@ -3358,12 +3381,13 @@ describe("yeet attempt journal", () => {
               startedAt: "2026-08-04T00:00:00.000Z",
               ...owner,
             });
+          });
 
-          yield* appendYeetAttemptJournalEvent(tempContext, attemptStarted(1));
+          yield* appendYeetAttemptJournalEvent(tempContext, yield* attemptStarted(1));
           const intact = yield* fs.readFileString(journalPath);
           yield* fs.writeFileString(journalPath, `${intact}{"schemaVersion":"yeet-attempt-jour`);
 
-          yield* appendYeetAttemptJournalEvent(tempContext, attemptStarted(2));
+          yield* appendYeetAttemptJournalEvent(tempContext, yield* attemptStarted(2));
 
           const lines = pipe(yield* fs.readFileString(journalPath), Str.split("\n"), A.filter(Str.isNonEmpty));
           const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
@@ -3385,8 +3409,11 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const owner = yield* liveAttemptOwner();
-          const attemptIds = A.makeBy(5, (index) =>
-            attemptUuid(`00000000-0000-4000-8011-${Str.padStart(12, "0")(`${index}`)}`)
+          const attemptIds = yield* Effect.forEach(
+            A.range(0, 5 - 1),
+            Effect.fnUntraced(function* (index) {
+              return yield* attemptUuid(`00000000-0000-4000-8011-${Str.padStart(12, "0")(`${index}`)}`);
+            })
           );
           const starts = yield* Effect.forEach(attemptIds, (attemptId, index) =>
             encodeStarted(
@@ -3434,9 +3461,9 @@ describe("yeet attempt journal", () => {
         yield* TestClock.setTime(DateTime.toEpochMillis(now));
         const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
         const journalPath = yield* attemptJournalPath(tempContext);
-        const youngAttemptId = attemptUuid("00000000-0000-4000-8011-000000000005");
-        const staleAttemptId = attemptUuid("00000000-0000-4000-8011-000000000006");
-        const deadAttemptId = attemptUuid("00000000-0000-4000-8011-000000000007");
+        const youngAttemptId = yield* attemptUuid("00000000-0000-4000-8011-000000000005");
+        const staleAttemptId = yield* attemptUuid("00000000-0000-4000-8011-000000000006");
+        const deadAttemptId = yield* attemptUuid("00000000-0000-4000-8011-000000000007");
         const started = (attemptId: UUID, ownerPid: number, startedAt: string) =>
           YeetAttemptStarted.make({
             schemaVersion: "yeet-attempt-journal/v1",
@@ -3490,8 +3517,11 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const owner = yield* liveAttemptOwner();
-          const unfinishedIds = A.makeBy(50, (index) =>
-            attemptUuid(`00000000-0000-4000-8012-${Str.padStart(12, "0")(`${index}`)}`)
+          const unfinishedIds = yield* Effect.forEach(
+            A.range(0, 50 - 1),
+            Effect.fnUntraced(function* (index) {
+              return yield* attemptUuid(`00000000-0000-4000-8012-${Str.padStart(12, "0")(`${index}`)}`);
+            })
           );
           const unfinishedLines = yield* Effect.forEach(unfinishedIds, (attemptId, index) =>
             encodeStarted(
@@ -3538,8 +3568,11 @@ describe("yeet attempt journal", () => {
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
           const owner = yield* liveAttemptOwner();
-          const unfinishedIds = A.makeBy(60, (index) =>
-            attemptUuid(`00000000-0000-4000-8014-${Str.padStart(12, "0")(`${index}`)}`)
+          const unfinishedIds = yield* Effect.forEach(
+            A.range(0, 60 - 1),
+            Effect.fnUntraced(function* (index) {
+              return yield* attemptUuid(`00000000-0000-4000-8014-${Str.padStart(12, "0")(`${index}`)}`);
+            })
           );
           const unfinishedLines = yield* Effect.forEach(unfinishedIds, (attemptId, index) =>
             encodeStarted(
@@ -3591,8 +3624,11 @@ describe("yeet attempt journal", () => {
           const path = yield* Path.Path;
           const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
           const journalPath = yield* attemptJournalPath(tempContext);
-          const deadIds = A.makeBy(60, (index) =>
-            attemptUuid(`00000000-0000-4000-8016-${Str.padStart(12, "0")(`${index}`)}`)
+          const deadIds = yield* Effect.forEach(
+            A.range(0, 60 - 1),
+            Effect.fnUntraced(function* (index) {
+              return yield* attemptUuid(`00000000-0000-4000-8016-${Str.padStart(12, "0")(`${index}`)}`);
+            })
           );
           const starts = yield* Effect.forEach(deadIds, (attemptId, index) =>
             encodeStarted(
@@ -3699,7 +3735,7 @@ describe("yeet attempt journal", () => {
             YeetAttemptStarted.make({
               schemaVersion: "yeet-attempt-journal/v1",
               _tag: "attempt-started",
-              attemptId: attemptUuid("00000000-0000-4000-8018-000000000099"),
+              attemptId: yield* attemptUuid("00000000-0000-4000-8018-000000000099"),
               runId: "opaque-trigger",
               branch: "retention-fixture",
               base: "origin/main",
@@ -3773,7 +3809,7 @@ describe("yeet attempt journal", () => {
           );
           const startedLine = pipe(legacyLines, A.head, O.getOrThrow);
           const finishedLine = pipe(legacyLines, A.last, O.getOrThrow);
-          const attemptId = attemptUuid("550e8400-e29b-41d4-a716-446655440010");
+          const attemptId = yield* attemptUuid("550e8400-e29b-41d4-a716-446655440010");
           const terminatedLine = yield* encodeTerminated(
             YeetAttemptTerminated.make({
               schemaVersion: "yeet-attempt-journal/v1",
@@ -4078,107 +4114,109 @@ describe("yeet publish scope helpers", () => {
     )
   );
 
-  it("builds a verdict with hint-derived repair commands and not-run lanes", () => {
-    const proofStep = RepoPlanStep.make({
-      id: "full:pre-push",
-      label: "full:pre-push",
-      phase: "full",
-      command: "bun",
-      args: ["run", "beep", "quality", "github-checks", "pre-push"],
-      cwd: "/repo",
-      scope: "repo",
-      mutability: "readonly",
-      resume: "never",
-    });
-    const pushStep = RepoPlanStep.make({
-      id: "publish:01-git-push",
-      label: "publish:git:push",
-      phase: "publish",
-      command: "git",
-      args: ["push", "-u", "origin", "HEAD"],
-      cwd: "/repo",
-      scope: "git",
-      mutability: "publish",
-      resume: "never",
-    });
-    const verdict = buildYeetVerdictForTesting(
-      BuildYeetVerdictInput.make({
-        attemptId: O.some(attemptUuid("550e8400-e29b-41d4-a716-446655440000")),
-        base: "origin/main",
-        branch: "feature",
-        createdAt: "2026-06-11T00:00:00.000Z",
-        startedAt: O.some("2026-06-11T00:00:00.000Z"),
-        endedAt: O.some("2026-06-11T00:00:00.012Z"),
-        elapsedMs: O.some(12),
-        executed: [
-          YeetExecutedStep.make({
-            durationMs: 12,
-            result: RepoStepRunResult.make({
-              stepId: proofStep.id,
-              commandText: "bun run beep quality github-checks pre-push",
-              exitCode: 1,
-              // The typos marker sits inside the red lint lane's own segment;
-              // the record names that lane, so no whole-output scan runs.
-              output: [
-                "[beep-cli] quality:lint: bun run beep ci lane lint",
-                "[beep-cli] lint:typos: typos",
-                "error: misspelling found",
-                "[beep-cli] quality:lint: failed in 12ms",
-              ].join("\n"),
+  it.effect("builds a verdict with hint-derived repair commands and not-run lanes", () =>
+    Effect.gen(function* () {
+      const proofStep = RepoPlanStep.make({
+        id: "full:pre-push",
+        label: "full:pre-push",
+        phase: "full",
+        command: "bun",
+        args: ["run", "beep", "quality", "github-checks", "pre-push"],
+        cwd: "/repo",
+        scope: "repo",
+        mutability: "readonly",
+        resume: "never",
+      });
+      const pushStep = RepoPlanStep.make({
+        id: "publish:01-git-push",
+        label: "publish:git:push",
+        phase: "publish",
+        command: "git",
+        args: ["push", "-u", "origin", "HEAD"],
+        cwd: "/repo",
+        scope: "git",
+        mutability: "publish",
+        resume: "never",
+      });
+      const verdict = buildYeetVerdictForTesting(
+        BuildYeetVerdictInput.make({
+          attemptId: O.some(yield* attemptUuid("550e8400-e29b-41d4-a716-446655440000")),
+          base: "origin/main",
+          branch: "feature",
+          createdAt: "2026-06-11T00:00:00.000Z",
+          startedAt: O.some("2026-06-11T00:00:00.000Z"),
+          endedAt: O.some("2026-06-11T00:00:00.012Z"),
+          elapsedMs: O.some(12),
+          executed: [
+            YeetExecutedStep.make({
+              durationMs: 12,
+              result: RepoStepRunResult.make({
+                stepId: proofStep.id,
+                commandText: "bun run beep quality github-checks pre-push",
+                exitCode: 1,
+                // The typos marker sits inside the red lint lane's own segment;
+                // the record names that lane, so no whole-output scan runs.
+                output: [
+                  "[beep-cli] quality:lint: bun run beep ci lane lint",
+                  "[beep-cli] lint:typos: typos",
+                  "error: misspelling found",
+                  "[beep-cli] quality:lint: failed in 12ms",
+                ].join("\n"),
+              }),
+              step: proofStep,
             }),
-            step: proofStep,
-          }),
-        ],
-        innerLaneReports: [
-          QualityTaskLaneRunReport.make({
-            schemaVersion: "quality-task-lane-run/v1",
-            parentLaneId: O.some(proofStep.id),
-            lanes: [
-              QualityTaskLaneRun.make({
-                id: "quality:lint",
-                label: "quality:lint",
-                status: "failed",
-                inputDigest: O.none(),
-              }),
-              QualityTaskLaneRun.make({
-                id: "quality:docgen",
-                label: "quality:docgen",
-                status: "not-run-early-stop",
-                inputDigest: O.none(),
-              }),
-            ],
-          }),
-        ],
-        head: "HEAD",
-        message: "yeet publish proof failed after creating the local commit.",
-        mode: "publish",
-        outcome: "failure",
-        failedStepId: proofStep.id,
-        failureKind: "step-exit",
-        packetPaths: [],
-        planned: [proofStep, pushStep],
-        runId: "feature",
-      })
-    );
+          ],
+          innerLaneReports: [
+            QualityTaskLaneRunReport.make({
+              schemaVersion: "quality-task-lane-run/v1",
+              parentLaneId: O.some(proofStep.id),
+              lanes: [
+                QualityTaskLaneRun.make({
+                  id: "quality:lint",
+                  label: "quality:lint",
+                  status: "failed",
+                  inputDigest: O.none(),
+                }),
+                QualityTaskLaneRun.make({
+                  id: "quality:docgen",
+                  label: "quality:docgen",
+                  status: "not-run-early-stop",
+                  inputDigest: O.none(),
+                }),
+              ],
+            }),
+          ],
+          head: "HEAD",
+          message: "yeet publish proof failed after creating the local commit.",
+          mode: "publish",
+          outcome: "failure",
+          failedStepId: proofStep.id,
+          failureKind: "step-exit",
+          packetPaths: [],
+          planned: [proofStep, pushStep],
+          runId: "feature",
+        })
+      );
 
-    expect(verdict.outcome).toBe("failure");
-    expect(verdict.committed).toBe(false);
-    expect(verdict.pushed).toBe(false);
-    expect(verdict.failurePolicy).toBe("fail-fast");
-    expect(verdict.failedStepId).toBe(proofStep.id);
-    expect(verdict.failureKind).toBe("step-exit");
-    expect(verdict.lanes).toHaveLength(4);
-    expect(verdict.lanes[0]).toMatchObject({
-      id: "full:pre-push",
-      durationMs: 12,
-      repairCommand:
-        "Run the typos checker on the flagged files and fix the spelling, or whitelist intentional terms in `_typos.toml`.",
-      status: "failed",
-    });
-    expect(verdict.lanes[1]).toMatchObject({ id: "quality:lint", status: "failed" });
-    expect(verdict.lanes[2]).toMatchObject({ id: "quality:docgen", status: "not-run-early-stop" });
-    expect(verdict.lanes[3]).toMatchObject({ id: "publish:01-git-push", status: "not-run" });
-  });
+      expect(verdict.outcome).toBe("failure");
+      expect(verdict.committed).toBe(false);
+      expect(verdict.pushed).toBe(false);
+      expect(verdict.failurePolicy).toBe("fail-fast");
+      expect(verdict.failedStepId).toBe(proofStep.id);
+      expect(verdict.failureKind).toBe("step-exit");
+      expect(verdict.lanes).toHaveLength(4);
+      expect(verdict.lanes[0]).toMatchObject({
+        id: "full:pre-push",
+        durationMs: 12,
+        repairCommand:
+          "Run the typos checker on the flagged files and fix the spelling, or whitelist intentional terms in `_typos.toml`.",
+        status: "failed",
+      });
+      expect(verdict.lanes[1]).toMatchObject({ id: "quality:lint", status: "failed" });
+      expect(verdict.lanes[2]).toMatchObject({ id: "quality:docgen", status: "not-run-early-stop" });
+      expect(verdict.lanes[3]).toMatchObject({ id: "publish:01-git-push", status: "not-run" });
+    })
+  );
 
   it("summarizes the first pre-push red and skipped tail from durable inner-lane facts", () => {
     const summary = summarizePrePushInnerLanesForTesting([
@@ -4227,7 +4265,7 @@ describe("yeet publish scope helpers", () => {
         });
         const verdict = buildYeetVerdictForTesting(
           BuildYeetVerdictInput.make({
-            attemptId: O.some(attemptUuid("550e8400-e29b-41d4-a716-446655440001")),
+            attemptId: O.some(yield* attemptUuid("550e8400-e29b-41d4-a716-446655440001")),
             base: "origin/main",
             branch: "feature",
             createdAt: "2026-06-11T00:00:00.000Z",
@@ -4375,26 +4413,21 @@ describe("yeet publish scope helpers", () => {
     expect(O.isNone(verdict.attemptId)).toBe(true);
   });
 
-  it("property: verdict schema round-trips arbitrary verdicts", () => {
+  {
     const VerdictArbitrary = Arbitrary.schema(YeetVerdict);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([VerdictArbitrary]),
-          ([verdict]) => {
-            const encoded = encodeYeetVerdictSync(verdict);
-            const decoded = decodeYeetVerdictSync(encoded);
-            expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
-            expect(decoded.lanes.length).toBe(verdict.lanes.length);
-            expect(decoded.outcome).toBe(verdict.outcome);
-
-            return true;
-          },
-          fcRuns(32)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+    it.effect.prop(
+      "property: verdict schema round-trips arbitrary verdicts",
+      [VerdictArbitrary],
+      Effect.fnUntraced(function* ([verdict]) {
+        const encoded = yield* encodeYeetVerdictEffect(verdict);
+        const decoded = yield* decodeYeetVerdictEffect(encoded);
+        expect(decoded.schemaVersion).toBe("yeet-verdict/v2");
+        expect(decoded.lanes.length).toBe(verdict.lanes.length);
+        expect(decoded.outcome).toBe(verdict.outcome);
+      }),
+      { arbitrary: fcRuns(32) }
+    );
+  }
 
   it("parks and restores staged-only residue through a marked stash", () =>
     Effect.runPromise(
@@ -5036,7 +5069,7 @@ describe("yeet publish scope helpers", () => {
               startedAt: "2026-08-25T00:00:00.000Z",
             })
           )}\n`;
-          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const claimPath = yield* proofLockReapClaimPath(lockPath, staleText);
           const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
           const replacementText = "replacement-from-dead-claim-recovery\n";
           yield* fs.writeFileString(lockPath, staleText);
@@ -5065,10 +5098,10 @@ describe("yeet publish scope helpers", () => {
               startedAt: "2026-08-25T00:00:00.000Z",
             })
           )}\n`;
-          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const claimPath = yield* proofLockReapClaimPath(lockPath, staleText);
           const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
           const delayedClaimText = `${yield* encodeProofLockReapClaim(process.pid, "2026-08-26T00:00:00.002Z")}\n`;
-          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const tombstonePath = yield* proofLockReapClaimTombstonePath(claimPath, deadClaimText);
           const tombstoneCleaned = yield* Deferred.make<void>();
           const releaseWinner = yield* Deferred.make<void>();
           let pauseFirstTombstoneCleanup = true;
@@ -5127,9 +5160,9 @@ describe("yeet publish scope helpers", () => {
       withProofCoordinatorRepo(({ lockPath }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const claimPath = proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
+          const claimPath = yield* proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
           const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
-          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const tombstonePath = yield* proofLockReapClaimTombstonePath(claimPath, deadClaimText);
           const liveTombstoneText = `${yield* encodeProofLockReapClaim(process.pid)}\n`;
           yield* fs.writeFileString(claimPath, deadClaimText);
           yield* fs.writeFileString(tombstonePath, liveTombstoneText);
@@ -5152,9 +5185,9 @@ describe("yeet publish scope helpers", () => {
       withProofCoordinatorRepo(({ lockPath }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const claimPath = proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
+          const claimPath = yield* proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
           const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
-          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const tombstonePath = yield* proofLockReapClaimTombstonePath(claimPath, deadClaimText);
           const deadTombstoneText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
           yield* fs.writeFileString(claimPath, deadClaimText);
           yield* fs.writeFileString(tombstonePath, deadTombstoneText);
@@ -5179,9 +5212,9 @@ describe("yeet publish scope helpers", () => {
       withProofCoordinatorRepo(({ lockPath }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
-          const claimPath = proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
+          const claimPath = yield* proofLockReapClaimPath(lockPath, "stale-lock-observation\n");
           const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
-          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const tombstonePath = yield* proofLockReapClaimTombstonePath(claimPath, deadClaimText);
           const unreadableTombstoneText = "not-json\n";
           yield* fs.writeFileString(claimPath, deadClaimText);
           yield* fs.writeFileString(tombstonePath, unreadableTombstoneText);
@@ -5217,7 +5250,7 @@ describe("yeet publish scope helpers", () => {
               startedAt: "2026-08-25T00:00:00.000Z",
             })
           )}\n`;
-          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const claimPath = yield* proofLockReapClaimPath(lockPath, staleText);
           const liveClaimText = `${yield* encodeProofLockReapClaim(process.pid)}\n`;
           yield* fs.writeFileString(lockPath, staleText);
           yield* fs.writeFileString(claimPath, liveClaimText);
@@ -5245,7 +5278,7 @@ describe("yeet publish scope helpers", () => {
               startedAt: "2026-08-25T00:00:00.000Z",
             })
           )}\n`;
-          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const claimPath = yield* proofLockReapClaimPath(lockPath, staleText);
           yield* fs.writeFileString(lockPath, staleText);
           yield* fs.writeFileString(claimPath, "not-json\n");
 
@@ -5277,9 +5310,9 @@ describe("yeet publish scope helpers", () => {
               startedAt: "2026-08-25T00:00:00.000Z",
             })
           )}\n`;
-          const claimPath = proofLockReapClaimPath(lockPath, staleText);
+          const claimPath = yield* proofLockReapClaimPath(lockPath, staleText);
           const deadClaimText = `${yield* encodeProofLockReapClaim(2_147_483_647)}\n`;
-          const tombstonePath = proofLockReapClaimTombstonePath(claimPath, deadClaimText);
+          const tombstonePath = yield* proofLockReapClaimTombstonePath(claimPath, deadClaimText);
           const winnerText = "winner-a\n";
           const loserText = "winner-b\n";
           yield* fs.writeFileString(lockPath, staleText);

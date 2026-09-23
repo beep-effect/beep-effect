@@ -1281,47 +1281,63 @@ const isOperationPathAvailable = (
  * @category getters
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Method, path, operation metadata, and collision sets are co-primary identifier-construction inputs.
-export const operationPath = (
-  method: string,
-  path: string,
-  operation: Readonly<Record<string, unknown>>,
-  used: HashSet.HashSet<string>,
-  namespaces: HashSet.HashSet<string>
-): ReadonlyArray<string> => {
-  const raw = pipe(own(operation, "operationId"), O.flatMap(nonEmptyString));
-  const segments = pipe(
-    raw,
-    O.match({
-      onNone: () => A.of(fallbackOperationId(method, path)),
-      onSome: Str.split("."),
-    }),
-    A.map(sanitizeOperationSegment)
-  );
-  if (isOperationPathAvailable(segments, used, namespaces)) return segments;
-  const conflict = pipe(
-    A.dropRight(segments, 1),
-    A.findFirstIndex((_, index) => HashSet.has(used, pipe(segments, A.take(index + 1), A.join("."))))
-  );
-  if (O.isSome(conflict) && conflict.value + 1 < A.length(segments)) {
-    const collapsed = A.flatMap(segments, (segment, index) => {
-      if (index === conflict.value) {
-        const next = pipe(A.get(segments, index + 1), O.getOrElse(thunkEmptyStr));
-        return A.of(`${segment}${pipe(next, Str.slice(0, 1), Str.toUpperCase)}${pipe(next, Str.slice(1))}`);
+export const operationPath: {
+  (
+    path: string,
+    operation: Readonly<Record<string, unknown>>,
+    used: HashSet.HashSet<string>,
+    namespaces: HashSet.HashSet<string>
+  ): (method: string) => ReadonlyArray<string>;
+  (
+    method: string,
+    path: string,
+    operation: Readonly<Record<string, unknown>>,
+    used: HashSet.HashSet<string>,
+    namespaces: HashSet.HashSet<string>
+  ): ReadonlyArray<string>;
+} = dual(
+  5,
+  (
+    method: string,
+    path: string,
+    operation: Readonly<Record<string, unknown>>,
+    used: HashSet.HashSet<string>,
+    namespaces: HashSet.HashSet<string>
+  ): ReadonlyArray<string> => {
+    const raw = pipe(own(operation, "operationId"), O.flatMap(nonEmptyString));
+    const segments = pipe(
+      raw,
+      O.match({
+        onNone: () => A.of(fallbackOperationId(method, path)),
+        onSome: Str.split("."),
+      }),
+      A.map(sanitizeOperationSegment)
+    );
+    if (isOperationPathAvailable(segments, used, namespaces)) return segments;
+    const conflict = pipe(
+      A.dropRight(segments, 1),
+      A.findFirstIndex((_, index) => HashSet.has(used, pipe(segments, A.take(index + 1), A.join("."))))
+    );
+    if (O.isSome(conflict) && conflict.value + 1 < A.length(segments)) {
+      const collapsed = A.flatMap(segments, (segment, index) => {
+        if (index === conflict.value) {
+          const next = pipe(A.get(segments, index + 1), O.getOrElse(thunkEmptyStr));
+          return A.of(`${segment}${pipe(next, Str.slice(0, 1), Str.toUpperCase)}${pipe(next, Str.slice(1))}`);
+        }
+        return index === conflict.value + 1 ? A.empty() : A.of(segment);
+      });
+      if (isOperationPathAvailable(collapsed, used, namespaces)) {
+        return collapsed;
       }
-      return index === conflict.value + 1 ? A.empty() : A.of(segment);
-    });
-    if (isOperationPathAvailable(collapsed, used, namespaces)) {
-      return collapsed;
     }
+    const fallback = pipe(segments, A.join("_"));
+    const next = (index: number): string => {
+      const candidate = `${fallback}_${index}`;
+      return isOperationPathAvailable(A.of(candidate), used, namespaces) ? candidate : next(index + 1);
+    };
+    return A.of(next(2));
   }
-  const fallback = pipe(segments, A.join("_"));
-  const next = (index: number): string => {
-    const candidate = `${fallback}_${index}`;
-    return isOperationPathAvailable(A.of(candidate), used, namespaces) ? candidate : next(index + 1);
-  };
-  return A.of(next(2));
-};
+);
 
 /**
  * Validates a host or document server URL as an absolute HTTP(S) origin plus

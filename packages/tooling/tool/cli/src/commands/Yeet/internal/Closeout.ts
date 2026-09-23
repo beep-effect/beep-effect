@@ -34,6 +34,7 @@ import {
 import { closeoutWritePlan } from "./closeout/WritePlan.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutWriteAction } from "./closeout/Closeout.schemas.ts";
@@ -75,7 +76,7 @@ export { closeoutWritePlanForTesting } from "./closeout/WritePlan.ts";
 export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
   context: RepoRunContext,
   options: PrCloseoutOptions
-): Effect.fn.Return<PrCloseoutReport, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<PrCloseoutReport, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   let { pullRequest, pr } = yield* collectPrCloseoutPayload(context);
   const writeRequested =
     Str.isNonEmpty(Str.trim(options.replyThread)) ||
@@ -218,7 +219,7 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
 export const writePrCloseoutReport = Effect.fn("Yeet.writePrCloseoutReport")(function* (
   context: RepoRunContext,
   report: PrCloseoutReport
-): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const reportPath = yield* runArtifactPathForContext(context, "pr-closeout.json");
   const json = yield* PrCloseoutReportJson.encode(report).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode yeet PR closeout report."))
@@ -294,7 +295,7 @@ export const runYeetAutomaticCloseout = Effect.fn("Yeet.runYeetAutomaticCloseout
 ): Effect.fn.Return<
   { readonly report: PrCloseoutReport; readonly reportPath: string },
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const report = yield* runPrCloseout(context, yeetAutomaticCloseoutOptions);
   const reportPath = yield* writePrCloseoutReport(context, report);

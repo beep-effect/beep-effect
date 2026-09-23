@@ -75,10 +75,12 @@ const canonicalDampingKeys = [
   "expiresEpochMs",
 ];
 
-const decodeHookPulse = S.decodeUnknownSync(HookPulseV1);
-const hookPulseLine = (input: unknown): string => HookPulseV1.encodeJsonSync(decodeHookPulse(input));
+const hookPulseLine = Effect.fnUntraced(function* (input: unknown) {
+  const decoded = yield* HookPulseV1.decodeEffect(input);
+  return yield* HookPulseV1.encodeJsonEffect(decoded);
+});
 
-const preToolUseLine = (sessionId = SESSION_ID, cwd = CWD_ID, ts = PRE_TS, toolUseId = TOOL_USE_ID): string =>
+const preToolUseLine = (sessionId = SESSION_ID, cwd = CWD_ID, ts = PRE_TS, toolUseId = TOOL_USE_ID) =>
   hookPulseLine({
     schemaVersion: "hook-pulse/v1",
     ts,
@@ -431,7 +433,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
 
         expectSilentSuccess(yield* runNotifier(store));
         const initial = yield* decodedNotifications(store);
@@ -452,7 +454,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
           { status: "skipped", reason: "storm-damped" },
         ]);
 
-        yield* fs.writeFileString(store.hookPath, `${postToolUseLine}\n`, { flag: "a" });
+        yield* fs.writeFileString(store.hookPath, `${yield* postToolUseLine}\n`, { flag: "a" });
         expectSilentSuccess(yield* runNotifier(store));
         const resolved = yield* decodedNotifications(store);
         expect(A.map(A.takeRight(resolved, 2), ({ delivery }) => delivery)).toEqual([
@@ -471,7 +473,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
         const store = yield* makeNotifierStore();
         yield* fs.writeFileString(
           store.hookPath,
-          `${preToolUseLine()}\n${preToolUseLine(SESSION_ID, CWD_ID, PRE_TS, AMBIGUOUS_TOOL_USE_ID)}\n${permissionRequestLine}\n${ambiguousPostToolUseLine}\n`
+          `${yield* preToolUseLine()}\n${yield* preToolUseLine(SESSION_ID, CWD_ID, PRE_TS, AMBIGUOUS_TOOL_USE_ID)}\n${yield* permissionRequestLine}\n${yield* ambiguousPostToolUseLine}\n`
         );
 
         expectSilentSuccess(yield* runNotifier(store));
@@ -491,7 +493,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
         yield* fs.makeDirectory(path.dirname(store.dampingPath), { recursive: true });
         const invalidState = yield* encodeJson({ expiresEpochMs: 9_007_199_254_740_991 });
         yield* fs.writeFileString(store.dampingPath, invalidState);
@@ -511,7 +513,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const store = yield* makeNotifierStore();
-      yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
       yield* fs.writeFileString(
         `${store.fakeBin}/notify-send`,
         '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\n'
@@ -532,7 +534,7 @@ layer(NodeServices.layer, { timeout: "30 seconds" })("sequence-break notificatio
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const store = yield* makeNotifierStore();
-      yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
       yield* fs.writeFileString(
         `${store.fakeBin}/git`,
         `#!/usr/bin/env bash
@@ -559,7 +561,7 @@ esac
       const fs = yield* FileSystem.FileSystem;
       const store = yield* makeNotifierStore();
       const uri = "claude://code/continue?session=local_test-session";
-      yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
       yield* fs.writeFileString(
         `${store.fakeBin}/notify-send`,
         '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
@@ -587,7 +589,7 @@ esac
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const store = yield* makeNotifierStore();
-      yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
       yield* fs.writeFileString(
         `${store.fakeBin}/git`,
         `#!/usr/bin/env bash
@@ -622,7 +624,7 @@ esac
         (uri) =>
           Effect.gen(function* () {
             const store = yield* makeNotifierStore();
-            yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+            yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
             yield* fs.writeFileString(
               `${store.fakeBin}/notify-send`,
               '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\n'
@@ -638,7 +640,7 @@ esac
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const store = yield* makeNotifierStore();
-      yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
       yield* fs.writeFileString(`${store.fakeBin}/notify-send`, '#!/usr/bin/env bash\ntouch "$HOME/fallback"\n');
       yield* fs.writeFileString(
         `${store.fakeBin}/curl`,
@@ -673,7 +675,7 @@ cat >/dev/null
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const store = yield* makeNotifierStore();
-      yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+      yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
       yield* fs.writeFileString(
         `${store.fakeBin}/notify-send`,
         `#!/usr/bin/env bash
@@ -723,7 +725,7 @@ touch "$HOME/finished"
         const rawCwd = "/workspace/sequence-break-writer";
         const sessionDigest = yield* hashPrivateIdentifier(rawSessionId, O.none());
         const cwdDigest = yield* hashPrivateIdentifier(rawCwd, O.none());
-        const preLine = preToolUseLine(sessionDigest, cwdDigest, "2020-01-01T00:00:00.000Z");
+        const preLine = yield* preToolUseLine(sessionDigest, cwdDigest, "2020-01-01T00:00:00.000Z");
         const prePath = store.hookPath.replace(SESSION_ID, sessionDigest);
         yield* fs.writeFileString(prePath, `${preLine}\n`);
 
@@ -753,7 +755,7 @@ touch "$HOME/finished"
         const sessionDigest = yield* hashPrivateIdentifier(rawSessionId, O.none());
         const cwdDigest = yield* hashPrivateIdentifier(rawCwd, O.none());
         const prePath = store.hookPath.replace(SESSION_ID, sessionDigest);
-        yield* fs.writeFileString(prePath, `${preToolUseLine(sessionDigest, cwdDigest)}\n`);
+        yield* fs.writeFileString(prePath, `${yield* preToolUseLine(sessionDigest, cwdDigest)}\n`);
 
         expectSilentSuccess(
           yield* runWriter(
@@ -778,7 +780,7 @@ touch "$HOME/finished"
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
 
         expectSilentSuccess(yield* runNotifier(store, CANARY));
         const notifications = yield* decodedNotifications(store);
@@ -803,7 +805,7 @@ touch "$HOME/finished"
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
         yield* fs.makeDirectory(path.dirname(store.circuitOpenPath), { recursive: true });
         yield* fs.writeFileString(store.circuitOpenPath, yield* encodeJson({ schemaVersion: "unknown" }));
 
@@ -829,7 +831,7 @@ touch "$HOME/finished"
         const store = yield* makeNotifierStore();
         const fakeCurl = `${store.fakeBin}/curl`;
         const fakeNotifySend = `${store.fakeBin}/notify-send`;
-        yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
         yield* fs.writeFileString(
           fakeNotifySend,
           `#!/usr/bin/env bash
@@ -888,7 +890,7 @@ exit 0
         const store = yield* makeNotifierStore();
         const curlCallsPath = path.join(store.evidenceRoot, "curl-calls");
         const fakeCurl = path.join(store.fakeBin, "curl");
-        yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
         yield* fs.writeFileString(
           fakeCurl,
           `#!/usr/bin/env bash
@@ -917,7 +919,7 @@ exit 0
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const store = yield* makeNotifierStore();
-        yield* fs.writeFileString(store.hookPath, `${preToolUseLine()}\n${permissionRequestLine}\n`);
+        yield* fs.writeFileString(store.hookPath, `${yield* preToolUseLine()}\n${yield* permissionRequestLine}\n`);
         yield* fs.writeFileString(hookPulseDisarmSentinelPath(store.evidenceRoot), "disarmed\n");
 
         expectSilentSuccess(yield* runNotifier(store));

@@ -6,10 +6,10 @@ import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const decodeOrganizationLicenseTierSync = S.decodeSync(Organization.LicenseTier);
-const decodeOrganizationSettingsSync = S.decodeSync(Organization.Settings);
+const decodeOrganizationLicenseTier = S.decodeEffect(Organization.LicenseTier);
+const decodeOrganizationSettings = S.decodeEffect(Organization.Settings);
 const decodeUnknownOrganizationSettings = S.decodeUnknownEffect(Organization.Settings);
-const encodeOrganizationSettingsSync = S.encodeSync(Organization.Settings);
+const encodeOrganizationSettings = S.encodeEffect(Organization.Settings);
 
 const decodeOrganization = S.decodeUnknownEffect(Organization.Model);
 const decodeOrganizationId = S.decodeUnknownEffect(Shared.OrganizationId);
@@ -78,13 +78,13 @@ describe("Organization", () => {
     })
   );
 
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived license tiers and settings",
     [S.Tuple([Organization.LicenseTier, Organization.Settings])],
-    ([[licenseTier, settings]]) => {
-      const decodedTier = decodeOrganizationLicenseTierSync(licenseTier);
-      const encodedSettings = encodeOrganizationSettingsSync(settings);
-      const decodedSettings = decodeOrganizationSettingsSync(encodedSettings);
+    Effect.fnUntraced(function* ([[licenseTier, settings]]) {
+      const decodedTier = yield* decodeOrganizationLicenseTier(licenseTier);
+      const encodedSettings = yield* encodeOrganizationSettings(settings);
+      const decodedSettings = yield* decodeOrganizationSettings(encodedSettings);
 
       expect(decodedTier).toBe(licenseTier);
       expect(
@@ -95,7 +95,9 @@ describe("Organization", () => {
       assert.instanceOf(decodedSettings, Organization.Settings);
       assert.strictEqual(decodedSettings.allowAgentActions, settings.allowAgentActions);
       assert.strictEqual(decodedSettings.defaultRetentionDays, settings.defaultRetentionDays);
-    },
+
+      return true;
+    }),
     { arbitrary: fcRuns(50) }
   );
 

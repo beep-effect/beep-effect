@@ -58,13 +58,13 @@ const decodeUnknownProjectionSnapshot = S.decodeUnknownEffect(ProjectionSnapshot
 const decodeUnknownProviderRecording = S.decodeUnknownEffect(ProviderRecording);
 const decodeUnknownRetentionAuthorization = S.decodeUnknownEffect(RetentionAuthorization);
 const decodeUnknownRuleResult = S.decodeUnknownEffect(RuleResult);
-const decodeUnknownRetentionAuthorizationSync = S.decodeUnknownSync(RetentionAuthorization);
 const encodeImmutableDemoBundle = S.encodeEffect(ImmutableDemoBundle);
 const encodeNormalizedFixture = S.encodeEffect(NormalizedFixture);
 const encodeProviderCandidateListFromJsonString = S.encodeEffect(ProviderCandidateListFromJsonString);
 const encodeProviderRecording = S.encodeEffect(ProviderRecording);
+const encodeProviderRecordingFromJsonString = S.encodeEffect(ProviderRecordingFromJsonString);
+const encodeRetentionAuthorization = S.encodeEffect(RetentionAuthorization);
 const encodeRuleResult = S.encodeEffect(RuleResult);
-const encodeRetentionAuthorizationSync = S.encodeSync(RetentionAuthorization);
 const isFrozenSourceHash = S.is(FrozenSourceHash);
 
 import type {
@@ -75,24 +75,28 @@ import type {
 
 const provideBunCrypto = provideScopedLayer(BunCrypto.layer);
 const makeInMemoryProjectionLayer = () => makeProjectionLayer(ProjectionLayerOptions.make({ duckDbPath: ":memory:" }));
-const providerRecordingJson = S.encodeSync(ProviderRecordingFromJsonString)(
-  S.decodeUnknownSync(ProviderRecording)(providerRecordingFixture)
+const decodedProviderRecording = decodeUnknownProviderRecording(providerRecordingFixture).pipe(
+  Effect.flatMap(encodeProviderRecordingFromJsonString),
+  Effect.flatMap(decodeProviderRecordingFromJsonString)
 );
 
 describe("LeJeune deterministic fixture bundle", () => {
-  it("round-trips schema-derived retention authorizations", () => {
-    const equivalent = S.toEquivalence(RetentionAuthorization);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(RetentionAuthorization),
-          (value) =>
-            equivalent(decodeUnknownRetentionAuthorizationSync(encodeRetentionAuthorizationSync(value)), value),
-          fcRuns(20)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect(
+    "round-trips schema-derived retention authorizations",
+    Effect.fnUntraced(function* () {
+      const equivalent = S.toEquivalence(RetentionAuthorization);
+      const outcome = yield* Arbitrary.checkEffect(
+        Arbitrary.schema(RetentionAuthorization),
+        (value) =>
+          encodeRetentionAuthorization(value).pipe(
+            Effect.flatMap(decodeUnknownRetentionAuthorization),
+            Effect.map((roundTripped) => equivalent(roundTripped, value))
+          ),
+        fcRuns(20)
+      );
+      expect(outcome._tag).toBe("Passed");
+    })
+  );
 
   it.effect(
     "generates exactly four stable synthetic source records across the two authorized layouts",
@@ -475,7 +479,7 @@ describe("LeJeune deterministic fixture bundle", () => {
       const artifacts = yield* buildFixtureArtifacts.pipe(provideBunCrypto);
       const fixtures = yield* buildNormalizedFixtures(artifacts);
       const rules = yield* evaluateRules(fixtures);
-      const recording = yield* decodeProviderRecordingFromJsonString(providerRecordingJson);
+      const recording = yield* decodedProviderRecording;
       const replay = yield* replayOffline(recording).pipe(
         provideScopedLayer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer()))
       );
@@ -968,7 +972,7 @@ describe("LeJeune deterministic fixture bundle", () => {
   it.effect(
     "verifies the committed provider recording digest and source grounding",
     Effect.fnUntraced(function* () {
-      const recording = yield* decodeProviderRecordingFromJsonString(providerRecordingJson);
+      const recording = yield* decodedProviderRecording;
       const verified = yield* verifyProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(provideBunCrypto);
       const frozen = yield* verifyFrozenProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(
         provideBunCrypto
@@ -1058,7 +1062,7 @@ describe("LeJeune deterministic fixture bundle", () => {
   it.live(
     "replays the same bundle identity with provider and network unavailable",
     Effect.fnUntraced(function* () {
-      const recording = yield* decodeProviderRecordingFromJsonString(providerRecordingJson);
+      const recording = yield* decodedProviderRecording;
       yield* verifyProviderRecording(recording, PROVIDER_RECORDING_SOURCE_TEXT).pipe(provideBunCrypto);
       const rebuild = () =>
         replayOffline(recording).pipe(provideScopedLayer(Layer.merge(BunCrypto.layer, makeInMemoryProjectionLayer())));

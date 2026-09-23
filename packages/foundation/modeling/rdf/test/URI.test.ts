@@ -9,20 +9,23 @@ import {
 } from "@beep/rdf/Uri";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Cause, Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 
-const decodeUri = S.decodeUnknownSync(URI);
-const decodeAbsoluteUri = S.decodeUnknownSync(AbsoluteURI);
-const decodeUriReference = S.decodeUnknownSync(URIReference);
-const decodeRelativeUriReference = S.decodeUnknownSync(RelativeURIReference);
+const decodeUri = S.decodeUnknownEffect(URI);
+const decodeAbsoluteUri = S.decodeUnknownEffect(AbsoluteURI);
+const decodeUriReference = S.decodeUnknownEffect(URIReference);
+const decodeRelativeUriReference = S.decodeUnknownEffect(RelativeURIReference);
 
 describe("URI", () => {
-  it("accepts representative absolute and relative URI forms", () => {
-    expect(decodeUri("https://example.com/path?q=1#frag")).toBe("https://example.com/path?q=1#frag");
-    expect(decodeAbsoluteUri("mailto:user@example.com")).toBe("mailto:user@example.com");
-    expect(decodeUriReference("../child?q=1")).toBe("../child?q=1");
-    expect(decodeRelativeUriReference("../child?q=1")).toBe("../child?q=1");
-  });
+  it.effect("accepts representative absolute and relative URI forms", () =>
+    Effect.gen(function* () {
+      expect(yield* decodeUri("https://example.com/path?q=1#frag")).toBe("https://example.com/path?q=1#frag");
+      expect(yield* decodeAbsoluteUri("mailto:user@example.com")).toBe("mailto:user@example.com");
+      expect(yield* decodeUriReference("../child?q=1")).toBe("../child?q=1");
+      expect(yield* decodeRelativeUriReference("../child?q=1")).toBe("../child?q=1");
+    })
+  );
 
   it("normalizes scheme, host, default ports, and unreserved percent encoding", () => {
     expect(normalizeUriReference("HTTPS://Example.com:443/%7Ealice?q=%41#%7e")).toBe(
@@ -41,15 +44,29 @@ describe("URI", () => {
     expect(areUrisEquivalent("https://example.com/a", "https://example.com/b")).toBe(false);
   });
 
-  it("rejects malformed absolute and relative URI values", () => {
-    expect(() => decodeAbsoluteUri("folder/child")).toThrow("Expected a valid RFC 3986 absolute URI");
-    expect(() => decodeUri(" https://example.com")).toThrow(
-      "URI values must not contain leading or trailing whitespace"
-    );
-    expect(() => decodeRelativeUriReference("scheme://example.com")).toThrow(
-      "Expected a valid RFC 3986 relative URI reference"
-    );
-  });
+  it.effect("rejects malformed absolute and relative URI values", () =>
+    Effect.gen(function* () {
+      const invalidAbsolute = yield* Effect.exit(decodeAbsoluteUri("folder/child"));
+      expect(Exit.isFailure(invalidAbsolute)).toBe(true);
+      if (Exit.isFailure(invalidAbsolute)) {
+        expect(Cause.pretty(invalidAbsolute.cause)).toContain("Expected a valid RFC 3986 absolute URI");
+      }
+
+      const leadingWhitespace = yield* Effect.exit(decodeUri(" https://example.com"));
+      expect(Exit.isFailure(leadingWhitespace)).toBe(true);
+      if (Exit.isFailure(leadingWhitespace)) {
+        expect(Cause.pretty(leadingWhitespace.cause)).toContain(
+          "URI values must not contain leading or trailing whitespace"
+        );
+      }
+
+      const invalidRelative = yield* Effect.exit(decodeRelativeUriReference("scheme://example.com"));
+      expect(Exit.isFailure(invalidRelative)).toBe(true);
+      if (Exit.isFailure(invalidRelative)) {
+        expect(Cause.pretty(invalidRelative.cause)).toContain("Expected a valid RFC 3986 relative URI reference");
+      }
+    })
+  );
 });
 
 describe("schema-derived arbitraries", () => {

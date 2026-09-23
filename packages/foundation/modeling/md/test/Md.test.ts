@@ -96,8 +96,7 @@ const decodeBlockResult = S.decodeResult(Block);
 const decodeDocumentResult = S.decodeResult(Document);
 const decodeInlineResult = S.decodeResult(Inline);
 const decodeInlineChildrenResult = S.decodeResult(InlineChildren);
-const decodeCodeFenceLanguageSync = S.decodeSync(CodeFenceLanguage);
-const decodeUrlPolicySpecSync = S.decodeSync(UrlPolicySpec);
+const decodeUrlPolicySpec = S.decodeUnknownEffect(UrlPolicySpec);
 const encodeBlock = S.encodeEffect(Block);
 const encodeDocument = S.encodeEffect(Document);
 const encodePre = S.encodeEffect(Pre);
@@ -448,7 +447,8 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       const tsPre = Pre.make({ value: "x", language: O.some("ts") });
       expect(yield* decodePre(yield* encodePre(tsPre))).toEqual(tsPre);
       expect(yield* decodeCodeFenceLanguage("ts")).toBe("ts");
-      expect(() => decodeCodeFenceLanguageSync("ts bad")).toThrow();
+      const invalidLanguage = yield* Effect.exit(decodeCodeFenceLanguage("ts bad"));
+      expect(Exit.isFailure(invalidLanguage)).toBe(true);
       // Pre.language now folds non-conforming legacy info strings to None at decode,
       // so a free-form "ts bad" token drops out instead of being preserved.
       expect(yield* decodePre({ _tag: "pre", language: "ts bad", value: "x" })).toEqual(
@@ -926,18 +926,6 @@ Demo video`);
       '<blockquote><ul><li><p><a href="tel:+15551234567">Call</a> <a href="#">Web</a></p></li></ul></blockquote>'
     );
 
-    const normalizedPolicy = decodeUrlPolicySpecSync({
-      _tag: "AllowList",
-      schemes: [" HTTPS: "],
-      allowRelative: false,
-      allowProtocolRelative: false,
-      allowBackslashRelative: false,
-    });
-    expect(normalizedPolicy._tag).toBe("AllowList");
-    if (normalizedPolicy._tag === "AllowList") {
-      expect(normalizedPolicy.schemes).toEqual(["https:"]);
-    }
-
     const markedInspiredEvasions = [
       "java\u0000script:alert(1)",
       "jav&#x61;%73cript:alert(1)",
@@ -948,6 +936,23 @@ Demo video`);
       expect(sanitizeUrlDestinationWithPolicy(destination, BrowserSafeUrlPolicySpec)).toBe("#");
     }
   });
+
+  it.effect(
+    "normalizes URL policy spec schemes at decode",
+    Effect.fnUntraced(function* () {
+      const normalizedPolicy = yield* decodeUrlPolicySpec({
+        _tag: "AllowList",
+        schemes: [" HTTPS: "],
+        allowRelative: false,
+        allowProtocolRelative: false,
+        allowBackslashRelative: false,
+      });
+      expect(normalizedPolicy._tag).toBe("AllowList");
+      if (normalizedPolicy._tag === "AllowList") {
+        expect(normalizedPolicy.schemes).toEqual(["https:"]);
+      }
+    })
+  );
 
   it("applies a custom URL policy across every recursive render fold", () => {
     const document = Md.make([

@@ -97,7 +97,7 @@ const planFor = (findings: ReadonlyArray<CaptureFinding>, source?: CodexRefreshL
     )
   );
 
-const documentsFor = (plan: Effect.Success<ReturnType<typeof planFor>>): ReadonlyArray<PacketDocument> =>
+const documentsFor = (plan: Effect.Success<ReturnType<typeof planFor>>) =>
   renderPacketDocuments({
     plan,
     rawPayloadJson: "{}\n",
@@ -156,7 +156,8 @@ const bootstrapAuthoredPacket = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.makeDirectory("goals", { recursive: true });
   const plan = yield* planFor([alpha, beta]);
-  yield* writePacket({ repoRoot: process.cwd(), slug: SLUG, documents: documentsFor(plan), dryRun: false });
+  const documents = yield* documentsFor(plan);
+  yield* writePacket({ repoRoot: process.cwd(), slug: SLUG, documents, dryRun: false });
 
   const source = yield* loadCodexRefreshLedgerSource({ repoRoot: process.cwd(), slug: SLUG });
   const first = source.ledger.findings[0];
@@ -226,7 +227,8 @@ const bootstrapAuthoredPacket = Effect.fnUntraced(function* () {
 const refreshPlan = Effect.fnUntraced(function* () {
   const source = yield* loadCodexRefreshLedgerSource({ repoRoot: process.cwd(), slug: SLUG });
   const plan = yield* planFor([arrivingHigh, alpha, beta, arrivingInfo], source);
-  return { source, plan, documents: documentsFor(plan) };
+  const documents = yield* documentsFor(plan);
+  return { source, plan, documents };
 });
 
 const packetSnapshot = Effect.fnUntraced(function* (includeRaw = true) {
@@ -334,7 +336,7 @@ describe("codex findings preservation-safe refresh", () => {
           slug: SLUG,
           source,
           plan,
-          documents: documentsFor(plan),
+          documents: yield* documentsFor(plan),
           dryRun: false,
         });
 
@@ -421,7 +423,7 @@ describe("codex findings preservation-safe refresh", () => {
         const trackedBefore = yield* packetSnapshot(false);
         const source = yield* loadCodexRefreshLedgerSource({ repoRoot: process.cwd(), slug: SLUG });
         const plan = yield* planFor([arrivingHigh, alpha, beta, arrivingInfo], source);
-        const documents = A.map(documentsFor(plan), (document) =>
+        const documents = A.map(yield* documentsFor(plan), (document) =>
           document.path === "raw/payload.json"
             ? PacketDocument.make({
                 ...document,
@@ -512,7 +514,7 @@ describe("codex findings preservation-safe refresh", () => {
           slug: SLUG,
           source,
           plan: removalPlan,
-          documents: documentsFor(removalPlan),
+          documents: yield* documentsFor(removalPlan),
           dryRun: true,
         }).pipe(
           Effect.map(() => "accepted"),
@@ -526,7 +528,7 @@ describe("codex findings preservation-safe refresh", () => {
           slug: SLUG,
           source,
           plan: driftPlan,
-          documents: documentsFor(driftPlan),
+          documents: yield* documentsFor(driftPlan),
           dryRun: true,
         }).pipe(
           Effect.map(() => "accepted"),
@@ -540,7 +542,7 @@ describe("codex findings preservation-safe refresh", () => {
           slug: SLUG,
           source,
           plan: countDriftPlan,
-          documents: documentsFor(countDriftPlan),
+          documents: yield* documentsFor(countDriftPlan),
           dryRun: true,
         }).pipe(
           Effect.map(() => "accepted"),

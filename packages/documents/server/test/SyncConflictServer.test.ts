@@ -41,8 +41,8 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   ).toBe("Passed");
 };
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
-const ghostConflictId = S.decodeSync(Documents.SyncConflictId)(99);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
+const ghostConflictId = Documents.SyncConflictId.make(99);
 const listOpenInput = ListOpenSyncConflictsInput.make({ provider: "box", workspaceId });
 
 const conflictSeed = (remoteEventId: O.Option<string>) =>

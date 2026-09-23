@@ -21,10 +21,11 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 const decodeWorkspaceIdentityThreadId = S.decodeEffect(WorkspaceIdentity.ThreadId);
 
 const { InMemoryState, MessageEntityInput, ThreadEntityInput, TurnEntityInput } = ThreadStoreRepoTestSchemas;
-const encodeInMemoryStateSync = S.encodeSync(InMemoryState);
-const encodeMessageEntityInputSync = S.encodeSync(MessageEntityInput);
-const encodeThreadEntityInputSync = S.encodeSync(ThreadEntityInput);
-const encodeTurnEntityInputSync = S.encodeSync(TurnEntityInput);
+
+const encodeThreadEntityInput = S.encodeEffect(ThreadEntityInput);
+const encodeTurnEntityInput = S.encodeEffect(TurnEntityInput);
+const encodeMessageEntityInput = S.encodeEffect(MessageEntityInput);
+const encodeInMemoryState = S.encodeEffect(InMemoryState);
 
 const docOf = (value: string) => Document.make({ children: [P.make({ children: [Text.make({ value })] })] });
 const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(BunCrypto.layer));
@@ -49,11 +50,14 @@ const makeYieldingCuidLayer = () => {
   return CuidState.Default.pipe(Layer.provideMerge(YieldingCryptoLayer));
 };
 
-const schemaRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): boolean => {
-  const encoded = S.encodeSync(schema)(value);
-  const decoded = S.decodeUnknownSync(schema)(encoded);
+const schemaRoundTrips = Effect.fn("ThreadStoreTest.schemaRoundTrips")(function* <Schema extends S.Codec<unknown>>(
+  schema: Schema,
+  value: Schema["Type"]
+) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
   return Eq.equals(decoded, value) || S.toEquivalence(schema)(decoded, value);
-};
+});
 
 describe("ThreadStore in-memory", () => {
   it.effect(
@@ -290,19 +294,18 @@ describe("ThreadStore in-memory", () => {
     { arbitrary: {} }
   );
 
-  it("keeps crispened construction schema encoded shapes stable", () => {
-    expect(
-      encodeThreadEntityInputSync(
+  it.effect("keeps crispened construction schema encoded shapes stable", () =>
+    Effect.gen(function* () {
+      const encodedThread = yield* encodeThreadEntityInput(
         ThreadEntityInput.make({
           id: PosInt.make(1),
           title: "Matter intake",
           workspaceId: PosInt.make(2),
         })
-      )
-    ).toEqual({ id: 1, title: "Matter intake", workspaceId: 2 });
+      );
+      expect(encodedThread).toEqual({ id: 1, title: "Matter intake", workspaceId: 2 });
 
-    expect(
-      encodeTurnEntityInputSync(
+      const encodedTurn = yield* encodeTurnEntityInput(
         TurnEntityInput.make({
           id: PosInt.make(3),
           messageId: PosInt.make(4),
@@ -310,11 +313,10 @@ describe("ThreadStore in-memory", () => {
           threadId: PosInt.make(1),
           turnIndex: NonNegativeInt.make(0),
         })
-      )
-    ).toEqual({ id: 3, messageId: 4, parentTurnId: null, threadId: 1, turnIndex: 0 });
+      );
+      expect(encodedTurn).toEqual({ id: 3, messageId: 4, parentTurnId: null, threadId: 1, turnIndex: 0 });
 
-    expect(
-      encodeMessageEntityInputSync(
+      const encodedMessage = yield* encodeMessageEntityInput(
         MessageEntityInput.make({
           content: docOf("Hello"),
           id: PosInt.make(4),
@@ -322,24 +324,25 @@ describe("ThreadStore in-memory", () => {
           threadId: PosInt.make(1),
           turnId: PosInt.make(3),
         })
-      )
-    ).toEqual({
-      content: {
-        _tag: "document",
-        children: [{ _tag: "p", children: [{ _tag: "text", value: "Hello" }] }],
-      },
-      id: 4,
-      role: "assistant",
-      threadId: 1,
-      turnId: 3,
-    });
+      );
+      expect(encodedMessage).toEqual({
+        content: {
+          _tag: "document",
+          children: [{ _tag: "p", children: [{ _tag: "text", value: "Hello" }] }],
+        },
+        id: 4,
+        role: "assistant",
+        threadId: 1,
+        turnId: 3,
+      });
 
-    const encodedState = encodeInMemoryStateSync(InMemoryState.make({}));
-    expect(encodedState.nextId).toBe(1);
-    expect(HashMap.size(encodedState.messages)).toBe(0);
-    expect(HashMap.size(encodedState.threads)).toBe(0);
-    expect(HashMap.size(encodedState.turns)).toBe(0);
-  });
+      const encodedState = yield* encodeInMemoryState(InMemoryState.make({}));
+      expect(encodedState.nextId).toBe(1);
+      expect(HashMap.size(encodedState.messages)).toBe(0);
+      expect(HashMap.size(encodedState.threads)).toBe(0);
+      expect(HashMap.size(encodedState.turns)).toBe(0);
+    })
+  );
 
   it("round-trips crispened construction schemas from derived arbitraries", () => {
     expect(

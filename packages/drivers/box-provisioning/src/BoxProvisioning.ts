@@ -6,8 +6,12 @@
  */
 
 import { $BoxProvisioningId } from "@beep/identity";
-import { Context, Effect, Equal, Layer } from "effect";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
+import { Context, Effect, Equal, Layer, Match } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import { identity } from "effect/Function";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import {
   BoxProvisioningApplier,
@@ -15,18 +19,23 @@ import {
   validateBoxProvisioningPostApplyPlan,
 } from "./BoxProvisioningApplier.ts";
 import { decodeBoxDesiredState, decodeBoxProvisioningPlan } from "./BoxProvisioningArtifacts.ts";
-import { BoxProvisioningDriftError, BoxProvisioningInvariantError } from "./BoxProvisioningErrors.ts";
+import {
+  BoxProvisioningDriftError,
+  BoxProvisioningInvariantError,
+  BoxProvisioningSchemaError,
+} from "./BoxProvisioningErrors.ts";
 import { BoxAdoption, BoxDesiredState, BoxLogicalKey, mergeBoxAdoptions } from "./BoxProvisioningIntent.ts";
 import { BoxProvisioningInventory } from "./BoxProvisioningInventory.ts";
 import { BoxProvisioningPlanner } from "./BoxProvisioningPlanner.ts";
 import { BoxReviewedApplyResult } from "./BoxProvisioningReceipt.ts";
 import { digestText, hasValidBoxProvisioningPlanDigest } from "./internal/canonical.ts";
 import type * as B from "@beep/box";
+import type * as PlatformError from "effect/PlatformError";
+import type * as SchemaIssue from "effect/SchemaIssue";
 import type { BoxProvisioningApplyJournal } from "./BoxProvisioningApplier.ts";
 import type {
   BoxProvisioningApplyJournalError,
   BoxProvisioningBlockerContractError,
-  BoxProvisioningSchemaError,
   BoxProvisioningSubjectMismatchError,
   BoxProvisioningTenantMismatchError,
 } from "./BoxProvisioningErrors.ts";
@@ -41,7 +50,8 @@ type ReadError =
   | BoxProvisioningInvariantError
   | BoxProvisioningSchemaError
   | BoxProvisioningSubjectMismatchError
-  | BoxProvisioningTenantMismatchError;
+  | BoxProvisioningTenantMismatchError
+  | PlatformError.PlatformError;
 
 type ApplyError =
   | ReadError
@@ -50,6 +60,12 @@ type ApplyError =
   | BoxProvisioningApplyJournalError;
 
 const isAppliedOutcome = (outcome: BoxApplyOutcome): outcome is BoxActionApplied => P.isTagged(outcome, "Applied");
+
+/** Keeps platform digest failures intact and reports every schema issue as a plan-stage failure. */
+const toPlanStageFailure = Match.type<PlatformError.PlatformError | SchemaIssue.Issue>().pipe(
+  Match.tag("PlatformError", identity<PlatformError.PlatformError>),
+  Match.orElse(() => BoxProvisioningSchemaError.make({ stage: "plan" }))
+);
 
 const postApplyAdoptions = Effect.fn("BoxProvisioning.postApplyAdoptions")(function* (
   desired: BoxDesiredState,
@@ -62,9 +78,16 @@ const postApplyAdoptions = Effect.fn("BoxProvisioning.postApplyAdoptions")(funct
   return yield* Effect.forEach(
     appliedFolders,
     Effect.fnUntraced(function* (outcome) {
-      const desiredFolder = yield* Effect.fromOption(
-        A.findFirst(desired.folders, (folder) => Equal.equals(digestText(folder.logicalKey), outcome.logicalKeyDigest)),
-        () => BoxProvisioningInvariantError.make({ code: "unresolved-dependency" })
+      const folderMatches = yield* Effect.forEach(
+        desired.folders,
+        Effect.fnUntraced(function* (folder) {
+          const digest = yield* digestText(folder.logicalKey);
+          return Equal.equals(digest, outcome.logicalKeyDigest) ? O.some(folder) : O.none();
+        }),
+        { concurrency: 1 }
+      );
+      const desiredFolder = yield* Effect.fromOption(A.head(A.getSomes(folderMatches)), () =>
+        BoxProvisioningInvariantError.make({ code: "unresolved-dependency" })
       );
       const observedFolder = yield* Effect.fromOption(
         A.findFirst(observed.folders, (folder) => Equal.equals(folder.providerId, outcome.providerId)),
@@ -87,43 +110,50 @@ const postApplyAdoptions = Effect.fn("BoxProvisioning.postApplyAdoptions")(funct
 const makeService = (
   inventory: BoxProvisioningInventory["Service"],
   planner: BoxProvisioningPlanner["Service"],
-  applier: BoxProvisioningApplier["Service"]
+  applier: BoxProvisioningApplier["Service"],
+  crypto: Crypto.Crypto
 ): BoxProvisioningShape => {
-  const dryRun = Effect.fn("BoxProvisioning.dryRun")(function* (desiredInput: unknown) {
-    const desired = yield* decodeBoxDesiredState(desiredInput);
-    const observed = yield* inventory.observe(desired);
-    return yield* planner.plan(desired, observed);
-  });
+  const dryRun = Effect.fn("BoxProvisioning.dryRun")(
+    function* (desiredInput: unknown) {
+      const desired = yield* decodeBoxDesiredState(desiredInput);
+      const observed = yield* inventory.observe(desired);
+      return yield* planner.plan(desired, observed);
+    },
+    (effect) => effect.pipe(Effect.provideService(Crypto.Crypto, crypto))
+  );
 
-  const applyReviewedPlan = Effect.fn("BoxProvisioning.applyReviewedPlan")(function* (
-    desiredInput: unknown,
-    reviewedPlanJson: unknown
-  ) {
-    const [desired, reviewedPlan] = yield* Effect.all([
-      decodeBoxDesiredState(desiredInput),
-      decodeBoxProvisioningPlan(reviewedPlanJson),
-    ]);
-    if (!hasValidBoxProvisioningPlanDigest(reviewedPlan)) {
-      return yield* BoxProvisioningInvariantError.make({ code: "invalid-plan-digest" });
-    }
-    yield* validateBoxProvisioningBlockerContract(desired, reviewedPlan, "pre-apply");
-    const observed = yield* inventory.observe(desired);
-    const freshPlan = yield* planner.plan(desired, observed);
-    if (!Equal.equals(reviewedPlan, freshPlan)) {
-      return yield* BoxProvisioningDriftError.make({
-        actualPlanDigest: freshPlan.planDigest,
-        expectedPlanDigest: reviewedPlan.planDigest,
-      });
-    }
-    const receipt = yield* applier.apply(desired, reviewedPlan);
-    const postObserved = yield* inventory.observe(desired);
-    const additionalAdoptions = yield* postApplyAdoptions(desired, postObserved, receipt);
-    const adoptions = mergeBoxAdoptions(desired.adoptions, additionalAdoptions);
-    const adoptedDesired = BoxDesiredState.make({ ...desired, adoptions });
-    const postApplyPlan = yield* planner.planWithAdoptions(adoptedDesired, postObserved, A.empty());
-    const verdict = yield* validateBoxProvisioningPostApplyPlan(adoptedDesired, reviewedPlan, postApplyPlan);
-    return BoxReviewedApplyResult.make({ adoptions, postApplyPlan, receipt, verdict });
-  });
+  const applyReviewedPlan = Effect.fn("BoxProvisioning.applyReviewedPlan")(
+    function* (desiredInput: unknown, reviewedPlanJson: unknown) {
+      const [desired, reviewedPlan] = yield* Effect.all([
+        decodeBoxDesiredState(desiredInput),
+        decodeBoxProvisioningPlan(reviewedPlanJson),
+      ]);
+      const planDigestValid = yield* hasValidBoxProvisioningPlanDigest(reviewedPlan).pipe(
+        Effect.mapError(toPlanStageFailure)
+      );
+      if (!planDigestValid) {
+        return yield* BoxProvisioningInvariantError.make({ code: "invalid-plan-digest" });
+      }
+      yield* validateBoxProvisioningBlockerContract(desired, reviewedPlan, "pre-apply");
+      const observed = yield* inventory.observe(desired);
+      const freshPlan = yield* planner.plan(desired, observed);
+      if (!Equal.equals(reviewedPlan, freshPlan)) {
+        return yield* BoxProvisioningDriftError.make({
+          actualPlanDigest: freshPlan.planDigest,
+          expectedPlanDigest: reviewedPlan.planDigest,
+        });
+      }
+      const receipt = yield* applier.apply(desired, reviewedPlan);
+      const postObserved = yield* inventory.observe(desired);
+      const additionalAdoptions = yield* postApplyAdoptions(desired, postObserved, receipt);
+      const adoptions = mergeBoxAdoptions(desired.adoptions, additionalAdoptions);
+      const adoptedDesired = BoxDesiredState.make({ ...desired, adoptions });
+      const postApplyPlan = yield* planner.planWithAdoptions(adoptedDesired, postObserved, A.empty());
+      const verdict = yield* validateBoxProvisioningPostApplyPlan(adoptedDesired, reviewedPlan, postApplyPlan);
+      return BoxReviewedApplyResult.make({ adoptions, postApplyPlan, receipt, verdict });
+    },
+    (effect) => effect.pipe(Effect.provideService(Crypto.Crypto, crypto))
+  );
 
   return { applyReviewedPlan, dryRun, reconcile: dryRun };
 };
@@ -172,12 +202,13 @@ export interface BoxProvisioningShape {
  * @since 0.0.0
  */
 export class BoxProvisioning extends Context.Service<BoxProvisioning, BoxProvisioningShape>()($I`BoxProvisioning`) {
-  static readonly layer = Layer.effect(
-    BoxProvisioning,
-    Effect.all([BoxProvisioningInventory, BoxProvisioningPlanner, BoxProvisioningApplier]).pipe(
-      Effect.map(([inventory, planner, applier]) => BoxProvisioning.of(makeService(inventory, planner, applier)))
+  static readonly layer = Layer.unwrap(
+    Effect.all([BoxProvisioningInventory, BoxProvisioningPlanner, BoxProvisioningApplier, Crypto.Crypto]).pipe(
+      Effect.map(([inventory, planner, applier, crypto]) =>
+        Layer.succeed(BoxProvisioning, BoxProvisioning.of(makeService(inventory, planner, applier, crypto)))
+      )
     )
-  );
+  ).pipe(Layer.provide(NodeCrypto.layer));
 
   /**
    * Orchestration plus live inventory and apply layers, requiring one Box layer.

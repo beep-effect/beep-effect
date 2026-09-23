@@ -2,17 +2,19 @@ import { DrizzleError } from "@beep/drizzle";
 import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { IRI } from "@beep/rdf";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, it } from "@effect/vitest";
 import { DateTime, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { SqlClient } from "effect/unstable/sql";
+import { describe } from "vitest";
 import { ArticleRepository } from "../../Repository/Article.ts";
 import { CachedClaimRepository } from "../../Repository/CachedClaim.ts";
 import { CanonicalEntityId, EntityRegistryRepository } from "../../Repository/EntityRegistry.ts";
 import { ExamplesRepository } from "../../Repository/Examples.ts";
 import { IngestedLinks, LinkBatches, LinkBatchItems } from "../../Repository/schema.ts";
+
 const isIngestedLinksSelectFieldsStatus = S.is(IngestedLinks.select.fields.status);
 const isLinkBatchItemsSelectFieldsStatus = S.is(LinkBatchItems.select.fields.status);
 const isLinkBatchesSelectFieldsStatus = S.is(LinkBatches.select.fields.status);
@@ -148,7 +150,7 @@ const EntityA = CanonicalEntityId.make("00000000-0000-4000-8000-000000000021");
 const EntityB = CanonicalEntityId.make("00000000-0000-4000-8000-000000000022");
 const PublishedAt = DateTime.toDateUtc(DateTime.makeUnsafe("2026-08-17T12:00:00.000Z"));
 
-describe.sequential("repository ontology isolation", () => {
+describe("repository ontology isolation", { concurrent: false }, () => {
   it.layer(RepositoryTestLayer)("with two ontology scopes", (it) => {
     it.effect(
       "isolates URI, ID, and cached subject claim lookups",

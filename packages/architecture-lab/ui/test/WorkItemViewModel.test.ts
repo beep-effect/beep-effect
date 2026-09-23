@@ -13,11 +13,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeWorkItemSummaryViewModelSync = S.decodeSync(WorkItemSummaryViewModel);
-const decodeWorkItemVisibleActionSync = S.decodeSync(WorkItemVisibleAction);
+const decodeWorkItemSummaryViewModel = S.decodeEffect(WorkItemSummaryViewModel);
+const decodeWorkItemVisibleAction = S.decodeEffect(WorkItemVisibleAction);
 const encodeWorkItemSummaryViewModel = S.encodeEffect(WorkItemSummaryViewModel);
-const encodeWorkItemSummaryViewModelSync = S.encodeSync(WorkItemSummaryViewModel);
-const encodeWorkItemVisibleActionSync = S.encodeSync(WorkItemVisibleAction);
+const encodeWorkItemVisibleAction = S.encodeEffect(WorkItemVisibleAction);
 const isWorkItemSummaryViewModel = S.is(WorkItemSummaryViewModel);
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
@@ -112,39 +111,37 @@ describe("WorkItem UI view model", () => {
     })
   );
 
-  it("round-trips touched schemas with schema-derived arbitraries", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([WorkItemVisibleActionArbitrary]),
-          ([value]) => {
-            expect(Equal.equals(decodeWorkItemVisibleActionSync(encodeWorkItemVisibleActionSync(value)), value)).toBe(
-              true
-            );
+  it.effect("round-trips touched schemas with schema-derived arbitraries", () =>
+    Effect.gen(function* () {
+      const actions = yield* Arbitrary.checkEffect(
+        Arbitrary.all([WorkItemVisibleActionArbitrary]),
+        ([value]) =>
+          Effect.gen(function* () {
+            const encoded = yield* encodeWorkItemVisibleAction(value);
+            const decoded = yield* decodeWorkItemVisibleAction(encoded);
+            expect(Equal.equals(decoded, value)).toBe(true);
 
             return true;
-          },
-          fcRuns(20)
-        )
-      )._tag
-    ).toBe("Passed");
+          }),
+        fcRuns(20)
+      );
+      expect(actions._tag).toBe("Passed");
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([WorkItemSummaryViewModelArbitrary]),
-          ([value]) => {
-            expect(
-              Equal.equals(decodeWorkItemSummaryViewModelSync(encodeWorkItemSummaryViewModelSync(value)), value)
-            ).toBe(true);
+      const summaries = yield* Arbitrary.checkEffect(
+        Arbitrary.all([WorkItemSummaryViewModelArbitrary]),
+        ([value]) =>
+          Effect.gen(function* () {
+            const encoded = yield* encodeWorkItemSummaryViewModel(value);
+            const decoded = yield* decodeWorkItemSummaryViewModel(encoded);
+            expect(Equal.equals(decoded, value)).toBe(true);
 
             return true;
-          },
-          fcRuns(20)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+          }),
+        fcRuns(20)
+      );
+      expect(summaries._tag).toBe("Passed");
+    })
+  );
 
   it("emits schema-accepted summaries for generated WorkItems", () => {
     expect(

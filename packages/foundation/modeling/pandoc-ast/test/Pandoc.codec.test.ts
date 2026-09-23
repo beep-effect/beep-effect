@@ -47,7 +47,7 @@ import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeUnknownPandocJsonFromStringSync = S.decodeUnknownSync(PandocJsonFromString);
+const decodePandocJsonFromString = S.decodeEffect(PandocJsonFromString);
 const encodeTable = S.encodeEffect(Table);
 const isPandocLosslessDocument = S.is(PandocLosslessDocument);
 const isPandocMetaValue = S.is(PandocMetaValue);
@@ -1485,11 +1485,12 @@ describe("Pandoc.codec", () => {
       )
     ).rejects.toThrow());
 
-  it("exposes a schema-owned JSON string boundary", () => {
-    expect(
-      decodeUnknownPandocJsonFromStringSync(`{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`).blocks
-    ).toEqual([]);
-  });
+  it.effect("exposes a schema-owned JSON string boundary", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decodePandocJsonFromString(`{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`);
+      expect(decoded.blocks).toEqual([]);
+    })
+  );
 });
 
 // The arbitrary compiler consumes decode only; verify the advertised encoding separately.

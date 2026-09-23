@@ -2,17 +2,18 @@ import { EmailString, NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { Button } from "@beep/ui/components/ui/button";
 import { A } from "@beep/utils";
-import { it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Clock, ConfigProvider, Effect, Exit, Layer } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as React from "react";
-import { beforeEach, describe, expect, vi } from "vitest";
+import { beforeEach, vi } from "vitest";
 import { makeOipContactHttpApiWebHandlerWithSubmit } from "@/app/api/contact/ContactHttpApiRoute";
 import { contactRequestResponseWithSubmit } from "@/app/api/contact/ContactRouteResponse";
 import { POST } from "@/app/api/contact/route";
+import { GET as llmsTextRoute } from "@/app/llms.txt/route";
 import oipManifest from "@/app/manifest";
 import Home from "@/app/page";
 import oipRobots from "@/app/robots";
@@ -49,7 +50,7 @@ const decodeUnknownContactSubmissionAcceptedExit = S.decodeUnknownExit(ContactSu
 const decodeUnknownContactSubmissionFormPayloadExit = S.decodeUnknownExit(ContactSubmissionFormPayload);
 const decodeUnknownContactSubmissionRejectedExit = S.decodeUnknownExit(ContactSubmissionRejected);
 
-const contactFormEmail = Result.getOrThrow(S.decodeResult(EmailString)("tom@example.com"));
+const contactFormEmail = EmailString.make("tom@example.com");
 
 vi.mock("next/image", () =>
   vi.importActual<typeof import("react")>("react").then((ReactModule) => {
@@ -178,14 +179,13 @@ const ContactSubmissionFormPayloadArbitrary = Arbitrary.schema(ContactSubmission
 const ContactSubmissionFormPayloadEquivalence = S.toEquivalence(ContactSubmissionFormPayload);
 const ContactSubmissionResponseArbitrary = Arbitrary.schema(ContactSubmissionResponse);
 const ContactSubmissionResponseEquivalence = S.toEquivalence(ContactSubmissionResponse);
-const encodeOipSiteContent = S.encodeSync(OipSiteContent);
-const decodeOipSiteContent = S.decodeUnknownSync(OipSiteContent);
-const encodeContactSubmission = S.encodeSync(ContactSubmission);
-const decodeContactSubmissionSync = S.decodeUnknownSync(ContactSubmission);
-const encodeContactSubmissionFormPayload = S.encodeSync(ContactSubmissionFormPayload);
-const decodeContactSubmissionFormPayload = S.decodeUnknownSync(ContactSubmissionFormPayload);
-const encodeContactSubmissionResponse = S.encodeSync(ContactSubmissionResponse);
-const decodeContactSubmissionResponse = S.decodeUnknownSync(ContactSubmissionResponse);
+const encodeOipSiteContent = S.encodeEffect(OipSiteContent);
+const decodeOipSiteContent = S.decodeUnknownEffect(OipSiteContent);
+const encodeContactSubmission = S.encodeEffect(ContactSubmission);
+const encodeContactSubmissionFormPayload = S.encodeEffect(ContactSubmissionFormPayload);
+const decodeContactSubmissionFormPayload = S.decodeUnknownEffect(ContactSubmissionFormPayload);
+const encodeContactSubmissionResponse = S.encodeEffect(ContactSubmissionResponse);
+const decodeContactSubmissionResponse = S.decodeUnknownEffect(ContactSubmissionResponse);
 
 describe("@beep/oip-web", { concurrent: false }, () => {
   beforeEach(() => {
@@ -218,86 +218,85 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     expect(Result.isSuccess(result)).toBe(true);
   });
 
-  it.prop(
+  it.effect.prop(
     "round-trips generated OIP site content",
     [OipSiteContentArbitrary],
-    ([content]) => {
-      expect(OipSiteContentEquivalence(decodeOipSiteContent(encodeOipSiteContent(content)), content)).toBe(true);
-    },
+    Effect.fnUntraced(function* ([content]) {
+      const encoded = yield* encodeOipSiteContent(content);
+      const decoded = yield* decodeOipSiteContent(encoded);
+      expect(OipSiteContentEquivalence(decoded, content)).toBe(true);
+    }),
     { arbitrary: fcRuns(100) }
   );
 
-  it.prop(
+  it.effect.prop(
     "round-trips generated contact submissions",
     [ContactSubmissionArbitrary],
-    ([submission]) => {
-      expect(
-        ContactSubmissionEquivalence(decodeContactSubmissionSync(encodeContactSubmission(submission)), submission)
-      ).toBe(true);
-    },
+    Effect.fnUntraced(function* ([submission]) {
+      const encoded = yield* encodeContactSubmission(submission);
+      const decoded = yield* decodeContactSubmission(encoded);
+      expect(ContactSubmissionEquivalence(decoded, submission)).toBe(true);
+    }),
     { arbitrary: fcRuns(100) }
   );
 
-  it.prop(
+  it.effect.prop(
     "round-trips generated contact payloads",
     [ContactSubmissionFormPayloadArbitrary],
-    ([payload]) => {
-      expect(
-        ContactSubmissionFormPayloadEquivalence(
-          decodeContactSubmissionFormPayload(encodeContactSubmissionFormPayload(payload)),
-          payload
-        )
-      ).toBe(true);
-    },
+    Effect.fnUntraced(function* ([payload]) {
+      const encoded = yield* encodeContactSubmissionFormPayload(payload);
+      const decoded = yield* decodeContactSubmissionFormPayload(encoded);
+      expect(ContactSubmissionFormPayloadEquivalence(decoded, payload)).toBe(true);
+    }),
     { arbitrary: fcRuns(100) }
   );
 
-  it.prop(
+  it.effect.prop(
     "round-trips generated contact responses",
     [ContactSubmissionResponseArbitrary],
-    ([response]) => {
-      expect(
-        ContactSubmissionResponseEquivalence(
-          decodeContactSubmissionResponse(encodeContactSubmissionResponse(response)),
-          response
-        )
-      ).toBe(true);
-    },
+    Effect.fnUntraced(function* ([response]) {
+      const encoded = yield* encodeContactSubmissionResponse(response);
+      const decoded = yield* decodeContactSubmissionResponse(encoded);
+      expect(ContactSubmissionResponseEquivalence(decoded, response)).toBe(true);
+    }),
     { arbitrary: fcRuns(100) }
   );
 
-  it("preserves encoded contact wire shape while decoding optional fields to Option", () => {
-    const submittedAt = NonNegativeInt.make(5_000);
-    const encoded = {
-      company: "OIP Builders",
-      email: "builder@example.com",
-      message: "I would like to discuss a patent matter.",
-      name: "Builder",
-      phone: "+16125550100",
-      posture: "ready",
-      submittedAt,
-      technology: "planter",
-      website: "https://example.com",
-    };
-    const decoded = decodeContactSubmissionSync(encoded);
+  it.effect(
+    "preserves encoded contact wire shape while decoding optional fields to Option",
+    Effect.fnUntraced(function* () {
+      const submittedAt = NonNegativeInt.make(5_000);
+      const encoded = {
+        company: "OIP Builders",
+        email: "builder@example.com",
+        message: "I would like to discuss a patent matter.",
+        name: "Builder",
+        phone: "+16125550100",
+        posture: "ready",
+        submittedAt,
+        technology: "planter",
+        website: "https://example.com",
+      };
+      const decoded = yield* decodeContactSubmission(encoded);
 
-    expect(encodeContactSubmission(decoded)).toEqual(encoded);
-    expect(
-      encodeContactSubmission(
-        ContactSubmission.make({
-          email: encoded.email,
-          message: encoded.message,
-          name: encoded.name,
-          submittedAt,
-        })
-      )
-    ).toEqual({
-      email: encoded.email,
-      message: encoded.message,
-      name: encoded.name,
-      submittedAt,
-    });
-  });
+      expect(yield* encodeContactSubmission(decoded)).toEqual(encoded);
+      expect(
+        yield* encodeContactSubmission(
+          ContactSubmission.make({
+            email: encoded.email,
+            message: encoded.message,
+            name: encoded.name,
+            submittedAt,
+          })
+        )
+      ).toEqual({
+        email: encoded.email,
+        message: encoded.message,
+        name: encoded.name,
+        submittedAt,
+      });
+    })
+  );
 
   it("exposes schema class-local decoders beside compatibility exports", () =>
     Effect.runPromise(
@@ -888,4 +887,35 @@ describe("@beep/oip-web", { concurrent: false }, () => {
       expect(response.status).toBe(303);
       expect(response.headers.get("location")).toBe("https://oip.law/?contact=rejected#contact");
     }));
+
+  it.effect(
+    "rejects a browser form submission missing a required field without calling submit",
+    Effect.fnUntraced(function* () {
+      const formData = contactFormData();
+      formData.delete("name");
+      const submit = vi.fn(() =>
+        Effect.succeed(
+          ContactSubmissionResponse.make({
+            message: "Should not submit.",
+            status: "accepted",
+          })
+        )
+      );
+
+      const response = yield* contactRequestResponseWithSubmit(formContactRequest(formData), submit);
+
+      expect(submit).not.toHaveBeenCalled();
+      expect(response.status).toBe(303);
+      expect(response.headers.get("location")).toBe("https://oip.law/?contact=rejected#contact");
+    })
+  );
+
+  it("serves llms.txt as plain text from the loaded site content", () =>
+    llmsTextRoute().then((response) =>
+      response.text().then((body) => {
+        expect(response.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+        expect(body).toContain("# OIP - Oppold IP Law");
+        expect(body).toContain("## Practice Areas");
+      })
+    ));
 });

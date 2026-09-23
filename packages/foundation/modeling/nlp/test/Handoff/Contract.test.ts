@@ -13,7 +13,7 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeContractAnnotatedDocument = S.decodeEffect(Contract.AnnotatedDocument);
 const decodeContractProvenance = S.decodeEffect(Contract.Provenance);
-const decodeContractSpanSync = S.decodeSync(Contract.Span);
+const decodeContractSpan = S.decodeUnknownEffect(Contract.Span);
 const encodeUnknownContractAnnotatedDocument = S.encodeUnknownEffect(Contract.AnnotatedDocument);
 
 const AnnotatedDocumentArbitrary = Arbitrary.schema(Contract.AnnotatedDocument);
@@ -152,10 +152,15 @@ describe("Span", () => {
     ).toBe("Passed");
   });
 
-  it("rejects negative offsets", () => {
-    expect(() => decodeContractSpanSync({ end: 1, start: -1 })).toThrow();
-    expect(() => decodeContractSpanSync({ end: -1, start: 0 })).toThrow();
-  });
+  it.effect(
+    "rejects negative offsets",
+    Effect.fnUntraced(function* () {
+      const negativeStart = yield* Effect.exit(decodeContractSpan({ end: 1, start: -1 }));
+      const negativeEnd = yield* Effect.exit(decodeContractSpan({ end: -1, start: 0 }));
+      expect(Exit.isFailure(negativeStart)).toBe(true);
+      expect(Exit.isFailure(negativeEnd)).toBe(true);
+    })
+  );
 
   it("rejects spans whose end precedes start", () => {
     expect(() => Contract.Span.make({ end: NonNegativeInt.make(4), start: NonNegativeInt.make(5) })).toThrow();

@@ -22,9 +22,7 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeBrandIdentity = S.decodeEffect(BrandIdentity);
 const decodePrintableTextResult = S.decodeResult(PrintableText);
-const decodeUnknownBrandIdentitySync = S.decodeUnknownSync(BrandIdentity);
 const encodeBrandIdentity = S.encodeEffect(BrandIdentity);
-const encodeBrandIdentitySync = S.encodeSync(BrandIdentity);
 
 describe("beep identity", () => {
   it.effect("round-trips through its schema", () =>
@@ -138,17 +136,17 @@ describe("BrandIdentity properties", () => {
   // Schema-derived property coverage: every arbitrary identity the schemas admit
   // round-trips losslessly, so the codec assertions above generalize past the
   // handpicked fixtures.
-  it("round-trips arbitrary identities through encode and decode", () => {
-    const equivalent = S.toEquivalence(BrandIdentity);
+  it.effect.prop(
+    "round-trips arbitrary identities through encode and decode",
+    [Arbitrary.schema(BrandIdentity)],
+    Effect.fnUntraced(function* ([identity]) {
+      const equivalent = S.toEquivalence(BrandIdentity);
+      const encoded = yield* encodeBrandIdentity(identity);
+      const decoded = yield* decodeBrandIdentity(encoded);
+      expect(equivalent(decoded, identity)).toBe(true);
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(BrandIdentity)]),
-          ([identity]) => equivalent(decodeUnknownBrandIdentitySync(encodeBrandIdentitySync(identity)), identity),
-          fcRuns(5)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(5) }
+  );
 });

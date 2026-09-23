@@ -7,10 +7,10 @@
 
 import { Buffer } from "node:buffer";
 import * as dns from "node:dns";
-import { Readable } from "node:stream";
 import { $BoxId } from "@beep/identity";
 import { assertAllowedRemoteUrl, BlockedHostError, HttpsUrl, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Cause, Effect, Exit, Queue, Result, Stream } from "effect";
+import * as NodeStream from "@effect/platform-node-shared/NodeStream";
+import { Effect, Exit, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -32,16 +32,20 @@ const BoxByteEffectStream = S.declare<Stream.Stream<Uint8Array, BoxError, never>
   })
 );
 
-const BoxByteInputValue = S.Union([
-  S.Uint8Array,
-  S.instanceOf(
-    Readable,
-    $I.annote("BoxReadableInput", {
-      description: "Node readable byte input accepted by Box upload adapters.",
-    })
-  ),
-  BoxByteEffectStream,
-]).pipe(
+const isNodeReadable = (value: unknown): value is NodeJS.ReadableStream =>
+  P.isObject(value) &&
+  P.isFunction(Reflect.get(value, "read")) &&
+  P.isFunction(Reflect.get(value, "on")) &&
+  P.isFunction(Reflect.get(value, "pipe"));
+
+const BoxNodeReadableInput = S.declare(
+  isNodeReadable,
+  $I.annote("BoxReadableInput", {
+    description: "Node readable byte input accepted by Box upload adapters.",
+  })
+);
+
+const BoxByteInputValue = S.Union([S.Uint8Array, BoxNodeReadableInput, BoxByteEffectStream]).pipe(
   $I.annoteSchema("BoxByteInput", {
     description: "Byte input accepted by Box upload adapters.",
   }),
@@ -801,7 +805,7 @@ const assertBoxUrlAllowed = (method: BoxMethodName, url: string): Effect.Effect<
     )
   );
 
-const byteInputToReadable = (method: BoxMethodName, value: unknown): Effect.Effect<Readable, BoxError> => {
+const byteInputToReadable = (method: BoxMethodName, value: unknown): Effect.Effect<NodeJS.ReadableStream, BoxError> => {
   if (!BoxByteInputValue.is(value)) {
     return Effect.fail(
       BoxError.fromReason("stream", {
@@ -811,21 +815,12 @@ const byteInputToReadable = (method: BoxMethodName, value: unknown): Effect.Effe
     );
   }
   if (value instanceof Uint8Array) {
-    return Effect.succeed(Readable.from([Buffer.from(value)]));
+    return Effect.succeed(NodeStream.toReadableNever(Stream.make(value)));
   }
-  if (value instanceof Readable) {
-    return Effect.succeed(value);
+  if (Stream.isStream(value)) {
+    return Effect.succeed(NodeStream.toReadableNever(value));
   }
-  return Effect.succeed(Readable.from(Stream.toAsyncIterable(value)));
-};
-
-const isAsyncIterable = (value: unknown): value is AsyncIterable<unknown> =>
-  P.isObject(value) && P.isFunction(Reflect.get(value, Symbol.asyncIterator));
-
-const destroyReadable = (value: unknown): void => {
-  if (value instanceof Readable && !value.destroyed) {
-    value.destroy();
-  }
+  return Effect.succeed(value);
 };
 
 const chunkToBytes =
@@ -848,18 +843,9 @@ const chunkToBytes =
 const byteStreamFromSdkValue = (method: BoxMethodName, value: unknown, controller: AbortController): BoxByteStream => {
   const finalizer = Effect.sync(() => {
     controller.abort();
-    destroyReadable(value);
   });
 
-  if (value === undefined) {
-    return Stream.fail(
-      BoxError.fromReason("stream", {
-        cause: "Box SDK did not return a readable byte stream",
-        method,
-      })
-    ).pipe(Stream.ensuring(finalizer));
-  }
-  if (!isAsyncIterable(value)) {
+  if (!isNodeReadable(value)) {
     return Stream.fail(
       BoxError.fromReason("stream", {
         cause: "Box SDK did not return a readable byte stream",
@@ -868,11 +854,10 @@ const byteStreamFromSdkValue = (method: BoxMethodName, value: unknown, controlle
     ).pipe(Stream.ensuring(finalizer));
   }
 
-  const sdkStream: Stream.Stream<unknown, BoxError, never> = Stream.fromAsyncIterable(value, (cause) =>
-    BoxError.fromUnknown(method, cause)
-  );
-
-  return sdkStream.pipe(Stream.mapEffect(chunkToBytes(method)), Stream.ensuring(finalizer));
+  return NodeStream.fromReadable<Uint8Array | string, BoxError>({
+    evaluate: () => value,
+    onError: (cause) => BoxError.fromUnknown(method, cause),
+  }).pipe(Stream.mapEffect(chunkToBytes(method)), Stream.ensuring(finalizer));
 };
 
 const runJsonSdkCall = <Payload, Success>(
@@ -936,7 +921,7 @@ const runByteStreamSdkCall = <Payload>(
   );
 
 const eventStreamFromSdkValue = (method: BoxMethodName, value: unknown): Stream.Stream<M.Event, BoxError> => {
-  if (!(value instanceof Readable)) {
+  if (!isNodeReadable(value)) {
     return Stream.fail(
       BoxError.fromReason("stream", {
         cause: "Box SDK did not return a readable event stream",
@@ -945,74 +930,21 @@ const eventStreamFromSdkValue = (method: BoxMethodName, value: unknown): Stream.
     );
   }
 
-  const readable = value;
-
-  return Stream.callback<M.Event, BoxError>((queue) =>
-    Effect.acquireRelease(
-      Effect.sync(() => {
-        let ended = false;
-
-        function removeListeners(): void {
-          readable.off("data", onData);
-          readable.off("error", onError);
-          readable.off("end", onEnd);
-          readable.off("close", onEnd);
-        }
-
-        function closeReadable(): void {
-          removeListeners();
-          destroyReadable(readable);
-        }
-
-        function fail(error: BoxError): void {
-          if (!ended) {
-            ended = true;
-            closeReadable();
-            Queue.failCauseUnsafe(queue, Cause.fail(error));
-          }
-        }
-
-        function onData(payload: unknown): void {
-          if (ended) {
-            return;
-          }
-
-          const result = decodeUnknownMEventResult(payload);
-          if (Result.isSuccess(result)) {
-            Queue.offerUnsafe(queue, result.success);
-            return;
-          }
-
-          fail(
+  return NodeStream.fromReadable<unknown, BoxError>({
+    evaluate: () => value,
+    onError: (cause) => BoxError.fromUnknown(method, cause),
+  }).pipe(
+    Stream.mapEffect((payload) => {
+      const result = decodeUnknownMEventResult(payload);
+      return Result.isSuccess(result)
+        ? Effect.succeed(result.success)
+        : Effect.fail(
             BoxError.fromReason("response decoding", {
               cause: result.failure,
               method,
             })
           );
-        }
-
-        function onError(cause: unknown): void {
-          fail(BoxError.fromUnknown(method, cause));
-        }
-
-        function onEnd(): void {
-          if (!ended) {
-            ended = true;
-            removeListeners();
-            Queue.endUnsafe(queue);
-          }
-        }
-
-        readable.on("data", onData);
-        readable.on("error", onError);
-        readable.on("end", onEnd);
-        readable.on("close", onEnd);
-
-        return closeReadable;
-      }),
-      (closeReadable) => Effect.sync(closeReadable)
-    )
-  ).pipe(
+    }),
     Stream.withSpan(`box.${method}.stream`, {
       attributes: {
         "box.method": method,

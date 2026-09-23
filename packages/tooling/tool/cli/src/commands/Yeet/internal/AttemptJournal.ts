@@ -21,6 +21,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetVerdict } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type * as SchemaAST from "effect/SchemaAST";
 import type { RepoRunContext } from "../../../internal/repo-run/RepoRun.models.ts";
 
@@ -212,7 +213,9 @@ export const decodeYeetAttemptJournalEvent: {
  * @category utilities
  * @since 0.0.0
  */
-export const attemptJournalPath = (context: RepoRunContext): Effect.Effect<string, never, Path.Path> =>
+export const attemptJournalPath = (
+  context: RepoRunContext
+): Effect.Effect<string, YeetCommandError, Crypto.Crypto | Path.Path> =>
   runArtifactPathForContext(context, JOURNAL_FILE_NAME);
 
 /**
@@ -235,7 +238,7 @@ export const attemptJournalPath = (context: RepoRunContext): Effect.Effect<strin
 export const appendYeetAttemptJournalEvent = Effect.fn("YeetAttemptJournal.append")(function* (
   context: RepoRunContext,
   event: YeetAttemptJournalEvent
-): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode Yeet attempt journal event."))
   );

@@ -1,43 +1,68 @@
 import { destructiveTransform } from "@beep/schema/Transformations";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 describe("destructiveTransform", () => {
-  it("decodes by applying the lossy transform", () => {
-    const schema = destructiveTransform(S.String, (value) => value.length);
+  it.effect(
+    "decodes by applying the lossy transform",
+    Effect.fnUntraced(function* () {
+      const schema = destructiveTransform(S.String, (value) => value.length);
 
-    expect(S.decodeSync(schema)("beep")).toBe(4);
-  });
+      expect(yield* S.decodeEffect(schema)("beep")).toBe(4);
+    })
+  );
 
-  it("preserves source decode failures", () => {
-    const schema = destructiveTransform(S.String, (value) => value.length);
+  it.effect(
+    "preserves source decode failures",
+    Effect.fnUntraced(function* () {
+      const schema = destructiveTransform(S.String, (value) => value.length);
 
-    expect(() => S.decodeSync(schema)(1)).toThrow("Expected string");
-  });
+      const failure1 = yield* Effect.result(S.decodeEffect(schema)(1));
+      expect(Result.isFailure(failure1)).toBe(true);
+      if (Result.isFailure(failure1)) {
+        expect(failure1.failure.message).toContain("Expected string");
+      }
+    })
+  );
 
-  it("maps thrown transform errors into parse issues", () => {
-    const schema = destructiveTransform(S.String, () => {
-      throw new Error("boom");
-    });
+  it.effect(
+    "maps thrown transform errors into parse issues",
+    Effect.fnUntraced(function* () {
+      const schema = destructiveTransform(S.String, () => {
+        throw new Error("boom");
+      });
 
-    expect(() => S.decodeSync(schema)("beep")).toThrow("Error applying transformation");
-  });
+      const failure2 = yield* Effect.result(S.decodeEffect(schema)("beep"));
+      expect(Result.isFailure(failure2)).toBe(true);
+      if (Result.isFailure(failure2)) {
+        expect(failure2.failure.message).toContain("Error applying transformation");
+      }
+    })
+  );
 
-  it("passes transformed values through on encode", () => {
-    const schema = destructiveTransform(S.String, (value) => value.length);
+  it.effect(
+    "passes transformed values through on encode",
+    Effect.fnUntraced(function* () {
+      const schema = destructiveTransform(S.String, (value) => value.length);
 
-    expect(S.encodeSync(schema)(4)).toBe(4);
-  });
+      expect(yield* S.encodeEffect(schema)(4)).toBe(4);
+    })
+  );
 
-  it("works for transformed struct fields during encode", () => {
-    const schema = S.Struct({
-      size: destructiveTransform(S.String, (value) => value.length),
-    });
+  it.effect(
+    "works for transformed struct fields during encode",
+    Effect.fnUntraced(function* () {
+      const schema = S.Struct({
+        size: destructiveTransform(S.String, (value) => value.length),
+      });
 
-    const decoded = S.decodeSync(schema)({ size: "beep" });
-    const encoded = S.encodeSync(schema)({ size: 4 });
+      const decoded = yield* S.decodeEffect(schema)({ size: "beep" });
+      const encoded = yield* S.encodeEffect(schema)({ size: 4 });
 
-    expect(decoded).toEqual({ size: 4 });
-    expect(encoded).toEqual({ size: 4 });
-  });
+      expect(decoded).toEqual({ size: 4 });
+      expect(encoded).toEqual({ size: 4 });
+    })
+  );
 });

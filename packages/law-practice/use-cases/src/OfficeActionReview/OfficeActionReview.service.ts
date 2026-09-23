@@ -32,8 +32,8 @@ import type { LangExtractError, LangExtractResult } from "@beep/langextract/Extr
 import type { IrToLawShape, LawEntities } from "../IrToLaw/index.ts";
 import type { OfficeActionReviewInput, OfficeActionReviewShape } from "./OfficeActionReview.ports.ts";
 
-const decodeCandidateClaim = S.decodeUnknownSync(CandidateClaim);
-const decodeEvidence = S.decodeUnknownSync(Evidence);
+const decodeCandidateClaim = S.decodeUnknownEffect(CandidateClaim);
+const decodeEvidence = S.decodeUnknownEffect(Evidence);
 
 /**
  * Structured extraction targets required by the office-action review workflow.
@@ -73,8 +73,8 @@ export const officeActionExtractionTargets: LangExtractRequest["targets"] = [
   }),
 ];
 
-const candidateClaimOf = (law: LawEntities, entitySeed: number): CandidateClaim =>
-  decodeCandidateClaim({
+const candidateClaimOf = Effect.fnUntraced(function* (law: LawEntities, entitySeed: number) {
+  return yield* decodeCandidateClaim({
     ...spikeEntityInput("EpistemicCandidateClaim", entitySeed * 10),
     fixtureKey: law.distinction.fixtureKey,
     lifecycle: "candidate",
@@ -82,10 +82,11 @@ const candidateClaimOf = (law: LawEntities, entitySeed: number): CandidateClaim 
       claimText: law.claim.text,
       distinction: law.distinction.anchor.quote,
     },
-  });
+  }).pipe(Effect.orDie);
+});
 
-const evidenceOf = (law: LawEntities, entitySeed: number): Evidence =>
-  decodeEvidence({
+const evidenceOf = Effect.fnUntraced(function* (law: LawEntities, entitySeed: number) {
+  return yield* decodeEvidence({
     ...spikeEntityInput("EpistemicEvidence", entitySeed * 10 + 1),
     artifactFixtureKey: law.officeAction.fixtureKey,
     span: {
@@ -95,7 +96,8 @@ const evidenceOf = (law: LawEntities, entitySeed: number): Evidence =>
       startChar: law.distinction.anchor.startChar,
     },
     spanFixtureKey: law.distinction.fixtureKey,
-  });
+  }).pipe(Effect.orDie);
+});
 
 const failFileExtraction = (
   result: ProcessFileResult,
@@ -257,8 +259,8 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
     const law = yield* deps.irToLaw.toLaw(extractionResult.extractions);
 
     return OfficeActionCandidateExtraction.make({
-      candidate: candidateClaimOf(law, input.entitySeed),
-      evidence: evidenceOf(law, input.entitySeed),
+      candidate: yield* candidateClaimOf(law, input.entitySeed),
+      evidence: yield* evidenceOf(law, input.entitySeed),
     });
   });
 

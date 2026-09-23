@@ -25,12 +25,12 @@ import {
   validatePathSegment,
   variadicStrings,
 } from "@beep/repo-cli/test/Cli";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, HashSet } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
-const decodeRunModeSync = S.decodeSync(RunMode);
+const decodeRunModeEffect = S.decodeEffect(RunMode);
 
 const toError = (cause: unknown) => new Error(String(cause));
 
@@ -62,11 +62,13 @@ describe("internal/cli/FailureRendering", () => {
 });
 
 describe("internal/cli/RunMode", () => {
-  it("decodes the shared run-mode literals", () => {
-    expect(decodeRunModeSync("dry-run")).toBe("dry-run");
-    expect(RunModeIs.write("write")).toBe(true);
-    expect(RunModeIs.write("check")).toBe(false);
-  });
+  it.effect("decodes the shared run-mode literals", () =>
+    Effect.gen(function* () {
+      expect(yield* decodeRunModeEffect("dry-run")).toBe("dry-run");
+      expect(RunModeIs.write("write")).toBe(true);
+      expect(RunModeIs.write("check")).toBe(false);
+    })
+  );
 
   it("resolves version-sync semantics via a compound dry-run condition", () => {
     const resolve = (write: boolean, dryRun: boolean) =>

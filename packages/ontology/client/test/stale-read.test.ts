@@ -19,10 +19,9 @@ import { SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { describe, expect, it } from "@effect/vitest";
 import { Deferred, Effect, Layer } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 
-const sessionId = S.decodeSync(SessionId)("session-1");
+const sessionId = SessionId.make("session-1");
 
 const openSession = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: makeDataset([]) }));
 

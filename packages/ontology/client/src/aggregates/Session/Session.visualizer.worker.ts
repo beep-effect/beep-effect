@@ -21,7 +21,11 @@ import { Result } from "effect";
 // ends speak the ENCODED form. See the codecs in Session.worker-protocol.ts for
 // what posting a decoded value did to this worker.
 const postResult = (result: WorkerResult): void => {
-  globalThis.postMessage(encodeWorkerResult(result));
+  const encoded = encodeWorkerResult(result);
+  if (!Result.isSuccess(encoded)) {
+    throw encoded.failure;
+  }
+  globalThis.postMessage(encoded.success);
 };
 
 const handleCommand = (command: WorkerCommand): void => {

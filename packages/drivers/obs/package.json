@@ -68,6 +68,7 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
+    "@effect/platform-node-shared": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

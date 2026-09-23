@@ -32,8 +32,15 @@ const WorkItemVisibleActionBase = LiteralKit(["assign", "complete", "reopen", "a
  *
  * ```ts
  * import { WorkItemVisibleAction } from "@beep/architecture-lab-ui/aggregates/WorkItem"
+ * import * as Result from "effect/Result"
  *
- * const action = WorkItemVisibleAction.fromUnknown("archive")
+ * const decoded = WorkItemVisibleAction.fromUnknown("archive")
+ *
+ * if (Result.isFailure(decoded)) {
+ *   throw new Error("expected archive to be a visible WorkItem action")
+ * }
+ *
+ * const action = decoded.success
  *
  * if (action !== WorkItemVisibleAction.Enum.archive) {
  *   throw new Error("expected archive to be a visible WorkItem action")
@@ -50,7 +57,7 @@ export const WorkItemVisibleAction = WorkItemVisibleActionBase.pipe(
   }),
   SchemaUtils.withStatics((schema) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownResult(schema),
   })),
   SchemaUtils.withLiteralKitStatics(WorkItemVisibleActionBase)
 );

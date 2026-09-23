@@ -44,6 +44,7 @@ import {
   jsdocMigrateShapeRegressions,
   rewriteJSDocMigrateBlock,
 } from "./JSDocMigrateRewrite.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type {
   JSDocMigrateExtractRecord,
@@ -65,7 +66,7 @@ const loadFrozenRecordSets = Effect.fn("JSDocMigrateApply.loadFrozenRecordSets")
   repoRoot: string,
   options: { readonly titles?: string | undefined; readonly overrides?: string | undefined },
   syntheticTitles: O.Option<ReadonlyArray<JSDocMigrateTitleRecord>>
-): Effect.fn.Return<FrozenRecordSets, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<FrozenRecordSets, QualityScriptCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const titles = O.isSome(syntheticTitles)
     ? syntheticTitles.value
@@ -360,7 +361,11 @@ type AffectedFile = {
 const readAffectedFiles = Effect.fn("JSDocMigrateApply.readAffectedFiles")(function* (
   repoRoot: string,
   files: ReadonlyArray<string>
-): Effect.fn.Return<ReadonlyArray<AffectedFile>, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  ReadonlyArray<AffectedFile>,
+  QualityScriptCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> {
   const perFile = yield* Effect.forEach(
     files,
     (filePath) =>
@@ -382,7 +387,7 @@ const readAffectedFiles = Effect.fn("JSDocMigrateApply.readAffectedFiles")(funct
 const formatBiome = Effect.fn("JSDocMigrateApply.formatBiome")(function* (
   repoRoot: string,
   files: ReadonlyArray<string>
-): Effect.fn.Return<void, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   for (const chunk of A.chunksOf(files, 50)) {
     const step = yield* runCaptured({
       command: "bun",
@@ -399,7 +404,7 @@ const writeManifest = Effect.fn("JSDocMigrateApply.writeManifest")(function* (
   repoRoot: string,
   manifestPath: string,
   manifest: JSDocMigrateProofManifest
-): Effect.fn.Return<void, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const jsonc = yield* formatJsonc(manifest).pipe(
     QualityScriptCommandError.mapError("Failed to format jsdoc-migrate proof manifest.")
@@ -470,7 +475,7 @@ const scanAnchorsForOrphans = Effect.fn("JSDocMigrateApply.scanAnchorsForOrphans
 ): Effect.fn.Return<
   MutableHashMap.MutableHashMap<string, JSDocMigrateScannedBlock>,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -580,7 +585,7 @@ export const runJSDocMigrateApply = Effect.fn("JSDocMigrateApply.run")(function*
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (options.syntheticTitles && !options.dryRun) {
     return yield* migrateError("--synthetic-titles is a measurement mode; combine it with --dry-run.");
@@ -589,8 +594,10 @@ export const runJSDocMigrateApply = Effect.fn("JSDocMigrateApply.run")(function*
   const path = yield* Path.Path;
   const files = yield* listJSDocMigrateCorpusFiles(repoRoot);
   const affectedFiles = yield* readAffectedFiles(repoRoot, files);
-  const liveExtract = A.flatMap(affectedFiles, (file) =>
-    jsdocMigrateExtractRecordsForFile(file.filePath, file.sourceText)
+  const liveExtract = A.flatten(
+    yield* Effect.forEach(affectedFiles, (file) => jsdocMigrateExtractRecordsForFile(file.filePath, file.sourceText), {
+      concurrency: 1,
+    })
   );
 
   const { overrideByAnchor, overrides, titleByAnchor, titles } = yield* loadFrozenRecordSets(
@@ -764,7 +771,7 @@ export const runJSDocMigrateVerify = Effect.fn("JSDocMigrateApply.runVerify")(fu
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const { fs, path, repoRoot } = yield* jsdocMigrateRunContext();
 

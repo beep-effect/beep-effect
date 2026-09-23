@@ -25,6 +25,7 @@ import { readInstalledSystemdUnit, systemdUnitDirective, systemdUserUnitDir } fr
 import { ResearchCommandError } from "../Research.errors.ts";
 import { ResearchRecordedTimer } from "../Research.schemas.ts";
 import { RESEARCH_ENV_FILE_RELATIVE } from "./ResearchEnv.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ResearchTimerOptions } from "../Research.schemas.ts";
 
@@ -36,7 +37,11 @@ import type { ResearchTimerOptions } from "../Research.schemas.ts";
  */
 export const RESEARCH_UNITS = ["beep-research-daily", "beep-research-repo-card"] as const;
 
-type ResearchTimerRequirements = ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path;
+type ResearchTimerRequirements =
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Crypto.Crypto
+  | FileSystem.FileSystem
+  | Path.Path;
 
 interface UnitPair {
   readonly baseName: string;
@@ -128,7 +133,7 @@ const unitDirOf = systemdUserUnitDir;
 
 const runSystemctl = Effect.fn("ResearchTimers.runSystemctl")(function* (
   args: ReadonlyArray<string>
-): Effect.fn.Return<void, ResearchCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, ResearchCommandError, ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto> {
   const result = yield* runCaptured({
     command: "systemctl",
     args: ["--user", ...args],

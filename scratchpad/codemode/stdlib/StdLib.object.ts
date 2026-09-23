@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { dual } from "effect/Function";
 import { LiteralKit } from "@beep/schema";
 import { A, P, R } from "@beep/utils";
 import { Effect } from "effect";
@@ -91,8 +92,10 @@ type DirectObjectMethod = Exclude<ObjectStatic, "fromEntries" | "groupBy">;
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown>, node: AstNode): unknown => {
+export const invokeObjectMethod: {
+  (args: Array<unknown>, node: AstNode): (name: DirectObjectMethod) => unknown;
+  (name: DirectObjectMethod, args: Array<unknown>, node: AstNode): unknown;
+} = dual(3, (name: DirectObjectMethod, args: Array<unknown>, node: AstNode): unknown => {
   const requireObject = (): object => {
     const input = args[0];
     if (A.isArray(input)) return input;
@@ -151,7 +154,7 @@ export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown
       return out;
     },
   });
-};
+});
 
 /**
  * Builds a null-prototype object from a synchronous iterable of `[key, value]`
@@ -195,45 +198,57 @@ export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest iterable, AST context, and callback runner are co-primary interpreter protocol inputs.
-export const invokeObjectFromEntries = <R>(
-  runner: SyncIteratorRunner<R>,
-  source: unknown,
-  node: AstNode
-): Effect.Effect<Record<string, unknown>, InterpreterFailure, R> => {
-  const out: Record<string, unknown> = makeEmptySafeObject();
-  return Effect.gen(function* () {
-    const cursor = yield* runner.syncIterator(source, node);
-    if (P.isUndefined(cursor)) {
-      throw InterpreterRuntimeError.new("Object.fromEntries expects a synchronous iterable of entries.", node).as(
-        "TypeError"
-      );
-    }
-    while (true) {
-      const step = yield* cursor.next;
-      if (step.done) return out;
-      yield* preserveConsumerError(
-        cursor,
-        Effect.sync(() => {
-          if (
-            P.isNull(step.value) ||
-            !P.isObjectKeyword(step.value) ||
-            isCodeModeValue(step.value) ||
-            containsOpaqueReference(step.value)
-          ) {
-            throw InterpreterRuntimeError.new("Object.fromEntries expects [key, value] entry objects.", node).as(
-              "TypeError"
-            );
-          }
-          const entryKey = Reflect.get(step.value, "0");
-          const entryValue = Reflect.get(step.value, "1");
-          boundedData(entryKey, "Object.fromEntries key");
-          boundedData(entryValue, "Object.fromEntries value");
-          const key = coerceToString(entryKey);
-          if (isBlockedMember(key)) throw InterpreterRuntimeError.new(`Property '${key}' is not available.`, node);
-          out[key] = entryValue;
-        })
-      );
-    }
-  });
-};
+export const invokeObjectFromEntries: {
+  (
+    source: unknown,
+    node: AstNode
+  ): <R>(runner: SyncIteratorRunner<R>) => Effect.Effect<Record<string, unknown>, InterpreterFailure, R>;
+  <R>(
+    runner: SyncIteratorRunner<R>,
+    source: unknown,
+    node: AstNode
+  ): Effect.Effect<Record<string, unknown>, InterpreterFailure, R>;
+} = dual(
+  3,
+  <R>(
+    runner: SyncIteratorRunner<R>,
+    source: unknown,
+    node: AstNode
+  ): Effect.Effect<Record<string, unknown>, InterpreterFailure, R> => {
+    const out: Record<string, unknown> = makeEmptySafeObject();
+    return Effect.gen(function* () {
+      const cursor = yield* runner.syncIterator(source, node);
+      if (P.isUndefined(cursor)) {
+        throw InterpreterRuntimeError.new("Object.fromEntries expects a synchronous iterable of entries.", node).as(
+          "TypeError"
+        );
+      }
+      while (true) {
+        const step = yield* cursor.next;
+        if (step.done) return out;
+        yield* preserveConsumerError(
+          cursor,
+          Effect.sync(() => {
+            if (
+              P.isNull(step.value) ||
+              !P.isObjectKeyword(step.value) ||
+              isCodeModeValue(step.value) ||
+              containsOpaqueReference(step.value)
+            ) {
+              throw InterpreterRuntimeError.new("Object.fromEntries expects [key, value] entry objects.", node).as(
+                "TypeError"
+              );
+            }
+            const entryKey = Reflect.get(step.value, "0");
+            const entryValue = Reflect.get(step.value, "1");
+            boundedData(entryKey, "Object.fromEntries key");
+            boundedData(entryValue, "Object.fromEntries value");
+            const key = coerceToString(entryKey);
+            if (isBlockedMember(key)) throw InterpreterRuntimeError.new(`Property '${key}' is not available.`, node);
+            out[key] = entryValue;
+          })
+        );
+      }
+    });
+  }
+);

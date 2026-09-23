@@ -21,14 +21,14 @@ import * as Struct from "effect/Struct";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePackageJson2 = S.decodeEffect(PackageJson);
-const decodeNpmPackageJsonFieldsPeerDependenciesMetaSync = S.decodeSync(NpmPackageJson.fields.peerDependenciesMeta);
-const decodePackageJsonFieldsDependenciesSync = S.decodeSync(PackageJson.fields.dependencies);
-const decodePackageJsonFieldsPublishConfigSync = S.decodeSync(PackageJson.fields.publishConfig);
+const decodeNpmPackageJsonFieldsPeerDependenciesMeta = S.decodeEffect(NpmPackageJson.fields.peerDependenciesMeta);
+const decodePackageJsonFieldsDependencies = S.decodeEffect(PackageJson.fields.dependencies);
+const decodePackageJsonFieldsPublishConfig = S.decodeEffect(PackageJson.fields.publishConfig);
 const decodeUnknownPackageJson = S.decodeUnknownEffect(PackageJson);
 const decodeUnknownNpmPackageJsonExit = S.decodeUnknownExit(NpmPackageJson);
-const encodeNpmPackageJsonFieldsPeerDependenciesMetaSync = S.encodeSync(NpmPackageJson.fields.peerDependenciesMeta);
-const encodePackageJsonFieldsDependenciesSync = S.encodeSync(PackageJson.fields.dependencies);
-const encodePackageJsonFieldsPublishConfigSync = S.encodeSync(PackageJson.fields.publishConfig);
+const encodeNpmPackageJsonFieldsPeerDependenciesMeta = S.encodeEffect(NpmPackageJson.fields.peerDependenciesMeta);
+const encodePackageJsonFieldsDependencies = S.encodeEffect(PackageJson.fields.dependencies);
+const encodePackageJsonFieldsPublishConfig = S.encodeEffect(PackageJson.fields.publishConfig);
 const isPackageJson = S.is(PackageJson);
 
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
@@ -71,63 +71,69 @@ describe("PackageJson schema", () => {
       ).toBe("Passed");
     });
 
-    it("round-trips schema-derived package.json dependency maps through the encoded wire shape", () => {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.filter(PackageJsonDependenciesArbitrary, O.isSome)]),
-            ([value]) => {
-              const encoded = encodePackageJsonFieldsDependenciesSync(value);
-              const decoded = decodePackageJsonFieldsDependenciesSync(encoded);
+    it.effect(
+      "round-trips schema-derived package.json dependency maps through the encoded wire shape",
+      Effect.fnUntraced(function* () {
+        const result = yield* Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.filter(PackageJsonDependenciesArbitrary, O.isSome)]),
+          ([value]) =>
+            Effect.gen(function* () {
+              const encoded = yield* encodePackageJsonFieldsDependencies(value);
+              const decoded = yield* decodePackageJsonFieldsDependencies(encoded);
 
               expect(decoded).toEqual(value);
 
               return true;
-            },
-            fcRuns(20)
-          )
-        )._tag
-      ).toBe("Passed");
-    });
+            }),
+          fcRuns(20)
+        );
 
-    it("round-trips schema-derived npm peer dependency metadata through the encoded wire shape", () => {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([Arbitrary.filter(NpmPackageJsonPeerDependenciesMetaArbitrary, O.isSome)]),
-            ([value]) => {
-              const encoded = encodeNpmPackageJsonFieldsPeerDependenciesMetaSync(value);
-              const decoded = decodeNpmPackageJsonFieldsPeerDependenciesMetaSync(encoded);
+        expect(result._tag).toBe("Passed");
+      })
+    );
+
+    it.effect(
+      "round-trips schema-derived npm peer dependency metadata through the encoded wire shape",
+      Effect.fnUntraced(function* () {
+        const result = yield* Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.filter(NpmPackageJsonPeerDependenciesMetaArbitrary, O.isSome)]),
+          ([value]) =>
+            Effect.gen(function* () {
+              const encoded = yield* encodeNpmPackageJsonFieldsPeerDependenciesMeta(value);
+              const decoded = yield* decodeNpmPackageJsonFieldsPeerDependenciesMeta(encoded);
 
               expect(decoded).toEqual(value);
 
               return true;
-            },
-            fcRuns(20)
-          )
-        )._tag
-      ).toBe("Passed");
-    });
+            }),
+          fcRuns(20)
+        );
 
-    it("round-trips schema-derived package.json publishConfig through the encoded wire shape", () => {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([PublishConfigCoreArbitrary]),
-            ([core]) => {
+        expect(result._tag).toBe("Passed");
+      })
+    );
+
+    it.effect(
+      "round-trips schema-derived package.json publishConfig through the encoded wire shape",
+      Effect.fnUntraced(function* () {
+        const result = yield* Arbitrary.checkEffect(
+          Arbitrary.all([PublishConfigCoreArbitrary]),
+          ([core]) =>
+            Effect.gen(function* () {
               const value = O.some(core);
-              const encoded = encodePackageJsonFieldsPublishConfigSync(value);
-              const decoded = decodePackageJsonFieldsPublishConfigSync(encoded);
+              const encoded = yield* encodePackageJsonFieldsPublishConfig(value);
+              const decoded = yield* decodePackageJsonFieldsPublishConfig(encoded);
 
               expect(decoded).toEqual(value);
 
               return true;
-            },
-            { runs: 20 }
-          )
-        )._tag
-      ).toBe("Passed");
-    });
+            }),
+          { runs: 20 }
+        );
+
+        expect(result._tag).toBe("Passed");
+      })
+    );
 
     it("decodes minimal package.json (name only)", () => {
       const result = decodePackageJson({ name: "my-package" });

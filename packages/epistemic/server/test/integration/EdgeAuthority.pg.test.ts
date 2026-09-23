@@ -62,11 +62,11 @@ const makeExternalLayer = () =>
     )
   );
 
-const decodeClaim = S.decodeUnknownSync(CandidateClaim);
-const decodeEvidence = S.decodeUnknownSync(Evidence);
-const decodeIdentity = S.decodeUnknownSync(LogicalEdgeIdentity);
-const decodeRecord = S.decodeUnknownSync(RecordEdgeFact);
-const decodeSupersede = S.decodeUnknownSync(SupersedeEdgeFact);
+const decodeClaim = S.decodeUnknownEffect(CandidateClaim);
+const decodeEvidence = S.decodeUnknownEffect(Evidence);
+const decodeIdentity = S.decodeUnknownEffect(LogicalEdgeIdentity);
+const decodeRecord = S.decodeUnknownEffect(RecordEdgeFact);
+const decodeSupersede = S.decodeUnknownEffect(SupersedeEdgeFact);
 
 const systemPrincipal = { component: "Runtime", kind: "System" } as const;
 
@@ -103,26 +103,30 @@ const seedScenario = Effect.fnUntraced(function* (scenario: string, fixture: num
   const claimRows = yield* db
     .insert(DbSchema.candidateClaim)
     .values(
-      toCandidateClaimInsert(
-        decodeClaim({
-          ...productEntityFixtureInput("EpistemicCandidateClaim", fixture),
-          fixtureKey: `claim.${scenario}`,
-          lifecycle: "candidate",
-          snapshot: {},
-        })
+      yield* Effect.fromResult(
+        toCandidateClaimInsert(
+          yield* decodeClaim({
+            ...productEntityFixtureInput("EpistemicCandidateClaim", fixture),
+            fixtureKey: `claim.${scenario}`,
+            lifecycle: "candidate",
+            snapshot: {},
+          })
+        )
       )
     )
     .returning();
   const evidenceRows = yield* db
     .insert(DbSchema.evidence)
     .values(
-      toEvidenceInsert(
-        decodeEvidence({
-          ...productEntityFixtureInput("EpistemicEvidence", fixture),
-          artifactFixtureKey: `artifact.${scenario}`,
-          span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
-          spanFixtureKey: `span.${scenario}`,
-        })
+      yield* Effect.fromResult(
+        toEvidenceInsert(
+          yield* decodeEvidence({
+            ...productEntityFixtureInput("EpistemicEvidence", fixture),
+            artifactFixtureKey: `artifact.${scenario}`,
+            span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
+            spanFixtureKey: `span.${scenario}`,
+          })
+        )
       )
     )
     .returning();
@@ -134,17 +138,17 @@ const seedScenario = Effect.fnUntraced(function* (scenario: string, fixture: num
     claimId: claimRow.id,
     evidenceId: evidenceRow.id,
     identity,
-    logicalKey: logicalEdgeKey(decodeIdentity(identity)),
+    logicalKey: logicalEdgeKey(yield* decodeIdentity(identity)),
   };
 });
 
-const recordFact = (
+const recordFact = Effect.fnUntraced(function* (
   identity: typeof LogicalEdgeIdentity.Encoded,
   fact: Record<string, unknown>,
   validFrom: number,
   recordedAt: number
-) =>
-  decodeRecord({
+) {
+  return yield* decodeRecord({
     fact,
     identity,
     orgId: 1,
@@ -155,13 +159,14 @@ const recordFact = (
     validFrom,
     validTo: null,
   });
+});
 
-const supersedeFact = (
+const supersedeFact = Effect.fnUntraced(function* (
   identity: typeof LogicalEdgeIdentity.Encoded,
   fact: Record<string, unknown>,
   recordedAt: number
-) =>
-  decodeSupersede({
+) {
+  return yield* decodeSupersede({
     expectedVersion: 1,
     fact,
     identity,
@@ -173,6 +178,7 @@ const supersedeFact = (
     validFrom: 1_000,
     validTo: null,
   });
+});
 
 const partitionOutcomes = (outcomes: ReadonlyArray<Result.Result<EdgeVersion, EdgeAuthorityError>>) => ({
   failures: pipe(
@@ -253,7 +259,7 @@ if (externalUrl.length === 0) {
           const sql = yield* currentSql;
           const writers = yield* twoWriters();
 
-          yield* writers[0].record(recordFact(scenario.identity, { amount: "100" }, 1_000, 1_000));
+          yield* writers[0].record(yield* recordFact(scenario.identity, { amount: "100" }, 1_000, 1_000));
 
           const lockHeld = yield* Deferred.make<void>();
           const blocker = sql.withTransaction(
@@ -275,7 +281,10 @@ if (externalUrl.length === 0) {
               Deferred.await(lockHeld).pipe(
                 Effect.andThen(
                   contend(writers, (writer, index) =>
-                    writer.supersede(supersedeFact(scenario.identity, { amount: `15${index}` }, 2_000 + index))
+                    supersedeFact(scenario.identity, { amount: `15${index}` }, 2_000 + index).pipe(
+                      Effect.orDie,
+                      Effect.flatMap((fact) => writer.supersede(fact))
+                    )
                   )
                 )
               ),
@@ -316,7 +325,10 @@ if (externalUrl.length === 0) {
           const writers = yield* twoWriters();
 
           const raced = yield* contend(writers, (writer, index) =>
-            writer.record(recordFact(scenario.identity, { attempt: `${index}` }, 1_000 + index, 1_000 + index))
+            recordFact(scenario.identity, { attempt: `${index}` }, 1_000 + index, 1_000 + index).pipe(
+              Effect.orDie,
+              Effect.flatMap((fact) => writer.record(fact))
+            )
           );
           const { failures, successes } = partitionOutcomes(raced);
 
@@ -350,7 +362,7 @@ if (externalUrl.length === 0) {
           const sql = yield* currentSql;
           const writers = yield* twoWriters();
 
-          const head = yield* writers[0].record(recordFact(scenario.identity, { state: "held" }, 1_000, 1_000));
+          const head = yield* writers[0].record(yield* recordFact(scenario.identity, { state: "held" }, 1_000, 1_000));
           expect(head.version).toBe(1);
 
           const violation = yield* Effect.flip(sql`

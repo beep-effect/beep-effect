@@ -18,10 +18,9 @@ import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, pipe } from "effect";
-import * as S from "effect/Schema";
 import type { ChangeEvent } from "react";
 
-const sessionId = S.decodeSync(SessionId)("session-1");
+const sessionId = SessionId.make("session-1");
 
 type TreeItem = {
   readonly id: string;

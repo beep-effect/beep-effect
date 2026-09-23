@@ -22,19 +22,19 @@ const decodeBoxDesiredStateOption = S.decodeOption(BoxDesiredState);
 const decodeBoxFolderNameOption = S.decodeOption(BoxFolderName);
 const encodeBoxDesiredState = S.encodeEffect(BoxDesiredState);
 
-const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I>): void => {
+const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I>) => {
   const equivalent = S.toEquivalence(schema);
-  const encode = S.encodeSync(schema);
-  const decode = S.decodeSync(schema);
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => equivalent(decode(encode(value)), value),
-        fcRuns(5)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
+  const encode = S.encodeEffect(schema);
+  const decode = S.decodeEffect(schema);
+  return Arbitrary.checkEffect(
+    Arbitrary.all([Arbitrary.schema(schema)]),
+    ([value]) =>
+      encode(value).pipe(
+        Effect.flatMap(decode),
+        Effect.map((decoded) => equivalent(decoded, value))
+      ),
+    fcRuns(5)
+  ).pipe(Effect.tap((result) => Effect.sync(() => expect(result).toMatchObject({ _tag: "Passed" }))));
 };
 
 describe("@beep/box-provisioning intent", () => {
@@ -92,9 +92,12 @@ describe("@beep/box-provisioning intent", () => {
       expect(error._tag).toBe("BoxProvisioningSchemaError");
     })
   );
-  it("round-trips schema-derived adoption and entitlement values", () => {
-    assertCodecRoundTrip(BoxAdoption);
-    assertCodecRoundTrip(BoxAdoptions);
-    assertCodecRoundTrip(BoxEntitlements);
-  });
+  it.effect(
+    "round-trips schema-derived adoption and entitlement values",
+    Effect.fnUntraced(function* () {
+      yield* assertCodecRoundTrip(BoxAdoption);
+      yield* assertCodecRoundTrip(BoxAdoptions);
+      yield* assertCodecRoundTrip(BoxEntitlements);
+    })
+  );
 });

@@ -37,9 +37,7 @@ import { isJsonFilePath, isMarkdownFilePath, isSkillFilePath, pathSpecs, syncMan
 import { ExperimentalSpec, PluginManifest } from "./Manifest.ts";
 
 const decodeUnknownMcpJsonFile = S.decodeUnknownEffect(McpJsonFile);
-const decodeUnknownHooksSectionSync = S.decodeUnknownSync(HooksSection);
-const encodeHooksSectionSync = S.encodeSync(HooksSection);
-const encodeMcpJsonFileSync = S.encodeSync(McpJsonFile);
+const decodeUnknownHooksSection = S.decodeUnknownEffect(HooksSection);
 const isHooksSection = S.is(HooksSection);
 
 const $I = $ScratchpadId.create("claudecode/Plugin/Load");
@@ -492,8 +490,8 @@ const toPluginConfig = (input: {
   agents: input.agents,
   skills: input.skills,
   outputStyles: input.outputStyles,
-  ...(O.isSome(input.hooksConfig) ? { hooksConfig: encodeHooksSectionSync(input.hooksConfig.value) } : {}),
-  ...(O.isSome(input.mcpConfig) ? { mcpConfig: encodeMcpJsonFileSync(input.mcpConfig.value) } : {}),
+  ...(O.isSome(input.hooksConfig) ? { hooksConfig: input.hooksConfig.value } : {}),
+  ...(O.isSome(input.mcpConfig) ? { mcpConfig: input.mcpConfig.value } : {}),
 });
 
 const loadCommandEntries = (
@@ -584,15 +582,15 @@ const loadOutputStyleEntries = (
     );
   });
 
-const mergeHooksConfigs = (configs: ReadonlyArray<HooksSection>): HooksSection => {
+const mergeHooksConfigs = Effect.fnUntraced(function* (configs: ReadonlyArray<HooksSection>) {
   const merged: Record<string, Array<unknown>> = {};
   for (const config of configs) {
     for (const [eventName, groups] of R.toEntries(config)) {
       merged[eventName] = [...(merged[eventName] ?? []), ...groups];
     }
   }
-  return decodeUnknownHooksSectionSync(merged);
-};
+  return yield* decodeUnknownHooksSection(merged);
+});
 
 const mergeMcpConfigs = (configs: ReadonlyArray<McpJsonFile>): McpJsonFile =>
   McpJsonFile.make({
@@ -614,10 +612,10 @@ const mergeMcpConfigs = (configs: ReadonlyArray<McpJsonFile>): McpJsonFile =>
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
- * const definition = Plugin.define({
+ * const definition = await Effect.runPromise(Plugin.define({
  *   manifest: { name: "review-tools" },
- *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
- * })
+ *   commands: [await Effect.runPromise(Plugin.command({ name: "hi", body: "# /hi\n" }))]
+ * }))
  * const fileSystem = await Effect.runPromise(Testing.writePluginToMemory(definition))
  * const scanned = await Effect.runPromise(
  *   Effect.provide(Plugin.scan("/plugin"), fileSystem.layer)
@@ -777,10 +775,10 @@ export const scan = Effect.fn("Plugin.scan")(function* (
  * import { Plugin, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const definition = Plugin.define({
+ * const definition = await Effect.runPromise(Plugin.define({
  *   manifest: { name: "review-tools" },
- *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
- * })
+ *   commands: [await Effect.runPromise(Plugin.command({ name: "hi", body: "# /hi\n" }))]
+ * }))
  * const fileSystem = await Effect.runPromise(Testing.writePluginToMemory(definition))
  * const loaded = await Effect.runPromise(
  *   Effect.provide(Plugin.load("/plugin"), fileSystem.layer)
@@ -810,7 +808,11 @@ export const load = Effect.fn("Plugin.load")(function* (
         ? Effect.succeed(O.none<HooksSection>())
         : Effect.forEach(scanned.hooksPaths, readHooksFile, {
             concurrency: 1,
-          }).pipe(Effect.map((configs) => O.some(mergeHooksConfigs(configs)))),
+          }).pipe(
+            Effect.flatMap(mergeHooksConfigs),
+            Effect.asSome,
+            Effect.mapError((cause) => PluginLoadError.make({ path: rootDir, cause }))
+          ),
   });
   const mcpConfig = yield* O.match(scanned.inlineMcpConfig, {
     onSome: (config) => Effect.succeedSome(config),
@@ -822,7 +824,7 @@ export const load = Effect.fn("Plugin.load")(function* (
           }).pipe(Effect.map((configs) => O.some(mergeMcpConfigs(configs)))),
   });
 
-  const definition = define(
+  const definition = yield* define(
     toPluginConfig({
       manifest: scanned.inferredManifest,
       commands,
@@ -832,7 +834,7 @@ export const load = Effect.fn("Plugin.load")(function* (
       hooksConfig,
       mcpConfig,
     })
-  );
+  ).pipe(Effect.mapError((cause) => PluginLoadError.make({ path: rootDir, cause })));
 
   return LoadedPlugin.make({
     ...definition,
@@ -849,20 +851,21 @@ export const load = Effect.fn("Plugin.load")(function* (
  * **Example** (Preserve custom command paths and collapse multi-file hooks)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  * import * as O from "effect/Option"
  *
- * const normalized = Plugin.sync(
- *   Plugin.define({
+ * const normalized = await Effect.runPromise(Plugin.sync(
+ *   await Effect.runPromise(Plugin.define({
  *     manifest: {
  *       name: "review-tools",
  *       commands: "./slash",
  *       hooks: ["./hooks/a.json", "./hooks/b.json"]
  *     },
- *     commands: [Plugin.command({ name: "hi", body: "# /hi\n" })],
+ *     commands: [await Effect.runPromise(Plugin.command({ name: "hi", body: "# /hi\n" }))],
  *     hooksConfig: { PostToolUse: [] }
- *   })
- * )
+ *   }))
+ * ))
  *
  * console.log(O.getOrUndefined(normalized.manifest.commands)) // "./slash"
  * console.log(O.getOrUndefined(normalized.manifest.hooks)) // "./hooks/hooks.json"
@@ -871,8 +874,8 @@ export const load = Effect.fn("Plugin.load")(function* (
  * @category normalization
  * @since 0.0.0
  */
-export const sync = (definition: PluginDefinition | LoadedPlugin): PluginDefinition =>
-  define(
+export const sync = Effect.fn("Plugin.sync")(function* (definition: PluginDefinition | LoadedPlugin) {
+  return yield* define(
     toPluginConfig({
       manifest: syncManifest(definition),
       commands: definition.commands,
@@ -883,3 +886,4 @@ export const sync = (definition: PluginDefinition | LoadedPlugin): PluginDefinit
       mcpConfig: definition.mcpConfig,
     })
   );
+});

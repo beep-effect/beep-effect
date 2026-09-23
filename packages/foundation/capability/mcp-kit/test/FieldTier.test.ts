@@ -10,7 +10,7 @@ import {
 } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -35,26 +35,14 @@ const largeDocumentBagPayload: Record<string, unknown> = {
   title: "Fixture Patent Title",
 };
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = Arbitrary.schema(schema);
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeSync(schema);
-  const equals = S.toEquivalence(schema);
-
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          assert.isTrue(equals(decode(encode(value)), value));
-
-          return true;
-        },
-        fcRuns(50)
-      )
-    )._tag
-  ).toBe("Passed");
-};
+const assertSchemaRoundTrip = Effect.fnUntraced(function* <Schema extends S.Codec<unknown, unknown, never, never>>(
+  schema: Schema,
+  value: Schema["Type"]
+) {
+  const encoded = yield* S.encodeEffect(schema)(value);
+  const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+  assert.isTrue(S.toEquivalence(schema)(decoded, value));
+});
 
 const mintFetchableHandle = (oversized: { readonly sizeBytes: number }): FetchableHandle =>
   FetchableHandle.make({
@@ -118,10 +106,23 @@ describe("field-tier projector", () => {
     assert.notProperty(projected, "value");
   });
 
-  it("round-trips fetchable projection schemas through their encoded shape", () => {
-    assertSchemaRoundTrip(FetchableHandle);
-    assertSchemaRoundTrip(FieldProjectionOutcome);
-  });
+  it.effect.prop(
+    "round-trips FetchableHandle through its encoded shape",
+    [Arbitrary.schema(FetchableHandle)],
+    Effect.fnUntraced(function* ([value]) {
+      yield* assertSchemaRoundTrip(FetchableHandle, value);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "round-trips FieldProjectionOutcome through its encoded shape",
+    [Arbitrary.schema(FieldProjectionOutcome)],
+    Effect.fnUntraced(function* ([value]) {
+      yield* assertSchemaRoundTrip(FieldProjectionOutcome, value);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 describe("toColumnarEnvelope", () => {
@@ -136,7 +137,12 @@ describe("toColumnarEnvelope", () => {
     assert.deepStrictEqual(ColumnarEnvelope.fromRows([{ title: "A" }, { id: "2", title: "B" }]), envelope);
   });
 
-  it("round-trips the columnar envelope schema", () => {
-    assertSchemaRoundTrip(ColumnarEnvelope);
-  });
+  it.effect.prop(
+    "round-trips the columnar envelope schema",
+    [Arbitrary.schema(ColumnarEnvelope)],
+    Effect.fnUntraced(function* ([value]) {
+      yield* assertSchemaRoundTrip(ColumnarEnvelope, value);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 });

@@ -1,10 +1,10 @@
 /**
  * Renders a resolved capture plan into the complete set of packet documents.
  *
- * Every renderer here is pure and total: planning is the last stage that can
- * fail on data, so rendering cannot. That split is what makes a dry run
- * meaningful — the documents a dry run reports are byte-identical to the ones a
- * real ingest would promote.
+ * Planning is the last stage that can fail on capture data. Rendering stays
+ * deterministic — the documents a dry run reports are byte-identical to the
+ * ones a real ingest would promote — and the only remaining Effect step is
+ * encoding the constructed triage ledger.
  *
  * Judgment is never fabricated. A freshly generated packet carries capture
  * metadata and explicit `_pending_` markers where a triage agent must write, so
@@ -16,8 +16,10 @@
 
 import { escapeMarkdownText } from "@beep/md/Md.escape";
 import { A, O } from "@beep/utils";
+import { Effect } from "effect";
 import * as R from "effect/Record";
 import { CodexFindingSeverity } from "./Findings.capture.schemas.ts";
+import { CodexFindingsIngestError } from "./Findings.errors.ts";
 import {
   CodexTriageFinding,
   CodexTriageLedger,
@@ -258,7 +260,7 @@ const manifestDocument = (plan: CodexPacketPlan): PacketDocument => {
   });
 };
 
-const triageDocument = (plan: CodexPacketPlan): PacketDocument => {
+const triageDocument = Effect.fnUntraced(function* (plan: CodexPacketPlan) {
   const ledger = CodexTriageLedger.make({
     meta: CodexTriageMeta.make({
       schemaVersion: "codex-triage/v1",
@@ -293,12 +295,22 @@ const triageDocument = (plan: CodexPacketPlan): PacketDocument => {
     ),
   });
 
+  const encoded = yield* encodeCodexTriageLedger(ledger).pipe(
+    Effect.mapError((cause) =>
+      CodexFindingsIngestError.make({
+        reason: "payload-invalid",
+        message: "The generated ops/triage.json ledger could not be encoded.",
+        cause,
+      })
+    )
+  );
+
   return PacketDocument.make({
     path: "ops/triage.json",
     tracked: true,
-    contents: json(encodeCodexTriageLedger(ledger)),
+    contents: json(encoded),
   });
-};
+});
 
 const findingDocument = (record: CodexFindingRecord): PacketDocument =>
   PacketDocument.make({
@@ -772,6 +784,7 @@ const rawGitignoreDocument = (): PacketDocument =>
  * ```ts
  * import { CodexPacketPlan } from "@beep/repo-cli/commands/Codex/Findings.schemas"
  * import { renderPacketDocuments } from "@beep/repo-cli/commands/Codex/Findings.packet"
+ * import * as Effect from "effect/Effect"
  *
  * const plan = CodexPacketPlan.make({
  *   slug: "codex-security-findings-2026-08-04",
@@ -785,17 +798,18 @@ const rawGitignoreDocument = (): PacketDocument =>
  *   severityCounts: {},
  * })
  *
- * const documents = renderPacketDocuments({ plan, rawPayloadJson: "{}\n" })
+ * const documents = Effect.runSync(renderPacketDocuments({ plan, rawPayloadJson: "{}\n" }))
  *
  * console.log(documents[0]?.path) // "README.md"
  * ```
  *
  * @param options - The resolved plan and the normalized raw payload text.
  * @returns Every document the packet contains, in stable order.
+ * @effects Encodes the constructed triage ledger; fails if that encode cannot complete.
  * @category use-cases
  * @since 0.0.0
  */
-export const renderPacketDocuments = (options: {
+export const renderPacketDocuments = Effect.fn("CodexFindings.renderPacketDocuments")(function* (options: {
   readonly plan: CodexPacketPlan;
   readonly rawPayloadJson: string;
   /** Report bodies keyed by Codex identity, written only under ignored `raw/`. */
@@ -805,12 +819,13 @@ export const renderPacketDocuments = (options: {
     readonly relevantPaths: string;
     readonly detectedAt: string;
   }>;
-}): ReadonlyArray<PacketDocument> =>
-  A.appendAll(
+}) {
+  const triage = yield* triageDocument(options.plan);
+  return A.appendAll(
     [
       ...captureSourceCopy[options.plan.source].guidanceDocuments(options.plan),
       manifestDocument(options.plan),
-      triageDocument(options.plan),
+      triage,
       findingsIndexDocument(options.plan),
       rawGitignoreDocument(),
       PacketDocument.make({
@@ -824,3 +839,4 @@ export const renderPacketDocuments = (options: {
       rawReportDocuments(options.plan, options.rawReports ?? A.empty())
     )
   );
+});

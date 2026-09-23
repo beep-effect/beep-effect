@@ -44,6 +44,7 @@
     "@beep/utils": "workspace:^",
     "@effect/atom-react": "catalog:",
     "@effect/platform-browser": "catalog:",
+    "@effect/platform-node": "catalog:",
     "@mdx-js/react": "catalog:",
     "@next/bundle-analyzer": "catalog:",
     "@next/mdx": "catalog:",

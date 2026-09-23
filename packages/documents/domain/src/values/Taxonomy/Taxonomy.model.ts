@@ -309,9 +309,9 @@ export class VaultFilingContext extends S.Class<VaultFilingContext>($I`VaultFili
  * @category constants
  * @since 0.0.0
  */
-export const DefaultVaultFilingContext = S.decodeSync(VaultFilingContext)({
+export const DefaultVaultFilingContext = VaultFilingContext.make({
   clientDisplayName: "Default Client",
-  clientStableKey: "client-default",
+  clientStableKey: ValidWindowsPlainPathSegment.make("client-default"),
   matterDisplayName: "General Matter",
-  matterStableKey: "matter-general",
+  matterStableKey: ValidWindowsPlainPathSegment.make("matter-general"),
 });

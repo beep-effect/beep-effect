@@ -21,6 +21,7 @@ import * as Str from "effect/String";
 import { WORKTREES_ROOT_SUFFIX } from "../../commands/Worktree/Worktree.constants.ts";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import { TmpfsReapCandidate, TmpfsReapClass, TmpfsReapReport } from "./TmpfsReap.schemas.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { TmpfsReapSkipReason } from "./TmpfsReap.schemas.ts";
 
@@ -692,7 +693,11 @@ const candidateLiveness = Effect.fnUntraced(function* (
 
 const worktreeIsDirty = Effect.fnUntraced(function* (
   candidate: DiscoveredCandidate
-): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  boolean,
+  never,
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   if (!Str.Equivalence(candidate.reapClass, "git-worktree") || O.isNone(candidate.parentRepo)) {
     return false;
   }
@@ -789,7 +794,7 @@ const skipReasonFor = (
 
 const measureBytes = Effect.fnUntraced(function* (
   candidatePath: string
-): Effect.fn.Return<O.Option<number>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<number>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runRepoCommandCapture("du", ["-sb", "--", candidatePath], candidatePath).pipe(Effect.option);
   return pipe(
     result,
@@ -818,7 +823,7 @@ const releaseNestedHeadInstallCheckout = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (!Str.Equivalence(candidate.reapClass, "head-install")) {
     return A.empty();
@@ -845,7 +850,11 @@ const releaseNestedHeadInstallCheckout = Effect.fnUntraced(function* (
 const removeDanglingWorktreeStub = Effect.fnUntraced(function* (
   candidate: DiscoveredCandidate,
   nestedWarnings: ReadonlyArray<string>
-): Effect.fn.Return<ApplyOutcome, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ApplyOutcome,
+  never,
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
   if (!(yield* danglingStubContentsAreExact(candidate.path))) {
@@ -899,7 +908,11 @@ const removeDanglingWorktreeStub = Effect.fnUntraced(function* (
 const removeDirectoryCandidate = Effect.fnUntraced(function* (
   candidate: DiscoveredCandidate,
   nestedWarnings: ReadonlyArray<string> = A.empty()
-): Effect.fn.Return<ApplyOutcome, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ApplyOutcome,
+  never,
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
   if (Str.Equivalence(candidate.reapClass, "dangling-worktree-stub")) {
     return yield* removeDanglingWorktreeStub(candidate, nestedWarnings);
@@ -923,7 +936,11 @@ const removeDirectoryCandidate = Effect.fnUntraced(function* (
 
 const removeGitWorktreeCandidate = Effect.fnUntraced(function* (
   candidate: DiscoveredCandidate
-): Effect.fn.Return<ApplyOutcome, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ApplyOutcome,
+  never,
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
   if (!(yield* candidatePathIsStillSafe(candidate))) {
@@ -993,7 +1010,11 @@ const applyCandidate = Effect.fnUntraced(function* (
   candidate: MeasuredCandidate,
   processListing: ProcessCommandLineListing,
   nowMillis: number
-): Effect.fn.Return<ApplyOutcome, never, FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ApplyOutcome,
+  never,
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   if (O.isSome(candidate.skipReason)) {
     return { reaped: false, warnings: [] };
   }

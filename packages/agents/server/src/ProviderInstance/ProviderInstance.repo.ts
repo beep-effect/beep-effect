@@ -33,8 +33,8 @@ import type { AddProviderInstanceCommand } from "@beep/agents-use-cases/server";
 import type * as Crypto from "effect/Crypto";
 
 const decodeProviderInstanceInsert = S.decodeUnknownEffect(Domain.ProviderInstance.insert);
-const encodeProviderInstanceInsert = S.encodeSync(Domain.ProviderInstance.insert);
-const encodePrincipal = S.encodeSync(Principal);
+const encodeProviderInstanceInsert = S.encodeEffect(Domain.ProviderInstance.insert);
+const encodePrincipal = S.encodeEffect(Principal);
 
 const unavailable =
   (operation: string) =>
@@ -75,7 +75,8 @@ const insertFromCommand = Effect.fn("Agents.ProviderInstanceRepository.insertFro
     updatedAt: now,
     updatedByPrincipal: scope.principal,
   }).pipe(unavailable("construct ProviderInstance"));
-  return { ...encodeProviderInstanceInsert(insert), rowVersion: 1 } satisfies ProviderInstanceInsert;
+  const encoded = yield* encodeProviderInstanceInsert(insert).pipe(unavailable("encode ProviderInstance"));
+  return { ...encoded, rowVersion: 1 } satisfies ProviderInstanceInsert;
 });
 
 /**
@@ -117,7 +118,7 @@ export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstance
                 guidance: "Provider instance persistence returned no inserted record. Try again.",
               })
             ),
-          onSome: (row) => Effect.succeed(fromProviderInstanceRow(row)),
+          onSome: (row) => Effect.fromResult(fromProviderInstanceRow(row)).pipe(unavailable("decode ProviderInstance")),
         })
       );
     }),
@@ -130,8 +131,10 @@ export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstance
         .pipe(unavailable("select ProviderInstance"));
       return yield* pipe(
         A.head(rows),
-        O.map(fromProviderInstanceRow),
-        Effect.fromOption(() => notFound(id))
+        Effect.fromOption(() => notFound(id)),
+        Effect.flatMap((row) =>
+          Effect.fromResult(fromProviderInstanceRow(row)).pipe(unavailable("decode ProviderInstance"))
+        )
       );
     }),
     list: db
@@ -139,7 +142,14 @@ export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstance
       .from(providerInstanceTable)
       .where(eq(providerInstanceTable.orgId, scope.orgId))
       .orderBy(asc(providerInstanceTable.id))
-      .pipe(unavailable("list ProviderInstance"), Effect.map(A.map(fromProviderInstanceRow))),
+      .pipe(
+        unavailable("list ProviderInstance"),
+        Effect.flatMap((rows) =>
+          Effect.forEach(rows, (row) => Effect.fromResult(fromProviderInstanceRow(row))).pipe(
+            unavailable("decode ProviderInstance")
+          )
+        )
+      ),
     remove: Effect.fn("Agents.ProviderInstanceRepository.remove")(function* (id) {
       const rows = yield* db
         .delete(providerInstanceTable)
@@ -150,22 +160,27 @@ export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstance
     }),
     save: Effect.fn("Agents.ProviderInstanceRepository.save")(function* (instance) {
       const now = DateTime.toEpochMillis(yield* DateTime.now);
+      const insert = yield* Effect.fromResult(toProviderInstanceInsert(instance)).pipe(
+        unavailable("encode ProviderInstance")
+      );
       const rows = yield* db
         .update(providerInstanceTable)
         .set({
-          ...toProviderInstanceInsert(instance),
+          ...insert,
           orgId: scope.orgId,
           rowVersion: instance.rowVersion + 1,
           updatedAt: now,
-          updatedByPrincipal: encodePrincipal(scope.principal),
+          updatedByPrincipal: yield* encodePrincipal(scope.principal).pipe(unavailable("encode Principal")),
         })
         .where(and(eq(providerInstanceTable.id, instance.id), eq(providerInstanceTable.orgId, scope.orgId)))
         .returning()
         .pipe(unavailable("update ProviderInstance"));
       return yield* pipe(
         A.head(rows),
-        O.map(fromProviderInstanceRow),
-        Effect.fromOption(() => notFound(instance.id))
+        Effect.fromOption(() => notFound(instance.id)),
+        Effect.flatMap((row) =>
+          Effect.fromResult(fromProviderInstanceRow(row)).pipe(unavailable("decode ProviderInstance"))
+        )
       );
     }),
   });

@@ -20,6 +20,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { renderPrettyCommandJson } from "../../../internal/cli/Json.ts";
 import { runGitOutput } from "./GitExec.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Provenance");
@@ -1572,7 +1573,7 @@ export interface PrProvenanceServiceShape {
 export class PrProvenanceService extends Context.Service<PrProvenanceService, PrProvenanceServiceShape>()(
   $I`PrProvenanceService`
 ) {}
-type Requirements = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type Requirements = FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner;
 /**
  * Construct the live provenance detector with captured platform requirements.
  *

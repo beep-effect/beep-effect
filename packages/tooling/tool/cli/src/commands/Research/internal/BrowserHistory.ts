@@ -245,7 +245,7 @@ const ALLOW_PATTERNS: ReadonlyArray<RegExp> = [
 export const isInterestingUrl = (url: string): boolean =>
   !A.some(DENY_PATTERNS, (pattern) => pattern.test(url)) && A.some(ALLOW_PATTERNS, (pattern) => pattern.test(url));
 
-const decodeLowercasedString = S.decodeSync(S.String.pipe(S.decode(SchemaTransformation.toLowerCase())));
+const decodeLowercasedString = S.decodeUnknownOption(S.String.pipe(S.decode(SchemaTransformation.toLowerCase())));
 
 /**
  * Collapse repository subpages to their repository root so one browsing
@@ -259,7 +259,10 @@ const decodeLowercasedString = S.decodeSync(S.String.pipe(S.decode(SchemaTransfo
 export const canonicalizeForSift = (url: string): string => {
   const repoMatch = url.match(/^https?:\/\/(github|gitlab)\.com\/([^/?#]+)\/([^/?#]+)/i);
   if (repoMatch !== null) {
-    return `https://${decodeLowercasedString(repoMatch[1] ?? "")}.com/${repoMatch[2]}/${repoMatch[3]}`;
+    return O.match(decodeLowercasedString(repoMatch[1]), {
+      onNone: () => url,
+      onSome: (host) => `https://${host}.com/${repoMatch[2]}/${repoMatch[3]}`,
+    });
   }
   return url;
 };

@@ -132,20 +132,14 @@ const MockM365Layer = Layer.succeed(M365, createMockM365());
 // a session (D-posture). The conformance port below proves the legacy
 // `initialize` path is refused with `-32022`.
 const clientMetadata = requestMetadata(McpClientOptions.make({}));
-const encodeFrame = S.encodeSync(JsonRpcMessageFromLine);
-const discoverRequest = encodeFrame(
-  JsonRpcMessage.make({ id: 1, method: "server/discover", params: withRequestMetadata({}, clientMetadata) })
-);
-const listRequest = encodeFrame(
-  JsonRpcMessage.make({ id: 2, method: "tools/list", params: withRequestMetadata({}, clientMetadata) })
-);
-const callRequest = encodeFrame(
-  JsonRpcMessage.make({
-    id: 3,
-    method: "tools/call",
-    params: withRequestMetadata({ name: "m365_list_drives", arguments: {} }, clientMetadata),
-  })
-);
+const encodeFrame = S.encodeEffect(JsonRpcMessageFromLine);
+const requestFrame = Effect.fnUntraced(function* (id: number, method: string, params: Record<string, unknown>) {
+  const metadata = yield* clientMetadata;
+  return yield* encodeFrame(JsonRpcMessage.make({ id, method, params: withRequestMetadata(params, metadata) }));
+});
+const discoverRequest = requestFrame(1, "server/discover", {});
+const listRequest = requestFrame(2, "tools/list", {});
+const callRequest = requestFrame(3, "tools/call", { name: "m365_list_drives", arguments: {} });
 const decodeOutputChunk = (chunk: string | Uint8Array): string => (P.isString(chunk) ? chunk : decoder.decode(chunk));
 
 const encodeRequest = (request: string): Uint8Array => encoder.encode(`${request}\n`);
@@ -160,10 +154,10 @@ const continueStdioConversation = Effect.fn("continueStdioConversation")(functio
 
   if (currentStage === 0 && Str.includes(`"id":1`)(output)) {
     yield* Ref.set(stage, 1);
-    yield* Queue.offer(stdin, encodeRequest(listRequest));
+    yield* Queue.offer(stdin, encodeRequest(yield* Effect.orDie(listRequest)));
   } else if (currentStage === 1 && Str.includes(`"id":2`)(output)) {
     yield* Ref.set(stage, 2);
-    yield* Queue.offer(stdin, encodeRequest(callRequest));
+    yield* Queue.offer(stdin, encodeRequest(yield* Effect.orDie(callRequest)));
   } else if (Str.includes(DriveId)(output)) {
     yield* Deferred.succeed(ready, void 0);
   }
@@ -294,7 +288,7 @@ describe("M365 MCP server", () => {
         })
       ).pipe(Layer.provide(makeStdioTestLayer(stdin, stdout, stage, ready)), Layer.provide(MockM365Layer));
 
-      yield* Queue.offer(stdin, encodeRequest(discoverRequest));
+      yield* Queue.offer(stdin, encodeRequest(yield* discoverRequest));
       const fiber = yield* serverLayer.pipe(Layer.launch, Effect.forkDetach({ startImmediately: true }));
 
       yield* Effect.yieldNow;

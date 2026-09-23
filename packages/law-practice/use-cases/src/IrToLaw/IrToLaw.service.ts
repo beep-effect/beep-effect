@@ -32,16 +32,15 @@ import { IrToLawExtractionError } from "./IrToLaw.errors.ts";
 import type { OfficeActionExtractionLabel as OfficeActionExtractionLabelValue } from "../OfficeActionReview/OfficeActionExtractionLabel.ts";
 import type { IrToLawShape, LawEntities } from "./IrToLaw.ports.ts";
 
-// Module-scope sync decoders: the spike builds these entities from statically
-// known-good shapes (fixed fixture keys/literals + unconstrained extraction
-// strings), so a decode failure here is a construction defect, not input error —
-// matching the ClaimGate/ClaimProjection precedent. Binding the decoders at
-// module scope (not inside an Effect) also satisfies the `schemaSyncInEffect` lint.
-const decodeOfficeAction = S.decodeUnknownSync(OfficeAction);
-const decodeClaim = S.decodeUnknownSync(Claim);
-const decodePriorArtReference = S.decodeUnknownSync(PriorArtReference);
-const decodeRejection = S.decodeUnknownSync(Rejection);
-const decodeDistinction = S.decodeUnknownSync(Distinction);
+// The spike builds these entities from statically known-good shapes (fixed
+// fixture keys/literals + unconstrained extraction strings), so a decode failure
+// here is a construction defect, not input error — matching the
+// ClaimGate/ClaimProjection precedent.
+const decodeOfficeAction = S.decodeUnknownEffect(OfficeAction);
+const decodeClaim = S.decodeUnknownEffect(Claim);
+const decodePriorArtReference = S.decodeUnknownEffect(PriorArtReference);
+const decodeRejection = S.decodeUnknownEffect(Rejection);
+const decodeDistinction = S.decodeUnknownEffect(Distinction);
 
 const missingExtraction = (label: OfficeActionExtractionLabelValue): IrToLawExtractionError =>
   IrToLawExtractionError.fromReason("required-extraction-missing", {
@@ -112,15 +111,15 @@ const buildLawEntities = Effect.fn("law_practice.ir_to_law.build_entities")(func
   const distinctionAnchor = yield* anchorOf(extractions, OfficeActionExtractionLabel.Enum.distinction);
 
   return {
-    claim: decodeClaim({
+    claim: yield* decodeClaim({
       ...spikeEntityInput("LawPracticeClaim", 2),
       claimNumber: 1,
       fixtureKey: claimFixtureKey,
       independent: true,
       patentAssetFixtureKey,
       text: claimText,
-    }),
-    distinction: decodeDistinction({
+    }).pipe(Effect.orDie),
+    distinction: yield* decodeDistinction({
       ...spikeEntityInput("LawPracticeDistinction", 5),
       anchor: distinctionAnchor,
       claimFixtureKey,
@@ -128,28 +127,28 @@ const buildLawEntities = Effect.fn("law_practice.ir_to_law.build_entities")(func
       fixtureKey: distinctionFixtureKey,
       lifecycleState: "candidate",
       rejectionFixtureKey,
-    }),
-    officeAction: decodeOfficeAction({
+    }).pipe(Effect.orDie),
+    officeAction: yield* decodeOfficeAction({
       ...spikeEntityInput("LawPracticeOfficeAction", 1),
       applicationNumber: officeActionText,
       fixtureKey: officeActionFixtureKey,
       matterFixtureKey: "matter.spike",
       patentAssetFixtureKey,
-    }),
-    priorArtReference: decodePriorArtReference({
+    }).pipe(Effect.orDie),
+    priorArtReference: yield* decodePriorArtReference({
       ...spikeEntityInput("LawPracticePriorArtReference", 3),
       documentNumber: "US 0,000,000 B2",
       fixtureKey: referenceFixtureKey,
       officeActionFixtureKey,
       title: referenceText,
-    }),
-    rejection: decodeRejection({
+    }).pipe(Effect.orDie),
+    rejection: yield* decodeRejection({
       ...spikeEntityInput("LawPracticeRejection", 4),
       claimFixtureKey,
       fixtureKey: rejectionFixtureKey,
       ground: { referenceFixtureKey, statute: "102" },
       officeActionFixtureKey,
-    }),
+    }).pipe(Effect.orDie),
   };
 });
 

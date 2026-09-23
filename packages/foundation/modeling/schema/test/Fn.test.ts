@@ -3,10 +3,11 @@ import { Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Cause from "effect/Cause";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 
-const decodeAnyFnSync = S.decodeSync(AnyFn);
+const decodeAnyFnEffect = S.decodeEffect(AnyFn);
 
 const runResult = <A, E>(effect: Effect.Effect<A, E>) =>
   Effect.runPromise(
@@ -25,22 +26,32 @@ const runResult = <A, E>(effect: Effect.Effect<A, E>) =>
 const runCause = <A, E>(effect: Effect.Effect<A, E>) => Effect.runPromise(Effect.flip(Effect.sandbox(effect)));
 
 describe("Fn schema", () => {
-  it("decodes and encodes runtime functions without wrapping them", () => {
-    const schema = Fn({
-      input: S.FiniteFromString,
-      output: S.FiniteFromString,
-    });
-    const handler = (count: number) => count + 1;
+  it.effect(
+    "decodes and encodes runtime functions without wrapping them",
+    Effect.fnUntraced(function* () {
+      const schema = Fn({
+        input: S.FiniteFromString,
+        output: S.FiniteFromString,
+      });
+      const handler = (count: number) => count + 1;
 
-    expect(S.decodeSync(schema)(handler)).toBe(handler);
-    expect(S.encodeSync(schema)(handler)).toBe(handler);
-  });
+      expect(yield* S.decodeEffect(schema)(handler)).toBe(handler);
+      expect(yield* S.encodeEffect(schema)(handler)).toBe(handler);
+    })
+  );
 
-  it("rejects non-function inputs", () => {
-    const schema = Fn({ output: S.String });
+  it.effect(
+    "rejects non-function inputs",
+    Effect.fnUntraced(function* () {
+      const schema = Fn({ output: S.String });
 
-    expect(() => S.decodeUnknownSync(schema)(null)).toThrow("Expected @beep/schema/Fn/Fn");
-  });
+      const failure1 = yield* Effect.result(S.decodeUnknownEffect(schema)(null));
+      expect(Result.isFailure(failure1)).toBe(true);
+      if (Result.isFailure(failure1)) {
+        expect(failure1.failure.message).toContain("Expected @beep/schema/Fn/Fn");
+      }
+    })
+  );
 
   it("defaults errorSchema to Schema.Never", () => {
     const schema = Fn({ output: S.String });
@@ -241,11 +252,14 @@ describe("Fn convenience exports", () => {
     expect(annotated.implementSync(() => "hello")()).toBe("hello");
   });
 
-  it("accepts any runtime function via AnyFn", () => {
-    const handler = () => "ok";
+  it.effect(
+    "accepts any runtime function via AnyFn",
+    Effect.fnUntraced(function* () {
+      const handler = () => "ok";
 
-    expect(decodeAnyFnSync(handler)).toBe(handler);
-  });
+      expect(yield* decodeAnyFnEffect(handler)).toBe(handler);
+    })
+  );
 
   it("creates thunk schemas with ThunkOf", () => {
     const schema = ThunkOf({ output: S.FiniteFromString, error: S.String });

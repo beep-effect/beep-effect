@@ -6,11 +6,19 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Stream from "effect/Stream";
 import * as FileChanged from "../../../claudecode/Hook/Events/FileChanged.ts";
 import * as SessionStart from "../../../claudecode/Hook/Events/SessionStart.ts";
 import * as Hook from "../../../claudecode/Hook.ts";
+
+const provideBuiltLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scopedWith((scope) =>
+      Layer.buildWithScope(scope)(layer).pipe(Effect.flatMap((context) => Effect.provide(self, context)))
+    );
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -61,7 +69,7 @@ describe("HookBus", () => {
 
         const paths = yield* Deferred.await(done);
         expect(paths).toEqual(["/repo/a.ts", "/repo/b.ts"]);
-      }).pipe(Effect.provide(Hook.Bus.layer))
+      }).pipe(provideBuiltLayer(Hook.Bus.layer))
     )
   );
 
@@ -85,8 +93,7 @@ describe("HookBus", () => {
 
         const source = yield* Deferred.await(done);
         expect(source).toBe("startup");
-      }).pipe(Effect.provide(Hook.Bus.layer))
+      }).pipe(provideBuiltLayer(Hook.Bus.layer))
     )
   );
 });
-/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

@@ -113,6 +113,7 @@ import {
   yeetWatchThreadOutstanding,
 } from "./WatchStream.ts";
 import type { Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorCommentWatermark } from "./MonitorComments.ts";
@@ -221,7 +222,11 @@ const acceptableWatchMergeStates: ReadonlyArray<string> = ["BEHIND", "CLEAN", "H
 const checksRead = Effect.fn("Yeet.checksRead")(function* (
   context: RepoRunContext,
   required: boolean
-): Effect.fn.Return<ReadonlyArray<WatchCheckRow>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<WatchCheckRow>,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runRepoCommandCapture(
     "gh",
     ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket,link,workflow"],
@@ -378,7 +383,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 ): Effect.fn.Return<
   YeetWatchSnapshot,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const viewResult = yield* runRepoCommandCapture(
     "gh",
@@ -591,7 +596,7 @@ const convergeYeetWatchDispatch = Effect.fn("convergeYeetWatchDispatch")(functio
   context: RepoRunContext,
   snapshot: YeetWatchSnapshot,
   at: string
-): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   yield* Effect.forEach(
     A.filter(snapshot.checks, (check) => YeetCheckOutcome.is.fail(check.outcome)),
     (check) => dispatchYeetCheckFailure(context.repoRoot, snapshot, check, at),
@@ -599,29 +604,31 @@ const convergeYeetWatchDispatch = Effect.fn("convergeYeetWatchDispatch")(functio
   );
   yield* Effect.forEach(
     A.filter(snapshot.threads, yeetWatchThreadOutstanding),
-    (thread) => {
-      const capsule = YeetReviewThreadCapsule.make({
-        headSha: snapshot.headSha,
-        link: null,
-        prNumber: snapshot.prNumber,
-        threadId: thread.id,
-      });
-      return appendYeetInboxRowOnce(
-        context.repoRoot,
-        YeetReviewThreadRow.make({
-          capsule,
-          checkout: context.repoRoot,
-          id: yeetReviewThreadRowId(capsule),
-          severity: "P1",
-          ts: at,
-        })
-      ).pipe(
+    (thread) =>
+      Effect.gen(function* () {
+        const capsule = YeetReviewThreadCapsule.make({
+          headSha: snapshot.headSha,
+          link: null,
+          prNumber: snapshot.prNumber,
+          threadId: thread.id,
+        });
+        const id = yield* yeetReviewThreadRowId(capsule);
+        yield* appendYeetInboxRowOnce(
+          context.repoRoot,
+          YeetReviewThreadRow.make({
+            capsule,
+            checkout: context.repoRoot,
+            id,
+            severity: "P1",
+            ts: at,
+          })
+        );
+      }).pipe(
         Effect.catch((error) =>
           Console.error(`[yeet] failed to append review-thread inbox row ${thread.id}: ${error.message}`)
         ),
         Effect.asVoid
-      );
-    },
+      ),
     { discard: true }
   );
   if (Str.toUpperCase(snapshot.mergeStateStatus) === "BEHIND") {
@@ -630,16 +637,19 @@ const convergeYeetWatchDispatch = Effect.fn("convergeYeetWatchDispatch")(functio
       headSha: snapshot.headSha,
       prNumber: snapshot.prNumber,
     });
-    yield* appendYeetInboxRowOnce(
-      context.repoRoot,
-      YeetBaseDriftRow.make({
-        capsule,
-        checkout: context.repoRoot,
-        id: yeetBaseDriftRowId(capsule),
-        severity: "P2",
-        ts: at,
-      })
-    ).pipe(
+    yield* yeetBaseDriftRowId(capsule).pipe(
+      Effect.flatMap((driftId) =>
+        appendYeetInboxRowOnce(
+          context.repoRoot,
+          YeetBaseDriftRow.make({
+            capsule,
+            checkout: context.repoRoot,
+            id: driftId,
+            severity: "P2",
+            ts: at,
+          })
+        )
+      ),
       Effect.catch((error) => Console.error(`[yeet] failed to append base-drift inbox row: ${error.message}`)),
       Effect.asVoid
     );
@@ -692,7 +702,7 @@ interface WatchCommentSession {
 const openWatchCommentSession = Effect.fn("Yeet.openWatchCommentSession")(function* (
   context: RepoRunContext,
   pullRequestNumber: number
-): Effect.fn.Return<WatchCommentSession, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<WatchCommentSession, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   return {
     failuresRef: yield* Ref.make(0),
     stoppedRef: yield* Ref.make(false),
@@ -713,7 +723,7 @@ const emitWatchCommentRows = Effect.fn("Yeet.emitWatchCommentRows")(function* (
 ): Effect.fn.Return<
   number,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   if (yield* Ref.get(session.stoppedRef)) {
     return 0;
@@ -792,7 +802,7 @@ const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   emptyPolls: number,
   settle: (
     snapshot: YeetWatchSnapshot
-  ) => Effect.Effect<YeetWatchSnapshot, never, ChildProcessSpawner.ChildProcessSpawner>
+  ) => Effect.Effect<YeetWatchSnapshot, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>
 ) {
   const polled = yield* collectYeetWatchSnapshot(context).pipe(
     Effect.asSome,
@@ -953,7 +963,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
 ): Effect.fn.Return<
   YeetWatchEnded,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const untilEvent = config.untilEvent === true;
   let head = O.none<WatchSettleState>();

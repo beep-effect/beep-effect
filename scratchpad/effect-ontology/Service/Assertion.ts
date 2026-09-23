@@ -1,3 +1,5 @@
+import * as Crypto from "effect/Crypto";
+import { flow } from "effect/Function";
 /**
  * Service: Assertion
  *
@@ -12,12 +14,12 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
 import type { Quad } from "@beep/rdf";
 import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
+import { LiteralKit } from "@beep/schema";
 import { Clock, Context, DateTime, Effect, HashMap, Layer, Order, Random, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -28,8 +30,9 @@ import { ContentHash } from "../Domain/Identity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import { AssertionId, AssertionStatus } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
-import { Claims, type ClaimRow } from "../Repository/schema.ts";
-import { sha256 } from "../Utils/Hash.ts";
+import type { ClaimRow } from "../Repository/schema.ts";
+import { Claims } from "../Repository/schema.ts";
+import { sha256 as sha256Effect } from "../Utils/Hash.ts";
 import { canonicalLiteral, canonicalQuad } from "../Utils/Rdf.ts";
 import { RdfBuilder } from "./Rdf.ts";
 
@@ -350,6 +353,8 @@ const ASSERTIONS = {
  */
 export class AssertionService extends Context.Service<AssertionService>()($I`AssertionService`, {
   make: Effect.gen(function* () {
+    const crypto = yield* Crypto.Crypto;
+    const sha256 = flow(sha256Effect, Effect.provideService(Crypto.Crypto, crypto));
     const claimRepo = yield* ClaimRepository;
 
     // In-memory store for assertions (can be replaced with DB repository later)

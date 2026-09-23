@@ -21,6 +21,21 @@
  */
 export * from "./Thread.converters.ts";
 /**
+ * Thread converter error exports.
+ *
+ * **Example** (Import Thread converter error)
+ *
+ * ```ts
+ * import * as Thread from "@beep/workspace-tables/entities/Thread"
+ *
+ * console.log(Thread.ThreadConverterError._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./Thread.errors.ts";
+/**
  * Thread table exports.
  *
  * **Example** (Import table exports)

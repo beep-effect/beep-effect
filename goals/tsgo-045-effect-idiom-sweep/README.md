@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`. P0 (grill and packet) complete 2026-09-12. P1
+Lifecycle: `superseded`. P0 (grill and packet) complete 2026-09-12. P1
 foundations PR is next. Machine-readable state:
 [`ops/manifest.json`](./ops/manifest.json).
 

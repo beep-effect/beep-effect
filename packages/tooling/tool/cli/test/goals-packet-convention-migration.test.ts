@@ -33,6 +33,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Exit, FileSystem, Layer, Path, PlatformError, Result } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -1045,6 +1046,7 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
       const traceRacePath = `${traceRaceLocator.packetPath}/ops/trace.json`;
       const traceRaceEvents = `${traceRaceLocator.packetPath}/ops/events`;
       let appended = false;
+      const crypto = yield* Crypto.Crypto;
       const traceRaceApplier = yield* makeApplier({
         ...fs,
         writeFileString: (target, content, options) =>
@@ -1070,7 +1072,9 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
                   actor: "concurrent-writer",
                   body: { type: "status-set", status: "paused", previous: "active" },
                 });
-                const concurrentId = yield* packetEventDigest(concurrent);
+                const concurrentId = yield* packetEventDigest(concurrent).pipe(
+                  Effect.provideService(Crypto.Crypto, crypto)
+                );
                 const concurrentText = yield* renderPacketEventFile(concurrent);
                 yield* fs.writeFileString(
                   `${traceRaceEvents}/${packetEventFileName(concurrent, concurrentId)}`,
@@ -1131,6 +1135,8 @@ layer(testLayer, { timeout: 30_000 })("packet mutation", (it) => {
                 body: { type: "status-set", status: "paused", previous: "active" },
               });
               return packetEventDigest(concurrent).pipe(
+                Effect.provideService(Crypto.Crypto, crypto),
+                Effect.catchTag("PlatformError", Effect.die),
                 Effect.map((id) =>
                   PacketStreamListing.make({
                     events: A.append(

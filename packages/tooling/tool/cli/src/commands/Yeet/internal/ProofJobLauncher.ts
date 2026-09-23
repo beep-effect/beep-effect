@@ -149,7 +149,9 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
   never,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const context = yield* Effect.context<FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner>();
+  const context = yield* Effect.context<
+    Crypto.Crypto | FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  >();
   const crypto = yield* Crypto.Crypto;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -240,7 +242,8 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     const attemptId = O.flatMap(record.runner, (runner) => runner.attemptId);
     if (record.phase === "terminated" && O.isSome(attemptId) && O.isSome(record.terminationReason)) {
       const journal = yield* attemptJournalPathForCheckout(repoRoot, record.request.branch).pipe(
-        Effect.provide(context)
+        Effect.provide(context),
+        Effect.mapError(guardError)
       );
       attemptTerminated = yield* appendProofJobAttemptTerminated(
         journal,

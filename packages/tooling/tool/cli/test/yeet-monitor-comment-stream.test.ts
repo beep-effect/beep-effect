@@ -17,6 +17,7 @@ import {
   yeetMonitorCommentStatePath,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -197,7 +198,7 @@ const readStateText = Effect.fnUntraced(function* (context: RepoRunContext) {
   return yield* fs.readFileString(yield* yeetMonitorCommentStatePath(context));
 });
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 // A7 (ship-velocity): the comment stream used to start both cursors at process
 // start, so a comment posted while no monitor was attached was never printed by

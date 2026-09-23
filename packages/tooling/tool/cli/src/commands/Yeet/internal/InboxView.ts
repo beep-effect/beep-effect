@@ -44,6 +44,7 @@ import {
 } from "./Inbox.ts";
 import { loadYeetRemediationWave } from "./Remediation.ts";
 import type { Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { YeetRemediationWave } from "./Remediation.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/InboxView");
@@ -324,7 +325,7 @@ const terminatedPortion = (text: string): string =>
  */
 export const loadYeetInboxView = Effect.fn("Yeet.loadYeetInboxView")(function* (
   repoRoot: string
-): Effect.fn.Return<YeetInboxView, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<YeetInboxView, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const paths = yield* yeetInboxPaths(repoRoot);
   const exists = yield* fs.exists(paths.failuresPath).pipe(Effect.orElseSucceed(thunkFalse));
@@ -337,7 +338,15 @@ export const loadYeetInboxView = Effect.fn("Yeet.loadYeetInboxView")(function* (
   }
   const lines = A.filter(Str.split(terminatedPortion(text.value), "\n"), Str.isNonEmpty);
   const rows = A.getSomes(A.map(lines, YeetInboxRowJson.decodeOption));
-  const wellFormed = A.filter(rows, (row) => row.id === yeetInboxExpectedRowId(row));
+  const wellFormed = yield* Effect.filter(
+    rows,
+    (row) =>
+      yeetInboxExpectedRowId(row).pipe(
+        Effect.map((expected) => row.id === expected),
+        Effect.orElseSucceed(thunkFalse)
+      ),
+    { concurrency: 1 }
+  );
   const deduped = dedupeRowsById(wellFormed);
   const wave = yield* loadYeetRemediationWave(repoRoot);
   const entries = yield* Effect.forEach(deduped, (row) =>

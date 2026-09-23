@@ -64,11 +64,11 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeOntologyGraphProjectionOptionsResult = S.decodeResult(OntologyGraphProjectionOptions);
-const decodePrefixMapSync = S.decodeSync(PrefixMap);
+const decodePrefixMap = S.decodeUnknownEffect(PrefixMap);
 const encodeOntologyGraphProjectionOptionsResult = S.encodeResult(OntologyGraphProjectionOptions);
 
-const sessionId = S.decodeSync(SessionId)("session-1");
-const fixturePath = S.decodeSync(OntologyFilePath)("fixtures/demo.ttl");
+const sessionId = SessionId.make("session-1");
+const fixturePath = OntologyFilePath.make("fixtures/demo.ttl");
 const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
 const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
 const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
@@ -154,16 +154,16 @@ describe("Session use-cases", () => {
         ),
       });
       const turtle = TurtleCodec.of({
-        parse: Effect.fn("TurtleCodec.parse")(() =>
-          Effect.succeed(
-            ParseTurtleResult.make({
-              dataset,
-              prefixes: decodePrefixMapSync({
+        parse: Effect.fn("TurtleCodec.parse")(function* () {
+          return ParseTurtleResult.make({
+            dataset,
+            prefixes: yield* Effect.orDie(
+              decodePrefixMap({
                 ex: "https://example.test/",
-              }),
-            })
-          )
-        ),
+              })
+            ),
+          });
+        }),
         serialize: Effect.fn("TurtleCodec.serialize")((request) =>
           Effect.sync(() => {
             serializedPrefixes = request.prefixes;
@@ -317,16 +317,16 @@ describe("Session use-cases", () => {
         write: Effect.fn("OntologyFileStore.write")(() => Effect.void),
       });
       const turtle = TurtleCodec.of({
-        parse: Effect.fn("TurtleCodec.parse")(() =>
-          Effect.succeed(
-            ParseTurtleResult.make({
-              dataset: openedDataset,
-              prefixes: decodePrefixMapSync({
+        parse: Effect.fn("TurtleCodec.parse")(function* () {
+          return ParseTurtleResult.make({
+            dataset: openedDataset,
+            prefixes: yield* Effect.orDie(
+              decodePrefixMap({
                 pizza: "https://example.org/pizza#",
-              }),
-            })
-          )
-        ),
+              })
+            ),
+          });
+        }),
         serialize: Effect.fn("TurtleCodec.serialize")(() => Effect.succeed(SerializeTurtleResult.make({ source: "" }))),
       });
       const useCases = yield* makeSessionUseCases().pipe(

@@ -6,6 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { dual } from "effect/Function";
 import { MappedLiteralKit, NonEmptyTrimmedStr, NonNegativeInt } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, N, O, P, pipe, R, Str, Struct, thunkEmptyStr, thunkFalse, thunkTrue } from "@beep/utils";
@@ -678,9 +679,15 @@ const errorBodySummary = (value: unknown): string => {
  * @category clients
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- HTTP client, operation plan, input, and invocation options are co-primary application-boundary inputs.
-export const invoke = (plan: Plan, input: unknown): Effect.Effect<unknown, ToolError, HttpClient.HttpClient> =>
-  Effect.gen(function* () {
+export const invoke: {
+  (input: unknown): (plan: Plan) => Effect.Effect<unknown, ToolError, HttpClient.HttpClient>;
+  (plan: Plan, input: unknown): Effect.Effect<unknown, ToolError, HttpClient.HttpClient>;
+} = dual(
+  2,
+  Effect.fnUntraced(function* (
+    plan: Plan,
+    input: unknown
+  ): Effect.fn.Return<unknown, ToolError, HttpClient.HttpClient> {
     const value = isRecord(input) ? input : R.emptyReadonly<string, unknown>();
     const request = yield* buildRequest(plan, value);
     const auth = yield* resolveAuth(plan);
@@ -718,4 +725,5 @@ export const invoke = (plan: Plan, input: unknown): Effect.Effect<unknown, ToolE
       return yield* ToolError.new(`${operationLabel(plan)} returned malformed JSON.`);
     }
     return parsed;
-  });
+  })
+);

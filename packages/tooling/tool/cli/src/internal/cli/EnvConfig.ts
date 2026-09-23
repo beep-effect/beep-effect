@@ -34,6 +34,7 @@ import {
   TurboEnvironmentHealthWarning,
   turboCacheValueSourceFor,
 } from "./TurboCache.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { TurboCacheValueSource } from "./TurboCache.ts";
 
@@ -49,13 +50,21 @@ import type { TurboCacheValueSource } from "./TurboCache.ts";
  * console.log(O.isOption(configStringOptionSync("HOME")))
  * ```
  *
+ * **Gotchas**
+ *
+ * The default `ConfigProvider` reference builds its environment key trie once,
+ * on first use, and never re-reads `process.env` afterwards. This reader
+ * therefore parses through a fresh `ConfigProvider.fromEnv()` on every call so
+ * that a variable set or deleted between two calls (as tests that toggle `CI`
+ * do) is observed by the next read.
+ *
  * @param name - Config key to read.
  * @returns The configured value when present, evaluated at call time.
  * @category configuration
  * @since 0.0.0
  */
 export const configStringOptionSync = (name: string): O.Option<string> =>
-  Effect.runSync(Config.option(Config.String(name)));
+  Effect.runSync(Config.option(Config.String(name)).parse(ConfigProvider.fromEnv()));
 
 /**
  * Check whether an optional string config value equals an expected value.
@@ -384,7 +393,7 @@ const secretReferenceProbe = Effect.fn("EnvConfig.secretReferenceProbe")(functio
   repoRoot: string,
   environment: Record<string, string>,
   args: ReadonlyArray<string> = ["run", "--", "true"]
-): Effect.fn.Return<boolean, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const exitCode = yield* runToExit({
     command: "op",
     args,
@@ -438,7 +447,7 @@ export const turboEnvironmentHealthWarnings = Effect.fn("EnvConfig.turboEnvironm
 ): Effect.fn.Return<
   ReadonlyArray<TurboEnvironmentHealthWarning>,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const cached = MutableHashMap.get(turboEnvironmentHealthVerdicts, repoRoot);
   if (O.isSome(cached)) return cached.value;
@@ -741,7 +750,7 @@ export const clearTurboCacheSecretSessionVerdictsForTesting = (): void => {
 export const canUseTurboCacheSecretSession = Effect.fn("EnvConfig.canUseTurboCacheSecretSession")(function* (
   repoRoot: string,
   environment: Readonly<Record<string, string | undefined>> = Bun.env
-): Effect.fn.Return<boolean, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const ci = yield* configStringOption("CI");
   if (
     pipe(

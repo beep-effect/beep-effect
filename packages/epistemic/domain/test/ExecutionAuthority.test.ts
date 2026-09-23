@@ -11,13 +11,17 @@ import {
   ExecutionRequest,
   ExecutionRequestEvaluationOptions,
   ExecutionRunKey,
+  ExecutionSink,
   emptyDraftGrantSet,
   evaluateExecutionRequest,
   evaluatorDenialReasons,
   FrozenGrantSet,
   freezeGrantSet,
+  GrantBudget,
   GrantOperation,
   GrantOperationDigest,
+  GrantPurpose,
+  GrantResource,
   GrantSetDigest,
   operationDigestOf,
   PolicyRevision,
@@ -47,13 +51,12 @@ import type {
   ExecutionVerdict,
 } from "@beep/epistemic-domain";
 
-const decodeExecutionDecisionRecordSync = S.decodeSync(ExecutionDecisionRecord);
-const decodeExecutionOutcomeRecordSync = S.decodeSync(ExecutionOutcomeRecord);
-const decodeExecutionRequestSync = S.decodeSync(ExecutionRequest);
-const decodeFrozenGrantSetSync = S.decodeSync(FrozenGrantSet);
-const encodeExecutionDecisionRecordSync = S.encodeSync(ExecutionDecisionRecord);
-const encodeExecutionOutcomeRecordSync = S.encodeSync(ExecutionOutcomeRecord);
-const encodeFrozenGrantSetSync = S.encodeSync(FrozenGrantSet);
+const decodeFrozenGrantSet = S.decodeEffect(FrozenGrantSet);
+const encodeFrozenGrantSet = S.encodeEffect(FrozenGrantSet);
+const decodeExecutionDecisionRecord = S.decodeEffect(ExecutionDecisionRecord);
+const encodeExecutionDecisionRecord = S.encodeEffect(ExecutionDecisionRecord);
+const decodeExecutionOutcomeRecord = S.decodeEffect(ExecutionOutcomeRecord);
+const encodeExecutionOutcomeRecord = S.encodeEffect(ExecutionOutcomeRecord);
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
@@ -84,34 +87,40 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
 
 const sha256HexPattern = /^[0-9a-f]{64}$/;
 
-const revision = S.decodeSync(PolicyRevision)("1.0.0");
-const otherRevision = S.decodeSync(PolicyRevision)("2.0.0");
+const revision = PolicyRevision.make("1.0.0");
+const otherRevision = PolicyRevision.make("2.0.0");
 
-const grant = S.decodeSync(ExecutionGrant)({
-  budget: { maxToolCalls: null },
-  expiresAt: 60000,
-  operation: "ontology_publish_provenance",
-  policyRevision: "1.0.0",
+const grant = ExecutionGrant.make({
+  budget: GrantBudget.make({ maxToolCalls: O.none() }),
+  expiresAt: DateTime.makeUnsafe(60000),
+  operation: GrantOperation.make("ontology_publish_provenance"),
+  policyRevision: revision,
   principal: { component: "Runtime", kind: "System" },
-  purpose: "provenance-publication",
-  resource: "ontology-workspace",
-  sink: {
+  purpose: GrantPurpose.make("provenance-publication"),
+  resource: GrantResource.make("ontology-workspace"),
+  sink: ExecutionSink.make({
     audience: "external-network",
-    destination: "https://registry.example",
+    destination: SinkDestination.make("https://registry.example"),
     sinkClass: "network-egress",
-  },
+  }),
 });
 
-const requestInput = {
-  destination: "https://registry.example",
-  operation: "ontology_publish_provenance",
-  principal: { component: "Runtime", kind: "System" },
-  resolvedAudience: "external-network",
-  sinkClass: "network-egress",
-} as const;
-
-const request = (overrides: Record<string, unknown> = {}): ExecutionRequest =>
-  decodeExecutionRequestSync({ ...requestInput, ...overrides });
+const request = (
+  overrides: {
+    readonly destination?: string;
+    readonly operation?: string;
+    readonly principal?: ExecutionRequest["principal"];
+    readonly resolvedAudience?: ExecutionRequest["resolvedAudience"];
+    readonly sinkClass?: ExecutionRequest["sinkClass"];
+  } = {}
+): ExecutionRequest =>
+  ExecutionRequest.make({
+    destination: SinkDestination.make(overrides.destination ?? "https://registry.example"),
+    operation: GrantOperation.make(overrides.operation ?? "ontology_publish_provenance"),
+    principal: overrides.principal ?? { component: "Runtime", kind: "System" },
+    resolvedAudience: overrides.resolvedAudience ?? "external-network",
+    sinkClass: overrides.sinkClass ?? "network-egress",
+  });
 
 const now = DateTime.makeUnsafe(0);
 const afterExpiry = DateTime.makeUnsafe(120000);
@@ -122,7 +131,7 @@ const evaluationOptions = (
   ExecutionRequestEvaluationOptions.make({ currentPolicyRevision, now: evaluationTime });
 
 const draft = Result.getOrThrow(addGrant(emptyDraftGrantSet(revision), grant));
-const frozen = freezeGrantSet(draft, DateTime.makeUnsafe(0));
+const frozen = Result.getOrThrow(freezeGrantSet(draft, DateTime.makeUnsafe(0)));
 
 const expectDenied = (verdict: ExecutionVerdict, reason: DenialReason): void => {
   expect(verdict.verdict).toBe("denied");
@@ -166,51 +175,57 @@ describe("ExecutionAuthority", () => {
       expect(verdict.verdict).toBe("allowed");
     });
 
-    it("reaches every evaluator denial reason distinctly, one axis per case", () => {
-      const tamperedFrozen = decodeFrozenGrantSetSync({
-        ...encodeFrozenGrantSetSync(frozen),
-        grants: [],
-      });
-      const verdictsByReason: Record<(typeof evaluatorDenialReasons)[number], ExecutionVerdict> = {
-        "grant-set-digest-mismatch": evaluateExecutionRequest(
-          tamperedFrozen,
-          request(),
-          evaluationOptions(now, revision)
-        ),
-        "policy-revision-mismatch": evaluateExecutionRequest(frozen, request(), evaluationOptions(now, otherRevision)),
-        "principal-not-granted": evaluateExecutionRequest(
-          frozen,
-          request({ principal: { component: "Policy", kind: "System" } }),
-          evaluationOptions(now, revision)
-        ),
-        "operation-not-granted": evaluateExecutionRequest(
-          frozen,
-          request({ operation: "ontology_delete_everything" }),
-          evaluationOptions(now, revision)
-        ),
-        "sink-class-not-granted": evaluateExecutionRequest(
-          frozen,
-          request({ sinkClass: "mcp-write" }),
-          evaluationOptions(now, revision)
-        ),
-        "audience-not-granted": evaluateExecutionRequest(
-          frozen,
-          request({ resolvedAudience: "local-workspace" }),
-          evaluationOptions(now, revision)
-        ),
-        "destination-not-granted": evaluateExecutionRequest(
-          frozen,
-          request({ destination: "https://attacker.example" }),
-          evaluationOptions(now, revision)
-        ),
-        "grant-expired": evaluateExecutionRequest(frozen, request(), evaluationOptions(afterExpiry, revision)),
-      };
+    it.effect("reaches every evaluator denial reason distinctly, one axis per case", () =>
+      Effect.gen(function* () {
+        const tamperedFrozen = yield* decodeFrozenGrantSet({
+          ...(yield* encodeFrozenGrantSet(frozen)),
+          grants: [],
+        });
+        const verdictsByReason: Record<(typeof evaluatorDenialReasons)[number], ExecutionVerdict> = {
+          "grant-set-digest-mismatch": evaluateExecutionRequest(
+            tamperedFrozen,
+            request(),
+            evaluationOptions(now, revision)
+          ),
+          "policy-revision-mismatch": evaluateExecutionRequest(
+            frozen,
+            request(),
+            evaluationOptions(now, otherRevision)
+          ),
+          "principal-not-granted": evaluateExecutionRequest(
+            frozen,
+            request({ principal: { component: "Policy", kind: "System" } }),
+            evaluationOptions(now, revision)
+          ),
+          "operation-not-granted": evaluateExecutionRequest(
+            frozen,
+            request({ operation: "ontology_delete_everything" }),
+            evaluationOptions(now, revision)
+          ),
+          "sink-class-not-granted": evaluateExecutionRequest(
+            frozen,
+            request({ sinkClass: "mcp-write" }),
+            evaluationOptions(now, revision)
+          ),
+          "audience-not-granted": evaluateExecutionRequest(
+            frozen,
+            request({ resolvedAudience: "local-workspace" }),
+            evaluationOptions(now, revision)
+          ),
+          "destination-not-granted": evaluateExecutionRequest(
+            frozen,
+            request({ destination: "https://attacker.example" }),
+            evaluationOptions(now, revision)
+          ),
+          "grant-expired": evaluateExecutionRequest(frozen, request(), evaluationOptions(afterExpiry, revision)),
+        };
 
-      expect(evaluatorDenialReasons.length).toBe(8);
-      for (const reason of evaluatorDenialReasons) {
-        expectDenied(verdictsByReason[reason], reason);
-      }
-    });
+        expect(evaluatorDenialReasons.length).toBe(8);
+        for (const reason of evaluatorDenialReasons) {
+          expectDenied(verdictsByReason[reason], reason);
+        }
+      })
+    );
 
     it("fails closed: an operation absent from the set denies, never allows", () => {
       const verdict = evaluateExecutionRequest(
@@ -222,20 +237,22 @@ describe("ExecutionAuthority", () => {
       expectDenied(verdict, "operation-not-granted");
     });
 
-    it("denies grant-set-digest-mismatch for a tampered seal before answering anything else", () => {
-      // The tampered set's grants would otherwise produce operation-not-granted;
-      // the broken seal must win because a set that fails its own digest cannot
-      // be trusted to answer any narrower question.
-      const tampered = decodeFrozenGrantSetSync({
-        ...encodeFrozenGrantSetSync(frozen),
-        grants: [],
-      });
+    it.effect("denies grant-set-digest-mismatch for a tampered seal before answering anything else", () =>
+      Effect.gen(function* () {
+        // The tampered set's grants would otherwise produce operation-not-granted;
+        // the broken seal must win because a set that fails its own digest cannot
+        // be trusted to answer any narrower question.
+        const tampered = yield* decodeFrozenGrantSet({
+          ...(yield* encodeFrozenGrantSet(frozen)),
+          grants: [],
+        });
 
-      expectDenied(
-        evaluateExecutionRequest(tampered, request(), evaluationOptions(now, revision)),
-        "grant-set-digest-mismatch"
-      );
-    });
+        expectDenied(
+          evaluateExecutionRequest(tampered, request(), evaluationOptions(now, revision)),
+          "grant-set-digest-mismatch"
+        );
+      })
+    );
   });
 
   describe("grant sets", () => {
@@ -261,22 +278,24 @@ describe("ExecutionAuthority", () => {
     it("freezeGrantSet seals with a deterministic 64-char lowercase hex digest", () => {
       expect(frozen.digest).toMatch(sha256HexPattern);
 
-      const again = freezeGrantSet(draft, DateTime.makeUnsafe(0));
+      const again = Result.getOrThrow(freezeGrantSet(draft, DateTime.makeUnsafe(0)));
       expect(again.digest).toBe(frozen.digest);
 
-      const later = freezeGrantSet(draft, DateTime.makeUnsafe(1));
+      const later = Result.getOrThrow(freezeGrantSet(draft, DateTime.makeUnsafe(1)));
       expect(later.digest).not.toBe(frozen.digest);
     });
 
-    it("verifyFrozenGrantSetDigest accepts the sealed set and rejects a tampered copy", () => {
-      expect(verifyFrozenGrantSetDigest(frozen)).toBe(true);
+    it.effect("verifyFrozenGrantSetDigest accepts the sealed set and rejects a tampered copy", () =>
+      Effect.gen(function* () {
+        expect(verifyFrozenGrantSetDigest(frozen)).toBe(true);
 
-      const tampered = decodeFrozenGrantSetSync({
-        ...encodeFrozenGrantSetSync(frozen),
-        policyRevision: "2.0.0",
-      });
-      expect(verifyFrozenGrantSetDigest(tampered)).toBe(false);
-    });
+        const tampered = yield* decodeFrozenGrantSet({
+          ...(yield* encodeFrozenGrantSet(frozen)),
+          policyRevision: "2.0.0",
+        });
+        expect(verifyFrozenGrantSetDigest(tampered)).toBe(false);
+      })
+    );
   });
 
   describe("decision records", () => {
@@ -287,15 +306,17 @@ describe("ExecutionAuthority", () => {
       expect(verifyExecutionDecisionHash(record)).toBe(true);
     });
 
-    it("rejects a tampered decision record keeping its old hash", () => {
-      const record = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
-      const tampered = decodeExecutionDecisionRecordSync({
-        ...encodeExecutionDecisionRecordSync(record),
-        audience: "local-workspace",
-      });
+    it.effect("rejects a tampered decision record keeping its old hash", () =>
+      Effect.gen(function* () {
+        const record = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+        const tampered = yield* decodeExecutionDecisionRecord({
+          ...(yield* encodeExecutionDecisionRecord(record)),
+          audience: "local-workspace",
+        });
 
-      expect(verifyExecutionDecisionHash(tampered)).toBe(false);
-    });
+        expect(verifyExecutionDecisionHash(tampered)).toBe(false);
+      })
+    );
 
     it("verifies an intact 3-record chain and the empty chain", () => {
       const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
@@ -306,17 +327,19 @@ describe("ExecutionAuthority", () => {
       expect(verifyExecutionDecisionChain([]).result).toBe("chain-intact");
     });
 
-    it("breaks the chain at the tampered middle record", () => {
-      const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
-      const second = sealExecutionDecision(decisionContent({ seq: 1, prevHash: O.some(first.hash) }));
-      const third = sealExecutionDecision(decisionContent({ seq: 2, prevHash: O.some(second.hash) }));
-      const tamperedSecond = decodeExecutionDecisionRecordSync({
-        ...encodeExecutionDecisionRecordSync(second),
-        destinationDigest: "0".repeat(64),
-      });
+    it.effect("breaks the chain at the tampered middle record", () =>
+      Effect.gen(function* () {
+        const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+        const second = sealExecutionDecision(decisionContent({ seq: 1, prevHash: O.some(first.hash) }));
+        const third = sealExecutionDecision(decisionContent({ seq: 2, prevHash: O.some(second.hash) }));
+        const tamperedSecond = yield* decodeExecutionDecisionRecord({
+          ...(yield* encodeExecutionDecisionRecord(second)),
+          destinationDigest: "0".repeat(64),
+        });
 
-      expectChainBrokenAt(verifyExecutionDecisionChain([first, tamperedSecond, third]), 1);
-    });
+        expectChainBrokenAt(verifyExecutionDecisionChain([first, tamperedSecond, third]), 1);
+      })
+    );
 
     it("breaks the chain at a seq gap", () => {
       const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
@@ -367,20 +390,22 @@ describe("ExecutionAuthority", () => {
       expect(verifyExecutionOutcomeHash(outcome)).toBe(true);
     });
 
-    it("rejects a tampered outcome record keeping its old hash", () => {
-      const outcome = sealExecutionOutcome({
-        decisionHash: DecisionRecordHash.make("c".repeat(64)),
-        recordedAt: DateTime.makeUnsafe(2),
-        runKey: ExecutionRunKey.make("b".repeat(64)),
-        settlement: "completed",
-      });
-      const tampered = decodeExecutionOutcomeRecordSync({
-        ...encodeExecutionOutcomeRecordSync(outcome),
-        settlement: "failed",
-      });
+    it.effect("rejects a tampered outcome record keeping its old hash", () =>
+      Effect.gen(function* () {
+        const outcome = sealExecutionOutcome({
+          decisionHash: DecisionRecordHash.make("c".repeat(64)),
+          recordedAt: DateTime.makeUnsafe(2),
+          runKey: ExecutionRunKey.make("b".repeat(64)),
+          settlement: "completed",
+        });
+        const tampered = yield* decodeExecutionOutcomeRecord({
+          ...(yield* encodeExecutionOutcomeRecord(outcome)),
+          settlement: "failed",
+        });
 
-      expect(verifyExecutionOutcomeHash(tampered)).toBe(false);
-    });
+        expect(verifyExecutionOutcomeHash(tampered)).toBe(false);
+      })
+    );
   });
 
   describe("verifyOutcomeBinding", () => {
@@ -473,7 +498,7 @@ describe("ExecutionAuthority", () => {
     // encoding version and update the vectors in the same change. A silent
     // digest change would strand every previously persisted seal.
     it("pins freezeGrantSet over the empty draft at frozenAt=0, policyRevision 1.0.0", () => {
-      const emptyFrozen = freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0));
+      const emptyFrozen = Result.getOrThrow(freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0)));
 
       expect(emptyFrozen.digest).toBe("6b964a03608449b6b1900d53904a30b85625b8086f18dee48593d05cc94bc623");
     });

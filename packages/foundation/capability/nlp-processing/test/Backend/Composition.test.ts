@@ -9,26 +9,24 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = Arbitrary.schema(schema);
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeSync(schema);
+const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
+  Schema extends S.Codec<unknown, unknown, never, never>,
+>(schema: Schema) {
   const equals = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.all([Arbitrary.schema(schema)]),
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(schema)(value);
+        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+        expect(equals(decoded, value)).toBe(true);
 
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          expect(equals(decode(encode(value)), value)).toBe(true);
-
-          return true;
-        },
-        fcRuns(50)
-      )
-    )._tag
-  ).toBe("Passed");
-};
+        return true;
+      }),
+    fcRuns(50)
+  );
+  expect(result._tag).toBe("Passed");
+});
 
 const baseCapabilities: Backend.BackendCapabilities = {
   constituencyParsing: false,
@@ -87,12 +85,14 @@ describe("withFallback", () => {
 });
 
 describe("withCaching", () => {
-  it("round-trips schema-derived cache options and applies defaults", () => {
-    assertSchemaRoundTrip(Composition.CachingOptions);
-    const defaults = Composition.CachingOptions.make({});
-    expect(defaults.capacity).toBe(1024);
-    expect(Duration.equals(defaults.timeToLive, Duration.minutes(10))).toBe(true);
-  });
+  it.effect("round-trips schema-derived cache options and applies defaults", () =>
+    Effect.gen(function* () {
+      yield* assertSchemaRoundTrip(Composition.CachingOptions);
+      const defaults = Composition.CachingOptions.make({});
+      expect(defaults.capacity).toBe(1024);
+      expect(Duration.equals(defaults.timeToLive, Duration.minutes(10))).toBe(true);
+    })
+  );
 
   it.effect(
     "memoizes a lookup so the backend runs once per key",

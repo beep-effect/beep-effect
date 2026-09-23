@@ -12,6 +12,7 @@
  */
 
 import { PosInt } from "@beep/schema";
+import { dual } from "effect/Function";
 import type { SafeObject } from "@beep/schema/SafeObject";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A, O, P, pipe, Str } from "@beep/utils";
@@ -196,9 +197,14 @@ export const caughtErrorValue = (thrown: unknown): unknown =>
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Error constructor name and arguments are co-primary inputs for a newly allocated guest error.
-export const constructErrorValue = (name: ErrorConstructorName, args: ReadonlyArray<unknown>): SafeObject =>
-  createErrorValue(name, P.isUndefined(args[0]) ? "" : coerceToString(args[0]));
+export const constructErrorValue: {
+  (args: ReadonlyArray<unknown>): (name: ErrorConstructorName) => SafeObject;
+  (name: ErrorConstructorName, args: ReadonlyArray<unknown>): SafeObject;
+} = dual(
+  2,
+  (name: ErrorConstructorName, args: ReadonlyArray<unknown>): SafeObject =>
+    createErrorValue(name, P.isUndefined(args[0]) ? "" : coerceToString(args[0]))
+);
 
 /**
  * Builds one branded guest AggregateError from a synchronous iterable of errors.
@@ -248,13 +254,23 @@ export const constructErrorValue = (name: ErrorConstructorName, args: ReadonlyAr
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Aggregate members, message, options, and interpreter context are co-primary construction inputs.
-export const constructAggregateErrorValue = <R>(
-  runner: SyncIteratorRunner<R>,
-  args: ReadonlyArray<unknown>,
-  node: AstNode
-): Effect.Effect<SafeObject, InterpreterFailure, R> =>
-  Effect.gen(function* () {
+export const constructAggregateErrorValue: {
+  (
+    args: ReadonlyArray<unknown>,
+    node: AstNode
+  ): <R>(runner: SyncIteratorRunner<R>) => Effect.Effect<SafeObject, InterpreterFailure, R>;
+  <R>(
+    runner: SyncIteratorRunner<R>,
+    args: ReadonlyArray<unknown>,
+    node: AstNode
+  ): Effect.Effect<SafeObject, InterpreterFailure, R>;
+} = dual(
+  3,
+  Effect.fnUntraced(function* <R>(
+    runner: SyncIteratorRunner<R>,
+    args: ReadonlyArray<unknown>,
+    node: AstNode
+  ): Effect.fn.Return<SafeObject, InterpreterFailure, R> {
     const cursor = yield* runner.syncIterator(args[0], node);
     if (P.isUndefined(cursor)) {
       return yield* InterpreterRuntimeError.new(
@@ -270,4 +286,5 @@ export const constructAggregateErrorValue = <R>(
       }
       errors.push(step.value);
     }
-  });
+  })
+);

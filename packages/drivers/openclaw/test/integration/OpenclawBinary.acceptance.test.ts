@@ -315,7 +315,8 @@ const writeRenderedGoldenConfig = Effect.fnUntraced(function* (bench: OpenclawIt
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const configPath = path.join(bench.configDir, fileName);
-  yield* fs.writeFileString(configPath, renderOpenclawConfig(workbenchIntent(bench)).canonicalJson);
+  const rendered = yield* renderOpenclawConfig(workbenchIntent(bench));
+  yield* fs.writeFileString(configPath, rendered.canonicalJson);
   return configPath;
 });
 

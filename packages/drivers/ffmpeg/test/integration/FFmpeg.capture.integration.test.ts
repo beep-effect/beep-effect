@@ -110,7 +110,7 @@ const FfprobeFormatTags = S.fromJsonString(
     }),
   })
 );
-const decodeFormatTags = S.decodeUnknownSync(FfprobeFormatTags);
+const decodeFormatTags = S.decodeUnknownEffect(FfprobeFormatTags);
 
 const withTempDirectory = <A2, E, R>(use: (tmpDir: string) => Effect.Effect<A2, E, R>) =>
   Effect.acquireUseRelease(
@@ -340,7 +340,7 @@ describe("@beep/ffmpeg live capture", () => {
                 "json",
                 taggedPath,
               ]);
-              const tags = decodeFormatTags(Str.trim(probeResult.stdout));
+              const tags = yield* decodeFormatTags(Str.trim(probeResult.stdout));
               expect(tags.format.tags.BEEP_QA_SESSION_ID).toBe(sessionId);
             }
           })

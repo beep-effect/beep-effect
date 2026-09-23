@@ -128,12 +128,14 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* makeDrizzleWorkerRepository();
           const id = yield* decodeWorkerId(1);
           const organizationId = yield* decodeOrganizationId(1);
-          const created = DomainWorker.create(
-            DomainWorker.CreateWorkerInput.make({
-              id,
-              organizationId,
-              displayName: "Ada Lovelace",
-            })
+          const created = yield* Effect.fromResult(
+            DomainWorker.create(
+              DomainWorker.CreateWorkerInput.make({
+                id,
+                organizationId,
+                displayName: "Ada Lovelace",
+              })
+            )
           );
 
           const inserted = yield* repository.create(created);

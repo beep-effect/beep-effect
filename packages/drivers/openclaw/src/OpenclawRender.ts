@@ -15,12 +15,13 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { $OpenclawId } from "@beep/identity";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { O } from "@beep/utils";
-import { flow, Match, Order, pipe, Result } from "effect";
+import { Effect, flow, Match, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -337,13 +338,16 @@ export class RenderedOpenclawConfig extends S.Class<RenderedOpenclawConfig>($I`R
   })
 ) {}
 
+const utf8 = new TextEncoder();
+
 /**
  * Render a deployment intent into the canonical `openclaw.json` document.
  *
  * **Details**
  *
- * Total and pure: dispatch is keyed on `intent.openclawVersion` over the
- * pinned version domain, so every valid intent renders without failure.
+ * Dispatch is keyed on `intent.openclawVersion` over the pinned version
+ * domain. The content hash is SHA-256 of the canonical JSON and requires
+ * `Crypto`.
  * Adapter invariants for `2026.7.1-2`: `gateway.mode` is `"local"`,
  * `gateway.reload.mode` is `"off"`, Telegram renders with `enabled: true` and
  * `configWrites: false`, `agents.list` is the emitted agent shape, and no
@@ -363,6 +367,7 @@ export class RenderedOpenclawConfig extends S.Class<RenderedOpenclawConfig>($I`R
  *   OpenclawSecretReference,
  *   OpenclawSecretsResolverIntent
  * } from "@beep/openclaw/OpenclawIntent.models"
+ * import * as Effect from "effect/Effect"
  * import { renderOpenclawConfig } from "@beep/openclaw/OpenclawRender"
  *
  * const rendered = renderOpenclawConfig(
@@ -396,21 +401,23 @@ export class RenderedOpenclawConfig extends S.Class<RenderedOpenclawConfig>($I`R
  *     })
  *   })
  * )
- * console.log(rendered.targetVersion) // "2026.7.1-2"
- * console.log(rendered.contentHash.length) // 64
+ * console.log(Effect.isEffect(rendered))
+ * // true
  * ```
  *
  * @category serialization
  * @since 0.0.0
  */
-export const renderOpenclawConfig = (intent: OpenclawDeploymentIntent): RenderedOpenclawConfig => {
+export const renderOpenclawConfig = Effect.fn($I`renderOpenclawConfig`)(function* (intent: OpenclawDeploymentIntent) {
+  const crypto = yield* Crypto.Crypto;
   const canonicalJson = canonicalizeDocument(versionedDocumentRenderer(intent.openclawVersion)(intent));
+  const digest = yield* crypto.digest("SHA-256", utf8.encode(canonicalJson));
   return RenderedOpenclawConfig.make({
     canonicalJson,
-    contentHash: OpenclawSha256Hex.make(createHash("sha256").update(canonicalJson, "utf8").digest("hex")),
+    contentHash: OpenclawSha256Hex.make(Encoding.encodeHex(digest)),
     targetVersion: intent.openclawVersion,
   });
-};
+});
 
 /**
  * List the extension surfaces a deployment intent declares.

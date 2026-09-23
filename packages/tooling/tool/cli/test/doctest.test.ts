@@ -10,6 +10,7 @@ import {
   validateDoctestAssertions,
 } from "@beep/repo-cli/test/Docgen";
 import { A } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
 import * as O from "effect/Option";
@@ -203,6 +204,7 @@ describe("doctest rewrite planning", () => {
 
 const changedSourcePaths = ["packages/example/src/existing.ts", "packages/example/src/deleted.ts"];
 const changedSourceLayer = Layer.mergeAll(
+  BunCrypto.layer,
   FileSystem.layerNoop({
     exists: (file) => Effect.succeed(Str.endsWith("packages/example/src/existing.ts")(file)),
   }),

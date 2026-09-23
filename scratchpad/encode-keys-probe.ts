@@ -15,7 +15,7 @@ const RenamedStruct = S.Struct({
 }).pipe(S.encodeKeys({ approvedSkills: "approved-skills" }));
 
 // standalone decode works:
-export const q1Standalone = S.decodeSync(RenamedStruct)({
+export const q1Standalone = S.decodeEffect(RenamedStruct)({
   name: "x",
   "approved-skills": "Bash",
 });
@@ -37,7 +37,7 @@ export class Frontmatter extends kit.Entity<Frontmatter>("Frontmatter")({
 
 export const FrontmatterWire = Frontmatter.json.pipe(S.encodeKeys({ approvedSkills: "approved-skills" }));
 
-export const q2Decoded = S.decodeSync(FrontmatterWire)({
+export const q2Decoded = S.decodeEffect(FrontmatterWire)({
   id: 1,
   name: "doc-skill",
   "approved-skills": "Bash, Read",

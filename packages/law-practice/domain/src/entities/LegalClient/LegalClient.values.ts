@@ -34,7 +34,7 @@ export const LegalClientStatus = LegalClientStatusBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(LegalClientStatusBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownResult(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

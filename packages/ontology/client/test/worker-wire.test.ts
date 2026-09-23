@@ -27,7 +27,7 @@ import * as S from "effect/Schema";
 // — it is exactly what `postMessage` does to the value.
 const session = createSession(
   CreateSessionInput.make({
-    id: S.decodeSync(SessionId)("session-1"),
+    id: SessionId.make("session-1"),
     baseDataset: makeDataset([
       makeQuad(
         makeNamedNode("https://example.test/alice"),
@@ -56,7 +56,12 @@ describe("ontology graph worker wire", () => {
     // forever, and nothing anywhere said why.
     const command = WorkerCommand.make({ kind: "projectGraph", snapshot, options });
 
-    const onTheWire = structuredClone(encodeWorkerCommand(command));
+    const encoded = encodeWorkerCommand(command);
+    expect(Result.isSuccess(encoded)).toBe(true);
+    if (!Result.isSuccess(encoded)) {
+      return;
+    }
+    const onTheWire = structuredClone(encoded.success);
     const received = decodeWorkerCommand(onTheWire);
 
     expect(Result.isSuccess(received)).toBe(true);
@@ -78,7 +83,12 @@ describe("ontology graph worker wire", () => {
     expect(isProjection(usedDirectly.result)).toBe(false);
 
     // What it consumes now: decoded back into the domain.
-    const received = decodeWorkerResult(structuredClone(encodeWorkerResult(result)));
+    const encoded = encodeWorkerResult(result);
+    expect(Result.isSuccess(encoded)).toBe(true);
+    if (!Result.isSuccess(encoded)) {
+      return;
+    }
+    const received = decodeWorkerResult(structuredClone(encoded.success));
     expect(Result.isSuccess(received)).toBe(true);
     expect(
       Result.isSuccess(received) && received.success.kind === "projectGraphSucceeded"

@@ -9,49 +9,56 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 const NicknamePayload = S.Struct({
   nickname: OptionFromOptionalNullishKey(S.String),
 });
-const decodeUnknownNicknamePayloadSync = S.decodeUnknownSync(NicknamePayload);
-const encodeNicknamePayloadSync = S.encodeSync(NicknamePayload);
+const decodeUnknownNicknamePayloadEffect = S.decodeUnknownEffect(NicknamePayload);
+const encodeNicknamePayloadEffect = S.encodeEffect(NicknamePayload);
 const HomepagePayload = S.Struct({
   homepage: OptionFromOptionalNullishKey({ schema: S.URLFromString, onNoneEncoding: null }),
 });
-const encodeHomepagePayloadSync = S.encodeSync(HomepagePayload);
+const encodeHomepagePayloadEffect = S.encodeEffect(HomepagePayload);
 const NicknamePayloadArbitrary = Arbitrary.schema(NicknamePayload);
 
 describe("OptionFromOptionalNullishKey", () => {
-  it("decodes omitted, null, and undefined keys as None", () => {
-    expect(decodeUnknownNicknamePayloadSync({}).nickname).toEqual(O.none());
-    expect(decodeUnknownNicknamePayloadSync({ nickname: null }).nickname).toEqual(O.none());
-    expect(decodeUnknownNicknamePayloadSync({ nickname: undefined }).nickname).toEqual(O.none());
-  });
+  it.effect(
+    "decodes omitted, null, and undefined keys as None",
+    Effect.fnUntraced(function* () {
+      expect((yield* decodeUnknownNicknamePayloadEffect({})).nickname).toEqual(O.none());
+      expect((yield* decodeUnknownNicknamePayloadEffect({ nickname: null })).nickname).toEqual(O.none());
+      expect((yield* decodeUnknownNicknamePayloadEffect({ nickname: undefined })).nickname).toEqual(O.none());
+    })
+  );
 
-  it("decodes present non-nullish values as Some", () => {
-    expect(decodeUnknownNicknamePayloadSync({ nickname: "beep" }).nickname).toEqual(O.some("beep"));
-  });
+  it.effect(
+    "decodes present non-nullish values as Some",
+    Effect.fnUntraced(function* () {
+      expect((yield* decodeUnknownNicknamePayloadEffect({ nickname: "beep" })).nickname).toEqual(O.some("beep"));
+    })
+  );
 
-  it("omits None by default during encoding", () => {
-    expect(encodeNicknamePayloadSync({ nickname: O.none() })).toEqual({});
-  });
+  it.effect(
+    "omits None by default during encoding",
+    Effect.fnUntraced(function* () {
+      expect(yield* encodeNicknamePayloadEffect({ nickname: O.none() })).toEqual({});
+    })
+  );
 
-  it("can encode None as null when requested", () => {
-    expect(encodeHomepagePayloadSync({ homepage: O.none() })).toEqual({ homepage: null });
-    expect(encodeHomepagePayloadSync({ homepage: O.some(new URL("https://example.com")) })).toEqual({
-      homepage: "https://example.com/",
-    });
-  });
+  it.effect(
+    "can encode None as null when requested",
+    Effect.fnUntraced(function* () {
+      expect(yield* encodeHomepagePayloadEffect({ homepage: O.none() })).toEqual({ homepage: null });
+      expect(yield* encodeHomepagePayloadEffect({ homepage: O.some(new URL("https://example.com")) })).toEqual({
+        homepage: "https://example.com/",
+      });
+    })
+  );
 
-  it("round-trips Option values derived from the source schema", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([NicknamePayloadArbitrary]),
-          ([payload]) => {
-            expect(decodeUnknownNicknamePayloadSync(encodeNicknamePayloadSync(payload))).toEqual(payload);
+  it.effect.prop(
+    "round-trips Option values derived from the source schema",
+    [NicknamePayloadArbitrary],
+    Effect.fnUntraced(function* ([payload]) {
+      expect(yield* decodeUnknownNicknamePayloadEffect(yield* encodeNicknamePayloadEffect(payload))).toEqual(payload);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 });

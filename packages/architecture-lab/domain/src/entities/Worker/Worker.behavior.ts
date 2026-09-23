@@ -28,9 +28,10 @@ const publicIdFor = (id: WorkerId) => WorkerPublicId.decodeUnknownSync(`${Worker
  * ```ts
  * import { CreateWorkerInput, WorkerOrganizationId, create } from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
- * const worker = create(
+ * const decoded = create(
  *   CreateWorkerInput.make({
  *     id: S.decodeUnknownSync(WorkerId)(1),
  *     organizationId: S.decodeUnknownSync(WorkerOrganizationId)(1),
@@ -38,13 +39,17 @@ const publicIdFor = (id: WorkerId) => WorkerPublicId.decodeUnknownSync(`${Worker
  *   })
  * )
  *
- * console.log(worker.status)
+ * if (Result.isFailure(decoded)) {
+ *   throw new Error("expected active Worker")
+ * }
+ *
+ * console.log(decoded.success.status)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export const create = (input: CreateWorkerInput): Worker =>
+export const create = (input: CreateWorkerInput) =>
   Worker.fromUnknown({
     createdAt: 0,
     createdByPrincipal: systemPrincipal,

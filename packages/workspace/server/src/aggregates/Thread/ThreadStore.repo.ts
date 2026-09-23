@@ -6,15 +6,16 @@
  * @since 0.0.0
  */
 
-import { Document } from "@beep/md/Md.model";
 import { PostgresDrizzle } from "@beep/postgres";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
+import { OrganizationId } from "@beep/shared-domain/identity/Shared";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, N } from "@beep/utils";
 import { Message } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-domain/entities/Thread";
-import { Turn } from "@beep/workspace-domain/entities/Turn";
+import { MessageItem, Turn } from "@beep/workspace-domain/entities/Turn";
 import { DbSchema } from "@beep/workspace-tables";
 import { fromMessageRow, toMessageInsert } from "@beep/workspace-tables/entities/Message";
 import { fromThreadRow, toThreadInsert } from "@beep/workspace-tables/entities/Thread";
@@ -23,9 +24,10 @@ import * as ThreadStoreServer from "@beep/workspace-use-cases/server";
 import { and, asc, eq } from "drizzle-orm";
 import { Clock, DateTime, Effect, HashMap, Match, Order, pipe, Ref, Semaphore } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import { InMemoryState } from "./ThreadStore.repo.internal.ts";
 import type { CuidState } from "@beep/schema/Cuid";
-import type { MessageItem, ToolCallItem } from "@beep/workspace-domain/entities/Turn";
+import type { ToolCallItem } from "@beep/workspace-domain/entities/Turn";
 import type { MessageInsert } from "@beep/workspace-tables/entities/Message";
 import type * as Crypto from "effect/Crypto";
 import type { MessageEntityInput, ThreadEntityInput, TurnEntityInput } from "./ThreadStore.repo.internal.ts";
@@ -34,20 +36,13 @@ const THREAD_TABLE_NAME = WorkspaceIdentity.ThreadId.tableName;
 const TURN_TABLE_NAME = WorkspaceIdentity.TurnId.tableName;
 const MESSAGE_TABLE_NAME = WorkspaceIdentity.MessageId.tableName;
 
-const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
+const SYSTEM_PRINCIPAL = SystemPrincipal.make({ component: "Runtime", kind: "System" });
 
 const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): PosInt =>
   PosInt.make(A.reduce(rows, 0, (max, row) => N.max(max, row.id)) + 1);
 
 /**
- * Build the encoded ProductEntity audit prefix shared by every workspace row.
- *
- * Persisted ProductEntity columns are all NOT NULL with no database defaults, so
- * every audit field is supplied here. The conversation-persistence increment
- * does not yet wire a request principal, so a system principal stands in.
- */
-/**
- * Audit timestamps in epoch milliseconds.
+ * Audit timestamps as decoded UTC instants.
  *
  * These used to be filled with the row's *entity id* — so thread 1 was stamped
  * `1970-01-01T00:00:00.001Z` and the sidebar rendered every conversation as
@@ -56,22 +51,20 @@ const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): PosInt =>
  * than restamping it.
  */
 type EntityTimestamps = {
-  readonly createdAt: number;
-  readonly updatedAt: number;
+  readonly createdAt: DateTime.Utc;
+  readonly updatedAt: DateTime.Utc;
 };
 
-const timestampsAt = (now: number): EntityTimestamps => ({ createdAt: now, updatedAt: now });
+const timestampsAt = (now: number): EntityTimestamps => ({
+  createdAt: DateTime.makeUnsafe(now),
+  updatedAt: DateTime.makeUnsafe(now),
+});
 
-const baseEntityRecord = (entityType: string, id: PosInt, publicId: string, timestamps: EntityTimestamps) => ({
+const auditFields = (timestamps: EntityTimestamps) => ({
   createdAt: timestamps.createdAt,
   createdByPrincipal: SYSTEM_PRINCIPAL,
-  entityType,
-  id,
-  orgId: 1,
-  publicId,
-  rowVersion: 1,
-  schemaVersion: "0.0.0",
-  source: "System",
+  orgId: OrganizationId.make(1),
+  rowVersion: PosInt.make(1),
   updatedAt: timestamps.updatedAt,
   updatedByPrincipal: SYSTEM_PRINCIPAL,
 });
@@ -81,10 +74,15 @@ const makeThreadEntity = (
   publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.ThreadId>,
   timestamps: EntityTimestamps
 ): Thread =>
-  Thread.decodeUnknownSync({
-    ...baseEntityRecord(WorkspaceIdentity.ThreadId.entityType, input.id, publicId, timestamps),
+  Thread.make({
+    ...auditFields(timestamps),
+    entityType: WorkspaceIdentity.ThreadId.entityType,
+    id: WorkspaceIdentity.ThreadId.make(input.id),
+    publicId,
+    schemaVersion: "0.0.0",
+    source: "System",
     title: input.title,
-    workspaceId: input.workspaceId,
+    workspaceId: WorkspaceIdentity.WorkspaceId.make(input.workspaceId),
   });
 
 const makeTurnEntity = (
@@ -92,11 +90,16 @@ const makeTurnEntity = (
   publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.TurnId>,
   timestamps: EntityTimestamps
 ): Turn =>
-  Turn.decodeUnknownSync({
-    ...baseEntityRecord(WorkspaceIdentity.TurnId.entityType, input.id, publicId, timestamps),
-    items: [{ itemType: "message", messageId: input.messageId }],
-    parentTurnId: input.parentTurnId,
-    threadId: input.threadId,
+  Turn.make({
+    ...auditFields(timestamps),
+    entityType: WorkspaceIdentity.TurnId.entityType,
+    id: WorkspaceIdentity.TurnId.make(input.id),
+    items: [MessageItem.make({ messageId: WorkspaceIdentity.MessageId.make(input.messageId) })],
+    parentTurnId: O.map(O.fromNullOr(input.parentTurnId), WorkspaceIdentity.TurnId.make),
+    publicId,
+    schemaVersion: "0.0.0",
+    source: "System",
+    threadId: WorkspaceIdentity.ThreadId.make(input.threadId),
     turnIndex: input.turnIndex,
   });
 
@@ -105,12 +108,17 @@ const makeMessageEntity = (
   publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.MessageId>,
   timestamps: EntityTimestamps
 ): Message =>
-  Message.decodeUnknownSync({
-    ...baseEntityRecord(WorkspaceIdentity.MessageId.entityType, input.id, publicId, timestamps),
-    content: Document.encodeSync(input.content),
+  Message.make({
+    ...auditFields(timestamps),
+    content: input.content,
+    entityType: WorkspaceIdentity.MessageId.entityType,
+    id: WorkspaceIdentity.MessageId.make(input.id),
+    publicId,
     role: input.role,
-    threadId: input.threadId,
-    turnId: input.turnId,
+    schemaVersion: "0.0.0",
+    source: "System",
+    threadId: WorkspaceIdentity.ThreadId.make(input.threadId),
+    turnId: WorkspaceIdentity.TurnId.make(input.turnId),
   });
 
 const turnIndexOrder = Order.mapInput(Order.Number, (turn: Turn) => turn.turnIndex);
@@ -284,7 +292,7 @@ export const makeInMemoryThreadStore = Effect.fn("Workspace.ThreadStore.makeInMe
           },
           current.value.publicId,
           // Renaming a thread must not restamp when it was created.
-          { createdAt: DateTime.toEpochMillis(current.value.createdAt), updatedAt: now }
+          { createdAt: current.value.createdAt, updatedAt: DateTime.makeUnsafe(now) }
         );
         return [
           "updated",
@@ -426,16 +434,21 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
             publicId,
             timestampsAt(now)
           );
+          const insert = yield* Effect.fromResult(toThreadInsert(seed)).pipe(
+            repositoryUnavailable("encode Thread insert", THREAD_TABLE_NAME)
+          );
           const rows = yield* db
             .insert(threadTable)
-            .values(toThreadInsert(seed))
+            .values(insert)
             .returning()
             .pipe(repositoryUnavailable("insert Thread", THREAD_TABLE_NAME));
-          return pipe(
-            rows,
-            A.head,
-            O.map(fromThreadRow),
-            O.getOrElse(() => seed)
+          return yield* pipe(
+            A.head(rows),
+            O.match({
+              onNone: () => Effect.succeed(seed),
+              onSome: (row) =>
+                Effect.fromResult(fromThreadRow(row)).pipe(repositoryUnavailable("decode Thread", THREAD_TABLE_NAME)),
+            })
           );
         })
       );
@@ -446,7 +459,9 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
         .from(threadTable)
         .where(eq(threadTable.workspaceId, workspaceId))
         .pipe(repositoryUnavailable("list Thread", THREAD_TABLE_NAME));
-      return A.map(rows, fromThreadRow);
+      return yield* Effect.fromResult(Result.all(A.map(rows, fromThreadRow))).pipe(
+        repositoryUnavailable("decode Thread", THREAD_TABLE_NAME)
+      );
     }),
     setTitleIfEmpty: Effect.fn("Workspace.ThreadStore.drizzleSetTitleIfEmpty")(function* (input) {
       const rows = yield* db
@@ -516,24 +531,28 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
                 timestampsAt(now)
               );
 
-              const turnRows = yield* tx.insert(turnTable).values(toTurnInsert(turnSeed)).returning();
-              const persistedTurn = pipe(
-                turnRows,
-                A.head,
-                O.map(fromTurnRow),
-                O.getOrElse(() => turnSeed)
+              const turnInsert = yield* Effect.fromResult(toTurnInsert(turnSeed));
+              const turnRows = yield* tx.insert(turnTable).values(turnInsert).returning();
+              const persistedTurn = yield* pipe(
+                A.head(turnRows),
+                O.match({
+                  onNone: () => Effect.succeed(turnSeed),
+                  onSome: (row) => Effect.fromResult(fromTurnRow(row)),
+                })
               );
 
+              const messageSeedInsert = yield* Effect.fromResult(toMessageInsert(messageSeed));
               const messageInsert: MessageInsert = {
-                ...toMessageInsert(messageSeed),
+                ...messageSeedInsert,
                 turnId: persistedTurn.id,
               };
               const messageRows = yield* tx.insert(messageTable).values(messageInsert).returning();
-              const persistedMessage = pipe(
-                messageRows,
-                A.head,
-                O.map(fromMessageRow),
-                O.getOrElse(() => messageSeed)
+              const persistedMessage = yield* pipe(
+                A.head(messageRows),
+                O.match({
+                  onNone: () => Effect.succeed(messageSeed),
+                  onSome: (row) => Effect.fromResult(fromMessageRow(row)),
+                })
               );
 
               const reconciledTurn = makeTurnEntity(
@@ -547,18 +566,20 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
                 persistedTurn.publicId,
                 // The row already exists; keep its creation stamp and only advance
                 // the update stamp.
-                { createdAt: DateTime.toEpochMillis(persistedTurn.createdAt), updatedAt: now }
+                { createdAt: persistedTurn.createdAt, updatedAt: DateTime.makeUnsafe(now) }
               );
+              const reconciledInsert = yield* Effect.fromResult(toTurnInsert(reconciledTurn));
               const reconciledRows = yield* tx
                 .update(turnTable)
-                .set({ items: toTurnInsert(reconciledTurn).items })
+                .set({ items: reconciledInsert.items })
                 .where(eq(turnTable.id, persistedTurn.id))
                 .returning();
-              const finalTurn = pipe(
-                reconciledRows,
-                A.head,
-                O.map(fromTurnRow),
-                O.getOrElse(() => reconciledTurn)
+              const finalTurn = yield* pipe(
+                A.head(reconciledRows),
+                O.match({
+                  onNone: () => Effect.succeed(reconciledTurn),
+                  onSome: (row) => Effect.fromResult(fromTurnRow(row)),
+                })
               );
 
               return { turn: finalTurn, message: persistedMessage };
@@ -589,8 +610,12 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
         .where(eq(messageTable.threadId, threadId))
         .pipe(repositoryUnavailable("list Message", MESSAGE_TABLE_NAME));
 
-      const turns = A.map(turnRows, fromTurnRow);
-      const messages = A.map(messageRows, fromMessageRow);
+      const turns = yield* Effect.fromResult(Result.all(A.map(turnRows, fromTurnRow))).pipe(
+        repositoryUnavailable("decode Turn", TURN_TABLE_NAME)
+      );
+      const messages = yield* Effect.fromResult(Result.all(A.map(messageRows, fromMessageRow))).pipe(
+        repositoryUnavailable("decode Message", MESSAGE_TABLE_NAME)
+      );
       const messageById = HashMap.fromIterable(A.map(messages, (message) => [message.id, message] as const));
       return projectTimeline(threadId, turns, (messageId) => HashMap.get(messageById, messageId));
     }),
