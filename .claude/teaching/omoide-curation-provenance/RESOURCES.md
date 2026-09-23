@@ -2,17 +2,20 @@
 
 ## Knowledge
 
-- [Repo doc: `docs/curation/source-registration.md` (Omoide-ux7, branch codex/curation-human-authority)](file:///home/elpresidank/YeeBois/workstation-apps/Omoide-ux7/docs/curation/source-registration.md)
+Paths below are on the workstation, outside this repo; the Omoide checkout root is
+`$HOME/YeeBois/workstation-apps/Omoide-ux7`.
+
+- Repo doc: `$HOME/YeeBois/workstation-apps/Omoide-ux7/docs/curation/source-registration.md` (branch codex/curation-human-authority).
   The contract for the registration manifest: fields, ancestry kinds, what is refused, and the
   "operator attestation, not verified fact" trust boundary (lines 72–84). Use for: any question
   about what a manifest field claims.
-- [Repo doc: `docs/curation/production-authority.md`](file:///home/elpresidank/YeeBois/workstation-apps/Omoide-ux7/docs/curation/production-authority.md)
+- Repo doc: `$HOME/YeeBois/workstation-apps/Omoide-ux7/docs/curation/production-authority.md`.
   Grants, passkey ceremonies and decision binding. Use for: what a human accept actually signs.
-- [Repo doc: `docs/curation/deployment.md`](file:///home/elpresidank/YeeBois/workstation-apps/Omoide-ux7/docs/curation/deployment.md)
+- Repo doc: `$HOME/YeeBois/workstation-apps/Omoide-ux7/docs/curation/deployment.md`.
   Register-inside-the-runtime, verify/reattest after restarts. Use for: why volume identity matters.
-- [Repo code: `app/services/curation_registration.py`](file:///home/elpresidank/YeeBois/workstation-apps/Omoide-ux7/app/services/curation_registration.py)
+- Repo code: `$HOME/YeeBois/workstation-apps/Omoide-ux7/app/services/curation_registration.py`.
   The validator that enforces the rules above. Use for: the exact error codes.
-- [Handoff: `docs/implementation/krea2-curation-production/pilot-checklist.md`](file:///home/elpresidank/ai/docs/implementation/krea2-curation-production/pilot-checklist.md)
+- Handoff: `$HOME/ai/docs/implementation/krea2-curation-production/pilot-checklist.md`.
   What only Benjamin can supply for the pilot. Use for: the list of decisions this mission serves.
 
 ## Wisdom (Communities)
