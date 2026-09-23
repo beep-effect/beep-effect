@@ -309,6 +309,8 @@ export const MemoryConsumer = LiteralKit([
 /** @category type-level @since 0.0.0 */
 export type MemoryConsumer = typeof MemoryConsumer.Type;
 
+const isMemoryConsumer = S.is(MemoryConsumer);
+
 /**
  * Evidence source lifecycle embedded on a product memory.
  *
@@ -837,6 +839,9 @@ export declare namespace MemoryItem {
   export type Encoded = S.Codec.Encoded<typeof MemoryItem>;
 }
 
+const decodeUnknownEffectMemoryItem = S.decodeUnknownEffect(MemoryItem);
+const isMemoryItem = S.is(MemoryItem);
+
 const normalizeSensitivity = (labels: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.sort(A.dedupe(A.filter(A.map(labels, (label) => Str.toLowerCase(Str.trim(label))), Str.isNonEmpty)), Order.String);
 
@@ -1039,7 +1044,7 @@ export const normalizeMemoryItem = Effect.fn("MemoryItem.normalizeMemoryItem")(f
  * @since 0.0.0
  */
 export const decodeMemoryItem = Effect.fn("MemoryItem.decodeMemoryItem")(function* (input: unknown) {
-  return yield* normalizeMemoryItem(yield* S.decodeUnknownEffect(MemoryItem)(input));
+  return yield* normalizeMemoryItem(yield* decodeUnknownEffectMemoryItem(input));
 });
 
 /**
@@ -1236,7 +1241,7 @@ export const isDefaultAccessEligible: {
   (policy: MemoryAccessPolicy, now?: DateTime.Utc): (item: MemoryItem) => AccessDecision;
   (item: MemoryItem, policy: MemoryAccessPolicy, now?: DateTime.Utc): AccessDecision;
 } = dual(
-  (args) => S.is(MemoryItem)(args[0]),
+  (args) => isMemoryItem(args[0]),
   (item: MemoryItem, policy: MemoryAccessPolicy, now?: DateTime.Utc): AccessDecision => {
     const current = now ?? DateTime.toUtc(DateTime.nowUnsafe());
     const base = basePolicyChecks(item, policy);
@@ -1275,7 +1280,7 @@ export const isArchiveAccessEligible: {
   (policy: MemoryAccessPolicy, now?: DateTime.Utc): (item: MemoryItem) => AccessDecision;
   (item: MemoryItem, policy: MemoryAccessPolicy, now?: DateTime.Utc): AccessDecision;
 } = dual(
-  (args) => S.is(MemoryItem)(args[0]),
+  (args) => isMemoryItem(args[0]),
   (item: MemoryItem, policy: MemoryAccessPolicy, now?: DateTime.Utc): AccessDecision => {
     void now;
     const base = basePolicyChecks(item, policy);
@@ -1309,7 +1314,7 @@ export const derivedDefaultAccessAllowed: {
   (consumer: string): (item: MemoryItem) => boolean;
   (item: MemoryItem, consumer: string): boolean;
 } = dual(2, (item: MemoryItem, consumer: string): boolean => {
-  const policy = S.is(MemoryConsumer)(consumer)
+  const policy = isMemoryConsumer(consumer)
     ? MemoryAccessPolicy.make({
         consumer,
         appHasDefaultMemoryGrant: true,

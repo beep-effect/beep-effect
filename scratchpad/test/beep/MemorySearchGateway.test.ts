@@ -17,6 +17,8 @@ import {
 } from "../../beep/MemorySearchGateway.ts";
 import { MemoryItem, memoryAccessPolicyForOmiChat, memoryAccessPolicyForThirdParty } from "../../beep/ProductMemory.ts";
 
+const encodeSearchVectorHit = S.encodeEffect(SearchVectorHit);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -101,7 +103,7 @@ describe("SearchVectorHit", () => {
     assert.strictEqual(O.isNone(bare.vectorId), true);
     assert.strictEqual(O.isNone(bare.uid), true);
     assert.strictEqual(O.isNone(bare.itemRevision), true);
-    const encoded = Effect.runSync(S.encodeEffect(SearchVectorHit)(bare));
+    const encoded = Effect.runSync(encodeSearchVectorHit(bare));
     assert.strictEqual(encoded.vectorId, null);
     assert.strictEqual(encoded.contentHash, null);
     assert.strictEqual(decodeFails(SearchVectorHit, { ...hitWire, score: "high" }), true);

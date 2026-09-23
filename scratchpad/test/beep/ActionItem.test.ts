@@ -29,6 +29,10 @@ import {
   requireTaskChange,
 } from "../../beep/ActionItem.ts";
 
+const decodeEvidenceRefChecked = S.decodeUnknownEffect(EvidenceRefChecked);
+
+const decodeActionItemCreateRequest = S.decodeUnknownEffect(ActionItemCreateRequest);
+
 const fail = <A>(effect: Effect.Effect<A, TaskFieldConflict>) => {
   const result = effect.pipe(Effect.result, Effect.runSync);
   assert.strictEqual(Result.isFailure(result), true);
@@ -96,7 +100,7 @@ describe("ActionItem", () => {
       "end_seconds must be greater than or equal to start_seconds",
     );
     const input: unknown = { kind: "local_screen", id: "frame-1", scope: "canonical" };
-    const rejected = S.decodeUnknownEffect(EvidenceRefChecked)(input).pipe(Effect.result, Effect.runSync);
+    const rejected = decodeEvidenceRefChecked(input).pipe(Effect.result, Effect.runSync);
     assert.strictEqual(Result.isFailure(rejected), true);
   });
 
@@ -183,7 +187,7 @@ describe("ActionItem", () => {
       isLocked: false,
       exported: false,
     };
-    const decoded = Effect.runSync(S.decodeUnknownEffect(ActionItemCreateRequest)(input));
+    const decoded = Effect.runSync(decodeActionItemCreateRequest(input));
     assert.strictEqual(decoded.description, "Ship the note");
   });
 });

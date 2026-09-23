@@ -5,6 +5,9 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { ScreenActivityCoverage, ScreenActivitySource } from "../../beep/ScreenActivity.ts";
 
+const isScreenActivitySource = S.is(ScreenActivitySource);
+const encodeScreenActivityCoverage = S.encodeEffect(ScreenActivityCoverage);
+
 const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
   Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
 
@@ -17,7 +20,7 @@ describe("ScreenActivity", () => {
     expect(coverage.source).toBe("synced_screen_activity");
     expect(coverage.captureCompleteness).toBe("unknown");
     expect(O.isNone(coverage.firstObservedAt)).toBe(true);
-    expect(S.is(ScreenActivitySource)("memory")).toBe(false);
+    expect(isScreenActivitySource("memory")).toBe(false);
   });
 
   it("treats missing and null observed-at strings as absent and keeps present strings", () => {
@@ -61,7 +64,7 @@ describe("ScreenActivity", () => {
       truncated: false,
       captureCompleteness: "unknown",
     });
-    const encoded = Effect.runSync(S.encodeEffect(ScreenActivityCoverage)(decoded));
+    const encoded = Effect.runSync(encodeScreenActivityCoverage(decoded));
     expect(encoded.firstObservedAt).toBeNull();
     expect(Arbitrary.isArbitrary(ScreenActivityCoverage.pipe(Arbitrary.schema))).toBe(true);
   });

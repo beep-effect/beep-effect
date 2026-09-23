@@ -4,6 +4,8 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { AutoModelPick } from "../../beep/AutoModel.ts";
 
+const decodeAutoModelPick = S.decodeUnknownEffect(AutoModelPick);
+
 describe("AutoModel", () => {
   it("builds an arbitrary value", () => {
     assert.notStrictEqual(AutoModelPick.pipe(Arbitrary.schema), undefined);
@@ -16,7 +18,7 @@ describe("AutoModel", () => {
       detail: { reason: "quality", scores: { geminiFlashLive: 1 } },
       attribution: "https://artificialanalysis.ai/",
     };
-    const decoded = Effect.runSync(S.decodeUnknownEffect(AutoModelPick)(input));
+    const decoded = Effect.runSync(decodeAutoModelPick(input));
     assert.strictEqual(decoded.updatedAt, 1_700_000_000);
     assert.strictEqual(decoded.detail.reason, "quality");
   });

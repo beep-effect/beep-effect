@@ -30,6 +30,8 @@ import {
   ChatEvidenceEnvelope,
 } from "../../beep/Chat.ts";
 
+const encodeMessage = S.encodeEffect(Message);
+
 const human = Message.make({
   id: "m1",
   text: "Hello",
@@ -55,7 +57,7 @@ describe("Chat", () => {
     expect(fileChatIsDocumentMessage(pdf)).toBe(true);
     expect(fileChatIsImage(pdf)).toBe(false);
     expect("thumb_name" in fileChatPayload(pdf)).toBe(false);
-    const humanWire = Effect.runSync(S.encodeEffect(Message)(human));
+    const humanWire = Effect.runSync(encodeMessage(human));
     const decoded = Effect.runSync(
       decodeMessage({
         ...Struct.omit(humanWire, ["contentBlocks"]),

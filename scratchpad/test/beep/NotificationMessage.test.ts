@@ -5,6 +5,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { MAX_CONTENT_BLOCKS_BYTES, NotificationMessage, getMessageAsDict } from "../../beep/NotificationMessage.ts";
 
+const encodeNotificationMessage = S.encodeEffect(NotificationMessage);
+
 const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -50,12 +52,12 @@ describe("NotificationMessage", () => {
     assert.strictEqual(O.getOrNull(missing.text), "");
     assert.strictEqual(O.isNone(missing.navigateTo), true);
     assert.strictEqual(O.isNone(missing.contentBlocks), true);
-    const encoded = Effect.runSync(S.encodeEffect(NotificationMessage)(nulls));
+    const encoded = Effect.runSync(encodeNotificationMessage(nulls));
     assert.strictEqual(encoded.pluginId, null);
     assert.strictEqual(encoded.text, null);
     assert.strictEqual(encoded.navigateTo, null);
     assert.strictEqual(encoded.contentBlocks, null);
-    const encodedMissing = Effect.runSync(S.encodeEffect(NotificationMessage)(missing));
+    const encodedMissing = Effect.runSync(encodeNotificationMessage(missing));
     assert.strictEqual(encodedMissing.text, "");
   });
 

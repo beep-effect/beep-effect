@@ -25,6 +25,9 @@ import {
   type JitTriggerAuthorityItem,
 } from "../../beep/JitProactivity.ts";
 
+const encodeJitAmbientNotificationReceipt = S.encodeEffect(JitAmbientNotificationReceipt);
+const isJitTriggerPairInvalid = S.is(JitTriggerPairInvalid);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -109,7 +112,7 @@ describe("JitProactivity", () => {
       assert.strictEqual(O.isNone(row.triggerRevision), true);
       assert.strictEqual(O.isNone(row.feedbackId), true);
     }
-    const encoded = Effect.runSync(S.encodeEffect(JitAmbientNotificationReceipt)(missing));
+    const encoded = Effect.runSync(encodeJitAmbientNotificationReceipt(missing));
     assert.strictEqual(encoded.triggerMemoryId, null);
     assert.strictEqual(encoded.triggerRevision, null);
     assert.strictEqual(encoded.feedbackId, null);
@@ -165,7 +168,7 @@ describe("JitProactivity", () => {
     const idOnly = failure(
       decodeJitProactivityEventReceipt({ ...base, operation: "ambient_notification", triggerMemoryId: "trigger-1" }),
     );
-    assert.strictEqual(S.is(JitTriggerPairInvalid)(idOnly), true);
+    assert.strictEqual(isJitTriggerPairInvalid(idOnly), true);
     const revisionOnly = failure(
       decodeJitProactivityEventReceipt({
         ...base,
@@ -174,11 +177,11 @@ describe("JitProactivity", () => {
         triggerRevision: 2,
       }),
     );
-    assert.strictEqual(S.is(JitTriggerPairInvalid)(revisionOnly), true);
+    assert.strictEqual(isJitTriggerPairInvalid(revisionOnly), true);
     const excess = failure(
       decodeJitProactivityEventReceipt({ ...base, operation: "planned_notification", triggerMemoryId: "t", triggerRevision: 1, parentEventId: parent }),
     );
-    assert.strictEqual(S.is(JitTriggerPairInvalid)(excess), false);
+    assert.strictEqual(isJitTriggerPairInvalid(excess), false);
   });
 
   it("make applies schema version and timezone defaults", () => {

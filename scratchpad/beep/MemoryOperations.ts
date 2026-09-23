@@ -108,6 +108,8 @@ export const MemoryOperationType = closed(
  */
 export type MemoryOperationType = typeof MemoryOperationType.Type;
 
+const isMemoryOperationType = S.is(MemoryOperationType);
+
 /**
  * Journal status. Committed, skipped, permanent failure, and stale are terminal.
  *
@@ -317,6 +319,9 @@ export declare namespace OperationLogicalPayload {
   export type Encoded = S.Codec.Encoded<typeof OperationLogicalPayload>;
 }
 
+const isOperationLogicalPayload = S.is(OperationLogicalPayload);
+const decodeOperationLogicalPayload = S.decodeUnknownEffect(OperationLogicalPayload);
+
 /**
  * Snake-case payload with absent options removed.
  *
@@ -411,7 +416,7 @@ const camelKnown = HashSet.fromIterable([
 export const coerceLogicalPayload = Effect.fn("MemoryOperations.coerceLogicalPayload")(function* (
   value: OperationLogicalPayload | S.JsonObject,
 ) {
-  if (S.is(OperationLogicalPayload)(value)) return value;
+  if (isOperationLogicalPayload(value)) return value;
   const known: { [key: string]: S.Json } = {};
   const metadata: { [key: string]: S.Json } = {};
   A.forEach(Rec.toEntries(value), ([key, item]) => {
@@ -422,7 +427,7 @@ export const coerceLogicalPayload = Effect.fn("MemoryOperations.coerceLogicalPay
   if (!Rec.has(known, "supersedes")) known.supersedes = [];
   if (!Rec.has(known, "arguments")) known.arguments = {};
   known.metadata = metadata;
-  return yield* S.decodeUnknownEffect(OperationLogicalPayload)(known);
+  return yield* decodeOperationLogicalPayload(known);
 });
 
 /**
@@ -476,7 +481,7 @@ export const buildOperationId = Effect.fn("MemoryOperations.buildOperationId")(f
   readonly outputIndex?: number | null;
 }) {
   const payload = yield* coerceLogicalPayload(input.logicalPayload);
-  const operationType = S.is(MemoryOperationType)(input.operationType) ? input.operationType : input.operationType;
+  const operationType = isMemoryOperationType(input.operationType) ? input.operationType : input.operationType;
   const digest = deterministicContractId("memory-operation", {
     uid: input.uid,
     operation_type: operationType,

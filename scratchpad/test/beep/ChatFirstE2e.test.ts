@@ -11,6 +11,8 @@ import {
   ChatFirstE2EPrepareRequest,
 } from "../../beep/ChatFirstE2e.ts";
 
+const decodeChatFirstE2EPrepareRequest = S.decodeUnknownEffect(ChatFirstE2EPrepareRequest);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -36,7 +38,7 @@ describe("ChatFirstE2e", () => {
     expect(snapshot.expectedShell).toBe("chat_first");
     const excess: unknown = { fixtureCase: "question", extra: true };
     expect(
-      Effect.runSyncExit(S.decodeUnknownEffect(ChatFirstE2EPrepareRequest)(excess, { onExcessProperty: "error" }))._tag,
+      Effect.runSyncExit(decodeChatFirstE2EPrepareRequest(excess, { onExcessProperty: "error" }))._tag,
     ).toBe("Failure");
   });
 

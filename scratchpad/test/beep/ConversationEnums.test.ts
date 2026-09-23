@@ -13,6 +13,8 @@ import {
   PostProcessingStatus,
 } from "../../beep/ConversationEnums.ts";
 
+const decodeConversationSource = S.decodeUnknownEffect(ConversationSource);
+
 const decode = <A>(schema: S.Codec<A>, input: unknown): A => Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 describe("ConversationEnums", () => {
@@ -31,7 +33,7 @@ describe("ConversationEnums", () => {
   it("collapses unknown conversation sources and rejects non-strings", () => {
     expect(decode(ConversationSource, "pendant")).toBe("unknown");
     expect(decode(ConversationSource, "omi")).toBe("omi");
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(ConversationSource)(1))._tag).toBe("Failure");
+    expect(Effect.runSyncExit(decodeConversationSource(1))._tag).toBe("Failure");
   });
 
   it("derives arbitraries", () => {

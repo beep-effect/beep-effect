@@ -777,10 +777,15 @@ export const DailySummaryResponseWire = DailySummaryResponse.pipe(
   }),
 );
 
+const decodeDailySummaryResponseWire = S.decodeUnknownEffect(DailySummaryResponseWire);
+const encodeDailySummaryResponseWire = S.encodeEffect(DailySummaryResponseWire);
+
 const UnknownRecord = S.Record(S.String, S.Unknown);
 
+const decodeUnknownOptionUnknownRecord = S.decodeUnknownOption(UnknownRecord);
+
 const recordOf = (value: unknown): O.Option<{ readonly [key: string]: unknown }> =>
-  S.decodeUnknownOption(UnknownRecord)(value);
+  decodeUnknownOptionUnknownRecord(value);
 
 /**
  * Moves unknown daily-summary keys into `rest` before decoding.
@@ -849,7 +854,7 @@ export const absorbDailySummaryRest = (input: unknown): unknown => {
  * @since 0.0.0
  */
 export const decodeDailySummaryResponse = Effect.fn("DailySummaryResponse.decode")(function* (input: unknown) {
-  return yield* S.decodeUnknownEffect(DailySummaryResponseWire)(absorbDailySummaryRest(input));
+  return yield* decodeDailySummaryResponseWire(absorbDailySummaryRest(input));
 });
 
 /**
@@ -878,7 +883,7 @@ export const decodeDailySummaryResponse = Effect.fn("DailySummaryResponse.decode
 export const flattenDailySummaryRest = Effect.fn("DailySummaryResponse.flattenRest")(function* (
   summary: DailySummaryResponse,
 ) {
-  const encoded = yield* S.encodeEffect(DailySummaryResponseWire)(summary);
+  const encoded = yield* encodeDailySummaryResponseWire(summary);
   const { rest, ...body } = encoded;
   return { ...body, ...rest };
 });

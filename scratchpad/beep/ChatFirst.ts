@@ -33,6 +33,7 @@ import {
   textBoundsCheck,
   timestamp,
 } from "./Kit.ts";
+import * as R from "effect/Record";
 import { atLeastCheck, boolDefault, intAtLeast, intBetween, isRecord, jsonList, Model, optionalNull, pg, textDefault } from "./Port.ts";
 
 const $I = $ScratchpadId.create("beep/ChatFirst");
@@ -102,6 +103,8 @@ export const ProactiveIntentDeliveryState = LiteralKit([
     description: "Delivery state of a proactive intent. Unknown strings are coerced to dead_letter before decode.",
   }),
 );
+
+const isProactiveIntentDeliveryState = S.is(ProactiveIntentDeliveryState);
 
 export const ProactiveIntentOutcome = LiteralKit(["accepted", "dismissed", "expired", "suppressed"]).pipe(
   $I.annoteSchema("ProactiveIntentOutcome", { description: "Terminal outcome reported for a proactive intent." }),
@@ -381,10 +384,10 @@ export const ChatFirstLegacyBlockSpec = ChatFirstLegacyBlockKind.mapMembers(
 ).pipe(S.toTaggedUnion("type"), $I.annoteSchema("ChatFirstLegacyBlockSpec", { description: "Legacy chat-first block." }));
 
 const stripNulls = (value: unknown): unknown => {
-  if (Array.isArray(value)) return value.map(stripNulls);
+  if (Arr.isArray(value)) return value.map(stripNulls);
   if (!isRecord(value)) return value;
   const out: { [key: string]: unknown } = {};
-  for (const key of Object.keys(value)) {
+  for (const key of R.keys(value)) {
     const child = value[key];
     if (child !== null && child !== undefined) out[key] = stripNulls(child);
   }
@@ -523,6 +526,8 @@ export declare namespace ProactiveIntent {
   export type Encoded = S.Codec.Encoded<typeof ProactiveIntent>;
 }
 
+const decodeUnknownEffectProactiveIntent = S.decodeUnknownEffect(ProactiveIntent);
+
 /**
  * Coerces an unknown delivery state to `dead_letter`, then decodes.
  *
@@ -546,14 +551,14 @@ export declare namespace ProactiveIntent {
  * @since 0.0.0
  */
 export const decodeProactiveIntent = (input: unknown) => {
-  if (!isRecord(input)) return S.decodeUnknownEffect(ProactiveIntent)(input);
+  if (!isRecord(input)) return decodeUnknownEffectProactiveIntent(input);
   const repaired: { [key: string]: unknown } = { ...input };
   const state = repaired.deliveryState ?? repaired.delivery_state;
-  if (state !== undefined && !S.is(ProactiveIntentDeliveryState)(state)) {
+  if (state !== undefined && !isProactiveIntentDeliveryState(state)) {
     repaired.deliveryState = "dead_letter";
     repaired.delivery_state = "dead_letter";
   }
-  return S.decodeUnknownEffect(ProactiveIntent)(repaired);
+  return decodeUnknownEffectProactiveIntent(repaired);
 };
 
 /**

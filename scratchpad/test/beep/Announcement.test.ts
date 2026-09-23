@@ -33,6 +33,8 @@ import {
   targetingToDict,
 } from "../../beep/Announcement.ts";
 
+const decodeAnnouncement = S.decodeUnknownEffect(Announcement);
+
 const created = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z");
 
 const notice = () =>
@@ -74,7 +76,7 @@ describe("Announcement", () => {
       active: true,
       content: { title: "January", changes: [{ title: "Fix", description: "Audio", indentLevel: 0 }] },
     };
-    const log = Effect.runSync(S.decodeUnknownEffect(Announcement)(logInput));
+    const log = Effect.runSync(decodeAnnouncement(logInput));
     assert.strictEqual(log.type, "changelog");
     const featureInput: unknown = {
       id: "feat-1",
@@ -83,7 +85,7 @@ describe("Announcement", () => {
       active: true,
       content: { title: "Memory", steps: [{ title: "Open", description: "Tap" }] },
     };
-    const feature = Effect.runSync(S.decodeUnknownEffect(Announcement)(featureInput));
+    const feature = Effect.runSync(decodeAnnouncement(featureInput));
     assert.strictEqual(feature.type, "feature");
     const generalInput: unknown = {
       id: "note-1",
@@ -92,7 +94,7 @@ describe("Announcement", () => {
       active: true,
       content: { title: "Hello", body: "World" },
     };
-    const general = Effect.runSync(S.decodeUnknownEffect(Announcement)(generalInput));
+    const general = Effect.runSync(decodeAnnouncement(generalInput));
     assert.strictEqual(general.type, "announcement");
   });
 

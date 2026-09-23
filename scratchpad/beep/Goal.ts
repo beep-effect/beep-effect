@@ -28,6 +28,8 @@ import { EvidenceRef } from "./ActionItem.ts";
 import { boundedText, optionalBoundedText, optionalStableId, optionalText, optionalTimestamp, stableId, text, textBoundsCheck, timestamp } from "./Kit.ts";
 import { atLeastCheck, betweenCheck, boolDefault, finiteDefault, intDefault, jsonbArrayLengthCheck, Model, optionalNull, pg, Table } from "./Port.ts";
 
+const decodeUnknownOptionStringUnknownRecord = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
+
 const $I = $ScratchpadId.create("beep/Goal");
 
 /**
@@ -52,6 +54,8 @@ export const GoalType = LiteralKit(["boolean", "scale", "numeric"]).pipe(
 
 /** @category type-level @since 0.0.0 */
 export type GoalType = typeof GoalType.Type;
+
+const decodeGoalType = S.decodeUnknownEffect(GoalType);
 
 /**
  * Goal lifecycle status, including focused.
@@ -278,7 +282,7 @@ export const validateMetricBounds = Effect.fn("GoalMetric.validateBounds")(funct
  * @since 0.0.0
  */
 export const normalizeLegacyDescription = (value: unknown): unknown => {
-  const record = S.decodeUnknownOption(S.Record(S.String, S.Unknown))(value);
+  const record = decodeUnknownOptionStringUnknownRecord(value);
   if (O.isNone(record) || !R.has(record.value, "description")) return value;
   const description = record.value.description;
   const without = R.remove(record.value, "description");
@@ -432,6 +436,8 @@ export const GoalCreateWire = GoalCreate.pipe(
   }),
 );
 
+const decodeGoalCreateWire = S.decodeUnknownEffect(GoalCreateWire, { onExcessProperty: "error" });
+
 const trimmedCriteria = (values: ReadonlyArray<string>): ReadonlyArray<string> => {
   let kept = A.empty<string>();
   for (const value of values) {
@@ -472,7 +478,7 @@ export const normalizeLegacyMetric = Effect.fn("GoalCreate.normalizeLegacyMetric
     ? O.some(
         yield* validateMetricBounds(
           GoalMetric.make({
-            type: yield* S.decodeUnknownEffect(GoalType)(O.getOrElse(create.goalType, () => scaleType)),
+            type: yield* decodeGoalType(O.getOrElse(create.goalType, () => scaleType)),
             current: O.getOrElse(create.currentValue, () => 0),
             target: O.getOrElse(create.targetValue, () => 0),
             min: create.minValue,
@@ -510,7 +516,7 @@ export const normalizeLegacyMetric = Effect.fn("GoalCreate.normalizeLegacyMetric
  * @since 0.0.0
  */
 export const decodeGoalCreate = Effect.fn("GoalCreate.decode")(function* (input: unknown) {
-  const decoded = yield* S.decodeUnknownEffect(GoalCreateWire, { onExcessProperty: "error" })(
+  const decoded = yield* decodeGoalCreateWire(
     normalizeLegacyDescription(input),
   );
   return yield* normalizeLegacyMetric(decoded);
@@ -597,6 +603,8 @@ export const GoalUpdateWire = GoalUpdate.pipe(
   }),
 );
 
+const decodeGoalUpdateWire = S.decodeUnknownEffect(GoalUpdateWire, { onExcessProperty: "error" });
+
 const nullGuards: ReadonlyArray<readonly [string, string]> = [
   ["title", "title cannot be null"],
   ["desired_outcome", "desired_outcome cannot be null"],
@@ -625,7 +633,7 @@ export const protectRequiredFields = Effect.fn("GoalUpdate.protectRequiredFields
   raw: unknown,
   update: GoalUpdate,
 ) {
-  const record = S.decodeUnknownOption(S.Record(S.String, S.Unknown))(raw);
+  const record = decodeUnknownOptionStringUnknownRecord(raw);
   if (O.isSome(record)) {
     for (const [key, message] of nullGuards) {
       if (R.has(record.value, key) && record.value[key] === null) {
@@ -663,7 +671,7 @@ export const protectRequiredFields = Effect.fn("GoalUpdate.protectRequiredFields
  * @since 0.0.0
  */
 export const decodeGoalUpdate = Effect.fn("GoalUpdate.decode")(function* (input: unknown) {
-  const decoded = yield* S.decodeUnknownEffect(GoalUpdateWire, { onExcessProperty: "error" })(input);
+  const decoded = yield* decodeGoalUpdateWire(input);
   return yield* protectRequiredFields(input, decoded);
 });
 
@@ -756,6 +764,8 @@ export const GoalLifecycleRequestWire = GoalLifecycleRequest.pipe(
   S.encodeKeys({ relationshipDisposition: "relationship_disposition" }),
 );
 
+const decodeGoalLifecycleRequestWire = S.decodeUnknownEffect(GoalLifecycleRequestWire, { onExcessProperty: "error" });
+
 /**
  * Rejects a lifecycle status that does not pause or end the goal.
  *
@@ -800,7 +810,7 @@ export const validateTerminalStatus = Effect.fn("GoalLifecycleRequest.validateTe
  * @since 0.0.0
  */
 export const decodeGoalLifecycleRequest = Effect.fn("GoalLifecycleRequest.decode")(function* (input: unknown) {
-  const decoded = yield* S.decodeUnknownEffect(GoalLifecycleRequestWire, { onExcessProperty: "error" })(input);
+  const decoded = yield* decodeGoalLifecycleRequestWire(input);
   return yield* validateTerminalStatus(decoded);
 });
 

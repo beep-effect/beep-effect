@@ -235,6 +235,8 @@ export const PhysicalMemoryStatus = LiteralKit(["active", "superseded", "tombsto
  */
 export type PhysicalMemoryStatus = typeof PhysicalMemoryStatus.Type;
 
+const isPhysicalMemoryStatus = S.is(PhysicalMemoryStatus);
+
 /**
  * Internal pipeline processing state. Never surfaced to clients.
  *
@@ -354,7 +356,7 @@ export const canonicalRecordStatus = (physicalStatus: PhysicalMemoryStatus): Mem
 export const physicalStatusToRecordStatus = Effect.fn("MemoryDomain.physicalStatusToRecordStatus")(function* (
   physicalStatus: string,
 ) {
-  if (!S.is(PhysicalMemoryStatus)(physicalStatus)) {
+  if (!isPhysicalMemoryStatus(physicalStatus)) {
     return yield* MemoryDomainError.make({
       message: `unknown physical memory status: '${physicalStatus}'`,
     });

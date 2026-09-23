@@ -24,6 +24,8 @@ import * as Str from "effect/String";
 import { UtcTimestamp, accountGenerationDefault, boundedText, nonNegativeIntCheck, optionalTimestamp, textBoundsCheck, timestamp } from "./Kit.ts";
 import { betweenCheck, Model, optionalNull, pg } from "./Port.ts";
 
+const decodeUtcTimestamp = S.decodeEffect(UtcTimestamp);
+
 const $I = $ScratchpadId.create("beep/FrameRequest");
 
 const byteLimit = 10 * 1024 * 1024;
@@ -294,7 +296,7 @@ export const validateStateUpdateStorageId = Effect.fn("FrameRequestStateUpdate.v
  */
 export const normalizeFrameInstant = Effect.fn("FrameRequest.normalizeDateTime")(function* (value: O.Option<string>) {
   if (O.isNone(value)) return O.none<DateTime.Utc>();
-  const instant = yield* S.decodeEffect(UtcTimestamp)(value.value);
+  const instant = yield* decodeUtcTimestamp(value.value);
   return O.some(instant);
 });
 
@@ -492,6 +494,8 @@ export const FrameRequestWire = FrameRequest.pipe(
   }),
 );
 
+const decodeFrameRequestWire = S.decodeUnknownEffect(FrameRequestWire, { onExcessProperty: "error" });
+
 const sameInstant = (left: DateTime.Utc, right: DateTime.Utc): boolean =>
   DateTime.toEpochMillis(left) === DateTime.toEpochMillis(right);
 
@@ -553,12 +557,14 @@ export const validateFrameLifecycle = Effect.fn("FrameRequest.validateLifecycle"
 
 const UnknownRecord = S.Record(S.String, S.Unknown);
 
+const decodeUnknownOptionUnknownRecord = S.decodeUnknownOption(UnknownRecord);
+
 const prepareStrings = Effect.fn("FrameRequest.prepareStrings")(function* (
   input: unknown,
   required: ReadonlyArray<string>,
   optional: ReadonlyArray<string>,
 ) {
-  const record = S.decodeUnknownOption(UnknownRecord)(input);
+  const record = decodeUnknownOptionUnknownRecord(input);
   if (O.isNone(record)) return input;
   let next = record.value;
   for (const key of required) {
@@ -612,7 +618,7 @@ export const decodeFrameRequest = Effect.fn("FrameRequest.decode")(function* (in
     ["uid", "device_id", "request_id", "dedupe_key"],
     ["conversation_id", "screenshot_id", "terminal_reason", "content_type", "storage_id"],
   );
-  const decoded = yield* S.decodeUnknownEffect(FrameRequestWire, { onExcessProperty: "error" })(prepared);
+  const decoded = yield* decodeFrameRequestWire(prepared);
   const requestId = yield* validateRequestId(decoded.requestId);
   const storageId = yield* validateFrameStorageId(decoded.storageId);
   return yield* validateFrameLifecycle(FrameRequest.make({ ...decoded, requestId, storageId }));
@@ -691,6 +697,8 @@ export const CreateFrameRequestWire = CreateFrameRequest.pipe(
   }),
 );
 
+const decodeCreateFrameRequestWire = S.decodeUnknownEffect(CreateFrameRequestWire, { onExcessProperty: "error" });
+
 /**
  * Decodes a create body and rejects unknown keys. Does not strip.
  *
@@ -709,7 +717,7 @@ export const CreateFrameRequestWire = CreateFrameRequest.pipe(
  * @since 0.0.0
  */
 export const decodeCreateFrameRequest = Effect.fn("CreateFrameRequest.decode")(function* (input: unknown) {
-  return yield* S.decodeUnknownEffect(CreateFrameRequestWire, { onExcessProperty: "error" })(input);
+  return yield* decodeCreateFrameRequestWire(input);
 });
 
 /**
@@ -785,6 +793,8 @@ export const FrameRequestStateUpdateWire = FrameRequestStateUpdate.pipe(
   }),
 );
 
+const decodeFrameRequestStateUpdateWire = S.decodeUnknownEffect(FrameRequestStateUpdateWire, { onExcessProperty: "error" });
+
 /**
  * Decodes a state update, strips storage id, and rejects unknown keys.
  *
@@ -807,7 +817,7 @@ export const FrameRequestStateUpdateWire = FrameRequestStateUpdate.pipe(
  */
 export const decodeFrameRequestStateUpdate = Effect.fn("FrameRequestStateUpdate.decode")(function* (input: unknown) {
   const prepared = yield* prepareStrings(input, [], ["storage_id", "terminal_reason", "content_type"]);
-  const decoded = yield* S.decodeUnknownEffect(FrameRequestStateUpdateWire, { onExcessProperty: "error" })(prepared);
+  const decoded = yield* decodeFrameRequestStateUpdateWire(prepared);
   const storageId = yield* validateFrameStorageId(decoded.storageId);
   return FrameRequestStateUpdate.make({ ...decoded, storageId });
 });

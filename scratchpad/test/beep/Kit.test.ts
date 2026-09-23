@@ -40,9 +40,11 @@ import {
   userId,
 } from "../../beep/Kit.ts";
 
+const isKitFieldError = S.is(KitFieldError);
+
 const dialect = new PgDialect();
 
-const decode = <A>(schema: S.Codec<A, unknown, never, unknown>, input: unknown): A =>
+const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 const decodeFails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
@@ -53,7 +55,7 @@ const problemOf = (run: () => void): string => {
     try: run,
     catch: (error) => error,
   });
-  if (Result.isFailure(attempted) && S.is(KitFieldError)(attempted.failure)) return attempted.failure.problem;
+  if (Result.isFailure(attempted) && isKitFieldError(attempted.failure)) return attempted.failure.problem;
   return "absent";
 };
 
@@ -78,6 +80,8 @@ class RequiredRow extends Model<RequiredRow>("RequiredRow")(
   ],
 ) {}
 
+const decodeRequiredRow = S.decodeEffect(RequiredRow);
+
 class OptionalRow extends Model<OptionalRow>("OptionalRow")(
   {
     parentId: optionalStableId("parent_id"),
@@ -96,6 +100,9 @@ class OptionalRow extends Model<OptionalRow>("OptionalRow")(
     nonNegativeIntCheck("attempt")(columns.attempt),
   ],
 ) {}
+
+const decodeOptionalRow = S.decodeEffect(OptionalRow);
+const encodeOptionalRow = S.encodeEffect(OptionalRow);
 
 const presentOptional = {
   parentId: "parent-1",
@@ -158,7 +165,7 @@ describe("required columns", () => {
   };
 
   it("decodes present values", () => {
-    const decoded = Effect.runSync(S.decodeEffect(RequiredRow)(input));
+    const decoded = Effect.runSync(decodeRequiredRow(input));
     assert.strictEqual(decoded.id, "goal-1");
     assert.strictEqual(decoded.uid, "user-1");
     assert.strictEqual(decoded.title, "Notes");
@@ -182,7 +189,7 @@ describe("required columns", () => {
 
 describe("optional columns", () => {
   it("decodes present values", () => {
-    const decoded = Effect.runSync(S.decodeEffect(OptionalRow)(presentOptional));
+    const decoded = Effect.runSync(decodeOptionalRow(presentOptional));
     assert.strictEqual(O.isSome(decoded.parentId) && decoded.parentId.value, "parent-1");
     assert.strictEqual(O.isSome(decoded.uid) && decoded.uid.value, "user-1");
     assert.strictEqual(O.isSome(decoded.note) && decoded.note.value, "hello");
@@ -194,7 +201,7 @@ describe("optional columns", () => {
     assert.strictEqual(O.isSome(decoded.dueConfidence) && decoded.dueConfidence.value, 1);
     assert.strictEqual(O.isSome(decoded.attempt) && decoded.attempt.value, 2);
     assert.strictEqual(O.isSome(decoded.archived) && decoded.archived.value, false);
-    const encoded = Effect.runSync(S.encodeEffect(OptionalRow)(decoded));
+    const encoded = Effect.runSync(encodeOptionalRow(decoded));
     assert.strictEqual(encoded.updatedAt, "2020-01-02T03:04:05.000Z");
     assert.strictEqual(encoded.parentId, "parent-1");
     assert.strictEqual(encoded.dueConfidence, 1);
@@ -202,7 +209,7 @@ describe("optional columns", () => {
   });
 
   it("decodes null and missing keys as None and encodes None as null", () => {
-    const fromNull = Effect.runSync(S.decodeEffect(OptionalRow)({
+    const fromNull = Effect.runSync(decodeOptionalRow({
       parentId: null,
       uid: null,
       note: null,
@@ -212,9 +219,9 @@ describe("optional columns", () => {
       attempt: null,
       archived: null,
     }));
-    const fromMissing = Effect.runSync(S.decodeEffect(OptionalRow)({}));
+    const fromMissing = Effect.runSync(decodeOptionalRow({}));
     const made = OptionalRow.make({});
-    const encoded = Effect.runSync(S.encodeEffect(OptionalRow)(made));
+    const encoded = Effect.runSync(encodeOptionalRow(made));
     for (const row of [fromNull, fromMissing, made]) {
       assert.strictEqual(O.isNone(row.parentId), true);
       assert.strictEqual(O.isNone(row.uid), true);
@@ -264,7 +271,7 @@ describe("constructor defaults", () => {
     }) {}
     assert.strictEqual(Row.make({}).accountGeneration, 0);
     assert.strictEqual(decodeFails(Row, {}), true);
-    assert.strictEqual(Effect.runSync(S.decodeEffect(Row)({ accountGeneration: 4 })).accountGeneration, 4);
+    assert.strictEqual(decode(Row, { accountGeneration: 4 }).accountGeneration, 4);
   });
 
   it("fills a timestamp with the current UTC instant only at construction", () => {

@@ -20,6 +20,8 @@ import {
   reserveBudget,
 } from "../../beep/ProactiveBudget.ts";
 
+const isProactiveBudgetExhausted = S.is(ProactiveBudgetExhausted);
+
 const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -143,7 +145,7 @@ describe("ProactiveBudget", () => {
       onFailure: (cause) =>
         cause.pipe(
           Cause.findErrorOption,
-          O.filter(S.is(ProactiveBudgetExhausted)),
+          O.filter(isProactiveBudgetExhausted),
           O.map((error) => error.reason),
           O.getOrElse(() => "other"),
         ),

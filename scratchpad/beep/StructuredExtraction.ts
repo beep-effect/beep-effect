@@ -46,6 +46,11 @@ import {
   setCategoryDefaultOnError,
 } from "./Structured.ts";
 
+const isCaptureKind = S.is(CaptureKind);
+const isCaptureOwner = S.is(CaptureOwner);
+const isDueCertainty = S.is(DueCertainty);
+const isCandidateAction = S.is(CandidateAction);
+
 const $I = $ScratchpadId.create("beep/StructuredExtraction");
 
 const emptyStrings: ReadonlyArray<string> = [];
@@ -90,10 +95,10 @@ const inVocabulary = (field: (typeof literalFields)[number], value: unknown): bo
   MatchField(field, value);
 
 const MatchField = (field: (typeof literalFields)[number], value: unknown): boolean => {
-  if (field === "captureKind") return S.is(CaptureKind)(value);
-  if (field === "captureOwner") return S.is(CaptureOwner)(value);
-  if (field === "dueCertainty") return S.is(DueCertainty)(value);
-  return S.is(CandidateAction)(value);
+  if (field === "captureKind") return isCaptureKind(value);
+  if (field === "captureOwner") return isCaptureOwner(value);
+  if (field === "dueCertainty") return isDueCertainty(value);
+  return isCandidateAction(value);
 };
 
 const normalizedToken = (value: unknown): O.Option<string> =>

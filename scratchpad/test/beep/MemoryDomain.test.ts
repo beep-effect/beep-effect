@@ -20,6 +20,9 @@ import {
   tierToLayer,
 } from "../../beep/MemoryDomain.ts";
 
+const isMemoryDomainError = S.is(MemoryDomainError);
+const encodeMemoryDomainRecord = S.encodeEffect(MemoryDomainRecord);
+
 const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -81,7 +84,7 @@ describe("physical status mapping", () => {
     const exit = Effect.runSyncExit(physicalStatusToRecordStatus("archived"));
     assert.strictEqual(exit._tag, "Failure");
     const error = physicalStatusToRecordStatus("archived").pipe(Effect.flip, Effect.runSync);
-    assert.strictEqual(S.is(MemoryDomainError)(error), true);
+    assert.strictEqual(isMemoryDomainError(error), true);
     assert.strictEqual(error.message, "unknown physical memory status: 'archived'");
   });
 });
@@ -114,7 +117,7 @@ describe("§1.3 legal state matrix", () => {
   it("assertLegalState succeeds on a legal triple and fails with the Python message", () => {
     assert.strictEqual(fails(assertLegalState("long_term", "active", "processed")), false);
     const error = assertLegalState("archive", "superseded", "processed").pipe(Effect.flip, Effect.runSync);
-    assert.strictEqual(S.is(MemoryDomainError)(error), true);
+    assert.strictEqual(isMemoryDomainError(error), true);
     assert.strictEqual(
       error.message,
       "illegal memory state combination: layer=archive, status=superseded, processing_state=processed",
@@ -190,7 +193,7 @@ describe("MemoryDomainRecord", () => {
     assert.strictEqual(O.isNone(missing.expiresAt), true);
     assert.strictEqual(missing.status, "hidden");
 
-    const encoded = Effect.runSync(S.encodeEffect(MemoryDomainRecord)(missing));
+    const encoded = Effect.runSync(encodeMemoryDomainRecord(missing));
     assert.strictEqual(encoded.category, null);
     assert.strictEqual(encoded.canonicalMemoryId, null);
     assert.strictEqual(encoded.promotion, null);

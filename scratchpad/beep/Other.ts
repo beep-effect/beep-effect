@@ -73,6 +73,8 @@ export declare namespace VoiceReadiness {
   export type Encoded = S.Codec.Encoded<typeof VoiceReadiness>;
 }
 
+const isVoiceReadiness = S.is(VoiceReadiness);
+
 /**
  * IANA timezone that failed validation.
  *
@@ -531,6 +533,8 @@ export declare namespace Person {
   export type Encoded = S.Codec.Encoded<typeof Person>;
 }
 
+const decodeUnknownEffectPerson = S.decodeUnknownEffect(Person);
+
 const withDefined = (record: { readonly [key: string]: unknown }, key: string, value: unknown) =>
   value === undefined ? record : { ...record, [key]: value };
 
@@ -561,10 +565,10 @@ const withDefined = (record: { readonly [key: string]: unknown }, key: string, v
  * @since 0.0.0
  */
 export const decodePerson = Effect.fn("Person.decodePerson")(function* (input: unknown) {
-  if (!P.isObject(input)) return yield* S.decodeUnknownEffect(Person)(input);
+  if (!P.isObject(input)) return yield* decodeUnknownEffectPerson(input);
   const claimed = readKey(input, "voice_readiness", "voiceReadiness");
   const embeddingPresent = P.hasProperty(input, "speaker_embedding") || P.hasProperty(input, "speakerEmbedding");
-  const readiness = S.is(VoiceReadiness)(claimed) && !embeddingPresent ? claimed : voiceReadiness(input);
+  const readiness = isVoiceReadiness(claimed) && !embeddingPresent ? claimed : voiceReadiness(input);
   const translated = withDefined(
     withDefined(
       withDefined(
@@ -586,7 +590,7 @@ export const decodePerson = Effect.fn("Person.decodePerson")(function* (input: u
     "voiceReadiness",
     readiness,
   );
-  return yield* S.decodeUnknownEffect(Person)(translated);
+  return yield* decodeUnknownEffectPerson(translated);
 });
 
 /**

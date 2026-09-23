@@ -22,6 +22,8 @@ import {
   validateLedgerKinds,
 } from "../../beep/KnowledgeLedgerSearch.ts";
 
+const isInvalidLedgerKinds = S.is(InvalidLedgerKinds);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -183,11 +185,11 @@ describe("KnowledgeLedgerSearch", () => {
     assert.strictEqual(HashSet.has(parsed, "fact"), true);
     assert.strictEqual(HashSet.has(parsed, "trigger"), true);
     const empty = failure(validateLedgerKinds([]));
-    assert.strictEqual(S.is(InvalidLedgerKinds)(empty), true);
+    assert.strictEqual(isInvalidLedgerKinds(empty), true);
     const blank = failure(validateLedgerKinds(["  "]));
-    assert.strictEqual(S.is(InvalidLedgerKinds)(blank), true);
+    assert.strictEqual(isInvalidLedgerKinds(blank), true);
     const unknown = failure(validateLedgerKinds(["fact", "note"]));
-    assert.strictEqual(S.is(InvalidLedgerKinds)(unknown), true);
+    assert.strictEqual(isInvalidLedgerKinds(unknown), true);
     assert.strictEqual(unknown.message, "kinds must contain only fact, document, or trigger");
   });
 });

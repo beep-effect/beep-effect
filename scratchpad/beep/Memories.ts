@@ -24,6 +24,7 @@ import * as Rec from "effect/Record";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as P from "effect/Predicate";
 import {
   Model,
   optionalBoundedText,
@@ -433,7 +434,7 @@ const CaptureAttribution = LiteralKit([
  * @since 0.0.0
  */
 export const mapLegacyCategories = (value: unknown): typeof MemoryCategoryPrimary.Type => {
-  if (typeof value !== "string") return interestingCategory;
+  if (!P.isString(value)) return interestingCategory;
   if (value === "interesting" || value === "system" || value === "manual" || value === "workflow") return value;
   if (
     value === "core" ||
@@ -716,6 +717,8 @@ export declare namespace Evidence {
   export type Encoded = S.Codec.Encoded<typeof Evidence>;
 }
 
+const isEvidence = S.is(Evidence);
+
 const memoryDbOnly = () => ({
   id: text("id"),
   uid: userId("uid"),
@@ -808,6 +811,8 @@ export class MemoryDB extends Model<MemoryDB>("MemoryDB")(
 export declare namespace MemoryDB {
   export type Encoded = S.Codec.Encoded<typeof MemoryDB>;
 }
+
+const decodeMemoryDB = S.decodeUnknownEffect(MemoryDB);
 
 /**
  * Legacy short-term shadow row.
@@ -932,12 +937,12 @@ export const documentIdFromSeed = (seed: string): string => {
 };
 
 const pyLiteral = (value: unknown): string => {
-  if (typeof value === "string") return `'${Str.replaceAll("'", "\\'")(value)}'`;
-  if (typeof value === "number" && Number.isFinite(value)) return String(value);
-  if (typeof value === "boolean") return value ? "True" : "False";
+  if (P.isString(value)) return `'${Str.replaceAll("'", "\\'")(value)}'`;
+  if (P.isNumber(value) && Number.isFinite(value)) return String(value);
+  if (P.isBoolean(value)) return value ? "True" : "False";
   if (value === null || value === undefined) return "None";
   if (A.isArray(value)) return `[${A.join(", ")(A.map(value, pyLiteral))}]`;
-  if (typeof value === "object") {
+  if (P.isObject(value)) {
     const entries = A.sort(Rec.toEntries(value), (left: readonly [string, unknown], right: readonly [string, unknown]) =>
       left[0] < right[0] ? -1 : left[0] > right[0] ? 1 : 0,
     );
@@ -995,7 +1000,7 @@ export const confidenceBand = (value: number): "low" | "medium" | "high" | "cert
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !A.isArray(value) && !DateTime.isDateTime(value);
+  P.isObject(value) && !DateTime.isDateTime(value);
 
 const readField = (row: object, key: string): unknown => (key in row ? Reflect.get(row, key) : undefined);
 
@@ -1080,10 +1085,10 @@ export const evidenceFromSource = (input: {
 };
 
 const numberOf = (value: unknown): O.Option<number> =>
-  typeof value === "number" && Number.isFinite(value) ? O.some(value) : O.none();
+  P.isNumber(value) && Number.isFinite(value) ? O.some(value) : O.none();
 
 const evidenceView = (item: object): Record<string, unknown> =>
-  S.is(Evidence)(item)
+  isEvidence(item)
     ? {
         evidenceId: item.evidenceId,
         redactionStatus: item.redactionStatus,
@@ -1130,7 +1135,7 @@ export const computeVeracity = (input: {
   const items = activeEvidence(input.evidence);
   const groups = A.reduce(items, HashSet.empty<string>(), (acc, item) => {
     const group = item.independenceGroup ?? item.sourceId;
-    return typeof group === "string" && group.length > 0 ? HashSet.add(acc, group) : acc;
+    return P.isString(group) && group.length > 0 ? HashSet.add(acc, group) : acc;
   });
   if (HashSet.size(groups) === 0) return 0.35;
   const maxCapture = O.getOrElse(
@@ -1180,7 +1185,7 @@ export const uncertaintyReasonsFor = (input: {
   const items = activeEvidence(input.evidence);
   const groups = A.reduce(items, HashSet.empty<string>(), (acc, item) => {
     const group = item.independenceGroup ?? item.sourceId;
-    return typeof group === "string" && group.length > 0 ? HashSet.add(acc, group) : acc;
+    return P.isString(group) && group.length > 0 ? HashSet.add(acc, group) : acc;
   });
   const reasons = A.empty<string>();
   const withSingle = HashSet.size(groups) <= 1 ? A.append(reasons, "single_source") : reasons;
@@ -1250,7 +1255,7 @@ export const mergeEvidenceSets = (input: {
   const seen = A.reduce([...input.existing, ...input.incoming], { rows: A.empty<Record<string, unknown>>(), index: HashMap.empty<string, number>() }, (state, item) => {
     const view = evidenceView(item);
     const evidenceId = view.evidenceId;
-    if (typeof evidenceId !== "string") return { ...state, rows: A.append(state.rows, view) };
+    if (!P.isString(evidenceId)) return { ...state, rows: A.append(state.rows, view) };
     const current = HashMap.get(state.index, evidenceId);
     if (O.isNone(current)) {
       return { rows: A.append(state.rows, view), index: HashMap.set(state.index, evidenceId, state.rows.length) };
@@ -1335,28 +1340,28 @@ export const propositionize = (input: {
  */
 export const renderMemory = (memory: object): string => {
   const contentValue = readField(memory, "content");
-  const content = typeof contentValue === "string" ? contentValue : "";
+  const content = P.isString(contentValue) ? contentValue : "";
   const predicateValue = readField(memory, "predicate");
   const predicate =
-    typeof predicateValue === "string"
+    P.isString(predicateValue)
       ? predicateValue
-      : O.isOption(predicateValue) && O.isSome(predicateValue) && typeof predicateValue.value === "string"
+      : O.isOption(predicateValue) && O.isSome(predicateValue) && P.isString(predicateValue.value)
         ? predicateValue.value
         : "";
   const categoryValue = readField(memory, "category");
-  const category = typeof categoryValue === "string" ? O.some(categoryValue) : O.none();
+  const category = P.isString(categoryValue) ? O.some(categoryValue) : O.none();
   const parsed = predicate.length === 0 ? propositionize({ content, category }) : null;
   const parsedName = parsed === null ? null : O.getOrNull(parsed.predicate);
-  const name = predicate.length > 0 ? predicate : typeof parsedName === "string" ? parsedName : null;
+  const name = predicate.length > 0 ? predicate : P.isString(parsedName) ? parsedName : null;
   const argsValue = readField(memory, "arguments");
   const args = isRecord(argsValue) ? argsValue : parsed?.arguments ?? {};
   if (name === null) return content;
-  if (name === "resides_in" && typeof args.location === "string") return `Lives in ${args.location}`;
-  if (name === "works_at" && typeof args.organization === "string") {
-    return typeof args.role === "string" ? `Works at ${args.organization} as ${args.role}` : `Works at ${args.organization}`;
+  if (name === "resides_in" && P.isString(args.location)) return `Lives in ${args.location}`;
+  if (name === "works_at" && P.isString(args.organization)) {
+    return P.isString(args.role) ? `Works at ${args.organization} as ${args.role}` : `Works at ${args.organization}`;
   }
-  if (name === "prefers" && typeof args.thing === "string") return `Prefers ${args.thing}`;
-  if (name === "has" && typeof args.object === "string") return `Has ${args.object}`;
+  if (name === "prefers" && P.isString(args.thing)) return `Prefers ${args.thing}`;
+  if (name === "has" && P.isString(args.object)) return `Has ${args.object}`;
   if (name === "age_years" && args.years !== undefined) return `Is ${String(args.years)} years old`;
   return content;
 };
@@ -1381,12 +1386,12 @@ export const structurallyConflicts = (input: { readonly left: object; readonly r
   const leftCategory = readField(input.left, "category");
   const rightCategory = readField(input.right, "category");
   const left = propositionize({
-    content: typeof leftContent === "string" ? leftContent : "",
-    category: typeof leftCategory === "string" ? O.some(leftCategory) : O.none(),
+    content: P.isString(leftContent) ? leftContent : "",
+    category: P.isString(leftCategory) ? O.some(leftCategory) : O.none(),
   });
   const right = propositionize({
-    content: typeof rightContent === "string" ? rightContent : "",
-    category: typeof rightCategory === "string" ? O.some(rightCategory) : O.none(),
+    content: P.isString(rightContent) ? rightContent : "",
+    category: P.isString(rightCategory) ? O.some(rightCategory) : O.none(),
   });
   if (O.isNone(left.predicate) || O.isNone(right.predicate) || left.predicate.value !== right.predicate.value) return false;
   const leftSubject = O.getOrNull(left.subjectEntityId);
@@ -1523,7 +1528,7 @@ export const isActive = (memory: { readonly invalidAt: O.Option<DateTime.Utc> })
  * @since 0.0.0
  */
 export const decodeMemoryDb = Effect.fn("MemoryDB.decode")(function* (input: unknown) {
-  const decoded = yield* S.decodeUnknownEffect(MemoryDB)(input);
+  const decoded = yield* decodeMemoryDB(input);
   return MemoryDB.make({ ...decoded, memoryId: O.some(decoded.id) });
 });
 
@@ -1785,7 +1790,7 @@ export const shortTermFromMemory = (input: {
 export const getMemoriesAsStr = (memories: ReadonlyArray<object>): string =>
   A.join("")(
     A.map(memories, (memory) => {
-      const content = typeof readField(memory, "content") === "string" ? readField(memory, "content") : "";
+      const content = P.isString(readField(memory, "content")) ? readField(memory, "content") : "";
       const stamp = readField(memory, "asOf");
       const created = readField(memory, "createdAt");
       const when = DateTime.isDateTime(stamp) ? stamp : DateTime.isDateTime(created) ? created : undefined;

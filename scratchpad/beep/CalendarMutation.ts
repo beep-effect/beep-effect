@@ -137,8 +137,10 @@ const primitiveText = (value: S.Json): string => {
  */
 const SummaryField = S.Struct({ summary: S.Json });
 
+const isSummaryField = S.is(SummaryField);
+
 export const eventTitle = (event: CalendarEvent): string =>
-  S.is(SummaryField)(event) ? primitiveText(event.summary) : "Untitled";
+  isSummaryField(event) ? primitiveText(event.summary) : "Untitled";
 
 /**
  * User-facing text for a calendar deletion batch.
@@ -192,9 +194,11 @@ export const formatDeletedCalendarEvents = (result: CalendarMutationResult): str
 
 const StartStamp = S.Struct({ dateTime: S.String });
 
+const isStartStamp = S.is(StartStamp);
+
 const wallClock = (event: CalendarEvent): string | undefined => {
   const start = event.start;
-  if (!S.is(StartStamp)(start)) return undefined;
+  if (!isStartStamp(start)) return undefined;
   const parsed = DateTime.make(start.dateTime);
   if (O.isNone(parsed)) return undefined;
   const matched = /^([0-9]{4})-([0-9]{2})-([0-9]{2})(?:[T ]([0-9]{2}):([0-9]{2}))?/.exec(start.dateTime);

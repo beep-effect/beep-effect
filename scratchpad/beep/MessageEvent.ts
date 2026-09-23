@@ -17,6 +17,8 @@ import * as SchemaGetter from "effect/SchemaGetter";
 import * as Tuple from "effect/Tuple";
 import { Model, optionalNull, pg } from "./Kit.ts";
 
+const decodeJsonObject = S.decodeUnknownEffect(S.JsonObject);
+
 const $I = $ScratchpadId.create("beep/MessageEvent");
 
 const emptyStrings: ReadonlyArray<string> = [];
@@ -142,6 +144,8 @@ export declare namespace MessageEvent {
   export type Encoded = S.Codec.Encoded<typeof MessageEvent>;
 }
 
+const encodeMessageEvent = S.encodeEffect(MessageEvent);
+
 /**
  * Conversation lifecycle event.
  *
@@ -190,6 +194,8 @@ export declare namespace ConversationEvent {
   export type Encoded = S.Codec.Encoded<typeof ConversationEvent>;
 }
 
+const encodeConversationEvent = S.encodeEffect(ConversationEvent);
+
 /**
  * Newly created conversation event.
  *
@@ -223,6 +229,8 @@ export declare namespace NewConversationCreated {
   /** Encoded form of {@link NewConversationCreated}. */
   export type Encoded = S.Codec.Encoded<typeof NewConversationCreated>;
 }
+
+const encodeNewConversationCreated = S.encodeEffect(NewConversationCreated);
 
 /**
  * Event announcing a processing conversation before it is durable.
@@ -258,6 +266,8 @@ export declare namespace NewProcessingConversationCreated {
   /** Encoded form of {@link NewProcessingConversationCreated}. */
   export type Encoded = S.Codec.Encoded<typeof NewProcessingConversationCreated>;
 }
+
+const encodeNewProcessingConversationCreated = S.encodeEffect(NewProcessingConversationCreated);
 
 /**
  * Processing-status change for a conversation.
@@ -296,6 +306,8 @@ export declare namespace ProcessingConversationStatusChanged {
   export type Encoded = S.Codec.Encoded<typeof ProcessingConversationStatusChanged>;
 }
 
+const encodeProcessingConversationStatusChanged = S.encodeEffect(ProcessingConversationStatusChanged);
+
 /**
  * Backward-sync event. The class name keeps the Python `Sycned` typo.
  *
@@ -328,6 +340,8 @@ export declare namespace MemoryBackwardSycnedEvent {
   /** Encoded form of {@link MemoryBackwardSycnedEvent}. */
   export type Encoded = S.Codec.Encoded<typeof MemoryBackwardSycnedEvent>;
 }
+
+const encodeMemoryBackwardSycnedEvent = S.encodeEffect(MemoryBackwardSycnedEvent);
 
 /**
  * Service status event. Null outcome fields are omitted from JSON.
@@ -375,6 +389,9 @@ export declare namespace MessageServiceStatusEvent {
   export type Encoded = S.Codec.Encoded<typeof MessageServiceStatusEvent>;
 }
 
+const encodeMessageServiceStatusEvent = S.encodeEffect(MessageServiceStatusEvent);
+const isMessageServiceStatusEvent = S.is(MessageServiceStatusEvent);
+
 /**
  * Recording-session lifecycle event. Not part of the older Dart switch.
  *
@@ -421,6 +438,9 @@ export declare namespace ConversationSessionEvent {
   export type Encoded = S.Codec.Encoded<typeof ConversationSessionEvent>;
 }
 
+const encodeConversationSessionEvent = S.encodeEffect(ConversationSessionEvent);
+const isConversationSessionEvent = S.is(ConversationSessionEvent);
+
 /**
  * Keepalive event.
  *
@@ -451,6 +471,9 @@ export declare namespace PingEvent {
   /** Encoded form of {@link PingEvent}. */
   export type Encoded = S.Codec.Encoded<typeof PingEvent>;
 }
+
+const encodePingEvent = S.encodeEffect(PingEvent);
+const isPingEvent = S.is(PingEvent);
 
 /**
  * Pointer to the latest conversation.
@@ -490,6 +513,9 @@ export declare namespace LastConversationEvent {
   export type Encoded = S.Codec.Encoded<typeof LastConversationEvent>;
 }
 
+const encodeLastConversationEvent = S.encodeEffect(LastConversationEvent);
+const isLastConversationEvent = S.is(LastConversationEvent);
+
 /**
  * Partial translation segments.
  *
@@ -526,6 +552,9 @@ export declare namespace TranslationEvent {
   export type Encoded = S.Codec.Encoded<typeof TranslationEvent>;
 }
 
+const encodeTranslationEvent = S.encodeEffect(TranslationEvent);
+const isTranslationEvent = S.is(TranslationEvent);
+
 /**
  * Photo that is still being processed.
  *
@@ -560,6 +589,9 @@ export declare namespace PhotoProcessingEvent {
   /** Encoded form of {@link PhotoProcessingEvent}. */
   export type Encoded = S.Codec.Encoded<typeof PhotoProcessingEvent>;
 }
+
+const encodePhotoProcessingEvent = S.encodeEffect(PhotoProcessingEvent);
+const isPhotoProcessingEvent = S.is(PhotoProcessingEvent);
 
 /**
  * Photo description result.
@@ -599,6 +631,9 @@ export declare namespace PhotoDescribedEvent {
   /** Encoded form of {@link PhotoDescribedEvent}. */
   export type Encoded = S.Codec.Encoded<typeof PhotoDescribedEvent>;
 }
+
+const encodePhotoDescribedEvent = S.encodeEffect(PhotoDescribedEvent);
+const isPhotoDescribedEvent = S.is(PhotoDescribedEvent);
 
 /**
  * Suggested speaker label for one transcript segment.
@@ -645,6 +680,9 @@ export declare namespace SpeakerLabelSuggestionEvent {
   /** Encoded form of {@link SpeakerLabelSuggestionEvent}. */
   export type Encoded = S.Codec.Encoded<typeof SpeakerLabelSuggestionEvent>;
 }
+
+const encodeSpeakerLabelSuggestionEvent = S.encodeEffect(SpeakerLabelSuggestionEvent);
+const isSpeakerLabelSuggestionEvent = S.is(SpeakerLabelSuggestionEvent);
 
 /**
  * Freemium threshold event.
@@ -695,6 +733,9 @@ export declare namespace FreemiumThresholdReachedEvent {
   export type Encoded = S.Codec.Encoded<typeof FreemiumThresholdReachedEvent>;
 }
 
+const encodeFreemiumThresholdReachedEvent = S.encodeEffect(FreemiumThresholdReachedEvent);
+const isFreemiumThresholdReachedEvent = S.is(FreemiumThresholdReachedEvent);
+
 /**
  * Deleted transcript segments.
  *
@@ -730,6 +771,9 @@ export declare namespace SegmentsDeletedEvent {
   /** Encoded form of {@link SegmentsDeletedEvent}. */
   export type Encoded = S.Codec.Encoded<typeof SegmentsDeletedEvent>;
 }
+
+const encodeSegmentsDeletedEvent = S.encodeEffect(SegmentsDeletedEvent);
+const isSegmentsDeletedEvent = S.is(SegmentsDeletedEvent);
 
 /**
  * Proactive chat message. A null conversation id is omitted from JSON.
@@ -768,6 +812,8 @@ export declare namespace ProactiveMessageEvent {
   /** Encoded form of {@link ProactiveMessageEvent}. */
   export type Encoded = S.Codec.Encoded<typeof ProactiveMessageEvent>;
 }
+
+const encodeProactiveMessageEvent = S.encodeEffect(ProactiveMessageEvent);
 
 /**
  * Fixed-type listen events, discriminated on `eventType`.
@@ -846,7 +892,7 @@ const jsonFrom =
   (encode: (event: A) => Effect.Effect<unknown, S.SchemaError, never>) =>
     Effect.fn(name)(function* (event: A) {
       const encoded = yield* encode(event);
-      const record = yield* S.decodeUnknownEffect(S.JsonObject)(encoded);
+      const record = yield* decodeJsonObject(encoded);
       const renamed = renameType(record);
       return omitNull ? Rec.filter(renamed, (value) => value !== null) : renamed;
     });
@@ -868,91 +914,91 @@ const jsonFrom =
  * @since 0.0.0
  */
 export const messageEventToJson = jsonFrom<MessageEvent>("MessageEvent.toJson", false)((event) =>
-  S.encodeEffect(MessageEvent)(event),
+  encodeMessageEvent(event),
 );
 
 /** @category serialization @since 0.0.0 */
 export const conversationEventToJson = jsonFrom<ConversationEvent>("ConversationEvent.toJson", false)((event) =>
-  S.encodeEffect(ConversationEvent)(event),
+  encodeConversationEvent(event),
 );
 
 /** @category serialization @since 0.0.0 */
 export const newConversationCreatedToJson = jsonFrom<NewConversationCreated>("NewConversationCreated.toJson", false)(
-  (event) => S.encodeEffect(NewConversationCreated)(event),
+  (event) => encodeNewConversationCreated(event),
 );
 
 /** @category serialization @since 0.0.0 */
 export const newProcessingConversationCreatedToJson = jsonFrom<NewProcessingConversationCreated>(
   "NewProcessingConversationCreated.toJson",
   false,
-)((event) => S.encodeEffect(NewProcessingConversationCreated)(event));
+)((event) => encodeNewProcessingConversationCreated(event));
 
 /** @category serialization @since 0.0.0 */
 export const processingConversationStatusChangedToJson = jsonFrom<ProcessingConversationStatusChanged>(
   "ProcessingConversationStatusChanged.toJson",
   false,
-)((event) => S.encodeEffect(ProcessingConversationStatusChanged)(event));
+)((event) => encodeProcessingConversationStatusChanged(event));
 
 /** @category serialization @since 0.0.0 */
 export const memoryBackwardSycnedEventToJson = jsonFrom<MemoryBackwardSycnedEvent>(
   "MemoryBackwardSycnedEvent.toJson",
   false,
-)((event) => S.encodeEffect(MemoryBackwardSycnedEvent)(event));
+)((event) => encodeMemoryBackwardSycnedEvent(event));
 
 /** @category serialization @since 0.0.0 */
 export const messageServiceStatusEventToJson = jsonFrom<MessageServiceStatusEvent>(
   "MessageServiceStatusEvent.toJson",
   true,
-)((event) => S.encodeEffect(MessageServiceStatusEvent)(event));
+)((event) => encodeMessageServiceStatusEvent(event));
 
 /** @category serialization @since 0.0.0 */
 export const conversationSessionEventToJson = jsonFrom<ConversationSessionEvent>("ConversationSessionEvent.toJson", false)(
-  (event) => S.encodeEffect(ConversationSessionEvent)(event),
+  (event) => encodeConversationSessionEvent(event),
 );
 
 /** @category serialization @since 0.0.0 */
-export const pingEventToJson = jsonFrom<PingEvent>("PingEvent.toJson", false)((event) => S.encodeEffect(PingEvent)(event));
+export const pingEventToJson = jsonFrom<PingEvent>("PingEvent.toJson", false)((event) => encodePingEvent(event));
 
 /** @category serialization @since 0.0.0 */
 export const lastConversationEventToJson = jsonFrom<LastConversationEvent>("LastConversationEvent.toJson", false)(
-  (event) => S.encodeEffect(LastConversationEvent)(event),
+  (event) => encodeLastConversationEvent(event),
 );
 
 /** @category serialization @since 0.0.0 */
 export const translationEventToJson = jsonFrom<TranslationEvent>("TranslationEvent.toJson", false)((event) =>
-  S.encodeEffect(TranslationEvent)(event),
+  encodeTranslationEvent(event),
 );
 
 /** @category serialization @since 0.0.0 */
 export const photoProcessingEventToJson = jsonFrom<PhotoProcessingEvent>("PhotoProcessingEvent.toJson", false)(
-  (event) => S.encodeEffect(PhotoProcessingEvent)(event),
+  (event) => encodePhotoProcessingEvent(event),
 );
 
 /** @category serialization @since 0.0.0 */
 export const photoDescribedEventToJson = jsonFrom<PhotoDescribedEvent>("PhotoDescribedEvent.toJson", false)((event) =>
-  S.encodeEffect(PhotoDescribedEvent)(event),
+  encodePhotoDescribedEvent(event),
 );
 
 /** @category serialization @since 0.0.0 */
 export const speakerLabelSuggestionEventToJson = jsonFrom<SpeakerLabelSuggestionEvent>(
   "SpeakerLabelSuggestionEvent.toJson",
   false,
-)((event) => S.encodeEffect(SpeakerLabelSuggestionEvent)(event));
+)((event) => encodeSpeakerLabelSuggestionEvent(event));
 
 /** @category serialization @since 0.0.0 */
 export const freemiumThresholdReachedEventToJson = jsonFrom<FreemiumThresholdReachedEvent>(
   "FreemiumThresholdReachedEvent.toJson",
   false,
-)((event) => S.encodeEffect(FreemiumThresholdReachedEvent)(event));
+)((event) => encodeFreemiumThresholdReachedEvent(event));
 
 /** @category serialization @since 0.0.0 */
 export const segmentsDeletedEventToJson = jsonFrom<SegmentsDeletedEvent>("SegmentsDeletedEvent.toJson", false)(
-  (event) => S.encodeEffect(SegmentsDeletedEvent)(event),
+  (event) => encodeSegmentsDeletedEvent(event),
 );
 
 /** @category serialization @since 0.0.0 */
 export const proactiveMessageEventToJson = jsonFrom<ProactiveMessageEvent>("ProactiveMessageEvent.toJson", true)(
-  (event) => S.encodeEffect(ProactiveMessageEvent)(event),
+  (event) => encodeProactiveMessageEvent(event),
 );
 
 /**
@@ -972,15 +1018,15 @@ export const proactiveMessageEventToJson = jsonFrom<ProactiveMessageEvent>("Proa
  * @since 0.0.0
  */
 export const fixedMessageEventToJson = Effect.fn("FixedMessageEvent.toJson")(function* (event: FixedMessageEvent) {
-  if (S.is(MessageServiceStatusEvent)(event)) return yield* messageServiceStatusEventToJson(event);
-  if (S.is(ConversationSessionEvent)(event)) return yield* conversationSessionEventToJson(event);
-  if (S.is(PingEvent)(event)) return yield* pingEventToJson(event);
-  if (S.is(LastConversationEvent)(event)) return yield* lastConversationEventToJson(event);
-  if (S.is(TranslationEvent)(event)) return yield* translationEventToJson(event);
-  if (S.is(PhotoProcessingEvent)(event)) return yield* photoProcessingEventToJson(event);
-  if (S.is(PhotoDescribedEvent)(event)) return yield* photoDescribedEventToJson(event);
-  if (S.is(SpeakerLabelSuggestionEvent)(event)) return yield* speakerLabelSuggestionEventToJson(event);
-  if (S.is(FreemiumThresholdReachedEvent)(event)) return yield* freemiumThresholdReachedEventToJson(event);
-  if (S.is(SegmentsDeletedEvent)(event)) return yield* segmentsDeletedEventToJson(event);
+  if (isMessageServiceStatusEvent(event)) return yield* messageServiceStatusEventToJson(event);
+  if (isConversationSessionEvent(event)) return yield* conversationSessionEventToJson(event);
+  if (isPingEvent(event)) return yield* pingEventToJson(event);
+  if (isLastConversationEvent(event)) return yield* lastConversationEventToJson(event);
+  if (isTranslationEvent(event)) return yield* translationEventToJson(event);
+  if (isPhotoProcessingEvent(event)) return yield* photoProcessingEventToJson(event);
+  if (isPhotoDescribedEvent(event)) return yield* photoDescribedEventToJson(event);
+  if (isSpeakerLabelSuggestionEvent(event)) return yield* speakerLabelSuggestionEventToJson(event);
+  if (isFreemiumThresholdReachedEvent(event)) return yield* freemiumThresholdReachedEventToJson(event);
+  if (isSegmentsDeletedEvent(event)) return yield* segmentsDeletedEventToJson(event);
   return yield* proactiveMessageEventToJson(event);
 });

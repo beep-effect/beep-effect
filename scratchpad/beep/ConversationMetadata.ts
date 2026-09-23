@@ -10,6 +10,9 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as A from "effect/Array";
 import { isRecord, jsonList, Model } from "./Port.ts";
 
 const $I = $ScratchpadId.create("beep/ConversationMetadata");
@@ -113,7 +116,7 @@ export const toVectorMetadata = (
 
 const stringsFromList = (value: ReadonlyArray<unknown>): ReadonlyArray<string> => {
   const result: Array<string> = [];
-  for (const item of value) result.push(typeof item === "string" ? item : globalThis.String(item));
+  for (const item of value) result.push(P.isString(item) ? item : globalThis.String(item));
   return result;
 };
 
@@ -145,8 +148,8 @@ const stringsFromList = (value: ReadonlyArray<unknown>): ReadonlyArray<string> =
  */
 // @effect-diagnostics-next-line missingPipeableSignature:off -- Metadata and key are co-primary inputs, and neither is a pipeable value.
 export const metadataList = (metadata: unknown, key: string): ReadonlyArray<string> => {
-  if (!isRecord(metadata) || !Object.hasOwn(metadata, key)) return [];
+  if (!isRecord(metadata) || !R.has(metadata, key)) return [];
   const value = metadata[key];
-  if (Array.isArray(value)) return stringsFromList(value);
+  if (A.isArray(value)) return stringsFromList(value);
   return [];
 };

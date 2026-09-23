@@ -21,6 +21,8 @@ import * as SchemaGetter from "effect/SchemaGetter";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as R from "effect/Record";
+import * as P from "effect/Predicate";
 import { boundedText, optionalBoundedText, optionalText, text, textBoundsCheck, timestamp } from "./Kit.ts";
 import { atLeastCheck, boolDefault, isRecord, jsonList, Model, optionDefault, optionalNull, pg } from "./Port.ts";
 
@@ -843,7 +845,7 @@ const jsonSize = (value: S.JsonObject): number => JSON.stringify(value).length;
  */
 export const evidenceReferenceIssue = (reference: ChatEvidenceReference): O.Option<string> => {
   if (O.isNone(readEvidenceId(reference.id))) return O.some("evidence id must not be blank");
-  if (HashSet.size(HashSet.fromIterable(Object.keys(reference.metadata))) > 16 || jsonSize(reference.metadata) > 2000) {
+  if (HashSet.size(HashSet.fromIterable(R.keys(reference.metadata))) > 16 || jsonSize(reference.metadata) > 2000) {
     return O.some("evidence metadata exceeds the bounded transport limit");
   }
   if (O.isSome(reference.endMs) && O.isSome(reference.startMs) && reference.endMs.value < reference.startMs.value) {
@@ -1041,6 +1043,8 @@ export declare namespace Message {
   export type Encoded = S.Codec.Encoded<typeof Message>;
 }
 
+const decodeUnknownEffectMessage = S.decodeUnknownEffect(Message);
+
 /**
  * Copies app and plugin ids and lifts legacy content blocks before decode.
  *
@@ -1062,7 +1066,7 @@ const camelKey = (key: string): string =>
 const camelizeTop = (input: unknown): unknown => {
   if (!isRecord(input)) return input;
   const out: { [key: string]: unknown } = {};
-  for (const key of Object.keys(input)) out[camelKey(key)] = input[key];
+  for (const key of R.keys(input)) out[camelKey(key)] = input[key];
   return out;
 };
 
@@ -1078,13 +1082,13 @@ export const repairMessageRecord = (input: unknown): unknown => {
     data.app_id = pluginId;
     data.appId = pluginId;
   }
-  const hasBlocks = Object.hasOwn(data, "content_blocks") || Object.hasOwn(data, "contentBlocks");
+  const hasBlocks = R.has(data, "content_blocks") || R.has(data, "contentBlocks");
   if (!hasBlocks) {
     const metadata = data.metadata;
-    if (typeof metadata === "string") {
+    if (P.isString(metadata)) {
       try {
         const parsed: unknown = JSON.parse(metadata);
-        if (isRecord(parsed) && Array.isArray(parsed.content_blocks)) data.contentBlocks = parsed.content_blocks;
+        if (isRecord(parsed) && Arr.isArray(parsed.content_blocks)) data.contentBlocks = parsed.content_blocks;
       } catch {
         // Legacy metadata that is not JSON stays a string.
       }
@@ -1119,7 +1123,7 @@ export const repairMessageRecord = (input: unknown): unknown => {
  * @since 0.0.0
  */
 export const decodeMessage = (input: unknown) =>
-  S.decodeUnknownEffect(Message)(repairMessageRecord(camelizeTop(input)));
+  decodeUnknownEffectMessage(repairMessageRecord(camelizeTop(input)));
 
 /**
  * Builds messages from stored records, skipping records that fail.
@@ -1179,7 +1183,7 @@ const resolveSenderName = (
   if (message.sender === "human") return "User";
   const appId = O.match(message.appId, { onNone: () => "", onSome: Str.trim });
   if (usePluginName && resolver !== undefined && appId.length > 0) {
-    const cached = Object.hasOwn(names, appId) ? names[appId] : undefined;
+    const cached = R.has(names, appId) ? names[appId] : undefined;
     const resolved =
       cached !== undefined
         ? cached
@@ -1570,6 +1574,8 @@ export declare namespace ChatSession {
   export type Encoded = S.Codec.Encoded<typeof ChatSession>;
 }
 
+const decodeChatSession = S.decodeUnknownEffect(ChatSession);
+
 /**
  * Mirrors app and plugin ids on a legacy session before decode.
  *
@@ -1594,7 +1600,7 @@ export const repairLegacyChatSessionRecord = (input: unknown): unknown => {
 };
 
 export const decodeLegacyChatSession = (input: unknown) =>
-  S.decodeUnknownEffect(ChatSession)(repairLegacyChatSessionRecord(input));
+  decodeChatSession(repairLegacyChatSessionRecord(input));
 
 /**
  * Appends file ids that are not already on the session.

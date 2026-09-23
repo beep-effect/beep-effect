@@ -34,12 +34,17 @@ import {
   validateTerminalStatus,
 } from "../../beep/Goal.ts";
 
+const isStringUnknownRecord = S.is(S.Record(S.String, S.Unknown));
+const decodeGoalResponseWire = S.decodeEffect(GoalResponseWire);
+const decodeGoalDeleteResponseWire = S.decodeEffect(GoalDeleteResponseWire);
+const decodeAdviceResponse = S.decodeEffect(AdviceResponse);
+
 describe("Goal", () => {
   it("promotes description, rewrites source, and synthesizes a metric", () => {
     const prepared = normalizeLegacyDescription({ title: "Run", description: "5k" });
-    assert.strictEqual(S.is(S.Record(S.String, S.Unknown))(prepared) && prepared.desired_outcome, "5k");
+    assert.strictEqual(isStringUnknownRecord(prepared) && prepared.desired_outcome, "5k");
     const kept = normalizeLegacyDescription({ title: "Run", description: "5k", desired_outcome: "kept" });
-    assert.strictEqual(S.is(S.Record(S.String, S.Unknown))(kept) && kept.desired_outcome, "kept");
+    assert.strictEqual(isStringUnknownRecord(kept) && kept.desired_outcome, "kept");
     assert.strictEqual(normalizeLegacyDescription("nope"), "nope");
     assert.strictEqual(normalizeLegacySource("ai"), "ai_suggested");
     assert.strictEqual(normalizeLegacySource("onboarding_typed"), "user");
@@ -140,7 +145,7 @@ describe("Goal", () => {
 
   it("decodes response aliases and constructs suggestion defaults", () => {
     const response = Effect.runSync(
-      S.decodeEffect(GoalResponseWire)({
+      decodeGoalResponseWire({
         id: "goal-1",
         goal_id: "goal-1",
         title: "Run",
@@ -173,9 +178,9 @@ describe("Goal", () => {
     });
     assert.strictEqual(suggestion.suggestedMin, 0);
     assert.strictEqual(suggestion.suggestedMax, 10);
-    const deleted = Effect.runSync(S.decodeEffect(GoalDeleteResponseWire)({ success: true, deleted_id: "goal-1" }));
+    const deleted = Effect.runSync(decodeGoalDeleteResponseWire({ success: true, deleted_id: "goal-1" }));
     assert.strictEqual(deleted.deletedId, "goal-1");
-    const advice = Effect.runSync(S.decodeEffect(AdviceResponse)({ advice: "Keep going" }));
+    const advice = Effect.runSync(decodeAdviceResponse({ advice: "Keep going" }));
     assert.strictEqual(advice.advice, "Keep going");
     const event = GoalProgressEventCreate.make({ kind: "milestone", summary: "Started" });
     assert.strictEqual(event.evidenceRefs.length, 0);

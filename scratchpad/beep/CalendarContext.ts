@@ -153,6 +153,8 @@ export declare namespace CalendarMeetingContext {
   export type Encoded = S.Codec.Encoded<typeof CalendarMeetingContext>;
 }
 
+const decodeCalendarMeetingContext = S.decodeUnknownEffect(CalendarMeetingContext);
+
 /**
  * Builds meeting contexts from stored records, skipping rows that fail.
  *
@@ -193,7 +195,7 @@ export const calendarMeetingContextsFromRecords = Effect.fn("CalendarMeetingCont
 ) {
   const parsed: Array<CalendarMeetingContext> = [];
   for (const record of records) {
-    const result = yield* Effect.result(S.decodeUnknownEffect(CalendarMeetingContext)(record));
+    const result = yield* Effect.result(decodeCalendarMeetingContext(record));
     if (Result.isFailure(result)) {
       if (onError !== undefined) onError(record, "invalid calendar meeting");
     } else {

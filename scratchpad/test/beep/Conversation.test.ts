@@ -23,6 +23,11 @@ import {
 import { Structured } from "../../beep/Structured.ts";
 import { TranscriptSegment } from "../../beep/TranscriptSegment.ts";
 
+const encodeConversation = S.encodeEffect(Conversation);
+const encodeAppResult = S.encodeEffect(AppResult);
+const encodePluginResult = S.encodeEffect(PluginResult);
+const encodeTranscriptSegment = S.encodeEffect(TranscriptSegment);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -43,7 +48,7 @@ describe("Conversation", () => {
     expect(O.isNone(missing.language)).toBe(true);
     expect(O.isNone(missing.geolocation)).toBe(true);
     expect(missing.transcriptSegments).toEqual([]);
-    const encoded = Effect.runSync(S.encodeEffect(Conversation)(missing));
+    const encoded = Effect.runSync(encodeConversation(missing));
     const nulled = decode(Conversation, { ...encoded, language: null, geolocation: null, processingState: null });
     expect(O.isNone(nulled.language)).toBe(true);
     expect(O.isNone(nulled.geolocation)).toBe(true);
@@ -52,11 +57,11 @@ describe("Conversation", () => {
       initializeConversation({
         ...encoded,
         processingConversationId: "mem-1",
-        appsResults: [Effect.runSync(S.encodeEffect(AppResult)(AppResult.make({ appId: O.some("app"), content: "done" })))],
-        pluginsResults: [Effect.runSync(S.encodeEffect(PluginResult)(PluginResult.make({ pluginId: O.none(), content: "stale" })))],
+        appsResults: [Effect.runSync(encodeAppResult(AppResult.make({ appId: O.some("app"), content: "done" })))],
+        pluginsResults: [Effect.runSync(encodePluginResult(PluginResult.make({ pluginId: O.none(), content: "stale" })))],
         transcriptSegments: [
           Effect.runSync(
-            S.encodeEffect(TranscriptSegment)(
+            encodeTranscriptSegment(
               TranscriptSegment.make({ id: "", text: "Hi", isUser: true, speakerId: 0, start: 0, end: 1 }),
             ),
           ),

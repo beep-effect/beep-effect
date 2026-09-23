@@ -27,6 +27,9 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { Model, UtcTimestamp, optionalNull, optionalTimestamp, pg } from "./Kit.ts";
 
+const isJson = S.is(S.Json);
+const isJsonObject = S.is(S.JsonObject);
+
 const $I = $ScratchpadId.create("beep/MemoryContracts");
 
 const described = <Sch extends S.Top>(schema: Sch, description: string) => schema.annotateKey({ description });
@@ -152,7 +155,7 @@ const jsonString = (value: string): string => {
 
 const jsonNumber = (value: number): string => (Number.isFinite(value) ? String(value) : "null");
 
-const jsonChild = (found: unknown): S.Json => (S.is(S.Json)(found) ? found : null);
+const jsonChild = (found: unknown): S.Json => (isJson(found) ? found : null);
 
 export const canonicalJson = (value: S.Json): string => {
   if (Predicate.isNull(value)) return "null";
@@ -455,6 +458,8 @@ export const LifecycleState = closed(
  * @since 0.0.0
  */
 export type LifecycleState = typeof LifecycleState.Type;
+
+const isLifecycleState = S.is(LifecycleState);
 
 /**
  * What a durable patch proposes to do.
@@ -772,7 +777,7 @@ export const deriveAllowedUse = Effect.fn("MemoryContracts.deriveAllowedUse")(fu
   status: string,
   riskFlags: ReadonlyArray<string> = [],
 ) {
-  if (!S.is(LifecycleState)(status)) {
+  if (!isLifecycleState(status)) {
     return yield* MemoryContractError.make({ message: `unknown lifecycle status: ${status}` });
   }
   if (Equal.equals(status, "hidden") || hasSecret(riskFlags)) return "hidden";
@@ -961,6 +966,8 @@ export declare namespace L1MemoryArchiveItem {
  */
 export const L1MemoryArchiveItemWire = L1MemoryArchiveItem.pipe(S.encodeKeys({ archiveClass: "class" }));
 
+const decodeL1MemoryArchiveItemWire = S.decodeUnknownEffect(L1MemoryArchiveItemWire);
+
 /**
  * Apply archive policy and fill a blank archive id.
  *
@@ -1007,7 +1014,7 @@ export const deriveArchivePolicy = (item: L1MemoryArchiveItem): L1MemoryArchiveI
 };
 
 const renameArchiveClass = (input: unknown): unknown => {
-  if (!S.is(S.JsonObject)(input) || Rec.has(input, "class") || !Rec.has(input, "archive_class")) return input;
+  if (!isJsonObject(input) || Rec.has(input, "class") || !Rec.has(input, "archive_class")) return input;
   const alias = Rec.get(input, "archive_class");
   if (O.isNone(alias)) return input;
   return Rec.set(Rec.remove(input, "archive_class"), "class", alias.value);
@@ -1033,7 +1040,7 @@ const renameArchiveClass = (input: unknown): unknown => {
 export const decodeL1MemoryArchiveItem = Effect.fn("MemoryContracts.decodeL1MemoryArchiveItem")(function* (
   input: unknown,
 ) {
-  const decoded = yield* S.decodeUnknownEffect(L1MemoryArchiveItemWire)(renameArchiveClass(input));
+  const decoded = yield* decodeL1MemoryArchiveItemWire(renameArchiveClass(input));
   return deriveArchivePolicy(decoded);
 });
 

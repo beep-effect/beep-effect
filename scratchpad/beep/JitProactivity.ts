@@ -20,6 +20,7 @@ import * as SchemaGetter from "effect/SchemaGetter";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import * as P from "effect/Predicate";
 import {
   Model,
   UtcTimestamp,
@@ -584,6 +585,8 @@ export const JITProactivityEventReceipt = JitProactivityOperation.mapMembers(
  */
 export type JITProactivityEventReceipt = typeof JITProactivityEventReceipt.Type;
 
+const decodeJITProactivityEventReceipt = S.decodeUnknownEffect(JITProactivityEventReceipt, { onExcessProperty: "error" });
+
 /**
  * Trigger id and revision were not supplied together.
  *
@@ -661,7 +664,7 @@ const triggerPairInvalid = (): JitTriggerPairInvalid =>
 export const decodeJitProactivityEventReceipt = Effect.fn("JITProactivityEventReceipt.decode")(function* (
   input: unknown,
 ) {
-  const decoded = yield* S.decodeUnknownEffect(JITProactivityEventReceipt, { onExcessProperty: "error" })(input);
+  const decoded = yield* decodeJITProactivityEventReceipt(input);
   if (
     (decoded.operation === "ambient_notification" ||
       decoded.operation === "nano_triage" ||
@@ -688,7 +691,7 @@ const restrictedLabels = HashSet.make(
 const collapse = (value: string): string => A.join(" ")(A.filter(Str.split(/\s+/u)(value), (part) => part.length > 0));
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !A.isArray(value);
+  P.isObject(value);
 
 /**
  * Plain view of the product memory fields the paid-authority fence reads.
@@ -778,7 +781,7 @@ export const isJitTriggerPaidAuthority = (input: {
   const at = input.at;
   const action = item.triggerCondition === null ? undefined : item.triggerCondition.action;
   const prompt = isRecord(action) ? action.prompt : undefined;
-  const collapsed = typeof prompt === "string" ? collapse(prompt) : "";
+  const collapsed = P.isString(prompt) ? collapse(prompt) : "";
   const labels = HashSet.fromIterable(item.sensitivityLabels);
   return (
     item.ledgerSchemaVersion === "knowledge_ledger.v1" &&
@@ -796,7 +799,7 @@ export const isJitTriggerPaidAuthority = (input: {
     HashSet.isEmpty(HashSet.intersection(labels, restrictedLabels)) &&
     isRecord(action) &&
     action.type === "agent_prompt" &&
-    typeof prompt === "string" &&
+    P.isString(prompt) &&
     collapsed.length > 0 &&
     collapsed.length <= 2000
   );

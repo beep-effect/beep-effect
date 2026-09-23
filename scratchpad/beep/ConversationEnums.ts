@@ -115,6 +115,8 @@ const ConversationSourceLiterals = LiteralKit([
   "unknown",
 ]);
 
+const isConversationSourceLiterals = S.is(ConversationSourceLiterals);
+
 /**
  * Where a conversation was captured.
  *
@@ -144,7 +146,7 @@ const ConversationSourceLiterals = LiteralKit([
  */
 export const ConversationSource = S.String.pipe(
   S.decodeTo(ConversationSourceLiterals, {
-    decode: SchemaGetter.transform((value) => (S.is(ConversationSourceLiterals)(value) ? value : "unknown")),
+    decode: SchemaGetter.transform((value) => (isConversationSourceLiterals(value) ? value : "unknown")),
     encode: SchemaGetter.transform((value) => value),
   }),
   $I.annoteSchema("ConversationSource", {

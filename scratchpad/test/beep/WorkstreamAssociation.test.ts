@@ -24,6 +24,12 @@ import {
   validateAssociationJudgment,
 } from "../../beep/WorkstreamAssociation.ts";
 
+const isWorkstreamAssociationError = S.is(WorkstreamAssociationError);
+const encodeAssociationJudgment = S.encodeEffect(AssociationJudgment);
+const encodeAssociationOutcome = S.encodeEffect(AssociationOutcome);
+const encodeRecurrenceConsumptionOutcome = S.encodeEffect(RecurrenceConsumptionOutcome);
+const encodeRecurrenceInboxReceipt = S.encodeEffect(RecurrenceInboxReceipt);
+
 const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -66,7 +72,7 @@ const failureMessage = (exit: Exit.Exit<unknown, unknown>): string =>
     onFailure: (cause) =>
       cause.pipe(
         Cause.findErrorOption,
-        O.filter(S.is(WorkstreamAssociationError)),
+        O.filter(isWorkstreamAssociationError),
         O.map((error) => error.message),
         O.getOrElse(() => "no-fail"),
       ),
@@ -169,7 +175,7 @@ describe("WorkstreamAssociation", () => {
     assert.strictEqual(O.isNone(nulls.eventSummary), true);
     const missing = decode(AssociationJudgment, { schemaVersion: 1, policyVersion: "association.v1", material: false, reason: "no_match" });
     assert.strictEqual(O.isNone(missing.workstreamId), true);
-    const encoded = Effect.runSync(S.encodeEffect(AssociationJudgment)(missing));
+    const encoded = Effect.runSync(encodeAssociationJudgment(missing));
     assert.strictEqual(encoded.workstreamId, null);
     assert.strictEqual(encoded.eventSummary, null);
     assert.strictEqual(encoded.policyVersion, "association.v1");
@@ -260,7 +266,7 @@ describe("WorkstreamAssociation", () => {
     });
     assert.strictEqual(O.isNone(nulls.workstreamId), true);
     assert.strictEqual(O.isNone(nulls.judgmentReason), true);
-    const encoded = Effect.runSync(S.encodeEffect(AssociationOutcome)(nulls));
+    const encoded = Effect.runSync(encodeAssociationOutcome(nulls));
     assert.strictEqual(encoded.judgmentReason, null);
     assert.strictEqual(encoded.workstreamId, null);
     assert.strictEqual(
@@ -317,7 +323,7 @@ describe("WorkstreamAssociation", () => {
     assert.strictEqual(O.isNone(nulls.candidateId), true);
     const missing = decode(RecurrenceConsumptionOutcome, { outcome: "workflow_disabled", signalId: "sig-1" });
     assert.strictEqual(O.isNone(missing.idempotencyKey), true);
-    const encoded = Effect.runSync(S.encodeEffect(RecurrenceConsumptionOutcome)(missing));
+    const encoded = Effect.runSync(encodeRecurrenceConsumptionOutcome(missing));
     assert.strictEqual(encoded.candidateId, null);
     assert.strictEqual(encoded.idempotencyKey, null);
     assert.strictEqual(decodeFails(RecurrenceConsumptionOutcome, { outcome: "created", signalId: "sig-1" }), true);
@@ -339,7 +345,7 @@ describe("WorkstreamAssociation", () => {
     assert.strictEqual(missing.attempts, 1);
     const { attempts: _attempts, ...withoutAttempts } = missing;
     assert.strictEqual(RecurrenceInboxReceipt.make(withoutAttempts).attempts, 0);
-    const encoded = Effect.runSync(S.encodeEffect(RecurrenceInboxReceipt)(missing));
+    const encoded = Effect.runSync(encodeRecurrenceInboxReceipt(missing));
     assert.strictEqual(encoded.lastOutcome, null);
     assert.strictEqual(encoded.lastErrorCode, null);
     assert.strictEqual(encoded.updatedAt, "2020-01-02T04:04:05.000Z");

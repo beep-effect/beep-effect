@@ -163,12 +163,16 @@ export declare namespace ProductMemorySearchItem {
   export type Encoded = S.Codec.Encoded<typeof ProductMemorySearchItem>;
 }
 
+const decodeUnknownEffectProductMemorySearchItem = S.decodeUnknownEffect(ProductMemorySearchItem);
+
 const knownProductMemorySearchItemKeys = HashSet.fromIterable(R.keys(ProductMemorySearchItem.fields));
 
 const UnknownRecord = S.Record(S.String, S.Unknown);
 
+const decodeUnknownOptionUnknownRecord = S.decodeUnknownOption(UnknownRecord);
+
 const recordOf = (value: unknown): O.Option<{ readonly [key: string]: unknown }> =>
-  S.decodeUnknownOption(UnknownRecord)(value);
+  decodeUnknownOptionUnknownRecord(value);
 
 /**
  * Moves unknown product search item keys into `rest` before decoding.
@@ -257,7 +261,7 @@ export const decodeProductMemorySearchItem = Effect.fn("ProductMemorySearchItem.
     onNone: () => absorbed,
     onSome: (value) => (O.isSome(R.get(value, "rest")) ? value : R.set("rest", {})(value)),
   });
-  return yield* S.decodeUnknownEffect(ProductMemorySearchItem)(prepared);
+  return yield* decodeUnknownEffectProductMemorySearchItem(prepared);
 });
 
 /**

@@ -625,6 +625,8 @@ export const MobileFeedbackRequestWire = MobileFeedbackRequest.pipe(
   }),
 );
 
+const decodeMobileFeedbackRequestWire = S.decodeUnknownEffect(MobileFeedbackRequestWire);
+
 /**
  * Rejects a reason from the other mobile surface, and a summary aimed at a recording.
  *
@@ -695,7 +697,7 @@ export const validateReasonSurface = Effect.fn("MobileFeedbackRequest.validateRe
  * @since 0.0.0
  */
 export const decodeMobileFeedbackRequest = Effect.fn("MobileFeedbackRequest.decode")(function* (input: unknown) {
-  const decoded = yield* S.decodeUnknownEffect(MobileFeedbackRequestWire)(input);
+  const decoded = yield* decodeMobileFeedbackRequestWire(input);
   const feedbackId = yield* trimFeedbackIdentifier(decoded.feedbackId);
   const targetId = yield* trimFeedbackIdentifier(decoded.targetId);
   return yield* validateReasonSurface(MobileFeedbackRequest.make({ ...decoded, feedbackId, targetId }));
@@ -866,6 +868,8 @@ export const MemoryUseFeedbackWire = MemoryUseFeedback.pipe(
   }),
 );
 
+const decodeMemoryUseFeedbackWire = S.decodeUnknownEffect(MemoryUseFeedbackWire);
+
 /**
  * Decodes memory-use feedback and trims its three identifiers.
  *
@@ -892,7 +896,7 @@ export const MemoryUseFeedbackWire = MemoryUseFeedback.pipe(
  * @since 0.0.0
  */
 export const decodeMemoryUseFeedback = Effect.fn("MemoryUseFeedback.decode")(function* (input: unknown) {
-  const decoded = yield* S.decodeUnknownEffect(MemoryUseFeedbackWire)(input);
+  const decoded = yield* decodeMemoryUseFeedbackWire(input);
   const uid = yield* trimMemoryUseIdentifier(decoded.uid);
   const feedbackId = yield* trimMemoryUseIdentifier(decoded.feedbackId);
   const targetMemoryId = yield* trimMemoryUseIdentifier(decoded.targetMemoryId);

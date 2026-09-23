@@ -1164,6 +1164,8 @@ export declare namespace ActionItemResponse {
   export type Encoded = S.Codec.Encoded<typeof ActionItemResponse>;
 }
 
+const decodeActionItemResponse = S.decodeUnknownEffect(ActionItemResponse);
+
 /**
  * Projects a legacy client dict into {@link ActionItemResponse}.
  *
@@ -1196,7 +1198,7 @@ export const projectLegacyActionItem = Effect.fn("ActionItemResponse.projectLega
   input: unknown,
 ) {
   if (!P.isObject(input) || A.isArray(input)) {
-    return yield* S.decodeUnknownEffect(ActionItemResponse)(input);
+    return yield* decodeActionItemResponse(input);
   }
   const data: { [key: string]: unknown } = { ...input };
   if (data.taskId === undefined && data.id !== undefined) data.taskId = data.id;
@@ -1215,7 +1217,7 @@ export const projectLegacyActionItem = Effect.fn("ActionItemResponse.projectLega
   if (data.exported === undefined) data.exported = false;
   if (data.status === undefined) data.status = activeStatus;
   const wire: unknown = data;
-  return yield* S.decodeUnknownEffect(ActionItemResponse)(wire);
+  return yield* decodeActionItemResponse(wire);
 });
 
 /**

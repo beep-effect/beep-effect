@@ -22,6 +22,10 @@ import {
   selectProfileSlotWinners,
 } from "../../beep/KnowledgeLedgerPolicy.ts";
 
+const encodeLedgerSlotDefinition = S.encodeEffect(LedgerSlotDefinition);
+const isUnsupportedLedgerSlot = S.is(UnsupportedLedgerSlot);
+const isNegativeProfileBudget = S.is(NegativeProfileBudget);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -61,7 +65,7 @@ describe("KnowledgeLedgerPolicy", () => {
     assert.strictEqual(decodeFails(LedgerSlotDefinition, { name: "timezone", rendererOrder: 4.5, aliases: [] }), true);
     const made = LedgerSlotDefinition.make({ name: "x", rendererOrder: 1 });
     assert.deepStrictEqual(made.aliases, []);
-    const encoded = Effect.runSync(S.encodeEffect(LedgerSlotDefinition)(made));
+    const encoded = Effect.runSync(encodeLedgerSlotDefinition(made));
     assert.deepStrictEqual(encoded, { name: "x", rendererOrder: 1, aliases: [] });
   });
 
@@ -99,7 +103,7 @@ describe("KnowledgeLedgerPolicy", () => {
     assert.strictEqual(city.pipe(slotOf, O.getOrNull), "home_city");
     assert.strictEqual(employer.pipe(slotOf, O.getOrNull), "employer");
     const strict = shoeSize.pipe(canonicalizeLedgerSlot, failure);
-    assert.strictEqual(S.is(UnsupportedLedgerSlot)(strict), true);
+    assert.strictEqual(isUnsupportedLedgerSlot(strict), true);
     assert.strictEqual(strict.slot, "shoe_size");
     const loose = Effect.runSync(canonicalizeLedgerSlot(O.some("shoe size"), { strict: false }));
     assert.strictEqual(O.isNone(loose), true);
@@ -154,7 +158,7 @@ describe("KnowledgeLedgerPolicy", () => {
     assert.strictEqual(tight, "preferred_name: Ada Lovelace");
     assert.strictEqual(Effect.runSync(renderBoundedProfile(rows, { characterBudget: 0 })), "");
     const negative = failure(renderBoundedProfile(rows, { characterBudget: -1 }));
-    assert.strictEqual(S.is(NegativeProfileBudget)(negative), true);
+    assert.strictEqual(isNegativeProfileBudget(negative), true);
     assert.strictEqual(negative.characterBudget, -1);
   });
 });

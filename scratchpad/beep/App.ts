@@ -171,6 +171,8 @@ export declare namespace AppReview {
   export type Encoded = S.Codec.Encoded<typeof AppReview>;
 }
 
+const decodeAppReview = S.decodeUnknownEffect(AppReview);
+
 /**
  * Builds a review from a stored JSON object.
  *
@@ -212,7 +214,7 @@ export const appReviewFromJson = Effect.fn("AppReview.fromJson")(function* (json
     response: jsonData.response === undefined ? null : jsonData.response,
     respondedAt: P.isString(responded) ? responded : null,
   };
-  return yield* S.decodeUnknownEffect(AppReview)(wire);
+  return yield* decodeAppReview(wire);
 });
 
 /**
@@ -388,6 +390,9 @@ export declare namespace ChatTool {
   export type Encoded = S.Codec.Encoded<typeof ChatTool>;
 }
 
+const decodeUnknownEffectChatTool = S.decodeUnknownEffect(ChatTool);
+const encodeChatToolArray = S.encodeEffect(S.Array(ChatTool));
+
 const noChatTools = (): ReadonlyArray<ChatTool> => [];
 
 /**
@@ -422,11 +427,11 @@ const noChatTools = (): ReadonlyArray<ChatTool> => [];
  */
 export const decodeChatTool = Effect.fn("ChatTool.decode")(function* (input: unknown) {
   if (!P.isObject(input) || A.isArray(input) || !P.isString(input.parameters)) {
-    return yield* S.decodeUnknownEffect(ChatTool)(input);
+    return yield* decodeUnknownEffectChatTool(input);
   }
   const parsed = yield* Effect.result(S.decodeEffect(jsonObjectFromString)(input.parameters));
   const wire: unknown = { ...input, parameters: Result.isSuccess(parsed) ? parsed.success : null };
-  return yield* S.decodeUnknownEffect(ChatTool)(wire);
+  return yield* decodeUnknownEffectChatTool(wire);
 });
 
 /**
@@ -504,6 +509,8 @@ export class ExternalIntegration extends Model<ExternalIntegration>("ExternalInt
 export declare namespace ExternalIntegration {
   export type Encoded = S.Codec.Encoded<typeof ExternalIntegration>;
 }
+
+const encodeExternalIntegration = S.encodeEffect(ExternalIntegration);
 
 /**
  * Scopes a proactive notification may include.
@@ -1131,7 +1138,7 @@ export const toReducedDict = Effect.fn("App.toReducedDict")(function* (app: App)
     connected_accounts: app.connectedAccounts,
     external_integration: O.isNone(app.externalIntegration)
       ? null
-      : yield* S.encodeEffect(ExternalIntegration)(app.externalIntegration.value),
+      : yield* encodeExternalIntegration(app.externalIntegration.value),
     rating_avg: O.getOrNull(app.ratingAvg),
     rating_count: app.ratingCount,
     enabled: app.enabled,
@@ -1152,7 +1159,7 @@ export const toReducedDict = Effect.fn("App.toReducedDict")(function* (app: App)
     is_influencer: O.getOrNull(app.isInfluencer),
     is_popular: O.getOrNull(app.isPopular),
     official: O.getOrNull(app.official),
-    chat_tools: O.isNone(app.chatTools) ? null : yield* S.encodeEffect(S.Array(ChatTool))(app.chatTools.value),
+    chat_tools: O.isNone(app.chatTools) ? null : yield* encodeChatToolArray(app.chatTools.value),
     source_code_url: O.getOrNull(app.sourceCodeUrl),
     disabled: O.getOrNull(app.disabled),
     disabled_reason: O.getOrNull(app.disabledReason),

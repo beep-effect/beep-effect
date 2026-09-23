@@ -18,6 +18,7 @@ import * as Order from "effect/Order";
 import * as Rec from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as P from "effect/Predicate";
 import { Model, pg, text } from "./Kit.ts";
 
 const $I = $ScratchpadId.create("beep/KnowledgeLedgerPolicy");
@@ -321,7 +322,7 @@ export const normalizeSlotToken = (value: string): string =>
  */
 export const normalizePlaybookHandle = (value: unknown): string => {
   if (value === null || value === undefined || value === false || value === 0 || value === "") return "";
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+  if (P.isString(value) || P.isNumber(value) || P.isBoolean(value)) {
     return A.join(" ")(A.filter(Str.split(/\s+/u)(String(value)), (part) => part.length > 0));
   }
   return A.join(" ")(A.filter(Str.split(/\s+/u)(JSON.stringify(value)), (part) => part.length > 0));
@@ -378,10 +379,10 @@ export const canonicalizeLedgerSlot = Effect.fn("canonicalizeLedgerSlot")(functi
 });
 
 const reasonText = (value: unknown): string => {
-  if (typeof value === "string") return value;
-  if (typeof value === "object" && value !== null && "value" in value) {
+  if (P.isString(value)) return value;
+  if (P.hasProperty(value, "value")) {
     const inner = Reflect.get(value, "value");
-    if (typeof inner === "string") return inner;
+    if (P.isString(inner)) return inner;
   }
   return "";
 };
@@ -421,14 +422,14 @@ const rowTimestamp = (row: object): number => {
 
 const rowIdentity = (row: object): string => {
   const memoryId = read(row, "memoryId");
-  if (typeof memoryId === "string" && memoryId.length > 0) return memoryId;
+  if (P.isString(memoryId) && memoryId.length > 0) return memoryId;
   const id = read(row, "id");
-  return typeof id === "string" ? id : "";
+  return P.isString(id) ? id : "";
 };
 
 const curationWeight = (row: object): number => {
   const value = read(row, "curationWeight");
-  return typeof value === "number" && Number.isFinite(value) ? Math.trunc(value) : 0;
+  return P.isNumber(value) && Number.isFinite(value) ? Math.trunc(value) : 0;
 };
 
 const beats = (left: object, right: object): boolean => {
@@ -477,7 +478,7 @@ const definitionFor = (name: string): O.Option<LedgerSlotDefinition> => {
 export const selectProfileSlotWinners = (rows: ReadonlyArray<object>): ReadonlyArray<readonly [string, object]> => {
   const winners = A.reduce(rows, HashMap.empty<string, object>(), (acc, row) => {
     const raw = read(row, "slot");
-    const slotName = typeof raw === "string" ? lookupAlias(normalizeSlotToken(raw)) : O.none();
+    const slotName = P.isString(raw) ? lookupAlias(normalizeSlotToken(raw)) : O.none();
     if (O.isNone(slotName)) return acc;
     const current = HashMap.get(acc, slotName.value);
     if (O.isNone(current) || beats(row, current.value)) return HashMap.set(acc, slotName.value, row);
@@ -501,7 +502,7 @@ export const selectProfileSlotWinners = (rows: ReadonlyArray<object>): ReadonlyA
 
 const lineContent = (row: object): string => {
   const value = read(row, "content");
-  const textValue = typeof value === "string" ? value : "";
+  const textValue = P.isString(value) ? value : "";
   return A.join(" ")(A.filter(Str.split(/\s+/u)(textValue), (part) => part.length > 0)).slice(
     0,
     PROFILE_LINE_CHARACTER_LIMIT,

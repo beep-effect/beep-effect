@@ -18,6 +18,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("beep/KnowledgeLedgerSearch");
 
@@ -182,18 +183,18 @@ const unwrap = (value: unknown): unknown => (O.isOption(value) ? O.getOrNull(val
 
 const textOf = (value: unknown): string => {
   const unwrapped = unwrap(value);
-  if (typeof unwrapped === "string") return unwrapped;
-  if (typeof unwrapped === "object" && unwrapped !== null && "value" in unwrapped) {
+  if (P.isString(unwrapped)) return unwrapped;
+  if (P.hasProperty(unwrapped, "value")) {
     const inner = Reflect.get(unwrapped, "value");
-    if (typeof inner === "string") return inner;
+    if (P.isString(inner)) return inner;
   }
   if (unwrapped === null || unwrapped === undefined) return "";
-  if (typeof unwrapped === "number" || typeof unwrapped === "boolean") return String(unwrapped);
+  if (P.isNumber(unwrapped) || P.isBoolean(unwrapped)) return String(unwrapped);
   return "";
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !A.isArray(value);
+  P.isObject(value);
 
 const promotion = (row: object): Record<string, unknown> => {
   const value = unwrap(read(row, "promotion"));
@@ -292,7 +293,7 @@ export const ledgerRowIsRejected = (row: object): boolean =>
 export const ledgerRowHasRestrictedSensitivity = (row: object): boolean => {
   const labels = read(row, "sensitivityLabels");
   if (!A.isArray(labels)) return false;
-  return A.some(labels, (label) => typeof label === "string" && HashSet.has(restrictedLabels, label));
+  return A.some(labels, (label) => P.isString(label) && HashSet.has(restrictedLabels, label));
 };
 
 /**
@@ -321,7 +322,7 @@ export const ledgerRowSourceIsReadable = (row: object): boolean => {
   if (sourceState === "tombstoned" || sourceState === "purged") return false;
   const evidence = read(row, "evidence");
   if (sourceState === "active" && A.isArray(evidence) && read(row, "userAsserted") !== true) {
-    return A.some(evidence, (entry) => typeof entry === "object" && entry !== null && textOf(read(entry, "sourceState")) === "active");
+    return A.some(evidence, (entry) => P.isObject(entry) && textOf(read(entry, "sourceState")) === "active");
   }
   return true;
 };
@@ -444,7 +445,7 @@ export const isLedgerRowAdmissible = (input: {
 export const ledgerRowIndexState = (row: object): LedgerRowIndexState => {
   if (!ledgerSchemaIsCurrent(row) || !kindAllowed(row, LEDGER_SEARCH_KINDS)) return "not_ledger";
   const uid = read(row, "uid");
-  return isLedgerRowAdmissible({ row, uid: typeof uid === "string" ? uid : null, surface: "current" })
+  return isLedgerRowAdmissible({ row, uid: P.isString(uid) ? uid : null, surface: "current" })
     ? "open"
     : "closed";
 };
@@ -492,7 +493,7 @@ export const buildLedgerIndexMetadata = (row: object): LedgerIndexMetadata | Rec
     ledgerSchemaVersion: "knowledge_ledger.v1",
     ledgerKind: ledgerKindValue(row),
     ledgerRowState: ledgerRowIndexState(row),
-    ledgerHasSlot: typeof slot === "string" && Str.trim(slot).length > 0,
+    ledgerHasSlot: P.isString(slot) && Str.trim(slot).length > 0,
     ledgerSubjectScope: textOf(read(row, "subjectScope")),
   };
 };

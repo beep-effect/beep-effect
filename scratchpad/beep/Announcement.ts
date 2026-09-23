@@ -18,6 +18,8 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { Model, optionalNull, optionalText, pg, text, timestamp } from "./Kit.ts";
 
+const decodeDateTimeUtcFromString = S.decodeEffect(S.DateTimeUtcFromString);
+
 const $I = $ScratchpadId.create("beep/Announcement");
 
 const boolDefault = (column: string, value: boolean) =>
@@ -65,6 +67,8 @@ export const AnnouncementType = LiteralKit(["changelog", "feature", "announcemen
  * @since 0.0.0
  */
 export type AnnouncementType = typeof AnnouncementType.Type;
+
+const isAnnouncementType = S.is(AnnouncementType);
 
 /**
  * When a client should consider showing the announcement.
@@ -177,6 +181,8 @@ export declare namespace ChangelogContent {
   export type Encoded = S.Codec.Encoded<typeof ChangelogContent>;
 }
 
+const encodeChangelogContent = S.encodeEffect(ChangelogContent);
+
 /**
  * One step in a feature walkthrough.
  *
@@ -248,6 +254,8 @@ export declare namespace FeatureContent {
   export type Encoded = S.Codec.Encoded<typeof FeatureContent>;
 }
 
+const encodeFeatureContent = S.encodeEffect(FeatureContent);
+
 /**
  * General announcement body.
  *
@@ -285,6 +293,8 @@ export class AnnouncementContent extends Model<AnnouncementContent>("Announcemen
 export declare namespace AnnouncementContent {
   export type Encoded = S.Codec.Encoded<typeof AnnouncementContent>;
 }
+
+const encodeAnnouncementContent = S.encodeEffect(AnnouncementContent);
 
 /**
  * Who should see an announcement.
@@ -336,6 +346,8 @@ export declare namespace Targeting {
   export type Encoded = S.Codec.Encoded<typeof Targeting>;
 }
 
+const decodeTargeting = S.decodeUnknownEffect(Targeting);
+
 /**
  * How an announcement is displayed.
  *
@@ -379,6 +391,8 @@ export class Display extends Model<Display>("Display")(
 export declare namespace Display {
   export type Encoded = S.Codec.Encoded<typeof Display>;
 }
+
+const decodeDisplay = S.decodeUnknownEffect(Display);
 
 const shell = {
   id: text("id"),
@@ -573,6 +587,8 @@ export const Announcement = LiteralKit(["changelog", "feature", "announcement"])
  * @since 0.0.0
  */
 export type Announcement = typeof Announcement.Type;
+
+const decodeAnnouncement = S.decodeUnknownEffect(Announcement);
 
 /**
  * Content getter was called for a different announcement type.
@@ -829,20 +845,20 @@ export const getEffectiveDisplay = (announcement: Announcement): Display =>
 
 const readTargeting = Effect.fn("Announcement.readTargeting")(function* (value: unknown) {
   if (!P.isObject(value) || A.isArray(value)) return O.none<Targeting>();
-  const result = yield* Effect.result(S.decodeUnknownEffect(Targeting)(value));
+  const result = yield* Effect.result(decodeTargeting(value));
   return Result.isSuccess(result) ? O.some(result.success) : O.none<Targeting>();
 });
 
 const readDisplay = Effect.fn("Announcement.readDisplay")(function* (value: unknown) {
   if (!P.isObject(value) || A.isArray(value)) return O.none<Display>();
-  const result = yield* Effect.result(S.decodeUnknownEffect(Display)(value));
+  const result = yield* Effect.result(decodeDisplay(value));
   return Result.isSuccess(result) ? O.some(result.success) : O.none<Display>();
 });
 
 const readCreatedAt = (value: unknown) => {
   if (value === undefined || value === null || value === "") return Effect.succeed(epoch);
   if (DateTime.isDateTime(value)) return Effect.succeed(value.pipe(DateTime.toUtc));
-  if (P.isString(value)) return S.decodeEffect(S.DateTimeUtcFromString)(value);
+  if (P.isString(value)) return decodeDateTimeUtcFromString(value);
   return Effect.fail(AnnouncementContentMismatch.make({ expected: "datetime", actual: "created_at" }));
 };
 
@@ -892,7 +908,7 @@ export const announcementFromDict = Effect.fn("Announcement.fromDict")(function*
     return yield* AnnouncementContentMismatch.make({ expected: "object", actual: "announcement" });
   }
   const data: { [key: string]: unknown } = { ...input };
-  const type: AnnouncementType = S.is(AnnouncementType)(data.type) ? data.type : "announcement";
+  const type: AnnouncementType = isAnnouncementType(data.type) ? data.type : "announcement";
   const id = P.isString(data.id) ? data.id : "";
   const createdAt = DateTime.formatIso(yield* readCreatedAt(data.created_at));
   const active = yield* readActive(data.active);
@@ -912,7 +928,7 @@ export const announcementFromDict = Effect.fn("Announcement.fromDict")(function*
     display: O.getOrNull(display),
     content,
   };
-  return yield* S.decodeUnknownEffect(Announcement)(wire);
+  return yield* decodeAnnouncement(wire);
 });
 
 /**
@@ -948,9 +964,9 @@ export const announcementFromDict = Effect.fn("Announcement.fromDict")(function*
  */
 export const announcementToDict = Effect.fn("Announcement.toDict")(function* (announcement: Announcement) {
   const content = yield* Announcement.match(announcement, {
-    changelog: (arm) => S.encodeEffect(ChangelogContent)(arm.content),
-    feature: (arm) => S.encodeEffect(FeatureContent)(arm.content),
-    announcement: (arm) => S.encodeEffect(AnnouncementContent)(arm.content),
+    changelog: (arm) => encodeChangelogContent(arm.content),
+    feature: (arm) => encodeFeatureContent(arm.content),
+    announcement: (arm) => encodeAnnouncementContent(arm.content),
   });
   const base = {
     id: announcement.id,

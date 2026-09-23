@@ -18,13 +18,15 @@ import {
   fairUseUtcNow,
 } from "../../beep/FairUse.ts";
 
+const encodeNaiveUtcTimestamp = S.encodeEffect(NaiveUtcTimestamp);
+
 const decode = <A>(schema: S.Codec<A, unknown, never, unknown>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
 describe("FairUse", () => {
   it("encodes a naive UTC stamp without a zone suffix", () => {
     const decoded = decode(NaiveUtcTimestamp, "2020-01-02T03:04:05.000");
-    const encoded = decoded.pipe(S.encodeEffect(NaiveUtcTimestamp), Effect.runSync);
+    const encoded = decoded.pipe(encodeNaiveUtcTimestamp, Effect.runSync);
     assert.strictEqual(encoded, "2020-01-02T03:04:05.000");
     assert.strictEqual(typeof Effect.runSync(fairUseUtcNow()).epochMilliseconds, "number");
     assert.strictEqual(decode(SoftCapTrigger, "3day"), "3day");

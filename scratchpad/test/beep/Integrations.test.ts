@@ -29,6 +29,9 @@ import {
   serializeDateTime,
 } from "../../beep/Integrations.ts";
 
+const encodeExternalIntegrationMemory = S.encodeEffect(ExternalIntegrationMemory);
+const encodeConversationItem = S.encodeEffect(ConversationItem);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -129,7 +132,7 @@ describe("Integrations", () => {
       assert.strictEqual(O.isNone(row.sourceUrl), true);
       assert.strictEqual(O.isNone(row.artifactRef), true);
     }
-    const encoded = Effect.runSync(S.encodeEffect(ExternalIntegrationMemory)(missing));
+    const encoded = Effect.runSync(encodeExternalIntegrationMemory(missing));
     assert.deepStrictEqual(encoded, { content: "fact", tags: null, sourceId: null, sourceUrl: null, artifactRef: null });
   });
 
@@ -263,7 +266,7 @@ describe("Integrations", () => {
     assert.strictEqual(O.map(present.structured, (s) => s.category).pipe(O.getOrNull), "work");
     assert.strictEqual(O.map(present.transcriptSegments, (s) => s.length).pipe(O.getOrNull), 0);
     assert.strictEqual(O.map(present.externalData, (d) => d.k).pipe(O.getOrNull), "v");
-    const encoded = Effect.runSync(S.encodeEffect(ConversationItem)(nulled));
+    const encoded = Effect.runSync(encodeConversationItem(nulled));
     assert.strictEqual(encoded.discarded, null);
     assert.strictEqual(encoded.structured, null);
     assert.strictEqual(encoded.startedAt, null);

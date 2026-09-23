@@ -282,6 +282,8 @@ export declare namespace AssociationJudgment {
   export type Encoded = S.Codec.Encoded<typeof AssociationJudgment>;
 }
 
+const decodeUnknownEffectAssociationJudgment = S.decodeUnknownEffect(AssociationJudgment);
+
 /**
  * Enforce the material and reason pairing.
  *
@@ -347,7 +349,7 @@ export const validateAssociationJudgment = Effect.fn("AssociationJudgment.valida
  * @since 0.0.0
  */
 export const decodeAssociationJudgment = Effect.fn("AssociationJudgment.decode")(function* (input: unknown) {
-  return yield* validateAssociationJudgment(yield* S.decodeUnknownEffect(AssociationJudgment)(input));
+  return yield* validateAssociationJudgment(yield* decodeUnknownEffectAssociationJudgment(input));
 });
 
 /**

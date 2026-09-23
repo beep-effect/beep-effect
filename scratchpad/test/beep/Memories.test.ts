@@ -40,6 +40,10 @@ import {
   uncertaintyReasonsFor,
 } from "../../beep/Memories.ts";
 
+const encodeMemory = S.encodeEffect(Memory);
+const encodeMemoryDB = S.encodeEffect(MemoryDB);
+const encodeShortTermMemory = S.encodeEffect(ShortTermMemory);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -130,7 +134,7 @@ describe("Memories literals", () => {
     assert.strictEqual(mapLegacyCategories(3), "interesting");
     const decoded = decode(Memory, { ...memoryWire, category: "learnings" });
     assert.strictEqual(decoded.category, "system");
-    const encoded = Effect.runSync(S.encodeEffect(Memory)(decoded));
+    const encoded = Effect.runSync(encodeMemory(decoded));
     assert.strictEqual(encoded.category, "system");
   });
 });
@@ -163,7 +167,7 @@ describe("Memory models", () => {
     assert.strictEqual(O.getOrNull(present.visibility), "public");
     assert.strictEqual(O.getOrNull(present.subjectScope), "third_party");
     assert.strictEqual(O.isSome(present.validTo), true);
-    const encoded = Effect.runSync(S.encodeEffect(Memory)(nulled));
+    const encoded = Effect.runSync(encodeMemory(nulled));
     assert.strictEqual(encoded.visibility, null);
     assert.strictEqual(encoded.headline, null);
     assert.strictEqual(encoded.captureContext, null);
@@ -215,7 +219,7 @@ describe("Memory models", () => {
     assert.strictEqual(isActive(closed), false);
     assert.strictEqual(decodeFails(MemoryDB, { ...memoryDbWire, memoryTier: "context_only" }), true);
     assert.strictEqual(Effect.runSyncExit(decodeMemoryDb({ id: "x" }))._tag, "Failure");
-    const encoded = Effect.runSync(S.encodeEffect(MemoryDB)(decoded));
+    const encoded = Effect.runSync(encodeMemoryDB(decoded));
     assert.strictEqual(encoded.memoryId, null);
     assert.strictEqual(encoded.memoryTier, null);
     assert.strictEqual(encoded.createdAt, "2026-09-22T10:00:00.000Z");
@@ -244,7 +248,7 @@ describe("Memory models", () => {
     assert.strictEqual(short.status, "pending_consolidation");
     assert.strictEqual(O.getOrNull(short.visibility), "private");
     assert.strictEqual(O.isNone(short.consolidatedAt), true);
-    const encoded = Effect.runSync(S.encodeEffect(ShortTermMemory)(short));
+    const encoded = Effect.runSync(encodeShortTermMemory(short));
     assert.strictEqual(encoded.consolidatedMemoryId, null);
     assert.strictEqual(encoded.status, "pending_consolidation");
   });

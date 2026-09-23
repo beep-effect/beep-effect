@@ -36,6 +36,12 @@ import {
 import { MemoryOperation, OperationLogicalPayload, logicalPayloadDigest } from "../../beep/MemoryOperations.ts";
 import { MemoryItem } from "../../beep/ProductMemory.ts";
 
+const isWriterAdmissionError = S.is(WriterAdmissionError);
+const isMemoryApplyError = S.is(MemoryApplyError);
+const isString = S.is(S.String);
+const isStringArray = S.is(S.Array(S.String));
+const decodeUnknownSyncJsonObject = S.decodeUnknownSync(S.JsonObject);
+
 const decode = <Sch extends S.ConstraintDecoder<unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   S.decodeUnknownSync(schema)(input);
 
@@ -208,7 +214,7 @@ describe("requireWriterAdmitted", () => {
   it("fails with WriterAdmissionError, naming an unknown class first", () => {
     assert.strictEqual(flipTag(requireWriterAdmitted(control, "robot")), "WriterAdmissionError");
     const error = requireWriterAdmitted(withMode("ledger"), "compatibility").pipe(Effect.flip, Effect.runSync);
-    assert.strictEqual(S.is(WriterAdmissionError)(error), true);
+    assert.strictEqual(isWriterAdmissionError(error), true);
     assert.strictEqual(error.message, "compatibility writer is not admitted while writer mode is ledger");
   });
 });
@@ -248,7 +254,7 @@ describe("control head transitions", () => {
       error(advanced, { commitId: "commit_2", parentCommitId: "commit_0", commitSequence: 2 }).message,
       "projection watermark parent chain mismatch",
     );
-    assert.strictEqual(S.is(MemoryApplyError)(error(control, { accountGeneration: 9 })), true);
+    assert.strictEqual(isMemoryApplyError(error(control, { accountGeneration: 9 })), true);
   });
 });
 
@@ -338,11 +344,11 @@ describe("pure helpers", () => {
 const digestFor = (patch: Record<string, unknown>) =>
   Effect.runSync(
     logicalPayloadDigest({
-      decision: S.is(S.String)(patch.decision) ? patch.decision : "add",
-      memory_text: S.is(S.String)(patch.memoryText) ? patch.memoryText : null,
-      target_memory_id: S.is(S.String)(patch.targetMemoryId) ? patch.targetMemoryId : null,
-      result_status: S.is(S.String)(patch.resultStatus) ? patch.resultStatus : "active",
-      supersedes: S.is(S.Array(S.String))(patch.supersedes) ? patch.supersedes : [],
+      decision: isString(patch.decision) ? patch.decision : "add",
+      memory_text: isString(patch.memoryText) ? patch.memoryText : null,
+      target_memory_id: isString(patch.targetMemoryId) ? patch.targetMemoryId : null,
+      result_status: isString(patch.resultStatus) ? patch.resultStatus : "active",
+      supersedes: isStringArray(patch.supersedes) ? patch.supersedes : [],
       arguments: {},
     }),
   );
@@ -366,8 +372,8 @@ const operationFor = (patch: Record<string, unknown>, overrides: Partial<Paramet
     uid: "user-1",
     operationType: "synthesis",
     status: "pending",
-    evidenceIds: S.is(S.Array(S.String))(patch.evidenceIds) ? patch.evidenceIds : [],
-    logicalPayload: OperationLogicalPayload.make({ decision: S.is(S.String)(patch.decision) ? patch.decision : "add" }),
+    evidenceIds: isStringArray(patch.evidenceIds) ? patch.evidenceIds : [],
+    logicalPayload: OperationLogicalPayload.make({ decision: isString(patch.decision) ? patch.decision : "add" }),
     logicalPayloadDigest: digestFor(patch),
     accountGeneration: 1,
     sourceGeneration: 2,
@@ -414,7 +420,7 @@ const apply = (
   patchPayload: Record<string, unknown>,
   overrides: { controlState?: MemoryControlState; operation?: MemoryOperation; allowTriggerFeedbackArguments?: boolean } = {},
 ) => {
-  const payload = S.decodeUnknownSync(S.JsonObject)(patchPayload);
+  const payload = decodeUnknownSyncJsonObject(patchPayload);
   return applyLongTermPatchTransaction({
       controlState: overrides.controlState ?? control,
       operation: overrides.operation ?? operationFor(patchPayload),

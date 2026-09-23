@@ -76,6 +76,9 @@ import {
   restrictedSensitivityLabels,
 } from "./ProductMemory.ts";
 
+const isJsonObject = S.is(S.JsonObject);
+const isSourceState = S.is(SourceState);
+
 const $I = $ScratchpadId.create("beep/MemoryApply");
 
 const closed = <const L extends readonly [string, ...ReadonlyArray<string>]>(
@@ -267,6 +270,8 @@ export const MemoryWriterClass = closed(
  * @since 0.0.0
  */
 export type MemoryWriterClass = typeof MemoryWriterClass.Type;
+
+const isMemoryWriterClass = S.is(MemoryWriterClass);
 
 /**
  * Outbox event kind.
@@ -636,7 +641,7 @@ export const requireWriterAdmitted = Effect.fn("MemoryApply.requireWriterAdmitte
   writerClass: string,
   allowLedgerMigration: boolean = false,
 ) {
-  if (!S.is(MemoryWriterClass)(writerClass)) {
+  if (!isMemoryWriterClass(writerClass)) {
     return yield* WriterAdmissionError.make({ message: "unknown memory writer class" });
   }
   const mode = control.writerMode;
@@ -1009,7 +1014,7 @@ const readKey = (record: S.JsonObject, snake: string, camel: string): O.Option<u
 
 const recordOf = (value: { readonly [key: string]: unknown }): { readonly [key: string]: unknown } => value;
 
-const asJsonObject = (value: unknown): O.Option<S.JsonObject> => (S.is(S.JsonObject)(value) ? O.some(value) : O.none());
+const asJsonObject = (value: unknown): O.Option<S.JsonObject> => (isJsonObject(value) ? O.some(value) : O.none());
 
 const jsonObjectOrEmpty = (value: O.Option<S.JsonObject>): S.JsonObject => O.getOrElse(value, () => ({}));
 
@@ -1041,7 +1046,7 @@ const linksOf = (rows: ReadonlyArray<MemoryEvidence>): ReadonlyArray<MemoryEvide
     MemoryEvidenceLink.make({
       sourceId: row.sourceId,
       conversationId: row.conversationId,
-      sourceState: S.is(SourceState)(row.sourceState) ? row.sourceState : "active",
+      sourceState: isSourceState(row.sourceState) ? row.sourceState : "active",
     }),
   );
 
@@ -2134,7 +2139,7 @@ export const applyLongTermPatchTransaction = Effect.fn("MemoryApply.applyLongTer
       !patch.clearGraphAssertion);
   if (refreshGraphAssertion) {
     const rawGraphPlan = readKey(promotionOf(memoryItem), "graph_plan", "graphPlan");
-    if (O.isNone(rawGraphPlan) || !S.is(S.JsonObject)(rawGraphPlan.value)) {
+    if (O.isNone(rawGraphPlan) || !isJsonObject(rawGraphPlan.value)) {
       return rejected("invalid_patch", controlState, operation, "active graph-backed Long-term update requires its stored graph plan");
     }
     const graphPlan = graphPlanFromJson(rawGraphPlan.value);

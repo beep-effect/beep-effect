@@ -23,6 +23,8 @@ import * as Str from "effect/String";
 import { optionalText, optionalTimestamp } from "./Kit.ts";
 import { atLeastCheck, betweenCheck, finiteBetween, Model, optionalNull, pg } from "./Port.ts";
 
+const decodeUnknownFromJsonString = S.decodeEffect(S.fromJsonString(S.Unknown));
+
 const $I = $ScratchpadId.create("beep/Geolocation");
 
 const headerLimit = 4096;
@@ -172,6 +174,8 @@ export const GeolocationWire = Geolocation.pipe(
   }),
 );
 
+const decodeGeolocationWire = S.decodeUnknownEffect(GeolocationWire);
+
 /**
  * Released coordinate wire, before bounds are applied.
  *
@@ -258,6 +262,9 @@ export const GeolocationInputWire = GeolocationInput.pipe(
   }),
 );
 
+const encodeGeolocationInputWire = S.encodeEffect(GeolocationInputWire);
+const decodeGeolocationInputWire = S.decodeUnknownEffect(GeolocationInputWire);
+
 /**
  * Converts a released coordinate into the bounded server value.
  *
@@ -284,10 +291,10 @@ export const GeolocationInputWire = GeolocationInput.pipe(
  * @since 0.0.0
  */
 const boundGeolocationInput = Effect.fn("Geolocation.boundInput")(function* (value: GeolocationInput) {
-  const encoded = yield* Effect.result(S.encodeEffect(GeolocationInputWire)(value));
+  const encoded = yield* Effect.result(encodeGeolocationInputWire(value));
   if (Result.isFailure(encoded)) return O.none<Geolocation>();
   // @effect-diagnostics-next-line preferTypedSchemaDecoder:off -- The released wire and the bounded value are different schemas.
-  return yield* Effect.option(S.decodeUnknownEffect(GeolocationWire)(encoded.success));
+  return yield* Effect.option(decodeGeolocationWire(encoded.success));
 });
 
 export const validatedGeolocationOrNone = (geolocation: O.Option<GeolocationInput>): O.Option<Geolocation> =>
@@ -325,9 +332,9 @@ export const validatedGeolocationOrNone = (geolocation: O.Option<GeolocationInpu
  */
 export const geolocationFromPrivateHeader = Effect.fn("Geolocation.fromPrivateHeader")(function* (value: unknown) {
   if (!P.isString(value) || Str.isEmpty(value) || value.length > headerLimit) return O.none();
-  const parsed = yield* Effect.result(S.decodeEffect(S.fromJsonString(S.Unknown))(value));
+  const parsed = yield* Effect.result(decodeUnknownFromJsonString(value));
   if (Result.isFailure(parsed)) return O.none();
-  const input = yield* Effect.result(S.decodeUnknownEffect(GeolocationInputWire)(parsed.success));
+  const input = yield* Effect.result(decodeGeolocationInputWire(parsed.success));
   if (Result.isFailure(input)) return O.none();
   return validatedGeolocationOrNone(O.some(input.success));
 });

@@ -47,6 +47,10 @@ import {
   sourceIds,
 } from "../../beep/ProductMemory.ts";
 
+const isMemoryItemRejected = S.is(MemoryItemRejected);
+const encodeMemoryEvidenceLink = S.encodeEffect(MemoryEvidenceLink);
+const encodeMemoryItem = S.encodeEffect(MemoryItem);
+
 const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -131,7 +135,7 @@ const rejection = (patch: Record<string, unknown>): Effect.Effect<string> =>
         onFailure: (cause) =>
           cause.pipe(
             Cause.findErrorOption,
-            O.filter(S.is(MemoryItemRejected)),
+            O.filter(isMemoryItemRejected),
             O.map((error) => error.reason),
             O.getOrElse(() => "other-failure"),
           ),
@@ -213,7 +217,7 @@ describe("MemoryAccessPolicy and MemoryItemAlias", () => {
     assert.strictEqual(O.isNone(nulls.sourceId), true);
     const missing = decode(MemoryEvidenceLink, { sourceState: "active" });
     assert.strictEqual(O.isNone(missing.conversationId), true);
-    const encoded = Effect.runSync(S.encodeEffect(MemoryEvidenceLink)(missing));
+    const encoded = Effect.runSync(encodeMemoryEvidenceLink(missing));
     assert.strictEqual(encoded.sourceId, null);
     assert.strictEqual(encoded.conversationId, null);
     assert.strictEqual(MemoryEvidenceLink.make({}).sourceState, "active");
@@ -268,7 +272,7 @@ describe("MemoryItem decoding", () => {
     const missing = decode(MemoryItem, missingKeys);
     assert.strictEqual(O.isNone(missing.ledgerCommitId), true);
     assert.strictEqual(O.isNone(missing.promotion), true);
-    const encoded = Effect.runSync(S.encodeEffect(MemoryItem)(missing));
+    const encoded = Effect.runSync(encodeMemoryItem(missing));
     assert.strictEqual(encoded.canonicalMemoryId, null);
     assert.strictEqual(encoded.writeReason, null);
     assert.strictEqual(encoded.validTo, null);

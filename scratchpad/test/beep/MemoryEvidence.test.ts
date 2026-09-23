@@ -16,6 +16,9 @@ import {
   memoryEvidenceIssue,
 } from "../../beep/MemoryEvidence.ts";
 
+const encodeArtifactRef = S.encodeEffect(ArtifactRef);
+const encodeMemoryEvidence = S.encodeEffect(MemoryEvidence);
+
 const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -118,7 +121,7 @@ describe("ArtifactRef", () => {
     assert.strictEqual(O.isNone(missing.uri), true);
     assert.strictEqual(O.isNone(missing.checksum), true);
     assert.strictEqual(O.isNone(missing.sizeBytes), true);
-    const encoded = Effect.runSync(S.encodeEffect(ArtifactRef)(missing));
+    const encoded = Effect.runSync(encodeArtifactRef(missing));
     assert.strictEqual(encoded.artifactId, null);
     assert.strictEqual(encoded.uri, null);
     assert.strictEqual(encoded.checksum, null);
@@ -162,7 +165,7 @@ describe("MemoryEvidence", () => {
     assert.strictEqual(O.isNone(evidence.clientDeviceId), true);
     assert.deepStrictEqual(evidence.artifactRefs, []);
     assert.deepStrictEqual(evidence.quoteRefs, []);
-    const encoded = Effect.runSync(S.encodeEffect(MemoryEvidence)(evidence));
+    const encoded = Effect.runSync(encodeMemoryEvidence(evidence));
     assert.strictEqual(encoded.sourceId, null);
     assert.strictEqual(encoded.capturedAt, null);
     assert.strictEqual(encoded.captureConfidence, null);

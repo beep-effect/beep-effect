@@ -429,6 +429,8 @@ export const JITTriggerFeedbackReceipt = JitTriggerFeedbackAction.mapMembers(
  */
 export type JITTriggerFeedbackReceipt = typeof JITTriggerFeedbackReceipt.Type;
 
+const decodeJITTriggerFeedbackReceipt = S.decodeUnknownEffect(JITTriggerFeedbackReceipt, { onExcessProperty: "error" });
+
 /**
  * Decodes trigger feedback and rejects unknown keys.
  *
@@ -461,5 +463,5 @@ export type JITTriggerFeedbackReceipt = typeof JITTriggerFeedbackReceipt.Type;
 export const decodeJitTriggerFeedbackReceipt = Effect.fn("JITTriggerFeedbackReceipt.decode")(function* (
   input: unknown,
 ) {
-  return yield* S.decodeUnknownEffect(JITTriggerFeedbackReceipt, { onExcessProperty: "error" })(input);
+  return yield* decodeJITTriggerFeedbackReceipt(input);
 });

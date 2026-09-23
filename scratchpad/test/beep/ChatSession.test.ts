@@ -12,6 +12,8 @@ import {
   decodeChatSessionResponse,
 } from "../../beep/ChatSession.ts";
 
+const decodeSaveMessageResponse = S.decodeUnknownEffect(SaveMessageResponse);
+
 describe("ChatSession", () => {
   it("repairs a legacy session and decodes null preview", () => {
     const decoded = Effect.runSync(
@@ -45,7 +47,7 @@ describe("ChatSession", () => {
       updated: false,
       journalRevision: null,
     };
-    const saved = Effect.runSync(S.decodeUnknownEffect(SaveMessageResponse)(savedInput));
+    const saved = Effect.runSync(decodeSaveMessageResponse(savedInput));
     expect(saved.created).toBe(false);
     expect(O.isNone(saved.sessionId)).toBe(true);
     expect(O.isNone(saved.journalRevision)).toBe(true);

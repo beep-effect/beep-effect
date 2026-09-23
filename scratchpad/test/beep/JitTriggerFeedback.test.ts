@@ -15,6 +15,8 @@ import {
   decodeJitTriggerFeedbackReceipt,
 } from "../../beep/JitTriggerFeedback.ts";
 
+const encodeJitUsefulFeedbackReceipt = S.encodeEffect(JitUsefulFeedbackReceipt);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -67,7 +69,7 @@ describe("JitTriggerFeedback", () => {
     const nulled = decode(JitUsefulFeedbackReceipt, { ...base, action: "useful", appliedTriggerRevision: null });
     assert.strictEqual(O.isNone(missing.appliedTriggerRevision), true);
     assert.strictEqual(O.isNone(nulled.appliedTriggerRevision), true);
-    const encoded = Effect.runSync(S.encodeEffect(JitUsefulFeedbackReceipt)(missing));
+    const encoded = Effect.runSync(encodeJitUsefulFeedbackReceipt(missing));
     assert.strictEqual(encoded.appliedTriggerRevision, null);
     assert.strictEqual(encoded.recordedAt, "2026-09-22T10:00:00.000Z");
   });

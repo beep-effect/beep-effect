@@ -7,8 +7,9 @@
  * @since 0.0.0
  */
 import { createHash } from "node:crypto";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as P from "effect/Predicate";
 
 /**
  * Required `processing_receipt.receipt_version`.
@@ -61,10 +62,10 @@ export const REQUIRED_PROCESSOR_VERSION = "v1";
 const sha256Hex = (content: string): string => createHash("sha256").update(content, "utf8").digest("hex");
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !A.isArray(value);
+  P.isObject(value);
 
 const read = (record: Record<string, unknown>, key: string): unknown =>
-  Object.hasOwn(record, key) ? record[key] : undefined;
+  R.has(record, key) ? record[key] : undefined;
 
 /**
  * Python `int` check, including booleans.
@@ -87,12 +88,12 @@ const read = (record: Record<string, unknown>, key: string): unknown =>
  * @since 0.0.0
  */
 export const pythonInt = (value: unknown): O.Option<number> => {
-  if (typeof value === "boolean") return O.some(value ? 1 : 0);
-  if (typeof value === "number" && Number.isInteger(value)) return O.some(value);
+  if (P.isBoolean(value)) return O.some(value ? 1 : 0);
+  if (P.isNumber(value) && Number.isInteger(value)) return O.some(value);
   return O.none();
 };
 
-const text = (value: unknown): O.Option<string> => (typeof value === "string" && value.length > 0 ? O.some(value) : O.none());
+const text = (value: unknown): O.Option<string> => (P.isString(value) && value.length > 0 ? O.some(value) : O.none());
 
 /**
  * Returns whether admission proof is bound to the current content lineage.

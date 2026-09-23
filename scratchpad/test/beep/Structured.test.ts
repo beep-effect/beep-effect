@@ -17,6 +17,8 @@ import {
   setCategoryDefaultOnError,
 } from "../../beep/Structured.ts";
 
+const isCategoryEnum = S.is(CategoryEnum);
+
 const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -27,8 +29,8 @@ const instant = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z");
 
 describe("Structured", () => {
   it("keeps romantic and maps romance, numbers, and unknown strings to other", () => {
-    expect(S.is(CategoryEnum)("romantic")).toBe(true);
-    expect(S.is(CategoryEnum)("romance")).toBe(false);
+    expect(isCategoryEnum("romantic")).toBe(true);
+    expect(isCategoryEnum("romance")).toBe(false);
     expect(setCategoryDefaultOnError("romantic")).toBe("romantic");
     expect(setCategoryDefaultOnError("romance")).toBe("other");
     expect(setCategoryDefaultOnError(1)).toBe("other");

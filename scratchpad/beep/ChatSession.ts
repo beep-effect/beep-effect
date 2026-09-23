@@ -14,6 +14,8 @@
 import { $ScratchpadId } from "@beep/identity";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as R from "effect/Record";
+import * as A from "effect/Array";
 import { bool, optionalText, text, timestamp } from "./Kit.ts";
 import { boolDefault, isRecord, Model, optionalNull, pg, toWire } from "./Port.ts";
 
@@ -52,13 +54,13 @@ export const repairChatSessionResponseRecord = (input: unknown): unknown => {
   else if (pluginId !== undefined && pluginId !== null) data.app_id = pluginId;
   const title = data.title;
   if (title === undefined || title === null || title === "") data.title = "New Chat";
-  if (!Object.hasOwn(data, "preview")) data.preview = null;
+  if (!R.has(data, "preview")) data.preview = null;
   if ((data.updated_at === undefined || data.updated_at === null) && data.created_at != null) {
     data.updated_at = data.created_at;
   }
   if (data.message_count == null) {
     const ids = data.message_ids;
-    data.message_count = Array.isArray(ids) ? ids.length : 0;
+    data.message_count = A.isArray(ids) ? ids.length : 0;
   }
   if (data.starred == null) data.starred = false;
   return data;
@@ -118,6 +120,8 @@ export declare namespace ChatSessionResponse {
 
 const ChatSessionResponseWire = toWire(ChatSessionResponse);
 
+const decodeChatSessionResponseWire = S.decodeUnknownEffect(ChatSessionResponseWire);
+
 /**
  * Decodes a v2 session, repairing legacy app/plugin ids and missing counters.
  *
@@ -143,7 +147,7 @@ const ChatSessionResponseWire = toWire(ChatSessionResponse);
  * @since 0.0.0
  */
 export const decodeChatSessionResponse = Effect.fn("ChatSessionResponse.decode")(function* (input: unknown) {
-  return yield* S.decodeUnknownEffect(ChatSessionResponseWire)(repairChatSessionResponseRecord(input));
+  return yield* decodeChatSessionResponseWire(repairChatSessionResponseRecord(input));
 });
 
 /**

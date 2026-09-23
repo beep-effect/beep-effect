@@ -15,6 +15,8 @@ import {
   stableLoopKey,
 } from "../../beep/MemoryRecurrence.ts";
 
+const encodeRecurrenceEvidenceRef = S.encodeEffect(RecurrenceEvidenceRef);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -67,7 +69,7 @@ describe("RecurrenceEvidenceRef", () => {
     const nulled = decode(RecurrenceEvidenceRef, { ...refWire, version: null, deviceId: null, startSeconds: null });
     assert.strictEqual(O.isNone(nulled.version), true);
     assert.strictEqual(O.isNone(nulled.startSeconds), true);
-    const encoded = Effect.runSync(S.encodeEffect(RecurrenceEvidenceRef)(nulled));
+    const encoded = Effect.runSync(encodeRecurrenceEvidenceRef(nulled));
     assert.strictEqual(encoded.version, null);
     assert.strictEqual(encoded.deviceId, null);
   });

@@ -10,6 +10,10 @@ import {
   syncLocalFilesV2Responses,
 } from "../../beep/SyncContract.ts";
 
+const isSyncRecoveryWindowExceededResponse = S.is(SyncRecoveryWindowExceededResponse);
+const isSyncRequestValidationErrorResponse = S.is(SyncRequestValidationErrorResponse);
+const decodeSyncLocalFilesV2Response = S.decodeUnknownEffect(SyncLocalFilesV2Response);
+
 const decode = <A extends S.Codec<unknown, unknown, never, unknown>>(schema: A, input: unknown): A["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -18,12 +22,12 @@ describe("SyncContract", () => {
     const recovery = decode(SyncLocalFilesV2Response, { code: "window", detail: "too old" });
     const withLane = decode(SyncRecoveryWindowExceededResponse, { code: "window", detail: "too old", lane: null });
     const validation = decode(SyncLocalFilesV2Response, { detail: [{ type: "missing" }] });
-    expect(S.is(SyncRecoveryWindowExceededResponse)(recovery)).toBe(true);
-    if (S.is(SyncRecoveryWindowExceededResponse)(recovery)) expect(O.isNone(recovery.lane)).toBe(true);
+    expect(isSyncRecoveryWindowExceededResponse(recovery)).toBe(true);
+    if (isSyncRecoveryWindowExceededResponse(recovery)) expect(O.isNone(recovery.lane)).toBe(true);
     expect(O.isNone(withLane.lane)).toBe(true);
-    expect(S.is(SyncRequestValidationErrorResponse)(validation)).toBe(true);
-    if (S.is(SyncRequestValidationErrorResponse)(validation)) expect(validation.detail).toHaveLength(1);
-    expect(Effect.runSyncExit(S.decodeUnknownEffect(SyncLocalFilesV2Response)({ detail: "missing code" }))._tag).toBe(
+    expect(isSyncRequestValidationErrorResponse(validation)).toBe(true);
+    if (isSyncRequestValidationErrorResponse(validation)) expect(validation.detail).toHaveLength(1);
+    expect(Effect.runSyncExit(decodeSyncLocalFilesV2Response({ detail: "missing code" }))._tag).toBe(
       "Failure",
     );
   });

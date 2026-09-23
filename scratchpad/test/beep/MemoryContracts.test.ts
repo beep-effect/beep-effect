@@ -58,6 +58,19 @@ import {
   workingObservationExtractionError,
 } from "../../beep/MemoryContracts.ts";
 
+const isMemoryExtractionError = S.is(MemoryExtractionError);
+const isWorkingObservationExtractionError = S.is(WorkingObservationExtractionError);
+const encodeEvidenceRef = S.encodeEffect(EvidenceRef);
+const encodeL1MemoryArchiveItemWire = S.encodeEffect(L1MemoryArchiveItemWire);
+const encodeWorkingMemoryObservation = S.encodeEffect(WorkingMemoryObservation);
+const encodeL2SearchResult = S.encodeEffect(L2SearchResult);
+const isL2MemoryRouteDurable = S.is(L2MemoryRouteDurable);
+const isL2MemoryRouteReview = S.is(L2MemoryRouteReview);
+const isL2MemoryRouteDiscard = S.is(L2MemoryRouteDiscard);
+const isL2MemoryRouteHidden = S.is(L2MemoryRouteHidden);
+const encodeL2MemoryRoute = S.encodeEffect(L2MemoryRoute);
+const encodeDurableMemoryPatch = S.encodeEffect(DurableMemoryPatch);
+
 const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -152,11 +165,11 @@ describe("canonicalJson and deterministicContractId", () => {
 describe("errors", () => {
   it("build tagged errors with the Python messages", () => {
     const defaulted = memoryExtractionError("extractor_x");
-    assert.strictEqual(S.is(MemoryExtractionError)(defaulted), true);
+    assert.strictEqual(isMemoryExtractionError(defaulted), true);
     assert.strictEqual(defaulted.message, "extractor_x failed before producing a valid extraction result");
     assert.strictEqual(memoryExtractionError("extractor_x", "custom").message, "custom");
     const staged = workingObservationExtractionError("parse");
-    assert.strictEqual(S.is(WorkingObservationExtractionError)(staged), true);
+    assert.strictEqual(isWorkingObservationExtractionError(staged), true);
     assert.strictEqual(staged.extractor, "working_observation_extractor");
     assert.strictEqual(staged.message, "working observation extraction failed during parse");
   });
@@ -194,7 +207,7 @@ describe("EvidenceRef", () => {
     const missing = decode(EvidenceRef, { evidenceId: "ev-1", artifactRef: {} });
     assert.strictEqual(O.isNone(missing.sourceType), true);
     assert.strictEqual(O.isNone(missing.quote), true);
-    const encoded = Effect.runSync(S.encodeEffect(EvidenceRef)(missing));
+    const encoded = Effect.runSync(encodeEvidenceRef(missing));
     assert.strictEqual(encoded.sourceId, null);
     assert.strictEqual(encoded.quote, null);
     assert.deepStrictEqual(EvidenceRef.make({ evidenceId: "ev-2" }).artifactRef, {});
@@ -237,7 +250,7 @@ describe("L1MemoryArchiveItem", () => {
     assert.strictEqual(O.isNone(item.subjectScope), true);
     assert.strictEqual(O.isNone(item.allowedUse), true);
     assert.strictEqual(DateTime.formatIso(item.validTo.pipe(O.getOrThrow)), iso);
-    const encoded = Effect.runSync(S.encodeEffect(L1MemoryArchiveItemWire)(item));
+    const encoded = Effect.runSync(encodeL1MemoryArchiveItemWire(item));
     assert.strictEqual(encoded.class, "general");
     assert.strictEqual(encoded.subjectScope, null);
     assert.strictEqual(encoded.allowedUse, null);
@@ -410,7 +423,7 @@ describe("WorkingMemoryObservation", () => {
     assert.strictEqual(O.isNone(observation.packetId), true);
     assert.strictEqual(O.isNone(observation.routeHint), true);
     assert.strictEqual(O.isNone(observation.predicate), true);
-    const encoded = Effect.runSync(S.encodeEffect(WorkingMemoryObservation)(observation));
+    const encoded = Effect.runSync(encodeWorkingMemoryObservation(observation));
     assert.strictEqual(encoded.packetId, null);
     assert.strictEqual(encoded.allowedUse, null);
     const made = WorkingMemoryObservation.make({ content: "text" });
@@ -531,7 +544,7 @@ describe("L2 search contracts", () => {
     const bare = decode(L2SearchResult, { resultId: "r1", contentHash: "h", status: "review", source: "vector", metadata: {} });
     assert.strictEqual(O.isNone(bare.score), true);
     assert.strictEqual(O.isNone(bare.content), true);
-    const encoded = Effect.runSync(S.encodeEffect(L2SearchResult)(bare));
+    const encoded = Effect.runSync(encodeL2SearchResult(bare));
     assert.strictEqual(encoded.score, null);
     assert.strictEqual(encoded.content, null);
     assert.strictEqual(decodeFails(L2SearchResult, { ...bare, score: null, content: null }), false);
@@ -573,11 +586,11 @@ describe("L2MemoryRoute tagged union", () => {
   it("decodes every member on route", () => {
     const durable = decode(L2MemoryRoute, { ...routeBase, route: "durable", memoryText: " text ", evidenceQuotes: ["q"] });
     assert.strictEqual(durable.route, "durable");
-    assert.strictEqual(S.is(L2MemoryRouteDurable)(durable), true);
+    assert.strictEqual(isL2MemoryRouteDurable(durable), true);
     assert.strictEqual(durable.memoryText, "text");
 
     const review = decode(L2MemoryRoute, { ...routeBase, route: "review", memoryText: "text", evidenceQuotes: ["q"] });
-    assert.strictEqual(S.is(L2MemoryRouteReview)(review), true);
+    assert.strictEqual(isL2MemoryRouteReview(review), true);
 
     const discard = decode(L2MemoryRoute, {
       ...routeBase,
@@ -586,7 +599,7 @@ describe("L2MemoryRoute tagged union", () => {
       evidenceQuotes: [],
       dropReason: "duplicate",
     });
-    assert.strictEqual(S.is(L2MemoryRouteDiscard)(discard), true);
+    assert.strictEqual(isL2MemoryRouteDiscard(discard), true);
     assert.strictEqual(discard.route === "discard" && O.isNone(discard.memoryText), true);
     assert.strictEqual(discard.route === "discard" && discard.dropReason === "duplicate", true);
 
@@ -596,9 +609,9 @@ describe("L2MemoryRoute tagged union", () => {
       evidenceQuotes: [],
       dropReason: "secret_or_security_sensitive",
     });
-    assert.strictEqual(S.is(L2MemoryRouteHidden)(hidden), true);
+    assert.strictEqual(isL2MemoryRouteHidden(hidden), true);
     assert.strictEqual(hidden.route === "hidden" && O.isNone(hidden.memoryText), true);
-    const encodedHidden = Effect.runSync(S.encodeEffect(L2MemoryRoute)(hidden));
+    const encodedHidden = Effect.runSync(encodeL2MemoryRoute(hidden));
     assert.strictEqual(encodedHidden.route, "hidden");
     assert.strictEqual(encodedHidden.route === "hidden" && encodedHidden.memoryText === null, true);
   });
@@ -690,7 +703,7 @@ describe("DurableMemoryPatch", () => {
     assert.strictEqual(O.isNone(missing.targetTier), true);
     assert.strictEqual(O.isNone(missing.slot), true);
     assert.strictEqual(O.isNone(missing.writeReason), true);
-    const encoded = Effect.runSync(S.encodeEffect(DurableMemoryPatch)(missing));
+    const encoded = Effect.runSync(encodeDurableMemoryPatch(missing));
     assert.strictEqual(encoded.validTo, null);
     assert.strictEqual(encoded.targetTier, null);
     assert.strictEqual(encoded.slot, null);

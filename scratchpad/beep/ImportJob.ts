@@ -174,6 +174,8 @@ export declare namespace ImportJob {
   export type Encoded = S.Codec.Encoded<typeof ImportJob>;
 }
 
+const encodeImportJob = S.encodeEffect(ImportJob);
+
 /**
  * API projection of an import job.
  *
@@ -257,5 +259,5 @@ export declare namespace ImportJobResponse {
  * @since 0.0.0
  */
 export const dumpImportJob = Effect.fn("ImportJob.dump")(function* (job: ImportJob) {
-  return yield* S.encodeEffect(ImportJob)(job);
+  return yield* encodeImportJob(job);
 });

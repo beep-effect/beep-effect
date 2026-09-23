@@ -35,6 +35,8 @@ import {
   worksWithMemories,
 } from "../../beep/App.ts";
 
+const decodeApp = S.decodeUnknownEffect(App);
+
 const base = {
   id: "app-1",
   name: "Notes",
@@ -93,11 +95,11 @@ describe("App", () => {
 
   it("defaults a missing paid flag and keeps a present null", () => {
     const input: unknown = wireBase;
-    const missing = Effect.runSync(S.decodeUnknownEffect(App)(input));
+    const missing = Effect.runSync(decodeApp(input));
     assert.strictEqual(O.getOrNull(missing.isPaid), false);
     assert.strictEqual(O.getOrNull(missing.ratingAvg), 0);
     const cleared: unknown = { ...wireBase, isPaid: null, ratingAvg: null, price: null };
-    const none = Effect.runSync(S.decodeUnknownEffect(App)(cleared));
+    const none = Effect.runSync(decodeApp(cleared));
     assert.strictEqual(O.isNone(none.isPaid), true);
     assert.strictEqual(O.isNone(none.ratingAvg), true);
     assert.strictEqual(getRatingAvg(none), null);
@@ -135,7 +137,7 @@ describe("App", () => {
     });
     assert.deepStrictEqual(filterProactiveNotificationScopes(scoped, ["calendar", "mail"]), ["calendar"]);
     const cleared: unknown = { ...wireBase, chatTools: null };
-    const none = Effect.runSync(S.decodeUnknownEffect(App)(cleared));
+    const none = Effect.runSync(decodeApp(cleared));
     assert.strictEqual(hasChatTools(none), false);
   });
 

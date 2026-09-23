@@ -63,6 +63,8 @@ export const PreDispatchReason = LiteralKit([
  */
 export type PreDispatchReason = typeof PreDispatchReason.Type;
 
+const decodeUnknownOptionPreDispatchReason = S.decodeUnknownOption(PreDispatchReason);
+
 /**
  * Extraction failure that can name its extractor.
  *
@@ -109,6 +111,8 @@ export declare namespace MemoryExtractionFailure {
   export type Encoded = S.Codec.Encoded<typeof MemoryExtractionFailure>;
 }
 
+const isMemoryExtractionFailure = S.is(MemoryExtractionFailure);
+
 /**
  * Typed signal accepted only with its issuing claim's live proof.
  *
@@ -151,6 +155,8 @@ export class SweepPreDispatchError extends S.TaggedError<SweepPreDispatchError>(
 export declare namespace SweepPreDispatchError {
   export type Encoded = S.Codec.Encoded<typeof SweepPreDispatchError>;
 }
+
+const isSweepPreDispatchError = S.is(SweepPreDispatchError);
 
 /**
  * Builds the certified error for a closed reason.
@@ -453,10 +459,10 @@ export const markProviderDispatch = (
 
 const coerceReason = (error: unknown): PreDispatchReason => {
   const candidate =
-    S.is(MemoryExtractionFailure)(error) || S.is(SweepPreDispatchError)(error)
+    isMemoryExtractionFailure(error) || isSweepPreDispatchError(error)
       ? error.extractor
       : "daily_sweep_summary_agent";
-  const decoded = S.decodeUnknownOption(PreDispatchReason)(candidate);
+  const decoded = decodeUnknownOptionPreDispatchReason(candidate);
   return O.getOrElse(decoded, () => "daily_sweep_summary_agent");
 };
 
@@ -554,6 +560,6 @@ export const certifyPreDispatch = Effect.fn("SweepDispatchScope.certifyPreDispat
   const reason = coerceReason(error);
   const issued = makeSweepPreDispatchError(reason);
   const next = withPatch(scope, { issued: O.some(issued), reason: O.some(reason) });
-  const causeMessage = S.is(MemoryExtractionFailure)(error) ? error.message : "preparation failed";
+  const causeMessage = isMemoryExtractionFailure(error) ? error.message : "preparation failed";
   return yield* CertifiedSweepFailure.make({ reason, issued, scope: next, causeMessage });
 });

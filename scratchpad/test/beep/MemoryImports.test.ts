@@ -17,6 +17,10 @@ import {
   utcNow,
 } from "../../beep/MemoryImports.ts";
 
+const encodeMemoryImportBatchItem = S.encodeEffect(MemoryImportBatchItem);
+const encodeMemoryImportRun = S.encodeEffect(MemoryImportRun);
+const encodeMemoryImportArtifact = S.encodeEffect(MemoryImportArtifact);
+
 const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -123,7 +127,7 @@ describe("MemoryImportBatchItem", () => {
     assert.strictEqual(O.isNone(blank.contentHash), true);
     assert.strictEqual(O.isNone(blank.clientDeviceId), true);
     assert.strictEqual(O.isNone(blank.occurredAt), true);
-    const encoded = Effect.runSync(S.encodeEffect(MemoryImportBatchItem)(blank));
+    const encoded = Effect.runSync(encodeMemoryImportBatchItem(blank));
     assert.strictEqual(encoded.externalId, null);
     assert.strictEqual(encoded.title, null);
     assert.strictEqual(encoded.occurredAt, null);
@@ -214,7 +218,7 @@ describe("MemoryImportRun", () => {
     assert.strictEqual(O.isNone(decoded.extractorVersion), true);
     assert.strictEqual(O.isNone(decoded.completedAt), true);
     assert.strictEqual(O.isNone(decoded.lastError), true);
-    const encoded = Effect.runSync(S.encodeEffect(MemoryImportRun)(decoded));
+    const encoded = Effect.runSync(encodeMemoryImportRun(decoded));
     assert.strictEqual(encoded.sourceAccountHash, null);
     assert.strictEqual(encoded.completedAt, null);
     assert.strictEqual(encoded.lastError, null);
@@ -283,7 +287,7 @@ describe("MemoryImportArtifact", () => {
     assert.strictEqual(O.isNone(decoded.occurredAt), true);
     assert.strictEqual(O.isNone(decoded.clientDeviceId), true);
     assert.strictEqual(decoded.sourceState, "tombstoned");
-    const encoded = Effect.runSync(S.encodeEffect(MemoryImportArtifact)(decoded));
+    const encoded = Effect.runSync(encodeMemoryImportArtifact(decoded));
     assert.strictEqual(encoded.externalId, null);
     assert.strictEqual(encoded.occurredAt, null);
     assert.strictEqual(encoded.clientDeviceId, null);

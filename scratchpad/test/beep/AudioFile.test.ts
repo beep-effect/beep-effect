@@ -5,6 +5,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AudioFile } from "../../beep/AudioFile.ts";
 
+const decodeAudioFile = S.decodeUnknownEffect(AudioFile);
+
 describe("AudioFile", () => {
   it("builds an arbitrary value", () => {
     assert.notStrictEqual(AudioFile.pipe(Arbitrary.schema), undefined);
@@ -30,11 +32,11 @@ describe("AudioFile", () => {
       duration: 2,
     };
     const present: unknown = base;
-    const decoded = Effect.runSync(S.decodeUnknownEffect(AudioFile)(present));
+    const decoded = Effect.runSync(decodeAudioFile(present));
     assert.strictEqual(decoded.provider, "s3");
     assert.strictEqual(O.isSome(decoded.startedAt), true);
     const cleared: unknown = { ...base, startedAt: null };
-    const none = Effect.runSync(S.decodeUnknownEffect(AudioFile)(cleared));
+    const none = Effect.runSync(decodeAudioFile(cleared));
     assert.strictEqual(O.isNone(none.startedAt), true);
   });
 });

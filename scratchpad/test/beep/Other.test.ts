@@ -23,6 +23,8 @@ import {
   voiceReadiness,
 } from "../../beep/Other.ts";
 
+const encodePerson = S.encodeEffect(Person);
+
 const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -131,7 +133,7 @@ describe("Other", () => {
     const { createdAt: _c, updatedAt: _u, speechSampleTranscripts: _t, ...rest } = personInput;
     const missing = decode(Person, rest);
     assert.strictEqual(O.isNone(missing.updatedAt), true);
-    const encoded = Effect.runSync(S.encodeEffect(Person)(missing));
+    const encoded = Effect.runSync(encodePerson(missing));
     assert.strictEqual(encoded.createdAt, null);
     assert.strictEqual(encoded.updatedAt, null);
     assert.strictEqual(encoded.speechSampleTranscripts, null);

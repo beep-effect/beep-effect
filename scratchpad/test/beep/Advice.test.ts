@@ -6,6 +6,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Advice } from "../../beep/Advice.ts";
 
+const decodeAdvice = S.decodeUnknownEffect(Advice);
+
 const instant = DateTime.makeUnsafe("2020-01-02T03:04:05.000Z");
 
 describe("Advice", () => {
@@ -39,10 +41,10 @@ describe("Advice", () => {
       isDismissed: false,
     };
     const present: unknown = base;
-    const decoded = Effect.runSync(S.decodeUnknownEffect(Advice)(present));
+    const decoded = Effect.runSync(decodeAdvice(present));
     assert.strictEqual(O.getOrNull(decoded.reasoning), "You have been at it for hours");
     const cleared: unknown = { ...base, reasoning: null, sourceApp: null };
-    const none = Effect.runSync(S.decodeUnknownEffect(Advice)(cleared));
+    const none = Effect.runSync(decodeAdvice(cleared));
     assert.strictEqual(O.isNone(none.reasoning), true);
     assert.strictEqual(O.isNone(none.sourceApp), true);
   });

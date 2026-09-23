@@ -45,6 +45,8 @@ import {
   candidateWorkstreamProposal,
 } from "../../beep/Candidate.ts";
 
+const decodeCandidateCreate = S.decodeUnknownEffect(CandidateCreate);
+
 const evidence = [{ kind: "conversation", id: "conv-1", scope: "canonical" }];
 
 const envelope = {
@@ -100,7 +102,7 @@ describe("Candidate", () => {
 
   it("decodes each create arm", () => {
     const created = Effect.runSync(
-      S.decodeUnknownEffect(CandidateCreate)({
+      decodeCandidateCreate({
         ...envelope,
         subjectKind: "task",
         proposedAction: "create",
@@ -120,7 +122,7 @@ describe("Candidate", () => {
     assert.strictEqual(O.isNone(candidateCompatibility(created)), true);
     assert.strictEqual(O.isNone(candidateWorkstreamProposal(created)), true);
     const updated = Effect.runSync(
-      S.decodeUnknownEffect(CandidateCreate)({
+      decodeCandidateCreate({
         ...envelope,
         subjectKind: "task",
         proposedAction: "update",
@@ -130,7 +132,7 @@ describe("Candidate", () => {
     );
     assert.strictEqual(O.getOrNull(candidateTaskId(updated)), "task-1");
     const completed = Effect.runSync(
-      S.decodeUnknownEffect(CandidateCreate)({
+      decodeCandidateCreate({
         ...envelope,
         subjectKind: "task",
         proposedAction: "complete",
@@ -140,7 +142,7 @@ describe("Candidate", () => {
     );
     assert.strictEqual(completed.proposedAction, "complete");
     const cancelled = Effect.runSync(
-      S.decodeUnknownEffect(CandidateCreate)({
+      decodeCandidateCreate({
         ...envelope,
         subjectKind: "task",
         proposedAction: "cancel",
@@ -150,7 +152,7 @@ describe("Candidate", () => {
     );
     assert.strictEqual(cancelled.proposedAction, "cancel");
     const replaced = Effect.runSync(
-      S.decodeUnknownEffect(CandidateCreate)({
+      decodeCandidateCreate({
         ...envelope,
         subjectKind: "task",
         proposedAction: "supersede",
@@ -160,7 +162,7 @@ describe("Candidate", () => {
     );
     assert.strictEqual(replaced.proposedAction, "supersede");
     const workstream = Effect.runSync(
-      S.decodeUnknownEffect(CandidateCreate)({
+      decodeCandidateCreate({
         ...envelope,
         subjectKind: "workstream",
         proposedAction: "create",

@@ -18,6 +18,9 @@ import {
   stripRetiredChatFirstFlag,
 } from "../../beep/TaskIntelligence.ts";
 
+const decodeTaskIntelligenceAttributionEvent = S.decodeUnknownEffect(TaskIntelligenceAttributionEvent);
+const isMemoryCohortEligible = S.is(MemoryCohortEligible);
+
 const fails = (schema: S.Codec<unknown, unknown, never, unknown>, input: unknown): boolean =>
   Effect.runSyncExit(S.decodeUnknownEffect(schema)(input))._tag === "Failure";
 
@@ -29,7 +32,7 @@ const base = {
 };
 
 const event = (fields: Record<string, unknown>): TaskIntelligenceAttributionEvent =>
-  Effect.runSync(S.decodeUnknownEffect(TaskIntelligenceAttributionEvent)({ ...base, ...fields }));
+  Effect.runSync(decodeTaskIntelligenceAttributionEvent({ ...base, ...fields }));
 
 const message = (value: TaskIntelligenceAttributionEvent): string =>
   O.getOrElse(linkageFailure(value), () => "");
@@ -49,7 +52,7 @@ describe("TaskIntelligence", () => {
     });
     expect(decision.memoryCohortEligible).toBe(true);
     expect(decision.accountGeneration).toBe(0);
-    expect(S.is(MemoryCohortEligible)(false)).toBe(false);
+    expect(isMemoryCohortEligible(false)).toBe(false);
     expect(fails(TaskIntelligenceRolloutDecision, {
       uid: "",
       workflowMode: "off",

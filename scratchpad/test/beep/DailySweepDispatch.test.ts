@@ -19,6 +19,9 @@ import {
   provesPreDispatch,
 } from "../../beep/DailySweepDispatch.ts";
 
+const isCertifiedSweepFailure = S.is(CertifiedSweepFailure);
+const isSweepPreDispatchError = S.is(SweepPreDispatchError);
+
 const failure = <E>(effect: Effect.Effect<unknown, E>): E => {
   const exit = Effect.runSyncExit(effect);
   if (exit._tag === "Success") throw new Error("expected failure");
@@ -70,8 +73,8 @@ describe("DailySweepDispatch", () => {
         Effect.fail(MemoryExtractionFailure.make({ extractor: "daily_sweep_summary_input_budget", message: "budget" })),
       ),
     );
-    assert.strictEqual(S.is(CertifiedSweepFailure)(certified), true);
-    if (S.is(CertifiedSweepFailure)(certified)) {
+    assert.strictEqual(isCertifiedSweepFailure(certified), true);
+    if (isCertifiedSweepFailure(certified)) {
       assert.strictEqual(certified.reason, "daily_sweep_summary_input_budget");
       assert.strictEqual(provesPreDispatch(certified.scope, certified.issued), true);
     }
@@ -81,13 +84,13 @@ describe("DailySweepDispatch", () => {
         Effect.fail(MemoryExtractionFailure.make({ extractor: "not-a-reason", message: "other" })),
       ),
     );
-    if (S.is(CertifiedSweepFailure)(coerced)) {
+    if (isCertifiedSweepFailure(coerced)) {
       assert.strictEqual(coerced.reason, "daily_sweep_summary_agent");
     }
     const issued = makeSweepPreDispatchError("source_locked_before_dispatch");
     const active = SweepDispatchScope.make({ dispatched: true, issued: O.some(issued), reason: O.some(issued.extractor) });
     const rethrown = failure(certifyPreDispatch(O.some(active), Effect.fail(issued)));
-    assert.strictEqual(S.is(SweepPreDispatchError)(rethrown), true);
+    assert.strictEqual(isSweepPreDispatchError(rethrown), true);
     const absent = failure(certifyPreDispatch(O.none(), Effect.fail(issued)));
     assert.strictEqual(absent, issued);
   });

@@ -37,6 +37,14 @@ import {
   unitIntervalCheck,
 } from "./Kit.ts";
 
+const decodeStableId = S.decodeUnknownEffect(StableId);
+const decodeNonNegativeInt = S.decodeUnknownEffect(NonNegativeInt);
+const decodeDateTimeUtcFromString = S.decodeUnknownEffect(S.DateTimeUtcFromString);
+const isTaskCreatePayload = S.is(TaskCreatePayload);
+const encodeTaskCreatePayload = S.encodeEffect(TaskCreatePayload);
+const encodeTaskChangePayload = S.encodeEffect(TaskChangePayload);
+const encodeEvidenceRefCheckedArray = S.encodeEffect(S.Array(EvidenceRefChecked));
+
 const $I = $ScratchpadId.create("beep/Candidate");
 
 const completed: TaskStatus = "completed";
@@ -137,6 +145,8 @@ export const CandidateStatus = LiteralKit(["pending", "accepted", "rejected", "e
  */
 export type CandidateStatus = typeof CandidateStatus.Type;
 
+const decodeCandidateStatus = S.decodeUnknownEffect(CandidateStatus);
+
 /**
  * Task-intelligence workflow mode copied onto a migration report.
  *
@@ -221,6 +231,8 @@ export declare namespace WorkstreamProposal {
   export type Encoded = S.Codec.Encoded<typeof WorkstreamProposal>;
 }
 
+const encodeWorkstreamProposal = S.encodeEffect(WorkstreamProposal);
+
 /**
  * Presentation fields kept outside the strict task payload.
  *
@@ -265,6 +277,8 @@ export class CandidateCompatibilityMetadata extends Model<CandidateCompatibility
 export declare namespace CandidateCompatibilityMetadata {
   export type Encoded = S.Codec.Encoded<typeof CandidateCompatibilityMetadata>;
 }
+
+const encodeCandidateCompatibilityMetadata = S.encodeEffect(CandidateCompatibilityMetadata);
 
 const evidenceRefs = S.Array(EvidenceRefChecked)
   .check(S.isMinLength(1))
@@ -388,6 +402,8 @@ export declare namespace TaskUpdateCandidate {
   export type Encoded = S.Codec.Encoded<typeof TaskUpdateCandidate>;
 }
 
+const isTaskUpdateCandidate = S.is(TaskUpdateCandidate);
+
 /**
  * Proposal to complete an existing task. Status must be `completed`.
  *
@@ -439,6 +455,8 @@ export declare namespace TaskCompleteCandidate {
   export type Encoded = S.Codec.Encoded<typeof TaskCompleteCandidate>;
 }
 
+const isTaskCompleteCandidate = S.is(TaskCompleteCandidate);
+
 /**
  * Proposal to cancel an existing task. Status must be `cancelled`.
  *
@@ -489,6 +507,8 @@ export class TaskCancelCandidate extends Model<TaskCancelCandidate>("TaskCancelC
 export declare namespace TaskCancelCandidate {
   export type Encoded = S.Codec.Encoded<typeof TaskCancelCandidate>;
 }
+
+const isTaskCancelCandidate = S.is(TaskCancelCandidate);
 
 /**
  * Proposal to supersede an existing task.
@@ -547,6 +567,8 @@ export class TaskSupersedeCandidate extends Model<TaskSupersedeCandidate>("TaskS
 export declare namespace TaskSupersedeCandidate {
   export type Encoded = S.Codec.Encoded<typeof TaskSupersedeCandidate>;
 }
+
+const isTaskSupersedeCandidate = S.is(TaskSupersedeCandidate);
 
 /**
  * Proposal to create a workstream.
@@ -752,6 +774,8 @@ export const CandidateCreate = S.Union([TaskCandidate, WorkstreamCreateCandidate
  */
 export type CandidateCreate = typeof CandidateCreate.Type;
 
+const decodeCandidateCreate = S.decodeUnknownEffect(CandidateCreate);
+
 /**
  * Subject of a create payload.
  *
@@ -824,10 +848,10 @@ export const candidateProposedAction = (candidate: CandidateCreate): CandidateAc
  * @since 0.0.0
  */
 export const candidateTaskId = (candidate: CandidateCreate): O.Option<string> => {
-  if (S.is(TaskUpdateCandidate)(candidate)) return O.some(candidate.taskId);
-  if (S.is(TaskCompleteCandidate)(candidate)) return O.some(candidate.taskId);
-  if (S.is(TaskCancelCandidate)(candidate)) return O.some(candidate.taskId);
-  if (S.is(TaskSupersedeCandidate)(candidate)) return O.some(candidate.taskId);
+  if (isTaskUpdateCandidate(candidate)) return O.some(candidate.taskId);
+  if (isTaskCompleteCandidate(candidate)) return O.some(candidate.taskId);
+  if (isTaskCancelCandidate(candidate)) return O.some(candidate.taskId);
+  if (isTaskSupersedeCandidate(candidate)) return O.some(candidate.taskId);
   return O.none();
 };
 
@@ -1333,6 +1357,8 @@ const StoredResolutionTail = S.Struct({
   expiresAt: optionalInstant,
 });
 
+const decodeStoredResolutionTail = S.decodeEffect(StoredResolutionTail);
+
 export const candidateRecordFromStorage = Effect.fn("CandidateRecord.fromStorage")(function* (value: unknown) {
   if (!P.isObject(value)) {
     return yield* CandidateShapeError.make({ message: "candidate record must be an object" });
@@ -1357,10 +1383,10 @@ export const candidateRecordFromStorage = Effect.fn("CandidateRecord.fromStorage
     },
     P.isNotUndefined,
   );
-  const proposal = yield* S.decodeUnknownEffect(CandidateCreate)(proposalInput, { onExcessProperty: "error" });
-  const tail = yield* S.decodeEffect(StoredResolutionTail)(data);
+  const proposal = yield* decodeCandidateCreate(proposalInput, { onExcessProperty: "error" });
+  const tail = yield* decodeStoredResolutionTail(data);
   const record = CandidateRecord.make({
-    candidateId: yield* S.decodeUnknownEffect(StableId)(data.candidateId),
+    candidateId: yield* decodeStableId(data.candidateId),
     subjectKind: proposal.subjectKind,
     proposedAction: proposal.proposedAction,
     taskId: candidateTaskId(proposal),
@@ -1373,13 +1399,13 @@ export const candidateRecordFromStorage = Effect.fn("CandidateRecord.fromStorage
     evidenceRefs: proposal.evidenceRefs,
     sourceSurface: proposal.sourceSurface,
     compatibility: proposal.compatibility,
-    status: data.status === undefined ? "pending" : yield* S.decodeUnknownEffect(CandidateStatus)(data.status),
-    accountGeneration: yield* S.decodeUnknownEffect(NonNegativeInt)(data.accountGeneration),
-    idempotencyKey: yield* S.decodeUnknownEffect(StableId)(data.idempotencyKey),
+    status: data.status === undefined ? "pending" : yield* decodeCandidateStatus(data.status),
+    accountGeneration: yield* decodeNonNegativeInt(data.accountGeneration),
+    idempotencyKey: yield* decodeStableId(data.idempotencyKey),
     resolutionReason: tail.resolutionReason,
     resultTaskId: tail.resultTaskId,
     resultWorkstreamId: tail.resultWorkstreamId,
-    createdAt: yield* S.decodeUnknownEffect(S.DateTimeUtcFromString)(data.createdAt),
+    createdAt: yield* decodeDateTimeUtcFromString(data.createdAt),
     resolvedAt: tail.resolvedAt,
     expiresAt: tail.expiresAt,
   });
@@ -1424,9 +1450,9 @@ export const candidateRecordFromStorage = Effect.fn("CandidateRecord.fromStorage
  * @since 0.0.0
  */
 const encodeTaskChange = (change: TaskCreatePayload | TaskChangePayload) =>
-  S.is(TaskCreatePayload)(change)
-    ? S.encodeEffect(TaskCreatePayload)(change)
-    : S.encodeEffect(TaskChangePayload)(change);
+  isTaskCreatePayload(change)
+    ? encodeTaskCreatePayload(change)
+    : encodeTaskChangePayload(change);
 
 export const candidateRecordAsProposal = Effect.fn("CandidateRecord.asProposal")(function* (record: CandidateRecord) {
   const input: { [key: string]: unknown } = {
@@ -1434,20 +1460,20 @@ export const candidateRecordAsProposal = Effect.fn("CandidateRecord.asProposal")
     proposedAction: record.proposedAction,
     captureConfidence: record.captureConfidence,
     ownershipConfidence: record.ownershipConfidence,
-    evidenceRefs: yield* S.encodeEffect(S.Array(EvidenceRefChecked))(record.evidenceRefs),
+    evidenceRefs: yield* encodeEvidenceRefCheckedArray(record.evidenceRefs),
     sourceSurface: record.sourceSurface,
   };
   if (O.isSome(record.taskId)) input.taskId = record.taskId.value;
   if (O.isSome(record.taskChange)) input.taskChange = yield* encodeTaskChange(record.taskChange.value);
   if (O.isSome(record.workstreamProposal)) {
-    input.workstreamProposal = yield* S.encodeEffect(WorkstreamProposal)(record.workstreamProposal.value);
+    input.workstreamProposal = yield* encodeWorkstreamProposal(record.workstreamProposal.value);
   }
   if (O.isSome(record.goalId)) input.goalId = record.goalId.value;
   if (O.isSome(record.workstreamId)) input.workstreamId = record.workstreamId.value;
   if (O.isSome(record.compatibility)) {
-    input.compatibility = yield* S.encodeEffect(CandidateCompatibilityMetadata)(record.compatibility.value);
+    input.compatibility = yield* encodeCandidateCompatibilityMetadata(record.compatibility.value);
   }
-  return yield* S.decodeUnknownEffect(CandidateCreate)(input);
+  return yield* decodeCandidateCreate(input);
 });
 
 /**

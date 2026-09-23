@@ -201,6 +201,8 @@ export const NonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
  */
 export type NonNegativeInt = typeof NonNegativeInt.Type;
 
+const isNonNegativeInt = S.is(NonNegativeInt);
+
 /**
  * UTC timestamp stored as an ISO-8601 string.
  *
@@ -287,7 +289,7 @@ const patternOf = (pattern: string): RegExp => {
 };
 
 const requireBound = (value: number, label: string): number =>
-  S.is(NonNegativeInt)(value) ? value : fail("bound", label);
+  isNonNegativeInt(value) ? value : fail("bound", label);
 
 const checkedName = (column: string, suffix: string): string => {
   const name = `${column}_${suffix}`;

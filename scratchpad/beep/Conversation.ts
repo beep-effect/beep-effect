@@ -26,6 +26,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import * as P from "effect/Predicate";
 import { AudioFile } from "./AudioFile.ts";
 import { CalendarMeetingContext } from "./CalendarContext.ts";
 import { Message } from "./Chat.ts";
@@ -385,11 +386,15 @@ export declare namespace Conversation {
   export type Encoded = S.Codec.Encoded<typeof Conversation>;
 }
 
+const decodeUnknownEffectConversation = S.decodeUnknownEffect(Conversation);
+
+const decodeConversation = S.decodeUnknownEffect(Conversation);
+
 const backfillSegmentIds = (conversationId: string, segments: ReadonlyArray<unknown>): ReadonlyArray<unknown> =>
   segments.map((segment, index) => {
     if (!isRecord(segment)) return segment;
     const id = segment.id;
-    if (typeof id === "string" && id.length > 0) return segment;
+    if (P.isString(id) && id.length > 0) return segment;
     return { ...segment, id: legacyConversationSegmentId(conversationId, index) };
   });
 
@@ -431,12 +436,12 @@ const backfillSegmentIds = (conversationId: string, segments: ReadonlyArray<unkn
  * @since 0.0.0
  */
 export const initializeConversation = (input: unknown) => {
-  if (!isRecord(input)) return S.decodeUnknownEffect(Conversation)(input);
+  if (!isRecord(input)) return decodeConversation(input);
   const prepared: { [key: string]: unknown } = { ...input };
-  if (typeof prepared.id === "string" && Array.isArray(prepared.transcriptSegments)) {
+  if (P.isString(prepared.id) && Arr.isArray(prepared.transcriptSegments)) {
     prepared.transcriptSegments = backfillSegmentIds(prepared.id, prepared.transcriptSegments);
   }
-  return S.decodeUnknownEffect(Conversation)(prepared).pipe(
+  return decodeUnknownEffectConversation(prepared).pipe(
     Effect.map((decoded) =>
       Conversation.make({
         ...decoded,

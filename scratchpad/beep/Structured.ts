@@ -111,6 +111,8 @@ export const CategoryEnum = LiteralKit([
  */
 export type CategoryEnum = typeof CategoryEnum.Type;
 
+const isCategoryEnum = S.is(CategoryEnum);
+
 /**
  * How explicitly an action item was captured.
  *
@@ -274,7 +276,7 @@ const otherCategory = "other" satisfies CategoryEnum;
  * @since 0.0.0
  */
 export const setCategoryDefaultOnError = (value: unknown): CategoryEnum =>
-  S.is(CategoryEnum)(value) ? value : otherCategory;
+  isCategoryEnum(value) ? value : otherCategory;
 
 const categoryField = S.String.pipe(
   S.decodeTo(

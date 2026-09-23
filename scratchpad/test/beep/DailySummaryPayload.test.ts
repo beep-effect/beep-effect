@@ -13,10 +13,12 @@ import {
   LearnedMemoryRef,
 } from "../../beep/DailySummaryPayload.ts";
 
+const decodeDailySummaryPayload = S.decodeEffect(DailySummaryPayload);
+
 describe("DailySummaryPayload", () => {
   it("decodes present values and null optional fields", () => {
     const payload = Effect.runSync(
-      S.decodeEffect(DailySummaryPayload)({
+      decodeDailySummaryPayload({
         headline: "Day",
         highlights: [{ topic: "Ship", emoji: "", summary: "Left", conversationNumbers: [1] }],
         unresolvedQuestions: [{ question: "When?", conversationNumber: null }],

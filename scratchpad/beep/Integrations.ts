@@ -18,6 +18,7 @@ import * as Rec from "effect/Record";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as P from "effect/Predicate";
 import { memoryDbFields } from "./Memories.ts";
 import {
   Model,
@@ -382,8 +383,10 @@ export declare namespace IntegrationMemoryItem {
   export type Encoded = S.Codec.Encoded<typeof IntegrationMemoryItem>;
 }
 
+const encodeEffectIntegrationMemoryItem = S.encodeEffect(IntegrationMemoryItem);
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !A.isArray(value);
+  P.isObject(value);
 
 const omitNulls = (value: unknown): unknown => {
   if (A.isArray(value)) return A.map(value, omitNulls);
@@ -413,7 +416,7 @@ const omitNulls = (value: unknown): unknown => {
 export const encodeIntegrationMemoryItem = Effect.fn("IntegrationMemoryItem.encode")(function* (
   item: IntegrationMemoryItem,
 ) {
-  const encoded = yield* S.encodeEffect(IntegrationMemoryItem)(item);
+  const encoded = yield* encodeEffectIntegrationMemoryItem(item);
   const omitted = omitNulls(encoded);
   return isRecord(omitted) ? omitted : Rec.empty<string, unknown>();
 });
@@ -510,7 +513,7 @@ export declare namespace IntegrationActionItem {
  * @since 0.0.0
  */
 export const serializeDateTime = (value: DateTime.Utc | string): string => {
-  if (typeof value === "string") {
+  if (P.isString(value)) {
     if (Str.endsWith("Z")(value)) return value;
     if (Str.includes("+00:00")(value)) return Str.replace("+00:00", "Z")(value);
     if (/[+-][0-9]{2}:[0-9]{2}$/.test(value)) return value;
@@ -560,6 +563,8 @@ export declare namespace IntegrationEvent {
   export type Encoded = S.Codec.Encoded<typeof IntegrationEvent>;
 }
 
+const encodeIntegrationEvent = S.encodeEffect(IntegrationEvent);
+
 /**
  * Encodes an event and rewrites `start` to a Z-suffixed UTC string.
  *
@@ -584,7 +589,7 @@ export declare namespace IntegrationEvent {
 export const eventAsDictCleanedDates = Effect.fn("IntegrationEvent.asDictCleanedDates")(function* (
   event: IntegrationEvent,
 ) {
-  const encoded = yield* S.encodeEffect(IntegrationEvent)(event);
+  const encoded = yield* encodeIntegrationEvent(event);
   return { ...encoded, start: serializeDateTime(event.start) };
 });
 

@@ -27,6 +27,9 @@ import {
   transitionOperation,
 } from "../../beep/MemoryOperations.ts";
 
+const encodeOperationLogicalPayload = S.encodeEffect(OperationLogicalPayload);
+const encodeMemoryOperation = S.encodeEffect(MemoryOperation);
+
 const decode = <Sch extends S.Codec<unknown, unknown, never, unknown>>(schema: Sch, input: unknown): Sch["Type"] =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -191,7 +194,7 @@ describe("OperationLogicalPayload", () => {
     assert.strictEqual(O.isNone(missing.targetMemoryId), true);
     assert.strictEqual(O.isNone(missing.predicate), true);
     assert.strictEqual(O.isNone(missing.clearGraphAssertion), true);
-    const encoded = Effect.runSync(S.encodeEffect(OperationLogicalPayload)(missing));
+    const encoded = Effect.runSync(encodeOperationLogicalPayload(missing));
     assert.strictEqual(encoded.memoryText, null);
     assert.strictEqual(encoded.targetTier, null);
     assert.strictEqual(encoded.mutationMetadata, null);
@@ -308,7 +311,7 @@ describe("memoryOperationNew", () => {
 });
 
 describe("MemoryOperation decode", () => {
-  const wire = () => Effect.runSync(S.encodeEffect(MemoryOperation)(freshOperation()));
+  const wire = () => Effect.runSync(encodeMemoryOperation(freshOperation()));
 
   it("round-trips through the encoded form with None as null", () => {
     const encoded = wire();

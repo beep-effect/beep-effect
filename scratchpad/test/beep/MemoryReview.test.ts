@@ -6,6 +6,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { MemoryReviewConflict, MemoryReviewRejected, buildMemoryReviewConflict } from "../../beep/MemoryReview.ts";
 
+const encodeMemoryReviewConflict = S.encodeEffect(MemoryReviewConflict);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -54,7 +56,7 @@ describe("MemoryReviewConflict", () => {
     assert.strictEqual(O.getOrNull(withAuthority.authority), "canonical_memory");
     assert.strictEqual(O.getOrNull(withAuthority.sourceItemRevision), 3);
     assert.strictEqual(O.isNone(withAuthority.sourceContentHash), true);
-    const encoded = Effect.runSync(S.encodeEffect(MemoryReviewConflict)(conflict));
+    const encoded = Effect.runSync(encodeMemoryReviewConflict(conflict));
     assert.strictEqual(encoded.authority, null);
     assert.strictEqual(encoded.sourceCommitId, null);
     assert.strictEqual(encoded.veracity, "likely");

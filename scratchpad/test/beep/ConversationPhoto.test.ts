@@ -5,10 +5,12 @@ import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 import { ConversationPhoto, photosAsString, readContentType, readStorageId } from "../../beep/ConversationPhoto.ts";
 
+const decodeConversationPhoto = S.decodeEffect(ConversationPhoto);
+
 describe("ConversationPhoto", () => {
   it("decodes null and missing optional fields", () => {
     const present = Effect.runSync(
-      S.decodeEffect(ConversationPhoto)({
+      decodeConversationPhoto({
         base64: "pixels",
         storageId: " frame-1 ",
         contentType: " Image/PNG ",
@@ -21,11 +23,11 @@ describe("ConversationPhoto", () => {
     expect(O.getOrElse(present.contentType, () => "")).toBe("image/png");
     // Constructor defaults are construction-only: decode still needs the defaulted keys.
     const wireDefaults = { createdAt: "2020-01-02T03:04:05.000Z", discarded: false };
-    const missing = Effect.runSync(S.decodeEffect(ConversationPhoto)({ base64: "pixels", ...wireDefaults }));
+    const missing = Effect.runSync(decodeConversationPhoto({ base64: "pixels", ...wireDefaults }));
     expect(O.isNone(missing.storageId)).toBe(true);
     expect(O.isNone(missing.description)).toBe(true);
     const nulled = Effect.runSync(
-      S.decodeEffect(ConversationPhoto)({ base64: "pixels", storageId: null, description: null, ...wireDefaults }),
+      decodeConversationPhoto({ base64: "pixels", storageId: null, description: null, ...wireDefaults }),
     );
     expect(O.isNone(nulled.storageId)).toBe(true);
     expect(O.isNone(nulled.description)).toBe(true);
@@ -48,7 +50,7 @@ describe("ConversationPhoto", () => {
     const blank = ConversationPhoto.make({ base64: "pixels", description: O.some("   ") });
     expect(photosAsString([blank], false)).toBe("None");
     const dated = Effect.runSync(
-      S.decodeEffect(ConversationPhoto)({
+      decodeConversationPhoto({
         base64: "pixels",
         description: "desk",
         createdAt: "2020-01-02T03:04:05.000Z",

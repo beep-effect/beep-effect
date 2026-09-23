@@ -15,6 +15,8 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as S from "effect/Schema";
+import * as R from "effect/Record";
+import * as P from "effect/Predicate";
 import { Model, Table, optionalNull, pg } from "./Kit.ts";
 
 const snakeKey = (key: string): string => key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
@@ -35,11 +37,11 @@ const snakeKey = (key: string): string => key.replace(/[A-Z]/g, (letter) => `_${
  * @since 0.0.0
  */
 export const isRecord = (value: unknown): value is { readonly [key: string]: unknown } =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
+  P.isObject(value);
 
 type FieldRecord = { readonly [key: string]: unknown };
 
-const isFieldKey = (fields: FieldRecord, key: string): key is string => Object.hasOwn(fields, key);
+const isFieldKey = (fields: FieldRecord, key: string): key is string => R.has(fields, key);
 
 /**
  * Renames camelCase fields to snake_case on the encoded wire.
@@ -75,12 +77,12 @@ type Renamable = {
 export function toWire<S extends Renamable>(schema: S): S;
 export function toWire(schema: Renamable): Renamable {
   const mapping: Record<string, string> = {};
-  for (const key of Object.keys(schema.fields)) {
+  for (const key of R.keys(schema.fields)) {
     if (!isFieldKey(schema.fields, key)) continue;
     const encoded = snakeKey(key);
     if (encoded !== key) mapping[key] = encoded;
   }
-  if (Object.keys(mapping).length === 0) return schema;
+  if (R.keys(mapping).length === 0) return schema;
   // encodeKeys widens the encoded keys and still decodes to the same class.
   // @ts-expect-error TS2345 encodeKeys' function is wider than Renamable.pipe's parameter.
   return schema.pipe(S.encodeKeys(mapping));

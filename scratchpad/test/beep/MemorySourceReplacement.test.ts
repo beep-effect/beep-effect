@@ -5,6 +5,8 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { AwareUtcTimestamp, ConversationSourceReplacementReceipt } from "../../beep/MemorySourceReplacement.ts";
 
+const encodeAwareUtcTimestamp = S.encodeEffect(AwareUtcTimestamp);
+
 const decode = <A>(schema: S.ConstraintDecoder<A>, input: unknown): A =>
   Effect.runSync(S.decodeUnknownEffect(schema)(input));
 
@@ -35,7 +37,7 @@ describe("AwareUtcTimestamp", () => {
     );
     assert.strictEqual(decodeFails(AwareUtcTimestamp, "2026-09-22T10:00:00"), true);
     assert.strictEqual(decodeFails(AwareUtcTimestamp, "not a date"), true);
-    assert.strictEqual(decoded.pipe(S.encodeEffect(AwareUtcTimestamp), Effect.runSync), "2026-09-22T08:00:00.000Z");
+    assert.strictEqual(decoded.pipe(encodeAwareUtcTimestamp, Effect.runSync), "2026-09-22T08:00:00.000Z");
   });
 });
 
