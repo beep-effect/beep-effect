@@ -90,7 +90,7 @@
   ],
   "blinding": {
     "cloned_beep_effect": false,
-    "opened_pr": false,
+    "opened_pr": true,
     "called_cloud_agent": true
   },
   "written_at": "2026-09-23T09:15:00-05:00"
