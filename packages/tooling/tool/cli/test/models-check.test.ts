@@ -116,6 +116,12 @@ layer(Layer.mergeAll(platform, models))((it) => {
       const online = yield* runCheckIn("manifest.yaml", false);
       const recorded = yield* ledger.latest(online.workspace.root);
       strictEqual(O.isSome(recorded), true);
+
+      // Against that online baseline an offline run must not report the
+      // upstream-only models it never fetched as `removed`.
+      const offlineAgain = yield* runCheckIn("manifest.yaml", true);
+      strictEqual(offlineAgain.report.diff.removed.length, 0);
+      strictEqual(offlineAgain.report.diff.added.length, 0);
     })
   );
 

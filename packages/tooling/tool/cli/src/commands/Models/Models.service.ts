@@ -19,6 +19,7 @@ import { Effect, FileSystem, Layer, Match } from "effect";
 import * as Context from "effect/Context";
 import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
+import { CatalogDiff } from "./Models.catalog.schemas.ts";
 import {
   ModelsCatalog,
   ModelsCatalogLive,
@@ -347,7 +348,12 @@ const makeCheck = (): ModelsCheckShape => ({
         yield* ledger.record(options.home, snapshot);
       }
 
-      const diff = diffSnapshots(previous, snapshot);
+      // An offline snapshot has no upstream layer, so comparing it with the
+      // online baseline would report every upstream-only model as `removed`.
+      // An offline run carries an empty catalog diff instead.
+      const diff = options.offline
+        ? CatalogDiff.make({ added: [], removed: [], levelsChanged: [] })
+        : diffSnapshots(previous, snapshot);
       const models = catalogModelsById(snapshot.models);
       const answered = snapshot.summary.sources;
       const bindings = HashMap.fromIterable(
