@@ -117,11 +117,11 @@ describe("@beep/epistemic-use-cases claim disposition", () => {
 
         const persisted = yield* dispositions.listByClaim(rejectedInput.claim.id);
         expect(persisted.length).toBe(1);
-        expect(persisted[0].status).toBe(ClaimDispositionStatus.Enum.rejected);
-        expect(persisted[0].reason).toBe(violation.message);
-        expect(persisted[0].violations.length).toBe(1);
-        expect(persisted[0].violations[0].path).toBe(violation.path);
-        expect(persisted[0].resolvedBy).toStrictEqual(rejectedInput.resolvedBy);
+        expect(persisted[0]?.status).toBe(ClaimDispositionStatus.Enum.rejected);
+        expect(persisted[0]?.reason).toBe(violation.message);
+        expect(persisted[0]?.violations.length).toBe(1);
+        expect(persisted[0]?.violations[0]?.path).toBe(violation.path);
+        expect(persisted[0]?.resolvedBy).toStrictEqual(rejectedInput.resolvedBy);
       })
     );
 

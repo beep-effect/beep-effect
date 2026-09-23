@@ -2076,7 +2076,7 @@ const archiveMoveImpl = Effect.fn("CorpusCommandService.archiveMove")(function* 
       CorpusCommandError.mapError("Archive move manifest record failed JSONL encoding.")
     )
   );
-  const manifestPath = path.join(path.dirname(options.provenancePaths[0]), "move-manifest.jsonl");
+  const manifestPath = path.join(path.dirname(O.getOrThrow(A.head(options.provenancePaths))), "move-manifest.jsonl");
   yield* fs
     .writeFileString(manifestPath, jsonlContent(manifestLines))
     .pipe(CorpusCommandError.mapError(`Failed writing archive move manifest "${manifestPath}".`));

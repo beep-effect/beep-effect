@@ -9,6 +9,7 @@ import * as Agents from "@beep/shared-domain/identity/Agents";
 import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Layer } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
@@ -115,7 +116,7 @@ describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, ()
       const result = registry.get(probeProviderInstanceAtom);
       expect(AsyncResult.isFailure(result)).toBe(true);
       if (AsyncResult.isFailure(result)) {
-        const reason = result.cause.reasons[0];
+        const reason = O.getOrThrow(A.head(result.cause.reasons));
         expect(Cause.isFailReason(reason)).toBe(true);
         if (Cause.isFailReason(reason)) {
           expect(isProviderUnauthenticated(reason.error)).toBe(true);

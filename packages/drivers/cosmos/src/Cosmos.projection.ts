@@ -41,7 +41,7 @@ const Uint32Arr = S.instanceOf<globalThis.Uint32ArrayConstructor, globalThis.Uin
  * @since 0.0.0
  */
 export class CosmosGraphProjection extends S.Class<CosmosGraphProjection>($I`CosmosGraphProjection`)(
-  {
+  S.Struct({
     nodeCount: S.Int,
     edgeCount: S.Int,
     nodeIds: Uint32Arr,
@@ -52,7 +52,21 @@ export class CosmosGraphProjection extends S.Class<CosmosGraphProjection>($I`Cos
     // canvas, which is how a label layer is built. Absent or empty means a bare
     // graph; a caller with more points than it wants to name simply sends fewer.
     labels: S.Array(S.String).pipe(S.optionalKey),
-  },
+  }).check(
+    S.makeFilter(
+      (projection) =>
+        projection.nodeIds.length === projection.nodeCount &&
+        projection.pointPositions.length === projection.nodeCount * 2 &&
+        projection.links.length === projection.edgeCount * 2,
+      {
+        identifier: $I`CosmosGraphProjectionShapeCheck`,
+        title: "Cosmos Graph Projection Shape",
+        description:
+          "Checks that nodeIds holds nodeCount ids, pointPositions 2 * nodeCount floats, and links 2 * edgeCount floats.",
+        message: "Projection typed arrays must match nodeCount and edgeCount.",
+      }
+    )
+  ),
   $I.annote("CosmosGraphProjection", {
     description: "Typed-array graph projection: node ids, point positions, source-target link pairs, and labels.",
   })

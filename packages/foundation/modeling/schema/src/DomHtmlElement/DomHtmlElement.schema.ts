@@ -6,6 +6,7 @@
  */
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
+import { instanceOfDomGlobal } from "../internal/domGlobal.ts";
 
 const $I = $SchemaId.create("DomHtmlElement");
 
@@ -23,7 +24,7 @@ const $I = $SchemaId.create("DomHtmlElement");
  * @category guards
  * @since 0.0.0
  */
-export const isHTMLElement = (u: unknown): u is HTMLElement => u instanceof HTMLElement;
+export const isHTMLElement: (u: unknown) => u is HTMLElement = instanceOfDomGlobal<HTMLElement>("HTMLElement");
 
 /**
  * An HTMLElement.

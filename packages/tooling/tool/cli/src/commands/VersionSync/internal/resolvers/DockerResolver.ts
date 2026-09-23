@@ -11,7 +11,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeYamlTextAs } from "@beep/schema/Yaml";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Effect, FileSystem, identity, Match, Number as N, Order, Path, SchemaTransformation } from "effect";
+import { Effect, FileSystem, identity, Match, Number as N, Order, Path, pipe, SchemaTransformation } from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -171,14 +171,16 @@ const SEMVER_PATTERN = /^v?(\d+)\.(\d+)\.(\d+)$/;
 
 const parseSemverPart = N.parse;
 
-const parseSemver = (tag: string): O.Option<readonly [number, number, number]> =>
-  O.flatMap(Str.match(SEMVER_PATTERN)(tag), (match) =>
-    O.flatMap(parseSemverPart(match[1]), (major) =>
-      O.flatMap(parseSemverPart(match[2]), (minor) =>
-        O.map(parseSemverPart(match[3]), (patch) => [major, minor, patch] as const)
-      )
+const semverTriple = (match: RegExpMatchArray): O.Option<readonly [number, number, number]> =>
+  pipe(
+    O.all([A.get(match, 1), A.get(match, 2), A.get(match, 3)]),
+    O.flatMap(([major, minor, patch]) =>
+      O.all([parseSemverPart(major), parseSemverPart(minor), parseSemverPart(patch)])
     )
   );
+
+const parseSemver = (tag: string): O.Option<readonly [number, number, number]> =>
+  O.flatMap(Str.match(SEMVER_PATTERN)(tag), semverTriple);
 
 const semverCompare = (a: readonly [number, number, number], b: readonly [number, number, number]): number => {
   if (a[0] !== b[0]) return a[0] - b[0];
@@ -265,13 +267,7 @@ const findLatestForPgvector = (tags: ReadonlyArray<string>, currentTag: string):
     if (!Str.startsWith(prefix)(tag)) continue;
     if (!isStableTag(tag)) continue;
     // Pattern: pg17-v0.8.0 or similar with version suffix
-    const version = O.flatMap(Str.match(VERSION_PATTERN)(tag), (versionMatch) =>
-      O.flatMap(parseSemverPart(versionMatch[1]), (major) =>
-        O.flatMap(parseSemverPart(versionMatch[2]), (minor) =>
-          O.map(parseSemverPart(versionMatch[3]), (patch) => [major, minor, patch] as const)
-        )
-      )
-    );
+    const version = O.flatMap(Str.match(VERSION_PATTERN)(tag), semverTriple);
     if (O.isSome(version)) {
       candidates = A.append(candidates, {
         tag,
@@ -349,8 +345,7 @@ export const resolveDockerImages: {
 
     let images = A.empty<DockerImageElement>();
 
-    for (const serviceName of R.keys(composeDocument.services)) {
-      const service = composeDocument.services[serviceName];
+    for (const [serviceName, service] of R.toEntries(composeDocument.services)) {
       if (service.image === undefined) {
         continue;
       }

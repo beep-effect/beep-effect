@@ -7,7 +7,7 @@
 import { $RdfId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, Str } from "@beep/utils";
-import { pipe } from "effect";
+import { Number as N, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { SCHEMA_ORG_NAMESPACE } from "./Vocab/generated/SchemaOrg.terms.ts";
@@ -271,34 +271,12 @@ const isValidH16 = (input: string): boolean => {
 
 const isValidIPv4Octet = (input: string): boolean => {
   const length = Str.length(input);
-  const firstCodePoint = codePointAt(input, 0);
-  const secondCodePoint = codePointAt(input, 1);
-
-  if (length === 1) {
-    return firstCodePoint !== undefined && isDigit(firstCodePoint);
-  }
-
-  if (length === 2) {
-    return input[0] >= "1" && input[0] <= "9" && secondCodePoint !== undefined && isDigit(secondCodePoint);
-  }
-
-  if (length !== 3) {
+  if (length < 1 || length > 3 || !scanEntireComponent(input, isDigit)) {
     return false;
   }
-
-  const first = input[0];
-  const second = input[1];
-  const third = input[2];
-
-  if (first === "1") {
-    return second >= "0" && second <= "9" && third >= "0" && third <= "9";
-  }
-
-  if (first === "2" && second >= "0" && second <= "4") {
-    return third >= "0" && third <= "9";
-  }
-
-  return first === "2" && second === "5" && third >= "0" && third <= "5";
+  // Only the single digit "0" may start with a zero, and the value must fit in a byte.
+  const startsWithZero = codePointAt(input, 0) === 0x30;
+  return (length === 1 || !startsWithZero) && O.exists(N.parse(input), (value) => value <= 255);
 };
 
 const isValidIPv4Address = (input: string): boolean => {

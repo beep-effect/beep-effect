@@ -75,7 +75,7 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
         expect(verdict.verdict).toBe("rejected");
         if (ClaimGateResult.guards.rejected(verdict)) {
           expect(verdict.violations.length).toBeGreaterThan(0);
-          expect(verdict.violations[0].severity).toBe("violation");
+          expect(verdict.violations[0]?.severity).toBe("violation");
         }
 
         const blocked = yield* ClaimLifecycleUC.makeClaimTransition().advance(claim, verdict);

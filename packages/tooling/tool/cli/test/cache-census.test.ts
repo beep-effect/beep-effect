@@ -24,6 +24,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -252,7 +253,7 @@ describe("executable cache census", () => {
         scripts: { "lint:policy-fingerprint": "bun run beep lint policy-fingerprint --check" },
       });
       const rootTask = {
-        ...node("lint:policy-fingerprint", rootWorkspace.scripts["lint:policy-fingerprint"]),
+        ...node("lint:policy-fingerprint", O.getOrThrow(R.get(rootWorkspace.scripts, "lint:policy-fingerprint"))),
         taskId: "//#lint:policy-fingerprint",
         package: "//",
       };

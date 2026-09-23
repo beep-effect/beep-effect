@@ -36,8 +36,9 @@ import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { flow } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -364,9 +365,13 @@ describe("@beep/professional-desktop contradiction sidecar registration", () => 
         _tag: "ContradictionActionError",
         reason: "candidate-already-resolved",
       });
-      expect(O.map(result.detail.left.evidence[0]?.verifiedAnchor, (anchor) => anchor.anchor.quote)).toStrictEqual(
-        O.some("fact")
-      );
+      expect(
+        pipe(
+          A.head(result.detail.left.evidence),
+          O.flatMap((evidence) => evidence.verifiedAnchor),
+          O.map((anchor) => anchor.anchor.quote)
+        )
+      ).toStrictEqual(O.some("fact"));
       expect(result.page.page.pageIndex).toBe(1);
       expect(result.page.page.startOffset).toBe(65_535);
       expect(result.page.highlight).toStrictEqual(

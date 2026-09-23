@@ -210,11 +210,14 @@ const formatParams = (parameters: ReadonlyArray<unknown>, palette: Colors): stri
   const widths = pipe(
     formatted,
     A.map((parameter, index): readonly [number, number] => [index % 3, visualLength(parameter)]),
-    A.reduce([0, 0, 0] as ReadonlyArray<number>, (acc, [column, length]) => [
-      column === 0 ? Math.max(acc[0], length) : acc[0],
-      column === 1 ? Math.max(acc[1], length) : acc[1],
-      column === 2 ? Math.max(acc[2], length) : acc[2],
-    ])
+    A.reduce(
+      [0, 0, 0] as readonly [number, number, number],
+      (acc, [column, length]): readonly [number, number, number] => [
+        column === 0 ? Math.max(acc[0], length) : acc[0],
+        column === 1 ? Math.max(acc[1], length) : acc[1],
+        column === 2 ? Math.max(acc[2], length) : acc[2],
+      ]
+    )
   );
 
   return pipe(

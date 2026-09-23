@@ -192,11 +192,8 @@ const findNodeVersionLocations: (
     VersionSyncError.mapError("Failed to parse workflow YAML", relativeFile)
   );
 
-  for (const jobName of R.keys(workflow.jobs)) {
-    const job = workflow.jobs[jobName];
-
-    for (let stepIdx = 0; stepIdx < A.length(job.steps); stepIdx += 1) {
-      const step = job.steps[stepIdx];
+  for (const [jobName, job] of R.toEntries(workflow.jobs)) {
+    for (const [stepIdx, step] of job.steps.entries()) {
       const withBlock = step.with;
       if (withBlock === undefined || withBlock["node-version"] === undefined) {
         continue;

@@ -348,7 +348,9 @@ describe("Stage B eslint task inputs", { concurrent: false }, () => {
           yield* writeFile(root, file, `${original}\n`);
           const mutated = yield* policyHashes(root, binary);
           A.forEach(mutated, (task, index) => {
-            expect(task.hash === baseline[index]?.hash, `${file}: ${task.taskId}`).toBe(!changed[index]);
+            expect(task.hash === baseline[index]?.hash, `${file}: ${task.taskId}`).toBe(
+              !O.getOrThrow(A.get(changed, index))
+            );
           });
           yield* writeFile(root, file, original);
           expect(yield* policyHashes(root, binary)).toEqual(baseline);

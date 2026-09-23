@@ -1729,14 +1729,14 @@ const validateTemplateInterpolations = (values: ReadonlyArray<unknown>): void =>
     },
   });
 
-const validateTemplateSegmentCount = (strings: TemplateStringsArray): void =>
+const singleTemplateSegment = (strings: TemplateStringsArray): string =>
   A.match(strings, {
     onEmpty: () => {
       throw IdentitySegmentCountError.make({});
     },
-    onNonEmpty: () =>
-      A.match(A.drop(strings, 1), {
-        onEmpty: Fn.constVoid,
+    onNonEmpty: (segments) =>
+      A.match(A.drop(segments, 1), {
+        onEmpty: () => A.headNonEmpty(segments),
         onNonEmpty: () => {
           throw IdentitySegmentCountError.make({});
         },
@@ -1782,14 +1782,10 @@ const createComposer = <
 
   function createTemplateIdentity(strings: TemplateStringsArray, ...values: ReadonlyArray<unknown>) {
     validateTemplateInterpolations(values);
-    validateTemplateSegmentCount(strings);
 
-    const segment = strings[0];
-    if (segment === undefined) {
-      throw IdentitySegmentCountError.make({});
-    }
-
-    return toIdentityString(appendIdentityValue(value, ModuleSegmentSchema.make(segment)));
+    return pipe(singleTemplateSegment(strings), ModuleSegmentSchema.make, (segment) =>
+      toIdentityString(appendIdentityValue(value, segment))
+    );
   }
 
   function toTaggedComposerEntry(segment: ModuleSegmentValue<TString.NonEmpty>) {

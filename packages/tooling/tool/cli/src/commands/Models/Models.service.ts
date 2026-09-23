@@ -148,6 +148,14 @@ export interface ModelsCheckShape {
 /**
  * The `check` orchestrator.
  *
+ * **Gotchas**
+ *
+ * An offline run suppresses the catalog diff: the availability overlays report
+ * different effort ladders than upstream, so a projected diff would be a wall
+ * of phantom `levelsChanged`. Such a run returns an empty `diff` and reports
+ * `diffScope: "suppressed-offline"` — read that field before treating an empty
+ * diff as "no upstream churn".
+ *
  * **Example** (Describe a check run)
  *
  * ```ts
@@ -402,6 +410,7 @@ const makeCheck = (): ModelsCheckShape => ({
       return ModelsCheckReport.make({
         catalog: snapshot.summary,
         diff,
+        diffScope: options.offline ? "suppressed-offline" : "full",
         findings,
         hasDrift: A.isReadonlyArrayNonEmpty(findings),
       });

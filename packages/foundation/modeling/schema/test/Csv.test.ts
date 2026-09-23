@@ -66,8 +66,8 @@ describe("CSV", () => {
 
       expect(rows).toHaveLength(2);
       expect(rows[0]).toBeInstanceOf(UserRow);
-      expect(rows[0].id).toBe(1);
-      expect(rows[1].last_name).toBe("Hopper");
+      expect(rows[0]?.id).toBe(1);
+      expect(rows[1]?.last_name).toBe("Hopper");
     })
   );
 
@@ -79,9 +79,9 @@ describe("CSV", () => {
         "address,last_name,id,first_name\nLondon,Lovelace,1,Ada\nNew York,Hopper,2,Grace"
       );
 
-      expect(rows[0].first_name).toBe("Ada");
-      expect(rows[0].address).toBe("London");
-      expect(rows[1].id).toBe(2);
+      expect(rows[0]?.first_name).toBe("Ada");
+      expect(rows[0]?.address).toBe("London");
+      expect(rows[1]?.id).toBe(2);
     })
   );
 
@@ -102,8 +102,8 @@ describe("CSV", () => {
       );
 
       expect(rows).toHaveLength(1);
-      expect(rows[0].id).toBe(2);
-      expect(rows[0].address).toBe("New\nYork");
+      expect(rows[0]?.id).toBe(2);
+      expect(rows[0]?.address).toBe("New\nYork");
     })
   );
 
@@ -146,8 +146,8 @@ describe("CSV", () => {
       expect(encoded).toBe('id,first_name,last_name,address\n1,Ada,Lovelace,"London, UK"');
 
       const roundTrip = yield* S.decodeEffect(csv)(encoded);
-      expect(roundTrip[0].address).toBe("London, UK");
-      expect(roundTrip[0].id).toBe(1);
+      expect(roundTrip[0]?.address).toBe("London, UK");
+      expect(roundTrip[0]?.id).toBe(1);
     })
   );
 

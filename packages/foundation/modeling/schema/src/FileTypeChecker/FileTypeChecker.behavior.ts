@@ -81,7 +81,10 @@ const compiledCatalog: ReadonlyArray<CompiledFileType> = A.map(FileType.Options,
 
 const matchesAt = (fileChunk: ReadonlyArray<number>, sequence: ReadonlyArray<number>, offset: number): boolean =>
   fileChunk.length >= offset + sequence.length &&
-  A.every(sequence, (byte, sequenceIndex) => byteEquivalence(fileChunk[offset + sequenceIndex], byte));
+  pipe(
+    A.zip(sequence, A.drop(fileChunk, offset)),
+    A.every(([byte, fileByte]) => byteEquivalence(fileByte, byte))
+  );
 
 const includesByteSequenceAfter = (
   fileChunk: ReadonlyArray<number>,
@@ -95,8 +98,18 @@ const includesByteSequenceAfter = (
 
 const matchesSignature = (fileChunk: ReadonlyArray<number>, compiled: CompiledSignature): boolean =>
   Num.Equivalence(compiled.absolutePositions.length, compiled.signature.sequence.length) &&
-  A.every(compiled.signature.sequence, (byte, sequenceIndex) =>
-    byteEquivalence(fileChunk[compiled.absolutePositions[sequenceIndex]], byte)
+  pipe(
+    A.zip(compiled.signature.sequence, compiled.absolutePositions),
+    A.every(([byte, position]) =>
+      pipe(
+        fileChunk,
+        A.get(position),
+        O.match({
+          onNone: () => false,
+          onSome: (fileByte) => byteEquivalence(fileByte, byte),
+        })
+      )
+    )
   );
 
 const detectCandidate = (fileChunk: ReadonlyArray<number>, compiled: CompiledFileType): O.Option<DetectedFileInfo> =>

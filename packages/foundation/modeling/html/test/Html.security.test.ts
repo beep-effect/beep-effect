@@ -50,6 +50,7 @@ import { Comment, Doctype, Text } from "@beep/html/Html.nodes";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -493,7 +494,7 @@ describe("@beep/html proof provenance", () => {
     expect(safeRoot).toBe(issuedRoot);
     if (issuedRoot._tag === "#fragment") {
       expect(Object.isFrozen(issuedRoot.children)).toBe(true);
-      const issuedAnchor = issuedRoot.children[0];
+      const issuedAnchor = O.getOrThrow(A.head(issuedRoot.children));
       expect(Object.isFrozen(issuedAnchor)).toBe(true);
       expect(Reflect.set(issuedRoot.children, "0", injected)).toBe(false);
       expect(Reflect.set(issuedAnchor, "href", O.some("javascript:alert(1)"))).toBe(false);

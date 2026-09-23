@@ -428,7 +428,7 @@ describe("enum and custom columns", () => {
     expect(_badEnumBroadString).toThrow("finite non-empty union");
     expect(_enumValueMismatch).toThrow("incompatible values");
     expect(_pgNulEnum).toThrow("NUL (U+0000)");
-    expect(effectDrizzleSchema.enums.deduped_status.enumValues).toEqual(["draft", "active"]);
+    expect(effectDrizzleSchema.enums.deduped_status?.enumValues).toEqual(["draft", "active"]);
   });
 
   it("compiles unsafe custom SQL types verbatim", () => {
