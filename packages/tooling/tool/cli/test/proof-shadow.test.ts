@@ -302,6 +302,58 @@ describe("proof shadow mode", () => {
     ).pipe(provideScopedLayer(PlatformLayer))
   );
 
+  // C5 must-fail fixture (ruling 4): a lockfile change starts a new epoch, and a
+  // passed fact from the old epoch never satisfies the same lane again.
+  it.live("must fail: an epoch change refuses the passed fact it would otherwise reuse", () =>
+    inTempCheckout((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const lanes = [lane("quality:coverage", "passed", O.some("digest-a"), 600_000)];
+        yield* recordProofShadowForAttempt(root, facts(), [report(lanes)]);
+        const sameEpoch = yield* recordProofShadowForAttempt(root, facts({ attemptId: "attempt-2" }), [report(lanes)]);
+        expect(sameEpoch).toMatchObject({ recorded: 1, wouldReuse: 1 });
+
+        yield* fs.writeFileString(path.join(root, "bun.lock"), "lockfile after a deps bump\n");
+        const newEpoch = yield* recordProofShadowForAttempt(root, facts({ attemptId: "attempt-3" }), [report(lanes)]);
+        expect(newEpoch).toMatchObject({ recorded: 1, wouldReuse: 0, disagreements: 0 });
+
+        const ledger = yield* ProofLedger.make(root);
+        const rows = yield* ledger.shadowRows;
+        expect(
+          A.map(rows, (row) => (row.decision.kind === "miss" ? row.decision.reason : row.decision.kind))
+        ).toStrictEqual(["no-fact", "hit", "epoch-changed"]);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  // C5 must-fail fixture (rulings 1, 2, 63): a merged-preview fact recorded under the
+  // PR posture never satisfies the same lane in pre-push under the local profile.
+  it.live("must fail: a fact from another env profile never satisfies the pre-push lookup", () =>
+    inTempCheckout((root) =>
+      Effect.gen(function* () {
+        const lanes = [lane("quality:coverage", "passed", O.some("digest-a"), 600_000)];
+        yield* recordProofShadowForAttempt(root, facts({ stage: "merged-preview", envProfile: "pr-posture" }), [
+          report(lanes),
+        ]);
+        const crossProfile = yield* recordProofShadowForAttempt(root, facts({ attemptId: "attempt-2" }), [
+          report(lanes),
+        ]);
+        expect(crossProfile).toMatchObject({ recorded: 1, wouldReuse: 0, disagreements: 0 });
+
+        const ledger = yield* ProofLedger.make(root);
+        const rows = yield* ledger.shadowRows;
+        expect(
+          A.map(rows, (row) => (row.decision.kind === "miss" ? row.decision.reason : row.decision.kind))
+        ).toStrictEqual(["no-fact", "profile-mismatch"]);
+        expect(A.map(rows, (row) => `${row.stage}/${row.envProfile}`)).toStrictEqual([
+          "merged-preview/pr-posture",
+          "pre-push/local",
+        ]);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
   it("declares enforcement ready only when the bar is met with zero disagreements", () => {
     const empty = buildProofShadowReport(emptyInput());
     expect(empty.bar).toStrictEqual(ProofShadowEnforcementBar.ratified);
