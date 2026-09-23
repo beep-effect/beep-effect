@@ -317,7 +317,7 @@
       "ruleId": "SFV4-arbitrary-tests",
       "line": 52,
       "owner": "@beep/epistemic-tables",
-      "reason": "Converter failure-path regression over fixed corrupted rows and unencodable records; schema-derived property coverage for ExecutionDecisionRecord and ExecutionOutcomeRecord lives with the owning @beep/epistemic-domain value models, while the table converters only project them across the persistence boundary."
+      "reason": "Fixed-fixture suite: physical table and column pins, insert/select round-trips of an allowed decision, a denied decision, an outcome and a sealed pair, plus the converter failure paths (an unencodable record, a corrupted row on each ledger boundary, and the empty-message fromSchema fallback). Schema-derived property coverage for ExecutionDecisionRecord and ExecutionOutcomeRecord lives with the owning @beep/epistemic-domain value models; the table converters only project them across the persistence boundary."
     },
     {
       "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts",
