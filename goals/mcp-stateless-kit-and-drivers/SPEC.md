@@ -146,4 +146,4 @@ from `explorations/effect-mcp-2026-07-28` (`BRIEF.md`; rulings in `DECISIONS.md`
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None yet | N/A | N/A | N/A | N/A |
+| nlp-mcp stays on `v2025_06_18` | `packages/drivers/nlp-mcp` (the `.mcp.json` `nlp` server) | Goal A steward | D-cli-contract: the 2026-09-22 capture (`history/nlp-mcp-capture.md`) shows Claude Code 2.1.275 sends a legacy `initialize` (2025-11-25) by default and `server/discover` only under `MCP_PROTOCOL_NEGOTIATION=auto`; a 2026-only build fails every default launch. Codex not captured (pool exhausted, run aborted before spawning stdio servers). | Either Claude Code defaults stdio negotiation to `auto` (or the operator pins `MCP_PROTOCOL_NEGOTIATION=auto` in the environment every daily launch uses), or a re-run of the capture shows a daily CLI opening with `server/discover` by default; then apply the two-line flip plus `instructions` and `conformance2026` recorded in the capture. |
