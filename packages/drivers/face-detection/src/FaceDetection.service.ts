@@ -794,8 +794,9 @@ const decodeStrideFaces = Effect.fn("FaceDetection.decodeStrideFaces")(function*
   const stride = O.getOrThrow(A.get(strides, strideIndex));
   const cols = image.padWidth / stride;
   const rows = image.padHeight / stride;
-  const clsName = O.getOrThrow(A.get(outputNames, strideIndex));
-  const cls = yield* outputTensor(outputs, clsName).pipe(Effect.flatMap((tensor) => tensorData(tensor, clsName)));
+  const cls = yield* outputTensor(outputs, O.getOrThrow(A.get(outputNames, strideIndex))).pipe(
+    Effect.flatMap((tensor) => tensorData(tensor, O.getOrThrow(A.get(outputNames, strideIndex))))
+  );
   const objName = O.getOrThrow(A.get(outputNames, strideIndex + strides.length));
   const obj = yield* outputTensor(outputs, objName).pipe(Effect.flatMap((tensor) => tensorData(tensor, objName)));
   const bboxName = O.getOrThrow(A.get(outputNames, strideIndex + strides.length * 2));
