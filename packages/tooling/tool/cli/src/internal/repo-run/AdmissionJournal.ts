@@ -800,9 +800,13 @@ const takenJournalLockIsOwned = Effect.fnUntraced(function* (
   });
 });
 
+const randomIdentity = Effect.orDie(Effect.flatMap(Crypto.Crypto, (crypto) => crypto.randomUUIDv4));
+
 const journalLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedToken: string) {
   const crypto = yield* Crypto.Crypto;
-  const digest = Encoding.encodeHex(yield* crypto.digest("SHA-256", new TextEncoder().encode(observedToken)));
+  const digest = Encoding.encodeHex(
+    yield* Effect.orDie(crypto.digest("SHA-256", new TextEncoder().encode(observedToken)))
+  );
   return `${lockPath}.reap-${digest}`;
 });
 
@@ -812,8 +816,7 @@ const journalLockReapAdopterPath = (claimPath: string, adopter: AdmissionJournal
   `${journalLockReapAdopterPrefix(claimPath)}${adopter.generation.pid}.${Encoding.encodeBase64Url(adopter.generation.procStart)}.${Encoding.encodeBase64Url(adopter.generation.ownerToken)}.${adopter.claimedAtMillis}`;
 
 const journalLockReapTombstonePath = Effect.fnUntraced(function* (claimPath: string) {
-  const crypto = yield* Crypto.Crypto;
-  return `${claimPath}.tombstone-${process.pid}-${yield* crypto.randomUUIDv4}`;
+  return `${claimPath}.tombstone-${process.pid}-${yield* randomIdentity}`;
 });
 
 interface TakenJournalLockGeneration {
@@ -1050,10 +1053,7 @@ const adoptJournalLockReapClaim = Effect.fnUntraced(function* (
   if (!O.exists(claimedToken, (token) => token === observedToken)) {
     return O.none();
   }
-  const crypto = yield* Crypto.Crypto;
-  const identity = yield* crypto.randomUUIDv4.pipe(Effect.option);
-  if (O.isNone(identity)) return O.none();
-  const adopterGeneration = yield* makeLockGeneration(`${process.pid}:${identity.value}`);
+  const adopterGeneration = yield* makeLockGeneration(`${process.pid}:${yield* randomIdentity}`);
   if (O.isNone(adopterGeneration)) {
     return O.none();
   }
@@ -1134,12 +1134,7 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
     yield* reportLostJournalLockReapClaim(adopterPath);
     return;
   }
-  const generatedPath = yield* journalLockReapTombstonePath(claimPath).pipe(Effect.option);
-  if (O.isNone(generatedPath)) {
-    yield* releaseJournalLockReapClaim(adopterPath, observedToken);
-    return;
-  }
-  const tombstonePath = generatedPath.value;
+  const tombstonePath = yield* journalLockReapTombstonePath(claimPath);
   const taken = yield* takeJournalLockGeneration(lockPath, tombstonePath);
   if (O.isNone(taken)) {
     yield* releaseJournalLockReapClaim(adopterPath, observedToken);
@@ -1218,11 +1213,8 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   if (O.isNone(observedToken)) {
     return;
   }
-  const claimPath = yield* journalLockReapClaimPath(lockPath, observedToken.value).pipe(Effect.option);
-  if (O.isNone(claimPath)) return;
-  yield* Effect.uninterruptible(
-    claimAndFinishJournalLockReap(lockPath, claimPath.value, observedToken.value, nowMillis)
-  );
+  const claimPath = yield* journalLockReapClaimPath(lockPath, observedToken.value);
+  yield* Effect.uninterruptible(claimAndFinishJournalLockReap(lockPath, claimPath, observedToken.value, nowMillis));
 });
 
 const tryAcquireJournalLock = Effect.fnUntraced(function* (
@@ -1238,10 +1230,7 @@ const tryAcquireJournalLock = Effect.fnUntraced(function* (
   const generationText = yield* encodeLockGeneration(generation.value).pipe(Effect.orDie);
   // Publish the lock via hard link so it never exists without its token: a
   // contender reading a just-created lock always sees a full generation.
-  const crypto = yield* Crypto.Crypto;
-  const identity = yield* crypto.randomUUIDv4.pipe(Effect.option);
-  if (O.isNone(identity)) return false;
-  const stagingPath = `${lockPath}.stage-${process.pid}-${identity.value}`;
+  const stagingPath = `${lockPath}.stage-${process.pid}-${yield* randomIdentity}`;
   const acquired = yield* fs
     .writeFileString(stagingPath, generationText)
     .pipe(Effect.andThen(fs.link(stagingPath, lockPath)), Effect.as(true), Effect.orElseSucceed(constant(false)));
@@ -1317,15 +1306,7 @@ export const releaseJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
 ): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem> {
-  const generatedPath = yield* journalLockReapClaimPath(lockPath, token).pipe(
-    Effect.flatMap(journalLockReapTombstonePath),
-    Effect.option
-  );
-  if (O.isNone(generatedPath)) {
-    yield* Console.error("[yeet] unable to generate journal release identity; lock generation retained");
-    return;
-  }
-  const tombstonePath = generatedPath.value;
+  const tombstonePath = yield* journalLockReapTombstonePath(yield* journalLockReapClaimPath(lockPath, token));
   const taken = yield* takeJournalLockGeneration(lockPath, tombstonePath);
   if (O.isNone(taken)) {
     return;
