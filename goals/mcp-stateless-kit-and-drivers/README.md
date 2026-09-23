@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,12 +33,11 @@ practice-kg, then nlp-mcp behind a live first-message capture of the vendor CLIs
 
 ## Current Phase
 
-P1 Implement, in progress. PR 1 (kit rebase, dual-read caller, dispatch anchor,
-`@beep/mcp-kit/client`, conformance port) merged as #1192 and PR 2 (m365, uspto) merged as #1204,
-both on 2026-09-22. PR 3 (this lane, `mcp-hosts-pr3`): gov-legal and practice-kg serve
-`[McpProtocol.v2026_07_28]` only through `statelessMcpProtocols`, advertise `instructions`, expose
-registrations-only layers and pass `conformance2026` (practice-kg over a shared fixture bundle); the
-compiled `.mcpb` smoke sends `server/discover` first. Next: PR 4 (nlp-mcp capture).
+P4 Close. PR 1 (#1192) and PR 2 (#1204) merged 2026-09-22; PR 3 (gov-legal, practice-kg,
+`.mcpb` smoke) is #1209; PR 4 (this lane, `mcp-nlp-pr4`) records the D-cli-contract capture in
+`history/nlp-mcp-capture.md` and holds nlp-mcp on `v2025_06_18` behind the exception-ledger row in
+`SPEC.md` and the re-entry gate in the exploration `MAP.md`. The closeout reflection is written and
+the manifest is `completed-retained`.
 
 Goal B checkpoint: `goals/ontology-sidecar-stateless-identity` is unblocked since #1192 merged (it
 consumes `CurrentMcpDispatchAnchor`, the dual-read and `@beep/mcp-kit/client`; keep those
@@ -46,9 +45,13 @@ signatures stable).
 
 ## Latest Evidence
 
-- 2026-09-22: `bunx vitest run` in `packages/foundation/capability/mcp-kit`: 74 tests pass,
-  including every verification-matrix filter and the 15-arm `conformance 2026-07-28` suite on
-  the kit fixture host over HTTP and stdio. PR 1 decisions are in `PLAN.md`.
+- 2026-09-22 closeout: PR 1 #1192 (kit on rc.117, `@beep/mcp-kit/client`, conformance port),
+  PR 2 #1204 (m365, uspto), PR 3 #1209 (gov-legal, practice-kg, `.mcpb` smoke over
+  `server/discover`) — each flipped host passes `conformance2026` over HTTP and stdio; kit 88,
+  m365 20, uspto 26, gov-legal 32, practice-kg 21 tests. PR 4: `history/nlp-mcp-capture.md`
+  holds nlp-mcp on `v2025_06_18` (Claude Code 2.1.275 sends `initialize` by default,
+  `server/discover` only under `MCP_PROTOCOL_NEGOTIATION=auto`); exception-ledger row and MAP
+  re-entry gate recorded. Closeout reflection: `history/reflections/2026-09-22-claude.md`.
 - `history/sql-pg-pgclient-census.md` — the inherited S0 census.
 - The exploration's Gate B/C evidence is in
   `explorations/effect-mcp-2026-07-28/research/verification/README.md` and `reviews/`.
