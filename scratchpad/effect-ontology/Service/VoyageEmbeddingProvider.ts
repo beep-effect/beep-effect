@@ -520,16 +520,17 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
           return yield* httpClient.execute(request).pipe(
             // Map HTTP client errors (network, connection) to embedding errors
             Effect.mapError((e) => mapVoyageError(e, timeout)),
-            Effect.timeout(timeout),
-            Effect.catchTag("TimeoutError", () =>
-              Effect.fail(
-                EmbeddingTimeoutError.make({
-                  message: "Voyage API timeout",
-                  provider: "voyage",
-                  timeoutMs: Milliseconds.make(timeoutMs),
-                })
-              )
-            ),
+            Effect.timeoutOrElse({
+              duration: timeout,
+              orElse: () =>
+                Effect.fail(
+                  EmbeddingTimeoutError.make({
+                    message: "Voyage API timeout",
+                    provider: "voyage",
+                    timeoutMs: Milliseconds.make(timeoutMs),
+                  })
+                ),
+            }),
             Effect.flatMap(processResponse),
             // Retry transient errors (429, 5xx) with exponential backoff
             Effect.retry({

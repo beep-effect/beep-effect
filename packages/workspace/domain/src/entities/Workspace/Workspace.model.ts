@@ -53,5 +53,5 @@ export class Workspace extends ProductEntity.Entity<Workspace>()(WorkspaceIdenti
     description: "User or team work area participating in a runtime scenario.",
   })
 ) {
-  static readonly decodeSync = S.decodeSync(Workspace);
+  static readonly decodeEffect = S.decodeEffect(Workspace);
 }

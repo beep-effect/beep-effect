@@ -22,6 +22,21 @@
  */
 export * from "./Evidence.converters.ts";
 /**
+ * Evidence converter error exports.
+ *
+ * **Example** (Access EvidenceConverterError export)
+ *
+ * ```ts
+ * import * as Evidence from "@beep/epistemic-tables/entities/Evidence"
+ *
+ * console.log(Evidence.EvidenceConverterError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./Evidence.errors.ts";
+/**
  * Evidence table exports.
  *
  * **Example** (Log table entity type)

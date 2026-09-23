@@ -19,6 +19,7 @@ import { writeTextFile } from "./IssueArtifacts.ts";
 import { ensureProvenanceFooter, recordCurrentPrSession } from "./ProvenanceFooter.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -79,7 +80,7 @@ const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError =
  */
 export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(function* (
   context: RepoRunContext
-): Effect.fn.Return<GhPrView, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<GhPrView, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const output = yield* ghOutput({
     args: ghPullRequestViewArgs,
     cwd: context.repoRoot,
@@ -123,7 +124,7 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
  */
 export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(function* (
   context: RepoRunContext
-): Effect.fn.Return<O.Option<GhPrView>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<GhPrView>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const output = yield* ghOutput({
     args: ghPullRequestViewArgs,
     cwd: context.repoRoot,
@@ -187,7 +188,7 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
 ): Effect.fn.Return<
   string,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const mergeBase = yield* runGitOutput(context.repoRoot, ["merge-base", context.base, "HEAD"]).pipe(
     Effect.map(Str.trim),
@@ -204,7 +205,8 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   const proofSection = Str.isNonEmpty(laneSummary)
     ? laneSummary
     : "- full local proof still running (start-pr-early); see the verdict artifact for final lane results";
-  return `${Str.trim(commitLog)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runIdForContext(context)}/verdict.json\n`;
+  const runId = yield* runIdForContext(context);
+  return `${Str.trim(commitLog)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runId}/verdict.json\n`;
 });
 
 interface EnsurePullRequestDependencies {
@@ -376,7 +378,7 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const capture = dependencies.capture ?? runRepoCommandCapture;
   const existing = yield* (dependencies.findOpen ?? findOpenPullRequest)(context);
@@ -469,7 +471,7 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
  */
 export const validateOpenPullRequest = Effect.fn("Yeet.validateOpenPullRequest")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const pullRequest = yield* runGhPullRequestView(context);
 
   if (pullRequest.state !== "OPEN") {

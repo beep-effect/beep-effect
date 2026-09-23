@@ -6,11 +6,30 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
+import { EmailString } from "@beep/schema";
 import { PromotionSubjectRef } from "@beep/shared-use-cases/PromotionGate";
 import { A, Str } from "@beep/utils";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CandidateOutputSet } from "./ProfessionalRuntime.contracts.ts";
+import {
+  CandidateOutputSet,
+  RuntimeActivity,
+  RuntimeApprovalGate,
+  RuntimeCandidateClaim,
+  RuntimeCandidateDraft,
+  RuntimeCandidateProject,
+  RuntimeCandidateTask,
+  RuntimeContextPacketRequest,
+  RuntimeDraftRecipient,
+  RuntimeEntityRef,
+  RuntimeEvidenceRef,
+  RuntimeScope,
+  RuntimeSourceArtifact,
+  RuntimeSourceSpanRef,
+  RuntimeUsageRecord,
+  SdkContextPacket,
+} from "./ProfessionalRuntime.contracts.ts";
 import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.ts";
 import { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.ts";
 
@@ -125,162 +144,116 @@ const assertSpanRefs = (input: RuntimeFixtureInput, spanIds: ReadonlyArray<strin
   }
 };
 
+const entityRef = (kind: string, id: string) => RuntimeEntityRef.make({ id, kind });
+
+const evidenceSpan = (artifactId: string, spanId: string) =>
+  RuntimeEvidenceRef.make({ artifactId, spanId: O.some(spanId) });
+
+const evidenceSpans = (artifactId: string, spanIds: ReadonlyArray<string>) =>
+  RuntimeEvidenceRef.make({ artifactId, spanIds: O.some(spanIds) });
+
 const runLawPatentIntake = (input: RuntimeFixtureInput): CandidateOutputSet => {
   const spanIds = ["law-email-001-s2", "law-email-001-s3", "law-email-001-s4", "law-email-001-s5"];
   assertSpanRefs(input, spanIds);
+  const artifactId = input.email.artifactId;
 
-  return CandidateOutputSet.fromUnknown({
+  return CandidateOutputSet.make({
     scenarioId: "law-patent-intake",
     claims: [
-      {
+      RuntimeCandidateClaim.make({
         claimId: "claim-law-provisional-request-001",
         lifecycle: "candidate",
         claimType: "client_request",
-        subjectRef: {
-          kind: "matter",
-          id: "matter-law-robotic-gripper-001",
-        },
+        subjectRef: entityRef("matter", "matter-law-robotic-gripper-001"),
         statement:
           "Northstar Robotics asked for help preparing a provisional patent application for the robotic gripper control system.",
         confidence: "high",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "law-email-001-s2",
-          },
-        ],
+        evidence: [evidenceSpan(artifactId, "law-email-001-s2")],
         producedByPrincipalId: "principal-agent-runtime-fixture",
-      },
-      {
+      }),
+      RuntimeCandidateClaim.make({
         claimId: "claim-law-demo-date-001",
         lifecycle: "candidate",
         claimType: "deadline_context",
-        subjectRef: {
-          kind: "patentAsset",
-          id: "patent-asset-robotic-gripper-001",
-        },
+        subjectRef: entityRef("patentAsset", "patent-asset-robotic-gripper-001"),
         statement: "The client plans a public prototype demonstration on June 12, 2026.",
         confidence: "high",
-        eventDate: "2026-06-12",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "law-email-001-s3",
-          },
-        ],
+        eventDate: O.some("2026-06-12"),
+        evidence: [evidenceSpan(artifactId, "law-email-001-s3")],
         producedByPrincipalId: "principal-agent-runtime-fixture",
-      },
-      {
+      }),
+      RuntimeCandidateClaim.make({
         claimId: "claim-law-inventor-candidates-001",
         lifecycle: "candidate",
         claimType: "inventor_context",
-        subjectRef: {
-          kind: "patentAsset",
-          id: "patent-asset-robotic-gripper-001",
-        },
+        subjectRef: entityRef("patentAsset", "patent-asset-robotic-gripper-001"),
         statement: "Avery Chen and Priya Raman are named by the client as the main contributors.",
         confidence: "medium",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "law-email-001-s4",
-          },
-        ],
+        evidence: [evidenceSpan(artifactId, "law-email-001-s4")],
         producedByPrincipalId: "principal-agent-runtime-fixture",
-      },
+      }),
     ],
-    candidateProject: {
+    candidateProject: RuntimeCandidateProject.make({
       projectId: "project-law-provisional-filing-001",
       lifecycle: "candidate",
       workspaceId: input.seed.workspace.workspaceId,
       title: "Prepare provisional patent intake",
       verticalContextRefs: [
-        {
-          kind: "matter",
-          id: "matter-law-robotic-gripper-001",
-        },
-        {
-          kind: "patentAsset",
-          id: "patent-asset-robotic-gripper-001",
-        },
+        entityRef("matter", "matter-law-robotic-gripper-001"),
+        entityRef("patentAsset", "patent-asset-robotic-gripper-001"),
       ],
-      evidence: [
-        {
-          artifactId: input.email.artifactId,
-          spanIds: ["law-email-001-s2", "law-email-001-s3"],
-        },
-      ],
-    },
+      evidence: [evidenceSpans(artifactId, ["law-email-001-s2", "law-email-001-s3"])],
+    }),
     tasks: [
-      {
+      RuntimeCandidateTask.make({
         taskId: "task-law-schedule-intake-call-001",
         projectId: "project-law-provisional-filing-001",
         lifecycle: "candidate",
         title: "Schedule patent intake call next week",
         assigneePrincipalId: "principal-user-law-jordan-miles",
         dueDate: "2026-05-08",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "law-email-001-s5",
-          },
-        ],
-      },
-      {
+        evidence: [evidenceSpan(artifactId, "law-email-001-s5")],
+      }),
+      RuntimeCandidateTask.make({
         taskId: "task-law-request-invention-materials-001",
         projectId: "project-law-provisional-filing-001",
         lifecycle: "candidate",
         title: "Request design notes, photos, and control-flow diagram",
         assigneePrincipalId: "principal-user-law-jordan-miles",
         dueDate: "2026-05-05",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "law-email-001-s4",
-          },
-        ],
-      },
-      {
+        evidence: [evidenceSpan(artifactId, "law-email-001-s4")],
+      }),
+      RuntimeCandidateTask.make({
         taskId: "task-law-confirm-public-demo-deadline-001",
         projectId: "project-law-provisional-filing-001",
         lifecycle: "candidate",
         title: "Confirm filing timeline before June 12 public demo",
         assigneePrincipalId: "principal-user-law-jordan-miles",
         dueDate: "2026-05-10",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "law-email-001-s3",
-          },
-        ],
-      },
+        evidence: [evidenceSpan(artifactId, "law-email-001-s3")],
+      }),
     ],
     drafts: [
-      {
+      RuntimeCandidateDraft.make({
         draftId: "draft-law-patent-acknowledgement-001",
         artifactId: "draft-artifact-law-patent-acknowledgement-001",
         lifecycle: "candidate",
         draftKind: "client_email_reply",
         to: [
-          {
+          RuntimeDraftRecipient.make({
             displayName: "Avery Chen",
-            email: "avery.chen@example.test",
-          },
+            email: EmailString.make("avery.chen@example.test"),
+          }),
         ],
         subject: `Re: ${input.email.subject}`,
         body: "Hi Avery,\n\nThanks for the note. I can help you prepare for the provisional patent discussion, and the June 12 demo date is important context for our timing. Please send the design notes, photos, and control-flow diagram when ready. I will also send over an intake checklist and a few times for a call next week.\n\nBest,\nJordan",
         requiresApproval: true,
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanIds,
-          },
-        ],
+        evidence: [evidenceSpans(artifactId, spanIds)],
         producedByPrincipalId: "principal-agent-runtime-fixture",
-      },
+      }),
     ],
     approvalGates: [
-      {
+      RuntimeApprovalGate.make({
         approvalGateId: "approval-law-patent-intake-001",
         lifecycle: "candidate",
         decision: "pending",
@@ -301,67 +274,44 @@ const runLawPatentIntake = (input: RuntimeFixtureInput): CandidateOutputSet => {
           "task-law-confirm-public-demo-deadline-001",
           "draft-law-patent-acknowledgement-001",
         ],
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanIds,
-          },
-        ],
-      },
+        evidence: [evidenceSpans(artifactId, spanIds)],
+      }),
     ],
-    contextPacket: {
+    contextPacket: SdkContextPacket.make({
       schemaVersion: "runtime-data-loop.expected.context-packet.v1",
       scenarioId: "law-patent-intake",
       contextPacketId: "context-law-patent-intake-001",
       generatedAt: "2026-05-01T14:13:30Z",
-      scope: {
+      scope: RuntimeScope.make({
         organizationId: input.seed.organization.organizationId,
         workspaceId: input.seed.workspace.workspaceId,
         threadId: input.email.threadId,
-      },
-      request: {
+      }),
+      request: RuntimeContextPacketRequest.make({
         kind: "email_to_candidate_work",
-        artifactId: input.email.artifactId,
-      },
+        artifactId,
+      }),
       principals: ["principal-user-law-jordan-miles", "principal-agent-runtime-fixture"],
       verticalContext: [
-        {
-          kind: "legalClient",
-          id: "legal-client-northstar-robotics",
-        },
-        {
-          kind: "matter",
-          id: "matter-law-robotic-gripper-001",
-        },
-        {
-          kind: "patentAsset",
-          id: "patent-asset-robotic-gripper-001",
-        },
+        entityRef("legalClient", "legal-client-northstar-robotics"),
+        entityRef("matter", "matter-law-robotic-gripper-001"),
+        entityRef("patentAsset", "patent-asset-robotic-gripper-001"),
       ],
       sourceArtifacts: [
-        {
-          artifactId: input.email.artifactId,
+        RuntimeSourceArtifact.make({
+          artifactId,
           sourceKind: "email",
           title: input.email.subject,
           spanRefs: [
-            {
-              spanId: "law-email-001-s2",
-              purpose: "client request",
-            },
-            {
-              spanId: "law-email-001-s3",
-              purpose: "public demo date",
-            },
-            {
+            RuntimeSourceSpanRef.make({ spanId: "law-email-001-s2", purpose: "client request" }),
+            RuntimeSourceSpanRef.make({ spanId: "law-email-001-s3", purpose: "public demo date" }),
+            RuntimeSourceSpanRef.make({
               spanId: "law-email-001-s4",
               purpose: "contributors and source materials",
-            },
-            {
-              spanId: "law-email-001-s5",
-              purpose: "requested next step",
-            },
+            }),
+            RuntimeSourceSpanRef.make({ spanId: "law-email-001-s5", purpose: "requested next step" }),
           ],
-        },
+        }),
       ],
       candidateClaims: [
         "claim-law-provisional-request-001",
@@ -376,195 +326,138 @@ const runLawPatentIntake = (input: RuntimeFixtureInput): CandidateOutputSet => {
       candidateDrafts: ["draft-law-patent-acknowledgement-001"],
       approvalGates: ["approval-law-patent-intake-001"],
       activities: [
-        {
+        RuntimeActivity.make({
           activityId: "activity-law-email-ingested-001",
           activityType: "artifact_ingested",
           principalId: "principal-agent-runtime-fixture",
-          artifactId: input.email.artifactId,
-        },
-        {
+          artifactId: O.some(artifactId),
+        }),
+        RuntimeActivity.make({
           activityId: "activity-law-candidates-proposed-001",
           activityType: "candidate_work_proposed",
           principalId: "principal-agent-runtime-fixture",
-          spanIds,
-        },
+          spanIds: O.some(spanIds),
+        }),
       ],
       usage: [
-        {
+        RuntimeUsageRecord.make({
           usageRecordId: "usage-law-fixture-agent-001",
           mode: "deterministic_fixture",
           provider: "fixture",
           model: "none",
-        },
+        }),
       ],
       exclusions: [
         "No raw email provider state is included.",
         "No external docket or filing portal state is included.",
         "No accepted legal advice is included.",
       ],
-    },
+    }),
   });
 };
 
 const runWealthCashRequest = (input: RuntimeFixtureInput): CandidateOutputSet => {
   const spanIds = ["wealth-email-001-s2", "wealth-email-001-s3", "wealth-email-001-s4", "wealth-email-001-s5"];
   assertSpanRefs(input, spanIds);
+  const artifactId = input.email.artifactId;
 
-  return CandidateOutputSet.fromUnknown({
+  return CandidateOutputSet.make({
     scenarioId: "wealth-cash-request",
     claims: [
-      {
+      RuntimeCandidateClaim.make({
         claimId: "claim-wealth-cash-need-001",
         lifecycle: "candidate",
         claimType: "client_cash_need",
-        subjectRef: {
-          kind: "household",
-          id: "household-park-family",
-        },
+        subjectRef: entityRef("household", "household-park-family"),
         statement: "The Park household needs about $150,000 available by June 3, 2026.",
         confidence: "high",
-        eventDate: "2026-06-03",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "wealth-email-001-s2",
-          },
-        ],
+        eventDate: O.some("2026-06-03"),
+        evidence: [evidenceSpan(artifactId, "wealth-email-001-s2")],
         producedByPrincipalId: "principal-agent-runtime-fixture",
-      },
-      {
+      }),
+      RuntimeCandidateClaim.make({
         claimId: "claim-wealth-taxable-account-source-001",
         lifecycle: "candidate",
         claimType: "client_assumption",
-        subjectRef: {
-          kind: "account",
-          id: "account-park-taxable-4421",
-        },
+        subjectRef: entityRef("account", "account-park-taxable-4421"),
         statement: "Mira assumed the cash could come from the taxable account ending in 4421.",
         confidence: "high",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "wealth-email-001-s3",
-          },
-        ],
+        evidence: [evidenceSpan(artifactId, "wealth-email-001-s3")],
         producedByPrincipalId: "principal-agent-runtime-fixture",
-      },
-      {
+      }),
+      RuntimeCandidateClaim.make({
         claimId: "claim-wealth-tax-sensitivity-001",
         lifecycle: "candidate",
         claimType: "client_preference",
-        subjectRef: {
-          kind: "household",
-          id: "household-park-family",
-        },
+        subjectRef: entityRef("household", "household-park-family"),
         statement: "Mira wants to avoid creating an unfavorable tax situation when sourcing cash.",
         confidence: "high",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "wealth-email-001-s3",
-          },
-        ],
+        evidence: [evidenceSpan(artifactId, "wealth-email-001-s3")],
         producedByPrincipalId: "principal-agent-runtime-fixture",
-      },
+      }),
     ],
-    candidateProject: {
+    candidateProject: RuntimeCandidateProject.make({
       projectId: "project-wealth-cash-need-001",
       lifecycle: "candidate",
       workspaceId: input.seed.workspace.workspaceId,
       title: "Review Park household cash need",
       verticalContextRefs: [
-        {
-          kind: "household",
-          id: "household-park-family",
-        },
-        {
-          kind: "client",
-          id: "client-mira-park",
-        },
-        {
-          kind: "account",
-          id: "account-park-taxable-4421",
-        },
+        entityRef("household", "household-park-family"),
+        entityRef("client", "client-mira-park"),
+        entityRef("account", "account-park-taxable-4421"),
       ],
-      evidence: [
-        {
-          artifactId: input.email.artifactId,
-          spanIds: ["wealth-email-001-s2", "wealth-email-001-s3"],
-        },
-      ],
-    },
+      evidence: [evidenceSpans(artifactId, ["wealth-email-001-s2", "wealth-email-001-s3"])],
+    }),
     tasks: [
-      {
+      RuntimeCandidateTask.make({
         taskId: "task-wealth-review-liquidity-001",
         projectId: "project-wealth-cash-need-001",
         lifecycle: "candidate",
         title: "Review liquidity and tax-sensitive funding options",
         assigneePrincipalId: "principal-user-wealth-tia-rowan",
         dueDate: "2026-05-08",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanIds: ["wealth-email-001-s2", "wealth-email-001-s3", "wealth-email-001-s4"],
-          },
-        ],
-      },
-      {
+        evidence: [evidenceSpans(artifactId, ["wealth-email-001-s2", "wealth-email-001-s3", "wealth-email-001-s4"])],
+      }),
+      RuntimeCandidateTask.make({
         taskId: "task-wealth-schedule-friday-call-001",
         projectId: "project-wealth-cash-need-001",
         lifecycle: "candidate",
         title: "Offer Friday afternoon call times",
         assigneePrincipalId: "principal-user-wealth-tia-rowan",
         dueDate: "2026-05-08",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "wealth-email-001-s5",
-          },
-        ],
-      },
-      {
+        evidence: [evidenceSpan(artifactId, "wealth-email-001-s5")],
+      }),
+      RuntimeCandidateTask.make({
         taskId: "task-wealth-confirm-no-movement-001",
         projectId: "project-wealth-cash-need-001",
         lifecycle: "candidate",
         title: "Confirm no money movement occurs before advisor review",
         assigneePrincipalId: "principal-user-wealth-tia-rowan",
         dueDate: "2026-05-03",
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanId: "wealth-email-001-s4",
-          },
-        ],
-      },
+        evidence: [evidenceSpan(artifactId, "wealth-email-001-s4")],
+      }),
     ],
     drafts: [
-      {
+      RuntimeCandidateDraft.make({
         draftId: "draft-wealth-cash-acknowledgement-001",
         artifactId: "draft-artifact-wealth-cash-acknowledgement-001",
         lifecycle: "candidate",
         draftKind: "client_email_reply",
         to: [
-          {
+          RuntimeDraftRecipient.make({
             displayName: "Mira Park",
-            email: "mira.park@example.test",
-          },
+            email: EmailString.make("mira.park@example.test"),
+          }),
         ],
         subject: `Re: ${input.email.subject}`,
         body: "Hi Mira,\n\nThanks for flagging the June 3 cash need. I will review the available options before recommending any movement, including the taxable account ending in 4421 and any tax considerations we should weigh. I can also send a few Friday afternoon times for a quick call.\n\nBest,\nTia",
         requiresApproval: true,
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanIds,
-          },
-        ],
+        evidence: [evidenceSpans(artifactId, spanIds)],
         producedByPrincipalId: "principal-agent-runtime-fixture",
-      },
+      }),
     ],
     approvalGates: [
-      {
+      RuntimeApprovalGate.make({
         approvalGateId: "approval-wealth-cash-request-001",
         lifecycle: "candidate",
         decision: "pending",
@@ -585,67 +478,47 @@ const runWealthCashRequest = (input: RuntimeFixtureInput): CandidateOutputSet =>
           "task-wealth-confirm-no-movement-001",
           "draft-wealth-cash-acknowledgement-001",
         ],
-        evidence: [
-          {
-            artifactId: input.email.artifactId,
-            spanIds,
-          },
-        ],
-      },
+        evidence: [evidenceSpans(artifactId, spanIds)],
+      }),
     ],
-    contextPacket: {
+    contextPacket: SdkContextPacket.make({
       schemaVersion: "runtime-data-loop.expected.context-packet.v1",
       scenarioId: "wealth-cash-request",
       contextPacketId: "context-wealth-cash-request-001",
       generatedAt: "2026-05-01T15:05:10Z",
-      scope: {
+      scope: RuntimeScope.make({
         organizationId: input.seed.organization.organizationId,
         workspaceId: input.seed.workspace.workspaceId,
         threadId: input.email.threadId,
-      },
-      request: {
+      }),
+      request: RuntimeContextPacketRequest.make({
         kind: "email_to_candidate_work",
-        artifactId: input.email.artifactId,
-      },
+        artifactId,
+      }),
       principals: ["principal-user-wealth-tia-rowan", "principal-agent-runtime-fixture"],
       verticalContext: [
-        {
-          kind: "household",
-          id: "household-park-family",
-        },
-        {
-          kind: "client",
-          id: "client-mira-park",
-        },
-        {
-          kind: "account",
-          id: "account-park-taxable-4421",
-        },
+        entityRef("household", "household-park-family"),
+        entityRef("client", "client-mira-park"),
+        entityRef("account", "account-park-taxable-4421"),
       ],
       sourceArtifacts: [
-        {
-          artifactId: input.email.artifactId,
+        RuntimeSourceArtifact.make({
+          artifactId,
           sourceKind: "email",
           title: input.email.subject,
           spanRefs: [
-            {
-              spanId: "wealth-email-001-s2",
-              purpose: "cash need and date",
-            },
-            {
+            RuntimeSourceSpanRef.make({ spanId: "wealth-email-001-s2", purpose: "cash need and date" }),
+            RuntimeSourceSpanRef.make({
               spanId: "wealth-email-001-s3",
               purpose: "assumed source and tax sensitivity",
-            },
-            {
+            }),
+            RuntimeSourceSpanRef.make({
               spanId: "wealth-email-001-s4",
               purpose: "request for recommendation before action",
-            },
-            {
-              spanId: "wealth-email-001-s5",
-              purpose: "requested call timing",
-            },
+            }),
+            RuntimeSourceSpanRef.make({ spanId: "wealth-email-001-s5", purpose: "requested call timing" }),
           ],
-        },
+        }),
       ],
       candidateClaims: [
         "claim-wealth-cash-need-001",
@@ -660,33 +533,33 @@ const runWealthCashRequest = (input: RuntimeFixtureInput): CandidateOutputSet =>
       candidateDrafts: ["draft-wealth-cash-acknowledgement-001"],
       approvalGates: ["approval-wealth-cash-request-001"],
       activities: [
-        {
+        RuntimeActivity.make({
           activityId: "activity-wealth-email-ingested-001",
           activityType: "artifact_ingested",
           principalId: "principal-agent-runtime-fixture",
-          artifactId: input.email.artifactId,
-        },
-        {
+          artifactId: O.some(artifactId),
+        }),
+        RuntimeActivity.make({
           activityId: "activity-wealth-candidates-proposed-001",
           activityType: "candidate_work_proposed",
           principalId: "principal-agent-runtime-fixture",
-          spanIds,
-        },
+          spanIds: O.some(spanIds),
+        }),
       ],
       usage: [
-        {
+        RuntimeUsageRecord.make({
           usageRecordId: "usage-wealth-fixture-agent-001",
           mode: "deterministic_fixture",
           provider: "fixture",
           model: "none",
-        },
+        }),
       ],
       exclusions: [
         "No portfolio accounting or custodian state is included.",
         "No external money movement instruction is included.",
         "No accepted financial recommendation is included.",
       ],
-    },
+    }),
   });
 };
 

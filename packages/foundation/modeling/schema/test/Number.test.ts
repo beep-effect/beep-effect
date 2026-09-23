@@ -11,7 +11,6 @@ const decodeUnknownAge = S.decodeUnknownEffect(Age);
 const encodeAge = S.encodeEffect(Age);
 
 const decodeNonNegativeInt = S.decodeUnknownEffect(NonNegativeInt);
-const exit = <A, E>(effect: Effect.Effect<A, E>) => Effect.runPromise(Effect.exit(effect));
 
 describe("Age", () => {
   it("derives valid ages that decode without changing their value", () => {
@@ -44,16 +43,14 @@ describe("Number schemas", () => {
     expectTypeOf<NonNegativeInt extends Int ? true : false>().toEqualTypeOf<true>();
   });
 
-  it("exports the non-negative integer schema from the Number subpath", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        expect(yield* decodeNonNegativeInt(0)).toBe(0);
-        expect(yield* decodeNonNegativeInt(42)).toBe(42);
+  it.effect(
+    "exports the non-negative integer schema from the Number subpath",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeNonNegativeInt(0)).toBe(0);
+      expect(yield* decodeNonNegativeInt(42)).toBe(42);
 
-        expect(Exit.isFailure(yield* Effect.promise(() => Promise.resolve(exit(decodeNonNegativeInt(-1)))))).toBe(true);
-        expect(Exit.isFailure(yield* Effect.promise(() => Promise.resolve(exit(decodeNonNegativeInt(1.5)))))).toBe(
-          true
-        );
-      })
-    ));
+      expect(Exit.isFailure(yield* Effect.exit(decodeNonNegativeInt(-1)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeNonNegativeInt(1.5)))).toBe(true);
+    })
+  );
 });

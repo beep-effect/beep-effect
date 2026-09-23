@@ -44,18 +44,25 @@ import { fixtureHost } from "./fixtures/FixtureHost.ts";
 
 // One JSON-RPC frame is exactly one wire line, so the kit's own codec builds
 // and reads the stub host's traffic instead of hand-rolled JSON.
-const encodeFrame = S.encodeSync(JsonRpcMessageFromLine);
-const decodeFrame = S.decodeSync(JsonRpcMessageFromLine);
+// Framing a stub's own traffic always codes, so a codec failure is a defect of
+// the test rather than an outcome under test.
+const encodeFrameLine = S.encodeEffect(JsonRpcMessageFromLine);
+const decodeFrameLine = S.decodeEffect(JsonRpcMessageFromLine);
+const encodeFrame = (message: JsonRpcMessage) => Effect.orDie(encodeFrameLine(message));
+const decodeFrame = (line: string) => Effect.orDie(decodeFrameLine(line));
 // A typeless `Blob` body is how a response gets no `content-type` header at
 // all: a string body would have one inferred.
-const encodeFrameBody = (message: JsonRpcMessage): Blob => new Blob([encodeFrame(message)]);
+const encodeFrameBody = (message: JsonRpcMessage): Effect.Effect<Blob> =>
+  Effect.map(encodeFrame(message), (frame) => new Blob([frame]));
 
 describe("wire helpers", () => {
-  it("builds request metadata from the client options", () => {
-    const metadata = requestMetadata(McpClientOptions.make({}));
-    expect(metadata[PROTOCOL_VERSION_META_KEY]).toBe("2026-07-28");
-    expect(metadata[CLIENT_CAPABILITIES_META_KEY]).toEqual({});
-  });
+  it.effect("builds request metadata from the client options", () =>
+    Effect.gen(function* () {
+      const metadata = yield* requestMetadata(McpClientOptions.make({}));
+      expect(metadata[PROTOCOL_VERSION_META_KEY]).toBe("2026-07-28");
+      expect(metadata[CLIENT_CAPABILITIES_META_KEY]).toEqual({});
+    })
+  );
 
   it("merges metadata under _meta and lets caller keys win", () => {
     const params = withRequestMetadata(
@@ -194,20 +201,20 @@ describe("layerProtocolHttp", () => {
       // No `content-type` at all: the decoder must fall back to JSON rather
       // than dying on a missing header, and a host error frame must reach the
       // caller as a failure instead of an empty success.
-      const erroringClient = HttpClient.make((request) => {
-        const sent =
-          request.body._tag === "Uint8Array"
-            ? decodeFrame(new TextDecoder().decode(request.body.body))
-            : JsonRpcMessage.make({});
-        const id = sent.id ?? 1;
-        const body =
-          sent.method === "server/discover"
-            ? JsonRpcMessage.make({ id, result: { supportedVersions: ["2026-07-28"], capabilities: {} } })
-            : JsonRpcMessage.make({ id, error: { code: -32603, message: "host said no" } });
-        return Effect.succeed(
-          HttpClientResponse.fromWeb(request, new Response(encodeFrameBody(body), { status: 200 }))
-        );
-      });
+      const erroringClient = HttpClient.make(
+        Effect.fnUntraced(function* (request) {
+          const sent =
+            request.body._tag === "Uint8Array"
+              ? yield* decodeFrame(new TextDecoder().decode(request.body.body))
+              : JsonRpcMessage.make({});
+          const id = sent.id ?? 1;
+          const body =
+            sent.method === "server/discover"
+              ? JsonRpcMessage.make({ id, result: { supportedVersions: ["2026-07-28"], capabilities: {} } })
+              : JsonRpcMessage.make({ id, error: { code: -32603, message: "host said no" } });
+          return HttpClientResponse.fromWeb(request, new Response(yield* encodeFrameBody(body), { status: 200 }));
+        })
+      );
       const protocol = yield* Layer.build(
         layerProtocolHttp(McpHttpProtocolOptions.make({ url: "http://stub/mcp" })).pipe(
           Layer.provide(Layer.succeed(HttpClient.HttpClient, erroringClient))
@@ -270,7 +277,7 @@ describe("layerProtocolNdjson", () => {
       const rpc = yield* RpcClient.make(McpClientRpcs).pipe(Effect.provideContext(protocol));
       const fiber = yield* Effect.forkScoped(rpc["tools/list"]({}));
       const request = yield* Queue.take(written);
-      const id = decodeFrame(request).id ?? 1;
+      const id = (yield* decodeFrame(request)).id ?? 1;
 
       // A stdio host interleaves keep-alive blanks, log noise and responses
       // to requests this client never sent; none of them may settle or
@@ -278,9 +285,9 @@ describe("layerProtocolNdjson", () => {
       yield* Queue.offerAll(incoming, [
         "   ",
         "this is not a json-rpc line",
-        encodeFrame(JsonRpcMessage.make({ method: "notifications/progress", params: {} })),
-        encodeFrame(JsonRpcMessage.make({ id: "unknown-request", result: {} })),
-        encodeFrame(JsonRpcMessage.make({ id, result: { tools: [] } })),
+        yield* encodeFrame(JsonRpcMessage.make({ method: "notifications/progress", params: {} })),
+        yield* encodeFrame(JsonRpcMessage.make({ id: "unknown-request", result: {} })),
+        yield* encodeFrame(JsonRpcMessage.make({ id, result: { tools: [] } })),
       ]);
 
       const result = yield* Fiber.join(fiber);

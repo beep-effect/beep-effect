@@ -18,6 +18,7 @@ import { formatJsonc, renderTruncatedLines, writeArtifact } from "../../../inter
 import { runCapturedStreams } from "../../../internal/process/index.ts";
 import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
 
@@ -406,7 +407,11 @@ type KnipProcessResult = {
 
 const runKnipReporterJson = Effect.fn("KnipRatchet.runKnipReporterJson")(function* (
   repoRoot: string
-): Effect.fn.Return<KnipProcessResult, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  KnipProcessResult,
+  QualityScriptCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log(`[knip] ${knipCommand}`);
   return yield* runCapturedStreams({
     command: "bun",
@@ -526,7 +531,7 @@ export const runKnipRatchet = Effect.fn("KnipRatchet.runKnipRatchet")(function* 
 }: RunKnipRatchetOptions): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const current = yield* runKnipReporterJson(repoRoot).pipe(Effect.flatMap(decodeCurrentFindings));

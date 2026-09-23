@@ -378,7 +378,10 @@ const OpaqueMemberReference = S.Union([
   GlobalMethodReference,
   JsonMethodReference,
   GeneratorMethodReference,
-]).pipe(S.toTaggedUnion("_tag"), SchemaUtils.withCodecStatics(["is"]));
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
+);
 
 type OpaqueMemberReference = typeof OpaqueMemberReference.Type;
 
@@ -1537,10 +1540,10 @@ export class Interpreter<R> {
     if (CodeModeGenerator.is(value)) {
       if (value.asynchronous && !allowAsync) return Effect.succeedNone;
       return Effect.succeedSome({
-    iterator: value,
-    next: GeneratorMethodReference.new(value, "next"),
-    asynchronous: value.asynchronous,
-});
+        iterator: value,
+        next: GeneratorMethodReference.new(value, "next"),
+        asynchronous: value.asynchronous,
+      });
     }
     if (!isRecord(value) || isRuntimeReference(value)) return Effect.succeedNone;
     const asyncMethod = allowAsync ? Reflect.get(value, AsyncIteratorSymbol) : undefined;

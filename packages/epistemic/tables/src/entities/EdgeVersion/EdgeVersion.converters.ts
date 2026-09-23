@@ -11,7 +11,9 @@
  */
 
 import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
+import { Result } from "effect";
 import * as S from "effect/Schema";
+import { EdgeVersionConverterError } from "./EdgeVersion.errors.ts";
 import type { Table } from "./EdgeVersion.table.ts";
 
 /**
@@ -117,8 +119,8 @@ export type EdgeVersionRow = typeof Table.$inferSelect;
  */
 export type EdgeVersionInsert = typeof Table.$inferInsert;
 
-const encodeEdgeVersion = S.encodeSync(EdgeVersion);
-const decodeEdgeVersionRow = S.decodeUnknownSync(EdgeVersion);
+const encodeEdgeVersion = S.encodeResult(EdgeVersion);
+const decodeEdgeVersionRow = S.decodeUnknownResult(EdgeVersion);
 
 /**
  * Convert an EdgeVersion entity into its persistence insert row.
@@ -134,6 +136,7 @@ const decodeEdgeVersionRow = S.decodeUnknownSync(EdgeVersion);
  * ```ts
  * import { fromEdgeVersionRow, toEdgeVersionInsert } from "@beep/epistemic-tables/entities/EdgeVersion"
  * import type { EdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   createdAt: 1,
@@ -171,17 +174,23 @@ const decodeEdgeVersionRow = S.decodeUnknownSync(EdgeVersion);
  *   version: 1
  * } satisfies EdgeVersionRow
  *
- * const insert = toEdgeVersionInsert(fromEdgeVersionRow(row))
- * console.log("id" in insert) // false
+ * const insert = toEdgeVersionInsert(Result.getOrThrow(fromEdgeVersionRow(row)))
+ * console.log("id" in Result.getOrThrow(insert)) // false
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toEdgeVersionInsert = (edgeVersion: EdgeVersion): EdgeVersionInsert => {
-  const { id: _id, ...rest } = encodeEdgeVersion(edgeVersion);
-  return rest as EdgeVersionInsert;
-};
+export const toEdgeVersionInsert = (
+  edgeVersion: EdgeVersion
+): Result.Result<EdgeVersionInsert, EdgeVersionConverterError> =>
+  Result.mapError(
+    Result.map(encodeEdgeVersion(edgeVersion), (encoded): EdgeVersionInsert => {
+      const { id: _id, ...rest } = encoded;
+      return rest as EdgeVersionInsert;
+    }),
+    (error) => EdgeVersionConverterError.fromSchema("toInsert", error)
+  );
 
 /**
  * Convert a selected persistence row into an EdgeVersion entity.
@@ -191,6 +200,7 @@ export const toEdgeVersionInsert = (edgeVersion: EdgeVersion): EdgeVersionInsert
  * ```ts
  * import { fromEdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion"
  * import type { EdgeVersionRow } from "@beep/epistemic-tables/entities/EdgeVersion"
+ * import * as Result from "effect/Result"
  * import * as O from "effect/Option"
  *
  * const row = {
@@ -229,11 +239,12 @@ export const toEdgeVersionInsert = (edgeVersion: EdgeVersion): EdgeVersionInsert
  *   version: 1
  * } satisfies EdgeVersionRow
  *
- * const version = fromEdgeVersionRow(row)
+ * const version = Result.getOrThrow(fromEdgeVersionRow(row))
  * console.log(O.isNone(version.validTo)) // true — the fact is still held true
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromEdgeVersionRow = (row: EdgeVersionRow): EdgeVersion => decodeEdgeVersionRow(row);
+export const fromEdgeVersionRow = (row: EdgeVersionRow): Result.Result<EdgeVersion, EdgeVersionConverterError> =>
+  Result.mapError(decodeEdgeVersionRow(row), (error) => EdgeVersionConverterError.fromSchema("fromRow", error));

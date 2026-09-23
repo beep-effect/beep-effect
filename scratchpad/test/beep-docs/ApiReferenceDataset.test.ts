@@ -1,5 +1,5 @@
-import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { BunServices } from "@effect/platform-bun";
 import { assert, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -17,7 +17,8 @@ import {
   TypeDocProjectReflection,
   TypeDocProjectReflectionFromJsonString,
 } from "../../beep-docs/domain/ApiReference.ts";
-const decodeUnknownTypeDocProjectReflectionSync = S.decodeUnknownSync(TypeDocProjectReflection);
+
+const decodeUnknownTypeDocProjectReflection = S.decodeUnknownEffect(TypeDocProjectReflection);
 
 const utf8 = new TextEncoder();
 
@@ -28,7 +29,7 @@ const decodePackageManifest = S.decodeUnknownEffect(ApiReferencePackageManifest)
 const decodeDatasetManifest = S.decodeUnknownEffect(ApiReferenceDatasetManifest);
 
 const reflectionFor = (name: string) =>
-  decodeUnknownTypeDocProjectReflectionSync({
+  decodeUnknownTypeDocProjectReflection({
     schemaVersion: "2.0",
     variant: "project",
     id: 1,
@@ -51,8 +52,8 @@ const writeDataset = Effect.fnUntraced(function* (fixture: Fixture) {
   const packageDirectory = path.join(base, "v4", "platform");
   yield* fs.makeDirectory(packageDirectory, { recursive: true });
 
-  const indexJson = yield* encodeReflection(reflectionFor("@effect/platform"));
-  const httpClientJson = yield* encodeReflection(reflectionFor("@effect/platform/HttpClient"));
+  const indexJson = yield* encodeReflection(yield* reflectionFor("@effect/platform"));
+  const httpClientJson = yield* encodeReflection(yield* reflectionFor("@effect/platform/HttpClient"));
   const indexDigest = yield* Sha256HexFromBytes.decodeEffect(utf8.encode(indexJson));
   const httpClientDigest = yield* Sha256HexFromBytes.decodeEffect(utf8.encode(httpClientJson));
   yield* fs.writeFileString(path.join(packageDirectory, "index.json"), indexJson);
@@ -84,7 +85,10 @@ const writeDataset = Effect.fnUntraced(function* (fixture: Fixture) {
       },
     ],
   });
-  yield* fs.writeFileString(path.join(packageDirectory, "manifest.json"), yield* encodePackageManifest(packageManifest));
+  yield* fs.writeFileString(
+    path.join(packageDirectory, "manifest.json"),
+    yield* encodePackageManifest(packageManifest)
+  );
 
   const collidingDirectory = path.join(base, "v4", "platform-unscoped");
   yield* fs.makeDirectory(collidingDirectory, { recursive: true });

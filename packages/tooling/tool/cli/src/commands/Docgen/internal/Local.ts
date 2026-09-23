@@ -1336,7 +1336,7 @@ export const buildDocgenLocalPlan: (
 ) => Effect.Effect<
   DocgenLocalPlan,
   DomainError | NoSuchFileError,
-  FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner
 > = Effect.fn("DocgenLocal.buildDocgenLocalPlan")(function* (options) {
   const repoRoot = yield* findRepoRoot();
   return yield* buildDocgenLocalPlanWithRepoRoot(options, repoRoot);

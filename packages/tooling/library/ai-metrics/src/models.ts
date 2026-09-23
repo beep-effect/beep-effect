@@ -1108,7 +1108,8 @@ export class CodexTranscriptLine extends S.Class<CodexTranscriptLine>($I`CodexTr
   })
 ) {
   static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(CodexTranscriptLine));
-  static readonly encodeJsonSync = S.encodeUnknownSync(S.fromJsonString(CodexTranscriptLine));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(CodexTranscriptLine));
+  static readonly encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(CodexTranscriptLine));
 }
 
 /**
@@ -1139,7 +1140,8 @@ export class ClaudeTranscriptLine extends S.Class<ClaudeTranscriptLine>($I`Claud
   })
 ) {
   static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(ClaudeTranscriptLine));
-  static readonly encodeJsonSync = S.encodeUnknownSync(S.fromJsonString(ClaudeTranscriptLine));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(ClaudeTranscriptLine));
+  static readonly encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(ClaudeTranscriptLine));
 }
 
 /**
@@ -1170,5 +1172,6 @@ export class OpenClawTranscriptLine extends S.Class<OpenClawTranscriptLine>($I`O
   })
 ) {
   static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(OpenClawTranscriptLine));
-  static readonly encodeJsonSync = S.encodeUnknownSync(S.fromJsonString(OpenClawTranscriptLine));
+  static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(OpenClawTranscriptLine));
+  static readonly encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(OpenClawTranscriptLine));
 }

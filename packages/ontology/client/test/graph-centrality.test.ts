@@ -73,4 +73,12 @@ describe("3d graph centrality budget", () => {
     expect(first.nodeImportance).toEqual(second.nodeImportance);
     expect(first.nodeImportance[1]).toBeGreaterThan(0.004);
   });
+
+  it("leaves every importance at zero when no node sits between two others", () => {
+    const pair = graph3dProjectionFromOntology(pathProjection(2, 2));
+
+    expect(pair.nodeImportance).toHaveLength(2);
+    expect([...pair.nodeImportance]).toEqual([0, 0]);
+    expect(pair.edgeWeights).toHaveLength(1);
+  });
 });

@@ -18,7 +18,7 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { expectTypeOf } from "vitest";
 
 const Count = S.FiniteFromString;
-const decodeUnknownCountSync = S.decodeUnknownSync(Count);
+const decodeUnknownCountEffect = S.decodeUnknownEffect(Count);
 const finiteArbitrary = Arbitrary.schema(S.Finite);
 const isCodecStaticKey = S.is(CodecStaticKey);
 const isCount = S.is(Count);
@@ -42,21 +42,24 @@ const invalidSelectionsAreRejectedAtCompileTime = () => {
 };
 
 describe("withCodecStatics", () => {
-  it("supports pipeable and data-first declarations with exact surfaces", () => {
-    const Piped = Count.pipe(withCodecStatics(["decodeUnknownSync", "is"]));
-    const Direct = withCodecStatics(Count, ["decodeUnknownSync", "is"]);
+  it.effect(
+    "supports pipeable and data-first declarations with exact surfaces",
+    Effect.fnUntraced(function* () {
+      const Piped = Count.pipe(withCodecStatics(["decodeUnknownEffect", "is"]));
+      const Direct = withCodecStatics(Count, ["decodeUnknownEffect", "is"]);
 
-    expectTypeOf(invalidSelectionsAreRejectedAtCompileTime).toBeFunction();
-    expect(Piped.decodeUnknownSync("42")).toBe(42);
-    expect(Direct.decodeUnknownSync("42")).toBe(42);
-    expect(Piped.is(42)).toBe(true);
-    expect(Reflect.has(Piped, "decodeEffect")).toBe(false);
-    expect(Reflect.has(Direct, "encodeUnknownSync")).toBe(false);
-    expectTypeOf(Piped.decodeUnknownSync).toEqualTypeOf(decodeUnknownCountSync);
-    expectTypeOf(Piped.is).toEqualTypeOf(isCount);
-    expectTypeOf(Direct).toEqualTypeOf(Piped);
-    expectTypeOf(Piped).not.toHaveProperty("decodeEffect");
-  });
+      expectTypeOf(invalidSelectionsAreRejectedAtCompileTime).toBeFunction();
+      expect(yield* Piped.decodeUnknownEffect("42")).toBe(42);
+      expect(yield* Direct.decodeUnknownEffect("42")).toBe(42);
+      expect(Piped.is(42)).toBe(true);
+      expect(Reflect.has(Piped, "decodeEffect")).toBe(false);
+      expect(Reflect.has(Direct, "encodeUnknownSync")).toBe(false);
+      expectTypeOf(Piped.decodeUnknownEffect).toEqualTypeOf(decodeUnknownCountEffect);
+      expectTypeOf(Piped.is).toEqualTypeOf(isCount);
+      expectTypeOf(Direct).toEqualTypeOf(Piped);
+      expectTypeOf(Piped).not.toHaveProperty("decodeEffect");
+    })
+  );
 
   it("owns a fresh schema and installs strict hidden descriptors", () => {
     const Selected = Count.pipe(withCodecStatics(["is"]));

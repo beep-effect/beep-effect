@@ -28,6 +28,7 @@ import {
   runYeetReply,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -487,7 +488,7 @@ const withTempDirectory = Effect.fn("withTempDirectory")(function* <Value, Failu
 });
 
 const replyTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>, spawned?: Array<string>) =>
-  Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs, spawned));
+  Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs, spawned));
 
 const deniedRepoViewStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["gh repo view", { exitCode: 1, output: "gh: authentication required" }],

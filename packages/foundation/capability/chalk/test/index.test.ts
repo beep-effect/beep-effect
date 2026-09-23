@@ -20,12 +20,14 @@ import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Equal from "effect/Equal";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { ChalkInstance, ColorSupportLevel as ColorSupportLevelType } from "@beep/chalk";
 
-const decodeUnknownChalkConstructorOptionsSync = S.decodeUnknownSync(ChalkConstructorOptions);
-const decodeUnknownChalkOptionsSync = S.decodeUnknownSync(ChalkOptions);
+const decodeChalkConstructorOptions = S.decodeEffect(ChalkConstructorOptions);
+const decodeUnknownChalkConstructorOptions = S.decodeUnknownEffect(ChalkConstructorOptions);
+const decodeChalkOptions = S.decodeEffect(ChalkOptions);
 const isColorSupportLevel = S.is(ColorSupportLevel);
 
 const withLevel = (instance: ChalkInstance, level: ColorSupportLevelType, run: () => void): void => {
@@ -162,49 +164,56 @@ describe("@beep/chalk", () => {
     });
   });
 
-  it("backs public option models with Effect schemas", () => {
-    expect(decodeUnknownChalkConstructorOptionsSync({ level: 3 }).level).toBe(3);
-    expect(decodeUnknownChalkOptionsSync({ level: 3 }).level).toBe(3);
-    expect(isColorSupportLevel(2)).toBe(true);
-    expect(isColorSupportLevel(4)).toBe(false);
-    expect(() => decodeUnknownChalkConstructorOptionsSync({ level: 4 })).toThrow(/integer from 0 to 3/);
-  });
+  it.effect(
+    "backs public option models with Effect schemas",
+    Effect.fnUntraced(function* () {
+      expect((yield* decodeChalkConstructorOptions({ level: 3 })).level).toBe(3);
+      expect((yield* decodeChalkOptions({ level: 3 })).level).toBe(3);
+      expect(isColorSupportLevel(2)).toBe(true);
+      expect(isColorSupportLevel(4)).toBe(false);
+      const invalid = yield* Effect.result(decodeUnknownChalkConstructorOptions({ level: 4 }));
+      expect(Result.isFailure(invalid)).toBe(true);
+      if (Result.isFailure(invalid)) {
+        expect(invalid.failure.message).toContain("integer from 0 to 3");
+      }
+    })
+  );
 
-  it("round-trips schema-derived values through their encoded shapes", () => {
-    const schemas = [
-      AnsiRenderLevel,
-      ChalkConstructorOptions,
-      ChalkOptions,
-      ColorInfo,
-      ColorModelName,
-      ColorName,
-      ColorSupport,
-      ColorSupportLevel,
-      ModifierName,
-      StyleChannel,
-      StyleName,
-    ] as const;
+  it.effect(
+    "round-trips schema-derived values through their encoded shapes",
+    Effect.fnUntraced(function* () {
+      const schemas = [
+        AnsiRenderLevel,
+        ChalkConstructorOptions,
+        ChalkOptions,
+        ColorInfo,
+        ColorModelName,
+        ColorName,
+        ColorSupport,
+        ColorSupportLevel,
+        ModifierName,
+        StyleChannel,
+        StyleName,
+      ] as const;
 
-    for (const schema of schemas) {
-      const arbitrary = Arbitrary.schema(schema);
-      const decode = S.decodeSync(schema);
-      const encode = S.encodeSync(schema);
-
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.all([arbitrary]),
-            ([value]) => {
-              expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+      for (const schema of schemas) {
+        const result = yield* Arbitrary.checkEffect(
+          Arbitrary.all([Arbitrary.schema(schema)]),
+          ([value]) =>
+            Effect.gen(function* () {
+              const encoded = yield* S.encodeEffect(schema)(value);
+              const decoded = yield* S.decodeEffect(schema)(encoded);
+              expect(Equal.equals(decoded, value)).toBe(true);
 
               return true;
-            },
-            fcRuns(50)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-  });
+            }),
+          fcRuns(50)
+        );
+
+        expect(result._tag).toBe("Passed");
+      }
+    })
+  );
 });
 
 describe("supportsColor detection", () => {

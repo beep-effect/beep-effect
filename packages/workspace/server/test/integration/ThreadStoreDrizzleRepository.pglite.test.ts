@@ -192,7 +192,8 @@ if (!shouldRunPgliteIntegration) {
             workspaceId,
           });
 
-          yield* db.insert(DbSchema.thread).values(toThreadInsert(legacy));
+          const legacyInsert = yield* Effect.fromResult(toThreadInsert(legacy));
+          yield* db.insert(DbSchema.thread).values(legacyInsert);
 
           const threads = yield* store.listThreads(workspaceId);
           expect(A.some(threads, (thread) => ThreadPublicId.equivalence(thread.publicId, legacy.publicId))).toBe(true);

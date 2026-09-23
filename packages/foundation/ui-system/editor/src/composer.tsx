@@ -31,7 +31,7 @@ import { editorTheme } from "./theme.ts";
 import { EditorCompatibilityViewer, EditorWireViewer } from "./viewer.tsx";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 
-const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson);
+const encodeEditorStateFromJsonOption = S.encodeOption(EditorStateFromJson);
 
 import type { JSX } from "react";
 
@@ -147,8 +147,8 @@ export function EditorComposer({
   onSerializedChange,
 }: EditorComposerProps): JSX.Element {
   const logEditorError = useAtomSet(logEditorErrorFn);
-  const runtimeInitialState = runtimeInitialStateOption(initialState);
-  if (initialState !== undefined && O.isNone(runtimeInitialState)) {
+  const encodedInitialState = O.flatMap(runtimeInitialStateOption(initialState), encodeEditorStateFromJsonOption);
+  if (initialState !== undefined && O.isNone(encodedInitialState)) {
     return <EditorWireViewer input={initialState} className={className} />;
   }
 
@@ -159,7 +159,7 @@ export function EditorComposer({
         theme: editorTheme,
         nodes: [...editorNodes],
         ...O.getSomesStruct({
-          editorState: O.map(runtimeInitialState, encodeEditorStateFromJsonSync),
+          editorState: encodedInitialState,
         }),
         onError: (error) => logEditorError(error),
       }}
@@ -237,20 +237,21 @@ export function EditorWireComposer({
     onSuccess: (result) =>
       O.match(result.state, {
         onNone: () => <EditorCompatibilityViewer result={result} className={className} />,
-        onSome: (initialState) => {
-          const encodedInitialState = encodeEditorStateFromJsonSync(initialState);
-          return (
-            <EditorComposer
-              key={encodedInitialState}
-              initialState={initialState}
-              {...O.getSomesStruct({
-                className: O.fromUndefinedOr(className),
-                onSerializedChange: O.fromUndefinedOr(onSerializedChange),
-                placeholder: O.fromUndefinedOr(placeholder),
-              })}
-            />
-          );
-        },
+        onSome: (initialState) =>
+          O.match(encodeEditorStateFromJsonOption(initialState), {
+            onNone: () => <EditorWireViewer input={input} className={className} />,
+            onSome: (encodedInitialState) => (
+              <EditorComposer
+                key={encodedInitialState}
+                initialState={initialState}
+                {...O.getSomesStruct({
+                  className: O.fromUndefinedOr(className),
+                  onSerializedChange: O.fromUndefinedOr(onSerializedChange),
+                  placeholder: O.fromUndefinedOr(placeholder),
+                })}
+              />
+            ),
+          }),
       }),
   });
 }

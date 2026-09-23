@@ -16,11 +16,13 @@ import {
   rewriteReadmeLifecycleToken,
 } from "@beep/repo-cli/test/Goals";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
 
-const decodeManifest = S.decodeUnknownSync(GoalManifest);
+const decodeManifest = S.decodeUnknownEffect(GoalManifest);
+const encodePrettyJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
 
 const COMPLETION_GATE = {
   operator: "yeet",
@@ -106,41 +108,46 @@ describe("goals status migration mapping", () => {
 });
 
 describe("planGoalPacketMigration", () => {
-  const legacyManifest = `${JSON.stringify(
-    {
-      schemaVersion: "initiative-manifest/v1",
-      initiative: { id: "demo", title: "Demo", status: "complete" },
-      packetPath: "goals/demo",
-      lifecycle: "complete",
-      completionGate: COMPLETION_GATE,
-      phases: [
-        { id: "P0", status: "done" },
-        { id: "P1", status: "seeded" },
-      ],
-    },
-    null,
-    2
-  )}\n`;
+  const legacyManifest = `{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": { "id": "demo", "title": "Demo", "status": "complete" },
+  "packetPath": "goals/demo",
+  "lifecycle": "complete",
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Ship via yeet.",
+    "grandfathered": false
+  },
+  "phases": [
+    { "id": "P0", "status": "done" },
+    { "id": "P1", "status": "seeded" }
+  ]
+}
+`;
   const legacyReadme = "# Demo\n\n## Status\n\nLifecycle: `complete`\n\n## Mission\n\nShip the demo thing.\n";
 
-  it("rewrites status surfaces mechanically and records the legacy token", () => {
-    const plan = planGoalPacketMigration(
-      packetRecord({ slug: "demo", manifestText: legacyManifest, readmeText: legacyReadme })
-    );
-    expect(plan.parked).toBeUndefined();
-    expect(plan.manifestText).toBeDefined();
-    expect(plan.readmeText).toBeDefined();
+  it.effect("rewrites status surfaces mechanically and records the legacy token", () =>
+    Effect.gen(function* () {
+      const plan = planGoalPacketMigration(
+        packetRecord({ slug: "demo", manifestText: legacyManifest, readmeText: legacyReadme })
+      );
+      expect(plan.parked).toBeUndefined();
+      expect(plan.manifestText).toBeDefined();
+      expect(plan.readmeText).toBeDefined();
 
-    const migrated = decodeManifest(parse(plan.manifestText ?? ""));
-    expect(migrated.initiative.status).toBe("completed-retained");
-    expect(migrated.lifecycle).toBe("completed-retained");
-    expect(migrated.statusNote).toBe("legacy status: complete");
-    expect(migrated.mission).toBe("Ship the demo thing.");
-    expect(O.getOrNull(readmeLifecycleToken(plan.readmeText ?? ""))).toBe("completed-retained");
+      const migrated = yield* decodeManifest(parse(plan.manifestText ?? ""));
+      expect(migrated.initiative.status).toBe("completed-retained");
+      expect(migrated.lifecycle).toBe("completed-retained");
+      expect(migrated.statusNote).toBe("legacy status: complete");
+      expect(migrated.mission).toBe("Ship the demo thing.");
+      expect(O.getOrNull(readmeLifecycleToken(plan.readmeText ?? ""))).toBe("completed-retained");
 
-    const phases = parse(plan.manifestText ?? "").phases as ReadonlyArray<{ status: string }>;
-    expect(phases.map((phase) => phase.status)).toEqual(["complete", "pending"]);
-  });
+      const phases = parse(plan.manifestText ?? "").phases as ReadonlyArray<{ status: string }>;
+      expect(phases.map((phase) => phase.status)).toEqual(["complete", "pending"]);
+    })
+  );
 
   it("is idempotent: replanning the migrated packet yields zero edits", () => {
     const first = planGoalPacketMigration(
@@ -154,80 +161,79 @@ describe("planGoalPacketMigration", () => {
     expect(second.readmeText).toBeUndefined();
   });
 
-  it("creates an initiative block for bare top-level status manifests", () => {
-    const bareManifest = `${JSON.stringify(
-      {
+  it.effect("creates an initiative block for bare top-level status manifests", () =>
+    Effect.gen(function* () {
+      const bareManifest = `${yield* encodePrettyJson({
         slug: "bare-demo",
         title: "Bare Demo",
         status: "DONE",
         completionGate: COMPLETION_GATE,
         phases: { landed: { name: "Landed", status: "DONE" } },
-      },
-      null,
-      2
-    )}\n`;
-    const plan = planGoalPacketMigration(packetRecord({ slug: "bare-demo", manifestText: bareManifest }));
-    const migratedJson = parse(plan.manifestText ?? "") as Record<string, unknown>;
-    expect(migratedJson.status).toBeUndefined();
+      })}\n`;
+      const plan = planGoalPacketMigration(packetRecord({ slug: "bare-demo", manifestText: bareManifest }));
+      const migratedJson = parse(plan.manifestText ?? "") as Record<string, unknown>;
+      expect(migratedJson.status).toBeUndefined();
 
-    const migrated = decodeManifest(migratedJson);
-    expect(migrated.initiative.id).toBe("bare-demo");
-    expect(migrated.initiative.title).toBe("Bare Demo");
-    expect(migrated.initiative.status).toBe("completed-retained");
-    expect(migrated.statusNote).toBe("legacy status: DONE");
-    const phases = migratedJson.phases as Record<string, { status: string }>;
-    expect(phases.landed?.status).toBe("complete");
-  });
+      const migrated = yield* decodeManifest(migratedJson);
+      expect(migrated.initiative.id).toBe("bare-demo");
+      expect(migrated.initiative.title).toBe("Bare Demo");
+      expect(migrated.initiative.status).toBe("completed-retained");
+      expect(migrated.statusNote).toBe("legacy status: DONE");
+      const phases = migratedJson.phases as Record<string, { status: string }>;
+      expect(phases.landed?.status).toBe("complete");
+    })
+  );
 
-  it("normalizes an object-shaped supersededBy to a slug plus note", () => {
-    const manifest = `${JSON.stringify(
-      {
+  it.effect("normalizes an object-shaped supersededBy to a slug plus note", () =>
+    Effect.gen(function* () {
+      const manifest = `${yield* encodePrettyJson({
         schemaVersion: "initiative-manifest/v1",
         initiative: { id: "sup-demo", title: "Sup", status: "completed-retained" },
         supersededBy: { packet: "goals/standards-remediation", scope: "remaining ledger", date: "2026-07-07" },
         completionGate: COMPLETION_GATE,
-      },
-      null,
-      2
-    )}\n`;
-    const plan = planGoalPacketMigration(packetRecord({ slug: "sup-demo", manifestText: manifest }));
-    const migrated = decodeManifest(parse(plan.manifestText ?? ""));
-    expect(migrated.supersededBy).toBe("standards-remediation");
-    expect(migrated.supersededNote).toBe("remaining ledger (2026-07-07)");
-  });
+      })}\n`;
+      const plan = planGoalPacketMigration(packetRecord({ slug: "sup-demo", manifestText: manifest }));
+      const migrated = yield* decodeManifest(parse(plan.manifestText ?? ""));
+      expect(migrated.supersededBy).toBe("standards-remediation");
+      expect(migrated.supersededNote).toBe("remaining ledger (2026-07-07)");
+    })
+  );
 
-  it("parks packets with unmappable status tokens instead of guessing", () => {
-    const manifest = `${JSON.stringify(
-      {
+  it.effect("parks packets with unmappable status tokens instead of guessing", () =>
+    Effect.gen(function* () {
+      const manifest = `${yield* encodePrettyJson({
         initiative: { id: "weird", title: "Weird", status: "quantum-flux" },
         completionGate: COMPLETION_GATE,
-      },
-      null,
-      2
-    )}\n`;
-    const plan = planGoalPacketMigration(packetRecord({ slug: "weird", manifestText: manifest }));
-    expect(plan.parked).toContain("quantum-flux");
-    expect(plan.manifestText).toBeUndefined();
-  });
+      })}\n`;
+      const plan = planGoalPacketMigration(packetRecord({ slug: "weird", manifestText: manifest }));
+      expect(plan.parked).toContain("quantum-flux");
+      expect(plan.manifestText).toBeUndefined();
+    })
+  );
 
-  it("backfills v2 manifests for the five recorded manifest-less packets", () => {
-    expect(GOAL_MANIFEST_BACKFILLS.map((backfill) => backfill.slug)).toEqual([
-      "agentic-cad-patent-tooling",
-      "dedup-clone-engine",
-      "knowledge-workspace",
-      "repo-codegraph-jsdoc",
-      "trustgraph-port",
-    ]);
-    for (const backfill of GOAL_MANIFEST_BACKFILLS) {
-      const text = buildBackfillManifestText(backfill, O.some(`# Title Of ${backfill.slug}\n\n## Mission\n\nDo it.\n`));
-      const manifest = decodeManifest(parse(text));
-      expect(manifest.schemaVersion).toBe("initiative-manifest/v2");
-      expect(manifest.initiative.status).toBe(backfill.status);
-      expect(manifest.lifecycle).toBe(backfill.status);
-      expect(manifest.initiative.title).toBe(`Title Of ${backfill.slug}`);
-      expect(manifest.mission).toBe("Do it.");
-    }
-  });
+  it.effect("backfills v2 manifests for the five recorded manifest-less packets", () =>
+    Effect.gen(function* () {
+      expect(GOAL_MANIFEST_BACKFILLS.map((backfill) => backfill.slug)).toEqual([
+        "agentic-cad-patent-tooling",
+        "dedup-clone-engine",
+        "knowledge-workspace",
+        "repo-codegraph-jsdoc",
+        "trustgraph-port",
+      ]);
+      for (const backfill of GOAL_MANIFEST_BACKFILLS) {
+        const text = buildBackfillManifestText(
+          backfill,
+          O.some(`# Title Of ${backfill.slug}\n\n## Mission\n\nDo it.\n`)
+        );
+        const manifest = yield* decodeManifest(parse(text));
+        expect(manifest.schemaVersion).toBe("initiative-manifest/v2");
+        expect(manifest.initiative.status).toBe(backfill.status);
+        expect(manifest.lifecycle).toBe(backfill.status);
+        expect(manifest.initiative.title).toBe(`Title Of ${backfill.slug}`);
+        expect(manifest.mission).toBe("Do it.");
+      }
+    })
+  );
 });
 
 describe("README helpers", () => {

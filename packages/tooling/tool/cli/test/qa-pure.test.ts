@@ -81,6 +81,7 @@ import {
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { thunk } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -89,7 +90,7 @@ import { Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import type { ActionEvent } from "@beep/qa-capture";
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer));
 
 const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>

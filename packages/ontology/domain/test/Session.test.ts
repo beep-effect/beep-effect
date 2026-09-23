@@ -16,10 +16,9 @@ import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 
-const sessionId = S.decodeSync(SessionId)("session-1");
+const sessionId = SessionId.make("session-1");
 const nameQuad = makeQuad(
   makeNamedNode("https://example.test/alice"),
   makeNamedNode("https://example.test/name"),

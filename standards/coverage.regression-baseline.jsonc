@@ -29742,6 +29742,18 @@
             "functions": 1
           }
         },
+        "packages/tooling/library/repo-utils/src/Sha256Hex.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts": {
           "lines": 92,
           "statements": 91.42,

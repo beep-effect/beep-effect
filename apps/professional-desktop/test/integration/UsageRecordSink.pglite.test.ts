@@ -24,7 +24,7 @@ const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePglit
 const makeInProcessPgliteLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
-const decodeUsageAppend = S.decodeUnknownSync(TurnFinalizationUsageAppend);
+const decodeUsageAppend = S.decodeUnknownEffect(TurnFinalizationUsageAppend);
 const optionalActivityMigrationName = "20260801021411_usage_record_optional_activity";
 const migrationsBeforeOptionalActivity = A.filter(
   migrationBundle,
@@ -131,7 +131,7 @@ if (!shouldRunPgliteIntegration) {
 
           const sink = yield* UsageRecordSink;
 
-          const record = appendTurnFinalizationUsageRecord(decodeUsageAppend(usageAppendInput));
+          const record = appendTurnFinalizationUsageRecord(yield* decodeUsageAppend(usageAppendInput));
           yield* sink.append(record);
 
           const rows = yield* db.select().from(UsageRecordTable.Table);
@@ -142,7 +142,7 @@ if (!shouldRunPgliteIntegration) {
             expect(appended.value.provider).toBe("fixture");
             expect(appended.value.model).toBe("fixture-model");
 
-            const decoded = UsageRecordTable.fromUsageRecordRow(appended.value);
+            const decoded = yield* Effect.fromResult(UsageRecordTable.fromUsageRecordRow(appended.value));
             expect(decoded.provider).toBe("fixture");
             expect(O.isNone(decoded.activityId)).toBe(true);
             expect(O.getOrNull(decoded.inputTokens)).toBe(12);

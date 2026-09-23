@@ -1,3 +1,4 @@
+import { EvidenceSpan } from "@beep/epistemic-domain";
 import { ClaimEvidenceBasis } from "@beep/epistemic-domain/values/ClaimEvidenceReview";
 import { ClaimEvidenceReviewPanel } from "@beep/epistemic-ui";
 import {
@@ -6,39 +7,52 @@ import {
   ExplainClaimEvidence,
   explainClaimEvidence,
 } from "@beep/epistemic-use-cases/ClaimEvidenceReview";
-import { SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { NonNegativeInt } from "@beep/schema";
+import { PosixPath } from "@beep/schema/PosixPath";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
+import { UserId } from "@beep/shared-domain/identity/Shared";
 import { Button } from "@beep/ui/components/button";
 import { RegistryProvider, useAtom, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as BrowserCrypto from "@effect/platform-browser/BrowserCrypto";
 import { Effect } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-const decodeBasis = S.decodeUnknownSync(ClaimEvidenceBasis);
 const exampleText = (year: number) =>
   `North Observatory field note\n\nThe observatory opened to the public in ${year}.\nThe site includes one telescope and a public archive.\n`;
-const exampleBasis = (year: number, digest: string) =>
-  decodeBasis({
+const exampleBasis = (year: number, digest: SourceTextDigest) =>
+  ClaimEvidenceBasis.make({
     claimRef: "claim:observatory-opening",
     assertion: `North Observatory opened to the public in ${year}.`,
     subject: "North Observatory",
-    evidence: { startChar: 46, endChar: 74, quote: `opened to the public in ${year}`, confidence: 0.82 },
-    source: {
+    evidence: EvidenceSpan.make({
+      startChar: NonNegativeInt.make(46),
+      endChar: NonNegativeInt.make(74),
+      quote: `opened to the public in ${year}`,
+      confidence: UnitInterval.make(0.82),
+    }),
+    source: SourceTextIdentity.make({
       scopeRef: "project:observatory",
       sourceRef: "document:field-note",
-      locator: "documents/observatory.txt",
+      locator: PosixPath.make("documents/observatory.txt"),
       sourceDigest: digest,
       textDigest: digest,
-      extractor: { name: "plain-text", version: "1" },
+      extractor: SourceTextExtractor.make({ name: "plain-text", version: "1" }),
       normalizationVersion: "1",
-    },
+    }),
   });
-const originalBasis = exampleBasis(2024, "sha256:02788cfc8542722b1611c7dd35b1b25bc22316d85d7d84baa693ee35a335bf73");
-const revisedBasis = exampleBasis(2025, "sha256:f75c0e0ecb422c2bc553af0785681e1f2a8214522fb3eea0ada5a38599458dc7");
-const reviewer = S.decodeSync(UserPrincipal)({ kind: "User", userId: 1 });
+const originalBasis = exampleBasis(
+  2024,
+  SourceTextDigest.make("sha256:02788cfc8542722b1611c7dd35b1b25bc22316d85d7d84baa693ee35a335bf73")
+);
+const revisedBasis = exampleBasis(
+  2025,
+  SourceTextDigest.make("sha256:f75c0e0ecb422c2bc553af0785681e1f2a8214522fb3eea0ada5a38599458dc7")
+);
+const reviewer = UserPrincipal.make({ kind: "User", userId: UserId.make(1) });
 const initialInput = ExplainClaimEvidence.make({
   basis: originalBasis,
   currentSource: originalBasis.source,

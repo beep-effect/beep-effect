@@ -39,13 +39,13 @@ import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownJson = S.decodeEffect(S.fromJsonString(S.Unknown));
-const decodeBunVersionStateSync = S.decodeSync(BunVersionState);
-const encodeBunVersionStateSync = S.encodeSync(BunVersionState);
+const decodeBunVersionStateEffect = S.decodeEffect(BunVersionState);
+const encodeBunVersionStateEffect = S.encodeEffect(BunVersionState);
 
 import { FetchHttpClient } from "effect/unstable/http";
 
@@ -70,7 +70,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
         yield* fs.writeFileString(
           packageJsonPath,
-          `${encodeJson({
+          `${yield* encodeJson({
             name: "@beep/test-root",
             catalog: {
               effect: "^4.0.0-beta.28",
@@ -153,7 +153,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
           const packageJsonPath = path.join(tmpDir, "package.json");
           yield* fs.writeFileString(
             packageJsonPath,
-            encodeJson({
+            yield* encodeJson({
               catalog: {
                 effect: `https://pkg.pr.new/Effect-TS/${repository}/effect@c8349ed`,
                 "@effect/vitest": "https://pkg.pr.new/Effect-TS/effect-smol/@effect/vitest@abcdef0",
@@ -209,7 +209,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
         yield* fs.writeFileString(
           packageJsonPath,
-          `${encodeJson({
+          `${yield* encodeJson({
             name: "@beep/test-root",
             catalog: {
               effect: "^4.0.0-beta.28",
@@ -314,19 +314,18 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
   });
 
   describe("buildBunReport", () => {
-    it("round-trips schema-derived Bun version states", () => {
+    {
       const equivalent = S.toEquivalence(BunVersionState);
-
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(BunVersionState)]), ([state]) => {
-            expect(equivalent(decodeBunVersionStateSync(encodeBunVersionStateSync(state)), state)).toBe(true);
-
-            return true;
-          })
-        )._tag
-      ).toBe("Passed");
-    });
+      it.effect.prop(
+        "round-trips schema-derived Bun version states",
+        [Arbitrary.schema(BunVersionState)],
+        Effect.fnUntraced(function* ([state]) {
+          expect(equivalent(yield* decodeBunVersionStateEffect(yield* encodeBunVersionStateEffect(state)), state)).toBe(
+            true
+          );
+        })
+      );
+    }
 
     it.effect(
       "resolves the root, Vercel, and runner archive Bun pins without network access",
@@ -341,11 +340,11 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         yield* fs.writeFileString(path.join(tmpDir, ".bun-version"), "1.4.0\n");
         yield* fs.writeFileString(
           path.join(tmpDir, "package.json"),
-          `${encodeJson({ packageManager: "bun@1.4.0" })}\n`
+          `${yield* encodeJson({ packageManager: "bun@1.4.0" })}\n`
         );
         yield* fs.writeFileString(
           path.join(vercelDir, "vercel.json"),
-          `${encodeJson({
+          `${yield* encodeJson({
             installCommand: 'cd ../.. && npx --yes "bun@1.3.14" install --frozen-lockfile',
             buildCommand: "cd ../.. && npx --yes bun@1.3.14 run --cwd apps/oip-web build:pwa",
           })}\n`
@@ -375,7 +374,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         yield* fs.writeFileString(path.join(tmpDir, ".bun-version"), "1.4.0\n");
         yield* fs.writeFileString(
           path.join(tmpDir, "package.json"),
-          `${encodeJson({ packageManager: "bun@1.4.0" })}\n`
+          `${yield* encodeJson({ packageManager: "bun@1.4.0" })}\n`
         );
 
         const state = yield* resolveBunVersions(tmpDir, true);
@@ -455,7 +454,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         const tmpDir = yield* fs.makeTempDirectoryScoped();
         const vercelDir = path.join(tmpDir, "apps", "oip-web");
         const vercelJsonPath = path.join(vercelDir, "vercel.json");
-        const document = `${encodeJson({
+        const document = `${yield* encodeJson({
           installCommand: 'cd ../.. && npx --yes "bun@$(cat .bun-version)" install --frozen-lockfile',
           buildCommand: 'cd ../.. && npx --yes "bun@$(cat .bun-version)" run --cwd apps/oip-web build:pwa',
         })}\n`;
@@ -464,7 +463,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         yield* fs.writeFileString(path.join(tmpDir, ".bun-version"), "1.3.14\n");
         yield* fs.writeFileString(
           path.join(tmpDir, "package.json"),
-          `${encodeJson({ packageManager: "bun@1.4.0" })}\n`
+          `${yield* encodeJson({ packageManager: "bun@1.4.0" })}\n`
         );
         yield* fs.writeFileString(vercelJsonPath, document);
 
@@ -498,7 +497,7 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
 
         yield* fs.writeFileString(
           vercelJsonPath,
-          `${encodeJson({
+          `${yield* encodeJson({
             $schema: "https://openapi.vercel.sh/vercel.json",
             installCommand: 'cd ../.. && npx --yes "bun@1.3.14" install --frozen-lockfile',
             buildCommand: "cd ../.. && npx --yes bun@1.3.14 run --cwd apps/oip-web build:pwa",
@@ -530,12 +529,12 @@ layer(VersionSyncTestLayer)("VersionSync Effect Catalog", (it) => {
         yield* fs.writeFileString(path.join(tmpDir, ".bun-version"), "1.4.0\n");
         yield* fs.writeFileString(
           path.join(tmpDir, "package.json"),
-          `${encodeJson({ packageManager: "bun@1.4.0" })}\n`
+          `${yield* encodeJson({ packageManager: "bun@1.4.0" })}\n`
         );
         yield* fs.writeFileString(path.join(tmpDir, ".bun-linux-x64.sha256"), "old-digest\n");
         yield* fs.writeFileString(
           path.join(vercelDir, "vercel.json"),
-          `${encodeJson({
+          `${yield* encodeJson({
             installCommand: "npx --yes bun@1.3.14 install --frozen-lockfile",
             buildCommand: "npx --yes bun@1.3.14 run build:pwa",
           })}\n`
@@ -586,7 +585,7 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
     yield* fs.makeDirectory(bareDir, { recursive: true });
     yield* fs.writeFileString(
       path.join(tmpDir, "package.json"),
-      encodeJson({
+      yield* encodeJson({
         name: "turbo-fixture",
         workspaces: ["apps/*", "packages/*"],
         catalog: { turbo: "^2.10.13" },
@@ -613,9 +612,9 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
         )
       );
     }
-    yield* fs.writeFileString(path.join(appDir, "package.json"), encodeJson({ name: "@fixture/web" }));
-    yield* fs.writeFileString(path.join(libDir, "package.json"), encodeJson({ name: "@fixture/lib" }));
-    yield* fs.writeFileString(path.join(bareDir, "package.json"), encodeJson({ name: "@fixture/bare" }));
+    yield* fs.writeFileString(path.join(appDir, "package.json"), yield* encodeJson({ name: "@fixture/web" }));
+    yield* fs.writeFileString(path.join(libDir, "package.json"), yield* encodeJson({ name: "@fixture/lib" }));
+    yield* fs.writeFileString(path.join(bareDir, "package.json"), yield* encodeJson({ name: "@fixture/bare" }));
     yield* fs.writeFileString(
       path.join(tmpDir, "turbo.json"),
       A.join(
@@ -632,13 +631,13 @@ layer(VersionSyncTestLayer)("VersionSync Turbo Schema", (it) => {
     );
     yield* fs.writeFileString(
       path.join(appDir, "turbo.json"),
-      encodeJson({ $schema: "https://turborepo.com/schema.json", extends: ["//"], tasks: {} })
+      yield* encodeJson({ $schema: "https://turborepo.com/schema.json", extends: ["//"], tasks: {} })
     );
     yield* fs.writeFileString(
       path.join(libDir, "turbo.json"),
-      encodeJson({ $schema: "https://v2-10-13.turborepo.dev/schema.json", extends: ["//"], tasks: {} })
+      yield* encodeJson({ $schema: "https://v2-10-13.turborepo.dev/schema.json", extends: ["//"], tasks: {} })
     );
-    yield* fs.writeFileString(path.join(bareDir, "turbo.json"), encodeJson({ extends: ["//"], tasks: {} }));
+    yield* fs.writeFileString(path.join(bareDir, "turbo.json"), yield* encodeJson({ extends: ["//"], tasks: {} }));
   });
 
   describe("resolveTurboSchema", () => {
@@ -900,11 +899,11 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
 
         yield* fs.writeFileString(
           path.join(tmpDir, "package.json"),
-          encodeJson({ name: "fixture", devDependencies: { turbo: "~2.10.13" } })
+          yield* encodeJson({ name: "fixture", devDependencies: { turbo: "~2.10.13" } })
         );
         yield* fs.writeFileString(
           path.join(tmpDir, "bun.lock"),
-          encodeJson({ lockfileVersion: 1, packages: { turbo: [{ unexpected: true }, ""] } })
+          yield* encodeJson({ lockfileVersion: 1, packages: { turbo: [{ unexpected: true }, ""] } })
         );
 
         expect(yield* readLockfileResolvedVersion(tmpDir, "turbo")).toEqual(O.none());
@@ -954,9 +953,9 @@ layer(VersionSyncTestLayer)("VersionSync installed tool version", (it) => {
         yield* fs.makeDirectory(appDir, { recursive: true });
         yield* fs.writeFileString(
           path.join(tmpDir, "package.json"),
-          encodeJson({ name: "fixture", workspaces: ["apps/*"], catalog: { turbo: "2.10.13" } })
+          yield* encodeJson({ name: "fixture", workspaces: ["apps/*"], catalog: { turbo: "2.10.13" } })
         );
-        yield* fs.writeFileString(path.join(appDir, "package.json"), encodeJson({ name: "@fixture/web" }));
+        yield* fs.writeFileString(path.join(appDir, "package.json"), yield* encodeJson({ name: "@fixture/web" }));
         yield* fs.writeFileString(path.join(appDir, "turbo.json"), "{ not: valid");
 
         const failure = yield* resolveTurboSchema(tmpDir).pipe(Effect.flip);

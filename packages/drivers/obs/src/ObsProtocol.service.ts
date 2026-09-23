@@ -12,10 +12,10 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { $ObsId } from "@beep/identity/packages";
 import { Fn } from "@beep/schema";
 import { O } from "@beep/utils";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import {
   Cause,
   Context,
@@ -31,6 +31,8 @@ import {
   Ref,
   Stream,
 } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import * as S from "effect/Schema";
 import { Socket } from "effect/unstable/socket";
 import { ObsError } from "./Obs.errors.ts";
@@ -131,6 +133,14 @@ const ComputeObsAuthentication = Fn({
   })
 );
 
+const utf8 = new TextEncoder();
+
+const sha256Base64 = Effect.fnUntraced(function* (value: string) {
+  const crypto = yield* Crypto.Crypto;
+  const bytes = yield* crypto.digest("SHA-256", utf8.encode(value));
+  return Encoding.encodeBase64(bytes);
+});
+
 /**
  * Compute the obs-websocket `Identify` authentication string:
  * `base64(sha256(base64(sha256(password + salt)) + challenge))`.
@@ -138,6 +148,7 @@ const ComputeObsAuthentication = Fn({
  * **Example** (Compute authentication string)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { computeObsAuthentication } from "@beep/obs"
  *
  * const authentication = computeObsAuthentication({
@@ -145,17 +156,21 @@ const ComputeObsAuthentication = Fn({
  *   password: "supersecretpassword",
  *   salt: "lM1GncleQOaCu9lT1yeUZhFYnqhsLLP1G5lAGo3ixaI="
  * })
- * console.log(authentication)
+ * console.log(Effect.isEffect(authentication))
+ * // true
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const computeObsAuthentication: (options: ComputeObsAuthenticationOptions) => string =
-  ComputeObsAuthentication.implementSync((options) => {
-    const secret = createHash("sha256").update(`${options.password}${options.salt}`).digest("base64");
-    return createHash("sha256").update(`${secret}${options.challenge}`).digest("base64");
-  });
+export const computeObsAuthentication = ComputeObsAuthentication.implementEffect((options) =>
+  sha256Base64(`${options.password}${options.salt}`).pipe(
+    Effect.flatMap((secret) => sha256Base64(`${secret}${options.challenge}`)),
+    Effect.mapError((cause) =>
+      ObsError.fromUnknown("authenticate", "Failed to compute the obs-websocket authentication string.", { cause })
+    )
+  )
+);
 
 const socketFailureToObsError = (config: ObsConfig): ((error: Socket.SocketError) => ObsError) => {
   const toError: (reason: Socket.SocketErrorReason) => ObsError = Match.type<Socket.SocketErrorReason>().pipe(
@@ -201,7 +216,7 @@ const socketFailureToObsError = (config: ObsConfig): ((error: Socket.SocketError
  *
  * ```ts
  * import type { ObsProtocolShape } from "@beep/obs"
- * import { Stream } from "effect"
+ * import * as Stream from "effect/Stream"
  *
  * const eventsOf = (protocol: ObsProtocolShape) => Stream.take(protocol.events, 1)
  * console.log(eventsOf)
@@ -285,18 +300,26 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
           })
         ),
       onSome: (password) =>
-        Effect.succeed(
-          ObsIdentify.make({
-            authentication: O.some(
-              computeObsAuthentication({
-                challenge: challenge.challenge,
-                password: Redacted.value(password),
-                salt: challenge.salt,
-              })
-            ),
-            eventSubscriptions: config.eventSubscriptions,
-            rpcVersion: OBS_RPC_VERSION,
-          })
+        computeObsAuthentication({
+          challenge: challenge.challenge,
+          password: Redacted.value(password),
+          salt: challenge.salt,
+        }).pipe(
+          Effect.provideService(Crypto.Crypto, NodeCrypto.make),
+          Effect.map((authentication) =>
+            ObsIdentify.make({
+              authentication: O.some(authentication),
+              eventSubscriptions: config.eventSubscriptions,
+              rpcVersion: OBS_RPC_VERSION,
+            })
+          ),
+          // `fromUnknown` returns an existing `ObsError` cause unchanged, so the
+          // schema-issue channel is normalized without re-wrapping driver errors.
+          Effect.mapError((error) =>
+            ObsError.fromUnknown("authenticate", "Failed to compute the obs-websocket authentication string.", {
+              cause: error,
+            })
+          )
         ),
     });
 
@@ -513,7 +536,7 @@ export class ObsProtocol extends Context.Service<ObsProtocol, ObsProtocolShape>(
    *
    * ```ts
    * import { ObsProtocol } from "@beep/obs"
-   * import { Effect } from "effect"
+   * import * as Effect from "effect/Effect"
    *
    * const program = Effect.scoped(
    *   Effect.flatMap(ObsProtocol.connect(), (protocol) => protocol.request("GetVersion"))
@@ -560,7 +583,7 @@ export class ObsProtocol extends Context.Service<ObsProtocol, ObsProtocolShape>(
    *
    * ```ts
    * import { ObsProtocol } from "@beep/obs"
-   * import { Layer } from "effect"
+   * import * as Layer from "effect/Layer"
    * import { Socket } from "effect/unstable/socket"
    *
    * const layer = ObsProtocol.makeLayer().pipe(Layer.provide(Socket.layerWebSocketConstructorGlobal))

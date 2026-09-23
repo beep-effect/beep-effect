@@ -9,17 +9,27 @@
  *
  * @since 0.0.0
  */
-import type * as Duration from "effect/Duration"
-import type * as Effect from "effect/Effect"
-import type * as Layer from "effect/Layer"
-import type * as S from "effect/Schema"
-import type * as Scope from "effect/Scope"
-import type * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"
-import * as internal from "./internal/internal.ts"
-import * as utils from "./utils.ts"
+import type * as Duration from "effect/Duration";
+import type * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
+import type * as Layer from "effect/Layer";
+import * as P from "effect/Predicate";
+import type * as S from "effect/Schema";
+import type * as Scope from "effect/Scope";
+import type * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
+import * as internal from "./internal/internal.ts";
+import * as utils from "./utils.ts";
 
-import * as bt from "bun:test"
-import { assert as chaiAssert } from "chai"
+import * as bt from "bun:test";
+import { assert as chaiAssert } from "chai";
+
+export { describe, expect, test } from "bun:test";
+
+type Hook = {
+  (options?: Parameters<typeof bt.afterAll>[1]): (fn: Parameters<typeof bt.afterAll>[0]) => void;
+} & typeof bt.afterAll;
+
+const makeHook = (hook: typeof bt.afterAll): Hook => dual((args) => P.isFunction(args[0]), hook);
 
 /**
  * Register cleanup after all tests in the current suite finish.
@@ -37,7 +47,7 @@ import { assert as chaiAssert } from "chai"
  * @category testing
  * @since 0.0.0
  */
-export const afterAll = bt.afterAll
+export const afterAll: Hook = makeHook(bt.afterAll);
 /**
  * Register cleanup after each test in the current suite.
  *
@@ -54,7 +64,7 @@ export const afterAll = bt.afterAll
  * @category testing
  * @since 0.0.0
  */
-export const afterEach = bt.afterEach
+export const afterEach: Hook = makeHook(bt.afterEach);
 /**
  * Initialize shared state before the current suite runs.
  *
@@ -71,7 +81,7 @@ export const afterEach = bt.afterEach
  * @category testing
  * @since 0.0.0
  */
-export const beforeAll = bt.beforeAll
+export const beforeAll: Hook = makeHook(bt.beforeAll);
 /**
  * Initialize fresh state before each test in the current suite.
  *
@@ -88,39 +98,7 @@ export const beforeAll = bt.beforeAll
  * @category testing
  * @since 0.0.0
  */
-export const beforeEach = bt.beforeEach
-/**
- * Group native Bun tests under a suite name.
- *
- * **Example** (Use describe in a test)
- *
- * ```ts
- * import { describe, expect, it } from "@beep/scratchpad/bun-test/index"
- *
- * describe("arithmetic", () => {
- *   it("adds", () => expect(1 + 1).toBe(2))
- * })
- * ```
- *
- * @category testing
- * @since 0.0.0
- */
-export const describe = bt.describe
-/**
- * Assert runtime values with Bun's native matchers.
- *
- * **Example** (Use expect in a test)
- *
- * ```ts
- * import { expect } from "@beep/scratchpad/bun-test/index"
- *
- * expect({ count: 2 }).toEqual({ count: 2 })
- * ```
- *
- * @category testing
- * @since 0.0.0
- */
-export const expect = bt.expect
+export const beforeEach: Hook = makeHook(bt.beforeEach);
 /**
  * Express type-level expectations using the installed Bun testing API.
  *
@@ -135,7 +113,7 @@ export const expect = bt.expect
  * @category testing
  * @since 0.0.0
  */
-export const expectTypeOf: typeof bt.expectTypeOf = bt.expectTypeOf
+export const expectTypeOf: typeof bt.expectTypeOf = bt.expectTypeOf;
 /**
  * Expose Bun's available Vitest-style mock utilities; unsupported Vitest methods remain unavailable.
  *
@@ -152,7 +130,7 @@ export const expectTypeOf: typeof bt.expectTypeOf = bt.expectTypeOf
  * @category testing
  * @since 0.0.0
  */
-export const vi = bt.vi
+export const vi = bt.vi;
 /**
  * Expose Bun's Jest-style mock and timer utilities.
  *
@@ -168,7 +146,7 @@ export const vi = bt.vi
  * @category testing
  * @since 0.0.0
  */
-export const jest = bt.jest
+export const jest = bt.jest;
 /**
  * Create native Bun mock functions with observable call histories.
  *
@@ -185,7 +163,7 @@ export const jest = bt.jest
  * @category testing
  * @since 0.0.0
  */
-export const mock = bt.mock
+export const mock = bt.mock;
 /**
  * Override the native clock for deterministic date assertions.
  *
@@ -202,7 +180,7 @@ export const mock = bt.mock
  * @category testing
  * @since 0.0.0
  */
-export const setSystemTime = bt.setSystemTime
+export const setSystemTime = bt.setSystemTime;
 /**
  * Configure Bun and the adapter's interruptible default before collecting tests.
  *
@@ -219,7 +197,7 @@ export const setSystemTime = bt.setSystemTime
  * @category testing
  * @since 0.0.0
  */
-export const setDefaultTimeout = internal.setDefaultTimeout
+export const setDefaultTimeout = internal.setDefaultTimeout;
 /**
  * Observe a method with a native Bun spy and restore it after the assertion.
  *
@@ -238,23 +216,13 @@ export const setDefaultTimeout = internal.setDefaultTimeout
  * @category testing
  * @since 0.0.0
  */
-export const spyOn = bt.spyOn
-/**
- * Register a native Bun test without the adapter's Effect helpers.
- *
- * **Example** (Use test in a test)
- *
- * ```ts
- * import { test, expect } from "@beep/scratchpad/bun-test/index"
- *
- * test("adds two numbers", () => expect(1 + 1).toBe(2))
- * ```
- *
- * @category testing
- * @since 0.0.0
- */
-export const test = bt.test
-
+export const spyOn: {
+  <K extends PropertyKey>(methodOrPropertyValue: K): <T extends Record<K, unknown>>(
+    obj: T
+  ) => ReturnType<typeof bt.spyOn<T, K>>;
+  <T extends object, K extends keyof T>(methodOrPropertyValue: K): (obj: T) => ReturnType<typeof bt.spyOn<T, K>>;
+  <T extends object, K extends keyof T>(obj: T, methodOrPropertyValue: K): ReturnType<typeof bt.spyOn<T, K>>;
+} = dual(2, bt.spyOn);
 /**
  * Provide basic assertion helpers plus Chai deep-inclusion checks for shared test helpers.
  *
@@ -271,21 +239,21 @@ export const test = bt.test
  * @since 0.0.0
  */
 export const assert: {
-  readonly fail: (message: string) => void
-  readonly strictEqual: <A>(actual: A, expected: A, message?: string) => void
-  readonly deepStrictEqual: <A>(actual: A, expected: A, message?: string) => void
-  readonly deepInclude: typeof chaiAssert.deepInclude
-  readonly notDeepStrictEqual: <A>(actual: A, expected: A, message?: string) => void
-  readonly isTrue: (self: unknown, message?: string) => void
-  readonly isFalse: (self: boolean, message?: string) => void
-  readonly include: (actual: string | ReadonlyArray<unknown> | undefined, expected: unknown) => void
-  readonly match: (actual: string, regExp: RegExp) => void
-  readonly instanceOf: (value: unknown, constructor: abstract new(...args: any) => any, message?: string) => void
-  readonly isDefined: <A>(a: A | undefined) => void
-  readonly isUndefined: <A>(a: A | undefined) => void
-  readonly throws: (thunk: () => void, error?: Error | ((u: unknown) => undefined)) => void
-  readonly doesNotThrow: (thunk: () => void, message?: string) => void
-  readonly ok: (self: unknown, message?: string) => void
+  readonly fail: (message: string) => void;
+  readonly strictEqual: <A>(actual: A, expected: A, message?: string) => void;
+  readonly deepStrictEqual: <A>(actual: A, expected: A, message?: string) => void;
+  readonly deepInclude: typeof chaiAssert.deepInclude;
+  readonly notDeepStrictEqual: <A>(actual: A, expected: A, message?: string) => void;
+  readonly isTrue: (self: unknown, message?: string) => void;
+  readonly isFalse: (self: boolean, message?: string) => void;
+  readonly include: (actual: string | ReadonlyArray<unknown> | undefined, expected: unknown) => void;
+  readonly match: (actual: string, regExp: RegExp) => void;
+  readonly instanceOf: (value: unknown, constructor: abstract new (...args: any) => any, message?: string) => void;
+  readonly isDefined: <A>(a: A | undefined) => void;
+  readonly isUndefined: <A>(a: A | undefined) => void;
+  readonly throws: (thunk: () => void, error?: Error | ((u: unknown) => undefined)) => void;
+  readonly doesNotThrow: (thunk: () => void, message?: string) => void;
+  readonly ok: (self: unknown, message?: string) => void;
 } = {
   fail: utils.fail,
   strictEqual: utils.strictEqual,
@@ -301,8 +269,8 @@ export const assert: {
   isUndefined: utils.assertUndefined,
   throws: utils.throws,
   doesNotThrow: utils.doesNotThrow,
-  ok: utils.assertTrue
-}
+  ok: utils.assertTrue,
+};
 
 /**
  * A stand-in for Vitest's `TestContext`. Bun's test runner doesn't pass a
@@ -318,9 +286,9 @@ export const assert: {
  * @since 0.0.0
  */
 export interface TestContext {
-  readonly signal: AbortSignal
-  onTestFinished(fn: () => void | Promise<void>): void
-  onTestFailed(fn: () => void | Promise<void>): void
+  readonly signal: AbortSignal;
+  onTestFinished(fn: () => void | Promise<void>): void;
+  onTestFailed(fn: () => void | Promise<void>): void;
 }
 
 /**
@@ -330,13 +298,13 @@ export interface TestContext {
  * @since 0.0.0
  */
 export interface TestOptions {
-  readonly timeout?: number
-  readonly retry?: number
-  readonly repeats?: number
-  readonly skip?: boolean
-  readonly only?: boolean
-  readonly todo?: boolean
-  readonly fails?: boolean
+  readonly timeout?: number;
+  readonly retry?: number;
+  readonly repeats?: number;
+  readonly skip?: boolean;
+  readonly only?: boolean;
+  readonly todo?: boolean;
+  readonly fails?: boolean;
 }
 
 /**
@@ -345,7 +313,7 @@ export interface TestOptions {
  * @category models
  * @since 0.0.0
  */
-export type API = TestCollectorCallable
+export type API = TestCollectorCallable;
 
 /**
  * Register a test with either callback-first or options-first arguments.
@@ -354,16 +322,10 @@ export type API = TestCollectorCallable
  * @since 0.0.0
  */
 export interface TestCollectorCallable {
-  (
-    name: string,
-    fn: (ctx: TestContext) => unknown | Promise<unknown>,
-    options?: number | TestOptions
-  ): void
-  (
-    name: string,
-    options: TestOptions,
-    fn: (ctx: TestContext) => unknown | Promise<unknown>
-  ): void
+  (fn: (ctx: TestContext) => unknown | Promise<unknown>, options?: number | TestOptions): (name: string) => void;
+  (options: TestOptions, fn: (ctx: TestContext) => unknown | Promise<unknown>): (name: string) => void;
+  (name: string, fn: (ctx: TestContext) => unknown | Promise<unknown>, options?: number | TestOptions): void;
+  (name: string, options: TestOptions, fn: (ctx: TestContext) => unknown | Promise<unknown>): void;
 }
 
 /**
@@ -373,11 +335,13 @@ export interface TestCollectorCallable {
  * @since 0.0.0
  */
 export interface TestEach {
-  <T>(cases: ReadonlyArray<T>): (
+  <T>(
+    cases: ReadonlyArray<T>
+  ): (
     name: string,
     fn: (value: T, ctx: TestContext) => unknown | Promise<unknown>,
     options?: number | TestOptions
-  ) => void
+  ) => void;
 }
 
 /**
@@ -388,14 +352,14 @@ export interface TestEach {
  * @since 0.0.0
  */
 export interface Collector extends TestCollectorCallable {
-  readonly skip: TestCollectorCallable & { readonly each: TestEach }
-  readonly only: TestCollectorCallable
-  readonly todo: (name: string) => void
-  readonly skipIf: (condition: unknown) => TestCollectorCallable
-  readonly runIf: (condition: unknown) => TestCollectorCallable
-  readonly fails: TestCollectorCallable
-  readonly each: TestEach
-  readonly describe: typeof bt.describe
+  readonly skip: TestCollectorCallable & { readonly each: TestEach };
+  readonly only: TestCollectorCallable;
+  readonly todo: (name: string) => void;
+  readonly skipIf: (condition: unknown) => TestCollectorCallable;
+  readonly runIf: (condition: unknown) => TestCollectorCallable;
+  readonly fails: TestCollectorCallable;
+  readonly each: TestEach;
+  readonly describe: typeof bt.describe;
 }
 
 /**
@@ -412,7 +376,7 @@ export namespace BunTest {
    * @since 0.0.0
    */
   export interface TestFunction<A, E, R, TestArgs extends Array<any>> {
-    (...args: TestArgs): Effect.Effect<A, E, R>
+    (...args: TestArgs): Effect.Effect<A, E, R>;
   }
 
   /**
@@ -422,11 +386,8 @@ export namespace BunTest {
    * @since 0.0.0
    */
   export interface Test<R> {
-    <A, E>(
-      name: string,
-      self: TestFunction<A, E, R, [TestContext]>,
-      timeout?: number | TestOptions
-    ): void
+    <A, E>(self: TestFunction<A, E, R, [TestContext]>, timeout?: number | TestOptions): (name: string) => void;
+    <A, E>(name: string, self: TestFunction<A, E, R, [TestContext]>, timeout?: number | TestOptions): void;
   }
 
   /**
@@ -437,11 +398,9 @@ export namespace BunTest {
    */
   export type Arbitraries =
     | Array<S.Schema<any> | Arbitrary.Arbitrary<any>>
-    | { [K in string]: S.Schema<any> | Arbitrary.Arbitrary<any> }
+    | { [K in string]: S.Schema<any> | Arbitrary.Arbitrary<any> };
 
-  type ArbitraryValue<A> = A extends S.Schema<infer T> ? T
-    : A extends Arbitrary.Arbitrary<infer T> ? T
-    : never
+  type ArbitraryValue<A> = A extends S.Schema<infer T> ? T : A extends Arbitrary.Arbitrary<infer T> ? T : never;
 
   /**
    * Effect test registrar with conditional, parameterized, and property-test variants.
@@ -450,14 +409,14 @@ export namespace BunTest {
    * @since 0.0.0
    */
   export interface Tester<R> extends BunTest.Test<R> {
-    skip: BunTest.Test<R>
-    skipIf: (condition: unknown) => BunTest.Test<R>
-    runIf: (condition: unknown) => BunTest.Test<R>
-    only: BunTest.Test<R>
+    skip: BunTest.Test<R>;
+    skipIf: (condition: unknown) => BunTest.Test<R>;
+    runIf: (condition: unknown) => BunTest.Test<R>;
+    only: BunTest.Test<R>;
     each: <T>(
       cases: ReadonlyArray<T>
-    ) => <A, E>(name: string, self: TestFunction<A, E, R, Array<T>>, timeout?: number | TestOptions) => void
-    fails: BunTest.Test<R>
+    ) => <A, E>(name: string, self: TestFunction<A, E, R, Array<T>>, timeout?: number | TestOptions) => void;
+    fails: BunTest.Test<R>;
 
     /**
      * Runs an Effectful property test using Schema or Arbitrary inputs.
@@ -486,17 +445,17 @@ export namespace BunTest {
         R,
         [
           {
-            [K in keyof Arbs]: ArbitraryValue<Arbs[K]>
+            [K in keyof Arbs]: ArbitraryValue<Arbs[K]>;
           },
-          TestContext
+          TestContext,
         ]
       >,
       timeout?:
         | number
-        | TestOptions & {
-          arbitrary?: Arbitrary.CheckOptions
-        }
-    ) => void
+        | (TestOptions & {
+            arbitrary?: Arbitrary.CheckOptions;
+          })
+    ) => void;
   }
 
   /**
@@ -506,20 +465,20 @@ export namespace BunTest {
    * @since 0.0.0
    */
   export interface MethodsNonLive<R = never> extends Collector {
-    readonly effect: BunTest.Tester<R | Scope.Scope>
+    readonly effect: BunTest.Tester<R | Scope.Scope>;
     readonly flakyTest: <A, E, R2>(
       self: Effect.Effect<A, E, R2 | Scope.Scope>,
       timeout?: Duration.Input
-    ) => Effect.Effect<A, never, R2>
-    readonly layer: <R2, E>(layer: Layer.Layer<R2, E, R>, options?: {
-      readonly timeout?: Duration.Input
-    }) => {
-      (f: (it: BunTest.MethodsNonLive<R | R2>) => void): void
-      (
-        name: string,
-        f: (it: BunTest.MethodsNonLive<R | R2>) => void
-      ): void
-    }
+    ) => Effect.Effect<A, never, R2>;
+    readonly layer: <R2, E>(
+      layer: Layer.Layer<R2, E, R>,
+      options?: {
+        readonly timeout?: Duration.Input;
+      }
+    ) => {
+      (f: (it: BunTest.MethodsNonLive<R | R2>) => void): void;
+      (name: string, f: (it: BunTest.MethodsNonLive<R | R2>) => void): void;
+    };
 
     /**
      * Runs a synchronous property test using Schema or Arbitrary inputs.
@@ -531,21 +490,19 @@ export namespace BunTest {
      *
      * @since 0.0.0
      */
-    readonly prop: <const Arbs extends Arbitraries>(
-      name: string,
-      arbitraries: Arbs,
-      self: (
-        properties: {
-          [K in keyof Arbs]: ArbitraryValue<Arbs[K]>
-        },
-        ctx: TestContext
-      ) => void,
-      timeout?:
-        | number
-        | TestOptions & {
-          arbitrary?: Arbitrary.CheckOptions
-        }
-    ) => void
+    readonly prop: {
+      <const Arbs extends Arbitraries>(
+        arbitraries: Arbs,
+        self: (properties: { [K in keyof Arbs]: ArbitraryValue<Arbs[K]> }, ctx: TestContext) => void,
+        timeout?: number | (TestOptions & { arbitrary?: Arbitrary.CheckOptions })
+      ): (name: string) => void;
+      <const Arbs extends Arbitraries>(
+        name: string,
+        arbitraries: Arbs,
+        self: (properties: { [K in keyof Arbs]: ArbitraryValue<Arbs[K]> }, ctx: TestContext) => void,
+        timeout?: number | (TestOptions & { arbitrary?: Arbitrary.CheckOptions })
+      ): void;
+    };
   }
 
   /**
@@ -555,18 +512,18 @@ export namespace BunTest {
    * @since 0.0.0
    */
   export interface Methods<R = never> extends MethodsNonLive<R> {
-    readonly live: BunTest.Tester<Scope.Scope | R>
-    readonly layer: <R2, E>(layer: Layer.Layer<R2, E, R>, options?: {
-      readonly memoMap?: Layer.MemoMap
-      readonly timeout?: Duration.Input
-      readonly excludeTestServices?: boolean
-    }) => {
-      (f: (it: BunTest.MethodsNonLive<R | R2>) => void): void
-      (
-        name: string,
-        f: (it: BunTest.MethodsNonLive<R | R2>) => void
-      ): void
-    }
+    readonly live: BunTest.Tester<Scope.Scope | R>;
+    readonly layer: <R2, E>(
+      layer: Layer.Layer<R2, E, R>,
+      options?: {
+        readonly memoMap?: Layer.MemoMap;
+        readonly timeout?: Duration.Input;
+        readonly excludeTestServices?: boolean;
+      }
+    ) => {
+      (f: (it: BunTest.MethodsNonLive<R | R2>) => void): void;
+      (name: string, f: (it: BunTest.MethodsNonLive<R | R2>) => void): void;
+    };
   }
 }
 
@@ -587,7 +544,7 @@ export namespace BunTest {
  * @category testing
  * @since 0.0.0
  */
-export const addEqualityTesters: () => void = internal.addEqualityTesters
+export const addEqualityTesters: () => void = internal.addEqualityTesters;
 
 /**
  * Register a scoped Effect test with TestClock and TestConsole services.
@@ -604,7 +561,7 @@ export const addEqualityTesters: () => void = internal.addEqualityTesters
  * @category testing
  * @since 0.0.0
  */
-export const effect: BunTest.Tester<Scope.Scope> = internal.effect
+export const effect: BunTest.Tester<Scope.Scope> = internal.effect;
 
 /**
  * Register a scoped Effect test using the live runtime clock.
@@ -621,7 +578,7 @@ export const effect: BunTest.Tester<Scope.Scope> = internal.effect
  * @category testing
  * @since 0.0.0
  */
-export const live: BunTest.Tester<Scope.Scope> = internal.live
+export const live: BunTest.Tester<Scope.Scope> = internal.live;
 
 /**
  * Share a Layer across tests in a block, closing its resources when the block finishes.
@@ -641,17 +598,7 @@ export const live: BunTest.Tester<Scope.Scope> = internal.live
  * @category testing
  * @since 0.0.0
  */
-export const layer: <R, E>(
-  layer_: Layer.Layer<R, E>,
-  options?: {
-    readonly memoMap?: Layer.MemoMap
-    readonly timeout?: Duration.Input
-    readonly excludeTestServices?: boolean
-  }
-) => {
-  (f: (it: BunTest.MethodsNonLive<R>) => void): void
-  (name: string, f: (it: BunTest.MethodsNonLive<R>) => void): void
-} = internal.layer
+export const layer: typeof internal.layer = internal.layer;
 
 /**
  * Retry a scoped Effect failure within the helper's bounded retry policy.
@@ -668,10 +615,7 @@ export const layer: <R, E>(
  * @category testing
  * @since 0.0.0
  */
-export const flakyTest: <A, E, R>(
-  self: Effect.Effect<A, E, R | Scope.Scope>,
-  timeout?: Duration.Input
-) => Effect.Effect<A, never, R> = internal.flakyTest
+export const flakyTest: typeof internal.flakyTest = internal.flakyTest;
 
 /**
  * Check a synchronous property with schema-derived inputs and explicit run options.
@@ -690,7 +634,7 @@ export const flakyTest: <A, E, R>(
  * @category testing
  * @since 0.0.0
  */
-export const prop: BunTest.Methods["prop"] = internal.prop
+export const prop: BunTest.Methods["prop"] = internal.prop;
 
 /**
  * Register plain, scoped Effect, live-clock, and property tests through one collector.
@@ -707,7 +651,7 @@ export const prop: BunTest.Methods["prop"] = internal.prop
  * @category testing
  * @since 0.0.0
  */
-export const it: BunTest.Methods = internal.makeMethods(internal.defaultApi)
+export const it: BunTest.Methods = internal.makeMethods(internal.defaultApi);
 
 /**
  * Extend a compatible collector with scoped Effect and property-test methods.
@@ -725,7 +669,7 @@ export const it: BunTest.Methods = internal.makeMethods(internal.defaultApi)
  * @category testing
  * @since 0.0.0
  */
-export const makeMethods: (it: Collector) => BunTest.Methods = internal.makeMethods
+export const makeMethods: (it: Collector) => BunTest.Methods = internal.makeMethods;
 
 /**
  * Create a named suite whose callback receives the Effect-aware collector.
@@ -744,4 +688,4 @@ export const makeMethods: (it: Collector) => BunTest.Methods = internal.makeMeth
  * @category testing
  * @since 0.0.0
  */
-export const describeWrapped: (name: string, f: (it: BunTest.Methods) => void) => void = internal.describeWrapped
+export const describeWrapped: typeof internal.describeWrapped = internal.describeWrapped;

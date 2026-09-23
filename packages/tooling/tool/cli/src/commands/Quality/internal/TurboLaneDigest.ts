@@ -1,13 +1,15 @@
-import { createHash } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, P, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
+import type * as PlatformError from "effect/PlatformError";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboLaneDigest");
 
@@ -162,18 +164,19 @@ const selectedRows = (tasks: ReadonlyArray<TurboSummaryTask>): ReadonlyArray<Tur
     TurboLaneTaskHash.make({ taskId: task.taskId, hash: task.hash, cacheStatus: task.cache.status })
   );
 
-const digestRows = (summaryIds: ReadonlyArray<string>, rows: ReadonlyArray<TurboLaneTaskHash>): TurboLaneDigest => {
+const digestRows = Effect.fnUntraced(function* (
+  summaryIds: ReadonlyArray<string>,
+  rows: ReadonlyArray<TurboLaneTaskHash>
+) {
+  const crypto = yield* Crypto.Crypto;
   const sorted = pipe(rows, A.sortBy(rowOrder));
-  const digest = createHash("sha256")
-    .update(
-      A.join(
-        A.map(sorted, (row) => `${row.taskId}=${row.hash}`),
-        "\n"
-      )
-    )
-    .digest("hex");
+  const text = A.join(
+    A.map(sorted, (row) => `${row.taskId}=${row.hash}`),
+    "\n"
+  );
+  const digest = Encoding.encodeHex(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
   return TurboLaneDigest.make({ digest, summaryIds, tasks: sorted });
-};
+});
 
 const selectTasks = (summary: TurboRunSummary, taskNames: ReadonlyArray<string>): ReadonlyArray<TurboSummaryTask> => {
   const wanted = HashSet.fromIterable(taskNames);
@@ -189,7 +192,7 @@ const selectTasks = (summary: TurboRunSummary, taskNames: ReadonlyArray<string>)
  *
  * ```ts
  * import { TurboRunSummary, turboLaneDigestFromSummary } from "@beep/repo-cli/test/Quality"
- * import * as O from "effect/Option"
+ * import { Effect } from "effect"
  *
  * const summary = TurboRunSummary.make({
  *   id: "run",
@@ -200,7 +203,7 @@ const selectTasks = (summary: TurboRunSummary, taskNames: ReadonlyArray<string>)
  *   ],
  * })
  * const digest = turboLaneDigestFromSummary(summary, ["lint:allowlist", "lint:typos"])
- * console.log(O.isSome(digest)) // true
+ * console.log(Effect.isEffect(digest)) // true
  * ```
  *
  * **Gotchas**
@@ -215,15 +218,23 @@ const selectTasks = (summary: TurboRunSummary, taskNames: ReadonlyArray<string>)
  * @since 0.0.0
  */
 export const turboLaneDigestFromSummary: {
-  (taskNames: ReadonlyArray<string>): (summary: TurboRunSummary) => O.Option<TurboLaneDigest>;
-  (summary: TurboRunSummary, taskNames: ReadonlyArray<string>): O.Option<TurboLaneDigest>;
-} = dual(2, (summary: TurboRunSummary, taskNames: ReadonlyArray<string>): O.Option<TurboLaneDigest> => {
-  const selected = selectTasks(summary, taskNames);
-  if (A.isReadonlyArrayEmpty(selected) || !A.every(selected, taskPassed)) {
-    return O.none();
-  }
-  return O.some(digestRows([summary.id], selectedRows(selected)));
-});
+  (
+    taskNames: ReadonlyArray<string>
+  ): (summary: TurboRunSummary) => Effect.Effect<O.Option<TurboLaneDigest>, PlatformError.PlatformError, Crypto.Crypto>;
+  (
+    summary: TurboRunSummary,
+    taskNames: ReadonlyArray<string>
+  ): Effect.Effect<O.Option<TurboLaneDigest>, PlatformError.PlatformError, Crypto.Crypto>;
+} = dual(
+  2,
+  Effect.fnUntraced(function* (summary: TurboRunSummary, taskNames: ReadonlyArray<string>) {
+    const selected = selectTasks(summary, taskNames);
+    if (A.isReadonlyArrayEmpty(selected) || !A.every(selected, taskPassed)) {
+      return O.none<TurboLaneDigest>();
+    }
+    return O.some(yield* digestRows([summary.id], selectedRows(selected)));
+  })
+);
 
 const summaryStartOrder = Order.mapInput(Order.Number, (summary: TurboRunSummary) => summary.execution.startTime);
 
@@ -308,7 +319,7 @@ export const readTurboLaneDigest = Effect.fn("QualityTasks.readTurboLaneDigest")
     return O.none<TurboLaneDigest>();
   }
   return O.some(
-    digestRows(
+    yield* digestRows(
       A.map(fresh, (summary) => summary.id),
       newestRowsByTask(selectedRows(selected))
     )
@@ -358,15 +369,15 @@ export const TURBO_LANE_LEDGER_ENV = "BEEP_TURBO_LANE_LEDGER";
  * @category folding
  * @since 0.0.0
  */
-export const foldTurboLaneDigests = (digests: ReadonlyArray<TurboLaneDigest>): O.Option<TurboLaneDigest> =>
-  A.isReadonlyArrayEmpty(digests)
-    ? O.none()
-    : O.some(
-        digestRows(
-          A.flatMap(digests, (digest) => digest.summaryIds),
-          newestRowsByTask(A.flatMap(digests, (digest) => digest.tasks))
-        )
-      );
+export const foldTurboLaneDigests = Effect.fnUntraced(function* (digests: ReadonlyArray<TurboLaneDigest>) {
+  if (A.isReadonlyArrayEmpty(digests)) return O.none<TurboLaneDigest>();
+  return O.some(
+    yield* digestRows(
+      A.flatMap(digests, (digest) => digest.summaryIds),
+      newestRowsByTask(A.flatMap(digests, (digest) => digest.tasks))
+    )
+  );
+});
 
 /**
  * One line of a wrapper lane ledger: a digest the child declared, or the close record naming how
@@ -405,7 +416,7 @@ type ClosedLedgerRow = Extract<TurboLaneLedgerRow, { readonly _tag: "closed" }>;
 const isDeclaredRow = (row: TurboLaneLedgerRow): row is DeclaredLedgerRow => P.isTagged("declared")(row);
 const isClosedRow = (row: TurboLaneLedgerRow): row is ClosedLedgerRow => P.isTagged("closed")(row);
 
-const encodeLedgerLine = S.encodeSync(S.fromJsonString(TurboLaneLedgerRow));
+const encodeLedgerLine = S.encodeEffect(S.fromJsonString(TurboLaneLedgerRow));
 const decodeLedgerLine = S.decodeUnknownEffect(S.fromJsonString(TurboLaneLedgerRow));
 
 const appendLedgerRow = Effect.fn("QualityTasks.appendLedgerRow")(function* (
@@ -415,7 +426,8 @@ const appendLedgerRow = Effect.fn("QualityTasks.appendLedgerRow")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs.makeDirectory(path.dirname(ledgerPath), { recursive: true });
-  yield* fs.writeFileString(ledgerPath, `${encodeLedgerLine(row)}\n`, { flag: "a" });
+  const encoded = yield* encodeLedgerLine(row);
+  yield* fs.writeFileString(ledgerPath, `${encoded}\n`, { flag: "a" });
 });
 
 /**
@@ -501,5 +513,5 @@ export const readTurboLaneLedger = Effect.fn("QualityTasks.readTurboLaneLedger")
   if (A.isReadonlyArrayEmpty(closes) || attempted !== A.length(declared)) {
     return O.none<TurboLaneDigest>();
   }
-  return foldTurboLaneDigests(declared);
+  return yield* foldTurboLaneDigests(declared);
 });

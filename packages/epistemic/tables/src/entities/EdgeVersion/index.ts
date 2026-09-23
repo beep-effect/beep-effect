@@ -22,6 +22,21 @@
  */
 export * from "./EdgeVersion.converters.ts";
 /**
+ * EdgeVersion converter error exports.
+ *
+ * **Example** (Access EdgeVersionConverterError export)
+ *
+ * ```ts
+ * import * as EdgeVersion from "@beep/epistemic-tables/entities/EdgeVersion"
+ *
+ * console.log(EdgeVersion.EdgeVersionConverterError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./EdgeVersion.errors.ts";
+/**
  * EdgeVersion table exports.
  *
  * **Example** (Access Table entityType)

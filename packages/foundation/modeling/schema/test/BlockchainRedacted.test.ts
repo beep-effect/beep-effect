@@ -11,11 +11,11 @@ import { Effect, Redacted } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeCryptoTxnHashRedactedSync = S.decodeSync(CryptoTxnHashRedacted);
-const decodeCryptoWalletAddressRedactedSync = S.decodeSync(CryptoWalletAddressRedacted);
-const decodeEthereumValidatorPublicKeyRedactedSync = S.decodeSync(EthereumValidatorPublicKeyRedacted);
-const decodeEvmAddressRedactedSync = S.decodeSync(EvmAddressRedacted);
-const decodeUnknownEthereumValidatorPublicKeySync = S.decodeUnknownSync(EthereumValidatorPublicKey);
+const decodeCryptoTxnHashRedactedEffect = S.decodeEffect(CryptoTxnHashRedacted);
+const decodeCryptoWalletAddressRedactedEffect = S.decodeEffect(CryptoWalletAddressRedacted);
+const decodeEthereumValidatorPublicKeyRedactedEffect = S.decodeEffect(EthereumValidatorPublicKeyRedacted);
+const decodeEvmAddressRedactedEffect = S.decodeEffect(EvmAddressRedacted);
+const decodeUnknownEthereumValidatorPublicKeyEffect = S.decodeUnknownEffect(EthereumValidatorPublicKey);
 
 const bitcoinAddress = "16L5yRNPTuciSgXGHqYwn9N6NeoKqopAu";
 const evmAddress = "0x52908400098527886e0f7030069857d2e4169ee7";
@@ -24,36 +24,34 @@ const validatorPublicKey =
 const transactionHash = "0xabababababababababababababababababababababababababababababababab";
 
 describe("blockchain redacted schemas", () => {
-  it("decode canonical blockchain identifiers into redacted values", () => {
-    const walletAddress = decodeCryptoWalletAddressRedactedSync(bitcoinAddress);
-    const decodedEvmAddress = decodeEvmAddressRedactedSync(evmAddress);
-    const decodedValidatorPublicKey = decodeEthereumValidatorPublicKeyRedactedSync(validatorPublicKey);
-    const decodedTransactionHash = decodeCryptoTxnHashRedactedSync(transactionHash);
+  it.effect(
+    "decode canonical blockchain identifiers into redacted values",
+    Effect.fnUntraced(function* () {
+      const walletAddress = yield* decodeCryptoWalletAddressRedactedEffect(bitcoinAddress);
+      const decodedEvmAddress = yield* decodeEvmAddressRedactedEffect(evmAddress);
+      const decodedValidatorPublicKey = yield* decodeEthereumValidatorPublicKeyRedactedEffect(validatorPublicKey);
+      const decodedTransactionHash = yield* decodeCryptoTxnHashRedactedEffect(transactionHash);
 
-    expect(String(walletAddress)).toBe("<redacted>");
-    expect(String(decodedEvmAddress)).toBe("<redacted>");
-    expect(String(decodedValidatorPublicKey)).toBe("<redacted>");
-    expect(String(decodedTransactionHash)).toBe("<redacted>");
-    expect(Redacted.value(walletAddress)).toBe(bitcoinAddress);
-    expect(Redacted.value(decodedEvmAddress)).toBe(evmAddress);
-    expect(Redacted.value(decodedValidatorPublicKey)).toBe(validatorPublicKey);
-    expect(Redacted.value(decodedTransactionHash)).toBe(transactionHash);
-  });
+      expect(String(walletAddress)).toBe("<redacted>");
+      expect(String(decodedEvmAddress)).toBe("<redacted>");
+      expect(String(decodedValidatorPublicKey)).toBe("<redacted>");
+      expect(String(decodedTransactionHash)).toBe("<redacted>");
+      expect(Redacted.value(walletAddress)).toBe(bitcoinAddress);
+      expect(Redacted.value(decodedEvmAddress)).toBe(evmAddress);
+      expect(Redacted.value(decodedValidatorPublicKey)).toBe(validatorPublicKey);
+      expect(Redacted.value(decodedTransactionHash)).toBe(transactionHash);
+    })
+  );
   const validatorPublicKeyArbitrary = Arbitrary.schema(EthereumValidatorPublicKey);
 
-  it("derives valid validator public keys from the source schema and round-trips", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([validatorPublicKeyArbitrary]),
-          ([value]) => {
-            expect(decodeUnknownEthereumValidatorPublicKeySync(value)).toBe(value);
+  it.effect.prop(
+    "derives valid validator public keys from the source schema and round-trips",
+    [validatorPublicKeyArbitrary],
+    Effect.fnUntraced(function* ([value]) {
+      expect(yield* decodeUnknownEthereumValidatorPublicKeyEffect(value)).toBe(value);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 });

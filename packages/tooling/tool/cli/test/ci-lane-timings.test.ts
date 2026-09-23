@@ -27,9 +27,12 @@ import {
 } from "@beep/repo-cli/commands/Ci";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, Exit, Fiber, Layer, pipe, Sink, Stream } from "effect";
+import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
@@ -143,6 +146,7 @@ const forkCollect = Effect.fn("TestCiLaneTimings.forkCollect")(
   (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) =>
     collectCiLaneTimings(".", 1).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      Effect.provideService(Crypto.Crypto, NodeCrypto.make),
       Effect.exit,
       Effect.forkChild
     )
@@ -168,7 +172,10 @@ const SECONDARY_RATE_LIMIT: ScriptedGhExit = {
   output: "gh: You have exceeded a secondary rate limit. Please wait a few minutes before you try again. (HTTP 403)",
 };
 
-const laneTimingsSpawnerLayer = Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner);
+const laneTimingsSpawnerLayer = Layer.mergeAll(
+  BunCrypto.layer,
+  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner)
+);
 
 const REQUIRED_CONTEXTS = [
   "Heavy / Check",

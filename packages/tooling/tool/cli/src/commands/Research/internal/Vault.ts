@@ -10,8 +10,9 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { Config, Effect, FileSystem, Path } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -135,7 +136,16 @@ export const normalizeUrl = (rawUrl: string): Effect.Effect<string, ResearchComm
  * @returns Hex-encoded SHA-256 digest.
  * @category utilities
  */
-export const sha256HexOf = (content: string): string => createHash("sha256").update(content, "utf8").digest("hex");
+export const sha256HexOf = Effect.fn("ResearchVault.sha256HexOf")(function* (
+  content: string
+): Effect.fn.Return<string, ResearchCommandError, Crypto.Crypto> {
+  const crypto = yield* Crypto.Crypto;
+  return Encoding.encodeHex(
+    yield* crypto
+      .digest("SHA-256", new TextEncoder().encode(content))
+      .pipe(ResearchCommandError.mapError("Failed hashing UTF-8 content."))
+  );
+});
 
 /**
  * Build a filesystem slug from a card title and its normalized URL: kebab-case
@@ -148,17 +158,17 @@ export const sha256HexOf = (content: string): string => createHash("sha256").upd
  * @returns Filesystem-safe card slug.
  * @category utilities
  */
-export const slugFor: {
-  (urlNorm: string): (title: string) => string;
-  (title: string, urlNorm: string): string;
-} = dual(2, (title: string, urlNorm: string): string => {
+export const slugFor = Effect.fn("ResearchVault.slugFor")(function* (
+  title: string,
+  urlNorm: string
+): Effect.fn.Return<string, ResearchCommandError, Crypto.Crypto> {
   const base = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 60)
     .replace(/-+$/, "");
-  const suffix = sha256HexOf(urlNorm).slice(0, 8);
+  const suffix = (yield* sha256HexOf(urlNorm)).slice(0, 8);
   return Str.isEmpty(base) ? suffix : `${base}--${suffix}`;
 });
 

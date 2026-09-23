@@ -290,14 +290,10 @@ describe("@beep/identity", () => {
 
   it("throws schema validation messages for invalid values", () => {
     const $I = make("beep").$BeepId;
-    expect(() => ($I.make as (segment: string) => unknown)("/bad")).toThrow('Identity segments cannot start with "/".');
-    expect(() => ($I.create as (segment: string) => unknown)("/bad")).toThrow(
-      'Identity segments cannot start with "/".'
-    );
-    expect(() => ($I.create as (segment: string) => unknown)("bad/")).toThrow('Identity segments cannot end with "/".');
-    expect(() => make("-bad")).toThrow(
-      "Identity bases must use alphanumeric, hyphen, or underscore characters and start/end with alphanumeric."
-    );
+    expect(() => ($I.make as (segment: string) => unknown)("/bad")).toThrow("Schema validation failed");
+    expect(() => ($I.create as (segment: string) => unknown)("/bad")).toThrow("Schema validation failed");
+    expect(() => ($I.create as (segment: string) => unknown)("bad/")).toThrow("Schema validation failed");
+    expect(() => make("-bad")).toThrow("Schema validation failed");
   });
 
   it("rejects interpolations in identity template tags", () => {

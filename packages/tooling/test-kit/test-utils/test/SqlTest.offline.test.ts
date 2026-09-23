@@ -296,4 +296,33 @@ describe("SqlTest offline coverage", () => {
       }
     })
   );
+
+  it.effect("maps an unparsable external PostgreSQL connection URI", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        Effect.void.pipe(
+          provideScopedLayer(
+            makeSqlTestLayer({
+              config: {
+                connectionUri: "postgres://postgres@[offline]:5432/offline",
+                isolation: "none",
+              },
+              driver: PgExternalTestDriver,
+            })
+          )
+        )
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        const failure = Cause.squash(exit.cause);
+        expect(SqlTestHarnessError.is(failure)).toBe(true);
+        if (SqlTestHarnessError.is(failure)) {
+          expect(failure.driver).toBe("pg-external");
+          expect(failure.phase).toBe("provision");
+          expect(failure.message).toContain("Invalid external PostgreSQL connection URI.");
+        }
+      }
+    })
+  );
 });

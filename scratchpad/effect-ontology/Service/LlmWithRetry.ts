@@ -1,3 +1,4 @@
+import type * as Crypto from "effect/Crypto";
 /**
  * Service: LLM with Retry
  *
@@ -26,6 +27,7 @@ import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
 import { recordProviderAttempt, recordProviderUsage } from "../Telemetry/ExtractionTelemetry.ts";
 import { annotateError, annotateLlmCall, annotateRetry, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
+import type { HashingError } from "../Utils/Hash.ts";
 import { sha256Sync } from "../Utils/Hash.ts";
 import { makeCachedPromptFromStructured } from "./PromptCache.ts";
 import type { RetryPolicyInput } from "./Retry.ts";
@@ -94,8 +96,8 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
   options: GenerateObjectWithRetryOptions<StructuredOutputSchema>
 ): Effect.fn.Return<
   LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"], "opaque">,
-  AiError.AiError | Cause.TimeoutError | S.SchemaError,
-  LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"]
+  AiError.AiError | Cause.TimeoutError | S.SchemaError | HashingError,
+  LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"] | Crypto.Crypto
 > {
   const {
     annotateSuccess,
@@ -123,7 +125,7 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
 
   const attemptCount = yield* Ref.make(0);
   const schemaJson = yield* schema.pipe(S.toJsonSchemaDocument, UnknownFromJsonString.encodeUnknownEffect);
-  const schemaHash = sha256Sync(schemaJson);
+  const schemaHash = yield* sha256Sync(schemaJson);
 
   const attempt = recordProviderAttempt.pipe(
     Effect.andThen(Ref.update(attemptCount, (count) => count + 1)),

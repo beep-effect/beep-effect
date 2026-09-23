@@ -30,7 +30,7 @@ const decodeMiddleware = S.decodeUnknownEffect(Middleware);
 const decodeLoggingConfig = S.decodeUnknownEffect(LoggingConfig);
 const decodeSassOptions = S.decodeUnknownEffect(SassOptions);
 
-const exit = <A, E>(effect: Effect.Effect<A, E>) => Effect.runPromise(Effect.exit(effect));
+const exit = <A, E>(effect: Effect.Effect<A, E>) => Effect.runPromiseExit(effect);
 
 const expectRoundTrip = <Schema extends S.Top & S.ConstraintEncoder<unknown> & S.ConstraintDecoder<unknown>>(
   schema: Schema,

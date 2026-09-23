@@ -29,7 +29,7 @@ import type { DmsProvider } from "@beep/documents-domain/values/Sync";
 import type { SyncCursorSeed } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
-const decodeSyncCursor = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
+const decodeSyncCursor = S.decodeUnknownEffect(DomainSyncCursor.SyncCursor);
 
 /**
  * Build a full SyncCursor entity from an upsert seed and an assigned id.
@@ -38,7 +38,7 @@ const decodeSyncCursor = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
-const syncCursorFromSeed = (id: number, seed: SyncCursorSeed): DomainSyncCursor.SyncCursor =>
+const syncCursorFromSeed = Effect.fn("Documents.SyncCursorRepository.fromSeed")((id: number, seed: SyncCursorSeed) =>
   decodeSyncCursor({
     createdAt: 0,
     createdByPrincipal: SYSTEM_PRINCIPAL,
@@ -57,7 +57,8 @@ const syncCursorFromSeed = (id: number, seed: SyncCursorSeed): DomainSyncCursor.
     updatedAt: 0,
     updatedByPrincipal: SYSTEM_PRINCIPAL,
     workspaceId: seed.workspaceId,
-  });
+  }).pipe(repositoryUnavailable("construct SyncCursor"))
+);
 
 /**
  * Apply the seed's mutable cursor fields onto an existing cursor row.
@@ -122,7 +123,7 @@ export const makeInMemorySyncCursorRepository = Effect.fn("Documents.SyncCursorR
         return replaced;
       }
       const id = yield* Ref.getAndUpdate(counter, N.increment);
-      const cursor = syncCursorFromSeed(id, seed);
+      const cursor = yield* syncCursorFromSeed(id, seed);
       yield* Ref.update(store, HashMap.set(cursor.id, cursor));
       return cursor;
     }),
@@ -172,7 +173,14 @@ export const makeDrizzleSyncCursorRepository = Effect.fn("Documents.SyncCursorRe
       .where(and(eq(syncCursorTable.workspaceId, input.workspaceId), eq(syncCursorTable.provider, input.provider)))
       .limit(1)
       .pipe(repositoryUnavailable("select SyncCursor"));
-    return pipe(rows, A.head, O.map(fromSyncCursorRow));
+    return yield* pipe(
+      A.head(rows),
+      O.match({
+        onNone: () => Effect.succeedNone,
+        onSome: (row) =>
+          Effect.fromResult(fromSyncCursorRow(row)).pipe(repositoryUnavailable("decode SyncCursor"), Effect.asSome),
+      })
+    );
   });
 
   return SyncCursorRepository.of({
@@ -183,31 +191,39 @@ export const makeDrizzleSyncCursorRepository = Effect.fn("Documents.SyncCursorRe
       const existing = yield* findRow(seed);
       if (O.isSome(existing)) {
         const replaced = replaceCursorFields(existing.value, seed);
+        const insert = yield* Effect.fromResult(toSyncCursorInsert(replaced)).pipe(
+          repositoryUnavailable("encode SyncCursor insert")
+        );
         const rows = yield* db
           .update(syncCursorTable)
-          .set(toSyncCursorInsert(replaced))
+          .set(insert)
           .where(eq(syncCursorTable.id, replaced.id))
           .returning()
           .pipe(repositoryUnavailable("update SyncCursor"));
-        return pipe(
-          rows,
-          A.head,
-          O.map(fromSyncCursorRow),
-          O.getOrElse(() => replaced)
+        return yield* pipe(
+          A.head(rows),
+          O.match({
+            onNone: () => Effect.succeed(replaced),
+            onSome: (row) => Effect.fromResult(fromSyncCursorRow(row)).pipe(repositoryUnavailable("decode SyncCursor")),
+          })
         );
       }
       const currentRows = yield* db.select().from(syncCursorTable).pipe(repositoryUnavailable("list SyncCursor"));
-      const cursor = syncCursorFromSeed(nextEntityId(currentRows), seed);
+      const cursor = yield* syncCursorFromSeed(nextEntityId(currentRows), seed);
+      const insert = yield* Effect.fromResult(toSyncCursorInsert(cursor)).pipe(
+        repositoryUnavailable("encode SyncCursor insert")
+      );
       const rows = yield* db
         .insert(syncCursorTable)
-        .values(toSyncCursorInsert(cursor))
+        .values(insert)
         .returning()
         .pipe(repositoryUnavailable("insert SyncCursor"));
-      return pipe(
-        rows,
-        A.head,
-        O.map(fromSyncCursorRow),
-        O.getOrElse(() => cursor)
+      return yield* pipe(
+        A.head(rows),
+        O.match({
+          onNone: () => Effect.succeed(cursor),
+          onSome: (row) => Effect.fromResult(fromSyncCursorRow(row)).pipe(repositoryUnavailable("decode SyncCursor")),
+        })
       );
     }),
   });

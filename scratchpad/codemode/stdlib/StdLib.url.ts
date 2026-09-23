@@ -152,12 +152,10 @@ export const uriArgument: {
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeUriFunction = (
-  ref: UriFunction,
-  args: Array<unknown>,
-  node: AstNode
-): Result.Result<string, InterpreterFailure> => {
+export const invokeUriFunction: {
+  (args: Array<unknown>, node: AstNode): (ref: UriFunction) => Result.Result<string, InterpreterFailure>;
+  (ref: UriFunction, args: Array<unknown>, node: AstNode): Result.Result<string, InterpreterFailure>;
+} = dual(3, (ref: UriFunction, args: Array<unknown>, node: AstNode): Result.Result<string, InterpreterFailure> => {
   const value = Result.try({
     try: () => uriArgument(args[0], `${ref.name} input`),
     catch: (error) =>
@@ -181,7 +179,7 @@ export const invokeUriFunction = (
         ).as("URIError"),
     })
   );
-};
+});
 
 /**
  * Accepts a {@link CodeModeURL} by `href` or otherwise stringifies through
@@ -239,8 +237,10 @@ export const urlArgument: {
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeURLStatic = (name: UrlStatic, args: Array<unknown>, node: AstNode): unknown => {
+export const invokeURLStatic: {
+  (args: Array<unknown>, node: AstNode): (name: UrlStatic) => unknown;
+  (name: UrlStatic, args: Array<unknown>, node: AstNode): unknown;
+} = dual(3, (name: UrlStatic, args: Array<unknown>, node: AstNode): unknown => {
   if (A.isArrayEmpty(args))
     throw InterpreterRuntimeError.new(`URL.${name} requires a URL argument.`, node).as("TypeError");
   const input = urlArgument(args[0], `URL.${name} input`);
@@ -251,7 +251,7 @@ export const invokeURLStatic = (name: UrlStatic, args: Array<unknown>, node: Ast
   } catch {
     return UrlStatic.is.canParse(name) ? false : null;
   }
-};
+});
 
 /**
  * Returns `value.url.href` for both `toString` and `toJSON`.
@@ -279,5 +279,7 @@ export const invokeURLStatic = (name: UrlStatic, args: Array<unknown>, node: Ast
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeURLMethod = (value: CodeModeURL, _name: UrlMethod, _node: AstNode): string => value.url.href;
+export const invokeURLMethod: {
+  (_name: UrlMethod, _node: AstNode): (value: CodeModeURL) => string;
+  (value: CodeModeURL, _name: UrlMethod, _node: AstNode): string;
+} = dual(3, (value: CodeModeURL, _name: UrlMethod, _node: AstNode): string => value.url.href);

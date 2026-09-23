@@ -1,4 +1,3 @@
-import { createHash, randomUUID } from "node:crypto";
 import { qualityCommand, renderAdmissionSnapshotLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
   AdmissionAttemptTerminationJournal,
@@ -72,7 +71,9 @@ import {
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { UUID } from "@beep/schema/String";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -93,6 +94,7 @@ import {
   Schedule,
 } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -121,19 +123,22 @@ const decodeLegacyAdmissionProtocol = S.decodeUnknownOption(
   )
 );
 
-const decodeAdmissionJournalEventJsonSync = S.decodeSync(S.fromJsonString(AdmissionJournalEvent));
-const encodeAdmissionJournalEventJsonSync = S.encodeSync(S.fromJsonString(AdmissionJournalEvent));
+const decodeAdmissionJournalEventJsonEffect = S.decodeEffect(S.fromJsonString(AdmissionJournalEvent));
+const encodeAdmissionJournalEventJsonEffect = S.encodeEffect(S.fromJsonString(AdmissionJournalEvent));
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
+  Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 const SchedulerCommandLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
 const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
 
 const DEAD_PID = 2_147_483_647;
-const JOURNALED_ATTEMPT_ID = S.decodeSync(UUID)("550e8400-e29b-41d4-a716-446655440020");
-const reapClaimPath = (lockPath: string, observedToken: string): string =>
-  `${lockPath}.reap-${createHash("sha256").update(observedToken).digest("hex")}`;
+const JOURNALED_ATTEMPT_ID = UUID.make("550e8400-e29b-41d4-a716-446655440020");
+const reapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedToken: string) {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(observedToken));
+  return `${lockPath}.reap-${Encoding.encodeHex(digest)}`;
+});
 const reapAdopterPath = (
   claimPath: string,
   generation: Pick<AdmissionJournalLockGeneration, "ownerToken" | "pid" | "procStart">,
@@ -749,7 +754,11 @@ describe("quality-scheduler", () => {
 
       expect(yield* stats.availableGib).toBeGreaterThan(0);
       expect(yield* stats.totalGib).toBeGreaterThan(0);
-    }).pipe(provideScopedLayer(MemoryStatsLive), provideScopedLayer(NodeFileSystem.layer))
+    }).pipe(
+      provideScopedLayer(MemoryStatsLive),
+      provideScopedLayer(NodeFileSystem.layer),
+      provideScopedLayer(NodeCrypto.layer)
+    )
   );
 
   it.effect("preserves an existing file when exclusive publication collides", () =>
@@ -762,7 +771,7 @@ describe("quality-scheduler", () => {
       expect(yield* tryCreateExclusiveForTesting(filePath, "replacement")).toBe(false);
       expect(yield* fs.readFileString(filePath)).toBe("original");
       expect(A.some(yield* fs.readDirectory(directory), Str.includes(".tmp-"))).toBe(false);
-    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+    }).pipe(provideScopedLayer(NodeFileSystem.layer), provideScopedLayer(NodeCrypto.layer))
   );
 
   it.effect("removes the staged temporary when an atomic write is interrupted mid-write", () =>
@@ -782,7 +791,7 @@ describe("quality-scheduler", () => {
       yield* Fiber.interrupt(writer);
 
       expect(yield* fs.readDirectory(directory)).toStrictEqual([]);
-    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+    }).pipe(provideScopedLayer(NodeFileSystem.layer), provideScopedLayer(NodeCrypto.layer))
   );
 
   it.effect("removes the staged temporary when an atomic write is interrupted before publication", () =>
@@ -802,7 +811,7 @@ describe("quality-scheduler", () => {
       yield* Fiber.interrupt(writer);
 
       expect(yield* fs.readDirectory(directory)).toStrictEqual([]);
-    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+    }).pipe(provideScopedLayer(NodeFileSystem.layer), provideScopedLayer(NodeCrypto.layer))
   );
 
   it.effect("removes the staged temporary when exclusive publication is interrupted before linking", () =>
@@ -823,7 +832,7 @@ describe("quality-scheduler", () => {
 
       expect(yield* fs.readDirectory(directory)).toStrictEqual(["existing"]);
       expect(yield* fs.readFileString(filePath)).toBe("original");
-    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+    }).pipe(provideScopedLayer(NodeFileSystem.layer), provideScopedLayer(NodeCrypto.layer))
   );
 
   it.effect("reports a staging temporary that survives its cleanup instead of hiding the refusal", () =>
@@ -848,7 +857,11 @@ describe("quality-scheduler", () => {
       expect(yield* fs.readFileString(filePath)).toBe("original");
       const errors = A.map(yield* TestConsole.errorLines, String);
       expect(A.some(errors, Str.includes("failed to remove admission staging file"))).toBe(true);
-    }).pipe(provideScopedLayer(TestConsole.layer), provideScopedLayer(NodeFileSystem.layer))
+    }).pipe(
+      provideScopedLayer(TestConsole.layer),
+      provideScopedLayer(NodeFileSystem.layer),
+      provideScopedLayer(NodeCrypto.layer)
+    )
   );
 
   it.effect("accepts an owner-agnostic private directory and rejects an unsafe mode", () =>
@@ -881,7 +894,7 @@ describe("quality-scheduler", () => {
       const failure = yield* validatePrivateCoordinationDirectory(directory, options).pipe(Effect.flip);
 
       expect(failure).toContain("expected 0700");
-    }).pipe(provideScopedLayer(NodeFileSystem.layer))
+    }).pipe(provideScopedLayer(NodeFileSystem.layer), provideScopedLayer(NodeCrypto.layer))
   );
 
   describe("capacity formula", () => {
@@ -1616,7 +1629,7 @@ describe("quality-scheduler", () => {
             const path = yield* Path.Path;
             const lockPath = path.join(tempRoot.root, "journal.lock");
             const observedToken = `${DEAD_PID}:abandoned-generation`;
-            const claimPath = `${lockPath}.reap-${createHash("sha256").update(observedToken).digest("hex")}`;
+            const claimPath = yield* reapClaimPath(lockPath, observedToken);
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
             yield* fs.writeFileString(lockPath, observedToken);
             yield* fs.link(lockPath, claimPath);
@@ -1806,7 +1819,7 @@ describe("quality-scheduler", () => {
             const path = yield* Path.Path;
             const lockPath = path.join(tempRoot.root, "completed-reap.lock");
             const observedToken = `${DEAD_PID}:completed-reap-generation`;
-            const claimPath = reapClaimPath(lockPath, observedToken);
+            const claimPath = yield* reapClaimPath(lockPath, observedToken);
             const adopterPath = `${claimPath}.adopt-direct`;
             yield* fs.makeDirectory(tempRoot.root, { recursive: true, mode: 0o700 });
             yield* fs.writeFileString(lockPath, observedToken);
@@ -2320,7 +2333,7 @@ describe("quality-scheduler", () => {
 
             const liveLockPath = path.join(tempRoot.root, "live-adopter.lock");
             const liveToken = `${DEAD_PID}:live-adopter-generation`;
-            const liveClaimPath = reapClaimPath(liveLockPath, liveToken);
+            const liveClaimPath = yield* reapClaimPath(liveLockPath, liveToken);
             const liveAdopterPath = reapAdopterPath(
               liveClaimPath,
               AdmissionJournalLockGeneration.make({
@@ -2338,7 +2351,7 @@ describe("quality-scheduler", () => {
 
             const legacyLockPath = path.join(tempRoot.root, "legacy-live-adopter.lock");
             const legacyToken = `${DEAD_PID}:legacy-live-adopter-generation`;
-            const legacyClaimPath = reapClaimPath(legacyLockPath, legacyToken);
+            const legacyClaimPath = yield* reapClaimPath(legacyLockPath, legacyToken);
             const legacyAdopterPath = `${legacyClaimPath}.adopt-${process.pid}.${Encoding.encodeBase64Url(procStart)}.${Encoding.encodeBase64Url(`${process.pid}:legacy-live-adopter`)}`;
             yield* fs.writeFileString(legacyLockPath, legacyToken);
             yield* fs.link(legacyLockPath, legacyAdopterPath);
@@ -2347,8 +2360,9 @@ describe("quality-scheduler", () => {
 
             const freshLockPath = path.join(tempRoot.root, "fresh-malformed-adopter.lock");
             const freshToken = `${DEAD_PID}:fresh-malformed-generation`;
+            const freshClaimPath = yield* reapClaimPath(freshLockPath, freshToken);
             yield* fs.writeFileString(freshLockPath, freshToken);
-            yield* fs.writeFileString(`${reapClaimPath(freshLockPath, freshToken)}.adopt-malformed`, freshToken);
+            yield* fs.writeFileString(`${freshClaimPath}.adopt-malformed`, freshToken);
             expect(yield* acquireJournalFileLock(freshLockPath, `${process.pid}:contender-fresh`, 1)).toBe(false);
             expect(yield* fs.exists(freshLockPath)).toBe(true);
 
@@ -2371,9 +2385,8 @@ describe("quality-scheduler", () => {
 
             const vanishedLockPath = path.join(tempRoot.root, "vanished-adopter.lock");
             const vanishedToken = `${DEAD_PID}:vanished-adopter-generation`;
-            const vanishedAdopterName = path.basename(
-              `${reapClaimPath(vanishedLockPath, vanishedToken)}.adopt-vanished`
-            );
+            const vanishedClaimPath = yield* reapClaimPath(vanishedLockPath, vanishedToken);
+            const vanishedAdopterName = path.basename(`${vanishedClaimPath}.adopt-vanished`);
             yield* fs.writeFileString(vanishedLockPath, vanishedToken);
             const vanishedFileSystem = FileSystem.FileSystem.of({
               ...fs,
@@ -2408,7 +2421,7 @@ describe("quality-scheduler", () => {
 
             const staleLiveLockPath = path.join(tempRoot.root, "stale-live-adopter.lock");
             const staleLiveToken = `${DEAD_PID}:stale-live-adopter-generation`;
-            const staleLiveClaimPath = reapClaimPath(staleLiveLockPath, staleLiveToken);
+            const staleLiveClaimPath = yield* reapClaimPath(staleLiveLockPath, staleLiveToken);
             const staleLiveAdopterPath = reapAdopterPath(
               staleLiveClaimPath,
               AdmissionJournalLockGeneration.make({
@@ -2428,7 +2441,8 @@ describe("quality-scheduler", () => {
 
             const staleLockPath = path.join(tempRoot.root, "stale-malformed-adopter.lock");
             const staleToken = `${DEAD_PID}:stale-malformed-generation`;
-            const staleAdopterPath = `${reapClaimPath(staleLockPath, staleToken)}.adopt-not-a-number.cHJvYzpzdGFydA.b3duZXI`;
+            const staleClaimPath = yield* reapClaimPath(staleLockPath, staleToken);
+            const staleAdopterPath = `${staleClaimPath}.adopt-not-a-number.cHJvYzpzdGFydA.b3duZXI`;
             yield* fs.writeFileString(staleLockPath, staleToken);
             yield* fs.link(staleLockPath, staleAdopterPath);
             yield* fs.utimes(staleAdopterPath, agedSeconds, agedSeconds);
@@ -2437,7 +2451,7 @@ describe("quality-scheduler", () => {
 
             const deadLockPath = path.join(tempRoot.root, "dead-adopter.lock");
             const deadToken = `${DEAD_PID}:dead-adopter-generation`;
-            const deadClaimPath = reapClaimPath(deadLockPath, deadToken);
+            const deadClaimPath = yield* reapClaimPath(deadLockPath, deadToken);
             const deadAdopterPath = reapAdopterPath(
               deadClaimPath,
               AdmissionJournalLockGeneration.make({
@@ -3023,24 +3037,25 @@ describe("quality-scheduler", () => {
             );
             const ownIdentity = O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "");
             expect(ownIdentity).not.toBe("");
+            const crypto = yield* Crypto.Crypto;
             // Legacy names carry only the writer pid; identity-bearing names
             // add the hex-encoded process start so a reused pid cannot shield
             // an orphan the way it cannot shield a dead lease.
             const staleLegacy = path.join(
               tempRoot.leases,
-              `nonce-${DEAD_PID}.lease.json.tmp-${DEAD_PID}-${randomUUID()}`
+              `nonce-${DEAD_PID}.lease.json.tmp-${DEAD_PID}-${yield* crypto.randomUUIDv4}`
             );
             const liveLegacy = path.join(
               tempRoot.queue,
-              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${randomUUID()}`
+              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${yield* crypto.randomUUIDv4}`
             );
             const reusedPid = path.join(
               tempRoot.leases,
-              `nonce-${process.pid}.lease.json.tmp-${process.pid}-${Encoding.encodeHex("proc:1")}-${randomUUID()}`
+              `nonce-${process.pid}.lease.json.tmp-${process.pid}-${Encoding.encodeHex("proc:1")}-${yield* crypto.randomUUIDv4}`
             );
             const current = path.join(
               tempRoot.queue,
-              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Encoding.encodeHex(ownIdentity)}-${randomUUID()}`
+              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Encoding.encodeHex(ownIdentity)}-${yield* crypto.randomUUIDv4}`
             );
             yield* Effect.forEach([staleLegacy, liveLegacy, reusedPid, current], (file) =>
               fs.writeFileString(file, "")
@@ -3063,28 +3078,23 @@ describe("quality-scheduler", () => {
       })
     ));
 
-  it("property: admission journal events round-trip through the NDJSON codec", () => {
+  {
     const EventArbitrary = Arbitrary.schema(AdmissionJournalEvent);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([EventArbitrary]),
-          ([event]) => {
-            const encoded = encodeAdmissionJournalEventJsonSync(event);
-            const decoded = decodeAdmissionJournalEventJsonSync(encoded);
-            expect(decoded._tag).toBe(event._tag);
-            expect(decoded.nonce).toBe(event.nonce);
-            // JSON drops the sign of -0, so the codec law is encode-stability
-            // rather than Object.is identity on numeric fields.
-            expect(encodeAdmissionJournalEventJsonSync(decoded)).toBe(encoded);
-
-            return true;
-          },
-          fcRuns(32)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+    it.effect.prop(
+      "property: admission journal events round-trip through the NDJSON codec",
+      [EventArbitrary],
+      Effect.fnUntraced(function* ([event]) {
+        const encoded = yield* encodeAdmissionJournalEventJsonEffect(event);
+        const decoded = yield* decodeAdmissionJournalEventJsonEffect(encoded);
+        expect(decoded._tag).toBe(event._tag);
+        expect(decoded.nonce).toBe(event.nonce);
+        // JSON drops the sign of -0, so the codec law is encode-stability
+        // rather than Object.is identity on numeric fields.
+        expect(yield* encodeAdmissionJournalEventJsonEffect(decoded)).toBe(encoded);
+      }),
+      { arbitrary: fcRuns(32) }
+    );
+  }
 
   it("queues while tokens are held and admits when the holder releases", () =>
     Effect.runPromise(

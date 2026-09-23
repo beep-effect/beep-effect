@@ -1,3 +1,5 @@
+import * as Crypto from "effect/Crypto";
+import { flow } from "effect/Function";
 /**
  * Runtime: HTTP Middleware
  *
@@ -19,7 +21,7 @@ import * as Str from "effect/String";
 import { HttpMiddleware, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { ConflictActor } from "../Domain/Schema/Timeline.ts";
 import { ConfigService } from "../Service/Config.ts";
-import { sha256 } from "../Utils/Hash.ts";
+import { sha256 as sha256Effect } from "../Utils/Hash.ts";
 import { ShutdownService } from "./Shutdown.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/HttpMiddleware");
@@ -112,6 +114,8 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
  * @since 0.0.0
  */
 export const makeAuthMiddleware = Effect.gen(function* () {
+  const crypto = yield* Crypto.Crypto;
+  const sha256 = flow(sha256Effect, Effect.provideService(Crypto.Crypto, crypto));
   const config = yield* ConfigService;
 
   // Skip auth if not required

@@ -3455,7 +3455,7 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
     description: "Root Markdown document AST.",
   })
 ) {
-  static readonly encodeSync = S.encodeSync(Document);
+  static readonly encodeEffect = S.encodeEffect(Document);
 
   static readonly toPlainText = (document: Document): string => Block.toPlainTextAll(document.children);
 

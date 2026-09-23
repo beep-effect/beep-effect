@@ -30,9 +30,8 @@ const XAiWebSocketCloseCode = S.Int.check(S.isBetween({ minimum: 1000, maximum: 
  *
  * ```ts
  * import { XAiHttpStatusCode } from "@beep/xai"
- * import * as S from "effect/Schema"
  *
- * const status = S.decodeUnknownSync(XAiHttpStatusCode)(200)
+ * const status = XAiHttpStatusCode.make(200)
  * console.log(status)
  * ```
  *
@@ -401,9 +400,12 @@ const XAiWebSocketEventKindBase = LiteralKit(["close", "error", "message"]);
  *
  * ```ts
  * import { XAiWebSocketEventKind } from "@beep/xai"
+ * import * as Effect from "effect/Effect"
  *
- * const kind = XAiWebSocketEventKind.fromUnknown("message")
- * console.log(kind)
+ * const program = Effect.gen(function* () {
+ *   const kind = yield* XAiWebSocketEventKind.fromUnknown("message")
+ *   console.log(kind) // "message"
+ * })
  * ```
  *
  * @category schemas
@@ -415,7 +417,7 @@ export const XAiWebSocketEventKind = XAiWebSocketEventKindBase.pipe(
   }),
   SchemaUtils.withStatics((schema) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
   })),
   SchemaUtils.withLiteralKitStatics(XAiWebSocketEventKindBase)
 );

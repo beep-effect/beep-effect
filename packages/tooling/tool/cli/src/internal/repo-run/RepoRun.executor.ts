@@ -11,6 +11,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
 import { commandTextForStep, RepoStepRunResult } from "./RepoRun.models.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoPlanStep } from "./RepoRun.models.ts";
 
@@ -26,7 +27,7 @@ const runRepoCommand = (
   cwd: string,
   env: Record<string, string | undefined> | undefined,
   tee: boolean
-): Effect.Effect<RepoCommandOutput, DomainError, ChildProcessSpawner.ChildProcessSpawner> => {
+): Effect.Effect<RepoCommandOutput, DomainError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> => {
   const commandText = A.join([command, ...args], " ");
   return runCaptured({
     command,
@@ -48,7 +49,7 @@ const makeRepoCommandCapture = (identifier: string, tee: boolean) =>
     args: ReadonlyArray<string>,
     cwd: string,
     env: Record<string, string | undefined> | undefined = undefined
-  ): Effect.fn.Return<RepoCommandOutput, DomainError, ChildProcessSpawner.ChildProcessSpawner> {
+  ): Effect.fn.Return<RepoCommandOutput, DomainError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
     return yield* runRepoCommand(command, args, cwd, env, tee);
   });
 
@@ -123,7 +124,7 @@ const makeRepoPlanStepExecutor = (identifier: string, capture: typeof runRepoCom
   ): Effect.fn.Return<
     RepoStepRunResult,
     DomainError,
-    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
   > {
     const commandText = commandTextForStep(step);
     yield* Console.log(`[repo-run] ${step.label}: ${commandText}`);

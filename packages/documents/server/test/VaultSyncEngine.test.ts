@@ -105,8 +105,7 @@ const ProcfsUnavailableMissingInodeSyncEngineTestLayer = DocumentsSyncFixtureLiv
   Layer.provideMerge(BunPath.layer)
 );
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(7);
-const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(7);
 const encodeText = (text: string) => new TextEncoder().encode(text);
 const digestOf = (text: string) => DocumentContentDigest.make(bytesToHex(sha256(encodeText(text))));
 const syncInput = (vaultRootPath: string) => SyncOnceInput.make({ vaultRootPath, workspaceId });
@@ -150,7 +149,7 @@ const rootFileSeed = (relPath: string, contents: string) =>
     contentSizeBytes: O.some(NonNegativeInt.make(encodeText(contents).byteLength)),
     itemKind: "file",
     localGeneration: NonNegativeInt.make(1),
-    localRelPath: decodeVaultRelPath(relPath),
+    localRelPath: VaultRelPath.make(relPath),
     provider: "box",
     syncState: "pending",
     workspaceId,
@@ -172,7 +171,7 @@ const rootUploadSeed = (
     status,
     syncItemId,
     targetName: relPath,
-    targetRelPath: decodeVaultRelPath(relPath),
+    targetRelPath: VaultRelPath.make(relPath),
     workspaceId,
   });
 
@@ -415,7 +414,7 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       const counts = yield* handle.counts;
       const failed = yield* listOperationsByStatus("failed");
       const tracked = yield* itemRepository.findByPath(
-        FindSyncItemByPathInput.make({ localRelPath: decodeVaultRelPath("doomed.txt"), provider: "box", workspaceId })
+        FindSyncItemByPathInput.make({ localRelPath: VaultRelPath.make("doomed.txt"), provider: "box", workspaceId })
       );
 
       expect(counts.uploadFile).toBe(1);
@@ -495,7 +494,7 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       const tree = yield* handle.snapshotTree;
       const succeeded = yield* listOperationsByStatus("succeeded");
       const tracked = yield* itemRepository.findByPath(
-        FindSyncItemByPathInput.make({ localRelPath: decodeVaultRelPath("orphan.txt"), provider: "box", workspaceId })
+        FindSyncItemByPathInput.make({ localRelPath: VaultRelPath.make("orphan.txt"), provider: "box", workspaceId })
       );
 
       expect(counts.uploadFile).toBe(1);

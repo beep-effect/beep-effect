@@ -12,6 +12,7 @@ import {
   yeetCheckRegistration,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -262,7 +263,7 @@ const withTempDirectory = Effect.fn("withTempDirectory")(function* <Value, Failu
   );
 });
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 describe("the monitor phase check watch", () => {
   it.live("completes when the watch finds registered checks and they pass", () =>

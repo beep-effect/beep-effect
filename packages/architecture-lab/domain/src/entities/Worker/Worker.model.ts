@@ -28,15 +28,22 @@ const pg = ProductEntity.pg;
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
- * const worker: Worker = create(
+ * const decoded = create(
  *   CreateWorkerInput.make({
  *     id: S.decodeUnknownSync(WorkerId)(1),
  *     organizationId: S.decodeUnknownSync(WorkerOrganizationId)(1),
  *     displayName: "Ada Lovelace"
  *   })
  * )
+ *
+ * if (Result.isFailure(decoded)) {
+ *   throw new Error("expected active Worker entity")
+ * }
+ *
+ * const worker: Worker = decoded.success
  *
  * if (worker.entityType !== WorkerId.entityType || worker.status !== "active") {
  *   throw new Error("expected active Worker entity")
@@ -60,5 +67,5 @@ export class Worker extends ProductEntity.Entity<Worker>()(WorkerId)(
     description: "Canonical architecture lab persisted entity used to prove entity archetype generation.",
   })
 ) {
-  static readonly fromUnknown = S.decodeUnknownSync(Worker);
+  static readonly fromUnknown = S.decodeUnknownResult(Worker);
 }

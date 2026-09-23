@@ -7,6 +7,7 @@
  */
 
 import { LiteralKit } from "@beep/schema";
+import { dual } from "effect/Function";
 import { O, pipe } from "@beep/utils";
 import { DateTime } from "effect";
 import * as S from "effect/Schema";
@@ -18,7 +19,7 @@ import {
   dateMethods,
   dateStatics,
 } from "../Codemode.method-names.ts";
-import type { CodeModeDate } from "../Codemode.values.ts";
+import { CodeModeDate } from "../Codemode.values.ts";
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts";
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts";
 const isDateSetterName = S.is(DateSetterName);
@@ -57,8 +58,10 @@ type DirectDateStatic = Exclude<DateStatic, "now">;
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeDateStatic = (name: DirectDateStatic, args: Array<unknown>, _node: AstNode): number =>
+export const invokeDateStatic: {
+  (args: Array<unknown>, _node: AstNode): (name: DirectDateStatic) => number;
+  (name: DirectDateStatic, args: Array<unknown>, _node: AstNode): number;
+} = dual(3, (name: DirectDateStatic, args: Array<unknown>, _node: AstNode): number =>
   DirectDateStatic.$match(name, {
     parse: () =>
       pipe(
@@ -66,7 +69,8 @@ export const invokeDateStatic = (name: DirectDateStatic, args: Array<unknown>, _
         O.match({ onNone: () => Number.NaN, onSome: DateTime.toEpochMillis })
       ),
     UTC: () => Reflect.apply(Date.UTC, Date, args.map(coerceToNumber)),
-  });
+  })
+);
 
 /**
  * Returns how many numeric arguments a Date setter consumes, when the method is
@@ -120,107 +124,107 @@ export const dateSetterArgumentCount = (name: DateMethod): O.Option<1 | 2 | 3 | 
  * @category interop
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Guest intrinsic dispatch uses co-primary receiver/name/arguments/AST context; a data-last overload would misstate the protocol.
-export const invokeDateMethod = (
-  value: CodeModeDate,
-  name: DateMethod,
-  args: Array<number>,
-  node: AstNode,
-  initialTime = value.time
-): unknown => {
-  const hosted = DateTime.make(initialTime).pipe(
-    O.match({
-      onNone: () => {
-        const invalid = DateTime.makeUnsafe(0).pipe(DateTime.toDate);
-        invalid.setTime(Number.NaN);
-        return invalid;
+export const invokeDateMethod: {
+  (name: DateMethod, args: Array<number>, node: AstNode, initialTime?: number): (value: CodeModeDate) => unknown;
+  (value: CodeModeDate, name: DateMethod, args: Array<number>, node: AstNode, initialTime?: number): unknown;
+} = dual(
+  (args) => CodeModeDate.is(args[0]),
+  (value: CodeModeDate, name: DateMethod, args: Array<number>, node: AstNode, initialTime = value.time): unknown => {
+    const hosted = DateTime.make(initialTime).pipe(
+      O.match({
+        onNone: () => {
+          const invalid = DateTime.makeUnsafe(0).pipe(DateTime.toDate);
+          invalid.setTime(Number.NaN);
+          return invalid;
+        },
+        onSome: DateTime.toDate,
+      })
+    );
+    return dateMethods.$match(name, {
+      getTime: () => value.time,
+      valueOf: () => value.time,
+      toISOString: () => {
+        if (!Number.isFinite(value.time))
+          throw InterpreterRuntimeError.new("Invalid time value.", node).as("RangeError");
+        return hosted.toISOString();
       },
-      onSome: DateTime.toDate,
-    })
-  );
-  return dateMethods.$match(name, {
-    getTime: () => value.time,
-    valueOf: () => value.time,
-    toISOString: () => {
-      if (!Number.isFinite(value.time)) throw InterpreterRuntimeError.new("Invalid time value.", node).as("RangeError");
-      return hosted.toISOString();
-    },
-    toJSON: () => (Number.isFinite(value.time) ? hosted.toISOString() : null),
-    toString: () => coerceToString(value),
-    toUTCString: () => hosted.toUTCString(),
-    toGMTString: () => hosted.toUTCString(),
-    getFullYear: () => hosted.getFullYear(),
-    getMonth: () => hosted.getMonth(),
-    getDate: () => hosted.getDate(),
-    getDay: () => hosted.getDay(),
-    getHours: () => hosted.getHours(),
-    getMinutes: () => hosted.getMinutes(),
-    getSeconds: () => hosted.getSeconds(),
-    getMilliseconds: () => hosted.getMilliseconds(),
-    getUTCFullYear: () => hosted.getUTCFullYear(),
-    getUTCMonth: () => hosted.getUTCMonth(),
-    getUTCDate: () => hosted.getUTCDate(),
-    getUTCDay: () => hosted.getUTCDay(),
-    getUTCHours: () => hosted.getUTCHours(),
-    getUTCMinutes: () => hosted.getUTCMinutes(),
-    getUTCSeconds: () => hosted.getUTCSeconds(),
-    getUTCMilliseconds: () => hosted.getUTCMilliseconds(),
-    getTimezoneOffset: () => hosted.getTimezoneOffset(),
-    setTime: () => updateDate(value, hosted.setTime(args[0])),
-    setMilliseconds: () => updateDate(value, hosted.setMilliseconds(args[0])),
-    setUTCMilliseconds: () => updateDate(value, hosted.setUTCMilliseconds(args[0])),
-    setSeconds: () => {
-      if (args.length < 2) return updateDate(value, hosted.setSeconds(args[0]));
-      return updateDate(value, hosted.setSeconds(args[0], args[1]));
-    },
-    setUTCSeconds: () => {
-      if (args.length < 2) return updateDate(value, hosted.setUTCSeconds(args[0]));
-      return updateDate(value, hosted.setUTCSeconds(args[0], args[1]));
-    },
-    setMinutes: () => {
-      if (args.length < 2) return updateDate(value, hosted.setMinutes(args[0]));
-      if (args.length < 3) return updateDate(value, hosted.setMinutes(args[0], args[1]));
-      return updateDate(value, hosted.setMinutes(args[0], args[1], args[2]));
-    },
-    setUTCMinutes: () => {
-      if (args.length < 2) return updateDate(value, hosted.setUTCMinutes(args[0]));
-      if (args.length < 3) return updateDate(value, hosted.setUTCMinutes(args[0], args[1]));
-      return updateDate(value, hosted.setUTCMinutes(args[0], args[1], args[2]));
-    },
-    setHours: () => {
-      if (args.length < 2) return updateDate(value, hosted.setHours(args[0]));
-      if (args.length < 3) return updateDate(value, hosted.setHours(args[0], args[1]));
-      if (args.length < 4) return updateDate(value, hosted.setHours(args[0], args[1], args[2]));
-      return updateDate(value, hosted.setHours(args[0], args[1], args[2], args[3]));
-    },
-    setUTCHours: () => {
-      if (args.length < 2) return updateDate(value, hosted.setUTCHours(args[0]));
-      if (args.length < 3) return updateDate(value, hosted.setUTCHours(args[0], args[1]));
-      if (args.length < 4) return updateDate(value, hosted.setUTCHours(args[0], args[1], args[2]));
-      return updateDate(value, hosted.setUTCHours(args[0], args[1], args[2], args[3]));
-    },
-    setDate: () => updateDate(value, hosted.setDate(args[0])),
-    setUTCDate: () => updateDate(value, hosted.setUTCDate(args[0])),
-    setMonth: () => {
-      if (args.length < 2) return updateDate(value, hosted.setMonth(args[0]));
-      return updateDate(value, hosted.setMonth(args[0], args[1]));
-    },
-    setUTCMonth: () => {
-      if (args.length < 2) return updateDate(value, hosted.setUTCMonth(args[0]));
-      return updateDate(value, hosted.setUTCMonth(args[0], args[1]));
-    },
-    setFullYear: () => {
-      if (args.length < 2) return updateDate(value, hosted.setFullYear(args[0]));
-      if (args.length < 3) return updateDate(value, hosted.setFullYear(args[0], args[1]));
-      return updateDate(value, hosted.setFullYear(args[0], args[1], args[2]));
-    },
-    setUTCFullYear: () => {
-      if (args.length < 2) return updateDate(value, hosted.setUTCFullYear(args[0]));
-      if (args.length < 3) return updateDate(value, hosted.setUTCFullYear(args[0], args[1]));
-      return updateDate(value, hosted.setUTCFullYear(args[0], args[1], args[2]));
-    },
-  });
-};
+      toJSON: () => (Number.isFinite(value.time) ? hosted.toISOString() : null),
+      toString: () => coerceToString(value),
+      toUTCString: () => hosted.toUTCString(),
+      toGMTString: () => hosted.toUTCString(),
+      getFullYear: () => hosted.getFullYear(),
+      getMonth: () => hosted.getMonth(),
+      getDate: () => hosted.getDate(),
+      getDay: () => hosted.getDay(),
+      getHours: () => hosted.getHours(),
+      getMinutes: () => hosted.getMinutes(),
+      getSeconds: () => hosted.getSeconds(),
+      getMilliseconds: () => hosted.getMilliseconds(),
+      getUTCFullYear: () => hosted.getUTCFullYear(),
+      getUTCMonth: () => hosted.getUTCMonth(),
+      getUTCDate: () => hosted.getUTCDate(),
+      getUTCDay: () => hosted.getUTCDay(),
+      getUTCHours: () => hosted.getUTCHours(),
+      getUTCMinutes: () => hosted.getUTCMinutes(),
+      getUTCSeconds: () => hosted.getUTCSeconds(),
+      getUTCMilliseconds: () => hosted.getUTCMilliseconds(),
+      getTimezoneOffset: () => hosted.getTimezoneOffset(),
+      setTime: () => updateDate(value, hosted.setTime(args[0])),
+      setMilliseconds: () => updateDate(value, hosted.setMilliseconds(args[0])),
+      setUTCMilliseconds: () => updateDate(value, hosted.setUTCMilliseconds(args[0])),
+      setSeconds: () => {
+        if (args.length < 2) return updateDate(value, hosted.setSeconds(args[0]));
+        return updateDate(value, hosted.setSeconds(args[0], args[1]));
+      },
+      setUTCSeconds: () => {
+        if (args.length < 2) return updateDate(value, hosted.setUTCSeconds(args[0]));
+        return updateDate(value, hosted.setUTCSeconds(args[0], args[1]));
+      },
+      setMinutes: () => {
+        if (args.length < 2) return updateDate(value, hosted.setMinutes(args[0]));
+        if (args.length < 3) return updateDate(value, hosted.setMinutes(args[0], args[1]));
+        return updateDate(value, hosted.setMinutes(args[0], args[1], args[2]));
+      },
+      setUTCMinutes: () => {
+        if (args.length < 2) return updateDate(value, hosted.setUTCMinutes(args[0]));
+        if (args.length < 3) return updateDate(value, hosted.setUTCMinutes(args[0], args[1]));
+        return updateDate(value, hosted.setUTCMinutes(args[0], args[1], args[2]));
+      },
+      setHours: () => {
+        if (args.length < 2) return updateDate(value, hosted.setHours(args[0]));
+        if (args.length < 3) return updateDate(value, hosted.setHours(args[0], args[1]));
+        if (args.length < 4) return updateDate(value, hosted.setHours(args[0], args[1], args[2]));
+        return updateDate(value, hosted.setHours(args[0], args[1], args[2], args[3]));
+      },
+      setUTCHours: () => {
+        if (args.length < 2) return updateDate(value, hosted.setUTCHours(args[0]));
+        if (args.length < 3) return updateDate(value, hosted.setUTCHours(args[0], args[1]));
+        if (args.length < 4) return updateDate(value, hosted.setUTCHours(args[0], args[1], args[2]));
+        return updateDate(value, hosted.setUTCHours(args[0], args[1], args[2], args[3]));
+      },
+      setDate: () => updateDate(value, hosted.setDate(args[0])),
+      setUTCDate: () => updateDate(value, hosted.setUTCDate(args[0])),
+      setMonth: () => {
+        if (args.length < 2) return updateDate(value, hosted.setMonth(args[0]));
+        return updateDate(value, hosted.setMonth(args[0], args[1]));
+      },
+      setUTCMonth: () => {
+        if (args.length < 2) return updateDate(value, hosted.setUTCMonth(args[0]));
+        return updateDate(value, hosted.setUTCMonth(args[0], args[1]));
+      },
+      setFullYear: () => {
+        if (args.length < 2) return updateDate(value, hosted.setFullYear(args[0]));
+        if (args.length < 3) return updateDate(value, hosted.setFullYear(args[0], args[1]));
+        return updateDate(value, hosted.setFullYear(args[0], args[1], args[2]));
+      },
+      setUTCFullYear: () => {
+        if (args.length < 2) return updateDate(value, hosted.setUTCFullYear(args[0]));
+        if (args.length < 3) return updateDate(value, hosted.setUTCFullYear(args[0], args[1]));
+        return updateDate(value, hosted.setUTCFullYear(args[0], args[1], args[2]));
+      },
+    });
+  }
+);
 
 const updateDate = (value: CodeModeDate, time: number): number => {
   value.time = time;

@@ -472,21 +472,24 @@ class PatchSummarization extends S.Class<PatchSummarization>($I`PatchSummarizati
       "Summarize a JSON patch into non-sensitive structural metadata: the operation count and, per operation, the op kind plus a redacted/truncated JSON Pointer. The `value` field of add/replace operations carries repaired assistant content and is intentionally never logged.",
   })
 ) {
-  static readonly decodeSync = S.decodeSync(PatchSummarization);
+  static readonly decodeEffect = S.decodeEffect(PatchSummarization);
 }
 
 // Summarize a JSON patch into non-sensitive structural metadata: the operation
 // count and, per operation, the op kind plus a redacted/truncated JSON Pointer.
 // The `value` field of add/replace operations carries repaired assistant content
 // and is intentionally never logged.
-const summarizePatch = (patch: JsonPatch.JsonPatch): PatchSummarization =>
-  PatchSummarization.decodeSync({
+const summarizePatch = Effect.fn("agents.assistant_turn.summarize_patch")(function* (
+  patch: JsonPatch.JsonPatch
+): Effect.fn.Return<PatchSummarization, BlockRepairFailed> {
+  return yield* PatchSummarization.decodeEffect({
     operations: A.length(patch),
     ops: A.map(patch, (operation) => ({
       op: operation.op,
       path: redactString(operation.path, PATCH_PATH_LIMIT),
     })),
-  });
+  }).pipe(Effect.mapError(() => toBlockRepairFailed("Block repair patch summary failed validation.")));
+});
 
 const trackRepairOutcome = (outcome: "call_failed" | "dropped" | "repaired", count: number): Effect.Effect<void> =>
   count === 0 ? Effect.void : Metric.update(Metric.withAttributes(blocksRepaired, { outcome }), count);
@@ -524,7 +527,7 @@ const requestRepairEnvelope = (
 const repairItemToIndexed = Effect.fn("repairItemToIndexed")(function* (
   pending: ReadonlyArray<IssueReport>,
   item: RepairItem
-): Effect.fn.Return<O.Option<IndexedBlock>> {
+): Effect.fn.Return<O.Option<IndexedBlock>, BlockRepairFailed> {
   const failure = A.findFirst(pending, (candidate) => candidate.index === item.index);
   if (O.isNone(failure)) {
     yield* Effect.logWarning("assistant-turn block repair ignored unexpected index", { index: item.index });
@@ -577,12 +580,14 @@ const repairItemToIndexed = Effect.fn("repairItemToIndexed")(function* (
           index: item.index,
           detail: error.message,
         }),
-      onSuccess: (originalJson) => {
+      onSuccess: Effect.fnUntraced(function* (originalJson) {
         const patch = JsonPatch.get(originalJson, encodedJson.value);
-        return A.isReadonlyArrayEmpty(patch)
-          ? Effect.logInfo("assistant-turn block repaired without structural patch", { index: item.index })
-          : Effect.logInfo("assistant-turn block repaired", { index: item.index, ...summarizePatch(patch) });
-      },
+        if (A.isReadonlyArrayEmpty(patch)) {
+          return yield* Effect.logInfo("assistant-turn block repaired without structural patch", { index: item.index });
+        }
+        const summary = yield* summarizePatch(patch);
+        return yield* Effect.logInfo("assistant-turn block repaired", { index: item.index, ...summary });
+      }),
     })
   );
   return O.some<IndexedBlock>({ block: checked.value, index: item.index });

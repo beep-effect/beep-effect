@@ -1,4 +1,3 @@
-import { setTimeout as sleep } from "node:timers/promises";
 import {
   DuckDb,
   DuckDbConnectionOptions,
@@ -17,8 +16,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Fiber, FileSystem, Layer, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as Reactivity from "effect/unstable/reactivity/Reactivity";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
@@ -88,8 +89,15 @@ const makeLatch = (): Latch => {
 
 const awaitLatch = (latch: Latch): Effect.Effect<void> => Effect.promise(() => latch.promise);
 
+// Wall-clock waits: these tests coordinate with native promises, and `it.effect`
+// installs TestClock, so a bare `Effect.sleep` would never elapse.
+const liveSleep = (millis: number): Effect.Effect<void> =>
+  Effect.sleep(Duration.millis(millis)).pipe(TestClock.withLive);
+
+const liveSleepPromise = (millis: number): Promise<void> => Effect.runPromise(Effect.sleep(Duration.millis(millis)));
+
 const latchResolvesWithin = (latch: Latch, millis: number): Effect.Effect<boolean> =>
-  Effect.promise(() => Promise.race([latch.promise.then(() => true), sleep(millis).then(() => false)]));
+  Effect.raceFirst(awaitLatch(latch).pipe(Effect.as(true)), liveSleep(millis).pipe(Effect.as(false)));
 
 const fakeRowReader = (rows: DuckDbRows): Awaited<ReturnType<DuckDBConnection["runAndReadAll"]>> =>
   ({ getRowObjectsJson: () => rows }) as Awaited<ReturnType<DuckDBConnection["runAndReadAll"]>>;
@@ -367,7 +375,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
             duckdb.query("SELECT 1 AS value").pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
             Effect.gen(function* () {
               yield* awaitLatch(firstStarted);
-              yield* Effect.promise(() => sleep(75));
+              yield* liveSleep(75);
               const secondFiber = yield* duckdb
                 .query("SELECT 2 AS value")
                 .pipe(Effect.forkChild({ startImmediately: true }));
@@ -424,7 +432,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
               .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
             Effect.gen(function* () {
               yield* awaitLatch(runStarted);
-              yield* Effect.promise(() => sleep(75));
+              yield* liveSleep(75);
               const readFiber = yield* duckdb
                 .query("SELECT 2 AS value")
                 .pipe(Effect.forkChild({ startImmediately: true }));
@@ -481,7 +489,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
               .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
             Effect.gen(function* () {
               yield* awaitLatch(copyStarted);
-              yield* Effect.promise(() => sleep(75));
+              yield* liveSleep(75);
               const readFiber = yield* duckdb
                 .query("SELECT 2 AS value")
                 .pipe(Effect.forkChild({ startImmediately: true }));
@@ -600,7 +608,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
 
               yield* awaitLatch(connectStarted);
               yield* Fiber.interrupt(queryFiber).pipe(Effect.forkChild({ startImmediately: true }));
-              yield* Effect.promise(() => sleep(25));
+              yield* liveSleep(25);
               expect(connectionCloseAttempts).toBe(0);
               expect(instanceCloseAttempts).toBe(0);
               connect.resolve(fakeConnection as unknown as DuckDBConnection);
@@ -651,7 +659,7 @@ describe("@beep/duckdb", { concurrent: false }, () => {
           .pipe(Effect.forkChild({ startImmediately: true }));
 
         yield* awaitLatch(beginStarted);
-        yield* Effect.promise(() => sleep(75));
+        yield* liveSleep(75);
         yield* Fiber.interrupt(transactionFiber).pipe(Effect.forkChild({ startImmediately: true }));
         expect(statements).toEqual(["BEGIN TRANSACTION"]);
         releaseBegin.resolve();
@@ -923,7 +931,7 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
         liveConnection.runAndReadAll = (...args: Parameters<DuckDBConnection["runAndReadAll"]>) => {
           activeExecutions += 1;
           maxActiveExecutions = activeExecutions > maxActiveExecutions ? activeExecutions : maxActiveExecutions;
-          return sleep(20)
+          return liveSleepPromise(20)
             .then(() => runAndReadAll(...args))
             .finally(() => {
               activeExecutions -= 1;
@@ -1012,7 +1020,7 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
             sql<{ readonly value: number }>`SELECT 1 AS value`.pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
             Effect.gen(function* () {
               yield* awaitLatch(firstStarted);
-              yield* Effect.promise(() => sleep(75));
+              yield* liveSleep(75);
               const secondFiber = yield* sql<{ readonly value: number }>`SELECT 2 AS value`.pipe(
                 Effect.forkChild({ startImmediately: true })
               );
@@ -1078,7 +1086,7 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
                     .pipe(Effect.timeoutOption("50 millis"), Effect.ignore),
                   Effect.gen(function* () {
                     yield* awaitLatch(rawStarted);
-                    yield* Effect.promise(() => sleep(75));
+                    yield* liveSleep(75);
                     const readFiber = yield* sql<{ readonly id: string }>`SELECT id FROM raw_interrupt_events`.pipe(
                       Effect.forkChild({ startImmediately: true })
                     );

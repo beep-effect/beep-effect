@@ -314,19 +314,20 @@ export const isSkillFilePath = (path: string): boolean => path === "SKILL.md" ||
  * **Example** (Synchronize command and hook path specs)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  * import * as O from "effect/Option"
  *
  * const manifest = Plugin.Layout.syncManifest(
- *   Plugin.define({
+ *   await Effect.runPromise(Plugin.define({
  *     manifest: {
  *       name: "review-tools",
  *       commands: "./slash",
  *       hooks: ["./hooks/a.json", "./hooks/b.json"]
  *     },
- *     commands: [Plugin.command({ name: "hi", body: "# /hi\n" })],
+ *     commands: [await Effect.runPromise(Plugin.command({ name: "hi", body: "# /hi\n" }))],
  *     hooksConfig: { PostToolUse: [] }
- *   })
+ *   }))
  * )
  *
  * console.log(O.getOrUndefined(manifest.commands)) // "./slash"

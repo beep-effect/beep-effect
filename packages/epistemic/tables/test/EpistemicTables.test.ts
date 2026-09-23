@@ -26,14 +26,34 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEvidenceModelResult = S.decodeResult(EvidenceModel);
 const decodeUnknownEvidenceModelResult = S.decodeUnknownResult(EvidenceModel);
-const decodeUnknownCandidateClaimModelSync = S.decodeUnknownSync(CandidateClaimModel);
-const decodeUnknownClaimDispositionModelSync = S.decodeUnknownSync(ClaimDispositionModel);
-const decodeUnknownEdgeVersionModelSync = S.decodeUnknownSync(EdgeVersionModel);
-const decodeUnknownEvidenceModelSync = S.decodeUnknownSync(EvidenceModel);
-const decodeUnknownUsageRecordModelSync = S.decodeUnknownSync(UsageRecordModel);
+const decodeUnknownCandidateClaimModel = S.decodeUnknownEffect(CandidateClaimModel);
+const decodeUnknownClaimDispositionModel = S.decodeUnknownEffect(ClaimDispositionModel);
+const decodeUnknownEdgeVersionModel = S.decodeUnknownEffect(EdgeVersionModel);
+const decodeUnknownEvidenceModel = S.decodeUnknownEffect(EvidenceModel);
+const decodeUnknownUsageRecordModel = S.decodeUnknownEffect(UsageRecordModel);
 
 const UsageRecordArbitrary = Arbitrary.schema(UsageRecordModel);
 const UsageRecordEquivalence = S.toEquivalence(UsageRecordModel);
+
+const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
+
+const edgeVersionRow = (insert: EdgeVersion.EdgeVersionInsert, id: number): EdgeVersion.EdgeVersionRow => ({
+  ...insert,
+  id,
+  evidenceScope: absentAsNull(insert.evidenceScope),
+  expiredAt: absentAsNull(insert.expiredAt),
+  matterScope: absentAsNull(insert.matterScope),
+  sourceClaimId: absentAsNull(insert.sourceClaimId),
+  sourceEntityRef: absentAsNull(insert.sourceEntityRef),
+  sourceEvidenceId: absentAsNull(insert.sourceEvidenceId),
+  sourceObservationRef: absentAsNull(insert.sourceObservationRef),
+  supersedesId: absentAsNull(insert.supersedesId),
+  targetClaimId: absentAsNull(insert.targetClaimId),
+  targetEntityRef: absentAsNull(insert.targetEntityRef),
+  targetEvidenceId: absentAsNull(insert.targetEvidenceId),
+  targetObservationRef: absentAsNull(insert.targetObservationRef),
+  validTo: absentAsNull(insert.validTo),
+});
 
 const usageRecordInput = (id: number) => ({
   ...productEntityFixtureInput("EpistemicUsageRecord", id),
@@ -114,6 +134,53 @@ const claimDispositionInput = (id: number) => ({
     },
   ],
 });
+
+// Every row codec here is a class schema, so an unencodable entity has to stay
+// an instance of its model: clone onto the same prototype and corrupt a single
+// column rather than handing the encoder a bare struct it would reject wholesale.
+const withUnencodablePublicId = <A extends object>(entity: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (
+  error: { readonly _tag: string; readonly operation: string; readonly reason: string },
+  tag: string,
+  operation: string
+): void => {
+  expect(error._tag).toBe(tag);
+  expect(error.operation).toBe(operation);
+  expect(Str.isNonEmpty(error.reason)).toBe(true);
+};
+
+// `defaultFormatter` renders a `message: ""` annotation verbatim, so this is a
+// real SchemaError whose rendered message is empty - the input every
+// `fromSchema` fallback branch is written for.
+const emptyMessageSchemaError = S.decodeUnknownResult(S.String.annotate({ message: "" }))(0).pipe(
+  Result.flip,
+  Effect.fromResult
+);
+
+const fallbackReasonCases = [
+  [
+    "CandidateClaimConverterError",
+    (error: S.SchemaError) => CandidateClaim.CandidateClaimConverterError.fromSchema("fromRow", error),
+  ],
+  [
+    "ClaimDispositionConverterError",
+    (error: S.SchemaError) => ClaimDisposition.ClaimDispositionConverterError.fromSchema("fromRow", error),
+  ],
+  [
+    "EdgeVersionConverterError",
+    (error: S.SchemaError) => EdgeVersion.EdgeVersionConverterError.fromSchema("fromRow", error),
+  ],
+  ["EvidenceConverterError", (error: S.SchemaError) => Evidence.EvidenceConverterError.fromSchema("fromRow", error)],
+  [
+    "UsageRecordConverterError",
+    (error: S.SchemaError) => UsageRecord.UsageRecordConverterError.fromSchema("fromRow", error),
+  ],
+] as const;
 
 const baseEntityColumnNames = {
   createdAt: "created_at",
@@ -314,282 +381,284 @@ describe("EpistemicTables", () => {
     expect(indexNames).not.toContain("epistemic_contradiction_receipt_receipt_key_unique_idx");
   });
 
-  it("round-trips a UsageRecord row through the converters", () => {
-    const record = decodeUnknownUsageRecordModelSync(usageRecordInput(10));
+  it.effect(
+    "round-trips a UsageRecord row through the converters",
+    Effect.fnUntraced(function* () {
+      const record = yield* decodeUnknownUsageRecordModel(usageRecordInput(10));
 
-    const insert = UsageRecord.toUsageRecordInsert(record);
-    expect("id" in insert).toBe(false);
-    expect(insert.provider).toBe("fixture");
-    expect(insert.model).toBe("fixture-model");
-    expect(insert.entityType).toBe("EpistemicUsageRecord");
-    expect(insert.activityId).toBe(7);
-    expect(insert.inputTokens).toBe(12);
-    expect(insert.outputTokens).toBe(34);
-    expect(insert.totalTokens).toBe(46);
-    expect(insert.costUsdApproxMicros).toBeNull();
-    expect(insert.credentialReference).toBeNull();
-    expect(insert.unitCount).toBeNull();
+      const insert = yield* Effect.fromResult(UsageRecord.toUsageRecordInsert(record));
+      expect("id" in insert).toBe(false);
+      expect(insert.provider).toBe("fixture");
+      expect(insert.model).toBe("fixture-model");
+      expect(insert.entityType).toBe("EpistemicUsageRecord");
+      expect(insert.activityId).toBe(7);
+      expect(insert.inputTokens).toBe(12);
+      expect(insert.outputTokens).toBe(34);
+      expect(insert.totalTokens).toBe(46);
+      expect(insert.costUsdApproxMicros).toBeNull();
+      expect(insert.credentialReference).toBeNull();
+      expect(insert.unitCount).toBeNull();
 
-    const decoded = UsageRecord.fromUsageRecordRow({
-      ...insert,
-      id: 10,
-      // $inferInsert types the nullable columns as optional (number | null |
-      // undefined); the select-row converter expects number | null, so resolve
-      // each absent optional to its concrete null before round-tripping.
-      activityId: insert.activityId ?? null,
-      costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
-      credentialReference: insert.credentialReference ?? null,
-      inputTokens: insert.inputTokens ?? null,
-      latencyMillis: insert.latencyMillis ?? null,
-      outputTokens: insert.outputTokens ?? null,
-      totalTokens: insert.totalTokens ?? null,
-      unitCount: insert.unitCount ?? null,
-    });
-    expect(decoded.provider).toBe("fixture");
-    expect(decoded.model).toBe("fixture-model");
-    expect(O.getOrNull(decoded.inputTokens)).toBe(12);
-    expect(O.getOrNull(decoded.costUsdApproxMicros)).toBeNull();
-    expect(O.isNone(decoded.unitCount)).toBe(true);
-  });
+      const decoded = yield* Effect.fromResult(
+        UsageRecord.fromUsageRecordRow({
+          ...insert,
+          id: 10,
+          // $inferInsert types the nullable columns as optional (number | null |
+          // undefined); the select-row converter expects number | null, so resolve
+          // each absent optional to its concrete null before round-tripping.
+          activityId: insert.activityId ?? null,
+          costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
+          credentialReference: insert.credentialReference ?? null,
+          inputTokens: insert.inputTokens ?? null,
+          latencyMillis: insert.latencyMillis ?? null,
+          outputTokens: insert.outputTokens ?? null,
+          totalTokens: insert.totalTokens ?? null,
+          unitCount: insert.unitCount ?? null,
+        })
+      );
+      expect(decoded.provider).toBe("fixture");
+      expect(decoded.model).toBe("fixture-model");
+      expect(O.getOrNull(decoded.inputTokens)).toBe(12);
+      expect(O.getOrNull(decoded.costUsdApproxMicros)).toBeNull();
+      expect(O.isNone(decoded.unitCount)).toBe(true);
+    })
+  );
 
-  it("round-trips a CandidateClaim row through the converters", () => {
-    const claim = decodeUnknownCandidateClaimModelSync(candidateClaimInput(10));
+  it.effect(
+    "round-trips a CandidateClaim row through the converters",
+    Effect.fnUntraced(function* () {
+      const claim = yield* decodeUnknownCandidateClaimModel(candidateClaimInput(10));
 
-    const insert = CandidateClaim.toCandidateClaimInsert(claim);
-    expect("id" in insert).toBe(false);
-    expect(insert.entityType).toBe("EpistemicCandidateClaim");
-    expect(insert.fixtureKey).toBe("claim:patentability");
-    expect(insert.lifecycle).toBe("candidate");
-    expect(insert.snapshot).toStrictEqual({ text: "The application describes a processor." });
+      const insert = yield* Effect.fromResult(CandidateClaim.toCandidateClaimInsert(claim));
+      expect("id" in insert).toBe(false);
+      expect(insert.entityType).toBe("EpistemicCandidateClaim");
+      expect(insert.fixtureKey).toBe("claim:patentability");
+      expect(insert.lifecycle).toBe("candidate");
+      expect(insert.snapshot).toStrictEqual({ text: "The application describes a processor." });
 
-    const decoded = CandidateClaim.fromCandidateClaimRow({ ...insert, id: 10 });
-    expect(decoded.id).toBe(10);
-    expect(decoded.fixtureKey).toBe("claim:patentability");
-    expect(decoded.lifecycle).toBe("candidate");
-  });
+      const decoded = yield* Effect.fromResult(CandidateClaim.fromCandidateClaimRow({ ...insert, id: 10 }));
+      expect(decoded.id).toBe(10);
+      expect(decoded.fixtureKey).toBe("claim:patentability");
+      expect(decoded.lifecycle).toBe("candidate");
+    })
+  );
 
-  it("round-trips an Evidence row through the converters", () => {
-    const evidence = decodeUnknownEvidenceModelSync(evidenceInput(10));
+  it.effect(
+    "round-trips an Evidence row through the converters",
+    Effect.fnUntraced(function* () {
+      const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
 
-    const insert = Evidence.toEvidenceInsert(evidence);
-    expect("id" in insert).toBe(false);
-    expect(insert.entityType).toBe("EpistemicEvidence");
-    expect(insert.artifactFixtureKey).toBe("artifact:oa-1");
-    expect(insert.spanFixtureKey).toBe("span:oa-1:12-57");
-    expect(insert.span).toStrictEqual({
-      confidence: 0.92,
-      endChar: 57,
-      quote: "a processor configured to receive sensor data",
-      startChar: 12,
-    });
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
+      expect("id" in insert).toBe(false);
+      expect(insert.entityType).toBe("EpistemicEvidence");
+      expect(insert.artifactFixtureKey).toBe("artifact:oa-1");
+      expect(insert.spanFixtureKey).toBe("span:oa-1:12-57");
+      expect(insert.span).toStrictEqual({
+        confidence: 0.92,
+        endChar: 57,
+        quote: "a processor configured to receive sensor data",
+        startChar: 12,
+      });
 
-    const decoded = Evidence.fromEvidenceRow({ ...insert, id: 10 });
-    expect(decoded.id).toBe(10);
-    expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
-    expect(decoded.span.confidence).toBe(0.92);
-  });
+      const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow({ ...insert, id: 10 }));
+      expect(decoded.id).toBe(10);
+      expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
+      expect(decoded.span.confidence).toBe(0.92);
+    })
+  );
 
-  it("normalizes legacy Evidence span widths on read and writes only the strict width", () => {
-    const evidence = Result.getOrThrow(decodeUnknownEvidenceModelResult(evidenceInput(10)));
-    const insert = Evidence.toEvidenceInsert(evidence);
-    const legacyRow = {
-      ...insert,
-      id: 10,
-      span: {
-        ...insert.span,
-        endChar: 48,
-      },
-      spanFixtureKey: "span:oa-1:12-48",
-    };
+  it.effect(
+    "normalizes legacy Evidence span widths on read and writes only the strict width",
+    Effect.fnUntraced(function* () {
+      const evidence = yield* Effect.fromResult(decodeUnknownEvidenceModelResult(evidenceInput(10)));
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
+      const legacyRow = {
+        ...insert,
+        id: 10,
+        span: {
+          ...insert.span,
+          endChar: 48,
+        },
+        spanFixtureKey: "span:oa-1:12-48",
+      };
 
-    expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
+      expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
 
-    const decoded = Evidence.fromEvidenceRow(legacyRow);
-    const canonicalInsert = Evidence.toEvidenceInsert(decoded);
+      const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow(legacyRow));
+      const canonicalInsert = yield* Effect.fromResult(Evidence.toEvidenceInsert(decoded));
 
-    expect(decoded.span.startChar).toBe(12);
-    expect(decoded.span.endChar).toBe(57);
-    expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
-    expect(decoded.spanFixtureKey).toBe("span:oa-1:12-48");
-    expect(canonicalInsert.span.endChar).toBe(57);
-  });
+      expect(decoded.span.startChar).toBe(12);
+      expect(decoded.span.endChar).toBe(57);
+      expect(decoded.span.quote).toBe("a processor configured to receive sensor data");
+      expect(decoded.spanFixtureKey).toBe("span:oa-1:12-48");
+      expect(canonicalInsert.span.endChar).toBe(57);
+    })
+  );
 
-  it("preserves reads of legacy Evidence quotes above the current write bound", () => {
-    const evidence = Result.getOrThrow(decodeUnknownEvidenceModelResult(evidenceInput(10)));
-    const insert = Evidence.toEvidenceInsert(evidence);
-    const quote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1)("a");
-    const legacyRow = {
-      ...insert,
-      id: 10,
-      span: {
-        ...insert.span,
-        endChar: 12 + Str.length(quote),
-        quote,
-      },
-    };
+  it.effect(
+    "preserves reads of legacy Evidence quotes above the current write bound",
+    Effect.fnUntraced(function* () {
+      const evidence = yield* Effect.fromResult(decodeUnknownEvidenceModelResult(evidenceInput(10)));
+      const insert = yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence));
+      const quote = Str.repeat(EVIDENCE_SPAN_QUOTE_MAX_LENGTH + 1)("a");
+      const legacyRow = {
+        ...insert,
+        id: 10,
+        span: {
+          ...insert.span,
+          endChar: 12 + Str.length(quote),
+          quote,
+        },
+      };
 
-    expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
+      expect(Result.isFailure(decodeEvidenceModelResult(legacyRow))).toBe(true);
 
-    const decoded = Evidence.fromEvidenceRow(legacyRow);
+      const decoded = yield* Effect.fromResult(Evidence.fromEvidenceRow(legacyRow));
 
-    expect(decoded.span.quote).toBe(quote);
-    expect(decoded.span.endChar).toBe(12 + Str.length(quote));
-    expect(() => Evidence.toEvidenceInsert(decoded)).toThrow(S.SchemaError);
-  });
+      expect(decoded.span.quote).toBe(quote);
+      expect(decoded.span.endChar).toBe(12 + Str.length(quote));
 
-  it("rejects malformed Evidence rows with a schema error", () => {
-    const evidence = decodeUnknownEvidenceModelSync(evidenceInput(10));
-    const malformedRow = {
-      ...Evidence.toEvidenceInsert(evidence),
-      id: 10,
-      span: null,
-    } as unknown as Evidence.EvidenceRow;
+      const reencoded = Evidence.toEvidenceInsert(decoded);
+      expect(Result.isFailure(reencoded)).toBe(true);
+      const encodeError = yield* reencoded.pipe(Result.flip, Effect.fromResult);
+      expect(encodeError._tag).toBe("EvidenceConverterError");
+      expect(encodeError.operation).toBe("toInsert");
+    })
+  );
 
-    expect(() => Evidence.fromEvidenceRow(malformedRow)).toThrow(S.SchemaError);
-  });
+  it.effect(
+    "rejects malformed Evidence rows with a schema error",
+    Effect.fnUntraced(function* () {
+      const evidence = yield* decodeUnknownEvidenceModel(evidenceInput(10));
+      const malformedRow = {
+        ...(yield* Effect.fromResult(Evidence.toEvidenceInsert(evidence))),
+        id: 10,
+        span: null,
+      } as unknown as Evidence.EvidenceRow;
 
-  // Exhaustive per-column assertion walk over the widest table in the slice;
-  // branch count is the column count, not logic to simplify.
-  // fallow-ignore-next-line complexity -- exhaustive assertions cover every column of the slice's widest table
-  it("round-trips an EdgeVersion row through the converters", () => {
-    const version = decodeUnknownEdgeVersionModelSync(edgeVersionInput(10));
+      const decodeResult = Evidence.fromEvidenceRow(malformedRow);
+      expect(Result.isFailure(decodeResult)).toBe(true);
+      const decodeError = yield* decodeResult.pipe(Result.flip, Effect.fromResult);
+      expect(decodeError._tag).toBe("EvidenceConverterError");
+      expect(decodeError.operation).toBe("fromRow");
+    })
+  );
 
-    const insert = EdgeVersion.toEdgeVersionInsert(version);
-    expect("id" in insert).toBe(false);
-    expect(insert.entityType).toBe("EpistemicEdgeVersion");
-    expect(insert.logicalKey).toBe("abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe");
-    expect(insert.relation).toBe("supports");
-    expect(insert.sourceKind).toBe("claim");
-    expect(insert.sourceClaimId).toBe(1);
-    expect(insert.targetKind).toBe("evidence");
-    expect(insert.targetEvidenceId).toBe(2);
-    expect(insert.qualifiers).toStrictEqual({ statute: "35 USC 103" });
-    expect(insert.fact).toStrictEqual({ note: "cited in the office action" });
-    expect(insert.version).toBe(1);
-    // Open upper bounds encode to null on both axes rather than to a sentinel.
-    expect(insert.validFrom).toBe(1_000);
-    expect(insert.validTo).toBeNull();
-    expect(insert.recordedAt).toBe(1_000);
-    expect(insert.expiredAt).toBeNull();
-    expect(insert.supersedesId).toBeNull();
+  it.effect(
+    "round-trips an EdgeVersion row through the converters",
+    Effect.fnUntraced(function* () {
+      const version = yield* decodeUnknownEdgeVersionModel(edgeVersionInput(10));
 
-    const decoded = EdgeVersion.fromEdgeVersionRow({
-      ...insert,
-      id: 10,
-      evidenceScope: insert.evidenceScope ?? null,
-      expiredAt: insert.expiredAt ?? null,
-      matterScope: insert.matterScope ?? null,
-      sourceClaimId: insert.sourceClaimId ?? null,
-      sourceEntityRef: insert.sourceEntityRef ?? null,
-      sourceEvidenceId: insert.sourceEvidenceId ?? null,
-      sourceObservationRef: insert.sourceObservationRef ?? null,
-      supersedesId: insert.supersedesId ?? null,
-      targetClaimId: insert.targetClaimId ?? null,
-      targetEntityRef: insert.targetEntityRef ?? null,
-      targetEvidenceId: insert.targetEvidenceId ?? null,
-      targetObservationRef: insert.targetObservationRef ?? null,
-      validTo: insert.validTo ?? null,
-    });
-    expect(decoded.id).toBe(10);
-    expect(decoded.relation).toBe("supports");
-    expect(O.getOrNull(decoded.sourceClaimId)).toBe(1);
-    expect(O.getOrNull(decoded.targetEvidenceId)).toBe(2);
-    expect(O.isNone(decoded.validTo)).toBe(true);
-    expect(O.isNone(decoded.expiredAt)).toBe(true);
-    expect(O.isNone(decoded.supersedesId)).toBe(true);
-    expect(O.isNone(decoded.matterScope)).toBe(true);
-    expect(O.isNone(decoded.evidenceScope)).toBe(true);
-  });
+      const insert = yield* Effect.fromResult(EdgeVersion.toEdgeVersionInsert(version));
+      expect("id" in insert).toBe(false);
+      expect(insert.entityType).toBe("EpistemicEdgeVersion");
+      expect(insert.logicalKey).toBe("abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe");
+      expect(insert.relation).toBe("supports");
+      expect(insert.sourceKind).toBe("claim");
+      expect(insert.sourceClaimId).toBe(1);
+      expect(insert.targetKind).toBe("evidence");
+      expect(insert.targetEvidenceId).toBe(2);
+      expect(insert.qualifiers).toStrictEqual({ statute: "35 USC 103" });
+      expect(insert.fact).toStrictEqual({ note: "cited in the office action" });
+      expect(insert.version).toBe(1);
+      // Open upper bounds encode to null on both axes rather than to a sentinel.
+      expect(insert.validFrom).toBe(1_000);
+      expect(insert.validTo).toBeNull();
+      expect(insert.recordedAt).toBe(1_000);
+      expect(insert.expiredAt).toBeNull();
+      expect(insert.supersedesId).toBeNull();
 
-  // Same exhaustive column walk for the closed/Option-some variant.
-  // fallow-ignore-next-line complexity -- exhaustive assertions cover the closed and Option-some column variant
-  it("round-trips a closed EdgeVersion row through the converters", () => {
-    const closed = decodeUnknownEdgeVersionModelSync({
-      ...edgeVersionInput(11),
-      evidenceScope: "evidence-set-1",
-      expiredAt: 2_500,
-      matterScope: "matter-1",
-      sourceClaimId: null,
-      sourceEntityRef: "workspace:matter-1",
-      sourceKind: "entity",
-      supersedesId: 10,
-      targetEvidenceId: null,
-      targetKind: "observation",
-      targetObservationRef: "observation:run-1:step-3",
-      validTo: 2_000,
-      version: 2,
-    });
+      const decoded = yield* Effect.fromResult(EdgeVersion.fromEdgeVersionRow(edgeVersionRow(insert, 10)));
+      expect(decoded.id).toBe(10);
+      expect(decoded.relation).toBe("supports");
+      expect(O.getOrNull(decoded.sourceClaimId)).toBe(1);
+      expect(O.getOrNull(decoded.targetEvidenceId)).toBe(2);
+      expect(O.isNone(decoded.validTo)).toBe(true);
+      expect(O.isNone(decoded.expiredAt)).toBe(true);
+      expect(O.isNone(decoded.supersedesId)).toBe(true);
+      expect(O.isNone(decoded.matterScope)).toBe(true);
+      expect(O.isNone(decoded.evidenceScope)).toBe(true);
+    })
+  );
 
-    const insert = EdgeVersion.toEdgeVersionInsert(closed);
-    expect(insert.evidenceScope).toBe("evidence-set-1");
-    expect(insert.matterScope).toBe("matter-1");
-    expect(insert.sourceKind).toBe("entity");
-    expect(insert.sourceEntityRef).toBe("workspace:matter-1");
-    expect(insert.targetKind).toBe("observation");
-    expect(insert.targetObservationRef).toBe("observation:run-1:step-3");
-    expect(insert.supersedesId).toBe(10);
-    expect(insert.validTo).toBe(2_000);
-    expect(insert.expiredAt).toBe(2_500);
-    expect(insert.version).toBe(2);
+  it.effect(
+    "round-trips a closed EdgeVersion row through the converters",
+    Effect.fnUntraced(function* () {
+      const closed = yield* decodeUnknownEdgeVersionModel({
+        ...edgeVersionInput(11),
+        evidenceScope: "evidence-set-1",
+        expiredAt: 2_500,
+        matterScope: "matter-1",
+        sourceClaimId: null,
+        sourceEntityRef: "workspace:matter-1",
+        sourceKind: "entity",
+        supersedesId: 10,
+        targetEvidenceId: null,
+        targetKind: "observation",
+        targetObservationRef: "observation:run-1:step-3",
+        validTo: 2_000,
+        version: 2,
+      });
 
-    const decoded = EdgeVersion.fromEdgeVersionRow({
-      ...insert,
-      id: 11,
-      evidenceScope: insert.evidenceScope ?? null,
-      expiredAt: insert.expiredAt ?? null,
-      matterScope: insert.matterScope ?? null,
-      sourceClaimId: insert.sourceClaimId ?? null,
-      sourceEntityRef: insert.sourceEntityRef ?? null,
-      sourceEvidenceId: insert.sourceEvidenceId ?? null,
-      sourceObservationRef: insert.sourceObservationRef ?? null,
-      supersedesId: insert.supersedesId ?? null,
-      targetClaimId: insert.targetClaimId ?? null,
-      targetEntityRef: insert.targetEntityRef ?? null,
-      targetEvidenceId: insert.targetEvidenceId ?? null,
-      targetObservationRef: insert.targetObservationRef ?? null,
-      validTo: insert.validTo ?? null,
-    });
-    expect(O.getOrNull(O.map(decoded.validTo, DateTime.toEpochMillis))).toBe(2_000);
-    expect(O.getOrNull(O.map(decoded.expiredAt, DateTime.toEpochMillis))).toBe(2_500);
-    expect(O.getOrNull(decoded.supersedesId)).toBe(10);
-    expect(O.getOrNull(decoded.sourceEntityRef)).toBe("workspace:matter-1");
-    expect(O.getOrNull(decoded.targetObservationRef)).toBe("observation:run-1:step-3");
-  });
+      const insert = yield* Effect.fromResult(EdgeVersion.toEdgeVersionInsert(closed));
+      expect(insert.evidenceScope).toBe("evidence-set-1");
+      expect(insert.matterScope).toBe("matter-1");
+      expect(insert.sourceKind).toBe("entity");
+      expect(insert.sourceEntityRef).toBe("workspace:matter-1");
+      expect(insert.targetKind).toBe("observation");
+      expect(insert.targetObservationRef).toBe("observation:run-1:step-3");
+      expect(insert.supersedesId).toBe(10);
+      expect(insert.validTo).toBe(2_000);
+      expect(insert.expiredAt).toBe(2_500);
+      expect(insert.version).toBe(2);
 
-  it("round-trips a ClaimDisposition row through the converters", () => {
-    const disposition = decodeUnknownClaimDispositionModelSync(claimDispositionInput(10));
+      const decoded = yield* Effect.fromResult(EdgeVersion.fromEdgeVersionRow(edgeVersionRow(insert, 11)));
+      expect(O.getOrNull(O.map(decoded.validTo, DateTime.toEpochMillis))).toBe(2_000);
+      expect(O.getOrNull(O.map(decoded.expiredAt, DateTime.toEpochMillis))).toBe(2_500);
+      expect(O.getOrNull(decoded.supersedesId)).toBe(10);
+      expect(O.getOrNull(decoded.sourceEntityRef)).toBe("workspace:matter-1");
+      expect(O.getOrNull(decoded.targetObservationRef)).toBe("observation:run-1:step-3");
+    })
+  );
 
-    const insert = ClaimDisposition.toClaimDispositionInsert(disposition);
-    expect("id" in insert).toBe(false);
-    expect(insert.entityType).toBe("EpistemicClaimDisposition");
-    expect(insert.claimId).toBe(3);
-    expect(insert.status).toBe("rejected");
-    expect(insert.reason).toBe("Expected at least 1 value(s) for evidence.");
-    expect(insert.resolvedAt).toBe(1_000);
-    expect(insert.resolvedBy).toStrictEqual(systemPrincipal);
-    expect(insert.violations).toStrictEqual([
-      {
-        focusNode: "https://beep.dev/epistemic/claim/patentability",
-        message: "Expected at least 1 value(s) for evidence.",
-        path: "https://beep.dev/epistemic/hasEvidenceQuote",
-        severity: "violation",
-      },
-    ]);
+  it.effect(
+    "round-trips a ClaimDisposition row through the converters",
+    Effect.fnUntraced(function* () {
+      const disposition = yield* decodeUnknownClaimDispositionModel(claimDispositionInput(10));
 
-    const decoded = ClaimDisposition.fromClaimDispositionRow({ ...insert, id: 10 });
-    expect(decoded.id).toBe(10);
-    expect(decoded.status).toBe("rejected");
-    expect(decoded.violations[0]?.severity).toBe("violation");
-  });
+      const insert = yield* Effect.fromResult(ClaimDisposition.toClaimDispositionInsert(disposition));
+      expect("id" in insert).toBe(false);
+      expect(insert.entityType).toBe("EpistemicClaimDisposition");
+      expect(insert.claimId).toBe(3);
+      expect(insert.status).toBe("rejected");
+      expect(insert.reason).toBe("Expected at least 1 value(s) for evidence.");
+      expect(insert.resolvedAt).toBe(1_000);
+      expect(insert.resolvedBy).toStrictEqual(systemPrincipal);
+      expect(insert.violations).toStrictEqual([
+        {
+          focusNode: "https://beep.dev/epistemic/claim/patentability",
+          message: "Expected at least 1 value(s) for evidence.",
+          path: "https://beep.dev/epistemic/hasEvidenceQuote",
+          severity: "violation",
+        },
+      ]);
 
-  it("round-trips schema-derived UsageRecords through the row converters", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([UsageRecordArbitrary]),
-          ([record]) => {
-            const insert = UsageRecord.toUsageRecordInsert(record);
-            const decoded = UsageRecord.fromUsageRecordRow({
+      const decoded = yield* Effect.fromResult(ClaimDisposition.fromClaimDispositionRow({ ...insert, id: 10 }));
+      expect(decoded.id).toBe(10);
+      expect(decoded.status).toBe("rejected");
+      expect(decoded.violations[0]?.severity).toBe("violation");
+    })
+  );
+
+  it.effect(
+    "round-trips schema-derived UsageRecords through the row converters",
+    Effect.fnUntraced(function* () {
+      const outcome = yield* Arbitrary.checkEffect(
+        Arbitrary.all([UsageRecordArbitrary]),
+        Effect.fnUntraced(function* ([record]) {
+          const insert = yield* Effect.fromResult(UsageRecord.toUsageRecordInsert(record));
+          const decoded = yield* Effect.fromResult(
+            UsageRecord.fromUsageRecordRow({
               ...insert,
               id: record.id,
               activityId: insert.activityId ?? null,
@@ -600,14 +669,130 @@ describe("EpistemicTables", () => {
               outputTokens: insert.outputTokens ?? null,
               totalTokens: insert.totalTokens ?? null,
               unitCount: insert.unitCount ?? null,
-            });
+            })
+          );
 
-            expect(UsageRecordEquivalence(decoded, record)).toBe(true);
+          expect(UsageRecordEquivalence(decoded, record)).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+          return true;
+        }),
+        fcRuns(50)
+      );
+
+      expect(outcome._tag).toBe("Passed");
+    })
+  );
+  it.effect(
+    "reports a typed CandidateClaim converter failure on both sides of the boundary",
+    Effect.fnUntraced(function* () {
+      const claim = yield* decodeUnknownCandidateClaimModel(candidateClaimInput(10));
+      const insert = yield* Effect.fromResult(CandidateClaim.toCandidateClaimInsert(claim));
+
+      expectConverterFailure(
+        yield* converterFailure(CandidateClaim.toCandidateClaimInsert(withUnencodablePublicId(claim))),
+        "CandidateClaimConverterError",
+        "toInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          CandidateClaim.fromCandidateClaimRow({
+            ...insert,
+            id: 10,
+            publicId: 42,
+          } as unknown as CandidateClaim.CandidateClaimRow)
+        ),
+        "CandidateClaimConverterError",
+        "fromRow"
+      );
+    })
+  );
+
+  it.effect(
+    "reports a typed ClaimDisposition converter failure on both sides of the boundary",
+    Effect.fnUntraced(function* () {
+      const disposition = yield* decodeUnknownClaimDispositionModel(claimDispositionInput(10));
+      const insert = yield* Effect.fromResult(ClaimDisposition.toClaimDispositionInsert(disposition));
+
+      expectConverterFailure(
+        yield* converterFailure(ClaimDisposition.toClaimDispositionInsert(withUnencodablePublicId(disposition))),
+        "ClaimDispositionConverterError",
+        "toInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          ClaimDisposition.fromClaimDispositionRow({
+            ...insert,
+            id: 10,
+            publicId: 42,
+          } as unknown as ClaimDisposition.ClaimDispositionRow)
+        ),
+        "ClaimDispositionConverterError",
+        "fromRow"
+      );
+    })
+  );
+
+  it.effect(
+    "reports a typed EdgeVersion converter failure on both sides of the boundary",
+    Effect.fnUntraced(function* () {
+      const version = yield* decodeUnknownEdgeVersionModel(edgeVersionInput(10));
+      const insert = yield* Effect.fromResult(EdgeVersion.toEdgeVersionInsert(version));
+
+      expectConverterFailure(
+        yield* converterFailure(EdgeVersion.toEdgeVersionInsert(withUnencodablePublicId(version))),
+        "EdgeVersionConverterError",
+        "toInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          EdgeVersion.fromEdgeVersionRow({
+            ...edgeVersionRow(insert, 10),
+            publicId: 42,
+          } as unknown as EdgeVersion.EdgeVersionRow)
+        ),
+        "EdgeVersionConverterError",
+        "fromRow"
+      );
+    })
+  );
+
+  it.effect(
+    "reports a typed UsageRecord converter failure on both sides of the boundary",
+    Effect.fnUntraced(function* () {
+      const record = yield* decodeUnknownUsageRecordModel(usageRecordInput(10));
+      const insert = yield* Effect.fromResult(UsageRecord.toUsageRecordInsert(record));
+
+      expectConverterFailure(
+        yield* converterFailure(UsageRecord.toUsageRecordInsert(withUnencodablePublicId(record))),
+        "UsageRecordConverterError",
+        "toInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          UsageRecord.fromUsageRecordRow({
+            ...insert,
+            id: 10,
+            publicId: 42,
+          } as unknown as UsageRecord.UsageRecordRow)
+        ),
+        "UsageRecordConverterError",
+        "fromRow"
+      );
+    })
+  );
+
+  A.forEach(fallbackReasonCases, ([tag, lift]) =>
+    it.effect(
+      `falls back to a generic reason when ${tag} lifts an empty schema failure`,
+      Effect.fnUntraced(function* () {
+        const schemaError = yield* emptyMessageSchemaError;
+        expect(schemaError.message).toBe("");
+
+        const converterError = lift(schemaError);
+        expect(converterError._tag).toBe(tag);
+        expect(converterError.operation).toBe("fromRow");
+        expect(converterError.reason).toBe("schema conversion failed");
+      })
+    )
+  );
 });

@@ -119,6 +119,7 @@ import {
   YeetMergeReadyCriterion,
 } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorLoopPolicy } from "./MonitorPolicy.ts";
@@ -789,7 +790,7 @@ const jobIsRed = (job: GithubJobRecord): boolean =>
 const runJobs = Effect.fn("YeetMonitorLoop.runJobs")(function* (
   context: RepoRunContext,
   runDatabaseId: number
-): Effect.fn.Return<ReadonlyArray<GithubJobRecord>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<GithubJobRecord>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runRepoCommandCapture(
     "gh",
     ["run", "view", `${runDatabaseId}`, "--json", "jobs"],
@@ -824,7 +825,7 @@ const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
   context: RepoRunContext,
   job: GithubJobRecord,
   runCompleted: boolean
-): Effect.fn.Return<YeetMonitorFailedJob, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<YeetMonitorFailedJob, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const shapeClass = detectGithubJobShapeClass(job);
   if (O.isSome(shapeClass)) {
     return YeetMonitorFailedJob.make({
@@ -884,7 +885,11 @@ const classifyJob = Effect.fn("YeetMonitorLoop.classifyJob")(function* (
 export const collectYeetMonitorFailedJobs = Effect.fn("YeetMonitorLoop.collectFailedJobs")(function* (
   context: RepoRunContext,
   headSha: string
-): Effect.fn.Return<ReadonlyArray<YeetMonitorFailedJob>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<YeetMonitorFailedJob>,
+  never,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const runs = yield* collectRemoteWorkflowRuns(context);
   const candidateRuns = A.filter(
     runs,
@@ -912,7 +917,7 @@ export const collectYeetMonitorFailedJobs = Effect.fn("YeetMonitorLoop.collectFa
 const rerunJob = Effect.fn("YeetMonitorLoop.rerunJob")(function* (
   context: RepoRunContext,
   databaseId: number
-): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runRepoCommandCapture("gh", ["run", "rerun", "--job", `${databaseId}`], context.repoRoot).pipe(
     Effect.orElseSucceed(() => ({ exitCode: 1, output: Str.empty, truncated: false }))
   );
@@ -951,7 +956,7 @@ const rerunJob = Effect.fn("YeetMonitorLoop.rerunJob")(function* (
 export const applyYeetMonitorJobDecision = Effect.fn("YeetMonitorLoop.applyDecision")(function* (
   context: RepoRunContext,
   decision: YeetMonitorJobDecision
-): Effect.fn.Return<void, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log(renderYeetMonitorJobDecision(decision));
   if (decision.status !== "rerun") {
     return;
@@ -980,7 +985,7 @@ interface YeetMonitorUntilMergedOptions {
       ) => Effect.Effect<
         unknown,
         YeetCommandError,
-        FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+        Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
       >)
     | undefined;
   readonly policy?: YeetMonitorLoopPolicy | undefined;
@@ -1376,7 +1381,7 @@ const announceMonitorReadiness = Effect.fn("YeetMonitorLoop.announceReadiness")(
     closeoutAt: O.getOrNull(current.timeline.closeoutAt),
     pushToReadyMs: O.getOrNull(yeetPushToReadyMillis(current.timeline)),
   });
-  const id = yeetPrMergeReadyRowId(capsule);
+  const id = yield* yeetPrMergeReadyRowId(capsule);
   yield* appendYeetInboxRowOnce(
     context.repoRoot,
     YeetPrMergeReadyRow.make({
@@ -1553,7 +1558,7 @@ export const runYeetMonitorUntilMerged: {
   ) => Effect.Effect<
     YeetMonitorTerminalState,
     YeetCommandError,
-    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   >;
   (
     context: RepoRunContext,
@@ -1561,7 +1566,7 @@ export const runYeetMonitorUntilMerged: {
   ): Effect.Effect<
     YeetMonitorTerminalState,
     YeetCommandError,
-    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   >;
 } = dual(
   2,
@@ -1571,7 +1576,7 @@ export const runYeetMonitorUntilMerged: {
   ): Effect.fn.Return<
     YeetMonitorTerminalState,
     YeetCommandError,
-    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > {
     const interval = O.getOrElse(O.fromNullishOr(options.pollInterval), () => mergeLoopPollInterval);
     let budget = emptyYeetMonitorRerunBudget;

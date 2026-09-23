@@ -28,7 +28,7 @@ import {
 import { PostgresDrizzle, PostgresError } from "@beep/postgres";
 import { A, O } from "@beep/utils";
 import { and, asc, eq, isNull } from "drizzle-orm";
-import { Effect, pipe } from "effect";
+import { Effect, pipe, Result } from "effect";
 import type { ExecutionLedgerError, ExecutionLedgerOperation } from "@beep/epistemic-use-cases/ExecutionLedger";
 
 const decisionTable = DbSchema.executionDecision;
@@ -87,16 +87,16 @@ export const makeDrizzleExecutionLedger = Effect.fn("Epistemic.ExecutionLedger.m
 
   return ExecutionLedger.of({
     appendDecision: Effect.fn("Epistemic.ExecutionLedger.appendDecision")(function* (record) {
-      yield* db
-        .insert(decisionTable)
-        .values(toExecutionDecisionInsert(record))
-        .pipe(writeFailure("appendDecision", DECISION_TABLE_NAME));
+      const insert = yield* Effect.fromResult(toExecutionDecisionInsert(record)).pipe(
+        writeFailure("appendDecision", DECISION_TABLE_NAME)
+      );
+      yield* db.insert(decisionTable).values(insert).pipe(writeFailure("appendDecision", DECISION_TABLE_NAME));
     }),
     appendOutcome: Effect.fn("Epistemic.ExecutionLedger.appendOutcome")(function* (record) {
-      yield* db
-        .insert(outcomeTable)
-        .values(toExecutionOutcomeInsert(record))
-        .pipe(writeFailure("appendOutcome", OUTCOME_TABLE_NAME));
+      const insert = yield* Effect.fromResult(toExecutionOutcomeInsert(record)).pipe(
+        writeFailure("appendOutcome", OUTCOME_TABLE_NAME)
+      );
+      yield* db.insert(outcomeTable).values(insert).pipe(writeFailure("appendOutcome", OUTCOME_TABLE_NAME));
     }),
     readDecisions: Effect.fn("Epistemic.ExecutionLedger.readDecisions")(function* (runKey) {
       const rows = yield* db
@@ -105,7 +105,9 @@ export const makeDrizzleExecutionLedger = Effect.fn("Epistemic.ExecutionLedger.m
         .where(eq(decisionTable.runKey, runKey))
         .orderBy(asc(decisionTable.seq))
         .pipe(readUnavailable("readDecisions", DECISION_TABLE_NAME));
-      return A.map(rows, fromExecutionDecisionRow);
+      return yield* Effect.fromResult(Result.all(A.map(rows, fromExecutionDecisionRow))).pipe(
+        readUnavailable("readDecisions", DECISION_TABLE_NAME)
+      );
     }),
     readOutcomes: Effect.fn("Epistemic.ExecutionLedger.readOutcomes")(function* (runKey) {
       const rows = yield* db
@@ -114,7 +116,9 @@ export const makeDrizzleExecutionLedger = Effect.fn("Epistemic.ExecutionLedger.m
         .where(eq(outcomeTable.runKey, runKey))
         .orderBy(asc(outcomeTable.recordedAt))
         .pipe(readUnavailable("readOutcomes", OUTCOME_TABLE_NAME));
-      return A.map(rows, fromExecutionOutcomeRow);
+      return yield* Effect.fromResult(Result.all(A.map(rows, fromExecutionOutcomeRow))).pipe(
+        readUnavailable("readOutcomes", OUTCOME_TABLE_NAME)
+      );
     }),
     readUnsettledAllowed: Effect.fn("Epistemic.ExecutionLedger.readUnsettledAllowed")(function* (runKey) {
       // Scoped to allowed decisions on purpose: a refused dispatch legitimately
@@ -129,7 +133,9 @@ export const makeDrizzleExecutionLedger = Effect.fn("Epistemic.ExecutionLedger.m
         )
         .orderBy(asc(decisionTable.seq))
         .pipe(readUnavailable("readUnsettledAllowed", DECISION_TABLE_NAME));
-      return A.map(rows, (row) => fromExecutionDecisionRow(row.decision));
+      return yield* Effect.fromResult(Result.all(A.map(rows, (row) => fromExecutionDecisionRow(row.decision)))).pipe(
+        readUnavailable("readUnsettledAllowed", DECISION_TABLE_NAME)
+      );
     }),
   });
 });

@@ -7,7 +7,9 @@
  */
 
 import { UsageRecord } from "@beep/epistemic-domain/entities/UsageRecord";
+import { Result } from "effect";
 import * as S from "effect/Schema";
+import { UsageRecordConverterError } from "./UsageRecord.errors.ts";
 import type { Table } from "./UsageRecord.table.ts";
 
 /**
@@ -93,8 +95,8 @@ export type UsageRecordRow = typeof Table.$inferSelect;
  */
 export type UsageRecordInsert = typeof Table.$inferInsert;
 
-const encodeUsageRecord = S.encodeSync(UsageRecord);
-const decodeUsageRecordRow = S.decodeUnknownSync(UsageRecord);
+const encodeUsageRecord = S.encodeResult(UsageRecord);
+const decodeUsageRecordRow = S.decodeUnknownResult(UsageRecord);
 
 /**
  * Convert a UsageRecord entity into its persistence insert row.
@@ -110,6 +112,7 @@ const decodeUsageRecordRow = S.decodeUnknownSync(UsageRecord);
  * ```ts
  * import { fromUsageRecordRow, toUsageRecordInsert } from "@beep/epistemic-tables/entities/UsageRecord"
  * import type { UsageRecordRow } from "@beep/epistemic-tables/entities/UsageRecord"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   activityId: 7,
@@ -137,17 +140,23 @@ const decodeUsageRecordRow = S.decodeUnknownSync(UsageRecord);
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * } satisfies UsageRecordRow
  *
- * const insert = toUsageRecordInsert(fromUsageRecordRow(row))
- * console.log("id" in insert) // false
+ * const insert = toUsageRecordInsert(Result.getOrThrow(fromUsageRecordRow(row)))
+ * console.log("id" in Result.getOrThrow(insert)) // false
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toUsageRecordInsert = (usageRecord: UsageRecord): UsageRecordInsert => {
-  const { id: _id, ...rest } = encodeUsageRecord(usageRecord);
-  return rest as UsageRecordInsert;
-};
+export const toUsageRecordInsert = (
+  usageRecord: UsageRecord
+): Result.Result<UsageRecordInsert, UsageRecordConverterError> =>
+  Result.mapError(
+    Result.map(encodeUsageRecord(usageRecord), (encoded): UsageRecordInsert => {
+      const { id: _id, ...rest } = encoded;
+      return rest as UsageRecordInsert;
+    }),
+    (error) => UsageRecordConverterError.fromSchema("toInsert", error)
+  );
 
 /**
  * Convert a selected persistence row into a UsageRecord entity.
@@ -157,6 +166,7 @@ export const toUsageRecordInsert = (usageRecord: UsageRecord): UsageRecordInsert
  * ```ts
  * import { fromUsageRecordRow } from "@beep/epistemic-tables/entities/UsageRecord"
  * import type { UsageRecordRow } from "@beep/epistemic-tables/entities/UsageRecord"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   activityId: 7,
@@ -184,11 +194,12 @@ export const toUsageRecordInsert = (usageRecord: UsageRecord): UsageRecordInsert
  *   updatedByPrincipal: { kind: "System", component: "Runtime" }
  * } satisfies UsageRecordRow
  *
- * const usage = fromUsageRecordRow(row)
+ * const usage = Result.getOrThrow(fromUsageRecordRow(row))
  * console.log(usage.provider)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromUsageRecordRow = (row: UsageRecordRow): UsageRecord => decodeUsageRecordRow(row);
+export const fromUsageRecordRow = (row: UsageRecordRow): Result.Result<UsageRecord, UsageRecordConverterError> =>
+  Result.mapError(decodeUsageRecordRow(row), (error) => UsageRecordConverterError.fromSchema("fromRow", error));

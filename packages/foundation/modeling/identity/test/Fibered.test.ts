@@ -12,7 +12,7 @@ const Section = S.Struct({
   rank: S.Finite,
   route: S.String,
 });
-const decodeSectionSync = S.decodeSync(Section);
+const decodeSection = S.decodeUnknownEffect(Section);
 const sectionValues = {
   text: { label: "Text", rank: 1, route: "/text" },
   count: { label: "Count", rank: 2, route: "/count" },
@@ -30,7 +30,7 @@ const family = Fibered.make({
     values: sectionValues,
   },
 });
-const decodeFamilyUnionSync = S.decodeSync(family.union);
+const decodeFamilyUnion = S.decodeUnknownEffect(family.union);
 const decodeUnknownFamilyUnionExit = S.decodeUnknownExit(family.union);
 
 describe("Fibered", () => {
@@ -44,16 +44,19 @@ describe("Fibered", () => {
     }
   });
 
-  it("decodes each section value once and uses the default annotation key", () => {
-    for (const point of Base.literals) {
-      const expected = decodeSectionSync(sectionValues[point]);
-      const first = family.meta(point);
+  it.effect(
+    "decodes each section value once and uses the default annotation key",
+    Effect.fnUntraced(function* () {
+      for (const point of Base.literals) {
+        const expected = yield* decodeSection(sectionValues[point]);
+        const first = family.meta(point);
 
-      expect(first).toEqual(expected);
-      expect(family.meta(point)).toBe(first);
-      expect(S.resolveAnnotations(family.member(point))?.fiberedSection).toBe(first);
-    }
-  });
+        expect(first).toEqual(expected);
+        expect(family.meta(point)).toBe(first);
+        expect(S.resolveAnnotations(family.member(point))?.fiberedSection).toBe(first);
+      }
+    })
+  );
 
   it("maps every schema-generated union value to its point's section", () => {
     expect(
@@ -68,30 +71,36 @@ describe("Fibered", () => {
     ).toBe("Passed");
   });
 
-  it("maps decoded member values back to their section metadata", () => {
-    const text = S.decodeSync(family.member("text"))({ _tag: "text", value: "hello" });
-    const count = S.decodeSync(family.member("count"))({ _tag: "count", value: 3 });
+  it.effect(
+    "maps decoded member values back to their section metadata",
+    Effect.fnUntraced(function* () {
+      const text = yield* S.decodeEffect(family.member("text"))({ _tag: "text", value: "hello" });
+      const count = yield* S.decodeEffect(family.member("count"))({ _tag: "count", value: 3 });
 
-    expect(family.fiberOf(text)).toBe(family.meta("text"));
-    expect(family.fiberOf(count)).toBe(family.meta("count"));
-  });
+      expect(family.fiberOf(text)).toBe(family.meta("text"));
+      expect(family.fiberOf(count)).toBe(family.meta("count"));
+    })
+  );
 
-  it("accepts every member encoding and rejects wrong tags and payloads", () => {
-    expect(decodeFamilyUnionSync({ _tag: "text", value: "hello" })).toEqual({
-      _tag: "text",
-      value: "hello",
-    });
-    expect(decodeFamilyUnionSync({ _tag: "count", value: 3 })).toEqual({
-      _tag: "count",
-      value: 3,
-    });
-    expect(decodeFamilyUnionSync({ _tag: "flag", value: true })).toEqual({
-      _tag: "flag",
-      value: true,
-    });
-    expect(decodeUnknownFamilyUnionExit({ _tag: "missing", value: "hello" })._tag).toBe("Failure");
-    expect(decodeUnknownFamilyUnionExit({ _tag: "count", value: "three" })._tag).toBe("Failure");
-  });
+  it.effect(
+    "accepts every member encoding and rejects wrong tags and payloads",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeFamilyUnion({ _tag: "text", value: "hello" })).toEqual({
+        _tag: "text",
+        value: "hello",
+      });
+      expect(yield* decodeFamilyUnion({ _tag: "count", value: 3 })).toEqual({
+        _tag: "count",
+        value: 3,
+      });
+      expect(yield* decodeFamilyUnion({ _tag: "flag", value: true })).toEqual({
+        _tag: "flag",
+        value: true,
+      });
+      expect(decodeUnknownFamilyUnionExit({ _tag: "missing", value: "hello" })._tag).toBe("Failure");
+      expect(decodeUnknownFamilyUnionExit({ _tag: "count", value: "three" })._tag).toBe("Failure");
+    })
+  );
 
   it("projects named section keys and permits the empty projection", () => {
     expect(family.project("text", ["label", "route"])).toEqual({ label: "Text", route: "/text" });

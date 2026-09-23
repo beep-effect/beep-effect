@@ -158,6 +158,12 @@ const main = Effect.gen(function* () {
   );
 });
 
+const provideBuiltLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scopedWith((scope) =>
+      Layer.buildWithScope(scope)(layer).pipe(Effect.flatMap((context) => Effect.provide(self, context)))
+    );
+
 const services = Layer.provideMerge(MemoryStatsLive, BunServices.layer);
-// @effect-diagnostics-next-line strictEffectProvide:off
-main.pipe(Effect.scoped, Effect.provide(services), BunRuntime.runMain);
+main.pipe(Effect.scoped, provideBuiltLayer(services), BunRuntime.runMain);

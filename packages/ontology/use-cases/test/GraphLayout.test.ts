@@ -11,7 +11,6 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 
 const EX = "https://example.test/";
 
@@ -21,7 +20,7 @@ const classes = A.makeBy(12, (index) => `${EX}Class${index}`);
 
 const session = createSession(
   CreateSessionInput.make({
-    id: S.decodeSync(SessionId)("session-1"),
+    id: SessionId.make("session-1"),
     baseDataset: makeDataset(A.map(classes, (iri) => makeQuad(makeNamedNode(iri), RDF_TYPE, OWL_CLASS))),
   })
 );

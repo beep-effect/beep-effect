@@ -16,7 +16,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Email } from "@beep/schema";
+import { Email, EmailString } from "@beep/schema";
 import { Config, Effect, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -55,7 +55,9 @@ export const COGNEE_ENV = {
   password: "COGNEE_API_PASSWORD",
 } as const;
 
-const DEFAULT_COGNEE_EMAIL = S.decodeSync(Email)("default_user@example.com");
+const DEFAULT_COGNEE_EMAIL = Email.make(
+  Redacted.make(EmailString.make("default_user@example.com"), { label: "Email" })
+);
 const DEFAULT_COGNEE_PASSWORD = "default_password";
 
 /**
@@ -179,7 +181,7 @@ export class CogneeCardUpload extends S.Class<CogneeCardUpload>($I`CogneeCardUpl
  *
  * const settings = CogneeSettings.make({
  *   apiUrl: "http://127.0.0.1:8010",
- *   email: S.decodeSync(Email)("default_user@example.com"),
+ *   email: Email.make(Redacted.make(EmailString.make("default_user@example.com"), { label: "Email" })),
  *   password: Redacted.make("default_password")
  * })
  * console.log(settings.apiUrl) // "http://127.0.0.1:8010"
@@ -349,7 +351,7 @@ const failStatus = Effect.fn("CogneeClient.failStatus")(function* (
  * const program = cogneeLogin(
  *   CogneeSettings.make({
  *     apiUrl: "http://127.0.0.1:8010",
- *     email: S.decodeSync(Email)("default_user@example.com"),
+ *     email: Email.make(Redacted.make(EmailString.make("default_user@example.com"), { label: "Email" })),
  *     password: Redacted.make("default_password")
  *   })
  * )

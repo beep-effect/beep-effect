@@ -18,7 +18,7 @@ const SourceKindWithStatics = SourceKindBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(SourceKindBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownResult(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

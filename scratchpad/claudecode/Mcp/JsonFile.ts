@@ -16,6 +16,8 @@ import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { McpConfigError } from "../Errors.ts";
@@ -513,10 +515,10 @@ const mcpFileFromServers = (
 const optionalJsonField = <A>(key: string, value: O.Option<A>): Readonly<Record<string, unknown>> =>
   O.map(value, (fieldValue) => ({ [key]: fieldValue })).pipe(O.getOrElse(() => ({})));
 
-const encodeOAuth = S.encodeSync(McpOAuth);
+const encodeOAuth = S.encodeEffect(McpOAuth);
 
 /** @internal */
-const serializeServerForCurrentClaudeCode = (server: McpServerConfig): Readonly<Record<string, unknown>> => {
+const serializeServerForCurrentClaudeCode = Effect.fnUntraced(function* (server: McpServerConfig): Effect.fn.Return<Readonly<Record<string, unknown>>, S.SchemaError> {
   if (isStdioMcpServer(server)) {
     return {
       ...optionalJsonField("type", server.type),
@@ -535,7 +537,7 @@ const serializeServerForCurrentClaudeCode = (server: McpServerConfig): Readonly<
       ...optionalJsonField("headersHelper", server.headersHelper),
       ...optionalJsonField("timeout", server.timeout),
       ...optionalJsonField("alwaysLoad", server.alwaysLoad),
-      ...optionalJsonField("oauth", O.map(server.oauth, encodeOAuth)),
+      ...optionalJsonField("oauth", O.isSome(server.oauth) ? O.some(yield* encodeOAuth(server.oauth.value)) : O.none()),
     };
   }
   return {
@@ -546,7 +548,7 @@ const serializeServerForCurrentClaudeCode = (server: McpServerConfig): Readonly<
     ...optionalJsonField("timeout", server.timeout),
     ...optionalJsonField("alwaysLoad", server.alwaysLoad),
   };
-};
+});
 
 /**
  * Convert an MCP config into the current Claude Code JSON shape.
@@ -561,19 +563,23 @@ const serializeServerForCurrentClaudeCode = (server: McpServerConfig): Readonly<
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
- * const encoded = Mcp.toClaudeCodeJson(
+ * import * as Effect from "effect/Effect"
+ *
+ * const encoded = await Effect.runPromise(Mcp.toClaudeCodeJson(
  *   Mcp.McpJsonFile.make({ mcpServers: {} })
- * )
+ * ))
  * console.log(encoded.mcpServers)
  * ```
  *
  * @category serialization
  * @since 0.0.0
  */
-export const toClaudeCodeJson = (
-  file: McpJsonFile
-): Readonly<{ readonly mcpServers: Readonly<Record<string, unknown>> }> => ({
-  mcpServers: R.map(R.remove(file.mcpServers, reservedServerName), serializeServerForCurrentClaudeCode),
+export const toClaudeCodeJson = Effect.fnUntraced(function* (file: McpJsonFile) {
+  const mcpServers = yield* Effect.all(
+    R.map(R.remove(file.mcpServers, reservedServerName), serializeServerForCurrentClaudeCode),
+    { concurrency: 1 }
+  );
+  return { mcpServers };
 });
 
 /** @internal */
@@ -843,9 +849,19 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
  * @category decoding
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- The required cwd plus optional scope overrides make a one-argument direct call indistinguishable from a curried overload.
-export const loadEffective = (
-  cwd: string,
-  options?: EffectiveMcpLoadOptions
-): Effect.Effect<McpJsonFile, McpConfigError, FileSystem.FileSystem | Path.Path> =>
-  loadEffectiveWithOptions(cwd, O.fromNullishOr(options));
+export const loadEffective: {
+  (
+    cwd: string,
+    options?: EffectiveMcpLoadOptions
+  ): Effect.Effect<McpJsonFile, McpConfigError, FileSystem.FileSystem | Path.Path>;
+  (
+    options?: EffectiveMcpLoadOptions
+  ): (cwd: string) => Effect.Effect<McpJsonFile, McpConfigError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  (args) => P.isString(args[0]),
+  (
+    cwd: string,
+    options?: EffectiveMcpLoadOptions
+  ): Effect.Effect<McpJsonFile, McpConfigError, FileSystem.FileSystem | Path.Path> =>
+    loadEffectiveWithOptions(cwd, O.fromNullishOr(options))
+);

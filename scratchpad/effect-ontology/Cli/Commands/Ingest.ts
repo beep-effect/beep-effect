@@ -1,3 +1,4 @@
+import type * as Crypto from "effect/Crypto";
 /**
  * CLI: Ingest Command
  *
@@ -10,31 +11,33 @@
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";
-import { Console, DateTime, Effect, FileSystem, Path, PlatformError, Random } from "effect";
+import type { PlatformError } from "effect";
+import { Console, DateTime, Effect, FileSystem, Path, Random } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
+import type * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Argument from "effect/unstable/cli/Argument";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
-import * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
+import type * as KeyValueStore from "effect/unstable/persistence/KeyValueStore";
 import {
-    BatchId,
-    ContentHash,
-    DocumentId,
-    GcsBucket,
-    GcsUri,
-    Namespace,
-    OntologyName,
-    OntologyVersion,
+  BatchId,
+  ContentHash,
+  DocumentId,
+  GcsBucket,
+  GcsUri,
+  Namespace,
+  OntologyName,
+  OntologyVersion,
 } from "../../Domain/Identity.ts";
 import type { ManifestDocument } from "../../Domain/Schema/Batch.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { ConfigService } from "../../Service/Config.ts";
 import { StorageService } from "../../Service/Storage.ts";
+import type { HashingError } from "../../Utils/Hash.ts";
 import { sha256SyncFull } from "../../Utils/Hash.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
 
@@ -88,7 +91,11 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   output: O.Option<string>,
   batchId: O.Option<string>,
   prefix: O.Option<string>
-): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError | PlatformError.PlatformError | S.SchemaError, ConfigService | FileSystem.FileSystem | Path.Path | StorageService> {
+): Effect.fn.Return<
+  void,
+  KeyValueStore.KeyValueStoreError | PlatformError.PlatformError | S.SchemaError | HashingError,
+  ConfigService | FileSystem.FileSystem | Path.Path | StorageService | Crypto.Crypto
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const storage = yield* StorageService;
@@ -122,7 +129,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
     const filePath = path.join(dir, file);
     const stat = yield* fs.stat(filePath);
     const content = yield* fs.readFileString(filePath);
-    const docId = DocumentId.fromContentHash(ContentHash.make(sha256SyncFull(content)));
+    const docId = DocumentId.fromContentHash(ContentHash.make(yield* sha256SyncFull(content)));
     const storageKey = `${storagePrefix}/documents/${docId}`;
     yield* storage.set(storageKey, content);
     const contentType = Str.endsWith(".json")(file)
@@ -144,7 +151,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   const ontologyContent = yield* fs.readFileString(ontology);
   const ontologyName = yield* OntologyName.decodeEffect(ontologyId);
   const targetNamespace = yield* Namespace.decodeEffect(namespace);
-  const ontologyHash = ContentHash.make(sha256SyncFull(ontologyContent));
+  const ontologyHash = ContentHash.make(yield* sha256SyncFull(ontologyContent));
   const ontologyFilename = path.basename(ontology);
   const ontologyKey = `${storagePrefix}/ontology/${ontologyFilename}`;
   yield* storage.set(ontologyKey, ontologyContent);

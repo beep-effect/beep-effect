@@ -44,70 +44,75 @@ import { Effect, Equal } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schema): void => {
-  const encode = S.encodeSync(schema);
-  const decode = S.decodeUnknownSync(schema);
+const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(
+  schema: Schema
+) {
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.all([Arbitrary.schema(schema)]),
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(schema)(value);
+        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+        expect(Equal.equals(decoded, value)).toBe(true);
 
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
-
-          return true;
-        },
-        fcRuns(25)
-      )
-    )._tag
-  ).toBe("Passed");
-};
+        return true;
+      }),
+    fcRuns(25)
+  );
+  expect(result._tag).toBe("Passed");
+});
 
 describe("@beep/qa-capture models", () => {
-  it("round-trips literal domains", () => {
-    assertRoundTrip(ActionEventKind);
-    assertRoundTrip(TransitionPhase);
-    assertRoundTrip(CaptureLane);
-    assertRoundTrip(ClockSyncMethod);
-    assertRoundTrip(ClockConfidence);
-    assertRoundTrip(ExtractionPriority);
-    assertRoundTrip(ExtractionRuleKind);
-    assertRoundTrip(DropReason);
-  });
+  it.effect("round-trips literal domains", () =>
+    Effect.gen(function* () {
+      yield* assertRoundTrip(ActionEventKind);
+      yield* assertRoundTrip(TransitionPhase);
+      yield* assertRoundTrip(CaptureLane);
+      yield* assertRoundTrip(ClockSyncMethod);
+      yield* assertRoundTrip(ClockConfidence);
+      yield* assertRoundTrip(ExtractionPriority);
+      yield* assertRoundTrip(ExtractionRuleKind);
+      yield* assertRoundTrip(DropReason);
+    })
+  );
 
-  it("round-trips every action-event variant and the union", () => {
-    assertRoundTrip(DomRect);
-    assertRoundTrip(PointerDownEvent);
-    assertRoundTrip(PointerUpEvent);
-    assertRoundTrip(PointerMoveEvent);
-    assertRoundTrip(PointerEnterEvent);
-    assertRoundTrip(PointerLeaveEvent);
-    assertRoundTrip(FocusInEvent);
-    assertRoundTrip(FocusOutEvent);
-    assertRoundTrip(KeyDownEvent);
-    assertRoundTrip(CssTransitionEvent);
-    assertRoundTrip(CssAnimationEvent);
-    assertRoundTrip(ScrollEvent);
-    assertRoundTrip(MarkerEvent);
-    assertRoundTrip(BeaconEvent);
-    assertRoundTrip(ActionEvent);
-  });
+  it.effect("round-trips every action-event variant and the union", () =>
+    Effect.gen(function* () {
+      yield* assertRoundTrip(DomRect);
+      yield* assertRoundTrip(PointerDownEvent);
+      yield* assertRoundTrip(PointerUpEvent);
+      yield* assertRoundTrip(PointerMoveEvent);
+      yield* assertRoundTrip(PointerEnterEvent);
+      yield* assertRoundTrip(PointerLeaveEvent);
+      yield* assertRoundTrip(FocusInEvent);
+      yield* assertRoundTrip(FocusOutEvent);
+      yield* assertRoundTrip(KeyDownEvent);
+      yield* assertRoundTrip(CssTransitionEvent);
+      yield* assertRoundTrip(CssAnimationEvent);
+      yield* assertRoundTrip(ScrollEvent);
+      yield* assertRoundTrip(MarkerEvent);
+      yield* assertRoundTrip(BeaconEvent);
+      yield* assertRoundTrip(ActionEvent);
+    })
+  );
 
-  it("round-trips session, provenance, and plan models", () => {
-    assertRoundTrip(Viewport);
-    assertRoundTrip(CaptureSession);
-    assertRoundTrip(ClockSync);
-    assertRoundTrip(CaptureProvenance);
-    assertRoundTrip(CaptureArtifact);
-    assertRoundTrip(SessionManifest);
-    assertRoundTrip(CollectorHandle);
-    assertRoundTrip(ArtifactBudget);
-    assertRoundTrip(ExtractionRule);
-    assertRoundTrip(GifSpec);
-    assertRoundTrip(ExtractionWindow);
-    assertRoundTrip(DroppedWindow);
-    assertRoundTrip(ExtractionPlan);
-  });
+  it.effect("round-trips session, provenance, and plan models", () =>
+    Effect.gen(function* () {
+      yield* assertRoundTrip(Viewport);
+      yield* assertRoundTrip(CaptureSession);
+      yield* assertRoundTrip(ClockSync);
+      yield* assertRoundTrip(CaptureProvenance);
+      yield* assertRoundTrip(CaptureArtifact);
+      yield* assertRoundTrip(SessionManifest);
+      yield* assertRoundTrip(CollectorHandle);
+      yield* assertRoundTrip(ArtifactBudget);
+      yield* assertRoundTrip(ExtractionRule);
+      yield* assertRoundTrip(GifSpec);
+      yield* assertRoundTrip(ExtractionWindow);
+      yield* assertRoundTrip(DroppedWindow);
+      yield* assertRoundTrip(ExtractionPlan);
+    })
+  );
 
   it.effect("decodes an NDJSON line into the tagged union", () =>
     Effect.gen(function* () {

@@ -33,7 +33,7 @@ export const SystemComponent = SystemComponentBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(SystemComponentBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownResult(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

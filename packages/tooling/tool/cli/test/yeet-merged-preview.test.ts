@@ -12,6 +12,7 @@ import {
   yeetMergedPreviewContext,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -25,7 +26,7 @@ const HEAD_SHA = "2222222222222222222222222222222222222222";
 const COMMIT_SHA = "3333333333333333333333333333333333333333";
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
+  Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer))
 );
 
 const context = RepoRunContext.make({

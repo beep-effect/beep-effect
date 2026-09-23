@@ -126,4 +126,54 @@ describe("BlockRepair", () => {
       }
     })
   );
+
+  it.effect(
+    "maps a malformed repair envelope to BlockRepairFailed",
+    Effect.fnUntraced(function* () {
+      const repair = makeRepairInvalidBlocks(() => Effect.succeed(repairCallResult('{"repairs":"not-an-array"}')));
+      const exit = yield* Effect.exit(repair([invalidParagraph]));
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        const error = Cause.findErrorOption(exit.cause);
+        expect(O.isSome(error)).toBe(true);
+        if (O.isSome(error)) {
+          expect(BlockRepairFailed.is(error.value)).toBe(true);
+          expect(error.value.message).toContain("envelope failed validation");
+        }
+      }
+    })
+  );
+
+  it.effect(
+    "maps invalid usage metadata to BlockRepairFailed",
+    Effect.fnUntraced(function* () {
+      const repair = makeRepairInvalidBlocks(() => Effect.succeed(repairCallResult('{"repairs":[]}', -1, 2)));
+      const exit = yield* Effect.exit(repair([invalidParagraph]));
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        const error = Cause.findErrorOption(exit.cause);
+        expect(O.isSome(error)).toBe(true);
+        if (O.isSome(error)) {
+          expect(BlockRepairFailed.is(error.value)).toBe(true);
+          expect(error.value.message).toContain("invalid usage metadata");
+        }
+      }
+    })
+  );
+
+  it.effect(
+    "returns an empty result without calling the repair model",
+    Effect.fnUntraced(function* () {
+      const repair = makeRepairInvalidBlocks(() =>
+        Effect.fail(RepairError.make({ message: "unreachable", operation: "generate_tool_json" }))
+      );
+      const repaired = yield* repair(A.empty<IssueReport>());
+
+      expect(A.isReadonlyArrayEmpty(repaired.blocks)).toBe(true);
+      expect(repaired.inputTokens).toBe(0);
+      expect(repaired.outputTokens).toBe(0);
+    })
+  );
 });

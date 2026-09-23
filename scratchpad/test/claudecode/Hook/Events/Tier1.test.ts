@@ -8,9 +8,9 @@
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-
 import * as Notification from "../../../../claudecode/Hook/Events/Notification.ts";
 import * as PostToolUse from "../../../../claudecode/Hook/Events/PostToolUse.ts";
 import * as PreCompact from "../../../../claudecode/Hook/Events/PreCompact.ts";
@@ -20,8 +20,9 @@ import * as Stop from "../../../../claudecode/Hook/Events/Stop.ts";
 import * as SubagentStop from "../../../../claudecode/Hook/Events/SubagentStop.ts";
 import * as UserPromptSubmit from "../../../../claudecode/Hook/Events/UserPromptSubmit.ts";
 import * as Testing from "../../../../claudecode/Testing.ts";
+
 const decodeUnknownSessionStartInput = S.decodeUnknownEffect(SessionStart.Input);
-const decodeUnknownNotificationInputSync = S.decodeUnknownSync(Notification.Input);
+const decodeUnknownNotificationInput = S.decodeUnknownEffect(Notification.Input);
 
 // ---------------------------------------------------------------------------
 // Shared envelope
@@ -34,7 +35,7 @@ const envelope = {
   permission_mode: "default",
 } as const;
 
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 // ---------------------------------------------------------------------------
 // PostToolUse
@@ -46,7 +47,7 @@ describe("Hook.PostToolUse", () => {
       const hook = PostToolUse.define({
         handler: () => Effect.succeed(PostToolUse.addContext("logged")),
       });
-      const json = encodeJson({
+      const json = yield* encodeJson({
         ...envelope,
         hook_event_name: "PostToolUse",
         tool_name: "Read",
@@ -82,7 +83,7 @@ describe("Hook.UserPromptSubmit", () => {
       const hook = UserPromptSubmit.define({
         handler: () => Effect.succeed(UserPromptSubmit.addContext("Current time: noon")),
       });
-      const json = encodeJson({
+      const json = yield* encodeJson({
         ...envelope,
         hook_event_name: "UserPromptSubmit",
         prompt: "what time is it?",
@@ -120,7 +121,7 @@ describe("Hook.Notification", () => {
       const hook = Notification.define({
         handler: () => Effect.succeed(Notification.passthrough()),
       });
-      const json = encodeJson({
+      const json = yield* encodeJson({
         ...envelope,
         hook_event_name: "Notification",
         message: "Permission needed",
@@ -131,16 +132,19 @@ describe("Hook.Notification", () => {
     })
   );
 
-  it("rejects an unknown notification_type", () => {
-    expect(() =>
-      decodeUnknownNotificationInputSync({
-        ...envelope,
-        hook_event_name: "Notification",
-        message: "hi",
-        notification_type: "unknown",
-      })
-    ).toThrow();
-  });
+  it.effect("rejects an unknown notification_type", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        decodeUnknownNotificationInput({
+          ...envelope,
+          hook_event_name: "Notification",
+          message: "hi",
+          notification_type: "unknown",
+        })
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -153,7 +157,7 @@ describe("Hook.Stop", () => {
       const hook = Stop.define({
         handler: () => Effect.succeed(Stop.block("keep going")),
       });
-      const json = encodeJson({
+      const json = yield* encodeJson({
         ...envelope,
         hook_event_name: "Stop",
         stop_hook_active: false,
@@ -178,7 +182,7 @@ describe("Hook.SubagentStop", () => {
       const hook = SubagentStop.define({
         handler: () => Effect.succeed(SubagentStop.allowStop()),
       });
-      const json = encodeJson({
+      const json = yield* encodeJson({
         ...envelope,
         hook_event_name: "SubagentStop",
         stop_hook_active: false,
@@ -203,7 +207,7 @@ describe("Hook.SessionStart", () => {
       const hook = SessionStart.define({
         handler: () => Effect.succeed(SessionStart.addContext("Project uses Effect v4")),
       });
-      const json = encodeJson({
+      const json = yield* encodeJson({
         session_id: "test-session",
         transcript_path: "/tmp/t.jsonl",
         cwd: "/tmp/ws",
@@ -248,7 +252,7 @@ describe("Hook.SessionEnd", () => {
       const hook = SessionEnd.define({
         handler: () => Effect.succeed(SessionEnd.passthrough()),
       });
-      const json = encodeJson({
+      const json = yield* encodeJson({
         session_id: "test-session",
         transcript_path: "/tmp/t.jsonl",
         cwd: "/tmp/ws",
@@ -271,7 +275,7 @@ describe("Hook.PreCompact", () => {
       const hook = PreCompact.define({
         handler: () => Effect.succeed(PreCompact.passthrough()),
       });
-      const json = encodeJson({
+      const json = yield* encodeJson({
         session_id: "test-session",
         transcript_path: "/tmp/t.jsonl",
         cwd: "/tmp/ws",

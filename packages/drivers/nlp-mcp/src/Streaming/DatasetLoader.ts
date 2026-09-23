@@ -40,8 +40,12 @@ const DatasetFormatBase = LiteralKit(["json", "jsonl", "lines", "text"]);
  * ```ts
  * import { DatasetFormat } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
- * const format = DatasetFormat.fromUnknown("jsonl")
- * console.log(format)
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const format = yield* DatasetFormat.fromUnknown("jsonl")
+ *   console.log(format) // "jsonl"
+ * })
  * ```
  *
  * @category schemas
@@ -52,7 +56,7 @@ export const DatasetFormat = DatasetFormatBase.pipe(
     description: "Dataset formats supported by the file and URL loaders.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );
@@ -84,8 +88,12 @@ const DatasetSourceTypeBase = LiteralKit(["file", "url"]);
  * ```ts
  * import { DatasetSourceType } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
- * const sourceType = DatasetSourceType.fromUnknown("file")
- * console.log(sourceType)
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const sourceType = yield* DatasetSourceType.fromUnknown("file")
+ *   console.log(sourceType) // "file"
+ * })
  * ```
  *
  * @category schemas
@@ -96,7 +104,7 @@ export const DatasetSourceType = DatasetSourceTypeBase.pipe(
     description: "Provenance source channels supported by dataset loaders.",
   }),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

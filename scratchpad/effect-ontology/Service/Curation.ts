@@ -1,3 +1,5 @@
+import * as Crypto from "effect/Crypto";
+import { flow } from "effect/Function";
 /**
  * Curation Service
  *
@@ -25,17 +27,18 @@ import { ContentHash } from "../Domain/Identity.ts";
 import type {
   AddAliasAction,
   CorrectTripleAction,
+  CurationAction,
   LinkToWikidataAction,
   MarkAsWrongAction,
   PromoteToPreferredAction,
 } from "../Domain/Schema/CurationAction.ts";
-import { CurationAction } from "../Domain/Schema/CurationAction.ts";
 import { BackgroundJobId, EmbeddingJob, PromptCacheJob } from "../Domain/Schema/JobSchema.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import { CanonicalEntityId, EntityRegistryRepository, normalizeEntityMention } from "../Repository/EntityRegistry.ts";
 import { ExamplesRepository } from "../Repository/Examples.ts";
-import { sha256SyncFull } from "../Utils/Hash.ts";
+import type { HashingError } from "../Utils/Hash.ts";
+import { sha256SyncFull as sha256SyncFullEffect } from "../Utils/Hash.ts";
 import { EmbeddingService } from "./Embedding.ts";
 import type { EventEntry } from "./EventBus.ts";
 import { EventBusService } from "./EventBus.ts";
@@ -64,7 +67,7 @@ const CurationActionTag = LiteralKit([
  * @category type-level
  * @since 0.0.0
  */
-export type CurationServiceError = DrizzleError | S.SchemaError | AnyEmbeddingError | EventBusError;
+export type CurationServiceError = DrizzleError | S.SchemaError | AnyEmbeddingError | EventBusError | HashingError;
 
 /**
  * Outcome of applying one curation action to a claim or entity.
@@ -122,6 +125,8 @@ export class CurationResult extends S.Class<CurationResult>($I`CurationResult`)(
  */
 export class CurationService extends Context.Service<CurationService>()($I`CurationService`, {
   make: Effect.gen(function* () {
+    const crypto = yield* Crypto.Crypto;
+    const sha256SyncFull = flow(sha256SyncFullEffect, Effect.provideService(Crypto.Crypto, crypto));
     const claimRepo = yield* ClaimRepository;
     const entityRegistry = yield* EntityRegistryRepository;
     const examplesRepo = yield* ExamplesRepository;
@@ -214,7 +219,9 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         yield* eventBus.enqueueJob(
           PromptCacheJob.make({
             id: BackgroundJobId.fromContentHash(
-              ContentHash.make(sha256SyncFull(`${action.ontologyId}:${example.id}:${DateTime.toEpochMillis(now)}`))
+              ContentHash.make(
+                yield* sha256SyncFull(`${action.ontologyId}:${example.id}:${DateTime.toEpochMillis(now)}`)
+              )
             ),
             ontologyId: action.ontologyId,
             exampleId: example.id,
@@ -289,7 +296,9 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         yield* eventBus.enqueueJob(
           PromptCacheJob.make({
             id: BackgroundJobId.fromContentHash(
-              ContentHash.make(sha256SyncFull(`${action.ontologyId}:${example.id}:${DateTime.toEpochMillis(now)}`))
+              ContentHash.make(
+                yield* sha256SyncFull(`${action.ontologyId}:${example.id}:${DateTime.toEpochMillis(now)}`)
+              )
             ),
             ontologyId: action.ontologyId,
             exampleId: example.id,
@@ -368,7 +377,9 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       yield* eventBus.enqueueJob(
         EmbeddingJob.make({
           id: BackgroundJobId.fromContentHash(
-            ContentHash.make(sha256SyncFull(`${action.ontologyId}:${canonical.id}:${DateTime.toEpochMillis(now)}`))
+            ContentHash.make(
+              yield* sha256SyncFull(`${action.ontologyId}:${canonical.id}:${DateTime.toEpochMillis(now)}`)
+            )
           ),
           ontologyId: action.ontologyId,
           canonicalEntityId,

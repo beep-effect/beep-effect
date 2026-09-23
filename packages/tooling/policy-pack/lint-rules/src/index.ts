@@ -12,6 +12,7 @@
  */
 
 import { $LintRulesId } from "@beep/identity/packages";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $LintRulesId;
@@ -196,35 +197,35 @@ export class RuleRegistrySchema extends S.Class<RuleRegistrySchema>("RuleRegistr
  * @category configuration
  * @since 0.1.0
  */
-export const RULES: { readonly [K in RuleName]: RuleMetadata } = S.decodeSync(RuleRegistrySchema)({
-  "no-native-error": {
+export const RULES: { readonly [K in RuleName]: RuleMetadata } = RuleRegistrySchema.make({
+  "no-native-error": RuleMetadataSchema.make({
     name: "no-native-error",
     severity: "error",
-    replaces: "lint tooling-tagged-errors",
+    replaces: O.some("lint tooling-tagged-errors"),
     summary: "Disallow native Error construction in tooling source; use S.TaggedError from effect/Schema.",
-    scope: "packages/tooling/**/src/**",
-  },
-  "no-bigint-literals": {
+    scope: O.some("packages/tooling/**/src/**"),
+  }),
+  "no-bigint-literals": RuleMetadataSchema.make({
     name: "no-bigint-literals",
     severity: "warn",
-    replaces: null,
+    replaces: O.none(),
     summary: "Disallow bigint literals (1n, 0xFFn, ...); use BigInt(value).",
-    scope: "**/src/**",
-  },
-  "no-empty-named-blocks": {
+    scope: O.some("**/src/**"),
+  }),
+  "no-empty-named-blocks": RuleMetadataSchema.make({
     name: "no-empty-named-blocks",
     severity: "error",
-    replaces: null,
+    replaces: O.none(),
     summary: 'Disallow empty named import blocks: `import {} from "..."`.',
-    scope: null,
-  },
-  "prefer-array-flat-map": {
+    scope: O.none(),
+  }),
+  "prefer-array-flat-map": RuleMetadataSchema.make({
     name: "prefer-array-flat-map",
     severity: "error",
-    replaces: null,
+    replaces: O.none(),
     summary: "Prefer `.flatMap(f)` over `.map(f).flat()`.",
-    scope: null,
-  },
+    scope: O.none(),
+  }),
 });
 
 /**

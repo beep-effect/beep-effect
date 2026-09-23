@@ -127,7 +127,7 @@ import {
 } from "./Quality.schemas.ts";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
-import type { Scope } from "effect";
+import type { Crypto, Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta, CoverageScopeOwner } from "./internal/CoverageScope.ts";
@@ -206,7 +206,12 @@ const capturedTimeoutResult = (error: CaptureCommandTimedOutError): CapturedStep
     truncated: false,
   });
 
-type QualityTaskEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type QualityTaskEnvironment =
+  | Crypto.Crypto
+  | FileSystem.FileSystem
+  | Path.Path
+  | Crypto.Crypto
+  | ChildProcessSpawner.ChildProcessSpawner;
 
 type PackageJsonWorkspaces = ReadonlyArray<string> | PackageJsonWorkspacesDocument;
 
@@ -1647,7 +1652,7 @@ interface StreamingStepOutcome {
 type StreamingOutcomeObserver = (
   outcome: StreamingStepOutcome,
   index: number
-) => Effect.Effect<void, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path>;
+) => Effect.Effect<void, QualityTaskConfigurationError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
 
 const ignoreStreamingOutcome: StreamingOutcomeObserver = () => Effect.void;
 
@@ -1876,7 +1881,7 @@ const redSchedulingDecision = (
 
 type QualityTaskLaneRunObserver = (
   laneRun: QualityTaskLaneRun
-) => Effect.Effect<void, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path>;
+) => Effect.Effect<void, QualityTaskConfigurationError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
 
 const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
 
@@ -1991,7 +1996,9 @@ const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function
   lane: GithubCheckWaveLane,
   laneProofMode?: LaneProofSession["mode"]
 ) {
-  const session = yield* prepareLaneProofSession([lane], laneProofMode);
+  const session = yield* prepareLaneProofSession([lane], laneProofMode).pipe(
+    QualityTaskConfigurationError.mapError("Failed to prepare the lane-proof session.")
+  );
   const reusable = O.exists(session, (prepared) => hasReusableLaneProof(prepared, lane.id));
   const activeReuse = reusable && O.exists(session, (prepared) => prepared.mode === "active");
   if (reusable) {
@@ -2388,7 +2395,11 @@ export const runQualityTaskStreamingLaneGroup = Effect.fn("QualityTasks.runStrea
 
 const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOutput")(function* (
   step: QualityTaskStep
-): Effect.fn.Return<QualityTaskStepOutput, QualityTaskConfigurationError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  QualityTaskStepOutput,
+  QualityTaskConfigurationError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, step.env ?? {}).pipe(
     QualityTaskConfigurationError.mapError("Rejected a caller-provided cache runtime identity.")
   );

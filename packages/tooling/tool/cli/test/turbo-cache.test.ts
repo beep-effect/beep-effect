@@ -17,13 +17,14 @@ import {
   turboCacheValueSourceFor,
 } from "@beep/repo-cli/test/SharedInternals";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { TurboCacheValueSource } from "@beep/repo-cli/test/SharedInternals";
 
-const decodeTurboCachePlanSync = S.decodeSync(TurboCachePlan);
+const decodeTurboCachePlanEffect = S.decodeEffect(TurboCachePlan);
 
 const REMOTE_READ_MODE = TurboCacheMode.Enum.LocalWriteRemoteRead;
 const LOCAL_ONLY_ARG = `--cache=${TurboCacheMode.Enum.LocalOnly}`;
@@ -120,11 +121,13 @@ describe("turbo cache plan resolution", () => {
     expect(turboCachePlanArgs(plan)).toEqual([]);
   });
 
-  it("prefers the CI verdict over an explicit cache argument", () => {
-    expect(resolveTurboCachePlan(completeEnvironment, { args: ["--force"], ci: true })).toEqual(
-      decodeTurboCachePlanSync({ _tag: "caller-controlled", reason: "ci" })
-    );
-  });
+  it.effect("prefers the CI verdict over an explicit cache argument", () =>
+    Effect.gen(function* () {
+      expect(resolveTurboCachePlan(completeEnvironment, { args: ["--force"], ci: true })).toEqual(
+        yield* decodeTurboCachePlanEffect({ _tag: "caller-controlled", reason: "ci" })
+      );
+    })
+  );
 });
 
 describe("turbo cache control arguments", () => {

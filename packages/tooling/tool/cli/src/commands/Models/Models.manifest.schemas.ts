@@ -297,10 +297,7 @@ export const isEffortAllowedOnSurface: {
   (effort: EffortLevelValue): (surface: RoutingSurface) => boolean;
   (surface: RoutingSurface, effort: EffortLevelValue): boolean;
 } = dual(2, (surface: RoutingSurface, effort: EffortLevelValue): boolean =>
-  O.match(HashMap.get(SurfaceEffortDomain, surface), {
-    onNone: () => false,
-    onSome: (levels) => HashSet.has(levels, effort),
-  })
+  O.exists(HashMap.get(SurfaceEffortDomain, surface), (levels) => HashSet.has(levels, effort))
 );
 
 // ── Bindings ────────────────────────────────────────────────────────────────

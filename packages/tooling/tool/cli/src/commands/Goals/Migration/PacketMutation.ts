@@ -8,6 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
 import { Context, Effect, FileSystem, flow, Layer, Order, Path, Ref } from "effect";
+import * as Crypto from "effect/Crypto";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
@@ -135,6 +136,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const store = yield* PacketEventStore;
+  const crypto = yield* Crypto.Crypto;
 
   const preview = Effect.fn("PacketForkRepairApplier.preview")(function* (locator: PacketStreamLocator) {
     const listing = yield* store.list(locator);
@@ -142,6 +144,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
       return yield* streamError(locator.packet, "stream has integrity issues; fork repair refuses ambiguous bytes");
     }
     return yield* planForkRepair({ packet: locator.packet, root: locator.root, events: listing.events }).pipe(
+      Effect.provideService(Crypto.Crypto, crypto),
       Effect.mapError((error) => streamError(locator.packet, `repair plan could not be encoded: ${error.message}`))
     );
   });
@@ -169,6 +172,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
   }) {
     for (const event of input.repair.rebaseDrafts) {
       const id = yield* packetEventDigest(event).pipe(
+        Effect.provideService(Crypto.Crypto, crypto),
         Effect.mapError((error) => streamError(input.packet, `rebased event digest failed: ${error.message}`))
       );
       const content = yield* renderPacketEventFile(event).pipe(
@@ -317,13 +321,14 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
 
   const applyLocked = Effect.fn("PacketForkRepairApplier.applyLocked")(function* (
     locator: PacketStreamLocator,
-    assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+    assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem | Crypto.Crypto>
   ) {
     const original = yield* store.list(locator);
     if (A.isReadonlyArrayNonEmpty(original.issues)) {
       return yield* streamError(locator.packet, "stream has integrity issues; fork repair refuses ambiguous bytes");
     }
     const planned = yield* planForkRepair({ packet: locator.packet, root: locator.root, events: original.events }).pipe(
+      Effect.provideService(Crypto.Crypto, crypto),
       Effect.mapError((error) => streamError(locator.packet, `repair plan could not be encoded: ${error.message}`))
     );
     if (O.isNone(planned)) return O.none<PacketForkRepairOutcome>();
@@ -437,11 +442,15 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
         streamError(locator.packet, "event-stream ownership was lost during fork repair; retry the mutation")
       ),
       Effect.provideService(FileSystem.FileSystem, fs),
-      Effect.provideService(Path.Path, path)
+      Effect.provideService(Path.Path, path),
+      Effect.provideService(Crypto.Crypto, crypto)
     );
   });
 
-  return PacketForkRepairApplier.of({ preview, apply });
+  return PacketForkRepairApplier.of({
+    preview,
+    apply,
+  });
 });
 
 /**
@@ -461,7 +470,7 @@ const makePacketForkRepairApplier = Effect.fn("PacketForkRepairApplier.make")(fu
 export const PacketForkRepairApplierLive: Layer.Layer<
   PacketForkRepairApplier,
   never,
-  PacketEventStore | FileSystem.FileSystem | Path.Path
+  PacketEventStore | FileSystem.FileSystem | Path.Path | Crypto.Crypto
 > = Layer.effect(PacketForkRepairApplier, makePacketForkRepairApplier());
 
 const ownsGenesisEvent = Effect.fnUntraced(function* (seed: PacketGenesisSeed) {
@@ -796,7 +805,7 @@ export const quarantineOwnedGenesisEvents = Effect.fn("Goals.quarantineOwnedGene
 const quarantineOwnedGenesisEventsLocked = Effect.fnUntraced(function* (
   seed: PacketGenesisSeed,
   context: "genesis rollback" | "seed rollback",
-  assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+  assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem | Crypto.Crypto>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -829,7 +838,7 @@ const quarantineOwnedGenesisEventsLocked = Effect.fnUntraced(function* (
     .pipe(Effect.mapError((error) => streamError(seed.slug, `${context} event remove failed: ${error.message}`)));
 });
 
-type PacketOwnershipFence = Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>;
+type PacketOwnershipFence = Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem | Crypto.Crypto>;
 
 const publishGenesisTrace = Effect.fnUntraced(function* (seed: PacketGenesisSeed, assertOwned: PacketOwnershipFence) {
   const fs = yield* FileSystem.FileSystem;
@@ -989,7 +998,7 @@ export const applyPacketGenesisSeed = Effect.fn("Goals.applyPacketGenesisSeed")(
 
 const applyPacketGenesisSeedLocked = Effect.fnUntraced(function* (
   seed: PacketGenesisSeed,
-  assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem>
+  assertOwned: Effect.Effect<void, QualitySchedulerError, FileSystem.FileSystem | Crypto.Crypto>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

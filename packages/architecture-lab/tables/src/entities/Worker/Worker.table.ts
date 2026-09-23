@@ -69,10 +69,11 @@ export const WORKER_TABLE_NAME = getTableName(workerTable);
  * } from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert, type WorkerRow } from "@beep/architecture-lab-tables/entities/Worker"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const id = S.decodeUnknownSync(WorkerId)(1)
- * const worker = create(
+ * const decoded = create(
  *   CreateWorkerInput.make({
  *     displayName: "Ada Lovelace",
  *     id,
@@ -80,6 +81,11 @@ export const WORKER_TABLE_NAME = getTableName(workerTable);
  *   })
  * )
  *
+ * if (Result.isFailure(decoded)) {
+ *   throw new Error("expected Worker")
+ * }
+ *
+ * const worker = decoded.success
  * const row = { ...toWorkerInsert(worker), id } satisfies WorkerRow
  *
  * console.log(row.displayName)
@@ -103,9 +109,10 @@ export type WorkerRow = typeof workerTable.$inferSelect;
  * } from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert, type WorkerInsert } from "@beep/architecture-lab-tables/entities/Worker"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
- * const worker = create(
+ * const decoded = create(
  *   CreateWorkerInput.make({
  *     displayName: "Ada Lovelace",
  *     id: S.decodeUnknownSync(WorkerId)(1),
@@ -113,6 +120,11 @@ export type WorkerRow = typeof workerTable.$inferSelect;
  *   })
  * )
  *
+ * if (Result.isFailure(decoded)) {
+ *   throw new Error("expected Worker")
+ * }
+ *
+ * const worker = decoded.success
  * const insert: WorkerInsert = toWorkerInsert(worker)
  *
  * console.log(insert.status)
@@ -139,9 +151,10 @@ const decodeWorker = S.decodeUnknownResult(DomainWorker.Worker);
  * } from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert } from "@beep/architecture-lab-tables/entities/Worker"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
- * const worker = create(
+ * const decoded = create(
  *   CreateWorkerInput.make({
  *     displayName: "Ada Lovelace",
  *     id: S.decodeUnknownSync(WorkerId)(1),
@@ -149,6 +162,11 @@ const decodeWorker = S.decodeUnknownResult(DomainWorker.Worker);
  *   })
  * )
  *
+ * if (Result.isFailure(decoded)) {
+ *   throw new Error("expected Worker")
+ * }
+ *
+ * const worker = decoded.success
  * const insert = toWorkerInsert(worker)
  * if (insert.displayName !== "Ada Lovelace" || insert.status !== "active") {
  *   throw new Error("expected Worker insert projection")
@@ -175,24 +193,31 @@ export const toWorkerInsert = (worker: DomainWorker.Worker): WorkerInsert => Res
  * } from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { fromWorkerRow, toWorkerInsert, type WorkerRow } from "@beep/architecture-lab-tables/entities/Worker"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const id = S.decodeUnknownSync(WorkerId)(1)
- * const worker = create(
+ * const decoded = create(
  *   CreateWorkerInput.make({
  *     displayName: "Ada Lovelace",
  *     id,
  *     organizationId: S.decodeUnknownSync(WorkerOrganizationId)(1)
  *   })
  * )
+ *
+ * if (Result.isFailure(decoded)) {
+ *   throw new Error("expected Worker")
+ * }
+ *
+ * const worker = decoded.success
  * const row = { ...toWorkerInsert(worker), id } satisfies WorkerRow
  *
- * const decoded = fromWorkerRow(row)
- * if (decoded.displayName !== "Ada Lovelace") {
+ * const restored = fromWorkerRow(row)
+ * if (restored.displayName !== "Ada Lovelace") {
  *   throw new Error("expected decoded Worker")
  * }
  *
- * console.log(decoded.displayName)
+ * console.log(restored.displayName)
  * ```
  *
  * @category tables

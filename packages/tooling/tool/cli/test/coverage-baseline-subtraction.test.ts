@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
 import { describe, expect, it } from "vitest";
 
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const BaselineProjection = S.Struct({
   generated_at: S.String,
@@ -84,7 +84,7 @@ const writeBaselineFixture = Effect.fn("writeBaselineFixture")(function* (repoRo
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs.makeDirectory(path.join(repoRoot, "standards"), { recursive: true });
-  yield* fs.writeFileString(path.join(repoRoot, coverageRegressionBaselinePath), `${encodeJson(document)}\n`);
+  yield* fs.writeFileString(path.join(repoRoot, coverageRegressionBaselinePath), `${yield* encodeJson(document)}\n`);
 });
 
 const readBaselineText = Effect.fn("readBaselineText")(function* (repoRoot: string) {

@@ -39,7 +39,4 @@ export class Thread extends ProductEntity.Entity<Thread>()(WorkspaceIdentity.Thr
   $I.annote("Thread", {
     description: "Durable workspace conversation thread.",
   })
-) {
-  static readonly decodeUnknownSync = S.decodeUnknownSync(Thread);
-  static readonly encodeSync = S.encodeSync(Thread);
-}
+) {}

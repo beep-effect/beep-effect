@@ -25,13 +25,14 @@ import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.ts";
 import type { DmsProvider, RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import type { SyncItemSeed } from "@beep/documents-use-cases/entities/SyncItem/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
-const decodeSyncItem = S.decodeUnknownSync(DomainSyncItem.SyncItem);
+const decodeSyncItem = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
 
 /**
  * Build a full SyncItem entity from a creation seed and an assigned id.
@@ -40,7 +41,7 @@ const decodeSyncItem = S.decodeUnknownSync(DomainSyncItem.SyncItem);
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
-const syncItemFromSeed = (id: number, seed: SyncItemSeed): DomainSyncItem.SyncItem =>
+const syncItemFromSeed = Effect.fn("Documents.SyncItemRepository.fromSeed")((id: number, seed: SyncItemSeed) =>
   decodeSyncItem({
     contentDigest: O.getOrNull(seed.contentDigest),
     contentSizeBytes: O.getOrNull(seed.contentSizeBytes),
@@ -67,7 +68,8 @@ const syncItemFromSeed = (id: number, seed: SyncItemSeed): DomainSyncItem.SyncIt
     updatedAt: 0,
     updatedByPrincipal: SYSTEM_PRINCIPAL,
     workspaceId: seed.workspaceId,
-  });
+  }).pipe(repositoryUnavailable("construct SyncItem"))
+);
 
 type MirrorScope = {
   readonly provider: DmsProvider;
@@ -120,7 +122,7 @@ export const makeInMemorySyncItemRepository = Effect.fn("Documents.SyncItemRepos
         return yield* duplicatePathConflict(seed);
       }
       const id = yield* Ref.getAndUpdate(counter, N.increment);
-      const syncItem = syncItemFromSeed(id, seed);
+      const syncItem = yield* syncItemFromSeed(id, seed);
       yield* Ref.update(store, HashMap.set(syncItem.id, syncItem));
       return syncItem;
     }),
@@ -163,6 +165,16 @@ const repositoryUnavailable =
       )
     );
 
+const decodeOptionalSyncItemRow = (rows: ReadonlyArray<Parameters<typeof fromSyncItemRow>[0]>) =>
+  pipe(
+    A.head(rows),
+    O.match({
+      onNone: () => Effect.succeedNone,
+      onSome: (row) =>
+        Effect.fromResult(fromSyncItemRow(row)).pipe(repositoryUnavailable("decode SyncItem"), Effect.asSome),
+    })
+  );
+
 /**
  * Build a Drizzle-backed SyncItem repository used by live persistence tests.
  *
@@ -198,7 +210,7 @@ export const makeDrizzleSyncItemRepository = Effect.fn("Documents.SyncItemReposi
       )
       .limit(1)
       .pipe(repositoryUnavailable("select SyncItem by path"));
-    return pipe(rows, A.head, O.map(fromSyncItemRow));
+    return yield* decodeOptionalSyncItemRow(rows);
   });
 
   return SyncItemRepository.of({
@@ -208,17 +220,21 @@ export const makeDrizzleSyncItemRepository = Effect.fn("Documents.SyncItemReposi
         return yield* duplicatePathConflict(seed);
       }
       const currentRows = yield* db.select().from(syncItemTable).pipe(repositoryUnavailable("list SyncItem"));
-      const syncItem = syncItemFromSeed(nextEntityId(currentRows), seed);
+      const syncItem = yield* syncItemFromSeed(nextEntityId(currentRows), seed);
+      const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem)).pipe(
+        repositoryUnavailable("encode SyncItem insert")
+      );
       const rows = yield* db
         .insert(syncItemTable)
-        .values(toSyncItemInsert(syncItem))
+        .values(insert)
         .returning()
         .pipe(repositoryUnavailable("insert SyncItem"));
-      return pipe(
-        rows,
-        A.head,
-        O.map(fromSyncItemRow),
-        O.getOrElse(() => syncItem)
+      return yield* pipe(
+        A.head(rows),
+        O.match({
+          onNone: () => Effect.succeed(syncItem),
+          onSome: (row) => Effect.fromResult(fromSyncItemRow(row)).pipe(repositoryUnavailable("decode SyncItem")),
+        })
       );
     }),
     findByPath: Effect.fn("Documents.SyncItemRepository.drizzleFindByPath")(function* (input) {
@@ -237,7 +253,7 @@ export const makeDrizzleSyncItemRepository = Effect.fn("Documents.SyncItemReposi
         )
         .limit(1)
         .pipe(repositoryUnavailable("select SyncItem by remote id"));
-      return pipe(rows, A.head, O.map(fromSyncItemRow));
+      return yield* decodeOptionalSyncItemRow(rows);
     }),
     listByWorkspace: Effect.fn("Documents.SyncItemRepository.drizzleListByWorkspace")(function* (input) {
       const rows = yield* db
@@ -246,12 +262,17 @@ export const makeDrizzleSyncItemRepository = Effect.fn("Documents.SyncItemReposi
         .where(and(eq(syncItemTable.workspaceId, input.workspaceId), eq(syncItemTable.provider, input.provider)))
         .orderBy(asc(syncItemTable.id))
         .pipe(repositoryUnavailable("list SyncItem"));
-      return A.map(rows, fromSyncItemRow);
+      return yield* Effect.fromResult(Result.all(A.map(rows, fromSyncItemRow))).pipe(
+        repositoryUnavailable("decode SyncItem")
+      );
     }),
     update: Effect.fn("Documents.SyncItemRepository.drizzleUpdate")(function* (syncItem) {
+      const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem)).pipe(
+        repositoryUnavailable("encode SyncItem insert")
+      );
       const rows = yield* db
         .update(syncItemTable)
-        .set(toSyncItemInsert(syncItem))
+        .set(insert)
         .where(eq(syncItemTable.id, syncItem.id))
         .returning()
         .pipe(repositoryUnavailable("update SyncItem"));
@@ -259,7 +280,7 @@ export const makeDrizzleSyncItemRepository = Effect.fn("Documents.SyncItemReposi
       if (O.isNone(updated)) {
         return yield* SyncItemRepositoryNotFound.make({ syncItemId: syncItem.id });
       }
-      return fromSyncItemRow(updated.value);
+      return yield* Effect.fromResult(fromSyncItemRow(updated.value)).pipe(repositoryUnavailable("decode SyncItem"));
     }),
   });
 });

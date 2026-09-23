@@ -1,3 +1,4 @@
+import * as Crypto from "effect/Crypto";
 /**
  * Service: Grounder
  *
@@ -746,6 +747,7 @@ const DEFAULT_BATCH_SIZE = 5;
  */
 export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
   make: Effect.gen(function* () {
+    const crypto = yield* Crypto.Crypto;
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 
@@ -768,6 +770,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             confidence: response.value.confidence,
           }),
         }).pipe(
+          Effect.provideService(Crypto.Crypto, crypto),
           Effect.provideService(LanguageModel.LanguageModel, llm),
           Effect.tap((response) =>
             Effect.logDebug("Grounder verification result", {
@@ -805,7 +808,10 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                 grounded: response.value.grounded,
                 confidence: response.value.confidence,
               }),
-            }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
+            }).pipe(
+              Effect.provideService(Crypto.Crypto, crypto),
+              Effect.provideService(LanguageModel.LanguageModel, llm)
+            );
             return [
               GrounderResult.make({
                 decision: groundingDecision(result.value.grounded, result.value.confidence),
@@ -826,7 +832,10 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
               [LlmAttributes.RELATION_COUNT]: inputs.length,
               [LlmAttributes.PROMPT_LENGTH]: prompt.length,
             },
-          }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
+          }).pipe(
+            Effect.provideService(Crypto.Crypto, crypto),
+            Effect.provideService(LanguageModel.LanguageModel, llm)
+          );
           return yield* validateRelationBatch(inputs, response.value.results);
         },
         (effect, inputs) =>
@@ -875,6 +884,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                 [LlmAttributes.PROMPT_LENGTH]: prompt.length,
               },
             }).pipe(
+              Effect.provideService(Crypto.Crypto, crypto),
               Effect.provideService(LanguageModel.LanguageModel, llm),
               Effect.flatMap((response) => validateRelationBatch(batchArray, response.value.results))
             );
@@ -900,6 +910,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             confidence: response.value.confidence,
           }),
         }).pipe(
+          Effect.provideService(Crypto.Crypto, crypto),
           Effect.provideService(LanguageModel.LanguageModel, llm),
           Effect.tap((response) =>
             Effect.logDebug("Grounder entity verification result", {
@@ -937,7 +948,10 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
               spanAttributes: {
                 [LlmAttributes.PROMPT_LENGTH]: prompt.length,
               },
-            }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
+            }).pipe(
+              Effect.provideService(Crypto.Crypto, crypto),
+              Effect.provideService(LanguageModel.LanguageModel, llm)
+            );
             return [
               EntityGrounderResult.make({
                 decision: groundingDecision(result.value.grounded, result.value.confidence),
@@ -959,7 +973,10 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
               [LlmAttributes.ENTITY_COUNT]: entities.length,
               [LlmAttributes.PROMPT_LENGTH]: prompt.length,
             },
-          }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
+          }).pipe(
+            Effect.provideService(Crypto.Crypto, crypto),
+            Effect.provideService(LanguageModel.LanguageModel, llm)
+          );
           return yield* validateEntityBatch(entities, response.value.results);
         },
         (effect, _context, entities) =>

@@ -1,3 +1,5 @@
+import * as Crypto from "effect/Crypto";
+
 /**
  * Service: Extraction Run Service
  *
@@ -17,7 +19,6 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils, Sha256Hex } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Int";
@@ -38,6 +39,7 @@ import {
 import type { AuditErrorType, AuditEventType, RunConfig, RunStats } from "../Domain/Model/ExtractionRun.ts";
 import { AuditError, AuditEvent, ExtractionRun, OutputMetadata, RunStatus } from "../Domain/Model/ExtractionRun.ts";
 import { OutputType } from "../Domain/Model/OutputType.ts";
+import { sha256 } from "../Utils/Hash.ts";
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionRun");
@@ -56,7 +58,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionRun");
  * @param content - Content to hash
  * @returns Full 64-character hex hash
  */
-const sha256Hex = (content: string): string => createHash("sha256").update(content).digest("hex");
+const sha256Hex = sha256;
 
 /**
  * Generate document ID from text using SHA-256
@@ -67,10 +69,10 @@ const sha256Hex = (content: string): string => createHash("sha256").update(conte
  * @param text - Document text to hash
  * @returns Deterministic document ID
  */
-const generateDocumentId = (text: string): ExtractionRunId => {
-  const documentId = DocumentId.fromContentHash(ContentHash.make(sha256Hex(text)));
+const generateDocumentId = Effect.fn("ExtractionRun.generateDocumentId")(function* (text: string) {
+  const documentId = DocumentId.fromContentHash(ContentHash.make(yield* sha256Hex(text)));
   return ExtractionRunIdSchema.make(documentId);
-};
+});
 
 /**
  * Get run ID from text (deterministic hash)
@@ -80,19 +82,24 @@ const generateDocumentId = (text: string): ExtractionRunId => {
  * ```ts
  * import { getRunIdFromText } from "@effect-ontology/Service/ExtractionRun"
  *
- * const runId = getRunIdFromText("Ada founded Acme")
- * console.log(runId.startsWith("doc-")) // true
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const runId = yield* getRunIdFromText("Ada founded Acme")
+ *   console.log(runId.startsWith("doc-")) // true
+ * })
+ * console.log(program)
  * ```
  *
  * @category services
  * @since 0.0.0
  */
-export const getRunIdFromText = (text: string): ExtractionRunId => generateDocumentId(text);
+export const getRunIdFromText = generateDocumentId;
 
 /**
  * Hash content for integrity checking
  */
-const hashContent = (content: string): string => sha256Hex(content);
+const hashContent = sha256Hex;
 
 /**
  * Decode JSON string to ExtractionRun
@@ -301,10 +308,9 @@ export class ExtractionRunService extends Context.Service<ExtractionRunService, 
 
 const makeExtractionRunService = Effect.gen(function* () {
   const storage = yield* StorageService;
+  const crypto = yield* Crypto.Crypto;
 
-  const KeyIndex = S.Record(S.String, DocumentId).pipe(
-    SchemaUtils.withCodecStatics(["decodeEffect"]),
-  );
+  const KeyIndex = S.Record(S.String, DocumentId).pipe(SchemaUtils.withCodecStatics(["decodeEffect"]));
   const KeyIndexJson = S.fromJsonString(KeyIndex, { space: 2 }).pipe(
     SchemaUtils.withStatics((schema) => ({
       decodeKeyIndex: S.decodeUnknownEffect(schema),
@@ -374,7 +380,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     runConfig: RunConfig,
     options?: { idempotencyKey?: IdempotencyKey; ontologyVersion?: string }
   ) {
-    const runId = generateDocumentId(text);
+    const runId = yield* generateDocumentId(text).pipe(Effect.provideService(Crypto.Crypto, crypto));
     const existing = yield* storage.getOption(metadataKey(runId));
     if (O.isSome(existing)) {
       const existingText = yield* storage.getOption(documentKey(runId));
@@ -438,7 +444,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     const metadata = OutputMetadata.make({
       type: outputType,
       path: `outputs/${filename}`,
-      hash: Sha256Hex.make(hashContent(content)),
+      hash: Sha256Hex.make(yield* hashContent(content).pipe(Effect.provideService(Crypto.Crypto, crypto))),
       size: NonNegativeInt.make(Buffer.byteLength(content, "utf8")),
       savedAt: now,
     });
