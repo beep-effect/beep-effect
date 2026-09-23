@@ -1,5 +1,5 @@
 import * as B from "@beep/box";
-import { BoxAdoptions, BoxDesiredState, recoverBoxAdoptions } from "@beep/box-provisioning";
+import { BoxAdoptions, BoxApplyJournalApplied, BoxDesiredState, recoverBoxAdoptions } from "@beep/box-provisioning";
 import { BoxProvisioningApplier, BoxProvisioningApplyJournal } from "@beep/box-provisioning/BoxProvisioningApplier";
 import { BoxObservedState } from "@beep/box-provisioning/BoxProvisioningObserved";
 import { planBoxProvisioning } from "@beep/box-provisioning/BoxProvisioningPlanner";
@@ -148,6 +148,23 @@ layer(BunCrypto.layer)("@beep/box-provisioning apply journal", (it) => {
       expect(recovered.entries).toHaveLength(1);
       expect(recovered.entries[0]?.expectedProviderId).toBe("created-folder-1");
       expect(recovered.entries[0]?.expectedParentProviderId).toBe("0");
+    })
+  );
+
+  it.effect(
+    "skips a recovered folder whose journal entry carries no provider identity",
+    Effect.fnUntraced(function* () {
+      const result = yield* applyWithJournal(2, false);
+      const anonymized = A.map(result.entries, (entry) =>
+        entry.phase === "Applied"
+          ? BoxApplyJournalApplied.make({ ...entry, parentProviderId: O.none(), providerId: O.none() })
+          : entry
+      );
+      const recovered = yield* recoverBoxAdoptions(desiredFixture, anonymized);
+
+      // Only the adoption already declared in the desired state survives: the
+      // identity-less journal entry contributes nothing.
+      expect(A.map(recovered.entries, (adoption) => adoption.expectedProviderId)).toEqual(["100"]);
     })
   );
 

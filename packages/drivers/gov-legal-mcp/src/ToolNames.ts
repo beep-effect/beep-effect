@@ -445,16 +445,21 @@ const projectUntruncatedToolNameCandidate = (
   pipe(
     normalizeToolName(candidateText(input)),
     Result.flatMap((normalized) =>
-      N.isGreaterThan(Str.length(normalized), MAX_WIRE_NAME_LENGTH)
-        ? Result.fail(
-            ToolNameNormalizationError.make({
-              candidate: candidateText(input),
-              message: "Production tool names must fit the 64-character wire cap without a digest.",
-              normalized,
-              reason: "invalid_normalized",
-            })
-          )
-        : Result.succeed(toolNameRow(input, normalized, O.none()))
+      pipe(
+        N.isGreaterThan(Str.length(normalized), MAX_WIRE_NAME_LENGTH),
+        Bool.match({
+          onFalse: () => Result.succeed(toolNameRow(input, normalized, O.none())),
+          onTrue: () =>
+            Result.fail(
+              ToolNameNormalizationError.make({
+                candidate: candidateText(input),
+                message: "Production tool names must fit the 64-character wire cap without a digest.",
+                normalized,
+                reason: "invalid_normalized",
+              })
+            ),
+        })
+      )
     )
   );
 

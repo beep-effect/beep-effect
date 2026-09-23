@@ -313,12 +313,12 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
               rpcVersion: OBS_RPC_VERSION,
             })
           ),
+          // `fromUnknown` returns an existing `ObsError` cause unchanged, so the
+          // schema-issue channel is normalized without re-wrapping driver errors.
           Effect.mapError((error) =>
-            ObsError.is(error)
-              ? error
-              : ObsError.fromUnknown("authenticate", "Failed to compute the obs-websocket authentication string.", {
-                  cause: error,
-                })
+            ObsError.fromUnknown("authenticate", "Failed to compute the obs-websocket authentication string.", {
+              cause: error,
+            })
           )
         ),
     });

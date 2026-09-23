@@ -241,6 +241,29 @@ describe("ObsProtocol.connectWith", () => {
   );
 
   it.effect(
+    "drops a response with no pending request and keeps serving later requests",
+    Effect.fnUntraced(function* () {
+      const server = yield* makeFakeObsServer({
+        onRequest: (envelope, emit) => respondSuccess(envelope, emit, O.none()),
+      });
+      const protocol = yield* ObsProtocol.connectWith(server.socket, resolveObsConfig());
+
+      yield* server.emitMessage(
+        ObsRequestResponseMessage.make({
+          d: ObsRequestResponseEnvelope.make({
+            requestId: "no-such-request",
+            requestStatus: ObsRequestStatus.make({ code: 100, result: true }),
+            requestType: "GetVersion",
+            responseData: O.none(),
+          }),
+        })
+      );
+
+      expect(O.isNone(yield* protocol.request("GetVersion"))).toBe(true);
+    })
+  );
+
+  it.effect(
     "correlates concurrent requests by requestId even when responses arrive out of order",
     Effect.fnUntraced(function* () {
       const buffered = yield* Ref.make(A.empty<ObsRequestEnvelope>());

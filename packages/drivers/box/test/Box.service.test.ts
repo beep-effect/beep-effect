@@ -523,6 +523,19 @@ describe("@beep/box", () => {
     expect(error.cause).toEqual(O.some("String"));
   });
 
+  it("survives SDK throwables whose property access throws", () => {
+    const hostile = {
+      get name(): string {
+        throw new Error("property access denied");
+      },
+    };
+
+    const error = B.BoxError.fromUnknown("users.getUserMe", hostile);
+
+    expect(error.reason).toBe("sdk thrown");
+    expect(error.cause).toEqual(O.some("Unknown"));
+  });
+
   it.effect(
     "maps developer-token config failures into BoxError",
     Effect.fnUntraced(function* () {
@@ -1068,4 +1081,53 @@ describe("@beep/box", () => {
       })
     );
   });
+});
+
+describe("Box layer constructors", () => {
+  const buildBox = <E>(layerToBuild: EffectLayer.Layer<B.Box, E>) =>
+    Effect.scoped(
+      EffectLayer.build(layerToBuild).pipe(Effect.flatMap((context) => B.Box.pipe(Effect.provide(context))))
+    );
+
+  it.effect(
+    "builds a developer-token layer from explicit configuration",
+    Effect.fnUntraced(function* () {
+      const box = yield* buildBox(
+        B.Box.makeLayer(B.BoxDeveloperTokenConfig.make({ token: Redacted.make("box-token") }))
+      );
+
+      expect(P.isFunction(box.users.getUserMe)).toBe(true);
+      expect(P.isFunction(box.downloads.downloadFile)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "builds a client-credentials layer from explicit configuration",
+    Effect.fnUntraced(function* () {
+      const box = yield* buildBox(
+        B.Box.makeCcgLayer(
+          B.BoxCcgConfig.make({
+            clientId: "client-id",
+            clientSecret: Redacted.make("client-secret"),
+            enterpriseId: O.some("enterprise-id"),
+          })
+        )
+      );
+
+      expect(P.isFunction(box.users.getUserMe)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "builds the live developer-token layer from CLOUD_BOX_TOKEN",
+    Effect.fnUntraced(function* () {
+      const box = yield* buildBox(
+        B.Box.layer.pipe(
+          EffectLayer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ CLOUD_BOX_TOKEN: "box-token" })))
+        )
+      );
+
+      expect(P.isFunction(box.users.getUserMe)).toBe(true);
+    })
+  );
 });

@@ -515,6 +515,75 @@ layer(BunCrypto.layer)("@beep/box-provisioning planner", (it) => {
   );
 
   it.effect(
+    "blocks a desired collaboration that matches more than one observed collaboration",
+    Effect.fnUntraced(function* () {
+      const ambiguous = BoxObservedState.make({
+        ...observedAfterApplyFixture,
+        collaborations: A.appendAll(
+          observedAfterApplyFixture.collaborations,
+          A.map(observedAfterApplyFixture.collaborations, (collaboration) =>
+            BoxObservedCollaboration.make({ ...collaboration, providerId: BoxProviderId.make("201") })
+          )
+        ),
+      });
+
+      const plan = yield* planBoxProvisioning(desiredFixture, ambiguous, postApplyAdoptionsFixture);
+      const collaboration = A.findFirst(plan.actions, (action) => action.resourceKind === "collaboration");
+
+      expect(O.map(collaboration, (action) => action._tag)).toEqual(O.some("Blocked"));
+    })
+  );
+
+  it.effect(
+    "rejects an enterprise other than the pinned tenant",
+    Effect.fnUntraced(function* () {
+      const error = yield* planBoxProvisioning(
+        desiredFixture,
+        BoxObservedState.make({
+          ...observedFixture,
+          enterpriseId: BoxProviderId.make("wrong-enterprise-id"),
+        })
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("BoxProvisioningTenantMismatchError");
+    })
+  );
+
+  it.effect(
+    "updates a matched collaboration whose observed role drifted",
+    Effect.fnUntraced(function* () {
+      const drifted = BoxObservedState.make({
+        ...observedAfterApplyFixture,
+        collaborations: A.map(observedAfterApplyFixture.collaborations, (collaboration) =>
+          BoxObservedCollaboration.make({ ...collaboration, role: "viewer" })
+        ),
+      });
+
+      const plan = yield* planBoxProvisioning(desiredFixture, drifted, postApplyAdoptionsFixture);
+      const collaboration = A.findFirst(plan.actions, (action) => action.resourceKind === "collaboration");
+
+      expect(O.map(collaboration, (action) => action._tag)).toEqual(O.some("Update"));
+    })
+  );
+
+  it.effect(
+    "updates a matched webhook whose observed trigger set drifted",
+    Effect.fnUntraced(function* () {
+      const drifted = BoxObservedState.make({
+        ...observedAfterApplyFixture,
+        webhooks: A.map(observedAfterApplyFixture.webhooks, (webhook) =>
+          BoxObservedWebhook.make({ ...webhook, triggers: ["FILE.DOWNLOADED"] })
+        ),
+      });
+
+      const plan = yield* planBoxProvisioning(desiredFixture, drifted, postApplyAdoptionsFixture);
+      const webhook = A.findFirst(plan.actions, (action) => action.resourceKind === "webhook");
+
+      expect(O.map(webhook, (action) => action._tag)).toEqual(O.some("Update"));
+    })
+  );
+
+  it.effect(
     "rejects an authenticated subject other than the pinned service identity",
     Effect.fnUntraced(function* () {
       const error = yield* planBoxProvisioning(

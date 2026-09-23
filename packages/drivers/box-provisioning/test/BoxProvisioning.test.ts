@@ -24,6 +24,7 @@ import {
   validateBoxProvisioningBlockerContract,
   validateBoxProvisioningPostApplyPlan,
 } from "@beep/box-provisioning/BoxProvisioningApplier";
+import { Sha256Hex } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect, layer } from "@effect/vitest";
@@ -88,8 +89,48 @@ const makeDependencies = (plan: BoxProvisioningPlan, postApplyPlan: BoxProvision
     )
   );
 
+type ProvisioningDependencies = Layer.Layer<BoxProvisioningApplier | BoxProvisioningInventory | BoxProvisioningPlanner>;
+
+const makeAdoptionDependencies = (
+  plan: BoxProvisioningPlan,
+  observed: BoxObservedState,
+  outcomes: ReadonlyArray<BoxActionApplied>
+): ProvisioningDependencies =>
+  Layer.mergeAll(
+    Layer.succeed(
+      BoxProvisioningInventory,
+      BoxProvisioningInventory.of({
+        observe: Effect.fn("BoxProvisioningInventory.observe")(() => Effect.succeed(observed)),
+      })
+    ),
+    Layer.succeed(
+      BoxProvisioningPlanner,
+      BoxProvisioningPlanner.of({
+        plan: Effect.fn("BoxProvisioningPlanner.plan")(() => Effect.succeed(plan)),
+        planWithAdoptions: Effect.fn("BoxProvisioningPlanner.planWithAdoptions")(() => Effect.succeed(plan)),
+      })
+    ),
+    Layer.succeed(
+      BoxProvisioningApplier,
+      BoxProvisioningApplier.of({
+        apply: Effect.fn("BoxProvisioningApplier.apply")((_desired, appliedPlan) =>
+          Effect.succeed(
+            BoxApplyReceipt.make({
+              appliedAt: DateTime.makeUnsafe("2026-08-30T00:00:00.000Z"),
+              outcomes,
+              planDigest: appliedPlan.planDigest,
+            })
+          )
+        ),
+      })
+    )
+  );
+
+const firstFolderAction = (plan: BoxProvisioningPlan) =>
+  Effect.fromOption(A.findFirst(plan.actions, (candidate) => candidate.resourceKind === "folder"));
+
 const runProvisioning = <A, E>(
-  dependencies: ReturnType<typeof makeDependencies>,
+  dependencies: ProvisioningDependencies,
   use: (service: BoxProvisioning["Service"]) => Effect.Effect<A, E>
 ) =>
   BoxProvisioning.pipe(
@@ -216,6 +257,92 @@ layer(BunCrypto.layer)("@beep/box-provisioning orchestration", (it) => {
         "Blocked",
         "Blocked",
       ]);
+    })
+  );
+
+  it.effect(
+    "rejects a post-apply folder outcome whose logical-key digest matches no desired folder",
+    Effect.fnUntraced(function* () {
+      const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
+      const planJson = yield* encodeBoxProvisioningPlan(plan);
+      const encodedDesired = yield* desiredInput;
+      const dependencies = makeAdoptionDependencies(plan, observedFixture, [
+        BoxActionApplied.make({
+          actionKey: (yield* firstFolderAction(plan)).actionKey,
+          logicalKeyDigest: Sha256Hex.make("0".repeat(64)),
+          providerId: BoxProviderId.make("100"),
+          resourceKind: "folder",
+        }),
+      ]);
+
+      const error = yield* runProvisioning(dependencies, (service) =>
+        service.applyReviewedPlan(encodedDesired, planJson)
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("BoxProvisioningInvariantError");
+      if (error._tag === "BoxProvisioningInvariantError") {
+        expect(error.code).toBe("unresolved-dependency");
+      }
+    })
+  );
+
+  it.effect(
+    "rejects a post-apply folder outcome whose provider id is absent from the fresh inventory",
+    Effect.fnUntraced(function* () {
+      const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
+      const planJson = yield* encodeBoxProvisioningPlan(plan);
+      const encodedDesired = yield* desiredInput;
+      const folderAction = yield* firstFolderAction(plan);
+      const dependencies = makeAdoptionDependencies(plan, observedFixture, [
+        BoxActionApplied.make({
+          actionKey: folderAction.actionKey,
+          logicalKeyDigest: folderAction.logicalKeyDigest,
+          providerId: BoxProviderId.make("does-not-exist"),
+          resourceKind: "folder",
+        }),
+      ]);
+
+      const error = yield* runProvisioning(dependencies, (service) =>
+        service.applyReviewedPlan(encodedDesired, planJson)
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("BoxProvisioningInvariantError");
+      if (error._tag === "BoxProvisioningInvariantError") {
+        expect(error.code).toBe("unresolved-dependency");
+      }
+    })
+  );
+
+  it.effect(
+    "rejects a post-apply folder outcome observed without a parent folder",
+    Effect.fnUntraced(function* () {
+      const plan = yield* planBoxProvisioning(desiredFixture, observedFixture);
+      const planJson = yield* encodeBoxProvisioningPlan(plan);
+      const encodedDesired = yield* desiredInput;
+      const folderAction = yield* firstFolderAction(plan);
+      const parentlessObserved = BoxObservedState.make({
+        ...observedFixture,
+        folders: A.map(observedFixture.folders, (folder) =>
+          BoxObservedFolder.make({ ...folder, parentProviderId: O.none() })
+        ),
+      });
+      const dependencies = makeAdoptionDependencies(plan, parentlessObserved, [
+        BoxActionApplied.make({
+          actionKey: folderAction.actionKey,
+          logicalKeyDigest: folderAction.logicalKeyDigest,
+          providerId: BoxProviderId.make("100"),
+          resourceKind: "folder",
+        }),
+      ]);
+
+      const error = yield* runProvisioning(dependencies, (service) =>
+        service.applyReviewedPlan(encodedDesired, planJson)
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("BoxProvisioningInvariantError");
+      if (error._tag === "BoxProvisioningInvariantError") {
+        expect(error.code).toBe("unresolved-dependency");
+      }
     })
   );
 

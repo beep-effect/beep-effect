@@ -7,9 +7,10 @@
 
 import { $BoxProvisioningId } from "@beep/identity";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import { Context, Effect, Equal, Layer } from "effect";
+import { Context, Effect, Equal, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
+import { identity } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import {
@@ -30,6 +31,7 @@ import { BoxReviewedApplyResult } from "./BoxProvisioningReceipt.ts";
 import { digestText, hasValidBoxProvisioningPlanDigest } from "./internal/canonical.ts";
 import type * as B from "@beep/box";
 import type * as PlatformError from "effect/PlatformError";
+import type * as SchemaIssue from "effect/SchemaIssue";
 import type { BoxProvisioningApplyJournal } from "./BoxProvisioningApplier.ts";
 import type {
   BoxProvisioningApplyJournalError,
@@ -59,6 +61,12 @@ type ApplyError =
 
 const isAppliedOutcome = (outcome: BoxApplyOutcome): outcome is BoxActionApplied => P.isTagged(outcome, "Applied");
 
+/** Keeps platform digest failures intact and reports every schema issue as a plan-stage failure. */
+const toPlanStageFailure = Match.type<PlatformError.PlatformError | SchemaIssue.Issue>().pipe(
+  Match.tag("PlatformError", identity<PlatformError.PlatformError>),
+  Match.orElse(() => BoxProvisioningSchemaError.make({ stage: "plan" }))
+);
+
 const postApplyAdoptions = Effect.fn("BoxProvisioning.postApplyAdoptions")(function* (
   desired: BoxDesiredState,
   observed: BoxObservedState,
@@ -73,11 +81,7 @@ const postApplyAdoptions = Effect.fn("BoxProvisioning.postApplyAdoptions")(funct
       const folderMatches = yield* Effect.forEach(
         desired.folders,
         Effect.fnUntraced(function* (folder) {
-          const digest = yield* digestText(folder.logicalKey).pipe(
-            Effect.mapError((error) =>
-              P.isTagged("PlatformError")(error) ? error : BoxProvisioningSchemaError.make({ stage: "plan" })
-            )
-          );
+          const digest = yield* digestText(folder.logicalKey);
           return Equal.equals(digest, outcome.logicalKeyDigest) ? O.some(folder) : O.none();
         }),
         { concurrency: 1 }
@@ -125,9 +129,7 @@ const makeService = (
         decodeBoxProvisioningPlan(reviewedPlanJson),
       ]);
       const planDigestValid = yield* hasValidBoxProvisioningPlanDigest(reviewedPlan).pipe(
-        Effect.mapError((error) =>
-          P.isTagged("PlatformError")(error) ? error : BoxProvisioningSchemaError.make({ stage: "plan" })
-        )
+        Effect.mapError(toPlanStageFailure)
       );
       if (!planDigestValid) {
         return yield* BoxProvisioningInvariantError.make({ code: "invalid-plan-digest" });
