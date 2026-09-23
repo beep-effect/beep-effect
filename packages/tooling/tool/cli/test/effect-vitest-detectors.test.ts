@@ -329,6 +329,25 @@ layer(BunCrypto.layer)((it) => {
     })
   );
 
+  it.effect("reads the expected literal of a node:assert equality over a data shape", () =>
+    Effect.gen(function* () {
+      assertTrue(
+        yield* hasRule(
+          'import assert from "node:assert/strict"; it("x", () => assert.strictEqual(O.isSome(value), true));',
+          "EV006"
+        )
+      );
+    })
+  );
+
+  it.effect("resolves an acquire-release provision instead of routing it to judgment", () =>
+    Effect.gen(function* () {
+      const rows = yield* findings('it.effect("x", () => Fx.provide(program, Fx.acquireRelease(acquire, release)));');
+
+      assertTrue(A.some(rows, (row) => row.ruleId === "EV002" && row.mechanization === "detector"));
+    })
+  );
+
   it.effect("recognizes const-arrow and Effect.fnUntraced resource wrapper definitions", () =>
     Effect.gen(function* () {
       assertTrue(
@@ -351,6 +370,13 @@ layer(BunCrypto.layer)((it) => {
       assertTrue(yield* hasRule('it("o", () => expect(value).toEqual(O.none()));', "EV006"));
       assertTrue(yield* hasRule('it("r", () => expect(value).toEqual(R.succeed(1)));', "EV006"));
       assertTrue(yield* hasRule('it("e", () => expect(value).toEqual(X.fail(error)));', "EV006"));
+    })
+  );
+
+  it.effect("reads truthiness matchers as the polarity of the asserted data shape", () =>
+    Effect.gen(function* () {
+      assertTrue(yield* hasRule('it("t", () => expect(O.isSome(value)).toBeTruthy());', "EV006"));
+      assertTrue(yield* hasRule('it("f", () => expect(O.isNone(value)).toBeFalsy());', "EV006"));
     })
   );
 

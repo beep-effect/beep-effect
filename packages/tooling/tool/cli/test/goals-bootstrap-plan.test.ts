@@ -16,6 +16,8 @@ import {
   PORTFOLIO_INDEX_PATH,
   parseGoalManifestText,
   readPacketSnapshot,
+  renderMaterializationPlanHuman,
+  sealMaterializationPlan,
   validationRequirementsForGoalDoctorFinding,
 } from "@beep/repo-cli/test/Goals";
 import { findRepoRoot } from "@beep/repo-utils";
@@ -499,8 +501,76 @@ describe("goals plan validation mapping", () => {
   });
 });
 
+describe("goals plan human rendering", () => {
+  it("renders preserved unmodeled keys with their pre-image digest", () =>
+    run(
+      Effect.gen(function* () {
+        const plan = yield* sealMaterializationPlan({
+          mode: "adopt",
+          slug: "render-goal",
+          packetPath: "goals/render-goal",
+          entries: [],
+          preservations: [
+            {
+              path: "goals/render-goal/ops/manifest.json",
+              unmodeledKeys: ["risk", "steward"],
+              preImageDigest: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              reason: "unmodeled keys survive adoption",
+            },
+          ],
+          validations: [],
+          conflicts: [],
+        });
+
+        expect(renderMaterializationPlanHuman(plan)).toContain(
+          "preserve-keys goals/render-goal/ops/manifest.json: risk, steward (pre-image e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855)"
+        );
+      })
+    ));
+});
+
 describe("goals bootstrap command gate", () => {
   const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
+
+  it.effect(
+    "rejects an invalid slug and defaults the plan date to the current day",
+    () =>
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const invalidSlug = yield* Effect.exit(
+            runGoalsCommand([
+              "bootstrap",
+              "--slug",
+              "Not A Slug",
+              "--title",
+              "Invalid",
+              "--mission",
+              "The slug grammar refuses this.",
+              "--plan",
+            ])
+          );
+          expectReportedExit(invalidSlug);
+
+          // No --today: the compiler falls back to the current date rather
+          // than refusing, which is the only path that reads the clock.
+          const defaultedDate = yield* Effect.exit(
+            runGoalsCommand([
+              "bootstrap",
+              "--slug",
+              "dated-goal",
+              "--title",
+              "Dated Goal",
+              "--mission",
+              "Default the capture date from the clock.",
+              "--plan",
+              "--json",
+            ])
+          );
+          assertExitSuccess(defaultedDate, undefined);
+        })
+      ).pipe(provideScopedLayer(commandTestLayer)),
+    30_000
+  );
 
   it(
     "refuses without --plan, rejects a provides/requires self-cycle, and prints a JSON plan on the happy path",

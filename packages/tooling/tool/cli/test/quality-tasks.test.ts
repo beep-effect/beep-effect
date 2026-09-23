@@ -40,6 +40,7 @@ import {
   CoverageSelfJudgeScope,
   CoverageUncoveredCounts,
   changedCoverageOwners,
+  cleanCoverageRegressionOutputs,
   collectEffectTsgoDiagnosticLines,
   compareCoverageRegressionSnapshotsForExpectedPackagesForTesting,
   compareCoverageRegressionSnapshotsForTesting,
@@ -119,6 +120,7 @@ import {
   rootQualityStepsForTesting,
   runBunAudit,
   runGithubChecks,
+  runJSDocModuleTagsCheck,
   runQualityTask,
   runQualityTaskStepGroupForTesting,
   runQualityTaskStreamingStepGroupForTesting,
@@ -166,6 +168,7 @@ import {
   Cause,
   ConfigProvider,
   Console,
+  Crypto,
   Effect,
   Exit,
   Fiber,
@@ -175,6 +178,7 @@ import {
   Layer,
   Order,
   Path,
+  PlatformError,
   pipe,
   Sink,
   Stream,
@@ -1995,6 +1999,44 @@ describe("quality task adapter", () => {
       } finally {
         spawnSync.mockRestore();
       }
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "surfaces platform crypto failures while identifying and staging lane proofs",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-crypto-failure-" });
+      yield* initializeLaneProofRepository(tempRoot);
+
+      const lane = laneProofTestLane(tempRoot, "proof:crypto", "preflight", "process.exit(0)");
+      const platformCrypto = yield* Crypto.Crypto;
+      const cryptoFailure = PlatformError.badArgument({ module: "Crypto", method: "test" });
+
+      const withoutIndexIdentity = yield* prepareLaneProofSession([lane], "active").pipe(
+        Effect.provideService(Crypto.Crypto, { ...platformCrypto, randomUUIDv4: Effect.fail(cryptoFailure) })
+      );
+      assertNone(withoutIndexIdentity);
+
+      const digestFailure = yield* prepareLaneProofSession([lane], "active").pipe(
+        Effect.provideService(Crypto.Crypto, { ...platformCrypto, digest: () => Effect.fail(cryptoFailure) }),
+        Effect.flip
+      );
+      expect(digestFailure.message).toBe("Failed to hash lane-proof identity.");
+
+      const session = yield* Effect.fromOption(yield* prepareLaneProofSession([lane], "active"));
+      let identityCalls = 0;
+      const stagingFailure = yield* persistLaneProofs(session, [[lane, 12]]).pipe(
+        Effect.provideService(Crypto.Crypto, {
+          ...platformCrypto,
+          randomUUIDv4: Effect.suspend(() => {
+            identityCalls = identityCalls + 1;
+            return identityCalls > 1 ? Effect.fail(cryptoFailure) : platformCrypto.randomUUIDv4;
+          }),
+        }),
+        Effect.flip
+      );
+      expect(stagingFailure.message).toBe("Failed to create lane-proof staging identity.");
     }, provideScopedLayer(PlatformLayer))
   );
 
@@ -6726,6 +6768,92 @@ describe("quality task adapter", () => {
     expect(plan.packages["@beep/new"]?.lines).toBe(90);
     expect(coverageBaselineWriteSummary(plan, true)).toBe(
       "[coverage-ratchet] wrote standards/coverage.regression-baseline.jsonc: replaced all 2 package(s), pruned 0 (--replace-all; base: dirty worktree only)"
+    );
+  });
+
+  it.effect("fails the module-tags lint on a tracked @module fileoverview and passes once it is replaced", () =>
+    withTempRepo(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = process.cwd();
+        const filePath = path.join(repoRoot, "packages/example/src/Index.ts");
+        const fileWith = (tag: string) =>
+          ["/**", " * Fixture module.", " *", ` * @${tag} example`, " */", "export const v = 1;", ""].join("\n");
+
+        yield* fs.makeDirectory(path.dirname(filePath), { recursive: true });
+        yield* fs.writeFileString(filePath, fileWith("module"));
+        yield* runGit(repoRoot, ["init"]);
+        yield* runGit(repoRoot, ["add", "--all"]);
+
+        const failure = yield* Effect.flip(runJSDocModuleTagsCheck());
+        expect(failure.message).toBe("JSDoc module tag violations were found.");
+
+        yield* fs.writeFileString(filePath, fileWith("packageDocumentation"));
+        yield* runJSDocModuleTagsCheck();
+
+        expect(A.join(A.filter(yield* TestConsole.logLines, isString), "\n")).toContain(
+          "[check:jsdoc-module-tags] verified tracked fileoverview comments do not use @module"
+        );
+      })
+    )
+  );
+
+  it.effect("removes the coverage output directory of every workspace package that declares a coverage script", () =>
+    withTempRepo(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = process.cwd();
+        const coveredCoverage = path.join(repoRoot, "packages/covered/coverage");
+        const bareCoverage = path.join(repoRoot, "packages/bare/coverage");
+
+        yield* fs.makeDirectory(coveredCoverage, { recursive: true });
+        yield* fs.makeDirectory(bareCoverage, { recursive: true });
+        yield* fs.writeFileString(
+          path.join(repoRoot, "package.json"),
+          yield* encodeJson({ name: "@beep/clean-root", private: true, workspaces: ["packages/*"] })
+        );
+        yield* fs.writeFileString(
+          path.join(repoRoot, "packages/covered/package.json"),
+          yield* encodeJson({ name: "@beep/covered", private: true, scripts: { coverage: "vitest" } })
+        );
+        yield* fs.writeFileString(
+          path.join(repoRoot, "packages/bare/package.json"),
+          yield* encodeJson({ name: "@beep/bare", private: true })
+        );
+        yield* fs.writeFileString(path.join(coveredCoverage, "coverage-summary.json"), "{}\n");
+        yield* fs.writeFileString(path.join(bareCoverage, "coverage-summary.json"), "{}\n");
+
+        yield* cleanCoverageRegressionOutputs(repoRoot);
+
+        expect(yield* fs.exists(coveredCoverage)).toBe(false);
+        // A package without a coverage script owns no coverage output the
+        // ratchet reads, so the cleaner leaves it alone.
+        expect(yield* fs.exists(bareCoverage)).toBe(true);
+      })
+    )
+  );
+
+  it("reports a measured package with no committed row as added rather than held", () => {
+    const previous = { "@beep/changed": coveragePackageBaseline("packages/changed", 50) };
+    const plan = planCoverageBaselineWrite(
+      previous,
+      [
+        { packageName: "@beep/changed", baseline: coveragePackageBaseline("packages/changed", 80) },
+        { packageName: "@beep/fresh", baseline: coveragePackageBaseline("packages/fresh", 88) },
+      ],
+      CoverageBaselineChangeSet.make({
+        baseDescription: "dirty worktree only",
+        packageNames: ["@beep/changed"],
+        fullReasons: [],
+      }),
+      CoverageBaselineWriteOptions.make({ replaceAll: false, carryUnmeasured: true })
+    );
+
+    expect(plan.dispositions).toEqual({ "@beep/changed": "replaced", "@beep/fresh": "added" });
+    expect(coverageBaselineWriteReport(plan, previous)).toContain(
+      "[coverage-ratchet] @beep/fresh: added (no committed row)"
     );
   });
 
