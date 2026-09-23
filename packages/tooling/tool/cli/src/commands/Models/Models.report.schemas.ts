@@ -15,6 +15,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { RunMode } from "../../internal/cli/RunMode.ts";
 import { CatalogDiff, CatalogSnapshotSummary } from "./Models.catalog.schemas.ts";
@@ -130,6 +131,79 @@ export const DriftKindIs = DriftKindKit.is;
  */
 export const DriftKindOptions = DriftKindKit.Options;
 
+const CatalogDiffScopeKit = LiteralKit(["full", "suppressed-offline"]);
+
+/**
+ * How much of the catalog diff a check run actually computed.
+ *
+ * **Details**
+ *
+ * `full` means the report's {@link ModelsCheckReport.diff} was computed against
+ * the recorded online baseline and an empty diff therefore means the catalog
+ * did not move. `suppressed-offline` means the run had no upstream layer to
+ * compare with, so the diff was left empty on purpose and says nothing about
+ * upstream churn.
+ *
+ * **Example** (Guard a diff scope)
+ *
+ * ```ts
+ * import { CatalogDiffScope } from "@beep/repo-cli/commands/Models/Models.report.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CatalogDiffScope)("suppressed-offline")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CatalogDiffScope = CatalogDiffScopeKit.pipe(
+  $I.annoteSchema("CatalogDiffScope", {
+    description: "Whether a check run computed the catalog diff or suppressed it because the run was offline.",
+  })
+);
+
+/**
+ * How much of the catalog diff a check run actually computed.
+ *
+ * @see {@link CatalogDiffScope} for runtime decoding and guards.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CatalogDiffScope = typeof CatalogDiffScope.Type;
+
+/**
+ * Derived per-literal guards for {@link CatalogDiffScope}.
+ *
+ * **Example** (Separate a suppressed diff from a real one)
+ *
+ * ```ts
+ * import { CatalogDiffScopeIs } from "@beep/repo-cli/commands/Models/Models.report.schemas"
+ *
+ * console.log(CatalogDiffScopeIs["suppressed-offline"]("suppressed-offline")) // true
+ * console.log(CatalogDiffScopeIs.full("suppressed-offline")) // false
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const CatalogDiffScopeIs = CatalogDiffScopeKit.is;
+
+/**
+ * Literal option tuple for {@link CatalogDiffScope}.
+ *
+ * **Example** (Enumerate diff scopes)
+ *
+ * ```ts
+ * import { CatalogDiffScopeOptions } from "@beep/repo-cli/commands/Models/Models.report.schemas"
+ *
+ * console.log(CatalogDiffScopeOptions.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CatalogDiffScopeOptions = CatalogDiffScopeKit.Options;
+
 /**
  * One locator whose file value does not match the manifest.
  *
@@ -190,6 +264,14 @@ export class DriftFinding extends S.Class<DriftFinding>($I`DriftFinding`)(
  * that one field; a consumer must not have to re-derive the verdict from a
  * shape that may grow more finding kinds.
  *
+ * **Gotchas**
+ *
+ * An empty `diff` is only meaningful together with `diffScope`. An offline run
+ * suppresses the catalog diff — the overlays report different effort ladders
+ * than upstream, so a projected diff would be a wall of phantom
+ * `levelsChanged` — and reports `diffScope: "suppressed-offline"`. Read
+ * `diffScope` before treating an empty `diff` as "no upstream churn".
+ *
  * **Example** (Build a clean report)
  *
  * ```ts
@@ -205,6 +287,7 @@ export class DriftFinding extends S.Class<DriftFinding>($I`DriftFinding`)(
  *     modelCount: 134
  *   }),
  *   diff: CatalogDiff.make({ added: [], removed: [], levelsChanged: [] }),
+ *   diffScope: "full",
  *   findings: [],
  *   hasDrift: false
  * })
@@ -218,6 +301,7 @@ export class ModelsCheckReport extends S.Class<ModelsCheckReport>($I`ModelsCheck
   {
     catalog: CatalogSnapshotSummary,
     diff: CatalogDiff,
+    diffScope: CatalogDiffScope.pipe(S.withDecodingDefaultKey(Effect.succeed<CatalogDiffScope>("full"))),
     findings: S.Array(DriftFinding),
     hasDrift: S.Boolean,
   },

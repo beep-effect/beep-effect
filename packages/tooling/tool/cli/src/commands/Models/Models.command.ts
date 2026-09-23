@@ -13,7 +13,7 @@
 
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Config, Console, Effect, FileSystem, Path } from "effect";
+import { Config, Console, Effect, FileSystem, Match, Path } from "effect";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -123,12 +123,27 @@ const renderFinding = (entry: DriftFinding): string =>
   ) +
   ` expected=${JSON.stringify(Str.slice(0, 120)(entry.expected))}`;
 
+// An offline run leaves `diff` empty on purpose, so the counts would read as
+// "catalog stable" to an operator. Say which of the two it is.
+const renderCatalogDiff = (report: ModelsCheckReport): string =>
+  Match.value(report.diffScope).pipe(
+    Match.when("suppressed-offline", () => "catalog diff: suppressed (offline run)"),
+    Match.when(
+      "full",
+      () =>
+        `catalog diff: ${A.length(report.diff.added)} added, ${A.length(report.diff.removed)} removed, ` +
+        `${A.length(report.diff.levelsChanged)} effort ladder(s) changed`
+    ),
+    Match.exhaustive
+  );
+
 const renderReportMarkdown = (report: ModelsCheckReport): string =>
   pipe(
     [
       "# Model Routing Check",
       "",
       `Catalog: ${report.catalog.modelCount} model(s) from ${A.join(report.catalog.sources, ", ")}`,
+      renderCatalogDiff(report),
       `Drift: ${report.hasDrift ? "yes" : "no"} (${A.length(report.findings)} finding(s))`,
       "",
       "| Target | Locator | Kind | Current | Expected |",
@@ -190,6 +205,7 @@ const runCheck = Effect.fnUntraced(function* (flags: ModelsCommandFlags) {
       `models: ${A.length(report.findings)} finding(s) across ${report.catalog.modelCount} catalog model(s) ` +
         `from ${A.join(report.catalog.sources, ", ")}`
     );
+    yield* Console.log(`models: ${renderCatalogDiff(report)}`);
   }
 
   yield* writeReports(flags.reportDir, report);
