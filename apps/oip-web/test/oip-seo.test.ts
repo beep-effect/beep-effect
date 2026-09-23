@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   decodeOipSiteContentResult,
   makeJsonLdGraph,
+  makeLlmsText,
   OipSiteContent,
   oipSiteContent,
   oipTwitterHandle,
@@ -178,5 +179,25 @@ describe("OipSeo social.active filter (CSF-043)", () => {
     expect(seoUrls).toContain("https://www.instagram.com/oip.law/");
     expect(A.some(seoUrls, (url) => url.includes("discord"))).toBe(false);
     expect(oipTwitterHandle(OipSiteContent.make({ ...oipSiteContent }))).toBe("@opiplaw");
+  });
+
+  it("renders llms.txt sections from the reviewed launch content", () => {
+    const text = makeLlmsText(oipSiteContent);
+
+    expect(text).toContain("# OIP - Oppold IP Law");
+    expect(text).toContain(`- Canonical URL: [${oipSiteContent.metadata.siteUrl}]`);
+    expect(text).toContain(`- Contact: [${oipSiteContent.contact.email}]`);
+    for (const practice of oipSiteContent.practices) {
+      expect(text).toContain(`- ${practice.title}: ${practice.body}`);
+    }
+    for (const matter of oipSiteContent.matters) {
+      expect(text).toContain(`- [${matter.title}](${matter.source.href}): ${matter.source.label}`);
+    }
+    for (const item of oipSiteContent.press) {
+      expect(text).toContain(`- [${item.headline}](${item.source.href})`);
+    }
+    for (const notice of oipSiteContent.contact.notice) {
+      expect(text).toContain(`- ${notice}`);
+    }
   });
 });

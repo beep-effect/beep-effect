@@ -16,6 +16,7 @@ import { CandorDispositionLifecycle, PatentReference } from "@beep/law-practice-
 import { VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { Effect, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
+import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -213,7 +214,7 @@ const evaluateGroup = Effect.fn("CandorPolicy.evaluateGroup")(function* (
   }
 
   const reason = yield* O.match(A.get(heads, 0), {
-    onNone: () => Effect.succeedSome<UncoveredReason>("ambiguous-lineage"),
+    onNone: F.constant(Effect.succeedSome<UncoveredReason>("ambiguous-lineage")),
     onSome: (head) => coverageReason(head, dispositions),
   });
 

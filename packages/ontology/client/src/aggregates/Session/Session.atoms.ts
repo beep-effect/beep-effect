@@ -50,7 +50,7 @@ import { IRI } from "@beep/rdf/Iri";
 import { makeLiteral, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { A, O, P, Str } from "@beep/utils";
+import { A, O, P, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import { Cause, Duration, Effect, flow, Layer, Order, pipe, Result, Semaphore } from "effect";
 import * as S from "effect/Schema";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
@@ -810,7 +810,7 @@ const sessionSignature = (session: Session): string => `${session.id}:${changeLo
  */
 const sessionMoved = (current: O.Option<Session>, signature: string): boolean =>
   O.match(current, {
-    onNone: () => true,
+    onNone: thunkTrue,
     onSome: (session) => sessionSignature(session) !== signature,
   });
 
@@ -1532,7 +1532,7 @@ export const ontologyDirtyAtom = Atom.make((get) =>
   pipe(
     get(ontologySessionAtom),
     O.match({
-      onNone: () => false,
+      onNone: thunkFalse,
       onSome: (session) => changeLogSignature(session.changeLog) !== get(ontologySavedChangeLogSignatureAtom),
     })
   )

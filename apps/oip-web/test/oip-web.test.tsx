@@ -13,6 +13,7 @@ import { beforeEach, vi } from "vitest";
 import { makeOipContactHttpApiWebHandlerWithSubmit } from "@/app/api/contact/ContactHttpApiRoute";
 import { contactRequestResponseWithSubmit } from "@/app/api/contact/ContactRouteResponse";
 import { POST } from "@/app/api/contact/route";
+import { GET as llmsTextRoute } from "@/app/llms.txt/route";
 import oipManifest from "@/app/manifest";
 import Home from "@/app/page";
 import oipRobots from "@/app/robots";
@@ -886,4 +887,35 @@ describe("@beep/oip-web", { concurrent: false }, () => {
       expect(response.status).toBe(303);
       expect(response.headers.get("location")).toBe("https://oip.law/?contact=rejected#contact");
     }));
+
+  it.effect(
+    "rejects a browser form submission missing a required field without calling submit",
+    Effect.fnUntraced(function* () {
+      const formData = contactFormData();
+      formData.delete("name");
+      const submit = vi.fn(() =>
+        Effect.succeed(
+          ContactSubmissionResponse.make({
+            message: "Should not submit.",
+            status: "accepted",
+          })
+        )
+      );
+
+      const response = yield* contactRequestResponseWithSubmit(formContactRequest(formData), submit);
+
+      expect(submit).not.toHaveBeenCalled();
+      expect(response.status).toBe(303);
+      expect(response.headers.get("location")).toBe("https://oip.law/?contact=rejected#contact");
+    })
+  );
+
+  it("serves llms.txt as plain text from the loaded site content", () =>
+    llmsTextRoute().then((response) =>
+      response.text().then((body) => {
+        expect(response.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+        expect(body).toContain("# OIP - Oppold IP Law");
+        expect(body).toContain("## Practice Areas");
+      })
+    ));
 });

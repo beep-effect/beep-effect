@@ -9,9 +9,10 @@
 import { assistantContentToDocument } from "@beep/agents-domain/values/AssistantContent";
 import { FixtureTurnKernel, fixtureBlocksFor, fixtureEventsFor } from "@beep/agents-use-cases/proof";
 import { AgentTurnKernel, TurnGenerationError, TurnHistoryItem } from "@beep/agents-use-cases/public";
+import { UsageRecord } from "@beep/epistemic-domain";
 import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
-import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
+import { assertSchemaArbitraryDecodesToSelf, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { ThreadStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Thread";
 import { Thread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
@@ -31,7 +32,7 @@ import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import { decodeWorkspaceId, userDocument, userParagraphDocument } from "@/chat/ChatFixtures";
 import { documentToPlainText, makeChatOperations } from "@/chat/ChatOrchestrator";
-import { makeInMemoryUsageRecordSink } from "@/chat/UsageRecordSink";
+import { makeInMemoryUsageRecordSink, UsageRecordSink, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
 import type { TurnHistoryItem as TurnHistoryItemType } from "@beep/agents-use-cases/public";
 
 // Build the chat operations + the usage Ref over the provided in-memory stack.
@@ -51,6 +52,22 @@ const TestCryptoLayer = Layer.succeed(
 );
 const ThreadStoreTestLayer = ThreadStoreInMemoryLayer.pipe(Layer.provide(TestCryptoLayer));
 const StackLayer = Layer.merge(ThreadStoreTestLayer, FixtureTurnKernel);
+const decodeUsageRecord = S.decodeUnknownEffect(UsageRecord);
+const usageRecordInput = {
+  ...productEntityFixtureInput("EpistemicUsageRecord", 1),
+  activityId: null,
+  actor: { component: "Runtime", kind: "System" },
+  costUsdApproxMicros: null,
+  credentialReference: null,
+  inputTokens: 12,
+  latencyMillis: null,
+  metadata: { trace: "fixture" },
+  model: "fixture-model",
+  outputTokens: 34,
+  provider: "fixture",
+  totalTokens: 46,
+  unitCount: null,
+};
 const encodeTurnHistoryItem = S.encodeUnknownEffect(TurnHistoryItem);
 const decodeTurnHistoryItem = S.decodeUnknownEffect(TurnHistoryItem);
 
@@ -632,5 +649,18 @@ describe("@beep/professional-desktop chat contract", () => {
 
       expect(yield* operations.getTurnRequestStatus("expiring-request")).toBe("unknown");
     }, provideScopedLayer(StackLayer))
+  );
+
+  it.effect(
+    "serves one memoized in-memory sink through the UsageRecordSink layer",
+    Effect.fnUntraced(function* () {
+      const sink = yield* UsageRecordSink;
+      const again = yield* UsageRecordSink;
+      const record = yield* decodeUsageRecord(usageRecordInput);
+
+      expect(again).toBe(sink);
+      yield* sink.append(record);
+      yield* again.append(record);
+    }, provideScopedLayer(UsageRecordSinkInMemory))
   );
 });

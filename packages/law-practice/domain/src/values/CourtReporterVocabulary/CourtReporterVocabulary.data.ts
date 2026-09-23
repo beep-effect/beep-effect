@@ -7,6 +7,7 @@
 
 import { A, O } from "@beep/utils";
 import { pipe } from "effect";
+import * as F from "effect/Function";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -136,7 +137,7 @@ export const CourtReporterArtifact = pipe(
  */
 export const isCurrentCourtReporterArtifactVersion = (version: string): boolean =>
   Result.match(CourtReporterArtifact, {
-    onFailure: () => false,
+    onFailure: F.constFalse,
     onSuccess: (artifact) => version === artifact.artifactVersion,
   });
 
