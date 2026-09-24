@@ -2049,11 +2049,15 @@
       {
         "from": "@beep/identity",
         "allow": [
+          "@beep/fc-runs",
           "@beep/identity",
+          "@beep/test-runner",
           "@beep/types"
         ],
         "allowTypeOnly": [
+          "@beep/fc-runs",
           "@beep/identity",
+          "@beep/test-runner",
           "@beep/types"
         ]
       },
