@@ -1,11 +1,11 @@
 {
-  "lastSuccessfulRun": "2026-09-22T08:56:00-05:00",
-  "lastSuccessfulPacket": "research/2026-09-22",
-  "lastSuccessfulPr": 1199,
-  "lastAttemptedRun": "2026-09-22T08:56:00-05:00",
+  "lastSuccessfulRun": "2026-09-23T08:57:00-05:00",
+  "lastSuccessfulPacket": "research/2026-09-23",
+  "lastSuccessfulPr": 1215,
+  "lastAttemptedRun": "2026-09-23T08:57:00-05:00",
   "lastAttemptedStatus": "partial",
-  "lastAttemptedPacket": "research/2026-09-22",
-  "note": "Draft until human merge of research/2026-09-22. Publisher fills lastSuccessfulPr after PR opens. Never claim merged. Never auto-merge. Partial: X client-not-enrolled; npmjs HTML Cloudflare-blocked (registry JSON OK). Prior stamp research/2026-09-17 / PR #1171 (merged 2026-09-21).",
+  "lastAttemptedPacket": "research/2026-09-23",
+  "note": "Draft until human merge of research/2026-09-23. Publisher fills lastSuccessfulPr after PR opens. Never claim merged. Never auto-merge. Partial: X client-not-enrolled. Prior stamp research/2026-09-22 / PR #1199 (merged 2026-09-22).",
   "excludedUnmergedPackets": [
     {
       "date": "2026-08-27",
