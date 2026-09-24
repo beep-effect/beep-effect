@@ -39,7 +39,7 @@
         "picomatch": "catalog:",
         "syncpack": "catalog:",
         "toml": "catalog:",
-        "turbo": "^2.11.3",
+        "turbo": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:",
       },
@@ -3094,6 +3094,7 @@
   },
   "patchedDependencies": {
     "onnxruntime-node@1.30.0": "patches/onnxruntime-node@1.30.0.patch",
+    "knip@6.38.0": "patches/knip@6.38.0.patch",
     "@effect/platform-node-shared@4.0.0-rc.117": "patches/@effect%2Fplatform-node-shared@4.0.0-rc.117.patch",
   },
   "overrides": {
