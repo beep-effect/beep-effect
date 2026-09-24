@@ -40,8 +40,15 @@ the remaining feedback/docgen steps completed successfully. Three unrelated
 repair-produced source formatting changes were inspected, retained as a local
 diff receipt, and restored to HEAD before scope verification.
 
-Full proof, publication, and hosted closeout are still pending. Their receipts
-will be recorded as they complete; this is not a success claim.
+The full detached Yeet proof passed on 2026-09-24 at 23:07 UTC, including
+preflight, policy, type checks, doctests, and selected coverage. Publication
+reused that proof and created [PR #1218](https://github.com/beep-effect/beep-effect/pull/1218)
+at commit `516a1dd4159e8a480dba6bca0a593ea8036457fd`. Hosted admission confirmed
+the docs-only route. Hosted closeout remains pending.
+
+Hosted review identified that rerunning the mutating repair command could
+reintroduce source edits. PLAN now makes the post-repair scope check explicit
+and separates one-time repair from repeatable packet validation.
 
 The final PR URL and exact-head proof belong in the delivery receipt. Planning
 PR completion updates P0 only; P1-P5 remain pending and lifecycle stays paused.

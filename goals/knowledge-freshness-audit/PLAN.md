@@ -24,6 +24,11 @@ explicit audit activation. [SPEC.md](./SPEC.md) is normative.
 4. Review inherited doctrine, completeness, feasibility, source claims, and
    pause/activation semantics. Correct only this packet and its minimal parent link.
 5. Run packet checks and the canonical Yeet repair, verify, publish, monitor flow.
+   After repair, inspect the complete diff before verification: retain a local
+   receipt of unrelated repair-produced changes and restore only those changes
+   after confirming they were produced by this run. Preserve pre-existing work.
+   Require every staged path to be Markdown or this goal manifest; otherwise
+   stop publication and separate the repair into its owning implementation PR.
 6. Leave the PR open at mergeable. Record the delivery receipt without activating
    the audit or declaring the campaign completed.
 
@@ -104,7 +109,13 @@ bun run beep goals doctor
 bun run beep goals index --check
 bun run beep explore --check
 bun run beep lint reflection-artifacts
-bun run beep yeet repair
+```
+
+Run `bun run beep yeet repair` once with the P0 post-repair scope check above.
+It is a mutating operation, not a repeatable packet validator. After the reviewed
+diff is docs-only, run:
+
+```sh
 bun run beep yeet verify
 ```
 
