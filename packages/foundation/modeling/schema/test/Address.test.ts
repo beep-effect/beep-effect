@@ -3,11 +3,13 @@ import { Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { base58, bech32, bech32m } from "@scure/base";
+import { Effect } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-const decodeUnknownCryptoWalletAddressSync = S.decodeUnknownSync(CryptoWalletAddress);
+const decodeUnknownCryptoWalletAddressEffect = S.decodeUnknownEffect(CryptoWalletAddress);
 const CryptoWalletAddressPayload = S.Struct({ address: CryptoWalletAddress });
-const decodeCryptoWalletAddressPayloadSync = S.decodeSync(CryptoWalletAddressPayload);
+const decodeCryptoWalletAddressPayloadEffect = S.decodeEffect(CryptoWalletAddressPayload);
 
 const evmLowercase = "0x52908400098527886e0f7030069857d2e4169ee7";
 const evmChecksummed = "0x5AEDA56215b167893e80B4fE645BA6d5Bab767DE";
@@ -37,71 +39,156 @@ const bitcoinWitnessUnsupportedVersion = bech32.encode("bc", [1, ...bech32.toWor
 const bitcoinTaprootUnsupportedVersion = bech32m.encode("bc", [0, ...bech32m.toWords(new Uint8Array(32).fill(1))]);
 
 describe("CryptoWalletAddress", () => {
-  it("accepts canonical EVM addresses", () => {
-    expect(decodeUnknownCryptoWalletAddressSync(evmLowercase)).toBe(evmLowercase);
-    expect(decodeUnknownCryptoWalletAddressSync(evmChecksummed)).toBe(evmChecksummed);
-  });
+  it.effect(
+    "accepts canonical EVM addresses",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeUnknownCryptoWalletAddressEffect(evmLowercase)).toBe(evmLowercase);
+      expect(yield* decodeUnknownCryptoWalletAddressEffect(evmChecksummed)).toBe(evmChecksummed);
+    })
+  );
 
-  it("accepts canonical Bitcoin addresses", () => {
-    expect(decodeUnknownCryptoWalletAddressSync(bitcoinP2pkh)).toBe(bitcoinP2pkh);
-    expect(decodeUnknownCryptoWalletAddressSync(bitcoinP2sh)).toBe(bitcoinP2sh);
-    expect(decodeUnknownCryptoWalletAddressSync(bitcoinWitness)).toBe(bitcoinWitness);
-    expect(decodeUnknownCryptoWalletAddressSync(bitcoinP2wsh)).toBe(bitcoinP2wsh);
-    expect(decodeUnknownCryptoWalletAddressSync(bitcoinTaproot)).toBe(bitcoinTaproot);
-  });
+  it.effect(
+    "accepts canonical Bitcoin addresses",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeUnknownCryptoWalletAddressEffect(bitcoinP2pkh)).toBe(bitcoinP2pkh);
+      expect(yield* decodeUnknownCryptoWalletAddressEffect(bitcoinP2sh)).toBe(bitcoinP2sh);
+      expect(yield* decodeUnknownCryptoWalletAddressEffect(bitcoinWitness)).toBe(bitcoinWitness);
+      expect(yield* decodeUnknownCryptoWalletAddressEffect(bitcoinP2wsh)).toBe(bitcoinP2wsh);
+      expect(yield* decodeUnknownCryptoWalletAddressEffect(bitcoinTaproot)).toBe(bitcoinTaproot);
+    })
+  );
 
-  it("accepts canonical Solana addresses", () => {
-    expect(decodeUnknownCryptoWalletAddressSync(solanaCryptoWalletAddress)).toBe(solanaCryptoWalletAddress);
-  });
+  it.effect(
+    "accepts canonical Solana addresses",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeUnknownCryptoWalletAddressEffect(solanaCryptoWalletAddress)).toBe(solanaCryptoWalletAddress);
+    })
+  );
 
-  it("rejects malformed EVM addresses", () => {
-    expect(() => decodeUnknownCryptoWalletAddressSync(Str.toUpperCase(evmChecksummed))).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-    expect(() => decodeUnknownCryptoWalletAddressSync("52908400098527886e0f7030069857d2e4169ee7")).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-    expect(() => decodeUnknownCryptoWalletAddressSync("0x52908400098527886E0F7030069857D2E4169Ee7")).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-  });
+  it.effect(
+    "rejects malformed EVM addresses",
+    Effect.fnUntraced(function* () {
+      const failure1 = yield* Effect.result(decodeUnknownCryptoWalletAddressEffect(Str.toUpperCase(evmChecksummed)));
+      expect(Result.isFailure(failure1)).toBe(true);
+      if (Result.isFailure(failure1)) {
+        expect(failure1.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+      const failure2 = yield* Effect.result(
+        decodeUnknownCryptoWalletAddressEffect("52908400098527886e0f7030069857d2e4169ee7")
+      );
+      expect(Result.isFailure(failure2)).toBe(true);
+      if (Result.isFailure(failure2)) {
+        expect(failure2.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+      const failure3 = yield* Effect.result(
+        decodeUnknownCryptoWalletAddressEffect("0x52908400098527886E0F7030069857D2E4169Ee7")
+      );
+      expect(Result.isFailure(failure3)).toBe(true);
+      if (Result.isFailure(failure3)) {
+        expect(failure3.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+    })
+  );
 
-  it("rejects malformed Bitcoin addresses", () => {
-    expect(() => decodeUnknownCryptoWalletAddressSync("tb1qqypqxpq9qcrsszg2pvxq6rs0zqg3yyc5f8j3j2")).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-    expect(() => decodeUnknownCryptoWalletAddressSync("bc1qQypqxpq9qcrsszg2pvxq6rs0zqg3yyc5fcj4z3")).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-    expect(() => decodeUnknownCryptoWalletAddressSync("16L5yRNPTuciSgXGHqYwn9N6NeoKqopAv")).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-    expect(() => decodeUnknownCryptoWalletAddressSync(bitcoinBase58UnsupportedVersion)).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-    expect(() => decodeUnknownCryptoWalletAddressSync(bitcoinWitnessEmptyProgram)).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-    expect(() => decodeUnknownCryptoWalletAddressSync(bitcoinWitnessUnsupportedVersion)).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-    expect(() => decodeUnknownCryptoWalletAddressSync(bitcoinTaprootUnsupportedVersion)).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-  });
+  it.effect(
+    "rejects malformed Bitcoin addresses",
+    Effect.fnUntraced(function* () {
+      const failure4 = yield* Effect.result(
+        decodeUnknownCryptoWalletAddressEffect("tb1qqypqxpq9qcrsszg2pvxq6rs0zqg3yyc5f8j3j2")
+      );
+      expect(Result.isFailure(failure4)).toBe(true);
+      if (Result.isFailure(failure4)) {
+        expect(failure4.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+      const failure5 = yield* Effect.result(
+        decodeUnknownCryptoWalletAddressEffect("bc1qQypqxpq9qcrsszg2pvxq6rs0zqg3yyc5fcj4z3")
+      );
+      expect(Result.isFailure(failure5)).toBe(true);
+      if (Result.isFailure(failure5)) {
+        expect(failure5.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+      const failure6 = yield* Effect.result(
+        decodeUnknownCryptoWalletAddressEffect("16L5yRNPTuciSgXGHqYwn9N6NeoKqopAv")
+      );
+      expect(Result.isFailure(failure6)).toBe(true);
+      if (Result.isFailure(failure6)) {
+        expect(failure6.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+      const failure7 = yield* Effect.result(decodeUnknownCryptoWalletAddressEffect(bitcoinBase58UnsupportedVersion));
+      expect(Result.isFailure(failure7)).toBe(true);
+      if (Result.isFailure(failure7)) {
+        expect(failure7.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+      const failure8 = yield* Effect.result(decodeUnknownCryptoWalletAddressEffect(bitcoinWitnessEmptyProgram));
+      expect(Result.isFailure(failure8)).toBe(true);
+      if (Result.isFailure(failure8)) {
+        expect(failure8.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+      const failure9 = yield* Effect.result(decodeUnknownCryptoWalletAddressEffect(bitcoinWitnessUnsupportedVersion));
+      expect(Result.isFailure(failure9)).toBe(true);
+      if (Result.isFailure(failure9)) {
+        expect(failure9.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+      const failure10 = yield* Effect.result(decodeUnknownCryptoWalletAddressEffect(bitcoinTaprootUnsupportedVersion));
+      expect(Result.isFailure(failure10)).toBe(true);
+      if (Result.isFailure(failure10)) {
+        expect(failure10.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+    })
+  );
 
-  it("rejects malformed Solana addresses", () => {
-    expect(() =>
-      decodeUnknownCryptoWalletAddressSync(
-        "2YeNeP1Xwhs2QCXnqvbDHktoF5v2ZDByARS2fWeiW5x8oENhfydKP6pwhQ8SarrG3Nhb3AeFMiwD38oj24uqC9um"
-      )
-    ).toThrow("CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address");
-    expect(() => decodeUnknownCryptoWalletAddressSync("O0Il")).toThrow(
-      "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
-    );
-  });
+  it.effect(
+    "rejects malformed Solana addresses",
+    Effect.fnUntraced(function* () {
+      const failure11 = yield* Effect.result(
+        decodeUnknownCryptoWalletAddressEffect(
+          "2YeNeP1Xwhs2QCXnqvbDHktoF5v2ZDByARS2fWeiW5x8oENhfydKP6pwhQ8SarrG3Nhb3AeFMiwD38oj24uqC9um"
+        )
+      );
+      expect(Result.isFailure(failure11)).toBe(true);
+      if (Result.isFailure(failure11)) {
+        expect(failure11.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+      const failure12 = yield* Effect.result(decodeUnknownCryptoWalletAddressEffect("O0Il"));
+      expect(Result.isFailure(failure12)).toBe(true);
+      if (Result.isFailure(failure12)) {
+        expect(failure12.failure.message).toContain(
+          "CryptoWalletAddress must be a canonical mainnet EVM, Bitcoin, or Solana wallet address"
+        );
+      }
+    })
+  );
 
-  it("reports nested field failures at the address key", () => {
-    expect(() => decodeCryptoWalletAddressPayloadSync({ address: "invalid" })).toThrow(`at ["address"]`);
-  });
+  it.effect(
+    "reports nested field failures at the address key",
+    Effect.fnUntraced(function* () {
+      const failure13 = yield* Effect.result(decodeCryptoWalletAddressPayloadEffect({ address: "invalid" }));
+      expect(Result.isFailure(failure13)).toBe(true);
+      if (Result.isFailure(failure13)) {
+        expect(failure13.failure.message).toContain(`at ["address"]`);
+      }
+    })
+  );
 });

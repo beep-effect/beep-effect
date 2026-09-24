@@ -44,14 +44,26 @@ class SmokeServerInfo extends S.Class<SmokeServerInfo>($I`SmokeServerInfo`)(
   $I.annote("SmokeServerInfo", { description: "Server identity returned by MCP initialization." })
 ) {}
 
-class SmokeInitializeResult extends S.Class<SmokeInitializeResult>($I`SmokeInitializeResult`)(
-  { serverInfo: SmokeServerInfo },
-  $I.annote("SmokeInitializeResult", { description: "Initialization payload returned by the compiled MCP host." })
+// The 2026-07-28 `server/discover` result carries serverInfo under a `_meta`
+// key (`SERVER_INFO_META_KEY` in `@beep/mcp-kit/client`); the smoke inlines the
+// key so the compiled app keeps its dependency set.
+const SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo";
+const PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion";
+const CLIENT_CAPABILITIES_META_KEY = "io.modelcontextprotocol/clientCapabilities";
+const CLIENT_INFO_META_KEY = "io.modelcontextprotocol/clientInfo";
+const MCP_PROTOCOL_VERSION = "2026-07-28";
+class SmokeDiscoverMeta extends S.Class<SmokeDiscoverMeta>($I`SmokeDiscoverMeta`)(
+  { [SERVER_INFO_META_KEY]: SmokeServerInfo },
+  $I.annote("SmokeDiscoverMeta", { description: "Discover result metadata carrying the server identity." })
+) {}
+class SmokeDiscoverResult extends S.Class<SmokeDiscoverResult>($I`SmokeDiscoverResult`)(
+  { _meta: SmokeDiscoverMeta, supportedVersions: S.Array(S.String) },
+  $I.annote("SmokeDiscoverResult", { description: "Initialization payload returned by the compiled MCP host." })
 ) {}
 
-class SmokeInitializeResponse extends S.Class<SmokeInitializeResponse>($I`SmokeInitializeResponse`)(
-  { result: SmokeInitializeResult },
-  $I.annote("SmokeInitializeResponse", { description: "Initialization JSON-RPC response from the compiled MCP host." })
+class SmokeDiscoverResponse extends S.Class<SmokeDiscoverResponse>($I`SmokeDiscoverResponse`)(
+  { result: SmokeDiscoverResult },
+  $I.annote("SmokeDiscoverResponse", { description: "Initialization JSON-RPC response from the compiled MCP host." })
 ) {}
 
 class SmokeManifestEnv extends S.Class<SmokeManifestEnv>($I`SmokeManifestEnv`)(
@@ -97,7 +109,7 @@ class SmokeCallResponse extends S.Class<SmokeCallResponse>($I`SmokeCallResponse`
   $I.annote("SmokeCallResponse", { description: "Tool-call JSON-RPC response from the compiled MCP host." })
 ) {}
 
-const decodeInitialize = S.decodeUnknownEffect(S.fromJsonString(SmokeInitializeResponse));
+const decodeDiscover = S.decodeUnknownEffect(S.fromJsonString(SmokeDiscoverResponse));
 const decodeTools = S.decodeUnknownEffect(S.fromJsonString(SmokeToolsResponse));
 const decodeCall = S.decodeUnknownEffect(S.fromJsonString(SmokeCallResponse));
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(SmokeManifest));
@@ -200,11 +212,15 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   // also leaves PRACTICE_KG_CORPUS_ROOT unset, mirroring the pointer-only install.
   const ambientEnv: Record<string, string | undefined> = { ...Bun.env };
   const hostEnv = R.remove(R.remove(ambientEnv, "PRACTICE_KG_BUNDLE_DIR"), "PRACTICE_KG_CORPUS_ROOT");
+  // 2026-07-28 framing: no initialize handshake; every request carries the
+  // protocol version, client capabilities and client info in `_meta`.
+  const requestMeta = `{"${PROTOCOL_VERSION_META_KEY}":"${MCP_PROTOCOL_VERSION}","${CLIENT_CAPABILITIES_META_KEY}":{},"${CLIENT_INFO_META_KEY}":{"name":"compiled-smoke","version":"0.0.0"}}`;
+  const frame = (id: number, method: string, params: string): string =>
+    `{"jsonrpc":"2.0","id":${id},"method":"${method}","params":${params}}`;
   const pipeScript =
-    `{ printf '%s\\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"compiled-smoke","version":"0.0.0"}}}'; sleep 2; ` +
-    `printf '%s\\n' '{"jsonrpc":"2.0","method":"notifications/initialized"}'; sleep 1; ` +
-    `printf '%s\\n' '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'; sleep 1; ` +
-    `printf '%s\\n' '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"corpus_search_text","arguments":{"query":"fixture"}}}'; sleep 3; } ` +
+    `{ printf '%s\\n' '${frame(1, "server/discover", `{"_meta":${requestMeta}}`)}'; sleep 2; ` +
+    `printf '%s\\n' '${frame(2, "tools/list", `{"_meta":${requestMeta}}`)}'; sleep 1; ` +
+    `printf '%s\\n' '${frame(3, "tools/call", `{"name":"corpus_search_text","arguments":{"query":"fixture"},"_meta":${requestMeta}}`)}'; sleep 3; } ` +
     `| "$1"`;
   const child = yield* Effect.try({
     try: () =>
@@ -242,12 +258,17 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
         onSome: Effect.succeed,
       })
     );
-  const initializeLine = yield* responseLine(0, "initialize");
+  const discoverLine = yield* responseLine(0, "server/discover");
   const toolsLine = yield* responseLine(1, "tools/list");
   // Server-name mismatch fails here too: SmokeServerInfo.name is a literal.
-  const initialize = yield* decodeInitialize(initializeLine).pipe(
-    Effect.mapError((cause) => SmokeFailure.make({ cause, message: "Initialize response was invalid." }))
+  const discover = yield* decodeDiscover(discoverLine).pipe(
+    Effect.mapError((cause) => SmokeFailure.make({ cause, message: "server/discover response was invalid." }))
   );
+  if (!A.contains(discover.result.supportedVersions, MCP_PROTOCOL_VERSION)) {
+    return yield* SmokeFailure.make({
+      message: `Compiled host does not advertise ${MCP_PROTOCOL_VERSION}: ${A.join(discover.result.supportedVersions, ", ")}`,
+    });
+  }
   const tools = yield* decodeTools(toolsLine).pipe(
     Effect.mapError((cause) => SmokeFailure.make({ cause, message: "Tools/list response was invalid." }))
   );
@@ -271,7 +292,7 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
     return yield* SmokeFailure.make({ message: "corpus_search_text result did not include bundle_version." });
   }
   yield* Effect.logInfo("COMPILED_SMOKE_OK", {
-    initialize: initialize.result.serverInfo.name,
+    discover: discover.result._meta[SERVER_INFO_META_KEY].name,
     toolCount: names.length,
     tools: A.join(names, ","),
   });

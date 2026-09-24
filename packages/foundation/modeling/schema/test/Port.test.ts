@@ -2,14 +2,15 @@ import { fcRuns } from "@beep/fc-runs";
 import { Port, PortFromString } from "@beep/schema/Port";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodePort = S.decodeEffect(Port);
 const decodeUnknownPort = S.decodeUnknownEffect(Port);
 const decodeUnknownPortFromString = S.decodeUnknownEffect(PortFromString);
-const decodeUnknownPortSync = S.decodeUnknownSync(Port);
-const decodeUnknownPortFromStringSync = S.decodeUnknownSync(PortFromString);
+const decodeUnknownPortEffect = S.decodeUnknownEffect(Port);
+const decodeUnknownPortFromStringEffect = S.decodeUnknownEffect(PortFromString);
 const encodePortFromString = S.encodeEffect(PortFromString);
 const isPort2 = S.is(Port);
 
@@ -49,28 +50,30 @@ describe("Port", () => {
     })
   );
 
-  it("uses the annotated range error message", () => {
-    expect(() => decodeUnknownPortSync(0)).toThrow("Expected a valid transport port number between 1 and 65535");
-  });
+  it.effect(
+    "uses the annotated range error message",
+    Effect.fnUntraced(function* () {
+      const failure1 = yield* Effect.result(decodeUnknownPortEffect(0));
+      expect(Result.isFailure(failure1)).toBe(true);
+      if (Result.isFailure(failure1)) {
+        expect(failure1.failure.message).toContain("Expected a valid transport port number between 1 and 65535");
+      }
+    })
+  );
 
-  it("derives arbitrary values inside the port range", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([PortArbitrary]),
-          ([value]) => {
-            expect(isPort2(value)).toBe(true);
-            expect(Number.isInteger(value)).toBe(true);
-            expect(value).toBeGreaterThanOrEqual(portMinimum);
-            expect(value).toBeLessThanOrEqual(portMaximum);
+  it.effect.prop(
+    "derives arbitrary values inside the port range",
+    [PortArbitrary],
+    Effect.fnUntraced(function* ([value]) {
+      expect(isPort2(value)).toBe(true);
+      expect(Number.isInteger(value)).toBe(true);
+      expect(value).toBeGreaterThanOrEqual(portMinimum);
+      expect(value).toBeLessThanOrEqual(portMaximum);
 
-            return true;
-          },
-          fcRuns(100)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(100) }
+  );
 });
 
 describe("PortFromString", () => {
@@ -112,9 +115,14 @@ describe("PortFromString", () => {
     })
   );
 
-  it("uses the annotated decimal-string error message", () => {
-    expect(() => decodeUnknownPortFromStringSync("0x50")).toThrow(
-      "Port strings must contain only ASCII decimal digits"
-    );
-  });
+  it.effect(
+    "uses the annotated decimal-string error message",
+    Effect.fnUntraced(function* () {
+      const failure2 = yield* Effect.result(decodeUnknownPortFromStringEffect("0x50"));
+      expect(Result.isFailure(failure2)).toBe(true);
+      if (Result.isFailure(failure2)) {
+        expect(failure2.failure.message).toContain("Port strings must contain only ASCII decimal digits");
+      }
+    })
+  );
 });

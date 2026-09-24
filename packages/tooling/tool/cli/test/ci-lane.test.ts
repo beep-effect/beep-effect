@@ -4,6 +4,7 @@ import {
   CI_LANE_PARTITIONS,
   CiLaneId,
   CiLanePartition,
+  CiLanePartitionShard,
   CiLaneRunOptions,
   CiLocalStepPlan,
   ciLanePartitionArgsForTesting,
@@ -23,8 +24,10 @@ import {
 import { FsUtilsLive, findRepoRoot, resolveWorkspacePackages } from "@beep/repo-utils";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { A } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, HashMap, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -113,6 +116,7 @@ const ciExecutionLayer = (
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
   return Layer.mergeAll(
+    BunCrypto.layer,
     fileSystemAndPath,
     FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
     processLayer,
@@ -124,6 +128,7 @@ const firstOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.head(items));
 const stepAt = <T>(items: ReadonlyArray<T>, index: number): T => O.getOrThrow(A.get(items, index));
 const lastOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.last(items));
 const isLocalCiLaneId = S.is(CiLaneId);
+const decodeShard = S.decodeUnknownOption(CiLanePartitionShard);
 
 const baseOptions = CiLaneRunOptions.make({
   affected: false,
@@ -376,11 +381,113 @@ describe("CI lane partitions", () => {
       }))
     ).toEqual([
       { id: "lint-a", packages: 68, weightSeconds: 1132 },
-      { id: "lint-b", packages: 67, weightSeconds: 1134 },
-      { id: "repo-cli", packages: 1, weightSeconds: 879 },
-      { id: "unit-a", packages: 67, weightSeconds: 1214 },
+      { id: "lint-b", packages: 68, weightSeconds: 1134 },
+      { id: "repo-cli-1", packages: 1, weightSeconds: 440 },
+      { id: "repo-cli-2", packages: 1, weightSeconds: 440 },
+      { id: "unit-a", packages: 68, weightSeconds: 1214 },
       { id: "unit-b", packages: 67, weightSeconds: 1214 },
     ]);
+  });
+
+  it("pins the repo-cli Vitest shard split and keeps every other bin unsharded", () => {
+    expect(A.map(CI_LANE_PARTITIONS, (partition) => ({ id: partition.id, shard: partition.shard }))).toEqual([
+      { id: "lint-a", shard: undefined },
+      { id: "lint-b", shard: undefined },
+      { id: "repo-cli-1", shard: CiLanePartitionShard.make({ index: 1, total: 2 }) },
+      { id: "repo-cli-2", shard: CiLanePartitionShard.make({ index: 2, total: 2 }) },
+      { id: "unit-a", shard: undefined },
+      { id: "unit-b", shard: undefined },
+    ]);
+    expect(partitionPackages("repo-cli-1")).toEqual(["@beep/repo-cli"]);
+    expect(partitionPackages("repo-cli-2")).toEqual(["@beep/repo-cli"]);
+  });
+
+  it("rejects a shard whose index exceeds its total or whose total is below two", () => {
+    assertNone(decodeShard({ index: 3, total: 2 }));
+    assertNone(decodeShard({ index: 1, total: 1 }));
+    assertNone(decodeShard({ index: 0, total: 2 }));
+    assertSome(decodeShard({ index: 2, total: 2 }), CiLanePartitionShard.make({ index: 2, total: 2 }));
+  });
+
+  it.effect("proves a complete two-shard set and fails closed on every shard-set violation", () =>
+    Effect.gen(function* () {
+      const packageName = "@beep/repo-cli";
+      const shardBin = (id: "lint-a" | "lint-b" | "unit-a" | "unit-b", index: number, total: number) =>
+        CiLanePartition.make({
+          id,
+          lane: "lint",
+          packages: [packageName],
+          weightSeconds: 1,
+          shard: CiLanePartitionShard.make({ index, total }),
+        });
+      const prove = (table: ReadonlyArray<CiLanePartition>) =>
+        proveCiLanePartition("lint", "lint-a", [packageName], [packageName], [packageName], false, table);
+
+      const valid = yield* prove([shardBin("lint-a", 1, 2), shardBin("lint-b", 2, 2)]);
+      expect(valid.packages).toEqual([packageName]);
+      expect(valid.shard).toEqual(CiLanePartitionShard.make({ index: 1, total: 2 }));
+
+      const missingIndex = yield* prove([shardBin("lint-a", 1, 3), shardBin("lint-b", 3, 3)]).pipe(Effect.flip);
+      expect(missingIndex.reason).toBe("shard-set-incomplete");
+      expect(missingIndex.message).toContain("expected exactly 1..3");
+
+      const mismatchedTotal = yield* prove([shardBin("lint-a", 1, 2), shardBin("lint-b", 2, 3)]).pipe(Effect.flip);
+      expect(mismatchedTotal.reason).toBe("shard-total-mismatch");
+      expect(mismatchedTotal.message).toContain("different totals (2, 3)");
+
+      const duplicateIndex = yield* prove([shardBin("lint-a", 1, 2), shardBin("lint-b", 1, 2)]).pipe(Effect.flip);
+      expect(duplicateIndex.reason).toBe("shard-index-duplicate");
+      expect(duplicateIndex.message).toContain("shard index 1 more than once");
+
+      const alsoUnsharded = yield* prove([
+        shardBin("lint-a", 1, 2),
+        shardBin("lint-b", 2, 2),
+        CiLanePartition.make({ id: "unit-a", lane: "lint", packages: [packageName], weightSeconds: 1 }),
+      ]).pipe(Effect.flip);
+      expect(alsoUnsharded.reason).toBe("sharded-package-unsharded");
+      expect(alsoUnsharded.message).toContain("unsharded in others (lint-a, lint-b, unit-a)");
+
+      const oversized = yield* prove([
+        CiLanePartition.make({ ...shardBin("lint-a", 1, 2), packages: [packageName, "@beep/types"] }),
+        shardBin("lint-b", 2, 2),
+      ]).pipe(Effect.flip);
+      expect(oversized.reason).toBe("sharded-bin-package-count");
+      expect(oversized.message).toContain("names 2 packages");
+    })
+  );
+
+  it("forwards the Vitest shard as a Turbo pass-through only for sharded partitions", () => {
+    const options = CiLaneRunOptions.make({ ...baseOptions, partition: "repo-cli-1", summarize: true });
+    const repoCli1 = O.getOrThrow(A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === "repo-cli-1"));
+    const sharded = ciLanePartitionArgsForTesting("test-unit", repoCli1.packages, options, repoCli1.shard);
+    const shardedShape = [
+      "--only",
+      "--concurrency=2",
+      "--filter=!./apps/labs/**",
+      "--filter=@beep/repo-cli",
+      "--summarize",
+      "--",
+      "--shard=1/2",
+    ];
+    expect([...sharded.execution]).toEqual([
+      "turbo",
+      "run",
+      "@beep/repo-cli#test",
+      ...expectedTurboCacheArgs(shardedShape),
+      ...shardedShape,
+    ]);
+    expect(A.takeRight(sharded.execution, 2)).toEqual(["--", "--shard=1/2"]);
+    expect(sharded.selection).not.toContain("--shard=1/2");
+
+    const unitA = O.getOrThrow(A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === "unit-a"));
+    const unsharded = ciLanePartitionArgsForTesting(
+      "test-unit",
+      A.take(unitA.packages, 1),
+      CiLaneRunOptions.make({ ...baseOptions, partition: "unit-a" }),
+      unitA.shard
+    );
+    expect(unsharded.execution).not.toContain("--");
+    expect(A.some(unsharded.execution, Str.startsWith("--shard="))).toBe(false);
   });
 
   it.effect("rejects a partition that belongs to another lane", () =>
@@ -584,7 +691,7 @@ describe("CI lane partitions", () => {
 
       for (const [laneId, task, partition] of [
         ["lint", "lint", "lint-a"],
-        ["test-unit", "test", "repo-cli"],
+        ["test-unit", "test", "repo-cli-1"],
       ] as const) {
         const taskPackageNames = pipe(
           workspaceEntries,
@@ -603,15 +710,23 @@ describe("CI lane partitions", () => {
           taskPackageNames,
           false
         );
-        const assignments = pipe(
-          CI_LANE_PARTITIONS,
-          A.filter((entry) => entry.lane === laneId),
+        const lanePartitions = A.filter(CI_LANE_PARTITIONS, (entry) => entry.lane === laneId);
+        const unshardedAssignments = pipe(
+          lanePartitions,
+          A.filter((entry) => entry.shard === undefined),
           A.flatMap((entry) => entry.packages)
         );
+        const shardedAssignments = pipe(
+          lanePartitions,
+          A.filter((entry) => entry.shard !== undefined),
+          A.flatMap((entry) => entry.packages),
+          A.dedupe
+        );
+        const assignments = A.appendAll(unshardedAssignments, shardedAssignments);
 
         expect(A.length(A.dedupe(assignments))).toBe(A.length(assignments));
         expect(A.sort(assignments, Order.String)).toEqual(taskPackageNames);
-        expect(proof.selectedTaskCount).toBe(135);
+        expect(proof.selectedTaskCount).toBe(136);
       }
     }).pipe(provideScopedLayer(LiveRepoLayer))
   );
@@ -703,7 +818,7 @@ describe("partitioned CI lane execution", () => {
             expect(execution).not.toContain("--affected");
 
             const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-            expect(output).toContain("lint partition union proved: 135 executable tasks, 135 selected, 68 in lint-a");
+            expect(output).toContain("lint partition union proved: 136 executable tasks, 136 selected, 68 in lint-a");
           })
         );
       })
@@ -740,7 +855,7 @@ describe("partitioned CI lane execution", () => {
             CiLaneRunOptions.make({
               ...baseOptions,
               affected: true,
-              partition: "repo-cli",
+              partition: "repo-cli-1",
             })
           );
 
@@ -750,8 +865,10 @@ describe("partitioned CI lane execution", () => {
           expect(firstOf(commands)).toContain("--affected --filter=!./apps/labs/** --only --dry-run=json");
 
           const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-          expect(output).toContain("test-unit partition union proved: 135 executable tasks, 1 selected, 0 in repo-cli");
-          expect(output).toContain("test-unit repo-cli: partition has no selected tasks (skipped)");
+          expect(output).toContain(
+            "test-unit partition union proved: 136 executable tasks, 1 selected, 0 in repo-cli-1"
+          );
+          expect(output).toContain("test-unit repo-cli-1: partition has no selected tasks (skipped)");
         })
       );
     }).pipe(provideScopedLayer(PartitionLaneLayer))
@@ -761,12 +878,14 @@ describe("partitioned CI lane execution", () => {
     withPartitionShim({ dryRunOutput: turboDryRunOutput("test", lanePackages("test-unit")) }, ({ commandLogPath }) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* runCiLane("test-unit", CiLaneRunOptions.make({ ...baseOptions, dryRun: true, partition: "repo-cli" }));
+        yield* runCiLane("test-unit", CiLaneRunOptions.make({ ...baseOptions, dryRun: true, partition: "repo-cli-1" }));
 
         const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(commands).toHaveLength(1);
         const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-        expect(output).toContain("test-unit repo-cli: dry-run proof complete; no tasks executed");
+        expect(output).toContain("test-unit repo-cli-1: planned execution: bunx turbo run @beep/repo-cli#test");
+        expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/2");
+        expect(output).toContain("test-unit repo-cli-1: dry-run proof complete; no tasks executed");
       })
     ).pipe(provideScopedLayer(PartitionLaneLayer))
   );
@@ -796,29 +915,30 @@ describe("partitioned CI lane execution", () => {
 
   it.effect("surfaces a non-zero partition execution as a quality task failure", () =>
     Effect.gen(function* () {
-      const selectedPackage = firstOf(partitionPackages("repo-cli"));
+      const selectedPackage = firstOf(partitionPackages("repo-cli-2"));
       const error = yield* withPartitionShim(
         {
           dryRunOutput: turboDryRunOutput("test", [selectedPackage]),
           executionExitCode: 7,
         },
         () =>
-          runCiLane("test-unit", CiLaneRunOptions.make({ ...baseOptions, affected: true, partition: "repo-cli" })).pipe(
-            Effect.flip
-          )
+          runCiLane(
+            "test-unit",
+            CiLaneRunOptions.make({ ...baseOptions, affected: true, partition: "repo-cli-2" })
+          ).pipe(Effect.flip)
       );
 
       expect(error._tag).toBe("QualityTaskGroupFailed");
       if (error._tag === "QualityTaskGroupFailed") {
         expect(error.exitCode).toBe(7);
-        expect(error.label).toBe("ci:test-unit:repo-cli");
+        expect(error.label).toBe("ci:test-unit:repo-cli-2");
       }
     }).pipe(provideScopedLayer(PartitionLaneLayer))
   );
 
   it.effect("maps an unreadable workspace inventory to the typed partition error", () =>
     Effect.gen(function* () {
-      const selectedPackage = firstOf(partitionPackages("repo-cli"));
+      const selectedPackage = firstOf(partitionPackages("repo-cli-2"));
       const error = yield* withPartitionShim(
         { dryRunOutput: turboDryRunOutput("test", [selectedPackage]) },
         ({ tempDir }) =>
@@ -828,7 +948,9 @@ describe("partitioned CI lane execution", () => {
             yield* fs.makeDirectory(path.join(tempDir, ".git"), { recursive: true });
             return yield* withWorkingDirectory(
               tempDir,
-              runCiLane("test-unit", CiLaneRunOptions.make({ ...baseOptions, partition: "repo-cli" })).pipe(Effect.flip)
+              runCiLane("test-unit", CiLaneRunOptions.make({ ...baseOptions, partition: "repo-cli-2" })).pipe(
+                Effect.flip
+              )
             );
           })
       );
@@ -1352,6 +1474,7 @@ const storybookCiLayer = (dryRunOutput: string, spawned: Array<StorybookSpawn>, 
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
   return Layer.mergeAll(
+    BunCrypto.layer,
     fileSystemAndPath,
     FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
     processLayer,

@@ -19,12 +19,22 @@ import {
   M365SiteCollection,
 } from "@beep/m365";
 import {
+  M365_MCP_INSTRUCTIONS,
+  M365McpRegistrationsLive,
   M365McpServerConfig,
   M365ToolError,
   M365Toolkit,
   M365ToolkitHandlersLive,
   makeServerLayer,
 } from "@beep/m365-mcp";
+import {
+  JsonRpcMessage,
+  JsonRpcMessageFromLine,
+  McpClientOptions,
+  requestMetadata,
+  withRequestMetadata,
+} from "@beep/mcp-kit/client";
+import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Result } from "effect";
@@ -117,16 +127,19 @@ const createMockM365 = () =>
 
 const MockM365Layer = Layer.succeed(M365, createMockM365());
 
-const initializeRequest = `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"m365-mcp-test","version":"0.0.0"}}}`;
-const initializedAndListRequests = `${pipe(
-  [
-    `{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}`,
-    `{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}`,
-  ],
-  A.join("\n")
-)}`;
-const callRequest = `{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"m365_list_drives","arguments":{}}}`;
-
+// The stdio conversation is framed by the kit client's own helpers: every
+// request carries the 2026-07-28 `_meta` keys, and the host answers without
+// a session (D-posture). The conformance port below proves the legacy
+// `initialize` path is refused with `-32022`.
+const clientMetadata = requestMetadata(McpClientOptions.make({}));
+const encodeFrame = S.encodeEffect(JsonRpcMessageFromLine);
+const requestFrame = Effect.fnUntraced(function* (id: number, method: string, params: Record<string, unknown>) {
+  const metadata = yield* clientMetadata;
+  return yield* encodeFrame(JsonRpcMessage.make({ id, method, params: withRequestMetadata(params, metadata) }));
+});
+const discoverRequest = requestFrame(1, "server/discover", {});
+const listRequest = requestFrame(2, "tools/list", {});
+const callRequest = requestFrame(3, "tools/call", { name: "m365_list_drives", arguments: {} });
 const decodeOutputChunk = (chunk: string | Uint8Array): string => (P.isString(chunk) ? chunk : decoder.decode(chunk));
 
 const encodeRequest = (request: string): Uint8Array => encoder.encode(`${request}\n`);
@@ -141,16 +154,12 @@ const continueStdioConversation = Effect.fn("continueStdioConversation")(functio
 
   if (currentStage === 0 && Str.includes(`"id":1`)(output)) {
     yield* Ref.set(stage, 1);
-    return yield* Queue.offer(stdin, encodeRequest(initializedAndListRequests));
-  }
-
-  if (currentStage === 1 && Str.includes(`"id":2`)(output)) {
+    yield* Queue.offer(stdin, encodeRequest(yield* Effect.orDie(listRequest)));
+  } else if (currentStage === 1 && Str.includes(`"id":2`)(output)) {
     yield* Ref.set(stage, 2);
-    return yield* Queue.offer(stdin, encodeRequest(callRequest));
-  }
-
-  if (Str.includes(DriveId)(output)) {
-    return yield* Deferred.succeed(ready, void 0);
+    yield* Queue.offer(stdin, encodeRequest(yield* Effect.orDie(callRequest)));
+  } else if (Str.includes(DriveId)(output)) {
+    yield* Deferred.succeed(ready, void 0);
   }
 });
 
@@ -266,7 +275,7 @@ describe("M365 MCP server", () => {
   });
 
   it.effect(
-    "serves tool listing and tool calls over stdio",
+    "serves server/discover, tools/list and tools/call over stdio with 2026-07-28 framing",
     Effect.fnUntraced(function* () {
       const stdout = yield* Ref.make("");
       const stdin = yield* Queue.make<Uint8Array>();
@@ -279,7 +288,7 @@ describe("M365 MCP server", () => {
         })
       ).pipe(Layer.provide(makeStdioTestLayer(stdin, stdout, stage, ready)), Layer.provide(MockM365Layer));
 
-      yield* Queue.offer(stdin, encodeRequest(initializeRequest));
+      yield* Queue.offer(stdin, encodeRequest(yield* discoverRequest));
       const fiber = yield* serverLayer.pipe(Layer.launch, Effect.forkDetach({ startImmediately: true }));
 
       yield* Effect.yieldNow;
@@ -294,4 +303,16 @@ describe("M365 MCP server", () => {
       assert.isTrue(Str.includes(DriveId)(output), output);
     })
   );
+});
+
+conformance2026({
+  name: "beep-m365-test",
+  version: "0.0.0",
+  instructions: M365_MCP_INSTRUCTIONS,
+  registrations: M365McpRegistrationsLive.pipe(Layer.provide(MockM365Layer)),
+  tool: {
+    name: "m365_get_site",
+    arguments: { siteId: SiteId },
+    invalidArguments: { siteId: 1 },
+  },
 });

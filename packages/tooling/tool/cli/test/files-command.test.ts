@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { Chalk } from "@beep/chalk";
 import { createColors } from "@beep/colors";
 import {
@@ -41,7 +40,9 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { A, N, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { Cause, ConfigProvider, Data, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { Cause, ConfigProvider, Data, Effect, Encoding, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
+import * as Crypto from "effect/Crypto";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -50,7 +51,6 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import sharp from "sharp";
-import { describe, expect, it } from "vitest";
 
 const decodePersonMatchDeviceIndexesFromCsv = S.decodeEffect(PersonMatchDeviceIndexesFromCsv);
 const decodeUnknownPersonMatchModelOption = S.decodeUnknownOption(PersonMatchModel);
@@ -63,15 +63,15 @@ const provideScopedLayer =
 
 const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer, FetchHttpClient.layer);
 const runFilesCommand = Command.runWith(filesCommand, { version: "0.0.0" });
-const decodeArchivePoorCandidatesManifest = S.decodeUnknownSync(S.fromJsonString(ArchivePoorCandidatesManifest));
-const decodeDetectBordersReport = S.decodeUnknownSync(S.fromJsonString(DetectBordersReport));
+const decodeArchivePoorCandidatesManifest = S.decodeUnknownEffect(S.fromJsonString(ArchivePoorCandidatesManifest));
+const decodeDetectBordersReport = S.decodeUnknownEffect(S.fromJsonString(DetectBordersReport));
 const decodeDetectFacesReport = S.decodeUnknownEffect(S.fromJsonString(DetectFacesReport));
 const decodeImageAuditManifest = S.decodeUnknownEffect(S.fromJsonString(ImageAuditManifest));
 const decodeImageCurationManifest = S.decodeUnknownEffect(S.fromJsonString(ImageCurationManifest));
 const decodeChildArtifactRecord = S.decodeUnknownEffect(S.fromJsonString(ChildArtifactRecord));
 const decodeFileProcessingCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(FileProcessingCoverageSummary));
 const decodeFileProcessingFailureRecord = S.decodeUnknownEffect(S.fromJsonString(FileProcessingFailureRecord));
-const decodeNormalizeManifest = S.decodeUnknownSync(S.fromJsonString(NormalizeManifest));
+const decodeNormalizeManifest = S.decodeUnknownEffect(S.fromJsonString(NormalizeManifest));
 const decodePersonMatchReport = S.decodeUnknownEffect(S.fromJsonString(PersonMatchReport));
 const decodePersonMatchWorkerSuccess = S.decodeUnknownEffect(PersonMatchWorkerSuccess);
 const decodeProcessRunManifest = S.decodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
@@ -265,7 +265,7 @@ const readImageMetadata = Effect.fn("FilesTest.readImageMetadata")(function* (fi
 const readNormalizeManifest = Effect.fn("FilesTest.readNormalizeManifest")(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(filePath);
-  return decodeNormalizeManifest(content);
+  return yield* decodeNormalizeManifest(content);
 });
 
 const readArchivePoorCandidatesManifest = Effect.fn("FilesTest.readArchivePoorCandidatesManifest")(function* (
@@ -273,12 +273,12 @@ const readArchivePoorCandidatesManifest = Effect.fn("FilesTest.readArchivePoorCa
 ) {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(filePath);
-  return decodeArchivePoorCandidatesManifest(content);
+  return yield* decodeArchivePoorCandidatesManifest(content);
 });
 
 const readDetectBordersJsonLog = Effect.fn("FilesTest.readDetectBordersJsonLog")(function* () {
   const lines = A.filter(yield* TestConsole.logLines, isString);
-  return decodeDetectBordersReport(A.join("\n")(lines));
+  return yield* decodeDetectBordersReport(A.join("\n")(lines));
 });
 
 const readDetectFacesJsonLog = Effect.fn("FilesTest.readDetectFacesJsonLog")(function* () {
@@ -826,93 +826,74 @@ const fileSize = Effect.fn("FilesTest.fileSize")(function* (filePath: string) {
 
 const sha256FileRef = Effect.fn("FilesTest.sha256FileRef")(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
+  const crypto = yield* Crypto.Crypto;
   const bytes = yield* fs.readFile(filePath);
-  return `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+  return `sha256:${Encoding.encodeHex(yield* crypto.digest("SHA-256", bytes))}`;
 });
 
 describe("files command", { concurrent: false }, () => {
-  it("round-trips schema-derived report data through JSON command boundaries", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            DetectBordersReportArbitrary,
-            ImageAuditManifestArbitrary,
-            ImageCurationManifestArbitrary,
-            ChildArtifactRecordArbitrary,
-            FileProcessingCoverageSummaryArbitrary,
-            FileProcessingFailureRecordArbitrary,
-            NormalizeManifestArbitrary,
-            ProcessRunManifestArbitrary,
-            SourceProcessingRecordArbitrary,
-          ]),
-          ([
-            detectBordersReport,
-            imageAuditManifest,
-            imageCurationManifest,
-            childArtifactRecord,
-            coverageSummary,
-            failureRecord,
-            normalizeManifest,
-            processRunManifest,
-            sourceProcessingRecord,
-          ]) => {
-            const encodedDetectBordersReport = Effect.runSync(encodeDetectBordersReport(detectBordersReport));
-            const decodedDetectBordersReport = decodeDetectBordersReport(encodedDetectBordersReport);
-            expect(Effect.runSync(encodeDetectBordersReport(decodedDetectBordersReport))).toBe(
-              encodedDetectBordersReport
-            );
+  it.effect.prop(
+    "round-trips schema-derived report data through JSON command boundaries",
+    [
+      DetectBordersReportArbitrary,
+      ImageAuditManifestArbitrary,
+      ImageCurationManifestArbitrary,
+      ChildArtifactRecordArbitrary,
+      FileProcessingCoverageSummaryArbitrary,
+      FileProcessingFailureRecordArbitrary,
+      NormalizeManifestArbitrary,
+      ProcessRunManifestArbitrary,
+      SourceProcessingRecordArbitrary,
+    ],
+    Effect.fnUntraced(function* ([
+      detectBordersReport,
+      imageAuditManifest,
+      imageCurationManifest,
+      childArtifactRecord,
+      coverageSummary,
+      failureRecord,
+      normalizeManifest,
+      processRunManifest,
+      sourceProcessingRecord,
+    ]) {
+      const encodedDetectBordersReport = yield* encodeDetectBordersReport(detectBordersReport);
+      const decodedDetectBordersReport = yield* decodeDetectBordersReport(encodedDetectBordersReport);
+      expect(yield* encodeDetectBordersReport(decodedDetectBordersReport)).toBe(encodedDetectBordersReport);
 
-            const encodedImageAuditManifest = Effect.runSync(encodeImageAuditManifest(imageAuditManifest));
-            const decodedImageAuditManifest = Effect.runSync(decodeImageAuditManifest(encodedImageAuditManifest));
-            expect(Effect.runSync(encodeImageAuditManifest(decodedImageAuditManifest))).toBe(encodedImageAuditManifest);
+      const encodedImageAuditManifest = yield* encodeImageAuditManifest(imageAuditManifest);
+      const decodedImageAuditManifest = yield* decodeImageAuditManifest(encodedImageAuditManifest);
+      expect(yield* encodeImageAuditManifest(decodedImageAuditManifest)).toBe(encodedImageAuditManifest);
 
-            const encodedImageCurationManifest = Effect.runSync(encodeImageCurationManifest(imageCurationManifest));
-            const decodedImageCurationManifest = Effect.runSync(
-              decodeImageCurationManifest(encodedImageCurationManifest)
-            );
-            expect(Effect.runSync(encodeImageCurationManifest(decodedImageCurationManifest))).toBe(
-              encodedImageCurationManifest
-            );
+      const encodedImageCurationManifest = yield* encodeImageCurationManifest(imageCurationManifest);
+      const decodedImageCurationManifest = yield* decodeImageCurationManifest(encodedImageCurationManifest);
+      expect(yield* encodeImageCurationManifest(decodedImageCurationManifest)).toBe(encodedImageCurationManifest);
 
-            const encodedChildArtifactRecord = Effect.runSync(encodeChildArtifactRecord(childArtifactRecord));
-            const decodedChildArtifactRecord = Effect.runSync(decodeChildArtifactRecord(encodedChildArtifactRecord));
-            expect(Effect.runSync(encodeChildArtifactRecord(decodedChildArtifactRecord))).toBe(
-              encodedChildArtifactRecord
-            );
+      const encodedChildArtifactRecord = yield* encodeChildArtifactRecord(childArtifactRecord);
+      const decodedChildArtifactRecord = yield* decodeChildArtifactRecord(encodedChildArtifactRecord);
+      expect(yield* encodeChildArtifactRecord(decodedChildArtifactRecord)).toBe(encodedChildArtifactRecord);
 
-            const encodedCoverageSummary = Effect.runSync(encodeFileProcessingCoverageSummary(coverageSummary));
-            const decodedCoverageSummary = Effect.runSync(decodeFileProcessingCoverageSummary(encodedCoverageSummary));
-            expect(Effect.runSync(encodeFileProcessingCoverageSummary(decodedCoverageSummary))).toBe(
-              encodedCoverageSummary
-            );
+      const encodedCoverageSummary = yield* encodeFileProcessingCoverageSummary(coverageSummary);
+      const decodedCoverageSummary = yield* decodeFileProcessingCoverageSummary(encodedCoverageSummary);
+      expect(yield* encodeFileProcessingCoverageSummary(decodedCoverageSummary)).toBe(encodedCoverageSummary);
 
-            const encodedFailureRecord = Effect.runSync(encodeFileProcessingFailureRecord(failureRecord));
-            const decodedFailureRecord = Effect.runSync(decodeFileProcessingFailureRecord(encodedFailureRecord));
-            expect(Effect.runSync(encodeFileProcessingFailureRecord(decodedFailureRecord))).toBe(encodedFailureRecord);
+      const encodedFailureRecord = yield* encodeFileProcessingFailureRecord(failureRecord);
+      const decodedFailureRecord = yield* decodeFileProcessingFailureRecord(encodedFailureRecord);
+      expect(yield* encodeFileProcessingFailureRecord(decodedFailureRecord)).toBe(encodedFailureRecord);
 
-            const encodedNormalizeManifest = Effect.runSync(encodeNormalizeManifest(normalizeManifest));
-            const decodedNormalizeManifest = decodeNormalizeManifest(encodedNormalizeManifest);
-            expect(Effect.runSync(encodeNormalizeManifest(decodedNormalizeManifest))).toBe(encodedNormalizeManifest);
+      const encodedNormalizeManifest = yield* encodeNormalizeManifest(normalizeManifest);
+      const decodedNormalizeManifest = yield* decodeNormalizeManifest(encodedNormalizeManifest);
+      expect(yield* encodeNormalizeManifest(decodedNormalizeManifest)).toBe(encodedNormalizeManifest);
 
-            const encodedProcessRunManifest = Effect.runSync(encodeProcessRunManifest(processRunManifest));
-            const decodedProcessRunManifest = Effect.runSync(decodeProcessRunManifest(encodedProcessRunManifest));
-            expect(Effect.runSync(encodeProcessRunManifest(decodedProcessRunManifest))).toBe(encodedProcessRunManifest);
+      const encodedProcessRunManifest = yield* encodeProcessRunManifest(processRunManifest);
+      const decodedProcessRunManifest = yield* decodeProcessRunManifest(encodedProcessRunManifest);
+      expect(yield* encodeProcessRunManifest(decodedProcessRunManifest)).toBe(encodedProcessRunManifest);
 
-            const encodedSourceProcessingRecord = Effect.runSync(encodeSourceProcessingRecord(sourceProcessingRecord));
-            const decodedSourceProcessingRecord = Effect.runSync(
-              decodeSourceProcessingRecord(encodedSourceProcessingRecord)
-            );
-            expect(Effect.runSync(encodeSourceProcessingRecord(decodedSourceProcessingRecord))).toBe(
-              encodedSourceProcessingRecord
-            );
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+      const encodedSourceProcessingRecord = yield* encodeSourceProcessingRecord(sourceProcessingRecord);
+      const decodedSourceProcessingRecord = yield* decodeSourceProcessingRecord(encodedSourceProcessingRecord);
+      expect(yield* encodeSourceProcessingRecord(decodedSourceProcessingRecord)).toBe(encodedSourceProcessingRecord);
+    }),
+    { arbitrary: fcRuns(25) }
+  );
 
   it("renders a plain ascii files progress bar when colors are disabled", () => {
     const rendered = renderFilesProgressBar({

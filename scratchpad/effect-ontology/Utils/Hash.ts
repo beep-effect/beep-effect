@@ -4,16 +4,16 @@
  * **Details**
  *
  * Content-addressable hashing for cache keys.
- * Uses WebCrypto API for cross-platform compatibility (Node.js & Browser).
+ * Uses the platform-provided Effect Crypto service.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
 import { Effect } from "effect";
-import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { dual2, dual3 } from "./Dual.ts";
@@ -21,14 +21,14 @@ import { dual2, dual3 } from "./Dual.ts";
 const $I = $ScratchpadId.create("effect-ontology/Utils/Hash");
 
 /**
- * Describes a failed WebCrypto digest operation.
+ * Describes a failed Effect Crypto digest operation.
  *
  * **Example** (Inspect the operation)
  *
  * ```ts
  * import { HashingError } from "@effect-ontology/Utils/Hash"
  *
- * const error = HashingError.make({ operation: "sha256", cause: "WebCrypto unavailable" })
+ * const error = HashingError.make({ operation: "sha256", cause: "Crypto service unavailable" })
  * console.log(error.operation)
  * ```
  *
@@ -42,48 +42,42 @@ export class HashingError extends S.TaggedError<HashingError>($I`HashingError`)(
     cause: S.Defect({ includeStack: true }),
   },
   $I.annote("HashingError", {
-    description: "Failure while computing a SHA-256 digest through WebCrypto.",
+    description: "Failure while computing a SHA-256 digest through the Effect Crypto service.",
   })
 ) {}
 
 /**
- * Convert Uint8Array to hex string
- */
-const toHex = (buffer: ArrayBuffer): string => {
-  const bytes = new Uint8Array(buffer);
-  return A.join(
-    A.map(A.fromIterable(bytes), (byte) => Str.padStart(2, "0")(byte.toString(16))),
-    ""
-  );
-};
-
-/**
- * Computes a full SHA-256 hex digest of a string through WebCrypto.
+ * Computes a full SHA-256 hex digest of a string through the Effect Crypto service.
  *
  * **Details**
  *
- * Works in Node.js and browsers. The returned hex is 64 characters.
+ * Requires the platform Crypto service. The returned lowercase hex is 64 characters.
  *
- * **Example** (Hash a string through WebCrypto)
+ * **Example** (Hash a string through the Effect Crypto service)
  *
  * ```ts
  * import { sha256, sha256SyncFull } from "@effect-ontology/Utils/Hash"
  * import { Effect } from "effect"
  *
- * const hex = await Effect.runPromise(sha256("ada lovelace"))
- * console.log(hex.length) // 64
- * console.log(hex === sha256SyncFull("ada lovelace")) // true
+ * const program = Effect.gen(function* () {
+ *   const hex = (yield* sha256("ada lovelace"))
+ *   console.log(hex.length) // 64
+ *   console.log(hex === (yield* sha256SyncFull("ada lovelace"))) // true
+ * })
+ * console.log(program)
  * ```
  *
- * @see {@link sha256SyncFull} for the Node-only synchronous full digest.
+ * @see {@link sha256SyncFull} for the Effect-returning compatibility full digest.
  * @category utilities
  * @since 0.0.0
  */
-export const sha256 = (input: string): Effect.Effect<string, HashingError> =>
-  Effect.tryPromise({
-    try: () => globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(input)).then(toHex),
-    catch: (cause) => HashingError.make({ operation: "sha256", cause }),
-  });
+export const sha256 = Effect.fn("Hash.sha256")(function* (input: string) {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto
+    .digest("SHA-256", new TextEncoder().encode(input))
+    .pipe(Effect.mapError((cause) => HashingError.make({ operation: "sha256", cause })));
+  return Encoding.encodeHex(digest);
+});
 
 /**
  * Builds an embedding cache key as SHA-256(`text::taskType`).
@@ -98,91 +92,108 @@ export const sha256 = (input: string): Effect.Effect<string, HashingError> =>
  * import { hashEmbeddingKey, hashEmbeddingKeySync } from "@effect-ontology/Utils/Hash"
  * import { Effect } from "effect"
  *
- * const hex = await Effect.runPromise(hashEmbeddingKey("Ada Lovelace", "search_document"))
- * console.log(hex === hashEmbeddingKeySync("Ada Lovelace", "search_document")) // true
- * console.log(hex.length) // 64
+ * const program = Effect.gen(function* () {
+ *   const hex = (yield* hashEmbeddingKey("Ada Lovelace", "search_document"))
+ *   console.log(hex === (yield* hashEmbeddingKeySync("Ada Lovelace", "search_document"))) // true
+ *   console.log(hex.length) // 64
+ * })
+ * console.log(program)
  * ```
  *
- * @see {@link hashEmbeddingKeySync} for the Node-only synchronous twin.
+ * @see {@link hashEmbeddingKeySync} for the Effect-returning compatibility twin.
  * @see {@link hashVersionedEmbeddingKey} when provider, model, and dimension must enter the key.
  * @category utilities
  * @since 0.0.0
  */
 export const hashEmbeddingKey = dual2(
-  (text: string, taskType: string): Effect.Effect<string, HashingError> => sha256(`${text}::${taskType}`)
+  Effect.fn("Hash.hashEmbeddingKey")(function* (text: string, taskType: string) {
+    return yield* sha256(`${text}::${taskType}`);
+  })
 );
 
 /**
- * Computes a full SHA-256 hex digest of a string through Node `crypto`.
+ * Computes a full SHA-256 hex digest of a string through the Effect Crypto service.
  *
  * **Gotchas**
  *
- * Node `crypto` only. Do not call this from a browser; use {@link sha256}.
+ * Returns an Effect requiring Crypto.Crypto; the legacy Sync suffix is retained for compatibility.
  *
  * **Example** (Hash a string on the server)
  *
  * ```ts
  * import { sha256Sync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
+ * import { Effect } from "effect"
  *
- * const full = sha256SyncFull("ada lovelace")
- * console.log(full.length) // 64
- * console.log(sha256Sync("ada lovelace") === full.slice(0, 16)) // true
+ * const program = Effect.gen(function* () {
+ *   const full = yield* sha256SyncFull("ada lovelace")
+ *   console.log(full.length) // 64
+ *   console.log((yield* sha256Sync("ada lovelace")) === full.slice(0, 16)) // true
+ * })
+ * console.log(program)
  * ```
  *
- * @returns Hex-encoded SHA-256 digest (64 characters).
- * @see {@link sha256} for the WebCrypto Effect twin.
+ * @returns An Effect producing a hex-encoded SHA-256 digest (64 characters).
+ * @see {@link sha256} for the primary Effect constructor.
  * @see {@link sha256Sync} for the truncated 16-character digest.
  * @category utilities
  * @since 0.0.0
  */
-export const sha256SyncFull = (input: string): string => createHash("sha256").update(input).digest("hex");
+export const sha256SyncFull = sha256;
 
 /**
- * Computes a truncated SHA-256 hex digest of a string through Node `crypto`.
+ * Computes a truncated SHA-256 hex digest of a string through the Effect Crypto service.
  *
  * **Gotchas**
  *
- * Node `crypto` only. Do not call this from a browser; use {@link sha256}.
+ * Returns an Effect requiring Crypto.Crypto; the legacy Sync suffix is retained for compatibility.
  * Truncation is the first 16 hex characters of {@link sha256SyncFull}.
  *
  * **Example** (Take the 16-character digest)
  *
  * ```ts
  * import { sha256Sync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
+ * import { Effect } from "effect"
  *
- * const truncated = sha256Sync("ada lovelace")
- * console.log(truncated.length) // 16
- * console.log(truncated === sha256SyncFull("ada lovelace").slice(0, 16)) // true
+ * const program = Effect.gen(function* () {
+ *   const truncated = yield* sha256Sync("ada lovelace")
+ *   console.log(truncated.length) // 16
+ *   console.log(truncated === (yield* sha256SyncFull("ada lovelace")).slice(0, 16)) // true
+ * })
+ * console.log(program)
  * ```
  *
- * @returns First 16 hex characters of the SHA-256 digest.
+ * @returns An Effect producing the first 16 hex characters of the SHA-256 digest.
  * @see {@link sha256SyncFull} for the untruncated 64-character digest.
- * @see {@link sha256} for the WebCrypto Effect twin.
+ * @see {@link sha256} for the primary Effect constructor.
  * @category utilities
  * @since 0.0.0
  */
-export const sha256Sync = (input: string): string => sha256SyncFull(input).slice(0, 16);
+export const sha256Sync = Effect.fn("Hash.sha256Sync")(function* (input: string) {
+  return Str.slice(0, 16)(yield* sha256(input));
+});
 
 /**
- * Synchronous Node twin of {@link hashEmbeddingKey}.
+ * Effect-returning compatibility alias of {@link hashEmbeddingKey}.
  *
  * **Example** (Hash an embedding key on the server)
  *
  * ```ts
  * import { hashEmbeddingKeySync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
+ * import { Effect } from "effect"
  *
- * const hex = hashEmbeddingKeySync("Ada Lovelace", "search_query")
- * console.log(hex === sha256SyncFull("Ada Lovelace::search_query")) // true
+ * const program = Effect.gen(function* () {
+ *   const hex = yield* hashEmbeddingKeySync("Ada Lovelace", "search_query")
+ *   console.log(hex === (yield* sha256SyncFull("Ada Lovelace::search_query"))) // true
+ * })
+ * console.log(program)
  * ```
  *
- * @see {@link hashEmbeddingKey} for the WebCrypto Effect twin.
+ * @see {@link hashEmbeddingKey} for the primary Effect constructor.
  * @see {@link hashVersionedEmbeddingKeySync} when provider metadata must enter the key.
  * @category utilities
  * @since 0.0.0
  */
-export const hashEmbeddingKeySync = dual2((text: string, taskType: string): string =>
-  sha256SyncFull(`${text}::${taskType}`)
-);
+export const hashEmbeddingKeySync = hashEmbeddingKey;
 
 /**
  * Provider, model, and dimension that version an embedding cache key.
@@ -212,88 +223,109 @@ export interface EmbeddingKeyMetadata {
  * import { hashVersionedEmbeddingKey, hashVersionedEmbeddingKeySync } from "@effect-ontology/Utils/Hash"
  * import { Effect } from "effect"
  *
- * const metadata = { providerId: "nomic", modelId: "nomic-embed-text-v1.5", dimension: 768 }
- * const hex = await Effect.runPromise(
- *   hashVersionedEmbeddingKey("Ada Lovelace", "search_document", metadata)
- * )
- * console.log(hex === hashVersionedEmbeddingKeySync("Ada Lovelace", "search_document", metadata)) // true
+ * const program = Effect.gen(function* () {
+ *   const metadata = { providerId: "nomic", modelId: "nomic-embed-text-v1.5", dimension: 768 }
+ *   const hex = (yield*
+ *     hashVersionedEmbeddingKey("Ada Lovelace", "search_document", metadata)
+ *   )
+ *   console.log(hex === (yield* hashVersionedEmbeddingKeySync("Ada Lovelace", "search_document", metadata))) // true
+ * })
+ * console.log(program)
  * ```
  *
- * @see {@link hashVersionedEmbeddingKeySync} for the Node-only synchronous twin.
+ * @see {@link hashVersionedEmbeddingKeySync} for the Effect-returning compatibility twin.
  * @see {@link hashEmbeddingKey} when provider metadata is not part of the collision domain.
  * @category utilities
  * @since 0.0.0
  */
 export const hashVersionedEmbeddingKey = dual3(
-  (text: string, taskType: string, metadata: EmbeddingKeyMetadata): Effect.Effect<string, HashingError> =>
-    sha256(`${metadata.providerId}::${metadata.modelId}::${metadata.dimension}::${taskType}::${text}`)
+  Effect.fn("Hash.hashVersionedEmbeddingKey")(function* (
+    text: string,
+    taskType: string,
+    metadata: EmbeddingKeyMetadata
+  ) {
+    return yield* sha256(`${metadata.providerId}::${metadata.modelId}::${metadata.dimension}::${taskType}::${text}`);
+  })
 );
 
 /**
- * Synchronous Node twin of {@link hashVersionedEmbeddingKey}.
+ * Effect-returning compatibility alias of {@link hashVersionedEmbeddingKey}.
  *
  * **Example** (Hash a versioned key on the server)
  *
  * ```ts
  * import { hashVersionedEmbeddingKeySync, sha256SyncFull } from "@effect-ontology/Utils/Hash"
+ * import { Effect } from "effect"
  *
- * const metadata = { providerId: "voyage", modelId: "voyage-3", dimension: 1024 }
- * const hex = hashVersionedEmbeddingKeySync("Ada Lovelace", "search_query", metadata)
- * console.log(hex === sha256SyncFull("voyage::voyage-3::1024::search_query::Ada Lovelace")) // true
+ * const program = Effect.gen(function* () {
+ *   const metadata = { providerId: "voyage", modelId: "voyage-3", dimension: 1024 }
+ *   const hex = yield* hashVersionedEmbeddingKeySync("Ada Lovelace", "search_query", metadata)
+ *   console.log(hex === (yield* sha256SyncFull("voyage::voyage-3::1024::search_query::Ada Lovelace"))) // true
+ * })
+ * console.log(program)
  * ```
  *
- * @see {@link hashVersionedEmbeddingKey} for the WebCrypto Effect twin.
+ * @see {@link hashVersionedEmbeddingKey} for the primary Effect constructor.
  * @category utilities
  * @since 0.0.0
  */
-export const hashVersionedEmbeddingKeySync = dual3(
-  (text: string, taskType: string, metadata: EmbeddingKeyMetadata): string =>
-    sha256SyncFull(`${metadata.providerId}::${metadata.modelId}::${metadata.dimension}::${taskType}::${text}`)
-);
+export const hashVersionedEmbeddingKeySync = hashVersionedEmbeddingKey;
 
 /**
- * Computes a full SHA-256 hex digest of bytes through WebCrypto.
+ * Computes a full SHA-256 hex digest of bytes through the Effect Crypto service.
  *
- * **Example** (Hash bytes through WebCrypto)
+ * **Example** (Hash bytes through the Effect Crypto service)
  *
  * ```ts
  * import { sha256Bytes, sha256BytesSync } from "@effect-ontology/Utils/Hash"
  * import { Effect } from "effect"
  *
- * const bytes = new TextEncoder().encode("ada")
- * const hex = await Effect.runPromise(sha256Bytes(bytes))
- * console.log(hex.length) // 64
- * console.log(hex === sha256BytesSync(bytes)) // true
+ * const program = Effect.gen(function* () {
+ *   const bytes = new TextEncoder().encode("ada")
+ *   const hex = (yield* sha256Bytes(bytes))
+ *   console.log(hex.length) // 64
+ *   console.log(hex === (yield* sha256BytesSync(bytes))) // true
+ * })
+ * console.log(program)
  * ```
  *
- * @see {@link sha256BytesSync} for the Node-only synchronous twin.
+ * @see {@link sha256BytesSync} for the Effect-returning compatibility twin.
  * @category utilities
  * @since 0.0.0
  */
-export const sha256Bytes = (bytes: BufferSource): Effect.Effect<string, HashingError> =>
-  Effect.tryPromise({
-    try: () => globalThis.crypto.subtle.digest("SHA-256", bytes).then(toHex),
-    catch: (cause) => HashingError.make({ operation: "sha256-bytes", cause }),
-  });
+export const sha256Bytes = Effect.fn("Hash.sha256Bytes")(function* (bytes: BufferSource) {
+  const crypto = yield* Crypto.Crypto;
+  const input = ArrayBuffer.isView(bytes)
+    ? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+    : new Uint8Array(bytes);
+  const digest = yield* crypto
+    .digest("SHA-256", input)
+    .pipe(Effect.mapError((cause) => HashingError.make({ operation: "sha256-bytes", cause })));
+  return Encoding.encodeHex(digest);
+});
 
 /**
- * Computes a full SHA-256 hex digest of bytes through Node `crypto`.
+ * Computes a full SHA-256 hex digest of bytes through the Effect Crypto service.
  *
  * **Gotchas**
  *
- * Node `crypto` only. Do not call this from a browser; use {@link sha256Bytes}.
+ * Returns an Effect requiring Crypto.Crypto; the legacy Sync suffix is retained for compatibility.
  *
  * **Example** (Hash bytes on the server)
  *
  * ```ts
  * import { sha256BytesSync } from "@effect-ontology/Utils/Hash"
+ * import { Effect } from "effect"
  *
- * const hex = sha256BytesSync(new TextEncoder().encode("ada"))
- * console.log(hex.length) // 64
+ * const program = Effect.gen(function* () {
+ *   const hex = yield* sha256BytesSync(new TextEncoder().encode("ada"))
+ *   console.log(hex.length) // 64
+ * })
+ * console.log(program)
  * ```
  *
- * @see {@link sha256Bytes} for the WebCrypto Effect twin.
+ * @see {@link sha256Bytes} for the primary Effect constructor.
  * @category utilities
  * @since 0.0.0
  */
-export const sha256BytesSync = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
+export const sha256BytesSync = sha256Bytes;

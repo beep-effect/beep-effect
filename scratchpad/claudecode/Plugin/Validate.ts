@@ -471,10 +471,11 @@ const validateSkillEntries = (definition: PluginDefinition | LoadedPlugin): Read
  * **Example** (Inspect lint)
  *
  * ```ts
+ * import * as Effect from "effect/Effect"
  * import { Plugin } from "effect-claudecode"
  *
  * const report = Plugin.lint(
- *   Plugin.define({ manifest: { name: "example-plugin" } })
+ *   await Effect.runPromise(Plugin.define({ manifest: { name: "example-plugin" } }))
  * )
  * console.log(report.errors)
  * ```
@@ -598,13 +599,13 @@ export const lint = (definition: PluginDefinition | LoadedPlugin): PluginLintRep
  *
  * const exit = Effect.runSyncExit(
  *   Plugin.validate(
- *     Plugin.define({
+ *     await Effect.runPromise(Plugin.define({
  *       manifest: { name: "review-tools" },
  *       commands: [
- *         Plugin.command({ name: "hi", body: "# /hi\n" }),
- *         Plugin.command({ name: "hi", body: "# /hi again\n" })
+ *         await Effect.runPromise(Plugin.command({ name: "hi", body: "# /hi\n" })),
+ *         await Effect.runPromise(Plugin.command({ name: "hi", body: "# /hi again\n" }))
  *       ]
- *     })
+ *     }))
  *   )
  * )
  *
@@ -632,10 +633,10 @@ export const validate = (
  * import { Plugin, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
  *
- * const definition = Plugin.define({
+ * const definition = await Effect.runPromise(Plugin.define({
  *   manifest: { name: "review-tools" },
- *   commands: [Plugin.command({ name: "hi", body: "# /hi\n" })]
- * })
+ *   commands: [await Effect.runPromise(Plugin.command({ name: "hi", body: "# /hi\n" }))]
+ * }))
  * const fileSystem = await Effect.runPromise(Testing.writePluginToMemory(definition))
  * const report = await Effect.runPromise(
  *   Effect.provide(Plugin.doctor("/plugin"), fileSystem.layer)

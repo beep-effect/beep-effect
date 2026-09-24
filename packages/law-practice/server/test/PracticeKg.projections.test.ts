@@ -8,6 +8,7 @@ import {
 import {
   buildPracticeKgBundle,
   LawPracticeServerLive,
+  PRACTICE_KG_MCP_INSTRUCTIONS,
   PracticeKgBundle,
   PracticeKgBundleContext,
   PracticeKgBundleManifest,
@@ -28,14 +29,16 @@ import {
   PracticeKgToolError,
   PracticeKgToolResult,
 } from "@beep/law-practice-use-cases/server";
+import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
 import { Md } from "@beep/md";
 import * as Pglite from "@beep/pglite";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { afterAll, beforeAll, describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
-import { Config, ConfigProvider, Effect, FileSystem, Layer, Order, Path, Stream } from "effect";
+import { Config, ConfigProvider, Effect, Exit, FileSystem, Layer, Order, Path, Scope, Stream } from "effect";
 import * as A from "effect/Array";
+import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -47,9 +50,6 @@ import * as Response from "effect/unstable/ai/Response";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { OFFICE_ACTION_FIXTURE } from "./fixture.ts";
 
-const decodePracticeKgOptionsSync = S.decodeSync(PracticeKgOptions);
-const decodePracticeKgToolResultSync = S.decodeSync(PracticeKgToolResult);
-const decodeUnknownPracticeKgToolResultSync = S.decodeUnknownSync(PracticeKgToolResult);
 const isPracticeKgCandidateClaimsNotLoadedResult = S.is(PracticeKgCandidateClaimsNotLoadedResult);
 const isString = S.is(S.String);
 
@@ -100,6 +100,9 @@ const decodeToolErrorJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToo
 const decodeToolResultJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToolResult));
 const decodeCandidateClaimsJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgCandidateClaimsResult));
 const decodeCandidateClaimRows = S.decodeUnknownEffect(S.Array(PracticeKgCandidateClaimToolRow));
+const decodePracticeKgOptions = S.decodeEffect(PracticeKgOptions);
+const decodePracticeKgToolResult = S.decodeEffect(PracticeKgToolResult);
+const decodeUnknownPracticeKgToolResult = S.decodeUnknownEffect(PracticeKgToolResult);
 const declaredColumnNames = (columns: Readonly<Record<string, { readonly name: string }>>): ReadonlyArray<string> =>
   A.sort(
     A.map(R.values(columns), (column) => column.name),
@@ -206,7 +209,7 @@ const makeFixtureCatalog = Effect.fn("PracticeKgTest.makeFixtureCatalog")(functi
         [fixtureDigests.family, "family-notes.txt", "family"],
         [fixtureDigests.archive, "archive.pst", "archive"],
         [fixtureDigests.email, "exported-message.txt", "email"],
-      ],
+      ] as const,
       ([digest, relativePath], index) =>
         db.run(
           "INSERT INTO corpus_source_files VALUES ('base', 'fixture-source', $1, $2, '2026-01-02T03:04:05.000Z', $3)",
@@ -296,7 +299,7 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
       ["Message00001", "Alpha fixture", "Fixture Sender", "/O=FIXTURE/OU=UNIT/CN=RECIPIENTS/CN=SENDER"],
       ["Message00002", "Beta fixture", "Fixture Sender Two", "sender.two@example.invalid"],
       ["Message00003", "Gamma fixture", "Fixture Sender Three", "sender.three@example.invalid"],
-    ],
+    ] as const,
     ([messageDir, subject, senderName, senderAddress], index) => {
       const directory = path.join(childrenRoot, messageDir);
       return fs
@@ -460,42 +463,46 @@ describe("practice KG projections", () => {
     { arbitrary: { runs: 10 } }
   );
 
-  it("pins the schema-absorbed defaults to their contract values", () => {
-    const options = PracticeKgOptions.make({
-      corpusRoot: "/corpus",
-      includeRefresh: false,
-      overwrite: false,
-      skipEmails: true,
-    });
-    expect(options.maxTextBytes).toBe(2_097_152);
-    expect(options.bundleOut).toBeUndefined();
-    const decoded = decodePracticeKgOptionsSync({
-      corpusRoot: "/corpus",
-      includeRefresh: false,
-      overwrite: false,
-      skipEmails: true,
-    });
-    expect(decoded.maxTextBytes).toBe(2_097_152);
-    const spineRow = decodePracticeKgToolResultSync({
-      bundle_version: "2026-07-27-01",
-      data: { columns: ["family"], rows: [["10008"]] },
-      epistemic_status: "derived-from-official-records",
-      tier: "minimal",
-      total: 1,
-      truncated: false,
-    });
-    expect(spineRow.epistemic_status).toBe("derived-from-official-records");
-    expect(() =>
-      decodeUnknownPracticeKgToolResultSync({
+  it.effect(
+    "pins the schema-absorbed defaults to their contract values",
+    Effect.fnUntraced(function* () {
+      const options = PracticeKgOptions.make({
+        corpusRoot: "/corpus",
+        includeRefresh: false,
+        overwrite: false,
+        skipEmails: true,
+      });
+      expect(options.maxTextBytes).toBe(2_097_152);
+      expect(options.bundleOut).toBeUndefined();
+      const decoded = yield* decodePracticeKgOptions({
+        corpusRoot: "/corpus",
+        includeRefresh: false,
+        overwrite: false,
+        skipEmails: true,
+      });
+      expect(decoded.maxTextBytes).toBe(2_097_152);
+      const spineRow = yield* decodePracticeKgToolResult({
         bundle_version: "2026-07-27-01",
-        data: { columns: [], rows: [] },
-        epistemic_status: "settled-fact",
+        data: { columns: ["family"], rows: [["10008"]] },
+        epistemic_status: "derived-from-official-records",
         tier: "minimal",
-        total: 0,
+        total: 1,
         truncated: false,
-      })
-    ).toThrow();
-  });
+      });
+      expect(spineRow.epistemic_status).toBe("derived-from-official-records");
+      const rejected = yield* Effect.exit(
+        decodeUnknownPracticeKgToolResult({
+          bundle_version: "2026-07-27-01",
+          data: { columns: [], rows: [] },
+          epistemic_status: "settled-fact",
+          tier: "minimal",
+          total: 0,
+          truncated: false,
+        })
+      );
+      expect(Exit.isFailure(rejected)).toBe(true);
+    })
+  );
 
   it.effect(
     "builds byte-identical ordered dumps with stable IRIs and complete provenance",
@@ -1017,4 +1024,73 @@ describe("practice KG projections", () => {
     }, provideTestLayer),
     { timeout: 300_000 }
   );
+});
+
+// One fixture bundle for the conformance port, built once per file: the
+// runner mounts `registrations` for every arm, and rebuilding the corpus and
+// bundle each time would dominate the suite. The scope holds the temp
+// directories until `afterAll` closes it.
+interface ConformanceBundle {
+  readonly bundleOut: string;
+  readonly context: PracticeKgBundleContext;
+  readonly scope: Scope.Closeable;
+}
+
+const conformanceBundle = MutableRef.make<O.Option<ConformanceBundle>>(O.none());
+
+const buildConformanceBundle = Effect.fn("PracticeKgTest.buildConformanceBundle")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const scope = yield* Scope.make();
+  const corpusRoot = yield* makeFixtureCorpus().pipe(Scope.provide(scope));
+  const bundleOut = path.join(corpusRoot, "bundle-conformance");
+  yield* runBuild(graphOptions(corpusRoot, bundleOut), bundleOut);
+  const manifest = yield* fs
+    .readFileString(path.join(bundleOut, "bundle.manifest.json"))
+    .pipe(Effect.flatMap(decodeManifestJson));
+  const context = PracticeKgBundleContext.make({ bundleDir: bundleOut, corpusRoot, manifest });
+  MutableRef.set(conformanceBundle, O.some({ bundleOut, context, scope }));
+});
+
+beforeAll(() => Effect.runPromise(buildConformanceBundle().pipe(provideTestLayer)), 120_000);
+
+afterAll(() =>
+  Effect.runPromise(
+    O.match(MutableRef.get(conformanceBundle), {
+      onNone: () => Effect.void,
+      onSome: (bundle) => Scope.close(bundle.scope, Exit.void),
+    })
+  )
+);
+
+// Registrations only: the toolkit over the shared bundle's PGlite and DuckDB
+// resources, with the transport left to the runner.
+const practiceKgConformanceRegistrations = Layer.unwrap(
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    const bundle = yield* O.match(MutableRef.get(conformanceBundle), {
+      onNone: () => Effect.die("the conformance bundle is built in beforeAll"),
+      onSome: Effect.succeed,
+    });
+    const resources = Layer.mergeAll(
+      Pglite.makeLayer({ dataDir: path.join(bundle.bundleOut, "kg.pglite") }),
+      DuckDb.makeNodeLayer(
+        DuckDbConnectionOptions.make({ databasePath: path.join(bundle.bundleOut, "practice.duckdb") })
+      ),
+      Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(bundle.context))
+    );
+    return PracticeKgToolkitLayer.pipe(Layer.provide(resources));
+  })
+).pipe(Layer.provide(testLayer));
+
+conformance2026({
+  name: "beep-practice-kg-test",
+  version: "0.0.0",
+  instructions: PRACTICE_KG_MCP_INSTRUCTIONS,
+  registrations: practiceKgConformanceRegistrations,
+  tool: {
+    name: "corpus_search_text",
+    arguments: { query: "alpha" },
+    invalidArguments: { query: 1 },
+  },
 });

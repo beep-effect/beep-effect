@@ -4,6 +4,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -11,7 +12,6 @@ import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
-import { describe, expect, it } from "vitest";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -30,8 +30,8 @@ const shouldAppendSkipLockfile = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, (arg) => arg === "--dry-run" || arg === "--skip-lockfile");
 const runCreatePackageCommand = (args: ReadonlyArray<string>) =>
   runCreatePackageCommandRaw(shouldAppendSkipLockfile(args) ? [...args, "--skip-lockfile"] : args);
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownSync;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
 const CreatePackageTestTimeoutMs = 30_000;
 const TestFileCwd = process.cwd();
 
@@ -54,7 +54,7 @@ const TsconfigOptionalReferences = S.Struct({
   references: S.Struct({ path: S.String }).pipe(S.Array, S.optionalKey),
   compilerOptions: S.Record(S.String, S.Unknown),
 });
-const decodeTsconfigOptionalReferences = S.decodeUnknownSync(TsconfigOptionalReferences);
+const decodeTsconfigOptionalReferences = S.decodeUnknownEffect(TsconfigOptionalReferences);
 const referencePathsOf = (tsconfig: typeof TsconfigOptionalReferences.Type): ReadonlyArray<string> =>
   A.map(tsconfig.references ?? [], (entry) => entry.path);
 const TsconfigPaths = S.Struct({
@@ -74,11 +74,11 @@ const StoriesTsconfig = S.Struct({
     types: S.Array(S.String),
   }),
 });
-const encodeStoriesTsconfigSync = S.encodeSync(StoriesTsconfig);
+const encodeStoriesTsconfigEffect = S.encodeEffect(StoriesTsconfig);
 const StoriesDirectoryTsconfig = S.Struct({
   extends: S.Literal("../tsconfig.stories.json"),
 });
-const encodeStoriesDirectoryTsconfigSync = S.encodeSync(StoriesDirectoryTsconfig);
+const encodeStoriesDirectoryTsconfigEffect = S.encodeEffect(StoriesDirectoryTsconfig);
 const TypeScriptPluginsConfig = S.Struct({
   compilerOptions: S.Struct({
     plugins: S.Array(S.Record(S.String, S.Unknown)),
@@ -146,27 +146,27 @@ const EcosystemTestTsconfig = S.Struct({
   }),
 });
 
-const decodeRootPackage = S.decodeUnknownSync(RootPackage);
-const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
-const decodeTsconfigPaths = S.decodeUnknownSync(TsconfigPaths);
-const decodeTsconfigIncludes = S.decodeUnknownSync(TsconfigIncludes);
-const decodeStoriesTsconfig = S.decodeUnknownSync(StoriesTsconfig);
-const decodeStoriesDirectoryTsconfig = S.decodeUnknownSync(StoriesDirectoryTsconfig);
+const decodeRootPackage = S.decodeUnknownEffect(RootPackage);
+const decodeTsconfigReferences = S.decodeUnknownEffect(TsconfigReferences);
+const decodeTsconfigPaths = S.decodeUnknownEffect(TsconfigPaths);
+const decodeTsconfigIncludes = S.decodeUnknownEffect(TsconfigIncludes);
+const decodeStoriesTsconfig = S.decodeUnknownEffect(StoriesTsconfig);
+const decodeStoriesDirectoryTsconfig = S.decodeUnknownEffect(StoriesDirectoryTsconfig);
 const decodeTypeScriptPluginsConfig = S.decodeUnknownEffect(TypeScriptPluginsConfig);
-const decodePackageScripts = S.decodeUnknownSync(PackageScripts);
+const decodePackageScripts = S.decodeUnknownEffect(PackageScripts);
 const ToolPackageManifest = S.Struct({
   scripts: S.Record(S.String, S.String),
   dependencies: S.Record(S.String, S.String),
 });
-const decodeToolPackageManifest = S.decodeUnknownSync(ToolPackageManifest);
-const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManifest);
-const decodeFoundationPackageMetadata = S.decodeUnknownSync(FoundationPackageMetadata);
-const decodeToolingPackageMetadata = S.decodeUnknownSync(ToolingPackageMetadata);
-const decodeDriverPackageMetadata = S.decodeUnknownSync(DriverPackageMetadata);
-const decodeEcosystemPackageMetadata = S.decodeUnknownSync(EcosystemPackageMetadata);
-const decodeEcosystemProductionTsconfig = S.decodeUnknownSync(EcosystemProductionTsconfig);
-const decodeEcosystemTestTsconfig = S.decodeUnknownSync(EcosystemTestTsconfig);
-const decodeUnknownRecord = S.decodeUnknownSync(S.Record(S.String, S.Unknown));
+const decodeToolPackageManifest = S.decodeUnknownEffect(ToolPackageManifest);
+const decodeGeneratedPackageManifest = S.decodeUnknownEffect(GeneratedPackageManifest);
+const decodeFoundationPackageMetadata = S.decodeUnknownEffect(FoundationPackageMetadata);
+const decodeToolingPackageMetadata = S.decodeUnknownEffect(ToolingPackageMetadata);
+const decodeDriverPackageMetadata = S.decodeUnknownEffect(DriverPackageMetadata);
+const decodeEcosystemPackageMetadata = S.decodeUnknownEffect(EcosystemPackageMetadata);
+const decodeEcosystemProductionTsconfig = S.decodeUnknownEffect(EcosystemProductionTsconfig);
+const decodeEcosystemTestTsconfig = S.decodeUnknownEffect(EcosystemTestTsconfig);
+const decodeUnknownRecord = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
 const StoriesTsconfigArbitrary = Arbitrary.schema(StoriesTsconfig);
 const StoriesDirectoryTsconfigArbitrary = Arbitrary.schema(StoriesDirectoryTsconfig);
 const TestRootTypeScriptPlugins = [
@@ -190,21 +190,25 @@ const TestRootTypeScriptPlugins = [
   },
 ];
 type TypeScriptPluginConfig = (typeof TypeScriptPluginsConfig.Type)["compilerOptions"]["plugins"][number];
-const withSanctionedEcosystemDiagnosticDelta = (
+const withSanctionedEcosystemDiagnosticDelta = Effect.fnUntraced(function* (
   plugins: ReadonlyArray<TypeScriptPluginConfig>
-): ReadonlyArray<TypeScriptPluginConfig> =>
-  A.map(plugins, (plugin) =>
-    plugin.name === "@effect/language-service"
-      ? {
-          ...plugin,
-          diagnosticSeverity: {
-            ...decodeUnknownRecord(plugin.diagnosticSeverity),
-            missedPipeableOpportunity: "off",
-            missingPipeableSignature: "off",
-          },
-        }
-      : plugin
+) {
+  return yield* Effect.forEach(
+    plugins,
+    Effect.fnUntraced(function* (plugin) {
+      return plugin.name === "@effect/language-service"
+        ? {
+            ...plugin,
+            diagnosticSeverity: {
+              ...(yield* decodeUnknownRecord(plugin.diagnosticSeverity)),
+              missedPipeableOpportunity: "off",
+              missingPipeableSignature: "off",
+            },
+          }
+        : plugin;
+    })
   );
+});
 const ExpectedGeneratedQualityScripts = {
   audit: "bun run --if-present beep:audit",
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
@@ -360,12 +364,12 @@ const writeTextFile = Effect.fn(function* (filePath: string, content: string) {
 });
 
 const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
-  yield* writeTextFile(filePath, `${encodeJson(value)}\n`);
+  yield* writeTextFile(filePath, `${yield* encodeJson(value)}\n`);
 });
 
 const readJsonFile = Effect.fn(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return decodeUnknownJson(yield* fs.readFileString(filePath));
+  return yield* decodeUnknownJson(yield* fs.readFileString(filePath));
 });
 
 const readJsoncFile = Effect.fn(function* (filePath: string) {
@@ -590,24 +594,19 @@ describe("create-package", { concurrent: false }, () => {
     yield* bootstrapIdentityWorkspace(rootDir);
   });
 
-  it("property: Storybook tsconfig schemas round-trip derived values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([StoriesTsconfigArbitrary, StoriesDirectoryTsconfigArbitrary]),
-          ([storiesTsconfig, storiesDirectory]) => {
-            expect(decodeStoriesTsconfig(encodeStoriesTsconfigSync(storiesTsconfig))).toEqual(storiesTsconfig);
-            expect(decodeStoriesDirectoryTsconfig(encodeStoriesDirectoryTsconfigSync(storiesDirectory))).toEqual(
-              storiesDirectory
-            );
-
-            return true;
-          },
-          fcRuns(16)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "property: Storybook tsconfig schemas round-trip derived values",
+    [StoriesTsconfigArbitrary, StoriesDirectoryTsconfigArbitrary],
+    Effect.fnUntraced(function* ([storiesTsconfig, storiesDirectory]) {
+      expect(yield* decodeStoriesTsconfig(yield* encodeStoriesTsconfigEffect(storiesTsconfig))).toEqual(
+        storiesTsconfig
+      );
+      expect(
+        yield* decodeStoriesDirectoryTsconfig(yield* encodeStoriesDirectoryTsconfigEffect(storiesDirectory))
+      ).toEqual(storiesDirectory);
+    }),
+    { arbitrary: fcRuns(16) }
+  );
 
   it(
     "keeps the checked-in OIP plugin profile aligned with the canonical root profile",
@@ -675,7 +674,7 @@ describe("create-package", { concurrent: false }, () => {
               "A tool package",
             ]);
 
-            const manifest = decodeToolPackageManifest(
+            const manifest = yield* decodeToolPackageManifest(
               yield* readJsonFile(path.join(rootDir, "packages", "example-tool", "package.json"))
             );
             expect(manifest.scripts).toEqual(CreatePackageScripts.package("tool", false));
@@ -702,10 +701,10 @@ describe("create-package", { concurrent: false }, () => {
               "An editor package",
             ]);
 
-            const rootPackage = decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+            const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
             expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*", "packages/example-domain"]);
 
-            const generatedPackage = decodePackageScripts(
+            const generatedPackage = yield* decodePackageScripts(
               yield* readJsonFile(path.join(rootDir, "packages", "example-domain", "package.json"))
             );
             expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
@@ -713,7 +712,7 @@ describe("create-package", { concurrent: false }, () => {
             expect(generatedPackage.scripts.codegen).toBeUndefined();
             expect(yield* fs.exists(path.join(rootDir, "packages", "example-domain", "ai-context.md"))).toBe(false);
 
-            const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(rootTsconfig.compilerOptions.paths).toMatchObject({
               "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
               "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
@@ -721,7 +720,7 @@ describe("create-package", { concurrent: false }, () => {
               "@beep/example-domain/*": ["./packages/example-domain/src/*"],
             });
 
-            const packageRefs = decodeTsconfigReferences(
+            const packageRefs = yield* decodeTsconfigReferences(
               yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
             );
             expect(A.map(packageRefs.references, (entry) => entry.path)).toEqual([
@@ -733,10 +732,10 @@ describe("create-package", { concurrent: false }, () => {
             // the canonical references (quality-lane audit D3), with no module
             // overrides of its own.
             const packageDir = path.join(rootDir, "packages", "example-domain");
-            const canonicalTsconfig = decodeTsconfigOptionalReferences(
+            const canonicalTsconfig = yield* decodeTsconfigOptionalReferences(
               yield* readJsoncFile(path.join(packageDir, "tsconfig.json"))
             );
-            const checkOverlay = decodeTsconfigOptionalReferences(
+            const checkOverlay = yield* decodeTsconfigOptionalReferences(
               yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
             );
             expect(referencePathsOf(checkOverlay)).toEqual(referencePathsOf(canonicalTsconfig));
@@ -843,7 +842,7 @@ describe("create-package", { concurrent: false }, () => {
             ]);
 
             const packageDir = path.join(rootDir, "apps", "marketing-web");
-            const generatedPackage = decodeGeneratedPackageManifest(
+            const generatedPackage = yield* decodeGeneratedPackageManifest(
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
 
@@ -863,8 +862,8 @@ describe("create-package", { concurrent: false }, () => {
             expect(yield* fs.exists(path.join(packageDir, "src", "app", "page.tsx"))).toBe(true);
 
             const appTsconfigDocument = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
-            const appTsconfig = decodeTsconfigPaths(appTsconfigDocument);
-            expect(decodeTsconfigIncludes(appTsconfigDocument).include).toContain(
+            const appTsconfig = yield* decodeTsconfigPaths(appTsconfigDocument);
+            expect((yield* decodeTsconfigIncludes(appTsconfigDocument)).include).toContain(
               "../../vitest.aliases.generated.json"
             );
             const appPlugins = yield* decodeTypeScriptPluginsConfig(appTsconfigDocument);
@@ -873,7 +872,7 @@ describe("create-package", { concurrent: false }, () => {
             });
             expect(appPlugins.compilerOptions.plugins).toEqual(A.append(TestRootTypeScriptPlugins, { name: "next" }));
 
-            const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(rootTsconfig.compilerOptions.paths["@beep/marketing-web"]).toBeUndefined();
             expect(rootTsconfig.compilerOptions.paths["@beep/marketing-web/*"]).toBeUndefined();
 
@@ -906,7 +905,7 @@ describe("create-package", { concurrent: false }, () => {
             ]);
 
             const packageDir = path.join(rootDir, "apps", "desktop-shell");
-            const generatedPackage = decodeGeneratedPackageManifest(
+            const generatedPackage = yield* decodeGeneratedPackageManifest(
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
 
@@ -942,8 +941,8 @@ describe("create-package", { concurrent: false }, () => {
             expect(tauriConf).toContain(`"devUrl": "http://desktop-shell.beep.localhost:1355"`);
 
             const appTsconfigDocument = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
-            const appTsconfig = decodeTsconfigPaths(appTsconfigDocument);
-            expect(decodeTsconfigIncludes(appTsconfigDocument).include).toContain(
+            const appTsconfig = yield* decodeTsconfigPaths(appTsconfigDocument);
+            expect((yield* decodeTsconfigIncludes(appTsconfigDocument)).include).toContain(
               "../../vitest.aliases.generated.json"
             );
             expect(appTsconfig.compilerOptions.paths).toMatchObject({
@@ -955,7 +954,7 @@ describe("create-package", { concurrent: false }, () => {
             expect(viteConfig).toContain(`"@": fileURLToPath(new URL("./src", import.meta.url))`);
             expect(vitestConfig).toContain(`"@": fileURLToPath(new URL("./src", import.meta.url))`);
 
-            const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(rootTsconfig.compilerOptions.paths["@beep/desktop-shell"]).toBeUndefined();
             expect(rootTsconfig.compilerOptions.paths["@beep/desktop-shell/*"]).toBeUndefined();
 
@@ -995,7 +994,7 @@ describe("create-package", { concurrent: false }, () => {
               ]);
 
               const packageDir = path.join(rootDir, "apps", "vite-shell");
-              const generatedPackage = decodeGeneratedPackageManifest(
+              const generatedPackage = yield* decodeGeneratedPackageManifest(
                 yield* readJsonFile(path.join(packageDir, "package.json"))
               );
 
@@ -1012,7 +1011,7 @@ describe("create-package", { concurrent: false }, () => {
                 "react-dom": "catalog:",
               });
 
-              const rootPackage = decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+              const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
               expect(rootPackage.workspaces).toEqual(["packages/foundation/modeling/identity", "apps/*"]);
 
               expect(yield* fs.exists(path.join(packageDir, "src", "App.tsx"))).toBe(true);
@@ -1022,7 +1021,9 @@ describe("create-package", { concurrent: false }, () => {
               const globalsCss = yield* fs.readFileString(path.join(packageDir, "src", "styles", "globals.css"));
               expect(globalsCss).toContain(":root");
               const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
-              expect(decodeTsconfigIncludes(appTsconfig).include).toContain("../../vitest.aliases.generated.json");
+              expect((yield* decodeTsconfigIncludes(appTsconfig)).include).toContain(
+                "../../vitest.aliases.generated.json"
+              );
               expect(appTsconfig.compilerOptions.rootDir).toBe("../..");
 
               yield* expectIdentityRegistration({ fs, path, rootDir }, "vite-shell", "ViteShell");
@@ -1051,19 +1052,21 @@ describe("create-package", { concurrent: false }, () => {
             ]);
 
             const packageDir = path.join(rootDir, "apps", "api-service");
-            const generatedPackage = decodeGeneratedPackageManifest(
+            const generatedPackage = yield* decodeGeneratedPackageManifest(
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
             expect(generatedPackage.scripts["beep:check"]).toBe("tsgo -p tsconfig.check.json");
 
             const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
-            expect(decodeTsconfigIncludes(appTsconfig).include).toContain("../../vitest.aliases.generated.json");
+            expect((yield* decodeTsconfigIncludes(appTsconfig)).include).toContain(
+              "../../vitest.aliases.generated.json"
+            );
 
             // The service app depends on @beep/identity, so the post-scaffold
             // sync gives tsconfig.json one reference and the check overlay must
             // carry the same one (quality-lane audit D3).
-            const canonicalTsconfig = decodeTsconfigOptionalReferences(appTsconfig);
-            const checkOverlay = decodeTsconfigOptionalReferences(
+            const canonicalTsconfig = yield* decodeTsconfigOptionalReferences(appTsconfig);
+            const checkOverlay = yield* decodeTsconfigOptionalReferences(
               yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
             );
             expect(referencePathsOf(canonicalTsconfig)).toEqual([
@@ -1097,7 +1100,7 @@ describe("create-package", { concurrent: false }, () => {
             ]);
 
             const packageDir = path.join(rootDir, "apps", "runtime-proof-lab");
-            const generatedPackage = decodeGeneratedPackageManifest(
+            const generatedPackage = yield* decodeGeneratedPackageManifest(
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
 
@@ -1116,7 +1119,7 @@ describe("create-package", { concurrent: false }, () => {
             expect(yield* fs.exists(path.join(packageDir, "src", "index.ts"))).toBe(true);
             expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(true);
 
-            const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(rootTsconfig.compilerOptions.paths).toMatchObject({
               "@beep/runtime-proof-lab": ["./apps/runtime-proof-lab/src/index.ts"],
               "@beep/runtime-proof-lab/*": ["./apps/runtime-proof-lab/src/*"],
@@ -1151,10 +1154,10 @@ describe("create-package", { concurrent: false }, () => {
               "A schema helper package",
             ]);
 
-            const rootPackage = decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+            const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
             expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*"]);
 
-            const generatedPackage = decodeFoundationPackageMetadata(
+            const generatedPackage = yield* decodeFoundationPackageMetadata(
               yield* readJsonFile(
                 path.join(rootDir, "packages", "foundation", "modeling", "schema-kit", "package.json")
               )
@@ -1166,7 +1169,7 @@ describe("create-package", { concurrent: false }, () => {
             expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
             expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
-            const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const rootTsconfig = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(rootTsconfig.compilerOptions.paths).toMatchObject({
               "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
               "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
@@ -1208,7 +1211,7 @@ describe("create-package", { concurrent: false }, () => {
             ]);
 
             const packageDir = path.join(rootDir, "packages", "foundation", "ui-system", "design-kit");
-            const generatedPackage = decodeFoundationPackageMetadata(
+            const generatedPackage = yield* decodeFoundationPackageMetadata(
               yield* readJsonFile(path.join(packageDir, "package.json"))
             );
             expect(generatedPackage.beep).toEqual({
@@ -1217,7 +1220,7 @@ describe("create-package", { concurrent: false }, () => {
             });
             expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedStoriesQualityScripts);
 
-            const storiesTsconfig = decodeStoriesTsconfig(
+            const storiesTsconfig = yield* decodeStoriesTsconfig(
               yield* readJsoncFile(path.join(packageDir, "tsconfig.stories.json"))
             );
             expect(storiesTsconfig.include).toEqual(["src", "stories"]);
@@ -1228,7 +1231,9 @@ describe("create-package", { concurrent: false }, () => {
               types: ["node", "vite/client"],
             });
             expect(
-              decodeStoriesDirectoryTsconfig(yield* readJsoncFile(path.join(packageDir, "stories", "tsconfig.json")))
+              yield* decodeStoriesDirectoryTsconfig(
+                yield* readJsoncFile(path.join(packageDir, "stories", "tsconfig.json"))
+              )
             ).toEqual({
               extends: "../tsconfig.stories.json",
             });
@@ -1335,7 +1340,7 @@ describe("create-package", { concurrent: false }, () => {
                 "Repo helpers",
               ]);
 
-              const rootPackage = decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+              const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
               expect(rootPackage.workspaces).toEqual([
                 "packages/foundation/*/*",
                 "packages/tooling/tool/cli",
@@ -1343,7 +1348,7 @@ describe("create-package", { concurrent: false }, () => {
               ]);
               expect(rootPackage.workspaces).not.toContain("packages/tooling/*/*");
 
-              const generatedPackage = decodeToolingPackageMetadata(
+              const generatedPackage = yield* decodeToolingPackageMetadata(
                 yield* readJsonFile(path.join(rootDir, "packages", "tooling", "library", "repo-utils", "package.json"))
               );
               expect(generatedPackage.beep).toEqual({
@@ -1352,7 +1357,7 @@ describe("create-package", { concurrent: false }, () => {
               });
               expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
-              const packageRefs = decodeTsconfigReferences(
+              const packageRefs = yield* decodeTsconfigReferences(
                 yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
               );
               expect(A.map(packageRefs.references, (entry) => entry.path)).toEqual([
@@ -1400,10 +1405,10 @@ describe("create-package", { concurrent: false }, () => {
                 "Runpod API driver package",
               ]);
 
-              const rootPackage = decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+              const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
               expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*", "packages/drivers/*"]);
 
-              const generatedPackage = decodeDriverPackageMetadata(
+              const generatedPackage = yield* decodeDriverPackageMetadata(
                 yield* readJsonFile(path.join(rootDir, "packages", "drivers", "runpod", "package.json"))
               );
               expect(generatedPackage.beep).toEqual({
@@ -1412,7 +1417,9 @@ describe("create-package", { concurrent: false }, () => {
               expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
               expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
-              const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+              const rootTsconfig = yield* decodeTsconfigPaths(
+                yield* readJsoncFile(path.join(rootDir, "tsconfig.json"))
+              );
               expect(rootTsconfig.compilerOptions.paths).toMatchObject({
                 "@beep/runpod": ["./packages/drivers/runpod/src/index.ts"],
                 "@beep/runpod/*": ["./packages/drivers/runpod/src/*"],
@@ -1459,10 +1466,10 @@ describe("create-package", { concurrent: false }, () => {
                 "Portable Effect library",
               ]);
 
-              const rootPackage = decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+              const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
               expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*", "packages/ecosystem/*"]);
 
-              const generatedPackage = decodeEcosystemPackageMetadata(
+              const generatedPackage = yield* decodeEcosystemPackageMetadata(
                 yield* readJsonFile(path.join(rootDir, "packages", "ecosystem", "portable-effect", "package.json"))
               );
               expect(generatedPackage.beep).toEqual({ family: "ecosystem" });
@@ -1496,16 +1503,16 @@ describe("create-package", { concurrent: false }, () => {
               expect(generatedPackage.scripts.docgen).toBe("bun run beep:docgen");
 
               const ecosystemPackageDir = path.join(rootDir, "packages", "ecosystem", "portable-effect");
-              const productionTsconfig = decodeEcosystemProductionTsconfig(
+              const productionTsconfig = yield* decodeEcosystemProductionTsconfig(
                 yield* readJsoncFile(path.join(ecosystemPackageDir, "tsconfig.json"))
               );
-              const testTsconfig = decodeEcosystemTestTsconfig(
+              const testTsconfig = yield* decodeEcosystemTestTsconfig(
                 yield* readJsoncFile(path.join(ecosystemPackageDir, "tsconfig.test.json"))
               );
               const rootTypeScriptPlugins = yield* decodeTypeScriptPluginsConfig(
                 yield* readJsoncFile(path.join(rootDir, "tsconfig.base.json"))
               );
-              const expectedEcosystemPlugins = withSanctionedEcosystemDiagnosticDelta(
+              const expectedEcosystemPlugins = yield* withSanctionedEcosystemDiagnosticDelta(
                 rootTypeScriptPlugins.compilerOptions.plugins
               );
               expect(productionTsconfig.compilerOptions.stripInternal).toBe(true);

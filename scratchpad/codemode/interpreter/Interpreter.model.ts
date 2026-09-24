@@ -37,6 +37,7 @@ import { ToolRuntimeError } from "../Codemode.tool-runtime.ts";
 import {
   CodeModeDate,
   CodeModeMap,
+  CodeModeNumber,
   CodeModePromise,
   CodeModeRegExp,
   CodeModeSet,
@@ -759,8 +760,7 @@ export const IntrinsicMethod = S.Union([
   S.Struct({
     receiverKind: S.tag("Number"),
     // Guest JavaScript numbers intentionally include NaN and infinities.
-    // @effect-diagnostics-next-line schemaNumber:off
-    receiver: S.Number,
+    receiver: CodeModeNumber,
     name: numberMethods,
   }),
   S.Struct({
@@ -1680,11 +1680,11 @@ export const RuntimeReference = S.Union([
   GeneratorReturn,
   ErrorConstructorReference,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("RuntimeReference", {
     description: "All schema-owned interpreter references and control wrappers.",
   }),
-  SchemaUtils.withCodecStatics(["is"])
+  S.toTaggedUnion("_tag"),
+  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
 );
 
 /**
@@ -1889,11 +1889,11 @@ export const InterpreterFailure = S.Union([
   ToolRuntimeError,
   ToolError,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("InterpreterFailure", {
     description: "Closed recoverable failure channel for guest evaluation and host tool calls.",
   }),
-  SchemaUtils.withCodecStatics(["is"])
+  S.toTaggedUnion("_tag"),
+  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
 );
 
 /**
@@ -1936,18 +1936,20 @@ export type InterpreterFailure = typeof InterpreterFailure.Type;
  * @category error-handling
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- The optional AST context makes a one-argument evaluation call indistinguishable from a curried overload.
-export const tryInterpreter = <Value>(
-  evaluate: () => Value,
-  node?: AstNode
-): Result.Result<Value, InterpreterFailure> =>
-  Result.try({
-    try: evaluate,
-    catch: (error) =>
-      InterpreterFailure.is(error)
-        ? error
-        : InterpreterRuntimeError.new(P.isError(error) ? error.message : globalThis.String(error), node),
-  });
+export const tryInterpreter: {
+  (node?: AstNode): <Value>(evaluate: () => Value) => Result.Result<Value, InterpreterFailure>;
+  <Value>(evaluate: () => Value, node?: AstNode): Result.Result<Value, InterpreterFailure>;
+} = dual(
+  (args) => P.isFunction(args[0]),
+  <Value>(evaluate: () => Value, node?: AstNode): Result.Result<Value, InterpreterFailure> =>
+    Result.try({
+      try: evaluate,
+      catch: (error) =>
+        InterpreterFailure.is(error)
+          ? error
+          : InterpreterRuntimeError.new(P.isError(error) ? error.message : globalThis.String(error), node),
+    })
+);
 
 /**
  * Builds an `UnsupportedSyntax` runtime error that embeds {@link supportedSyntaxMessage}.
@@ -1968,14 +1970,19 @@ export const tryInterpreter = <Value>(
  * @category error-handling
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Syntax kind and offending AST node are co-primary inputs for a newly allocated diagnostic.
-export const unsupportedSyntax = (kind: string, node: AstNode): InterpreterRuntimeError =>
-  InterpreterRuntimeError.new(
-    `Syntax '${kind}' is not supported. ${supportedSyntaxMessage}`,
-    node,
-    DiagnosticKind.Enum.UnsupportedSyntax,
-    [supportedSyntaxMessage]
-  );
+export const unsupportedSyntax: {
+  (node: AstNode): (kind: string) => InterpreterRuntimeError;
+  (kind: string, node: AstNode): InterpreterRuntimeError;
+} = dual(
+  2,
+  (kind: string, node: AstNode): InterpreterRuntimeError =>
+    InterpreterRuntimeError.new(
+      `Syntax '${kind}' is not supported. ${supportedSyntaxMessage}`,
+      node,
+      DiagnosticKind.Enum.UnsupportedSyntax,
+      [supportedSyntaxMessage]
+    )
+);
 
 /**
  * Narrows a value to a non-null object record.

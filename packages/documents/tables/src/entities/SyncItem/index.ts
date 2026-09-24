@@ -13,6 +13,13 @@
  */
 export * from "./SyncItem.converters.ts";
 /**
+ * SyncItem converter error exports.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./SyncItem.errors.ts";
+/**
  * SyncItem table exports.
  *
  * @category tables

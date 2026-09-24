@@ -32,59 +32,61 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = Arbitrary.schema(schema);
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeSync(schema);
+const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
+  Schema extends S.Codec<unknown, unknown, never, never>,
+>(schema: Schema) {
   const equals = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.all([Arbitrary.schema(schema)]),
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(schema)(value);
+        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+        expect(equals(decoded, value)).toBe(true);
 
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          expect(equals(decode(encode(value)), value)).toBe(true);
-
-          return true;
-        },
-        fcRuns(50)
-      )
-    )._tag
-  ).toBe("Passed");
-};
+        return true;
+      }),
+    fcRuns(50)
+  );
+  expect(result._tag).toBe("Passed");
+});
 
 describe("AI tool shared schemas", () => {
-  it("round-trips schema-derived shared result models", () => {
-    assertSchemaRoundTrip(AiToken);
-    assertSchemaRoundTrip(AiAnalysis);
-    assertSchemaRoundTrip(AiSentence);
-    assertSchemaRoundTrip(AiDocumentStats);
-    assertSchemaRoundTrip(AiSentenceChunk);
-    assertSchemaRoundTrip(AiRankedText);
-    assertSchemaRoundTrip(AiEntity);
-    assertSchemaRoundTrip(AiNGram);
-    assertSchemaRoundTrip(AiPhoneticMatch);
-    assertSchemaRoundTrip(AiCorpusSummary);
-    assertSchemaRoundTrip(AiCorpusRankedDocument);
-    assertSchemaRoundTrip(AiCorpusMatrixShape);
-    assertSchemaRoundTrip(AiCorpusStats);
-  });
+  it.effect("round-trips schema-derived shared result models", () =>
+    Effect.gen(function* () {
+      yield* assertSchemaRoundTrip(AiToken);
+      yield* assertSchemaRoundTrip(AiAnalysis);
+      yield* assertSchemaRoundTrip(AiSentence);
+      yield* assertSchemaRoundTrip(AiDocumentStats);
+      yield* assertSchemaRoundTrip(AiSentenceChunk);
+      yield* assertSchemaRoundTrip(AiRankedText);
+      yield* assertSchemaRoundTrip(AiEntity);
+      yield* assertSchemaRoundTrip(AiNGram);
+      yield* assertSchemaRoundTrip(AiPhoneticMatch);
+      yield* assertSchemaRoundTrip(AiCorpusSummary);
+      yield* assertSchemaRoundTrip(AiCorpusRankedDocument);
+      yield* assertSchemaRoundTrip(AiCorpusMatrixShape);
+      yield* assertSchemaRoundTrip(AiCorpusStats);
+    })
+  );
 });
 
 describe("AI tool success schemas", () => {
-  it("round-trips schema-derived success payloads", () => {
-    assertSchemaRoundTrip(WordCount.successSchema);
-    assertSchemaRoundTrip(Tokenize.successSchema);
-    assertSchemaRoundTrip(Stem.successSchema);
-    assertSchemaRoundTrip(Sentences.successSchema);
-    assertSchemaRoundTrip(RemoveStopWords.successSchema);
-    assertSchemaRoundTrip(Paragraphize.successSchema);
-    assertSchemaRoundTrip(BagOfWords.successSchema);
-    assertSchemaRoundTrip(NGrams.successSchema);
-    assertSchemaRoundTrip(LearnCustomEntities.successSchema);
-    assertSchemaRoundTrip(ExtractEntities.successSchema);
-    assertSchemaRoundTrip(ChunkBySentences.successSchema);
-    assertSchemaRoundTrip(QueryCorpus.successSchema);
-    assertSchemaRoundTrip(RankByRelevance.successSchema);
-  });
+  it.effect("round-trips schema-derived success payloads", () =>
+    Effect.gen(function* () {
+      yield* assertSchemaRoundTrip(WordCount.successSchema);
+      yield* assertSchemaRoundTrip(Tokenize.successSchema);
+      yield* assertSchemaRoundTrip(Stem.successSchema);
+      yield* assertSchemaRoundTrip(Sentences.successSchema);
+      yield* assertSchemaRoundTrip(RemoveStopWords.successSchema);
+      yield* assertSchemaRoundTrip(Paragraphize.successSchema);
+      yield* assertSchemaRoundTrip(BagOfWords.successSchema);
+      yield* assertSchemaRoundTrip(NGrams.successSchema);
+      yield* assertSchemaRoundTrip(LearnCustomEntities.successSchema);
+      yield* assertSchemaRoundTrip(ExtractEntities.successSchema);
+      yield* assertSchemaRoundTrip(ChunkBySentences.successSchema);
+      yield* assertSchemaRoundTrip(QueryCorpus.successSchema);
+      yield* assertSchemaRoundTrip(RankByRelevance.successSchema);
+    })
+  );
 });

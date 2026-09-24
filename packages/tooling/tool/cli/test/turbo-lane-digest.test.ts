@@ -73,31 +73,45 @@ describe("Turbo lane digests", () => {
       )._tag
     ).toBe("Passed"));
 
-  it("folds selected task hashes by bare name, independent of row order", () => {
-    const rows = [
-      task("//#lint:allowlist", "a1", "MISS"),
-      task("@beep/schema#lint:laws", "b2", "HIT"),
-      task("//#lint:typos", "c3", "MISS"),
-    ];
-    const forward = turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:allowlist", "lint:laws"]);
-    const reversed = turboLaneDigestFromSummary(summary("run", 100, A.reverse(rows)), ["lint:laws", "lint:allowlist"]);
-    expect(O.isSome(forward)).toBe(true);
-    if (O.isSome(forward) && O.isSome(reversed)) {
-      expect(forward.value.digest).toBe(reversed.value.digest);
-      expect(A.map(forward.value.tasks, (row) => row.taskId)).toEqual(["//#lint:allowlist", "@beep/schema#lint:laws"]);
-      expect(forward.value.summaryIds).toEqual(["run"]);
-    }
-    const everything = turboLaneDigestFromSummary(summary("run", 100, rows), []);
-    expect(O.map(everything, (digest) => A.length(digest.tasks))).toEqual(O.some(3));
-    expect(O.map(everything, (digest) => digest.digest)).not.toEqual(O.map(forward, (digest) => digest.digest));
-  });
+  it.effect(
+    "folds selected task hashes by bare name, independent of row order",
+    Effect.fnUntraced(function* () {
+      const rows = [
+        task("//#lint:allowlist", "a1", "MISS"),
+        task("@beep/schema#lint:laws", "b2", "HIT"),
+        task("//#lint:typos", "c3", "MISS"),
+      ];
+      const forward = yield* turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:allowlist", "lint:laws"]);
+      const reversed = yield* turboLaneDigestFromSummary(summary("run", 100, A.reverse(rows)), [
+        "lint:laws",
+        "lint:allowlist",
+      ]);
+      expect(O.isSome(forward)).toBe(true);
+      if (O.isSome(forward) && O.isSome(reversed)) {
+        expect(forward.value.digest).toBe(reversed.value.digest);
+        expect(A.map(forward.value.tasks, (row) => row.taskId)).toEqual([
+          "//#lint:allowlist",
+          "@beep/schema#lint:laws",
+        ]);
+        expect(forward.value.summaryIds).toEqual(["run"]);
+      }
+      const everything = yield* turboLaneDigestFromSummary(summary("run", 100, rows), []);
+      expect(O.map(everything, (digest) => A.length(digest.tasks))).toEqual(O.some(3));
+      expect(O.map(everything, (digest) => digest.digest)).not.toEqual(O.map(forward, (digest) => digest.digest));
+    }, providePlatform)
+  );
 
-  it("refuses a digest when a selected task failed or none matched", () => {
-    const rows = [task("//#lint:allowlist", "a1", "MISS", 1), task("//#lint:typos", "c3", "MISS")];
-    expect(turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:allowlist", "lint:typos"])).toEqual(O.none());
-    expect(turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:typos"])).not.toEqual(O.none());
-    expect(turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:missing"])).toEqual(O.none());
-  });
+  it.effect(
+    "refuses a digest when a selected task failed or none matched",
+    Effect.fnUntraced(function* () {
+      const rows = [task("//#lint:allowlist", "a1", "MISS", 1), task("//#lint:typos", "c3", "MISS")];
+      expect(yield* turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:allowlist", "lint:typos"])).toEqual(
+        O.none()
+      );
+      expect(yield* turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:typos"])).not.toEqual(O.none());
+      expect(yield* turboLaneDigestFromSummary(summary("run", 100, rows), ["lint:missing"])).toEqual(O.none());
+    }, providePlatform)
+  );
 
   it.effect(
     "reads only summaries the attempt wrote and skips unreadable files",
@@ -183,7 +197,7 @@ describe("Turbo lane digests", () => {
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-ledger-" });
       const ledger = path.join(root, "nested", "lane.jsonl");
       expect(yield* readTurboLaneLedger(ledger)).toEqual(O.none());
-      expect(foldTurboLaneDigests([])).toEqual(O.none());
+      expect(yield* foldTurboLaneDigests([])).toEqual(O.none());
 
       const row = (taskId: string, hash: string, cacheStatus: "HIT" | "MISS") => ({ taskId, hash, cacheStatus });
       const first = TurboLaneDigest.make({
@@ -206,7 +220,7 @@ describe("Turbo lane digests", () => {
       expect(O.map(folded, (value) => A.map(value.tasks, (task) => `${task.taskId}=${task.hash}`))).toEqual(
         O.some(["//#lint:allowlist=h2", "//#lint:typos=t1"])
       );
-      expect(folded).toEqual(foldTurboLaneDigests([first, second]));
+      expect(folded).toEqual(yield* foldTurboLaneDigests([first, second]));
       // A close record naming more attempts than declarations marks a lost declaration.
       yield* closeTurboLaneLedger(ledger, 1);
       expect(yield* readTurboLaneLedger(ledger)).toEqual(O.none());

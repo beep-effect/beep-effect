@@ -52,7 +52,7 @@ export const UsptoToolErrorReason = UsptoToolErrorReasonBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(UsptoToolErrorReasonBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

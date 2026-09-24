@@ -28,12 +28,17 @@ import type { TableCellHeaderState } from "@beep/lexical-schema";
 
 const decodeLexicalNodeResult = S.decodeResult(LexicalNode);
 const decodeSerializedEditorStateResult = S.decodeResult(SerializedEditorState);
-const decodeArtifactUriSync = S.decodeSync(ArtifactUri);
-const decodeMdModelDocumentSync = S.decodeSync(MdModel.Document);
-const decodeMdModelPreSync = S.decodeSync(MdModel.Pre);
-const decodeSerializedEditorStateSync = S.decodeSync(SerializedEditorState);
-const encodeArtifactUriSync = S.encodeSync(ArtifactUri);
-const encodeMdModelDocumentSync = S.encodeSync(MdModel.Document);
+const decodeArtifactUriResult = S.decodeResult(ArtifactUri);
+const decodeMdModelDocumentResult = S.decodeResult(MdModel.Document);
+const decodeMdModelPreResult = S.decodeResult(MdModel.Pre);
+const encodeArtifactUriResult = S.encodeResult(ArtifactUri);
+const encodeMdModelDocumentResult = S.encodeResult(MdModel.Document);
+
+const decoded = <A, E>(result: Result.Result<A, E>): A =>
+  Result.match(result, {
+    onSuccess: (value) => value,
+    onFailure: (error) => expect.fail(String(error)),
+  });
 
 const StateArbitrary = Arbitrary.schema(SerializedEditorState);
 const ArtifactUriArbitrary = Arbitrary.schema(ArtifactUri);
@@ -366,7 +371,7 @@ describe("Lexical.codec", { concurrent: false }, () => {
           Arbitrary.all([ArtifactUriArbitrary]),
           ([uri]) => {
             expect(ArtifactUri.is(uri)).toBe(true);
-            expect(decodeArtifactUriSync(encodeArtifactUriSync(uri))).toBe(uri);
+            expect(decoded(decodeArtifactUriResult(decoded(encodeArtifactUriResult(uri))))).toBe(uri);
 
             return true;
           },
@@ -396,11 +401,13 @@ describe("Lexical.codec", { concurrent: false }, () => {
     // Invalid info-strings are unconstructable via `Pre.make` now (the schema
     // validates the branded `CodeFenceLanguage` at construction); they can only
     // arrive on the wire, where Md decode folds them to None at the boundary.
-    const invalidLanguage = decodeMdModelPreSync({
-      _tag: "pre",
-      value: "console.log('beep')",
-      language: "ts bad",
-    });
+    const invalidLanguage = decoded(
+      decodeMdModelPreResult({
+        _tag: "pre",
+        value: "console.log('beep')",
+        language: "ts bad",
+      })
+    );
     expect(invalidLanguage.language).toEqual(O.none());
 
     const validLanguage = MdModel.Pre.make({ value: "console.log('beep')", language: O.some("ts") });
@@ -424,28 +431,30 @@ describe("Lexical.codec", { concurrent: false }, () => {
   });
 
   it("drops Lexical-only text format bits (underline) per the lossiness profile", () => {
-    const state = decodeSerializedEditorStateSync({
-      root: {
-        type: "root",
-        version: 1,
-        direction: null,
-        format: "",
-        indent: 0,
-        children: [
-          {
-            type: "paragraph",
-            version: 1,
-            direction: null,
-            format: "",
-            indent: 0,
-            children: [
-              // bold (1) + underline (8): underline has no Md equivalent
-              { type: "text", version: 1, detail: 0, format: 9, mode: "normal", style: "", text: "kept bold" },
-            ],
-          },
-        ],
-      },
-    });
+    const state = decoded(
+      decodeSerializedEditorStateResult({
+        root: {
+          type: "root",
+          version: 1,
+          direction: null,
+          format: "",
+          indent: 0,
+          children: [
+            {
+              type: "paragraph",
+              version: 1,
+              direction: null,
+              format: "",
+              indent: 0,
+              children: [
+                // bold (1) + underline (8): underline has no Md equivalent
+                { type: "text", version: 1, detail: 0, format: 9, mode: "normal", style: "", text: "kept bold" },
+              ],
+            },
+          ],
+        },
+      })
+    );
 
     expect(editorStateToDocument(state).children).toEqual([
       MdModel.P.make({ children: [MdModel.Strong.make({ children: [mdText("kept bold")] })] }),
@@ -473,63 +482,73 @@ describe("Lexical.codec", { concurrent: false }, () => {
   });
 
   it("preserves nested lists through Lexical and Md projections", () => {
-    const state = decodeSerializedEditorStateSync({
-      root: {
-        type: "root",
-        version: 1,
-        direction: null,
-        format: "",
-        indent: 0,
-        children: [
-          {
-            type: "list",
-            version: 1,
-            direction: null,
-            format: "",
-            indent: 0,
-            listType: "bullet",
-            start: 1,
-            tag: "ul",
-            children: [
-              {
-                type: "listitem",
-                version: 1,
-                direction: null,
-                format: "",
-                indent: 0,
-                value: 1,
-                children: [
-                  { type: "text", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "parent" },
-                  {
-                    type: "list",
-                    version: 1,
-                    direction: null,
-                    format: "",
-                    indent: 1,
-                    listType: "bullet",
-                    start: 1,
-                    tag: "ul",
-                    children: [
-                      {
-                        type: "listitem",
-                        version: 1,
-                        direction: null,
-                        format: "",
-                        indent: 1,
-                        value: 1,
-                        children: [
-                          { type: "text", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "child" },
-                        ],
-                      },
-                    ],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    });
+    const state = decoded(
+      decodeSerializedEditorStateResult({
+        root: {
+          type: "root",
+          version: 1,
+          direction: null,
+          format: "",
+          indent: 0,
+          children: [
+            {
+              type: "list",
+              version: 1,
+              direction: null,
+              format: "",
+              indent: 0,
+              listType: "bullet",
+              start: 1,
+              tag: "ul",
+              children: [
+                {
+                  type: "listitem",
+                  version: 1,
+                  direction: null,
+                  format: "",
+                  indent: 0,
+                  value: 1,
+                  children: [
+                    { type: "text", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "parent" },
+                    {
+                      type: "list",
+                      version: 1,
+                      direction: null,
+                      format: "",
+                      indent: 1,
+                      listType: "bullet",
+                      start: 1,
+                      tag: "ul",
+                      children: [
+                        {
+                          type: "listitem",
+                          version: 1,
+                          direction: null,
+                          format: "",
+                          indent: 1,
+                          value: 1,
+                          children: [
+                            {
+                              type: "text",
+                              version: 1,
+                              detail: 0,
+                              format: 0,
+                              mode: "normal",
+                              style: "",
+                              text: "child",
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      })
+    );
 
     expect(editorStateToDocument(state).children).toEqual([
       MdModel.Ul.make({
@@ -656,7 +675,9 @@ describe("Lexical.codec", { concurrent: false }, () => {
             // field (OptionFromNullOr), so the projected instance differs from its
             // encoded form. Decoding the instance directly would reject its real
             // Option; decoding the encoded form confirms the projection is valid.
-            expect(decodeMdModelDocumentSync(encodeMdModelDocumentSync(document))).toEqual(document);
+            expect(decoded(decodeMdModelDocumentResult(decoded(encodeMdModelDocumentResult(document))))).toEqual(
+              document
+            );
 
             return true;
           },

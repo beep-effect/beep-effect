@@ -467,7 +467,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("pinned primitive graph"
         effect("virtual", () => Effect.sleep("1 second"));
       `
       );
-      const rows = detectEffectVitestFindings(source, "packages/example/test/alternatives.test.ts", "@beep/example");
+      const rows = yield* detectEffectVitestFindings(
+        source,
+        "packages/example/test/alternatives.test.ts",
+        "@beep/example"
+      );
       const hydrated = yield* applyEffectVitestPrimitiveGraph(rows, graph);
       const timeout = A.findFirst(hydrated, (row) => row.ruleId === "EV014");
       assertTrue(O.isSome(timeout), "Expected standalone resource timeout judgment");

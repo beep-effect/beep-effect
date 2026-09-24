@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { UUID } from "@beep/schema/String";
@@ -101,7 +100,7 @@ import {
   renderYeetCheckRegistrationExhausted,
   YEET_CHECK_REGISTRATION_BACKOFF,
 } from "./MonitorChecks.ts";
-import { runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
+import { replayYeetMonitorComments, runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
 import {
   buildYeetRunPlanWithMode,
@@ -114,6 +113,11 @@ import {
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
 import { ProofJobOutcome, ProofJobRunner } from "./ProofJob.ts";
 import { updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
+import {
+  proofShadowAttemptFacts,
+  recordProofShadowForAttempt,
+  renderProofShadowAttemptSummary,
+} from "./ProofShadow.ts";
 import {
   acquireFullProofFallbackLockOrObserveAtPath,
   assertReusableVerifiedState,
@@ -152,7 +156,7 @@ import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuaran
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
-import type { YeetStatusSnapshot } from "./Status.ts";
+import type { YeetStatusReviewThread, YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdict.ts";
 
 const decodeGhPrViewJson = S.decodeEffect(S.fromJsonString(GhPrView));
@@ -194,7 +198,7 @@ const recordLocalShardOutcome = Effect.fn("Yeet.recordLocalShardOutcome")(functi
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (!isNamedLocalProofShard(step)) {
     return;
@@ -221,6 +225,12 @@ interface YeetContextCoordinates {
   readonly head: string;
   readonly packetDir: string;
 }
+
+const currentRepoRootAndBranch = Effect.fnUntraced(function* () {
+  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
+  const branch = yield* currentYeetBranch(repoRoot);
+  return { repoRoot, branch };
+});
 
 const readOnlyRunContext = (repoRoot: string, branch: string, options: YeetContextCoordinates): RepoRunContext =>
   RepoRunContext.make({
@@ -265,10 +275,9 @@ export const hydrateYeetReadOnlyContext = Effect.fn("Yeet.hydrateYeetReadOnlyCon
 ): Effect.fn.Return<
   RepoRunContext,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
-  const branch = yield* currentYeetBranch(repoRoot);
+  const { repoRoot, branch } = yield* currentRepoRootAndBranch();
   return readOnlyRunContext(repoRoot, branch, options);
 });
 
@@ -294,10 +303,9 @@ export const hydrateYeetRunContext = Effect.fn("Yeet.hydrateYeetRunContext")(fun
 ): Effect.fn.Return<
   RepoRunContext,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
-  const branch = yield* currentYeetBranch(repoRoot);
+  const { repoRoot, branch } = yield* currentRepoRootAndBranch();
   if (options.mode === "pre-push-hook") {
     return readOnlyRunContext(repoRoot, branch, options);
   }
@@ -337,7 +345,8 @@ const executeMeasuredStep = Effect.fn("Yeet.executeMeasuredStep")(function* (
   }
   const artifactDir = yield* artifactDirForContext(context);
   const rssDir = path.join(artifactDir, "rss");
-  const rssPath = path.join(rssDir, `${safeArtifactName(step.id)}-${randomUUID()}.txt`);
+  const crypto = yield* Crypto.Crypto;
+  const rssPath = path.join(rssDir, `${safeArtifactName(step.id)}-${yield* crypto.randomUUIDv4}.txt`);
   yield* fs.makeDirectory(rssDir, { recursive: true });
   const measuredStep = RepoPlanStep.make({
     ...step,
@@ -411,7 +420,7 @@ const runProofPhase = Effect.fn("Yeet.runProofPhase")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<RepoStepRunResult>,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   let results = A.empty<RepoStepRunResult>();
   for (const step of steps) {
@@ -592,7 +601,7 @@ const runPhase = Effect.fn("Yeet.runPhase")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<RepoStepRunResult>,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* Effect.forEach(steps, (step) => runPhaseStep(context, step, recorder), { concurrency: 1 });
 });
@@ -623,7 +632,7 @@ const runRequiredPhase = Effect.fn("Yeet.runRequiredPhase")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const results = yield* runPhase(context, steps, recorder);
   if (A.some(results, (result) => result.exitCode !== 0)) {
@@ -667,7 +676,7 @@ const reusablePublishStagingIsClean = Effect.fn("Yeet.reusablePublishStagingIsCl
 ): Effect.fn.Return<
   boolean,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (A.isReadonlyArrayEmpty(stagedPaths)) return true;
   if (!options.pushOnly) return false;
@@ -687,7 +696,7 @@ const requireCleanReusablePublishWorktree = Effect.fn("Yeet.requireCleanReusable
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (A.isReadonlyArrayEmpty(changedPaths)) return;
   return yield* failPublishScopeWithPacket(context, {
@@ -707,7 +716,7 @@ const shouldSkipCommitForReusablePublish = Effect.fn("Yeet.shouldSkipCommitForRe
 ): Effect.fn.Return<
   boolean,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (!reusablePublishMaySkipCommit(options)) return false;
 
@@ -740,7 +749,7 @@ const validatePublishCommitMessage = Effect.fn("Yeet.validatePublishCommitMessag
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (O.isSome(message)) {
     return yield* validateCommitMessage(context, message.value);
@@ -775,7 +784,7 @@ const stageAndCommitPublishIntent = Effect.fn("Yeet.stageAndCommitPublishIntent"
 ): Effect.fn.Return<
   PreparedPublishCommit,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (publishIntent.kind === "existing-commit") {
     yield* Console.log(
@@ -808,7 +817,7 @@ const preparePublishCommit = Effect.fn("Yeet.preparePublishCommit")(function* (
 ): Effect.fn.Return<
   PreparedPublishCommit,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (skipCommit) {
     yield* Console.log("[yeet] skipped commit; exact reusable proof state matches the current clean commit");
@@ -1052,7 +1061,7 @@ const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   yield* runMonitorPhase(context, monitorSteps, recorder, "yeet monitor failed.").pipe(
     Effect.catch((error) => failWithRerunGuidance(context, error))
@@ -1069,7 +1078,7 @@ const printOperatorStatusSummary = Effect.fn("Yeet.printOperatorStatusSummary")(
 ): Effect.fn.Return<
   YeetStatusSnapshot,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const snapshot = yield* collectYeetStatus(context, remote);
   yield* writeYeetStatusSnapshot(snapshot);
@@ -1088,7 +1097,7 @@ const failWithRerunGuidance = Effect.fn("Yeet.failWithRerunGuidance")(function* 
 ): Effect.fn.Return<
   never,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const snapshot = yield* printOperatorStatusSummary(context, true);
   return yield* YeetCommandError.make({
@@ -1100,16 +1109,36 @@ const failWithRerunGuidance = Effect.fn("Yeet.failWithRerunGuidance")(function* 
   });
 });
 
+const threadDescriptors = (threads: O.Option<ReadonlyArray<YeetStatusReviewThread>>): ReadonlyArray<string> =>
+  O.match(threads, {
+    onNone: A.empty<string>,
+    onSome: A.map(
+      (thread) =>
+        `${thread.threadId}${O.match(thread.path, { onNone: () => Str.empty, onSome: (path) => ` (${path})` })}`
+    ),
+  });
+
+// The gate is the COUNTS, not the id list: a snapshot can report a thread
+// count it has no triage rows for (a legacy artifact, a listing that decoded
+// but carried no context), and reading the list alone would wave that pull
+// request through. Follow-ups count with unresolved threads because both owe
+// a reply; acknowledgements are excluded because nothing is owed on them.
 const assertNoUnresolvedReviewThreads = Effect.fn("Yeet.assertNoUnresolvedReviewThreads")(function* (
   snapshot: YeetStatusSnapshot
 ): Effect.fn.Return<void, YeetCommandError> {
-  const unresolved = snapshot.remote.unresolvedReviewThreads ?? A.empty<string>();
-  if (A.isReadonlyArrayEmpty(unresolved)) {
+  const remote = snapshot.remote;
+  const outstanding = (remote.unresolvedReviewThreadCount ?? 0) + (remote.followUpThreadCount ?? 0);
+  if (outstanding === 0) {
     return;
   }
+  const named = [
+    ...(remote.unresolvedReviewThreads ?? threadDescriptors(remote.unresolvedThreads)),
+    ...threadDescriptors(remote.followUpThreads),
+  ];
+  const detail = A.isReadonlyArrayNonEmpty(named) ? `: ${A.join(named, ", ")}` : Str.empty;
   return yield* YeetCommandError.make({
-    message: `Yeet merge readiness requires zero unresolved review threads; found ${A.length(unresolved)}: ${A.join(unresolved, ", ")}`,
-    command: "bun run beep yeet closeout --summary",
+    message: `Yeet merge readiness requires zero outstanding review threads; found ${outstanding} (${remote.unresolvedReviewThreadCount ?? 0} unresolved, ${remote.followUpThreadCount ?? 0} reviewer follow-up)${detail}`,
+    command: "bun run beep yeet reply",
     exitCode: 1,
   });
 });
@@ -1134,12 +1163,12 @@ const retryPendingMonitorChecks = Effect.fn("Yeet.retryPendingMonitorChecks")(fu
   attempt: Effect.Effect<
     ReadonlyArray<RepoStepRunResult>,
     YeetCommandError,
-    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   >
 ): Effect.fn.Return<
   MonitorCheckReconciliation,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const remaining = deadline - (yield* Clock.currentTimeMillis);
   if (remaining <= 0) return MonitorCheckReconciliation.cases.timeout.make({ names });
@@ -1164,12 +1193,12 @@ const reconcileMonitorCheckCensus = Effect.fn("Yeet.reconcileMonitorCheckCensus"
   attempt: Effect.Effect<
     ReadonlyArray<RepoStepRunResult>,
     YeetCommandError,
-    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   >
 ): Effect.fn.Return<
   MonitorCheckReconciliation,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (isAwaitingYeetCheckRegistration(results)) return MonitorCheckReconciliation.cases.unreadable.make({});
   const required = yield* collectRemoteChecks(context, true);
@@ -1230,7 +1259,7 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   // `runPhase` appends to the recorder, and the recorder is what the verdict,
   // the PR body, and `yeet status` all read. A retried attempt must therefore
@@ -1300,7 +1329,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   // The planner emits monitor steps only under `--monitor`, so every other
   // publish arrives here with an empty list. Falling through decoded the absent
@@ -1342,7 +1371,7 @@ const runPublishMonitorAndResult = Effect.fn("Yeet.runPublishMonitorAndResult")(
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   yield* runMonitorPhase(context, monitorSteps, recorder, "yeet publish monitor phase failed.").pipe(
     Effect.catch((error) => failWithRerunGuidance(context, error))
@@ -1377,10 +1406,17 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const snapshot = yield* collectYeetStatus(context, options.remote);
   yield* writeYeetStatusSnapshot(snapshot);
+  // A read-first status is the operator's first look at the pull request since
+  // the last session ended, so it replays what was said in between — but never
+  // under `--json`, where a comment printed to stdout would corrupt the
+  // document the caller is parsing.
+  if (!options.json && snapshot.remote.number !== undefined) {
+    yield* replayYeetMonitorComments(context, snapshot.remote.number);
+  }
   if (options.json) {
     yield* printCommandJson(snapshot).pipe(Effect.mapError(YeetCommandError.new("Failed to print yeet status JSON.")));
   } else {
@@ -1388,6 +1424,28 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
   }
   return yield* emptyPlanResult(context);
 });
+
+/**
+ * Run `yeet status` end to end, for tests that need the whole mode.
+ *
+ * **Details**
+ *
+ * The seam the comment-replay guard is proved through: replay is a side effect
+ * of the mode, not of `collectYeetStatus`, so nothing below this function can
+ * show whether `--json` suppressed it.
+ *
+ * **Example** (Name the status mode runner)
+ *
+ * ```ts
+ * import { runStatusModeForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof runStatusModeForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runStatusModeForTesting = runStatusMode;
 
 /**
  * Expose the closeout artifact writer to focused tests.
@@ -1411,7 +1469,7 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const report = yield* runPrCloseout(
     context,
@@ -1428,6 +1486,9 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
   );
   const reportPath = yield* writePrCloseoutReport(context, report);
   yield* Console.log(`[yeet] PR closeout report written to ${reportPath}`);
+  // The closeout is the read-first surface an agent runs after a gap, so it is
+  // where a comment posted while nothing was attached has to surface.
+  yield* replayYeetMonitorComments(context, report.prNumber);
   if (options.summary) {
     yield* printOperatorStatusSummary(context, true);
   }
@@ -1547,6 +1608,12 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
         Console.log(`[yeet] pre-push first red: ${summary.firstRed}; skipped after red: ${summary.skippedAfterRed}`),
     })
   );
+  // Shadow mode (ruling 63): observe what the proof ledger would have reused,
+  // never change what ran, and never let a ledger fault fail the attempt.
+  yield* recordProofShadowForAttempt(plan.context.repoRoot, proofShadowAttemptFacts(attempt), innerLaneReports).pipe(
+    Effect.flatMap((summary) => Console.log(`[yeet] ${renderProofShadowAttemptSummary(summary)}`)),
+    Effect.catch((error) => Console.error(`[yeet] proof shadow skipped: ${error.message}`))
+  );
   const endedAtEpochMillis = yield* Clock.currentTimeMillis;
   const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const artifactDir = yield* artifactDirForContext(plan.context);
@@ -1618,7 +1685,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
       O.getOrElse(A.empty<string>)
     ),
     planned: plan.steps,
-    runId: runIdForContext(plan.context),
+    runId: yield* runIdForContext(plan.context),
     // Only the publish/monitor paths observe a live status snapshot, so runs
     // that never read the pull request omit the key rather than asserting an
     // unknown merge readiness.
@@ -1689,7 +1756,7 @@ const ensureAttemptTerminated = Effect.fn("Yeet.ensureAttemptTerminated")(functi
   attempt: YeetAttemptStarted,
   terminalWritten: Ref.Ref<boolean>,
   exit: Exit.Exit<unknown, unknown>
-): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   if (yield* Ref.get(terminalWritten)) {
     return;
   }
@@ -1794,7 +1861,7 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
     schemaVersion: "yeet-attempt-journal/v1",
     _tag: "attempt-started",
     attemptId,
-    runId: runIdForContext(context),
+    runId: yield* runIdForContext(context),
     branch: context.branch,
     base: context.base,
     head: resolvedHeadSha,
@@ -1997,7 +2064,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
  */
 const warnMergedVerifyIgnoresUncommittedWork = Effect.fn("Yeet.warnMergedVerifyIgnoresUncommittedWork")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const staged = yield* collectStagedPublishPaths(context.repoRoot);
   const unstaged = yield* collectUnstagedTrackedPaths(context.repoRoot);
   const untracked = yield* collectUntrackedPaths(context.repoRoot);

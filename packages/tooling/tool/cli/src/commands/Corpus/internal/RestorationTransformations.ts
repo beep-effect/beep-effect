@@ -67,6 +67,7 @@ type TransformationRequirements =
   | Crypto.Crypto
   | FileSystem.FileSystem
   | Path.Path
+  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner;
 
 type PreservedFilePass = Extract<ArchiveLedgerRecord, { readonly recordType: "archive-file-pass" }>;
@@ -234,7 +235,7 @@ const withTransformationRunWriter = Effect.fn("CorpusRestoration.withTransformat
   context: TransformationRunContext,
   claimName: string,
   use: Effect.Effect<A, E, R>
-): Effect.fn.Return<A, E | CorpusCommandError, R | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<A, E | CorpusCommandError, R | Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const claimDirectory = path.join(context.runRoot, "writer-claims");
@@ -248,7 +249,7 @@ const withTransformationRunWriter = Effect.fn("CorpusRestoration.withTransformat
 const withTransformationFamilyWriter = <A, E, R>(
   context: TransformationRunContext,
   use: Effect.Effect<A, E, R>
-): Effect.Effect<A, E | CorpusCommandError, R | FileSystem.FileSystem | Path.Path> => {
+): Effect.Effect<A, E | CorpusCommandError, R | Crypto.Crypto | FileSystem.FileSystem | Path.Path> => {
   const scope = O.getOrElse(context.mailScope, () => "full");
   return withTransformationRunWriter(context, `${context.family}-${scope}.claim`, use);
 };
@@ -256,7 +257,7 @@ const withTransformationFamilyWriter = <A, E, R>(
 const appendTransformationRecord = Effect.fn("CorpusRestoration.appendTransformationRecord")(function* (
   ledgerPath: string,
   record: TransformationLedgerRecord
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const encoded = yield* encodeTransformationLedgerRecordJson(record).pipe(
     CorpusCommandError.mapError("Transformation ledger record failed JSONL encoding.")
   );
@@ -323,7 +324,7 @@ const currentPreservationEvidence = Effect.fn("CorpusRestoration.currentPreserva
 ): Effect.fn.Return<
   { readonly records: ReadonlyArray<ArchiveLedgerRecord>; readonly seal: PreservationSeal },
   CorpusCommandError,
-  FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -347,7 +348,7 @@ const currentPreservationEvidence = Effect.fn("CorpusRestoration.currentPreserva
 const requireCanonicalContainedPath = Effect.fn("CorpusRestoration.requireCanonicalContainedPath")(function* (
   root: string,
   candidate: string
-): Effect.fn.Return<string, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<string, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const resolvedRoot = path.resolve(root);
@@ -392,40 +393,51 @@ const deterministicPreservationElapsed = (
 
 const walkTransformationEntries = Effect.fn("CorpusRestoration.walkTransformationEntries")(function* (
   root: string
-): Effect.fn.Return<ReadonlyArray<WalkedTransformationEntry>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  ReadonlyArray<WalkedTransformationEntry>,
+  CorpusCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* requireCanonicalContainedPath(root, root);
   const entries: Array<WalkedTransformationEntry> = [];
-  const walkAt: (directory: string) => Effect.Effect<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> =
-    Effect.fn("CorpusRestoration.walkTransformationEntries.walkAt")(function* (directory) {
-      const names = yield* fs
-        .readDirectory(directory)
-        .pipe(CorpusCommandError.mapError("Failed walking transformation output."));
-      for (const name of A.sort(names, Order.String)) {
-        const absolutePath = path.join(directory, name);
-        yield* requireCanonicalContainedPath(root, absolutePath);
-        const info = yield* fs
-          .stat(absolutePath)
-          .pipe(CorpusCommandError.mapError("Failed inspecting transformation output."));
-        if (info.type === "Directory") {
-          entries.push({ absolutePath, kind: "directory", relativePath: path.relative(root, absolutePath) });
-          yield* walkAt(absolutePath);
-          continue;
-        }
-        if (info.type !== "File") {
-          return yield* transformationError("Transformation output contains an unsupported non-file object.");
-        }
-        entries.push({ absolutePath, kind: "file", relativePath: path.relative(root, absolutePath) });
+  const walkAt: (
+    directory: string
+  ) => Effect.Effect<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> = Effect.fn(
+    "CorpusRestoration.walkTransformationEntries.walkAt"
+  )(function* (directory) {
+    const names = yield* fs
+      .readDirectory(directory)
+      .pipe(CorpusCommandError.mapError("Failed walking transformation output."));
+    for (const name of A.sort(names, Order.String)) {
+      const absolutePath = path.join(directory, name);
+      yield* requireCanonicalContainedPath(root, absolutePath);
+      const info = yield* fs
+        .stat(absolutePath)
+        .pipe(CorpusCommandError.mapError("Failed inspecting transformation output."));
+      if (info.type === "Directory") {
+        entries.push({ absolutePath, kind: "directory", relativePath: path.relative(root, absolutePath) });
+        yield* walkAt(absolutePath);
+        continue;
       }
-    });
+      if (info.type !== "File") {
+        return yield* transformationError("Transformation output contains an unsupported non-file object.");
+      }
+      entries.push({ absolutePath, kind: "file", relativePath: path.relative(root, absolutePath) });
+    }
+  });
   yield* walkAt(root);
   return entries;
 });
 
 const walkFiles = Effect.fn("CorpusRestoration.walkTransformationFiles")(function* (
   root: string
-): Effect.fn.Return<ReadonlyArray<WalkedTransformationFile>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  ReadonlyArray<WalkedTransformationFile>,
+  CorpusCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> {
   return A.map(
     A.filter(yield* walkTransformationEntries(root), (entry) => entry.kind === "file"),
     ({ absolutePath, relativePath }) => ({ absolutePath, relativePath })
@@ -434,7 +446,7 @@ const walkFiles = Effect.fn("CorpusRestoration.walkTransformationFiles")(functio
 
 const hashTransformationTree = Effect.fn("CorpusRestoration.hashTransformationTree")(function* (
   root: string
-): Effect.fn.Return<TransformationTreeDigest, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<TransformationTreeDigest, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const exists = yield* fs
@@ -458,32 +470,35 @@ const hashTransformationTree = Effect.fn("CorpusRestoration.hashTransformationTr
   yield* requireCanonicalContainedPath(root, root);
   const hasher = sha256.create();
   let sizeBytes = 0;
-  const walkAt: (directory: string) => Effect.Effect<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> =
-    Effect.fn("CorpusRestoration.hashTransformationTree.walkAt")(function* (directory) {
-      const names = yield* fs
-        .readDirectory(directory)
-        .pipe(CorpusCommandError.mapError("Failed reading transformation tree during hashing."));
-      for (const name of A.sort(names, Order.String)) {
-        const absolutePath = path.join(directory, name);
-        yield* requireCanonicalContainedPath(root, absolutePath);
-        const relativePath = path.relative(root, absolutePath);
-        const info = yield* fs
-          .stat(absolutePath)
-          .pipe(CorpusCommandError.mapError("Failed inspecting transformation tree entry during hashing."));
-        if (info.type === "Directory") {
-          hasher.update(utf8ToBytes(`D\u0000${relativePath}\n`));
-          yield* walkAt(absolutePath);
-          continue;
-        }
-        if (info.type !== "File") {
-          return yield* transformationError("Transformation tree contains an unsupported non-file object.");
-        }
-        const digest = yield* hashRestorationFileStreaming(absolutePath, 1024 * 1024);
-        yield* requireCanonicalContainedPath(root, absolutePath);
-        hasher.update(utf8ToBytes(`F\u0000${relativePath}\u0000${digest.sha256}\u0000${digest.sizeBytes}\n`));
-        sizeBytes += digest.sizeBytes;
+  const walkAt: (
+    directory: string
+  ) => Effect.Effect<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> = Effect.fn(
+    "CorpusRestoration.hashTransformationTree.walkAt"
+  )(function* (directory) {
+    const names = yield* fs
+      .readDirectory(directory)
+      .pipe(CorpusCommandError.mapError("Failed reading transformation tree during hashing."));
+    for (const name of A.sort(names, Order.String)) {
+      const absolutePath = path.join(directory, name);
+      yield* requireCanonicalContainedPath(root, absolutePath);
+      const relativePath = path.relative(root, absolutePath);
+      const info = yield* fs
+        .stat(absolutePath)
+        .pipe(CorpusCommandError.mapError("Failed inspecting transformation tree entry during hashing."));
+      if (info.type === "Directory") {
+        hasher.update(utf8ToBytes(`D\u0000${relativePath}\n`));
+        yield* walkAt(absolutePath);
+        continue;
       }
-    });
+      if (info.type !== "File") {
+        return yield* transformationError("Transformation tree contains an unsupported non-file object.");
+      }
+      const digest = yield* hashRestorationFileStreaming(absolutePath, 1024 * 1024);
+      yield* requireCanonicalContainedPath(root, absolutePath);
+      hasher.update(utf8ToBytes(`F\u0000${relativePath}\u0000${digest.sha256}\u0000${digest.sizeBytes}\n`));
+      sizeBytes += digest.sizeBytes;
+    }
+  });
   hasher.update(utf8ToBytes("D\u0000.\n"));
   yield* walkAt(root);
   return { sha256: Sha256Hex.make(bytesToHex(hasher.digest())), sizeBytes };
@@ -491,7 +506,7 @@ const hashTransformationTree = Effect.fn("CorpusRestoration.hashTransformationTr
 
 const measureTransformationTreeBytes = Effect.fn("CorpusRestoration.measureTransformationTreeBytes")(function* (
   root: string
-): Effect.fn.Return<number, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<number, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const exists = yield* fs
     .exists(root)
@@ -521,7 +536,7 @@ const measureTransformationTreeBytes = Effect.fn("CorpusRestoration.measureTrans
 
 const syncTree = Effect.fn("CorpusRestoration.syncTransformationTree")(function* (
   root: string
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const files = yield* walkFiles(root);
@@ -751,7 +766,7 @@ const requireAttachmentCapacity = Effect.fn("CorpusRestoration.requireAttachment
   nextSizeBytes: number,
   attemptOutputCeiling: number,
   message: string
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const retained = yield* hashTransformationTree(attemptRoot);
   const available = yield* availableRestorationBytesAt(context.corpusRoot);
   if (nextSizeBytes > attemptOutputCeiling - retained.sizeBytes || available < nextSizeBytes) {
@@ -766,7 +781,7 @@ const materializeAttachmentRepair = Effect.fn("CorpusRestoration.materializeAtta
   expected: TransformationTreeDigest,
   context: TransformationRunContext,
   attemptOutputCeiling: number
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const exists = yield* fs
@@ -847,7 +862,7 @@ const persistAttachmentText = Effect.fn("CorpusRestoration.persistAttachmentText
   tikaText: string,
   context: TransformationRunContext,
   attemptOutputCeiling: number
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const tikaPath = path.join(attemptRoot, tikaRelativePath);
@@ -1019,7 +1034,7 @@ const emptyMailAttemptOutputDigest = (): TransformationTreeDigest => {
 const retainedMailAttemptDigest = Effect.fn("CorpusRestoration.retainedMailAttemptDigest")(function* (
   partialRoot: string,
   finalRoot: string
-): Effect.fn.Return<TransformationTreeDigest, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<TransformationTreeDigest, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const partial = yield* hashTransformationTree(partialRoot);
   const final = yield* hashTransformationTree(finalRoot);
   return combineMailAttemptOutputDigests(partial, final);
@@ -1034,7 +1049,7 @@ const appendPstException = Effect.fn("CorpusRestoration.appendPstException")(fun
   exceptionKind: PstExceptionKind,
   message: string,
   retainedOutput: TransformationTreeDigest
-): Effect.fn.Return<boolean, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<boolean, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const dispositionApproved = O.contains(context.mailScope, "full") && exceptionKind !== "engine-failure";
   yield* appendTransformationRecord(
     context.ledgerPath,
@@ -1561,7 +1576,7 @@ const beginOrResumeFamilyRun = Effect.fn("CorpusRestoration.beginOrResumeFamilyR
   maxTotalElapsedMillis: PosInt,
   maxTotalOutputBytes: PosInt,
   policySha256: Sha256Hex
-): Effect.fn.Return<TransformationRunContext, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<TransformationRunContext, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   yield* repairRestorationJsonlTail(context.ledgerPath);
   const decoded = yield* decodeTransformationLedger(context, true);
   const existing = yield* resumableFamilyStart(context, decoded.records);
@@ -1642,7 +1657,7 @@ const appendFamilyAttemptStart = Effect.fn("CorpusRestoration.appendFamilyAttemp
   sourceId: string,
   sourceSha256: Sha256Hex,
   inputBytes: number
-): Effect.fn.Return<FamilyAttemptStart, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<FamilyAttemptStart, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const records = yield* resumableTransformationRecords(context);
   const sourceStarts = A.filter(
     A.filter(records, isRecordType("family-attempt-start")),
@@ -1700,7 +1715,7 @@ const retainInterruptedAttempt = Effect.fn("CorpusRestoration.retainInterruptedA
   context: TransformationRunContext,
   start: FamilyAttemptStart,
   roots: ReadonlyArray<InterruptedRootCandidate>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const retainedOutputRelativePath = path.join("interrupted", start.attemptId);
@@ -1736,7 +1751,7 @@ const retainInterruptedAttempt = Effect.fn("CorpusRestoration.retainInterruptedA
 const recoverInterruptedAttempts = Effect.fn("CorpusRestoration.recoverInterruptedAttempts")(function* (
   context: TransformationRunContext,
   rootsFor: (start: FamilyAttemptStart) => ReadonlyArray<InterruptedRootCandidate>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const records = yield* resumableTransformationRecords(context);
   for (const start of unsettledAttemptStarts(records)) {
     yield* retainInterruptedAttempt(context, start, rootsFor(start));
@@ -1772,7 +1787,7 @@ const denyFamilyPreflight = Effect.fn("CorpusRestoration.denyFamilyPreflight")(f
   maxTotalOutputBytes: PosInt,
   message: string,
   errorMessage: string
-): Effect.fn.Return<never, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<never, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const outputTree = yield* hashTransformationTree(context.outputRoot);
   yield* appendTransformationRecord(
     context.ledgerPath,
@@ -1802,7 +1817,7 @@ const rejectFamilyPreflight = Effect.fn("CorpusRestoration.rejectFamilyPreflight
   maxTotalOutputBytes: PosInt,
   message: string,
   errorMessage: string
-): Effect.fn.Return<never, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<never, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   return yield* pendingSummary
     ? transformationError(`${errorMessage} Pending summary evidence remains immutable.`)
     : denyFamilyPreflight(context, expectedCount, maxTotalElapsedMillis, maxTotalOutputBytes, message, errorMessage);
@@ -1813,7 +1828,7 @@ const requireFamilyCapacity = Effect.fn("CorpusRestoration.requireFamilyCapacity
   expectedCount: number,
   maxTotalElapsedMillis: PosInt,
   maxTotalOutputBytes: PosInt
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const availableBytes = yield* availableRestorationBytesAt(context.corpusRoot);
   if (availableBytes < maxTotalOutputBytes) {
     return yield* denyFamilyPreflight(
@@ -1897,7 +1912,11 @@ const restorationSummaryFromFamilySummary = (summary: FamilyRunSummary): Restora
 
 const completePendingFamilySummary = Effect.fn("CorpusRestoration.completePendingFamilySummary")(function* (
   input: PendingFamilyCompletionInput
-): Effect.fn.Return<O.Option<RestorationRunSummary>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  O.Option<RestorationRunSummary>,
+  CorpusCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> {
   const pendingSummary = A.last(input.decoded.records).pipe(O.filter(isRecordType("family-run-summary")));
   if (O.isNone(pendingSummary)) return O.none();
   if (!pendingFamilySummaryReconciles(input, pendingSummary.value)) {
@@ -1935,7 +1954,7 @@ const finalizeFamilyRun = Effect.fn("CorpusRestoration.finalizeFamilyRun")(funct
   maxTotalOutputBytes: PosInt,
   failureMessage: string,
   errorMessage: string
-): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const terminalCount = counters.passCount + counters.exceptionCount;
   const outputTree = yield* hashTransformationTree(context.outputRoot);
   const decoded = yield* decodeTransformationLedger(context, false);
@@ -2165,7 +2184,7 @@ const mailResumeState = Effect.fn("CorpusRestoration.mailResumeState")(function*
   context: TransformationRunContext,
   candidates: ReadonlyArray<MailCandidate>,
   existingOutputBytes: number
-): Effect.fn.Return<MailResumeState, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<MailResumeState, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   return yield* resumeFamilyCandidates(
     context,
     candidates,
@@ -2411,7 +2430,7 @@ const hashRecycleContent = Effect.fn("CorpusRestoration.hashRecycleContent")(fun
 ): Effect.fn.Return<
   { readonly sha256: Sha256Hex; readonly sizeBytes: number },
   CorpusCommandError,
-  FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const info = yield* fs
@@ -2496,7 +2515,7 @@ const exclusiveCopyFile = Effect.fn("CorpusRestoration.exclusiveCopyFile")(funct
   sourcePath: string,
   destinationPath: string,
   outputRoot: string
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* requireCanonicalContainedPath(outputRoot, path.dirname(destinationPath));
@@ -2541,7 +2560,7 @@ const exclusiveCopyDirectory = Effect.fn("CorpusRestoration.exclusiveCopyDirecto
   sourceRoot: string,
   destinationRoot: string,
   outputRoot: string
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs
@@ -2551,7 +2570,7 @@ const exclusiveCopyDirectory = Effect.fn("CorpusRestoration.exclusiveCopyDirecto
   const copyAt: (
     source: string,
     destination: string
-  ) => Effect.Effect<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+  ) => Effect.Effect<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> = Effect.fn(
     "CorpusRestoration.exclusiveCopyDirectory.copyAt"
   )(function* (source, destination) {
     const names = yield* fs
@@ -2586,7 +2605,7 @@ const copyRecycleContent = Effect.fn("CorpusRestoration.copyRecycleContent")(fun
   sourcePath: string,
   destinationPath: string,
   expectedDigest: Sha256Hex
-): Effect.fn.Return<number, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<number, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const exists = yield* fs
@@ -2746,7 +2765,7 @@ const readRecycleMetadata = Effect.fn("CorpusRestoration.readRecycleMetadata")(f
 
 const hashPreservedRecycleContent = Effect.fn("CorpusRestoration.hashPreservedRecycleContent")(function* (
   content: RecycleArchiveEntry
-): Effect.fn.Return<TransformationTreeDigest, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<TransformationTreeDigest, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const digest = yield* hashRecycleContent(content.sourcePath);
   if (
     content.preservationRecord.recordType === "archive-file-pass" &&
@@ -2763,7 +2782,7 @@ const requireRecycleCopyCapacity = Effect.fn("CorpusRestoration.requireRecycleCo
   state: RecycleRestoreState,
   options: RestorationRecycleOptions,
   startedAt: number
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const elapsedMillis = yield* familyElapsedMillis(startedAt);
   if (
     elapsedMillis >= options.maxTotalElapsedMillis ||
@@ -2796,7 +2815,7 @@ const recycleSourcesUnchanged = Effect.fn("CorpusRestoration.recycleSourcesUncha
   metadataBefore: TransformationTreeDigest,
   content: RecycleArchiveEntry,
   contentBefore: TransformationTreeDigest
-): Effect.fn.Return<boolean, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<boolean, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const metadataAfter = yield* hashRestorationFileStreaming(metadata.sourcePath, 1024 * 1024);
   const contentAfter = yield* hashRecycleContent(content.sourcePath);
   return (
@@ -2950,7 +2969,7 @@ const recycleRetainedCheckpointMatches = Effect.fn("CorpusRestoration.recycleRet
   outputRoot: string,
   restoredRelativePath: string,
   digest: TransformationTreeDigest
-): Effect.fn.Return<boolean, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<boolean, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const retainedPath = path.join(outputRoot, restoredRelativePath);
   yield* requireCanonicalContainedPath(context.outputRoot, retainedPath);
@@ -3139,7 +3158,7 @@ const appendRecycleJoins = Effect.fn("CorpusRestoration.appendRecycleJoins")(fun
 ): Effect.fn.Return<
   { readonly joinOutcomeCount: number; readonly missingContentCount: number },
   CorpusCommandError,
-  FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
 > {
   const specs = recycleJoinSpecs(groups, surfaces);
   if (
@@ -3336,7 +3355,9 @@ const runLegacyStep = Effect.fn("CorpusRestoration.runLegacyStep")(function* (
   args: ReadonlyArray<string>,
   maxElapsedMillis: number,
   source: "all" | "stdout" = "all",
-  abortWhen: O.Option<Effect.Effect<never, CorpusCommandError, FileSystem.FileSystem | Path.Path>> = O.none()
+  abortWhen: O.Option<
+    Effect.Effect<never, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>
+  > = O.none()
 ): Effect.fn.Return<CapturedStep, CorpusCommandError, TransformationRequirements> {
   if (maxElapsedMillis <= 0) {
     return yield* transformationError("Legacy-Word transformation has no remaining elapsed-time budget.");
@@ -3362,7 +3383,7 @@ type LegacyTimeBudget = {
 const legacyOutputWatchdog = Effect.fn("CorpusRestoration.legacyOutputWatchdog")(function* (
   context: TransformationRunContext,
   options: RestorationLegacyWordOptions
-): Effect.fn.Return<never, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<never, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   while (true) {
     const retainedBytes = yield* measureTransformationTreeBytes(context.outputRoot);
     if (retainedBytes > options.maxTotalOutputBytes) {
@@ -3660,7 +3681,7 @@ const makeLegacyWorkRoot = Effect.fn("CorpusRestoration.makeLegacyWorkRoot")(fun
   outputRoot: string,
   digest: Sha256Hex,
   attemptId: string
-): Effect.fn.Return<string, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<string, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const workRoot = path.join(outputRoot, "proof", digest, attemptId);
@@ -3797,7 +3818,7 @@ const promoteLegacyWordOutput = Effect.fn("CorpusRestoration.promoteLegacyWordOu
 const legacyCandidateRetainedBytes = Effect.fn("CorpusRestoration.legacyCandidateRetainedBytes")(function* (
   outputRoot: string,
   digest: Sha256Hex
-): Effect.fn.Return<number, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<number, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const sizes = yield* Effect.forEach(
     [path.join(outputRoot, "proof", digest), path.join(outputRoot, "converted", `${digest}.docx`)],
@@ -3895,7 +3916,7 @@ const processLegacyWordCandidate = Effect.fn("CorpusRestoration.processLegacyWor
 const legacyFailureTerminal = Effect.fn("CorpusRestoration.legacyFailureTerminal")(function* (
   context: TransformationRunContext,
   candidate: LegacyWordCandidate
-): Effect.fn.Return<LegacyWordTerminal, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<LegacyWordTerminal, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const records = yield* resumableTransformationRecords(context);
   const attempt = O.getOrElse(
     A.last(A.filter(unsettledAttemptStarts(records), (start) => start.sourceId === candidate.digest)),
@@ -3962,7 +3983,7 @@ const legacyResumeState = Effect.fn("CorpusRestoration.legacyResumeState")(funct
   context: TransformationRunContext,
   candidates: ReadonlyArray<LegacyWordCandidate>,
   existingOutputBytes: number
-): Effect.fn.Return<LegacyResumeState, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<LegacyResumeState, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   return yield* resumeFamilyCandidates(
     context,
     candidates,
@@ -4564,7 +4585,7 @@ const recordIdentityMatches = (record: TransformationLedgerRecord, context: Tran
 
 const readStrictFamilyEvidence = Effect.fn("CorpusRestoration.readStrictFamilyEvidence")(function* (
   context: TransformationRunContext
-): Effect.fn.Return<StrictFamilyEvidence, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<StrictFamilyEvidence, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const decoded = yield* decodeTransformationLedger(context, false);
   if (decoded.lines.length < 2) {
     return yield* transformationError(`${context.family} transformation ledger has missing or blank evidence rows.`);
@@ -4594,7 +4615,7 @@ const mailAttemptRelativeRoots = (path: Path.Path, attemptId: string): readonly 
 const rehashMailExceptionOutputs = Effect.fn("CorpusRestoration.rehashMailExceptionOutputs")(function* (
   context: TransformationRunContext,
   exceptions: ReadonlyArray<MailStoreException>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   for (const exception of exceptions) {
     const [partialRelativePath, finalRelativePath] = mailAttemptRelativeRoots(path, exception.attemptId);
@@ -4623,7 +4644,7 @@ const requireRecyclePhysicalEntriesOwned = Effect.fn("CorpusRestoration.requireR
   context: TransformationRunContext,
   mappings: ReadonlyArray<RecycleMapping>,
   interruptions: ReadonlyArray<FamilyAttemptInterrupted>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const ownedRoots = A.appendAll(
     A.map(mappings, (mapping) => path.join("restored", mapping.restoredRelativePath)),
@@ -4645,7 +4666,7 @@ const requireMailPhysicalFilesOwned = Effect.fn("CorpusRestoration.requireMailPh
   records: ReadonlyArray<TransformationLedgerRecord>,
   interruptions: ReadonlyArray<FamilyAttemptInterrupted>,
   exceptions: ReadonlyArray<MailStoreException>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const passAttemptIds = MutableHashSet.fromIterable(
     A.map(A.filter(records, isRecordType("mail-store-pass")), (record) => record.attemptId)
@@ -4676,7 +4697,7 @@ const rehashMailChildren = Effect.fn("CorpusRestoration.rehashMailChildren")(fun
   context: TransformationRunContext,
   records: ReadonlyArray<TransformationLedgerRecord>,
   interruptions: ReadonlyArray<FamilyAttemptInterrupted>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   for (const child of A.filter(records, isRecordType("mail-child-pass"))) {
     const interrupted = A.findFirst(interruptions, (record) => record.attemptId === child.attemptId);
@@ -4698,7 +4719,7 @@ const rehashMailChildren = Effect.fn("CorpusRestoration.rehashMailChildren")(fun
 const rehashMailOutputs = Effect.fn("CorpusRestoration.rehashMailOutputs")(function* (
   context: TransformationRunContext,
   records: ReadonlyArray<TransformationLedgerRecord>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const interruptions = A.filter(records, isRecordType("family-attempt-interrupted"));
   const exceptions = A.filter(records, isRecordType("mail-store-exception"));
   yield* rehashMailExceptionOutputs(context, exceptions);
@@ -4709,7 +4730,7 @@ const rehashMailOutputs = Effect.fn("CorpusRestoration.rehashMailOutputs")(funct
 const rehashInterruptedOutputs = Effect.fn("CorpusRestoration.rehashInterruptedOutputs")(function* (
   context: TransformationRunContext,
   records: ReadonlyArray<TransformationLedgerRecord>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   for (const interrupted of A.filter(records, isRecordType("family-attempt-interrupted"))) {
     const retainedRoot = yield* containedEvidencePath(path, context.outputRoot, [
@@ -4726,7 +4747,7 @@ const rehashInterruptedOutputs = Effect.fn("CorpusRestoration.rehashInterruptedO
 const rehashRecycleOutputs = Effect.fn("CorpusRestoration.rehashRecycleOutputs")(function* (
   context: TransformationRunContext,
   records: ReadonlyArray<TransformationLedgerRecord>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const mappings = A.filter(records, isRecordType("recycle-mapping"));
   yield* requireRecyclePhysicalEntriesOwned(
@@ -4750,7 +4771,7 @@ const rehashRecycleOutputs = Effect.fn("CorpusRestoration.rehashRecycleOutputs")
 const rehashLegacyOutputs = Effect.fn("CorpusRestoration.rehashLegacyOutputs")(function* (
   context: TransformationRunContext,
   records: ReadonlyArray<TransformationLedgerRecord>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   for (const pass of A.filter(records, isRecordType("legacy-word-pass"))) {
     const outputPath = yield* containedEvidencePath(path, context.outputRoot, [
@@ -4768,7 +4789,7 @@ const rehashLegacyOutputs = Effect.fn("CorpusRestoration.rehashLegacyOutputs")(f
 const rehashRetainedFamilyOutputs = Effect.fn("CorpusRestoration.rehashRetainedFamilyOutputs")(function* (
   context: TransformationRunContext,
   records: ReadonlyArray<TransformationLedgerRecord>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   yield* rehashInterruptedOutputs(context, records);
   if (context.family === "mail") return yield* rehashMailOutputs(context, records);
   if (context.family === "recycle") return yield* rehashRecycleOutputs(context, records);
@@ -4779,7 +4800,7 @@ const readCanonicalAcceptance = Effect.fn("CorpusRestoration.readCanonicalAccept
   directory: string,
   filePath: string,
   description: string
-): Effect.fn.Return<string, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<string, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   yield* requireCanonicalContainedPath(directory, filePath);
   const info = yield* fs.stat(filePath).pipe(CorpusCommandError.mapError(`Failed inspecting ${description}.`));
@@ -4798,7 +4819,7 @@ const publishAcceptancePartial = Effect.fn("CorpusRestoration.publishAcceptanceP
   directory: string,
   partialPath: string,
   destinationPath: string
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   yield* requireCanonicalContainedPath(directory, partialPath);
   yield* fs
@@ -4816,7 +4837,7 @@ const removeMatchingAcceptancePartial = Effect.fn("CorpusRestoration.removeMatch
   directory: string,
   partialPath: string,
   encoded: string
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const partialExists = yield* fs
     .exists(partialPath)
@@ -4836,7 +4857,7 @@ const writeAcceptanceRecord = Effect.fn("CorpusRestoration.writeAcceptanceRecord
   corpusRoot: string,
   runLabel: string,
   record: RestorationAcceptanceRecord
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = path.join(corpusRoot, "staging", "restoration", "runs", runLabel, "acceptance");
@@ -5064,7 +5085,11 @@ export const restorationTransformationTesting = {
 
 const reconcileTransformationAcceptance = Effect.fn("CorpusRestoration.reconcileTransformationAcceptance")(function* (
   context: TransformationRunContext
-): Effect.fn.Return<RestorationAcceptanceRecord, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  RestorationAcceptanceRecord,
+  CorpusCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> {
   const evidence = yield* readStrictFamilyEvidence(context);
   const outputTree = yield* hashTransformationTree(context.outputRoot);
   if (!familyEvidenceAccepted(context, evidence, outputTree)) {

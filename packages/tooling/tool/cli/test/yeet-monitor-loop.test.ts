@@ -22,6 +22,7 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, HashSet, Layer, Sink, Stream } from "effect";
 import * as O from "effect/Option";
@@ -439,28 +440,31 @@ interface MonitorGhScript {
 // and `run rerun` for an executed rerun. Anything else — notably a job fetch
 // for a run the selection should have excluded — dies the test.
 const monitorSpawnerLayer = (script: MonitorGhScript) =>
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) => {
-      if (!ChildProcess.isStandardCommand(command)) {
-        return Effect.die("the merge loop never spawns a piped command");
-      }
-      const line = A.join([command.command, ...command.args], " ");
-      if (Str.includes("run list")(line)) {
-        return Effect.succeed(stubHandle(0, script.runList));
-      }
-      if (Str.includes("--log-failed")(line)) {
-        return Effect.succeed(stubHandle(script.jobLog.exitCode, script.jobLog.output));
-      }
-      if (Str.includes("run rerun")(line)) {
-        const rerun = script.rerun ?? { exitCode: 0, output: "" };
-        return Effect.succeed(stubHandle(rerun.exitCode, rerun.output));
-      }
-      if (Str.includes("run view 7")(line)) {
-        return Effect.succeed(stubHandle(0, script.runJobs));
-      }
-      return Effect.die(`unexpected gh invocation: ${line}`);
-    })
+  Layer.mergeAll(
+    BunCrypto.layer,
+    Layer.succeed(
+      ChildProcessSpawner.ChildProcessSpawner,
+      ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) {
+          return Effect.die("the merge loop never spawns a piped command");
+        }
+        const line = A.join([command.command, ...command.args], " ");
+        if (Str.includes("run list")(line)) {
+          return Effect.succeed(stubHandle(0, script.runList));
+        }
+        if (Str.includes("--log-failed")(line)) {
+          return Effect.succeed(stubHandle(script.jobLog.exitCode, script.jobLog.output));
+        }
+        if (Str.includes("run rerun")(line)) {
+          const rerun = script.rerun ?? { exitCode: 0, output: "" };
+          return Effect.succeed(stubHandle(rerun.exitCode, rerun.output));
+        }
+        if (Str.includes("run view 7")(line)) {
+          return Effect.succeed(stubHandle(0, script.runJobs));
+        }
+        return Effect.die(`unexpected gh invocation: ${line}`);
+      })
+    )
   );
 
 const runListJson = (

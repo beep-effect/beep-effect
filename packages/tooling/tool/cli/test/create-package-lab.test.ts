@@ -21,16 +21,16 @@ import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
-import { describe, expect, it } from "vitest";
 
-const decodeUnknownLabManifestFromJsonStringSync = S.decodeUnknownSync(LabManifestFromJsonString);
-const encodeLabManifestFromJsonStringSync = S.encodeSync(LabManifestFromJsonString);
+const decodeUnknownLabManifestFromJsonStringEffect = S.decodeUnknownEffect(LabManifestFromJsonString);
+const encodeLabManifestFromJsonStringEffect = S.encodeEffect(LabManifestFromJsonString);
 
 const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer);
 const CommandTestLayer = Layer.mergeAll(
@@ -44,8 +44,9 @@ const shouldAppendSkipLockfile = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, (arg) => arg === "--dry-run" || arg === "--skip-lockfile");
 const runCreatePackageCommand = (args: ReadonlyArray<string>) =>
   runCreatePackageCommandRaw(shouldAppendSkipLockfile(args) ? [...args, "--skip-lockfile"] : args);
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownSync;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const encodePrettyJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
+const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
 const CreatePackageLabTestTimeoutMs = 30_000;
 const TestFileCwd = process.cwd();
 
@@ -66,7 +67,7 @@ const AppTsconfig = S.Struct({
     rootDir: S.String,
   }),
 });
-const encodeAppTsconfigSync = S.encodeSync(AppTsconfig);
+const encodeAppTsconfigEffect = S.encodeEffect(AppTsconfig);
 const LabCheckTsconfig = S.Struct({
   extends: S.String,
   references: S.Array(S.Unknown),
@@ -82,14 +83,14 @@ const TsconfigOptionalReferences = S.Struct({
   references: S.Struct({ path: S.String }).pipe(S.Array, S.optionalKey),
   compilerOptions: S.Record(S.String, S.Unknown),
 });
-const decodeTsconfigOptionalReferences = S.decodeUnknownSync(TsconfigOptionalReferences);
+const decodeTsconfigOptionalReferences = S.decodeUnknownEffect(TsconfigOptionalReferences);
 const referencePathsOf = (tsconfig: typeof TsconfigOptionalReferences.Type): ReadonlyArray<string> =>
   A.map(tsconfig.references ?? [], (entry) => entry.path);
-const encodeLabCheckTsconfigSync = S.encodeSync(LabCheckTsconfig);
-const decodeRootPackage = S.decodeUnknownSync(RootPackage);
-const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManifest);
-const decodeAppTsconfig = S.decodeUnknownSync(AppTsconfig);
-const decodeLabCheckTsconfig = S.decodeUnknownSync(LabCheckTsconfig);
+const encodeLabCheckTsconfigEffect = S.encodeEffect(LabCheckTsconfig);
+const decodeRootPackage = S.decodeUnknownEffect(RootPackage);
+const decodeGeneratedPackageManifest = S.decodeUnknownEffect(GeneratedPackageManifest);
+const decodeAppTsconfig = S.decodeUnknownEffect(AppTsconfig);
+const decodeLabCheckTsconfig = S.decodeUnknownEffect(LabCheckTsconfig);
 const LabTsconfigArbitrary = Arbitrary.schema(AppTsconfig);
 const LabCheckTsconfigArbitrary = Arbitrary.schema(LabCheckTsconfig);
 
@@ -121,12 +122,12 @@ const writeTextFile = Effect.fn(function* (filePath: string, content: string) {
 });
 
 const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
-  yield* writeTextFile(filePath, `${encodeJson(value)}\n`);
+  yield* writeTextFile(filePath, `${yield* encodeJson(value)}\n`);
 });
 
 const readJsonFile = Effect.fn(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return decodeUnknownJson(yield* fs.readFileString(filePath));
+  return yield* decodeUnknownJson(yield* fs.readFileString(filePath));
 });
 
 const readJsoncFile = Effect.fn(function* (filePath: string) {
@@ -359,24 +360,19 @@ const expectNoPackageCeremony = (manifest: {
 };
 
 describe("create-package --lab", { concurrent: false }, () => {
-  it("property: lab tsconfig schemas round-trip derived values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([LabTsconfigArbitrary, LabCheckTsconfigArbitrary]),
-          ([labTsconfig, labCheckTsconfig]) => {
-            expect(decodeAppTsconfig(encodeAppTsconfigSync(labTsconfig))).toEqual(labTsconfig);
-            expect(decodeLabCheckTsconfig(encodeLabCheckTsconfigSync(labCheckTsconfig))).toEqual(labCheckTsconfig);
+  it.effect.prop(
+    "property: lab tsconfig schemas round-trip derived values",
+    [LabTsconfigArbitrary, LabCheckTsconfigArbitrary],
+    Effect.fnUntraced(function* ([labTsconfig, labCheckTsconfig]) {
+      expect(yield* decodeAppTsconfig(yield* encodeAppTsconfigEffect(labTsconfig))).toEqual(labTsconfig);
+      expect(yield* decodeLabCheckTsconfig(yield* encodeLabCheckTsconfigEffect(labCheckTsconfig))).toEqual(
+        labCheckTsconfig
+      );
+    }),
+    { arbitrary: fcRuns(16) }
+  );
 
-            return true;
-          },
-          fcRuns(16)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
-
-  it("property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates", () => {
+  {
     const manifestEquivalence = S.toEquivalence(LabManifest);
     const isoDate = Arbitrary.map(
       Arbitrary.all([
@@ -394,27 +390,22 @@ describe("create-package --lab", { concurrent: false }, () => {
       disposition: Arbitrary.schema(S.Union([S.Literal("active"), S.Literal("promote"), S.Literal("expired")])),
       postgresSchema: S.Literal("lab_a").pipe(S.UndefinedOr, Arbitrary.schema),
     });
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([encodedManifest]),
-          ([encoded]) => {
-            const json = JSON.stringify(encoded, null, 2);
-            const decoded = decodeUnknownLabManifestFromJsonStringSync(json);
-            expect(
-              manifestEquivalence(
-                decodeUnknownLabManifestFromJsonStringSync(encodeLabManifestFromJsonStringSync(decoded)),
-                decoded
-              )
-            ).toBe(true);
-
-            return true;
-          },
-          fcRuns(16)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+    it.effect.prop(
+      "property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates",
+      [encodedManifest],
+      Effect.fnUntraced(function* ([encoded]) {
+        const json = yield* encodePrettyJson(encoded);
+        const decoded = yield* decodeUnknownLabManifestFromJsonStringEffect(json);
+        expect(
+          manifestEquivalence(
+            yield* decodeUnknownLabManifestFromJsonStringEffect(yield* encodeLabManifestFromJsonStringEffect(decoded)),
+            decoded
+          )
+        ).toBe(true);
+      }),
+      { arbitrary: fcRuns(16) }
+    );
+  }
 
   it(
     "scaffolds a nextjs lab with manifest, labs portless label, @beep/ui wiring, and the labs identity segment",
@@ -436,7 +427,9 @@ describe("create-package --lab", { concurrent: false }, () => {
             ]);
 
             const packageDir = path.join(rootDir, "apps", "labs", "web-lab");
-            const manifest = decodeGeneratedPackageManifest(yield* readJsonFile(path.join(packageDir, "package.json")));
+            const manifest = yield* decodeGeneratedPackageManifest(
+              yield* readJsonFile(path.join(packageDir, "package.json"))
+            );
             expect(manifest.scripts.dev).toBe("portless web-lab.labs.beep next dev --turbopack");
             expectNoPackageCeremony(manifest);
             // Exactly what the emitted templates import: @beep/repo-configs in
@@ -462,17 +455,17 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(yield* fs.exists(path.join(packageDir, "tsconfig.next.json"))).toBe(true);
             expect(yield* fs.exists(path.join(packageDir, "tsconfig.check.json"))).toBe(true);
             expect(yield* fs.exists(path.join(packageDir, "postcss.config.mjs"))).toBe(true);
-            const labCheckTsconfig = decodeLabCheckTsconfig(
+            const labCheckTsconfig = yield* decodeLabCheckTsconfig(
               yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
             );
             expect(labCheckTsconfig.extends).toBe("./tsconfig.json");
             expect(labCheckTsconfig.compilerOptions.noEmit).toBe(true);
             // The overlay mirrors the canonical references exactly and adds no
             // module overrides (quality-lane audit D3).
-            const canonicalLabTsconfig = decodeTsconfigOptionalReferences(
+            const canonicalLabTsconfig = yield* decodeTsconfigOptionalReferences(
               yield* readJsoncFile(path.join(packageDir, "tsconfig.json"))
             );
-            const labOverlay = decodeTsconfigOptionalReferences(
+            const labOverlay = yield* decodeTsconfigOptionalReferences(
               yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
             );
             expect(referencePathsOf(labOverlay)).toEqual(referencePathsOf(canonicalLabTsconfig));
@@ -484,10 +477,10 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(nextConfig).toContain("web-lab.labs.beep.localhost");
             const globalsCss = yield* fs.readFileString(path.join(packageDir, "src", "app", "globals.css"));
             expect(globalsCss).toContain('@import "@beep/ui/styles/globals.css";');
-            const appTsconfig = decodeAppTsconfig(yield* readJsoncFile(path.join(packageDir, "tsconfig.json")));
+            const appTsconfig = yield* decodeAppTsconfig(yield* readJsoncFile(path.join(packageDir, "tsconfig.json")));
             expect(appTsconfig.compilerOptions.rootDir).toBe("../../..");
 
-            const rootPackage = decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+            const rootPackage = yield* decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
             expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*", "apps/labs/*"]);
 
             const registry = yield* readIdentityRegistry(context);
@@ -525,7 +518,9 @@ describe("create-package --lab", { concurrent: false }, () => {
             ]);
 
             const packageDir = path.join(rootDir, "apps", "labs", "graph-lab");
-            const manifest = decodeGeneratedPackageManifest(yield* readJsonFile(path.join(packageDir, "package.json")));
+            const manifest = yield* decodeGeneratedPackageManifest(
+              yield* readJsonFile(path.join(packageDir, "package.json"))
+            );
             expect(manifest.scripts.dev).toBe(
               "portless graph-lab.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'"
             );
@@ -547,7 +542,7 @@ describe("create-package --lab", { concurrent: false }, () => {
             const globalsCss = yield* fs.readFileString(path.join(packageDir, "src", "styles", "globals.css"));
             expect(globalsCss).toContain('@import "@beep/ui/styles/globals.css";');
             expect(globalsCss).not.toContain(":root");
-            const appTsconfig = decodeAppTsconfig(yield* readJsoncFile(path.join(packageDir, "tsconfig.json")));
+            const appTsconfig = yield* decodeAppTsconfig(yield* readJsoncFile(path.join(packageDir, "tsconfig.json")));
             expect(appTsconfig.compilerOptions.rootDir).toBe("../../..");
 
             const registry = yield* readIdentityRegistry(context);
@@ -579,7 +574,9 @@ describe("create-package --lab", { concurrent: false }, () => {
             ]);
 
             const packageDir = path.join(rootDir, "apps", "labs", "probe-svc");
-            const manifest = decodeGeneratedPackageManifest(yield* readJsonFile(path.join(packageDir, "package.json")));
+            const manifest = yield* decodeGeneratedPackageManifest(
+              yield* readJsonFile(path.join(packageDir, "package.json"))
+            );
             expect(manifest.scripts.dev).toBe("portless probe-svc.labs.beep sh -c 'bun --watch src/main.ts'");
             expectNoPackageCeremony(manifest);
             // src/Api.ts imports the identity accessor; main.ts imports
@@ -653,7 +650,9 @@ describe("create-package --lab", { concurrent: false }, () => {
             ]);
 
             const packageDir = path.join(rootDir, "apps", "labs", "probe-tauri");
-            const manifest = decodeGeneratedPackageManifest(yield* readJsonFile(path.join(packageDir, "package.json")));
+            const manifest = yield* decodeGeneratedPackageManifest(
+              yield* readJsonFile(path.join(packageDir, "package.json"))
+            );
             expect(manifest.scripts.dev).toBe(
               "portless probe-tauri.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'"
             );

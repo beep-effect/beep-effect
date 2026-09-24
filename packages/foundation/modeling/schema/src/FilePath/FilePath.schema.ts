@@ -135,13 +135,11 @@ const FilePathChecks = S.makeFilterGroup(
  * **Example** (Decode valid file paths)
  *
  * ```ts import.meta.vitest name="Decode valid file paths"
- * import * as S from "effect/Schema"
+ * import * as Effect from "effect/Effect"
  * import { FilePath } from "@beep/schema/FilePath"
  *
- * const decode = S.decodeUnknownSync(FilePath)
- *
- * const posix = decode("/usr/local/bin/node")
- * const relative = decode("src/index.ts")
+ * const posix = await Effect.runPromise(FilePath.decodeUnknownEffect("/usr/local/bin/node"))
+ * const relative = await Effect.runPromise(FilePath.decodeUnknownEffect("src/index.ts"))
  * ```
  *
  * **Example** (Reject bare root paths)
@@ -161,7 +159,7 @@ const FilePathChecks = S.makeFilterGroup(
  */
 export const FilePath = S.String.check(FilePathChecks).pipe(
   S.brand("FilePath"),
-  SchemaUtils.withCodecStatics(["decodeUnknownSync", "is"]),
+  SchemaUtils.withCodecStatics(["decodeUnknownEffect", "is"]),
   $I.annoteSchema("FilePath", {
     description: "A file path string valid for at least one supported operating-system path family.",
   })

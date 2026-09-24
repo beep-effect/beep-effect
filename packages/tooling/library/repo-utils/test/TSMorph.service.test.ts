@@ -24,8 +24,8 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { REPO_ROOT, TestLayer, WORKSPACE_ROOT } from "./TSMorph.test-support.ts";
 
-const decodeUnknownSymbolIdSync = S.decodeUnknownSync(SymbolId);
-const encodeUnknownSymbolIdSync = S.encodeUnknownSync(SymbolId);
+const decodeUnknownSymbolId = S.decodeUnknownEffect(SymbolId);
+const encodeUnknownSymbolId = S.encodeUnknownEffect(SymbolId);
 
 const TSCONFIG_PATH = "packages/tooling/library/repo-utils/tsconfig.json";
 const MODEL_FILE_PATH = "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts";
@@ -40,15 +40,15 @@ const LATE_FILE_EXTRA_FILE_PATH = "packages/tooling/library/repo-utils/test/fixt
 const OUTLINE_ORDER_FILE_PATH = "packages/tooling/library/repo-utils/test/fixtures/tsmorph-outline-order/source.ts";
 const OUTSIDE_WORKSPACE_FILE_PATH = "packages/foundation/ui-system/ui/src/css.d.ts";
 
-const decodeDiagnosticsRequest = S.decodeUnknownSync(TsMorphDiagnosticsRequest);
-const decodeFileOutlineRequest = S.decodeUnknownSync(TsMorphFileOutlineRequest);
-const decodeProjectInspectionRequest = S.decodeUnknownSync(TsMorphProjectInspectionRequest);
-const decodeProjectScopeRequest = S.decodeUnknownSync(TsMorphProjectScopeRequest);
-const decodeSourceTextRequest = S.decodeUnknownSync(TsMorphSourceTextRequest);
-const decodeSymbolQualifiedName = S.decodeUnknownSync(SymbolQualifiedName);
-const decodeSymbolLookupRequest = S.decodeUnknownSync(TsMorphSymbolLookupRequest);
-const decodeSymbolSearchRequest = S.decodeUnknownSync(TsMorphSymbolSearchRequest);
-const decodeSymbolSourceRequest = S.decodeUnknownSync(TsMorphSymbolSourceRequest);
+const decodeDiagnosticsRequest = S.decodeUnknownEffect(TsMorphDiagnosticsRequest);
+const decodeFileOutlineRequest = S.decodeUnknownEffect(TsMorphFileOutlineRequest);
+const decodeProjectInspectionRequest = S.decodeUnknownEffect(TsMorphProjectInspectionRequest);
+const decodeProjectScopeRequest = S.decodeUnknownEffect(TsMorphProjectScopeRequest);
+const decodeSourceTextRequest = S.decodeUnknownEffect(TsMorphSourceTextRequest);
+const decodeSymbolQualifiedName = S.decodeUnknownEffect(SymbolQualifiedName);
+const decodeSymbolLookupRequest = S.decodeUnknownEffect(TsMorphSymbolLookupRequest);
+const decodeSymbolSearchRequest = S.decodeUnknownEffect(TsMorphSymbolSearchRequest);
+const decodeSymbolSourceRequest = S.decodeUnknownEffect(TsMorphSymbolSourceRequest);
 
 const repoUtilsScopeRequest = (mode: "syntax" | "semantic" = "syntax") =>
   decodeProjectScopeRequest({
@@ -86,23 +86,25 @@ const lateFileScopeRequest = (mode: "syntax" | "semantic" = "syntax") =>
 const TSMORPH_TIMEOUT = 40_000;
 
 describe("SymbolId schema arbitrary", () => {
-  it("only generates decodable, round-tripping symbol ids", () => {
-    const symbolIdArbitrary = Arbitrary.schema(SymbolId);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([symbolIdArbitrary]),
-          ([symbolId]) => {
-            const decoded = decodeUnknownSymbolIdSync(symbolId);
-            expect(encodeUnknownSymbolIdSync(decoded)).toBe(symbolId);
+  it.effect(
+    "only generates decodable, round-tripping symbol ids",
+    Effect.fnUntraced(function* () {
+      const symbolIdArbitrary = Arbitrary.schema(SymbolId);
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([symbolIdArbitrary]),
+        ([symbolId]) =>
+          Effect.gen(function* () {
+            const decoded = yield* decodeUnknownSymbolId(symbolId);
+            expect(yield* encodeUnknownSymbolId(decoded)).toBe(symbolId);
 
             return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+          }),
+        fcRuns(50)
+      );
+
+      expect(result._tag).toBe("Passed");
+    })
+  );
 });
 
 layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
@@ -111,7 +113,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "resolves a workspace tsconfig into a stable scope",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(repoUtilsScopeRequest("syntax"));
+        const scope = yield* service.resolveProjectScope(yield* repoUtilsScopeRequest("syntax"));
 
         expect(scope.scopeId).toBe("packages/tooling/library/repo-utils/tsconfig.json::syntax#workspaceOnly");
         expect(scope.cacheKey).toBe("packages/tooling/library/repo-utils/tsconfig.json::syntax#workspaceOnly");
@@ -134,7 +136,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
         const before = yield* fs.readFileString(absoluteFixturePath);
 
         const result = yield* service.inspectProject(
-          decodeProjectInspectionRequest({
+          yield* decodeProjectInspectionRequest({
             entrypoint: {
               _tag: "tsconfig",
               tsConfigPath: LATE_FILE_TSCONFIG_PATH,
@@ -187,7 +189,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
         const service = yield* TSMorphService;
 
         const result = yield* service.inspectProject(
-          decodeProjectInspectionRequest({
+          yield* decodeProjectInspectionRequest({
             entrypoint: {
               _tag: "tsconfig",
               tsConfigPath: LATE_FILE_TSCONFIG_PATH,
@@ -230,7 +232,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
         expect(packageFiles).toEqual([explicit]);
 
         const explicitByPath = yield* service.inspectProject(
-          decodeProjectInspectionRequest({
+          yield* decodeProjectInspectionRequest({
             entrypoint: { _tag: "tsconfig", tsConfigPath: LATE_FILE_TSCONFIG_PATH },
             repoRootPath: REPO_ROOT,
             mode: "syntax",
@@ -244,7 +246,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
         expect(explicitByPath).toBe(1);
 
         const ordinaryCount = yield* service.inspectProject(
-          decodeProjectInspectionRequest({
+          yield* decodeProjectInspectionRequest({
             entrypoint: { _tag: "tsconfig", tsConfigPath: LATE_FILE_TSCONFIG_PATH },
             repoRootPath: REPO_ROOT,
             mode: "syntax",
@@ -268,7 +270,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       Effect.fn(function* () {
         const service = yield* TSMorphService;
         const sourceText = yield* service.readSourceText(
-          decodeSourceTextRequest({
+          yield* decodeSourceTextRequest({
             filePath: MODEL_FILE_PATH,
           })
         );
@@ -286,9 +288,9 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "extracts a non-empty outline for a known TypeScript file",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(repoUtilsScopeRequest("syntax"));
+        const scope = yield* service.resolveProjectScope(yield* repoUtilsScopeRequest("syntax"));
         const outline = yield* service.getFileOutline(
-          decodeFileOutlineRequest({
+          yield* decodeFileOutlineRequest({
             scopeId: scope.scopeId,
             filePath: MODEL_FILE_PATH,
           })
@@ -310,9 +312,9 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "preserves source declaration order within a file outline",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(repoUtilsScopeRequest("syntax"));
+        const scope = yield* service.resolveProjectScope(yield* repoUtilsScopeRequest("syntax"));
         const outline = yield* service.getFileOutline(
-          decodeFileOutlineRequest({
+          yield* decodeFileOutlineRequest({
             scopeId: scope.scopeId,
             filePath: OUTLINE_ORDER_FILE_PATH,
           })
@@ -333,9 +335,9 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "loads a normalized class symbol and its extracted source text",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(repoUtilsScopeRequest("syntax"));
+        const scope = yield* service.resolveProjectScope(yield* repoUtilsScopeRequest("syntax"));
         const outline = yield* service.getFileOutline(
-          decodeFileOutlineRequest({
+          yield* decodeFileOutlineRequest({
             scopeId: scope.scopeId,
             filePath: MODEL_FILE_PATH,
           })
@@ -351,19 +353,19 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
         }
 
         const lookup = yield* service.getSymbolById(
-          decodeSymbolLookupRequest({
+          yield* decodeSymbolLookupRequest({
             scopeId: scope.scopeId,
             symbolId: targetSymbol.value.id,
           })
         );
         const source = yield* service.readSymbolSource(
-          decodeSymbolSourceRequest({
+          yield* decodeSymbolSourceRequest({
             scopeId: scope.scopeId,
             symbolId: targetSymbol.value.id,
           })
         );
         const sourceFile = yield* service.readSourceText(
-          decodeSourceTextRequest({
+          yield* decodeSourceTextRequest({
             filePath: MODEL_FILE_PATH,
           })
         );
@@ -387,9 +389,9 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "fails with a typed error for missing symbol ids",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(repoUtilsScopeRequest("syntax"));
+        const scope = yield* service.resolveProjectScope(yield* repoUtilsScopeRequest("syntax"));
         const outline = yield* service.getFileOutline(
-          decodeFileOutlineRequest({
+          yield* decodeFileOutlineRequest({
             scopeId: scope.scopeId,
             filePath: MODEL_FILE_PATH,
           })
@@ -407,12 +409,12 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
 
         const missingSymbolId = makeSymbolId({
           filePath: filePath.value,
-          qualifiedName: decodeSymbolQualifiedName("DefinitelyMissingSymbol"),
+          qualifiedName: yield* decodeSymbolQualifiedName("DefinitelyMissingSymbol"),
           kind: "ClassDeclaration",
         });
         const lookupError = yield* service
           .getSymbolById(
-            decodeSymbolLookupRequest({
+            yield* decodeSymbolLookupRequest({
               scopeId: scope.scopeId,
               symbolId: missingSymbolId,
             })
@@ -420,7 +422,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
           .pipe(Effect.flip);
         const sourceError = yield* service
           .readSymbolSource(
-            decodeSymbolSourceRequest({
+            yield* decodeSymbolSourceRequest({
               scopeId: scope.scopeId,
               symbolId: missingSymbolId,
             })
@@ -449,9 +451,9 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "searches deterministically and honors category, kind, and limit filters",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(repoUtilsScopeRequest("syntax"));
+        const scope = yield* service.resolveProjectScope(yield* repoUtilsScopeRequest("syntax"));
         const allMatches = yield* service.searchSymbols(
-          decodeSymbolSearchRequest({
+          yield* decodeSymbolSearchRequest({
             scopeId: scope.scopeId,
             query: "TsMorph",
             categories: [],
@@ -460,7 +462,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
           })
         );
         const unbounded = yield* service.searchSymbols(
-          decodeSymbolSearchRequest({
+          yield* decodeSymbolSearchRequest({
             scopeId: scope.scopeId,
             query: "TsMorph",
             categories: ["class"],
@@ -469,7 +471,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
           })
         );
         const limited = yield* service.searchSymbols(
-          decodeSymbolSearchRequest({
+          yield* decodeSymbolSearchRequest({
             scopeId: scope.scopeId,
             query: "TsMorph",
             categories: ["class"],
@@ -478,7 +480,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
           })
         );
         const blank = yield* service.searchSymbols(
-          decodeSymbolSearchRequest({
+          yield* decodeSymbolSearchRequest({
             scopeId: scope.scopeId,
             query: "   ",
             categories: [],
@@ -514,9 +516,9 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "refreshes the cached symbol index when a late-loaded implementation file enters the project",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(lateFileScopeRequest("syntax"));
+        const scope = yield* service.resolveProjectScope(yield* lateFileScopeRequest("syntax"));
         const initialSearch = yield* service.searchSymbols(
-          decodeSymbolSearchRequest({
+          yield* decodeSymbolSearchRequest({
             scopeId: scope.scopeId,
             query: "IncludedThing",
             categories: [],
@@ -525,7 +527,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
           })
         );
         const outline = yield* service.getFileOutline(
-          decodeFileOutlineRequest({
+          yield* decodeFileOutlineRequest({
             scopeId: scope.scopeId,
             filePath: LATE_FILE_EXTRA_FILE_PATH,
           })
@@ -544,7 +546,7 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
         }
 
         const lookup = yield* service.getSymbolById(
-          decodeSymbolLookupRequest({
+          yield* decodeSymbolLookupRequest({
             scopeId: scope.scopeId,
             symbolId: targetSymbol.value.id,
           })
@@ -562,9 +564,9 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "returns no diagnostics for a known clean file in semantic mode",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(fixtureScopeRequest("semantic"));
+        const scope = yield* service.resolveProjectScope(yield* fixtureScopeRequest("semantic"));
         const diagnostics = yield* service.getDiagnostics(
-          decodeDiagnosticsRequest({
+          yield* decodeDiagnosticsRequest({
             scopeId: scope.scopeId,
             filePath: FIXTURE_CLEAN_FILE_PATH,
           })
@@ -580,9 +582,9 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "normalizes file-local diagnostics for an intentionally broken fixture",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(fixtureScopeRequest("semantic"));
+        const scope = yield* service.resolveProjectScope(yield* fixtureScopeRequest("semantic"));
         const diagnostics = yield* service.getDiagnostics(
-          decodeDiagnosticsRequest({
+          yield* decodeDiagnosticsRequest({
             scopeId: scope.scopeId,
             filePath: FIXTURE_BROKEN_FILE_PATH,
           })
@@ -612,10 +614,10 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "rejects files outside the workspace boundary with a source file error",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(repoUtilsScopeRequest("semantic"));
+        const scope = yield* service.resolveProjectScope(yield* repoUtilsScopeRequest("semantic"));
         const error = yield* service
           .getDiagnostics(
-            decodeDiagnosticsRequest({
+            yield* decodeDiagnosticsRequest({
               scopeId: scope.scopeId,
               filePath: OUTSIDE_WORKSPACE_FILE_PATH,
             })
@@ -637,10 +639,10 @@ layer(TestLayer, { timeout: TSMORPH_TIMEOUT })("TSMorphService", (it) => {
       "rejects declaration files for outline extraction with an unsupported file error",
       Effect.fn(function* () {
         const service = yield* TSMorphService;
-        const scope = yield* service.resolveProjectScope(repoUtilsScopeRequest("syntax"));
+        const scope = yield* service.resolveProjectScope(yield* repoUtilsScopeRequest("syntax"));
         const error = yield* service
           .getFileOutline(
-            decodeFileOutlineRequest({
+            yield* decodeFileOutlineRequest({
               scopeId: scope.scopeId,
               filePath: DECLARATION_FILE_PATH,
             })

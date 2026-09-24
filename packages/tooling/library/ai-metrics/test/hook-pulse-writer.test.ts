@@ -111,15 +111,13 @@ const withSaltEnv = <A, E, R>(env: Record<string, string>, effect: Effect.Effect
 
 const decodeHookPulseFromRaw = HookPulseV1FromRawEvent.decodeUnknownEffect;
 const decodeHookPulseRow = HookPulseV1.decodeJsonEffect;
-const decodeRowKeys = S.decodeUnknownSync(S.fromJsonString(S.Record(S.String, S.Unknown)));
-const decodeRowString = S.decodeUnknownSync(S.String);
-const encodeHookPulseRow = HookPulseV1.encodeJsonSync;
-const decodeHookPulseRowSync = HookPulseV1.decodeJsonSync;
+const decodeRowKeys = S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.Unknown)));
+const decodeRowString = S.decodeUnknownEffect(S.String);
 const hookPulseEquivalent = S.toEquivalence(HookPulseV1);
 // Fixture payloads are raw harness shapes, not a schema this package owns, so the
 // unknown-shaped encoder is the right rung: it renders stdin without pretending the
 // content-bearing keys we deliberately never model are part of the contract.
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
 
 // Exactly the canonical `HookPulseV1` encoded surface. Any other key on a row is
 // a leak or a drift, whichever it turns out to be. Stated by hand so the leak
@@ -391,7 +389,10 @@ const permissionDeniedPayload = {
 // `JSON.stringify` renders that as `null`. The harness on the other end of this
 // pipe is not JavaScript, so the literal is spliced into the stdin text directly
 // — which is exactly how an out-of-range duration would actually arrive.
-const nonFiniteDurationStdin = `{"duration_ms":1e400,${encodeJson(R.remove(postToolUsePayload, "duration_ms")).slice(1)}`;
+const nonFiniteDurationStdin = Effect.map(
+  encodeJson(R.remove(postToolUsePayload, "duration_ms")),
+  (json) => `{"duration_ms":1e400,${json.slice(1)}`
+);
 
 const notificationPayload = (notificationType: O.Option<string>) => ({
   ...baseFields,
@@ -557,7 +558,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("tags Codex hook rows as codex-cli", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(encodeJson(preToolUsePayload), { writerPath: codexWriterPath });
+        const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { writerPath: codexWriterPath });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.agentKind).toBe(HookPulseAgentKind.Enum["codex-cli"]);
@@ -578,7 +579,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           model: "composer-2.5",
           workspace_roots: [baseFields.cwd],
         };
-        const run = yield* runWriter(encodeJson(cursorPayload), { writerPath: cursorWriterPath });
+        const run = yield* runWriter(yield* encodeJson(cursorPayload), { writerPath: cursorWriterPath });
 
         expect(run.exitCode).toBe(0);
         expect(run.stderr).toBe("");
@@ -596,7 +597,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
 
   it.effect("writes nothing for an agent kind outside HookPulseAgentKind", () =>
     Effect.gen(function* () {
-      const run = yield* runWriter(encodeJson(preToolUsePayload), { agentKind: "other" });
+      const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { agentKind: "other" });
 
       expectSilentRefusal(run);
     })
@@ -656,7 +657,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     it.effect(`emits one HookPulseV1 row for ${label}`, () =>
       Effect.scoped(
         Effect.gen(function* () {
-          const run = yield* runWriter(encodeJson(payload));
+          const run = yield* runWriter(yield* encodeJson(payload));
           const row = expectSingleRow(run);
           const decoded = yield* decodeHookPulseRow(row);
 
@@ -688,7 +689,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     it.effect(`writes no measured content for ${label}`, () =>
       Effect.scoped(
         Effect.gen(function* () {
-          const run = yield* runWriter(encodeJson(payload));
+          const run = yield* runWriter(yield* encodeJson(payload));
           const row = expectSingleRow(run);
 
           expect(row).not.toContain(CANARY);
@@ -697,7 +698,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
           // content field. A digest of the canary is still derived from content
           // and still belongs nowhere in the ledger.
           expect(row).not.toContain(yield* privateDigest(CANARY));
-          expect(A.difference(R.keys(decodeRowKeys(row)), canonicalRowKeys)).toEqual([]);
+          expect(A.difference(R.keys(yield* decodeRowKeys(row)), canonicalRowKeys)).toEqual([]);
         })
       )
     );
@@ -713,30 +714,33 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     expect(A.difference(schemaKeys, canonicalRowKeys)).toEqual([]);
   });
 
-  it("keeps every schema-inhabitable canonical row inside the declared ledger surface", () => {
-    // The fixtures above only reach the key combinations the measured harness
-    // emits. This walks the whole space `HookPulseV1` admits, so a future field
-    // — or an encoder that starts emitting one conditionally — cannot slip past
-    // the leak allowlist just because no fixture happens to populate it. The
-    // round-trip half proves the NDJSON line the ledger stores is lossless for
-    // every such row, which is what P4 replay actually depends on.
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([HookPulseV1Arbitrary]),
-          ([value]) => {
-            const line = encodeHookPulseRow(value);
+  it.effect("keeps every schema-inhabitable canonical row inside the declared ledger surface", () =>
+    Effect.gen(function* () {
+      // The fixtures above only reach the key combinations the measured harness
+      // emits. This walks the whole space `HookPulseV1` admits, so a future field
+      // — or an encoder that starts emitting one conditionally — cannot slip past
+      // the leak allowlist just because no fixture happens to populate it. The
+      // round-trip half proves the NDJSON line the ledger stores is lossless for
+      // every such row, which is what P4 replay actually depends on.
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([HookPulseV1Arbitrary]),
+        ([value]) =>
+          Effect.gen(function* () {
+            const line = yield* HookPulseV1.encodeJsonEffect(value);
+            const keys = yield* decodeRowKeys(line);
+            const decoded = yield* HookPulseV1.decodeJsonEffect(line);
 
-            expect(A.difference(R.keys(decodeRowKeys(line)), canonicalRowKeys)).toEqual([]);
-            expect(hookPulseEquivalent(decodeHookPulseRowSync(line), value)).toBe(true);
+            expect(A.difference(R.keys(keys), canonicalRowKeys)).toEqual([]);
+            expect(hookPulseEquivalent(decoded, value)).toBe(true);
 
             return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+          }),
+        fcRuns(50)
+      );
+
+      expect(result._tag).toBe("Passed");
+    })
+  );
 
   it.effect("keeps the jq allowlists set-equal to the schema literal domains", () =>
     Effect.gen(function* () {
@@ -766,9 +770,10 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // not the raw session id: a filename is as readable as a row, so a
         // ledger whose rows are pseudonymized while its directory listing spells
         // out every session UUID has pseudonymized nothing.
-        const run = yield* runWriter(encodeJson(preToolUsePayload));
+        const run = yield* runWriter(yield* encodeJson(preToolUsePayload));
         const row = expectSingleRow(run);
-        const ts = decodeRowString(decodeRowKeys(row).ts);
+        const keys = yield* decodeRowKeys(row);
+        const ts = yield* decodeRowString(keys.ts);
         const sessionDigest = yield* privateDigest(session);
 
         // Exact equality against the oracle digest, so the raw session id cannot
@@ -786,7 +791,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // by any 64-hex string. This is the only one that fails when the shell
         // hashes the right value the wrong way — the NUL-through-a-variable trap
         // described above being the way it actually happens.
-        const run = yield* runWriter(encodeJson(preToolUsePayload));
+        const run = yield* runWriter(yield* encodeJson(preToolUsePayload));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.sessionId).toBe(yield* privateDigest(session));
@@ -803,7 +808,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // at all, because the insecure default is what such a writer would have
         // used anyway. Only a run under an operator salt separates "resolves the
         // salt" from "hardcodes the fallback".
-        const run = yield* runWriter(encodeJson(preToolUsePayload), {
+        const run = yield* runWriter(yield* encodeJson(preToolUsePayload), {
           hashSalt: OPERATOR_SALT,
         });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
@@ -822,7 +827,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // `resolveAiMetricsHashSaltValue` trims first and falls back. That lone
         // input is where the two halves can disagree with both looking correct,
         // so the shell trims too and this pins it.
-        const run = yield* runWriter(encodeJson(preToolUsePayload), {
+        const run = yield* runWriter(yield* encodeJson(preToolUsePayload), {
           hashSalt: "   ",
         });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
@@ -835,7 +840,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("omits notificationType when the raw value is outside the enum", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(encodeJson(futureNotificationPayload));
+        const run = yield* runWriter(yield* encodeJson(futureNotificationPayload));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         // The spike's jq `capture()` defect dropped exactly this row while still
@@ -851,7 +856,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("keeps notificationType when the raw value is inside the enum", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(encodeJson(permissionPromptNotificationPayload));
+        const run = yield* runWriter(yield* encodeJson(permissionPromptNotificationPayload));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.notificationType).toEqual(O.some(HookPulseNotificationType.Enum.permission_prompt));
@@ -862,9 +867,9 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("carries sessionEndReason only on SessionEnd", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const ended = yield* runWriter(encodeJson(sessionEndPayload));
-        const stopped = yield* runWriter(encodeJson(stopPayload));
-        const denied = yield* runWriter(encodeJson(permissionDeniedPayload));
+        const ended = yield* runWriter(yield* encodeJson(sessionEndPayload));
+        const stopped = yield* runWriter(yield* encodeJson(stopPayload));
+        const denied = yield* runWriter(yield* encodeJson(permissionDeniedPayload));
         const decodedEnd = yield* decodeHookPulseRow(expectSingleRow(ended));
         const decodedStop = yield* decodeHookPulseRow(expectSingleRow(stopped));
         const decodedDenied = yield* decodeHookPulseRow(expectSingleRow(denied));
@@ -880,7 +885,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("carries durationMs from PostToolUse and pairs tool ids", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(encodeJson(postToolUsePayload));
+        const run = yield* runWriter(yield* encodeJson(postToolUsePayload));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.durationMs).toEqual(O.some(477));
@@ -896,7 +901,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // `Infinity` and fails `NonNegNum`'s `S.Finite`. Keeping it would put an
         // undecodable line in a shard, which poisons replay for every row that
         // shard holds — strictly worse than dropping one optional field.
-        const run = yield* runWriter(nonFiniteDurationStdin);
+        const run = yield* runWriter(yield* nonFiniteDurationStdin);
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.durationMs).toEqual(O.none());
@@ -908,7 +913,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("invents no toolUseId for PermissionRequest", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(encodeJson(permissionRequestPlanPayload));
+        const run = yield* runWriter(yield* encodeJson(permissionRequestPlanPayload));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         // The two-hop join in P4 depends on this absence being real.
@@ -921,7 +926,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("writes nothing and exits 0 when the kill-switch sentinel exists", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const run = yield* runWriter(encodeJson(permissionRequestPlanPayload), {
+        const run = yield* runWriter(yield* encodeJson(permissionRequestPlanPayload), {
           disarmSentinel: '{"disarmedAt":"2026-08-05T00:00:00Z","reason":"test","evidenceTier":"unknown"}',
         });
 
@@ -932,8 +937,8 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
 
   A.forEach(
     [
-      { label: "unparseable stdin", stdin: "not json at all {{{" },
-      { label: "empty stdin", stdin: "" },
+      { label: "unparseable stdin", stdin: Effect.succeed("not json at all {{{") },
+      { label: "empty stdin", stdin: Effect.succeed("") },
       {
         label: "a payload with no session_id",
         stdin: encodeJson({ ...stopPayload, session_id: undefined }),
@@ -950,7 +955,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       it.effect(`writes no partial line for ${label}`, () =>
         Effect.scoped(
           Effect.gen(function* () {
-            const run = yield* runWriter(stdin);
+            const run = yield* runWriter(yield* stdin);
 
             expectSilentRefusal(run);
           })
@@ -966,8 +971,8 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
   it.effect("carries bracket-closing evidence and isInterrupt on PostToolUseFailure", () =>
     Effect.scoped(
       Effect.gen(function* () {
-        const interrupted = yield* runWriter(encodeJson(postToolUseFailurePayload(true)));
-        const errored = yield* runWriter(encodeJson(postToolUseFailurePayload(false)));
+        const interrupted = yield* runWriter(yield* encodeJson(postToolUseFailurePayload(true)));
+        const errored = yield* runWriter(yield* encodeJson(postToolUseFailurePayload(false)));
         const decodedInterrupted = yield* decodeHookPulseRow(expectSingleRow(interrupted));
         const decodedErrored = yield* decodeHookPulseRow(expectSingleRow(errored));
 
@@ -986,7 +991,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       Effect.gen(function* () {
         // `is_interrupt` on a foreign event is owned by PostToolUseFailure, so
         // emitting it would fail HookPulseEventOwnedFieldInvariant on decode.
-        const run = yield* runWriter(encodeJson({ ...postToolUsePayload, is_interrupt: true }));
+        const run = yield* runWriter(yield* encodeJson({ ...postToolUsePayload, is_interrupt: true }));
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
 
         expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PostToolUse);
@@ -1001,7 +1006,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
         // With BEEP_AGENT_EVIDENCE_ROOT cleared, the writer must land in the
         // same directory `agentEvidenceRoot`/`hookPulseLedgerDir` compute — the
         // runner reads back from exactly that derived path.
-        const run = yield* runWriter(encodeJson(permissionRequestPlanPayload), {
+        const run = yield* runWriter(yield* encodeJson(permissionRequestPlanPayload), {
           viaXdgFallback: true,
         });
         const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
@@ -1050,7 +1055,7 @@ layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
     it.effect(`reproduces the writer's private digests through ${label}`, () =>
       Effect.scoped(
         Effect.gen(function* () {
-          const run = yield* runWriter(encodeJson(preToolUsePayload), writerOptions);
+          const run = yield* runWriter(yield* encodeJson(preToolUsePayload), writerOptions);
           const writerRow = yield* decodeHookPulseRow(expectSingleRow(run));
           // `ts`, `notifierRev`, `instrumentClass`, `agentKind`, and
           // `evidenceTier` enter no digest, so a literal `ts` here avoids
@@ -1200,7 +1205,7 @@ const SEEDED_DISARM = {
   evidenceTier: HookPulseEvidenceTier.Enum.unknown,
   reason: "seeded-first-window",
 };
-const seededSentinelJson = `${encodeJson(SEEDED_DISARM)}\n`;
+const seededSentinelJson = Effect.map(encodeJson(SEEDED_DISARM), (json) => `${json}\n`);
 
 const expectSingleWindow = (rows: ReadonlyArray<string>): string => {
   expect(rows).toHaveLength(1);
@@ -1256,7 +1261,7 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
     Effect.scoped(
       Effect.gen(function* () {
         const store = yield* makeSwitchStore();
-        yield* seedSentinel(store, seededSentinelJson);
+        yield* seedSentinel(store, yield* seededSentinelJson);
 
         const run = yield* runSwitch(store, ["disarm", "a-much-later-reason"]);
 
@@ -1264,7 +1269,7 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
         // Byte-identical to what was seeded: not the reason, not the timestamp,
         // not the trailing newline. The seeded start is far enough in the past
         // that an overwrite is unambiguous rather than clock-resolution noise.
-        expect(yield* readSentinel(store)).toEqual(O.some(seededSentinelJson));
+        expect(yield* readSentinel(store)).toEqual(O.some(yield* seededSentinelJson));
         expect(run.stdout).toContain(SEEDED_DISARM.disarmedAt);
       })
     )
@@ -1298,7 +1303,7 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
         // covered. Nothing downstream can detect that: the ledger still looks
         // complete, and the window it describes is simply wrong.
         const store = yield* makeSwitchStore();
-        yield* seedSentinel(store, seededSentinelJson);
+        yield* seedSentinel(store, yield* seededSentinelJson);
         yield* runSwitch(store, ["disarm", "a-much-later-reason"]);
 
         const armed = yield* runSwitch(store, ["arm"]);
@@ -1391,7 +1396,7 @@ layer(NodeServices.layer)("hook-pulse kill-switch conformance", (it) => {
         // now", so it has to read the same sentinel the writer tests for rather
         // than a second opinion about it.
         const store = yield* makeSwitchStore();
-        yield* seedSentinel(store, seededSentinelJson);
+        yield* seedSentinel(store, yield* seededSentinelJson);
 
         const disarmed = yield* runSwitch(store, ["status"]);
         yield* runSwitch(store, ["arm"]);

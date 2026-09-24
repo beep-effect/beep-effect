@@ -1529,3 +1529,14 @@ closed for its recorded path set. Next obtain current-profile read/write and
 capture evidence, then refresh the exact-version local comparison matrix.
 Signed sibling acceptance remains required. Do not promote the pilot or count
 the reboot-interrupted full local proof as passing.
+
+### Supplemental capture review: 2026-09-22
+
+The descriptor capture attributes all 21 observed scalar writes, including two
+one-byte child writes immediately following decoded pipe creation. Its 428
+repository read paths match the earlier capture; read-call counts differ. The
+separate ring capture resolves all five enter calls to epoll-control flushing.
+See `research/descriptor-capture-2026-09-22.json` and
+`research/ring-attribution-2026-09-22.json` for retained digests and limitations.
+Neither observation establishes complete semantic inputs or signed replay.
+Current stable and canary matrices remain pending; no tuple is qualified.

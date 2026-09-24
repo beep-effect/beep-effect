@@ -26,6 +26,7 @@ import { detectPrRepository } from "./ProvenanceFooter.ts";
 import { makePrSessionRegistryLive } from "./PrSessionRegistry.ts";
 import { PrRef, ResolvedResume } from "./Resume.schemas.ts";
 import type { ConfigError } from "effect/Config";
+import type * as Crypto from "effect/Crypto";
 import type { PlatformError } from "effect/PlatformError";
 import type { PrNumber } from "./Provenance.ts";
 import type { ResumeOptions } from "./Resume.schemas.ts";
@@ -399,7 +400,7 @@ export interface HarnessResumerShape {
   ) => Effect.Effect<
     void,
     YeetCommandError | ConfigError | PlatformError,
-    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
   >;
 }
 /**

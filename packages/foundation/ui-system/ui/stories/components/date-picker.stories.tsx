@@ -1,5 +1,7 @@
 import { DatePicker } from "@beep/ui/components/date-picker";
 import { DateTime } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import { expect, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
@@ -116,7 +118,7 @@ export const SelectsADate: Story = {
     return userEvent
       .click(trigger)
       .then(() => screen.findByRole("grid"))
-      .then((grid) => userEvent.click(within(grid).getAllByRole("button")[0]))
+      .then((grid) => userEvent.click(O.getOrThrow(A.head(within(grid).getAllByRole("button")))))
       .then(() =>
         waitFor(() => {
           expect(args.onValueChange).toHaveBeenCalled();

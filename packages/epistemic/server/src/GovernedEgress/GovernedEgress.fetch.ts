@@ -250,7 +250,11 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
       }),
     });
   });
-  const frozen = freezeGrantSet(DraftGrantSet.make({ grants, policyRevision: config.policyRevision }), frozenAt);
+  // The layer's error channel is closed. A grant set built from constructors
+  // encodes, so a schema failure here is a defect rather than a caller error.
+  const frozen = yield* Effect.fromResult(
+    freezeGrantSet(DraftGrantSet.make({ grants, policyRevision: config.policyRevision }), frozenAt)
+  ).pipe(Effect.orDie);
   const runKey = ExecutionRunKey.make(
     digestForLedger(`epistemic-egress/${DateTime.toEpochMillis(frozenAt)}/${frozen.digest}`)
   );

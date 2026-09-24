@@ -596,8 +596,9 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
       graph.addNode(
         nodeId,
         NodeAttributes.make({
-          x: nextProjection.pointPositions[positionOffset],
-          y: nextProjection.pointPositions[positionOffset + 1],
+          // CosmosGraphProjection checks pointPositions.length === 2 * nodeCount, so both reads are in range.
+          x: nextProjection.pointPositions[positionOffset]!,
+          y: nextProjection.pointPositions[positionOffset + 1]!,
           label: nodeId,
         })
       );
@@ -608,8 +609,9 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
 
     while (edgeIndex < nextProjection.edgeCount) {
       const linkOffset = edgeIndex * 2;
-      const sourceIndex = nextProjection.links[linkOffset] % nextProjection.nodeCount;
-      const targetIndex = nextProjection.links[linkOffset + 1] % nextProjection.nodeCount;
+      // CosmosGraphProjection checks links.length === 2 * edgeCount, so both reads are in range.
+      const sourceIndex = nextProjection.links[linkOffset]! % nextProjection.nodeCount;
+      const targetIndex = nextProjection.links[linkOffset + 1]! % nextProjection.nodeCount;
 
       graph.addDirectedEdgeWithKey(
         `e${edgeIndex}`,

@@ -10,40 +10,43 @@ const SqlState = MappedLiteralKit([
   ["SUCCESSFUL_COMPLETION", "00000"],
   ["WARNING", "01000"],
 ] as const);
-const decodeSqlStateSync = S.decodeSync(SqlState);
-const decodeSqlStateToSync = S.decodeSync(SqlState.To);
-const decodeUnknownSqlStateSync = S.decodeUnknownSync(SqlState);
-const encodeSqlStateSync = S.encodeSync(SqlState);
-const encodeSqlStateToSync = S.encodeSync(SqlState.To);
+const decodeSqlStateEffect = S.decodeEffect(SqlState);
+const decodeSqlStateToEffect = S.decodeEffect(SqlState.To);
+const decodeUnknownSqlStateEffect = S.decodeUnknownEffect(SqlState);
+const encodeSqlStateEffect = S.encodeEffect(SqlState);
+const encodeSqlStateToEffect = S.encodeEffect(SqlState.To);
 
 describe("MappedLiteralKit", () => {
-  it("decodes From literals into To literals", () => {
-    expect(decodeSqlStateSync("SUCCESSFUL_COMPLETION")).toBe("00000");
-    expect(decodeSqlStateSync("WARNING")).toBe("01000");
-  });
+  it.effect(
+    "decodes From literals into To literals",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeSqlStateEffect("SUCCESSFUL_COMPLETION")).toBe("00000");
+      expect(yield* decodeSqlStateEffect("WARNING")).toBe("01000");
+    })
+  );
 
-  it("encodes To literals back into From literals", () => {
-    expect(encodeSqlStateSync("00000")).toBe("SUCCESSFUL_COMPLETION");
-    expect(encodeSqlStateSync("01000")).toBe("WARNING");
-  });
+  it.effect(
+    "encodes To literals back into From literals",
+    Effect.fnUntraced(function* () {
+      expect(yield* encodeSqlStateEffect("00000")).toBe("SUCCESSFUL_COMPLETION");
+      expect(yield* encodeSqlStateEffect("01000")).toBe("WARNING");
+    })
+  );
 
-  it("round-trips schema-derived mapped literal samples", () => {
+  {
     const arbitrary = Arbitrary.schema(SqlState);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([literal]) => {
-            expect(SqlState.To.Options).toContain(literal);
-            expect(decodeUnknownSqlStateSync(encodeSqlStateSync(literal))).toBe(literal);
+    it.effect.prop(
+      "round-trips schema-derived mapped literal samples",
+      [arbitrary],
+      Effect.fnUntraced(function* ([literal]) {
+        expect(SqlState.To.Options).toContain(literal);
+        expect(yield* decodeUnknownSqlStateEffect(yield* encodeSqlStateEffect(literal))).toBe(literal);
 
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        return true;
+      }),
+      { arbitrary: fcRuns(25) }
+    );
+  }
 
   it("exposes directional enum maps", () => {
     expect(SqlState.From.Enum.SUCCESSFUL_COMPLETION).toBe("00000");
@@ -60,25 +63,28 @@ describe("MappedLiteralKit", () => {
     expect(SqlState.is.SUCCESSFUL_COMPLETION("WARNING")).toBe(false);
   });
 
-  it("preserves the top-level From alias after annotation", () => {
-    const annotated = SqlState.annotate({
-      title: "Annotated SQL state",
-    });
-    const reannotated = annotated.annotate({
-      description: "Re-annotated SQL state",
-    });
+  it.effect(
+    "preserves the top-level From alias after annotation",
+    Effect.fnUntraced(function* () {
+      const annotated = SqlState.annotate({
+        title: "Annotated SQL state",
+      });
+      const reannotated = annotated.annotate({
+        description: "Re-annotated SQL state",
+      });
 
-    expect(annotated).not.toBe(SqlState);
-    expect(annotated.From).toBe(annotated);
-    expect(annotated.From).not.toBe(SqlState);
-    expect(annotated.To).toBe(SqlState.To);
-    expect(annotated.Enum.SUCCESSFUL_COMPLETION).toBe("00000");
-    expect(S.decodeSync(annotated)("WARNING")).toBe("01000");
+      expect(annotated).not.toBe(SqlState);
+      expect(annotated.From).toBe(annotated);
+      expect(annotated.From).not.toBe(SqlState);
+      expect(annotated.To).toBe(SqlState.To);
+      expect(annotated.Enum.SUCCESSFUL_COMPLETION).toBe("00000");
+      expect(yield* S.decodeEffect(annotated)("WARNING")).toBe("01000");
 
-    expect(reannotated.From).toBe(reannotated);
-    expect(reannotated.To).toBe(SqlState.To);
-    expect(S.encodeSync(reannotated)("00000")).toBe("SUCCESSFUL_COMPLETION");
-  });
+      expect(reannotated.From).toBe(reannotated);
+      expect(reannotated.To).toBe(SqlState.To);
+      expect(yield* S.encodeEffect(reannotated)("00000")).toBe("SUCCESSFUL_COMPLETION");
+    })
+  );
 
   it("defines helper properties as readonly and non-configurable", () => {
     const fromDescriptor = Object.getOwnPropertyDescriptor(SqlState, "From");
@@ -114,10 +120,13 @@ describe("MappedLiteralKit", () => {
     expect(toMatch).toBe("ok-code");
   });
 
-  it("decodes and encodes on the reverse directional kit", () => {
-    expect(decodeSqlStateToSync("00000")).toBe("SUCCESSFUL_COMPLETION");
-    expect(encodeSqlStateToSync("SUCCESSFUL_COMPLETION")).toBe("00000");
-  });
+  it.effect(
+    "decodes and encodes on the reverse directional kit",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeSqlStateToEffect("00000")).toBe("SUCCESSFUL_COMPLETION");
+      expect(yield* encodeSqlStateToEffect("SUCCESSFUL_COMPLETION")).toBe("00000");
+    })
+  );
 
   it("rejects duplicate from-side literals", () => {
     expect(() =>

@@ -14,7 +14,6 @@ import { NonNegativeInt } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Layer, Stream } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import {
   AssistantTurnBlockEvent,
   AssistantTurnFinalization,
@@ -23,8 +22,6 @@ import {
 } from "./AssistantTurn.contracts.ts";
 import { AgentTurnKernel } from "./AssistantTurn.kernel.ts";
 import type { AssistantTurnEvent, TurnHistoryItem } from "./AssistantTurn.contracts.ts";
-
-const decodeBlock = S.decodeUnknownSync(AssistantBlock);
 
 const lastUserPrompt = (history: ReadonlyArray<TurnHistoryItem>): O.Option<string> =>
   O.map(
@@ -61,22 +58,22 @@ export const fixtureBlocksFor = (history: ReadonlyArray<TurnHistoryItem>): Reado
     O.filter(lastUserPrompt(history), (prompt) => prompt.length > 0),
     {
       onNone: () => [
-        decodeBlock({
+        AssistantBlock.make({
           type: "paragraph",
           children: [{ type: "text", text: "No input." }],
         }),
       ],
       onSome: (prompt) => [
-        decodeBlock({
+        AssistantBlock.make({
           type: "heading",
           level: "h2",
           children: [{ type: "text", text: "Echo" }],
         }),
-        decodeBlock({
+        AssistantBlock.make({
           type: "paragraph",
           children: [{ type: "text", text: `You said: ${prompt}` }],
         }),
-        decodeBlock({
+        AssistantBlock.make({
           type: "list",
           listType: "bullet",
           items: [
@@ -84,7 +81,7 @@ export const fixtureBlocksFor = (history: ReadonlyArray<TurnHistoryItem>): Reado
             { children: [{ type: "text", text: "Echoing it back" }] },
           ],
         }),
-        decodeBlock({
+        AssistantBlock.make({
           type: "code",
           language: "text",
           code: prompt,

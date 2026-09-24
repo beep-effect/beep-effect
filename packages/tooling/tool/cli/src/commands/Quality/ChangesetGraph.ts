@@ -17,6 +17,7 @@ import * as S from "effect/Schema";
 import { parseDocument } from "yaml";
 import { runCaptured } from "../../internal/process/index.ts";
 import { ChangesetGraphError } from "./Quality.errors.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 /**
@@ -186,7 +187,7 @@ const extractFrontmatter = (content: string): O.Option<string> =>
 const collectGitOutput = Effect.fn("ChangesetGraph.collectGitOutput")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
-): Effect.fn.Return<string, ChangesetGraphError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, ChangesetGraphError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runCaptured({
     command: "git",
     args,
@@ -279,7 +280,7 @@ export const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collec
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   ChangesetGraphError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const rootPackageJson = yield* readPackageJson(path.join(repoRoot, "package.json"));
@@ -306,7 +307,7 @@ const collectWorkspacePackageNames = Effect.fn("ChangesetGraph.collectWorkspaceP
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   ChangesetGraphError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const packageJsonFiles = yield* collectWorkspacePackageJsonFiles(repoRoot);
@@ -333,7 +334,7 @@ const collectChangesetFiles = Effect.fn("ChangesetGraph.collectChangesetFiles")(
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   ChangesetGraphError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -582,7 +583,7 @@ export const runChangesetGraphCheck = Effect.fn("ChangesetGraph.runChangesetGrap
 ): Effect.fn.Return<
   ChangesetGraphSummary,
   ChangesetGraphError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const workspacePackageNames = yield* collectWorkspacePackageNames(repoRoot);
   const allowedMissingPackageNames = yield* readRetiredChangesetPackageNames(repoRoot);

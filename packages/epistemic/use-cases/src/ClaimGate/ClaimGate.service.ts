@@ -12,26 +12,29 @@
  * @since 0.0.0
  */
 
-import { ClaimGateResult } from "@beep/epistemic-domain/values";
-import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { ClaimGateViolation } from "@beep/epistemic-domain/values";
+import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { ShaclValidationRequest } from "@beep/semantic-web/services/shacl-validation";
+import { NonNegativeInt } from "@beep/schema";
+import {
+  ShaclNodeShape,
+  ShaclPropertyShape,
+  ShaclValidationRequest,
+} from "@beep/semantic-web/services/shacl-validation";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
-import * as S from "effect/Schema";
+import * as O from "effect/Option";
 import type * as DomainCandidateClaim from "@beep/epistemic-domain/entities/CandidateClaim";
 import type * as DomainEvidence from "@beep/epistemic-domain/entities/Evidence";
+import type { ClaimGateResult } from "@beep/epistemic-domain/values";
+import type { Dataset } from "@beep/rdf/Rdf";
 import type { ShaclValidationResult, ShaclValidationServiceShape } from "@beep/semantic-web/services/shacl-validation";
 import type { ClaimGateShape } from "./ClaimGate.ports.ts";
 
 const CLAIM_CLASS_IRI = "https://beep.dev/epistemic/Claim";
 const EVIDENCE_QUOTE_IRI = "https://beep.dev/epistemic/hasEvidenceQuote";
 const CLAIM_SUBJECT_PREFIX = "https://beep.dev/epistemic/claim/";
-
-const decodeClaimGateResult = S.decodeUnknownSync(ClaimGateResult);
-const decodeShaclValidationRequest = S.decodeUnknownSync(ShaclValidationRequest);
-const encodeDataset = S.encodeSync(Dataset);
 
 const toDataset = (
   claim: DomainCandidateClaim.CandidateClaim,
@@ -50,36 +53,36 @@ const buildRequest = (
   claim: DomainCandidateClaim.CandidateClaim,
   evidence: ReadonlyArray<DomainEvidence.Evidence>
 ): ShaclValidationRequest =>
-  // Built from statically known-good shapes; decode brands minCount and re-decodes the encoded dataset.
-  decodeShaclValidationRequest({
-    dataset: encodeDataset(toDataset(claim, evidence)),
+  ShaclValidationRequest.make({
+    dataset: toDataset(claim, evidence),
     shapes: [
-      {
-        targetClass: { termType: "NamedNode", value: CLAIM_CLASS_IRI },
+      ShaclNodeShape.make({
+        targetClass: O.some(makeNamedNode(CLAIM_CLASS_IRI)),
         properties: [
-          {
-            path: { termType: "NamedNode", value: EVIDENCE_QUOTE_IRI },
-            minCount: 1,
-            datatype: { termType: "NamedNode", value: XSD_STRING.value },
-          },
+          ShaclPropertyShape.make({
+            path: makeNamedNode(EVIDENCE_QUOTE_IRI),
+            minCount: O.some(NonNegativeInt.make(1)),
+            datatype: O.some(makeNamedNode(XSD_STRING.value)),
+          }),
         ],
-      },
+      }),
     ],
   });
 
-// Project the engine result into the domain verdict; decode brands the violation fields from known-good values.
 const toVerdict = (result: ShaclValidationResult): ClaimGateResult =>
   result.conforms && !result.truncated
-    ? decodeClaimGateResult({ verdict: "admitted" })
-    : decodeClaimGateResult({
+    ? { verdict: "admitted" }
+    : {
         verdict: "rejected",
-        violations: A.map(result.violations, (violation) => ({
-          focusNode: violation.focusNode,
-          path: violation.path.value,
-          message: violation.message,
-          severity: violation.severity,
-        })),
-      });
+        violations: A.map(result.violations, (violation) =>
+          ClaimGateViolation.make({
+            focusNode: violation.focusNode,
+            path: violation.path.value,
+            message: violation.message,
+            severity: violation.severity,
+          })
+        ),
+      };
 
 /**
  * Build the claim gate shape from a resolved bounded SHACL engine. Rejection is a

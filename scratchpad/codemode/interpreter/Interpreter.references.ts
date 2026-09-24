@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { dual } from "effect/Function";
 import { SchemaUtils } from "@beep/schema";
 import { A, P, R } from "@beep/utils";
 import { MutableHashSet } from "effect";
@@ -240,8 +241,10 @@ export const containsOpaqueReference = (value: unknown): boolean => {
  * @category assertions
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Container, candidate value, diagnostic label, and AST node are co-primary invariant-check inputs.
-export const rejectCircularInsertion = (container: object, value: unknown, label: string, node: AstNode): void => {
+export const rejectCircularInsertion: {
+  (value: unknown, label: string, node: AstNode): (container: object) => void;
+  (container: object, value: unknown, label: string, node: AstNode): void;
+} = dual(4, (container: object, value: unknown, label: string, node: AstNode): void => {
   const pending: Array<Iterator<unknown>> = [[value].values()];
   const seen = MutableHashSet.empty<object>();
   while (pending.length > 0) {
@@ -260,7 +263,7 @@ export const rejectCircularInsertion = (container: object, value: unknown, label
     MutableHashSet.add(seen, current);
     pending.push(A.isArray(current) ? current[Symbol.iterator]() : childValues(current));
   }
-};
+});
 
 /**
  * Guest `typeof` that lies like JavaScript for namespaces and function handles.

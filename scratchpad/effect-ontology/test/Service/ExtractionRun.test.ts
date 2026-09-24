@@ -1,3 +1,4 @@
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { SystemError } from "effect/PlatformError";
@@ -47,9 +48,18 @@ const CorruptIndexStorage = Layer.effect(
   })
 ).pipe(Layer.provide(StorageServiceTest));
 
-const MissingIndexLayer = ExtractionRunServiceLive.pipe(Layer.provide(StorageServiceTest));
-const FailingStorageLayer = ExtractionRunServiceLive.pipe(Layer.provide(FailingStorage));
-const CorruptIndexLayer = ExtractionRunServiceLive.pipe(Layer.provide(CorruptIndexStorage));
+const MissingIndexLayer = ExtractionRunServiceLive.pipe(
+  Layer.provide(BunCrypto.layer),
+  Layer.provide(StorageServiceTest)
+);
+const FailingStorageLayer = ExtractionRunServiceLive.pipe(
+  Layer.provide(BunCrypto.layer),
+  Layer.provide(FailingStorage)
+);
+const CorruptIndexLayer = ExtractionRunServiceLive.pipe(
+  Layer.provide(BunCrypto.layer),
+  Layer.provide(CorruptIndexStorage)
+);
 
 describe("ExtractionRunService storage boundaries", () => {
   it.layer(MissingIndexLayer)("with an absent idempotency index", (it) => {

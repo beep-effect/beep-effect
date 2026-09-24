@@ -236,8 +236,8 @@ const persistCandidate = Effect.fn("PracticeKgClaims.persistCandidate")(function
   candidate: CandidateClaim,
   evidence: Evidence
 ) {
-  const candidateRow = CandidateClaimTable.toCandidateClaimInsert(candidate);
-  const evidenceRow = EvidenceTable.toEvidenceInsert(evidence);
+  const candidateRow = yield* Effect.fromResult(CandidateClaimTable.toCandidateClaimInsert(candidate));
+  const evidenceRow = yield* Effect.fromResult(EvidenceTable.toEvidenceInsert(evidence));
   const candidateCreatedBy = yield* encodeUnknownJson(candidateRow.createdByPrincipal);
   const candidateUpdatedBy = yield* encodeUnknownJson(candidateRow.updatedByPrincipal);
   const snapshot = yield* encodeUnknownJson(candidateRow.snapshot);

@@ -1,0 +1,4 @@
+{
+  "model": "claude-fable-5-1",
+  "nested": { "model": "gpt-5.6-luna" }
+}

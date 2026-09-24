@@ -80,7 +80,9 @@ const decisionContent = (input: {
 };
 
 // Chains a run of sealed decisions: seq 0 allowed, seq 1 denied, seq 2 allowed.
-const sealedRun = (runKey: string): ReadonlyArray<ExecutionDecisionRecord> => {
+const sealedRun = (
+  runKey: string
+): readonly [ExecutionDecisionRecord, ExecutionDecisionRecord, ExecutionDecisionRecord] => {
   const first = sealExecutionDecision(decisionContent({ prevHash: O.none(), runKey, seq: 0 }));
   const second = sealExecutionDecision(
     decisionContent({ prevHash: O.some(first.hash), runKey, seq: 1, verdict: "denied" })

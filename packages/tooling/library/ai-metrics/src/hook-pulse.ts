@@ -966,8 +966,8 @@ export class HookPulseV1 extends S.Class<HookPulseV1>($I`HookPulseV1`)(
   static readonly encodeResult = S.encodeResult(HookPulseV1);
   static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(HookPulseV1));
   static readonly encodeJsonEffect = S.encodeUnknownEffect(S.fromJsonString(HookPulseV1));
-  static readonly decodeJsonSync = S.decodeUnknownSync(S.fromJsonString(HookPulseV1));
-  static readonly encodeJsonSync = S.encodeUnknownSync(S.fromJsonString(HookPulseV1));
+  static readonly decodeJsonResult = S.decodeUnknownResult(S.fromJsonString(HookPulseV1));
+  static readonly encodeJsonResult = S.encodeUnknownResult(S.fromJsonString(HookPulseV1));
 }
 
 /**

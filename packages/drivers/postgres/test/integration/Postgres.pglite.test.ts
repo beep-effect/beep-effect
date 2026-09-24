@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import {
   MigrationBundleLegacyNameSet,
@@ -17,12 +16,19 @@ import { describe, expect, layer } from "@effect/vitest";
 import { formatToMillis } from "drizzle-orm/migrator.utils";
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { Effect, Layer, pipe } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import * as Statement from "effect/unstable/sql/Statement";
+
+const sha256Hex = Effect.fnUntraced(function* (text: string) {
+  const crypto = yield* Crypto.Crypto;
+  return Encoding.encodeHex(yield* crypto.digest("SHA-256", new TextEncoder().encode(text)));
+});
 
 const { shouldRunPgliteIntegration, makePgliteLayer } = makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("./fixtures/migrations", import.meta.url));
@@ -188,6 +194,7 @@ if (!shouldRunPgliteIntegration) {
           const fixtureMigrationSql = yield* fs.readFileString(
             path.join(migrationsFolder, fixtureMigrationName, "migration.sql")
           );
+          const fixtureMigrationHash = yield* sha256Hex(fixtureMigrationSql);
           const migrationsSchema = pipe(
             info.schema,
             O.getOrElse(() => "drizzle")
@@ -214,7 +221,7 @@ if (!shouldRunPgliteIntegration) {
             )
           ).toEqual([
             {
-              hash: createHash("sha256").update(fixtureMigrationSql).digest("hex"),
+              hash: fixtureMigrationHash,
               name: fixtureMigrationName,
             },
           ]);
@@ -350,16 +357,18 @@ if (!shouldRunPgliteIntegration) {
           `;
           yield* sql`CREATE TABLE legacy_v0_rebaseline_probe (id integer PRIMARY KEY)`;
           yield* sql`ALTER TABLE legacy_v0_rebaseline_probe ADD COLUMN prior_value text`;
+          const firstLegacyHash = yield* sha256Hex(firstLegacy.sql);
+          const secondLegacyHash = yield* sha256Hex(secondLegacy.sql);
           yield* sql`
             INSERT INTO ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)}
               (hash, created_at)
             VALUES
               (
-                ${createHash("sha256").update(firstLegacy.sql).digest("hex")},
+                ${firstLegacyHash},
                 ${formatToMillis(Str.slice(0, 14)(firstLegacy.name))}
               ),
               (
-                ${createHash("sha256").update(secondLegacy.sql).digest("hex")},
+                ${secondLegacyHash},
                 ${formatToMillis(Str.slice(0, 14)(secondLegacy.name))}
               )
           `;

@@ -35,6 +35,13 @@ import {
   WsMcpServer,
 } from "../../../claudecode/Mcp/Schema.ts";
 
+const provideBuiltLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scopedWith((scope) =>
+      Layer.buildWithScope(scope)(layer).pipe(Effect.flatMap((context) => Effect.provide(self, context)))
+    );
+
 const decodeServer = S.decodeUnknownEffect(McpServerConfig);
 const decodeHttp = S.decodeUnknownEffect(HttpMcpServer);
 const decodeFile = S.decodeUnknownEffect(McpJsonFile);
@@ -292,7 +299,7 @@ describe("Mcp.loadJson", () => {
         command: "mcp-fs",
       });
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makeFileSystemLayer(
           new Map([
             [
@@ -315,7 +322,7 @@ describe("Mcp.loadJson", () => {
       expect(file.mcpServers.workspace).toBeUndefined();
       expect(file.mcpServers.safe).toBeInstanceOf(StdioMcpServer);
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makeFileSystemLayer(
           new Map([
             [
@@ -341,14 +348,14 @@ describe("Mcp.loadJson", () => {
         _tag: "McpConfigError",
         path: "/missing.json",
       });
-    }).pipe(Effect.provide(makeFileSystemLayer(new Map())))
+    }).pipe(provideBuiltLayer(makeFileSystemLayer(new Map())))
   );
 
   it.effect("wraps JSON parse failures in McpConfigError", () =>
     Effect.gen(function* () {
       const raised = yield* Effect.flip(loadJson("/broken.json"));
       expect(raised).toBeInstanceOf(McpConfigError);
-    }).pipe(Effect.provide(makeFileSystemLayer(new Map([["/broken.json", "not valid json"]]))))
+    }).pipe(provideBuiltLayer(makeFileSystemLayer(new Map([["/broken.json", "not valid json"]]))))
   );
 
   it.effect("wraps schema decode failures in McpConfigError", () =>
@@ -356,7 +363,7 @@ describe("Mcp.loadJson", () => {
       const raised = yield* Effect.flip(loadJson("/invalid.json"));
       expect(raised).toBeInstanceOf(McpConfigError);
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makeFileSystemLayer(
           new Map([
             [
@@ -389,7 +396,7 @@ describe("Mcp.loadManagedMcp", () => {
       });
       expect(file.mcpServers.managed).toBeInstanceOf(HttpMcpServer);
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makePlatformLayer(
           new Map([
             [
@@ -451,7 +458,7 @@ describe("Mcp.loadEffective", () => {
         url: "https://duplicate.example.com/mcp",
       });
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makePlatformLayer(
           new Map([
             [
@@ -515,7 +522,7 @@ describe("Mcp.loadEffective", () => {
       expect(effective.mcpServers.user).toBeUndefined();
       expect(effective.mcpServers.plugin).toBeUndefined();
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makePlatformLayer(
           new Map([
             [
@@ -567,7 +574,7 @@ describe("Mcp.toClaudeCodeJson", () => {
         },
       });
 
-      expect(toClaudeCodeJson(file)).toEqual({
+      expect(yield* toClaudeCodeJson(file)).toEqual({
         mcpServers: {
           api: {
             type: "http",
@@ -583,4 +590,3 @@ describe("Mcp.toClaudeCodeJson", () => {
     })
   );
 });
-/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

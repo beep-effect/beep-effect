@@ -21,8 +21,11 @@ import {
 } from "@beep/openclaw/OpenclawRender";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { pipe, Result } from "effect";
+import { Effect, pipe, Result } from "effect";
+import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -34,6 +37,9 @@ import {
   goldenIntentCanonicalJson,
   goldenIntentContentHash,
 } from "./fixtures/golden-intent.expected.ts";
+
+const renderConfig = (intent: OpenclawDeploymentIntent) =>
+  Effect.runSync(renderOpenclawConfig(intent).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make)));
 
 const encodeOpenclawSchemaPlaceholderFindingResult = S.encodeResult(OpenclawSchemaPlaceholderFinding);
 const isRenderedOpenclawConfig = S.is(RenderedOpenclawConfig);
@@ -91,7 +97,7 @@ const ollamaProvider = (id: string) =>
 
 describe("@beep/openclaw render adapter", () => {
   it("renders the golden intent to byte-identical canonical JSON with the pinned content hash", () => {
-    const rendered = renderOpenclawConfig(goldenDeploymentIntent);
+    const rendered = renderConfig(goldenDeploymentIntent);
 
     expect(rendered.canonicalJson).toBe(goldenIntentCanonicalJson);
     expect(rendered.contentHash).toBe(goldenIntentContentHash);
@@ -100,15 +106,15 @@ describe("@beep/openclaw render adapter", () => {
   });
 
   it("renders deterministically", () => {
-    const first = renderOpenclawConfig(goldenDeploymentIntent);
-    const second = renderOpenclawConfig(goldenDeploymentIntent);
+    const first = renderConfig(goldenDeploymentIntent);
+    const second = renderConfig(goldenDeploymentIntent);
 
     expect(second.canonicalJson).toBe(first.canonicalJson);
     expect(second.contentHash).toBe(first.contentHash);
   });
 
   it("enforces the 2026.7.1-2 adapter invariants in the rendered document", () => {
-    const rendered = renderOpenclawConfig(goldenDeploymentIntent);
+    const rendered = renderConfig(goldenDeploymentIntent);
     const json = rendered.canonicalJson;
     const parsed = parseDocument(json);
 
@@ -148,7 +154,7 @@ describe("@beep/openclaw render adapter", () => {
   });
 
   it("omits channels and the telegram secrets provider for the minimal intent", () => {
-    const rendered = renderOpenclawConfig(minimalIntent);
+    const rendered = renderConfig(minimalIntent);
 
     expect(pipe(rendered.canonicalJson, Str.includes("op_telegram"))).toBe(false);
     expect(parseDocument(rendered.canonicalJson)).toEqual({
@@ -191,7 +197,7 @@ describe("@beep/openclaw render adapter", () => {
   });
 
   it("renders secret-referenced provider api keys as exec secret references", () => {
-    const rendered = renderOpenclawConfig(
+    const rendered = renderConfig(
       OpenclawDeploymentIntent.make({
         agent: minimalIntent.agent,
         controlUi: minimalIntent.controlUi,
@@ -310,7 +316,7 @@ describe("@beep/openclaw render adapter", () => {
 
     expect(findings).toHaveLength(1);
     expect(findings[0]).toBeInstanceOf(OpenclawSchemaPlaceholderFinding);
-    expect(Result.getOrThrow(encodeOpenclawSchemaPlaceholderFindingResult(findings[0]))).toEqual({
+    expect(Result.getOrThrow(encodeOpenclawSchemaPlaceholderFindingResult(O.getOrThrow(A.head(findings))))).toEqual({
       reason: "missing",
       surface: "channels.telegram",
     });
@@ -344,8 +350,8 @@ describe("@beep/openclaw render adapter", () => {
     "renders deterministically for arbitrary intents",
     [IntentArbitrary],
     ([intent]) => {
-      const first = renderOpenclawConfig(intent);
-      const second = renderOpenclawConfig(intent);
+      const first = renderConfig(intent);
+      const second = renderConfig(intent);
 
       expect(second.canonicalJson).toBe(first.canonicalJson);
       expect(second.contentHash).toBe(first.contentHash);

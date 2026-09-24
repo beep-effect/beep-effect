@@ -13,15 +13,17 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
 import { Effect, Order, Struct } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { isJsonRecord } from "../Inventory.ts";
 import { PacketEvent, PacketEventType } from "./PacketCore.schemas.ts";
+import type * as PlatformError from "effect/PlatformError";
 import type { PacketEventId } from "./PacketCore.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketDigest");
@@ -157,20 +159,23 @@ export const canonicalJsonTextPretty = (value: unknown): string => `${canonicalA
 /**
  * Compute the lowercase sha-256 hex digest of a text.
  *
- * **Example** (Digest an empty string)
+ * **Example** (Build the digest effect for empty text)
  *
  * ```ts
  * import { sha256Hex } from "@beep/repo-cli/test/Goals"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(sha256Hex("").length) // 64
+ * console.log(Effect.isEffect(sha256Hex(""))) // true
  * ```
  *
  * @param text - Text to digest.
- * @returns Lowercase 64-character hex digest.
+ * @returns Effect yielding a lowercase 64-character hex digest.
  * @category encoding
  * @since 0.0.0
  */
-export const sha256Hex = (text: string): string => createHash("sha256").update(text).digest("hex");
+export const sha256Hex = Effect.fn("PacketDigest.sha256Hex")(function* (text: string) {
+  return yield* sha256HexBytes(new TextEncoder().encode(text));
+});
 
 /**
  * Compute the lowercase sha-256 hex digest of exact bytes.
@@ -181,20 +186,24 @@ export const sha256Hex = (text: string): string => createHash("sha256").update(t
  * collapse to U+FFFD), so hash-pinning file contents must digest the raw bytes
  * — this variant matches what external `sha256sum` tooling reports.
  *
- * **Example** (Digest empty bytes)
+ * **Example** (Build the digest effect for empty bytes)
  *
  * ```ts
  * import { sha256HexBytes } from "@beep/repo-cli/test/Goals"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(sha256HexBytes(new Uint8Array()).length) // 64
+ * console.log(Effect.isEffect(sha256HexBytes(new Uint8Array()))) // true
  * ```
  *
  * @param bytes - Exact bytes to digest.
- * @returns Lowercase 64-character hex digest.
+ * @returns Effect yielding a lowercase 64-character hex digest.
  * @category encoding
  * @since 0.0.0
  */
-export const sha256HexBytes = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
+export const sha256HexBytes = Effect.fn("PacketDigest.sha256HexBytes")(function* (bytes: Uint8Array) {
+  const crypto = yield* Crypto.Crypto;
+  return Encoding.encodeHex(yield* crypto.digest("SHA-256", bytes));
+});
 
 const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);
 
@@ -206,7 +215,7 @@ const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);
  *
  * ```ts
  * import { PacketEvent, packetEventDigest } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const event = PacketEvent.make({
  *   schemaVersion: "packet-event/v1",
@@ -224,10 +233,12 @@ const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);
  * @category encoding
  * @since 0.0.0
  */
-export const packetEventDigest: (event: PacketEvent) => Effect.Effect<PacketEventId, S.SchemaError> = Effect.fnUntraced(
+export const packetEventDigest: (
+  event: PacketEvent
+) => Effect.Effect<PacketEventId, S.SchemaError | PlatformError.PlatformError, Crypto.Crypto> = Effect.fnUntraced(
   function* (event: PacketEvent) {
     const encoded = yield* encodePacketEvent(event);
-    return sha256Hex(canonicalJsonText(encoded));
+    return yield* sha256Hex(canonicalJsonText(encoded));
   }
 );
 
@@ -238,7 +249,7 @@ export const packetEventDigest: (event: PacketEvent) => Effect.Effect<PacketEven
  *
  * ```ts
  * import { PacketEvent, renderPacketEventFile } from "@beep/repo-cli/test/Goals"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const event = PacketEvent.make({
  *   schemaVersion: "packet-event/v1",

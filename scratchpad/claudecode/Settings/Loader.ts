@@ -17,6 +17,7 @@ import { UnknownFromJsonString } from "@beep/schema/Unknown";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, FileSystem, Order, Path } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -384,20 +385,40 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
  * @category configuration
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- The required cwd plus optional load options make a one-argument direct call indistinguishable from a curried overload.
-export const load = (
-  cwd: string,
-  options?: LoadOptions.Encoded
-): Effect.Effect<
-  SettingsFile,
-  Config.ConfigError | SettingsReadError | SettingsParseError | SettingsDecodeError,
-  FileSystem.FileSystem | Path.Path
-> =>
-  loadWithOptions(
-    cwd,
-    LoadOptions.make({
-      settingsPath: O.fromNullishOr(options?.settingsPath),
-      managedSettingsRoot: O.fromNullishOr(options?.managedSettingsRoot),
-      managedSettingsRoots: O.fromNullishOr(options?.managedSettingsRoots),
-    })
-  );
+export const load: {
+  (
+    cwd: string,
+    options?: LoadOptions.Encoded
+  ): Effect.Effect<
+    SettingsFile,
+    Config.ConfigError | SettingsReadError | SettingsParseError | SettingsDecodeError,
+    FileSystem.FileSystem | Path.Path
+  >;
+  (
+    options?: LoadOptions.Encoded
+  ): (
+    cwd: string
+  ) => Effect.Effect<
+    SettingsFile,
+    Config.ConfigError | SettingsReadError | SettingsParseError | SettingsDecodeError,
+    FileSystem.FileSystem | Path.Path
+  >;
+} = dual(
+  (args) => P.isString(args[0]),
+  (
+    cwd: string,
+    options?: LoadOptions.Encoded
+  ): Effect.Effect<
+    SettingsFile,
+    Config.ConfigError | SettingsReadError | SettingsParseError | SettingsDecodeError,
+    FileSystem.FileSystem | Path.Path
+  > =>
+    loadWithOptions(
+      cwd,
+      LoadOptions.make({
+        settingsPath: O.fromNullishOr(options?.settingsPath),
+        managedSettingsRoot: O.fromNullishOr(options?.managedSettingsRoot),
+        managedSettingsRoots: O.fromNullishOr(options?.managedSettingsRoots),
+      })
+    )
+);

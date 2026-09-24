@@ -18,12 +18,15 @@ import {
   scanJSDocMigrateBlocks,
   syntheticJSDocMigrateTitleRecord,
 } from "@beep/repo-cli/test/Quality";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, MutableHashMap } from "effect";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { Effect, Exit, MutableHashMap, Result } from "effect";
 import * as S from "effect/Schema";
 
 const decodeUnknownJSDocMigrateProxyUrl = S.decodeUnknownEffect(JSDocMigrateProxyUrl);
 const isJSDocMigrateInlineText = S.is(JSDocMigrateInlineText);
+const encodeUnknownJsonString = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeUnknownJson = (value: unknown): string => Result.getOrThrow(encodeUnknownJsonString(value));
 
 const lines = (...values: ReadonlyArray<string>): string => values.join("\n");
 
@@ -475,32 +478,36 @@ describe("JSDocMigrateExtract anchors", () => {
     expect(blocks.map((block) => block.symbol)).toEqual(["<fileoverview>", "a"]);
   });
 
-  it("emits records only for blocks carrying a legacy carrier", () => {
-    const source = lines(
-      "/**",
-      " * Already migrated.",
-      " *",
-      " * **Example** (Use it)",
-      " *",
-      " * ```ts",
-      " * use()",
-      " * ```",
-      " */",
-      "export const migrated = 1",
-      "/**",
-      " * Legacy block.",
-      " *",
-      " * @example",
-      " * ```ts",
-      " * legacy()",
-      " * ```",
-      " */",
-      "export const legacy = 1",
-      ""
+  it.layer(BunCrypto.layer)((it) => {
+    it.effect("emits records only for blocks carrying a legacy carrier", () =>
+      Effect.gen(function* () {
+        const source = lines(
+          "/**",
+          " * Already migrated.",
+          " *",
+          " * **Example** (Use it)",
+          " *",
+          " * ```ts",
+          " * use()",
+          " * ```",
+          " */",
+          "export const migrated = 1",
+          "/**",
+          " * Legacy block.",
+          " *",
+          " * @example",
+          " * ```ts",
+          " * legacy()",
+          " * ```",
+          " */",
+          "export const legacy = 1",
+          ""
+        );
+        const records = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/mixed.ts", source);
+        expect(records.map((record) => record.symbol)).toEqual(["legacy"]);
+        expect(records[0]?.sourceHash).toBe(yield* jsdocMigrateSourceHash(records[0]?.blockText ?? ""));
+      })
     );
-    const records = jsdocMigrateExtractRecordsForFile("packages/x/src/mixed.ts", source);
-    expect(records.map((record) => record.symbol)).toEqual(["legacy"]);
-    expect(records[0]?.sourceHash).toBe(jsdocMigrateSourceHash(records[0]?.blockText ?? ""));
   });
 
   it("measures block statistics for the title pass", () => {
@@ -549,79 +556,94 @@ const legacyPair = (first: string, second: string): string =>
     ""
   );
 
-describe("JSDocMigrateApply binding verification", () => {
-  it("passes when frozen records biject with the extract and hashes match", () => {
-    const extract = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
-    const titles = extract.map(syntheticJSDocMigrateTitleRecord);
-    const report = computeJSDocMigrateBinding({ extract, titles, overrides: [] });
-    expect(report.orphanRecordAnchors).toEqual([]);
-    expect(report.unmatchedExtractAnchors).toEqual([]);
-    expect(report.sourceHashMismatchAnchors).toEqual([]);
-    expect(report.kindMismatchAnchors).toEqual([]);
-  });
+layer(BunCrypto.layer)("JSDocMigrateApply binding verification", (it) => {
+  it.effect("passes when frozen records biject with the extract and hashes match", () =>
+    Effect.gen(function* () {
+      const extract = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
+      const titles = extract.map(syntheticJSDocMigrateTitleRecord);
+      const report = computeJSDocMigrateBinding({ extract, titles, overrides: [] });
+      expect(report.orphanRecordAnchors).toEqual([]);
+      expect(report.unmatchedExtractAnchors).toEqual([]);
+      expect(report.sourceHashMismatchAnchors).toEqual([]);
+      expect(report.kindMismatchAnchors).toEqual([]);
+    })
+  );
 
-  it("detects reordered same-name declarations via sourceHash while counts still match", () => {
-    const frozen = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
-    const reordered = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc B.", "Doc A."));
-    const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
-    const report = computeJSDocMigrateBinding({ extract: reordered, titles, overrides: [] });
-    expect(report.extractCount).toBe(report.recordCount);
-    expect(report.orphanRecordAnchors).toEqual([]);
-    expect(report.unmatchedExtractAnchors).toEqual([]);
-    expect(report.sourceHashMismatchAnchors.length).toBeGreaterThan(0);
-  });
+  it.effect("detects reordered same-name declarations via sourceHash while counts still match", () =>
+    Effect.gen(function* () {
+      const frozen = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
+      const reordered = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc B.", "Doc A."));
+      const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
+      const report = computeJSDocMigrateBinding({ extract: reordered, titles, overrides: [] });
+      expect(report.extractCount).toBe(report.recordCount);
+      expect(report.orphanRecordAnchors).toEqual([]);
+      expect(report.unmatchedExtractAnchors).toEqual([]);
+      expect(report.sourceHashMismatchAnchors.length).toBeGreaterThan(0);
+    })
+  );
 
-  it("detects a declaration added ahead as a bijection failure", () => {
-    const frozen = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
-    const grown = jsdocMigrateExtractRecordsForFile(
-      "packages/x/src/g.ts",
-      lines(
-        "/**",
-        " * Doc Z.",
-        " *",
-        " * @example",
-        " * ```ts",
-        ' * use("Doc Z.")',
-        " * ```",
-        " */",
-        "export function g(a: boolean): boolean;",
-        legacyPair("Doc A.", "Doc B.")
-      )
-    );
-    const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
-    const report = computeJSDocMigrateBinding({ extract: grown, titles, overrides: [] });
-    expect(report.unmatchedExtractAnchors.length).toBeGreaterThan(0);
-  });
+  it.effect("detects a declaration added ahead as a bijection failure", () =>
+    Effect.gen(function* () {
+      const frozen = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
+      const grown = yield* jsdocMigrateExtractRecordsForFile(
+        "packages/x/src/g.ts",
+        lines(
+          "/**",
+          " * Doc Z.",
+          " *",
+          " * @example",
+          " * ```ts",
+          ' * use("Doc Z.")',
+          " * ```",
+          " */",
+          "export function g(a: boolean): boolean;",
+          legacyPair("Doc A.", "Doc B.")
+        )
+      );
+      const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
+      const report = computeJSDocMigrateBinding({ extract: grown, titles, overrides: [] });
+      expect(report.unmatchedExtractAnchors.length).toBeGreaterThan(0);
+    })
+  );
 
-  it("detects a removed declaration as an orphan record failure", () => {
-    const frozen = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
-    const shrunk = frozen.slice(0, 1);
-    const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
-    const report = computeJSDocMigrateBinding({ extract: shrunk, titles, overrides: [] });
-    expect(report.orphanRecordAnchors.length).toBeGreaterThan(0);
-  });
+  it.effect("detects a removed declaration as an orphan record failure", () =>
+    Effect.gen(function* () {
+      const frozen = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
+      const shrunk = frozen.slice(0, 1);
+      const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
+      const report = computeJSDocMigrateBinding({ extract: shrunk, titles, overrides: [] });
+      expect(report.orphanRecordAnchors.length).toBeGreaterThan(0);
+    })
+  );
 
-  it("detects an in-place edit as a sourceHash mismatch that demands a re-title", () => {
-    const frozen = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
-    const edited = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A, edited.", "Doc B."));
-    const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
-    const report = computeJSDocMigrateBinding({ extract: edited, titles, overrides: [] });
-    expect(report.sourceHashMismatchAnchors).toEqual(["packages/x/src/g.ts#g#0"]);
-  });
+  it.effect("detects an in-place edit as a sourceHash mismatch that demands a re-title", () =>
+    Effect.gen(function* () {
+      const frozen = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
+      const edited = yield* jsdocMigrateExtractRecordsForFile(
+        "packages/x/src/g.ts",
+        legacyPair("Doc A, edited.", "Doc B.")
+      );
+      const titles = frozen.map(syntheticJSDocMigrateTitleRecord);
+      const report = computeJSDocMigrateBinding({ extract: edited, titles, overrides: [] });
+      expect(report.sourceHashMismatchAnchors).toEqual(["packages/x/src/g.ts#g#0"]);
+    })
+  );
 
-  it("synthesizes one unique placeholder title per example tag", () => {
-    const extract = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
-    const first = extract[0];
-    expect(first).toBeDefined();
-    if (first === undefined) {
-      return;
-    }
-    expect(syntheticJSDocMigrateTitleRecord(first).titles).toEqual(["Placeholder title"]);
-  });
+  it.effect("synthesizes one unique placeholder title per example tag", () =>
+    Effect.gen(function* () {
+      const extract = yield* jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
+      const first = extract[0];
+      expect(first).toBeDefined();
+      if (first === undefined) {
+        return;
+      }
+      expect(syntheticJSDocMigrateTitleRecord(first).titles).toEqual(["Placeholder title"]);
+    })
+  );
 });
 
-describe("JSDocMigrateTitles response validation", () => {
-  const pending = jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
+layer(BunCrypto.layer)("JSDocMigrateTitles response validation", (it) => {
+  const pendingExtract = () => jsdocMigrateExtractRecordsForFile("packages/x/src/g.ts", legacyPair("Doc A.", "Doc B."));
 
   it("rejects every ECMAScript line separator while accepting a safe inline line", () => {
     expect(isJSDocMigrateInlineText("safe\u2028*/ const injected = true")).toBe(false);
@@ -629,78 +651,104 @@ describe("JSDocMigrateTitles response validation", () => {
     expect(isJSDocMigrateInlineText("A plain safe line")).toBe(true);
   });
 
-  it("renders a prompt naming every pending anchor", () => {
-    const prompt = jsdocMigrateTitlesPrompt(pending);
-    for (const record of pending) {
-      expect(prompt).toContain(record.anchor);
-    }
-  });
+  it.effect("renders a prompt naming every pending anchor", () =>
+    Effect.gen(function* () {
+      const pending = yield* pendingExtract();
+      const prompt = jsdocMigrateTitlesPrompt(pending);
+      for (const record of pending) {
+        expect(prompt).toContain(record.anchor);
+      }
+    })
+  );
 
-  it("accepts a valid response and stamps verification fields", () => {
-    const content = JSON.stringify(pending.map((record) => ({ anchor: record.anchor, titles: ["Use the helper"] })));
-    const records = Effect.runSync(jsdocMigrateTitleRecordsFromResponse(content, pending));
-    expect(records.length).toBe(pending.length);
-    expect(records[0]?.sourceHash).toBe(pending[0]?.sourceHash);
-    expect(records[0]?.kind).toBe(pending[0]?.kind);
-  });
+  it.effect("accepts a valid response and stamps verification fields", () =>
+    Effect.gen(function* () {
+      const pending = yield* pendingExtract();
+      const content = encodeUnknownJson(
+        pending.map((record) => ({ anchor: record.anchor, titles: ["Use the helper"] }))
+      );
+      const records = yield* jsdocMigrateTitleRecordsFromResponse(content, pending);
+      expect(records.length).toBe(pending.length);
+      expect(records[0]?.sourceHash).toBe(pending[0]?.sourceHash);
+      expect(records[0]?.kind).toBe(pending[0]?.kind);
+    })
+  );
 
-  it("rejects a response with a wrong title count", () => {
-    const content = JSON.stringify(pending.map((record) => ({ anchor: record.anchor, titles: ["One", "Two"] })));
-    const exit = Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(content, pending));
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("rejects a response with a wrong title count", () =>
+    Effect.gen(function* () {
+      const pending = yield* pendingExtract();
+      const content = encodeUnknownJson(pending.map((record) => ({ anchor: record.anchor, titles: ["One", "Two"] })));
+      const exit = yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(content, pending));
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
-  it("rejects a response that misses an anchor", () => {
-    const content = JSON.stringify([{ anchor: pending[0]?.anchor, titles: ["Only one"] }]);
-    const exit = Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(content, pending));
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("rejects a response that misses an anchor", () =>
+    Effect.gen(function* () {
+      const pending = yield* pendingExtract();
+      const content = encodeUnknownJson([{ anchor: pending[0]?.anchor, titles: ["Only one"] }]);
+      const exit = yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(content, pending));
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
-  it("rejects non-JSON content", () => {
-    const exit = Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse("not json", pending));
-    expect(Exit.isFailure(exit)).toBe(true);
-  });
+  it.effect("rejects non-JSON content", () =>
+    Effect.gen(function* () {
+      const pending = yield* pendingExtract();
+      const exit = yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse("not json", pending));
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 
-  it("rejects empty and duplicate titles", () => {
-    const twoExample = jsdocMigrateExtractRecordsForFile(
-      "packages/x/src/two.ts",
-      lines(
-        "/**",
-        " * Two examples.",
-        " *",
-        " * @example",
-        " * ```ts",
-        " * one()",
-        " * ```",
-        " *",
-        " * @example",
-        " * ```ts",
-        " * two()",
-        " * ```",
-        " */",
-        "export const two = 1",
-        ""
-      )
-    );
-    const duplicate = JSON.stringify(twoExample.map((record) => ({ anchor: record.anchor, titles: ["Same", "Same"] })));
-    expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(duplicate, twoExample)))).toBe(true);
-    const empty = JSON.stringify(twoExample.map((record) => ({ anchor: record.anchor, titles: ["Fine", "  "] })));
-    expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(empty, twoExample)))).toBe(true);
-  });
+  it.effect("rejects empty and duplicate titles", () =>
+    Effect.gen(function* () {
+      const twoExample = yield* jsdocMigrateExtractRecordsForFile(
+        "packages/x/src/two.ts",
+        lines(
+          "/**",
+          " * Two examples.",
+          " *",
+          " * @example",
+          " * ```ts",
+          " * one()",
+          " * ```",
+          " *",
+          " * @example",
+          " * ```ts",
+          " * two()",
+          " * ```",
+          " */",
+          "export const two = 1",
+          ""
+        )
+      );
+      const duplicate = encodeUnknownJson(
+        twoExample.map((record) => ({ anchor: record.anchor, titles: ["Same", "Same"] }))
+      );
+      expect(Exit.isFailure(yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(duplicate, twoExample)))).toBe(
+        true
+      );
+      const empty = encodeUnknownJson(twoExample.map((record) => ({ anchor: record.anchor, titles: ["Fine", "  "] })));
+      expect(Exit.isFailure(yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(empty, twoExample)))).toBe(true);
+    })
+  );
 
-  it("rejects multiline and comment-closing model text", () => {
-    const multiline = JSON.stringify(
-      pending.map((record) => ({ anchor: record.anchor, titles: ["Use the helper\nconst injected = true"] }))
-    );
-    const commentClosing = JSON.stringify(
-      pending.map((record) => ({ anchor: record.anchor, titles: ["Close */ const injected = true"] }))
-    );
+  it.effect("rejects multiline and comment-closing model text", () =>
+    Effect.gen(function* () {
+      const pending = yield* pendingExtract();
+      const multiline = encodeUnknownJson(
+        pending.map((record) => ({ anchor: record.anchor, titles: ["Use the helper\nconst injected = true"] }))
+      );
+      const commentClosing = encodeUnknownJson(
+        pending.map((record) => ({ anchor: record.anchor, titles: ["Close */ const injected = true"] }))
+      );
 
-    expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(multiline, pending)))).toBe(true);
-    expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(commentClosing, pending)))).toBe(
-      true
-    );
-  });
+      expect(Exit.isFailure(yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(multiline, pending)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(commentClosing, pending)))).toBe(
+        true
+      );
+    })
+  );
 
   it("accepts only literal loopback HTTP proxy URLs", () => {
     expect(Exit.isSuccess(Effect.runSyncExit(decodeUnknownJSDocMigrateProxyUrl("http://127.0.0.1:8317")))).toBe(true);
@@ -709,33 +757,37 @@ describe("JSDocMigrateTitles response validation", () => {
     expect(Exit.isFailure(Effect.runSyncExit(decodeUnknownJSDocMigrateProxyUrl("http://localhost:8317")))).toBe(true);
   });
 
-  it("rejects a see-purpose count that disagrees with the block", () => {
-    const withSee = jsdocMigrateExtractRecordsForFile(
-      "packages/x/src/see.ts",
-      lines(
-        "/**",
-        " * Uses a helper.",
-        " *",
-        " * @see {@link other}",
-        " * @example",
-        " * ```ts",
-        " * use()",
-        " * ```",
-        " */",
-        "export const use = 1",
-        ""
-      )
-    );
-    const missingPurpose = JSON.stringify(withSee.map((record) => ({ anchor: record.anchor, titles: ["Use it"] })));
-    expect(Exit.isFailure(Effect.runSyncExit(jsdocMigrateTitleRecordsFromResponse(missingPurpose, withSee)))).toBe(
-      true
-    );
-    const withPurpose = JSON.stringify(
-      withSee.map((record) => ({ anchor: record.anchor, titles: ["Use it"], seePurposes: ["for the helper."] }))
-    );
-    const records = Effect.runSync(jsdocMigrateTitleRecordsFromResponse(withPurpose, withSee));
-    expect(records.length).toBe(withSee.length);
-  });
+  it.effect("rejects a see-purpose count that disagrees with the block", () =>
+    Effect.gen(function* () {
+      const withSee = yield* jsdocMigrateExtractRecordsForFile(
+        "packages/x/src/see.ts",
+        lines(
+          "/**",
+          " * Uses a helper.",
+          " *",
+          " * @see {@link other}",
+          " * @example",
+          " * ```ts",
+          " * use()",
+          " * ```",
+          " */",
+          "export const use = 1",
+          ""
+        )
+      );
+      const missingPurpose = encodeUnknownJson(
+        withSee.map((record) => ({ anchor: record.anchor, titles: ["Use it"] }))
+      );
+      expect(Exit.isFailure(yield* Effect.exit(jsdocMigrateTitleRecordsFromResponse(missingPurpose, withSee)))).toBe(
+        true
+      );
+      const withPurpose = encodeUnknownJson(
+        withSee.map((record) => ({ anchor: record.anchor, titles: ["Use it"], seePurposes: ["for the helper."] }))
+      );
+      const records = yield* jsdocMigrateTitleRecordsFromResponse(withPurpose, withSee);
+      expect(records.length).toBe(withSee.length);
+    })
+  );
 });
 
 describe("JSDocMigrateApply orphan tolerance", () => {

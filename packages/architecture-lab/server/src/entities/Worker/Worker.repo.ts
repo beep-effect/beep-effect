@@ -50,12 +50,14 @@ const getStoredWorker = Effect.fn("ArchitectureLab.WorkerRepository.getStored")(
  *
  * const program = Effect.gen(function* () {
  *   const repository = yield* makeInMemoryWorkerRepository()
- *   const worker = DomainWorker.create(
- *     DomainWorker.CreateWorkerInput.make({
- *       id: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1),
- *       organizationId: S.decodeUnknownSync(DomainWorker.WorkerOrganizationId)(10),
- *       displayName: "Avery Reviewer"
- *     })
+ *   const worker = yield* Effect.fromResult(
+ *     DomainWorker.create(
+ *       DomainWorker.CreateWorkerInput.make({
+ *         id: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1),
+ *         organizationId: S.decodeUnknownSync(DomainWorker.WorkerOrganizationId)(10),
+ *         displayName: "Avery Reviewer"
+ *       })
+ *     )
  *   )
  *   yield* repository.create(worker)
  *   return yield* repository.list

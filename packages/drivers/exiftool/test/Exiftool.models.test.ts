@@ -33,29 +33,29 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownSafeTagNameOption = S.decodeUnknownOption(SafeTagName);
-const decodeUnknownExiftoolErrorFromUnknownOptionsSync = S.decodeUnknownSync(ExiftoolErrorFromUnknownOptions);
-const encodeBeepQaProvenanceSync = S.encodeSync(BeepQaProvenance);
-const encodeExifMetadataSync = S.encodeSync(ExifMetadata);
-const encodeExiftoolErrorFromUnknownOptionsSync = S.encodeSync(ExiftoolErrorFromUnknownOptions);
+const decodeUnknownExiftoolErrorFromUnknownOptions = S.decodeUnknownEffect(ExiftoolErrorFromUnknownOptions);
+const encodeBeepQaProvenance = S.encodeEffect(BeepQaProvenance);
+const encodeExifMetadata = S.encodeEffect(ExifMetadata);
+const encodeExiftoolErrorFromUnknownOptions = S.encodeEffect(ExiftoolErrorFromUnknownOptions);
 
-const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schema): void => {
-  const encode = S.encodeSync(schema);
-  const decode = S.decodeUnknownSync(schema);
+const assertRoundTrip = Effect.fn("assertRoundTrip")(function* <Schema extends S.Codec<unknown, unknown>>(
+  schema: Schema
+) {
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.all([Arbitrary.schema(schema)]),
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(schema)(value);
+        const decoded = yield* S.decodeEffect(schema)(encoded);
+        expect(Equal.equals(decoded, value)).toBe(true);
 
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([Arbitrary.schema(schema)]),
-        ([value]) => {
-          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+        return true;
+      }),
+    fcRuns(25)
+  );
 
-          return true;
-        },
-        fcRuns(25)
-      )
-    )
-  ).toMatchObject({ _tag: "Passed" });
-};
+  expect(result).toMatchObject({ _tag: "Passed" });
+});
 
 const fullProvenance = BeepQaProvenance.make({
   actionId: "act-9",
@@ -69,86 +69,88 @@ const fullProvenance = BeepQaProvenance.make({
 });
 
 describe("@beep/exiftool models", () => {
-  it("round-trips schema-modeled public payloads", () => {
-    assertRoundTrip(PositiveMilliseconds);
-    assertRoundTrip(EpochMilliseconds);
-    assertRoundTrip(TagCount);
-    assertRoundTrip(SafeTagName);
-    assertRoundTrip(ProcessExitCode);
-    assertRoundTrip(ExiftoolWritableExtension);
-    assertRoundTrip(BeepQaTagName);
-    assertRoundTrip(ReadTagsRequest);
-    assertRoundTrip(TagAssignment);
-    assertRoundTrip(WriteTagsRequest);
-    assertRoundTrip(BeepQaProvenance);
-    assertRoundTrip(WriteXmpPacketRequest);
-    assertRoundTrip(ExiftoolErrorContext);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(ExiftoolErrorFromUnknownOptions).pipe(
-              Arbitrary.filter((options) => O.isNone(options.cause))
-            ),
-          ]),
-          ([options]) => {
-            expect(
-              Equal.equals(
-                decodeUnknownExiftoolErrorFromUnknownOptionsSync(encodeExiftoolErrorFromUnknownOptionsSync(options)),
-                options
-              )
-            ).toBe(true);
+  it.effect(
+    "round-trips schema-modeled public payloads",
+    Effect.fnUntraced(function* () {
+      yield* assertRoundTrip(PositiveMilliseconds);
+      yield* assertRoundTrip(EpochMilliseconds);
+      yield* assertRoundTrip(TagCount);
+      yield* assertRoundTrip(SafeTagName);
+      yield* assertRoundTrip(ProcessExitCode);
+      yield* assertRoundTrip(ExiftoolWritableExtension);
+      yield* assertRoundTrip(BeepQaTagName);
+      yield* assertRoundTrip(ReadTagsRequest);
+      yield* assertRoundTrip(TagAssignment);
+      yield* assertRoundTrip(WriteTagsRequest);
+      yield* assertRoundTrip(BeepQaProvenance);
+      yield* assertRoundTrip(WriteXmpPacketRequest);
+      yield* assertRoundTrip(ExiftoolErrorContext);
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([
+          Arbitrary.schema(ExiftoolErrorFromUnknownOptions).pipe(
+            Arbitrary.filter((options) => O.isNone(options.cause))
+          ),
+        ]),
+        ([options]) =>
+          Effect.gen(function* () {
+            const encoded = yield* encodeExiftoolErrorFromUnknownOptions(options);
+            const decoded = yield* decodeUnknownExiftoolErrorFromUnknownOptions(encoded);
+            expect(Equal.equals(decoded, options)).toBe(true);
 
             return true;
-          },
-          fcRuns(25)
+          }),
+        fcRuns(25)
+      );
+
+      expect(result).toMatchObject({ _tag: "Passed" });
+    })
+  );
+
+  it.effect(
+    "keeps Option-modeled optional metadata encoded as omitted keys",
+    Effect.fnUntraced(function* () {
+      expect(
+        yield* encodeBeepQaProvenance(
+          BeepQaProvenance.make({
+            actionId: "act-9",
+            capturedAtEpochMs: 1753900000000,
+            scenarioName: "sash-drag",
+            sessionId: "sess-1",
+          })
         )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      ).toEqual({
+        actionId: "act-9",
+        capturedAtEpochMs: 1753900000000,
+        scenarioName: "sash-drag",
+        sessionId: "sess-1",
+      });
 
-  it("keeps Option-modeled optional metadata encoded as omitted keys", () => {
-    expect(
-      encodeBeepQaProvenanceSync(
-        BeepQaProvenance.make({
-          actionId: "act-9",
-          capturedAtEpochMs: 1753900000000,
-          scenarioName: "sash-drag",
-          sessionId: "sess-1",
-        })
-      )
-    ).toEqual({
-      actionId: "act-9",
-      capturedAtEpochMs: 1753900000000,
-      scenarioName: "sash-drag",
-      sessionId: "sess-1",
-    });
+      expect(yield* encodeBeepQaProvenance(fullProvenance)).toEqual({
+        actionId: "act-9",
+        capturedAtEpochMs: 1753900000000,
+        clockOffsetMs: 12.5,
+        commitSha: "abc1234",
+        scenarioName: "sash-drag",
+        sessionId: "sess-1",
+        sourceVideo: "video/capture.webm",
+        toolVersions: { exiftool: "13.55" },
+      });
 
-    expect(encodeBeepQaProvenanceSync(fullProvenance)).toEqual({
-      actionId: "act-9",
-      capturedAtEpochMs: 1753900000000,
-      clockOffsetMs: 12.5,
-      commitSha: "abc1234",
-      scenarioName: "sash-drag",
-      sessionId: "sess-1",
-      sourceVideo: "video/capture.webm",
-      toolVersions: { exiftool: "13.55" },
-    });
-
-    expect(
-      encodeExifMetadataSync(
-        ExifMetadata.make({
-          fileType: O.some("PNG"),
-          imageWidth: O.some(8),
-          raw: { "File:FileType": "PNG" },
-        })
-      )
-    ).toEqual({
-      fileType: "PNG",
-      imageWidth: 8,
-      raw: { "File:FileType": "PNG" },
-    });
-  });
+      expect(
+        yield* encodeExifMetadata(
+          ExifMetadata.make({
+            fileType: O.some("PNG"),
+            imageWidth: O.some(8),
+            raw: { "File:FileType": "PNG" },
+          })
+        )
+      ).toEqual({
+        fileType: "PNG",
+        imageWidth: 8,
+        raw: { "File:FileType": "PNG" },
+      });
+    })
+  );
 
   it("rejects tag names that could smuggle extra arguments", () => {
     expect(O.isSome(decodeUnknownSafeTagNameOption("XMP-beepQA:sessionId"))).toBe(true);
@@ -243,39 +245,42 @@ describe("@beep/exiftool models", () => {
     ]);
   });
 
-  it("decodes provenance back out of ucfirst-capitalized -j -G1 keys", () => {
-    expect(beepQaRawTagKey("sessionId")).toBe("XMP-beepQA:SessionId");
-    expect(beepQaRawTagKey("capturedAtEpochMs")).toBe("XMP-beepQA:CapturedAtEpochMs");
+  it.effect(
+    "decodes provenance back out of ucfirst-capitalized -j -G1 keys",
+    Effect.fnUntraced(function* () {
+      expect(beepQaRawTagKey("sessionId")).toBe("XMP-beepQA:SessionId");
+      expect(beepQaRawTagKey("capturedAtEpochMs")).toBe("XMP-beepQA:CapturedAtEpochMs");
 
-    // exiftool 13.55 returns numeric-looking values as JSON numbers.
-    const decoded = provenanceFromRawTags({
-      "XMP-beepQA:ActionId": "act-9",
-      "XMP-beepQA:CapturedAtEpochMs": 1753900000000,
-      "XMP-beepQA:ClockOffsetMs": 12.5,
-      "XMP-beepQA:CommitSha": "abc1234",
-      "XMP-beepQA:ScenarioName": "sash-drag",
-      "XMP-beepQA:SessionId": "sess-1",
-      "XMP-beepQA:SourceVideo": "video/capture.webm",
-      "XMP-beepQA:ToolVersions": '{"exiftool":"13.55"}',
-    });
+      // exiftool 13.55 returns numeric-looking values as JSON numbers.
+      const decoded = provenanceFromRawTags({
+        "XMP-beepQA:ActionId": "act-9",
+        "XMP-beepQA:CapturedAtEpochMs": 1753900000000,
+        "XMP-beepQA:ClockOffsetMs": 12.5,
+        "XMP-beepQA:CommitSha": "abc1234",
+        "XMP-beepQA:ScenarioName": "sash-drag",
+        "XMP-beepQA:SessionId": "sess-1",
+        "XMP-beepQA:SourceVideo": "video/capture.webm",
+        "XMP-beepQA:ToolVersions": '{"exiftool":"13.55"}',
+      });
 
-    expect(O.isSome(decoded)).toBe(true);
-    expect(
-      pipe(
-        decoded,
-        O.map((provenance) => encodeBeepQaProvenanceSync(provenance)),
-        O.getOrElse(() => ({}))
-      )
-    ).toEqual(encodeBeepQaProvenanceSync(fullProvenance));
+      expect(O.isSome(decoded)).toBe(true);
+      expect(
+        yield* pipe(
+          decoded,
+          O.map(encodeBeepQaProvenance),
+          O.getOrElse(() => Effect.succeed({}))
+        )
+      ).toEqual(yield* encodeBeepQaProvenance(fullProvenance));
 
-    expect(
-      O.isNone(
-        provenanceFromRawTags({
-          "XMP-beepQA:ActionId": "act-9",
-          "XMP-beepQA:CapturedAtEpochMs": 1753900000000,
-          "XMP-beepQA:ScenarioName": "sash-drag",
-        })
-      )
-    ).toBe(true);
-  });
+      expect(
+        O.isNone(
+          provenanceFromRawTags({
+            "XMP-beepQA:ActionId": "act-9",
+            "XMP-beepQA:CapturedAtEpochMs": 1753900000000,
+            "XMP-beepQA:ScenarioName": "sash-drag",
+          })
+        )
+      ).toBe(true);
+    })
+  );
 });

@@ -30,31 +30,29 @@ const arbMetrics: Arbitrary.Arbitrary<Types.ExecutionMetrics> = Arbitrary.schema
 );
 const metricsEqual = S.toEquivalence(Types.ExecutionMetrics);
 
-const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
-  const arbitrary = Arbitrary.schema(schema);
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeSync(schema);
+const assertSchemaRoundTrip = Effect.fn("assertSchemaRoundTrip")(function* <
+  Schema extends S.Codec<unknown, unknown, never, never>,
+>(schema: Schema) {
   const equals = S.toEquivalence(schema);
+  const result = yield* Arbitrary.checkEffect(
+    Arbitrary.all([Arbitrary.schema(schema)]),
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(schema)(value);
+        const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
+        expect(equals(decoded, value)).toBe(true);
 
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(
-        Arbitrary.all([arbitrary]),
-        ([value]) => {
-          expect(equals(decode(encode(value)), value)).toBe(true);
-
-          return true;
-        },
-        fcRuns(50)
-      )
-    )._tag
-  ).toBe("Passed");
-};
+        return true;
+      }),
+    fcRuns(50)
+  );
+  expect(result._tag).toBe("Passed");
+});
 
 describe("ExecutionMetrics monoid laws", () => {
-  it("round-trips schema-derived metrics through encode/decode", () => {
-    assertSchemaRoundTrip(Types.ExecutionMetrics);
-  });
+  it.effect("round-trips schema-derived metrics through encode/decode", () =>
+    assertSchemaRoundTrip(Types.ExecutionMetrics)
+  );
 
   it("satisfies left identity: empty ⊕ x = x", () => {
     expect(
@@ -91,9 +89,9 @@ describe("ExecutionMetrics monoid laws", () => {
 });
 
 describe("OperationCost", () => {
-  it("round-trips schema-derived operation costs through encode/decode", () => {
-    assertSchemaRoundTrip(Types.OperationCost);
-  });
+  it.effect("round-trips schema-derived operation costs through encode/decode", () =>
+    assertSchemaRoundTrip(Types.OperationCost)
+  );
 
   it("scales O(1) cost by a constant factor of 1", () => {
     const scaled = Types.OperationCost.scale(
@@ -114,9 +112,7 @@ describe("OperationCost", () => {
 });
 
 describe("ExecutionId", () => {
-  it("round-trips schema-derived ids through encode/decode", () => {
-    assertSchemaRoundTrip(Types.ExecutionId);
-  });
+  it.effect("round-trips schema-derived ids through encode/decode", () => assertSchemaRoundTrip(Types.ExecutionId));
 
   it.effect(
     "generates distinct ids",

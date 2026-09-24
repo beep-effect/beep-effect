@@ -92,16 +92,14 @@ if (!shouldRunPgliteIntegration) {
             },
             spanFixtureKey: "span:contradiction-migration",
           });
-          const evidenceRows = yield* db
-            .insert(EpistemicDbSchema.evidence)
-            .values(toEvidenceInsert(evidence))
-            .returning();
+          const evidenceInsert = yield* Effect.fromResult(toEvidenceInsert(evidence));
+          const evidenceRows = yield* db.insert(EpistemicDbSchema.evidence).values(evidenceInsert).returning();
           const persistedEvidence = yield* pipe(
             evidenceRows,
             A.head,
             O.match({
               onNone: () => Effect.die("expected the persisted evidence row"),
-              onSome: (row) => Effect.succeed(fromEvidenceRow(row)),
+              onSome: (row) => Effect.fromResult(fromEvidenceRow(row)),
             })
           );
           const uncheckedVerification = yield* decodeEvidenceVerification({

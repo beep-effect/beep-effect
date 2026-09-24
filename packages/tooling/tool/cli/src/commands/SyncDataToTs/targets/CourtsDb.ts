@@ -447,10 +447,15 @@ const acquireCourtsDbProjection = Effect.fn("SyncDataToTs.CourtsDb.acquire")(fun
   });
   const places = pipe(
     placeNames,
-    A.map((name) => [name, entries[placePath(name)]] as const),
+    A.map((name) => [name, O.getOrThrow(R.get(entries, placePath(name)))] as const),
     R.fromEntries
   );
-  const courts = yield* assembleCourtsData(entries[courtsPath], entries[variablesPath], places, entries[utilsPath]);
+  const courts = yield* assembleCourtsData(
+    O.getOrThrow(R.get(entries, courtsPath)),
+    O.getOrThrow(R.get(entries, variablesPath)),
+    places,
+    O.getOrThrow(R.get(entries, utilsPath))
+  );
 
   if (A.length(courts) !== expectedCourtCount) {
     return yield* SyncDataToTsError.make({

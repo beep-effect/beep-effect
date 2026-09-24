@@ -181,7 +181,7 @@ export const proofLockPathForContext = Effect.fn("Yeet.proofLockPathForContext")
 ): Effect.fn.Return<
   string,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const repositoryIdentity = yield* runGitOutput(context.repoRoot, ["config", "--get", "remote.origin.url"]);
   return yield* proofCoordinatorLockPath(repositoryIdentity);
@@ -236,7 +236,7 @@ export const collectGitDiffBytes = Effect.fn("Yeet.collectGitDiffBytes")(functio
 ): Effect.fn.Return<
   Uint8Array,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1012,7 +1012,7 @@ const prepareFullProofLockLease = Effect.fn("Yeet.prepareFullProofLockLease")(fu
 ): Effect.fn.Return<
   PreparedFullProofLockLease,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const lockPath = yield* proofLockPathForContext(context);
   return yield* prepareFullProofLockLeaseAt(lockPath, context, proofSteps);
@@ -1022,7 +1022,7 @@ const prepareFullProofLockLeaseAt = Effect.fn("Yeet.prepareFullProofLockLeaseAt"
   lockPath: string,
   context: RepoRunContext,
   proofSteps: ReadonlyArray<RepoPlanStep>
-): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   return yield* prepareFullProofLockLeaseForCommandAt(
     lockPath,
     context,
@@ -1036,7 +1036,7 @@ const prepareFullProofLockLeaseForCommandAt = Effect.fn("Yeet.prepareFullProofLo
   context: RepoRunContext,
   command: string,
   procStart: string
-): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<PreparedFullProofLockLease, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   yield* ensureProofCoordinatorDirectory(path.dirname(lockPath));
   const lockState = YeetProofLockState.make({
@@ -1533,7 +1533,7 @@ export const writeVerifiedState = Effect.fn("Yeet.writeVerifiedState")(function*
     head: context.head,
     proofCommand: proofCommandForSteps(proofSteps),
     proofTier: tier,
-    runId: runIdForContext(context),
+    runId: yield* runIdForContext(context),
     verifiedAt,
   });
   yield* writeTextFile(statePath, `${yield* renderJson(state)}\n`);
@@ -1610,7 +1610,7 @@ const verifiedStateArtifactForPath =
  */
 export const loadVerifiedState = Effect.fn("Yeet.loadVerifiedState")(function* (
   context: RepoRunContext
-): Effect.fn.Return<YeetRunState, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<YeetRunState, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const statePath = yield* runStatePathForContext(context);
   const legacyStatePath = yield* legacyRunStatePathForContext(context);

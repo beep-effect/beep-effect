@@ -805,7 +805,7 @@ export const RunpodHttpMethod = RunpodHttpMethodBase.pipe(
   SchemaUtils.withLiteralKitStatics(RunpodHttpMethodBase),
   SchemaUtils.withStatics((schema) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
   }))
 );
 
@@ -847,7 +847,7 @@ export const RunpodOperationId = RunpodOperationIdBase.pipe(
   SchemaUtils.withLiteralKitStatics(RunpodOperationIdBase),
   SchemaUtils.withStatics((schema) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
   }))
 );
 
@@ -889,7 +889,7 @@ export const RunpodRequestBodyKind = RunpodRequestBodyKindBase.pipe(
   SchemaUtils.withLiteralKitStatics(RunpodRequestBodyKindBase),
   SchemaUtils.withStatics((schema) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
   }))
 );
 
@@ -931,7 +931,7 @@ export const RunpodResponseBodyKind = RunpodResponseBodyKindBase.pipe(
   SchemaUtils.withLiteralKitStatics(RunpodResponseBodyKindBase),
   SchemaUtils.withStatics((schema) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
   }))
 );
 

@@ -37,7 +37,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   ).toBe("Passed");
 };
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
 const findInput = FindSyncCursorInput.make({ provider: "box", workspaceId });
 
 describe("SyncCursor server repository", () => {

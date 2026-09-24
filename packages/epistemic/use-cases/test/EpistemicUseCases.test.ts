@@ -13,33 +13,28 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeClaimProjectionOutputSchemaSync = S.decodeSync(ClaimProjection.outputSchema);
-const decodeUnknownCandidateClaimSync = S.decodeUnknownSync(CandidateClaim);
-const encodeClaimProjectionOutputSchemaSync = S.encodeSync(ClaimProjection.outputSchema);
-
-const ClaimProjectionAuthorityArbitrary = Arbitrary.schema(ClaimProjection.inputSchema);
 const sameClaimProjectionView = S.toEquivalence(ClaimProjectionView);
+const decodeUnknownCandidateClaim = S.decodeUnknownEffect(CandidateClaim);
+const encodeClaimProjectionOutput = S.encodeEffect(ClaimProjection.outputSchema);
+const decodeClaimProjectionOutput = S.decodeEffect(ClaimProjection.outputSchema);
 
-const makeCandidate = (id: number, fixtureKey: string, lifecycle: string): CandidateClaim =>
-  decodeUnknownCandidateClaimSync({
+const makeCandidate = (id: number, fixtureKey: string, lifecycle: string) =>
+  decodeUnknownCandidateClaim({
     ...productEntityFixtureInput("EpistemicCandidateClaim", id),
     fixtureKey,
     lifecycle,
     snapshot: {},
   });
 
-const evidence: Evidence = S.decodeUnknownSync(Evidence)({
+const decodeEvidence = S.decodeUnknownEffect(Evidence)({
   ...productEntityFixtureInput("EpistemicEvidence", 10),
   artifactFixtureKey: "artifact.office-action",
   spanFixtureKey: "span.claim-1",
   span: { startChar: 0, endChar: 14, quote: "a claimed fact", confidence: 0.92 },
 });
 
-const candidate = makeCandidate(1, "claim.patentability", "candidate");
-const alreadyAdmitted = makeCandidate(4, "claim.alreadyAdmitted", "admitted");
-const admittedVerdict = S.decodeSync(ClaimGateResult)({ verdict: "admitted" });
+const decodeAdmittedVerdict = S.decodeEffect(ClaimGateResult)({ verdict: "admitted" });
 
 // Stubbed port: conforms exactly when the projected dataset carries evidence
 // quads beyond the claim's type quad, mirroring the bounded engine's minCount
@@ -75,6 +70,8 @@ describe("@beep/epistemic-use-cases", () => {
     it.effect(
       "admits a well-formed claim and advances candidate -> shape_valid",
       Effect.fnUntraced(function* () {
+        const candidate = yield* makeCandidate(1, "claim.patentability", "candidate");
+        const evidence = yield* decodeEvidence;
         const shacl = yield* ShaclValidationService;
         const gate = ClaimGateUC.makeClaimGate(shacl);
 
@@ -90,6 +87,7 @@ describe("@beep/epistemic-use-cases", () => {
     it.effect(
       "rejects a claim with no evidence span and does not advance",
       Effect.fnUntraced(function* () {
+        const candidate = yield* makeCandidate(1, "claim.patentability", "candidate");
         const shacl = yield* ShaclValidationService;
         const gate = ClaimGateUC.makeClaimGate(shacl);
 
@@ -97,7 +95,7 @@ describe("@beep/epistemic-use-cases", () => {
         expect(verdict.verdict).toBe("rejected");
         if (ClaimGateResult.guards.rejected(verdict)) {
           expect(verdict.violations.length).toBeGreaterThan(0);
-          expect(verdict.violations[0].severity).toBe("violation");
+          expect(verdict.violations[0]?.severity).toBe("violation");
         }
 
         const blocked = yield* ClaimLifecycleUC.makeClaimTransition().advance(candidate, verdict);
@@ -109,6 +107,8 @@ describe("@beep/epistemic-use-cases", () => {
   it.effect(
     "fails an illegal advance from a non-candidate state with ClaimInvalidTransition",
     Effect.fnUntraced(function* () {
+      const alreadyAdmitted = yield* makeCandidate(4, "claim.alreadyAdmitted", "admitted");
+      const admittedVerdict = yield* decodeAdmittedVerdict;
       const error = yield* ClaimLifecycleUC.makeClaimTransition()
         .advance(alreadyAdmitted, admittedVerdict)
         .pipe(Effect.flip);
@@ -119,55 +119,53 @@ describe("@beep/epistemic-use-cases", () => {
     })
   );
 
-  it("projects a single-owner authority deterministically and referentially equal on rebuild", () => {
-    const authority: ReadonlyArray<CandidateClaim> = [
-      candidate,
-      makeCandidate(2, "claim.novelty", "admitted"),
-      makeCandidate(3, "claim.obviousness", "shape_valid"),
-    ];
+  it.effect("projects a single-owner authority deterministically and referentially equal on rebuild", () =>
+    Effect.gen(function* () {
+      const authority: ReadonlyArray<CandidateClaim> = [
+        yield* makeCandidate(1, "claim.patentability", "candidate"),
+        yield* makeCandidate(2, "claim.novelty", "admitted"),
+        yield* makeCandidate(3, "claim.obviousness", "shape_valid"),
+      ];
 
-    const view1 = projectClaims(authority);
-    const view2 = projectClaims(authority);
-    const encoded = encodeClaimProjectionOutputSchemaSync(view1);
+      const view1 = projectClaims(authority);
+      const view2 = projectClaims(authority);
+      const encoded = yield* encodeClaimProjectionOutput(view1);
 
-    expect(view1.total).toBe(3);
-    expect(view1.counts.candidate).toBe(1);
-    expect(view1.counts.shape_valid).toBe(1);
-    expect(view1.counts.admitted).toBe(1);
-    expect([...view1.admittedKeys]).toEqual(["claim.novelty"]);
-    expect(encoded).toStrictEqual({
-      admittedKeys: ["claim.novelty"],
-      counts: {
-        admitted: 1,
-        candidate: 1,
-        consistency_checked: 0,
-        shape_valid: 1,
-      },
-      total: 3,
-    });
-    expect(sameClaimProjectionView(view1, view2)).toBe(true);
-  });
+      expect(view1.total).toBe(3);
+      expect(view1.counts.candidate).toBe(1);
+      expect(view1.counts.shape_valid).toBe(1);
+      expect(view1.counts.admitted).toBe(1);
+      expect([...view1.admittedKeys]).toEqual(["claim.novelty"]);
+      expect(encoded).toStrictEqual({
+        admittedKeys: ["claim.novelty"],
+        counts: {
+          admitted: 1,
+          candidate: 1,
+          consistency_checked: 0,
+          shape_valid: 1,
+        },
+        total: 3,
+      });
+      expect(sameClaimProjectionView(view1, view2)).toBe(true);
+    })
+  );
 
-  it("round-trips schema-derived projection outputs without changing encoded shape", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ClaimProjectionAuthorityArbitrary]),
-          ([authority]) => {
-            const view = projectClaims(authority);
-            const encoded = encodeClaimProjectionOutputSchemaSync(view);
-            const decoded = decodeClaimProjectionOutputSchemaSync(encoded);
+  it.effect.prop(
+    "round-trips schema-derived projection outputs without changing encoded shape",
+    { authority: ClaimProjection.inputSchema },
+    Effect.fnUntraced(function* ({ authority }) {
+      const view = projectClaims(authority);
+      const encoded = yield* encodeClaimProjectionOutput(view);
+      const decoded = yield* decodeClaimProjectionOutput(encoded);
 
-            expect(encoded.total).toBe(A.length(authority));
-            for (const state of ClaimLifecycle.Options) {
-              expect(encoded.counts[state]).toBe(A.length(A.filter(authority, (claim) => claim.lifecycle === state)));
-            }
-            expect(sameClaimProjectionView(decoded, view)).toBe(true);
+      expect(encoded.total).toBe(A.length(authority));
+      for (const state of ClaimLifecycle.Options) {
+        expect(encoded.counts[state]).toBe(A.length(A.filter(authority, (claim) => claim.lifecycle === state)));
+      }
+      expect(sameClaimProjectionView(decoded, view)).toBe(true);
 
-            return true;
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed"));
+      return true;
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 });

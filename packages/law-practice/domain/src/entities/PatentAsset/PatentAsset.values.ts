@@ -34,7 +34,7 @@ export const PatentAssetStatus = PatentAssetStatusBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(PatentAssetStatusBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownResult(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

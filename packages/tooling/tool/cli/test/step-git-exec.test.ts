@@ -24,6 +24,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { provideScopedLayer } from "@beep/test-utils";
 import { Str } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Ref, Sink, Stream } from "effect";
@@ -225,7 +226,9 @@ describe("GitExec archive spawn wiring", () => {
       });
 
       yield* writeGitArchive("/repo", "deadbeef", "/tmp/out.tar", adapter).pipe(
-        provideScopedLayer(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner))
+        provideScopedLayer(
+          Layer.mergeAll(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), BunCrypto.layer)
+        )
       );
 
       const calls = yield* Ref.get(captured);

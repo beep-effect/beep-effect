@@ -22,7 +22,7 @@ import {
 } from "@beep/html/Html.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Effect, Exit, Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -31,13 +31,13 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 const decodeUnknownHtmlDocumentResult = S.decodeUnknownResult(HtmlDocument);
 const decodeUnknownHtmlNodeResult = S.decodeUnknownResult(HtmlNode);
 const decodeUnknownLosslessDocumentResult = S.decodeUnknownResult(LosslessDocument);
-const encodeDoctypeSync = S.encodeSync(Doctype);
-const encodeGlobalAttributesStructSync = S.encodeSync(GlobalAttributesStruct);
-const encodeHtmlElementMetaSync = S.encodeSync(HtmlElementMeta);
-const encodeInputSync = S.encodeSync(Input);
+const encodeDoctype = S.encodeEffect(Doctype);
+const encodeGlobalAttributesStruct = S.encodeEffect(GlobalAttributesStruct);
+const encodeHtmlElementMeta = S.encodeEffect(HtmlElementMeta);
+const encodeInput = S.encodeEffect(Input);
 
-const decode = S.decodeUnknownSync(HtmlNode);
-const encode = S.encodeSync(HtmlNode);
+const decode = S.decodeUnknownEffect(HtmlNode);
+const encode = S.encodeEffect(HtmlNode);
 const GlobalAttributesArbitrary = Arbitrary.schema(GlobalAttributesStruct);
 const BooleanAttributeArbitrary = Arbitrary.schema(BooleanAttribute);
 const TextArbitrary = Arbitrary.schema(Text);
@@ -100,20 +100,22 @@ describe("HtmlNode AST — structure & nodes", () => {
     expect(LosslessDocument.make({ children: [Div.make({ children: [] })] })).toBeDefined();
   });
 
-  it("decodes and re-encodes a nested tree (JSON identity)", () => {
-    const json = {
-      _tag: "div",
-      id: "root",
-      class: "wrap",
-      children: [
-        { _tag: "span", children: [{ _tag: "#text", value: "hi" }] },
-        { _tag: "img", src: "x.png", alt: "logo" },
-      ],
-    };
-    const node = decode(json);
-    expect(node._tag).toBe("div");
-    expect(encode(node)).toStrictEqual(json);
-  });
+  it.effect("decodes and re-encodes a nested tree (JSON identity)", () =>
+    Effect.gen(function* () {
+      const json = {
+        _tag: "div",
+        id: "root",
+        class: "wrap",
+        children: [
+          { _tag: "span", children: [{ _tag: "#text", value: "hi" }] },
+          { _tag: "img", src: "x.png", alt: "logo" },
+        ],
+      };
+      const node = yield* decode(json);
+      expect(node._tag).toBe("div");
+      expect(yield* encode(node)).toStrictEqual(json);
+    })
+  );
 
   it("provides .make constructors that auto-inject _tag", () => {
     expect(Div.make({ children: [] })._tag).toBe("div");
@@ -122,138 +124,155 @@ describe("HtmlNode AST — structure & nodes", () => {
     expect(Marquee.make({ children: [] })._tag).toBe("marquee");
   });
 
-  it("discriminates union members by _tag and rejects unknown tags", () => {
-    expect(decode({ _tag: "span", children: [] })._tag).toBe("span");
-    expect(() => decode({ _tag: "not-a-real-element", children: [] })).toThrow();
-  });
+  it.effect("discriminates union members by _tag and rejects unknown tags", () =>
+    Effect.gen(function* () {
+      expect((yield* decode({ _tag: "span", children: [] }))._tag).toBe("span");
+      const unknownTag = yield* Effect.exit(decode({ _tag: "not-a-real-element", children: [] }));
+      expect(Exit.isFailure(unknownTag)).toBe(true);
+    })
+  );
 
-  it("treats void elements as childless", () => {
-    const img = decode({ _tag: "img", src: "a.png" });
-    expect(img._tag).toBe("img");
-    expect("children" in img).toBe(false);
-  });
+  it.effect("treats void elements as childless", () =>
+    Effect.gen(function* () {
+      const img = yield* decode({ _tag: "img", src: "a.png" });
+      expect(img._tag).toBe("img");
+      expect("children" in img).toBe(false);
+    })
+  );
 
-  it("models raw-text elements with a content field", () => {
-    const script = Script.make({ content: "console.log(1)" });
-    expect(script._tag).toBe("script");
-    expect(script.content).toBe("console.log(1)");
-    expect(encode(decode({ _tag: "style", content: ".a{}" }))).toStrictEqual({ _tag: "style", content: ".a{}" });
-  });
+  it.effect("models raw-text elements with a content field", () =>
+    Effect.gen(function* () {
+      const script = Script.make({ content: "console.log(1)" });
+      expect(script._tag).toBe("script");
+      expect(script.content).toBe("console.log(1)");
+      expect(yield* encode(yield* decode({ _tag: "style", content: ".a{}" }))).toStrictEqual({
+        _tag: "style",
+        content: ".a{}",
+      });
+    })
+  );
 });
 
 describe("HtmlNode AST — attributes", () => {
-  it("enforces enumerated attribute values (input[type])", () => {
-    // `as const` keeps each value at its literal type, so `Input.make` actually
-    // exercises that the `S.Literals` input-type union accepts every keyword.
-    const types = [
-      "button",
-      "checkbox",
-      "color",
-      "date",
-      "datetime-local",
-      "email",
-      "file",
-      "hidden",
-      "image",
-      "month",
-      "number",
-      "password",
-      "radio",
-      "range",
-      "reset",
-      "search",
-      "submit",
-      "tel",
-      "text",
-      "time",
-      "url",
-      "week",
-    ] as const;
-    for (const type of types) {
-      expect(() => Input.make({ type: O.some(type) })).not.toThrow();
-    }
-    expect(() => decode({ _tag: "input", type: "not-a-type" })).toThrow();
-  });
+  it.effect("enforces enumerated attribute values (input[type])", () =>
+    Effect.gen(function* () {
+      // `as const` keeps each value at its literal type, so `Input.make` actually
+      // exercises that the `S.Literals` input-type union accepts every keyword.
+      const types = [
+        "button",
+        "checkbox",
+        "color",
+        "date",
+        "datetime-local",
+        "email",
+        "file",
+        "hidden",
+        "image",
+        "month",
+        "number",
+        "password",
+        "radio",
+        "range",
+        "reset",
+        "search",
+        "submit",
+        "tel",
+        "text",
+        "time",
+        "url",
+        "week",
+      ] as const;
+      for (const type of types) {
+        expect(() => Input.make({ type: O.some(type) })).not.toThrow();
+      }
+      const invalidType = yield* Effect.exit(decode({ _tag: "input", type: "not-a-type" }));
+      expect(Exit.isFailure(invalidType)).toBe(true);
+    })
+  );
 
-  it("accepts global, ARIA, event-handler, and data-* attributes on any element", () => {
-    const json = {
-      _tag: "button",
-      id: "b",
-      "aria-label": "Save",
-      onclick: "save()",
-      dataset: { testid: "save-btn" },
-      children: [],
-    };
-    expect(encode(decode(json))).toStrictEqual(json);
-  });
+  it.effect("accepts global, ARIA, event-handler, and data-* attributes on any element", () =>
+    Effect.gen(function* () {
+      const json = {
+        _tag: "button",
+        id: "b",
+        "aria-label": "Save",
+        onclick: "save()",
+        dataset: { testid: "save-btn" },
+        children: [],
+      };
+      expect(yield* encode(yield* decode(json))).toStrictEqual(json);
+    })
+  );
 });
 
 describe("HtmlNode AST — schema laws", () => {
-  it("keeps option-defaulted fields byte-identical on the encoded wire", () => {
-    expect(encodeGlobalAttributesStructSync(GlobalAttributesStruct.make({}))).toStrictEqual({});
-    expect(
-      encodeGlobalAttributesStructSync(
-        GlobalAttributesStruct.make({
-          autofocus: O.some(true),
-          dataset: O.some({ testid: "save" }),
-          id: O.some("root"),
-        })
-      )
-    ).toStrictEqual({
-      autofocus: true,
-      dataset: { testid: "save" },
-      id: "root",
-    });
-    expect(encodeDoctypeSync(Doctype.html())).toStrictEqual({ _tag: "#doctype", name: "html" });
-    expect(
-      encodeInputSync(
-        Input.make({
-          alt: O.some("Search"),
-          src: O.some("x.png"),
-          type: O.some("text"),
-        })
-      )
-    ).toStrictEqual({ _tag: "input", alt: "Search", src: "x.png", type: "text" });
-    expect(
-      encodeHtmlElementMetaSync(
-        HtmlElementMeta.make({
-          tag: "a",
-          interface: "HTMLAnchorElement",
-          conformance: "conforming",
-          void: false,
-          rawText: false,
-          textMode: "normal",
-          categories: ["flow", "phrasing"],
-          children: ["transparent"],
-          currentAttributes: [],
-          obsoleteAttributes: [],
-          conditionalCategories: [],
-          attributeEqualities: [],
-          attributeRequirements: [],
-          numericAttributeRelationships: [],
-          rules: {},
-          uniqueAttributes: [],
-        })
-      )
-    ).toStrictEqual({
-      tag: "a",
-      interface: "HTMLAnchorElement",
-      conformance: "conforming",
-      void: false,
-      rawText: false,
-      textMode: "normal",
-      categories: ["flow", "phrasing"],
-      children: ["transparent"],
-      currentAttributes: [],
-      obsoleteAttributes: [],
-      conditionalCategories: [],
-      attributeEqualities: [],
-      attributeRequirements: [],
-      numericAttributeRelationships: [],
-      rules: {},
-      uniqueAttributes: [],
-    });
-  });
+  it.effect("keeps option-defaulted fields byte-identical on the encoded wire", () =>
+    Effect.gen(function* () {
+      expect(yield* encodeGlobalAttributesStruct(GlobalAttributesStruct.make({}))).toStrictEqual({});
+      expect(
+        yield* encodeGlobalAttributesStruct(
+          GlobalAttributesStruct.make({
+            autofocus: O.some(true),
+            dataset: O.some({ testid: "save" }),
+            id: O.some("root"),
+          })
+        )
+      ).toStrictEqual({
+        autofocus: true,
+        dataset: { testid: "save" },
+        id: "root",
+      });
+      expect(yield* encodeDoctype(Doctype.html())).toStrictEqual({ _tag: "#doctype", name: "html" });
+      expect(
+        yield* encodeInput(
+          Input.make({
+            alt: O.some("Search"),
+            src: O.some("x.png"),
+            type: O.some("text"),
+          })
+        )
+      ).toStrictEqual({ _tag: "input", alt: "Search", src: "x.png", type: "text" });
+      expect(
+        yield* encodeHtmlElementMeta(
+          HtmlElementMeta.make({
+            tag: "a",
+            interface: "HTMLAnchorElement",
+            conformance: "conforming",
+            void: false,
+            rawText: false,
+            textMode: "normal",
+            categories: ["flow", "phrasing"],
+            children: ["transparent"],
+            currentAttributes: [],
+            obsoleteAttributes: [],
+            conditionalCategories: [],
+            attributeEqualities: [],
+            attributeRequirements: [],
+            numericAttributeRelationships: [],
+            rules: {},
+            uniqueAttributes: [],
+          })
+        )
+      ).toStrictEqual({
+        tag: "a",
+        interface: "HTMLAnchorElement",
+        conformance: "conforming",
+        void: false,
+        rawText: false,
+        textMode: "normal",
+        categories: ["flow", "phrasing"],
+        children: ["transparent"],
+        currentAttributes: [],
+        obsoleteAttributes: [],
+        conditionalCategories: [],
+        attributeEqualities: [],
+        attributeRequirements: [],
+        numericAttributeRelationships: [],
+        rules: {},
+        uniqueAttributes: [],
+      });
+    })
+  );
 
   it("round-trips schema-derived HTML AST schemas", () =>
     expect(

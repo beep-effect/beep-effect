@@ -24,12 +24,15 @@ import {
   yeetInboxRowId,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -162,37 +165,41 @@ const capsule = (overrides: Partial<Parameters<typeof YeetFailureCapsule.make>[0
   });
 
 describe("renderYeetDispatchLine", () => {
-  const report = (outcome: YeetRemediationOutcome): YeetDispatchReport => {
+  const report = Effect.fnUntraced(function* (outcome: YeetRemediationOutcome) {
     const subject = capsule();
     return YeetDispatchReport.make({
       outcome,
       row: YeetCheckFailedRow.make({
         capsule: subject,
         checkout: "/repo",
-        id: yeetInboxRowId(subject),
+        id: yield* yeetInboxRowId(subject),
         severity: "P0",
         ts: AT,
       }),
     });
-  };
+  });
 
-  it("announces each decision distinctly", () => {
-    const started = renderYeetDispatchLine(
-      report(YeetRemediationOutcome.make({ decision: "start-session", wave: wave() }))
-    );
-    const queued = renderYeetDispatchLine(
-      report(YeetRemediationOutcome.make({ decision: "queue", wave: wave({ capsuleIds: ["a", "b"] }) }))
-    );
-    const duplicate = renderYeetDispatchLine(
-      report(YeetRemediationOutcome.make({ decision: "duplicate", wave: wave() }))
-    );
+  layer(BunCrypto.layer)((it) => {
+    it.effect("announces each decision distinctly", () =>
+      Effect.gen(function* () {
+        const started = renderYeetDispatchLine(
+          yield* report(YeetRemediationOutcome.make({ decision: "start-session", wave: wave() }))
+        );
+        const queued = renderYeetDispatchLine(
+          yield* report(YeetRemediationOutcome.make({ decision: "queue", wave: wave({ capsuleIds: ["a", "b"] }) }))
+        );
+        const duplicate = renderYeetDispatchLine(
+          yield* report(YeetRemediationOutcome.make({ decision: "duplicate", wave: wave() }))
+        );
 
-    expect(started).toContain("repair session opened");
-    expect(started).toContain('"Check / Coverage"');
-    expect(started).toContain("aaa111b");
-    expect(queued).toContain("queued to the head");
-    expect(queued).toContain("2 capsules");
-    expect(duplicate).toContain("already queued");
+        expect(started).toContain("repair session opened");
+        expect(started).toContain('"Check / Coverage"');
+        expect(started).toContain("aaa111b");
+        expect(queued).toContain("queued to the head");
+        expect(queued).toContain("2 capsules");
+        expect(duplicate).toContain("already queued");
+      })
+    );
   });
 });
 
@@ -205,7 +212,21 @@ describe("renderYeetDispatchStateWarning", () => {
   });
 });
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
+
+// A crypto service that refuses to hash, standing in for a platform whose
+// digest is unavailable; the row id cannot be derived without it.
+const failingCrypto = Crypto.make({
+  randomBytes: (size) => new Uint8Array(size),
+  digest: () =>
+    Effect.fail(
+      PlatformError.badArgument({
+        module: "Crypto",
+        method: "digest",
+        description: "inbox row id digest refusal",
+      })
+    ),
+});
 
 const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requirements>(
   use: (root: string) => Effect.Effect<Value, Failure, Requirements>
@@ -425,6 +446,24 @@ describe("dispatchYeetCheckFailure", () => {
         expect(O.isNone(yield* loadYeetRemediationWave(root))).toBe(true);
         const errors = A.map(yield* TestConsole.errorLines, String);
         expect(A.some(errors, (line) => Str.includes("failed to deliver capsule")(line))).toBe(true);
+        expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
+      })
+    ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))
+  );
+
+  // The row id is the dedup identity, so a capsule without one is never queued:
+  // a hashing refusal must leave the inbox untouched and say so.
+  it.live("queues nothing when the row id cannot be derived", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        yield* dispatchYeetCheckFailure(root, snapshotWithFailure(failingCheck), failingCheck, AT).pipe(
+          Effect.provideService(Crypto.Crypto, failingCrypto)
+        );
+
+        expect(A.length(yield* readInboxRows(root))).toBe(0);
+        expect(O.isNone(yield* loadYeetRemediationWave(root))).toBe(true);
+        const errors = A.map(yield* TestConsole.errorLines, String);
+        expect(A.some(errors, (line) => Str.includes("failed to derive inbox row id")(line))).toBe(true);
         expect(A.some(errors, (line) => Str.includes("NOT queued")(line))).toBe(true);
       })
     ).pipe(provideScopedLayer(Layer.mergeAll(TestConsole.layer, PlatformLayer)))

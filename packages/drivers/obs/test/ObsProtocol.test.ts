@@ -19,7 +19,8 @@ import {
   resolveObsConfig,
 } from "@beep/obs";
 import { A, O, P, pipe, Str } from "@beep/utils";
-import { assert, describe, expect, it } from "@effect/vitest";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
+import { assert, describe, expect, it, layer } from "@effect/vitest";
 import { Deferred, Effect, Fiber, PubSub, Queue, Redacted, Ref } from "effect";
 import { Socket } from "effect/unstable/socket";
 import type { ObsIdentify, ObsIncomingMessage, ObsRequestEnvelope } from "@beep/obs";
@@ -144,9 +145,14 @@ const respondSuccess = (
   );
 
 describe("computeObsAuthentication", () => {
-  it("reproduces the documented obs-websocket authentication vector", () => {
-    expect(computeObsAuthentication({ challenge: DOC_CHALLENGE, password: DOC_PASSWORD, salt: DOC_SALT })).toBe(
-      DOC_AUTHENTICATION
+  layer(NodeCrypto.layer)((it) => {
+    it.effect(
+      "reproduces the documented obs-websocket authentication vector",
+      Effect.fnUntraced(function* () {
+        expect(
+          yield* computeObsAuthentication({ challenge: DOC_CHALLENGE, password: DOC_PASSWORD, salt: DOC_SALT })
+        ).toBe(DOC_AUTHENTICATION);
+      })
     );
   });
 });
@@ -231,6 +237,29 @@ describe("ObsProtocol.connectWith", () => {
       expect(error.operation).toBe("authenticate");
       assert(O.isSome(error.closeCode));
       expect(error.closeCode.value).toBe(4009);
+    })
+  );
+
+  it.effect(
+    "drops a response with no pending request and keeps serving later requests",
+    Effect.fnUntraced(function* () {
+      const server = yield* makeFakeObsServer({
+        onRequest: (envelope, emit) => respondSuccess(envelope, emit, O.none()),
+      });
+      const protocol = yield* ObsProtocol.connectWith(server.socket, resolveObsConfig());
+
+      yield* server.emitMessage(
+        ObsRequestResponseMessage.make({
+          d: ObsRequestResponseEnvelope.make({
+            requestId: "no-such-request",
+            requestStatus: ObsRequestStatus.make({ code: 100, result: true }),
+            requestType: "GetVersion",
+            responseData: O.none(),
+          }),
+        })
+      );
+
+      expect(O.isNone(yield* protocol.request("GetVersion"))).toBe(true);
     })
   );
 

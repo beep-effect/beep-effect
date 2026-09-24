@@ -10,7 +10,7 @@
  */
 
 import { $SharedDomainId } from "@beep/identity";
-import { Str } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { DateTime, Duration, Effect, Order as Ord, pipe, SchemaGetter, SchemaIssue } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -125,11 +125,15 @@ export const isLocalDate = LocalDate.Model.is;
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-const toCalendarParts = ([, yearString, monthString, dayString]: RegExpMatchArray): CalendarParts => ({
-  year: globalThis.Number.parseInt(yearString, 10),
-  month: globalThis.Number.parseInt(monthString, 10),
-  day: globalThis.Number.parseInt(dayString, 10),
-});
+const toCalendarParts = (match: RegExpMatchArray): O.Option<CalendarParts> =>
+  pipe(
+    O.all([A.get(match, 1), A.get(match, 2), A.get(match, 3)]),
+    O.map(([yearString, monthString, dayString]) => ({
+      year: globalThis.Number.parseInt(yearString, 10),
+      month: globalThis.Number.parseInt(monthString, 10),
+      day: globalThis.Number.parseInt(dayString, 10),
+    }))
+  );
 
 const decodeLocalDateFromString: (
   dateString: string,
@@ -138,15 +142,13 @@ const decodeLocalDateFromString: (
   dateString: string,
   _options: AST.ParseOptions
 ) {
-  const parts = yield* O.match(Str.match(ISO_DATE_PATTERN)(dateString), {
-    onNone: () =>
-      Effect.fail(
-        new SchemaIssue.InvalidValue({
-          message: "Expected an ISO 8601 local date in YYYY-MM-DD format",
-        })
-      ),
-    onSome: (match) => Effect.succeed(toCalendarParts(match)),
-  });
+  const parts = yield* Effect.fromOption(
+    O.flatMap(Str.match(ISO_DATE_PATTERN)(dateString), toCalendarParts),
+    () =>
+      new SchemaIssue.InvalidValue({
+        message: "Expected an ISO 8601 local date in YYYY-MM-DD format",
+      })
+  );
 
   if (parts.year < 1) {
     return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast));

@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import {
   CandidateClaim,
@@ -62,10 +61,13 @@ import {
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { eq } from "drizzle-orm";
 import { Effect, flow, Layer, pipe } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -83,7 +85,8 @@ const makeMigrationCapableLayer = () =>
 
 const ContradictionTestLayer = EpistemicServerDrizzleLive.pipe(
   Layer.provideMerge(makeDrizzleLayer()),
-  Layer.provideMerge(makeMigrationCapableLayer())
+  Layer.provideMerge(makeMigrationCapableLayer()),
+  Layer.provideMerge(NodeCrypto.layer)
 );
 
 const decodeClaim = flow(S.decodeUnknownResult(CandidateClaim), Result.getOrThrow);
@@ -102,21 +105,32 @@ const contradictionCandidatePublicId = PublicEntityId.factory(ContradictionIdent
 const reviewScope = (orgId: SharedIdentity.OrganizationId) =>
   ContradictionReviewScope.of({ orgId, sourceScopeRef: "workspace:1" });
 
-const digest = (value: string): string => createHash("sha256").update(value).digest("hex");
+const sha256Hex = Effect.fnUntraced(function* (value: string) {
+  const crypto = yield* Crypto.Crypto;
+  return Encoding.encodeHex(yield* crypto.digest("SHA-256", new TextEncoder().encode(value)));
+});
 
-const verifiedAnchorFor = (scenario: number, label: string, anchor: TextAnchor, sourceScopeRef = "workspace:1") =>
-  TextAnchorVerificationReceipt.make({
+const verifiedAnchorFor = Effect.fnUntraced(function* (
+  scenario: number,
+  label: string,
+  anchor: TextAnchor,
+  sourceScopeRef = "workspace:1"
+) {
+  const sourceDigest = yield* sha256Hex(`source-${scenario}-${label}`);
+  const textDigest = yield* sha256Hex(`text-${scenario}-${label}`);
+  return TextAnchorVerificationReceipt.make({
     anchor,
     source: SourceTextIdentity.make({
       extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
       locator: PosixPath.make(`sources/${scenario}-${label}.txt`),
       normalizationVersion: "1",
       scopeRef: sourceScopeRef,
-      sourceDigest: SourceTextDigest.make(`sha256:${digest(`source-${scenario}-${label}`)}`),
+      sourceDigest: SourceTextDigest.make(`sha256:${sourceDigest}`),
       sourceRef: `source:${scenario}:${label}`,
-      textDigest: SourceTextDigest.make(`sha256:${digest(`text-${scenario}-${label}`)}`),
+      textDigest: SourceTextDigest.make(`sha256:${textDigest}`),
     }),
   });
+});
 
 const insertVerification = Effect.fnUntraced(function* (
   scenario: number,
@@ -126,8 +140,8 @@ const insertVerification = Effect.fnUntraced(function* (
   sourceScopeRef = "workspace:1"
 ) {
   const db = yield* makeDrizzle();
-  const evidence = fromEvidenceRow(evidenceRow);
-  const verifiedAnchor = verifiedAnchorFor(
+  const evidence = yield* Effect.fromResult(fromEvidenceRow(evidenceRow));
+  const verifiedAnchor = yield* verifiedAnchorFor(
     scenario,
     `${ordinal}`,
     TextAnchor.make({
@@ -179,49 +193,57 @@ const seedScenario = Effect.fnUntraced(function* (
   const db = yield* makeDrizzle();
   const claims = yield* db
     .insert(DbSchema.candidateClaim)
-    .values([
-      toCandidateClaimInsert(
-        decodeClaim({
-          ...productEntityFixtureInput("EpistemicCandidateClaim", scenario * 10 + 1),
-          fixtureKey: `contradiction.claim-${scenario}-a`,
-          lifecycle: "candidate",
-          orgId: organizationId,
-          snapshot: {},
-        })
-      ),
-      toCandidateClaimInsert(
-        decodeClaim({
-          ...productEntityFixtureInput("EpistemicCandidateClaim", scenario * 10 + 2),
-          fixtureKey: `contradiction.claim-${scenario}-b`,
-          lifecycle: "candidate",
-          orgId: organizationId,
-          snapshot: {},
-        })
-      ),
-    ])
+    .values(
+      yield* Effect.fromResult(
+        Result.all([
+          toCandidateClaimInsert(
+            decodeClaim({
+              ...productEntityFixtureInput("EpistemicCandidateClaim", scenario * 10 + 1),
+              fixtureKey: `contradiction.claim-${scenario}-a`,
+              lifecycle: "candidate",
+              orgId: organizationId,
+              snapshot: {},
+            })
+          ),
+          toCandidateClaimInsert(
+            decodeClaim({
+              ...productEntityFixtureInput("EpistemicCandidateClaim", scenario * 10 + 2),
+              fixtureKey: `contradiction.claim-${scenario}-b`,
+              lifecycle: "candidate",
+              orgId: organizationId,
+              snapshot: {},
+            })
+          ),
+        ])
+      )
+    )
     .returning();
   const evidence = yield* db
     .insert(DbSchema.evidence)
-    .values([
-      toEvidenceInsert(
-        decodeEvidence({
-          ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 1),
-          artifactFixtureKey: `contradiction.source-${scenario}-a`,
-          orgId: organizationId,
-          span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
-          spanFixtureKey: `contradiction.span-${scenario}-a`,
-        })
-      ),
-      toEvidenceInsert(
-        decodeEvidence({
-          ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 2),
-          artifactFixtureKey: `contradiction.source-${scenario}-b`,
-          orgId: organizationId,
-          span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
-          spanFixtureKey: `contradiction.span-${scenario}-b`,
-        })
-      ),
-    ])
+    .values(
+      yield* Effect.fromResult(
+        Result.all([
+          toEvidenceInsert(
+            decodeEvidence({
+              ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 1),
+              artifactFixtureKey: `contradiction.source-${scenario}-a`,
+              orgId: organizationId,
+              span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
+              spanFixtureKey: `contradiction.span-${scenario}-a`,
+            })
+          ),
+          toEvidenceInsert(
+            decodeEvidence({
+              ...productEntityFixtureInput("EpistemicEvidence", scenario * 10 + 2),
+              artifactFixtureKey: `contradiction.source-${scenario}-b`,
+              orgId: organizationId,
+              span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
+              spanFixtureKey: `contradiction.span-${scenario}-b`,
+            })
+          ),
+        ])
+      )
+    )
     .returning();
   const claimA = yield* requireHead(claims, "claim A");
   const claimB = yield* requireHead(A.drop(claims, 1), "claim B");
@@ -300,7 +322,11 @@ interface SubmissionOptions {
   readonly rightEvidenceIds?: ReadonlyArray<EpistemicIdentity.EvidenceId>;
 }
 
-const makeSubmission = (scenario: number, seeded: SeededScenario, options: SubmissionOptions = {}) => {
+const makeSubmission = Effect.fnUntraced(function* (
+  scenario: number,
+  seeded: SeededScenario,
+  options: SubmissionOptions = {}
+) {
   const beliefA = BeliefVersionRef.make({
     edgeVersionId: seeded.beliefA.id,
     logicalKey: seeded.beliefA.logicalKey,
@@ -346,7 +372,7 @@ const makeSubmission = (scenario: number, seeded: SeededScenario, options: Submi
   const proposalContent = {
     fact: { amount: "125" },
     losingBelief: beliefA,
-    proposalId: ContradictionProposalId.make(digest(`proposal-${scenario}`)),
+    proposalId: ContradictionProposalId.make(yield* sha256Hex(`proposal-${scenario}`)),
     rationale: "The signed amendment controls.",
     validFrom: instant(proposalValidFrom),
     validTo: pipe(O.fromNullishOr(proposalValidTo), O.map(instant)),
@@ -363,7 +389,7 @@ const makeSubmission = (scenario: number, seeded: SeededScenario, options: Submi
     matchBasis,
     orgId: seeded.beliefA.orgId,
     pair,
-    receiptKey: ContradictionReceiptKey.make(digest(receipt)),
+    receiptKey: ContradictionReceiptKey.make(yield* sha256Hex(receipt)),
     recordedAt: instant(recordedAt),
     receivedBy: systemPrincipal,
     schemaVersion: seeded.beliefA.schemaVersion,
@@ -371,7 +397,7 @@ const makeSubmission = (scenario: number, seeded: SeededScenario, options: Submi
     validFrom: instant(candidateValidFrom),
     validTo: pipe(O.fromNullishOr(candidateValidTo), O.map(instant)),
   });
-};
+});
 
 const asOf = (identity: typeof LogicalEdgeIdentity.Encoded, validAt: number, knownAt: number) =>
   decodeAsOf({
@@ -421,13 +447,13 @@ if (!shouldRunPgliteIntegration) {
         Effect.fnUntraced(function* () {
           const seeded = yield* seedScenario(101);
           const repository = yield* ContradictionTriageRepository;
-          const first = yield* repository.submit(makeSubmission(101, seeded));
+          const first = yield* repository.submit(yield* makeSubmission(101, seeded));
           const repeated = yield* repository.submit(
-            makeSubmission(101, seeded, { receipt: "receipt-101-b", reversed: true })
+            yield* makeSubmission(101, seeded, { receipt: "receipt-101-b", reversed: true })
           );
           const retroactiveReceiptConflict = yield* Effect.flip(
             repository.submit(
-              makeSubmission(101, seeded, {
+              yield* makeSubmission(101, seeded, {
                 receipt: "receipt-101-retroactive",
                 recordedAt: 1_199,
               })
@@ -454,7 +480,7 @@ if (!shouldRunPgliteIntegration) {
 
           const conflict = yield* Effect.flip(
             repository.submit(
-              makeSubmission(101, seeded, {
+              yield* makeSubmission(101, seeded, {
                 confidence: 0.75,
                 receipt: "receipt-101-c",
               })
@@ -474,7 +500,7 @@ if (!shouldRunPgliteIntegration) {
           const evidenceAId = EpistemicIdentity.EvidenceId.make(seeded.evidenceA.id);
           const evidenceBId = EpistemicIdentity.EvidenceId.make(seeded.evidenceB.id);
           const first = yield* repository.submit(
-            makeSubmission(111, seeded, {
+            yield* makeSubmission(111, seeded, {
               kind: "same-source-overlap",
               leftEvidenceIds: [evidenceBId, evidenceAId],
               receipt: "receipt-111-a",
@@ -482,7 +508,7 @@ if (!shouldRunPgliteIntegration) {
             })
           );
           const repeated = yield* repository.submit(
-            makeSubmission(111, seeded, {
+            yield* makeSubmission(111, seeded, {
               kind: "same-source-overlap",
               leftEvidenceIds: [evidenceAId, evidenceBId],
               receipt: "receipt-111-b",
@@ -507,8 +533,8 @@ if (!shouldRunPgliteIntegration) {
           const firstSeeded = yield* seedScenario(107, firstOrganizationId);
           const secondSeeded = yield* seedScenario(108, secondOrganizationId);
           const repository = yield* ContradictionTriageRepository;
-          const firstCommand = makeSubmission(107, firstSeeded, { receipt });
-          const secondCommand = makeSubmission(108, secondSeeded, { receipt });
+          const firstCommand = yield* makeSubmission(107, firstSeeded, { receipt });
+          const secondCommand = yield* makeSubmission(108, secondSeeded, { receipt });
 
           const first = yield* repository.submit(firstCommand);
           const repeated = yield* repository.submit(firstCommand);
@@ -559,7 +585,7 @@ if (!shouldRunPgliteIntegration) {
           const firstOrganizationId = SharedIdentity.OrganizationId.make(1);
           const secondOrganizationId = SharedIdentity.OrganizationId.make(2);
           const seeded = yield* seedScenario(109, firstOrganizationId);
-          const command = makeSubmission(109, seeded);
+          const command = yield* makeSubmission(109, seeded);
           const normalized = canonicalizeContradiction(command.pair, command.matchBasis);
           const candidateKey = contradictionCandidateKey(normalized.pair, normalized.matchBasis);
           const candidateDigest = Result.getOrThrow(
@@ -585,7 +611,7 @@ if (!shouldRunPgliteIntegration) {
             matchBasis: normalized.matchBasis,
             orgId: secondOrganizationId,
             pair: normalized.pair,
-            publicId: contradictionCandidatePublicId.decodeUnknownSync(
+            publicId: yield* S.decodeEffect(contradictionCandidatePublicId)(
               `${ContradictionIdentity.ContradictionCandidateId.tableName}_aforeign${candidateKey}`
             ),
             recordedAt: command.recordedAt,
@@ -627,7 +653,7 @@ if (!shouldRunPgliteIntegration) {
 
           const missingConflict = yield* Effect.flip(
             repository.submit(
-              makeSubmission(105, seeded, {
+              yield* makeSubmission(105, seeded, {
                 leftEvidenceId: EpistemicIdentity.EvidenceId.make(999_999),
                 receipt: "receipt-105-missing",
               })
@@ -641,26 +667,28 @@ if (!shouldRunPgliteIntegration) {
           const crossOrgEvidenceRows = yield* db
             .insert(DbSchema.evidence)
             .values(
-              toEvidenceInsert(
-                decodeEvidence({
-                  ...productEntityFixtureInput("EpistemicEvidence", 10_503),
-                  artifactFixtureKey: "contradiction.source-105-cross-org",
-                  orgId: 2,
-                  span: {
-                    confidence: 0.93,
-                    endChar: 8,
-                    quote: "amount C",
-                    startChar: 0,
-                  },
-                  spanFixtureKey: "contradiction.span-105-cross-org",
-                })
+              yield* Effect.fromResult(
+                toEvidenceInsert(
+                  decodeEvidence({
+                    ...productEntityFixtureInput("EpistemicEvidence", 10_503),
+                    artifactFixtureKey: "contradiction.source-105-cross-org",
+                    orgId: 2,
+                    span: {
+                      confidence: 0.93,
+                      endChar: 8,
+                      quote: "amount C",
+                      startChar: 0,
+                    },
+                    spanFixtureKey: "contradiction.span-105-cross-org",
+                  })
+                )
               )
             )
             .returning();
           const crossOrgEvidence = yield* requireHead(crossOrgEvidenceRows, "cross-organization evidence");
           const crossOrgConflict = yield* Effect.flip(
             repository.submit(
-              makeSubmission(105, seeded, {
+              yield* makeSubmission(105, seeded, {
                 leftEvidenceId: EpistemicIdentity.EvidenceId.make(crossOrgEvidence.id),
                 receipt: "receipt-105-cross-org",
               })
@@ -688,7 +716,7 @@ if (!shouldRunPgliteIntegration) {
 
           const beliefConflict = yield* Effect.flip(
             repository.submit(
-              makeSubmission(1, beliefSeeded, {
+              yield* makeSubmission(1, beliefSeeded, {
                 recordedAt: 1_050,
                 receipt: "receipt-1-before-belief",
               })
@@ -701,7 +729,7 @@ if (!shouldRunPgliteIntegration) {
 
           const evidenceConflict = yield* Effect.flip(
             repository.submit(
-              makeSubmission(130, evidenceSeeded, {
+              yield* makeSubmission(130, evidenceSeeded, {
                 receipt: "receipt-130-before-evidence",
               })
             )
@@ -727,7 +755,7 @@ if (!shouldRunPgliteIntegration) {
 
           const conflict = yield* Effect.flip(
             repository.submit(
-              makeSubmission(112, seeded, {
+              yield* makeSubmission(112, seeded, {
                 candidateValidFrom: 999,
                 receipt: "receipt-112-outside-belief-intersection",
               })
@@ -752,7 +780,7 @@ if (!shouldRunPgliteIntegration) {
 
           const conflict = yield* Effect.flip(
             repository.submit(
-              makeSubmission(113, seeded, {
+              yield* makeSubmission(113, seeded, {
                 proposalValidFrom: 500,
                 receipt: "receipt-113-overlapping-proposal",
               })
@@ -778,7 +806,7 @@ if (!shouldRunPgliteIntegration) {
 
           const conflict = yield* Effect.flip(
             repository.submit(
-              makeSubmission(
+              yield* makeSubmission(
                 115,
                 { ...seeded, beliefA: historicalA, beliefB: historicalB },
                 {
@@ -804,7 +832,7 @@ if (!shouldRunPgliteIntegration) {
         "expands exact beliefs with organization- and source-scoped verification as of query transaction time",
         Effect.fnUntraced(function* () {
           const seeded = yield* seedScenario(106);
-          const decodedEvidenceA = fromEvidenceRow(seeded.evidenceA);
+          const decodedEvidenceA = yield* Effect.fromResult(fromEvidenceRow(seeded.evidenceA));
           const repository = yield* ContradictionTriageRepository;
           const db = yield* makeDrizzle();
           yield* insertVerification(106, 1, seeded.evidenceA, 1_100);
@@ -832,7 +860,7 @@ if (!shouldRunPgliteIntegration) {
           );
           const { id: _id, ...uncheckedUnrelatedInsert } = encodedUnrelated;
           yield* db.insert(DbSchema.evidenceVerification).values(uncheckedUnrelatedInsert);
-          const submitted = yield* repository.submit(makeSubmission(106, seeded));
+          const submitted = yield* repository.submit(yield* makeSubmission(106, seeded));
           const selected = yield* insertVerification(106, 4, seeded.evidenceA, 1_300);
           const selectedB = yield* insertVerification(106, 7, seeded.evidenceB, 1_350);
           yield* insertVerification(106, 6, seeded.evidenceA, 1_400, "workspace:2");
@@ -948,7 +976,7 @@ if (!shouldRunPgliteIntegration) {
           const seeded = yield* seedScenario(116);
           const repository = yield* ContradictionTriageRepository;
           const db = yield* makeDrizzle();
-          const submitted = yield* repository.submit(makeSubmission(116, seeded));
+          const submitted = yield* repository.submit(yield* makeSubmission(116, seeded));
           const selected = yield* insertVerification(116, 1, seeded.evidenceA, 1_300);
 
           yield* db
@@ -992,7 +1020,7 @@ if (!shouldRunPgliteIntegration) {
         Effect.fnUntraced(function* () {
           const seeded = yield* seedScenario(110);
           const repository = yield* ContradictionTriageRepository;
-          const submitted = yield* repository.submit(makeSubmission(110, seeded, { recordedAt: 5_000 }));
+          const submitted = yield* repository.submit(yield* makeSubmission(110, seeded, { recordedAt: 5_000 }));
           yield* TestClock.setTime(2_000);
 
           const conflict = yield* Effect.flip(
@@ -1033,7 +1061,7 @@ if (!shouldRunPgliteIntegration) {
         Effect.fnUntraced(function* () {
           const seeded = yield* seedScenario(102);
           const repository = yield* ContradictionTriageRepository;
-          const submitted = yield* repository.submit(makeSubmission(102, seeded));
+          const submitted = yield* repository.submit(yield* makeSubmission(102, seeded));
 
           const openPage = yield* repository.list(listQuery("open", 1_500));
           const listedCandidate = pipe(
@@ -1188,7 +1216,7 @@ if (!shouldRunPgliteIntegration) {
           const seeded = yield* seedScenario(103);
           const repository = yield* ContradictionTriageRepository;
           const edges = yield* EdgeAuthorityRepository;
-          const submitted = yield* repository.submit(makeSubmission(103, seeded));
+          const submitted = yield* repository.submit(yield* makeSubmission(103, seeded));
           const proposal = submitted.candidate.assessment.proposals[0];
           yield* TestClock.setTime(2_000);
 
@@ -1259,7 +1287,7 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* ContradictionTriageRepository;
           const edges = yield* EdgeAuthorityRepository;
           const submitted = yield* repository.submit(
-            makeSubmission(114, seeded, {
+            yield* makeSubmission(114, seeded, {
               proposalValidFrom: 500,
               receipt: "receipt-114-before-overlap",
             })
@@ -1299,7 +1327,7 @@ if (!shouldRunPgliteIntegration) {
           const seeded = yield* seedScenario(104);
           const repository = yield* ContradictionTriageRepository;
           const edges = yield* EdgeAuthorityRepository;
-          const submitted = yield* repository.submit(makeSubmission(104, seeded));
+          const submitted = yield* repository.submit(yield* makeSubmission(104, seeded));
           const proposal = submitted.candidate.assessment.proposals[0];
           yield* TestClock.setTime(2_000);
 
@@ -1309,7 +1337,7 @@ if (!shouldRunPgliteIntegration) {
                 candidateId: submitted.candidate.id,
                 decision: {
                   decision: "supersedeProposal",
-                  proposalDigest: ContradictionProposalDigest.make(digest("stale-proposal-digest")),
+                  proposalDigest: ContradictionProposalDigest.make(yield* sha256Hex("stale-proposal-digest")),
                   proposalId: proposal.proposalId,
                   reason: "Attempt with a stale digest.",
                 },

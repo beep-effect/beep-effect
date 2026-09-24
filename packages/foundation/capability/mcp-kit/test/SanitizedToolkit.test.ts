@@ -9,15 +9,18 @@
  * @since 0.0.0
  */
 import { CurrentMcpCaller, sanitizedToolkit } from "@beep/mcp-kit";
-import { assert, describe, layer } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
+import { assert, describe, it, layer } from "@effect/vitest";
+import { Cause, Effect, Exit, Layer } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Tracer from "effect/Tracer";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import { McpServerClient } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { HttpServerRequest } from "effect/unstable/http";
+import { fixtureHost } from "./fixtures/FixtureHost.ts";
 import { makeStubMcpClient, StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const FixtureTool = Tool.make("fixture_tool", {
@@ -62,6 +65,89 @@ const AnnotatedTool = Tool.make("annotated_tool", {
   description: "Annotated fixture tool",
   success: S.String,
 }).annotate(Tool.Meta, { fixture: true });
+
+// The failure-classification fixtures: every arm of the kit's own classifier
+// (`declaredFailureResult`, `makeInternalToolError`, `classifyToolFailure`)
+// needs a handler that ends the way that arm describes.
+class DeclaredErrorFailure extends S.TaggedError<DeclaredErrorFailure>()("DeclaredErrorFailure", {
+  message: S.String,
+}) {}
+
+// A declared failure that *is* an `Error`: the classifier answers with its
+// message rather than its encoded payload.
+const DeclaredErrorTool = Tool.make("declared_error_tool", {
+  failure: DeclaredErrorFailure,
+  success: S.String,
+});
+
+// `S.Int` keeps the failure channel a plain `number` at the type level while
+// making `1.5` undeclared at runtime, so one handler can produce both a
+// declared (encoded) and an undeclared (scrubbed) failure.
+const RefinedFailureTool = Tool.make("refined_failure_tool", {
+  failure: S.Int,
+  parameters: S.Struct({ declared: S.Boolean }),
+  success: S.String,
+});
+
+const DieTool = Tool.make("die_tool", { success: S.String });
+
+const InterruptTool = Tool.make("interrupt_tool", { success: S.String });
+
+// `failureMode: "return"` routes even a parameter-validation failure through
+// the result projection instead of the failure channel.
+const LenientParamsTool = Tool.make("lenient_params_tool", {
+  failure: S.Unknown,
+  failureMode: "return",
+  parameters: S.Struct({ count: S.Finite }),
+  success: S.String,
+});
+
+const VoidTool = Tool.make("void_tool", { success: S.Void });
+
+const StrictTool = Tool.make("strict_tool", {
+  parameters: S.Struct({ text: S.String }),
+  success: S.String,
+}).annotate(Tool.Strict, true);
+
+const DynamicTool = Tool.dynamic("dynamic_tool", {
+  parameters: { type: "object", properties: { q: { type: "string" } } },
+  success: S.String,
+});
+
+const FailureToolkit = Toolkit.make(
+  DeclaredErrorTool,
+  RefinedFailureTool,
+  DieTool,
+  InterruptTool,
+  LenientParamsTool,
+  VoidTool,
+  StrictTool,
+  DynamicTool
+);
+
+const FailureHandlersLive = FailureToolkit.toLayer({
+  declared_error_tool: () => Effect.fail(DeclaredErrorFailure.make({ message: "declared refusal" })),
+  die_tool: () => Effect.die("handler defect"),
+  dynamic_tool: () => Effect.succeed("dynamic"),
+  interrupt_tool: () => Effect.interrupt,
+  lenient_params_tool: () => Effect.succeed("ok"),
+  refined_failure_tool: (params: { readonly declared: boolean }) => Effect.fail(params.declared ? 42 : 1.5),
+  strict_tool: (params: { readonly text: string }) => Effect.succeed(params.text),
+  void_tool: () => Effect.void,
+});
+
+// Strict validation has no meaning for a raw JSON Schema, so the pairing is
+// rejected at registration rather than silently ignored.
+const StrictDynamicTool = Tool.dynamic("strict_dynamic_tool", {
+  parameters: { type: "object" },
+  success: S.String,
+}).annotate(Tool.Strict, true);
+
+const StrictDynamicToolkit = Toolkit.make(StrictDynamicTool);
+
+const StrictDynamicHandlersLive = StrictDynamicToolkit.toLayer({
+  strict_dynamic_tool: () => Effect.succeed("never reached"),
+});
 
 const FixtureToolkit = Toolkit.make(FixtureTool, ExpectedFailureTool, CallerTool, AnnotatedTool);
 
@@ -108,15 +194,18 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
   return { captured, tracer };
 };
 
-// The tool's success payload is JSON-encoded into the first text content part.
-const callerReport = (result: { readonly content: ReadonlyArray<unknown> }): string => {
+// The tool's payload (success or encoded declared failure) is JSON-encoded
+// into the first text content part.
+const callerReport = <A = string>(result: { readonly content: ReadonlyArray<unknown> }): A => {
   const [first] = result.content;
-  return JSON.parse((first as { readonly text: string }).text) as string;
+  return JSON.parse((first as { readonly text: string }).text) as A;
 };
 
-// `sanitizedToolkit` mints a caller identity only when `McpServerClient` is in
-// scope — the HTTP transport's own middleware provides it per request. Overriding
-// the suite-level stub is what makes the session assertions below non-vacuous.
+// Direct `server.callTool` is rc.117's stateful-only seam: it mints a caller
+// identity from `McpServerClient`, which a legacy (2025) transport provides
+// per initialized session. Overriding the suite-level stub is what makes the
+// session assertions below non-vacuous; the 2026 path is proven through the
+// HTTP transport at the end of this file.
 const withMcpClient = (clientId: number) => Effect.provideService(McpServerClient, makeStubMcpClient(clientId));
 
 const withSessionHeader = (sessionId: string) =>
@@ -131,6 +220,8 @@ const registrationLayer = sanitizedToolkit(FixtureToolkit).pipe(Layer.provide(Fi
 const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer, StubMcpClientLayer);
 const refRegistrationLayer = sanitizedToolkit(RefToolkit).pipe(Layer.provide(RefHandlersLive));
 const refFullLayer = Layer.mergeAll(McpServer.McpServer.layer, refRegistrationLayer, StubMcpClientLayer);
+const failureRegistrationLayer = sanitizedToolkit(FailureToolkit).pipe(Layer.provide(FailureHandlersLive));
+const failureFullLayer = Layer.mergeAll(McpServer.McpServer.layer, failureRegistrationLayer, StubMcpClientLayer);
 
 describe("sanitizedToolkit", () => {
   layer(fullLayer)("with the fixture toolkit registered via sanitizedToolkit", (it) => {
@@ -160,13 +251,14 @@ describe("sanitizedToolkit", () => {
     );
 
     it.effect(
-      "registers described tools with their wire description and _meta",
+      "registers described tools with their wire description, _meta and outputSchema",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const entry = server.tools.find((candidate) => candidate.tool.name === "annotated_tool");
 
         assert.strictEqual(entry?.tool.description, "Annotated fixture tool");
         assert.deepStrictEqual(entry?.tool._meta, { fixture: true });
+        assert.deepStrictEqual(entry?.tool.outputSchema, { type: "string" });
 
         const result = yield* server.callTool({ name: "annotated_tool", arguments: {} });
         assert.isFalse(result.isError);
@@ -191,32 +283,32 @@ describe("sanitizedToolkit", () => {
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ name: "expected_failure_tool", arguments: {} });
-        const failure = yield* decodeUnknownExpectedFixtureFailure(result.structuredContent);
+        // rc.117 projects declared failures as tool errors whose encoded payload
+        // travels in `content[].text`; `structuredContent` describes successes
+        // only (it must conform to the advertised `outputSchema`).
+        const failure = yield* decodeUnknownExpectedFixtureFailure(callerReport(result));
 
         assert.isTrue(result.isError);
+        assert.isUndefined(result.structuredContent);
         assert.strictEqual(failure._tag, "ExpectedFixtureFailure");
         assert.strictEqual(failure.message, "expected refusal");
       })
     );
 
     it.effect(
-      "does not expose schema stacks or local paths in boundary error text",
+      "invalid arguments surface as InvalidParams",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
-        const result = yield* server.callTool({ name: "fixture_tool", arguments: { secret: 1 } });
-        const [first] = result.content;
+        const error = yield* Effect.flip(server.callTool({ name: "fixture_tool", arguments: { secret: 1 } }));
 
-        assert.isTrue(result.isError);
-        assert.strictEqual(first?.type, "text");
-        assert.strictEqual(
-          (first as { readonly text: string }).text,
-          "Tool call failed before producing a structured result."
-        );
+        // Parameter validation is protocol-native under strict 2026 tools:
+        // upstream classifies it as JSON-RPC `InvalidParams`, no canned result.
+        assert.isTrue(P.isTagged(error, "InvalidParams"));
       })
     );
 
     it.effect(
-      "reports no session id when the dispatch carries no HTTP request",
+      "dispatches tools/call on a 2025 host through McpServerClient and reports no session id without an HTTP request",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ name: "caller_tool", arguments: {} }).pipe(withMcpClient(7));
@@ -268,15 +360,22 @@ describe("sanitizedToolkit", () => {
 
   layer(refFullLayer)("with a named schema parameter toolkit registered via sanitizedToolkit", (it) => {
     it.effect(
-      "adds a top-level object type to ref-backed input schemas for strict MCP clients",
+      "inlines a ref-backed input schema to an object root for strict MCP clients",
       Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const registered = server.tools.find(({ tool }) => tool.name === "ref_tool");
 
+        // rc.117 inlines the top-level `$ref` (Effect#8326); the root is the
+        // object itself and the definition stays under `$defs`.
         assert.isDefined(registered);
-        const inputSchema = registered?.tool.inputSchema as { readonly $ref?: unknown; readonly type?: unknown };
+        const inputSchema = registered?.tool.inputSchema as {
+          readonly $ref?: unknown;
+          readonly type?: unknown;
+          readonly properties?: Record<string, unknown>;
+        };
         assert.strictEqual(inputSchema.type, "object");
-        assert.strictEqual(inputSchema.$ref, "#/$defs/RefParametersEncoded");
+        assert.isUndefined(inputSchema.$ref);
+        assert.isDefined(inputSchema.properties?.secret);
       })
     );
 
@@ -292,6 +391,169 @@ describe("sanitizedToolkit", () => {
         assert.isDefined(registered);
         const inputSchema = registered?.tool.inputSchema as { readonly type?: unknown };
         assert.strictEqual(inputSchema.type, "object");
+      })
+    );
+  });
+
+  layer(failureFullLayer)("with the failure-classification toolkit registered via sanitizedToolkit", (it) => {
+    it.effect(
+      "answers a declared Error failure with its message",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const result = yield* server.callTool({ name: "declared_error_tool", arguments: {} });
+
+        // An `Error` carries its own wire text; encoding it against the
+        // failure schema would leak the schema's shape instead.
+        assert.isTrue(result.isError);
+        const [first] = result.content;
+        assert.strictEqual((first as { readonly text: string }).text, "declared refusal");
+      })
+    );
+
+    it.effect(
+      "encodes a declared non-Error failure and scrubs an undeclared one",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const declared = yield* server.callTool({
+          arguments: { declared: true },
+          name: "refined_failure_tool",
+        });
+
+        assert.isTrue(declared.isError);
+        assert.strictEqual(callerReport<number>(declared), 42);
+
+        // `1.5` types as the tool's declared failure but fails its schema, so
+        // it is an internal failure: the boundary text, never the value.
+        const undeclared = yield* server.callTool({
+          arguments: { declared: false },
+          name: "refined_failure_tool",
+        });
+
+        assert.isTrue(undeclared.isError);
+        const [first] = undeclared.content;
+        assert.strictEqual(
+          (first as { readonly text: string }).text,
+          "Tool call failed before producing a structured result."
+        );
+      })
+    );
+
+    it.effect(
+      "scrubs a handler defect to the boundary text",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const result = yield* server.callTool({ name: "die_tool", arguments: {} });
+
+        assert.isTrue(result.isError);
+        const [first] = result.content;
+        assert.strictEqual(
+          (first as { readonly text: string }).text,
+          "Tool call failed before producing a structured result."
+        );
+      })
+    );
+
+    it.effect(
+      "propagates interruption instead of reporting it as a tool failure",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const exit = yield* Effect.exit(server.callTool({ name: "interrupt_tool", arguments: {} }));
+
+        // An interrupted dispatch is the caller giving up, not a result: it
+        // must not be logged, reported, or answered with a canned result.
+        assert.isTrue(Exit.isFailure(exit));
+        assert.isTrue(Exit.isFailure(exit) && Cause.hasInterrupts(exit.cause));
+      })
+    );
+
+    it.effect(
+      "classifies a returned parameter failure as InvalidParams",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const error = yield* Effect.flip(
+          server.callTool({ arguments: { count: "not-a-number" }, name: "lenient_params_tool" })
+        );
+
+        // `failureMode: "return"` hands the validation failure back as a
+        // result carrying a non-handler origin; the origin, not the shape of
+        // the envelope, decides the JSON-RPC classification.
+        assert.isTrue(P.isTagged(error, "InvalidParams"));
+      })
+    );
+
+    it.effect(
+      "answers a void-result tool with no content and no structured content",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const result = yield* server.callTool({ name: "void_tool", arguments: {} });
+
+        assert.isFalse(result.isError);
+        assert.deepStrictEqual(result.content, []);
+        assert.isUndefined(result.structuredContent);
+      })
+    );
+
+    it.effect(
+      "rejects excess properties for a strict tool and advertises no additional properties",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const accepted = yield* server.callTool({ arguments: { text: "hi" }, name: "strict_tool" });
+        assert.isFalse(accepted.isError);
+
+        const error = yield* Effect.flip(
+          server.callTool({ arguments: { extra: true, text: "hi" }, name: "strict_tool" })
+        );
+        assert.isTrue(P.isTagged(error, "InvalidParams"));
+      })
+    );
+
+    it.effect(
+      "registers a dynamic tool's raw JSON Schema verbatim",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const registered = server.tools.find(({ tool }) => tool.name === "dynamic_tool");
+
+        // A dynamic tool's schema is the host's own document: the kit must
+        // not re-render it from the (absent) Effect Schema.
+        assert.deepStrictEqual(registered?.tool.inputSchema, {
+          type: "object",
+          properties: { q: { type: "string" } },
+        });
+
+        const result = yield* server.callTool({ arguments: { q: "hi" }, name: "dynamic_tool" });
+        assert.isFalse(result.isError);
+      })
+    );
+  });
+
+  it.effect(
+    "refuses to register a strict dynamic tool",
+    Effect.fnUntraced(function* () {
+      const exit = yield* Effect.exit(
+        Effect.scoped(
+          Layer.build(sanitizedToolkit(StrictDynamicToolkit).pipe(Layer.provide(StrictDynamicHandlersLive)))
+        )
+      );
+
+      // Strictness is an Effect Schema decode option; there is nothing to
+      // apply it to when the parameters arrive as a raw JSON Schema, so the
+      // pairing fails the layer build rather than validating nothing.
+      assert.isTrue(Exit.isFailure(exit));
+      assert.include(Cause.pretty(Exit.isFailure(exit) ? exit.cause : Cause.fail("no failure")), "strict_dynamic_tool");
+    })
+  );
+
+  layer(layerConformanceHttp(fixtureHost))("on a 2026-only host over streamable HTTP", (it) => {
+    it.effect("dispatches tools/call on a 2026-only host with McpRequestContext and no McpServerClient", () =>
+      Effect.gen(function* () {
+        // The stateless transport provides `McpRequestContext` only; the
+        // dual-read still yields a caller (the per-POST client id) and never a
+        // session, whatever headers the POST carried.
+        const { rpc } = yield* connectHttp();
+        const result = yield* rpc["tools/call"]({ name: "caller_report", arguments: {} });
+
+        assert.notStrictEqual(result.isError, true);
+        assert.match(callerReport(result), /^client=\d+;session=none$/);
       })
     );
   });

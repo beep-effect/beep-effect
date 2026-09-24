@@ -2,16 +2,21 @@ import * as B from "@beep/box";
 import {
   BoxAdoptions,
   BoxDesiredState,
+  BoxObservedCollaboration,
   BoxObservedState,
+  BoxObservedWebhook,
+  BoxProviderId,
   BoxSourceRevision,
   planBoxProvisioning,
 } from "@beep/box-provisioning";
 import { BoxProvisioningApplier } from "@beep/box-provisioning/BoxProvisioningApplier";
 import { provideScopedLayer } from "@beep/test-utils";
-import { describe, expect, it } from "@effect/vitest";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { expect, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
-import { desiredFixture, observedFixture } from "./fixtures.ts";
+import * as O from "effect/Option";
+import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 
 const mutationCounts = {
   collaborations: 0,
@@ -72,7 +77,109 @@ const mutationClient = {
 
 const ApplierTestLayer = BoxProvisioningApplier.layer.pipe(Layer.provide(B.Box.makeLayerFromClient(mutationClient)));
 
-describe("@beep/box-provisioning applier", () => {
+const updateCounts = { collaborations: 0, webhooks: 0 };
+
+const observedFolderPayload = (folderId: string) =>
+  folderId === "100"
+    ? {
+        etag: "etag-workspace",
+        id: "100",
+        name: "Fixture workspace",
+        parent: { id: "0", type: "folder" },
+        type: "folder",
+      }
+    : { etag: "etag-child", id: "101", name: "Fixture child", parent: { id: "100", type: "folder" }, type: "folder" };
+
+const updateClient = {
+  folders: {
+    getFolderById: (folderId: string, _optionalsInput: unknown): Promise<unknown> =>
+      Promise.resolve(observedFolderPayload(folderId)),
+    getFolderItems: (_folderId: string, _optionalsInput: unknown): Promise<unknown> => Promise.resolve({ entries: [] }),
+  },
+  userCollaborations: {
+    getCollaborationById: (_collaborationId: string, _optionalsInput: unknown): Promise<unknown> =>
+      Promise.resolve({
+        accessibleBy: { id: "user-id", login: "collaborator@example.test", type: "user" },
+        id: "200",
+        item: { id: "101", type: "folder" },
+        role: "viewer",
+        type: "collaboration",
+      }),
+    updateCollaborationById: (_collaborationId: string, _optionalsInput: unknown): Promise<unknown> => {
+      updateCounts.collaborations += 1;
+      return Promise.resolve({
+        accessibleBy: { id: "user-id", login: "collaborator@example.test", type: "user" },
+        id: "200",
+        item: { id: "101", type: "folder" },
+        role: "editor",
+        type: "collaboration",
+      });
+    },
+  },
+  webhooks: {
+    getWebhookById: (_webhookId: string, _optionalsInput: unknown): Promise<unknown> =>
+      Promise.resolve({
+        address: "https://example.test/box/events",
+        id: "300",
+        target: { id: "100", type: "folder" },
+        triggers: ["FILE.DOWNLOADED"],
+        type: "webhook",
+      }),
+    updateWebhookById: (_webhookId: string, _optionalsInput: unknown): Promise<unknown> => {
+      updateCounts.webhooks += 1;
+      return Promise.resolve({
+        address: "https://example.test/box/events",
+        id: "300",
+        target: { id: "100", type: "folder" },
+        triggers: ["FILE.UPLOADED"],
+        type: "webhook",
+      });
+    },
+  },
+};
+
+const UpdateApplierTestLayer = BoxProvisioningApplier.layer.pipe(
+  Layer.provide(B.Box.makeLayerFromClient(updateClient))
+);
+
+layer(BunCrypto.layer)("@beep/box-provisioning applier", (it) => {
+  it.effect(
+    "applies planned collaboration and webhook updates",
+    Effect.fnUntraced(function* () {
+      updateCounts.collaborations = 0;
+      updateCounts.webhooks = 0;
+      const drifted = BoxObservedState.make({
+        ...observedAfterApplyFixture,
+        collaborations: A.map(observedAfterApplyFixture.collaborations, (collaboration) =>
+          BoxObservedCollaboration.make({
+            ...collaboration,
+            principalProviderId: O.some(BoxProviderId.make("user-id")),
+            role: "viewer",
+          })
+        ),
+        webhooks: A.map(observedAfterApplyFixture.webhooks, (webhook) =>
+          BoxObservedWebhook.make({ ...webhook, triggers: ["FILE.DOWNLOADED"] })
+        ),
+      });
+      const plan = yield* planBoxProvisioning(desiredFixture, drifted, postApplyAdoptionsFixture);
+
+      const receipt = yield* BoxProvisioningApplier.pipe(
+        Effect.flatMap((applier) => applier.apply(desiredFixture, plan)),
+        provideScopedLayer(UpdateApplierTestLayer)
+      );
+
+      expect(updateCounts).toEqual({ collaborations: 1, webhooks: 1 });
+      expect(A.map(receipt.outcomes, (outcome) => outcome._tag)).toEqual([
+        "Skipped",
+        "Skipped",
+        "Applied",
+        "Applied",
+        "Blocked",
+        "Blocked",
+      ]);
+    })
+  );
+
   it.effect(
     "performs zero dependent mutations for an unallowlisted exact-name collision",
     Effect.fnUntraced(function* () {

@@ -141,7 +141,7 @@ if (!shouldRunRealAnthropic) {
           const usage = yield* UsageRecordSink;
           const ops = yield* makeChatOperations(store, kernel, usage);
 
-          const workspaceId = decodeWorkspaceId(3);
+          const workspaceId = yield* decodeWorkspaceId(3);
           const thread = yield* ops.createThread(workspaceId, "Real Anthropic rich blocks");
 
           const streamed = yield* ops.sendMessage(thread.id, userDocument(prompt)).pipe(Stream.runCollect);

@@ -84,7 +84,7 @@ export const RunpodErrorReason = RunpodErrorReasonBase.pipe(
   SchemaUtils.withLiteralKitStatics(RunpodErrorReasonBase),
   SchemaUtils.withStatics((schema) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
   }))
 );
 
@@ -126,7 +126,7 @@ export const RunpodDocsErrorReason = RunpodDocsErrorReasonBase.pipe(
   SchemaUtils.withLiteralKitStatics(RunpodDocsErrorReasonBase),
   SchemaUtils.withStatics((schema) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
   }))
 );
 

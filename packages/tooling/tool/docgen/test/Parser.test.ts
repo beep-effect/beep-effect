@@ -5,6 +5,7 @@ import * as Printer from "@beep/repo-docgen/Printer";
 import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Path, pipe } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as ast from "ts-morph";
 import { defaultDocgenConfig } from "./helpers.ts";
@@ -1481,7 +1482,7 @@ Since v1.0.0`
     `
       );
 
-      const constructorDeclaration = sourceFile.getClass("A")!.getConstructors()[0];
+      const constructorDeclaration = O.getOrThrow(A.head(sourceFile.getClass("A")!.getConstructors()));
 
       expect(Parser.getConstructorDeclarationSignature(constructorDeclaration)).toEqual("constructor()");
     });

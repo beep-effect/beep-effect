@@ -74,7 +74,7 @@ import type { LexicalEditor } from "lexical";
 import type { JSX, ReactNode } from "react";
 
 const decodeSlashItemsOption = S.decodeOption(SlashItems);
-const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson);
+const encodeEditorStateFromJsonOption = S.encodeOption(EditorStateFromJson);
 
 import type { AttachmentPort, MentionSource, SendPort, SlashItem } from "./config.ts";
 
@@ -589,9 +589,10 @@ export function ChatComposer(props: ChatComposerProps): JSX.Element {
   const runtimeInitialState = O.flatMap(O.fromUndefinedOr(initialState), (state) =>
     Result.getSuccess(decodeEditorStateForRuntimeResult(state))
   );
+  const encodedInitialState = O.flatMap(runtimeInitialState, encodeEditorStateFromJsonOption);
   // Lexical config errors log through the Effect runtime (no runSync here).
   const logEditorError = useAtomSet(logEditorErrorFn);
-  if (initialState !== undefined && O.isNone(runtimeInitialState)) {
+  if (initialState !== undefined && O.isNone(encodedInitialState)) {
     return <EditorWireViewer input={initialState} className={className} />;
   }
 
@@ -602,7 +603,7 @@ export function ChatComposer(props: ChatComposerProps): JSX.Element {
         theme: editorTheme,
         nodes: [...editorNodes],
         ...O.getSomesStruct({
-          editorState: O.map(runtimeInitialState, encodeEditorStateFromJsonSync),
+          editorState: encodedInitialState,
         }),
         onError: (error) => logEditorError(error),
       }}

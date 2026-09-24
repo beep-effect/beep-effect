@@ -724,7 +724,7 @@
       "whenToUse": "No detector replacement: use to terminate an assertion helper with an explicit failure message after its predicate has failed.",
       "whenNotToUse": "Do not call unconditionally in a passing path or use it instead of a typed Effect failure under test.",
       "replaces": [],
-      "example": "import { fail } from \"@effect/vitest/utils\"\nif (false) fail(\"failure\")",
+      "example": "import { fail } from \"@effect/vitest/utils\"\nconst passed: boolean = true\nif (!passed) fail(\"failure\")",
       "gotchas": [
         "It throws immediately through Node assert.",
         "Guard compile-only examples so the failure does not execute."

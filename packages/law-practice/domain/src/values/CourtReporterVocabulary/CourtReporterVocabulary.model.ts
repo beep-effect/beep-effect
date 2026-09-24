@@ -767,8 +767,13 @@ class ReporterVocabularyArtifactComparison extends S.Class<ReporterVocabularyArt
  *   CourtReporterArtifact,
  *   CourtReporterArtifactComparison,
  * } from "@beep/law-practice-domain/values/CourtReporterVocabulary"
+ * import * as Result from "effect/Result"
  *
- * const comparable = CourtReporterArtifactComparison.make(CourtReporterArtifact)
+ * if (Result.isFailure(CourtReporterArtifact)) {
+ *   throw new Error("expected court reporter artifact")
+ * }
+ *
+ * const comparable = CourtReporterArtifactComparison.make(CourtReporterArtifact.success)
  * console.log(comparable.schemaVersion) // "court-reporter-vocabulary/v1"
  * ```
  *

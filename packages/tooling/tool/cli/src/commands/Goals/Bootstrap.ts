@@ -5,8 +5,8 @@
  *
  * Workstream E phase 0: `--plan` is not a flag on a mutating command — it is
  * the only mode this command has. No function in this module calls a mutating
- * `FileSystem` member; the compiler is a pure total function from a decoded
- * `BootstrapInput` and the observed slug set to a content-addressed
+ * `FileSystem` member; the compiler hashes through Effect `Crypto` from a
+ * decoded `BootstrapInput` and the observed slug set to a content-addressed
  * `MaterializationPlan`, golden-tested before any writer exists.
  *
  * @packageDocumentation
@@ -30,10 +30,12 @@ import {
   PlanEntry,
   PlanPreservation,
 } from "./Bootstrap.schemas.ts";
-import { GoalPlanInputError } from "./Goals.errors.ts";
+import { GoalPlanInputError, GoalPlanOperationalError } from "./Goals.errors.ts";
 import { isCapabilitySlug } from "./Goals.schemas.ts";
 import { listGoalPackets } from "./Inventory.ts";
 import { canonicalJsonText, canonicalJsonTextPretty, sha256Hex } from "./PacketCore/PacketDigest.ts";
+import type * as Crypto from "effect/Crypto";
+import type * as PlatformError from "effect/PlatformError";
 import type { PlanMode, PlanOwnership, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { CapabilitySlug } from "./Goals.schemas.ts";
 
@@ -135,7 +137,11 @@ const REPORT_FIRST_PHASES: ReadonlyArray<ArchetypePhase> = [
 export const archetypePhases = (archetype: PhaseArchetype): ReadonlyArray<ArchetypePhase> =>
   PhaseArchetype.is["standard-delivery"](archetype) ? STANDARD_DELIVERY_PHASES : REPORT_FIRST_PHASES;
 
-const manifestPayload = (input: BootstrapInput): string => {
+// Pretty-printed manifest bytes are the hashed file payload. Stringify stays in
+// this sync helper; no schema codec owns this exact two-space file layout.
+const renderPrettyJson = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`;
+
+const manifestPayload = Effect.fnUntraced(function* (input: BootstrapInput) {
   const packetPath = `goals/${input.slug}`;
   const phases = A.map(archetypePhases(input.archetype), (phase) => ({
     id: phase.id,
@@ -147,11 +153,12 @@ const manifestPayload = (input: BootstrapInput): string => {
     O.map((exploration) => ({ provenance: { exploration: `explorations/${exploration}`, graduated: input.today } })),
     O.getOrElse(() => ({}))
   );
+  const packetId = `goal-packet/v1:${yield* sha256Hex(`${input.slug}\n${input.today}`)}`;
   const document = {
     schemaVersion: "initiative-manifest/v2",
     initiative: {
       id: input.slug,
-      packetId: `goal-packet/v1:${sha256Hex(`${input.slug}\n${input.today}`)}`,
+      packetId,
       title: input.title,
       status: input.status,
       created: input.today,
@@ -202,8 +209,8 @@ const manifestPayload = (input: BootstrapInput): string => {
     ],
     stopConditions: STOP_CONDITIONS,
   };
-  return `${JSON.stringify(document, null, 2)}\n`;
-};
+  return renderPrettyJson(document);
+});
 
 const readmePayload = (input: BootstrapInput): string => {
   const firstPhase = A.head(archetypePhases(input.archetype));
@@ -463,14 +470,20 @@ ${provenanceLines}
  */
 export type PlanRow = typeof PlanEntry.Encoded;
 
-const createRow = (path: string, ownership: PlanOwnership, reason: string, payload: string): PlanRow => ({
-  path,
-  action: "create",
-  ownership,
-  reason,
-  payload,
-  payloadDigest: sha256Hex(payload),
-});
+const createRow = (
+  path: string,
+  ownership: PlanOwnership,
+  reason: string,
+  payload: string
+): Effect.Effect<PlanRow, PlatformError.PlatformError, Crypto.Crypto> =>
+  Effect.map(sha256Hex(payload), (payloadDigest) => ({
+    path,
+    action: "create",
+    ownership,
+    reason,
+    payload,
+    payloadDigest,
+  }));
 
 const BOOTSTRAP_VALIDATIONS: ReadonlyArray<ValidationRequirement> = [
   "manifest-decodes",
@@ -516,12 +529,13 @@ export type ConflictRow = typeof PlanConflict.Encoded;
  * assemble before wrapping rows in schema classes. Both compilers share this
  * one sealing path so bootstrap and adoption plans are addressed identically.
  *
- * **Example** (Seal an empty conflicted plan)
+ * **Example** (Build the seal effect for an empty conflicted plan)
  *
  * ```ts
  * import { sealMaterializationPlan } from "@beep/repo-cli/commands/Goals/Bootstrap"
+ * import * as Effect from "effect/Effect"
  *
- * const plan = sealMaterializationPlan({
+ * const program = sealMaterializationPlan({
  *   mode: "bootstrap",
  *   slug: "x-goal",
  *   packetPath: "goals/x-goal",
@@ -530,15 +544,15 @@ export type ConflictRow = typeof PlanConflict.Encoded;
  *   validations: [],
  *   conflicts: [{ reason: "slug-exists", message: "exists" }],
  * })
- * console.log(plan.planId.startsWith("goal-plan/v1:")) // true
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param fields - The plain plan fields, without a plan id.
- * @returns The sealed plan carrying its content address.
+ * @returns Effect yielding the sealed plan carrying its content address.
  * @category use-cases
  * @since 0.0.0
  */
-export const sealMaterializationPlan = (fields: {
+export const sealMaterializationPlan = Effect.fnUntraced(function* (fields: {
   readonly mode: PlanMode;
   readonly slug: string;
   readonly packetPath: string;
@@ -548,7 +562,7 @@ export const sealMaterializationPlan = (fields: {
   readonly conflicts: ReadonlyArray<ConflictRow>;
   readonly towardArchetype?: PhaseArchetype;
   readonly templateSnapshotHash?: string;
-}): MaterializationPlan => {
+}) {
   const preimage = canonicalJsonText({
     schemaVersion: "goal-materialization-plan/v1",
     compilerVersion: "goal-materialization-compiler/v1",
@@ -565,7 +579,7 @@ export const sealMaterializationPlan = (fields: {
     O.getOrElse(() => ({}))
   );
   return MaterializationPlan.make({
-    planId: `goal-plan/v1:${sha256Hex(preimage)}`,
+    planId: `goal-plan/v1:${yield* sha256Hex(preimage)}`,
     mode: fields.mode,
     slug: fields.slug,
     packetPath: fields.packetPath,
@@ -576,27 +590,29 @@ export const sealMaterializationPlan = (fields: {
     ...towardArchetypeFields,
     ...templateSnapshotFields,
   });
-};
+});
 
 /**
  * Compiles a bootstrap input into a content-addressed materialization plan.
  *
  * **Details**
  *
- * A pure total function: no `Effect`, no `FileSystem`, no requirements
- * channel. The observed slug set is an explicit argument the command handler
+ * A total function of decoded input and the observed slug set: hashing goes
+ * through Effect `Crypto`, so the compiler is an Effect rather than a pure
+ * value. The observed slug set is an explicit argument the command handler
  * reads, so a `slug-exists` conflict is data the compiler emits — a conflicted
  * plan carries no entries. Every `create` entry carries its complete payload
  * bytes and digest, matching the ratified contract that the plan is the
  * complete deterministic description of the intended change.
  *
- * **Example** (Compile a minimal plan)
+ * **Example** (Build the compile effect for a minimal plan)
  *
  * ```ts
  * import { compileMaterializationPlan } from "@beep/repo-cli/commands/Goals/Bootstrap"
  * import { BootstrapInput } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
+ * import * as Effect from "effect/Effect"
  *
- * const plan = compileMaterializationPlan(
+ * const program = compileMaterializationPlan(
  *   BootstrapInput.make({
  *     slug: "example-goal",
  *     title: "Example Goal",
@@ -605,96 +621,108 @@ export const sealMaterializationPlan = (fields: {
  *   }),
  *   []
  * )
- * console.log(plan.conflicts.length) // 0
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param input - The decoded bootstrap input; `today` is explicit, never a clock read.
  * @param existingSlugs - Every packet slug currently under `goals/`.
- * @returns The sealed plan; conflicted plans carry no entries.
+ * @returns Effect yielding the sealed plan; conflicted plans carry no entries.
  * @category use-cases
  * @since 0.0.0
  */
 export const compileMaterializationPlan: {
-  (input: BootstrapInput, existingSlugs: ReadonlyArray<string>): MaterializationPlan;
-  (existingSlugs: ReadonlyArray<string>): (input: BootstrapInput) => MaterializationPlan;
-} = dual(2, (input: BootstrapInput, existingSlugs: ReadonlyArray<string>): MaterializationPlan => {
-  const packetPath = `goals/${input.slug}`;
-  if (A.contains(existingSlugs, input.slug)) {
-    return sealMaterializationPlan({
+  (
+    input: BootstrapInput,
+    existingSlugs: ReadonlyArray<string>
+  ): Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Crypto.Crypto>;
+  (
+    existingSlugs: ReadonlyArray<string>
+  ): (input: BootstrapInput) => Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Crypto.Crypto>;
+} = dual(
+  2,
+  Effect.fnUntraced(function* (input: BootstrapInput, existingSlugs: ReadonlyArray<string>) {
+    const packetPath = `goals/${input.slug}`;
+    if (A.contains(existingSlugs, input.slug)) {
+      return yield* sealMaterializationPlan({
+        mode: "bootstrap",
+        slug: input.slug,
+        packetPath,
+        entries: [],
+        preservations: [],
+        validations: [],
+        conflicts: [
+          {
+            reason: "slug-exists",
+            message: `Packet "${packetPath}" already exists; adopt it instead of bootstrapping over it.`,
+          },
+        ],
+      });
+    }
+
+    const entries = A.appendAll(
+      yield* Effect.all([
+        createRow(
+          `${packetPath}/ops/manifest.json`,
+          "generated",
+          "Every byte derives from the input and the archetype.",
+          yield* manifestPayload(input)
+        ),
+        createRow(
+          `${packetPath}/README.md`,
+          "generated-seed",
+          "Written once from input; human-owned immediately after.",
+          readmePayload(input)
+        ),
+        createRow(
+          `${packetPath}/GOAL.md`,
+          "generated-seed",
+          "Written once from mission and scope inputs; human-owned immediately after.",
+          goalMdPayload(input)
+        ),
+        createRow(
+          `${packetPath}/SPEC.md`,
+          "generated-seed",
+          "Written once from input; human-owned immediately after.",
+          specPayload(input)
+        ),
+        createRow(
+          `${packetPath}/PLAN.md`,
+          "generated-seed",
+          "Written once from the archetype phase table; human-owned immediately after.",
+          planPayload(input)
+        ),
+        createRow(
+          `${packetPath}/research/SOURCES.md`,
+          "generated-seed",
+          "Written once from provenance inputs; human-owned immediately after.",
+          sourcesPayload(input)
+        ),
+        createRow(`${packetPath}/research/.gitkeep`, "generated", "Directory marker.", "\n"),
+        createRow(`${packetPath}/history/.gitkeep`, "generated", "Directory marker.", "\n"),
+        createRow(`${packetPath}/history/reflections/.gitkeep`, "generated", "Directory marker.", ""),
+      ]),
+      [
+        {
+          path: "goals/INDEX.md",
+          action: "report",
+          ownership: "generated",
+          reason:
+            "Disposable projection owned by producer://goals/index; regenerate with `bun run beep goals index --write` after publish.",
+        } satisfies PlanRow,
+      ]
+    );
+
+    return yield* sealMaterializationPlan({
       mode: "bootstrap",
       slug: input.slug,
       packetPath,
-      entries: [],
+      entries,
       preservations: [],
-      validations: [],
-      conflicts: [
-        {
-          reason: "slug-exists",
-          message: `Packet "${packetPath}" already exists; adopt it instead of bootstrapping over it.`,
-        },
-      ],
+      validations: BOOTSTRAP_VALIDATIONS,
+      conflicts: [],
     });
-  }
-
-  const entries: ReadonlyArray<PlanRow> = [
-    createRow(
-      `${packetPath}/ops/manifest.json`,
-      "generated",
-      "Every byte derives from the input and the archetype.",
-      manifestPayload(input)
-    ),
-    createRow(
-      `${packetPath}/README.md`,
-      "generated-seed",
-      "Written once from input; human-owned immediately after.",
-      readmePayload(input)
-    ),
-    createRow(
-      `${packetPath}/GOAL.md`,
-      "generated-seed",
-      "Written once from mission and scope inputs; human-owned immediately after.",
-      goalMdPayload(input)
-    ),
-    createRow(
-      `${packetPath}/SPEC.md`,
-      "generated-seed",
-      "Written once from input; human-owned immediately after.",
-      specPayload(input)
-    ),
-    createRow(
-      `${packetPath}/PLAN.md`,
-      "generated-seed",
-      "Written once from the archetype phase table; human-owned immediately after.",
-      planPayload(input)
-    ),
-    createRow(
-      `${packetPath}/research/SOURCES.md`,
-      "generated-seed",
-      "Written once from provenance inputs; human-owned immediately after.",
-      sourcesPayload(input)
-    ),
-    createRow(`${packetPath}/research/.gitkeep`, "generated", "Directory marker.", "\n"),
-    createRow(`${packetPath}/history/.gitkeep`, "generated", "Directory marker.", "\n"),
-    createRow(`${packetPath}/history/reflections/.gitkeep`, "generated", "Directory marker.", ""),
-    {
-      path: "goals/INDEX.md",
-      action: "report",
-      ownership: "generated",
-      reason:
-        "Disposable projection owned by producer://goals/index; regenerate with `bun run beep goals index --write` after publish.",
-    },
-  ];
-
-  return sealMaterializationPlan({
-    mode: "bootstrap",
-    slug: input.slug,
-    packetPath,
-    entries,
-    preservations: [],
-    validations: BOOTSTRAP_VALIDATIONS,
-    conflicts: [],
-  });
-});
+  })
+);
 
 /**
  * Renders a materialization plan as canonical pretty JSON.
@@ -702,14 +730,20 @@ export const compileMaterializationPlan: {
  * **Example** (Render a compiled plan)
  *
  * ```ts
- * import { compileMaterializationPlan, renderMaterializationPlanJson } from "@beep/repo-cli/commands/Goals/Bootstrap"
- * import { BootstrapInput } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
- * import { Effect } from "effect"
+ * import { renderMaterializationPlanJson } from "@beep/repo-cli/commands/Goals/Bootstrap"
+ * import { MaterializationPlan } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
+ * import * as Effect from "effect/Effect"
  *
- * const plan = compileMaterializationPlan(
- *   BootstrapInput.make({ slug: "x-goal", title: "X", mission: "Y.", today: "2026-08-17" }),
- *   []
- * )
+ * const plan = MaterializationPlan.make({
+ *   planId: "goal-plan/v1:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   mode: "bootstrap",
+ *   slug: "x-goal",
+ *   packetPath: "goals/x-goal",
+ *   entries: [],
+ *   preservations: [],
+ *   validations: [],
+ *   conflicts: [],
+ * })
  * console.log(Effect.isEffect(renderMaterializationPlanJson(plan))) // true
  * ```
  *
@@ -730,13 +764,19 @@ export const renderMaterializationPlanJson: (plan: MaterializationPlan) => Effec
  * **Example** (Render headline counts)
  *
  * ```ts
- * import { compileMaterializationPlan, renderMaterializationPlanHuman } from "@beep/repo-cli/commands/Goals/Bootstrap"
- * import { BootstrapInput } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
+ * import { renderMaterializationPlanHuman } from "@beep/repo-cli/commands/Goals/Bootstrap"
+ * import { MaterializationPlan } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
  *
- * const plan = compileMaterializationPlan(
- *   BootstrapInput.make({ slug: "x-goal", title: "X", mission: "Y.", today: "2026-08-17" }),
- *   []
- * )
+ * const plan = MaterializationPlan.make({
+ *   planId: "goal-plan/v1:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   mode: "bootstrap",
+ *   slug: "x-goal",
+ *   packetPath: "goals/x-goal",
+ *   entries: [],
+ *   preservations: [],
+ *   validations: [],
+ *   conflicts: [],
+ * })
  * console.log(renderMaterializationPlanHuman(plan).includes("plan-id:")) // true
  * ```
  *
@@ -914,10 +954,10 @@ const runBootstrapPlan = Effect.fn("Goals.runBootstrapPlan")(function* (options:
     today,
   });
   const records = yield* listGoalPackets();
-  const plan = compileMaterializationPlan(
+  const plan = yield* compileMaterializationPlan(
     input,
     A.map(records, (record) => record.slug)
-  );
+  ).pipe(Effect.mapError(GoalPlanOperationalError.new("Failed to digest the materialization plan.")));
   yield* reportMaterializationPlan(plan, options.json);
 });
 
@@ -951,13 +991,16 @@ export const goalsBootstrapCommand = Command.make(
   },
   Effect.fn(function* (options) {
     return yield* runBootstrapPlan(options).pipe(
-      Effect.catchTag(
-        "GoalPlanInputError",
-        Effect.fn(function* (error) {
+      Effect.catchTags({
+        GoalPlanInputError: Effect.fn(function* (error) {
           yield* Console.error(`[goals:bootstrap] ${error.message}`);
           return yield* failWithReportedExit(`goals bootstrap: ${error.message}`);
-        })
-      )
+        }),
+        GoalPlanOperationalError: Effect.fn(function* (error) {
+          yield* Console.error(`[goals:bootstrap] ${error.message}`);
+          return yield* failWithReportedExit(`goals bootstrap: ${error.message}`);
+        }),
+      })
     );
   })
 ).pipe(Command.withDescription("Compile the read-only packet materialization plan (--plan --json); no writer exists"));

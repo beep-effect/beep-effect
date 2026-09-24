@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { hostname, userInfo } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
+import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { LiteralKit } from "@beep/schema";
 import { Effect, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -16,7 +16,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { repoRunArtifactId, repoRunSafeArtifactName } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import { perUserRuntimeRoot } from "../../../internal/repo-run/RuntimeRoot.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
 import type { FileSystem } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { RepoRunContext } from "../../../internal/repo-run/RepoRun.models.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ArtifactPaths");
@@ -127,7 +129,11 @@ const canonicalRepositoryIdentity = (repositoryIdentity: string): string => {
  */
 export const safeArtifactName: (value: string) => string = repoRunSafeArtifactName;
 
-const artifactNameHash = (value: string): string => createHash("sha256").update(value).digest("hex").slice(0, 12);
+const artifactNameHash = Effect.fnUntraced(function* (value: string) {
+  return Str.takeLeft(12)(
+    yield* sha256Hex(value).pipe(Effect.mapError(YeetCommandError.new("Failed to hash proof coordinator identity.")))
+  );
+});
 
 const effectiveUserId = (): number => userInfo().uid;
 
@@ -142,8 +148,9 @@ const proofCoordinatorRuntimeRoot = Effect.fnUntraced(function* (): Effect.fn.Re
   return (yield* perUserRuntimeRoot()).root;
 });
 
-const proofCoordinatorDirectoryName = (): string =>
-  `beep-yeet-proof-locks-${artifactNameHash(hostname())}-uid-${effectiveUserId()}`;
+const proofCoordinatorDirectoryName = Effect.fnUntraced(function* () {
+  return `beep-yeet-proof-locks-${yield* artifactNameHash(hostname())}-uid-${effectiveUserId()}`;
+});
 
 /**
  * Resolve the machine-local coordinator path for one repository identity.
@@ -176,13 +183,13 @@ const proofCoordinatorDirectoryName = (): string =>
  */
 export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath")(function* (
   repositoryIdentity: string
-): Effect.fn.Return<string, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const runtimeRoot = yield* proofCoordinatorRuntimeRoot();
   return path.join(
     runtimeRoot,
-    proofCoordinatorDirectoryName(),
-    `${artifactNameHash(canonicalRepositoryIdentity(repositoryIdentity))}.lock`
+    yield* proofCoordinatorDirectoryName(),
+    `${yield* artifactNameHash(canonicalRepositoryIdentity(repositoryIdentity))}.lock`
   );
 });
 
@@ -194,6 +201,7 @@ export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath
  * ```ts
  * import { runIdForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
  * import { RepoRunContext } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
  *
  * const context = RepoRunContext.make({
  *   base: "origin/main",
@@ -205,7 +213,8 @@ export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath
  *   repoRoot: "/repo",
  *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
  * })
- * console.log(runIdForContext(context)) // e.g. "feature-status-work-1a2b3c4d"
+ * const program = runIdForContext(context).pipe(Effect.map((id) => id.startsWith("feature-status-work-")))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param context - Repo run context carrying the current branch.
@@ -213,7 +222,10 @@ export const proofCoordinatorLockPath = Effect.fn("Yeet.proofCoordinatorLockPath
  * @category utilities
  * @since 0.0.0
  */
-export const runIdForContext = (context: RepoRunContext): string => repoRunArtifactId(context.branch);
+export const runIdForContext = (context: RepoRunContext) =>
+  repoRunArtifactId(context.branch).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to derive run artifact identity."))
+  );
 
 /**
  * Resolve the Yeet artifact directory for a repo run context.
@@ -291,10 +303,11 @@ export const proofLedgerPathForCheckout = Effect.fn("Yeet.proofLedgerPathForChec
 export const runArtifactPathForContext = Effect.fn("Yeet.runArtifactPathForContext")(function* (
   context: RepoRunContext,
   fileName: string
-): Effect.fn.Return<string, never, Path.Path> {
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | Path.Path> {
   const path = yield* Path.Path;
   const artifactDir = yield* artifactDirForContext(context);
-  return path.join(artifactDir, "runs", runIdForContext(context), fileName);
+  const runId = yield* runIdForContext(context);
+  return path.join(artifactDir, "runs", runId, fileName);
 });
 
 /**
@@ -315,5 +328,7 @@ export const runArtifactPathForContext = Effect.fn("Yeet.runArtifactPathForConte
  * @category utilities
  * @since 0.0.0
  */
-export const runStatePathForContext = (context: RepoRunContext): Effect.Effect<string, never, Path.Path> =>
+export const runStatePathForContext = (
+  context: RepoRunContext
+): Effect.Effect<string, YeetCommandError, Crypto.Crypto | Path.Path> =>
   runArtifactPathForContext(context, "state.json");

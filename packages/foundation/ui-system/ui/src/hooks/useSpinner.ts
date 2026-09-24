@@ -24,13 +24,12 @@ class SpinnerSchedule extends S.Class<SpinnerSchedule>($I`SpinnerSchedule`)(
   })
 ) {
   static readonly is = S.is(SpinnerSchedule);
-  static readonly fromUnknown = S.decodeUnknownSync(SpinnerSchedule);
   static readonly decodeOption = S.decodeUnknownOption(SpinnerSchedule);
 }
 
-const spinnerSchedule = SpinnerSchedule.fromUnknown({
-  continuousChangeInterval: 50,
-  continuousChangeDelay: 300,
+const spinnerSchedule = SpinnerSchedule.make({
+  continuousChangeInterval: NonNegativeInt.make(50),
+  continuousChangeDelay: NonNegativeInt.make(300),
 });
 
 type SpinnerState = {

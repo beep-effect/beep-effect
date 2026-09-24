@@ -646,7 +646,7 @@ const closeoutPrContextStep = (context: RepoRunContext): RepoPlanStep =>
     label: "closeout:pr-context",
     phase: "monitor",
     command: "gh",
-    args: ["pr", "view", "--json", "number,headRefName,state,url,headRefOid,isDraft"],
+    args: ["pr", "view", "--json", "number,headRefName,state,url,headRefOid,isDraft,author"],
     cwd: context.repoRoot,
     scope: "repo",
     mutability: "readonly",

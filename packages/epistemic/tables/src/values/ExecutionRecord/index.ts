@@ -14,6 +14,13 @@
  */
 export * from "./ExecutionRecord.converters.ts";
 /**
+ * Execution ledger converter error exports.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./ExecutionRecord.errors.ts";
+/**
  * Execution ledger table metadata exports.
  *
  * @category tables

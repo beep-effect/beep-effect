@@ -1819,7 +1819,7 @@ export const ProgressEvent = S.Union([
   RateLimitedEvent,
 ]).pipe(
   S.toTaggedUnion("_tag"),
-  SchemaUtils.withCodecStatics(["decodeUnknownEffect"]),
+  SchemaUtils.withStatics((schema) => ({ decodeUnknownEffect: S.decodeUnknownEffect(schema) })),
   $I.annoteSchema("ProgressEvent", {
     description: "Exhaustive discriminated union of extraction progress stream events.",
   })

@@ -33,7 +33,7 @@ export const Role = RoleBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(RoleBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownResult(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );
@@ -75,7 +75,7 @@ export const Status = StatusBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(StatusBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownResult(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

@@ -22,6 +22,7 @@ import {
   safeOriginBranchFromBase,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
@@ -62,7 +63,7 @@ const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
 export const runGitOutput = Effect.fn("Yeet.runGitOutput")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
-): Effect.fn.Return<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runSharedGitOutput(repoRoot, args, gitErrorAdapter);
 });
 
@@ -86,7 +87,7 @@ export const runGitOutput = Effect.fn("Yeet.runGitOutput")(function* (
 export const runGitPathList = Effect.fn("Yeet.runGitPathList")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
-): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runSharedGitPathList(repoRoot, args, gitErrorAdapter);
 });
 
@@ -109,7 +110,7 @@ export const runGitPathList = Effect.fn("Yeet.runGitPathList")(function* (
  */
 export const collectStagedPublishPaths = Effect.fn("Yeet.collectStagedPublishPaths")(function* (
   repoRoot: string
-): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* collectStagedPaths(repoRoot, gitErrorAdapter);
 });
 
@@ -132,7 +133,7 @@ export const collectStagedPublishPaths = Effect.fn("Yeet.collectStagedPublishPat
  */
 export const collectUnstagedTrackedPaths = Effect.fn("Yeet.collectUnstagedTrackedPaths")(function* (
   repoRoot: string
-): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* collectUnstagedPaths(repoRoot, gitErrorAdapter);
 });
 
@@ -155,7 +156,7 @@ export const collectUnstagedTrackedPaths = Effect.fn("Yeet.collectUnstagedTracke
  */
 export const collectUntrackedPaths = Effect.fn("Yeet.collectUntrackedPaths")(function* (
   repoRoot: string
-): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* collectGitUntrackedPaths(repoRoot, gitErrorAdapter);
 });
 
@@ -221,7 +222,7 @@ export const safeOriginBranchFromBaseForTesting = safeOriginBranchFromBase;
 export const refreshBaseRef = Effect.fn("Yeet.refreshBaseRef")(function* (
   repoRoot: string,
   base: string
-): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const originBranch = originBranchFromBase(base);
   if (O.isSome(originBranch)) {
     if (!isSafeOriginBranch(originBranch.value)) {
@@ -268,7 +269,7 @@ export const refreshBaseRef = Effect.fn("Yeet.refreshBaseRef")(function* (
  */
 export const currentYeetBranch = Effect.fn("Yeet.currentYeetBranch")(function* (
   repoRoot: string
-): Effect.fn.Return<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* currentBranch(repoRoot, gitErrorAdapter, "abbrev-ref").pipe(Effect.map(Str.trim));
 });
 
@@ -328,7 +329,7 @@ export const currentCommitSha = (context: RepoRunContext) =>
  */
 export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase")(function* (
   context: RepoRunContext
-): Effect.fn.Return<boolean, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const changed = yield* runGitPathList(context.repoRoot, [
     "diff",
     "--name-only",

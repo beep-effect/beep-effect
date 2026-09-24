@@ -791,17 +791,17 @@ const decodeStrideFaces = Effect.fn("FaceDetection.decodeStrideFaces")(function*
   image: PreprocessedImage,
   request: FaceDetectionImageRequest
 ): Effect.fn.Return<ReadonlyArray<RawFaceDetection>, FaceDetectionError> {
-  const stride = strides[strideIndex];
+  const stride = O.getOrThrow(A.get(strides, strideIndex));
   const cols = image.padWidth / stride;
   const rows = image.padHeight / stride;
-  const cls = yield* outputTensor(outputs, outputNames[strideIndex]).pipe(
-    Effect.flatMap((tensor) => tensorData(tensor, outputNames[strideIndex]))
+  const cls = yield* outputTensor(outputs, O.getOrThrow(A.get(outputNames, strideIndex))).pipe(
+    Effect.flatMap((tensor) => tensorData(tensor, O.getOrThrow(A.get(outputNames, strideIndex))))
   );
-  const objName = outputNames[strideIndex + strides.length];
+  const objName = O.getOrThrow(A.get(outputNames, strideIndex + strides.length));
   const obj = yield* outputTensor(outputs, objName).pipe(Effect.flatMap((tensor) => tensorData(tensor, objName)));
-  const bboxName = outputNames[strideIndex + strides.length * 2];
+  const bboxName = O.getOrThrow(A.get(outputNames, strideIndex + strides.length * 2));
   const bbox = yield* outputTensor(outputs, bboxName).pipe(Effect.flatMap((tensor) => tensorData(tensor, bboxName)));
-  const kpsName = outputNames[strideIndex + strides.length * 3];
+  const kpsName = O.getOrThrow(A.get(outputNames, strideIndex + strides.length * 3));
   const kps = yield* outputTensor(outputs, kpsName).pipe(Effect.flatMap((tensor) => tensorData(tensor, kpsName)));
   return collectStrideFaces(rows, cols, stride, request.minConfidence, cls, obj, bbox, kps);
 });

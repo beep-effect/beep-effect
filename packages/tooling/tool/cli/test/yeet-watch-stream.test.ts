@@ -23,6 +23,7 @@ import {
   yeetWatchCheckIsRequired,
   yeetWatchCommentEvent,
   yeetWatchEndReason,
+  yeetWatchThreadOutstanding,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -30,7 +31,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { YeetCheckTransition, YeetHeadChanged } from "@beep/repo-cli/test/Yeet";
+import type { YeetCheckTransition, YeetHeadChanged, YeetReviewThreadStateTag } from "@beep/repo-cli/test/Yeet";
 
 const decodeUnknownYeetWatchEventJson = S.decodeUnknownEffect(S.fromJsonString(YeetWatchEvent));
 
@@ -50,7 +51,7 @@ const snapshot = (overrides: Partial<Parameters<typeof YeetWatchSnapshot.make>[0
 const check = (name: string, outcome: "pending" | "pass" | "fail" | "skip"): YeetWatchCheck =>
   YeetWatchCheck.make({ name, outcome });
 
-const thread = (id: string, isResolved: boolean): YeetWatchThread => YeetWatchThread.make({ id, isResolved });
+const thread = (id: string, state: YeetReviewThreadStateTag): YeetWatchThread => YeetWatchThread.make({ id, state });
 
 const criteria = (value: boolean) =>
   YeetMergeReadyCriteria.make({
@@ -112,7 +113,7 @@ describe("diffYeetWatchSnapshots", () => {
     diffYeetWatchSnapshots(YeetWatchDiffInput.make(input));
 
   it("emits nothing when nothing changed", () => {
-    const same = snapshot({ checks: [check("Check", "pending")], threads: [thread("T1", false)] });
+    const same = snapshot({ checks: [check("Check", "pending")], threads: [thread("T1", "unresolved")] });
     expect(diff({ at: AT, next: same, prev: same })).toEqual([]);
   });
 
@@ -144,7 +145,7 @@ describe("diffYeetWatchSnapshots", () => {
   it("suppresses check and thread diffs when the head moved", () => {
     const events = diff({
       at: AT,
-      next: snapshot({ checks: [check("Check", "pending")], headSha: "bbb222", threads: [thread("T1", false)] }),
+      next: snapshot({ checks: [check("Check", "pending")], headSha: "bbb222", threads: [thread("T1", "unresolved")] }),
       prev: snapshot({ checks: [check("Check", "fail")] }),
     });
     expect(A.length(events)).toBe(1);
@@ -155,26 +156,53 @@ describe("diffYeetWatchSnapshots", () => {
   });
 
   it("reports thread lifecycle transitions: opened, resolved, unresolved", () => {
-    const opened = diff({ at: AT, next: snapshot({ threads: [thread("T1", false)] }), prev: snapshot() });
+    const opened = diff({ at: AT, next: snapshot({ threads: [thread("T1", "unresolved")] }), prev: snapshot() });
     expect(A.map(opened, (event) => (event as { readonly to: string }).to)).toEqual(["opened"]);
 
     const resolved = diff({
       at: AT,
-      next: snapshot({ threads: [thread("T1", true)] }),
-      prev: snapshot({ threads: [thread("T1", false)] }),
+      next: snapshot({ threads: [thread("T1", "resolved-answered")] }),
+      prev: snapshot({ threads: [thread("T1", "unresolved")] }),
     });
     expect(A.map(resolved, (event) => (event as { readonly to: string }).to)).toEqual(["resolved"]);
 
     const reopened = diff({
       at: AT,
-      next: snapshot({ threads: [thread("T1", false)] }),
-      prev: snapshot({ threads: [thread("T1", true)] }),
+      next: snapshot({ threads: [thread("T1", "unresolved")] }),
+      prev: snapshot({ threads: [thread("T1", "resolved-answered")] }),
     });
     expect(A.map(reopened, (event) => (event as { readonly to: string }).to)).toEqual(["unresolved"]);
   });
 
+  it("reports a reviewer follow-up and a bot acknowledgement on threads that stay resolved", () => {
+    // The gate closes here without `isResolved` moving: the thread is resolved
+    // in both snapshots, and only the classified state says a person is owed.
+    const followUp = diff({
+      at: AT,
+      next: snapshot({ threads: [thread("T1", "resolved-follow-up")] }),
+      prev: snapshot({ threads: [thread("T1", "resolved-answered")] }),
+    });
+    expect(A.map(followUp, (event) => (event as { readonly to: string }).to)).toEqual(["follow-up"]);
+
+    const acknowledged = diff({
+      at: AT,
+      next: snapshot({ threads: [thread("T1", "resolved-acknowledged")] }),
+      prev: snapshot({ threads: [thread("T1", "resolved-answered")] }),
+    });
+    expect(A.map(acknowledged, (event) => (event as { readonly to: string }).to)).toEqual(["acknowledged"]);
+  });
+
+  it("reports a thread first seen owing something, resolved or not", () => {
+    const followUp = diff({
+      at: AT,
+      next: snapshot({ threads: [thread("T1", "resolved-follow-up")] }),
+      prev: snapshot(),
+    });
+    expect(A.map(followUp, (event) => (event as { readonly to: string }).to)).toEqual(["follow-up"]);
+  });
+
   it("does not report a thread that arrives already resolved", () => {
-    const events = diff({ at: AT, next: snapshot({ threads: [thread("T1", true)] }), prev: snapshot() });
+    const events = diff({ at: AT, next: snapshot({ threads: [thread("T1", "resolved-answered")] }), prev: snapshot() });
     expect(events).toEqual([]);
   });
 
@@ -207,6 +235,17 @@ describe("diffYeetWatchSnapshots", () => {
       "merge-state-acceptable",
       "review-decision-acceptable",
     ]);
+  });
+});
+
+describe("yeetWatchThreadOutstanding", () => {
+  it("owes an answer on unresolved and follow-up threads only", () => {
+    const outstanding = (state: YeetReviewThreadStateTag) =>
+      yeetWatchThreadOutstanding(YeetWatchThread.make({ id: "T1", state }));
+    expect(outstanding("unresolved")).toBe(true);
+    expect(outstanding("resolved-follow-up")).toBe(true);
+    expect(outstanding("resolved-answered")).toBe(false);
+    expect(outstanding("resolved-acknowledged")).toBe(false);
   });
 });
 

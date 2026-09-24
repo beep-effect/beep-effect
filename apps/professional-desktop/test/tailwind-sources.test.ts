@@ -1,6 +1,5 @@
-import { provideScopedLayer } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { describe, expect, it } from "@effect/vitest";
+import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
@@ -25,14 +24,14 @@ const Manifest = S.Struct({
   dependencies: S.optionalKey(S.Record(S.String, S.String)),
 });
 
-const decodeManifest = S.decodeUnknownSync(S.fromJsonString(Manifest));
+const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(Manifest));
 
-describe("tailwind source declarations", () => {
+it.layer(BunFileSystem.layer)("tailwind source declarations", (it) => {
   it.effect(
     "declares an @source for every @beep UI package the app renders",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const manifest = decodeManifest(yield* fs.readFileString("package.json"));
+      const manifest = yield* decodeManifest(yield* fs.readFileString("package.json"));
       const globals = yield* fs.readFileString("src/styles/globals.css");
 
       const rendered = Object.keys(uiPackageSources).filter((name) => manifest.dependencies?.[name] !== undefined);
@@ -44,6 +43,6 @@ describe("tailwind source declarations", () => {
       const undeclared = rendered.filter((name) => !globals.includes(uiPackageSources[name] ?? " "));
 
       expect(undeclared).toStrictEqual([]);
-    }, provideScopedLayer(BunFileSystem.layer))
+    })
   );
 });

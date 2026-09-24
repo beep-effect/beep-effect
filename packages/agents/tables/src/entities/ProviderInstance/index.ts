@@ -21,6 +21,21 @@
  */
 export * from "./ProviderInstance.converters.ts";
 /**
+ * ProviderInstance converter error exports.
+ *
+ * **Example** (Import converter error)
+ *
+ * ```ts
+ * import * as ProviderInstance from "@beep/agents-tables/entities/ProviderInstance"
+ *
+ * console.log(ProviderInstance.ProviderInstanceConverterError._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./ProviderInstance.errors.ts";
+/**
  * ProviderInstance table exports.
  *
  * **Example** (Access table entity type)

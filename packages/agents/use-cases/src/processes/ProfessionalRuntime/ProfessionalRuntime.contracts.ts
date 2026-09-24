@@ -850,7 +850,5 @@ export class CandidateOutputSet extends S.Class<CandidateOutputSet>($I`Candidate
     description: "Structured candidate claims, project, tasks, drafts, gates, and context packet.",
   })
 ) {
-  static readonly fromUnknown = S.decodeUnknownSync(CandidateOutputSet);
-
   static readonly encodeResult = S.encodeResult(CandidateOutputSet);
 }

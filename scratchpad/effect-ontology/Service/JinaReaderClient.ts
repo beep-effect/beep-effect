@@ -258,15 +258,16 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
 
       // Execute with timeout
       const response = yield* httpClient.execute(request).pipe(
-        Effect.timeout(timeout),
-        Effect.catchTag("TimeoutError", () =>
-          Effect.fail(
-            JinaTimeoutError.make({
-              url: targetUrl,
-              timeoutMs: Milliseconds.make(Duration.toMillis(timeout)),
-            })
-          )
-        ),
+        Effect.timeoutOrElse({
+          duration: timeout,
+          orElse: () =>
+            Effect.fail(
+              JinaTimeoutError.make({
+                url: targetUrl,
+                timeoutMs: Milliseconds.make(Duration.toMillis(timeout)),
+              })
+            ),
+        }),
         Effect.mapError((error) => {
           if (JinaTimeoutError.is(error)) return error;
           return JinaApiError.make({

@@ -7,6 +7,7 @@ import {
 import {
   EXECUTION_DECISION_TABLE_NAME,
   EXECUTION_OUTCOME_TABLE_NAME,
+  ExecutionRecordConverterError,
   executionDecisionTable,
   executionOutcomeTable,
   fromExecutionDecisionRow,
@@ -17,10 +18,13 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type {
   ExecutionDecisionInsert,
   ExecutionDecisionRow,
@@ -45,8 +49,8 @@ const asSelectedOutcomeRow = (insert: ExecutionOutcomeInsert): ExecutionOutcomeR
   decisionVerdict: insert.decisionVerdict ?? "allowed",
 });
 
-const decodeDecision = S.decodeUnknownSync(ExecutionDecisionRecord);
-const decodeOutcome = S.decodeUnknownSync(ExecutionOutcomeRecord);
+const decodeDecision = S.decodeUnknownEffect(ExecutionDecisionRecord);
+const decodeOutcome = S.decodeUnknownEffect(ExecutionOutcomeRecord);
 const decisionEquivalence = S.toEquivalence(ExecutionDecisionRecord);
 const outcomeEquivalence = S.toEquivalence(ExecutionOutcomeRecord);
 
@@ -100,6 +104,31 @@ const columnFacts = (table: Table): Readonly<Record<string, { readonly columnTyp
     name: column.name,
   }));
 
+// The record schemas encode instances, so an unencodable record has to stay an
+// instance: clone onto the same prototype and corrupt one sealed field.
+const withUnencodableHash = <A extends object>(record: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(record)), record, { hash: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (
+  error: ExecutionRecordConverterError,
+  operation: ExecutionRecordConverterError["operation"]
+): void => {
+  expect(error._tag).toBe("ExecutionRecordConverterError");
+  expect(error.operation).toBe(operation);
+  expect(Str.isNonEmpty(error.reason)).toBe(true);
+};
+
+// `defaultFormatter` renders a `message: ""` annotation verbatim, so this is a
+// real SchemaError whose rendered message is empty - the input the `fromSchema`
+// fallback branch is written for.
+const emptyMessageSchemaError = S.decodeUnknownResult(S.String.annotate({ message: "" }))(0).pipe(
+  Result.flip,
+  Effect.fromResult
+);
+
 describe("ExecutionRecordTables", () => {
   it("pins the physical table names", () => {
     expect(getTableName(executionDecisionTable)).toBe(EXECUTION_DECISION_TABLE_NAME);
@@ -148,55 +177,134 @@ describe("ExecutionRecordTables", () => {
     }
   });
 
-  it("round-trips an allowed decision through insert and select rows", () => {
-    const insert = toExecutionDecisionInsert(allowedDecision);
+  it.effect(
+    "round-trips an allowed decision through insert and select rows",
+    Effect.fnUntraced(function* () {
+      const decision = yield* allowedDecision;
+      const insert = yield* Effect.fromResult(toExecutionDecisionInsert(decision));
 
-    expect(decisionEquivalence(fromExecutionDecisionRow(asSelectedRow(insert)), allowedDecision)).toBe(true);
-  });
+      expect(
+        decisionEquivalence(yield* Effect.fromResult(fromExecutionDecisionRow(asSelectedRow(insert))), decision)
+      ).toBe(true);
+    })
+  );
 
-  it("round-trips a denied decision with its bounded reason", () => {
-    const insert = toExecutionDecisionInsert(deniedDecision);
+  it.effect(
+    "round-trips a denied decision with its bounded reason",
+    Effect.fnUntraced(function* () {
+      const decision = yield* deniedDecision;
+      const insert = yield* Effect.fromResult(toExecutionDecisionInsert(decision));
 
-    expect(insert.reason).toBe("destination-not-granted");
-    expect(decisionEquivalence(fromExecutionDecisionRow(asSelectedRow(insert)), deniedDecision)).toBe(true);
-  });
+      expect(insert.reason).toBe("destination-not-granted");
+      expect(
+        decisionEquivalence(yield* Effect.fromResult(fromExecutionDecisionRow(asSelectedRow(insert))), decision)
+      ).toBe(true);
+    })
+  );
 
-  it("round-trips an outcome record", () => {
-    const insert = toExecutionOutcomeInsert(outcome);
+  it.effect(
+    "round-trips an outcome record",
+    Effect.fnUntraced(function* () {
+      const recorded = yield* outcome;
+      const insert = yield* Effect.fromResult(toExecutionOutcomeInsert(recorded));
 
-    expect(outcomeEquivalence(fromExecutionOutcomeRow(asSelectedOutcomeRow(insert)), outcome)).toBe(true);
-  });
+      expect(
+        outcomeEquivalence(yield* Effect.fromResult(fromExecutionOutcomeRow(asSelectedOutcomeRow(insert))), recorded)
+      ).toBe(true);
+    })
+  );
 
-  it("keeps sealed records and their row projections in agreement", () => {
-    const sealed = sealExecutionDecision({
-      audience: allowedDecision.audience,
-      decidedAt: allowedDecision.decidedAt,
-      destinationDigest: allowedDecision.destinationDigest,
-      grantSetDigest: allowedDecision.grantSetDigest,
-      operationDigest: allowedDecision.operationDigest,
-      policyRevision: allowedDecision.policyRevision,
-      prevHash: O.none(),
-      runKey: allowedDecision.runKey,
-      seq: allowedDecision.seq,
-      sinkClass: allowedDecision.sinkClass,
-      verdict: "allowed",
-    });
-    const rebuilt = fromExecutionDecisionRow(asSelectedRow(toExecutionDecisionInsert(sealed)));
+  it.effect(
+    "keeps sealed records and their row projections in agreement",
+    Effect.fnUntraced(function* () {
+      const decision = yield* allowedDecision;
+      const recorded = yield* outcome;
+      const sealed = sealExecutionDecision({
+        audience: decision.audience,
+        decidedAt: decision.decidedAt,
+        destinationDigest: decision.destinationDigest,
+        grantSetDigest: decision.grantSetDigest,
+        operationDigest: decision.operationDigest,
+        policyRevision: decision.policyRevision,
+        prevHash: O.none(),
+        runKey: decision.runKey,
+        seq: decision.seq,
+        sinkClass: decision.sinkClass,
+        verdict: "allowed",
+      });
+      const rebuilt = yield* Effect.fromResult(
+        toExecutionDecisionInsert(sealed).pipe(Result.map(asSelectedRow), Result.flatMap(fromExecutionDecisionRow))
+      );
 
-    expect(decisionEquivalence(rebuilt, sealed)).toBe(true);
+      expect(decisionEquivalence(rebuilt, sealed)).toBe(true);
 
-    const sealedOutcome = sealExecutionOutcome({
-      decisionHash: sealed.hash,
-      recordedAt: outcome.recordedAt,
-      runKey: sealed.runKey,
-      settlement: "completed",
-    });
+      const sealedOutcome = sealExecutionOutcome({
+        decisionHash: sealed.hash,
+        recordedAt: recorded.recordedAt,
+        runKey: sealed.runKey,
+        settlement: "completed",
+      });
 
-    expect(
-      outcomeEquivalence(
-        fromExecutionOutcomeRow(asSelectedOutcomeRow(toExecutionOutcomeInsert(sealedOutcome))),
-        sealedOutcome
-      )
-    ).toBe(true);
-  });
+      expect(
+        outcomeEquivalence(
+          yield* Effect.fromResult(
+            toExecutionOutcomeInsert(sealedOutcome).pipe(
+              Result.map(asSelectedOutcomeRow),
+              Result.flatMap(fromExecutionOutcomeRow)
+            )
+          ),
+          sealedOutcome
+        )
+      ).toBe(true);
+    })
+  );
+  it.effect(
+    "reports a typed converter failure on every ledger boundary",
+    Effect.fnUntraced(function* () {
+      const decision = yield* allowedDecision;
+      const decisionInsert = yield* Effect.fromResult(toExecutionDecisionInsert(decision));
+      const recorded = yield* outcome;
+      const outcomeInsert = yield* Effect.fromResult(toExecutionOutcomeInsert(recorded));
+
+      expectConverterFailure(
+        yield* converterFailure(toExecutionDecisionInsert(withUnencodableHash(decision))),
+        "toDecisionInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromExecutionDecisionRow({
+            ...asSelectedRow(decisionInsert),
+            hash: 42,
+          } as unknown as ExecutionDecisionRow)
+        ),
+        "fromDecisionRow"
+      );
+      expectConverterFailure(
+        yield* converterFailure(toExecutionOutcomeInsert(withUnencodableHash(recorded))),
+        "toOutcomeInsert"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromExecutionOutcomeRow({
+            ...asSelectedOutcomeRow(outcomeInsert),
+            hash: 42,
+          } as unknown as ExecutionOutcomeRow)
+        ),
+        "fromOutcomeRow"
+      );
+    })
+  );
+
+  it.effect(
+    "falls back to a generic reason when the schema failure renders empty",
+    Effect.fnUntraced(function* () {
+      const schemaError = yield* emptyMessageSchemaError;
+      expect(schemaError.message).toBe("");
+
+      const converterError = ExecutionRecordConverterError.fromSchema("fromDecisionRow", schemaError);
+      expect(converterError._tag).toBe("ExecutionRecordConverterError");
+      expect(converterError.operation).toBe("fromDecisionRow");
+      expect(converterError.reason).toBe("schema conversion failed");
+    })
+  );
 });

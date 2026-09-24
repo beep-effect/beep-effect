@@ -17,7 +17,7 @@ import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import type { SyncConflictRepositoryShape } from "@beep/documents-use-cases/entities/SyncConflict/server";
 
-const decodeUnknownNonEmptyStringSync = S.decodeUnknownSync(S.NonEmptyString);
+const decodeUnknownSyncConflict = S.decodeUnknownEffect(DomainSyncConflict.SyncConflict);
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
@@ -40,16 +40,15 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
   ).toBe("Passed");
 };
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(2);
-const unknownConflictId = S.decodeSync(Documents.SyncConflictId)(99);
-const decodeSyncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
-const encodeSyncConflict = S.encodeSync(DomainSyncConflict.SyncConflict);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(2);
+const unknownConflictId = Documents.SyncConflictId.make(99);
+const decodeSyncConflict = (input: unknown) => decodeUnknownSyncConflict(input).pipe(Effect.orDie);
 
 const driftSeed = (remoteEventId: O.Option<string>) =>
   SyncConflictSeed.make({
     conflictKind: "remoteEdit",
     provider: "box",
-    remoteEventId: O.map(remoteEventId, decodeUnknownNonEmptyStringSync),
+    remoteEventId: O.map(remoteEventId, (eventId) => S.NonEmptyString.make(eventId)),
     remotePayload: { eventType: "ITEM_MODIFY" },
     resolutionStatus: "open",
     workspaceId,
@@ -73,23 +72,25 @@ const makeRepository = (): SyncConflictRepositoryShape => {
   let nextId = 1;
 
   return {
-    record: (seed) =>
-      Effect.sync(() => {
-        const existing = O.flatMap(seed.remoteEventId, (remoteEventId) =>
-          A.findFirst(
-            conflicts,
-            (conflict) =>
-              conflict.provider === seed.provider &&
-              O.exists(conflict.remoteEventId, (eventId) => eventId === remoteEventId)
-          )
-        );
-        return O.getOrElse(existing, () => {
-          const created = decodeSyncConflict(syncConflictRow(seed, nextId));
+    record: (seed) => {
+      const existing = O.flatMap(seed.remoteEventId, (remoteEventId) =>
+        A.findFirst(
+          conflicts,
+          (conflict) =>
+            conflict.provider === seed.provider &&
+            O.exists(conflict.remoteEventId, (eventId) => eventId === remoteEventId)
+        )
+      );
+      return O.match(existing, {
+        onNone: Effect.fn("onNone")(function* () {
+          const created = yield* decodeSyncConflict(syncConflictRow(seed, nextId));
           nextId = nextId + 1;
           conflicts = A.append(conflicts, created);
           return created;
-        });
-      }),
+        }),
+        onSome: (found) => Effect.succeed(found),
+      });
+    },
     listOpen: (input) =>
       Effect.sync(() =>
         A.filter(
@@ -107,7 +108,7 @@ const makeRepository = (): SyncConflictRepositoryShape => {
           onNone: () => Effect.fail(SyncConflictRepositoryNotFound.make({ conflictId: input.conflictId })),
           onSome: (existing) =>
             Effect.sync(() => {
-              const reviewed = decodeSyncConflict({ ...encodeSyncConflict(existing), resolutionStatus: "reviewed" });
+              const reviewed = DomainSyncConflict.SyncConflict.make({ ...existing, resolutionStatus: "reviewed" });
               conflicts = A.map(conflicts, (conflict) => (conflict.id === existing.id ? reviewed : conflict));
               return reviewed;
             }),

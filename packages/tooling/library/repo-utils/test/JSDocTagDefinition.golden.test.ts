@@ -3,8 +3,7 @@ import { getJSDocTagMetadata } from "@beep/repo-utils/JSDoc/models/JSDocTagAnnot
 import { JSDocTagDefinition, make } from "@beep/repo-utils/JSDoc/models/JSDocTagDefinition.model";
 import { TagValue } from "@beep/repo-utils/JSDoc/models/tag-values";
 import { describe, expect, it } from "@effect/vitest";
-import { pipe, Result } from "effect";
-import * as A from "effect/Array";
+import { Effect, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -13,7 +12,7 @@ import golden from "./__golden__/jsdoc-tag-fingerprints.json" with { type: "json
 import type { TagName } from "@beep/repo-utils/JSDoc/models/tag-values";
 
 const decodeJSDocTagDefinitionResult = S.decodeResult(JSDocTagDefinition);
-const encodeJSDocTagDefinitionSync = S.encodeSync(JSDocTagDefinition);
+const encodeJSDocTagDefinition = S.encodeEffect(JSDocTagDefinition);
 
 const legacyMake: typeof make = dual(
   2,
@@ -39,41 +38,50 @@ type JSDocTagSchema = typeof JSDocTag;
 // Reuse captured wire values: native Arbitrary seeds do not reproduce fast-check samples.
 const sampleMember = (tag: TagName) => golden[tag].roundTrip;
 
-const fingerprint = (schema: MemberSchema, sample: unknown) => {
+const fingerprint = Effect.fnUntraced(function* (schema: MemberSchema, sample: unknown) {
   const metadata = pipe(getJSDocTagMetadata(schema), O.getOrThrow);
   const synchronous = schema as MemberSchema & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>;
-  const decoded = S.decodeUnknownSync(synchronous)(sample);
+  const decoded = yield* S.decodeUnknownEffect(synchronous)(sample);
 
   return {
     ast: String(schema.ast),
-    annotation: encodeJSDocTagDefinitionSync(metadata),
+    annotation: yield* encodeJSDocTagDefinition(metadata),
     fieldKeys: R.keys(schema.fields),
-    roundTrip: S.encodeSync(synchronous)(decoded),
+    roundTrip: yield* S.encodeUnknownEffect(synchronous)(decoded),
   };
-};
+});
 
-const fingerprints = (implementation: MakeMember, jsDocTag: JSDocTagSchema) =>
-  R.fromEntries(
-    A.map(jsDocTag.discriminants, (tag) => {
+const fingerprints = Effect.fnUntraced(function* (implementation: MakeMember, jsDocTag: JSDocTagSchema) {
+  const entries = yield* Effect.forEach(jsDocTag.discriminants, (tag) =>
+    Effect.gen(function* () {
       const definition = pipe(getJSDocTagMetadata(jsDocTag.cases[tag]), O.getOrThrow);
-      const { _tag: _, ...meta } = encodeJSDocTagDefinitionSync(definition);
+      const { _tag: _, ...meta } = yield* encodeJSDocTagDefinition(definition);
       const schema = implementation(tag, meta);
 
-      return [tag, fingerprint(schema, sampleMember(tag))] as const;
+      return [tag, yield* fingerprint(schema, sampleMember(tag))] as const;
     })
   );
 
+  return R.fromEntries(entries);
+});
+
 describe("JSDocTagDefinition.make golden compatibility", () => {
-  it("matches the copied legacy body for representative tags", () => {
-    const current = fingerprints(make, JSDocTag);
-    const legacy = fingerprints(legacyMake, JSDocTag);
+  it.effect(
+    "matches the copied legacy body for representative tags",
+    Effect.fnUntraced(function* () {
+      const current = yield* fingerprints(make, JSDocTag);
+      const legacy = yield* fingerprints(legacyMake, JSDocTag);
 
-    for (const tag of ["param", "returns", "deprecated", "example"] as const) {
-      expect(current[tag]).toEqual(legacy[tag]);
-    }
-  });
+      for (const tag of ["param", "returns", "deprecated", "example"] as const) {
+        expect(current[tag]).toEqual(legacy[tag]);
+      }
+    })
+  );
 
-  it("matches every pre-migration JSDoc tag fingerprint", () => {
-    expect(fingerprints(make, JSDocTag)).toEqual(golden);
-  });
+  it.effect(
+    "matches every pre-migration JSDoc tag fingerprint",
+    Effect.fnUntraced(function* () {
+      expect(yield* fingerprints(make, JSDocTag)).toEqual(golden);
+    })
+  );
 });

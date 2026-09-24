@@ -22,6 +22,7 @@ import {
   sweepStepBlockers,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
@@ -486,7 +487,7 @@ const withTempDirectory = Effect.fn("withTempDirectory")(function* <Value, Failu
 });
 
 const sweepTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
-  Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs));
+  Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs));
 
 describe("executeSweep", () => {
   it.layer(sweepTestLayer([["git merge-base --is-ancestor", ok("")], ...mergedSweepStubs]), { timeout: "30 seconds" })(

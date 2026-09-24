@@ -949,7 +949,11 @@ const canonicalRuleSource = (contract: CanonicalRuleSourceContract): RuleSource 
     url: contract.url,
   });
 
-const CanonicalRuleSources = A.map(CanonicalRuleSourceContracts, canonicalRuleSource);
+const CanonicalRuleSources: readonly [RuleSource, RuleSource, RuleSource] = [
+  canonicalRuleSource(CanonicalRuleSourceContracts[0]),
+  canonicalRuleSource(CanonicalRuleSourceContracts[1]),
+  canonicalRuleSource(CanonicalRuleSourceContracts[2]),
+];
 
 const CanonicalRuleResults: readonly [RuleResult, RuleResult, RuleResult, RuleResult, RuleResult, RuleResult] = [
   RuleResult.make({

@@ -1,0 +1,119 @@
+version: beep-models/v1
+bindings:
+  - role: codex.heavy
+    surface: codex-cli
+    modelId: gpt-6-astra
+    effort: medium
+    supersedes:
+      - gpt-5.6-sol
+  - role: research.web
+    surface: grok-cli
+    modelId: grok-4.6
+    effort: xhigh
+  - role: orchestrator
+    surface: claude-code
+    modelId: retired-model-x
+  - role: cursor.volume
+    surface: cursor-seat
+    modelId: composer-2.5
+  - role: graft.deep
+    surface: proxy-workflow
+    modelId: claude-opus-5
+targets:
+  - id: clean.toml
+    root: repo
+    path: locators.toml
+    optional: false
+    locators:
+      - _tag: toml-top-level-key
+        binding: { role: codex.heavy, surface: codex-cli, field: model }
+        render: { _tag: verbatim }
+        key: model
+      - _tag: toml-table-key
+        binding: { role: research.web, surface: grok-cli, field: effort }
+        render: { _tag: verbatim }
+        table: models
+        key: default_reasoning_effort
+  - id: stale.xml
+    root: repo
+    path: locators.xml
+    optional: false
+    locators:
+      - _tag: xml-attribute
+        binding: { role: codex.heavy, surface: codex-cli, field: model }
+        render: { _tag: verbatim }
+        elementSelector: option[name="model"]
+        attribute: value
+  - id: missing.file
+    root: repo
+    path: does-not-exist.toml
+    optional: false
+    locators:
+      - _tag: toml-top-level-key
+        binding: { role: codex.heavy, surface: codex-cli, field: model }
+        render: { _tag: verbatim }
+        key: model
+  - id: optional.file
+    root: repo
+    path: also-does-not-exist.toml
+    optional: true
+    locators:
+      - _tag: toml-top-level-key
+        binding: { role: codex.heavy, surface: codex-cli, field: model }
+        render: { _tag: verbatim }
+        key: model
+  - id: missing.locator
+    root: repo
+    path: locators.env
+    optional: false
+    locators:
+      - _tag: env-key
+        binding: { role: graft.deep, surface: proxy-workflow, field: model }
+        render: { _tag: verbatim }
+        key: NO_SUCH_KEY
+  - id: unknown.model
+    root: repo
+    path: locators.json
+    optional: false
+    locators:
+      - _tag: json-key
+        binding: { role: orchestrator, surface: claude-code, field: model }
+        render: { _tag: verbatim }
+        pointer:
+          - model
+  - id: clean.block
+    root: repo
+    path: locators.md
+    optional: false
+    locators:
+      - _tag: md-generated-block
+        blockId: routing-doctrine
+        filter:
+          roles:
+            - codex.heavy
+          surfaces:
+            - codex-cli
+        includeSuperseded: false
+  - id: missing.block
+    root: repo
+    path: locators.md
+    optional: false
+    locators:
+      - _tag: md-generated-block
+        blockId: not-present
+        filter: { roles: [], surfaces: [] }
+        includeSuperseded: false
+  - id: invalid.effort
+    root: repo
+    path: locators.sh
+    optional: false
+    locators:
+      - _tag: shell-assign
+        binding: { role: cursor.volume, surface: cursor-seat, field: effort }
+        render: { _tag: verbatim }
+        variable: "--model"
+        within: claudex
+superseded:
+  - id: gpt-5.6-sol
+    retiredAt: "2026-09-22T00:00:00Z"
+    replacedBy: gpt-6-astra

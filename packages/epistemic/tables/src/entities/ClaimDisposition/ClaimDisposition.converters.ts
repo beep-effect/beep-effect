@@ -7,7 +7,9 @@
  */
 
 import { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
+import { Result } from "effect";
 import * as S from "effect/Schema";
+import { ClaimDispositionConverterError } from "./ClaimDisposition.errors.ts";
 import type { Table } from "./ClaimDisposition.table.ts";
 
 /**
@@ -88,8 +90,8 @@ export type ClaimDispositionRow = typeof Table.$inferSelect;
  */
 export type ClaimDispositionInsert = typeof Table.$inferInsert;
 
-const encodeClaimDisposition = S.encodeSync(ClaimDisposition);
-const decodeClaimDispositionRow = S.decodeUnknownSync(ClaimDisposition);
+const encodeClaimDisposition = S.encodeResult(ClaimDisposition);
+const decodeClaimDispositionRow = S.decodeUnknownResult(ClaimDisposition);
 
 /**
  * Convert a ClaimDisposition entity into its persistence insert row.
@@ -105,6 +107,7 @@ const decodeClaimDispositionRow = S.decodeUnknownSync(ClaimDisposition);
  * ```ts
  * import { fromClaimDispositionRow, toClaimDispositionInsert } from "@beep/epistemic-tables/entities/ClaimDisposition"
  * import type { ClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   claimId: 3,
@@ -133,17 +136,23 @@ const decodeClaimDispositionRow = S.decodeUnknownSync(ClaimDisposition);
  *   ]
  * } satisfies ClaimDispositionRow
  *
- * const insert = toClaimDispositionInsert(fromClaimDispositionRow(row))
- * console.log("id" in insert) // false
+ * const insert = toClaimDispositionInsert(Result.getOrThrow(fromClaimDispositionRow(row)))
+ * console.log("id" in Result.getOrThrow(insert)) // false
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toClaimDispositionInsert = (claimDisposition: ClaimDisposition): ClaimDispositionInsert => {
-  const { id: _id, ...rest } = encodeClaimDisposition(claimDisposition);
-  return rest as ClaimDispositionInsert;
-};
+export const toClaimDispositionInsert = (
+  claimDisposition: ClaimDisposition
+): Result.Result<ClaimDispositionInsert, ClaimDispositionConverterError> =>
+  Result.mapError(
+    Result.map(encodeClaimDisposition(claimDisposition), (encoded): ClaimDispositionInsert => {
+      const { id: _id, ...rest } = encoded;
+      return rest as ClaimDispositionInsert;
+    }),
+    (error) => ClaimDispositionConverterError.fromSchema("toInsert", error)
+  );
 
 /**
  * Convert a selected persistence row into a ClaimDisposition entity.
@@ -153,6 +162,7 @@ export const toClaimDispositionInsert = (claimDisposition: ClaimDisposition): Cl
  * ```ts
  * import { fromClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition"
  * import type { ClaimDispositionRow } from "@beep/epistemic-tables/entities/ClaimDisposition"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   claimId: 3,
@@ -181,11 +191,16 @@ export const toClaimDispositionInsert = (claimDisposition: ClaimDisposition): Cl
  *   ]
  * } satisfies ClaimDispositionRow
  *
- * const disposition = fromClaimDispositionRow(row)
+ * const disposition = Result.getOrThrow(fromClaimDispositionRow(row))
  * console.log(disposition.status)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromClaimDispositionRow = (row: ClaimDispositionRow): ClaimDisposition => decodeClaimDispositionRow(row);
+export const fromClaimDispositionRow = (
+  row: ClaimDispositionRow
+): Result.Result<ClaimDisposition, ClaimDispositionConverterError> =>
+  Result.mapError(decodeClaimDispositionRow(row), (error) =>
+    ClaimDispositionConverterError.fromSchema("fromRow", error)
+  );

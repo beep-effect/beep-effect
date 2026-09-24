@@ -163,7 +163,7 @@ export const httpApiSuccessStatus: {
 const httpApiErrorStatus = (schema: S.Top, fallback = 500): NonNegativeInt =>
   HttpStatusCode.decodeUnknownSync(resolveHttpApiStatus(schema.ast) ?? fallback);
 
-const endpointSuccessSchemas = (endpoint: HttpApiEndpointMetadata): ReadonlyArray<S.Top> => {
+const endpointSuccessSchemas = (endpoint: HttpApiEndpointMetadata): A.NonEmptyReadonlyArray<S.Top> => {
   const schemas = A.fromIterable(endpoint.success);
   return A.isReadonlyArrayNonEmpty(schemas) ? schemas : A.make(HttpApiSchema.NoContent);
 };
@@ -305,7 +305,7 @@ export const makeHttpApiTelemetryDescriptor: {
     endpointName: endpoint.identifier,
     method: endpoint.method,
     route: endpoint.path,
-    successStatus: httpApiSuccessStatus(endpointSuccessSchemas(endpoint)[0]),
+    successStatus: httpApiSuccessStatus(A.headNonEmpty(endpointSuccessSchemas(endpoint))),
   })
 );
 

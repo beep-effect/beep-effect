@@ -11,14 +11,46 @@ import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { SyncItemInsert, SyncItemRow } from "@beep/documents-tables/entities/SyncItem";
 
-const decodeUnknownDomainSyncItemSyncItemSync = S.decodeUnknownSync(DomainSyncItem.SyncItem);
+const decodeUnknownSyncItem = S.decodeUnknownEffect(DomainSyncItem.SyncItem);
 
 const SyncItemEquivalence = S.toEquivalence(DomainSyncItem.SyncItem);
+
+// The row codec is a class schema, so an unencodable entity has to stay an
+// instance of its model: clone onto the same prototype and corrupt a single
+// column rather than handing the encoder a bare struct it would reject wholesale.
+const withUnencodablePublicId = <A extends object>(entity: A): A =>
+  Object.assign(Object.create(Object.getPrototypeOf(entity)), entity, { publicId: 42 });
+
+const converterFailure = <A, E>(result: Result.Result<A, E>): Effect.Effect<E, A> =>
+  result.pipe(Result.flip, Effect.fromResult);
+
+const expectConverterFailure = (error: { readonly _tag: string; readonly message: string }, tag: string): void => {
+  expect(error._tag).toBe(tag);
+  expect(Str.isNonEmpty(error.message)).toBe(true);
+};
+
+const absentAsNull = <A>(value: A | null | undefined): A | null => value ?? null;
+
+const syncItemRow = (insert: SyncItemInsert, id: number): SyncItemRow => ({
+  ...insert,
+  id,
+  contentDigest: absentAsNull(insert.contentDigest),
+  contentSizeBytes: absentAsNull(insert.contentSizeBytes),
+  lastError: absentAsNull(insert.lastError),
+  lastPushedDigest: absentAsNull(insert.lastPushedDigest),
+  lastPushedGeneration: absentAsNull(insert.lastPushedGeneration),
+  remoteId: absentAsNull(insert.remoteId),
+  remoteName: absentAsNull(insert.remoteName),
+  remoteParentId: absentAsNull(insert.remoteParentId),
+});
 
 const indexConfigNamed = (name: string) =>
   pipe(
@@ -91,57 +123,54 @@ describe("SyncItem table", () => {
     expect(Entities.SyncItem.syncItemTable).toBe(syncItemTable);
   });
 
-  it("round-trips SyncItem rows through the converters", () => {
-    const syncItem = decodeUnknownDomainSyncItemSyncItemSync(fileRow);
-    const insert = toSyncItemInsert(syncItem);
+  it.effect(
+    "round-trips SyncItem rows through the converters",
+    Effect.fnUntraced(function* () {
+      const syncItem = yield* decodeUnknownSyncItem(fileRow);
+      const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
 
-    expect("id" in insert).toBe(false);
-    expect(insert.localRelPath).toBe("matters/client-default/complaint.pdf");
-    expect(insert.syncState).toBe("pending");
-    expect(insert.workspaceId).toBe(2);
-    expect(insert.entityType).toBe("DocumentsSyncItem");
+      expect("id" in insert).toBe(false);
+      expect(insert.localRelPath).toBe("matters/client-default/complaint.pdf");
+      expect(insert.syncState).toBe("pending");
+      expect(insert.workspaceId).toBe(2);
+      expect(insert.entityType).toBe("DocumentsSyncItem");
 
-    const roundTripped = fromSyncItemRow({
-      ...insert,
-      id: 10,
-      // $inferInsert types nullable columns as `value | null | undefined`; the
-      // select-row converter expects `value | null`, so resolve absent
-      // optionals to their concrete nulls before round-tripping.
-      contentDigest: insert.contentDigest ?? null,
-      contentSizeBytes: insert.contentSizeBytes ?? null,
-      lastError: insert.lastError ?? null,
-      lastPushedDigest: insert.lastPushedDigest ?? null,
-      lastPushedGeneration: insert.lastPushedGeneration ?? null,
-      remoteId: insert.remoteId ?? null,
-      remoteName: insert.remoteName ?? null,
-      remoteParentId: insert.remoteParentId ?? null,
-    });
+      const roundTripped = yield* Effect.fromResult(fromSyncItemRow(syncItemRow(insert, 10)));
 
-    expect(roundTripped.contentDigest).toEqual(O.some("abc123"));
-    expect(roundTripped.lastError).toEqual(O.none());
-    expect(SyncItemEquivalence(roundTripped, syncItem)).toBe(true);
-  });
+      expect(roundTripped.contentDigest).toEqual(O.some("abc123"));
+      expect(roundTripped.lastError).toEqual(O.none());
+      expect(SyncItemEquivalence(roundTripped, syncItem)).toBe(true);
+    })
+  );
 
-  it.prop(
+  it.effect.prop(
     "round-trips schema-derived SyncItems through the row converters",
     [S.toType(DomainSyncItem.SyncItem)],
-    ([syncItem]) => {
-      const insert = toSyncItemInsert(syncItem);
-      const decoded = fromSyncItemRow({
-        ...insert,
-        id: syncItem.id,
-        contentDigest: insert.contentDigest ?? null,
-        contentSizeBytes: insert.contentSizeBytes ?? null,
-        lastError: insert.lastError ?? null,
-        lastPushedDigest: insert.lastPushedDigest ?? null,
-        lastPushedGeneration: insert.lastPushedGeneration ?? null,
-        remoteId: insert.remoteId ?? null,
-        remoteName: insert.remoteName ?? null,
-        remoteParentId: insert.remoteParentId ?? null,
-      });
+    Effect.fnUntraced(function* ([syncItem]) {
+      const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
+      const decoded = yield* Effect.fromResult(fromSyncItemRow(syncItemRow(insert, syncItem.id)));
 
       expect(SyncItemEquivalence(decoded, syncItem)).toBe(true);
-    },
+    }),
     { arbitrary: fcRuns(50) }
+  );
+
+  it.effect(
+    "reports a typed converter failure on both sides of the SyncItem boundary",
+    Effect.fnUntraced(function* () {
+      const syncItem = yield* decodeUnknownSyncItem(fileRow);
+      const insert = yield* Effect.fromResult(toSyncItemInsert(syncItem));
+
+      expectConverterFailure(
+        yield* converterFailure(toSyncItemInsert(withUnencodablePublicId(syncItem))),
+        "SyncItemConverterError"
+      );
+      expectConverterFailure(
+        yield* converterFailure(
+          fromSyncItemRow({ ...syncItemRow(insert, 10), publicId: 42 } as unknown as SyncItemRow)
+        ),
+        "SyncItemConverterError"
+      );
+    })
   );
 });

@@ -40,7 +40,7 @@ export const EcfrErrorReason = EcfrErrorReasonBase.pipe(
   SchemaUtils.withLiteralKitStatics(EcfrErrorReasonBase),
   SchemaUtils.withStatics((schema: typeof EcfrErrorReasonBase) => ({
     decodeOption: S.decodeUnknownOption(schema),
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownEffect(schema),
   }))
 );
 

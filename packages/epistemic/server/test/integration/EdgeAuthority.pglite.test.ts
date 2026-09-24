@@ -32,7 +32,7 @@ import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { and, eq, isNull } from "drizzle-orm";
-import { DateTime, Effect, Layer, pipe } from "effect";
+import { DateTime, Effect, Layer, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
@@ -51,14 +51,14 @@ const EdgeAuthorityTestLayer = EpistemicServerDrizzleLive.pipe(
   Layer.provideMerge(makeMigrationCapableLayer())
 );
 
-const decodeClaim = S.decodeUnknownSync(CandidateClaim);
-const decodeEvidence = S.decodeUnknownSync(Evidence);
-const decodeIdentity = S.decodeUnknownSync(LogicalEdgeIdentity);
-const decodeRecord = S.decodeUnknownSync(RecordEdgeFact);
-const decodeSupersede = S.decodeUnknownSync(SupersedeEdgeFact);
-const decodeAsOf = S.decodeUnknownSync(EdgeAsOfQuery);
-const decodeGateResult = S.decodeUnknownSync(ClaimGateResult);
-const decodeOutcomeInput = S.decodeUnknownSync(ClaimGateOutcomeInput);
+const decodeClaim = S.decodeUnknownEffect(CandidateClaim);
+const decodeEvidence = S.decodeUnknownEffect(Evidence);
+const decodeIdentity = S.decodeUnknownEffect(LogicalEdgeIdentity);
+const decodeRecord = S.decodeUnknownEffect(RecordEdgeFact);
+const decodeSupersede = S.decodeUnknownEffect(SupersedeEdgeFact);
+const decodeAsOf = S.decodeUnknownEffect(EdgeAsOfQuery);
+const decodeGateResult = S.decodeUnknownEffect(ClaimGateResult);
+const decodeOutcomeInput = S.decodeUnknownEffect(ClaimGateOutcomeInput);
 
 const systemPrincipal = { component: "Runtime", kind: "System" } as const;
 const edgeTable = DbSchema.edgeVersion;
@@ -95,21 +95,23 @@ const seedScenario = Effect.fnUntraced(function* (scenario: number) {
   yield* migrateEpistemicEdge();
   const db = yield* makeDrizzle();
 
-  const claim = decodeClaim({
+  const claim = yield* decodeClaim({
     ...productEntityFixtureInput("EpistemicCandidateClaim", scenario),
     fixtureKey: `claim.scenario-${scenario}`,
     lifecycle: "candidate",
     snapshot: {},
   });
-  const evidence = decodeEvidence({
+  const evidence = yield* decodeEvidence({
     ...productEntityFixtureInput("EpistemicEvidence", scenario),
     artifactFixtureKey: `artifact.scenario-${scenario}`,
     span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
     spanFixtureKey: `span.scenario-${scenario}`,
   });
 
-  const claimRows = yield* db.insert(DbSchema.candidateClaim).values(toCandidateClaimInsert(claim)).returning();
-  const evidenceRows = yield* db.insert(DbSchema.evidence).values(toEvidenceInsert(evidence)).returning();
+  const claimInsert = yield* Effect.fromResult(toCandidateClaimInsert(claim));
+  const claimRows = yield* db.insert(DbSchema.candidateClaim).values(claimInsert).returning();
+  const evidenceInsert = yield* Effect.fromResult(toEvidenceInsert(evidence));
+  const evidenceRows = yield* db.insert(DbSchema.evidence).values(evidenceInsert).returning();
   const claimRow = yield* requireHead(claimRows, "the seeded candidate claim row");
   const evidenceRow = yield* requireHead(evidenceRows, "the seeded evidence row");
 
@@ -126,14 +128,14 @@ const seedScenario = Effect.fnUntraced(function* (scenario: number) {
   return { claimId: claimRow.id, evidenceId: evidenceRow.id, identity };
 });
 
-const recordFact = (input: {
+const recordFact = Effect.fnUntraced(function* (input: {
   readonly identity: typeof LogicalEdgeIdentity.Encoded;
   readonly fact: Record<string, unknown>;
   readonly recordedAt: number;
   readonly validFrom: number;
   readonly validTo?: number;
-}) =>
-  decodeRecord({
+}) {
+  return yield* decodeRecord({
     fact: input.fact,
     identity: input.identity,
     orgId: 1,
@@ -144,16 +146,17 @@ const recordFact = (input: {
     validFrom: input.validFrom,
     validTo: input.validTo ?? null,
   });
+});
 
-const supersedeFact = (input: {
+const supersedeFact = Effect.fnUntraced(function* (input: {
   readonly identity: typeof LogicalEdgeIdentity.Encoded;
   readonly expectedVersion: number;
   readonly fact: Record<string, unknown>;
   readonly recordedAt: number;
   readonly validFrom: number;
   readonly validTo?: number;
-}) =>
-  decodeSupersede({
+}) {
+  return yield* decodeSupersede({
     expectedVersion: input.expectedVersion,
     fact: input.fact,
     identity: input.identity,
@@ -165,13 +168,19 @@ const supersedeFact = (input: {
     validFrom: input.validFrom,
     validTo: input.validTo ?? null,
   });
+});
 
-const asOf = (identity: typeof LogicalEdgeIdentity.Encoded, validAt: number, knownAt: number) =>
-  decodeAsOf({
+const asOf = Effect.fnUntraced(function* (
+  identity: typeof LogicalEdgeIdentity.Encoded,
+  validAt: number,
+  knownAt: number
+) {
+  return yield* decodeAsOf({
     knownAt,
-    logicalKey: logicalEdgeKey(decodeIdentity(identity)),
+    logicalKey: logicalEdgeKey(yield* decodeIdentity(identity)),
     validAt,
   });
+});
 
 const factOf = (version: O.Option<{ readonly fact: Record<string, unknown> }>, key: string): O.Option<unknown> =>
   O.map(version, (value) => value.fact[key]);
@@ -188,7 +197,7 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* EdgeAuthorityRepository;
 
           const head = yield* repository.record(
-            recordFact({
+            yield* recordFact({
               fact: { note: "cited in the office action" },
               identity: scenario.identity,
               recordedAt: 1_000,
@@ -203,11 +212,11 @@ if (!shouldRunPgliteIntegration) {
           expect(DateTime.toEpochMillis(head.validFrom)).toBe(1_000);
           expect(DateTime.toEpochMillis(head.recordedAt)).toBe(1_000);
           // Endpoints survive the flatten/unflatten round trip the columns force.
-          const identity = decodeIdentity(scenario.identity);
+          const identity = yield* decodeIdentity(scenario.identity);
           expect(unflattenEdgeSource(head)).toStrictEqual(O.some(identity.source));
           expect(unflattenEdgeTarget(head)).toStrictEqual(O.some(identity.target));
 
-          const atRead = yield* repository.readAsOf(asOf(scenario.identity, 1_500, 1_500));
+          const atRead = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 1_500));
           expect(O.map(atRead, (version) => version.version)).toStrictEqual(O.some(1));
 
           // `readLatest` is the same predicate asked at now/now, so pinning the
@@ -228,7 +237,7 @@ if (!shouldRunPgliteIntegration) {
           const db = yield* makeDrizzle();
 
           const former = yield* repository.record(
-            recordFact({
+            yield* recordFact({
               fact: { amount: "100" },
               identity: scenario.identity,
               recordedAt: 1_000,
@@ -236,7 +245,7 @@ if (!shouldRunPgliteIntegration) {
             })
           );
           const corrected = yield* repository.supersede(
-            supersedeFact({
+            yield* supersedeFact({
               expectedVersion: 1,
               fact: { amount: "150" },
               identity: scenario.identity,
@@ -248,10 +257,10 @@ if (!shouldRunPgliteIntegration) {
           expect(corrected.version).toBe(2);
           expect(corrected.supersedesId).toStrictEqual(O.some(former.id));
 
-          const before = yield* repository.readAsOf(asOf(scenario.identity, 1_500, 1_500));
-          const after = yield* repository.readAsOf(asOf(scenario.identity, 1_500, 2_500));
-          const atValidFrom = yield* repository.readAsOf(asOf(scenario.identity, 1_000, 1_000));
-          const beforeValidFrom = yield* repository.readAsOf(asOf(scenario.identity, 999, 2_500));
+          const before = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 1_500));
+          const after = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 2_500));
+          const atValidFrom = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_000, 1_000));
+          const beforeValidFrom = yield* repository.readAsOf(yield* asOf(scenario.identity, 999, 2_500));
 
           expect(factOf(before, "amount")).toStrictEqual(O.some("100"));
           expect(factOf(after, "amount")).toStrictEqual(O.some("150"));
@@ -268,7 +277,8 @@ if (!shouldRunPgliteIntegration) {
                 isNull(edgeTable.expiredAt)
               )
             );
-          expect(A.map(A.map(openHeads, fromEdgeVersionRow), (version) => version.version)).toStrictEqual([2]);
+          const openVersions = yield* Effect.fromResult(Result.all(A.map(openHeads, fromEdgeVersionRow)));
+          expect(A.map(openVersions, (version) => version.version)).toStrictEqual([2]);
         }),
         120_000
       );
@@ -280,7 +290,7 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* EdgeAuthorityRepository;
 
           yield* repository.record(
-            recordFact({
+            yield* recordFact({
               fact: { state: "employed" },
               identity: scenario.identity,
               recordedAt: 1_000,
@@ -288,7 +298,7 @@ if (!shouldRunPgliteIntegration) {
             })
           );
           const closed = yield* repository.supersede(
-            supersedeFact({
+            yield* supersedeFact({
               expectedVersion: 1,
               fact: { state: "employed" },
               identity: scenario.identity,
@@ -300,11 +310,11 @@ if (!shouldRunPgliteIntegration) {
 
           expect(O.map(closed.validTo, DateTime.toEpochMillis)).toStrictEqual(O.some(1_800));
 
-          const knownBefore = yield* repository.readAsOf(asOf(scenario.identity, 1_900, 2_100));
-          const knownAfter = yield* repository.readAsOf(asOf(scenario.identity, 1_900, 2_300));
-          const earlierValid = yield* repository.readAsOf(asOf(scenario.identity, 1_500, 2_300));
-          const atValidTo = yield* repository.readAsOf(asOf(scenario.identity, 1_800, 2_300));
-          const justBeforeValidTo = yield* repository.readAsOf(asOf(scenario.identity, 1_799, 2_300));
+          const knownBefore = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_900, 2_100));
+          const knownAfter = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_900, 2_300));
+          const earlierValid = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 2_300));
+          const atValidTo = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_800, 2_300));
+          const justBeforeValidTo = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_799, 2_300));
 
           expect(factOf(knownBefore, "state")).toStrictEqual(O.some("employed"));
           expect(O.isNone(knownAfter)).toBe(true);
@@ -323,7 +333,7 @@ if (!shouldRunPgliteIntegration) {
           const db = yield* makeDrizzle();
 
           const head = yield* repository.record(
-            recordFact({
+            yield* recordFact({
               fact: { state: "newer" },
               identity: scenario.identity,
               recordedAt: 2_000,
@@ -331,7 +341,7 @@ if (!shouldRunPgliteIntegration) {
             })
           );
           const late = yield* repository.record(
-            recordFact({
+            yield* recordFact({
               fact: { state: "older" },
               identity: scenario.identity,
               recordedAt: 2_500,
@@ -352,11 +362,12 @@ if (!shouldRunPgliteIntegration) {
             .where(
               and(eq(edgeTable.logicalKey, head.logicalKey), isNull(edgeTable.validTo), isNull(edgeTable.expiredAt))
             );
-          expect(A.map(A.map(openHeads, fromEdgeVersionRow), (version) => version.version)).toStrictEqual([1]);
+          const openVersions = yield* Effect.fromResult(Result.all(A.map(openHeads, fromEdgeVersionRow)));
+          expect(A.map(openVersions, (version) => version.version)).toStrictEqual([1]);
 
-          const olderWindow = yield* repository.readAsOf(asOf(scenario.identity, 1_500, 3_000));
-          const newerWindow = yield* repository.readAsOf(asOf(scenario.identity, 2_500, 3_000));
-          const beforeLateArrival = yield* repository.readAsOf(asOf(scenario.identity, 1_500, 2_200));
+          const olderWindow = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 3_000));
+          const newerWindow = yield* repository.readAsOf(yield* asOf(scenario.identity, 2_500, 3_000));
+          const beforeLateArrival = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 2_200));
 
           expect(factOf(olderWindow, "state")).toStrictEqual(O.some("older"));
           expect(factOf(newerWindow, "state")).toStrictEqual(O.some("newer"));
@@ -372,7 +383,7 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* EdgeAuthorityRepository;
 
           const head = yield* repository.record(
-            recordFact({
+            yield* recordFact({
               fact: { state: "current" },
               identity: scenario.identity,
               recordedAt: 2_000,
@@ -380,7 +391,7 @@ if (!shouldRunPgliteIntegration) {
             })
           );
           const disjoint = yield* repository.record(
-            recordFact({
+            yield* recordFact({
               fact: { state: "historic" },
               identity: scenario.identity,
               recordedAt: 2_500,
@@ -395,8 +406,8 @@ if (!shouldRunPgliteIntegration) {
           expect(O.isNone(disjoint.supersedesId)).toBe(true);
           expect(disjoint.version).toBe(2);
 
-          const inGap = yield* repository.readAsOf(asOf(scenario.identity, 1_500, 3_000));
-          const inDisjoint = yield* repository.readAsOf(asOf(scenario.identity, 700, 3_000));
+          const inGap = yield* repository.readAsOf(yield* asOf(scenario.identity, 1_500, 3_000));
+          const inDisjoint = yield* repository.readAsOf(yield* asOf(scenario.identity, 700, 3_000));
           yield* TestClock.setTime(3_000);
           const latest = yield* repository.readLatest(head.logicalKey);
 
@@ -418,7 +429,7 @@ if (!shouldRunPgliteIntegration) {
           // raise — it names the CHECK that caught it.
           const violation = yield* Effect.flip(
             repository.record(
-              recordFact({
+              yield* recordFact({
                 fact: { state: "inverted" },
                 identity: scenario.identity,
                 recordedAt: 1_000,
@@ -444,7 +455,7 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* EdgeAuthorityRepository;
 
           yield* repository.record(
-            recordFact({
+            yield* recordFact({
               fact: { amount: "100" },
               identity: scenario.identity,
               recordedAt: 1_000,
@@ -456,7 +467,7 @@ if (!shouldRunPgliteIntegration) {
           // aborts the surrounding pglite transaction chain.
           const conflict = yield* Effect.flip(
             repository.supersede(
-              supersedeFact({
+              yield* supersedeFact({
                 expectedVersion: 2,
                 fact: { amount: "150" },
                 identity: scenario.identity,
@@ -480,7 +491,7 @@ if (!shouldRunPgliteIntegration) {
 
           const conflict = yield* Effect.flip(
             repository.supersede(
-              supersedeFact({
+              yield* supersedeFact({
                 expectedVersion: 1,
                 fact: { amount: "150" },
                 identity: scenario.identity,
@@ -503,7 +514,7 @@ if (!shouldRunPgliteIntegration) {
           const repository = yield* EdgeAuthorityRepository;
 
           yield* repository.record(
-            recordFact({
+            yield* recordFact({
               fact: { state: "first" },
               identity: scenario.identity,
               recordedAt: 1_000,
@@ -513,7 +524,7 @@ if (!shouldRunPgliteIntegration) {
 
           const conflict = yield* Effect.flip(
             repository.record(
-              recordFact({
+              yield* recordFact({
                 fact: { state: "second" },
                 identity: scenario.identity,
                 recordedAt: 3_000,
@@ -541,7 +552,7 @@ if (!shouldRunPgliteIntegration) {
             lifecycle: "candidate",
             snapshot: {},
           };
-          const rejected = decodeGateResult({
+          const rejected = yield* decodeGateResult({
             verdict: "rejected",
             violations: [
               {
@@ -554,7 +565,7 @@ if (!shouldRunPgliteIntegration) {
           });
 
           const outcome = yield* resolver.resolve(
-            decodeOutcomeInput({
+            yield* decodeOutcomeInput({
               claim,
               dispositionId: 1,
               dispositionPublicId: `epistemic_claim_disposition_a${scenario.claimId}`,
@@ -577,7 +588,7 @@ if (!shouldRunPgliteIntegration) {
           ).toStrictEqual([["Expected at least 1 value(s) for evidence."]]);
 
           const admitted = yield* resolver.resolve(
-            decodeOutcomeInput({
+            yield* decodeOutcomeInput({
               claim,
               dispositionId: 2,
               dispositionPublicId: `epistemic_claim_disposition_b${scenario.claimId}`,

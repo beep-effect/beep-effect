@@ -229,7 +229,7 @@ export const addContext = (additionalContext: string): Output =>
  * import { Hook } from "effect-claudecode"
  * import * as O from "effect/Option"
  *
- * const output = Hook.PostToolUse.replaceOutput({ content: "[redacted]" })
+ * const output = Hook.PostToolUse.replaceOutput({ updatedToolOutput: { content: "[redacted]" } })
  * const replaced = O.flatMap(output.hookSpecificOutput, (specific) => specific.updatedToolOutput)
  * console.log(O.getOrUndefined(replaced)) // { content: "[redacted]" }
  * ```
@@ -238,14 +238,16 @@ export const addContext = (additionalContext: string): Output =>
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- This output constructor has no data operand; the optional context only configures the new value.
-export const replaceOutput = (updatedToolOutput: unknown, additionalContext?: string): Output =>
+export const replaceOutput = (input: {
+  readonly updatedToolOutput: unknown;
+  readonly additionalContext?: string;
+}): Output =>
   Output.make({
     hookSpecificOutput: O.some(
       HookSpecificOutput.make({
         hookEventName: "PostToolUse",
-        additionalContext: O.fromNullishOr(additionalContext),
-        updatedToolOutput: O.some(updatedToolOutput),
+        additionalContext: O.fromNullishOr(input.additionalContext),
+        updatedToolOutput: O.some(input.updatedToolOutput),
       })
     ),
   });
@@ -264,7 +266,7 @@ export const replaceOutput = (updatedToolOutput: unknown, additionalContext?: st
  * import { Hook } from "effect-claudecode"
  * import * as O from "effect/Option"
  *
- * const output = Hook.PostToolUse.replaceMcpOutput({ text: "sanitized" })
+ * const output = Hook.PostToolUse.replaceMcpOutput({ updatedMCPToolOutput: { text: "sanitized" } })
  * const replaced = O.flatMap(output.hookSpecificOutput, (specific) => specific.updatedMCPToolOutput)
  * console.log(O.getOrUndefined(replaced)) // { text: "sanitized" }
  * ```
@@ -273,14 +275,16 @@ export const replaceOutput = (updatedToolOutput: unknown, additionalContext?: st
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- This output constructor has no data operand; the optional context only configures the new value.
-export const replaceMcpOutput = (updatedMCPToolOutput: unknown, additionalContext?: string): Output =>
+export const replaceMcpOutput = (input: {
+  readonly updatedMCPToolOutput: unknown;
+  readonly additionalContext?: string;
+}): Output =>
   Output.make({
     hookSpecificOutput: O.some(
       HookSpecificOutput.make({
         hookEventName: "PostToolUse",
-        additionalContext: O.fromNullishOr(additionalContext),
-        updatedMCPToolOutput: O.some(updatedMCPToolOutput),
+        additionalContext: O.fromNullishOr(input.additionalContext),
+        updatedMCPToolOutput: O.some(input.updatedMCPToolOutput),
       })
     ),
   });
@@ -351,7 +355,7 @@ export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
  *
  * const hook = Hook.PostToolUse.onTool({
  *   toolName: "Bash",
- *   handler: () => Effect.succeed(Hook.PostToolUse.replaceOutput({ stdout: "[redacted]" })),
+ *   handler: () => Effect.succeed(Hook.PostToolUse.replaceOutput({ updatedToolOutput: { stdout: "[redacted]" } })),
  * })
  *
  * console.log(hook.event) // "PostToolUse"

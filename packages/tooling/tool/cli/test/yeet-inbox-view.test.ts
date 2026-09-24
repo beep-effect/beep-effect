@@ -24,9 +24,10 @@ import {
   yeetPrMergeReadyRowId,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -47,14 +48,15 @@ const capsule = (overrides: Partial<Parameters<typeof YeetFailureCapsule.make>[0
     ...overrides,
   });
 
-const row = (subject: YeetFailureCapsule): YeetCheckFailedRow =>
-  YeetCheckFailedRow.make({
+const row = Effect.fnUntraced(function* (subject: YeetFailureCapsule) {
+  return YeetCheckFailedRow.make({
     capsule: subject,
     checkout: "/repo",
-    id: yeetInboxRowId(subject),
+    id: yield* yeetInboxRowId(subject),
     severity: "P0",
     ts: AT,
   });
+});
 
 const wave = (overrides: Partial<Parameters<typeof YeetRemediationWave.make>[0]> = {}): YeetRemediationWave =>
   YeetRemediationWave.make({
@@ -66,7 +68,7 @@ const wave = (overrides: Partial<Parameters<typeof YeetRemediationWave.make>[0]>
     ...overrides,
   });
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requirements>(
   use: (root: string) => Effect.Effect<Value, Failure, Requirements>
@@ -86,21 +88,32 @@ const persistWave = Effect.fn("persistWave")(function* (root: string, current: Y
 });
 
 describe("yeetInboxRowLiveness", () => {
-  it("is unknown without a wave record", () => {
-    expect(yeetInboxRowLiveness(row(capsule()), O.none())).toBe("unknown");
-  });
+  layer(BunCrypto.layer)((it) => {
+    it.effect("is unknown without a wave record", () =>
+      Effect.gen(function* () {
+        expect(yeetInboxRowLiveness(yield* row(capsule()), O.none())).toBe("unknown");
+      })
+    );
 
-  it("is live when the row matches the wave's PR and head", () => {
-    expect(yeetInboxRowLiveness(row(capsule()), O.some(wave()))).toBe("live");
-  });
+    it.effect("is live when the row matches the wave's PR and head", () =>
+      Effect.gen(function* () {
+        expect(yeetInboxRowLiveness(yield* row(capsule()), O.some(wave()))).toBe("live");
+      })
+    );
 
-  it("is superseded when the wave moved to another head or PR", () => {
-    expect(yeetInboxRowLiveness(row(capsule()), O.some(wave({ headSha: "fff999" })))).toBe("superseded");
-    expect(yeetInboxRowLiveness(row(capsule()), O.some(wave({ prNumber: 99 })))).toBe("superseded");
-  });
+    it.effect("is superseded when the wave moved to another head or PR", () =>
+      Effect.gen(function* () {
+        expect(yeetInboxRowLiveness(yield* row(capsule()), O.some(wave({ headSha: "fff999" })))).toBe("superseded");
+        expect(yeetInboxRowLiveness(yield* row(capsule()), O.some(wave({ prNumber: 99 })))).toBe("superseded");
+      })
+    );
 
-  it("supports the data-last pipeable form", () => {
-    expect(pipe(row(capsule()), yeetInboxRowLiveness(O.some(wave())))).toBe("live");
+    it.effect("supports the data-last pipeable form", () =>
+      Effect.gen(function* () {
+        const subject = yield* row(capsule());
+        expect(pipe(subject, yeetInboxRowLiveness(O.some(wave())))).toBe("live");
+      })
+    );
   });
 });
 
@@ -122,10 +135,10 @@ describe("loadYeetInboxView", () => {
     inTempRepo((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* appendYeetInboxRow(root, row(capsule()));
+        yield* appendYeetInboxRow(root, yield* row(capsule()));
         const paths = yield* yeetInboxPaths(root);
         yield* fs.writeFileString(paths.failuresPath, "garbage line\n", { flag: "a" });
-        yield* appendYeetInboxRow(root, row(capsule({ lane: "Check / Lint" })));
+        yield* appendYeetInboxRow(root, yield* row(capsule({ lane: "Check / Lint" })));
 
         const view = yield* loadYeetInboxView(root);
 
@@ -138,7 +151,7 @@ describe("loadYeetInboxView", () => {
   it.live("dedupes re-announced ids keeping the first observation", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const first = row(capsule());
+        const first = yield* row(capsule());
         yield* appendYeetInboxRow(root, first);
         yield* appendYeetInboxRow(root, YeetCheckFailedRow.make({ ...first, ts: "2026-08-17T01:00:00Z" }));
 
@@ -153,8 +166,8 @@ describe("loadYeetInboxView", () => {
   it.live("joins each row with its ack state", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const acked = row(capsule());
-        const open = row(capsule({ lane: "Check / Lint" }));
+        const acked = yield* row(capsule());
+        const open = yield* row(capsule({ lane: "Check / Lint" }));
         yield* appendYeetInboxRow(root, acked);
         yield* appendYeetInboxRow(root, open);
         yield* writeYeetAckReceipt(
@@ -178,7 +191,7 @@ describe("loadYeetInboxView", () => {
     inTempRepo((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         yield* appendYeetInboxRow(root, subject);
         yield* fs.makeDirectory(`${root}/.beep/inbox/acks`, { recursive: true });
         yield* fs.writeFileString(yield* yeetInboxAckPath(root, subject.id), "corrupted");
@@ -199,7 +212,7 @@ describe("loadYeetInboxView", () => {
         const outsideRoot = `${root}/outside`;
         yield* fs.makeDirectory(repoRoot);
         yield* fs.makeDirectory(outsideRoot);
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         yield* appendYeetInboxRow(repoRoot, subject);
         yield* fs.makeDirectory(`${repoRoot}/.beep/inbox/acks`);
         const outsideAck = `${outsideRoot}/${subject.id}`;
@@ -227,7 +240,7 @@ describe("loadYeetInboxView", () => {
         const outsideAcks = `${root}/outside-acks`;
         yield* fs.makeDirectory(repoRoot);
         yield* fs.makeDirectory(outsideAcks);
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         yield* appendYeetInboxRow(repoRoot, subject);
         const receipt = YeetAckReceipt.make({
           ackedAt: AT,
@@ -248,8 +261,8 @@ describe("loadYeetInboxView", () => {
   it.live("joins liveness against the persisted wave record", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const current = row(capsule());
-        const stale = row(capsule({ headSha: "fff999" }));
+        const current = yield* row(capsule());
+        const stale = yield* row(capsule({ headSha: "fff999" }));
         yield* appendYeetInboxRow(root, current);
         yield* appendYeetInboxRow(root, stale);
         yield* persistWave(root, wave());
@@ -283,15 +296,17 @@ describe("loadYeetInboxView", () => {
     inTempRepo((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* appendYeetInboxRow(root, row(capsule()));
-        const forged = YeetCheckFailedRow.make({ ...row(capsule({ lane: "Check / Lint" })), id: "forged-id" });
+        const kept = yield* row(capsule());
+        yield* appendYeetInboxRow(root, kept);
+        const forgedSource = yield* row(capsule({ lane: "Check / Lint" }));
+        const forged = YeetCheckFailedRow.make({ ...forgedSource, id: "forged-id" });
         const paths = yield* yeetInboxPaths(root);
         const line = yield* YeetInboxRowJson.encode(forged);
         yield* fs.writeFileString(paths.failuresPath, `${line}\n`, { flag: "a" });
 
         const view = yield* loadYeetInboxView(root);
 
-        expect(A.map(view.entries, (entry) => entry.row.id)).toStrictEqual([row(capsule()).id]);
+        expect(A.map(view.entries, (entry) => entry.row.id)).toStrictEqual([kept.id]);
         expect(view.skippedLines).toBe(1);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
@@ -319,9 +334,9 @@ describe("loadYeetInboxView", () => {
     inTempRepo((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* appendYeetInboxRow(root, row(capsule()));
+        yield* appendYeetInboxRow(root, yield* row(capsule()));
         const paths = yield* yeetInboxPaths(root);
-        const partial = yield* YeetInboxRowJson.encode(row(capsule({ lane: "Check / Lint" })));
+        const partial = yield* YeetInboxRowJson.encode(yield* row(capsule({ lane: "Check / Lint" })));
         // Half of an in-flight append: no trailing newline.
         yield* fs.writeFileString(paths.failuresPath, Str.slice(0, 25)(partial), { flag: "a" });
 
@@ -336,7 +351,7 @@ describe("loadYeetInboxView", () => {
   it.live("round-trips the joined view through its codec", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        yield* appendYeetInboxRow(root, row(capsule()));
+        yield* appendYeetInboxRow(root, yield* row(capsule()));
 
         const view = yield* loadYeetInboxView(root);
         const encoded = yield* YeetInboxViewJson.encode(view);
@@ -349,53 +364,59 @@ describe("loadYeetInboxView", () => {
 });
 
 describe("merge-ready row liveness", () => {
-  it("is live regardless of the remediation wave: the merge loop supersedes it itself", () => {
-    const subject = YeetPrMergeReadyCapsule.make({
-      headSha: "abc123def456",
-      prNumber: 751,
-      url: null,
-      readyAt: AT,
-      pushedAt: null,
-      settledAt: null,
-      closeoutAt: null,
-      pushToReadyMs: null,
-    });
-    const ready = YeetPrMergeReadyRow.make({
-      capsule: subject,
-      checkout: "/repo",
-      id: yeetPrMergeReadyRowId(subject),
-      severity: "P1",
-      ts: AT,
-    });
-    expect(yeetInboxRowLiveness(ready, O.none())).toBe("live");
-    expect(yeetInboxRowLiveness(ready, O.some(wave({ headSha: "fff999" })))).toBe("live");
-  });
+  layer(BunCrypto.layer)((it) => {
+    it.effect("is live regardless of the remediation wave: the merge loop supersedes it itself", () =>
+      Effect.gen(function* () {
+        const subject = YeetPrMergeReadyCapsule.make({
+          headSha: "abc123def456",
+          prNumber: 751,
+          url: null,
+          readyAt: AT,
+          pushedAt: null,
+          settledAt: null,
+          closeoutAt: null,
+          pushToReadyMs: null,
+        });
+        const ready = YeetPrMergeReadyRow.make({
+          capsule: subject,
+          checkout: "/repo",
+          id: yield* yeetPrMergeReadyRowId(subject),
+          severity: "P1",
+          ts: AT,
+        });
+        expect(yeetInboxRowLiveness(ready, O.none())).toBe("live");
+        expect(yeetInboxRowLiveness(ready, O.some(wave({ headSha: "fff999" })))).toBe("live");
+      })
+    );
 
-  it("shares one observed-kind kit with --observed admission", () => {
-    const subject = YeetPrMergeReadyCapsule.make({
-      headSha: "abc123def456",
-      prNumber: 751,
-      url: null,
-      readyAt: AT,
-      pushedAt: null,
-      settledAt: null,
-      closeoutAt: null,
-      pushToReadyMs: null,
-    });
-    const ready = YeetPrMergeReadyRow.make({
-      capsule: subject,
-      checkout: "/repo",
-      id: yeetPrMergeReadyRowId(subject),
-      severity: "P1",
-      ts: AT,
-    });
-    const failed = row(capsule());
-    expect(YeetInboxObservedRowKind.Options).toStrictEqual(["proof-job-finished", "pr-merge-ready"]);
-    expect(yeetInboxRowIsObserved(ready)).toBe(true);
-    expect(yeetInboxRowIsObserved(failed)).toBe(false);
-    // An observed row is live under a moved wave; a gate row on the same wave is superseded.
-    const moved = O.some(wave({ headSha: "fff999" }));
-    expect(yeetInboxRowLiveness(ready, moved)).toBe("live");
-    expect(yeetInboxRowLiveness(failed, moved)).toBe("superseded");
+    it.effect("shares one observed-kind kit with --observed admission", () =>
+      Effect.gen(function* () {
+        const subject = YeetPrMergeReadyCapsule.make({
+          headSha: "abc123def456",
+          prNumber: 751,
+          url: null,
+          readyAt: AT,
+          pushedAt: null,
+          settledAt: null,
+          closeoutAt: null,
+          pushToReadyMs: null,
+        });
+        const ready = YeetPrMergeReadyRow.make({
+          capsule: subject,
+          checkout: "/repo",
+          id: yield* yeetPrMergeReadyRowId(subject),
+          severity: "P1",
+          ts: AT,
+        });
+        const failed = yield* row(capsule());
+        expect(YeetInboxObservedRowKind.Options).toStrictEqual(["proof-job-finished", "pr-merge-ready"]);
+        expect(yeetInboxRowIsObserved(ready)).toBe(true);
+        expect(yeetInboxRowIsObserved(failed)).toBe(false);
+        // An observed row is live under a moved wave; a gate row on the same wave is superseded.
+        const moved = O.some(wave({ headSha: "fff999" }));
+        expect(yeetInboxRowLiveness(ready, moved)).toBe("live");
+        expect(yeetInboxRowLiveness(failed, moved)).toBe("superseded");
+      })
+    );
   });
 });

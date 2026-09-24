@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
-import { A, Str, thunkFalse } from "@beep/utils";
+import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
 import {
   Clock,
@@ -117,6 +117,7 @@ import {
   QualityHardwareProfile,
 } from "./Quality.schemas.ts";
 import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
+import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
 import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
@@ -336,7 +337,7 @@ const ignoredTestPathSegments = ["/test/fixtures/", "/infra/lambda/"] as const;
 const testSearchRoots = ["apps", "packages", "infra"] as const;
 const moduleTagScannedRoots = [".patterns", "apps", "packages", "tooling"] as const;
 const moduleTagScannedExtensions = [".hbs", ".md", ".ts", ".tsx"] as const;
-const effectDiagnosticsDirectiveScannedRoots = ["apps", "packages", "tooling", "infra"] as const;
+const effectDiagnosticsDirectiveScannedRoots = ["apps", "packages", "tooling", "infra", "scratchpad"] as const;
 const effectDiagnosticsDirectiveScannedExtensions = [".cts", ".mts", ".ts", ".tsx"] as const;
 const effectDiagnosticsDirectiveIgnoredDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
 const tsgoProfileScannedRoots = ["apps", "packages", "infra", "scratchpad"] as const;
@@ -385,6 +386,7 @@ export const isEffectDiagnosticsDirectiveForTesting = (line: string): boolean =>
 
 const EffectDiagnosticsExemptPath = LiteralKit([
   "vitest.setup.ts",
+  "vitest.shared.ts",
   "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts",
 ]);
 const EffectDiagnosticsExemptRule = LiteralKit([
@@ -441,11 +443,13 @@ export class EffectDiagnosticsDirectiveExemption extends S.Class<EffectDiagnosti
  *
  * **Details**
  *
- * Exactly two entries exist and the tuple type keeps it that way: the root Bun-compat shim,
- * which implements `Bun.*` over node builtins before any Effect runtime exists, and the
- * effect-vitest-canon D14 conformance entrypoint. Every other `@effect-diagnostics` directive in
- * a scanned root fails `beep quality tsgo-rules`; a lane that wants a third entry has found a
- * rule-card gap, not a reason to grow this list.
+ * Exactly three entries exist and the tuple type keeps it that way: the root Bun-compat shim,
+ * which implements `Bun.*` over node builtins before any Effect runtime exists, the root Vitest
+ * shared config, whose include list is scanned synchronously before any Effect runtime exists,
+ * and the effect-vitest-canon D14 conformance entrypoint. Every other `@effect-diagnostics`
+ * directive in a scanned root (`apps`, `packages`, `tooling`, `infra`, `scratchpad`, and the
+ * repo-root TypeScript files) fails `beep quality tsgo-rules`; a lane that wants a fourth entry
+ * has found a rule-card gap, not a reason to grow this list.
  *
  * **Example** (Read the admitted paths)
  *
@@ -454,7 +458,7 @@ export class EffectDiagnosticsDirectiveExemption extends S.Class<EffectDiagnosti
  * import * as A from "effect/Array"
  *
  * console.log(A.map(effectDiagnosticsDirectiveExemptions, (exemption) => exemption.path))
- * // => ["vitest.setup.ts", "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts"]
+ * // => ["vitest.setup.ts", "vitest.shared.ts", "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts"]
  * ```
  *
  * @category constants
@@ -463,12 +467,19 @@ export class EffectDiagnosticsDirectiveExemption extends S.Class<EffectDiagnosti
 export const effectDiagnosticsDirectiveExemptions: readonly [
   EffectDiagnosticsDirectiveExemption,
   EffectDiagnosticsDirectiveExemption,
+  EffectDiagnosticsDirectiveExemption,
 ] = [
   EffectDiagnosticsDirectiveExemption.make({
     path: "vitest.setup.ts",
     rules: ["nodeBuiltinImport", "asyncFunction", "newPromise", "processEnv", "globalTimers", "globalRandom"],
     reason:
       "Root Bun-compat shim for Node-based vitest runs: it implements Bun.spawn/file/serve over node builtins before any Effect runtime exists.",
+  }),
+  EffectDiagnosticsDirectiveExemption.make({
+    path: "vitest.shared.ts",
+    rules: ["nodeBuiltinImport"],
+    reason:
+      "Root Vitest shared config: the include list is scanned synchronously with node builtins at config time, before any Effect runtime exists.",
   }),
   EffectDiagnosticsDirectiveExemption.make({
     path: "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts",
@@ -598,7 +609,12 @@ const decodeEffectTsgoLinkedRuleCellOption = S.decodeUnknownOption(EffectTsgoLin
 const decodeEffectTsgoRuleRowOption = S.decodeUnknownOption(EffectTsgoRuleRow);
 const decodeEffectTsgoDiagnosticsTableOption = S.decodeUnknownOption(EffectTsgoDiagnosticsTable);
 
-type QualityScriptEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type QualityScriptEnvironment =
+  | Crypto.Crypto
+  | FileSystem.FileSystem
+  | Path.Path
+  | Crypto.Crypto
+  | ChildProcessSpawner.ChildProcessSpawner;
 type GithubCheckError =
   | QualityScriptCommandError
   | QualityTaskConfigurationError
@@ -693,7 +709,7 @@ const qualityFileContext = Effect.fn("QualityScriptCommands.qualityFileContext")
 
 const runStep = Effect.fn("QualityScriptCommands.runStep")(function* (
   step: QualityTaskStep
-): Effect.fn.Return<void, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`);
   const exitCode = yield* runToExit({
     command: step.command,
@@ -802,7 +818,7 @@ const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function*
     readonly exitCode: number;
   },
   QualityScriptCommandError,
-  ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const result = yield* runCaptured({
     command: step.command,
@@ -826,7 +842,7 @@ const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function*
 
 const collectSuccessfulOutput = Effect.fn("QualityScriptCommands.collectSuccessfulOutput")(function* (
   step: QualityTaskStep
-): Effect.fn.Return<string, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* collectOutput(step);
 
   if (result.exitCode !== 0) {
@@ -845,7 +861,7 @@ const isTruthyMainPush = Effect.fn("QualityScriptCommands.isTruthyMainPush")(fun
 
 const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function* (
   repoRoot: string
-): Effect.fn.Return<string, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "git:branch",
@@ -858,7 +874,7 @@ const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function*
 
 const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log("[github-checks] refreshing origin/main");
   const shallow = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
@@ -890,7 +906,7 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
 ): Effect.fn.Return<
   ReadonlyArray<GithubCheckLaneSpec>,
   QualityScriptCommandError,
-  ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (yield* isTruthyMainPush()) {
     yield* Console.log("[github-checks] quality: skipped changeset status on main push");
@@ -933,7 +949,7 @@ export const runBunAudit = Effect.fn("QualityScriptCommands.runBunAudit")(functi
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1163,7 +1179,7 @@ const runReviewFix = Effect.fn("QualityScriptCommands.runReviewFix")(function* (
 
 const runSecretScan = Effect.fn("QualityScriptCommands.runSecretScan")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const mergeBase = yield* collectSuccessfulOutput(
     QualityTaskStep.make({
       label: "secrets:merge-base",
@@ -1190,7 +1206,7 @@ const runSecretScan = Effect.fn("QualityScriptCommands.runSecretScan")(function*
 
 const runSecurityScan = Effect.fn("QualityScriptCommands.runSecurityScan")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log("[github-checks] security: ONNX installer mitigation proof");
   yield* runFixedStep(repoRoot, "security:onnx-installer-mitigation", "node", [
     "--test",
@@ -1215,7 +1231,7 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1318,7 +1334,7 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
 
 const runNixChecks = Effect.fn("QualityScriptCommands.runNixChecks")(function* (
   repoRoot: string
-): Effect.fn.Return<void, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log("[github-checks] nix: flake check");
   yield* runFixedStep(repoRoot, "nix:flake-check", "nix", [
     "--option",
@@ -1674,7 +1690,7 @@ const runTestTsgoPackageGroup = Effect.fn("QualityScriptCommands.runTestTsgoPack
 ): Effect.fn.Return<
   TestTsgoPackageResult,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -2627,19 +2643,25 @@ const collectDisabledEffectDiagnosticDirectives = Effect.fn(
 )(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const isScannedExtension = (_normalized: string, name: string): boolean =>
+    A.contains(effectDiagnosticsDirectiveScannedExtensions, path.extname(name));
+  // Repo-root TypeScript files (vitest.setup.ts, vitest.shared.ts, *.config.ts) are scanned
+  // without descending: every directory at the root is skipped here and the recursive roots
+  // are walked separately below.
+  const rootFiles = yield* collectFiles(repoRoot, isScannedExtension, thunkTrue);
   const scannedFiles = yield* Effect.forEach(
     effectDiagnosticsDirectiveScannedRoots,
     (root) =>
       collectFiles(
         path.join(repoRoot, root),
-        (_normalized, name) => A.contains(effectDiagnosticsDirectiveScannedExtensions, path.extname(name)),
+        isScannedExtension,
         (normalized, name) =>
           A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name) ||
           name === ".storybook" ||
           Str.includes("/apps/storybook/")(normalized)
       ),
     { concurrency: 1 }
-  ).pipe(Effect.map(A.flatten));
+  ).pipe(Effect.map(A.flatten), Effect.map(A.appendAll(rootFiles)));
   return yield* Effect.forEach(
     scannedFiles,
     Effect.fnUntraced(function* (filePath) {
@@ -3239,7 +3261,7 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 ): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
@@ -3303,7 +3325,7 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 export const runJSDocQuality = Effect.fn("QualityScriptCommands.runJSDocQuality")(function* (): Effect.fn.Return<
   void,
   QualityScriptCommandError,
-  FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
+  Crypto.Crypto | FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
 > {
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
 

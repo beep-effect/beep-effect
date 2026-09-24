@@ -22,7 +22,8 @@ import {
   SyncDataToTsError,
 } from "./SyncDataToTs.schemas.ts";
 import { syncDataTargets } from "./targets/index.ts";
-import type { Crypto, JsonPatch } from "effect";
+import type { JsonPatch } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { HttpClient } from "effect/unstable/http";
 import type { SyncDataFileResult, SyncDataTarget } from "./SyncDataToTs.schemas.ts";
 

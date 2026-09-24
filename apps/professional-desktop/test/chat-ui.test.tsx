@@ -15,7 +15,7 @@ import * as Md from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { toast } from "@beep/ui/components/sonner";
 import { RegistryProvider, useAtomInitialValues, useAtomSet, useAtomSubscribe } from "@effect/atom-react";
-import { it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -23,7 +23,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { Reactivity } from "effect/unstable/reactivity";
-import { afterEach, describe, expect, vi } from "vitest";
+import { afterEach, vi } from "vitest";
 import { userDocument } from "@/chat/ChatFixtures";
 import { ChatApp } from "@/chat/ui/ChatApp";
 import { ChatTurnErrorToasts } from "@/chat/ui/ChatTurnErrorToasts";
@@ -31,7 +31,7 @@ import { MessageView } from "@/chat/ui/MessageView";
 import { blockRenderKey, boundedKey, StreamingBlocks, stableOccurrenceKeys } from "@/chat/ui/StreamingBlocks";
 import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 
-const decodeThreadId = S.decodeUnknownSync(WorkspaceIdentity.ThreadId);
+const decodeThreadId = S.decodeUnknownEffect(WorkspaceIdentity.ThreadId);
 
 const failingChatClient = ChatClient.of(((tag: string) =>
   tag === "SendMessage"
@@ -236,7 +236,7 @@ describe("ChatTurnErrorToasts", () => {
         <RegistryProvider initialValues={[[ChatClient.runtime.layer, FailingChatClientLayer]]}>
           <CaptureTurnError onValue={(error) => (latestTurnError = error)} />
           <ChatTurnErrorToasts />
-          <RunFailingTurn threadId={decodeThreadId(1)} />
+          <RunFailingTurn threadId={yield* decodeThreadId(1)} />
         </RegistryProvider>
       );
       fireEvent.click(getByTestId("run-failing-turn"));

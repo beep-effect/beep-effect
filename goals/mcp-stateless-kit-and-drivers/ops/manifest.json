@@ -3,13 +3,13 @@
   "initiative": {
     "id": "mcp-stateless-kit-and-drivers",
     "title": "MCP Stateless Kit and Drivers",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-09-22",
     "updated": "2026-09-22",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/mcp-stateless-kit-and-drivers",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Rebase @beep/mcp-kit on the installed rc.117 MCP 2026-07-28 adapter, add the in-repo 2026 client and conformance port, and cut the five stdio hosts over to the stateless protocol, nlp-mcp last behind a live vendor capture.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -60,7 +60,8 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress",
+      "exit": "PR 1 (kit rebase, @beep/mcp-kit/client, conformance port) published 2026-09-22; PR 2-4 pending."
     },
     {
       "id": "P2",

@@ -77,7 +77,7 @@ import { CurrentMcpCaller, TierGate, TierGateAuditRecord, TierGateVerdict } from
 import { NonNegativeInt } from "@beep/schema";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import { A, O } from "@beep/utils";
-import { Context, DateTime, Duration, Effect, HashMap, Ref, Semaphore } from "effect";
+import { Context, DateTime, Duration, Effect, HashMap, Ref, Result, Semaphore } from "effect";
 import * as S from "effect/Schema";
 import * as AiTool from "effect/unstable/ai/Tool";
 import type { DecisionRecordHash, ExecutionDecisionRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
@@ -247,7 +247,7 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
   // the wrapped effect always runs outside it.
   const lock = yield* Semaphore.make(1);
 
-  const freezeRunFor = (runId: string, now: DateTime.Utc): RunState => {
+  const freezeRunFor = (runId: string, now: DateTime.Utc): Result.Result<RunState, S.SchemaError> => {
     const expiresAt = DateTime.add(now, { milliseconds: Duration.toMillis(options.grantTtl) });
     const grants = A.map(options.operations, (operation) =>
       ExecutionGrant.make({
@@ -261,20 +261,22 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
         sink: options.sink,
       })
     );
-    const frozen = freezeGrantSet(DraftGrantSet.make({ grants, policyRevision: config.policyRevision }), now);
     // Deterministic per (run id, freeze instant). The run id is the transport's
     // session identifier, which never recurs, so the pair cannot repeat. A
     // collision would surface as a chain primary-key violation, which refuses
     // fail-closed rather than corrupting the chain.
     const runKey = ExecutionRunKey.make(digestForLedger(`epistemic-run/${runId}/${DateTime.toEpochMillis(now)}`));
-    return {
-      expiresAtMillis: DateTime.toEpochMillis(expiresAt),
-      frozen,
-      lastHash: O.none(),
-      nextSeq: 0,
-      pendingOutcomes: HashMap.empty(),
-      runKey,
-    };
+    return Result.map(
+      freezeGrantSet(DraftGrantSet.make({ grants, policyRevision: config.policyRevision }), now),
+      (frozen): RunState => ({
+        expiresAtMillis: DateTime.toEpochMillis(expiresAt),
+        frozen,
+        lastHash: O.none(),
+        nextSeq: 0,
+        pendingOutcomes: HashMap.empty(),
+        runKey,
+      })
+    );
   };
 
   // Runs are never evicted. Eviction plus re-freeze would hand an expired
@@ -283,14 +285,19 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
   // `grant-expired` permanent for the session that earned it. Growth is one
   // small entry per MCP session — sessions are minted only by an `initialize`
   // that already passed the origin allowlist and the per-launch bearer token.
+  // Run creation is serialized by `lock`, so reading the map and inserting the
+  // frozen run are not racing another creator. A freeze failure means the
+  // policy-derived draft violated its own schema, which is a programmer error
+  // rather than a caller error, so it dies instead of joining the gate's typed
+  // failures.
   const resolveRun = (runId: string, now: DateTime.Utc): Effect.Effect<RunState> =>
-    Ref.modify(runs, (map) =>
+    Effect.flatMap(Ref.get(runs), (map) =>
       O.match(HashMap.get(map, runId), {
-        onNone: () => {
-          const created = freezeRunFor(runId, now);
-          return [created, HashMap.set(map, runId, created)] as const;
-        },
-        onSome: (state) => [state, map] as const,
+        onNone: () =>
+          Effect.flatMap(Effect.orDie(Effect.fromResult(freezeRunFor(runId, now))), (created) =>
+            Effect.as(Ref.update(runs, HashMap.set(runId, created)), created)
+          ),
+        onSome: Effect.succeed,
       })
     );
 

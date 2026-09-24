@@ -25,6 +25,7 @@ import {
   flatMap as flatMapOption,
   fromUndefinedOr,
   getOrElse,
+  getOrThrow,
   isSome,
   map,
   match,
@@ -682,15 +683,16 @@ export function schema(models: ModelRecord): unknown {
                   edge.targetKey
                 );
               }
+              const sourceColumn = getOrThrow(fromUndefinedOr(columns[edge.sourceField]));
               const builder = match(fromUndefinedOr(edge.reference.name), {
                 onNone: () =>
                   foreignKey({
-                    columns: [columns[edge.sourceField]],
+                    columns: [sourceColumn],
                     foreignColumns: [targetColumn],
                   }),
                 onSome: (name) =>
                   foreignKey({
-                    columns: [columns[edge.sourceField]],
+                    columns: [sourceColumn],
                     foreignColumns: [targetColumn],
                     name,
                   }),
