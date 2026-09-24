@@ -1,6 +1,6 @@
 import { make } from "@beep/identity";
+import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const { $MyPkgId } = make("my-pkg", { authority: "https://ns.beep.sh/", prefix: "beep" });
 const $I = $MyPkgId.create("patent");

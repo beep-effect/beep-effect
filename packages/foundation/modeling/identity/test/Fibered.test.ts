@@ -1,12 +1,12 @@
+import { fcRuns } from "@beep/fc-runs";
 import { Fibered } from "@beep/identity";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { expectTypeOf } from "vitest";
 
 const Base = S.Literals(["text", "count", "flag"]);
+const points = [...Base.literals];
 const Section = S.Struct({
   label: S.String,
   rank: S.Finite,
@@ -55,18 +55,17 @@ describe("Fibered", () => {
     }
   });
 
-  it("maps every schema-generated union value to its point's section", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(Arbitrary.all([Arbitrary.schema(family.union)]), ([value]) => {
-          expect(family.fiberOf(value)).toBe(family.meta(value._tag));
-          expect(S.is(family.member(value._tag))(value)).toBe(true);
+  it.prop(
+    "maps every schema-generated union value to its point's section",
+    [Arbitrary.schema(family.union)],
+    ([value]) => {
+      expect(family.fiberOf(value)).toBe(family.meta(value._tag));
+      expect(S.is(family.member(value._tag))(value)).toBe(true);
 
-          return true;
-        })
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("maps decoded member values back to their section metadata", () => {
     const text = S.decodeSync(family.member("text"))({ _tag: "text", value: "hello" });
@@ -98,44 +97,34 @@ describe("Fibered", () => {
     expect(family.project("count", [])).toEqual({});
   });
 
-  it("property-checks pullback restriction and composition over random subsets", () => {
-    const points = [...Base.literals];
+  it.prop(
+    "property-checks pullback restriction and composition over random subsets",
+    [
+      Arbitrary.schema(S.Array(S.Literals(points)).check(S.isMaxLength(points.length))).pipe(Arbitrary.map(A.dedupe)),
+      Arbitrary.schema(S.Array(S.Literals(points)).check(S.isMaxLength(points.length))).pipe(Arbitrary.map(A.dedupe)),
+    ],
+    ([subset, candidate]) => {
+      const subsubset = A.filter(subset, (point) => A.contains(candidate, point));
+      const restricted = family.pullback(subset);
+      const composed = restricted.pullback(subsubset);
+      const direct = family.pullback(subsubset);
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(S.Array(S.Literals(points)).check(S.isMaxLength(points.length))).pipe(
-              Arbitrary.map(A.dedupe)
-            ),
-            Arbitrary.schema(S.Array(S.Literals(points)).check(S.isMaxLength(points.length))).pipe(
-              Arbitrary.map(A.dedupe)
-            ),
-          ]),
-          ([subset, candidate]) => {
-            const subsubset = A.filter(subset, (point) => A.contains(candidate, point));
-            const restricted = family.pullback(subset);
-            const composed = restricted.pullback(subsubset);
-            const direct = family.pullback(subsubset);
+      expect(restricted.points).toEqual(subset);
+      for (const point of subset) {
+        expect(restricted.member(point)).toBe(family.member(point));
+        expect(restricted.meta(point)).toBe(family.meta(point));
+      }
 
-            expect(restricted.points).toEqual(subset);
-            for (const point of subset) {
-              expect(restricted.member(point)).toBe(family.member(point));
-              expect(restricted.meta(point)).toBe(family.meta(point));
-            }
+      expect(composed.points).toEqual(direct.points);
+      for (const point of subsubset) {
+        expect(composed.member(point)).toBe(direct.member(point));
+        expect(composed.meta(point)).toBe(direct.meta(point));
+      }
 
-            expect(composed.points).toEqual(direct.points);
-            for (const point of subsubset) {
-              expect(composed.member(point)).toBe(direct.member(point));
-              expect(composed.meta(point)).toBe(direct.meta(point));
-            }
-
-            return true;
-          }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      return true;
+    },
+    { arbitrary: fcRuns(100) }
+  );
 
   it("preserves point-specific member and pullback types", () => {
     expectTypeOf(family.member("text")).not.toEqualTypeOf(family.member("count"));

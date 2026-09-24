@@ -1,7 +1,7 @@
 import { make } from "@beep/identity";
 import { $I, $OntologyId, $SemanticFoundationId } from "@beep/identity/packages";
+import { describe, expect, expectTypeOf, it } from "@effect/vitest";
 import * as S from "effect/Schema";
-import { describe, expect, expectTypeOf, it } from "vitest";
 import type { CurieFromIdentity, IriFromIdentity, SlugFromIdentifier } from "@beep/identity";
 
 const getProperty = (value: unknown, key: PropertyKey): unknown =>

@@ -37,6 +37,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/fc-runs": "workspace:^",
     "@beep/types": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
