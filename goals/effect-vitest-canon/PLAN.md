@@ -2,6 +2,22 @@
 
 Status: `active`
 
+## Backlog-first remediation authorization
+
+Benjamin authorized remediation of the existing legitimate inventory after the
+progress PR merged. Work through that backlog before inventorying the remainder
+that arrived while main moved. This supersedes the requirement to refresh the
+whole census before starting P2. It does not claim current-main P1 completeness.
+
+Check each selected finding against the current file and installed Effect API
+before editing. Preserve the frozen census, timing receipts and review history.
+Apply reviewed corrections only where relevant to the selected work; defer the
+remaining census delta until the existing backlog is exhausted. Keep dependency
+order, lens order, package verification, timing and PR gates. Benjamin retains
+merge authority. The first remediation slice is the identity registry resource
+finding in foundation/modeling; keep this family in its own PR.
+
+
 ## Progress-save integration — 2026-09-21
 
 Benjamin requested merging main, restoring green repository checks, and publishing
@@ -226,7 +242,7 @@ candidates are separate; uncovered packages are not represented as complete.
 | P0f | complete | Adversarial review | Three Grok rounds; no open blockers; majors fixed or waived. |
 | P0g | complete | Initial PR and ratification | PR1067 merged; Benjamin ratified continuation on 2026-09-11. |
 | P1 | in-progress | Inventory | All four lenses cover every file; timing evidence; Benjamin acknowledges before P2. |
-| P2 | pending | Remediation waves | Each topological wave passes package proof and shrinks baseline exactly. |
+| P2 | in-progress | Remediation waves | Each topological wave passes package proof and shrinks baseline exactly. |
 | P3 | pending | Close | Empty baseline; hosted proof; following-week p95; reflection and state flip in final PR. |
 
 P0a research and P0b packet setup overlap as authorized by the first-actions
