@@ -2,6 +2,16 @@
 
 Status: `active`
 
+## Identity wave complete — 2026-09-24
+
+The first backlog-first P2 wave (foundation/modeling, `@beep/identity`) is
+complete: 31 detector rows and 22 actionable lens rows are `fixed` at
+bf82dd87af, the baseline shrank by exactly those 31 rows with zero introduced
+findings, the instrumented `@beep/test-runner` runner is adopted across all
+twelve files, and full package verification passes. After-timing evidence is
+recorded as fresh, non-comparable measurements under the rc.117/Vitest 5
+runtime. See [the closeout receipt](history/2026-09-24-p2-identity-wave-closeout.md).
+
 ## Backlog-first remediation authorization
 
 Benjamin authorized remediation of the existing legitimate inventory after the
