@@ -1252,6 +1252,14 @@ describe("quality task adapter", () => {
         expect(legacy.exitCode).toStrictEqual(O.none());
         expect(legacy.inputDigest).toStrictEqual(O.none());
         expect(legacy.redSchedulingDecision).toStrictEqual(O.none());
+        // TTC ruling 68: `inputPackages` arrived after `quality-task-lane-run/v1`
+        // shipped, so a report written before it still decodes, with an empty scope.
+        expect(legacy.inputPackages).toStrictEqual([]);
+
+        const legacyReport = yield* decodeQualityTaskLaneRunReportJson(
+          '{"schemaVersion":"quality-task-lane-run/v1","lanes":[{"id":"check","label":"ci:check","status":"passed"}]}'
+        );
+        expect(legacyReport.lanes[0]?.inputPackages).toStrictEqual([]);
 
         const encoded = yield* encodeQualityTaskLaneRunReport(
           QualityTaskLaneRunReport.make({
@@ -1260,6 +1268,7 @@ describe("quality task adapter", () => {
           })
         );
         expect(encoded.lanes[0]?.inputDigest).toBeNull();
+        expect(encoded.lanes[0]?.inputPackages).toStrictEqual([]);
       })
     ));
 

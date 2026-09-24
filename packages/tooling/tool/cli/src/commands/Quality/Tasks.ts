@@ -99,6 +99,7 @@ import {
   readTurboLaneDigest,
   readTurboLaneLedger,
   TURBO_LANE_LEDGER_ENV,
+  turboLaneDigestPackages,
 } from "./internal/TurboLaneDigest.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
 import {
@@ -1821,9 +1822,18 @@ export type QualityTaskLaneInput = readonly [
   redSchedulingDecision?: GateRedSchedulingDecision,
 ];
 
+/**
+ * What a lane's Turbo inputs resolved to: the digest it can be reused by, and
+ * the workspace packages that digest folds (ruling 68).
+ */
+type LaneInputResolution = {
+  readonly inputDigest: O.Option<string>;
+  readonly inputPackages: ReadonlyArray<string>;
+};
+
 const qualityTaskLaneRunFromOutcome = (
   id: string,
-  inputDigest: O.Option<string>,
+  inputs: LaneInputResolution,
   outcome: StreamingStepOutcome,
   redSchedulingDecision: O.Option<GateRedSchedulingDecision> = O.none()
 ): QualityTaskLaneRun =>
@@ -1841,7 +1851,8 @@ const qualityTaskLaneRunFromOutcome = (
         O.getOrElse(() => 0)
       )
     ),
-    inputDigest,
+    inputDigest: inputs.inputDigest,
+    inputPackages: inputs.inputPackages,
     redSchedulingDecision: O.isSome(outcome.failure) ? redSchedulingDecision : O.none(),
     commandText: O.some(commandText(outcome.step.command, outcome.step.args)),
   });
@@ -1887,28 +1898,43 @@ const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
 
 const digestValue = (digest: TurboLaneDigest): string => digest.digest;
 
+// A lane that resolved no Turbo digest also has no package scope: an undeclared
+// lane, a failed step and a missing lane ledger all land here (ruling 68).
+const unscopedLaneInputs = (inputDigest: O.Option<string>): LaneInputResolution => ({
+  inputDigest,
+  inputPackages: A.empty<string>(),
+});
+
+const laneInputsFromTurboDigest = (digest: O.Option<TurboLaneDigest>): LaneInputResolution => ({
+  inputDigest: O.map(digest, digestValue),
+  inputPackages: O.match(digest, { onNone: A.empty<string>, onSome: turboLaneDigestPackages }),
+});
+
+const readLaneInputs = <Failure, Requirements>(
+  read: Effect.Effect<O.Option<TurboLaneDigest>, Failure, Requirements>
+): Effect.Effect<LaneInputResolution, never, Requirements> =>
+  read.pipe(
+    Effect.map(laneInputsFromTurboDigest),
+    Effect.orElseSucceed(() => unscopedLaneInputs(O.none()))
+  );
+
 const resolveLaneInputDigestSource = Effect.fn("QualityTasks.resolveLaneInputDigestSource")(function* (
   outcome: StreamingStepOutcome,
   declared: O.Option<string>,
   ledger: O.Option<string>
 ) {
   if (O.isSome(declared) || O.isSome(outcome.failure)) {
-    return declared;
+    return unscopedLaneInputs(declared);
   }
   if (isWrapperLaneStep(outcome.step)) {
     return yield* O.match(ledger, {
-      onNone: () => Effect.succeed(O.none<string>()),
-      onSome: (ledgerPath) =>
-        readTurboLaneLedger(ledgerPath).pipe(Effect.map(O.map(digestValue)), Effect.orElseSucceed(O.none<string>)),
+      onNone: () => Effect.succeed(unscopedLaneInputs(O.none())),
+      onSome: (ledgerPath) => readLaneInputs(readTurboLaneLedger(ledgerPath)),
     });
   }
   return yield* O.match(directTurboTaskNames(outcome.step), {
-    onNone: () => Effect.succeed(O.none<string>()),
-    onSome: (tasks) =>
-      readTurboLaneDigest(outcome.step.cwd, outcome.startedAt, tasks).pipe(
-        Effect.map(O.map(digestValue)),
-        Effect.orElseSucceed(O.none<string>)
-      ),
+    onNone: () => Effect.succeed(unscopedLaneInputs(O.none())),
+    onSome: (tasks) => readLaneInputs(readTurboLaneDigest(outcome.step.cwd, outcome.startedAt, tasks)),
   });
 });
 
@@ -1940,7 +1966,7 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
   concurrency = 1,
   onLaneRun: QualityTaskLaneRunObserver = appendQualityTaskLaneRun
 ) {
-  const digests = MutableHashMap.empty<number, O.Option<string>>();
+  const resolved = MutableHashMap.empty<number, LaneInputResolution>();
   const steps = yield* laneStepsWithLedgers(lanes);
   const outcomes = yield* collectStreamingStepOutcomes(label, steps, concurrency, (outcome, index) =>
     pipe(
@@ -1949,9 +1975,9 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
         onNone: () => Effect.void,
         onSome: ([id, , inputDigest, decision]) =>
           resolveLaneInputDigest(outcome, inputDigest).pipe(
-            Effect.flatMap((digest) => {
-              MutableHashMap.set(digests, index, digest);
-              return onLaneRun(qualityTaskLaneRunFromOutcome(id, digest, outcome, O.fromUndefinedOr(decision)));
+            Effect.flatMap((inputs) => {
+              MutableHashMap.set(resolved, index, inputs);
+              return onLaneRun(qualityTaskLaneRunFromOutcome(id, inputs, outcome, O.fromUndefinedOr(decision)));
             })
           ),
       })
@@ -1963,7 +1989,7 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
       lanes: A.map(A.zip(lanes, outcomes), ([[id, , inputDigest, decision], outcome], index) =>
         qualityTaskLaneRunFromOutcome(
           id,
-          O.getOrElse(MutableHashMap.get(digests, index), () => inputDigest),
+          O.getOrElse(MutableHashMap.get(resolved, index), () => unscopedLaneInputs(inputDigest)),
           outcome,
           O.fromUndefinedOr(decision)
         )
@@ -3939,14 +3965,22 @@ export const runQualityTaskStreamingStepGroupForTesting = runQualityTaskStreamin
 export const recordTurboLaneLedgerRowForTesting = recordTurboLaneLedgerRow;
 
 /**
- * Resolve a lane's input digest from its declared value, its ledger, or its own summaries,
- * exposed for tests.
+ * Resolve a lane's input digest and package scope from its declared value, its
+ * ledger, or its own summaries, exposed for tests.
  *
- * **Example** (A declared digest wins)
+ * **Details**
+ *
+ * The resolution carries both halves of ruling 68: the digest a later attempt
+ * can be reused by, and the workspace packages the Turbo tasks that digest
+ * folds belong to. Only a lane whose Turbo digest was actually read carries
+ * package names — a declared digest, a failed step, a wrapper lane with no
+ * ledger and a direct step that named no Turbo task all resolve an empty
+ * scope, matching the lanes whose input source is `undeclared`.
+ *
+ * **Example** (A declared digest wins and carries no package scope)
  *
  * ```ts
- * import { resolveLaneInputDigestForTesting } from "@beep/repo-cli/commands/Quality"
- * import { QualityTaskStep } from "@beep/repo-cli/commands/Quality"
+ * import { QualityTaskStep, resolveLaneInputDigestForTesting } from "@beep/repo-cli/commands/Quality"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *

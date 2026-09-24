@@ -373,6 +373,70 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
 });
 
 /**
+ * Read the paths the head changed against its base, failing when the read did
+ * not produce the whole list.
+ *
+ * **Details**
+ *
+ * The same `git diff --name-only <base>...HEAD` read {@link readYeetChangedPaths}
+ * performs, with the opposite failure direction: a spawn failure, a non-zero
+ * exit and a truncated capture each fail rather than degrade to no paths. A
+ * caller that must not silently shrink its changed set — the proof shadow
+ * pass's changed-package tripwire, which decides nothing when the set is
+ * unknown and everything scoped when it is (time-to-certainty ruling 69) —
+ * reads this; the docs-only settle rule keeps the tolerant reader, whose
+ * failure direction is `hold`.
+ *
+ * **Example** (Build the strict reader effect)
+ *
+ * ```ts
+ * import { readYeetChangedPathsStrict, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/settle",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(Effect.isEffect(readYeetChangedPathsStrict(context))) // true
+ * ```
+ *
+ * @param context - Repo context naming the checkout and its base ref.
+ * @param capture - The command capture to run `git` through; the repo capture by default.
+ * @returns The changed paths, trimmed and non-empty.
+ * @category services
+ * @since 0.0.0
+ */
+export const readYeetChangedPathsStrict = Effect.fn("Yeet.readYeetChangedPathsStrict")(function* (
+  context: RepoRunContext,
+  capture: typeof runRepoCommandCapture = runRepoCommandCapture
+): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  const range = `${context.base}...HEAD`;
+  const result = yield* capture("git", ["diff", "--name-only", range], context.repoRoot).pipe(
+    Effect.mapError(YeetCommandError.new(`Failed to read the paths changed across ${range}.`))
+  );
+  if (result.exitCode !== 0) {
+    return yield* YeetCommandError.make({
+      message: `git diff --name-only ${range} exited with code ${result.exitCode}.`,
+      command: `git diff --name-only ${range}`,
+      exitCode: result.exitCode,
+    });
+  }
+  if (result.truncated) {
+    return yield* YeetCommandError.make({
+      message: `git diff --name-only ${range} produced more output than the capture bound.`,
+      command: `git diff --name-only ${range}`,
+    });
+  }
+  return pipe(Str.split(result.output, "\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
+});
+
+/**
  * Read the head's merge-base diff against the base ref, once per head, for the
  * heavy admission decision.
  *
@@ -413,14 +477,7 @@ export const readYeetChangedPaths = Effect.fn("Yeet.readYeetChangedPaths")(funct
   context: RepoRunContext,
   capture: typeof runRepoCommandCapture = runRepoCommandCapture
 ): Effect.fn.Return<ReadonlyArray<string>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* capture("git", ["diff", "--name-only", `${context.base}...HEAD`], context.repoRoot).pipe(
-    Effect.map((result) =>
-      result.exitCode === 0 && !result.truncated
-        ? pipe(Str.split(result.output, "\n"), A.map(Str.trim), A.filter(Str.isNonEmpty))
-        : A.empty<string>()
-    ),
-    Effect.orElseSucceed(A.empty<string>)
-  );
+  return yield* readYeetChangedPathsStrict(context, capture).pipe(Effect.orElseSucceed(A.empty<string>));
 });
 
 /**

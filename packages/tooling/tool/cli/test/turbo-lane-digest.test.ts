@@ -13,6 +13,7 @@ import {
   TurboRunSummary,
   TurboSummaryTask,
   turboLaneDigestFromSummary,
+  turboLaneDigestPackages,
 } from "@beep/repo-cli/test/Quality";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -289,17 +290,94 @@ describe("Turbo lane digests", () => {
         cwd: root,
         env: { [TURBO_LANE_LEDGER_ENV]: ledger },
       });
+      const declaredDigest = pipe(
+        declared,
+        O.map((value) => value.digest),
+        O.getOrThrow
+      );
       const resolved = yield* resolveLaneInputDigestForTesting(outcome(wrapper), O.none());
-      expect(resolved).toEqual(O.map(declared, (value) => value.digest));
+      assertSome(resolved.inputDigest, declaredDigest);
+      // TTC ruling 68: a root-task-only lane folds `//#lint:typos`, which names no workspace.
+      expect(resolved.inputPackages).toStrictEqual([]);
       // The ledger directory is consumed once read; a wrapper without one reports no digest at all.
       expect(yield* fs.exists(path.dirname(ledger))).toBe(false);
       const bare = QualityTaskStep.make({ label: "quality:lint", command: "bun", args: wrapperArgs, cwd: root });
-      expect(yield* resolveLaneInputDigestForTesting(outcome(bare), O.none())).toEqual(O.none());
-      expect(yield* resolveLaneInputDigestForTesting(outcome(wrapper), O.some("declared"))).toEqual(O.some("declared"));
+      const bareResolved = yield* resolveLaneInputDigestForTesting(outcome(bare), O.none());
+      assertNone(bareResolved.inputDigest);
+      expect(bareResolved.inputPackages).toStrictEqual([]);
+      // A declared digest is taken as given, so it carries no package scope of its own.
+      const declaredResolved = yield* resolveLaneInputDigestForTesting(outcome(wrapper), O.some("declared"));
+      assertSome(declaredResolved.inputDigest, "declared");
+      expect(declaredResolved.inputPackages).toStrictEqual([]);
       // A direct step still selects only its own task rows from the shared runs directory.
-      expect(yield* resolveLaneInputDigestForTesting(outcome(child), O.none())).toEqual(
-        O.map(declared, (value) => value.digest)
+      const directResolved = yield* resolveLaneInputDigestForTesting(outcome(child), O.none());
+      assertSome(directResolved.inputDigest, declaredDigest);
+      expect(directResolved.inputPackages).toStrictEqual([]);
+    }, providePlatform)
+  );
+
+  // TTC ruling 68 (C5): a lane run carries the workspace packages of the Turbo tasks its
+  // digest folds, by both the wrapper-ledger path and the direct `turbo run --summarize`
+  // path, with root tasks contributing nothing. The proof ledger's changed-package
+  // tripwire intersects that scope with the attempt's changed packages.
+  it.effect(
+    "resolves a lane's package scope from its folded Turbo task ids by both digest paths",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-scope-" });
+      const runs = path.join(root, ".turbo", "runs");
+      yield* fs.makeDirectory(runs, { recursive: true });
+      const startedAtIso = "2026-09-24T04:00:00.000Z";
+      const startedAt = Date.parse(startedAtIso);
+      yield* Effect.flatMap(
+        encodeSummary(
+          summary("scope", startedAt + 1_000, [
+            task("@beep/x#check", "hx1", "HIT"),
+            task("@beep/x#test", "hx2", "MISS"),
+            task("@beep/y#check", "hy1", "MISS"),
+            task("//#lint:policy", "hr1", "HIT"),
+          ])
+        ),
+        (text) => fs.writeFileString(path.join(runs, "scope.json"), text)
       );
+      const outcome = (step: QualityTaskStep): StreamingStepOutcome => ({
+        durationMs: 1,
+        startedAt: startedAtIso,
+        endedAt: "2026-09-24T04:00:05.000Z",
+        failure: O.none(),
+        step,
+      });
+      const child = QualityTaskStep.make({
+        label: "ci:check",
+        command: "bunx",
+        args: ["turbo", "run", "check", "test", "lint:policy", "--summarize"],
+        cwd: root,
+      });
+
+      // The direct path reads its own summaries and carries the same scope.
+      const direct = yield* resolveLaneInputDigestForTesting(outcome(child), O.none());
+      assertSome(O.map(direct.inputDigest, Str.isNonEmpty), true);
+      expect(direct.inputPackages).toStrictEqual(["@beep/x", "@beep/y"]);
+
+      // The wrapper path reads the same digest back out of the lane ledger its child wrote.
+      const ledger = path.join(root, "lane-scope", "ledger.jsonl");
+      assertSome(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), outcome(child)), true);
+      yield* closeTurboLaneLedger(ledger, 1);
+      const wrapper = QualityTaskStep.make({
+        label: "quality:check",
+        command: "bun",
+        args: ["run", "beep", "ci", "lane", "check"],
+        cwd: root,
+        env: { [TURBO_LANE_LEDGER_ENV]: ledger },
+      });
+      const wrapped = yield* resolveLaneInputDigestForTesting(outcome(wrapper), O.none());
+      expect(wrapped.inputDigest).toEqual(direct.inputDigest);
+      expect(wrapped.inputPackages).toStrictEqual(["@beep/x", "@beep/y"]);
+
+      // The scope is derived from the digest's own rows, so it reads the same off the digest.
+      const folded = yield* readTurboLaneDigest(root, startedAtIso, ["check", "test", "lint:policy"]);
+      assertSome(O.map(folded, turboLaneDigestPackages), ["@beep/x", "@beep/y"]);
     }, providePlatform)
   );
 

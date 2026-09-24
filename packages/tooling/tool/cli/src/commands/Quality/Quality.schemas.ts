@@ -1254,6 +1254,7 @@ const NullableLaneInputDigest = S.OptionFromNullOr(S.String).pipe(
   SchemaUtils.withNoneDefault,
   S.withDecodingDefaultKey(EffectRuntime.succeed(null))
 );
+const LaneInputPackages = S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>());
 
 /**
  * Timing and outcome facts for one lane executed inside a wrapper command.
@@ -1266,6 +1267,15 @@ const NullableLaneInputDigest = S.OptionFromNullOr(S.String).pipe(
  * `commandText` is the lane's own launch command. Yeet reads it back as the
  * lane's repair command when no known sub-lane hint applies, so a red lane
  * never needs a broad output scan to name what to rerun.
+ *
+ * `inputPackages` is the lane's package scope: the sorted, deduped workspace
+ * names of the Turbo tasks its input digest folds, with root tasks (`//#…`)
+ * contributing nothing. It is observation data, never part of the reuse key
+ * (time-to-certainty ruling 68); the proof ledger's changed-package tripwire
+ * intersects it with the attempt's changed packages. A lane that resolved no
+ * Turbo digest — undeclared inputs, a failed step, no lane ledger — carries an
+ * empty scope, and both the constructor and a decode of a report written
+ * before the field existed default it to empty.
  *
  * **Example** (Record a completed lane)
  *
@@ -1282,6 +1292,7 @@ const NullableLaneInputDigest = S.OptionFromNullOr(S.String).pipe(
  *   durationMs: O.some(1000),
  *   exitCode: O.some(0),
  *   inputDigest: O.none(),
+ *   inputPackages: ["@beep/repo-cli"],
  *   commandText: O.some("bun run check")
  * })
  * console.log(lane.status) // "passed"
@@ -1300,6 +1311,7 @@ export class QualityTaskLaneRun extends S.Class<QualityTaskLaneRun>($I`QualityTa
     durationMs: OptionalLaneRunFinite,
     exitCode: OptionalLaneRunFinite,
     inputDigest: NullableLaneInputDigest,
+    inputPackages: LaneInputPackages,
     redSchedulingDecision: OptionalGateRedSchedulingDecision,
     commandText: OptionalLaneRunString,
   },

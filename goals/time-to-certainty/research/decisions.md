@@ -857,3 +857,59 @@ only the newest body per author so an older round is superseded rather than summ
 new counts (`S.withConstructorDefault` + `S.withDecodingDefault` at 0 lets a legacy report decode as
 "knew about none of them"); parsing finding prose out of review bodies; and letting any advisory
 count block a merge.
+
+## 2026-09-24 — C5 changed-package tripwire, round 21 (rulings 68–70, proposed by the orchestrator in the 2026-09-23 grill draft, implemented under the 2026-09-24 autonomous goal run; Benjamin's merge of this PR is the lock)
+
+Context: PLAN C5 owes the half of ruling 63 that C4 deferred — "the changed-package tripwire stays
+unwired in shadow (`constFalse`); C5 wires it with its must-fail fixture". The ledger's seam was
+already there (`ProofChangedPackageTripwire = (key: ProofInputDigest) => boolean`, applied before
+any fact is read, with the miss reason `changed-package-tripwire` already counted by the report);
+what was missing were the two facts the predicate needs. Neither was reachable. Local lanes are
+repo-wide ids (`quality:coverage`, `cheap-gates:effect-imports`) that name no package, so the only
+record of a lane's package scope anywhere was `TurboLaneDigest.tasks[].taskId` (`@beep/x#check`),
+and `resolveLaneInputDigest` folded that to the digest string and dropped the task list before the
+lane report was written. On the other side, `readYeetChangedPaths` and
+`PackageVerify.workspaceForFile` both existed but were composed nowhere the verdict writer could
+reach. These three rulings put both facts in hand at the seam ruling 63 placed the shadow pass.
+
+**Ruling 68 (C5-1) — a lane's package scope is observation data on the lane run, not part of the
+reuse key.** `QualityTaskLaneRun` gains `inputPackages: ReadonlyArray<string>` (sorted, deduped
+package names derived from the Turbo lane ledger's task ids; empty when the lane had no Turbo
+ledger, i.e. the same lanes whose `inputSource` is `undeclared`). `quality-task-lane-run/v1` keeps
+its version: the key is optional with an empty default, so older reports still decode. The reuse
+key (`ProofInputDigest`, `proof-fact/v1`) is unchanged: the packages are derived from the same
+task hashes the digest already folds, so putting them in the key adds no identity and would force a
+fact-schema bump for a field the tripwire reads once per lookup. Rejected: a `packages` field on
+`ProofInputDigest` (schema bump, redundant identity); deriving scope from the lane id (repo-wide
+ids name no package); a root-task rule (see ruling 70).
+
+**Ruling 69 (C5-2) — the change is the branch's diff against its base plus the dirty tree, mapped
+to workspaces.** The shadow pass receives the attempt's changed package set computed once per
+attempt in the verdict writer: `git diff --name-only <base>...HEAD` unioned with the working-tree
+snapshot the attempt verified — every staged, unstaged and untracked path, read once from the same
+checkout snapshot as the committed diff, so a path the attempt ran against cannot fall out of the
+set between collection and mapping — each path mapped to the deepest workspace containing it
+(`workspaceForFile`, hoisted from `PackageVerify` into a shared helper); paths under no workspace
+(root config, `goals/`, `docs/`) contribute nothing, because root config is already the epoch
+(ruling 4) and docs are not package source. PR scope rather than the attempt-to-attempt delta on
+purpose: the tripwire is the guard for a digest that missed an undeclared input, and the wider set
+is the conservative one while the first pair is still in shadow; narrowing to the delta is a
+later, separately fixtured change once the first pair is enforced. Rejected: attempt-delta scope
+now (fewer forced misses, but the ratified sample would then measure a narrower guard than the one
+enforcement ships with); mapping by `package.json` name lookup per path at lookup time (per-key
+filesystem reads inside the ledger; ruling 63 keeps graph policy out of storage).
+
+**Ruling 70 (C5-3) — the tripwire fires when the lane's package scope intersects the changed set;
+root-task lanes and undeclared lanes are outside it.** `changedPackageTripwire(key)` closes over
+`{ laneId → inputPackages }` from the attempt's own reports and the ruling-69 changed set, and
+returns true when the intersection is non-empty. A lane whose only Turbo tasks are root tasks
+(`//#lint:policy`) has an empty package scope and is decided by its digest alone (its hash already
+spans every input Turbo declares for the root task); an undeclared lane is already refused as
+`undeclared-inputs` before the tripwire runs. The tripwire stays in the verdict writer's shadow
+pass (ruling 63's placement) and never fails an attempt. The must-fail fixture: attempt 1 records a
+passed fact for a lane scoped to `@beep/x`; attempt 2 with the same digest and `@beep/x` in the
+changed set must record `changed-package-tripwire` and would-reuse 0; a control attempt with
+`@beep/y` changed must hit. Rejected: firing on any changed package for every lane (repo-wide lanes
+would never reuse across any package change, which is ruling 1's "any edit anywhere invalidates
+every lane" defect by another door); a lane-id allowlist of "package lanes" (a second table to keep
+honest against the lane specs).
