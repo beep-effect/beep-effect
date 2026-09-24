@@ -1,0 +1,674 @@
+{
+  "count": 40,
+  "tupleCount": 20,
+  "tuples": [
+    "000000",
+    "001000",
+    "010000",
+    "010001",
+    "010101",
+    "011000",
+    "011001",
+    "011100",
+    "100000",
+    "100010",
+    "101000",
+    "101010",
+    "110000",
+    "110001",
+    "110100",
+    "110101",
+    "111000",
+    "111001",
+    "111100",
+    "111101"
+  ],
+  "rows": [
+    {
+      "srcset": null,
+      "sizes": null,
+      "lazy": false,
+      "bits": "000000",
+      "disposition": "absent-ok",
+      "issues": []
+    },
+    {
+      "srcset": null,
+      "sizes": null,
+      "lazy": true,
+      "bits": "001000",
+      "disposition": "absent-ok",
+      "issues": []
+    },
+    {
+      "srcset": null,
+      "sizes": "10%",
+      "lazy": false,
+      "bits": "010000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "srcset": null,
+      "sizes": "10%",
+      "lazy": true,
+      "bits": "011000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "srcset": null,
+      "sizes": "100vw",
+      "lazy": false,
+      "bits": "010001",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": null,
+      "sizes": "100vw",
+      "lazy": true,
+      "bits": "011001",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": null,
+      "sizes": "AUTO",
+      "lazy": false,
+      "bits": "010101",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": null,
+      "sizes": "AUTO",
+      "lazy": true,
+      "bits": "011100",
+      "disposition": "present-ok",
+      "issues": []
+    },
+    {
+      "srcset": null,
+      "sizes": "auto, 100vw",
+      "lazy": false,
+      "bits": "010001",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": null,
+      "sizes": "auto, 100vw",
+      "lazy": true,
+      "bits": "011001",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x, b.png 1x",
+      "sizes": null,
+      "lazy": false,
+      "bits": "100000",
+      "disposition": "absent-ok",
+      "issues": [
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x, b.png 1x",
+      "sizes": null,
+      "lazy": true,
+      "bits": "101000",
+      "disposition": "absent-ok",
+      "issues": [
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x, b.png 1x",
+      "sizes": "10%",
+      "lazy": false,
+      "bits": "110000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        },
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x, b.png 1x",
+      "sizes": "10%",
+      "lazy": true,
+      "bits": "111000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        },
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x, b.png 1x",
+      "sizes": "100vw",
+      "lazy": false,
+      "bits": "110000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x, b.png 1x",
+      "sizes": "100vw",
+      "lazy": true,
+      "bits": "111000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x, b.png 1x",
+      "sizes": "AUTO",
+      "lazy": false,
+      "bits": "110100",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x, b.png 1x",
+      "sizes": "AUTO",
+      "lazy": true,
+      "bits": "111100",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x, b.png 1x",
+      "sizes": "auto, 100vw",
+      "lazy": false,
+      "bits": "110000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x, b.png 1x",
+      "sizes": "auto, 100vw",
+      "lazy": true,
+      "bits": "111000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x",
+      "sizes": null,
+      "lazy": false,
+      "bits": "100000",
+      "disposition": "absent-ok",
+      "issues": []
+    },
+    {
+      "srcset": "a.png 1x",
+      "sizes": null,
+      "lazy": true,
+      "bits": "101000",
+      "disposition": "absent-ok",
+      "issues": []
+    },
+    {
+      "srcset": "a.png 1x",
+      "sizes": "10%",
+      "lazy": false,
+      "bits": "110000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x",
+      "sizes": "10%",
+      "lazy": true,
+      "bits": "111000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x",
+      "sizes": "100vw",
+      "lazy": false,
+      "bits": "110001",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x",
+      "sizes": "100vw",
+      "lazy": true,
+      "bits": "111001",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x",
+      "sizes": "AUTO",
+      "lazy": false,
+      "bits": "110101",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x",
+      "sizes": "AUTO",
+      "lazy": true,
+      "bits": "111101",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x",
+      "sizes": "auto, 100vw",
+      "lazy": false,
+      "bits": "110001",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 1x",
+      "sizes": "auto, 100vw",
+      "lazy": true,
+      "bits": "111001",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 400w",
+      "sizes": null,
+      "lazy": false,
+      "bits": "100010",
+      "disposition": "absent-missing",
+      "issues": [
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> using width descriptors requires sizes"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 400w",
+      "sizes": null,
+      "lazy": true,
+      "bits": "101010",
+      "disposition": "absent-missing",
+      "issues": [
+        {
+          "path": ["attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<img srcset> using width descriptors requires sizes"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 400w",
+      "sizes": "10%",
+      "lazy": false,
+      "bits": "110000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 400w",
+      "sizes": "10%",
+      "lazy": true,
+      "bits": "111000",
+      "disposition": "present-ok",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 400w",
+      "sizes": "100vw",
+      "lazy": false,
+      "bits": "110000",
+      "disposition": "present-ok",
+      "issues": []
+    },
+    {
+      "srcset": "a.png 400w",
+      "sizes": "100vw",
+      "lazy": true,
+      "bits": "111000",
+      "disposition": "present-ok",
+      "issues": []
+    },
+    {
+      "srcset": "a.png 400w",
+      "sizes": "AUTO",
+      "lazy": false,
+      "bits": "110101",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 400w",
+      "sizes": "AUTO",
+      "lazy": true,
+      "bits": "111100",
+      "disposition": "present-ok",
+      "issues": []
+    },
+    {
+      "srcset": "a.png 400w",
+      "sizes": "auto, 100vw",
+      "lazy": false,
+      "bits": "110001",
+      "disposition": "present-incompatible",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "srcset": "a.png 400w",
+      "sizes": "auto, 100vw",
+      "lazy": true,
+      "bits": "111000",
+      "disposition": "present-ok",
+      "issues": []
+    }
+  ],
+  "extras": [
+    {
+      "sizes": " auto",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "sizes": "auto ",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "sizes": "auto/*comment*/,100vw",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "sizes": "auto, 100vw",
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+        }
+      ]
+    },
+    {
+      "sizes": "AUTO",
+      "issues": []
+    }
+  ],
+  "presence": [
+    {
+      "index": 0,
+      "present": false,
+      "string": false
+    },
+    {
+      "index": 1,
+      "present": true,
+      "string": false
+    },
+    {
+      "index": 2,
+      "present": true,
+      "string": false
+    },
+    {
+      "index": 3,
+      "present": true,
+      "string": false
+    },
+    {
+      "index": 4,
+      "present": true,
+      "string": true
+    },
+    {
+      "index": 5,
+      "present": false,
+      "string": false
+    },
+    {
+      "index": 6,
+      "present": true,
+      "string": false
+    },
+    {
+      "index": 7,
+      "present": true,
+      "string": false
+    }
+  ],
+  "pictures": [
+    {
+      "sizes": "AUTO",
+      "issues": []
+    },
+    {
+      "sizes": "auto, 100vw",
+      "issues": []
+    },
+    {
+      "sizes": "auto ",
+      "issues": [
+        {
+          "path": ["children.0", "attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<source srcset> using width descriptors requires sizes unless the following img allows auto-sizes"
+        },
+        {
+          "path": ["children.1", "attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<img sizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "sizes": "100vw",
+      "issues": [
+        {
+          "path": ["children.0", "attributes.srcset"],
+          "rule": "attributeRelationship",
+          "message": "<source srcset> using width descriptors requires sizes unless the following img allows auto-sizes"
+        }
+      ]
+    }
+  ],
+  "nested": [
+    {
+      "path": ["children.0", "attributes.sizes"],
+      "rule": "attributeRelationship",
+      "message": "<img sizes> requires a width-descriptor srcset, except for loading=lazy with sizes=auto"
+    }
+  ]
+}

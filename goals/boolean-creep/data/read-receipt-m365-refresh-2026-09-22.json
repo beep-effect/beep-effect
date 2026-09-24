@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "boolean-creep-bounded-design-refresh/v1",
+  "date": "2026-09-22",
+  "sourceSha": "f137beedb270a071d4aa2ecc1dd52a9d233044d1",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-read-receipt-m365-refresh.jsonl",
+    "sha256": "41bd12478546af93581a4ef6d1dc3493aae50930d49c3fcb254d43845f903171"
+  },
+  "inventoryAfterSha256": "46b954087cab523cdbe80ac0bbb434706803e5f7c95bcbc2b02a8277b1d7d412",
+  "changedIds": [
+    "contained-file-read-outcome",
+    "receipt-fallback-draft-occupancy",
+    "m365-tool-error-retryability"
+  ],
+  "unchangedRows": 750,
+  "qualificationChanged": false,
+  "statusCounts": {
+    "reviewed": 18,
+    "designed": 127,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/contained-file-read-outcome.md",
+      "sha256": "0e8c18e8d328cf813405c81ad8b2cac494193adbb34102ecb8bdde3bcb82949d"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-contained-file-read-outcome.md",
+      "sha256": "499d3483f65e923db83b09487e31be8aef5a957960047da041a4a2e8595937a1"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-contained-file-read-outcome.md",
+      "sha256": "f2c4a329a3b3d43bd63ad40cd072fb0f6617d6b304d1556bc792558d52080769"
+    },
+    {
+      "file": "designs/receipt-fallback-draft-occupancy.md",
+      "sha256": "d4924626241a4f36a66a083ce8b0dca49a885e0948134f1cb0075f57dc045106"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-receipt-fallback-draft-occupancy.md",
+      "sha256": "05d687a01342d185545ada759b82abc152d9187f4dafea5334a06db4cca36a83"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-receipt-fallback-draft-occupancy.md",
+      "sha256": "fda19da19f10be3e1ad20c873b2c2f172b35ee7035b5c31ed8ceadc7ee76d3bc"
+    },
+    {
+      "file": "designs/m365-tool-error-retryability.md",
+      "sha256": "46713b6b1747d1c71fb33e3ae7e0a1e5e00963371dda4d358ab79580f692abf3"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-m365-tool-error-retryability.md",
+      "sha256": "47816a65ea4b956c0217864cbb60fc265e7c7511423db3d7af70aeafcc1ec4c1"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-m365-tool-error-retryability.md",
+      "sha256": "d957e5ed0d1c7fd97e0eb38b09703259e1c64fdd893142d4b50295ac1f7e5bb3"
+    },
+    {
+      "file": "data/2026-09-22-m365-retryability-codec-probe.json",
+      "sha256": "c65bdbd36f4bbd668170bb9f5ffdcbdb3371fde1294588a38b40078beb811eb9"
+    }
+  ],
+  "savedSubset": {
+    "sourceReceipt": "data/responsive-timestamp-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "a23ebae855c726fb60625bf334f434a931211da8635e0a179f32fccc8228dd53",
+    "previousPendingCount": 35,
+    "completedIds": [
+      "contained-file-read-outcome",
+      "receipt-fallback-draft-occupancy",
+      "m365-tool-error-retryability"
+    ],
+    "pendingCount": 32,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "create-package-template-type-flags",
+      "yeet-status-remote-check-phase",
+      "create-package-scaffold-shape",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "worktree-removal-mode",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "files-worker-score-thresholds",
+      "files-person-reference-disposition",
+      "vault-sync-push-failure-disposition",
+      "create-package-retired-name-reconciliation",
+      "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations",
+      "r30-cli-commands-l-q-github-check-lane-outcome"
+    ],
+    "meaning": "Saved September14 subset only; whole current-source backlog remains uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-classifier-score-refresh.jsonl"
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "skipCommit": false,
+    "stashPresent": false,
+    "legal": true
+  },
+  {
+    "skipCommit": false,
+    "stashPresent": true,
+    "legal": true
+  },
+  {
+    "skipCommit": true,
+    "stashPresent": false,
+    "legal": true
+  },
+  {
+    "skipCommit": true,
+    "stashPresent": true,
+    "legal": false
+  }
+]

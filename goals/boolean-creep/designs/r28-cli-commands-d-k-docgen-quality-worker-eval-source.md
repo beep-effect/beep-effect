@@ -1,15 +1,13 @@
 # Design: r28-cli-commands-d-k-docgen-quality-worker-eval-source
 
-Current P2 design; the bounded R28 correction confirms this actual post-validation owner. Independent P3 and merged packet ratification remain required.
-ID `r28-cli-commands-d-k-docgen-quality-worker-eval-source`.
-HEAD `93217d998f851e2e93d9864e2b5315552eaa58a7`; main
-`d1b4d769fbaffddd55717f3b1ba461897dd545c5`.
+P2 refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`, 2026-09-22.
+Existing8/3 owner remains designed; independent P3 and ratification pending.
 
 Owned source object: `packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts:887-892`,
 enclosing `docgenQualityWorkerEvalCommand`. Raw descriptor anchor836 is withdrawn
-as evidence and replaced by this actual object. Exact-one gate858-873 precedes
+as evidence and replaced by this actual object. Source count858 and exact-one rejection869-873 precede
 packet-limit validation875, model validation881 and construction887. The helper
-must return a selection at the old gate position, preserving source-error
+must return a selection at the old rejection position869, preserving source-error
 precedence over packet/model errors and all work. Preserve provider, model,
 baseUrl trimming/omission, reasoning options, output Option, and evaluator
 arguments900-909. Output handling912-920 retains exact file/stdout behavior.
@@ -28,7 +26,12 @@ The original report uses the parser spelling `package`; the actual member is
 member spelling and kind become honest source object metadata.
 
 The command constructs this object only after rejecting zero or multiple
-source selections. The exported raw helper in
+source selections. FileSystem acquisition857 and pure provider/reasoning
+normalization859-867 occur before rejection869. Keep those positions. Codex
+omitted reasoning defaults through the existing helper; other providers retain
+omission. Do not trim the model passed to evaluator: trim is used only to reject
+blank model881. BaseUrl is trimmed and omitted when blank893-898, only after
+source resolution. All remaining argv/Option payloads retain full original strings. The exported raw helper in
 `packages/tooling/tool/cli/src/commands/Docgen/internal/Targets.ts:271-316`
 has a broader compatibility contract: input wins immediately, including
 input combined with all/package; input absence delegates to
@@ -54,9 +57,9 @@ this owner; independent P3 review remains required before implementation.
 Use a shared, annotated `QualityWorkerEvalSelection` schema with cases
 `Input { path: S.String }`, `Package { selector: S.String }`, and `All {}`.
 An operation schema owns `{ selection, packetLimit: S.Number }`; neither an
-all Boolean nor absent sibling source payloads remain in it. Use S.TaggedUnion
-and schema-derived cases/match. The exact local Effect reference at
-`.repos/effect/packages/effect/src/Schema.ts:6200-6250` defines those utilities.
+all Boolean nor absent sibling source payloads remain in it. Use a private LiteralKit vocabulary mapped to named annotated cases, annotate
+the union before toTaggedUnion to preserve statics, and use schema-derived cases/match. Use current local Effect tagged-union APIs and schema-derived constructors;
+validate exact signatures against the installed/reference version during implementation.
 Do not tighten empty strings, packet limits or paths at construction beyond
 this command's existing validation.
 
@@ -69,10 +72,13 @@ construction out of its current body so both entrypoints share actual work;
 no second analyzer or copied report-building body is permitted. The raw
 entrypoint continues its existing input-first and target-resolution behavior,
 including affected fallback and its current `scope: package` / generated:affected
-metadata mapping. The new entrypoint matches the three valid selections and
+metadata mapping. Targets.ts267 documents mutually exclusive options, but its
+broader established helper semantics are an explicit preservation obligation in
+this packet; this design neither qualifies its parameter bag nor silently
+turns that documentation into new public runtime rejection. The new entrypoint matches the three valid selections and
 uses the same filesystem decoding, target lookup and analysis primitives.
 
-Place the shared data schema in the existing Docgen schema role file and the
+Place the shared data schema in existing Docgen.schemas.ts and the
 resolver beside existing Targets helpers, with necessary imports and export
 annotations. Preserve existing barrel/public symbols; add only the shared
 internal operation API needed by these two command sites, without compatibility
@@ -92,7 +98,12 @@ orphan check and selector errors also remain unchanged.
   omitted the helper's call edge, so no-consumer conclusions are invalid.
   Preserve input read/decode first, input scope/path metadata, configured
   target lookup and sort order, zero-target error, packet-limit conversion,
-  analyzeDocgenQuality arguments and all returned report payloads.
+  analyzeDocgenQuality arguments and all returned report payloads. Source cap
+QualityWorkerEval.ts1175-1176 maps <=0 to0 and positive values to the maximum
+of caller limit and existing DEFAULT_SOURCE_PACKET_LIMIT; raw helper retains
+its broader Number domain. CLI uses Flag.Int163 with existing default, rejects
+negative875, and supports0. Do not tighten the public helper to integer/nonnegative
+merely because the canonical CLI operation is validated.
 - `internal/quality/Quality.scope.ts:107-176`: retain raw resolver behavior,
   orphan-config-before-conflict ordering, package discovery, all discovery,
   affected/changed-files behavior, and existing `DocgenQualityScopeMode`.
@@ -112,8 +123,8 @@ Replace the owned four-key source object with the selection+packetLimit
 operation. Eliminate the owned sourceCount local/counting expression and its
 separate !=1 dispatch by making the boundary selection resolver return the
 existing error or one valid schema case at the same position. Raw rejection
-is retained once, not removed. For the Runpod site, the old void-returning
-requireRunpodEvalSource helper becomes the selection-returning boundary helper.
+is retained once, not removed. The Runpod sibling owns replacing its void-returning requireRunpodEvalSource
+helper; no Runpod deletion credit belongs to this local instance.
 
 The canonical resolver has one exhaustive selection match, with no input
 Option presence check, independent all flag or package Option fallback. The
@@ -146,9 +157,12 @@ cases for input+other selectors, no selection, and no-input all+package with
 orphan-config precedence; these broader helper cases do not expand the three
 valid CLI operation states. Use source aliases in package tests.
 
-`test/docgen.test.ts:3510-3569` exercises input worker eval and output metadata;
-Runpod cleanup/confirmation/timeout tests around3675-3758 retain their current
-behavior. Run focused Docgen suites and full `@beep/repo-cli` package verification
+Current test/docgen.test.ts3701-3729 invokes input worker eval with packet-limit0,
+checks schemaVersion1, scope/path/provider/model, codex default low reasoning,
+SDK version, source packet count, zero selected packets and output-file log.
+That fixture does not establish package/all/invalid-input coverage by itself.
+Runpod command tests around3869/3895 belong to the sibling design and retain
+their current confirmation/cleanup behavior. Run focused Docgen suites and `bun run beep quality package-verify @beep/repo-cli`
 at implementation time. No product tests or provider requests ran in P2.
 
 ## Risk
@@ -159,8 +173,18 @@ compatibility explicitly and restrict the tagged operation to successful
 command normalization. Both eval designs share one schema/resolver and must
 be staged serially: the first creates shared pieces and migrates only its own
 call; the second reuses them and migrates the other call. Do not implement
-both candidate records just because they share a helper. The historical docgen quality-scope design is archived: its actual raw
+both candidate records just because they share a helper. Coordinated with the
+Runpod P2 owner: shared selection/resolver are created once; raw entrypoint
+continues all existing input-first/affected behavior. The historical docgen quality-scope design is archived: its actual raw
 request remains D1 and cannot inherit this post-validation 8/3 proof. This
 current P2 design is not an independent P3 receipt or source implementation.
 
 Integration and original provisional hashes: `data/r28-cli-first-owners-integration.json`.
+
+Preserve exact command errors and order: source-selection error first, then
+negative packet-limit error, then blank model error; only afterwards read/decode
+input or inspect workspace. Generated source analysis remains scoreMode codex.
+Report generation then output file write and wrote log, or stdout content, remain
+unchanged. DomainError/NoSuchFileError catches keep reportDocgenCommandError;
+other errors retain their existing behavior. This P2 launches no worker/model,
+provider or subprocess and makes no runtime proof claim.

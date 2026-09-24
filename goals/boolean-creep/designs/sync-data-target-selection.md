@@ -1,124 +1,143 @@
-# Instance
+# sync-data-target-selection
 
-- id: `sync-data-target-selection`
-- exact source SHA: `3330f9881a50c96d3f2ec0fcad76f0f7a09027e4`
-- corpus source SHA: `52fcc8d1353db9481ef9edb6cc9619500f95568d`
-- file:line: `packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.command.ts:61`
-- symbol: `SyncDataTargetSelection`
-- members: `all`, `targetId`
-- evidence: E2 at `SyncDataToTs.command.ts:124-137` — all with a target
-  fails as a conflict, neither fails as required selection, and the two
-  successful branches consume only their own selection payload.
+P2 refresh at `0be1f13d62fa00cb65e34ff69ec99043380f8d81`, 2026-09-22.
+Tier1 internal owner; independent P3 and implementation remain pending.
+Source anchors name packages/tooling/tool/cli/src/commands/SyncDataToTs/
+SyncDataToTs.command.ts unless another path is supplied.
 
-# Current shape
+## Current shape
 
-The private `SyncDataTargetSelection` class stores an optional target id, the
-`all` Boolean, and the independent `includeAuthenticated` Boolean. The resolver
-rejects all-plus-target first, selects all registered targets when `all` is
-true, and otherwise requires and resolves the target id. An unknown target
-keeps its separate typed error with the available-id list.
+Private SyncDataTargetSelection61-65 stores all:Boolean, targetId:Option<String>
+and independent includeAuthenticated:Boolean. The target Option schema is
+S.Option(S.String), not OptionFromOptionalKey and not a nullish string. No class
+constructor defaults exist. The sole writer144 supplies all three from raw flags:
+target29-33 is optional with alias t, all35 and includeAuthenticated36-39 default
+false. Selection flags do not normalize/trim target strings.
 
-`includeAuthenticated` is not a third selection mode. It changes the filter
-only for the all-targets branch, while a directly named authenticated target is
-allowed regardless of that flag. The raw CLI accepts it beside either valid
-selection, so retain it as an independent input rather than folding it into the
-exclusive pair.
+resolveTargetSelection124-137 rejects both all and target, otherwise selects
+all or delegates to resolveSelectedTarget114-117. The latter requires presence,
+and resolveTargetById105-112 finds the first exact registered ID. Arbitrary
+strings remain payload: an unknown string receives the separate typed unknown-ID
+error. includeAuthenticated affects the all filter119-122 only; a named
+authenticated target is allowed without it, as test918 demonstrates.
 
-# Cardinality gap
+## Cardinality gap
 
-At the `all`/target-presence level four pairs are representable. Two are valid
-selections:
-
-| all | target id | selection |
+| all | target presence | Legal selection |
 | --- | --- | --- |
-| true | absent | all targets |
-| false | present | one target, carrying the exact id |
+| false | None | no: required-selection error |
+| false | Some | yes: one exact target ID |
+| true | None | yes: registry targets filtered by access |
+| true | Some | no: conflict error |
 
-True/present is the explicit conflict. False/absent is the explicit required-
-selection error. Crossing either successful mode with
-`includeAuthenticated` remains legal; that independent Boolean does not change
-the 4/2 cluster cardinality.
+The correlated cluster is4/2. The complete carrier projection includes the
+independent includeAuthenticated Boolean, giving8/4. Both values are allowed
+beside either valid mode; direct-target true is not invalid merely because it
+has no effect there. Target-ID value validation against the registry remains
+separate from this presence projection. Do not claim all strings exist in the
+registry, restrict IDs to a new literal list, or treat an empty Some string as
+None. Dynamic registry order and first-match behavior are retained.
 
-# Target schema
+## Target schema
 
-Reuse the stable `sync-data-target-selection` owner, replacing its old D1
-member assignment with the corrected `[all,targetId]` cluster. Define a private
-`SyncDataTargetMode` union with payload-free `all` and
-`target { targetId: string }` cases. Keep `includeAuthenticated` beside it in
-`SyncDataTargetSelection`, or pass it independently to the resolver. Resolve
-the two raw CLI fields to this union once, preserving the two typed validation
-errors before constructing application state.
+Use a private LiteralKit-driven two-case tagged union SyncDataTargetMode:
+All with no target payload; Target with required targetId:String. Use named,
+annotated case schemas and schema-derived guards/match. Preserve the kit base
+until mapping members; annotate the resulting union before toTaggedUnion to
+retain helpers. Place mode plus independent includeAuthenticated in the private
+selection carrier (or pass that scalar separately); neither of the old all/
+targetId fields remains alongside mode. No Boolean compatibility getters.
 
-Do not create a literal for every registered target: target identifiers remain
-dynamic payload validated against `syncDataTargets`. Do not place
-`includeAuthenticated` on only one encoded shape or reject it with direct
-target selection; its existing independent CLI behavior remains supported.
+In resolveTargets139-145, validate the raw pair once with the current typed
+conflict/required errors and then construct the matching canonical case.
+Do not first allocate the old invalid bag or allocate a new raw schema clone.
+resolveTargetSelection becomes exhaustive case dispatch: All filters current
+registry using the unchanged independent access rule; Target calls existing
+resolveTargetById with its exact string. No target-specific LiteralKit and no
+codec for private transient selection are needed. Reuse existing schema helpers
+and the module's canonical identity conventions when annotating the new schemas.
 
-# Migration inventory
+## Migration inventory
 
-- `packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.command.ts:29-56`
-  — retain all three raw CLI flags, spellings, aliases, false defaults, and
-  descriptions.
-- `SyncDataToTs.command.ts:61-65` — replace the raw `all`/Option pair in the
-  private application carrier with `SyncDataTargetMode`; retain the independent
-  `includeAuthenticated` Boolean.
-- `SyncDataToTs.command.ts:85-103` — preserve the exact conflict, required, and
-  unknown-target `SyncDataToTsError` messages and target-id payload.
-- `SyncDataToTs.command.ts:105-117` — retain registry lookup, first matching
-  target, singleton result, and available-target ordering in errors.
-- `SyncDataToTs.command.ts:119-137` — match the honest mode. The all case
-  filters public plus optionally authenticated targets in registry order; the
-  target case resolves the exact id and ignores the independent include flag
-  exactly as today.
-- `SyncDataToTs.command.ts:139-145` — resolve raw `all` and target Option to the
-  union once and remove the invalid application carrier construction.
-- `SyncDataToTs.command.ts:545-570` — preserve repo-root and run-mode resolution
-  order, serial target execution, result reporting, report writes, summary, and
-  check-mode drift failure.
-- `packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:829-949` — retain
-  direct public and authenticated target behavior, write/dry-run/check modes,
-  exact generated bytes, logs, and privacy assertions; add the selection
-  boundary table.
+- Keep target/all/include-authenticated definitions29-39 and all other flag
+  definitions40-56, including optional report-dir, verbose alias v and defaults.
+- Replace class61-65 with mode plus independent access policy. The raw handler
+  parameter bag is not a second migration owner.
+- Keep exact errors85-103: “Pass either --all or --target, but not both.”;
+  “Select at least one target with --target <id> or pass --all.”; unknown-ID
+  message includes original targetId and available IDs in registry order.
+- Keep registry search105-112 first-match and singleton array; migrate
+  resolveSelectedTarget114-117 away only when the new Target case eliminates
+  Option fallback. Keep its required-error behavior at the raw boundary.
+- Replace selection match124-137 and writer139-145. targetIsEnabledForAll119-122
+  remains public-access-or-include policy. Neither sort nor deduplicate targets.
+- Handler558-560 retains findRepoRoot, then run-mode resolution, then target
+  selection. Thus root errors and check/dry-run conflict still precede selection
+  errors; both selection flags reject before unknown-target lookup.
+- Preserve serial Effect.forEach execution561-563, result reporting565-567,
+  writeReports568, summary569 and drift failure570. Typed catch/report/exit
+  behavior571 onward remains unchanged. Never fetch a target or write a report
+  just to choose a case.
+- targets/index.ts remains the same eight ordered entries: iso4217, iso3166,
+  iana media types, iana timezones, CLDR territories, reporters, courts, vocab.
+  Read the live registry at resolution; do not snapshot it into enum metadata.
+- Command barrel exports command/errors/schemas, not this private class.
+  Exhaustive symbol search found the one constructor and private readers only.
+  Downstream target implementations receive resolved SyncDataTarget values;
+  they are outside this migration and retain every payload/function field.
 
-Targeted source and barrel search found no other constructor or reader of the
-private selection class. All downstream target modules receive the already
-resolved `SyncDataTarget` and require no migration.
+The run-mode owner remains separately handled by internal/cli/RunMode.ts.
+This design removes no check/dry-run flag or behavior.
 
-# Guard-deletion accounting
+## Guard-deletion accounting
 
-Delete `all` and `targetId` from the decoded private carrier, the combined
-`all && O.isSome(targetId)` match arm, the later `all` branch, the target Option
-fallback, and the possibility of constructing the neither/both pairs. Keep the
-two raw-boundary checks long enough to produce their exact typed errors, then
-construct the union. Keep `targetIsEnabledForAll` and its
-`includeAuthenticated` read because that is an independent access filter, not
-a coherence guard.
+Delete stored all and targetId from application selection state. Remove the
+resolver's all-and-Some guard, subsequent all branch, and Option fallback from
+the canonical consumer; schema cases make both/neither unrepresentable there.
+Retain equivalent checks once at the raw argv boundary for exact diagnostics.
+This is consolidation of coherence checks into construction, not disappearance
+of user validation. Keep unknown-ID resolution and independent authentication
+filter; neither is a Boolean-creep coherence check. No claimed guard deletion
+in target fetching, reports, run modes or filesystem checks.
 
-# Encoded-side impact
+## Encoded-side impact
 
-None. The selection class and union are private transient command state. CLI
-spellings and defaults remain the external boundary, and no selection object is
-serialized or persisted. Preserve exact generated modules, canonical data,
-Markdown/JSON reports, error messages, output order, target order, and exit
-behavior. No compatibility codec or generated-file edit is needed.
+No serialized selection object or public schema constructor exists. Although
+S.Option has an encoding, no actual selection codec caller was found. No
+compatibility codec is warranted. Preserve flags/aliases/defaults, all original
+ID bytes in lookup/errors and no normalization. Generated TypeScript, canonical
+data, JSON/Markdown reports, logs, result order and exit behavior stay unchanged.
+Direct authenticated selection stays accepted with either include flag, and
+private source URLs/headers must never enter output. Changing selection structure
+is not permission to alter access filtering or authenticate otherwise skipped
+registry entries.
 
-# Test impact
+## Test impact
 
-Exercise all four raw `all`/target pairs: exact conflict for both, exact required
-error for neither, registry-ordered all selection, and singleton target
-selection. Cross both successful modes with both values of
-`includeAuthenticated`: all false excludes authenticated targets, all true
-includes them, and direct target selection remains unchanged for either value.
-Retain unknown-id errors with available target order, check/dry-run exclusivity,
-serial execution, authenticated-source privacy, report bytes, drift exit, and
-unchanged-file behavior. No browser QA applies.
+Add the full four raw-pair table through existing command fixtures. Both fails
+with conflict even if the supplied ID is unknown; neither fails required.
+Cross two valid modes with includeAuthenticated false/true: All false excludes
+authenticated entries, All true includes them, and direct targets ignore it.
+Use fixture targets/clients and temporary fixture roots; no live data fetch or
+real authentication is required. Assert first-match singleton selection and
+registry order; preserve unknown-ID text/order and payload including empty/
+whitespace/nonmatching strings. Add competing run-mode/selection-invalid inputs
+to protect error precedence and absence of target/report side effects.
 
-# Risk and sequencing
+Existing sync-data-to-ts.test.ts829-949 covers direct writes, dry run, drift,
+no-op, CSV and authenticated ISO3166 privacy. It does not currently provide the
+complete all/include-authenticated/both/neither table; do not claim it already
+proves that matrix. Retain its generated output and logging checks. Exercise
+report output under fixture clients when implementation touches the command.
+Run focused SyncDataToTs tests and
+`bun run beep quality package-verify @beep/repo-cli` after product edits, then
+campaign/Yeet gates. This P2 audit is source inspection and finite arithmetic
+only, with no live command, runtime implementation, P3 or package proof claim.
 
-Tier 1 internal stored-carrier refactor. Resolve the raw pair only after the
-same repo-root and run-mode steps so error precedence stays unchanged. The main
-risks are folding `includeAuthenticated` into the exclusive mode, rejecting a
-direct authenticated target, reordering the registry, or changing the exact
-both/neither errors. The stable inventory id should survive with corrected
-members and metadata; archive its former `[all,includeAuthenticated]` D1
-rationale during parent reconciliation.
+## Risk
+
+Risks are narrowing independent includeAuthenticated to the All constructor,
+trimming IDs, freezing/reordering registry entries, moving selection before
+root/run-mode validation, or changing exact typed errors and reported exits.
+The mode owns selection only. Keep full registered target objects, raw boundary
+errors and independent policy while removing the invalid stored pair.

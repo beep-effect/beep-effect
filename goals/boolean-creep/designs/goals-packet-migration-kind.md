@@ -1,85 +1,141 @@
-# R28 P2 design: goals-packet-migration-kind
+# goals-packet-migration-kind
 
-Frozen HEAD `93217d998f851e2e93d9864e2b5315552eaa58a7`, origin/main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Native P2 source/design proof is bound by `data/design-refresh-2026-09-09-r28-cli-retained-qualified-gap-audit.md` and the original bytes are archived by `data/r28-cli-retained-integration.json`. Independent replacement P3 design review remains pending; no prior review approval is transferred and no product implementation or test acceptance is claimed. Preserve the complete decoded API, public schema/method/test-kit exports, full payloads and encoded outputs described below. Raw request defaults, typed diagnostics and their ordering remain supported contracts; their D1 owners are not implementation targets of this returned-state migration.
+P2 after Benjamin's2026-09-22 operation-constraint ruling, source
+`0be1f13d62fa00cb65e34ff69ec99043380f8d81`. The prior hold remains historical.
+Proposed status designed; independent P3 and implementation remain pending.
 
-# Instance
+## Current shape
 
-- id: `goals-packet-migration-kind`
-- exact source SHA: `93217d998f851e2e93d9864e2b5315552eaa58a7`
-- corpus source SHA: `d1b4d769fbaffddd55717f3b1ba461897dd545c5`
-- file:line: `packages/tooling/tool/cli/src/commands/Goals/Migration.ts:349`
-- symbol: `GoalPacketMigration`
-- members: `isBackfill`, `parked`, `manifestText`, `readmeText`
-- evidence: E1 at `Migration.ts:365-389,573-607` — parked, backfill, and four mechanical output patterns are constructed from the same edit accumulator; E2 at `SetStatus.ts:109-119` consumes kind and output presence.
+GoalPacketMigration at packages/tooling/tool/cli/src/commands/Goals/Migration.ts
+343-355 exports slug:String, edits:Array(String), optional manifestText/readmeText/
+parked:String and optional isBackfill:Boolean. None of these optional keys has a
+default. The producer emits parked366, backfill384 and mechanical602 plans.
+SetStatus109 handles parked before writes;116-118 distinguishes backfill only
+when its Boolean is true, treating false and absence equivalently.
 
-# Current shape
+The new DECISIONS.md ruling establishes the missing contract: parked forbids
+backfill and both output texts; backfill requires manifest, with optional README.
+False remains a supported non-backfill representation. All String/Array payloads,
+including empty values, remain valid. These are authoritative owner constraints,
+not conclusions drawn from the six producer-observed tuples.
 
-GoalPacketMigration343–355 is the exported pure planner's returned class.
-isBackfill is an optional Boolean with absent/false/true; parked,
-manifestText and readmeText are independently optional strings. Edits is a
-required ordered string array and slug is required text. Production parked365
-omits the Boolean and texts, backfill384 writes true plus manifest, and
-mechanical602 omits the Boolean and owns either/both/neither text. Generic
-.make acceptance does not establish a supported explicitfalse operation;
-no live constructor/decoder fixture does so.
+## Cardinality gap
 
-# Cardinality gap
+The complete raw presence domain is3×2×2×2=24: isBackfill absent/false/true,
+parked absent/present, manifest absent/present, README absent/present.
 
-Actual members [isBackfill,parked,manifestText,readmeText] represent
-3 ×2 ×2 ×2 = **24** combinations. **6** are supported: parked; backfill;
-mechanical unchanged, manifest-only, README-only, both. Required edit-array
-emptiness is not an extra Boolean axis. Keep the array's exact contents/order
-and correspondence to changed text as payload invariants, including empty
-edits on unchanged/parked and nonempty descriptions for changes.
+- Parked: neither output, flag absent or false:2 legal strata.
+- Not parked, not backfill: four output combinations times absent/false:8.
+- Not parked, backfill: manifest present, README absent or present:2.
 
-# Target schema
+Thus **24 representable /12 legal**. Present empty text is present, including an
+empty parking question, manifest or README; it is never tested by truthiness.
+Edits remains an arbitrary ordered array, including empty arrays and strings in
+all cases. Do not add an emptiness axis or require a changed-text description.
+Slug remains the full String domain. The old24/6 figure is superseded.
 
-Define `GoalPacketMigrationKind` with `unchanged`, `manifest-change`, `readme-change`, `manifest-and-readme-change`, `backfill`, and `parked`, and make `GoalPacketMigration` a tagged union. Parked alone owns a nonempty question. Backfill owns manifest text and a nonempty edit sequence. The changed mechanical cases own exactly their corresponding texts and nonempty ordered edits; unchanged owns neither and has no edits. Migrate all constructors and readers atomically; do not retain the broad optionals or an explicit-false case.
+## Target schema
 
-# Migration inventory
+Create a private LiteralKit for six operation cases: parked, backfill, unchanged,
+manifest-change, readme-change, manifest-and-readme-change. Use annotated named
+case classes and schema-derived tagged-union helpers; annotate before toTaggedUnion
+so generated statics remain. Every case retains slug:String and edits:Array(String).
+Parked owns question:String, no output. Backfill owns manifestText:String and
+readmeText:Option<String>. Four mechanical cases own exactly their corresponding
+output strings, with none in unchanged. No case stores isBackfill or parked as an
+independent optional payload.
 
-- `Migration.ts:325-355` — replace the four finite members and preserve the required ordered edits payload; use named cases and retain `slug`, exact edit strings/order, and output texts.
-- `Migration.ts:365-389` — construct parked and backfill cases directly; keep every parked question and generated manifest byte unchanged.
-- `Migration.ts:547-607` — select one of the four mechanical cases while preserving JSONC edit order and exact output texts.
-- `SetStatus.ts:104-120` — exhaustively match kind; preserve parked logging, write behavior, and the same four counters.
-- `test/goals-command.test.ts:108-210` — migrate ordinary, backfill, and parked assertions; add rejection coverage for explicit false and parked/boolean cases.
-- Whole-source search found no additional reader or writer of `isBackfill` or `parked`.
+Preserve explicitfalse versus omission as representation metadata where that
+distinction exists: a private two-value LiteralKit, omitted|explicit-false, is
+required on parked and mechanical cases. It is independent within these
+non-backfill cases and absent from backfill. It is not a Boolean or a second
+operation tag, and must not control execution/counters. Producers choose omitted;
+boundary decoding of false chooses explicit-false. This retains all12 legal raw
+strata without collapsing the user's supported alias or adding invalid states.
+Do not expose redundant Boolean getters or manufacture a third flag state.
 
-# Guard-deletion accounting
+Keep a private exact flat raw schema with the current optional-key semantics and
+public GoalPacketMigration compatibility codec to the canonical cases. Validate
+the ruling before projection: reject parked+true, parked+either output, and
+backfill without manifest, without dropping fields. Encoding reconstructs the
+flat fields and uses metadata to retain false versus omission. Present empty
+strings survive. Preserve schema-derived Type/Encoded and migrate constructors
+atomically; no second public flat decoded alias. Local Effect decodeTo maps
+source Type to target Encoded; target canonical type-side schemas when returning
+constructed case instances. Do not pass transformations to Class.extend or assert
+unsupported codec constructor statics. Prove construction/encoding API at apply.
 
-Replace SetStatus109 parked presence branch and116–118 backfill/text
-coordination with exact case matches. applyMigrationPlan65–84 no longer needs
-optional output reconstruction to know which output is owned by the case;
-write permission and filesystem creation/writes remain at the same times.
-Delete all three constructors' optional kind/payload spreads and isBackfill
-assignments. Preserve the edit accumulator and every edit description; no
-invented required-array Boolean guard is counted. Schema-derived case guards
-replace manual cases; raw command usage validators remain unchanged.
+## Migration inventory
 
-# Encoded-side impact
+Paths in this section are relative to packages/tooling/tool/cli/.
 
-The plan itself has no live encode/decode or persisted boundary. It is a
-public exported planner/class via Goals and the test kit, so every known
-constructor/example/caller migrates atomically. Generated JSONC manifest and
-README text are the actual output boundary and must stay byte-identical,
-including comments, newlines, parked messages, edit order and counters.
-Required text arrays do not become an encoded presence tag.
+- Migration.ts343-355 and example336: replace flat decoded model, preserve full
+  slug/edits domains and public schema/type/encoding surface.
+- parkedPlan365-366: construct parked with omitted metadata and exact question;
+  preserve empty edits from this producer without imposing it on public input.
+- planBackfill378-391: construct backfill with optional README None, exact manifest
+  bytes and ordered description. Public backfill+Some(README) remains supported.
+- planGoalPacketMigration547-608: preserve missing-manifest/backfill, parse failure,
+  missing status and unmapped status ordering, then status/supersession/phase/
+  mission edits and README rewrite ordering. Select mechanical case by undefined
+  presence, not string truthiness; preserve bytes and exact edits.
+- SetStatus.ts63-82: log every edit in order, then manifest mkdir/write, then
+  README write when enabled. Matching backfill must honor its optional README.
+- SetStatus104-122: parked logs only PARKED and increments parked, ignoring its
+  supported edits payload as before; nonparked logs edits and writes as above.
+  Backfill contributes backfills1 and optional changedReadmes1, never changedManifests.
+  Mechanical outputs contribute the respective counters; unchanged still logs
+  its arbitrary edits but contributes zero. Representation metadata never changes
+  those counts. Retain sequential packet iteration and dry-run summary wording.
+- Goals/index.ts98 exports Migration.ts; documented module import and test
+  planner helpers remain. No new service or raw compatibility overload.
+- test/goals-command.test.ts108 onward retains planner and command fixtures;
+  add direct public schema/constructor cases for the broader ruling-supported
+  combinations that producer fixtures did not cover. Recheck callers at apply.
 
-# Test impact
+## Guard-deletion accounting
 
-Add schema-derived construction coverage for all six cases. Retain malformed/unmapped parking questions, P0 backfill bytes, JSONC comment/format preservation, status/phase/supersession edits, README rewriting, no-change behavior, dry-run output, and counter tests.
+Remove four independent decoded optionals and repeated kind/output reconstruction.
+Match operation cases for parked handling, writes and counters. Optional README
+inside backfill remains an independent payload choice, not an invalidity guard.
+Representation metadata only reconstructs encoded false/omission; it is not used
+for operation logic. No runtime coherence guard is claimed deleted from current
+source, which previously accepted all24 strata. One raw decoding wall enforces
+the new explicit constraints; retain request validators, parsing, filesystem
+errors, dry-run write suppression and their order.
 
-# Risk
+## Encoded-side impact
 
-Tier1 with the packet planning batch. Do not change P0 backfill decisions,
-status normalization, human parking questions, output omission, generated
-bytes or dry-run/write behavior. OptionalBoolean false is a representable
-third value; it is counted as such and excluded from target operations only
-on complete writer/fixture/consumer evidence, not callback-produced truthiness.
+Internal planner owner remains Tier1, but its public schema has an encoded
+surface. Preserve every legitimate flat key, optional omission, explicitfalse,
+full text and edits array exactly; avoid a new persisted/tagged wire claim.
+Backward raw decoding accepts12 strata and rejects12 contradictory strata per
+the ruling. No false-to-omitted normalization, empty-to-absent conversion or
+nonempty checks. Preserve field order where observable through existing encoding;
+compare complete encoded objects/serialization in tests. Assess release policy
+when implementing the public decoded API migration.
 
-Local Effect v4 schema APIs: `.repos/effect/packages/effect/src/Schema.ts:6105`
-provides S.toTaggedUnion;6255 provides S.TaggedUnion. Use existing LiteralKit
-values for discriminants, named schema classes/cases and derived S.is guards.
-No hand-rolled literal-union replacement or opaque always-true validator.
+## Test impact
 
-Landing: use the ordered Tier 1E internal tooling subsystem batches, not singleton PRs per Tier 1 record. Coordinate the Goals packet planner, transition plan and transition outcome in one subsystem batch. Plan precedes outcome in their shared PacketTransitionWriter.ts, with SetStatus/SetRiskTier and migration consumer edits applied serially; each guard deletion has one owner. The D1 Goals request validators remain intact.
+Enumerate all24 raw presence tuples with representative empty and nonempty
+payloads. Accept and round-trip12, reject12 without data loss. Compare false and
+omitted aliases in every non-backfill operation; exercise backfill with and
+without README, including empty strings, parked with nonempty arbitrary edits,
+and unchanged with arbitrary edits. Confirm those edits still follow existing
+logging/parked short-circuit behavior, not invented payload constraints.
+
+Retain JSONC comments/formatting, P0 backfill bytes, malformed/unmapped questions,
+status/phase/supersession changes, README rewrite, idempotence, dry-run counters
+and manifest-before-README write order. Run focused goals tests and
+`bun run beep quality package-verify @beep/repo-cli` after implementation, then
+campaign/Yeet gates. This audit only enumerates finite states and inspects saved
+source; no actual migration or runtime codec proof is claimed.
+
+## Risk
+
+The main risk is reinstating the producer-only24/6 restriction despite the user
+ruling. Alias metadata must preserve representation without governing semantics;
+empty payloads must survive. Keep this owner in the ordered Tier1 tooling batch
+and coordinate SetStatus edits with packet transition owners, without deleting
+another owner's guards or importing its review credit. Independent P3 must assess
+the compatibility construction and all12 accepted strata before implementation.

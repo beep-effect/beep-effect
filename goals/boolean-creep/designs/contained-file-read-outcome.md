@@ -1,117 +1,186 @@
 # contained-file-read-outcome
 
-Native P2 design refresh before R29, bound to merged source HEAD
-`f03850b762e41217b5a0c26f26041daee490a070` / main
-`4f13d83e13d61275a57004050ffc62a90d86c014`. This preserves status `designed`
-and cardinality 4/3. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
-Independent P3 review and implementation acceptance remain pending.
-
-Owner `ContainedFileRead` at `packages/tooling/tool/cli/src/internal/cli/FsGuards.ts:128`,
-with members `exists`, `contents`.
-Storage/exposure: stored/internal; target: tagged-union.
-
-The full public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
-[source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
-[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) bind this proposal.
-The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/contained-file-read-outcome.md) is preserved.
-Keep complete decoded exports, typed request diagnostics, public constructor and
-helper input domains, encoded keys/defaults/omission and full independent payloads
-as specified below. Paths beginning `src/` or `test/` are relative to
-`packages/tooling/tool/cli/` unless the design states otherwise.
+P2 source/design refresh at exact HEAD `f137beedb270a071d4aa2ecc1dd52a9d233044d1`.
+Owner: `packages/tooling/tool/cli/src/internal/cli/FsGuards.ts:125-133`.
+Status remains `designed`; stored/internal, tagged-union, Tier 1. This is not
+independent P3 review, implementation acceptance, or a fresh census round.
+Paths below are relative to `packages/tooling/tool/cli/` unless stated otherwise.
 
 ## Current shape
 
-`readContainedFileStringNoFollow` returns an exported schema class containing
-an existence bit and optional text. The pair distinguishes a missing target
-from an entry that exists but is not a readable regular text file, but it also
-represents the incoherent `exists: false`/`Some(contents)` tuple. A rejected
-symlink remains a typed `FsGuardError`, outside the result value.
+`ContainedFileRead` is an exported schema class with `exists: S.Boolean` and
+`contents: S.Option(S.String)`. The reader at713-734 returns missing when a
+parent or final entry is absent, existing-without-text for a non-file entry or
+failed string read, and existing-with-text for a successful read. Empty text is
+present text. A symlink or containment/inspection failure remains an
+`FsGuardError`; it is outside the success carrier.
+
+The current blast radius exceeds the previous design: Ack, two ProofLedger
+reads, ProofJobLauncher record reads and three guard-only reads, and the Yeet
+job-logs command all invoke this helper. The test-kit wildcard exposes both
+schema and function. No direct serializer of this carrier was discovered;
+that does not prove an exported codec has never been supported.
 
 ## Cardinality gap
 
-Four boolean/presence combinations are representable and three outcomes are
-legal: `missing`, `exists-not-text`, and `exists-text({ contents })`.
+The Boolean times Option-presence projection represents four tuples. Three
+are legitimate outcomes:
+
+| exists | contents | outcome |
+| --- | --- | --- |
+| false | None | missing |
+| true | None | exists-not-text |
+| true | Some(text), including empty string | exists-text |
+
+False/Some contradicts the result's documented filesystem meaning and has no
+producer. Text presence implies existence (E4); existence does not imply text.
+The current schema nevertheless accepts all four, as a bounded runtime probe
+confirms. The probe also executes missing-parent, missing-entry, directory,
+nonempty text, empty text, symlink, and deterministically injected read failure
+paths. This is baseline evidence of these paths, not a comprehensive filesystem
+or concurrency proof.
 
 ## Target schema
 
-Define a named `ContainedFileReadDisposition` LiteralKit with `missing`,
-`exists-not-text`, and `exists-text`. Use its members to build a tagged
-`ContainedFileRead` union; only `exists-text` owns `contents: S.String`.
-Keep `ContainedFileRead` as the stable exported test-kit schema name and use a
-transform at its existing schema boundary so the encoded projection remains
-the old legal `{ exists, contents }` object. Decode must reject the incoherent
-false/Some tuple. Writers construct one outcome directly; readers match the
-tag exhaustively. Do not turn filesystem failures or symlink refusals into
-additional success cases.
+Use private `ContainedFileReadDisposition = LiteralKit(["missing",
+"exists-not-text", "exists-text"])` and three named schema class cases with
+`kind` supplied through `S.tag` from the literal kit. Only `exists-text` carries
+`contents: S.String`. Build the private decoded `ContainedFileReadOutcome`
+union using the kit's members and `S.toTaggedUnion("kind")`; annotate the union
+before `toTaggedUnion` so derived cases/guards/match are retained. Do not add
+parallel handwritten literal types or a second optional payload bag. Writers
+construct its schema-derived case directly; readers match the union. Constructors
+omit a tag supplied by the schema default.
+
+Retain exported `ContainedFileRead` as a compatibility codec from the existing
+legal `{ exists, contents }` schema into the decoded union; expose its inferred
+same-name Type alias. Use a private legacy boundary schema and `S.decodeTo` with
+typed SchemaGetter/SchemaIssue handling, checked against the local Effect
+reference at implementation. The old `.make({ exists, contents })` constructor
+is replaced atomically in the repo; the public codec name remains. Do not cast
+the transformed codec into a tagged union or assume it inherits `.cases`.
+Construction and matching use the actual decoded union's helpers.
+
+Decode the three legal old pairs, reject false/Some with a schema issue, and
+encode each decoded case back to its corresponding old pair. No read-side
+filesystem guard is moved into a codec. Do not create a success case for
+symlink refusal or another typed filesystem failure. This retains the existing
+encoded contract without inferring permission to remove it from lack of local
+encoding calls; independent review must verify both transformations before apply.
 
 ## Migration inventory
 
-- `FsGuards.ts:104-133` — replace the two-field class with the named literal
-  domain, tagged cases, union, and legacy encoded projection; update its JSDoc
-  example and preserve the existing identity/description.
-- `FsGuards.ts:691-713` — construct `missing` for a rejected/missing prepared
-  target or absent entry, `exists-not-text` for a non-file or failed string
-  read, and `exists-text` for a successful string read. Preserve no-follow
-  inspection and the `FsGuardError` symlink path at lines 706-707.
-- `commands/Yeet/internal/Ack.ts:384-402` — match the outer read error/missing
-  cases to unacked, decode a receipt only from `exists-text`, and retain
-  `exists-not-text` as acked with a null receipt.
-- `commands/Yeet/internal/ProofLedger.ts:50-72` — map `missing` to an empty
-  ledger, preserve the exact unreadable-file error for `exists-not-text`, and
-  parse complete rows only from `exists-text`.
-- `commands/Yeet/internal/ProofLedger.ts:74-98` — preserve the same error on
-  append, the empty prefix for `missing`, and truncated-line recovery for
-  `exists-text`.
-- `src/test/Cli.test-kit.ts:11` — no barrel edit is required; its wildcard
-  continues exposing `ContainedFileRead` and the reader through
-  `@beep/repo-cli/test/Cli`. No package-root export exists.
-- `test/yeet-ack.test.ts:150-168` — preserve the existing unreadable receipt
-  contract. `test/proof-ledger.test.ts:80-337` covers missing, readable,
-  malformed/truncated, and unreadable ledger behavior; add a focused schema
-  projection test for all three legal cases and rejection of false/Some.
-- Whole-source search found no other writer or reader of `ContainedFileRead` or
-  `readContainedFileStringNoFollow`.
+- `src/internal/cli/FsGuards.ts:104-133` — replace the class with the literal
+  domain, class members, decoded union, and compatibility codec. Reuse existing
+  `LiteralKit` and `$I`. Update JSDoc to show codec decoding or current reader
+  output, replacing `.make` and `.exists` examples.
+- `FsGuards.ts:691-734` — update helper documentation and return type. Missing
+  prepared parent at721 and missing entry at726 construct missing. Retain
+  symlink refusal at728-729. At731-734, non-file or failed `readFileString`
+  constructs exists-not-text; successful read, including empty text, constructs
+  exists-text. Preserve read error suppression into this success state.
+- `commands/Yeet/internal/Ack.ts:418-433` — outer Effect.option failure or
+  missing gives unacked/null. Exists-not-text gives acked/null; exists-text
+  alone feeds receipt decoding. Preserve invalid receipt handling and expired
+  waiver handling, which can return unacked with the decoded receipt retained.
+- `commands/Yeet/internal/ProofLedger.ts:54-71` — missing returns zero malformed
+  rows and empty rows; exists-not-text preserves the exact unreadable-file
+  YeetCommandError, including file field; exists-text preserves complete-line
+  filtering and malformed-row count.
+- `ProofLedger.ts:79-98` — exists-not-text preserves the same append refusal.
+  Missing has empty recovery prefix. Exists-text adds a newline exactly when
+  nonempty text lacks a terminating newline. Keep encoding and append errors.
+- `commands/Yeet/internal/ProofJobLauncher.ts:167-181` — missing returns None;
+  exists-not-text retains `Job record is not a readable regular file.` through
+  the current guardError wrapper. Exists-text feeds the record codec and all
+  identity/checkout/unit-name/log-path checks unchanged.
+- `ProofJobLauncher.ts:192-195,378-381,395-398` — these are guard-only reads for
+  record lock, jobs-root guard, and prune candidates. Keep the call, services,
+  and error mapping; discard any success case exactly as now. Do not reinterpret
+  exists-not-text as a new error at these callers or delete the read because
+  its result is unused: no-follow checks are its purpose.
+- `commands/Yeet/Yeet.command.ts:831-837` — job logs selects contents only from
+  exists-text, else empty string for either missing or exists-not-text. Preserve
+  read-error wrapper, newline trimming, tail count, and Console.log output.
+- `src/test/Cli.test-kit.ts:11` — wildcard still exposes the stable codec name
+  and reader. No new root export or alias is required. All known in-repo
+  constructor/property consumers migrate atomically.
+- `test/yeet-ack.test.ts:150-222`, `test/proof-ledger.test.ts:322-339`, and
+  `test/proof-job.test.ts:790-819,1304-1317` — retain unreadable, symlink,
+  missing-log, normal-tail, and non-regular record contracts. Add the specific
+  codec and reader cases below. Existing generic FsGuards coverage in
+  `test/cli-kits.test.ts` does not directly test this carrier today.
+
+Graft exhaustive search covers five source files; a caller-edge query could
+not resolve this Effect.fn symbol, so it provides no completeness evidence.
+The source grep plus test-kit/barrel and test searches provide the inventory
+above. Re-run this discovery against current main before implementation.
 
 ## Guard-deletion accounting
 
-Delete all three construction-site `exists` writes, all construction-time `Option`/existence
-coordination, Ack's `!exists` branch, ProofLedger's `!read.exists`,
-`read.exists && O.isNone(read.contents)`, and subsequent Option extraction.
-The outer `Effect.option` in Ack and the no-follow/symlink/error guards remain
-because they represent independent filesystem failure behavior. The incoming
-write-only hardening at FsGuards.ts409-421 performs chmod(0o600) before writing
-the temporary file, then preserves containment recheck and atomic promotion.
-It is outside this read carrier; this design receives no deletion credit for
-that operation or its typed failure mapping. ProvenanceFooter.ts538-542 now
-uses the guarded writer and remains a write-only consumer, not a fourth read
-result consumer.
+Delete the three old `.make` constructions' exists writes and their paired
+Option coordination. Replace Ack's `!guardedRead.value.exists` and result
+contents Option flatMap, ProofLedger load's `!read.exists` then None guard,
+append's `read.exists && O.isNone(read.contents)` plus Option match,
+ProofJobLauncher rawRead's !exists/None sequence and `.contents.value`, and
+jobLogs' contents Option fallback with exhaustive outcome handling. Parsing a
+receipt still yields an independent Option and retains its own checks.
+
+The compatibility decoder owns one boundary check for the old incoherent
+false/Some pair; no producer or normal reader reconstructs that pair. No
+existing decoder guard is falsely claimed removed. The outer Ack
+Effect.option, symlink/containment/inspection guards, guard-only calls, job
+identity validation, waiver expiration, ledger newline checks, write hardening,
+and provenance writer remain. They address independent facts, not this
+carrier's coherence. Private decoded union constructors make the fourth
+internal state unrepresentable rather than relocating its Boolean bag.
 
 ## Encoded-side impact
 
-The decoded model becomes a tagged union, while the existing schema's legal
-encoded objects remain byte-for-value compatible: missing encodes as
-`{ exists: false, contents: None }`, exists-not-text as
-`{ exists: true, contents: None }`, and exists-text as
-`{ exists: true, contents: Some(text) }`. Nothing persists this result today,
-but retaining the projection avoids silently changing the exported test-kit
-codec. Filesystem contents, ack receipts, proof-ledger rows, errors, and paths
-are unchanged.
+Preserve the old schema's **Effect Option-valued** encoded fields and absence
+rules: `{ exists: false, contents: O.none() }`,
+`{ exists: true, contents: O.none() }`, and
+`{ exists: true, contents: O.some(text) }`. These are not newly claimed JSON
+objects containing plain `_tag` fields. The local Effect Schema.Option encoded
+type is Option of the inner encoded type, and the baseline encode probe confirms
+runtime Option values. Both keys remain required; neither omission nor null is
+silently introduced. Keep empty strings and arbitrary accepted string content.
+
+The incoherent fourth tuple is rejected deliberately by the reviewed design,
+not treated as a legitimate fourth filesystem outcome. Do not silently collapse
+it into missing. No ack receipt, proof ledger row, job record, log file, CLI
+output, or persisted path is re-encoded by this migration. Class instances,
+constructors, and decoded property access migrate as allowed by the campaign's
+atomic decoded-shape rider. This Tier 1 internal carrier still retains its
+exported encoded projection as a bounded compatibility choice; no blanket
+encoded-change permission is inferred. Apply the release policy to the final
+implementation diff.
 
 ## Test impact
 
-Add schema decode/encode coverage for the three legal projections and the
-incoherent fourth projection. Retain Ack's missing, symlink/error, unreadable,
-invalid receipt, expired waiver, and readable receipt tests. Retain proof
-ledger missing/create, unreadable/non-file error text, malformed complete row,
-truncated final row, newline recovery, and append behavior. Run the focused
-FsGuards, Ack, and proof-ledger suites plus `@beep/repo-cli` package
-verification when implemented. Preserve the new provenance mirror permission
-and symlink regression at test/yeet-provenance-footer.test.ts721-751. No tests
-ran in this source/design impact audit.
+Add direct reader tests for missing parent and entry, directory/non-file,
+successful empty/nonempty text, injected string-read failure, and target/parent
+symlink refusal. Read failure must remain exists-not-text; inspection failure
+must remain typed failure. Add codec decode/encode round trips for all three
+legal encoded forms, key presence and Option runtime identity, preservation of
+empty text, and rejection of false/Some. Test decoded union construction and
+exhaustive consumer behavior without relying on transformed-codec case helpers.
+
+Retain Ack missing/error, unreadable, invalid receipt, expired waiver, and
+readable receipt behavior. Retain ledger parse, malformed/truncated final row,
+append recovery, directory refusal, and error text. Retain proof job malformed
+and identity-invalid records, non-regular file refusal, lock/list/prune
+no-follow behavior, and job log empty/missing/non-file/read-failure output plus
+newline/tail semantics. Run focused suites and full
+`bun run beep quality package-verify @beep/repo-cli` when implemented. No package
+suite or implementation validation ran during this P2 audit; the private probe
+is bounded baseline evidence only.
 
 ## Risk
 
-Land the schema and all three readers atomically. The main risk is collapsing
-`exists-not-text` into `missing`, which would unack an unreadable receipt and
-silently replace an unreadable proof ledger. Keep no-follow path validation,
-symlink refusal, and read failures exactly where they are.
+Land schema and every result consumer atomically. Collapsing exists-not-text
+into missing would incorrectly unack receipts or silently replace unreadable
+ledgers; treating guard-only or log reads as stricter would alter unrelated
+behavior. Preserve the exported encoded projection and test its actual Option
+representation. No implementation begins before replacement independent P3
+review and GATE 2 evidence.

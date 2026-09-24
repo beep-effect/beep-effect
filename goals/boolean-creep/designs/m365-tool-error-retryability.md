@@ -1,69 +1,187 @@
 # Instance
 
 - id: `m365-tool-error-retryability`
-- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
-- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
+- exact source SHA: `f137beedb270a071d4aa2ecc1dd52a9d233044d1`
 - file:line: `packages/drivers/m365-mcp/src/M365Tools.ts:78`
 - symbol: `M365ToolError`
 - members: `reason`, `retryable`
-- evidence classes:
-  - E4 at `packages/drivers/m365-mcp/src/M365Handlers.ts:36-47` — the sole production writer sets retryable exactly for `throttled` and `transport` while carrying the same driver reason.
-  - E4 at `packages/drivers/m365-mcp/test/Server.test.ts:170-200` — explicit wire fixtures preserve `Some(throttled)` with true and `None` with false.
+- status: refreshed P2; no independent P3 or implementation credit.
 
 # Current shape
 
-`M365ErrorReason` is the existing eight-literal owner at `packages/drivers/m365/src/M365.errors.ts:49-62`. `M365ToolError` stores `reason: Option<M365ErrorReason>` and a separate required boolean at `M365Tools.ts:70-91`. The handler derives both from one `M365Error` at `M365Handlers.ts:36-47`: every production error has a reason, and only transport or throttling is retryable.
+`M365ToolError` is an exported schema class at `M365Tools.ts:70-91`.
+Its reason field is `Option<M365ErrorReason>` decoded from an optional string
+key, with a constructor-only None default. Its independently required boolean
+is `retryable`. The three other fields are nonempty strings: message,
+operation, and toolName. `M365ErrorReason` already owns eight literals at
+`packages/drivers/m365/src/M365.errors.ts:42-55`.
 
-The class is exported through `packages/drivers/m365-mcp/src/index.ts:28-41` and is the failure codec for eleven MCP tools at `M365Tools.ts:108-377`. Its encoding is therefore an app-owned MCP wire contract, not a mirror of a Graph SDK type. The explicit tests at `Server.test.ts:168-205` require the encoded `retryable` key and optional-key encoding for `reason`. The schema-derived arbitrary test at lines 207-226 proves that the current permissive codec is invertible; it does not make incoherent business tuples supported.
+The sole production constructor, `M365Handlers.ts:39-48`, copies the driver
+reason and derives retryability through its helper at 36-37. All eleven
+handlers feed this finalizer (113-180). All eleven tool declarations use this
+same failure schema and `failureMode: "return"`, at M365Tools lines
+111,137,163,189,215,241,267,293,319,345,371. This app-owned MCP failure schema
+is not a literal Graph SDK mirror; its outward encoding requires Tier 2
+compatibility rather than D2 dismissal.
 
 # Cardinality gap
 
-The boolean combined with absence or one of eight reason literals represents 18 tuples. Nine are supported:
+The reason has nine states (eight literals plus absence), independently paired
+with two booleans, giving 18 representable tuples. E4 is the production
+writer's exact policy at `M365Handlers.ts:36-46`: retryable true requires
+transport or throttled. The explicit no-reason constructor and wire assertion
+at `test/Server.test.ts:182-187,200-205` establishes the ninth supported state.
 
-| reason | retryable |
+| Reason | Retryable |
 | --- | --- |
 | absent | false |
-| `config` | false |
-| `auth` | false |
-| `request encoding` | false |
-| `response decoding` | false |
-| `response status` | false |
-| `encrypted item` | false |
-| `transport` | true |
-| `throttled` | true |
+| config | false |
+| auth | false |
+| request encoding | false |
+| response decoding | false |
+| response status | false |
+| encrypted item | false |
+| transport | true |
+| throttled | true |
 
-There is no supported absent/true state, retryable false transport or throttling, or retryable true non-transport reason. False does not imply absence, so this is a reason-derived policy projection rather than an option-presence bit.
+False does not imply absence. Do not replace the reason with an existence bit,
+collapse non-retryable reasons, or invent another retry vocabulary. The current
+schema accepts inverse tuples, and the arbitrary roundtrip at Server.test
+211-227 exercises permissive schema invertibility. Neither makes those tuples
+legitimate policy states. Conversely, production presence alone does not
+justify dropping the explicitly supported absent/false fixture.
 
 # Target schema
 
-Keep `Option<M365ErrorReason>` as the only semantic variable and target shape; do not introduce another literal vocabulary. Replace the public schema with a transformation between an exact private legacy encoded struct and the semantic `M365ToolError` model without a decoded `retryable` field.
+Keep `Option<M365ErrorReason>` as the only semantic retry policy owner. Use a
+private annotated semantic `S.Class` containing message, operation, reason,
+and toolName, with no retryable member or getter. Its reason field uses
+`S.Option(M365ErrorReason).pipe(SchemaUtils.withNoneDefault)`: at this internal
+stage the reason is already a runtime Option. Keep the constructor-only None
+default so callers can omit reason.
 
-The encoded struct retains `message`, `operation`, optional-key `reason`, required boolean `retryable`, and `toolName` exactly. Decode derives the expected retryability from the decoded reason and succeeds only when the encoded boolean matches. Encode always writes `retryable: true` for `Some(transport)` or `Some(throttled)` and false otherwise. `None` continues to omit `reason` while emitting `retryable: false`. Use the existing `M365ErrorReason` match/guards and `Option`; do not add a generic retry-policy helper.
+Define an exact private annotated legacy `S.Struct` with the old field order
+and field schemas: message, operation, reason, retryable, toolName. Only this
+boundary uses `S.OptionFromOptionalKey(M365ErrorReason)` and retains the
+required boolean. Reuse named field schemas/key annotations so nonempty
+constraints and descriptions do not drift.
+
+Export `M365ToolError` as the annotated legacy struct piped through
+`S.decodeTo(SemanticClass, SchemaTransformation.transformEffect(...))`, plus
+its same-name `typeof M365ToolError.Type` alias. The transformation decode
+receives the legacy struct's decoded Option and validates the boolean against
+that reason. Matching input becomes the semantic class fields; mismatch fails
+with a `SchemaIssue.InvalidValue`. Encode receives the target's encoded
+fields (including runtime Option), projects retryability, and returns legacy
+fields in their original order. Preserve the class schema identity/description
+annotation and all public key annotations deliberately.
+
+A single colocated boundary derivation may use the existing reason kit guards
+and Option matching. Both directions share it. It is not an independently
+stored semantic boolean or a generic retry-policy abstraction. `None` maps to
+false; only Some(transport/throttled) maps to true. The legacy optional-key
+codec then omits None's reason key on encoding.
+
+The local Effect reference confirms decodeTo carries target constructor input
+and make types (`Schema.ts:5320-5332`) and accepts getter-backed transformations
+at 5388-5394. `SchemaTransformation.transformEffect` at 380-389 supports
+schema-issue failure, and `SchemaIssue.InvalidValue` is at 747. A private
+runtime prototype confirmed transformed `.make` constructs the target class,
+including its omitted-reason default. Do not pass the transformed codec into
+`S.Class` as though it were a Struct; the Class overload accepts fields or an
+actual Struct (Schema.ts:14686-14713).
 
 # Migration inventory
 
-- `packages/drivers/m365/src/M365.errors.ts:49-79` — reuse the existing `M365ErrorReason` LiteralKit and exported type unchanged.
-- `packages/drivers/m365-mcp/src/M365Tools.ts:46-91` — split the exact five-key legacy encoded struct from the semantic model, remove decoded `retryable`, and expose the transformed schema under the existing `M365ToolError` name. Update the example to inspect the reason or encoded result rather than a removed semantic boolean.
-- `M365Tools.ts:108-377` — keep all eleven `Tool.make` declarations on `failure: M365ToolError`; their names, failure mode, hints, parameters, and success schemas do not change.
-- `packages/drivers/m365-mcp/src/M365Handlers.ts:34-48` — delete `isRetryableM365Error` and the duplicate `retryable` constructor argument. Continue mapping message, operation, `Some(error.reason)`, and tool name exactly.
-- `packages/drivers/m365-mcp/src/index.ts:28-41` and `package.json:39-60` — preserve the root export and published subpath behavior.
-- `packages/drivers/m365-mcp/test/Server.test.ts:66-68,168-226` — derive arbitrary values from the target semantic schema, retain both exact wire fixtures, add all nine supported projections, and reject all nine incoherent legacy tuples on decode.
-- `packages/drivers/m365-mcp/test/Server.test.ts:228-247` and integration tests — preserve the eleven exposed tool names and stdio MCP behavior.
+Paths below are relative to `packages/drivers/m365-mcp/` unless qualified.
 
-Targeted repository and barrel search found no reader of `M365ToolError.retryable` outside its JSDoc and wire assertions. The handler is the sole production constructor; the explicit no-reason test fixture is the sole supported constructor outside it.
+- `src/M365Tools.ts:46-91`: replace exported five-field class with private
+  semantic class plus legacy codec exported under the original schema/type
+  name. Update JSDoc example to inspect reason or explicitly encode a wire
+  object; delete its semantic retryable input/read.
+- `src/M365Tools.ts:109-377`: retain all eleven failure schema references,
+  names, return failure mode, read-only hints, parameters and success codecs.
+- `src/M365Handlers.ts:34-53`: keep the error value alias valid against the
+  same-name exported type, remove helper at 36-37 and constructor retryable
+  argument at 46. Message formatting, operation, Some(error.reason), toolName,
+  and Effect error mapping remain unchanged.
+- `src/M365Handlers.ts:113-180`: retain each finalizer mapping; no tool-specific
+  retry policy is introduced.
+- `src/index.ts:41` and `package.json` root/wildcard exports: retain schema and
+  type accessibility. The private semantic class is not exported.
+- `test/Server.test.ts:50-53,71-74`: keep codecs/equivalence bound to the public
+  transformed schema. Generate semantic values from the target schema for the
+  property test, so generation cannot manufacture an independent retry flag.
+  Prefer the public codec's target Type projection when a class shape is
+  needed; do not expose the private model merely for test access.
+- `test/Server.test.ts:174-227`: remove decoded constructor flags; preserve
+  exact throttled/true and absent/false encoded assertions; extend to all
+  nine supported projections and inverse rejection cases.
+- `test/Server.test.ts:229-247` and remaining stdio tests: preserve the eleven
+  tool names and protocol behavior; add failure-path encoding coverage.
+- `packages/drivers/m365/src/M365.errors.ts:42-73`: reuse unchanged reason
+  vocabulary/guards. No changes to the driver's error or Graph wire shapes.
+
+Targeted repository search found no other M365ToolError value constructor or
+semantic retryable reader beyond the handler, JSDoc, and server test fixtures.
+The barrel is a wildcard export, so preserving its name needs no invented
+explicit re-export. Absence of in-repo class `new`/`instanceof` consumers does
+not prove absence of external consumers.
 
 # Guard-deletion accounting
 
-Delete the decoded `retryable` class field and its independent constructor input at `M365Tools.ts:81-83`, the handler-local `isRetryableM365Error` function at `M365Handlers.ts:36-37`, and the `retryable` write at line 46. The codec has one boundary derivation and one equality validation because the legacy wire key must remain; it cannot represent an incoherent semantic value. Remove arbitrary-test coverage of incoherent decoded objects and replace it with supported-schema generation plus explicit legacy rejection cases.
+Remove the decoded retryable field and independent constructor input, the
+handler retry helper, its redundant write, and JSDoc's semantic read. There is
+no old coherence rejection or legacy normalizer to claim deleted. One boundary
+projection and one equality validation remain because the required wire key
+must be retained. They cannot produce a semantic object containing two
+independent retry policy variables. No code elsewhere gets a compatibility
+getter that recreates the removed field.
 
 # Encoded-side impact
 
-The encoded wire is byte-shape compatible for all nine supported values. `retryable` remains a required boolean key, `reason` remains an optional string key with the same eight literals, and the other fields remain unchanged. Decoding now rejects the nine incoherent combinations that no documented fixture or runtime writer supports. Encoding the semantic model deterministically reproduces the old canonical projection. No migration of MCP clients, persisted data, or tool declarations is required.
+Retain all legitimate encoded fields, reason spellings, string constraints,
+key order, required keys, optional reason omission, and values. None encodes
+without reason and with retryable false. A missing retryable key still fails;
+null, explicit undefined, and unknown string reasons remain rejected. No
+new wire default, null normalization, reason renaming, or Boolean coercion is
+allowed. The nine inverse combinations deliberately become decode failures;
+this tightens incoherent permissive schema inputs, not the supported domain.
+
+The public decoded class surface changes to a transformed schema/type and
+loses retryable. Keep `.make` for known consumers; construction with `new`,
+class identity introspection, and removed field reads are not promised source
+compatible. Apply the campaign's decoded-shape migration rider and update
+known consumers atomically. Do not claim all public TypeScript behavior is
+unchanged or add aliases that retain semantic redundancy. JSON Schema/MCP
+failure-schema representation must still describe the legacy encoded keys;
+verify the actual tool conversion rather than assuming source schema order
+alone establishes protocol compatibility.
 
 # Test impact
 
-Retain exact assertions for throttled/true and absent/false. Add table-driven encode/decode assertions for all eight reasons and absence, including transport/true. Add decode failures for the inverse boolean of every row. Keep the schema-derived property test, now generated from the semantic target, so it proves all generated values round-trip through the compatibility codec without granting incoherent tuples business legitimacy. Retain the MCP toolkit list and stdio call tests unchanged.
+A private P2 codec prototype checked all nine supported tuples. Each encoded
+`JSON.stringify` result matched the current codec byte-for-byte for fixed
+message/operation/toolName values; each inverse decoded under the old codec
+and failed under the prototype. It also checked omitted constructor reason,
+class construction, absence of decoded retryable, all eleven toolkit names,
+and rejection parity for five malformed boundary shapes. This is bounded API
+feasibility evidence, not a product implementation or complete MCP proof.
+
+At implementation, retain these exhaustive finite projection assertions with
+varied unchanged payload strings, explicit required-key/type/empty-string
+checks, semantic schema property roundtrips, and exact existing fixtures.
+Assert all eleven tools retain the same public failure codec and return mode;
+exercise a returned tool failure over stdio and compare its encoded shape.
+Check generated encoded JSON Schema, .make/type inference, docs, and downstream
+imports. Run full `bun run beep quality package-verify @beep/m365-mcp` and the
+applicable Yeet proof; this P2 pass does not run or claim those gates.
 
 # Risk and sequencing
 
-Tier 2 stored/wire migration. Land the semantic model, compatibility codec, handler constructor, JSDoc, and tests atomically because `M365ToolError` is exported and installed in eleven tools. The main risks are dropping the required wire key, encoding `None` with a `reason` key, or changing which reason literals retry. No source reason vocabulary, tool API, dependency, generated file, or generic abstraction is added.
+Tier 2 stored/wire. Land semantic model, legacy codec, handler, JSDoc and tests
+atomically after GATE 2. Main risks are losing the required encoded retryable,
+using an optional-key codec twice so reason is encoded too early, failing to
+preserve constructor None default, or treating generic arbitrary acceptance
+as business legitimacy. P3 must review both domain judgment and compatibility;
+no source implementation or review completion is claimed here.

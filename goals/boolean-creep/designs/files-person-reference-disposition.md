@@ -1,134 +1,237 @@
-# R28 P2 design: files-person-reference-disposition
+# P2 refresh: files-person-reference-disposition
 
-Frozen HEAD `93217d998f851e2e93d9864e2b5315552eaa58a7`, origin/main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Native P2 source/design proof is bound by `data/design-refresh-2026-09-09-r28-cli-retained-qualified-gap-audit.md` and the original bytes are archived by `data/r28-cli-retained-integration.json`. Independent replacement P3 design review remains pending; no prior review approval is transferred and no product implementation or test acceptance is claimed. Preserve the complete decoded API, public schema/method/test-kit exports, full payloads and encoded outputs described below. Raw request defaults, typed diagnostics and their ordering remain supported contracts; their D1 owners are not implementation targets of this returned-state migration.
+Source HEAD `0be1f13d62fa00cb65e34ff69ec99043380f8d81`, refreshed 2026-09-22.
+This supersedes the R28 design, including its unsafe proposal to put strict
+seven-case conversion directly in worker stdout parsing. P2 evidence only;
+replacement independent P3 and GATE 2 remain prerequisites to implementation.
 
-# Current shape
+## Current shape
 
-PersonMatchReference owns accepted:Boolean, optional detectionScore and optional
-reason from the existing six-value PersonMatchReferenceRejectionReason kit.
-It also owns full source name/path and required faceCount. The repo Python
-worker emits this protocol; it is not an external SDK mirror. Worker stdout
-and persisted PersonMatchReport both contain the schema.
+`MatchPerson.schemas.ts:1254-1266` owns `PersonMatchReference`: required
+sourceName, sourcePath and NonNegativeInt faceCount, accepted Boolean, optional
+FaceDetectionConfidence detectionScore, and optional six-literal
+PersonMatchReferenceRejectionReason (`431-450`). Required count and complete
+string/number payloads are not additional Boolean axes.
 
-collect_references in python/photo-face/beep_photo_face/worker.py730–803
-starts a rejected entry, then produces one of six reasons or acceptance.
-Four rejection reasons lack score: unreadable-image, aligner-confidence-failed,
-no-face, multiple-faces. Missing/invalid embedding rejections have one detected
-face and its score. Acceptance has score, faceCount1 and no reason. Score is
-rounded through the existing worker function; all full values remain payload.
+## Cardinality gap
 
-# Cardinality gap
+The finite product is 2 accepted values × 7 reason alternatives (absent or six
+literals) × 2 score-presence states = **28 representable / 7 legal**. The complete
+repo-owned Python producer `collect_references`, worker.py:730-803, establishes:
 
-Accepted2 × (absent reason +6 literals)7 × score-presence2 = **28**. There are
-**7** supported reason-specific projections, one per rejection plus accepted.
-The old8/3 count incorrectly replaced the finite reason domain with a Boolean.
-The four scoreless rejections and two scored rejections may share schema
-building blocks, but they remain six distinct supported literals. Required
-faceCount is not a zero/nonzero Boolean axis.
+| Semantic case | accepted | reason | detectionScore |
+| --- | --- | --- | --- |
+| Accepted | true | absent | present |
+| Unreadable image | false | unreadable-image | absent |
+| Aligner rejection | false | aligner-confidence-failed | absent |
+| No face | false | no-face | absent |
+| Multiple faces | false | multiple-faces | absent |
+| Missing embedding | false | missing-embedding | present |
+| Invalid embedding | false | invalid-embedding | present |
 
-# Target schema
+The saved probe executes the extracted actual producer with eight synthetic
+branches (two distinct aligner paths), producing seven projections. It preserves
+reference order, embeddings/names accumulation, rounded scores and stderr. This
+is bounded producer evidence, not package tests, model execution or proof that
+every potential public decoder input is a supported producer state. No supported
+alternate writer was found in the audited fixtures; permissive decoding alone
+is not an eighth case.
 
-Reuse PersonMatchReferenceRejectionReason; do not create a second spelling list.
-Define named accepted and rejected case schemas, with the rejection family
-partitioned by score ownership: the four scoreless reasons own no score and
-the two scored reasons own the complete FaceDetectionConfidence value.
-Use a named LiteralKit for any new top-level accepted/rejected discriminator
-and existing reason literals for cases; S.Union plus S.toTaggedUnion and
-schema-derived guards provide exhaustive matching. Retain required source
-identity and exact faceCount constraints in the relevant cases.
+## Target schema
 
-Keep a legacy flat encoded schema feeding the new decoded schema through an
-explicit bidirectional codec. Encoding reconstructs accepted, optional score
-and optional reason with exact omissions and numeric values. Decoding preserves
-all7 supported shapes and rejects contradictory ones with the existing typed
-worker/schema error mapping. Required count/path constraints remain separate
-from the finite cluster. No omission-to-false/zero default or score coercion.
+Introduce annotated named case schemas retaining sourceName, sourcePath,
+faceCount and every owned score value. Reuse the existing rejection reason kit;
+do not duplicate its six spellings. Use a private LiteralKit for the top-level
+accepted/rejected discriminator, and derive rejected cases from existing reason
+members. The accepted case has a required score and no reason; four rejected
+members have no score and two have required score. A rejected reason union plus
+top-level accepted/rejected union gives seven leaves without an extra stored
+Boolean. Use schema-derived matches and guards. Keep kit bases unannotated until
+member mapping; annotate the union before `S.toTaggedUnion` so matching statics
+survive. Named class members carry `$I.annote`; no ad-hoc interfaces/assertions.
 
-# Migration inventory
+Do not infer new finite count axes. Preserve NonNegativeInt payloads and the
+existing accepted faceCount=1 and aligner faceCount=0 validation. The producer's
+other observed counts are evidence, not authorization to tighten every exported
+payload constraint. Count, path, duplicate, summary and model validations remain
+independent obligations.
 
-- MatchPerson.schemas.ts431–450/1254–1266: reuse the reason kit, introduce
-  named cases/compatibility codec and preserve public PersonMatchReference
-  name/identity. Worker success1593 and persisted report1778 continue nesting
-  this same codec; report version and field order stay unchanged.
-- Python worker730–803 is the complete producer. Its wire fields and branching
-  can remain byte-identical; a TS decoded-state refactor does not require a
-  Python protocol edit merely to rename internal tags. Retain score rounding,
-  aligner exceptions, reference order, embeddings/names accumulation and all
-  stderr messages. Any future Python edit must prove the same old wire bytes.
-- MatchPerson.worker-service.ts506–528: keep stdout decoding with
-  onExcessProperty:error, worker error channel and existing diagnostic mapping.
-  Strict decoding must use the codec, not a new raw tag-bearing shape.
-- MatchPerson.ts1258–1331: keep path containment, basename identity and duplicate
-  path checks. Replace accepted/rejected Option coordination with case matching;
-  retain existing accepted faceCount1 and aligner-count checks and exact error
-  messages. Keep acceptedNames, acceptedCount and reference order.
-- MatchPerson.ts1524–1565 and other worker semantic validation retain all
-  model/parameters/report totals and accepted-reference joins. References
-  remain full values when materialized at2080; do not strip diagnostic payload.
-- Encode/write1675–1685, materializeReport1994 and result/report2080 retain
-  exact report bytes, manifest routing, archive/copy plan behavior and errors.
-  Files.schemas/index barrels publicly reexport this schema and codecs;
-  internal worker services stay on their existing surfaces.
-- files-command.test.ts492/564 actual worker fixtures,2731 over-count failure,
- 2915 duplicate-name failure and Python synthetic collect_references tests
-  retain complete rows. No successful custom fixture installs a contradictory
-  rejected reason/score combination; schema permissiveness alone is not proof.
+Crucially, distinguish a raw protocol DTO from the validated domain value.
+Retain the current flat field grammar in a clearly named raw worker-boundary
+schema. Worker success/report JSON decoding and injected worker service fixtures
+use that raw shape through envelope, size and recursive-name validation.
+Refine each reference at its existing ordered semantic-validation phase, not
+after the whole worker has already passed semantic validation.
+Do not install the strict semantic codec as the nested worker stdout schema.
+The raw accepted Boolean is justified only at this protocol/validation boundary;
+do not copy it into the validated report model or use it downstream there.
 
-# Guard-deletion accounting
+The public semantic `PersonMatchReference` and persisted `PersonMatchReport`
+use an explicit bidirectional legacy-flat-to-union codec. Encoding reconstructs
+the exact accepted/reason/detectionScore keys, omissions, numbers and order;
+no new discriminator reaches JSON. Worker DTO schemas remain raw and distinct
+from semantic report schemas. Retain existing public worker decoder, service,
+test-kit and report encoder entry points. This intentionally changes the
+semantic decoded constructor/property API; migrate its callers and examples,
+including `.make` uses. Do not falsely promise flat decoded property compatibility
+while removing those properties. Assess release-note/changeset policy during
+implementation; do not invent an unconditional version bump for this P2 audit.
 
-Remove independent decoded accepted/reason/score fields and the source-level
-accepted-reference guard1279 that must coordinate score and absent reason.
-Replace rejected reason-presence guard1290 with a case-owned reason, preserving
-its typed failure mapping at the actual input boundary. Replace outer
-Bool.match1309 with schema case matching. Required faceCount and path/duplicate
-checks remain because they validate independent full payload semantics; do not
-claim their removal just because the cluster is tagged.
+Use local Effect v4 `Schema.decodeTo` (5387-5408) with explicit SchemaGetter
+decode/encode transformations and `toTaggedUnion` (6126). Use Effect/Result
+boundary decoding with existing error mapping, not v3 transform APIs or sync
+throwing helpers. Every legal legacy shape must round-trip losslessly. Invalid
+combinations newly rejected by semantic conversion must report a typed error;
+do not claim they already had the same diagnostic under the permissive decoder.
 
-Do not claim the whole rejected-reference helper can disappear unchanged:
-its aligner-specific faceCount guard1295 must remain or become an equivalent
-named case constraint with the same diagnostic path. Do not count Python's
-branching over actual detector outcomes as redundant Boolean coherence logic.
+## Migration inventory
 
-# Encoded-side impact
+1. `MatchPerson.schemas.ts:431-450,1254-1266,1586-1601,1772-1789,1811-1840`:
+   reuse reason domain; separate raw worker DTO from semantic reference codec;
+   keep worker report nesting raw, report nesting semantic. Preserve worker v3
+   and report v2 versions, all other model/parameter/entry/summary fields and
+   full error union. Update existing exports through Files.schemas.ts and the
+   Files index, all public examples and constructor call sites.
+2. Python `worker.py:730-803`: leave byte-producing logic unchanged. Preserve
+   all six reasons, score rounding, complete count/name/path payloads and the
+   two aligner rejection paths. No tag additions or Python cosmetic rewrite.
+3. `MatchPerson.worker-service.ts:506-528`: retain truncation guard, strict
+   excess-property JSON parsing, stderr-aware invalid-JSON mapping and exit-code
+   checks. `884-901` must retain envelope checks, model-artifact verification,
+   then unique accepted-name validation. Envelope `755-763` retains requested
+   evidence, compute selection, backend runtime and size evidence in order.
+4. **Previously omitted consumer:** worker-service.ts:766-778 filters raw
+   references on accepted at line771 for recursive duplicate-name validation.
+   Keep it on the raw DTO at this earlier boundary. Replacing it with a strict
+   semantic decode would move reference grammar failures ahead of established
+   later diagnostics. Preserve recursive=false short circuit and name order.
+5. `MatchPerson.ts:1257-1335`: retain path containment/basename/duplicate
+   checks first, reference iteration order, accepted count and accepted-name
+   accumulation. Immediately after each reference's path check, preserve the
+   independent count rules and decode that reference into the seven-case model.
+   Accepted count != 1 maps to the existing inconsistent-accepted-evidence
+   `FilesCommandError`. This can precede case decoding: the existing OR at1279
+   uses the same message for count, missing score and extraneous reason, so their
+   relative evaluation does not distinguish observable diagnostics. For a raw
+   aligner rejection, preserve faceCount=0 validation and its existing error.
+   Its exact-reason guard cannot fire for an absent reason, preserving the old
+   missing-reason-before-aligner-count outcome. Do not add count restrictions
+   for other rejection cases.
 
-Tier2 singleton across the repo-owned worker/report protocol. Preserve flat
-worker JSON and PersonMatchReport version/keys/order/omissions, all six reason
-strings, full confidence scores, integer counts, names/paths, reference order,
-model/parameter/embedding payloads and exact typed error behavior. Both decode
-and encode are mandatory; no new tag appears on stdout or persisted JSON.
+   **One schema conversion at this phase replaces the coherence conditionals.**
+   The accepted case decode requires score and absent reason, with its decode
+   failure mapped to the existing inconsistent-accepted-evidence error. A
+   rejected case decode requires a reason; its structured missing-reason issue
+   maps to the existing omitted-rejection-reason error. The six rejected cases
+   constrain score presence according to the table. Other rejected case decode
+   failures map to a new typed inconsistent-rejected-reference-evidence error.
+   Use named case schemas and schema issue metadata/path information for error
+   mapping; never restore hand-written score/reason presence guards or inspect
+   formatted issue strings. An explicit raw accepted discriminator at this
+   transport boundary may select the branch codec/error mapping; it is not
+   stored again in the returned domain. Reject forbidden fields before any
+   transformation that might discard them. In particular, an accepted reason
+   and score on a scoreless rejection must fail, not be silently stripped.
 
-The current TypeScript rejected-reference guard is weaker than the Python
-producer grammar; it is not sufficient by itself to prove all reason/score
-tuples are supported. Before implementation, positive fixture/consumer review
-must continue to distinguish a real alternate writer from permissive schema
-acceptance. Any discovered supported additional tuple changes the target case
-set and count; it must not silently become a new rejection.
+   `validateWorkerReference` returns the refined reference, replacing its
+   Boolean result. `validateWorkerReferences` returns ordered refined references
+   alongside acceptedCount and acceptedNames; derive acceptance by the union's
+   generated match/guard. Update the existing `ValidatedWorkerReferences` model
+   to carry these complete domain references, not a reconstructed payload subset.
+6. `MatchPerson.ts:1544-1566,2058-2092`: retain model validation before references,
+   then entries, summary and completeness in the same order. Return the refined
+   references from `validateWorkerSemantics` after all these checks succeed.
+   Preserve expected-before/after discovery and changed-files failure before
+   semantic validation, then zero-accepted failure, copy plan and materialization.
+   Report construction at2080 consumes the returned refined references instead
+   of worker.references. **No second later reference decode or coherence pass.**
+   No output writes occur before the full existing semantic pipeline succeeds.
 
-Use local Effect v4 Schema.ts5366–5382 decodeTo with SchemaGetter decode and
-encode, and tagged APIs6105/6255. Avoid v3 transforms, ad-hoc type assertions
-or an always-true opaque schema for face/reference payloads.
+7. Report encoding/writing (`1675-1685`), materializeReport (`1994` onward),
+   manifest routing, archive/copy planning, JSON/human output and result fields
+   retain exact values and encoded bytes. No projected subset of the reference
+   payload may replace full report references.
 
-# Test impact
+## Guard-deletion accounting
 
-Round-trip all7 legal reason-specific shapes, with present numeric0 where
-FaceDetectionConfidence allows it, ordinary confidence values, full names/path
-strings and the exact count for each worker branch. Verify old/new stdout and
-report bytes and required omitted keys. Reject other21 abstract combinations
-through the correct existing error boundary, and retain malformed count/path,
-excess-property, duplicate accepted-name and model/parameter mismatch fixtures.
-Retain synthetic aligner/image/embedding failure tests and accepted order.
+Delete the score-presence and reason-absence predicates from accepted guard1279,
+leaving only the independent faceCount=1 rule with its existing error. Delete
+rejected reason-presence guard1290: schema case decoding now establishes it and
+maps its issue to the same typed diagnostic. Retain aligner count guard1295.
+Replace Bool.match1309 plus the Boolean-return validators with the ordered
+boundary decode described above and a refined-reference return value. Replace
+accepted Boolean accumulation at1323-1326 with the semantic union's generated
+match/guard; carry the same decoded reference into the report.
 
-No Python or TypeScript tests ran during this audit. Implementation must run
-focused worker/Files protocol tests plus mandatory package verification after
-independent design review; no user media/model execution is required for these
-synthetic compatibility fixtures.
+The raw worker service accepted filter771 and envelope/size/recursive-name checks
+remain at their earlier transport boundary and are **not** counted deleted.
+Path, count, model, entry, summary and completeness validation are independent
+payload obligations. The raw DTO must not survive as a semantic report field.
+This revision removes actual score/reason coordination predicates at their
+existing enforcement phase rather than retaining them and adding a late codec.
 
-# Risk
+## Diagnostic precedence and newly invalid inputs
 
-The risks are losing a rejection literal, constraining a supported score/count
-payload, or changing where a typed diagnostic is produced. The full7-case
-protocol map and bidirectional byte fixtures address these risks. No separate
-reason-pair record is created. The stable row has this complete P2 design;
-obtain replacement independent P3 before any product change.
+For the previously diagnosed accepted inconsistencies, absent rejected reason,
+aligner count, and path errors, preserve the same typed error and message at
+that reference's existing phase. This promise applies when no newly forbidden
+reason/score tuple earlier in the sequence now wins. Earlier worker-envelope,
+size, recursive-name, discovery and model errors still precede all per-reference
+case failures. Path failure for the same reference still precedes its case decode.
+An aligner count failure precedes a newly forbidden aligner score on that reference.
 
-Landing: Tier 2 requires one singleton PR for this record. Keep DetectFacesEntry and PersonMatchReference in separate PRs, preserve their legacy codecs and ordered Files implementation sequence, and edit shared Files modules serially with the Tier 1E threshold work. A shared file does not authorize combining Tier 2 records.
+The old validator accepted six rejected reason/score contradictions: scores on
+unreadable-image, aligner-confidence-failed, no-face or multiple-faces, and missing
+scores on missing-embedding or invalid-embedding. These now fail at their own
+reference phase, before later reference, entry, summary, completeness or
+zero-accepted failures. They were never accepted producer states, but this is an
+intentional tightening of permissive external decoding and an observable error
+precedence change on malformed inputs. Do not claim otherwise or postpone them
+to a late conversion to preserve accidental acceptance. Of the 21 illegal finite
+projections, 15 already fail the old accepted/missing-reason rules and six are
+newly constrained (holding independent payload validation legal).
+
+## Encoded-side impact
+
+Tier 2 persisted/wire-adjacent singleton. Preserve legacy worker/report keys,
+key order, versions, omissions, all six reasons, confidence values including
+permitted zero, counts, names/paths, reference ordering, model/parameters,
+embeddings and existing typed diagnostics within the precedence scope above. The worker protocol remains raw; persisted
+report encoding reverses the semantic transformation. No silent normalization,
+default false/zero, dropped scores, renamed wire reasons or new tag bytes.
+
+## Test impact
+
+Implementation tests must:
+- Round-trip all seven legal shapes through both boundary/report paths and
+  compare exact encoded bytes, omitted keys and full payloads.
+- Enumerate all 28 finite projections; reject the other21 in the semantic
+  codec with appropriate typed errors, distinguishing newly constrained inputs
+  from inputs already rejected by ordered legacy validation.
+- Retain the existing faces-limit fixture (`files-command.test.ts:2734-2762`):
+  an accepted reference with faceCount65,536 must still yield the aggregate
+  `reported more than 65536 faces` error, not an early schema/reference error.
+- Test competing invalid fields for truncation, JSON/excess keys, exit status,
+  envelope/model, aggregate face count, recursive duplicate names, changed
+  discovery, reference path, accepted score/reason/count, aligner count,
+  entry semantics, summary and completeness to prove the scoped established precedence and explicitly assert the six new
+  rejected-score failures at the per-reference phase. Include a newly invalid
+  earlier reference against a later old reference/entry error to document the
+  intentional change rather than asserting blanket error equivalence.
+- Preserve both ordinary accepted worker fixtures (`492`, `564`), recursive
+  duplicate-name fixture (`2921` onward), synthetic image/aligner/embedding
+  branches, accepted name/count order, and no-report-written failure behavior.
+- Run focused Files/protocol tests and mandatory `@beep/repo-cli` package
+  verification after implementation; this P2 refresh ran only the saved Python
+  producer probe and artifact checks, not those tests.
+
+## Risk
+
+Primary risks are diagnostic precedence, loss of payloads or omission semantics,
+and leaving the raw DTO in the validated domain. The ordered boundary split,
+byte fixtures and seven-case semantic report address these risks.
+
+Land this record alone in its Tier 2 PR after independent review/GATE 2.
+DetectFacesEntry remains a separate singleton; serialize shared Files module
+edits with that migration and threshold work. Shared files do not authorize
+combining distinct Tier 2 records.

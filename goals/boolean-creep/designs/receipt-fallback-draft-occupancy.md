@@ -1,11 +1,11 @@
 # Design: receipt-fallback-draft-occupancy
 
-Current P2 design at source `93217d998f851e2e93d9864e2b5315552eaa58a7`,
-main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Actual owner `reconcileReceiptFallbacks`;
-6 representable / 3 legal, Tier 1.
-Native source and inferred-type corrections are integrated in
-`data/r28-agent-app-integration.json`. This is not an independent P3 receipt;
-review and the merged packet-only ratification remain required before implementation.
+Current P2 design refreshed at exact source
+`f137beedb270a071d4aa2ecc1dd52a9d233044d1` on 2026-09-22.
+Actual owner `reconcileReceiptFallbacks`; 6 representable / 3 legal,
+Tier 1. This refresh is bounded to the current owner and its consumers;
+it is not a new corpus census, implementation, or independent P3 receipt.
+Review and the merged packet-only ratification remain required before implementation.
 
 ## Current shape
 
@@ -60,6 +60,7 @@ union `DraftRestorationState` with `available`, `occupied`, and
 `selected { turn: StreamingTurn }` cases. Use schema-first class variants
 and the existing full `StreamingTurn` schema for the selected payload;
 derive guards/matches from the schema instead of hand-written type tests.
+Declare the private finite discriminator via `LiteralKit(["available", "occupied", "selected"])` (no `as const`). Each annotated `S.Class` variant owns `kind: S.tag(Kind.Enum.<case>)`; only selected has `turn: StreamingTurn`. Do not pass the defaulted `kind` to `.make(...)`. Combine the three class schemas with `S.Union`, apply `$I.annote(...)` annotations before `S.toTaggedUnion("kind")`, then use the resulting `.match` and case schema constructors. Keep the kit's construction/helper surface intact when annotating it. The state and variants remain private next to the existing `StreamingTurn` definition, after that payload schema is defined, without changing its exports.
 The literal-only cases coexist with a payload-bearing selected case, so a
 payload-free option-literal would lose required restoration data.
 
@@ -144,8 +145,10 @@ The companion audit's compile-only probe verifies the old declared
 Option<boolean> domain and the explicit true-only control; it is not a
 product test or proposed committed fixture. The eventual implementation
 needs focused reconciliation checks and full `@beep/agents-client`
-package verification. This atom-only local transition adds no gesture
-surface requiring browser QA. No product commands ran for this P2 draft.
+package verification. This P2 audit does not run product tests or claim implementation verification.
+At implementation, inspect affected composer/retry gesture behavior rather than
+assuming private atom code is exempt: recorded browser QA is required for any
+affected gesture-bearing UI under the campaign acceptance rule.
 
 ## Risk
 
@@ -159,3 +162,38 @@ Construct the three-case state from the actual draft Option and preserve
 all supported producer behavior. The 6/3 correction is integrated with the prior 4/3 design bytes and
 finalized audits preserved as historical evidence. No new canonical id or
 overlapping cluster is added; independent P3 review remains pending.
+
+## Refresh evidence and limits
+
+Current source keeps exactly six references to the two old locals: declarations
+at 1019-1020, occupancy read at 1029, selected occupancy projection at 1030,
+sole write at 1032, and final restoration at 1048. The full owner and sole caller
+remain at the cited anchors. `@beep/utils` exports its Option module, whose
+`export * from "effect/Option"` at line130 preserves the installed map API;
+it does not narrow the ignored callback's inferred Boolean result.
+
+The current private compile-only probe reran against installed native TS7 and
+TypeScript TS6, each exit0. It proves exact `Option<boolean>` equality, accepts
+Some(false), rejects narrowing to `Option<true>`, and confirms an explicitly
+true-annotated control differs. It uses an opaque draft payload because map's
+callback ignores it. This is a bounded generic-inference proof, not a whole-owner
+type check. Installed map declarations and local Effect reference signatures
+agree on unconstrained output B; the reference orElse/getOrElse branch on None,
+not Boolean truthiness.
+
+The current fixture at `run-turn-reconciliation.test.ts:609-725` was inspected,
+not rerun: it proves the intended assertion structure for first restoration,
+later retention, persisted/timeline retirement, and newer draft plus appended
+fallback during receipt reads. These existing assertions mostly use structural
+equality; implementation tests must add reference identity assertions where
+preserving the exact selected Document/turn is the stated obligation, rather
+than claiming structural equality already proves identity.
+
+Status requests remain sequential (`concurrency: 1`), failure becomes None via
+Effect.option, requestId None avoids RPC, timeline fallbacks synthesize persisted,
+and missing decisions retain newly appended objects. Read the current fallback
+array after all status reads; decisions still associate by object identity,
+not request-id equality. Duplicate request IDs are legitimate separate fallback
+objects. No asynchronous boundary is introduced inside the synchronous state
+transition/filter/publication block. Draft is written before its revision and
+then retained fallbacks are published, in the existing order.

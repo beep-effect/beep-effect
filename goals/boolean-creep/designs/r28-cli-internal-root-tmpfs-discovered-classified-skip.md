@@ -1,23 +1,8 @@
 # r28-cli-internal-root-tmpfs-discovered-classified-skip
 
-Native P2 design refresh before R29, bound to merged source HEAD
-`f03850b762e41217b5a0c26f26041daee490a070` / main
-`4f13d83e13d61275a57004050ffc62a90d86c014`. This preserves status `designed`
-and cardinality 312/13. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
-Independent P3 review and implementation acceptance remain pending.
-
-Owner `DiscoveredCandidate` at `packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts:66`,
-with members `reapClass`, `classified`, `shapeSkipReason`, `parentRepo`.
-Storage/exposure: stored/internal; target: tagged-union.
-
-The full public [source-impact audit](../data/pre-r29-main-4f13d8-source-impact.md),
-[source bindings](../data/pre-r29-main-4f13d8-source-bindings.json), and
-[row/design map](../data/pre-r29-main-4f13d8-row-design-map.json) bind this proposal.
-The [exact original design](../history/designs/2026-09-09-pre-r29-main-4f13d8/r28-cli-internal-root-tmpfs-discovered-classified-skip.md) is preserved.
-Keep complete decoded exports, typed request diagnostics, public constructor and
-helper input domains, encoded keys/defaults/omission and full independent payloads
-as specified below. Paths beginning `src/` or `test/` are relative to
-`packages/tooling/tool/cli/` unless the design states otherwise.
+P2 current-source refresh bound to HEAD `0be1f13d62fa00cb65e34ff69ec99043380f8d81`.
+Private proposal only; status designed, 312/13. No implementation or P3 credit.
+Paths below are relative to packages/tooling/tool/cli unless stated otherwise.
 
 ## Current shape
 
@@ -39,6 +24,12 @@ Complete constructors are Git worktrees286-295; Vitest367-369; dangling373-397;
 escaped root/path419-427 and452-460; head-install/fallow/scoped512-536. This is
 returned discovery state, not a public request whose invalid combination has a
 specified diagnostic. No public constructor accepts arbitrary private fields.
+
+The private type is not exported by name, a schema or a test hook. Thus the
+closed constructor analysis qualifies internal returned state; it does not
+restrict the wider public report constructor domain. Public callers may still
+construct every tuple accepted by TmpfsReapCandidate, including combinations
+never emitted by discovery. Report schemas must not become this internal union.
 
 ## Cardinality gap
 
@@ -97,7 +88,7 @@ whose custom-tag API is present at
 unique; the Git/dangling alternatives belong to nested private schemas.
 Use named case schemas and private LiteralKits/derived guards for those domains.
 Local Effect v4 `S.TaggedUnion` at
-`.repos/effect/packages/effect/src/Schema.ts:6200-6250` provides schema-derived
+`.repos/effect/packages/effect/src/Schema.ts:6276-6287` provides schema-derived
 cases, guards and match; compose private tagged subfamilies under the existing
 outer class discriminator. No ad-hoc validator should recreate four mutually
 dependent fields. Infer runtime types from these schemas. Required payload
@@ -150,16 +141,16 @@ from no parent, and both variants retain their appropriate full payload.
 
 The private type has no external constructor or decoder. Only public
 runTmpfsReap/resolveBeepCacheRoot and report schemas are exposed through
-`internal/repo-run/index.ts:27-28` and `src/test/RepoRun.test-kit.ts`.
-`Quality.command.ts:53,3743-3775` and
+`internal/repo-run/index.ts:28-29` and `src/test/RepoRun.test-kit.ts`.
+`Quality.command.ts:53,3964-4037` and
 `Yeet/internal/Sweep.ts:1141-1180` consume the same public reports. Existing
 source/consumer coverage in the current design is retained by this correction.
 The incoming ResidueReap home/repository boundary checks belong to a separate
 janitor and do not supply this candidate or its stat observations. TmpfsReap
 has its own scanProcReferences and no ResidueReap/ProcessIdentity import. Its
 312/13 table, companion72/14 table, all temporal/error cases and guard allocation
-remain unchanged. The Quality citation shift above is caused solely by an
-earlier scheduler-reap flag default insertion.
+remain unchanged. Quality rendering/command currently occupies3964-4037; the earlier3743-3775
+anchor is stale. Public RepoRun wildcard exposure now occupies index28-29.
 
 ## Guard-deletion accounting
 
@@ -195,14 +186,24 @@ Absent output fields stay omitted through the existing report construction;
 do not emit null, false or empty strings. Quality JSON/text and Yeet summaries
 must receive identical public values. No persisted-state codec migration exists.
 
+Preserve public root/skipReason/parentRepo/bytes optional keys, unrestricted
+String parent payload, ageHours/bytes Finite, refCount/reapedCount Int, optional
+tmpRoots and default schemaVersion tag. No new default is introduced for private
+payloads. Public runTmpfsReap options remain unchanged: omitted options {},
+apply false, all six classes, absent explicit worktrees selecting ordinary
+discovery, cache/config fallback, injected process listing and current clock.
+Preserve root resolution before discovery; deduplicate before filtering;
+process/locks before measurement; liveness then dirty-state then reason/bytes;
+apply after measurement, followed by accounting and timestamp/warnings.
+
 ## Test impact
 
-The bound private source-extraction proof executed all14 local observation
-states and their seven dangling candidate projections, checked full payloads,
-and combined the inspected static constructors to enumerate13 full candidate
-rows out of312. It also verifies that those rows project to the historical six
-pair states. The five other-family constructors were source inspected, not
-claimed executed by that proof. No product tests or package commands ran here.
+This refresh inspects source and records a finite table of13 complete candidate
+states out of312. It does not execute source-extraction proofs, product tests,
+filesystem probes, deletion, Yeet or package verification. Historical proof
+claims in the immutable input design are historical only. The companion
+observation proposal independently retains14 local cases, including every one
+of the nine sequential known-path stat-result pairs.
 
 At implementation, cover all13 cases through supported constructors and test
 the exact public projection, not only internal tags. Include both parent states
@@ -211,7 +212,7 @@ check known-parent permission errors and race schedules. A finite schema test
 may enumerate312 old internal tuples and assert the13 mappings, without making
 unsupported claims about public JSON input legality. Retain discovery/apply
 fixtures in `test/tmpfs-reap.test.ts:450-810`, codec/default cases1139-1184 and
-1572-1583, `test/quality-tmpfs-render.test.ts`, Quality dispatch help/JSON and
+1589-1607, `test/quality-tmpfs-render.test.ts`, Quality dispatch help/JSON and
 Yeet sweep coverage. Run focused suites and full package verification only in
 an authorized implementation; independent P3 remains pending.
 
@@ -222,5 +223,4 @@ material risks are losing parent provenance, narrowing unknown/raced states,
 changing skip-reason precedence or skipping fresh safety probes. Keeping all13
 cases and the companion's full14 observations prevents those losses. Land both
 private migrations in the ordered Tier 1E subsystem batch, preserve public codecs and original correction
-history, and allocate guard credit as stated. This full-owner correction is
-integrated native P2 evidence, not a new independent correction; independent P3 remains pending.
+history, and allocate guard credit as stated. This private current-source refresh is P2 design evidence only; independent P3 remains pending.

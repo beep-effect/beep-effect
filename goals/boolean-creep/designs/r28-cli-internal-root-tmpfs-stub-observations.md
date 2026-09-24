@@ -1,7 +1,7 @@
 # Design: r28-cli-internal-root-tmpfs-stub-observations
 
-Current P2 design on source `93217d998f851e2e93d9864e2b5315552eaa58a7`, main `d1b4d769fbaffddd55717f3b1ba461897dd545c5`.
-Native source audit and private proof: `data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md`.
+Current P2 design on source `0be1f13d62fa00cb65e34ff69ec99043380f8d81`, same main.
+Historical source audit and private proof (not rerun this refresh): `data/design-refresh-2026-09-09-r28-tmpfs-observation-owner.md`.
 Independent P3 and merged packet ratification remain required. Coordinate both
 Tmpfs models in the ordered Tier 1E subsystem batch, with guard credit allocated below.
 
@@ -65,17 +65,20 @@ MissingExists, BothMissingInexact and BothMissingExact. These names identify
 observations at their separate call times; they do not assert current existence.
 The last two retain the exact Boolean result of the subsequent contents probe.
 This gives1+3+10=14 with no independent Boolean/Option coordination fields.
-Use named schema cases, `LiteralKit`, and the local Effect v4 `S.TaggedUnion`
-cases/guards/match contract at `.repos/effect/packages/effect/src/Schema.ts:
-6200-6250`; derive the private runtime type from the schema. Do not add a
+Use named schema cases, `LiteralKit`, and the current installed/local Effect v4 tagged-union
+cases/guards/match contract; derive the private runtime type from the schema. Keep literal domains
+unannotated through member construction, annotate the schema union before
+`S.toTaggedUnion`, and retain derived case/match helpers; do not rely on stale
+Effect line anchors or helper preservation after generic annotations. Do not add a
 persisted codec, public export, error payload, numeric bound or path refinement.
 
 Construct the path case first. No target performs neither stat; an unrecognized
 parent performs only the target stat. A recognized parent always performs target
 stat and then parent stat, even when the first result is Unknown or Exists.
 Only the Missing/Missing result evaluates `danglingStubContentsAreExact`.
-Translate stat failure reasons exactly as the current function does: NotFound
-to Missing, all other errors to Unknown. Preserve parser/normalizer behavior,
+Translate stat failure reasons exactly as the current function does: error.reason._tag equal to NotFound
+to Missing, all other typed errors to Unknown. Keep current Effect failure
+handling; do not broaden catches to defects/interruption. Preserve parser/normalizer behavior,
 marker size limit and symlink rejection before selecting any path case.
 
 The companion candidate design supplies the pure projection from these14 cases
@@ -109,9 +112,11 @@ remaining different legitimate observations here.
   A prior BothMissingExact observation never replaces a fresh safety check.
 
 No other writer accepts these private locals. Internal barrel exports at
-`internal/repo-run/index.ts:27-28` and the RepoRun test kit expose public run/
+`internal/repo-run/index.ts:28-29` and the RepoRun test kit expose public run/
 schema surfaces, not this owner. Quality and Yeet consume the projected report.
-The audit's consumer map and hashes cover those boundaries and existing fixtures.
+Current source hashes bind inspected owner, schemas, barrel and fixtures; no
+new public carrier export is planned. The sibling candidate audit owns its
+projection and policy mapping.
 
 ## Guard-deletion accounting
 
@@ -142,19 +147,19 @@ Quality encoding/text rendering and Yeet summary values remain identical.
 
 ## Test impact
 
-The authorized private source-extraction proof has already executed all14 legal
-local tuples, enumerated all72 and checked equality with the source implications.
-It checks eleven non-NotFound error variants, full paths/timestamps, ordered stat
-calls and the lazy contents gate. It uses installed Effect with an in-memory
-FileSystem; it is supporting native P2 evidence, not a product test or P3 review.
-The bound audit records its exact command, exit0, source/proof hashes and limits.
+The older audit records source-extraction execution; that historical result
+is not a current runtime claim. This refresh read source only and generated a
+private72-row algebraic table:14 satisfy the source implication laws. It did
+not stat candidate paths, read process state, run cleanup or execute Effect
+filesystem fixtures. Numerical projection verifies the finite arithmetic, not
+real filesystem interleavings or proposed schema behavior.
 
 For implementation, use these14 cases as meaningful constructor/behavior tests,
 including target-existed/parent-later-missing, known-path permission errors,
 unrecognized parent and both contents results. Compare public candidates and
 warnings before/after, not only schema tags. Retain all marker/relative-path/
 symlink/oversize/extra-contents fixtures in `test/tmpfs-reap.test.ts`, especially
-successive-call races527-616 and772-808, codec/default tests1139-1184/1572-1583,
+successive-call races527-630 and783-820, codec/default tests1139-1184/1572-1583,
 and `test/quality-tmpfs-render.test.ts`. Run focused suites and package verification
 only in a separately authorized implementation; none ran for this design.
 
@@ -165,5 +170,5 @@ are conflating None with false, treating a race as impossible, eagerly checking
 contents, omitting the second stat after an error, or reusing an old observation
 instead of the existing later probes. The14-case model preserves all of these
 distinctions. Keep this and the candidate projection in the ordered Tier 1E subsystem batch with
-non-overlapping guard credit. Full source eligibility is established here;
+non-overlapping guard credit. Source implications support the complete72/14 relation;
 independent P3 review remains pending.

@@ -1,62 +1,169 @@
 # Instance
 
 - id: `r3-arch-ecosystem-internal-pg-timestamp-timezone`
-- exact source SHA: `7440cb8c4302ce64b87860069a464bafbf65f576`
-- corpus source SHA: `9b7553f618b2b3ee10e11a3d6ee93606f3e40ce1`
+- exact source SHA: `f137beedb270a071d4aa2ecc1dd52a9d233044d1`
 - file:line: `packages/ecosystem/effect-drizzle/src/pg/Column.ts:222`
 - symbol: `SpecDefinition.timestamp` / `Timestamp`
 - members: `ident`, `withTimezone`
-- evidence classes:
-  - E3 at `Column.ts:855-869` — `makeTimestamp` derives the expected identity from `withTimezone` and rejects disagreement.
-  - E1 at `pg/combinators.ts:1008-1017` — the only public writer pairs `timestamptz/true` or `timestamp/false` in one operation.
-  - E2 at `Column.ts:979-987` — the runtime guard accepts the descriptor only when identity agrees with the boolean.
+- status: P2 refreshed; independent P3 review and implementation are outstanding.
 
-# Current shape
+# Current shape and evidence
 
-The public `SpecDefinition.timestamp` member stores `ident: "timestamp" | "timestamptz"`, `mode`, and `withTimezone: boolean`. The exported `Timestamp<Mode, Timezone>` type carries the same correlation. `makeTimestamp` validates it, `Timestamp.toDrizzleBuilder` reads only the boolean, and the `timestamp()` combinator writes both from its option.
+`SpecDefinition.timestamp` stores `ident: "timestamp" | "timestamptz"`,
+`mode: "date" | "string"`, and `withTimezone: boolean` at `Column.ts:219-225`.
+`Timestamp<Mode, Timezone>` refines that descriptor at `Column.ts:416-423`,
+but its default boolean instantiation still admits the product of identities
+and booleans. The constructor's broad implementation accepts that product,
+then rejects disagreement (`Column.ts:852-867`).
+
+- E3: `Column.ts:862-864` derives expected identity from the flag and rejects
+  disagreement. The flag duplicates the semantic identity.
+- E1: `pg/combinators.ts:1011-1016` sets identity and flag from one option.
+- E2: `Column.ts:983` accepts the timestamp member only when identity agrees
+  with the flag, after checking presence and boolean type.
 
 # Cardinality gap
 
-The identity/boolean pair represents four combinations but only two are legal. The descriptor identity already names the exact SQL choice, so `withTimezone` is a redundant projection.
+The projected pair has four representable states and two legal states:
+`timestamp/false` and `timestamptz/true`. Both modes are independently legal
+for each pair; including mode would give eight representable and four legal
+states. The inventory deliberately counts only the correlated pair (4/2).
+This stored descriptor is internal decoded metadata. The public function flag
+is excluded from campaign scope; Drizzle's own flag is an external contract
+(D2 boundary), not an eradication target.
 
-# Target schema
+# Target schema and type owner
 
-Use the existing `ident` literal owner rather than creating a duplicate domain. Remove `withTimezone` from `SpecDefinition.timestamp`. Change the exported type to `Timestamp<Mode, Identity extends "timestamp" | "timestamptz">` and derive Drizzle's required boolean only at `toDrizzleBuilder` via identity matching. Keep the user-facing `timestamp({ withTimezone })` option because function parameters are outside this campaign; map it once to the descriptor identity in the combinator's return type and writer.
+Reuse `SpecDefinition.timestamp["ident"]` as the sole timestamp timezone
+owner. Delete `withTimezone` from that member. Refine `Timestamp` using a
+second generic constrained to that existing identity type, defaulting to its
+whole two-member domain, and retain the existing first `Mode` generic. Derive
+identity constraints by indexing the existing spec; do not add a parallel
+literal domain, standalone boolean alias, or duplicate `LiteralKit`.
 
-Preserve defaults exactly: omitted `withTimezone` maps to `timestamptz`, true
-maps to `timestamptz`, false maps to `timestamp`, and omitted mode remains
-runtime `string`. Drizzle still receives `withTimezone: ident === "timestamptz"`
-for both modes; this external builder boolean is projected and never stored.
+This ecosystem package forbids runtime `@beep/*` imports and dependencies
+(`packages/ecosystem/AGENTS.md`, architecture `14-ecosystem-packages.md`).
+It already uses Effect `TaggedEnum`/`taggedEnum` for its descriptor algebra.
+Reuse that algebra instead of importing `@beep/schema` or converting the
+entire descriptor family as part of this instance. `targetShape: literalkit`
+denotes reuse of the existing named literal owner, not a new kit dependency.
 
-No `LiteralKit` dependency should be introduced merely to restate the existing tagged-enum identity. The target satisfies the named-owner rider by making `ident` the sole internal domain source.
+The constructor accepts only identity and mode, produces the existing
+`_tag: "timestamp"`, `dialect: "pg"`, and `kind: "timestamp"`, and has no
+identity/flag coherence check. `toDrizzleBuilder` projects
+`ident === "timestamptz"` to Drizzle's required boolean at its call boundary.
+It still chooses date versus string builder from mode. The projected boolean
+may exist as an ephemeral call argument; it must not be stored in metadata.
+
+Keep `timestamp`'s public overloads, optional `withTimezone?: TZ`, and generic
+`TZ extends boolean = true`. Their result maps `TZ` once to the new identity
+generic through the distributive mapping `TZ extends true ? "timestamptz" :
+"timestamp"`. A widened boolean therefore yields the identity union; a
+literal false or true remains precise. Do not widen all overload results to
+the whole domain. Omitted timezone stays true/timestamptz; omitted mode stays
+string. Drizzle itself defaults timezone to false, so omitting the projected
+argument would silently change behavior and is forbidden.
 
 # Migration inventory
 
-- `packages/ecosystem/effect-drizzle/src/pg/Column.ts:222-228` — delete `withTimezone` from the timestamp spec member.
-- `Column.ts:414-429` — change `Timestamp`'s second generic from boolean timezone to literal identity and remove the redundant field.
-- `Column.ts:855-885` — simplify `makeTimestamp`, delete the disagreement invariant, and derive the Drizzle option from `ident` in `toDrizzleBuilder`.
-- `Column.ts:979-987` — remove `withTimezone` property checks and retain identity/mode validation.
-- `Column.ts:1210` and `pg/table.ts:135-138` — update generic inference to the identity parameter without changing selected Drizzle builder types.
-- `pg/combinators.ts:996-1017` — preserve the public boolean option but map its generic and runtime value to `ident`; stop storing the option in column metadata.
-- `test/unit.test.ts:264-270,358-370` and timestamp fixtures — preserve SQL
-  type/default metadata and add both identities and modes.
-- `test/import-boundary.test.ts:188` — retain the proof that the deleted
-  timestamp mismatch error text is absent from the consumer bundle.
-- Package type tests and `pg/table.ts:135-138` — prove both identities retain
-  date/string Drizzle builder inference.
+All paths below are under `packages/ecosystem/effect-drizzle/`.
+
+- `src/pg/Column.ts:219-225`: remove the descriptor field.
+- `src/pg/Column.ts:416-423`: migrate the exported decoded second generic from
+  boolean timezone to identity, preserving mode and default union inference.
+- `src/pg/Column.ts:852-867`: replace constructor overload/implementation with
+  the identity-owned input; remove expected-identity computation and throw.
+- `src/pg/Column.ts:875-883`: project the identity at the Drizzle call boundary.
+- `src/pg/Column.ts:927-987`: retain all shared descriptor checks and mode
+  membership. Replace the timestamp-specific flag presence/type/equality
+  conjunction with explicit identity membership in timestamp/timestamptz.
+  **Do not merely delete the conjunction:** the shared precheck only proves
+  `ident` is a string. An arbitrary string must continue to fail.
+- `src/pg/Column.ts:1041`: existing timestamp compiler dispatch remains valid.
+- `src/pg/Column.ts:1205-1209` and `src/pg/table.ts:135-138`: verify mode-only
+  inference and Date/string builder selection under the new default second
+  generic. These sites may need no textual edit; they are mandatory type
+  consumers, not a reason to invent unnecessary changes.
+- `src/pg/combinators.ts:997-1020`: preserve public arguments and defaults,
+  map generic result identity, construct only identity/mode metadata.
+- `src/pg/combinators.ts:1470-1472,1498-1506`: retain `defaultNow` timestamp
+  eligibility and default metadata under the new generic.
+- `src/pg/index.ts:46`: keep the consumer type export and regenerate its
+  declaration/docs. No compatibility alias is needed by observed consumers.
+- `typetests/contracts.tst.ts:143,379-384`: preserve the public mode assertion
+  and encoded-carrier/defaultNow errors; extend inference coverage below.
+- `test/fixtures.ts:58-59,493`, `test/perf.consumer.ts:21-22,60`, and
+  `test/sqlite-fixtures.ts:117-118`: retain existing PG timestamp fixtures,
+  including PG fixtures appearing in the SQLite test file.
+- `test/unit.test.ts:264-270,358-369`: strengthen exact SQL timezone assertions
+  and retain injected timestamp metadata. Existing substring SQL assertion is
+  insufficient to distinguish the two identities.
+- `test/import-boundary.test.ts:187`: retain consumer-bundle absence of the
+  old mismatch error, alongside ecosystem dependency/import-DAG checks.
+- Generated README timestamp signatures currently at 1308,2477,4829-4835
+  must reflect regenerated declarations; do not hand-edit generated signatures.
+
+Repository source search found no other consumer of this descriptor's
+`withTimezone` field or explicit boolean second generic. Direct Drizzle
+`timestamp(..., { withTimezone: true })` calls in architecture-lab tables are
+upstream API usage and remain unchanged. Other `Timestamp` symbols in
+foundation modeling are unrelated owners.
 
 # Guard-deletion accounting
 
-Delete the constructor's identity/boolean mismatch guard, the `isSpec` equality guard, and all internal `withTimezone` field reads/writes. The Drizzle adapter's one literal-to-boolean projection is required by the upstream builder API and is not stored.
+Delete the `makeTimestamp` expected-identity branch and mismatch error;
+delete `isSpec`'s timestamp flag presence and boolean checks and its
+identity/flag equality; delete the stored field and its constructor writer
+and adapter reader. Keep identity and mode validity checks, all unrelated
+isSpec checks, mode dispatch, and the public option defaulting logic.
+`isBoolean` remains needed by `fromLiteralAST` at `Column.ts:994` and must not
+be removed from imports merely because the timestamp use disappears.
+No legacy normalizer or comment-only coherence invariant was found here.
 
 # Encoded-side impact
 
-None. Column metadata is an in-memory decoded TypeScript contract; no JSON, database row, RPC, CLI, or persisted artifact encodes this descriptor. The exported decoded type migrates atomically with all in-repo consumers.
+No descriptor codec or persisted descriptor representation was found in this
+consumer family. SQL type strings, installed Drizzle codec selection, encoded
+Date/string carriers, column names, defaults, metadata kind, and downstream
+DDL behavior must be preserved. Drizzle's stored/wire-facing boolean is
+untouched and projected only at the adapter boundary.
 
-# Test impact
+`Timestamp<Mode, boolean>` becoming `Timestamp<Mode, Identity>` is an
+intentional exported decoded TypeScript shape migration, permitted by the
+campaign's decoded-shape rider. It is **not** source-compatible for an
+external consumer explicitly supplying a boolean second argument or reading
+removed metadata. Public `timestamp({ withTimezone })` calls stay compatible.
+Migrate every known in-repo consumer atomically; update docs and apply the
+actual release/changeset policy when implementing. Do not invent a perpetual
+boolean compatibility alias or claim private-package status alone proves no
+public API impact.
 
-Add runtime and type-level assertions for default timestamptz, explicit timestamptz, and explicit timestamp-without-time-zone. Prove `isSpec` accepts both legal identities and no longer expects a redundant field; retain table-builder, default-now, bundle-size, and public import-boundary tests.
+# Test impact and bounded evidence
 
-# Risk & sequencing
+A read-only P2 probe against the current implementation checked all eight
+identity/flag/mode combinations: four legal and four rejected. Nine public
+combinator cases (omitted/date/string mode × omitted/false/true timezone)
+confirmed descriptor identity and installed builder mode/timezone defaults.
+These are baseline observations, not tests of an implemented replacement.
 
-Tier 1A. The main risk is generic inference drift in `Field.Patched` and `ToDrizzleColumn`; land type aliases, combinator overloads, runtime builder projection, and type tests atomically. Run full `@beep/effect-drizzle` package verification.
+Implementation verification must include:
+
+- both identities and modes through the constructor, unknown-input guard,
+  public combinator, and actual built table; exact SQL type, codec and carrier
+  behavior, including defaultNow and existing integration DDL regeneration;
+- guard rejection of invalid identity/mode and malformed outer descriptors,
+  acceptance of each legal descriptor without the removed field;
+- type assertions for omitted/true/false/widened timezone, string/date mode,
+  identity-union default, Date/string `CarrierOf` and table builder selection;
+- existing negative encoded-carrier/defaultNow tests, public import-boundary,
+  bundle-size and fixtures, regenerated documentation;
+- full `bun run beep quality package-verify @beep/effect-drizzle` and the
+  applicable Yeet proof before publication.
+
+# Risk and sequencing
+
+Tier 1, stored/internal. Land descriptor, constructor, guard, combinator
+return types, adapter projection, and type tests atomically after GATE 2.
+Primary risks are weakened unknown-input identity validation, widened generic
+inference, and accidental adoption of upstream Drizzle's false timezone
+default. No product source is changed by this P2 refresh; P3 remains required.

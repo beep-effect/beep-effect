@@ -1,0 +1,170 @@
+[
+  {
+    "isBackfill": null,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "legal": true
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "legal": true
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "legal": true
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "legal": true
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "legal": true
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "legal": false
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "legal": false
+  },
+  {
+    "isBackfill": null,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "legal": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "legal": true
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "legal": true
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "legal": true
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "legal": true
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "legal": true
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "legal": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "legal": false
+  },
+  {
+    "isBackfill": false,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "legal": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "legal": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": false,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "legal": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "legal": true
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": false,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "legal": true
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": false,
+    "legal": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": true,
+    "manifestPresent": false,
+    "readmePresent": true,
+    "legal": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": false,
+    "legal": false
+  },
+  {
+    "isBackfill": true,
+    "parkedPresent": true,
+    "manifestPresent": true,
+    "readmePresent": true,
+    "legal": false
+  }
+]

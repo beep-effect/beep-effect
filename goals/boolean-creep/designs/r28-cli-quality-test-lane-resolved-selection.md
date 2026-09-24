@@ -1,164 +1,162 @@
 # r28-cli-quality-test-lane-resolved-selection
 
-Current P2 source refresh, 2026-09-21, at `7536a751b40b8560706dfe8cfa451591b11b025d`.
-Qualification remains 4/3, derived/internal, Tier 1, status designed. This
-refresh supplies no independent P3 approval, implementation, or dry-round credit.
-The exact preceding design is archived at
-`history/designs/2026-09-21-before-test-selection-refresh-r28-cli-quality-test-lane-resolved-selection.md`.
-
-The retained design body below uses its original bed30 source line numbers.
-The following exact unchanged-line mappings govern those citations. The parser,
-raw accumulator, testing alias, runtime execution/routing, empty static plan,
-and cited parser/SQL fixtures retain the same source text.
-
-| File | Retained range | Current range |
-| --- | --- | --- |
-| Tasks.ts | 232–236 | 232–236 |
-| Tasks.ts | 263–267 | 264–268 |
-| Tasks.ts | 294–300 | 295–301 |
-| Tasks.ts | 307–321 | 308–322 |
-| Tasks.ts | 323–339 | 324–340 |
-| Tasks.ts | 3153–3199 | 3563–3609 |
-| Tasks.ts | 3202–3219 | 3612–3629 |
-| Tasks.ts | 2774–2825 | 3178–3229 |
-| test/quality-tasks.test.ts | 6179–6197 | 7636–7654 |
-| test/quality-tasks.test.ts | 2864–2874 | 3199–3209 |
-| test/quality-tasks.test.ts | 5467–5569 | 6894–6996 |
-
-Current package/app searches still find only the parser, its testing alias,
-one runtime call, and the direct test suite. Keep the public decoded migration
-atomic with the existing test facade. The latest shared Turbo builder forces
-fresh execution for `REGEN_GOLDENS=1` while preserving later passthrough
-arguments; retain that policy. The package-audit SQL-reference override is a
-separate route and must not be copied into the scoped integration resource.
-No SQL lifetime or failure-order change belongs to this selection migration.
-
-## Retained design with mapped source citations
+P2 source refresh, 2026-09-22, at
+`0be1f13d62fa00cb65e34ff69ec99043380f8d81`. This remains derived/internal,
+Tier 1, 4 representable / 3 legal states, status designed. No implementation,
+independent P3 approval, or dry-round credit is claimed. All Tasks.ts anchors
+below refer to `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` at this
+head; test anchors refer to `packages/tooling/tool/cli/test/quality-tasks.test.ts`.
 
 ## Current shape
 
-`parseTestLaneSelection`, `Tasks.ts:307–321`, returns the actual object at316–320
-with Boolean `unit`/`integration` and full required `args: ReadonlyArray<string>`.
-Its first Boolean remains at317. The named `TestLaneSelectionState` at232–236
-also serves the independent raw accumulator: false/false at263–267 is legitimate,
-and the reducer308–314 independently consumes each selector. Retain that raw
-contract and its D1 owner; this qualification belongs only to the normalized
-return. It is neither a predicate nor an anonymous parameter bag.
+The actual return at Tasks.ts:318–322 contains required Boolean `unit` and
+`integration`, plus the complete ordered `args` array. The named
+`TestLaneSelectionState` at 233–237 also types the independent raw accumulator,
+whose false/false value at 265–269 is legitimate. Keep that raw D1 contract.
+The reducer at 310–316 consumes exact selector tokens independently; only the
+normalized return is qualified here.
 
-New exported `parseTestLaneSelectionForTesting` at323–339 aliases the parser
-and exposes its complete decoded result. Upstream removed `rootUnitTestSteps`
-and `rootTestSteps`; `rootStepsFor` at2774–2789 now returns no static plan for
-test/coverage. The remaining runtime consumer is `runRootTestTask` at3153–3200.
+The parser at 309–323 is also exposed by the existing
+`parseTestLaneSelectionForTesting` alias at 341 and documented example 334–335.
+Its runtime consumer is `runRootTestTask` at 3573–3619. Static planning at
+3188–3203 returns no test/coverage steps; obsolete static builders are not
+migration sites. Repository-wide discovery additionally finds a diagnostic
+consumer outside the package: `goals/turborepo-task-qualification/research/
+refresh-root-quality-plans.ts:26–38` serializes parser selections into a local
+planner observation. Ignored output does not make that encoding unobservable.
 
 ## Cardinality gap
 
-| Input selectors | unit | integration | Resolved mode |
-| --- | --- | --- | --- |
-| unit only | true | false | unit |
-| integration only | false | true | integration |
-| neither or both | true | true | all |
+| Raw selectors after one leading delimiter removal | Resolved pair | Target mode |
+| --- | --- | --- |
+| unit only | true/false | unit |
+| integration only | false/true | integration |
+| both, in either order | true/true | all |
+| neither | true/true | all |
 
-The final `hasLane` and default assignments at315–318 exclude false/false.
-Four representable pairs, three legal outputs; the required argument array is
-not a further finite axis. The new direct fixtures at
-`test/quality-tasks.test.ts:6179–6197` explicitly cover all three outputs plus
-no-selector default and preserved payload order. The raw false/false state
-remains valid before normalization.
+`hasLane`317 and fallback assignments 319–320 exclude false/false from every
+successful resolved result: 4 representable / 3 legal pairs. The argument
+array is required payload, not an additional finite axis. Repeated selectors
+are idempotent; a later `--` is retained but does not stop the reducer from
+consuming later exact selector tokens. Substrings such as `--unit=false` are
+ordinary preserved arguments.
+
+A bounded execution probe of the current exported parser covered all 1,555
+sequences of length 0–4 over six tokens (`--unit`, `--integration`, `--`, empty
+string, `--affected`, `--concurrency=2`). Every result matched the three-state
+truth table and exact ordered remainder. This is parser-only evidence, not
+runtime orchestration or an exhaustive argument-language test.
 
 ## Target schema
 
-Keep the previously proposed private `internal/TestLaneSelection.schemas.ts`
-role: `RootTestLaneMode = LiteralKit(["unit", "integration", "all"])`, same-name
-derived type and an annotated `S.Class` for the resolved result with required
-`mode: RootTestLaneMode` and `args: S.Array(S.String)`. Run the architecture
-workflow before creating this proposed implementation file. No file is created
-in P2. Use repo identity, schema annotations and titled exported examples.
-No defaults, nonempty-array restriction, extra Option or compatibility flags.
+Retain the proposed private role
+`commands/Quality/internal/TestLaneSelection.schemas.ts`; run the architecture
+workflow before creating it at implementation. Define
+`RootTestLaneMode = LiteralKit(["unit", "integration", "all"])`, with its
+same-name derived type, repo identity annotations and retained kit helpers.
+If annotation rebuilds the schema, use an unannotated base followed by
+annotations and `withLiteralKitStatics(base)` to retain `.Enum`/`.is`.
+Use an annotated `S.Class` for the resolved value with exactly
+`mode: RootTestLaneMode` and `args: S.Array(S.String)`. Strings are arbitrary
+CLI passthrough tokens; do not trim, default, constrain nonempty or reinterpret
+them. No parallel resolved Boolean pair, Option fields or compatibility bag.
 
-Keep the raw reducer unchanged. Replace only its final normalization with one
-mode: unit-only/unit, integration-only/integration, neither-or-both/all. Return
-the new class using the exact ordered argument array. Use kit-derived guards
-at runtime; do not retain a stored Boolean pair beside the mode. The new testing
-alias at339 returns this same class rather than projecting the old bag.
-
-Keep the schema out of wildcard-exported `Quality.schemas.ts` (`index.ts:49`)
-and do not extend package exports. Its inferred decoded shape is nevertheless
-observable through the existing Tasks export and testing alias; it must be
-migrated and documented. Expose schema symbols through the existing source-only
-Quality test facade if direct schema tests need them, without a production
-barrel or an additional test adapter.
+Keep the raw reducer and its named type. Replace its final normalization with
+one mode classification and construct the class with the same ordered array.
+Use kit-derived mode guards for the two runtime selection decisions. The
+existing exported parser alias returns this class and documents the new
+result; no old-shape adapter on that alias. Keep schema symbols out of the
+wildcard-exported `Quality.schemas.ts` (Quality/index.ts:56) and retain existing
+package exports. Direct schema tests can use the existing source-only
+`src/test/Quality.test-kit.ts` facade, which already exports Tasks at 58.
 
 ## Migration inventory
 
-| Source / consumer | Required change |
+| Current site | Required migration or preserved behavior |
 | --- | --- |
-| `Tasks.ts:232–236,263–267,308–314` | Retain the named raw accumulator including false/false and independent selectors. |
-| `Tasks.ts:294–300,307–321` | Remove only one leading passthrough delimiter, consume exact --unit/--integration tokens, and retain every other string in original order. Replace the successful return type and two fields with the resolved class/mode. |
-| `Tasks.ts:323–339` | Keep the exported alias and argument API; update its result example/documentation and all decoded result assertions. Do not preserve the old two-flag return through a compatibility adapter. |
-| `Tasks.ts:3153–3164` | Unit mode/all enable the existing test:unit step with script test and boundedRootTurboArgs(args). Collect its failures before integration; they do not suppress integration. |
-| `Tasks.ts:3164–3199` | Integration mode/all keep workspace discovery, explicit-scope suppression of unsplit discovery, parallel then optional unsplit steps, scoped SQL resource acquisition and serial step. Preserve parallel-before-serial and unit-before-integration failure order. |
-| `Tasks.ts:3202–3219` | Preserve runtime routing and all other task routes. |
-| `Tasks.ts:2774–2825` | Keep the upstream empty static plan for test/coverage and both exported rootQualityStepsForTesting call forms. No test/coverage plan is rebuilt here. |
-| New private schema role; `src/test/Quality.test-kit.ts:58` | Tasks wildcard already exposes the new testing alias. Any explicit schema test exports use this source-only facade, package source imports use @beep aliases, and package exports49/63/66/68 stay unchanged. |
-| `test/quality-tasks.test.ts:21,6179–6197` | Direct alias import and complete expected decoded objects migrate atomically. Preserve each exact args payload and default. |
+| Tasks 233–237,265–269,310–316 | Retain raw independent selectors and false/false. |
+| Tasks 296–302,309–323 | Strip only one initial `--`; consume every exact selector anywhere thereafter; preserve all other strings and order. Return mode plus args. |
+| Tasks 326–341 | Preserve alias name and input API; migrate decoded output and example. |
+| Tasks 3577–3582 | Unit/all creates the existing `test:unit` Turbo step running task `test`, with bounded args; collect its step failures before integration. |
+| Tasks 3584–3606 | Integration/all runs workspace parallel selection, then optional unsplit step. Explicit affected/scope args bypass workspace filter discovery and suppress unsplit discovery. Preserve argument prepend/order, labels and concurrency. |
+| Tasks 3607–3618 | Resolve serial workspace args before SQL acquisition inside the same scope, collect serial failures, release on scope exit, concatenate parallel then serial failures after unit failures. |
+| Tasks 3621–3649 | Retain root dispatch and unrelated routes. |
+| Tasks 3188–3240 | Preserve empty static test/coverage plans and both rootQualityStepsForTesting call forms. |
+| test 23,7668–7686 | Migrate exact parser result expectations and retain complete argument payloads. |
+| Quality test facade 58; package exports | Existing alias remains observable; direct schema exports only through source-only test facade if needed. No production barrel expansion. |
+| `goals/turborepo-task-qualification/research/refresh-root-quality-plans.ts:26–38` | Keep current diagnostic JSON shape by projecting mode to unit/integration only at this existing serialization boundary. Keep args unchanged; no second semantic state. Verify the five current observations reproduce their old serialized objects. |
 
-Exhaustive package source/test search finds the parser definition, the alias,
-one runtime call at3157 and the direct test suite. The removed static helpers
-are historical consumers, not current migration sites. This claim combines
-Graft discovery with exact source/text inspection rather than absent graph edges.
+The source-wide parser/type search found these live code consumers. Historical
+review requests bind source hashes and local observation hashes; do not rewrite
+historical receipt hashes or pretend they prove the migrated source. If the
+other campaign needs current receipts, create fresh observations under its own
+workflow. The existing output projection is a boundary preservation, not a
+reason to retain two flags in the normalized owner.
 
 ## Guard-deletion accounting
 
-Delete two resolved fields/fallback assignments317–318 and the redundant
-`hasLane` local315, replacing them with one finite mode classification.
-Migrate exactly two current runtime member reads: `lanes.unit`3159 and
-`lanes.integration`3164. Do not claim the three reads in upstream-deleted static
-helpers as campaign deletions. The alias's expected objects are decoded API
-migration, not extra runtime guard deletion.
+Delete `hasLane`317 and the two fallback Boolean assignments 319–320. Replace
+exactly two runtime semantic reads (`lanes.unit`3579,
+`lanes.integration`3584) with finite-mode decisions. Do not count removed
+upstream static builders, changed test assertions or diagnostic projection as
+runtime guard deletion. Keep raw fields, optional step enablement, unsplit
+nonempty checks, explicit scope detection, workspace discovery and SQL lifetime.
 
-Keep independent raw fields, optional-step enabled arguments, unsplit-filter
-presence3177, explicit scope3166, all concurrency controls, workspace discovery,
-SQL acquisition/finalization and failure aggregation. No coverage or proof-reuse
-guard belongs to this record despite the shared Tasks.ts file.
+Preserve current failure distinctions. Collected process failures from unit
+steps do not prevent integration; collected parallel/unsplit failures do not
+prevent serial. Workspace discovery, SQL acquisition, observer/ledger and other
+Effect failures can short-circuit the pipeline; this migration does not turn
+them into accumulated process failures or promise serial execution after them.
+Do not add an unconditional finalizer for a resource never acquired.
 
 ## Encoded-side impact
 
-No resolved mode currently enters a file, wire payload, command argument or
-scheduler receipt. The existing exported testing alias does expose the decoded
-return and changes from flags to mode; update its documentation and callers.
-Do not describe it as unobservable. Preserve complete QualityTaskStep fields,
-labels, task names, environment, cwd, ordered args, SQL credentials transport,
-resource lifetimes and diagnostic order. Do not inspect or emit credentials.
+The parser's decoded testing API changes, with atomic caller migration. The
+existing local planner observation is an actual encoded-side surface: preserve
+its `{ unit, integration, args }` member shape with a one-way projection at the
+writer, using mode-derived values. The internal owner remains `{ mode, args }`.
+No decoder or compatibility Boolean bag is added to the parser. This replaces
+the prior incorrect blanket claim that no result ever enters a file.
 
-Raw strings stay fully supported: repeated/both selector orders, empty strings,
-unrecognized flags, selectors, later delimiters and concurrency arguments all
-retain their current handling. Neither selector still resolves to all. Static
-root test/coverage plans remain empty, matching the new public contract.
+Preserve CLI selection/defaults, exact planned command fields, env/cwd,
+passthrough args and diagnostics. Current main additionally rejects
+caller-provided cache identity at Tasks 1294–1296 and 2392–2394; actual executions
+pass through `cacheRuntimeStep` at 1319,1400,2397. The wrapper in
+`commands/Cache/Cache.runtime.ts:167–197` can change planned bunx Turbo execution
+to `bun --no-env-file ... cache execute -- ...` and preserves an `op` prefix.
+Do not undo it or assert actual spawned argv equals the old planned argv.
+Existing fresh-execution policy for `REGEN_GOLDENS=1`, cache inspection bypass,
+quarantine, ledger and secret session behavior remain in place. No credentials
+are inspected or recorded. Package-audit SQL overrides remain a separate route.
 
 ## Test impact
 
-Migrate all new direct parser fixtures6179–6197 to modes and exact argument
-arrays; add both orders, repetitions and passthrough edge cases through the
-existing alias. Do not reject the raw false/false accumulator. Keep the static
-plan test at2864–2874 asserting no test/coverage steps. Removed static integration
-plan fixtures must not be restored as if they represented execution.
+Migrate parser fixtures 7668–7686 to complete new objects. Include both orders,
+repetition, two leading delimiters, empty string, non-selector substrings and
+selectors after retained delimiters. Assert raw false/false stays accepted
+before normalization. Assert the diagnostic writer's five existing scenarios
+still produce exact old JSON objects through its boundary projection.
 
-Use existing runtime spawner/SQL harnesses to verify unit failure still permits
-integration, parallel failure still permits serial, explicit scope suppresses
-unsplit discovery, serial SQL releases on failure, and final failure ordering
-stays exact. Existing SQL child/resource fixtures at5467–5569 and workspace
-integration filtering at5904 onward remain. Assert complete command/env/args,
-not only labels, for all three runtime modes. Preserve labs filtering in the
-actual runtime/coverage helper tests rather than obsolete shadow plans.
+Keep the empty static-plan fixture 3218–3221. Use existing runtime spawner/SQL
+harnesses to test all three modes, unit failure followed by integration,
+parallel failure followed by serial, explicit-scope discovery suppression,
+serial release on child failure, discovery/acquisition failure short-circuiting,
+and final unit/parallel/serial failure order. Existing SQL step/env/resource
+fixtures 6920–7024 are supporting coverage, not proof of all root orchestration.
+Assert complete planned fields and current cache-wrapped spawn argv separately.
+Preserve labs filtering and argument-order policy in actual runtime helpers.
 
-Implementation runs focused Quality task tests and required repo-CLI package
-verification, then the ordered Tier1E Yeet gates. P2 ran no product tests.
+Implementation runs focused Quality task tests, full repo-CLI package verify,
+and the required Tier1E Yeet gates. This P2 audit ran only the bounded pure
+parser probe, not package tests or production execution. Apply release policy
+at implementation based on the actual decoded API change; no blanket
+private-file exemption or unconditional changeset is asserted here.
 
 ## Risk
 
-The return remains qualified and unchanged at its original source lines. The
-material refresh is the new decoded testing export and removal of stale static
-consumers. A partial migration could leave the alias's return documentation or
-runtime selection wrong, or revive a plan the CLI does not use. Land the schema,
-parser, alias example, runtime reads and tests together; serialize shared-file
-edits with coverage/proof reuse. Independent P3 approval remains pending.
+The 4/3 qualification survives current main. The important corrections are the
+newly discovered diagnostic encoding boundary, exact source anchors, cache
+runtime wrapper preservation, and distinction between accumulated process
+failures and aborting Effect failures. Implement schema, parser, runtime reads,
+alias docs/tests and diagnostic writer atomically, coordinating shared Tasks.ts
+edits with coverage/proof owners. Independent P3 remains required.

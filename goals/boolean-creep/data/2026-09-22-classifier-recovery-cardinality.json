@@ -1,0 +1,108 @@
+{
+  "projection": ["kind", "pairingAmbiguous", "ungoverned"],
+  "representable": 16,
+  "legal": 6,
+  "rows": [
+    {
+      "kind": "host-path",
+      "pairingAmbiguous": false,
+      "ungoverned": false,
+      "legal": true
+    },
+    {
+      "kind": "host-path",
+      "pairingAmbiguous": false,
+      "ungoverned": true,
+      "legal": false
+    },
+    {
+      "kind": "host-path",
+      "pairingAmbiguous": true,
+      "ungoverned": false,
+      "legal": false
+    },
+    {
+      "kind": "host-path",
+      "pairingAmbiguous": true,
+      "ungoverned": true,
+      "legal": false
+    },
+    {
+      "kind": "upstream",
+      "pairingAmbiguous": false,
+      "ungoverned": false,
+      "legal": true
+    },
+    {
+      "kind": "upstream",
+      "pairingAmbiguous": false,
+      "ungoverned": true,
+      "legal": false
+    },
+    {
+      "kind": "upstream",
+      "pairingAmbiguous": true,
+      "ungoverned": false,
+      "legal": false
+    },
+    {
+      "kind": "upstream",
+      "pairingAmbiguous": true,
+      "ungoverned": true,
+      "legal": false
+    },
+    {
+      "kind": "repo-path",
+      "pairingAmbiguous": false,
+      "ungoverned": false,
+      "legal": true
+    },
+    {
+      "kind": "repo-path",
+      "pairingAmbiguous": false,
+      "ungoverned": true,
+      "legal": true
+    },
+    {
+      "kind": "repo-path",
+      "pairingAmbiguous": true,
+      "ungoverned": false,
+      "legal": false
+    },
+    {
+      "kind": "repo-path",
+      "pairingAmbiguous": true,
+      "ungoverned": true,
+      "legal": false
+    },
+    {
+      "kind": "goal-uri",
+      "pairingAmbiguous": false,
+      "ungoverned": false,
+      "legal": true
+    },
+    {
+      "kind": "goal-uri",
+      "pairingAmbiguous": false,
+      "ungoverned": true,
+      "legal": false
+    },
+    {
+      "kind": "goal-uri",
+      "pairingAmbiguous": true,
+      "ungoverned": false,
+      "legal": true
+    },
+    {
+      "kind": "goal-uri",
+      "pairingAmbiguous": true,
+      "ungoverned": true,
+      "legal": false
+    }
+  ],
+  "presenceAbstraction": {
+    "representable": 1280,
+    "legal": 480
+  },
+  "scope": "Finite projection enumeration under owner ruling; not a runtime classifier or concrete-object enumeration."
+}

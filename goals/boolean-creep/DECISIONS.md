@@ -137,3 +137,41 @@ Disqualified (recorded for the census, never designed against):
   suspect — the instance was misqualified or the design missed the point.
 - All PRs through yeet; commit messages cite the `boolean-creep` slug;
   **never merge — Benjamin merges.**
+
+## 2026-09-22 Knowledge classifier input ruling
+
+Benjamin answered the independent adjudication question: **Require kind-specific
+grammar flags.** For the exported Knowledge reference classifier input,
+`pairingAmbiguous` implies `kind = goal-uri`, and `ungoverned` implies
+`kind = repo-path`. Wrong-kind and simultaneous grammar flags are not legitimate
+raw inputs. Ordered runtime precedence does not grant them supported status.
+
+Preserve independent `patternContext`, existing host Option fallbacks, reserved
+upstream references, and all resolution statuses. This ruling settles this
+owner contract only; qualification, the complete P2 design, independent P3 and
+GATE 2 remain evidence requirements. It does not resolve the separate citation
+contract questions.
+
+## 2026-09-22 inherited pincite stable-ID ruling
+
+Benjamin answered **Allow stable ID without index** for inherited pincites.
+When `pinciteInherited = true`, `pinciteInheritedFromId` may be present while
+`pinciteInheritedFrom` is absent. Apply this contract to IdCitation, SupraCitation
+and ShortFormCaseCitation; do not erase stable-ID-only provenance or require an
+index to construct it. This resolves the shared contract question, not their
+qualification/design/review gates. The constitutional preamble question remains
+unanswered.
+
+## 2026-09-22 packet migration operation constraints
+
+Benjamin ruled: **Require those operation-specific constraints.**
+
+- A parked plan forbids backfill and both manifest/README output texts.
+- A backfill requires manifest text; README output remains optional.
+- Explicit `isBackfill: false` remains supported as a non-backfill representation.
+- Empty strings and arrays remain legitimate payloads; add no nonempty checks.
+
+This resolves the public-domain ambiguity recorded in
+`data/goals-packet-migration-contract-hold-2026-09-22.md`. Re-derive the full
+finite domain and restore the owner only with a corrected design and evidence.
+The ruling supplies no independent P3, implementation or dry-round credit.

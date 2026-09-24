@@ -3,6 +3,65 @@
 Receipts recorded at the moment of friction (repo law: friction is a
 first-class output). Public repo: paths relative, no secrets, no session ids.
 
+## 2026-09-22 — decoded test helper had an external diagnostic writer
+
+- **Doing:** refreshing the normalized test-lane selection design after main
+  changed its runtime command wrapper.
+- **Evidence:** `goals/turborepo-task-qualification/research/refresh-root-quality-plans.ts`
+  serializes the exported parser result into an ignored diagnostic file. The
+  older package-bounded consumer search missed that observable encoding.
+- **Prevention:** include repository scripts and goal tooling when tracing
+  exported test helpers; project legacy observation fields at the writer rather
+  than retaining redundant fields in the semantic model.
+
+## 2026-09-22 — reboot interrupted final audit writeout
+
+- **Doing:** recovering the Knowledge classifier and two Files P2 audits after
+  workstation restarts.
+- **Evidence:** live agent inventory contained only the parent. The classifier
+  proposal survived without its final audit; both Files jobs retained probes
+  and input snapshots but no final designs. Fetched main remained `f5e1d4c64f`
+  on the second recovery. No completion credit was inferred from partial files.
+- **Prevention:** checkpoint findings and input hashes before drafting long
+  proposals, then write each deliverable atomically with a completion manifest.
+
+## 2026-09-22 — interrupted audits left partial artifacts
+
+- **Doing:** resuming the image, link and PostgreSQL timestamp P2 audits.
+- **Evidence:** the live agent inventory contained only the parent; private
+  audit folders retained input snapshots and an image probe, but no completed
+  proposal or audit receipt. The parent restarted bounded jobs from those
+  inputs after verifying that fetched main remained `f137beedb2`. No completed
+  audit credit was inferred from files left by a missing worker.
+- **Prevention:** write resumable per-owner checkpoints and final deliverable
+  manifests; validate both live handles and artifact completeness on resume.
+
+## 2026-09-22 — one combined-true example did not establish D1 independence
+
+- **Doing:** auditing the two Knowledge reference records after PR #1180.
+- **Evidence:** the old `knowledge-ref-candidate` D1 note cited a
+  `patternContext + ungoverned` combination. Current producers at
+  `Knowledge.refs.ts:2512`, `:2622`, and `:2668` instead show that
+  `pairingAmbiguous` and `ungoverned` belong to different reference kinds;
+  the source comment at `:1847` says so explicitly. One legal pair does not
+  prove all combinations of a three-flag owner are legal. The exported
+  classifier's total behavior also needs separate contract adjudication.
+- **Prevention:** justify D1 for every claimed independent dimension, and
+  distinguish public raw inputs from constrained internal producer records.
+
+## 2026-09-22 — concurrent P2 audits bound different inventory snapshots
+
+- **Doing:** integrating three isolated driver-design proposals while the parent
+  remained the only writer of canonical inventory.
+- **Evidence:** the SSE proposal digests matched inventory after the Phoenix
+  refresh, not `history/inventory/2026-09-22-pre-driver-refresh.jsonl`. The
+  integration hash assertion refused that mismatch before installing either
+  SSE proposal. Preserved the actual input as
+  `history/inventory/2026-09-22-post-phoenix-pre-sse-refresh.jsonl`, verified
+  both SSE owner rows were unchanged, and bound their audits to that snapshot.
+- **Prevention:** give each P2 job an immutable inventory snapshot when launching
+  it; parent-only writes do not make a shared read path immutable.
+
 ## 2026-08-17 — headless grok lane dropped an evaluated record
 
 - **Doing:** round-1 inventory sweep, ontology-mcp lane (headless grok,
@@ -1440,3 +1499,39 @@ terminated. A fresh process passed all 216 tests across the seven relevant
 files, including every affected test file. Serializing checkout mutation and
 dependency installation against active proofs would have prevented the mixed
 runtime and lost verification work. The next proof must bind the new head.
+
+## Adapter examples narrowed an optional port contract, 2026-09-22
+
+During the DMS probe P2 refresh, the proposed disconnected case required a
+reason because all current adapters supplied one. The same proposal quoted the
+port contract as carrying a reason “when known.” Parent review returned the
+proposal before admission: absence of a current reasonless writer does not
+exclude a documented legitimate port value. Evidence: `designs/dms-mirror-probe-connected.md`
+and the current `DmsMirror.ts` probe documentation. Checking documented optionality
+before deriving legal-state counts would have prevented the narrowed proposal
+and its dependent Vault projection from needing another pass. No source change
+or implementation credit was taken.
+
+## Planner reachability overstated the public migration contract, 2026-09-22
+
+While refreshing `goals-packet-migration-kind`, source review found that the
+old 24/6 legal-state claim counted only planner outputs. The exported schema
+accepts explicit false and full String/Array payloads, and SetStatus handles
+false like absence and supports additional output combinations. No explicit
+contract proved the remaining exclusions. The owner was moved to a contract
+hold, preserving its old row/design in history. Evidence:
+`data/goals-packet-migration-contract-hold-2026-09-22.md`. Separating observed
+producer coverage from the supported public domain before designing the union
+would have prevented the narrowed proposal and the required owner adjudication.
+
+## Remote status producer coverage lacked a public exclusion, 2026-09-22
+
+The Yeet remote-status refresh found that the old 12/5 qualification used the
+five observed producer states to exclude seven combinations from an exported
+persisted schema. The schema and its consumers do not establish those
+exclusions; consumers even differ intentionally on unknown draft status. The
+owner question now asks for the availability/check/draft contract. Evidence:
+`data/yeet-status-remote-contract-hold-2026-09-22.md`. Requiring a normative
+public-contract citation before deriving legal cardinality would have prevented
+the unsupported five-phase proposal and repeated review. No implementation or
+dry-round credit follows from the hold.

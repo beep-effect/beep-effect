@@ -1,12 +1,11 @@
 # create-package-template-type-flags
 
 Native P2 source/design refresh before R32, bound to merged source HEAD
-`a942d7dab3a962963912247d4699b7986bcb9c03` / main
-`e7b7d03e61bd5cddd74e89bb03ae10dbe06e067b`. This preserves status `designed`
+`0be1f13d62fa00cb65e34ff69ec99043380f8d81` / same main. This preserves status `designed`
 and cardinality 1658880/31. Tier 1: ordered Tier1E tooling batches with serial shared-file edits.
 Independent P3 review and implementation acceptance remain pending.
 
-Owner `TemplateContext` at `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:738`,
+Owner `TemplateContext` at `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:734`,
 with members `type`, `family`, `kind`, `appKind`, `isTool`, `isApp`, `isLibrary`, `isNextjsApp`, `isTauriApp`, `isViteApp`, `isServiceApp`, `isRuntimeProofApp`, `isRealApp`, `isLab`, `isEcosystem`.
 Storage/exposure: derived/internal; target: tagged-union.
 
@@ -86,54 +85,35 @@ a TemplateContext codec and then change which diagnostic appears first.
 
 # Migration inventory
 
-The current output baseline is main `e7b7d03e61`. The complete command source,
-all three owner declarations, validation gates, constructors, script helpers,
-and retired-name registry implementation are byte-identical to the prior d68
-source binding. The 284-to-e7b merge changes the authored included
-`templates/tsconfig.check.json.hbs:1-13`: it retains its five compiler switches
-and full `rootRelative` payload while removing the `module`/`moduleResolution`
-overrides. Do not restore those overrides while changing a selector or context.
+The output baseline is source/main `0be1f13d62fa00cb65e34ff69ec99043380f8d81`.
+Current declaration734–767, validation1190–1414 and writer1479–1504 retain
+the complete classification grammar. The current templates remain under
+`src/commands/CreatePackage/templates/` (not a CLI-root templates directory).
+Preserve `tsconfig.check.json.hbs` compiler switches, `rootRelative`, and absence
+of module/moduleResolution overrides. Preserve the post-scaffold
+`syncTsconfigAtRoot` at1597–1601: owner references, including absent-as-empty
+references, are unrelated output behavior and earn no deletion credit.
 
-Preserve rendering through TemplateRenderRequest at command 1508-1513 and the
-post-scaffold `syncTsconfigAtRoot` call at 1597-1601, after file generation,
-formatting and registration and before retirement clearing/lockfile work. The
-final overlay mirrors its owner project's references exactly; a missing owner
-reference key denotes an empty reference list. This generated output contract
-is distinct from the internal Boolean owner. New ordinary-package, service-app
-and lab assertions at `test/create-package.test.ts:735-747,1065-1077` and
-`test/create-package-lab.test.ts:453-463` prove that reference equality and both
-module-override absences must survive this refactor. Keep order, full path
-strings, optional-key behavior and unchanged command diagnostics. This upstream
-behavior earns no Boolean-guard deletion or implementation credit.
-The shared defaults at
-`src/internal/package-scripts/PackageScripts.schemas.ts:1250-1254,1271-1275`
-now give app and lab `beep:check` exactly `tsgo -p tsconfig.check.json`.
-Continue delegating to `scaffoldPackageScripts` at `:1351-1374`, including its
-full kind/optional-task contracts and sorted output; do not restore the former
-redundant `tsc -p tsconfig.json --noEmit` suffix. Preserve the separate stories
-check override and `tsc -p tsconfig.stories.json --noEmit` implementation at
-`CreatePackage.command.ts:1938-1943`, every arbitrary helper payload, and the
-CLI's narrower admission rules. Current script and manifest fixtures at
-`test/create-package.test.ts:245,267,320,1005,1060,1111` and the policy fixture at
-`test/package-scripts.policy.test.ts:127` assert this upstream output baseline.
-Their preservation earns no Boolean-guard deletion or implementation credit.
+Current `CreatePackageScripts`1957–1960 remains exported through the wildcard
+barrel `CreatePackage/index.ts:14`. Its `app` helper1772–1777 accepts arbitrary
+full dev/build strings and either lab Boolean. Its `package` helper1929–1941
+now takes only `(kind, withStoriesTsconfig)`: every nonlab ScriptsPackageKind
+and either stories Boolean remain legal even when the CLI grammar would not
+admit that combination. Do not restore removed rootRelative/packagePath helper
+parameters or introduce TemplateContext validation into these broader public
+helpers. The stories override keeps `tsc -p tsconfig.stories.json --noEmit`.
+Canonical generated audits now invoke `lint:laws`, not `beep:policy`;
+`scaffoldPackageScripts`1351–1374 remains the policy owner. App/lab check stays
+`tsgo -p tsconfig.check.json`. Preserve exact sorted scripts and optional task
+lists, coverage distinctions, and every existing helper payload.
 
-The merged source also exports `CreatePackageScripts` at
-CreatePackage.command.ts:1963-1966 through the same wildcard barrel at
-CreatePackage/index.ts:14. Preserve this additional decoded API while migrating
-TemplateContext. Its app helper at 1772-1777 accepts full dev/build strings and
-either lab value; its package helper at 1927-1946 accepts every nonlab scripts
-kind, full relative/path strings and either stories value. Do not route those
-public helper calls through the narrower CLI/TemplateContext selection grammar.
-
-Coordinate with the separate ScaffoldShape design at the existing manifest
-selection seam, CreatePackage.command.ts:1993-2075. Preserve canonical
-scaffoldPackageScripts calls and their exact optional task lists, builder
-ordering and stories override. Package-shaped runtime-proof output uses scripts
-kind app; ecosystem metadata takes precedence over the remaining app-kind,
-tool and library fallback. This output selection uses existing metadata and
-must not be flattened to the new context's broad PackageType alone. The shared
-writers and raw/public helper inputs are not TemplateContext Boolean deletions.
+Coordinate with the separate ScaffoldShape24/11 design at manifest selection
+1987–2070. Preserve real-app builder precedence, then ecosystem metadata,
+then app-kind/runtime-proof, tool and library fallback. Package-shaped
+runtime-proof output uses scripts kind app. The TemplateContext selection
+must not replace these decisions with PackageType alone. Shared raw validation,
+ScaffoldShape readers, general helpers and manifest output are not extra
+TemplateContext Boolean deletions.
 
 - CreatePackage.command.ts136–140/218–293: reuse type/family/kind/app kits and
   existing validators. Add selection schemas in the current module or an
@@ -210,9 +190,9 @@ such evidence. No incoming codec is invented for a nonexistent live boundary.
 
 # Test impact
 
-Keep current `create-package.test.ts:283-341` direct script-helper contract
-fixtures, tool creation at 661-690, exact app script expectations at 852/915
-and runtime-proof overrides at 1106-1115. These supplement the full31-selection
+Keep current `create-package.test.ts:283-339` direct script-helper contract
+fixtures, tool creation at 661-690, exact app script expectations at current app fixtures
+and runtime-proof overrides at current runtime-proof fixture. These supplement the full31-selection
 rendering matrix without admitting public helper parameters as another owner.
 Current canonical script output, including lint tasks and absence of placeholder
 codegen, is the compatibility baseline for generated-byte comparisons.
@@ -225,6 +205,9 @@ payload strings and the already supported plugin profiles. Preserve CLI
 both-success and diagnostic tests, stories/lab gates, standard apps,
 runtime-proof, no-family parent overrides and no-op/dry-run behavior.
 
+The private finite-state enumeration reconstructs all31 admitted selections
+and their eleven projections; it confirms the cardinality arithmetic and
+uniqueness, not end-to-end CLI execution or generated-byte equivalence.
 No product commands or tests ran in this P2 task. Implementation must run
 focused CreatePackage/TemplateService coverage and required package verification
 after independent review. These obligations do not authorize service or
@@ -240,8 +223,11 @@ payloads. The superseded app-kind and lab/ecosystem rows and prior designs
 are preserved by the integration archive, with the A-C correction receipt
 bound separately. Obtain replacement P3 for this complete owner.
 
-Local Effect v4 reference: Schema.ts6105 (`toTaggedUnion`),6255 (`TaggedUnion`).
-If an actual encoded boundary emerges, Schema.ts5366–5382 uses `decodeTo` with
-both SchemaGetter decode and encode functions; no v3 transform API is assumed.
+Use the checked-in local Effect v4 reference for implementation API validation.
+Apply schema annotations before `S.toTaggedUnion` so derived cases/match helpers
+remain available. Do not assume schema annotations preserve LiteralKit-only
+methods: derive from unannotated kit bases or explicitly retain kit statics.
+No codec is designed for this currently in-process-only model; if an actual
+encoded boundary emerges, bind its compatibility proof before application.
 
 Landing: use the ordered Tier 1E internal tooling subsystem batches, not singleton PRs per Tier 1 record. Coordinate the complete TemplateContext, separate ScaffoldShape and retired-name lifecycle designs in the CreatePackage subsystem; apply shared command/template edits serially and count each actual deletion once. Superseded app-kind/lab rows are not additional work items.

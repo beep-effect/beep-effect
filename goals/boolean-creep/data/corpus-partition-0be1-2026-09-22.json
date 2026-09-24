@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "boolean-creep-corpus-partition-observation/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "originMainSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "corpusEqualsOriginMain": true,
+  "corpusFileCount": 3141,
+  "corpusPathsSha256": "7d4f13b09e03207bda14bd8895d3e9b828d537e02c320d6e4811b7b22e3018d4",
+  "partitionCorrection": {
+    "kind": "explicit-graft-corpus-owner/v1",
+    "lane": "r32-cli-commands-d-k",
+    "addedArea": "packages/tooling/tool/cli/src/commands/Graft",
+    "classifier": {
+      "partitionModuleSha256": "8fe36cb21146d3ed0b9f00f48d9189bad38e194fbd5121e6244a197cb33b44bd",
+      "controllerSha256": "b7b9881335bddf08dd7a0b601e5d07dc3ed48e7f94a56b315d2645109302de34"
+    }
+  },
+  "scopeCorrectionSha256": "203f15c95554aea6dd33b24bfd95f910b6155f3732e94c5f9076a4583c1e9798",
+  "previousSourceSha": "dc852c92efdd7d259e3983ec30cd19cb9b4fd65d",
+  "previousFileCount": 3139,
+  "addedFiles": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.profile.ts",
+      "sha256": "fcc765eb08a0261a3a97e251d1e19f7811488753adf7fafb9f24068c145d578a"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
+      "sha256": "baadcd12bce60347fad5847886185ba9419bc75707382bf6c0287b52c6226ecc"
+    }
+  ],
+  "removedFiles": [],
+  "laneCount": 27,
+  "privateManifestSha256": "eb7cc195cd170e3d99deed4c9cef1dc297934c34aff4878e520e10a7b8d7de11",
+  "meaning": "Read-only exact-one-area partition derivation. This does not inspect domain semantics, establish census completion or authorize a source-invalid predecessor as dry. R31 reconciliation and fresh launch admission remain required.",
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false
+}
