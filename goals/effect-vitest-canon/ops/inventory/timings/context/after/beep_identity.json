@@ -16,7 +16,7 @@
     "--reporter=json",
     "--outputFile=../../../../goals/effect-vitest-canon/ops/inventory/timings/after/beep_identity.json"
   ],
-  "commandQualification": "Run from the package directory, matching the baseline command shape.",
+  "commandQualification": "Run from the package directory, matching the baseline command shape. The committed after file is the summary shape with repo-relative paths; the raw reporter output is retained privately.",
   "wholeCommandSeconds": 1.5425338745117188,
   "registeredTestStatuses": {
     "passed": 115
