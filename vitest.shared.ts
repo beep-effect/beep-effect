@@ -1,8 +1,8 @@
 // The include list must exist before vitest boots, and Effect's Node FileSystem
-// is async, so this config-time scan uses the synchronous Node builtins.
-// @effect-diagnostics-next-line nodeBuiltinImport:off -- synchronous config-time scan; no Effect runtime exists yet.
+// is async, so this config-time scan uses the synchronous Node builtins. This file is one of the
+// three declared directive exemptions in `beep quality tsgo-rules` (Quality.command.ts).
+// @effect-diagnostics nodeBuiltinImport:skip-file
 import { readdirSync, readFileSync } from "node:fs";
-// @effect-diagnostics-next-line nodeBuiltinImport:off -- synchronous config-time scan; no Effect runtime exists yet.
 import { join, relative, sep } from "node:path";
 import { A, P, Str, Struct } from "@beep/utils";
 import * as Doctest from "@effect/doctest/Plugin";

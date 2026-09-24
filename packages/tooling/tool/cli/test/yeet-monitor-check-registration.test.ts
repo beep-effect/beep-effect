@@ -12,12 +12,14 @@ import {
   yeetCheckRegistration,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, FileSystem, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
@@ -261,7 +263,7 @@ const withTempDirectory = Effect.fn("withTempDirectory")(function* <Value, Failu
   );
 });
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 describe("the monitor phase check watch", () => {
   it.live("completes when the watch finds registered checks and they pass", () =>
@@ -371,28 +373,26 @@ describe("the monitor check watch recorder", () => {
 });
 
 // B7: a nonzero fail-fast watch is only a failure when the required census is red.
-const censusSpawnerLayer = (
+const censusSpawner = (
   calls: Ref.Ref<number>,
   required: ReadonlyArray<string>,
   all = '[{"name":"Vercel","bucket":"fail","state":"FAILURE"}]'
 ) =>
-  Layer.effect(
-    ChildProcessSpawner.ChildProcessSpawner,
-    Effect.succeed(
-      ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) return Effect.die("expected a standard command");
-        if (A.contains(command.args, "--watch")) {
-          return Ref.updateAndGet(calls, (n) => n + 1).pipe(Effect.as(stubHandle(1, "checks failed")));
-        }
-        if (A.contains(command.args, "--required")) {
-          return Ref.get(calls).pipe(
-            Effect.map((n) => stubHandle(0, required[Math.min(n - 1, required.length - 1)] ?? "invalid"))
-          );
-        }
-        return Effect.succeed(stubHandle(0, all));
-      })
-    )
-  );
+  ChildProcessSpawner.make((command) => {
+    if (!ChildProcess.isStandardCommand(command)) return Effect.die("expected a standard command");
+    if (A.contains(command.args, "--watch")) {
+      return Ref.updateAndGet(calls, (n) => n + 1).pipe(Effect.as(stubHandle(1, "checks failed")));
+    }
+    if (A.contains(command.args, "--required")) {
+      return Ref.get(calls).pipe(
+        Effect.map((n) => stubHandle(0, required[Math.min(n - 1, required.length - 1)] ?? "invalid"))
+      );
+    }
+    return Effect.succeed(stubHandle(0, all));
+  });
+
+const censusSpawnerLayer = (calls: Ref.Ref<number>, required: ReadonlyArray<string>, all?: string) =>
+  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner)(censusSpawner(calls, required, all));
 
 const requiredGreen = '[{"name":"Check","bucket":"pass","state":"SUCCESS"}]';
 const requiredPending = '[{"name":"Check","bucket":"pending","state":"QUEUED"}]';
@@ -491,27 +491,39 @@ describe("plain monitor required census", () => {
     );
   }
 
-  for (const timeout of [0, 20]) {
-    it.live(`bounds pending retries and preserves their failure record (${timeout}ms)`, () =>
-      withTempDirectory((root) =>
-        Effect.gen(function* () {
-          const calls = yield* Ref.make(0);
-          const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
-          const error = yield* Effect.flip(
-            runMonitorCheckWatchForTesting(
-              monitorPhaseContext(root),
-              A.drop(monitorSteps(root), 1),
-              recorder,
-              "watch failed",
-              [],
-              timeout
-            ).pipe(provideScopedLayer(censusSpawnerLayer(calls, [requiredPending])))
-          );
-          expect(error.message).toContain("settle-timeout; pending: Check");
-          expect(yield* Ref.get(calls)).toBe(1);
-          expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
-        })
-      ).pipe(provideScopedLayer(PlatformLayer))
-    );
-  }
+  it.layer(PlatformLayer, { timeout: "10 seconds" })("pending retry bounds", (layerIt) => {
+    for (const { timeout, maxAttempts } of [
+      { timeout: 0, maxAttempts: 1 },
+      { timeout: 20, maxAttempts: 2 },
+    ]) {
+      layerIt.effect(`bounds pending retries and preserves their failure record (${timeout}ms)`, () =>
+        withTempDirectory((root) =>
+          Effect.gen(function* () {
+            const calls = yield* Ref.make(0);
+            const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+            const error = yield* Effect.flip(
+              runMonitorCheckWatchForTesting(
+                monitorPhaseContext(root),
+                A.drop(monitorSteps(root), 1),
+                recorder,
+                "watch failed",
+                [],
+                timeout
+              ).pipe(
+                Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, censusSpawner(calls, [requiredPending]))
+              )
+            );
+            expect(error.message).toContain("settle-timeout; pending: Check");
+            // The retry sleep and timeout share the remaining deadline. Either
+            // timer can win: one retry may start before the timeout interrupts it.
+            // A zero budget must still stop after the initial attempt.
+            const attempts = yield* Ref.get(calls);
+            expect(attempts).toBeGreaterThanOrEqual(1);
+            expect(attempts).toBeLessThanOrEqual(maxAttempts);
+            expect(A.map(yield* Ref.get(recorder), (entry) => entry.result.exitCode)).toEqual([1]);
+          })
+        ).pipe(TestClock.withLive)
+      );
+    }
+  });
 });

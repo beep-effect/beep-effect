@@ -14,9 +14,20 @@
         "$TURBO_ROOT$/packages/.gitignore",
         "$TURBO_ROOT$/packages/foundation/.gitignore",
         "$TURBO_ROOT$/packages/foundation/modeling/.gitignore",
-        "!.beep/**"
+        "!.beep/**",
+        "$TURBO_ROOT$/**/package.json",
+        "$TURBO_ROOT$/**/tsconfig*.json",
+        "$TURBO_ROOT$/**/turbo.json*",
+        "$TURBO_ROOT$/**/.gitignore",
+        "$TURBO_ROOT$/**/biome*.json*",
+        "$TURBO_ROOT$/packages/foundation/modeling/utils/**",
+        "$TURBO_ROOT$/vitest*.ts",
+        "$TURBO_ROOT$/vitest*.json",
+        "!$TURBO_ROOT$/.beep/**",
+        "!$TURBO_ROOT$/**/node_modules/**"
       ],
-      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"]
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
+      "passThroughEnv": ["BIOME_CONFIG_PATH"]
     }
   }
 }

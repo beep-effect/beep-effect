@@ -1,6 +1,6 @@
 {
   "$schema": "../../../../packages/tooling/tool/docgen/schema.json",
-  "exclude": ["src/internal/**/*.ts"],
+  "exclude": ["src/internal/**/*.ts", "src/test/**/*.ts"],
   "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/capability/mcp-kit/src/",
   "examplesCompilerOptions": {
     "noEmit": true,

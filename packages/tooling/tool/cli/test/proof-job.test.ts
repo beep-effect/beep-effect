@@ -836,7 +836,7 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
       });
       const row = (yield* inbox(root))[0];
       if (row === undefined) return yield* Effect.die("Expected finalization inbox row");
-      expect(Job.yeetInboxExpectedRowId(row)).toBe(yeetProofJobRowId(record));
+      expect(yield* Job.yeetInboxExpectedRowId(row)).toBe(yeetProofJobRowId(record));
       expect(Job.describeYeetInboxRow(row)).toContain(record.jobId);
       yield* runJobCommand(["inbox", "ack", row.id, "--observed"]);
       expect(Job.renderYeetAckResolution(Job.YeetAckObservedResolution.make({ via: "inbox-ack" }))).toBe(
@@ -861,7 +861,7 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
       const row = Job.YeetCheckFailedRow.make({
         capsule,
         checkout: root,
-        id: Job.yeetInboxRowId(capsule),
+        id: yield* Job.yeetInboxRowId(capsule),
         severity: "P0",
         ts: stamp,
       });
@@ -979,7 +979,7 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
       for (const [name, value] of [
         ["BEEP_YEET_JOB_ID", "wrong"],
         ["BEEP_YEET_JOB_UNIT", "wrong"],
-      ]) {
+      ] as const) {
         expect(
           yield* command.pipe(
             Effect.provideService(ConfigProvider.ConfigProvider, jobEnvironment(root, record, { [name]: value })),

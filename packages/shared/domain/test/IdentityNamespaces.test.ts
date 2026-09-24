@@ -432,27 +432,31 @@ describe("P3 identity namespaces", () => {
     })
   );
 
-  it("round-trips schema-derived ids for every identity namespace", () => {
-    for (const spec of specs) {
-      expect(
-        Effect.runSync(
-          Arbitrary.checkEffect(
-            Arbitrary.schema(spec.schema),
-            (id) => {
-              const decoded = S.decodeSync(spec.schema)(id);
-              const encoded = S.encodeSync(spec.schema)(decoded);
+  it.effect(
+    "round-trips schema-derived ids for every identity namespace",
+    Effect.fnUntraced(function* () {
+      for (const spec of specs) {
+        const decode = S.decodeEffect(spec.schema);
+        const encode = S.encodeEffect(spec.schema);
+        const result = yield* Arbitrary.checkEffect(
+          Arbitrary.schema(spec.schema),
+          (id) =>
+            Effect.gen(function* () {
+              const decoded = yield* decode(id);
+              const encoded = yield* encode(decoded);
 
               expect(encoded, spec.label).toBe(id);
               expect(spec.schema.equivalence(cast(decoded), cast(id)), spec.label).toBe(true);
 
               return true;
-            },
-            fcRuns(10)
-          )
-        )._tag
-      ).toBe("Passed");
-    }
-  });
+            }),
+          fcRuns(10)
+        );
+
+        expect(result._tag, spec.label).toBe("Passed");
+      }
+    })
+  );
 
   it.effect(
     "validates runtime identity composers",

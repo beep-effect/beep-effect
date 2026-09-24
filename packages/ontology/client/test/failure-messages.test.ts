@@ -10,12 +10,11 @@ import { makeDataset } from "@beep/rdf/Rdf";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 
 const session = createSession(
   CreateSessionInput.make({
-    id: S.decodeSync(SessionId)("session-1"),
+    id: SessionId.make("session-1"),
     baseDataset: makeDataset([]),
   })
 );

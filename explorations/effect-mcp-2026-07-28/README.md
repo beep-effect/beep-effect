@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,10 +19,9 @@ switch.
 
 ## Next Open Question
 
-Should G4 (`McpProtocol.v2026_07_28` only) be reopened at the align grill? Verified research shows
-a 2026-only list rejects `initialize` from every in-repo wire client and leaves `GovernedTierGate`
-with no server-minted identity, while upstream supports mixed lists with one stateless adapter.
-(Research stage: all ten lanes and Gate B verification complete; synthesis and Gate C next.)
+None: graduated 2026-09-22 into `goals/mcp-stateless-kit-and-drivers` (kit rebase, `@beep/mcp-kit/client`,
+five stdio hosts, nlp-mcp behind the live capture) and `goals/ontology-sidecar-stateless-identity`
+(run key = per-launch bearer digest, sidecar pin, Origin policy). Re-entry gates live in `MAP.md`.
 
 ## Read This First
 
@@ -41,3 +40,12 @@ with no server-minted identity, while upstream supports mixed lists with one sta
   orchestrator snapshot spike (`research/25-r4-spike-census.md`) complete.
 - 2026-09-17: Gate B verification complete: 184 claims, 175 survive, 9 struck
   (`research/verification/README.md`). Manifest open questions reseeded for the align grill.
+- 2026-09-17: Stage 2 synthesis written (`RESEARCH.md`, `research/impact-matrix.md`,
+  `research/sizing.md`, `research/SOURCES.md`); Gate C (three grok reviewers, 30 findings, all
+  `not-ready`) folded in; open questions reseeded as eight named decisions for the align grill.
+- 2026-09-21: capture PR #1169 merged. `effect@4.0.0-rc.117` shipped with the adapter and #1173
+  moved `main` to it, closing G1/G7 by events: S0 and S5b struck from `research/sizing.md`,
+  D-pin-sha withdrawn (seven decisions remain), `DECISIONS.md` entry added.
+- 2026-09-22: align grill closed in one session (`DECISIONS.md`: D-posture, D-cli-contract,
+  D-run-key, D-client-home, D-conformance, D-projection, D-origin, goal split); `BRIEF.md` and
+  `MAP.md` written; graduated into two goal packets; Gate D reviews in `reviews/gate-d-*.md`.

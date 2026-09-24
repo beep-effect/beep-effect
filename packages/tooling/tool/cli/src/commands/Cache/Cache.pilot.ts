@@ -21,7 +21,7 @@ import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schem
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { resolveWorktreeContext } from "../Worktree/index.ts";
-import { collectCacheCensus, joinCacheCensusPlan } from "./Cache.census.ts";
+import { collectCacheCensus, collectCacheTaskSelection, joinCacheCensusPlan } from "./Cache.census.ts";
 import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
 import { verifyCacheDependencies } from "./Cache.dependencies.ts";
 import {
@@ -45,6 +45,7 @@ import {
   CachePilotShadow,
   CachePilotTask,
 } from "./Cache.pilot.schemas.ts";
+import { renderCacheIdentityLintProfile, verifyCacheIdentityLintProfile } from "./Cache.profile.ts";
 import {
   CacheActivationPreview,
   CacheActivationRequest,
@@ -87,7 +88,10 @@ const NativeTask = S.Struct({
   }),
   hash: CacheSyntheticRun.fields.taskHash,
   cache: S.Struct({ status: S.Literals(["HIT", "MISS"]), local: S.Boolean, remote: S.Boolean }),
-  environmentVariables: S.Struct({ configured: S.Array(S.String) }),
+  environmentVariables: S.Struct({
+    configured: S.Array(S.String),
+    passthrough: S.Array(S.String).pipe(S.OptionFromNullOr),
+  }),
   execution: S.OptionFromOptionalKey(S.Struct({ exitCode: S.OptionFromOptionalKey(S.Int) })),
 });
 const NativeSummary = S.Struct({ tasks: S.Array(NativeTask) });
@@ -261,11 +265,27 @@ const runPilot = Effect.fn("CachePilot.run")(
       Order.String
     );
     const census = yield* collectCacheCensus(root);
+    const needsProfile = A.some(
+      census.nodes,
+      (node) =>
+        node.id === identityTask &&
+        O.isSome(node.command) &&
+        A.contains(node.configuration.passThroughEnv, "BIOME_CONFIG_PATH")
+    );
+    const profileObservation = Effect.fn("CachePilot.profileObservation")(function* (guest: string) {
+      return `BIOME_CONFIG_PATH=${yield* hashText(path.join(guest, "biome.identity.jsonc"))}`;
+    });
+    if (needsProfile) {
+      yield* verifyCacheIdentityLintProfile(root);
+      yield* collectCacheTaskSelection(root, ["run", "lint", "--filter=@beep/identity", "--env-mode=strict"]);
+    }
     const context = yield* resolveWorktreeContext(root);
     const revision = yield* captureHost(root, ["rev-parse", "HEAD"]).pipe(Effect.flatMap(decodeGitObjectId));
     const commonGit = yield* captureHost(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
     const sourceRoots = yield* Effect.forEach(request.worktrees, (source) => fs.realPath(source), { concurrency: 1 });
-    if (sourceRoots[0] === sourceRoots[1])
+    const sourceRootA = O.getOrThrow(A.get(sourceRoots, 0));
+    const sourceRootB = O.getOrThrow(A.get(sourceRoots, 1));
+    if (sourceRootA === sourceRootB)
       return yield* CacheCommandError.new("Cross-root pilot observations require two distinct registered worktrees.");
     yield* Effect.forEach(
       sourceRoots,
@@ -289,7 +309,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         [biome, current.source.toolchain.biome.sha256],
         [node, current.source.toolchain.node.sha256],
         [turbo, request.client.sha256],
-      ]) {
+      ] as const) {
         if ((yield* hashExecutable(executable)) !== expected)
           return yield* CacheCommandError.new("A pilot executable differs from its exact content pin.");
       }
@@ -334,6 +354,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       label: PilotRoot["label"],
       name: string
     ) {
+      if (needsProfile) yield* verifyCacheIdentityLintProfile(source);
       const directory = path.join(experiment, name);
       yield* fs.makeDirectory(directory);
       const identity = path.join(directory, "identity");
@@ -421,7 +442,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       for (const [directory, name] of [
         [identityDirectory, "identity-log"],
         [typesDirectory, "types-log"],
-      ])
+      ] as const)
         mounts.push("--bind", path.join(fixture.directory, name), path.join(guest, directory, ".turbo"));
       for (const parent of A.reverse(parents)) mounts.push("--remount-ro", parent);
       return mounts;
@@ -432,6 +453,8 @@ const runPilot = Effect.fn("CachePilot.run")(
       args: ReadonlyArray<string>,
       env: Readonly<Record<string, string>> = {}
     ) {
+      if (needsProfile && env.BIOME_CONFIG_PATH !== undefined)
+        return yield* CacheCommandError.new("Pilot scenario cannot override the governed lint profile.");
       for (const name of ["run", "identity-log", "types-log", "cache"])
         yield* fs.makeDirectory(path.join(fixture.directory, name), { recursive: true });
       return yield* runCapturedStreams({
@@ -501,14 +524,15 @@ const runPilot = Effect.fn("CachePilot.run")(
           GIT_CONFIG_NOSYSTEM: "1",
           GIT_OPTIONAL_LOCKS: "0",
           ...env,
+          ...(needsProfile ? { BIOME_CONFIG_PATH: path.join(guest, "biome.identity.jsonc") } : {}),
           BEEP_CACHE_TOOLCHAIN_DIGEST: runtimeIdentity.toolchainDigest,
         },
         bound: captureBound,
       }).pipe(Effect.timeout(Duration.seconds(60)));
     });
     const roots = [
-      yield* prepare(sourceRoots[0], "root-a", "initial-a"),
-      yield* prepare(sourceRoots[1], "root-b", "initial-b"),
+      yield* prepare(sourceRootA, "root-a", "initial-a"),
+      yield* prepare(sourceRootB, "root-b", "initial-b"),
     ];
     const firstRoot = O.getOrThrow(A.head(roots));
     const verifySandboxLibraries = Effect.fn("CachePilot.verifySandboxLibraries")(function* () {
@@ -561,6 +585,7 @@ const runPilot = Effect.fn("CachePilot.run")(
     yield* verifySandboxVersions();
     yield* Effect.logInfo(`Pilot ${request.channel}: installed runtime and exact client checks passed.`);
     const verifyNativePlans = Effect.fn("CachePilot.verifyNativePlans")(function* () {
+      const expectedProfile = yield* profileObservation("/fixture");
       yield* Effect.forEach(
         roots,
         Effect.fn("CachePilot.verifyNativePlan")(function* (fixture) {
@@ -581,7 +606,9 @@ const runPilot = Effect.fn("CachePilot.run")(
             !A.some(
               plan.tasks,
               (task) =>
-                task.taskId === identityTask && A.contains(task.environmentVariables.configured, runtimeKeyObservation)
+                task.taskId === identityTask &&
+                A.contains(task.environmentVariables.configured, runtimeKeyObservation) &&
+                (!needsProfile || O.exists(task.environmentVariables.passthrough, A.contains(expectedProfile)))
             )
           )
             return yield* CacheCommandError.new("The native pilot plan omitted the verified runtime key.");
@@ -673,6 +700,21 @@ const runPilot = Effect.fn("CachePilot.run")(
       if (fixture.omitChild) yield* fs.remove(path.join(fixture.identity, "turbo.json"), { force: true });
       else yield* writeContainedFileString(fixture.identity, "turbo.json", enabled ? fixture.after : fixture.before);
     });
+    const verifyExecutionEnvironment = Effect.fn("CachePilot.verifyExecutionEnvironment")(function* (
+      fixture: PilotRoot,
+      id: string,
+      task: typeof NativeTask.Type,
+      expectedProfile: string
+    ) {
+      if (!fixture.omitChild && !A.contains(task.environmentVariables.configured, runtimeKeyObservation))
+        return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified runtime key.`);
+      if (
+        needsProfile &&
+        !fixture.omitChild &&
+        !O.exists(task.environmentVariables.passthrough, A.contains(expectedProfile))
+      )
+        return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified lint profile.`);
+    });
     const execute = Effect.fn("CachePilot.execute")(function* (
       fixture: PilotRoot,
       id: string,
@@ -681,6 +723,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       guest = "/fixture",
       env: Readonly<Record<string, string>> = {}
     ) {
+      const expectedProfile = yield* profileObservation(guest);
       yield* prepareExecution(fixture, enabled);
       const beforeTrees = yield* Effect.all([snapshot(fixture.identity), snapshot(fixture.types)], { concurrency: 2 });
       const captured = yield* invoke(
@@ -730,8 +773,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           return CachePilotOutcome.cases.Blocked.make({ failedDependencies: failed });
         }),
         onSome: Effect.fn("CachePilot.executed")(function* (task: typeof NativeTask.Type) {
-          if (!fixture.omitChild && !A.contains(task.environmentVariables.configured, runtimeKeyObservation))
-            return yield* CacheCommandError.new(`Native pilot run ${id} omitted the verified runtime key.`);
+          yield* verifyExecutionEnvironment(fixture, id, task, expectedProfile);
           const observation = yield* taskObservation(task);
           if (task.command !== "bun run beep:lint" || (captured.exitCode === 0) !== (observation.exitCode === 0))
             return yield* CacheCommandError.new("Selected pilot command or verdict disagrees with its graph.");
@@ -798,7 +840,10 @@ const runPilot = Effect.fn("CachePilot.run")(
           );
           runs.push(...paired);
           checks.push(
-            CacheSyntheticCheck.make({ name: `fresh-pair-${pair}`, passed: compare(paired[0], paired[1], true) })
+            CacheSyntheticCheck.make({
+              name: `fresh-pair-${pair}`,
+              passed: compare(O.getOrThrow(A.get(paired, 0)), O.getOrThrow(A.get(paired, 1)), true),
+            })
           );
         }
         const producer = yield* execute(firstRoot, "activation-producer", true, true);
@@ -807,7 +852,7 @@ const runPilot = Effect.fn("CachePilot.run")(
         checks.push(
           CacheSyntheticCheck.make({
             name: "activation-capture-equivalence",
-            passed: compare(runs[0], producer, false),
+            passed: compare(O.getOrThrow(A.get(runs, 0)), producer, false),
           })
         );
         checks.push(
@@ -828,19 +873,22 @@ const runPilot = Effect.fn("CachePilot.run")(
         checks.push(
           CacheSyntheticCheck.make({
             name: "concurrent-fresh-equivalence",
-            passed: compare(concurrent[0], concurrent[1], true),
+            passed: compare(O.getOrThrow(A.get(concurrent, 0)), O.getOrThrow(A.get(concurrent, 1)), true),
           })
         );
         const otherRoot = yield* execute(firstRoot, "alternate-absolute-root", false, false, "/fixture-other");
         runs.push(otherRoot);
         checks.push(
-          CacheSyntheticCheck.make({ name: "absolute-root-equivalence", passed: compare(runs[0], otherRoot, true) })
+          CacheSyntheticCheck.make({
+            name: "absolute-root-equivalence",
+            passed: compare(O.getOrThrow(A.get(runs, 0)), otherRoot, true),
+          })
         );
         if (A.some(checks, (check) => !check.passed))
           return yield* CacheCommandError.new("Initial real-pilot comparisons diverged; local reuse has stopped.");
       });
       yield* runInitialComparisons();
-      const baseline = runs[0];
+      const baseline = O.getOrThrow(A.get(runs, 0));
       const applyShadowSource = Effect.fn("CachePilot.applyShadowSource")(function* (
         fixture: PilotRoot,
         scenario: PilotShadowScenario
@@ -918,8 +966,8 @@ const runPilot = Effect.fn("CachePilot.run")(
           PilotShadowScenario.make({ ...unchanged, id: "absolute-root", guest: "/fixture-other" }),
         ];
         for (const scenario of scenarios) {
-          const writer = yield* prepare(sourceRoots[0], "root-a", `shadow-${scenario.id}-a`);
-          const reader = yield* prepare(sourceRoots[1], "root-b", `shadow-${scenario.id}-b`);
+          const writer = yield* prepare(sourceRootA, "root-a", `shadow-${scenario.id}-a`);
+          const reader = yield* prepare(sourceRootB, "root-b", `shadow-${scenario.id}-b`);
           yield* Effect.forEach([writer, reader], (fixture) => applyShadowSource(fixture, scenario), {
             concurrency: 1,
             discard: true,
@@ -1141,6 +1189,12 @@ const runPilot = Effect.fn("CachePilot.run")(
           !A.contains(mutationIds.pickOptions(["child-task-config", "missing-child-config", "dependency-source"]), id)
         )
           changedFixture = yield* overlayRootFile(fixture, changedPath, changedText);
+        if (needsProfile && id === "root-lint-config")
+          changedFixture = yield* overlayRootFile(
+            changedFixture,
+            "biome.identity.jsonc",
+            yield* renderCacheIdentityLintProfile(changedText)
+          );
         const changed = yield* execute(changedFixture, `${id}-changed`, true, true, "/fixture", env);
         const replayed = yield* execute(changedFixture, `${id}-replay`, true, true, "/fixture", env);
         runs.push(seeded, changed, replayed);
@@ -1295,6 +1349,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       clientSelection: "pinned-native-skip-infer",
       runtimeKeying: "toolchain-sha256-env/v1",
       runtimeKeyDigest: runtimeIdentity.toolchainDigest,
+      runtimeLinker: O.some(runtimeLinker),
       authority: "local-observation-only",
       key: current.source.key,
       sourceRevision: revision,

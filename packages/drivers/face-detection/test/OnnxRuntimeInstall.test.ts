@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import { createRequire } from "node:module";
-import { PassThrough } from "node:stream";
 import { Script } from "node:vm";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeStream from "@effect/platform-node-shared/NodeStream";
 import { expect, it } from "@effect/vitest";
 import { Cause, Effect, FileSystem, Match, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { strToU8, zipSync } from "fflate";
 
@@ -39,22 +40,22 @@ const fixture = Effect.gen(function* () {
   const install = Effect.fn("OnnxRuntimeInstall.install")(function* (archive: Uint8Array) {
     const module: { exports: { installPackages?: InstallPackages } } = { exports: {} };
     const https = {
-      get: (url: string, receive: (response: PassThrough) => void) => {
-        const response = Object.assign(new PassThrough(), {
+      get: (url: string, receive: (response: ReturnType<typeof NodeStream.toReadableNever>) => void) => {
+        const payload = Match.value(url).pipe(
+          Match.when(Str.endsWith(".nupkg"), () => archive),
+          Match.when("https://test.invalid/index.json", () =>
+            new TextEncoder().encode(
+              '{"resources":[{"@type":"PackageBaseAddress/3.0.0","@id":"https://test.invalid/packages/"}]}'
+            )
+          ),
+          Match.orElse(() => new TextEncoder().encode('{"versions":["1.0.0"]}'))
+        );
+        const response = Object.assign(NodeStream.toReadableNever(Stream.make(payload)), {
           statusCode: 200,
           headers: { "content-type": "application/json" },
         });
-        const payload = Match.value(url).pipe(
-          Match.when(Str.endsWith(".nupkg"), () => archive),
-          Match.when(
-            "https://test.invalid/index.json",
-            () => '{"resources":[{"@type":"PackageBaseAddress/3.0.0","@id":"https://test.invalid/packages/"}]}'
-          ),
-          Match.orElse(() => '{"versions":["1.0.0"]}')
-        );
         queueMicrotask(() => {
           receive(response);
-          response.end(payload);
         });
         return new EventEmitter();
       },

@@ -18,6 +18,7 @@ import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, FileSystem, HashMap, HashSet, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
+import * as Num from "effect/Number";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
@@ -30,6 +31,7 @@ import {
 } from "../../internal/cli/Labs/index.ts";
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
+import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.ts";
 import { QualityCheckConcurrency } from "../Quality/Quality.schemas.ts";
 import {
   QualityTaskStep,
@@ -41,16 +43,24 @@ import {
   CI_LANE_PARTITION_TABLE_PATH,
   CI_LANE_PARTITIONS,
   CiLanePartitionId,
+  CiLanePartitionShard,
   PartitionedCiLane as PartitionedCiLaneSchema,
 } from "./CiLanePartitions.ts";
 import type { FsUtils } from "@beep/repo-utils";
+import type { Crypto } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { QualityTaskConfigurationError, QualityTaskGroupFailed, QualityTaskLaneInput } from "../Quality/Tasks.ts";
 import type { CiLanePartition, PartitionedCiLane } from "./CiLanePartitions.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiLane");
 
-type CiLaneEnvironment = FileSystem.FileSystem | FsUtils | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type CiLaneEnvironment =
+  | Crypto.Crypto
+  | FileSystem.FileSystem
+  | FsUtils
+  | Path.Path
+  | Crypto.Crypto
+  | ChildProcessSpawner.ChildProcessSpawner;
 
 const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 const STORYBOOK_PACKAGE_NAME = "@beep/storybook";
@@ -836,6 +846,7 @@ export class CiLanePartitionProof extends S.Class<CiLanePartitionProof>($I`CiLan
     selectedTaskCount: NonNegativeTaskCount,
     partitionTaskCount: NonNegativeTaskCount,
     packages: S.Array(S.String),
+    shard: S.optionalKey(CiLanePartitionShard),
   },
   $I.annote("CiLanePartitionProof", {
     description: "Validated intersection between Turbo's selected task set and one committed partition.",
@@ -884,6 +895,114 @@ const proveCiLanePartitionDefinition = Effect.fn("CiLane.proveCiLanePartitionDef
   return definition;
 });
 
+const packageBins = (
+  lanePartitions: ReadonlyArray<CiLanePartition>
+): ReadonlyArray<readonly [string, ReadonlyArray<CiLanePartition>]> =>
+  pipe(
+    lanePartitions,
+    A.reduce(HashMap.empty<string, ReadonlyArray<CiLanePartition>>(), (bins, candidate) =>
+      A.reduce(candidate.packages, bins, (acc, name) =>
+        HashMap.set(
+          acc,
+          name,
+          O.match(HashMap.get(acc, name), {
+            onNone: () => A.of(candidate),
+            onSome: (existing) => A.append(existing, candidate),
+          })
+        )
+      )
+    ),
+    HashMap.entries,
+    A.fromIterable,
+    A.sort(Order.mapInput(Order.String, ([name]: readonly [string, ReadonlyArray<CiLanePartition>]) => name))
+  );
+
+const shardIndexSetEquivalence = A.makeEquivalence(Num.Equivalence);
+
+const proveShardedPackageBins = Effect.fn("CiLane.proveShardedPackageBins")(function* (
+  laneId: PartitionedCiLane,
+  partitionId: CiLanePartitionId,
+  packageName: string,
+  bins: ReadonlyArray<CiLanePartition>
+): Effect.fn.Return<void, CiLanePartitionError> {
+  const binIds = A.join(
+    A.map(bins, (bin) => bin.id),
+    ", "
+  );
+  const shards = A.getSomes(A.map(bins, (bin) => O.fromUndefinedOr(bin.shard)));
+  if (A.isReadonlyArrayEmpty(shards)) {
+    if (A.length(bins) > 1) {
+      return yield* ciLanePartitionError(
+        "duplicate-package",
+        laneId,
+        `Package ${packageName} appears in more than one ${laneId} partition.`,
+        partitionId
+      );
+    }
+    return;
+  }
+  if (A.length(shards) !== A.length(bins)) {
+    return yield* ciLanePartitionError(
+      "sharded-package-unsharded",
+      laneId,
+      `Package ${packageName} is sharded in some ${laneId} partitions but unsharded in others (${binIds}).`,
+      partitionId
+    );
+  }
+  const oversizedBin = A.findFirst(bins, (bin) => A.length(bin.packages) !== 1);
+  if (O.isSome(oversizedBin)) {
+    return yield* ciLanePartitionError(
+      "sharded-bin-package-count",
+      laneId,
+      `Partition ${oversizedBin.value.id} carries a shard but names ${A.length(oversizedBin.value.packages)} packages; a sharded partition holds exactly one.`,
+      partitionId
+    );
+  }
+  const totals = A.dedupe(A.map(shards, (shard) => shard.total));
+  if (A.length(totals) !== 1) {
+    return yield* ciLanePartitionError(
+      "shard-total-mismatch",
+      laneId,
+      `Package ${packageName} has shards with different totals (${A.join(A.map(totals, String), ", ")}) across ${binIds}.`,
+      partitionId
+    );
+  }
+  const indexes = A.sort(
+    A.map(shards, (shard) => shard.index),
+    Order.Number
+  );
+  const duplicateIndex = firstDuplicate(A.map(indexes, String));
+  if (O.isSome(duplicateIndex)) {
+    return yield* ciLanePartitionError(
+      "shard-index-duplicate",
+      laneId,
+      `Package ${packageName} has shard index ${duplicateIndex.value} more than once across ${binIds}.`,
+      partitionId
+    );
+  }
+  const total = O.getOrThrow(A.head(totals));
+  if (!shardIndexSetEquivalence(indexes, A.range(1, total))) {
+    return yield* ciLanePartitionError(
+      "shard-set-incomplete",
+      laneId,
+      `Package ${packageName} has shard indexes ${A.join(A.map(indexes, String), ", ")} across ${binIds}; expected exactly 1..${total}.`,
+      partitionId
+    );
+  }
+});
+
+const proveCiLanePartitionShards = Effect.fn("CiLane.proveCiLanePartitionShards")(function* (
+  laneId: PartitionedCiLane,
+  partitionId: CiLanePartitionId,
+  lanePartitions: ReadonlyArray<CiLanePartition>
+): Effect.fn.Return<void, CiLanePartitionError> {
+  yield* Effect.forEach(
+    packageBins(lanePartitions),
+    ([packageName, bins]) => proveShardedPackageBins(laneId, partitionId, packageName, bins),
+    { discard: true }
+  );
+});
+
 const proveCiLanePartitionCoverage = Effect.fn("CiLane.proveCiLanePartitionCoverage")(function* (
   laneId: PartitionedCiLane,
   partitionId: CiLanePartitionId,
@@ -891,16 +1010,8 @@ const proveCiLanePartitionCoverage = Effect.fn("CiLane.proveCiLanePartitionCover
   taskPackageNames: ReadonlyArray<string>,
   lanePartitions: ReadonlyArray<CiLanePartition>
 ): Effect.fn.Return<HashSet.HashSet<string>, CiLanePartitionError> {
-  const assignedPackages = A.flatMap(lanePartitions, (candidate) => candidate.packages);
-  const duplicate = firstDuplicate(assignedPackages);
-  if (O.isSome(duplicate)) {
-    return yield* ciLanePartitionError(
-      "duplicate-package",
-      laneId,
-      `Package ${duplicate.value} appears in more than one ${laneId} partition.`,
-      partitionId
-    );
-  }
+  yield* proveCiLanePartitionShards(laneId, partitionId, lanePartitions);
+  const assignedPackages = A.dedupe(A.flatMap(lanePartitions, (candidate) => candidate.packages));
 
   const workspacePackages = HashSet.fromIterable(workspacePackageNames);
   const taskPackages = HashSet.fromIterable(taskPackageNames);
@@ -1027,6 +1138,7 @@ export const proveCiLanePartition = Effect.fn("CiLane.proveCiLanePartition")(fun
     selectedTaskCount: A.length(selectedTaskPackageNames),
     partitionTaskCount: A.length(packages),
     packages,
+    ...O.getSomesStruct({ shard: O.fromUndefinedOr(definition.shard) }),
   });
 });
 
@@ -1039,10 +1151,17 @@ const partitionDryRunArgs = (laneId: PartitionedCiLane, options: CiLaneRunOption
     [...(options.affected ? ["--affected"] : A.empty<string>()), LABS_TURBO_EXCLUDE_FILTER, "--only", "--dry-run=json"]
   );
 
+const shardPassThroughArgs = (shard: O.Option<CiLanePartitionShard>): ReadonlyArray<string> =>
+  O.match(shard, {
+    onNone: A.empty<string>,
+    onSome: ({ index, total }) => ["--", `--shard=${index}/${total}`],
+  });
+
 const partitionExecutionArgs = (
   laneId: PartitionedCiLane,
   packages: ReadonlyArray<string>,
-  options: CiLaneRunOptions
+  options: CiLaneRunOptions,
+  shard: O.Option<CiLanePartitionShard>
 ): ReadonlyArray<string> =>
   directTurboArgs(
     A.map(packages, (name) => `${name}#${partitionedLaneTask(laneId)}`),
@@ -1053,6 +1172,7 @@ const partitionExecutionArgs = (
       ...A.map(packages, (name) => `--filter=${name}`),
       ...(options.force ? ["--force"] : A.empty<string>()),
       ...(options.summarize ? ["--summarize"] : A.empty<string>()),
+      ...shardPassThroughArgs(shard),
     ]
   );
 
@@ -1102,14 +1222,28 @@ export class CiLanePartitionArgs extends S.Class<CiLanePartitionArgs>($I`CiLaneP
  * @since 0.0.0
  */
 export const ciLanePartitionArgsForTesting: {
-  (laneId: PartitionedCiLane, packages: ReadonlyArray<string>, options: CiLaneRunOptions): CiLanePartitionArgs;
-  (packages: ReadonlyArray<string>, options: CiLaneRunOptions): (laneId: PartitionedCiLane) => CiLanePartitionArgs;
+  (
+    laneId: PartitionedCiLane,
+    packages: ReadonlyArray<string>,
+    options: CiLaneRunOptions,
+    shard?: CiLanePartitionShard
+  ): CiLanePartitionArgs;
+  (
+    packages: ReadonlyArray<string>,
+    options: CiLaneRunOptions,
+    shard?: CiLanePartitionShard
+  ): (laneId: PartitionedCiLane) => CiLanePartitionArgs;
 } = dual(
-  3,
-  (laneId: PartitionedCiLane, packages: ReadonlyArray<string>, options: CiLaneRunOptions): CiLanePartitionArgs =>
+  (args) => isPartitionedCiLane(args[0]),
+  (
+    laneId: PartitionedCiLane,
+    packages: ReadonlyArray<string>,
+    options: CiLaneRunOptions,
+    shard?: CiLanePartitionShard
+  ): CiLanePartitionArgs =>
     CiLanePartitionArgs.make({
       selection: partitionDryRunArgs(laneId, options),
-      execution: partitionExecutionArgs(laneId, packages, options),
+      execution: partitionExecutionArgs(laneId, packages, options, O.fromUndefinedOr(shard)),
     })
 );
 
@@ -1504,18 +1638,23 @@ const renderStepCommand = (step: QualityTaskStep): string => A.join([step.comman
 
 const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
   step: QualityTaskStep
-): Effect.fn.Return<number, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<number, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  const stepEnv = step.env ?? {};
+  yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, stepEnv).pipe(
+    CiCommandError.mapError("Rejected a caller-provided cache runtime identity.")
+  );
   yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(step)}`);
   // Lane bodies that shell out to Turbo need the same env hygiene the root
   // quality runner applies: no interactive TUI (it can leave a killed run's
   // terminal in mouse-capture mode) and no unresolved `op://` token/team
   // references leaking through as literal values on a workstation.
   const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
+  const runtime = cacheRuntimeStep(step);
   return yield* runToExit({
-    command: step.command,
-    args: step.args,
+    command: runtime.command,
+    args: runtime.args,
     cwd: step.cwd,
-    env: { ...envOverrides, ...(step.env ?? {}) },
+    env: { ...envOverrides, ...stepEnv },
     extendEnv: turboEnvExtendsAmbient(step.command, step.args),
     stdio: "inherit",
   }).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(step)}.`));
@@ -1629,7 +1768,7 @@ const changedPathsBetween = Effect.fn("CiLane.changedPathsBetween")(function* (
   base: string,
   head: string,
   purpose: string
-): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runCaptured({
     command: "git",
     args: ["diff", "--name-only", `${base}...${head}`],
@@ -1648,7 +1787,7 @@ const resolveAutoDocgenLaneMode = Effect.fn("CiLane.resolveAutoDocgenLaneMode")(
   repoRoot: string,
   base: string,
   head: string
-): Effect.fn.Return<DocgenLaneMode, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<DocgenLaneMode, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const changedPaths = yield* changedPathsBetween(repoRoot, base, head, "automatic Docgen scope");
   const mode = docgenLaneModeForChangedPaths(changedPaths);
   yield* Console.log(`[ci] docgen: auto-selected ${mode} from ${A.length(changedPaths)} changed path(s)`);
@@ -1672,7 +1811,7 @@ const isStorybookBuildTask = (entry: TurboDryRunTask): boolean =>
 const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffected")(function* (
   repoRoot: string,
   base: string
-): Effect.fn.Return<boolean, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const probeArgs = storybookAffectedProbeArgs();
   yield* Console.log(`[ci] ci:storybook: bunx ${A.join(probeArgs, " ")}`);
   const envOverrides = yield* turboEnvOverrides("bunx", probeArgs, Bun.env);
@@ -1922,6 +2061,10 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
   );
 
   if (options.dryRun) {
+    if (A.isReadonlyArrayNonEmpty(proof.packages)) {
+      const plannedArgs = partitionExecutionArgs(laneId, proof.packages, options, O.fromUndefinedOr(proof.shard));
+      yield* Console.log(`[ci] ${laneId} ${partition}: planned execution: bunx ${A.join(plannedArgs, " ")}`);
+    }
     yield* Console.log(`[ci] ${laneId} ${partition}: dry-run proof complete; no tasks executed.`);
     return;
   }
@@ -1933,7 +2076,7 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
   const step = QualityTaskStep.make({
     label: `ci:${laneId}:${partition}`,
     command: "bunx",
-    args: partitionExecutionArgs(laneId, proof.packages, options),
+    args: partitionExecutionArgs(laneId, proof.packages, options, O.fromUndefinedOr(proof.shard)),
     cwd: repoRoot,
   });
   yield* runQualityTaskStreamingStepGroup(`ci:${laneId}:${partition}`, [step]);
@@ -2224,7 +2367,7 @@ const parseCiLocalLaneSelection = Effect.fn("CiLane.parseCiLocalLaneSelection")(
 
 const currentGitBranch = Effect.fn("CiLane.currentGitBranch")(function* (
   repoRoot: string
-): Effect.fn.Return<string, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runCaptured({
     command: "git",
     args: ["branch", "--show-current"],

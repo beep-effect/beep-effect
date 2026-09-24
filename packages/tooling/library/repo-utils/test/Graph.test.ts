@@ -178,7 +178,7 @@ describe("detectCycles", () => {
       expect(cycles.length).toBeGreaterThan(0);
 
       // The cycle should contain A, B, C and loop back
-      const cycle = cycles[0];
+      const cycle = O.getOrThrow(A.head(cycles));
       expect(cycle[0]).toBe(cycle[cycle.length - 1]); // Should loop back
       expect(cycle.length).toBeGreaterThanOrEqual(3); // At least 3 distinct + repeat
     })

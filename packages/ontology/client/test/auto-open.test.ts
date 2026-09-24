@@ -19,11 +19,10 @@ import { makeDataset } from "@beep/rdf/Rdf";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
-import * as S from "effect/Schema";
 import { AsyncResult, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 import type { OpenOntologyDocumentInput } from "@beep/ontology-client/aggregates/Session";
 
-const materialsPath = S.decodeSync(OntologyFilePath)("tmp/ontology-workbench/materials.ttl");
+const materialsPath = OntologyFilePath.make("tmp/ontology-workbench/materials.ttl");
 
 const seedSession = createSession(
   CreateSessionInput.make({

@@ -20,7 +20,7 @@ import * as S from "effect/Schema";
 const homeDir = "/home/dev";
 const xdgDefaultRoot = `${homeDir}/.local/state/beep/ai-metrics`;
 const cloneRelativeRoot = "/work/clone/.beep/ai-metrics";
-const decodeDataRootInput = S.decodeUnknownSync(AiMetricsDataRootInput);
+const decodeDataRootInput = S.decodeUnknownEffect(AiMetricsDataRootInput);
 
 const makeDataRootInput = ({
   envDataRoot = O.none<string>(),
@@ -105,12 +105,14 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
     expect(resolved.source).toBe(AiMetricsDataRootSource.Enum["target-default"]);
   });
 
-  it("treats blank flag and environment values as absent", () => {
-    const resolved = resolveRoot(decodeDataRootInput({ envDataRoot: "", flagDataRoot: "   ", homeDir }));
+  it.effect("treats blank flag and environment values as absent", () =>
+    Effect.gen(function* () {
+      const resolved = resolveRoot(yield* decodeDataRootInput({ envDataRoot: "", flagDataRoot: "   ", homeDir }));
 
-    expect(resolved.path).toBe(xdgDefaultRoot);
-    expect(resolved.source).toBe(AiMetricsDataRootSource.Enum["xdg-state-home"]);
-  });
+      expect(resolved.path).toBe(xdgDefaultRoot);
+      expect(resolved.source).toBe(AiMetricsDataRootSource.Enum["xdg-state-home"]);
+    })
+  );
 
   // Resolution carries a relative value through untouched rather than absolutizing it against an
   // ambient directory. `requireAbsoluteAiMetricsDataRoot` is where such a root gets refused, and
@@ -127,56 +129,60 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
     expect(resolved.source).toBe(AiMetricsDataRootSource.Enum.flag);
   });
 
-  it("refuses to anchor the XDG rung at the filesystem root when the home directory is blank or absent", () => {
-    const unresolvable = [
-      makeDataRootInput(),
-      decodeDataRootInput({ homeDir: "" }),
-      decodeDataRootInput({ homeDir: "   " }),
-      decodeDataRootInput({ homeDir: "", stateHome: "" }),
-      decodeDataRootInput({ envDataRoot: "", flagDataRoot: "  ", homeDir: "" }),
-    ];
+  it.effect("refuses to anchor the XDG rung at the filesystem root when the home directory is blank or absent", () =>
+    Effect.gen(function* () {
+      const unresolvable = [
+        makeDataRootInput(),
+        yield* decodeDataRootInput({ homeDir: "" }),
+        yield* decodeDataRootInput({ homeDir: "   " }),
+        yield* decodeDataRootInput({ homeDir: "", stateHome: "" }),
+        yield* decodeDataRootInput({ envDataRoot: "", flagDataRoot: "  ", homeDir: "" }),
+      ];
 
-    for (const input of unresolvable) {
-      expect(O.isNone(resolveAiMetricsDataRoot(input))).toBe(true);
-      expect(O.isNone(aiMetricsStateHome(input))).toBe(true);
-    }
+      for (const input of unresolvable) {
+        expect(O.isNone(resolveAiMetricsDataRoot(input))).toBe(true);
+        expect(O.isNone(aiMetricsStateHome(input))).toBe(true);
+      }
 
-    // The dankserver rung and an explicit XDG_STATE_HOME still resolve without a home.
-    expect(resolveRoot(decodeDataRootInput({ homeDir: "", stateHome: "/custom/state" })).path).toBe(
-      "/custom/state/beep/ai-metrics"
-    );
-    expect(
-      resolveRoot(
-        decodeDataRootInput({
-          homeDir: "",
+      // The dankserver rung and an explicit XDG_STATE_HOME still resolve without a home.
+      expect(resolveRoot(yield* decodeDataRootInput({ homeDir: "", stateHome: "/custom/state" })).path).toBe(
+        "/custom/state/beep/ai-metrics"
+      );
+      expect(
+        resolveRoot(
+          yield* decodeDataRootInput({
+            homeDir: "",
+            target: AiMetricsDeployTarget.Enum.dankserver,
+          })
+        ).path
+      ).toBe("/srv/data/ai-metrics");
+    })
+  );
+
+  it.effect("never resolves to the clone-relative store for any input combination", () =>
+    Effect.gen(function* () {
+      const inputs = [
+        makeDataRootInput({ homeDir: O.some(homeDir) }),
+        yield* decodeDataRootInput({ envDataRoot: "", flagDataRoot: "", homeDir }),
+        yield* decodeDataRootInput({ homeDir, stateHome: "" }),
+        makeDataRootInput({
+          homeDir: O.some(homeDir),
           target: AiMetricsDeployTarget.Enum.dankserver,
-        })
-      ).path
-    ).toBe("/srv/data/ai-metrics");
-  });
+        }),
+        makeDataRootInput({
+          homeDir: O.some(homeDir),
+          stateHome: O.some("/custom/state"),
+        }),
+      ];
 
-  it("never resolves to the clone-relative store for any input combination", () => {
-    const inputs = [
-      makeDataRootInput({ homeDir: O.some(homeDir) }),
-      decodeDataRootInput({ envDataRoot: "", flagDataRoot: "", homeDir }),
-      decodeDataRootInput({ homeDir, stateHome: "" }),
-      makeDataRootInput({
-        homeDir: O.some(homeDir),
-        target: AiMetricsDeployTarget.Enum.dankserver,
-      }),
-      makeDataRootInput({
-        homeDir: O.some(homeDir),
-        stateHome: O.some("/custom/state"),
-      }),
-    ];
-
-    for (const input of inputs) {
-      const resolved = resolveRoot(input);
-      expect(resolved.path).not.toBe(cloneRelativeRoot);
-      expect(pipe(resolved.path, Str.startsWith(`${cloneRelativeRoot}/`))).toBe(false);
-      expect(resolved.path).not.toContain(".beep/ai-metrics");
-    }
-  });
+      for (const input of inputs) {
+        const resolved = resolveRoot(input);
+        expect(resolved.path).not.toBe(cloneRelativeRoot);
+        expect(pipe(resolved.path, Str.startsWith(`${cloneRelativeRoot}/`))).toBe(false);
+        expect(resolved.path).not.toContain(".beep/ai-metrics");
+      }
+    })
+  );
 
   it("keeps the ai-metrics store a sibling of the hook-pulse agent-evidence store", () => {
     const stateHome = O.getOrThrowWith(

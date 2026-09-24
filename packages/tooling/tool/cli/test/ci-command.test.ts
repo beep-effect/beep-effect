@@ -60,6 +60,12 @@ describe("CI commands", () => {
         expect(exit._tag).toBe("Failure");
         expect(errors).toContain("Partition unit-a does not belong to lane lint");
         expect(errors).toContain("CiLanePartitions.ts");
+
+        const shardedExit = yield* Effect.exit(runCiLaneCommand(["lint", "--partition", "repo-cli-2"]));
+        const shardedErrors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
+        expect(shardedExit._tag).toBe("Failure");
+        expect(shardedErrors).toContain("Partition repo-cli-2 does not belong to lane lint");
+        expect(shardedErrors).not.toContain("Invalid value");
       }).pipe(provideScopedLayer(TestLayer))
     ));
 

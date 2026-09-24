@@ -11,7 +11,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Str } from "@beep/utils";
-import { Effect, FileSystem, identity, Path, pipe } from "effect";
+import { Effect, FileSystem, identity, Order, Path, pipe } from "effect";
 import * as Bool from "effect/Boolean";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -212,9 +212,15 @@ const parseBunSemver = (value: string): O.Option<BunSemver> => {
     return O.none();
   }
 
-  const major = parseBunVersionPart(match[1]);
-  const minor = parseBunVersionPart(match[2]);
-  const patch = parseBunVersionPart(match[3]);
+  const majorCapture = match[1];
+  const minorCapture = match[2];
+  const patchCapture = match[3];
+  if (majorCapture === undefined || minorCapture === undefined || patchCapture === undefined) {
+    return O.none();
+  }
+  const major = parseBunVersionPart(majorCapture);
+  const minor = parseBunVersionPart(minorCapture);
+  const patch = parseBunVersionPart(patchCapture);
 
   if (O.isNone(major) || O.isNone(minor) || O.isNone(patch)) {
     return O.none();
@@ -263,21 +269,12 @@ const comparePrerelease = (
     return -1;
   }
 
-  const length = Math.min(left.value.length, right.value.length);
-  for (let index = 0; index < length; index += 1) {
-    const result = compareBunSemverIdentifier(left.value[index], right.value[index]);
+  for (const result of A.zipWith(left.value, right.value, compareBunSemverIdentifier)) {
     if (result !== 0) {
       return result;
     }
   }
-
-  if (left.value.length < right.value.length) {
-    return -1;
-  }
-  if (left.value.length > right.value.length) {
-    return 1;
-  }
-  return 0;
+  return Order.Number(left.value.length, right.value.length);
 };
 
 const compareBunSemver = (left: BunSemver, right: BunSemver): number => {

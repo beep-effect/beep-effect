@@ -20,7 +20,7 @@ import {
 import { PostgresDrizzle } from "@beep/postgres";
 import { A, O } from "@beep/utils";
 import { asc, eq } from "drizzle-orm";
-import { Effect, Equal, pipe, Ref } from "effect";
+import { Effect, Equal, pipe, Ref, Result } from "effect";
 import type { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
 import type { ClaimDispositionOperation } from "@beep/epistemic-use-cases/ClaimDisposition";
 
@@ -127,21 +127,25 @@ export const makeDrizzleClaimDispositionRepository = Effect.fn("Epistemic.ClaimD
         .where(eq(dispositionTable.claimId, claimId))
         .orderBy(asc(dispositionTable.id))
         .pipe(repositoryUnavailable("listByClaim"));
-      return A.map(rows, fromClaimDispositionRow);
+      return yield* Effect.fromResult(Result.all(A.map(rows, fromClaimDispositionRow))).pipe(
+        repositoryUnavailable("listByClaim")
+      );
     }),
     record: Effect.fn("Epistemic.ClaimDisposition.drizzleRecord")(function* (disposition) {
-      const rows = yield* db
-        .insert(dispositionTable)
-        .values(toClaimDispositionInsert(disposition))
-        .returning()
-        .pipe(repositoryUnavailable("record"));
-      return pipe(
+      const insert = yield* Effect.fromResult(toClaimDispositionInsert(disposition)).pipe(
+        repositoryUnavailable("record")
+      );
+      const rows = yield* db.insert(dispositionTable).values(insert).returning().pipe(repositoryUnavailable("record"));
+      // The database assigns the SERIAL id, so the returned row is the
+      // authority; the argument only stands in if the driver returned none.
+      return yield* pipe(
         rows,
         A.head,
-        O.map(fromClaimDispositionRow),
-        // The database assigns the SERIAL id, so the returned row is the
-        // authority; the argument only stands in if the driver returned none.
-        O.getOrElse(() => disposition)
+        O.match({
+          onNone: () => Effect.succeed(disposition),
+          onSome: (row) => Effect.fromResult(fromClaimDispositionRow(row)),
+        }),
+        repositoryUnavailable("record")
       );
     }),
   });

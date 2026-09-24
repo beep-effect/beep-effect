@@ -7,19 +7,18 @@ import * as O from "@beep/utils/Option";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { assert, it as effectIt } from "@effect/vitest";
+import { assert, describe, it as effectIt, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import { Command } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
-import { describe, expect, it } from "vitest";
 
 const runTsconfigSyncCommand = Command.runWith(tsconfigSyncCommand, { version: "0.0.0" });
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeServices.layer);
 const TestLayer = Layer.mergeAll(PlatformLayer, FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer)));
-const encodeJson = UnknownFromJsonString.encodeUnknownSync;
-const decodeUnknownJson = UnknownFromJsonString.decodeUnknownSync;
+const encodeJson = UnknownFromJsonString.encodeUnknownEffect;
+const decodeUnknownJson = UnknownFromJsonString.decodeUnknownEffect;
 
 const TsconfigReferences = S.Struct({
   references: S.Array(
@@ -28,19 +27,19 @@ const TsconfigReferences = S.Struct({
     })
   ),
 });
-const encodeUnknownTsconfigReferencesSync = S.encodeUnknownSync(TsconfigReferences);
+const encodeUnknownTsconfigReferencesEffect = S.encodeUnknownEffect(TsconfigReferences);
 const TsconfigPaths = S.Struct({
   compilerOptions: S.Struct({
     paths: S.Record(S.String, S.Array(S.String)),
   }),
 });
-const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
-const decodeTsconfigPaths = S.decodeUnknownSync(TsconfigPaths);
+const decodeTsconfigReferences = S.decodeUnknownEffect(TsconfigReferences);
+const decodeTsconfigPaths = S.decodeUnknownEffect(TsconfigPaths);
 
-const expectTsconfigReferencesRoundTrip = (value: typeof TsconfigReferences.Type): void => {
-  const encoded = encodeUnknownTsconfigReferencesSync(value);
-  expect(decodeTsconfigReferences(encoded)).toEqual(value);
-};
+const expectTsconfigReferencesRoundTrip = Effect.fnUntraced(function* (value: typeof TsconfigReferences.Type) {
+  const encoded = yield* encodeUnknownTsconfigReferencesEffect(value);
+  expect(yield* decodeTsconfigReferences(encoded)).toEqual(value);
+});
 
 const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -70,7 +69,7 @@ const writeTextFile = Effect.fn(function* (filePath: string, content: string) {
 });
 
 const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
-  const encoded = encodeJson(value);
+  const encoded = yield* encodeJson(value);
   const edits = jsonc.format(encoded, undefined, {
     tabSize: 2,
     insertSpaces: true,
@@ -80,7 +79,7 @@ const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
 
 const readJsonFile = Effect.fn(function* (filePath: string) {
   const fs = yield* FileSystem.FileSystem;
-  return decodeUnknownJson(yield* fs.readFileString(filePath));
+  return yield* decodeUnknownJson(yield* fs.readFileString(filePath));
 });
 
 const readJsoncFile = Effect.fn(function* (filePath: string) {
@@ -188,7 +187,7 @@ const bootstrapWorkspace = Effect.fn(function* (
       `{
   // check overlay: references mirror tsconfig.json
   "extends": "./tsconfig.json",
-  "references": ${encodeJson(A.map(options.checkReferences, (referencePath) => ({ path: referencePath })))},
+  "references": ${yield* encodeJson(A.map(options.checkReferences, (referencePath) => ({ path: referencePath })))},
   "compilerOptions": {
     "composite": false,
     "noEmit": true,
@@ -201,20 +200,14 @@ const bootstrapWorkspace = Effect.fn(function* (
 });
 
 describe("tsconfig-sync", () => {
-  it("round-trips arbitrary tsconfig reference documents", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(TsconfigReferences)]),
-          ([value]) => {
-            expectTsconfigReferencesRoundTrip(value);
-            return true;
-          },
-          { runs: 25 }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "round-trips arbitrary tsconfig reference documents",
+    [Arbitrary.schema(TsconfigReferences)],
+    Effect.fnUntraced(function* ([value]) {
+      yield* expectTsconfigReferencesRoundTrip(value);
+    }),
+    { arbitrary: { runs: 25 } }
+  );
 
   it(
     "accepts --write as explicit sync mode",
@@ -238,7 +231,9 @@ describe("tsconfig-sync", () => {
 
             yield* runTsconfigSyncCommand(["--write", "--filter", "@beep/example-domain"]);
 
-            const refs = decodeTsconfigReferences(yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json")));
+            const refs = yield* decodeTsconfigReferences(
+              yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
+            );
             expect(A.map(refs.references, (entry) => entry.path)).toEqual(["packages/example-domain"]);
           })
         )
@@ -284,13 +279,15 @@ describe("tsconfig-sync", () => {
             "root-references",
           ]);
 
-          const refs = decodeTsconfigReferences(yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json")));
+          const refs = yield* decodeTsconfigReferences(
+            yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
+          );
           expect(A.map(refs.references, (entry) => entry.path)).toEqual([
             "packages/example-domain",
             "packages/foundation/modeling/identity",
           ]);
 
-          const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
           expect(paths.compilerOptions.paths).toMatchObject({
             "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
             "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
@@ -335,9 +332,45 @@ describe("tsconfig-sync", () => {
             verbose: false,
           });
 
-          const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
           assert.deepStrictEqual(paths.compilerOptions.paths["@beep/repo-cli/test/Knowledge"], [
             "./packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts",
+          ]);
+        })
+      );
+    })
+  );
+  effectIt.effect(
+    "generates the source-only Conformance test seam from the mcp-kit registry",
+    Effect.fnUntraced(function* () {
+      yield* withTempRepo(
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const rootDir = process.cwd();
+          yield* bootstrapRootConfig(rootDir, {
+            workspaces: ["packages/foundation/capability/mcp-kit"],
+            references: [],
+            paths: {},
+            syncpackSources: ["package.json"],
+          });
+          yield* bootstrapWorkspace(rootDir, {
+            relativeDir: "packages/foundation/capability/mcp-kit",
+            packageName: "@beep/mcp-kit",
+            exports: {
+              ".": "./src/index.ts",
+              "./client": "./src/client.ts",
+              "./test/*": "./src/test/*.test-kit.ts",
+              "./package.json": "./package.json",
+            },
+          });
+          yield* syncTsconfigAtRoot(rootDir, {
+            mode: "sync",
+            filter: "@beep/mcp-kit",
+            verbose: false,
+          });
+          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          assert.deepStrictEqual(paths.compilerOptions.paths["@beep/mcp-kit/test/Conformance"], [
+            "./packages/foundation/capability/mcp-kit/src/test/Conformance.test-kit.ts",
           ]);
         })
       );
@@ -389,7 +422,7 @@ describe("tsconfig-sync", () => {
             )
           ).toEqual(["package-docgen", "root-aliases"]);
 
-          const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
           expect(paths.compilerOptions.paths).toMatchObject({
             "@beep/example-use-cases": ["./packages/example-use-cases/src/index.ts"],
             "@beep/example-use-cases/public": ["./packages/example-use-cases/src/public.ts"],
@@ -446,7 +479,7 @@ describe("tsconfig-sync", () => {
             verbose: false,
           });
 
-          const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
           expect(paths.compilerOptions.paths).toMatchObject({
             "@beep/example-slices/flat/*": ["./packages/example-slices/src/flat/*"],
           });
@@ -777,7 +810,7 @@ describe("tsconfig-sync", () => {
             const referenceChanges = A.filter(syncResult.changes, (change) => change.section === "package-references");
             expect(referenceChanges).toHaveLength(1);
 
-            const refs = decodeTsconfigReferences(
+            const refs = yield* decodeTsconfigReferences(
               yield* readJsoncFile(path.join(rootDir, "packages", "example-domain", "tsconfig.json"))
             );
             expect(A.map(refs.references, (entry) => entry.path)).toEqual([
@@ -867,12 +900,12 @@ describe("tsconfig-sync", () => {
             );
 
             const expectedReferences = ["../foundation/modeling/identity/tsconfig.json"];
-            const canonicalRefs = decodeTsconfigReferences(
+            const canonicalRefs = yield* decodeTsconfigReferences(
               yield* readJsoncFile(path.join(rootDir, "packages", "example-domain", "tsconfig.json"))
             );
             expect(A.map(canonicalRefs.references, (entry) => entry.path)).toEqual(expectedReferences);
             const overlayPath = path.join(rootDir, "packages", "example-domain", "tsconfig.check.json");
-            const overlayRefs = decodeTsconfigReferences(yield* readJsoncFile(overlayPath));
+            const overlayRefs = yield* decodeTsconfigReferences(yield* readJsoncFile(overlayPath));
             expect(A.map(overlayRefs.references, (entry) => entry.path)).toEqual(expectedReferences);
             // The overlay is edited in place: its comment and unrelated keys survive.
             const overlayText = yield* fs.readFileString(overlayPath);
@@ -960,7 +993,7 @@ describe("tsconfig-sync", () => {
             expect(syncResult.changes[0]?.section).toBe("package-check-references");
             expect(syncResult.changes[0]?.summary).toBe("references: 2 -> 1 (add 0, remove 1)");
 
-            const overlayRefs = decodeTsconfigReferences(
+            const overlayRefs = yield* decodeTsconfigReferences(
               yield* readJsoncFile(path.join(rootDir, "packages", "example-domain", "tsconfig.check.json"))
             );
             expect(A.map(overlayRefs.references, (entry) => entry.path)).toEqual([
@@ -1079,7 +1112,7 @@ describe("tsconfig-sync", () => {
             expect(syncResult.changes[0]?.section).toBe("package-docgen");
 
             const syncedText = yield* fs.readFileString(docgenPath);
-            const syncedDocgen = decodeUnknownJson(syncedText) as {
+            const syncedDocgen = (yield* decodeUnknownJson(syncedText)) as {
               readonly examplesCompilerOptions?: Record<string, unknown>;
             };
 
@@ -1141,13 +1174,13 @@ describe("tsconfig-sync", () => {
 
             // Ratified lab-apps row 2: the hand-added lab root reference is
             // actively removed while non-lab workspaces stay referenced.
-            const rootRefs = decodeTsconfigReferences(
+            const rootRefs = yield* decodeTsconfigReferences(
               yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
             );
             expect(A.map(rootRefs.references, (entry) => entry.path)).toEqual(["packages/example-domain"]);
 
             // Package-local reference planning still sees the lab workspace.
-            const labRefs = decodeTsconfigReferences(
+            const labRefs = yield* decodeTsconfigReferences(
               yield* readJsoncFile(path.join(rootDir, "apps", "labs", "probe", "tsconfig.json"))
             );
             expect(A.map(labRefs.references, (entry) => entry.path)).toEqual([
@@ -1155,7 +1188,7 @@ describe("tsconfig-sync", () => {
             ]);
 
             // The exportless lab produces zero root aliases; non-lab aliases land.
-            const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const paths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(paths.compilerOptions.paths).toMatchObject({
               "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
               "@beep/example-domain/*": ["./packages/example-domain/src/*"],

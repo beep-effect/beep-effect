@@ -21,7 +21,7 @@ const provideScopedLayer =
 
 const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 const runImageCommand = Command.runWith(imageCommand, { version: "0.0.0" });
-const decodeManifest = S.decodeUnknownSync(S.fromJsonString(ExtractFramesManifest));
+const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(ExtractFramesManifest));
 const CLI_ENTRYPOINT = new URL("../src/bin.ts", import.meta.url).pathname;
 
 const firstFailure = <E>(cause: Cause.Cause<E>): O.Option<E> => Cause.findErrorOption(cause);
@@ -180,7 +180,9 @@ describe("image command", { concurrent: false }, () => {
             "clip_frame_00001.png",
             "extract-frames-manifest.json",
           ]);
-          const manifest = decodeManifest(yield* fs.readFileString(path.join(outDir, "extract-frames-manifest.json")));
+          const manifest = yield* decodeManifest(
+            yield* fs.readFileString(path.join(outDir, "extract-frames-manifest.json"))
+          );
           expect(manifest.summary.frameCount).toBe(2);
           expect(manifest.options.fps).toBe(1);
           expect(manifest.options.prefix).toBe("clip_frame");
@@ -262,7 +264,7 @@ describe("image command", { concurrent: false }, () => {
             "trailer_frame_00000.png",
             "trailer_frame_00001.png",
           ]);
-          const clipManifest = decodeManifest(
+          const clipManifest = yield* decodeManifest(
             yield* fs.readFileString(path.join(videoDir, "clip", "extract-frames-manifest.json"))
           );
           expect(clipManifest.options.prefix).toBe("clip_frame");

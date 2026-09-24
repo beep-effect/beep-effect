@@ -5,9 +5,11 @@
  * @since 0.0.0
  */
 
-import { randomUUID } from "node:crypto";
 import { A } from "@beep/utils";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { Config, Effect, pipe } from "effect";
+import * as Crypto from "effect/Crypto";
+import * as ManagedRuntime from "effect/ManagedRuntime";
 import * as O from "effect/Option";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
@@ -55,24 +57,16 @@ const withCsp = (cspHeader: string) => (response: NextResponse) => {
   return response;
 };
 
-/**
- * Adds a per-request CSP nonce to OIP document responses.
- *
- * **Example** (Assigning proxy handler)
- *
- * ```ts
- * import type { NextRequest, NextResponse } from "next/server"
- * import { proxy } from "@beep/oip-web/proxy"
- *
- * const handler: (request: NextRequest) => NextResponse = proxy
- * console.log(typeof handler)
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export function proxy(request: NextRequest): NextResponse {
-  const nonce = btoa(randomUUID());
+// The proxy runs on the Node runtime; the Crypto service is the only platform
+// capability it needs, so one app-local runtime provides it for every request.
+const proxyRuntime = ManagedRuntime.make(NodeCrypto.layer);
+
+const nextNonce = Effect.gen(function* () {
+  const crypto = yield* Crypto.Crypto;
+  return btoa(yield* crypto.randomUUIDv4);
+});
+
+const respondWithNonce = (request: NextRequest, nonce: string): NextResponse => {
   const cspHeader = buildCspHeader(nonce);
   const requestHeaders = new Headers(request.headers);
 
@@ -87,7 +81,31 @@ export function proxy(request: NextRequest): NextResponse {
       },
     })
   );
-}
+};
+
+/**
+ * Adds a per-request CSP nonce to OIP document responses.
+ *
+ * **Details**
+ *
+ * The nonce comes from the Effect `Crypto` service (`randomUUIDv4`) provided by a
+ * module-level `ManagedRuntime` over `NodeCrypto.layer`, so the handler is async.
+ *
+ * **Example** (Assigning proxy handler)
+ *
+ * ```ts
+ * import type { NextRequest, NextResponse } from "next/server"
+ * import { proxy } from "@beep/oip-web/proxy"
+ *
+ * const handler: (request: NextRequest) => Promise<NextResponse> = proxy
+ * console.log(typeof handler)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const proxy = (request: NextRequest): Promise<NextResponse> =>
+  proxyRuntime.runPromise(Effect.map(nextNonce, (nonce) => respondWithNonce(request, nonce)));
 
 /**
  * Route matcher for the OIP CSP proxy.

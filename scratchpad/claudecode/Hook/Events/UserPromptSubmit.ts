@@ -10,7 +10,9 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import type * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 import { envelopeFields } from "../Envelope.ts";
@@ -187,13 +189,18 @@ export const allow = (): Output => Output.make();
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- This output constructor has no data operand; its optional flags only configure the new value.
-export const block = (reason: string, options?: { readonly suppressOriginalPrompt?: boolean }): Output =>
-  Output.make({
-    decision: O.some("block"),
-    reason: O.some(reason),
-    suppressOriginalPrompt: O.fromNullishOr(options?.suppressOriginalPrompt),
-  });
+export const block: {
+  (reason: string, options?: { readonly suppressOriginalPrompt?: boolean }): Output;
+  (options?: { readonly suppressOriginalPrompt?: boolean }): (reason: string) => Output;
+} = dual(
+  (args) => P.isString(args[0]),
+  (reason: string, options?: { readonly suppressOriginalPrompt?: boolean }): Output =>
+    Output.make({
+      decision: O.some("block"),
+      reason: O.some(reason),
+      suppressOriginalPrompt: O.fromNullishOr(options?.suppressOriginalPrompt),
+    })
+);
 
 /**
  * Allow the prompt and inject additional context Claude will see.
@@ -233,7 +240,9 @@ export const addContext = (additionalContext: string): Output =>
  * import { Hook } from "effect-claudecode"
  * import * as O from "effect/Option"
  *
- * const output = Hook.UserPromptSubmit.renameSession("CI fix", "Focus on the red job")
+ * const output = Hook.UserPromptSubmit.renameSession("CI fix", {
+ *   additionalContext: "Focus on the red job",
+ * })
  * const specific = O.getOrUndefined(output.hookSpecificOutput)
  * console.log(O.getOrUndefined(specific?.sessionTitle ?? O.none())) // "CI fix"
  * console.log(O.getOrUndefined(specific?.additionalContext ?? O.none())) // "Focus on the red job"
@@ -243,17 +252,22 @@ export const addContext = (additionalContext: string): Output =>
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- This output constructor has no data operand; the optional context only configures the new value.
-export const renameSession = (sessionTitle: string, additionalContext?: string): Output =>
-  Output.make({
-    hookSpecificOutput: O.some(
-      HookSpecificOutput.make({
-        hookEventName: "UserPromptSubmit",
-        additionalContext: O.fromNullishOr(additionalContext),
-        sessionTitle: O.some(sessionTitle),
-      })
-    ),
-  });
+export const renameSession: {
+  (sessionTitle: string, options?: { readonly additionalContext?: string }): Output;
+  (options?: { readonly additionalContext?: string }): (sessionTitle: string) => Output;
+} = dual(
+  (args) => P.isString(args[0]),
+  (sessionTitle: string, options?: { readonly additionalContext?: string }): Output =>
+    Output.make({
+      hookSpecificOutput: O.some(
+        HookSpecificOutput.make({
+          hookEventName: "UserPromptSubmit",
+          additionalContext: O.fromNullishOr(options?.additionalContext),
+          sessionTitle: O.some(sessionTitle),
+        })
+      ),
+    })
+);
 
 // ---------------------------------------------------------------------------
 // define

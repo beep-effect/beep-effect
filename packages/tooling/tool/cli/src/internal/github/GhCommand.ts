@@ -20,6 +20,7 @@ import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { runRepoCommandCapture } from "../repo-run/index.ts";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GhPageInfo } from "./GhSchema.ts";
 
@@ -223,7 +224,7 @@ export interface GhGraphqlPageOptions<E> {
  */
 export const ghGraphqlPage = <E>(
   options: GhGraphqlPageOptions<E>
-): Effect.Effect<string, E, ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
   ghOutput({
     args: [
       "api",

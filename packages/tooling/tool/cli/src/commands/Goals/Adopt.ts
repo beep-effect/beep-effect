@@ -5,8 +5,8 @@
  *
  * Adoption is split in two by a value boundary: an effectful
  * `readPacketSnapshot` whose entire `FileSystem` surface is read members, and
- * a pure `compileAdoptionPlan` over the resulting `PacketSnapshot` value with
- * requirements `never`. The first adoption target is the hand-rolled
+ * `compileAdoptionPlan` over the resulting `PacketSnapshot` value. Hashing
+ * goes through Effect `Crypto`. The first adoption target is the hand-rolled
  * knowledge-surface-automation packet itself — the self-hosting pilot whose
  * expected plan contains zero authored-file creations.
  *
@@ -46,6 +46,8 @@ import {
   TEMPLATE_SLUG,
 } from "./Inventory.ts";
 import { canonicalJsonText, sha256Hex, sha256HexBytes } from "./PacketCore/PacketDigest.ts";
+import type * as Crypto from "effect/Crypto";
+import type * as PlatformError from "effect/PlatformError";
 import type { MaterializationPlan, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { ConflictRow, PlanRow, PreservationRow } from "./Bootstrap.ts";
 import type { GoalStatus } from "./Goals.schemas.ts";
@@ -67,32 +69,38 @@ const readSnapshotFile = Effect.fn("Goals.readSnapshotFile")(function* (root: st
   const bytes = yield* fs
     .readFile(entryAbsolute)
     .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to read "${entryAbsolute}".`)));
+  const digest = yield* sha256HexBytes(bytes).pipe(
+    Effect.mapError(GoalPlanOperationalError.new(`Failed to digest "${entryAbsolute}".`))
+  );
   return PacketSnapshotFile.make({
     path: entryRelative,
     text: new TextDecoder().decode(bytes),
-    digest: sha256HexBytes(bytes),
+    digest,
   });
 });
 
 const walkEntry: (
   root: string,
   entryRelative: string
-) => Effect.Effect<ReadonlyArray<PacketSnapshotFile>, GoalPlanOperationalError, FileSystem.FileSystem | Path.Path> =
-  Effect.fn("Goals.walkPacketEntry")(function* (root: string, entryRelative: string) {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const entryAbsolute = path.join(root, entryRelative);
-    const info = yield* fs
-      .stat(entryAbsolute)
-      .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to stat "${entryAbsolute}".`)));
-    if (info.type === "Directory") {
-      return yield* walkEntries(root, entryRelative);
-    }
-    if (info.type === "File") {
-      return [yield* readSnapshotFile(root, entryRelative)];
-    }
-    return A.empty<PacketSnapshotFile>();
-  });
+) => Effect.Effect<
+  ReadonlyArray<PacketSnapshotFile>,
+  GoalPlanOperationalError,
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+> = Effect.fn("Goals.walkPacketEntry")(function* (root: string, entryRelative: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const entryAbsolute = path.join(root, entryRelative);
+  const info = yield* fs
+    .stat(entryAbsolute)
+    .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to stat "${entryAbsolute}".`)));
+  if (info.type === "Directory") {
+    return yield* walkEntries(root, entryRelative);
+  }
+  if (info.type === "File") {
+    return [yield* readSnapshotFile(root, entryRelative)];
+  }
+  return A.empty<PacketSnapshotFile>();
+});
 
 const walkEntries = Effect.fn("Goals.walkPacketEntries")(function* (root: string, relative: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -111,7 +119,11 @@ const walkEntries = Effect.fn("Goals.walkPacketEntries")(function* (root: string
 
 const walkDirectory = (
   root: string
-): Effect.Effect<ReadonlyArray<PacketSnapshotFile>, GoalPlanOperationalError, FileSystem.FileSystem | Path.Path> =>
+): Effect.Effect<
+  ReadonlyArray<PacketSnapshotFile>,
+  GoalPlanOperationalError,
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+> =>
   Effect.map(walkEntries(root, ""), (files) =>
     A.sort(
       files,
@@ -151,7 +163,7 @@ const directoryExists = Effect.fn("Goals.packetDirectoryExists")(function* (targ
  *
  * ```ts
  * import { readPacketSnapshot } from "@beep/repo-cli/commands/Goals/Adopt"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(readPacketSnapshot("knowledge-surface-automation"))) // true
  * ```
@@ -167,9 +179,9 @@ export const readPacketSnapshot = Effect.fn("Goals.readPacketSnapshot")(function
   const packetPath = path.join(repoRoot, GOALS_DIR, slug);
   const templatePath = path.join(repoRoot, GOALS_DIR, TEMPLATE_SLUG);
   const templateFiles = yield* walkDirectory(templatePath);
-  const templateSnapshotHash = sha256Hex(
+  const templateSnapshotHash = yield* sha256Hex(
     canonicalJsonText(A.map(templateFiles, (file) => ({ path: file.path, digest: file.digest })))
-  );
+  ).pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to digest the template snapshot at "${templatePath}".`)));
   const exists = yield* directoryExists(packetPath);
   const files = exists ? yield* walkDirectory(packetPath) : A.empty<PacketSnapshotFile>();
   return PacketSnapshot.make({
@@ -258,22 +270,23 @@ const isReflectionArtifact = (relativePath: string): boolean =>
  *
  * **Details**
  *
- * A pure function of the snapshot value: requirements `never`, no clock, no
- * filesystem. Every present packet file is retained (`preserved` for the
- * manifest, whose unmodeled top-level keys are enumerated with a pre-image
- * digest); a standard artifact the packet lacks becomes a `report` entry a
- * human resolves; only machine-derivable artifacts (directory markers, and a
- * seeded manifest for a manifest-less packet) are planned as `create`.
- * Diagnosis never mutates, and it never invents prose.
+ * A total function of the snapshot value: no clock, no filesystem. Hashing
+ * goes through Effect `Crypto`. Every present packet file is retained
+ * (`preserved` for the manifest, whose unmodeled top-level keys are enumerated
+ * with a pre-image digest); a standard artifact the packet lacks becomes a
+ * `report` entry a human resolves; only machine-derivable artifacts (directory
+ * markers, and a seeded manifest for a manifest-less packet) are planned as
+ * `create`. Diagnosis never mutates, and it never invents prose.
  *
- * **Example** (Compile against an empty snapshot)
+ * **Example** (Build the compile effect against an empty snapshot)
  *
  * ```ts
  * import { compileAdoptionPlan } from "@beep/repo-cli/commands/Goals/Adopt"
  * import { PacketSnapshot } from "@beep/repo-cli/commands/Goals/Bootstrap.schemas"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
- * const plan = compileAdoptionPlan(
+ * const program = compileAdoptionPlan(
  *   PacketSnapshot.make({
  *     slug: "missing-goal",
  *     packetPath: "goals/missing-goal",
@@ -284,63 +297,75 @@ const isReflectionArtifact = (relativePath: string): boolean =>
  *   }),
  *   O.none()
  * )
- * console.log(plan.conflicts[0]?.reason) // "packet-not-found"
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param snapshot - The read-only packet and template capture.
  * @param toward - Optional explicit archetype; defaults to inference from the packet's phase shape.
- * @returns The sealed adoption plan.
+ * @returns Effect yielding the sealed adoption plan.
  * @category use-cases
  * @since 0.0.0
  */
 export const compileAdoptionPlan: {
-  (snapshot: PacketSnapshot, toward: O.Option<PhaseArchetype>): MaterializationPlan;
-  (toward: O.Option<PhaseArchetype>): (snapshot: PacketSnapshot) => MaterializationPlan;
-} = dual(2, (snapshot: PacketSnapshot, toward: O.Option<PhaseArchetype>): MaterializationPlan => {
-  const archetype = O.getOrElse(toward, () => inferArchetype(snapshot.files));
-  const base = {
-    mode: PlanMode.Enum.adopt,
-    slug: snapshot.slug,
-    packetPath: snapshot.packetPath,
-    towardArchetype: archetype,
-    templateSnapshotHash: snapshot.templateSnapshotHash,
-  };
+  (
+    snapshot: PacketSnapshot,
+    toward: O.Option<PhaseArchetype>
+  ): Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Crypto.Crypto>;
+  (
+    toward: O.Option<PhaseArchetype>
+  ): (snapshot: PacketSnapshot) => Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Crypto.Crypto>;
+} = dual(
+  2,
+  Effect.fnUntraced(function* (snapshot: PacketSnapshot, toward: O.Option<PhaseArchetype>) {
+    const archetype = O.getOrElse(toward, () => inferArchetype(snapshot.files));
+    const base = {
+      mode: PlanMode.Enum.adopt,
+      slug: snapshot.slug,
+      packetPath: snapshot.packetPath,
+      towardArchetype: archetype,
+      templateSnapshotHash: snapshot.templateSnapshotHash,
+    };
 
-  if (!snapshot.exists) {
-    return conflictedAdoptionPlan(base, "packet-not-found", `No goal packet directory "${snapshot.packetPath}".`);
-  }
+    if (!snapshot.exists) {
+      return yield* conflictedAdoptionPlan(
+        base,
+        "packet-not-found",
+        `No goal packet directory "${snapshot.packetPath}".`
+      );
+    }
 
-  const manifestFile = A.findFirst(snapshot.files, (file) => file.path === MANIFEST_RELATIVE_PATH);
-  const parsedManifest = O.flatMap(manifestFile, (file) => parseGoalManifestText(file.text));
-  if (O.isSome(manifestFile) && O.isNone(parsedManifest)) {
-    return conflictedAdoptionPlan(
-      base,
-      "manifest-unparseable",
-      `"${snapshot.packetPath}/${MANIFEST_RELATIVE_PATH}" does not parse as JSON; adoption cannot classify it.`
+    const manifestFile = A.findFirst(snapshot.files, (file) => file.path === MANIFEST_RELATIVE_PATH);
+    const parsedManifest = O.flatMap(manifestFile, (file) => parseGoalManifestText(file.text));
+    if (O.isSome(manifestFile) && O.isNone(parsedManifest)) {
+      return yield* conflictedAdoptionPlan(
+        base,
+        "manifest-unparseable",
+        `"${snapshot.packetPath}/${MANIFEST_RELATIVE_PATH}" does not parse as JSON; adoption cannot classify it.`
+      );
+    }
+
+    const present = A.map(snapshot.files, (file) => presentFileRow(snapshot.packetPath, file, parsedManifest));
+    const packetPaths = A.map(snapshot.files, (file) => file.path);
+    const missing = yield* Effect.forEach(
+      A.filter(snapshot.templateFiles, (templateFile) => !A.contains(packetPaths, templateFile.path)),
+      (templateFile) => missingTemplateRow(snapshot, archetype, templateFile)
     );
-  }
 
-  const present = A.map(snapshot.files, (file) => presentFileRow(snapshot.packetPath, file, parsedManifest));
-  const packetPaths = A.map(snapshot.files, (file) => file.path);
-  const missing = A.map(
-    A.filter(snapshot.templateFiles, (templateFile) => !A.contains(packetPaths, templateFile.path)),
-    (templateFile) => missingTemplateRow(snapshot, archetype, templateFile)
-  );
+    const validations: ReadonlyArray<ValidationRequirement> = A.some(snapshot.files, (file) =>
+      isReflectionArtifact(file.path)
+    )
+      ? A.append(ADOPT_BASE_VALIDATIONS, "reflection-frontmatter-valid")
+      : ADOPT_BASE_VALIDATIONS;
 
-  const validations: ReadonlyArray<ValidationRequirement> = A.some(snapshot.files, (file) =>
-    isReflectionArtifact(file.path)
-  )
-    ? A.append(ADOPT_BASE_VALIDATIONS, "reflection-frontmatter-valid")
-    : ADOPT_BASE_VALIDATIONS;
-
-  return sealMaterializationPlan({
-    ...base,
-    entries: A.map([...present, ...missing], (classified) => classified.entry),
-    preservations: A.getSomes(A.map(present, (classified) => classified.preservation)),
-    validations,
-    conflicts: [],
-  });
-});
+    return yield* sealMaterializationPlan({
+      ...base,
+      entries: A.map(A.appendAll(present, missing), (classified) => classified.entry),
+      preservations: A.getSomes(A.map(present, (classified) => classified.preservation)),
+      validations,
+      conflicts: [],
+    });
+  })
+);
 
 type AdoptionPlanBase = {
   readonly mode: PlanMode;
@@ -359,7 +384,7 @@ const conflictedAdoptionPlan = (
   base: AdoptionPlanBase,
   reason: ConflictRow["reason"],
   message: string
-): MaterializationPlan =>
+): Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Crypto.Crypto> =>
   sealMaterializationPlan({
     ...base,
     entries: [],
@@ -423,7 +448,11 @@ const presentFileRow = (
   };
 };
 
-const seededManifestRow = (snapshot: PacketSnapshot, archetype: PhaseArchetype, fullPath: string): PlanRow => {
+const seededManifestRow = (
+  snapshot: PacketSnapshot,
+  archetype: PhaseArchetype,
+  fullPath: string
+): Effect.Effect<PlanRow, PlatformError.PlatformError, Crypto.Crypto> => {
   const readme = A.findFirst(snapshot.files, (file) => file.path === README_RELATIVE_PATH);
   const readmeText = O.map(readme, (file) => file.text);
   const payload = seededManifestPayload({
@@ -442,14 +471,14 @@ const seededManifestRow = (snapshot: PacketSnapshot, archetype: PhaseArchetype, 
     mission: O.flatMap(readmeText, readmeMissionLine),
     archetype,
   });
-  return {
+  return Effect.map(sha256Hex(payload), (payloadDigest) => ({
     path: fullPath,
     action: "create",
     ownership: "generated",
     reason: "Manifest-less packet: seed a manifest from README-extractable fields.",
     payload,
-    payloadDigest: sha256Hex(payload),
-  };
+    payloadDigest,
+  }));
 };
 
 // Template artifact absent from the packet: manifest → generated seed; .gitkeep →
@@ -458,13 +487,16 @@ const missingTemplateRow = (
   snapshot: PacketSnapshot,
   archetype: PhaseArchetype,
   templateFile: PacketSnapshotFile
-): ClassifiedRow => {
+): Effect.Effect<ClassifiedRow, PlatformError.PlatformError, Crypto.Crypto> => {
   const fullPath = `${snapshot.packetPath}/${templateFile.path}`;
   if (templateFile.path === MANIFEST_RELATIVE_PATH) {
-    return { entry: seededManifestRow(snapshot, archetype, fullPath), preservation: O.none() };
+    return Effect.map(seededManifestRow(snapshot, archetype, fullPath), (entry) => ({
+      entry,
+      preservation: O.none(),
+    }));
   }
   if (isGitkeepPath(templateFile.path)) {
-    return {
+    return Effect.succeed({
       entry: {
         path: fullPath,
         action: "create",
@@ -474,9 +506,9 @@ const missingTemplateRow = (
         payloadDigest: templateFile.digest,
       },
       preservation: O.none(),
-    };
+    });
   }
-  return {
+  return Effect.succeed({
     entry: {
       path: fullPath,
       action: "report",
@@ -484,7 +516,7 @@ const missingTemplateRow = (
       reason: "Standard artifact absent; a human authors it — diagnosis never invents prose.",
     },
     preservation: O.none(),
-  };
+  });
 };
 
 const slugArgument = Argument.String("slug").pipe(Argument.withDescription("Goal packet slug under goals/"));
@@ -516,7 +548,9 @@ const runAdoptPlan = Effect.fn("Goals.runAdoptPlan")(function* (options: {
     Effect.mapError((issue) => GoalPlanInputError.new(`slug "${options.slug}" is invalid: ${issue.message}`))
   );
   const snapshot = yield* readPacketSnapshot(slug);
-  const plan = compileAdoptionPlan(snapshot, options.toward);
+  const plan = yield* compileAdoptionPlan(snapshot, options.toward).pipe(
+    Effect.mapError(GoalPlanOperationalError.new("Failed to digest the adoption plan."))
+  );
   yield* reportMaterializationPlan(plan, options.json);
 });
 

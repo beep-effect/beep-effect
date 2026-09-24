@@ -14,7 +14,6 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
 /**
  * CURIE expansion, contraction, and schema codecs for identity vocabularies.
  *

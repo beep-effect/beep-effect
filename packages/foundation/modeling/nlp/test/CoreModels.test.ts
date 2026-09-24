@@ -249,6 +249,6 @@ describe("Core models", () => {
     ).toEqual([[0], [2]]);
     expect(O.isSome(Document.getTokenByIndex(filtered, ada.index))).toBe(true);
     expect(O.isNone(Document.getTokenByIndex(filtered, wrote.index))).toBe(true);
-    expect(O.isSome(Document.getSentenceByIndex(filtered, sentences[1].index))).toBe(true);
+    expect(O.isSome(Document.getSentenceByIndex(filtered, O.getOrThrow(A.get(sentences, 1)).index))).toBe(true);
   });
 });

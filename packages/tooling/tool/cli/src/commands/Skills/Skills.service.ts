@@ -26,7 +26,7 @@ import {
   SkillUpstreamContent,
   SkillUpstreamContentFile,
 } from "./Skills.schemas.ts";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 
 const $I = $RepoCliId.create("commands/Skills/Skills.service");
 

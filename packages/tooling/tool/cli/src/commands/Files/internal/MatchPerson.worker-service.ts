@@ -210,6 +210,7 @@ type WorkerServiceRequirements =
   | Path.Path
   | Crypto.Crypto
   | HttpClient.HttpClient
+  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner;
 
 const {
@@ -798,7 +799,7 @@ const capturedCommandFailureMessage = (summary: string, stdout: string, stderr: 
 
 const validateWorkerLock = Effect.fn("Files.PersonMatchWorker.validateLock")(function* (
   inputs: CanonicalMatchPersonInputs
-): Effect.fn.Return<void, PersonMatchWorkerServiceError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, PersonMatchWorkerServiceError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runCapturedStreams({
     command: inputs.uvPath,
     args: ["lock", "--check", "--project", workerProjectDirectory, "--python", "3.12", "--no-python-downloads"],
@@ -845,7 +846,7 @@ const materializeWorkerEnvironment = Effect.fn("Files.PersonMatchWorker.material
 ): Effect.fn.Return<
   MaterializedPersonMatchWorkerEnvironment,
   MatchPersonWorkerEnvironmentSetupError | PersonMatchWorkerServiceError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const workerLibraryPath = yield* resolveWorkerLibraryPath(options, inputs, environment);
   const processEnvironment = workerProcessEnvironment(inputs, environment, workerLibraryPath);
@@ -947,7 +948,7 @@ const materializeInitialWorkerEnvironment = Effect.fn("Files.PersonMatchWorker.m
   ): Effect.fn.Return<
     MaterializedPersonMatchWorkerEnvironment,
     PersonMatchWorkerServiceError,
-    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
   > {
     return yield* materializeWorkerEnvironment(options, inputs, environment).pipe(
       Effect.catchTag("MatchPersonWorkerEnvironmentSetupError", (error) =>

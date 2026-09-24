@@ -578,12 +578,15 @@ describe("SqlTest", () => {
   it.effect(
     "uses a generated PGLite Testcontainers password by default",
     Effect.fnUntraced(function* () {
-      const config = PgliteTestcontainersTestDriverConfig.make({});
+      sqlTransportMock.rejectStart = false;
+      sqlTransportMock.rejectStop = false;
 
-      expect(config.username).toBe("postgres");
-      expect(config.database).toBe("postgres");
-      expect(config.password).not.toBe("postgres");
-      expect(config.password.length).toBeGreaterThan(20);
+      const resource = yield* Effect.scoped(makePgliteTestcontainerResource());
+
+      expect(resource.config.username).toBe("postgres");
+      expect(resource.config.database).toBe("postgres");
+      expect(resource.config.password).not.toBe("postgres");
+      expect(resource.config.password.length).toBeGreaterThan(20);
     })
   );
 

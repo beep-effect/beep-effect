@@ -9,6 +9,7 @@ import { $DiscordId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { DiscordHttpStatus } from "./Discord.models.ts";
+import type { Effect } from "effect";
 import type * as O from "effect/Option";
 
 const $I = $DiscordId.create("Discord.errors");
@@ -20,10 +21,10 @@ const withDiscordErrorReasonCodecStatics = <Sch extends S.Top & S.ConstraintDeco
   schema: Sch
 ): Sch & {
   readonly decodeOption: (input: unknown) => O.Option<Sch["Type"]>;
-  readonly fromUnknown: (input: unknown) => Sch["Type"];
+  readonly fromUnknown: (input: unknown) => Effect.Effect<Sch["Type"], S.SchemaError, Sch["DecodingServices"]>;
 } =>
   SchemaUtils.withStatics((self: Sch) => ({
-    fromUnknown: S.decodeUnknownSync(self),
+    fromUnknown: S.decodeUnknownEffect(self),
     decodeOption: S.decodeUnknownOption(self),
   }))(schema);
 

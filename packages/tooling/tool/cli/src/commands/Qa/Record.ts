@@ -50,6 +50,7 @@ import {
   writeRecordStartHint,
 } from "./Qa.session.ts";
 import type { CollectorRunning, RoundLayout, RoundNumber } from "@beep/qa-capture";
+import type * as Crypto from "effect/Crypto";
 import type * as Scope from "effect/Scope";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CliReportedExit } from "../../internal/cli/ExitCodeError.ts";
@@ -289,7 +290,7 @@ const runPlaywrightLane = Effect.fn("QaRecord.runPlaywrightLane")(function* (
 ): Effect.fn.Return<
   RecordOutcome,
   QaCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const path = yield* Path.Path;
   const startedAtEpochMs = yield* Clock.currentTimeMillis;
@@ -389,7 +390,11 @@ const runObsLane = Effect.fn("QaRecord.runObsLane")(function* (
   running: CollectorRunning,
   target: CaptureTarget,
   options: QaRecordOptions
-): Effect.fn.Return<RecordOutcome, QaCommandError, ChildProcessSpawner.ChildProcessSpawner | Scope.Scope> {
+): Effect.fn.Return<
+  RecordOutcome,
+  QaCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | Scope.Scope
+> {
   const layer = yield* obsLayer();
   // The OBS connection is built into the round's own scope rather than at the
   // CLI entry point, so the playwright lane never opens an obs-websocket
@@ -472,7 +477,7 @@ export const runQaRecord = Effect.fn("QaRecord.run")(function* (
 ): Effect.fn.Return<
   void,
   CliReportedExit | QaCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | Collector | FileSystem.FileSystem | Path.Path | SessionStore
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | Collector | FileSystem.FileSystem | Path.Path | SessionStore
 > {
   const path = yield* Path.Path;
   const store = yield* SessionStore;

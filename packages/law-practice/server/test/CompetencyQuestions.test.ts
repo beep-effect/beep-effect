@@ -635,7 +635,9 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
         );
         expect(A.length(elementNorms)).toBe(7);
         expect(A.every(elementNorms, (designation) => designation.length > 0)).toBe(true);
-        expect(O.getOrThrow(frame.preconditions[0].source.fragment)).toBe("upon written notice");
+        expect(
+          O.getOrThrow(O.flatMap(A.head(frame.preconditions), (precondition) => precondition.source.fragment))
+        ).toBe("upon written notice");
       })
     );
 
@@ -727,7 +729,7 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
         // negation buried in the wording of a positive one. The donor cannot
         // state it in this shape, and inheriting that gap was declined.
         expect(A.map(conditions, (condition) => condition.polarity)).toEqual(["present", "absent"]);
-        expect(conditions[1].operativeFact).toBe("the leasehold has already been assigned");
+        expect(conditions[1]?.operativeFact).toBe("the leasehold has already been assigned");
       })
     );
 
@@ -740,7 +742,7 @@ describe("FLINT competency queries — the in-scope subset this runtime answers"
         // One act, both directions, between the frame's own slot labels.
         expect(A.map(frame.creates, (moved) => moved.bearer)).toEqual(["assignee"]);
         expect(A.map(frame.terminates, (moved) => moved.bearer)).toEqual(["assignor"]);
-        expect(frame.creates[0].position.kind).toBe("claim");
+        expect(frame.creates[0]?.position.kind).toBe("claim");
 
         // The occasion carries the outcome, because a standing position has
         // none and would need a placeholder to pretend otherwise.
@@ -892,7 +894,7 @@ describe("UFO-L power-subjection competency questions — expressed in this runt
 
         // The frame says which position the act creates and for which slot; the
         // record produced by exercising it says who filled that slot.
-        expect(byId(frames, ASSIGNMENT_FRAME).creates[0].bearer).toBe("assignee");
+        expect(byId(frames, ASSIGNMENT_FRAME).creates[0]?.bearer).toBe("assignee");
         const assigned = byId(relators, ASSIGNED_CLAIM);
         expect(assigned.bearer.name).toBe("assignee");
         expect(policy.correlativeView(assigned).position.kind).toBe("duty");

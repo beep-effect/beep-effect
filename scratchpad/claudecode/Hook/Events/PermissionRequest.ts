@@ -11,7 +11,9 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { envelopeFields } from "../Envelope.ts";
 import * as Matcher from "../Matcher.ts";
@@ -514,20 +516,25 @@ export const passthrough = (): Output => Output.make();
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- This denial constructor has no data operand; its optional flags only configure the new value.
-export const deny = (message: string, options?: { readonly interrupt?: boolean }): Output =>
-  Output.make({
-    hookSpecificOutput: O.some(
-      HookSpecificOutput.make({
-        hookEventName: "PermissionRequest",
-        decision: PermissionDecision.make({
-          behavior: "deny",
-          message: O.some(message),
-          interrupt: O.fromNullishOr(options?.interrupt),
-        }),
-      })
-    ),
-  });
+export const deny: {
+  (message: string, options?: { readonly interrupt?: boolean }): Output;
+  (options?: { readonly interrupt?: boolean }): (message: string) => Output;
+} = dual(
+  (args) => P.isString(args[0]),
+  (message: string, options?: { readonly interrupt?: boolean }): Output =>
+    Output.make({
+      hookSpecificOutput: O.some(
+        HookSpecificOutput.make({
+          hookEventName: "PermissionRequest",
+          decision: PermissionDecision.make({
+            behavior: "deny",
+            message: O.some(message),
+            interrupt: O.fromNullishOr(options?.interrupt),
+          }),
+        })
+      ),
+    })
+);
 
 // ---------------------------------------------------------------------------
 // define

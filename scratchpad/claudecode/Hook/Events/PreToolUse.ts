@@ -10,7 +10,9 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { HookToolDecodeError } from "../../Errors.ts";
 import { envelopeFields } from "../Envelope.ts";
@@ -342,18 +344,23 @@ export const defer = (reason?: string): Output =>
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- This output constructor has no data operand; the optional reason only configures the new value.
-export const allowWithUpdatedInput = (updatedInput: Readonly<Record<string, unknown>>, reason?: string): Output =>
-  Output.make({
-    hookSpecificOutput: O.some(
-      HookSpecificOutput.make({
-        hookEventName: "PreToolUse",
-        permissionDecision: "allow",
-        permissionDecisionReason: O.fromNullishOr(reason),
-        updatedInput: O.some(updatedInput),
-      })
-    ),
-  });
+export const allowWithUpdatedInput: {
+  (updatedInput: Readonly<Record<string, unknown>>, reason?: string): Output;
+  (reason?: string): (updatedInput: Readonly<Record<string, unknown>>) => Output;
+} = dual(
+  (args) => args.length >= 2 || !P.isString(args[0]),
+  (updatedInput: Readonly<Record<string, unknown>>, reason?: string): Output =>
+    Output.make({
+      hookSpecificOutput: O.some(
+        HookSpecificOutput.make({
+          hookEventName: "PreToolUse",
+          permissionDecision: "allow",
+          permissionDecisionReason: O.fromNullishOr(reason),
+          updatedInput: O.some(updatedInput),
+        })
+      ),
+    })
+);
 
 // ---------------------------------------------------------------------------
 // define

@@ -56,6 +56,7 @@ import {
   proofJobUnitName,
 } from "./internal/ProofJob.ts";
 import { ProofJobLauncher, reportProofJobCommand } from "./internal/ProofJobLauncher.ts";
+import { runYeetProofReportCommand } from "./internal/ProofShadow.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
 import { YeetCommandError } from "./Yeet.errors.ts";
@@ -858,7 +859,7 @@ const jobFinalizeCommand = Command.make(
     for (const [name, expected] of [
       ["BEEP_YEET_JOB_ID", options.jobId],
       ["BEEP_YEET_JOB_UNIT", proofJobUnitName(options.jobId)],
-    ]) {
+    ] as const) {
       if (!O.contains(yield* configStringOption(name), expected))
         return yield* YeetCommandError.make({ message: `${name} does not match the proof job.` });
     }
@@ -1142,6 +1143,21 @@ const yeetInboxCommand = Command.make("inbox", inboxListFlags, runYeetInboxList)
   Command.withSubcommands([yeetInboxListCommand, yeetInboxAckCommand, yeetInboxAppendCommand])
 );
 
+const proofReportJsonFlag = Flag.Boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Render the proof shadow report as JSON (proof-shadow-report/v1)")
+);
+
+const yeetProofReportCommand = Command.make(
+  "proof-report",
+  { json: proofReportJsonFlag },
+  runYeetProofReportCommand
+).pipe(
+  Command.withDescription(
+    "Print the proof-ledger shadow report: sample size, would-have-reused lanes, disagreements, and the enforcement bar"
+  )
+);
+
 const yeetPlanContractCheckCommand = Command.make(
   "plan-contract-check",
   {
@@ -1189,6 +1205,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetReplyCommand,
     yeetInboxCommand,
     yeetJobCommand,
+    yeetProofReportCommand,
     yeetPrePushHookCommand,
     yeetFallowFeedbackCommand,
     yeetFallowFixtureCheckCommand,

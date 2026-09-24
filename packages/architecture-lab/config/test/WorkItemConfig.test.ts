@@ -16,14 +16,14 @@ import { Effect, Equal, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeUnknownWorkItemConfigValueSync = S.decodeUnknownSync(WorkItemConfigValue);
-const decodeUnknownWorkItemPublicConfigSync = S.decodeUnknownSync(WorkItemPublicConfig);
-const decodeUnknownWorkItemSecretConfigSync = S.decodeUnknownSync(WorkItemSecretConfig);
-const decodeUnknownWorkItemServerConfigSync = S.decodeUnknownSync(WorkItemServerConfig);
-const encodeWorkItemConfigValueSync = S.encodeSync(WorkItemConfigValue);
-const encodeWorkItemPublicConfigSync = S.encodeSync(WorkItemPublicConfig);
-const encodeWorkItemSecretConfigSync = S.encodeSync(WorkItemSecretConfig);
-const encodeWorkItemServerConfigSync = S.encodeSync(WorkItemServerConfig);
+const decodeUnknownWorkItemConfigValue = S.decodeUnknownEffect(WorkItemConfigValue);
+const decodeUnknownWorkItemPublicConfig = S.decodeUnknownEffect(WorkItemPublicConfig);
+const decodeUnknownWorkItemSecretConfig = S.decodeUnknownEffect(WorkItemSecretConfig);
+const decodeUnknownWorkItemServerConfig = S.decodeUnknownEffect(WorkItemServerConfig);
+const encodeWorkItemConfigValue = S.encodeEffect(WorkItemConfigValue);
+const encodeWorkItemPublicConfig = S.encodeEffect(WorkItemPublicConfig);
+const encodeWorkItemSecretConfig = S.encodeEffect(WorkItemSecretConfig);
+const encodeWorkItemServerConfig = S.encodeEffect(WorkItemServerConfig);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -40,66 +40,70 @@ describe("WorkItem configuration", () => {
     }, provideScopedLayer(ArchitectureLabConfigTest))
   );
 
-  it("keeps default encoded configuration shape byte-identical", () => {
-    expect(encodeWorkItemPublicConfigSync(defaultWorkItemPublicConfig)).toEqual({
-      assignmentEnabled: true,
-      reopenCompletedEnabled: true,
-    });
-    expect(encodeWorkItemServerConfigSync(defaultWorkItemServerConfig)).toEqual({
-      migrationSchemaName: "architecture_lab",
-      repositoryName: "architecture-lab-work-items",
-    });
-    expect(encodeWorkItemSecretConfigSync(defaultWorkItemSecretConfig)).toEqual({
-      connectionName: "architecture-lab-proof",
-    });
-    expect(encodeWorkItemConfigValueSync(testWorkItemConfig)).toEqual({
-      publicConfig: {
+  it.effect(
+    "keeps default encoded configuration shape byte-identical",
+    Effect.fnUntraced(function* () {
+      expect(yield* encodeWorkItemPublicConfig(defaultWorkItemPublicConfig)).toEqual({
         assignmentEnabled: true,
         reopenCompletedEnabled: true,
-      },
-      secretConfig: {
-        connectionName: "architecture-lab-proof",
-      },
-      serverConfig: {
+      });
+      expect(yield* encodeWorkItemServerConfig(defaultWorkItemServerConfig)).toEqual({
         migrationSchemaName: "architecture_lab",
         repositoryName: "architecture-lab-work-items",
-      },
-    });
-  });
+      });
+      expect(yield* encodeWorkItemSecretConfig(defaultWorkItemSecretConfig)).toEqual({
+        connectionName: "architecture-lab-proof",
+      });
+      expect(yield* encodeWorkItemConfigValue(testWorkItemConfig)).toEqual({
+        publicConfig: {
+          assignmentEnabled: true,
+          reopenCompletedEnabled: true,
+        },
+        secretConfig: {
+          connectionName: "architecture-lab-proof",
+        },
+        serverConfig: {
+          migrationSchemaName: "architecture_lab",
+          repositoryName: "architecture-lab-work-items",
+        },
+      });
+    })
+  );
 
-  it("round-trips schema-derived WorkItem config values", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(WorkItemPublicConfig),
-            Arbitrary.schema(WorkItemServerConfig),
-            Arbitrary.schema(WorkItemSecretConfig),
-            Arbitrary.schema(WorkItemConfigValue),
-          ]),
-          ([publicConfig, serverConfig, secretConfig, configValue]) => {
-            const result =
-              Equal.equals(
-                decodeUnknownWorkItemPublicConfigSync(encodeWorkItemPublicConfigSync(publicConfig)),
-                publicConfig
-              ) &&
-              Equal.equals(
-                decodeUnknownWorkItemServerConfigSync(encodeWorkItemServerConfigSync(serverConfig)),
-                serverConfig
-              ) &&
-              Equal.equals(
-                decodeUnknownWorkItemSecretConfigSync(encodeWorkItemSecretConfigSync(secretConfig)),
-                secretConfig
-              ) &&
-              Equal.equals(
-                decodeUnknownWorkItemConfigValueSync(encodeWorkItemConfigValueSync(configValue)),
-                configValue
-              );
-            return result;
-          },
-          fcRuns(25)
+  it.effect.prop(
+    "round-trips schema-derived WorkItem config values",
+    [
+      Arbitrary.schema(WorkItemPublicConfig),
+      Arbitrary.schema(WorkItemServerConfig),
+      Arbitrary.schema(WorkItemSecretConfig),
+      Arbitrary.schema(WorkItemConfigValue),
+    ],
+    Effect.fnUntraced(function* ([publicConfig, serverConfig, secretConfig, configValue]) {
+      expect(
+        Equal.equals(
+          yield* decodeUnknownWorkItemPublicConfig(yield* encodeWorkItemPublicConfig(publicConfig)),
+          publicConfig
         )
-      )._tag
-    ).toBe("Passed");
-  });
+      ).toBe(true);
+      expect(
+        Equal.equals(
+          yield* decodeUnknownWorkItemServerConfig(yield* encodeWorkItemServerConfig(serverConfig)),
+          serverConfig
+        )
+      ).toBe(true);
+      expect(
+        Equal.equals(
+          yield* decodeUnknownWorkItemSecretConfig(yield* encodeWorkItemSecretConfig(secretConfig)),
+          secretConfig
+        )
+      ).toBe(true);
+      expect(
+        Equal.equals(
+          yield* decodeUnknownWorkItemConfigValue(yield* encodeWorkItemConfigValue(configValue)),
+          configValue
+        )
+      ).toBe(true);
+    }),
+    { arbitrary: fcRuns(25) }
+  );
 });

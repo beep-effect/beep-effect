@@ -16,6 +16,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { commandErrorFields } from "../../../internal/cli/CommandErrorFields.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
+import type * as Crypto from "effect/Crypto";
 
 export { QualityArtifactGeneratorError } from "./QualityArtifactSupport.ts";
 
@@ -467,7 +468,7 @@ const runCommandOutput = Effect.fn("TurboConfigProof.runCommandOutput")(function
   repoRoot: string,
   command: string,
   args: ReadonlyArray<string>
-): Effect.fn.Return<CommandOutput, TurboConfigProofError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<CommandOutput, TurboConfigProofError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const renderedCommand = commandText(command, args);
   const result = yield* runCaptured({
     command,
@@ -511,7 +512,11 @@ const selectorArgs = (selector: TurboConfigProofSelectorMode, base: string, head
 export const runTurboConfigProof = Effect.fn("TurboConfigProof.runTurboConfigProof")(function* (
   repoRoot: string,
   options: TurboConfigProofOptions
-): Effect.fn.Return<TurboConfigProofReport, TurboConfigProofError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  TurboConfigProofReport,
+  TurboConfigProofError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const tasks = normalizeProofTasks(options.tasks);
   const queryArgs = ["turbo", "query", "affected", "--tasks", ...tasks, "--base", options.base, "--head", options.head];
   const queryOutput = yield* runCommandOutput(repoRoot, "bunx", queryArgs);

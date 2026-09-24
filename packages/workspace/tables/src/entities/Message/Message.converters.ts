@@ -7,6 +7,9 @@
  */
 
 import { Message } from "@beep/workspace-domain/entities/Message";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import { MessageConverterError } from "./Message.errors.ts";
 import type { Table } from "./Message.table.ts";
 
 /**
@@ -47,6 +50,9 @@ export type MessageRow = typeof Table.$inferSelect;
  */
 export type MessageInsert = typeof Table.$inferInsert;
 
+const encodeMessage = S.encodeResult(Message);
+const decodeMessageRow = S.decodeUnknownResult(Message);
+
 /**
  * Convert a Message entity into its persistence insert row.
  *
@@ -62,9 +68,11 @@ export type MessageInsert = typeof Table.$inferInsert;
  * ```ts
  * import { Message } from "@beep/workspace-domain/entities/Message"
  * import { toMessageInsert } from "@beep/workspace-tables/entities/Message"
+ * import * as Result from "effect/Result"
+ * import * as S from "effect/Schema"
  *
  * const principal = { component: "Runtime", kind: "System" }
- * const message = Message.decodeUnknownSync({
+ * const message = Result.getOrThrow(S.decodeUnknownResult(Message)({
  *   content: {
  *     _tag: "document",
  *     children: [{ _tag: "p", children: [{ _tag: "text", value: "Hello thread" }] }]
@@ -83,35 +91,38 @@ export type MessageInsert = typeof Table.$inferInsert;
  *   turnId: 12,
  *   updatedAt: 2,
  *   updatedByPrincipal: principal
- * })
+ * }))
  *
  * const insert = toMessageInsert(message)
- * console.log(insert.turnId)
+ * console.log(Result.getOrThrow(insert).turnId)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toMessageInsert = (message: Message): MessageInsert => {
-  const encoded = Message.encodeSync(message);
-
-  return {
-    content: encoded.content,
-    createdAt: encoded.createdAt,
-    createdByPrincipal: encoded.createdByPrincipal,
-    entityType: encoded.entityType,
-    orgId: encoded.orgId,
-    publicId: encoded.publicId,
-    role: encoded.role,
-    rowVersion: encoded.rowVersion,
-    schemaVersion: encoded.schemaVersion,
-    source: encoded.source,
-    threadId: encoded.threadId,
-    turnId: encoded.turnId,
-    updatedAt: encoded.updatedAt,
-    updatedByPrincipal: encoded.updatedByPrincipal,
-  } satisfies MessageInsert;
-};
+export const toMessageInsert = (message: Message): Result.Result<MessageInsert, MessageConverterError> =>
+  Result.mapError(
+    Result.map(
+      encodeMessage(message),
+      (encoded): MessageInsert => ({
+        content: encoded.content,
+        createdAt: encoded.createdAt,
+        createdByPrincipal: encoded.createdByPrincipal,
+        entityType: encoded.entityType,
+        orgId: encoded.orgId,
+        publicId: encoded.publicId,
+        role: encoded.role,
+        rowVersion: encoded.rowVersion,
+        schemaVersion: encoded.schemaVersion,
+        source: encoded.source,
+        threadId: encoded.threadId,
+        turnId: encoded.turnId,
+        updatedAt: encoded.updatedAt,
+        updatedByPrincipal: encoded.updatedByPrincipal,
+      })
+    ),
+    MessageConverterError.fromSchemaError
+  );
 
 /**
  * Convert a selected persistence row into a Message entity.
@@ -120,6 +131,7 @@ export const toMessageInsert = (message: Message): MessageInsert => {
  *
  * ```ts
  * import { fromMessageRow, type MessageRow } from "@beep/workspace-tables/entities/Message"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   content: {
@@ -143,10 +155,11 @@ export const toMessageInsert = (message: Message): MessageInsert => {
  * } satisfies MessageRow
  *
  * const message = fromMessageRow(row)
- * console.log(message.role)
+ * console.log(Result.getOrThrow(message).role)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromMessageRow = (row: MessageRow): Message => Message.decodeUnknownSync(row);
+export const fromMessageRow = (row: MessageRow): Result.Result<Message, MessageConverterError> =>
+  Result.mapError(decodeMessageRow(row), MessageConverterError.fromSchemaError);

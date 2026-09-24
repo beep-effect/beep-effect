@@ -1,3 +1,4 @@
+import * as Crypto from "effect/Crypto";
 /**
  * Service: Extraction Services
  *
@@ -40,7 +41,7 @@ import { Mention, MentionGraph } from "../Schema/MentionFactory.ts";
 import type { RelationGraph } from "../Schema/RelationFactory.ts";
 import { makeRelationSchema } from "../Schema/RelationFactory.ts";
 import { annotateExtraction, annotateLlmCall, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
-import { sha256Sync } from "../Utils/Hash.ts";
+import { sha256Sync as sha256SyncEffect } from "../Utils/Hash.ts";
 import { buildLocalNameToIriMapSafe, expandLocalNameToIri, expandTypesToIris } from "../Utils/Iri.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
@@ -93,6 +94,8 @@ const isAttributeValue = (value: unknown): value is string | number | boolean =>
  */
 export class EntityExtractor extends Context.Service<EntityExtractor>()($I`EntityExtractor`, {
   make: Effect.gen(function* () {
+    const crypto = yield* Crypto.Crypto;
+    const sha256Sync = flow(sha256SyncEffect, Effect.provideService(Crypto.Crypto, crypto));
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 
@@ -128,7 +131,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
         const jsonSchemaText = yield* UnknownFromJsonString.encodeUnknownEffect(jsonSchema);
-        const schemaHash = sha256Sync(jsonSchemaText);
+        const schemaHash = yield* sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Entity extraction schema", {
           stage: "entity-extraction",
           schemaIdentifier: "EntityGraph",
@@ -142,6 +145,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           retryPolicy: config.llm.retryPolicy,
           enablePromptCaching: config.llm.enablePromptCaching,
         }).pipe(
+          Effect.provideService(Crypto.Crypto, crypto),
           Effect.provideService(LanguageModel.LanguageModel, llm),
           Effect.tap((response) =>
             Effect.all([
@@ -328,6 +332,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
  */
 export class MentionExtractor extends Context.Service<MentionExtractor>()($I`MentionExtractor`, {
   make: Effect.gen(function* () {
+    const crypto = yield* Crypto.Crypto;
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 
@@ -355,6 +360,7 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
             mentionCount: response.value.mentions.length,
           }),
         }).pipe(
+          Effect.provideService(Crypto.Crypto, crypto),
           Effect.provideService(LanguageModel.LanguageModel, llm),
           Effect.tap((response) =>
             annotateExtraction({
@@ -431,6 +437,8 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
  */
 export class RelationExtractor extends Context.Service<RelationExtractor>()($I`RelationExtractor`, {
   make: Effect.gen(function* () {
+    const crypto = yield* Crypto.Crypto;
+    const sha256Sync = flow(sha256SyncEffect, Effect.provideService(Crypto.Crypto, crypto));
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 
@@ -487,7 +495,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
         const jsonSchemaText = yield* UnknownFromJsonString.encodeUnknownEffect(jsonSchema);
-        const schemaHash = sha256Sync(jsonSchemaText);
+        const schemaHash = yield* sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Relation extraction schema", {
           stage: "relation-extraction",
           schemaIdentifier: "RelationGraph",
@@ -511,6 +519,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
             relationCount: response.value.relations.length,
           }),
         }).pipe(
+          Effect.provideService(Crypto.Crypto, crypto),
           Effect.provideService(LanguageModel.LanguageModel, llm),
           Effect.tap((response) =>
             annotateExtraction({
@@ -691,7 +700,9 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           Chunk.fromIterable([
             Relation.make({
               subjectId: entityArray[0].id,
-              predicate: IRI.decodeUnknownSync(_properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo"),
+              predicate: IRI.decodeUnknownSync(
+                _properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo"
+              ),
               object: RelationObject.cases.EntityReference.make({ value: entityArray[1].id }),
             }),
           ])

@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "model-routing-sync",
+    "title": "Model Routing Sync",
+    "status": "active",
+    "created": "2026-09-22",
+    "updated": "2026-09-22",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/model-routing-sync",
+  "lifecycle": "active",
+  "mission": "One role x surface routing manifest at $HOME, projected into repo doctrine, skills, code defaults, and dotfiles from a layered model catalog.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "grill": "2026-09-22 grill-with-docs session; no exploration packet"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/runbooks/agent-pools.md",
+    "goals/model-routing-sync/README.md",
+    "goals/model-routing-sync/SPEC.md",
+    "goals/model-routing-sync/PLAN.md",
+    "goals/model-routing-sync/GOAL.md",
+    "goals/model-routing-sync/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/2026-09-22-00-aligned-design.md",
+    "research/2026-09-22-01-cliproxyapi-catalog.md",
+    "research/2026-09-22-02-repo-cli-sync-surface.md",
+    "research/2026-09-22-03-surface-census.md",
+    "research/2026-09-22-04-home-sweep.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/model-routing-sync/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete",
+      "exit": "Three Opus 5 exploration lanes + home sweep; grilled 2026-09-22, 12 rulings"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/model-routing-sync/GOAL.md)\" -le 4000",
+    "jq . goals/model-routing-sync/ops/manifest.json",
+    "bun run beep quality package-verify @beep/repo-cli --quick",
+    "git diff --check -- goals/model-routing-sync",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

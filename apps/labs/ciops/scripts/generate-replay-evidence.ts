@@ -1,8 +1,10 @@
-import { createHash } from "node:crypto";
 import { BunRuntime } from "@effect/platform-bun";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { Console, Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import { decodeAdmissionPolicyParams } from "@/projection/AboxPolicy";
 import {
   decodeAdmissionJournal,
@@ -34,7 +36,12 @@ const writeEvidence = Effect.fn("S7Evidence.writeEvidence")(function* (
   yield* fs.writeFileString(evidencePath, content).pipe(Effect.mapError(() => ioFailure("write", evidencePath)));
 });
 
-const sha256 = (content: string): string => createHash("sha256").update(content).digest("hex");
+const utf8 = new TextEncoder();
+
+const sha256 = Effect.fn("S7Evidence.sha256")(function* (content: string) {
+  const crypto = yield* Crypto.Crypto;
+  return Encoding.encodeHex(yield* crypto.digest("SHA-256", utf8.encode(content)));
+});
 
 const generate = Effect.gen(function* () {
   const artifacts = yield* Effect.all(
@@ -43,8 +50,8 @@ const generate = Effect.gen(function* () {
   );
   const policy = yield* decodeAdmissionPolicyParams(artifacts.abox);
   const events = yield* decodeAdmissionJournal(artifacts.journal);
-  const policyDigest = sha256(artifacts.abox);
-  const journalDigest = sha256(artifacts.journal);
+  const policyDigest = yield* sha256(artifacts.abox);
+  const journalDigest = yield* sha256(artifacts.journal);
   const report = yield* replayAdmissionJournal(policy, events, policyDigest, journalDigest);
   // Check mode recomputes and validates the frozen replay without regenerating
   // the historical report (whose explanatory prose belongs to its packet).
@@ -59,5 +66,9 @@ const generate = Effect.gen(function* () {
 // strictEffectProvide bans Layer-provide outside composed entry layers, so the
 // scoped context build below provides the file system as a Context instead.
 BunRuntime.runMain(
-  Effect.scoped(Effect.flatMap(Layer.build(BunFileSystem.layer), (context) => Effect.provide(generate, context)))
+  Effect.scoped(
+    Effect.flatMap(Layer.build(Layer.merge(BunFileSystem.layer, BunCrypto.layer)), (context) =>
+      Effect.provide(generate, context)
+    )
+  )
 );

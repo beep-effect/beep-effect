@@ -5,21 +5,20 @@
  */
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-
 import * as Plugin from "../../../claudecode/Plugin.ts";
 import * as Testing from "../../../claudecode/Testing.ts";
 
 describe("Plugin.validate", () => {
   it.effect("accepts a coherent plugin definition", () =>
     Effect.gen(function* () {
-      const plugin = Plugin.define({
+      const plugin = yield* Plugin.define({
         manifest: {
           name: "guardrails",
           commands: "custom/commands",
           channels: [{ server: "fs" }],
         },
         commands: [
-          Plugin.command({
+          yield* Plugin.command({
             name: "review",
             path: "custom/commands/review.md",
             description: "Review staged changes",
@@ -40,18 +39,18 @@ describe("Plugin.validate", () => {
 
   it.effect("fails on duplicate names and ambiguous multi-path layouts", () =>
     Effect.gen(function* () {
-      const plugin = Plugin.define({
+      const plugin = yield* Plugin.define({
         manifest: {
           name: "guardrails",
           commands: ["commands-a", "commands-b"],
         },
         commands: [
-          Plugin.command({
+          yield* Plugin.command({
             name: "review",
             description: "Review once",
             body: "# Review\n",
           }),
-          Plugin.command({
+          yield* Plugin.command({
             name: "review",
             description: "Review twice",
             body: "# Review again\n",
@@ -71,30 +70,32 @@ describe("Plugin.validate", () => {
 });
 
 describe("Plugin.lint", () => {
-  it("reports warnings for multi-file hook layouts that collapse on sync", () => {
-    const plugin = Plugin.define({
-      manifest: {
-        name: "guardrails",
-        hooks: ["hooks/a.json", "hooks/b.json"],
-      },
-      hooksConfig: { PostToolUse: [] },
-    });
+  it.effect("reports warnings for multi-file hook layouts that collapse on sync", () =>
+    Effect.gen(function* () {
+      const plugin = yield* Plugin.define({
+        manifest: {
+          name: "guardrails",
+          hooks: ["hooks/a.json", "hooks/b.json"],
+        },
+        hooksConfig: { PostToolUse: [] },
+      });
 
-    const report = Plugin.lint(plugin);
-    expect(report.warnings.map((item) => item.code)).toContain("hooks-layout-collapses-on-sync");
-  });
+      const report = Plugin.lint(plugin);
+      expect(report.warnings.map((item) => item.code)).toContain("hooks-layout-collapses-on-sync");
+    })
+  );
 });
 
 describe("Plugin.doctor", () => {
   it.effect("loads a plugin tree and reports cross-file issues", () =>
     Effect.gen(function* () {
-      const plugin = Plugin.define({
+      const plugin = yield* Plugin.define({
         manifest: {
           name: "guardrails",
           channels: [{ server: "missing-server" }],
         },
         commands: [
-          Plugin.command({
+          yield* Plugin.command({
             name: "review",
             description: "Review staged changes",
             body: "# Review\n",
@@ -103,11 +104,10 @@ describe("Plugin.doctor", () => {
       });
 
       const fileSystem = yield* Testing.writePluginToMemory(plugin, "/plugin");
-      const report = yield* Plugin.doctor("/plugin").pipe(Effect.provide(fileSystem.layer));
+      const report = yield* Plugin.doctor("/plugin").pipe(fileSystem.run);
 
       expect(report.loaded.manifest.name).toBe("guardrails");
       expect(report.errors.map((item) => item.code)).toContain("channel-missing-server");
     })
   );
 });
-/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

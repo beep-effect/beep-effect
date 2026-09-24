@@ -297,11 +297,11 @@ export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFai
  * @since 0.0.0
  */
 export const ToolCallEnded = S.Union([ToolCallSucceeded, ToolCallInterrupted, ToolCallFailed]).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("ToolCallEnded", {
     description: "All terminal observations for an admitted tool call.",
   }),
-  SchemaUtils.withCodecStatics(["is"])
+  S.toTaggedUnion("_tag"),
+  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
 );
 
 /**
@@ -726,9 +726,14 @@ const isoFromEpochMillis = (millis: number): string | null =>
  * @category encoding
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- The required boundary label plus defaulted adapter-preservation flag leave no unambiguous curried arity.
-export const copyIn = (value: unknown, label: string, preserveCodeModeValues = false): unknown =>
-  copyBounded(value, label, 0, HashSet.empty(), preserveCodeModeValues);
+export const copyIn: {
+  (label: string, preserveCodeModeValues?: boolean): (value: unknown) => unknown;
+  (value: unknown, label: string, preserveCodeModeValues?: boolean): unknown;
+} = dual(
+  (args) => P.isString(args[1]),
+  (value: unknown, label: string, preserveCodeModeValues = false): unknown =>
+    copyBounded(value, label, 0, HashSet.empty(), preserveCodeModeValues)
+);
 
 const copyBounded = (
   value: unknown,
@@ -1315,15 +1320,29 @@ export type ToolRuntime<R = never> = {
  * @category factories
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Toolkit, handlers, limits, index, and hooks are co-primary factory inputs rather than a data-first transformation.
-export const make = <R>(
-  toolkit: Toolkit.Any,
-  handlers: AnyWithHandler,
-  maxToolCalls: O.Option<NonNegativeInt>,
-  index: ReadonlyArray<SearchEntry>,
-  hooks: ToolCallHooks<R> = {}
-): Effect.Effect<ToolRuntime<R>, ToolRuntimeError> =>
-  Effect.gen(function* () {
+export const make: {
+  <R>(
+    handlers: AnyWithHandler,
+    maxToolCalls: O.Option<NonNegativeInt>,
+    index: ReadonlyArray<SearchEntry>,
+    hooks?: ToolCallHooks<R>
+  ): (toolkit: Toolkit.Any) => Effect.Effect<ToolRuntime<R>, ToolRuntimeError>;
+  <R>(
+    toolkit: Toolkit.Any,
+    handlers: AnyWithHandler,
+    maxToolCalls: O.Option<NonNegativeInt>,
+    index: ReadonlyArray<SearchEntry>,
+    hooks?: ToolCallHooks<R>
+  ): Effect.Effect<ToolRuntime<R>, ToolRuntimeError>;
+} = dual(
+  (args) => args.length >= 4 && !A.isArray(args[2]),
+  Effect.fnUntraced(function* <R>(
+    toolkit: Toolkit.Any,
+    handlers: AnyWithHandler,
+    maxToolCalls: O.Option<NonNegativeInt>,
+    index: ReadonlyArray<SearchEntry>,
+    hooks: ToolCallHooks<R> = {}
+  ): Effect.fn.Return<ToolRuntime<R>, ToolRuntimeError> {
     const root = yield* Effect.fromResult(toolTrie(toolkit));
     const calls = yield* Ref.make<ReadonlyArray<ToolCall>>(A.empty());
 
@@ -1466,7 +1485,8 @@ export const make = <R>(
         return yield* executeTool(name, input);
       }),
     };
-  });
+  })
+);
 
 /**
  * Empty default Toolkit used when no host tools are provided.

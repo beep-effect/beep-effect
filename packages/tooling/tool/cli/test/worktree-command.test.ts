@@ -48,6 +48,7 @@ import { GitObjectId } from "@beep/schema/Conformance";
 import { ISOStr } from "@beep/schema/Timestamp";
 import { A, O, P, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer, Path, Ref, Runtime, Sink, Stream } from "effect";
 import * as S from "effect/Schema";
@@ -70,6 +71,7 @@ const decodeResidueManifest = S.decodeUnknownEffect(S.fromJsonString(WorktreeRes
 const decodeResidueManifestValue = S.decodeUnknownEffect(WorktreeResidueManifest);
 const residueManifestJson = S.fromJsonString(WorktreeResidueManifest);
 const removalReceiptJson = S.fromJsonString(WorktreeRemovalReceipt);
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const archivePlanJson = S.fromJsonString(WorktreeArchivePlan);
 const isWorktreeRemovalName = S.is(WorktreeRemovalRequest.fields.name);
 
@@ -202,7 +204,10 @@ layer(WorktreeMergedPullRequestProbeLive, { timeout: "1 second" })("merged pull-
           GitObjectId.make("3333333333333333333333333333333333333333")
         )
       ).toEqual(O.none());
-    }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      provideScopedLayer(NodeCrypto.layer)
+    );
   });
 });
 
@@ -447,44 +452,39 @@ describe("WorktreeResidueManifest", () => {
     })
   );
 
-  it("decodes a legacy receipt that predates the unpushed inspection", () => {
-    const decoded = S.decodeSync(removalReceiptJson)(
-      JSON.stringify({
-        targetPath: "/repo-worktrees/feature-x",
-        branch: "feat/feature-x",
-        reason: "clean",
-        manifest: null,
-        branchDeleted: false,
-      })
-    );
+  it.effect("decodes a legacy receipt that predates the unpushed inspection", () =>
+    Effect.gen(function* () {
+      const decoded = yield* S.decodeEffect(removalReceiptJson)(
+        yield* encodeUnknownJson({
+          targetPath: "/repo-worktrees/feature-x",
+          branch: "feat/feature-x",
+          reason: "clean",
+          manifest: null,
+          branchDeleted: false,
+        })
+      );
 
-    expect(O.isNone(decoded.unpushedInspection)).toBe(true);
-    expect(O.getOrThrow(decoded.branch)).toBe("feat/feature-x");
-  });
+      expect(O.isNone(decoded.unpushedInspection)).toBe(true);
+      expect(O.getOrThrow(decoded.branch)).toBe("feat/feature-x");
+    })
+  );
 
-  it("round-trips arbitrary archive models through their JSON codecs", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([
-            Arbitrary.schema(WorktreeResidueManifest),
-            Arbitrary.schema(WorktreeRemovalReceipt),
-            Arbitrary.schema(WorktreeArchivePlan),
-          ]),
-          ([manifest, receipt, plan]) => {
-            const manifestJson = S.encodeSync(residueManifestJson)(manifest);
-            const receiptJson = S.encodeSync(removalReceiptJson)(receipt);
-            const planJson = S.encodeSync(archivePlanJson)(plan);
-            expect(S.decodeSync(residueManifestJson)(manifestJson)).toEqual(manifest);
-            expect(S.decodeSync(removalReceiptJson)(receiptJson)).toEqual(receipt);
-            expect(S.decodeSync(archivePlanJson)(planJson)).toEqual(plan);
-
-            return true;
-          }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "round-trips arbitrary archive models through their JSON codecs",
+    [
+      Arbitrary.schema(WorktreeResidueManifest),
+      Arbitrary.schema(WorktreeRemovalReceipt),
+      Arbitrary.schema(WorktreeArchivePlan),
+    ],
+    Effect.fnUntraced(function* ([manifest, receipt, plan]) {
+      const manifestJson = yield* S.encodeEffect(residueManifestJson)(manifest);
+      const receiptJson = yield* S.encodeEffect(removalReceiptJson)(receipt);
+      const planJson = yield* S.encodeEffect(archivePlanJson)(plan);
+      expect(yield* S.decodeEffect(residueManifestJson)(manifestJson)).toEqual(manifest);
+      expect(yield* S.decodeEffect(removalReceiptJson)(receiptJson)).toEqual(receipt);
+      expect(yield* S.decodeEffect(archivePlanJson)(planJson)).toEqual(plan);
+    })
+  );
 });
 
 describe("worktree error factories", () => {

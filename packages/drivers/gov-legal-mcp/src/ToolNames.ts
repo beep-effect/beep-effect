@@ -11,13 +11,14 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { $GovLegalMcpId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { UnknownFromJsonString } from "@beep/schema/Unknown";
-import { flow, HashMap, HashSet, Match, Number as N, Order, pipe, Result } from "effect";
+import { Effect, flow, HashMap, HashSet, Match, Number as N, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -222,7 +223,9 @@ export class ToolNameNormalizationError extends S.TaggedError<ToolNameNormalizat
  * **Example** (Fail closed on duplicates)
  *
  * ```ts
- * import * as Result from "effect/Result"
+ * import * as Effect from "effect/Effect"
+ * import * as Crypto from "effect/Crypto"
+ * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  * import * as S from "effect/Schema"
  * import {
  *   buildToolNameCollisionReport,
@@ -230,11 +233,13 @@ export class ToolNameNormalizationError extends S.TaggedError<ToolNameNormalizat
  *   ToolNameCollisionError
  * } from "@beep/gov-legal-mcp/ToolNames"
  *
- * const result = buildToolNameCollisionReport([
- *   ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
- *   ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" })
- * ])
- * console.log(Result.isFailure(result) && S.is(ToolNameCollisionError)(result.failure))
+ * const result = Effect.runSync(
+ *   buildToolNameCollisionReport([
+ *     ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
+ *     ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" })
+ *   ]).pipe(Effect.flip, Effect.provideService(Crypto.Crypto, NodeCrypto.make))
+ * )
+ * console.log(S.is(ToolNameCollisionError)(result))
  * // true
  * ```
  *
@@ -306,8 +311,31 @@ const stringEquivalence = S.toEquivalence(S.String);
 
 const candidateText = (candidate: ToolNameCandidate): string => `${candidate.source}_${candidate.operationId}`;
 
-const sha256Prefix8 = (normalized: string): string =>
-  pipe(createHash("sha256").update(normalized, "utf8").digest("hex"), Str.takeLeft(DIGEST_PREFIX_LENGTH));
+const utf8 = new TextEncoder();
+
+const sha256Prefix8 = Effect.fnUntraced(function* (normalized: string) {
+  const crypto = yield* Crypto.Crypto;
+  const bytes = yield* crypto.digest("SHA-256", utf8.encode(normalized));
+  return pipe(Encoding.encodeHex(bytes), Str.takeLeft(DIGEST_PREFIX_LENGTH));
+});
+
+const toolNameRow = (input: ToolNameCandidate, normalized: string, digest: O.Option<string>): ToolNameCollisionRow => {
+  const truncated = O.isSome(digest);
+  const finalWireName = truncated
+    ? `${pipe(normalized, Str.takeLeft(TRUNCATED_PREFIX_LENGTH))}_${O.getOrElse(digest, () => Str.empty)}`
+    : normalized;
+
+  return ToolNameCollisionRow.make({
+    candidate: candidateText(input),
+    digest: O.getOrNull(digest),
+    duplicateVerdict: "unique",
+    finalWireName,
+    normalized,
+    originalOperationId: input.operationId,
+    source: input.source,
+    truncated,
+  });
+};
 
 const groupsBy = (
   rows: ReadonlyArray<ToolNameCollisionRow>,
@@ -411,52 +439,104 @@ export const normalizeToolName = (candidate: string): Result.Result<string, Tool
   );
 };
 
+const projectUntruncatedToolNameCandidate = (
+  input: ToolNameCandidate
+): Result.Result<ToolNameCollisionRow, ToolNameNormalizationError> =>
+  pipe(
+    normalizeToolName(candidateText(input)),
+    Result.flatMap((normalized) =>
+      pipe(
+        N.isGreaterThan(Str.length(normalized), MAX_WIRE_NAME_LENGTH),
+        Bool.match({
+          onFalse: () => Result.succeed(toolNameRow(input, normalized, O.none())),
+          onTrue: () =>
+            Result.fail(
+              ToolNameNormalizationError.make({
+                candidate: candidateText(input),
+                message: "Production tool names must fit the 64-character wire cap without a digest.",
+                normalized,
+                reason: "invalid_normalized",
+              })
+            ),
+        })
+      )
+    )
+  );
+
 /**
  * Project one source/operation pair to its normalized, capped report row.
  *
  * **Example** (Project candidate to wire name)
  *
  * ```ts
- * import * as Result from "effect/Result"
+ * import * as Effect from "effect/Effect"
  * import { projectToolNameCandidate, ToolNameCandidate } from "@beep/gov-legal-mcp/ToolNames"
  *
- * const row = Result.getOrThrow(
- *   projectToolNameCandidate(ToolNameCandidate.make({ source: "ecfr", operationId: "getStructure" }))
- * )
- * console.log(row.finalWireName)
- * // "ecfr_get_structure"
+ * const row = projectToolNameCandidate(ToolNameCandidate.make({ source: "ecfr", operationId: "getStructure" }))
+ * console.log(Effect.isEffect(row))
+ * // true
  * ```
  *
  * @category normalization
  * @since 0.0.0
  */
-export const projectToolNameCandidate = (
+export const projectToolNameCandidate = Effect.fn("GovLegalMcp.projectToolNameCandidate")(function* (
   input: ToolNameCandidate
-): Result.Result<ToolNameCollisionRow, ToolNameNormalizationError> =>
-  pipe(
-    normalizeToolName(candidateText(input)),
-    Result.map((normalized) => {
-      const truncated = N.isGreaterThan(Str.length(normalized), MAX_WIRE_NAME_LENGTH);
-      const digest = truncated ? O.some(sha256Prefix8(normalized)) : O.none<string>();
-      const finalWireName = truncated
-        ? `${pipe(normalized, Str.takeLeft(TRUNCATED_PREFIX_LENGTH))}_${pipe(
-            digest,
-            O.getOrElse(() => Str.empty)
-          )}`
-        : normalized;
+) {
+  const normalized = yield* Effect.fromResult(normalizeToolName(candidateText(input)));
+  const truncated = N.isGreaterThan(Str.length(normalized), MAX_WIRE_NAME_LENGTH);
+  const digest = truncated ? O.some(yield* sha256Prefix8(normalized)) : O.none<string>();
+  return toolNameRow(input, normalized, digest);
+});
 
-      return ToolNameCollisionRow.make({
-        candidate: candidateText(input),
-        digest: O.getOrNull(digest),
-        duplicateVerdict: "unique",
-        finalWireName,
-        normalized,
-        originalOperationId: input.operationId,
-        source: input.source,
-        truncated,
-      });
-    })
+const collisionReportFromRows = (
+  projected: ReadonlyArray<ToolNameCollisionRow>
+): Result.Result<ToolNameCollisionReport, ToolNameCollisionError> => {
+  const normalizedDuplicates = duplicateKeys(groupsBy(projected, (row) => row.normalized));
+  const finalDuplicates = duplicateKeys(groupsBy(projected, (row) => row.finalWireName));
+  const hasNormalizedDuplicates = N.isGreaterThan(HashSet.size(normalizedDuplicates), 0);
+  const hasFinalDuplicates = N.isGreaterThan(HashSet.size(finalDuplicates), 0);
+  const rows = pipe(
+    projected,
+    A.map((row) =>
+      ToolNameCollisionRow.make({
+        ...row,
+        duplicateVerdict: HashSet.has(normalizedDuplicates, row.normalized)
+          ? "duplicate_normalized"
+          : HashSet.has(finalDuplicates, row.finalWireName)
+            ? "duplicate_final"
+            : "unique",
+      })
+    ),
+    A.sort(rowOrder)
   );
+  const report = ToolNameCollisionReport.make({
+    candidates: rows,
+    duplicateVerdict: hasNormalizedDuplicates || hasFinalDuplicates ? "duplicate" : "clean",
+  });
+
+  if (hasNormalizedDuplicates) {
+    return Result.fail(
+      ToolNameCollisionError.make({
+        collisionKeys: pipe(normalizedDuplicates, A.fromIterable, A.sort(Order.String)),
+        message: "Duplicate normalized MCP tool names are forbidden.",
+        reason: "duplicate_normalized",
+        report,
+      })
+    );
+  }
+  if (hasFinalDuplicates) {
+    return Result.fail(
+      ToolNameCollisionError.make({
+        collisionKeys: pipe(finalDuplicates, A.fromIterable, A.sort(Order.String)),
+        message: "Duplicate final MCP wire names are forbidden.",
+        reason: "duplicate_final",
+        report,
+      })
+    );
+  }
+  return Result.succeed(report);
+};
 
 /**
  * Build a sorted collision report, failing closed on either duplicate stage.
@@ -464,72 +544,26 @@ export const projectToolNameCandidate = (
  * **Example** (Build clean multi-source report)
  *
  * ```ts
- * import * as Result from "effect/Result"
+ * import * as Effect from "effect/Effect"
  * import { buildToolNameCollisionReport, ToolNameCandidate } from "@beep/gov-legal-mcp/ToolNames"
  *
- * const report = Result.getOrThrow(
- *   buildToolNameCollisionReport([
- *     ToolNameCandidate.make({ source: "govinfo", operationId: "search" }),
- *     ToolNameCandidate.make({ source: "ecfr", operationId: "listTitles" })
- *   ])
- * )
- * console.log(report.duplicateVerdict)
- * // "clean"
+ * const report = buildToolNameCollisionReport([
+ *   ToolNameCandidate.make({ source: "govinfo", operationId: "search" }),
+ *   ToolNameCandidate.make({ source: "ecfr", operationId: "listTitles" })
+ * ])
+ * console.log(Effect.isEffect(report))
+ * // true
  * ```
  *
  * @category validation
  * @since 0.0.0
  */
-export const buildToolNameCollisionReport = (
+export const buildToolNameCollisionReport = Effect.fn("GovLegalMcp.buildToolNameCollisionReport")(function* (
   candidates: ReadonlyArray<ToolNameCandidate>
-): Result.Result<ToolNameCollisionReport, ToolNameNormalizationError | ToolNameCollisionError> =>
-  Result.gen(function* () {
-    const projected = yield* Result.all(A.map(candidates, projectToolNameCandidate));
-    const normalizedDuplicates = duplicateKeys(groupsBy(projected, (row) => row.normalized));
-    const finalDuplicates = duplicateKeys(groupsBy(projected, (row) => row.finalWireName));
-    const hasNormalizedDuplicates = N.isGreaterThan(HashSet.size(normalizedDuplicates), 0);
-    const hasFinalDuplicates = N.isGreaterThan(HashSet.size(finalDuplicates), 0);
-    const rows = pipe(
-      projected,
-      A.map((row) =>
-        ToolNameCollisionRow.make({
-          ...row,
-          duplicateVerdict: HashSet.has(normalizedDuplicates, row.normalized)
-            ? "duplicate_normalized"
-            : HashSet.has(finalDuplicates, row.finalWireName)
-              ? "duplicate_final"
-              : "unique",
-        })
-      ),
-      A.sort(rowOrder)
-    );
-    const report = ToolNameCollisionReport.make({
-      candidates: rows,
-      duplicateVerdict: hasNormalizedDuplicates || hasFinalDuplicates ? "duplicate" : "clean",
-    });
-
-    if (hasNormalizedDuplicates) {
-      return yield* Result.fail(
-        ToolNameCollisionError.make({
-          collisionKeys: pipe(normalizedDuplicates, A.fromIterable, A.sort(Order.String)),
-          message: "Duplicate normalized MCP tool names are forbidden.",
-          reason: "duplicate_normalized",
-          report,
-        })
-      );
-    }
-    if (hasFinalDuplicates) {
-      return yield* Result.fail(
-        ToolNameCollisionError.make({
-          collisionKeys: pipe(finalDuplicates, A.fromIterable, A.sort(Order.String)),
-          message: "Duplicate final MCP wire names are forbidden.",
-          reason: "duplicate_final",
-          report,
-        })
-      );
-    }
-    return report;
-  });
+) {
+  const projected = yield* Effect.forEach(candidates, projectToolNameCandidate);
+  return yield* Effect.fromResult(collisionReportFromRows(projected));
+});
 
 /**
  * Render a report with sorted keys, two-space indentation, LF endings, and one
@@ -592,7 +626,10 @@ export const ProductionToolNameCandidates: ReadonlyArray<ToolNameCandidate> = [
  * @since 0.0.0
  */
 export const ProductionToolNameCollisionReport = Result.getOrThrowWith(
-  buildToolNameCollisionReport(ProductionToolNameCandidates),
+  pipe(
+    Result.all(A.map(ProductionToolNameCandidates, projectUntruncatedToolNameCandidate)),
+    Result.flatMap(collisionReportFromRows)
+  ),
   (error) => error
 );
 

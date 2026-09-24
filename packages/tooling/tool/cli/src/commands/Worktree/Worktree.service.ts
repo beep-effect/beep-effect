@@ -59,7 +59,7 @@ import {
   WorktreeUnpushedInspection,
   WorktreeUpstreamState,
 } from "./Worktree.schemas.ts";
-import type { Crypto } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GitCommandErrorAdapter, ProcessAttachment } from "../../internal/repo-run/index.ts";
 import type {
@@ -113,7 +113,7 @@ export interface WorktreeMergedPullRequestProbeShape {
     cwd: string,
     branch: string,
     head: GitObjectId
-  ) => Effect.Effect<O.Option<PosInt>, never, ChildProcessSpawner.ChildProcessSpawner>;
+  ) => Effect.Effect<O.Option<PosInt>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
 }
 
 /**
@@ -152,7 +152,7 @@ const ghMergedAtHead = Effect.fn("WorktreeMergedPullRequestProbe.ghMergedAtHead"
   cwd: string,
   branch: string,
   head: GitObjectId
-): Effect.fn.Return<O.Option<PosInt>, never, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<PosInt>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   // Any gh failure or undecodable payload answers none: an unavailable probe can only
   // make the retirement more conservative, never fail it.
   const rows = yield* ghOutput({
@@ -477,10 +477,14 @@ type WorktreeRemovalServiceRequirements =
   | Crypto.Crypto
   | FileSystem.FileSystem
   | Path.Path
+  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner
   | WorktreeMergedPullRequestProbe;
 
-type UpstreamProbeRequirements = ChildProcessSpawner.ChildProcessSpawner | WorktreeMergedPullRequestProbe;
+type UpstreamProbeRequirements =
+  | Crypto.Crypto
+  | ChildProcessSpawner.ChildProcessSpawner
+  | WorktreeMergedPullRequestProbe;
 
 const commandErrorAdapter = (failMessage: string): GitCommandErrorAdapter<WorktreeCommandError> => ({
   onSpawnFailure: (commandLine) => WorktreeCommandError.new(failMessage, { command: commandLine }),
@@ -530,7 +534,7 @@ export const runWorktreeGitCapture = Effect.fn("WorktreeRemovalService.runWorktr
   cwd: string,
   args: ReadonlyArray<string>,
   failMessage: string
-): Effect.fn.Return<string, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, WorktreeCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitOutput(cwd, args, commandErrorAdapter(failMessage));
 });
 
@@ -540,7 +544,7 @@ const runPreservationCommand = Effect.fn("WorktreeRemovalService.runPreservation
   step: WorktreePreservationError["step"],
   failMessage: string,
   affectedPath?: string
-): Effect.fn.Return<string, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, WorktreePreservationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitOutput(cwd, args, preservationErrorAdapter(step, failMessage, affectedPath));
 });
 
@@ -550,7 +554,7 @@ const runPreservationProbe = Effect.fn("WorktreeRemovalService.runPreservationPr
   step: WorktreePreservationError["step"],
   failMessage: string,
   affectedPath?: string
-): Effect.fn.Return<string, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, WorktreePreservationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   // Machine-read probes take stdout alone: a zero-exit git diagnostic on stderr
   // (a warning, advice, or trace line) must never pass for a ref name or a count.
   const output = yield* runGitRawOutput(cwd, args, preservationErrorAdapter(step, failMessage, affectedPath));
@@ -570,7 +574,11 @@ const countCommits = Effect.fn("WorktreeRemovalService.countCommits")(function* 
   targetPath: string,
   revision: string,
   step: WorktreePreservationError["step"]
-): Effect.fn.Return<NonNegativeInt, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  NonNegativeInt,
+  WorktreePreservationError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const output = yield* runPreservationProbe(
     targetPath,
     ["rev-list", "--count", revision, "--"],
@@ -590,7 +598,7 @@ const refExists = Effect.fn("WorktreeRemovalService.refExists")(function* (
   ref: string,
   step: WorktreePreservationError["step"],
   failMessage: string
-): Effect.fn.Return<boolean, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, WorktreePreservationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   // for-each-ref also lists refs nested under the pattern, so only an exact
   // refname line proves that the ref itself exists.
   const output = yield* runPreservationProbe(
@@ -605,7 +613,7 @@ const refExists = Effect.fn("WorktreeRemovalService.refExists")(function* (
 
 const resolveOriginDefaultBranch = Effect.fn("WorktreeRemovalService.resolveOriginDefaultBranch")(function* (
   targetPath: string
-): Effect.fn.Return<string, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, WorktreePreservationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   // A dangling origin/HEAD lists nothing, so the probe falls back to `main`.
   const symref = yield* runPreservationProbe(
     targetPath,
@@ -624,7 +632,7 @@ const resolveOriginDefaultBranch = Effect.fn("WorktreeRemovalService.resolveOrig
 const resolveHeadObjectId = Effect.fn("WorktreeRemovalService.resolveHeadObjectId")(function* (
   targetPath: string,
   step: WorktreePreservationError["step"]
-): Effect.fn.Return<GitObjectId, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<GitObjectId, WorktreePreservationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const headOutput = yield* resolveGitCommit(
     targetPath,
     "HEAD",
@@ -730,7 +738,7 @@ const inspectUnpushed = Effect.fn("WorktreeRemovalService.inspectUnpushed")(func
   );
   // A pruned upstream leaves nothing to count, so the default-branch range answers for it.
   const upstreamCount = yield* WorktreeUpstreamState.match<
-    Effect.Effect<NonNegativeInt, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner>
+    Effect.Effect<NonNegativeInt, WorktreePreservationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>
   >(upstream, {
     unset: () => Effect.succeed(NonNegativeInt.make(0)),
     pruned: () => Effect.succeed(baseCount),
@@ -981,7 +989,7 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
 ): Effect.fn.Return<
   void,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (!request.archive && request.deleteBranch) {
     return yield* WorktreeCommandError.make({
@@ -1053,7 +1061,7 @@ const makeRemovalReceipt = (
 const inspectRemovalChanges = Effect.fn("WorktreeRemovalService.inspectRemovalChanges")(function* <Error>(
   targetPath: string,
   adapter: GitCommandErrorAdapter<Error>
-): Effect.fn.Return<ReadonlyArray<string>, Error, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ReadonlyArray<string>, Error, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const statusArgs = ["status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"];
   const statusOutput = yield* runGitOutput(targetPath, statusArgs, adapter);
   return A.filter(Str.split(statusOutput, "\n"), Str.isNonEmpty);
@@ -1061,7 +1069,11 @@ const inspectRemovalChanges = Effect.fn("WorktreeRemovalService.inspectRemovalCh
 
 const assertNoDirtySubmodules = Effect.fn("WorktreeRemovalService.assertNoDirtySubmodules")(function* (
   request: WorktreeRemovalRequest
-): Effect.fn.Return<void, WorktreePreservationError, Path.Path | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  WorktreePreservationError,
+  Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const path = yield* Path.Path;
   yield* runPreservationCommand(
     request.targetPath,
@@ -1098,7 +1110,7 @@ const assertNoDirtySubmodules = Effect.fn("WorktreeRemovalService.assertNoDirtyS
 
 const inspectArchiveHead = Effect.fn("WorktreeRemovalService.inspectArchiveHead")(function* (
   request: WorktreeRemovalRequest
-): Effect.fn.Return<GitObjectId, WorktreePreservationError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<GitObjectId, WorktreePreservationError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* resolveHeadObjectId(request.targetPath, "inspect-head");
 });
 
@@ -1163,7 +1175,7 @@ const removeWorktree = Effect.fn("WorktreeRemovalService.removeWorktree")(functi
 ): Effect.fn.Return<
   void,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   yield* validateRemovalRequest(request);
   yield* runWorktreeGitCapture(
@@ -1175,14 +1187,14 @@ const removeWorktree = Effect.fn("WorktreeRemovalService.removeWorktree")(functi
 
 const pruneWorktreeMetadata = Effect.fn("WorktreeRemovalService.pruneWorktreeMetadata")(function* (
   mainCheckout: string
-): Effect.fn.Return<void, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, WorktreeCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   yield* runWorktreeGitCapture(mainCheckout, ["worktree", "prune"], "Failed to prune git worktree metadata.");
 });
 
 const deleteArchivedBranch = Effect.fn("WorktreeRemovalService.deleteArchivedBranch")(function* (
   request: WorktreeRemovalRequest,
   head: GitObjectId
-): Effect.fn.Return<boolean, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, WorktreeCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const branch = O.filter(request.branch, () => request.deleteBranch);
   return yield* O.match(branch, {
     onNone: () => Effect.succeed(false),
@@ -1212,7 +1224,7 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
 ): Effect.fn.Return<
   WorktreeRemovalReceipt,
   WorktreeCommandError | WorktreeDirtyError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (O.isSome(request.expectedHead)) {
     const head = yield* resolveGitCommit(

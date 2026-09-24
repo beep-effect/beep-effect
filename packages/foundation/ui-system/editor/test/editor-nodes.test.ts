@@ -21,9 +21,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const decodeUnknownSerializedEditorStateResult = S.decodeUnknownResult(SerializedEditorState);
-const decodeUnknownSerializedEditorStateSync = S.decodeUnknownSync(SerializedEditorState);
-const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson);
-const encodeSerializedEditorStateSync = S.encodeSync(SerializedEditorState);
+const decodeUnknownSerializedEditorState = S.decodeUnknownEffect(SerializedEditorState);
+const encodeEditorStateFromJson = S.encodeEffect(EditorStateFromJson);
+const encodeSerializedEditorStateJson = S.encodeEffect(S.fromJsonString(SerializedEditorState));
 
 import { $getRoot, $setState, createState } from "lexical";
 
@@ -74,63 +74,67 @@ const fixtureTurn = MdModel.Document.make({
 });
 
 describe("@beep/editor node registration", () => {
-  it("admits schema-derived strict states through the real Lexical runtime", () => {
-    const editor = createHeadlessEditor({
-      namespace: "beep-editor-schema-property-test",
-      nodes: [...editorNodes],
-      onError: (error) => {
-        throw error;
-      },
-    });
+  it.effect("admits schema-derived strict states through the real Lexical runtime", () =>
+    Effect.gen(function* () {
+      const editor = createHeadlessEditor({
+        namespace: "beep-editor-schema-property-test",
+        nodes: [...editorNodes],
+        onError: (error) => {
+          throw error;
+        },
+      });
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(SerializedEditorState)]),
-          ([state]) => {
-            editor.setEditorState(editor.parseEditorState(encodeEditorStateFromJsonSync(state)));
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([Arbitrary.schema(SerializedEditorState)]),
+        ([state]) =>
+          Effect.gen(function* () {
+            const encoded = yield* encodeEditorStateFromJson(state);
+            editor.setEditorState(editor.parseEditorState(encoded));
             expect(Result.isSuccess(decodeUnknownSerializedEditorStateResult(editor.getEditorState().toJSON()))).toBe(
               true
             );
 
             return true;
-          },
-          { runs: 25 }
+          }),
+        { runs: 25 }
+      );
+      expect(result._tag).toBe("Passed");
+    })
+  );
+
+  it.effect("imports a codec-built editor state and re-exports schema-conformant wire state", () =>
+    Effect.gen(function* () {
+      const state = yield* documentToEditorState(fixtureTurn);
+      const wire = yield* encodeSerializedEditorStateJson(state);
+
+      const editor = createHeadlessEditor({
+        namespace: "beep-editor-test",
+        nodes: [...editorNodes],
+        onError: (error) => {
+          throw error;
+        },
+      });
+
+      editor.setEditorState(editor.parseEditorState(wire));
+      const exported = editor.getEditorState().toJSON();
+
+      // Whatever the runtime nodes export must decode through the schema.
+      const decoded = yield* decodeUnknownSerializedEditorState(exported);
+      const artifact = decoded.root.children.at(-1);
+      expect(artifact?.type).toBe("artifact-ref");
+      if (artifact?.type === "artifact-ref") {
+        expect(artifact.artifactId).toBe("artifact-123");
+        expect(artifact.label).toEqual(O.some("Quarterly report"));
+      }
+      expect(decoded.root.children.some((node) => node.type === "table")).toBe(true);
+      expect(decoded.root.children.some((node) => node.type === "youtube")).toBe(true);
+      expect(
+        decoded.root.children.some(
+          (node) => node.type === "code" && O.isSome(node.language) && node.language.value === "mermaid"
         )
-      )._tag
-    ).toBe("Passed");
-  });
-
-  it("imports a codec-built editor state and re-exports schema-conformant wire state", () => {
-    const wire = documentToEditorState(fixtureTurn).pipe(Effect.runSync, encodeSerializedEditorStateSync);
-
-    const editor = createHeadlessEditor({
-      namespace: "beep-editor-test",
-      nodes: [...editorNodes],
-      onError: (error) => {
-        throw error;
-      },
-    });
-
-    editor.setEditorState(editor.parseEditorState(JSON.stringify(wire)));
-    const exported = editor.getEditorState().toJSON();
-
-    // Whatever the runtime nodes export must decode through the schema.
-    const decoded = decodeUnknownSerializedEditorStateSync(exported);
-    const artifact = decoded.root.children.at(-1);
-    expect(artifact?.type).toBe("artifact-ref");
-    if (artifact?.type === "artifact-ref") {
-      expect(artifact.artifactId).toBe("artifact-123");
-      expect(artifact.label).toEqual(O.some("Quarterly report"));
-    }
-    expect(decoded.root.children.some((node) => node.type === "table")).toBe(true);
-    expect(decoded.root.children.some((node) => node.type === "youtube")).toBe(true);
-    expect(
-      decoded.root.children.some(
-        (node) => node.type === "code" && O.isSome(node.language) && node.language.value === "mermaid"
-      )
-    ).toBe(true);
-  });
+      ).toBe(true);
+    })
+  );
 
   it("preserves JSON-compatible NodeState when exporting decorator nodes", () => {
     const editor = createHeadlessEditor({

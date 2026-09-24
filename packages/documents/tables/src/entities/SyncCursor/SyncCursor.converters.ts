@@ -7,7 +7,9 @@
  */
 
 import { SyncCursor } from "@beep/documents-domain/entities/SyncCursor";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { SyncCursorConverterError } from "./SyncCursor.errors.ts";
 import type { syncCursorTable } from "./SyncCursor.table.ts";
 
 /**
@@ -48,8 +50,8 @@ export type SyncCursorRow = typeof syncCursorTable.$inferSelect;
  */
 export type SyncCursorInsert = typeof syncCursorTable.$inferInsert;
 
-const encodeSyncCursor = S.encodeSync(SyncCursor);
-const decodeSyncCursorRow = S.decodeUnknownSync(SyncCursor);
+const encodeSyncCursor = S.encodeResult(SyncCursor);
+const decodeSyncCursorRow = S.decodeUnknownResult(SyncCursor);
 
 /**
  * Convert a SyncCursor entity into its persistence insert row.
@@ -66,6 +68,7 @@ const decodeSyncCursorRow = S.decodeUnknownSync(SyncCursor);
  * ```ts
  * import { fromSyncCursorRow, toSyncCursorInsert } from "@beep/documents-tables/entities/SyncCursor"
  * import type { SyncCursorRow } from "@beep/documents-tables/entities/SyncCursor"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   createdAt: 1,
@@ -87,17 +90,21 @@ const decodeSyncCursorRow = S.decodeUnknownSync(SyncCursor);
  *   workspaceId: 2
  * } satisfies SyncCursorRow
  *
- * const insert = toSyncCursorInsert(fromSyncCursorRow(row))
- * console.log("id" in insert) // false
+ * const insert = Result.flatMap(fromSyncCursorRow(row), toSyncCursorInsert)
+ * console.log(Result.isSuccess(insert) && !("id" in insert.success))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const toSyncCursorInsert = (syncCursor: SyncCursor): SyncCursorInsert => {
-  const { id: _id, ...rest } = encodeSyncCursor(syncCursor);
-  return rest as SyncCursorInsert;
-};
+export const toSyncCursorInsert = (syncCursor: SyncCursor): Result.Result<SyncCursorInsert, SyncCursorConverterError> =>
+  Result.mapError(
+    Result.map(encodeSyncCursor(syncCursor), (encoded): SyncCursorInsert => {
+      const { id: _id, ...insert } = encoded;
+      return insert;
+    }),
+    SyncCursorConverterError.fromSchemaError
+  );
 
 /**
  * Convert a selected persistence row into a SyncCursor entity.
@@ -107,6 +114,7 @@ export const toSyncCursorInsert = (syncCursor: SyncCursor): SyncCursorInsert => 
  * ```ts
  * import { fromSyncCursorRow } from "@beep/documents-tables/entities/SyncCursor"
  * import type { SyncCursorRow } from "@beep/documents-tables/entities/SyncCursor"
+ * import * as Result from "effect/Result"
  *
  * const row = {
  *   createdAt: 1,
@@ -129,10 +137,11 @@ export const toSyncCursorInsert = (syncCursor: SyncCursor): SyncCursorInsert => 
  * } satisfies SyncCursorRow
  *
  * const syncCursor = fromSyncCursorRow(row)
- * console.log(syncCursor.status)
+ * console.log(Result.isSuccess(syncCursor) && syncCursor.success.status)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const fromSyncCursorRow = (row: SyncCursorRow): SyncCursor => decodeSyncCursorRow(row);
+export const fromSyncCursorRow = (row: SyncCursorRow): Result.Result<SyncCursor, SyncCursorConverterError> =>
+  Result.mapError(decodeSyncCursorRow(row), SyncCursorConverterError.fromSchemaError);

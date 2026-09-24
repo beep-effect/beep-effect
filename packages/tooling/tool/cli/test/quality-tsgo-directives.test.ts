@@ -12,15 +12,19 @@ describe("Effect diagnostics directive policy", () => {
   const conformancePath = "packages/tooling/test-kit/test-utils/src/FileSystemConformance.ts";
   const conformanceDirective = `// ${directive} strictEffectProvide:skip-file`;
   const shimPath = "vitest.setup.ts";
+  const sharedConfigPath = "vitest.shared.ts";
+  const sharedConfigDirective = `// ${directive} nodeBuiltinImport:skip-file`;
   const shimRules = ["nodeBuiltinImport", "asyncFunction", "newPromise", "processEnv", "globalTimers", "globalRandom"];
 
   it("declares exactly two exemptions: the root Bun shim and the D14 conformance entrypoint", () => {
     expect(A.map(effectDiagnosticsDirectiveExemptions, (exemption) => exemption.path)).toEqual([
       shimPath,
+      sharedConfigPath,
       conformancePath,
     ]);
     expect(A.map(effectDiagnosticsDirectiveExemptions, (exemption) => [...exemption.rules])).toEqual([
       shimRules,
+      ["nodeBuiltinImport"],
       ["strictEffectProvide"],
     ]);
   });
@@ -33,6 +37,22 @@ describe("Effect diagnostics directive policy", () => {
     expect(isRejectedEffectDiagnosticsDirectiveForTesting(line, "packages/example/src/main.ts")).toBe(true);
     expect(isRejectedEffectDiagnosticsDirectiveForTesting(`${line} -- reason`, shimPath)).toBe(true);
     expect(isRejectedEffectDiagnosticsDirectiveForTesting(`// ${directive}-next-line ${rule}:off`, shimPath)).toBe(
+      true
+    );
+  });
+
+  it("admits only the exact nodeBuiltinImport skip-file line at the root shared Vitest config", () => {
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(sharedConfigDirective, sharedConfigPath)).toBe(false);
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(sharedConfigDirective, conformancePath)).toBe(true);
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(sharedConfigDirective, "vitest.config.ts")).toBe(true);
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(conformanceDirective, sharedConfigPath)).toBe(true);
+    expect(
+      isRejectedEffectDiagnosticsDirectiveForTesting(
+        `// ${directive}-next-line nodeBuiltinImport:off`,
+        sharedConfigPath
+      )
+    ).toBe(true);
+    expect(isRejectedEffectDiagnosticsDirectiveForTesting(`${sharedConfigDirective} -- reason`, sharedConfigPath)).toBe(
       true
     );
   });

@@ -82,7 +82,7 @@ if (!shouldRunPgliteIntegration) {
           const usage = yield* UsageRecordSink;
           const ops = yield* makeChatOperations(store, kernel, usage);
 
-          const workspaceId = decodeWorkspaceId(2);
+          const workspaceId = yield* decodeWorkspaceId(2);
           const thread = yield* ops.createThread(workspaceId, "Persisted matter");
 
           // The stream must complete (the finalize defect previously hung it),

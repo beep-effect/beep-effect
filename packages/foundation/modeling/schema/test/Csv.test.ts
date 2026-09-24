@@ -66,8 +66,8 @@ describe("CSV", () => {
 
       expect(rows).toHaveLength(2);
       expect(rows[0]).toBeInstanceOf(UserRow);
-      expect(rows[0].id).toBe(1);
-      expect(rows[1].last_name).toBe("Hopper");
+      expect(rows[0]?.id).toBe(1);
+      expect(rows[1]?.last_name).toBe("Hopper");
     })
   );
 
@@ -79,9 +79,9 @@ describe("CSV", () => {
         "address,last_name,id,first_name\nLondon,Lovelace,1,Ada\nNew York,Hopper,2,Grace"
       );
 
-      expect(rows[0].first_name).toBe("Ada");
-      expect(rows[0].address).toBe("London");
-      expect(rows[1].id).toBe(2);
+      expect(rows[0]?.first_name).toBe("Ada");
+      expect(rows[0]?.address).toBe("London");
+      expect(rows[1]?.id).toBe(2);
     })
   );
 
@@ -102,8 +102,8 @@ describe("CSV", () => {
       );
 
       expect(rows).toHaveLength(1);
-      expect(rows[0].id).toBe(2);
-      expect(rows[0].address).toBe("New\nYork");
+      expect(rows[0]?.id).toBe(2);
+      expect(rows[0]?.address).toBe("New\nYork");
     })
   );
 
@@ -146,40 +146,36 @@ describe("CSV", () => {
       expect(encoded).toBe('id,first_name,last_name,address\n1,Ada,Lovelace,"London, UK"');
 
       const roundTrip = yield* S.decodeEffect(csv)(encoded);
-      expect(roundTrip[0].address).toBe("London, UK");
-      expect(roundTrip[0].id).toBe(1);
+      expect(roundTrip[0]?.address).toBe("London, UK");
+      expect(roundTrip[0]?.id).toBe(1);
     })
   );
 
-  it("round-trips schema-derived rows with CSV null-byte normalization", () => {
+  {
     const csv = CSV(UserRow);
+    it.effect.prop(
+      "round-trips schema-derived rows with CSV null-byte normalization",
+      [Arbitrary.schema(S.Array(UserRow).check(S.isMaxLength(5)))],
+      Effect.fnUntraced(function* ([rows]) {
+        const encoded = yield* S.encodeEffect(csv)(rows);
+        const decoded = yield* S.decodeEffect(csv)(encoded);
 
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(S.Array(UserRow).check(S.isMaxLength(5)))]),
-          ([rows]) => {
-            const encoded = S.encodeSync(csv)(rows);
-            const decoded = S.decodeSync(csv)(encoded);
+        expect(decoded).toEqual(
+          A.map(rows, (row) =>
+            UserRow.make({
+              ...row,
+              first_name: Str.replaceAll("\0", "")(row.first_name),
+              last_name: Str.replaceAll("\0", "")(row.last_name),
+              address: Str.replaceAll("\0", "")(row.address),
+            })
+          )
+        );
 
-            expect(decoded).toEqual(
-              A.map(rows, (row) =>
-                UserRow.make({
-                  ...row,
-                  first_name: Str.replaceAll("\0", "")(row.first_name),
-                  last_name: Str.replaceAll("\0", "")(row.last_name),
-                  address: Str.replaceAll("\0", "")(row.address),
-                })
-              )
-            );
-
-            return true;
-          },
-          fcRuns(25)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+        return true;
+      }),
+      { arbitrary: fcRuns(25) }
+    );
+  }
 
   it.effect(
     "renders missing optional encoded fields as empty cells",

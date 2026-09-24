@@ -31,27 +31,40 @@ import { A, O, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { pipe } from "effect";
 import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const isCourtVocabularyArtifact = S.is(CourtVocabularyArtifact);
 const isReporterVocabularyArtifact = S.is(ReporterVocabularyArtifact);
 
-const currentCourt = CourtVocabulary.records[0]!;
-const secondCourt = CourtVocabulary.records[1]!;
-const thirdCourt = CourtVocabulary.records[2]!;
-const currentReporter = ReporterVocabulary.records[0]!;
-const secondReporter = ReporterVocabulary.records[1]!;
+if (
+  Result.isFailure(CourtVocabulary) ||
+  Result.isFailure(ReporterVocabulary) ||
+  Result.isFailure(CourtReporterArtifact)
+) {
+  throw new Error("pinned court/reporter vocabulary did not decode");
+}
+
+const courts = CourtVocabulary.success;
+const reporters = ReporterVocabulary.success;
+const artifact = CourtReporterArtifact.success;
+
+const currentCourt = courts.records[0]!;
+const secondCourt = courts.records[1]!;
+const thirdCourt = courts.records[2]!;
+const currentReporter = reporters.records[0]!;
+const secondReporter = reporters.records[1]!;
 
 const courtsArtifact = (records: ReadonlyArray<CourtVocabularyRecord>) =>
   CourtVocabularyArtifact.make({
-    ...CourtVocabulary,
+    ...courts,
     stableIdCount: NonNegativeInt.make(A.length(records)),
     records,
   });
 
 const reportersArtifact = (records: ReadonlyArray<ReporterVocabularyRecord>) =>
   ReporterVocabularyArtifact.make({
-    ...ReporterVocabulary,
+    ...reporters,
     stableIdCount: NonNegativeInt.make(A.length(records)),
     records,
   });
@@ -59,9 +72,9 @@ const reportersArtifact = (records: ReadonlyArray<ReporterVocabularyRecord>) =>
 const comparisonArtifact = ({
   courts = A.empty<CourtVocabularyRecord>(),
   reporters = A.empty<ReporterVocabularyRecord>(),
-  schemaVersion = CourtReporterArtifact.schemaVersion,
-  projectionVersion = CourtReporterArtifact.projectionVersion,
-  version = CourtReporterArtifact.artifactVersion,
+  schemaVersion = artifact.schemaVersion,
+  projectionVersion = artifact.projectionVersion,
+  version = artifact.artifactVersion,
 }: {
   readonly courts?: ReadonlyArray<CourtVocabularyRecord>;
   readonly reporters?: ReadonlyArray<ReporterVocabularyRecord>;
@@ -115,21 +128,21 @@ const classify = (previous: Parameters<typeof comparisonArtifact>[0], next: Para
 
 describe("CourtReporterVocabulary", () => {
   it("publishes schema-decoded pinned artifacts with unique stable identities", () => {
-    expect(isCourtVocabularyArtifact(CourtVocabulary)).toBe(true);
-    expect(isReporterVocabularyArtifact(ReporterVocabulary)).toBe(true);
-    expect(CourtVocabulary.stableIdCount).toBe(2_809);
-    expect(ReporterVocabulary.stableIdCount).toBe(1_262);
-    expect(A.length(A.dedupe(A.map(CourtVocabulary.records, ({ id }) => id)))).toBe(2_809);
-    expect(A.length(A.dedupe(A.map(ReporterVocabulary.records, ({ id }) => id)))).toBe(1_262);
-    expect(CourtVocabulary.artifactVersion).toBe(ReporterVocabulary.artifactVersion);
-    expect(CourtVocabulary.source.commit).toBe("f353e51400a55cc8942b230b3e12540ad364fd23");
-    expect(ReporterVocabulary.source.commit).toBe("fad63b383b92f9446c223ddc12bf0b6fd1a6b44c");
+    expect(isCourtVocabularyArtifact(courts)).toBe(true);
+    expect(isReporterVocabularyArtifact(reporters)).toBe(true);
+    expect(courts.stableIdCount).toBe(2_809);
+    expect(reporters.stableIdCount).toBe(1_262);
+    expect(A.length(A.dedupe(A.map(courts.records, ({ id }) => id)))).toBe(2_809);
+    expect(A.length(A.dedupe(A.map(reporters.records, ({ id }) => id)))).toBe(1_262);
+    expect(courts.artifactVersion).toBe(reporters.artifactVersion);
+    expect(courts.source.commit).toBe("f353e51400a55cc8942b230b3e12540ad364fd23");
+    expect(reporters.source.commit).toBe("fad63b383b92f9446c223ddc12bf0b6fd1a6b44c");
   });
 
   it("preserves the pinned source literal domains without lossy remapping", () => {
-    const systems = A.sort(A.dedupe(A.map(CourtVocabulary.records, ({ system }) => system)), Order.String);
-    const types = A.sort(A.dedupe(A.getSomes(A.map(CourtVocabulary.records, ({ type }) => type))), Order.String);
-    const citeTypes = A.sort(A.dedupe(A.map(ReporterVocabulary.records, ({ citeType }) => citeType)), Order.String);
+    const systems = A.sort(A.dedupe(A.map(courts.records, ({ system }) => system)), Order.String);
+    const types = A.sort(A.dedupe(A.getSomes(A.map(courts.records, ({ type }) => type))), Order.String);
+    const citeTypes = A.sort(A.dedupe(A.map(reporters.records, ({ citeType }) => citeType)), Order.String);
 
     expect(systems).toStrictEqual(CourtSystem.Options);
     expect(types).toStrictEqual(CourtType.Options);
@@ -147,22 +160,22 @@ describe("CourtReporterVocabulary", () => {
   });
 
   it("exposes vocabulary-only projections and an exact-version parser gate", () => {
-    expect("regexes" in ReporterVocabulary).toBe(false);
+    expect("regexes" in reporters).toBe(false);
     expect("variations" in currentReporter).toBe(false);
     expect("sub_names" in currentCourt).toBe(false);
-    expect(isCurrentCourtReporterArtifactVersion(CourtReporterArtifact.artifactVersion)).toBe(true);
+    expect(isCurrentCourtReporterArtifactVersion(artifact.artifactVersion)).toBe(true);
     expect(isCurrentCourtReporterArtifactVersion("crv1:stale-parser-build")).toBe(false);
   });
 
   it("rejects a combined contract whose independently generated artifact versions differ", () => {
     const mismatchedReporters = ReporterVocabularyArtifact.make({
-      ...ReporterVocabulary,
+      ...reporters,
       artifactVersion: CourtReporterArtifactVersion.make("crv1:fixture-mismatched-reporters"),
     });
 
     expect(() =>
       CourtReporterArtifactContract.make({
-        ...CourtReporterArtifact,
+        ...artifact,
         reporters: mismatchedReporters,
       })
     ).toThrow();
@@ -170,24 +183,21 @@ describe("CourtReporterVocabulary", () => {
 
   it("accepts future nested artifact headers before classifying contract drift", () => {
     const future = CourtReporterArtifactComparison.make({
-      ...CourtReporterArtifact,
+      ...artifact,
       schemaVersion: "court-reporter-vocabulary/v2",
       projectionVersion: 2,
       courts: {
-        ...CourtVocabulary,
+        ...courts,
         schemaVersion: "court-reporter-vocabulary/v2",
         projectionVersion: 2,
       },
       reporters: {
-        ...ReporterVocabulary,
+        ...reporters,
         schemaVersion: "court-reporter-vocabulary/v2",
         projectionVersion: 2,
       },
     });
-    const report = classifyCourtReporterArtifactCompatibility(
-      CourtReporterArtifactComparison.make(CourtReporterArtifact),
-      future
-    );
+    const report = classifyCourtReporterArtifactCompatibility(CourtReporterArtifactComparison.make(artifact), future);
 
     expect(report.compatibility).toBe("incompatible");
     expect(A.map(report.changes, ({ kind }) => kind)).toEqual(
@@ -196,11 +206,11 @@ describe("CourtReporterVocabulary", () => {
   });
 
   it("classifies nested header drift and rejects incoherent nested artifact identities", () => {
-    const current = CourtReporterArtifactComparison.make(CourtReporterArtifact);
+    const current = CourtReporterArtifactComparison.make(artifact);
     const nestedDrift = CourtReporterArtifactComparison.make({
-      ...CourtReporterArtifact,
+      ...artifact,
       courts: {
-        ...CourtVocabulary,
+        ...courts,
         schemaVersion: "court-reporter-vocabulary/v2",
         projectionVersion: 2,
       },
@@ -213,9 +223,9 @@ describe("CourtReporterVocabulary", () => {
     );
     expect(() =>
       CourtReporterArtifactComparison.make({
-        ...CourtReporterArtifact,
+        ...artifact,
         courts: {
-          ...CourtVocabulary,
+          ...courts,
           artifactVersion: CourtReporterArtifactVersion.make("crv1:fixture-mismatched-courts"),
         },
       })
@@ -280,15 +290,15 @@ describe("CourtReporterVocabulary", () => {
 
     expect(kinds).toStrictEqual(A.sort([...ArtifactDriftChangeKind.Options], Order.String));
     expect(
-      A.every([reports[0], reports[1], ...reports.slice(3, 7)], ({ compatibility }) => compatibility === "compatible")
+      A.every([...A.take(reports, 2), ...reports.slice(3, 7)], ({ compatibility }) => compatibility === "compatible")
     ).toBe(true);
-    expect(A.every([reports[2], ...reports.slice(7)], ({ compatibility }) => compatibility === "incompatible")).toBe(
-      true
-    );
+    expect(
+      A.every([...reports.slice(2, 3), ...reports.slice(7)], ({ compatibility }) => compatibility === "incompatible")
+    ).toBe(true);
   });
 
   it("reports an unchanged artifact as compatible with no drift", () => {
-    const current = CourtReporterArtifactComparison.make(CourtReporterArtifact);
+    const current = CourtReporterArtifactComparison.make(artifact);
     const report = classifyCourtReporterArtifactCompatibility(current, current);
 
     expect(report.compatibility).toBe("compatible");
@@ -297,16 +307,16 @@ describe("CourtReporterVocabulary", () => {
 
   it("rejects retained identities whose semantic fields or range boundaries drift", () => {
     const courtWithHierarchy = O.getOrThrow(
-      A.findFirst(CourtVocabulary.records, ({ hierarchyLevel }) => O.isSome(hierarchyLevel))
+      A.findFirst(courts.records, ({ hierarchyLevel }) => O.isSome(hierarchyLevel))
     );
     const courtWithJurisdiction = O.getOrThrow(
-      A.findFirst(CourtVocabulary.records, ({ sourceJurisdiction }) => O.isSome(sourceJurisdiction))
+      A.findFirst(courts.records, ({ sourceJurisdiction }) => O.isSome(sourceJurisdiction))
     );
     const courtWithRange = O.getOrThrow(
-      A.findFirst(CourtVocabulary.records, ({ effectiveRanges }) => A.isReadonlyArrayNonEmpty(effectiveRanges))
+      A.findFirst(courts.records, ({ effectiveRanges }) => A.isReadonlyArrayNonEmpty(effectiveRanges))
     );
     const reporterWithEdition = O.getOrThrow(
-      A.findFirst(ReporterVocabulary.records, ({ editions }) => A.isReadonlyArrayNonEmpty(editions))
+      A.findFirst(reporters.records, ({ editions }) => A.isReadonlyArrayNonEmpty(editions))
     );
     const courtRange = courtWithRange.effectiveRanges[0]!;
     const reporterEdition = reporterWithEdition.editions[0]!;

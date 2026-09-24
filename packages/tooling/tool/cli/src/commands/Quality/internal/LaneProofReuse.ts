@@ -4,11 +4,12 @@
  * @since 0.0.0
  */
 
-import { createHash, randomUUID } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Encoding from "effect/Encoding";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -95,7 +96,14 @@ export class LaneProofSession extends S.Class<LaneProofSession>($I`LaneProofSess
   })
 ) {}
 
-const hashText = (value: string): string => createHash("sha256").update(value).digest("hex");
+const hashText = Effect.fnUntraced(function* (value: string) {
+  const crypto = yield* Crypto.Crypto;
+  return Encoding.encodeHex(
+    yield* crypto
+      .digest("SHA-256", new TextEncoder().encode(value))
+      .pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to hash lane-proof identity." })))
+  );
+});
 
 const stableRecordText = (value: Readonly<Record<string, string | undefined>>): string =>
   pipe(
@@ -108,7 +116,7 @@ const stableRecordText = (value: Readonly<Record<string, string | undefined>>): 
     A.join("\0")
   );
 
-const laneCommandHash = (lane: GithubCheckLaneSpec): string =>
+const laneCommandHash = (lane: GithubCheckLaneSpec) =>
   hashText(
     A.join(
       [
@@ -121,12 +129,12 @@ const laneCommandHash = (lane: GithubCheckLaneSpec): string =>
     )
   );
 
-const environmentProfileHash = (lane: GithubCheckLaneSpec): string => {
+const environmentProfileHash = Effect.fnUntraced(function* (lane: GithubCheckLaneSpec) {
   const inheritedEnvironmentHash =
     lane.step.useLocalEnv === true || turboEnvExtendsAmbient(lane.step.command, lane.step.args)
-      ? hashText(stableRecordText(Bun.env))
+      ? yield* hashText(stableRecordText(Bun.env))
       : undefined;
-  return hashText(
+  return yield* hashText(
     stableRecordText({
       platform: process.platform,
       architecture: process.arch,
@@ -136,7 +144,7 @@ const environmentProfileHash = (lane: GithubCheckLaneSpec): string => {
       laneEnv: stableRecordText(lane.step.env ?? {}),
     })
   );
-};
+});
 
 const runGit = (
   cwd: string,
@@ -163,9 +171,14 @@ const runGit = (
 const virtualTreeSha = Effect.fn("LaneProofReuse.virtualTreeSha")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const crypto = yield* Crypto.Crypto;
   const indexPath = path.resolve(
     repoRoot,
-    yield* runGit(repoRoot, ["rev-parse", "--git-path", `yeet-lane-proof-index-${randomUUID()}`])
+    yield* runGit(repoRoot, [
+      "rev-parse",
+      "--git-path",
+      `yeet-lane-proof-index-${yield* crypto.randomUUIDv4.pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to create lane-proof index identity." })))}`,
+    ])
   );
   const indexEnv = { GIT_INDEX_FILE: indexPath };
   return yield* Effect.acquireUseRelease(
@@ -224,20 +237,20 @@ export const prepareLaneProofSession = Effect.fn("LaneProofReuse.prepareSession"
   const tree = yield* virtualTreeSha(repoRoot).pipe(Effect.option);
   if (O.isNone(tree)) return O.none<LaneProofSession>();
   const store = yield* loadStore(storePath);
-  const identities = pipe(
-    lanes,
-    A.filter((lane) => !isNonReusableLaneProofId(lane.id)),
-    A.map((lane) =>
-      LaneProofIdentity.make({
+  const identities = yield* Effect.forEach(
+    A.filter(lanes, (lane) => !isNonReusableLaneProofId(lane.id)),
+    Effect.fnUntraced(function* (lane) {
+      return LaneProofIdentity.make({
         laneId: lane.id,
-        commandHash: laneCommandHash(lane),
-        inputHash: hashText(`${lane.id}\0${tree.value}`),
+        commandHash: yield* laneCommandHash(lane),
+        inputHash: yield* hashText(`${lane.id}\0${tree.value}`),
         mergedTreeSha: tree.value,
         headSha: prepared.value.headSha,
         baseSha: prepared.value.baseSha,
-        envProfileHash: environmentProfileHash(lane),
-      })
-    )
+        envProfileHash: yield* environmentProfileHash(lane),
+      });
+    }),
+    { concurrency: 1 }
   );
   yield* fs.makeDirectory(path.dirname(storePath), { recursive: true }).pipe(Effect.ignore);
   return O.some(
@@ -332,7 +345,8 @@ export const persistLaneProofs = Effect.fn("LaneProofReuse.persist")(function* (
   const encoded = yield* LaneProofStoreJson.encode(
     LaneProofStore.make({ schemaVersion: "yeet-lane-proofs/v2", records })
   );
-  const temporaryPath = `${refreshedSession.path}.${randomUUID()}.tmp`;
+  const crypto = yield* Crypto.Crypto;
+  const temporaryPath = `${refreshedSession.path}.${yield* crypto.randomUUIDv4.pipe(Effect.mapError(() => LaneProofGitError.make({ message: "Failed to create lane-proof staging identity." })))}.tmp`;
   yield* fs.makeDirectory(path.dirname(refreshedSession.path), { recursive: true });
   yield* fs.writeFileString(temporaryPath, `${encoded}\n`);
   yield* fs.rename(temporaryPath, refreshedSession.path);

@@ -22,34 +22,43 @@ import type { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Wor
 
 const WORKSPACE_TABLE_NAME = "workspace_workspace" as const;
 
-const encodeWorkspaceId = S.encodeSync(WorkspaceIdentity.WorkspaceId);
+const encodeWorkspaceId = S.encodeEffect(WorkspaceIdentity.WorkspaceId);
+const decodeWorkspace = S.decodeEffect(Workspace);
+const decodeUnknownPosInt = S.decodeUnknownEffect(PosInt);
 
 const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
 
 const publicIdFor = (id: PosInt): string => `${WORKSPACE_TABLE_NAME}_a${id}`;
 
-const baseWorkspaceEntity = (id: PosInt, vaultRootPath: O.Option<WorkspaceVaultRootPath>): Workspace =>
-  Workspace.decodeSync({
-    createdAt: id,
-    createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: "WorkspaceWorkspace",
-    fixtureKey: "workspace.default",
-    id,
-    name: "Default Workspace",
-    orgId: 1,
-    organizationFixtureKey: "organization.default",
-    ownerPrincipalFixtureKey: "principal.default",
-    publicId: publicIdFor(id),
-    rowVersion: 1,
-    schemaVersion: "0.0.0",
-    source: "System",
-    updatedAt: id,
-    updatedByPrincipal: SYSTEM_PRINCIPAL,
-    vaultRootPath: O.getOrNull(vaultRootPath),
-  });
+const baseWorkspaceEntity = Effect.fn("Workspace.WorkspaceVaultStore.baseWorkspaceEntity")(
+  (id: PosInt, vaultRootPath: O.Option<WorkspaceVaultRootPath>) =>
+    decodeWorkspace({
+      createdAt: id,
+      createdByPrincipal: SYSTEM_PRINCIPAL,
+      entityType: "WorkspaceWorkspace",
+      fixtureKey: "workspace.default",
+      id,
+      name: "Default Workspace",
+      orgId: 1,
+      organizationFixtureKey: "organization.default",
+      ownerPrincipalFixtureKey: "principal.default",
+      publicId: publicIdFor(id),
+      rowVersion: 1,
+      schemaVersion: "0.0.0",
+      source: "System",
+      updatedAt: id,
+      updatedByPrincipal: SYSTEM_PRINCIPAL,
+      vaultRootPath: O.getOrNull(vaultRootPath),
+    }).pipe(repositoryUnavailable("decode Workspace seed"))
+);
 
-const workspaceIdToNumber = (workspaceId: WorkspaceIdentity.WorkspaceId): PosInt =>
-  PosInt.make(Number(encodeWorkspaceId(workspaceId)));
+const workspaceIdToNumber = Effect.fn("Workspace.WorkspaceVaultStore.workspaceIdToNumber")(
+  (workspaceId: WorkspaceIdentity.WorkspaceId) =>
+    encodeWorkspaceId(workspaceId).pipe(
+      Effect.flatMap(decodeUnknownPosInt),
+      repositoryUnavailable("encode Workspace id")
+    )
+);
 
 const configFor = (
   workspaceId: WorkspaceIdentity.WorkspaceId,
@@ -99,16 +108,17 @@ const validateVaultRoot = Effect.fn("Workspace.WorkspaceVaultStore.validateVault
  */
 export const makeInMemoryWorkspaceVaultStore = Effect.fn("Workspace.WorkspaceVaultStore.makeInMemory")(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const store = yield* Ref.make(HashMap.empty<number, WorkspaceVaultRootPath>());
+  const store = yield* Ref.make(HashMap.empty<PosInt, WorkspaceVaultRootPath>());
 
   return WorkspaceUseCases.Workspace.WorkspaceVaultStore.of({
     getVaultConfig: Effect.fn("Workspace.WorkspaceVaultStore.getVaultConfig")(function* (workspaceId) {
       const state = yield* Ref.get(store);
-      return configFor(workspaceId, HashMap.get(state, Number(encodeWorkspaceId(workspaceId))));
+      const id = yield* workspaceIdToNumber(workspaceId);
+      return configFor(workspaceId, HashMap.get(state, id));
     }),
     setVaultRoot: Effect.fn("Workspace.WorkspaceVaultStore.setVaultRoot")(function* (input) {
       yield* validateVaultRoot(fs, input.vaultRootPath);
-      const id = Number(encodeWorkspaceId(input.workspaceId));
+      const id = yield* workspaceIdToNumber(input.workspaceId);
       yield* Ref.update(store, HashMap.set(id, input.vaultRootPath));
       return configFor(input.workspaceId, O.some(input.vaultRootPath));
     }),
@@ -155,14 +165,18 @@ export const makeDrizzleWorkspaceVaultStore = Effect.fn("Workspace.WorkspaceVaul
 
   return WorkspaceUseCases.Workspace.WorkspaceVaultStore.of({
     getVaultConfig: Effect.fn("Workspace.WorkspaceVaultStore.drizzleGetVaultConfig")(function* (workspaceId) {
-      const id = workspaceIdToNumber(workspaceId);
+      const id = yield* workspaceIdToNumber(workspaceId);
       const rows = yield* db
         .select()
         .from(workspaceTable)
         .where(eq(workspaceTable.id, id))
         .limit(1)
         .pipe(repositoryUnavailable("select Workspace"));
-      const workspace = rows[0] === undefined ? O.none<Workspace>() : O.some(fromWorkspaceRow(rows[0]));
+      const workspace = yield* O.match(A.head(rows), {
+        onNone: () => Effect.succeedNone,
+        onSome: (row) =>
+          Effect.fromResult(fromWorkspaceRow(row)).pipe(repositoryUnavailable("decode Workspace"), Effect.asSome),
+      });
       return configFor(
         workspaceId,
         O.match(workspace, {
@@ -173,7 +187,7 @@ export const makeDrizzleWorkspaceVaultStore = Effect.fn("Workspace.WorkspaceVaul
     }),
     setVaultRoot: Effect.fn("Workspace.WorkspaceVaultStore.drizzleSetVaultRoot")(function* (input) {
       yield* validateVaultRoot(fs, input.vaultRootPath);
-      const id = workspaceIdToNumber(input.workspaceId);
+      const id = yield* workspaceIdToNumber(input.workspaceId);
       const rows = yield* db
         .select()
         .from(workspaceTable)
@@ -181,10 +195,13 @@ export const makeDrizzleWorkspaceVaultStore = Effect.fn("Workspace.WorkspaceVaul
         .limit(1)
         .pipe(repositoryUnavailable("select Workspace"));
       if (A.isReadonlyArrayEmpty(rows)) {
-        const seed = baseWorkspaceEntity(id, O.some(input.vaultRootPath));
+        const seed = yield* baseWorkspaceEntity(id, O.some(input.vaultRootPath));
+        const insert = yield* Effect.fromResult(toWorkspaceInsert(seed)).pipe(
+          repositoryUnavailable("encode Workspace insert")
+        );
         yield* db
           .insert(workspaceTable)
-          .values({ ...toWorkspaceInsert(seed), id })
+          .values({ ...insert, id })
           .pipe(repositoryUnavailable("insert Workspace"), Effect.asVoid);
       } else {
         yield* db

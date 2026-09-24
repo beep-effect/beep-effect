@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 
-import { randomUUID } from "node:crypto";
 import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import { Console, DateTime, Effect, FileSystem, HashMap, HashSet, Order, Path } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -54,7 +54,7 @@ const RestorationWriterClaimJson = S.fromJsonString(RestorationWriterClaim);
 const decodeRestorationWriterClaim = S.decodeUnknownEffect(RestorationWriterClaimJson);
 const encodeRestorationWriterClaim = S.encodeEffect(RestorationWriterClaimJson);
 
-type RestorationRequirements = FileSystem.FileSystem | Path.Path;
+type RestorationRequirements = Crypto.Crypto | FileSystem.FileSystem | Path.Path;
 
 type ArchiveSourceObject = {
   readonly destinationRelativePath: string;
@@ -526,7 +526,13 @@ const tryWriteExclusiveCoordinationFile = Effect.fn("CorpusRestoration.tryWriteE
   return written;
 });
 
-const reapedCoordinationPath = (filePath: string): string => `${filePath}.reaped-${process.pid}-${randomUUID()}`;
+const reapedCoordinationPath = Effect.fnUntraced(function* (filePath: string) {
+  const crypto = yield* Crypto.Crypto;
+  const token = yield* crypto.randomUUIDv4.pipe(
+    CorpusCommandError.mapError("Failed creating preservation coordination identity.")
+  );
+  return `${filePath}.reaped-${process.pid}-${token}`;
+});
 
 const moveObservedCoordinationFile = Effect.fn("CorpusRestoration.moveObservedCoordinationFile")(function* (
   filePath: string,
@@ -536,7 +542,7 @@ const moveObservedCoordinationFile = Effect.fn("CorpusRestoration.moveObservedCo
   const path = yield* Path.Path;
   const currentText = yield* readCanonicalCoordinationFile(filePath);
   if (O.isNone(currentText) || !Str.Equivalence(currentText.value, observedText)) return false;
-  const reapedPath = reapedCoordinationPath(filePath);
+  const reapedPath = yield* reapedCoordinationPath(filePath);
   const moved = yield* fs.rename(filePath, reapedPath).pipe(
     Effect.as(true),
     Effect.catchTag("PlatformError", (error) =>
@@ -677,13 +683,17 @@ const acquireRestorationWriterClaim = Effect.fn("CorpusRestoration.acquireWriter
   if (O.isNone(ownProcessStart)) {
     return yield* archiveError("Current preservation writer process identity is unavailable; ownership fails closed.");
   }
+  const crypto = yield* Crypto.Crypto;
+  const token = yield* crypto.randomUUIDv4.pipe(
+    CorpusCommandError.mapError("Failed creating preservation writer identity.")
+  );
   const encodedClaim = yield* encodeRestorationWriterClaim({
     bootId: yield* currentBootId(),
     pid: process.pid,
     procStart: ownProcessStart.value,
     schemaVersion: "oppold-preservation-writer/v2",
     startedAt: yield* recordedAt(),
-    token: randomUUID(),
+    token,
   }).pipe(CorpusCommandError.mapError("Failed encoding preservation writer ownership state."));
   const claimText = `${encodedClaim}\n`;
   const claimPath = yield* requireContainedPath(
@@ -758,7 +768,7 @@ export const withRestorationWriterClaim = Effect.fn("CorpusRestoration.withWrite
  */
 export const repairRestorationJsonlTail = Effect.fn("CorpusRestoration.repairJsonlTail")(function* (
   filePath: string
-): Effect.fn.Return<boolean, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<boolean, CorpusCommandError, RestorationRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const resolvedFilePath = path.resolve(filePath);
@@ -829,7 +839,7 @@ export const repairRestorationJsonlTail = Effect.fn("CorpusRestoration.repairJso
 export const appendRestorationTextDurably = Effect.fn("CorpusRestoration.appendTextDurably")(function* (
   filePath: string,
   text: string
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, RestorationRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const resolvedFilePath = path.resolve(filePath);
@@ -881,7 +891,7 @@ export const appendRestorationTextDurably = Effect.fn("CorpusRestoration.appendT
 const appendArchiveRecord = Effect.fn("CorpusRestoration.appendArchiveRecord")(function* (
   manifestPath: string,
   record: ArchiveLedgerRecord
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, RestorationRequirements> {
   const encoded = yield* encodeArchiveLedgerRecordJson(record).pipe(
     CorpusCommandError.mapError("Archive ledger record failed JSONL encoding.")
   );
@@ -1004,7 +1014,7 @@ const archiveInventorySignature = (
 
 const collectArchiveInventory = Effect.fn("CorpusRestoration.collectArchiveInventory")(function* (
   canonicalPaths: CanonicalArchivePaths
-): Effect.fn.Return<ArchiveInventory, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ArchiveInventory, CorpusCommandError, RestorationRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const sourceRoot = canonicalPaths.sourceRoot;
@@ -1025,58 +1035,59 @@ const collectArchiveInventory = Effect.fn("CorpusRestoration.collectArchiveInven
     sourceLabel: "salvage-tree",
     sourceRelativePath: ".",
   });
-  const collectAt: (directory: string) => Effect.Effect<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> =
-    Effect.fn("CorpusRestoration.collectArchiveInventory.collectAt")(function* (directory) {
-      const names = yield* fs
-        .readDirectory(directory)
-        .pipe(CorpusCommandError.mapError("Failed enumerating preservation source tree."));
-      for (const name of A.sort(names, Order.String)) {
-        const sourcePath = path.join(directory, name);
-        const relativePath = path.relative(sourceRoot, sourcePath);
-        yield* requireContainedPath(
-          path,
-          sourceRoot,
-          sourcePath,
-          "Preservation source entry escapes the canonical source root.",
-          true
-        );
-        const canonicalSourcePath = yield* fs
-          .realPath(sourcePath)
-          .pipe(CorpusCommandError.mapError("Failed canonicalizing preservation source entry."));
-        if (canonicalSourcePath !== sourcePath) {
-          return yield* archiveError("Preservation source entries must not traverse symbolic links.");
-        }
-        const info = yield* fs
-          .stat(sourcePath)
-          .pipe(CorpusCommandError.mapError("Failed inspecting preservation source entry."));
-        if (info.type === "Directory") {
-          directories.push({
-            destinationRelativePath: path.join("payload", "tree", relativePath),
-            expectedInfo: sourceIdentity(info),
-            objectId: objectIdFor("salvage-tree", relativePath),
-            sourceLabel: "salvage-tree",
-            sourceRelativePath: relativePath,
-          });
-          yield* collectAt(sourcePath);
-          continue;
-        }
-        if (info.type !== "File") {
-          return yield* archiveError("Preservation source contains an unsupported non-file object.");
-        }
-        const sizeBytes = Number(info.size);
-        sourceTreeBytes += sizeBytes;
-        files.push({
+  const collectAt: (directory: string) => Effect.Effect<void, CorpusCommandError, RestorationRequirements> = Effect.fn(
+    "CorpusRestoration.collectArchiveInventory.collectAt"
+  )(function* (directory) {
+    const names = yield* fs
+      .readDirectory(directory)
+      .pipe(CorpusCommandError.mapError("Failed enumerating preservation source tree."));
+    for (const name of A.sort(names, Order.String)) {
+      const sourcePath = path.join(directory, name);
+      const relativePath = path.relative(sourceRoot, sourcePath);
+      yield* requireContainedPath(
+        path,
+        sourceRoot,
+        sourcePath,
+        "Preservation source entry escapes the canonical source root.",
+        true
+      );
+      const canonicalSourcePath = yield* fs
+        .realPath(sourcePath)
+        .pipe(CorpusCommandError.mapError("Failed canonicalizing preservation source entry."));
+      if (canonicalSourcePath !== sourcePath) {
+        return yield* archiveError("Preservation source entries must not traverse symbolic links.");
+      }
+      const info = yield* fs
+        .stat(sourcePath)
+        .pipe(CorpusCommandError.mapError("Failed inspecting preservation source entry."));
+      if (info.type === "Directory") {
+        directories.push({
           destinationRelativePath: path.join("payload", "tree", relativePath),
           expectedInfo: sourceIdentity(info),
-          expectedSizeBytes: sizeBytes,
           objectId: objectIdFor("salvage-tree", relativePath),
-          objectKind: "file",
           sourceLabel: "salvage-tree",
-          sourcePath,
           sourceRelativePath: relativePath,
         });
+        yield* collectAt(sourcePath);
+        continue;
       }
-    });
+      if (info.type !== "File") {
+        return yield* archiveError("Preservation source contains an unsupported non-file object.");
+      }
+      const sizeBytes = Number(info.size);
+      sourceTreeBytes += sizeBytes;
+      files.push({
+        destinationRelativePath: path.join("payload", "tree", relativePath),
+        expectedInfo: sourceIdentity(info),
+        expectedSizeBytes: sizeBytes,
+        objectId: objectIdFor("salvage-tree", relativePath),
+        objectKind: "file",
+        sourceLabel: "salvage-tree",
+        sourcePath,
+        sourceRelativePath: relativePath,
+      });
+    }
+  });
   yield* collectAt(sourceRoot);
 
   const rootArchivePath = canonicalPaths.rootArchivePath;
@@ -1267,7 +1278,7 @@ const reconcileCollectorManifest = Effect.fn("CorpusRestoration.reconcileCollect
 ): Effect.fn.Return<
   { readonly collectorErrorCount: number; readonly mutatedDestinationCount: number; readonly rowCount: number },
   CorpusCommandError,
-  FileSystem.FileSystem | Path.Path
+  RestorationRequirements
 > {
   const fs = yield* FileSystem.FileSystem;
   const manifestText = yield* fs
@@ -1631,7 +1642,7 @@ const validateOpenedArchiveCopy = Effect.fn("CorpusRestoration.validateOpenedArc
 const copyArchiveBytes = Effect.fn("CorpusRestoration.copyArchiveBytes")(function* (
   context: ArchiveAttemptContext,
   partialState: PartialArchiveState
-): Effect.fn.Return<Sha256Hex, CorpusCommandError, FileSystem.FileSystem | Path.Path | Scope.Scope> {
+): Effect.fn.Return<Sha256Hex, CorpusCommandError, RestorationRequirements | Scope.Scope> {
   const fs = yield* FileSystem.FileSystem;
   const source = yield* fs
     .open(context.object.sourcePath, { flag: "r" })
@@ -1735,7 +1746,7 @@ const copyOneArchiveObject = Effect.fn("CorpusRestoration.copyOneArchiveObject")
   archiveRoot: string,
   manifestPath: string,
   runId: string
-): Effect.fn.Return<ArchiveFileCopyResult, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ArchiveFileCopyResult, CorpusCommandError, RestorationRequirements> {
   const path = yield* Path.Path;
   const destinationPath = path.join(archiveRoot, object.destinationRelativePath);
   yield* requireContainedPath(
@@ -1775,7 +1786,7 @@ const appendProvenance = Effect.fn("CorpusRestoration.appendProvenance")(functio
   source: ArchiveSourceObject,
   pass: ArchiveLedgerRecord,
   salvagedAt: string
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, RestorationRequirements> {
   if (pass.recordType !== "archive-file-pass") return;
   const path = yield* Path.Path;
   const record = CorpusProvenanceRecord.make({
@@ -1834,7 +1845,7 @@ const sealArchiveManifest = Effect.fn("CorpusRestoration.sealArchiveManifest")(f
   manifestPath: string,
   runId: string,
   chunkSize: number
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, RestorationRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs
     .readFileString(manifestPath)
@@ -2237,7 +2248,7 @@ const verificationFailure = (
 const persistVerificationReport = Effect.fn("CorpusRestoration.persistVerificationReport")(function* (
   archiveRoot: string,
   records: ReadonlyArray<ArchiveVerificationRecord>
-): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusCommandError, RestorationRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const lines = yield* Effect.forEach(records, (record) =>
@@ -2711,7 +2722,7 @@ export const restorationArchiveTesting = {
  */
 export const verifyRestorationArchiveImpl = Effect.fn("CorpusRestoration.verifyArchive")(function* (
   options: RestorationVerifyOptions
-): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<RestorationRunSummary, CorpusCommandError, RestorationRequirements> {
   const startedAt = DateTime.toEpochMillis(yield* DateTime.now);
   const path = yield* Path.Path;
   const archiveRoot = yield* resolveVerificationArchiveRoot(options);

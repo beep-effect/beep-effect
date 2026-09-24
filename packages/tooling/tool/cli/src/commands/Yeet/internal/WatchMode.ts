@@ -37,13 +37,14 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { Console, DateTime, Duration, Effect, FileSystem, flow, HashSet, Ref, Result } from "effect";
+import { Console, DateTime, Duration, Effect, FileSystem, flow, HashSet, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { GhActor } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -63,12 +64,20 @@ import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import {
   acknowledgeYeetMonitorComments,
   collectNewYeetMonitorComments,
+  isYeetMonitorThreadComment,
   openYeetMonitorCommentStream,
   renderYeetMonitorCommentStreamStopped,
   YEET_MONITOR_COMMENT_FAILURE_BUDGET,
 } from "./MonitorComments.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
 import { dispatchYeetCheckFailure, supersedeYeetDispatchState } from "./Remediation.ts";
+import {
+  deriveYeetReviewThreadState,
+  YeetReviewThreadNewestComment,
+  YeetReviewThreadStateInput,
+  yeetReviewCommentAuthorKind,
+  yeetReviewThreadStateOutstanding,
+} from "./ReviewThreadState.ts";
 import {
   deriveSettleVerdict,
   readYeetChangedPaths,
@@ -101,8 +110,10 @@ import {
   YeetWatchThread,
   yeetWatchCommentEvent,
   yeetWatchEndReason,
+  yeetWatchThreadOutstanding,
 } from "./WatchStream.ts";
 import type { Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetMonitorCommentWatermark } from "./MonitorComments.ts";
@@ -145,12 +156,31 @@ class WatchCheckRow extends S.Class<WatchCheckRow>($I`WatchCheckRow`)(
   })
 ) {}
 
+class WatchThreadComment extends S.Class<WatchThreadComment>($I`WatchThreadComment`)(
+  { author: GhActor.pipe(S.NullOr, S.optionalKey), createdAt: S.optionalKey(S.String) },
+  $I.annote("WatchThreadComment", { description: "One review-thread comment reduced to its author and timestamp." })
+) {}
+
+class WatchThreadCommentConnection extends S.Class<WatchThreadCommentConnection>($I`WatchThreadCommentConnection`)(
+  { nodes: S.Array(WatchThreadComment).pipe(SchemaUtils.withKeyDefaults(A.empty<WatchThreadComment>())) },
+  $I.annote("WatchThreadCommentConnection", { description: "The newest-comment connection of one review thread." })
+) {}
+
+// `isOutdated`, `resolvedBy` and `latest` default rather than being required:
+// they are what the state rule reads, and a payload recorded before the watch
+// asked for them classifies as the conservative unresolved/answered pair
+// instead of failing the whole poll.
 class WatchThreadNode extends S.Class<WatchThreadNode>($I`WatchThreadNode`)(
   {
     id: S.NonEmptyString,
     isResolved: S.Boolean,
+    isOutdated: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    path: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)),
+    line: S.NullOr(S.Finite).pipe(SchemaUtils.withKeyDefaults(null)),
+    resolvedBy: GhActor.pipe(S.NullOr, S.optionalKey),
+    latest: S.optionalKey(WatchThreadCommentConnection),
   },
-  $I.annote("WatchThreadNode", { description: "One review thread's identity and resolution state." })
+  $I.annote("WatchThreadNode", { description: "One review thread's identity, resolution, and newest comment." })
 ) {}
 
 class WatchThreadPageInfo extends S.Class<WatchThreadPageInfo>($I`WatchThreadPageInfo`)(
@@ -166,6 +196,7 @@ class WatchThreadsDocument extends S.Class<WatchThreadsDocument>($I`WatchThreads
     data: S.Struct({
       node: S.NullOr(
         S.Struct({
+          author: GhActor.pipe(S.NullOr, S.optionalKey),
           reviewThreads: S.Struct({ nodes: S.Array(WatchThreadNode), pageInfo: WatchThreadPageInfo }),
         })
       ),
@@ -179,7 +210,7 @@ const decodeCheckRows = S.decodeUnknownEffect(S.fromJsonString(S.Array(WatchChec
 const decodeThreadsDocument = S.decodeUnknownEffect(S.fromJsonString(WatchThreadsDocument));
 
 const watchThreadsQuery =
-  "query($id:ID!,$cursor:String){node(id:$id){... on PullRequest{reviewThreads(first:100,after:$cursor){pageInfo{hasNextPage endCursor} nodes{id isResolved}}}}}";
+  "query($id:ID!,$cursor:String){node(id:$id){... on PullRequest{author{login} reviewThreads(first:100,after:$cursor){pageInfo{hasNextPage endCursor} nodes{id isResolved isOutdated path line resolvedBy{login} latest:comments(last:1){nodes{author{__typename login} createdAt}}}}}}}";
 
 // gh renders an absent link or workflow as "" in some check sources (plain
 // commit statuses); the domain speaks null for "the record has no such field".
@@ -191,7 +222,11 @@ const acceptableWatchMergeStates: ReadonlyArray<string> = ["BEHIND", "CLEAN", "H
 const checksRead = Effect.fn("Yeet.checksRead")(function* (
   context: RepoRunContext,
   required: boolean
-): Effect.fn.Return<ReadonlyArray<WatchCheckRow>, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<WatchCheckRow>,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runRepoCommandCapture(
     "gh",
     ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket,link,workflow"],
@@ -210,12 +245,46 @@ const checksRead = Effect.fn("Yeet.checksRead")(function* (
     : A.empty<WatchCheckRow>();
 });
 
+// The watch reads the same structural facts the status gate classifies on, so
+// both surfaces answer "is anything outstanding" with one rule rather than two
+// that can disagree about a resolved thread a reviewer has spoken on since.
+const watchThreadState = (node: WatchThreadNode, pullRequestAuthor: O.Option<string>) =>
+  deriveYeetReviewThreadState(
+    YeetReviewThreadStateInput.make({
+      threadId: node.id,
+      isResolved: node.isResolved,
+      isOutdated: node.isOutdated,
+      path: O.fromNullishOr(node.path),
+      line: O.fromNullishOr(node.line),
+      pullRequestAuthor,
+      resolvedBy: pipe(
+        O.fromUndefinedOr(node.resolvedBy),
+        O.flatMap(O.fromNullishOr),
+        O.map((actor) => actor.login)
+      ),
+      newestComment: pipe(
+        O.fromUndefinedOr(node.latest),
+        O.flatMap((latest) => A.last(latest.nodes)),
+        O.flatMap((comment) =>
+          O.map(O.fromNullishOr(comment.author), (author) =>
+            YeetReviewThreadNewestComment.make({
+              authorLogin: author.login,
+              authorKind: yeetReviewCommentAuthorKind(O.fromUndefinedOr(author.__typename)),
+              createdAt: O.fromUndefinedOr(comment.createdAt),
+            })
+          )
+        )
+      ),
+    })
+  );
+
 // fallow-ignore-next-line complexity -- the GraphQL cursor and page validity checks form one pagination state machine
 const reviewThreadsRead = Effect.fn("Yeet.reviewThreadsRead")(function* (
   context: RepoRunContext,
   pullRequestId: string
 ) {
   const nodes: Array<WatchThreadNode> = [];
+  let pullRequestAuthor = O.none<string>();
   let cursor = O.none<string>();
   while (true) {
     const result = yield* runRepoCommandCapture(
@@ -237,13 +306,21 @@ const reviewThreadsRead = Effect.fn("Yeet.reviewThreadsRead")(function* (
         exitCode: 1,
       });
     }
-    const connection = yield* decodeThreadsDocument(result.output).pipe(
-      Effect.map((document) => document.data.node?.reviewThreads),
+    const node = yield* decodeThreadsDocument(result.output).pipe(
+      Effect.map((document) => document.data.node),
       Effect.mapError(YeetCommandError.new("Failed to decode PR review threads JSON for yeet watch."))
     );
-    if (connection === undefined) return nodes;
+    if (node === null) return { pullRequestAuthor, nodes };
+    pullRequestAuthor = O.orElse(pullRequestAuthor, () =>
+      pipe(
+        O.fromUndefinedOr(node.author),
+        O.flatMap(O.fromNullishOr),
+        O.map((author) => author.login)
+      )
+    );
+    const connection = node.reviewThreads;
     nodes.push(...connection.nodes);
-    if (!connection.pageInfo.hasNextPage) return nodes;
+    if (!connection.pageInfo.hasNextPage) return { pullRequestAuthor, nodes };
     if (connection.pageInfo.endCursor === null || Str.isEmpty(connection.pageInfo.endCursor)) {
       return yield* YeetCommandError.make({
         message: "PR review threads reported another GraphQL page without an end cursor.",
@@ -306,7 +383,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 ): Effect.fn.Return<
   YeetWatchSnapshot,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const viewResult = yield* runRepoCommandCapture(
     "gh",
@@ -325,7 +402,8 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 
   const [checkRows, requiredCheckRows] = yield* Effect.all([checksRead(context, false), checksRead(context, true)]);
 
-  const threadNodes = yield* reviewThreadsRead(context, view.id);
+  const threadPages = yield* reviewThreadsRead(context, view.id);
+  const threadStates = A.map(threadPages.nodes, (node) => watchThreadState(node, threadPages.pullRequestAuthor));
 
   const closeoutPath = yield* runArtifactPathForContext(context, "pr-closeout.json");
   const fs = yield* FileSystem.FileSystem;
@@ -341,8 +419,11 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
       const outcome = classifyYeetCheckOutcome(YeetCheckSignal.make({ bucket: row.bucket, state: row.state }));
       return YeetCheckOutcome.is.pass(outcome) || YeetCheckOutcome.is.skip(outcome);
     });
+  // Same predicate the status gate uses: a thread the author resolved with a
+  // human reviewer speaking last still owes an answer, so a watch that only
+  // asked `isResolved` would call the pull request ready while the gate held.
   const threadsResolved =
-    A.every(threadNodes, (thread) => thread.isResolved) && !O.exists(closeout, (report) => report.issueCount > 0);
+    !A.some(threadStates, yeetReviewThreadStateOutstanding) && !O.exists(closeout, (report) => report.issueCount > 0);
   const mergeStateStatus = view.mergeStateStatus ?? "UNKNOWN";
   const criteria = YeetMergeReadyCriteria.make({
     prOpen: Str.toUpperCase(view.state) === "OPEN",
@@ -377,7 +458,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
     prNumber: view.number,
     state: view.state,
     labels: A.map(view.labels, (label) => label.name),
-    threads: A.map(threadNodes, (node) => YeetWatchThread.make({ id: node.id, isResolved: node.isResolved })),
+    threads: A.map(threadStates, (state) => YeetWatchThread.make({ id: state.threadId, state: state.state })),
     criteria,
   });
 });
@@ -515,37 +596,39 @@ const convergeYeetWatchDispatch = Effect.fn("convergeYeetWatchDispatch")(functio
   context: RepoRunContext,
   snapshot: YeetWatchSnapshot,
   at: string
-): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   yield* Effect.forEach(
     A.filter(snapshot.checks, (check) => YeetCheckOutcome.is.fail(check.outcome)),
     (check) => dispatchYeetCheckFailure(context.repoRoot, snapshot, check, at),
     { discard: true }
   );
   yield* Effect.forEach(
-    A.filter(snapshot.threads, (thread) => !thread.isResolved),
-    (thread) => {
-      const capsule = YeetReviewThreadCapsule.make({
-        headSha: snapshot.headSha,
-        link: null,
-        prNumber: snapshot.prNumber,
-        threadId: thread.id,
-      });
-      return appendYeetInboxRowOnce(
-        context.repoRoot,
-        YeetReviewThreadRow.make({
-          capsule,
-          checkout: context.repoRoot,
-          id: yeetReviewThreadRowId(capsule),
-          severity: "P1",
-          ts: at,
-        })
-      ).pipe(
+    A.filter(snapshot.threads, yeetWatchThreadOutstanding),
+    (thread) =>
+      Effect.gen(function* () {
+        const capsule = YeetReviewThreadCapsule.make({
+          headSha: snapshot.headSha,
+          link: null,
+          prNumber: snapshot.prNumber,
+          threadId: thread.id,
+        });
+        const id = yield* yeetReviewThreadRowId(capsule);
+        yield* appendYeetInboxRowOnce(
+          context.repoRoot,
+          YeetReviewThreadRow.make({
+            capsule,
+            checkout: context.repoRoot,
+            id,
+            severity: "P1",
+            ts: at,
+          })
+        );
+      }).pipe(
         Effect.catch((error) =>
           Console.error(`[yeet] failed to append review-thread inbox row ${thread.id}: ${error.message}`)
         ),
         Effect.asVoid
-      );
-    },
+      ),
     { discard: true }
   );
   if (Str.toUpperCase(snapshot.mergeStateStatus) === "BEHIND") {
@@ -554,16 +637,19 @@ const convergeYeetWatchDispatch = Effect.fn("convergeYeetWatchDispatch")(functio
       headSha: snapshot.headSha,
       prNumber: snapshot.prNumber,
     });
-    yield* appendYeetInboxRowOnce(
-      context.repoRoot,
-      YeetBaseDriftRow.make({
-        capsule,
-        checkout: context.repoRoot,
-        id: yeetBaseDriftRowId(capsule),
-        severity: "P2",
-        ts: at,
-      })
-    ).pipe(
+    yield* yeetBaseDriftRowId(capsule).pipe(
+      Effect.flatMap((driftId) =>
+        appendYeetInboxRowOnce(
+          context.repoRoot,
+          YeetBaseDriftRow.make({
+            capsule,
+            checkout: context.repoRoot,
+            id: driftId,
+            severity: "P2",
+            ts: at,
+          })
+        )
+      ),
       Effect.catch((error) => Console.error(`[yeet] failed to append base-drift inbox row: ${error.message}`)),
       Effect.asVoid
     );
@@ -616,7 +702,7 @@ interface WatchCommentSession {
 const openWatchCommentSession = Effect.fn("Yeet.openWatchCommentSession")(function* (
   context: RepoRunContext,
   pullRequestNumber: number
-): Effect.fn.Return<WatchCommentSession, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<WatchCommentSession, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   return {
     failuresRef: yield* Ref.make(0),
     stoppedRef: yield* Ref.make(false),
@@ -637,7 +723,7 @@ const emitWatchCommentRows = Effect.fn("Yeet.emitWatchCommentRows")(function* (
 ): Effect.fn.Return<
   number,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   if (yield* Ref.get(session.stoppedRef)) {
     return 0;
@@ -656,9 +742,14 @@ const emitWatchCommentRows = Effect.fn("Yeet.emitWatchCommentRows")(function* (
   }
   yield* Ref.set(session.failuresRef, 0);
   const at = yield* isoNow;
-  yield* Effect.forEach(polled.success, flow(yeetWatchCommentEvent(at, snapshot.headSha), emitWatchEvent), {
-    discard: true,
-  });
+  // Review bodies ride the same stream but carry no path, line or thread, so
+  // they are acknowledged with the batch and left out of the `comment-posted`
+  // rows rather than given invented coordinates.
+  yield* Effect.forEach(
+    A.filter(polled.success, isYeetMonitorThreadComment),
+    flow(yeetWatchCommentEvent(at, snapshot.headSha), emitWatchEvent),
+    { discard: true }
+  );
   yield* acknowledgeYeetMonitorComments(context, snapshot.prNumber, session.watermarkRef, polled.success);
   return A.length(polled.success);
 });
@@ -711,7 +802,7 @@ const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   emptyPolls: number,
   settle: (
     snapshot: YeetWatchSnapshot
-  ) => Effect.Effect<YeetWatchSnapshot, never, ChildProcessSpawner.ChildProcessSpawner>
+  ) => Effect.Effect<YeetWatchSnapshot, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>
 ) {
   const polled = yield* collectYeetWatchSnapshot(context).pipe(
     Effect.asSome,
@@ -872,7 +963,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
 ): Effect.fn.Return<
   YeetWatchEnded,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > {
   const untilEvent = config.untilEvent === true;
   let head = O.none<WatchSettleState>();

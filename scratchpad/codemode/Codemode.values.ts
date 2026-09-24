@@ -8,11 +8,55 @@
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { type SafeObject, SafeObject as SafeObjectSchema } from "@beep/schema/SafeObject";
+import * as N from "effect/Number";
+import * as P from "effect/Predicate";
 import { Equal, Fiber } from "effect";
 import * as S from "effect/Schema";
 import type { InterpreterFailure } from "./interpreter/Interpreter.model.ts";
 
 const $I = $ScratchpadId.create("codemode/Codemode.values");
+
+/**
+ * Guest JavaScript numbers, including NaN and both infinities.
+ *
+ * **Details**
+ *
+ * Non-finite values are explicit because the interpreter must retain native
+ * arithmetic and invalid-date semantics. Effect numeric literals require finite values.
+ *
+ * **Example** (Recognize non-finite guest values)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CodeModeNumber } from "../../../codemode/Codemode.values.ts"
+ *
+ * S.is(CodeModeNumber)(Infinity) // true
+ * S.is(CodeModeNumber)(NaN) // true
+ * S.is(CodeModeNumber)("1") // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CodeModeNumber = S.Union([
+  S.Finite,
+  S.declare(
+    (value): value is number =>
+      P.isNumber(value) && (N.Equivalence(value, NaN) || value === Infinity || value === -Infinity)
+  ),
+]).pipe(
+  $I.annoteSchema("CodeModeNumber", {
+    description: "Guest JavaScript number preserving finite values, NaN, and positive and negative infinity.",
+  })
+);
+
+/**
+ * Runtime value accepted by the guest-number schema.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CodeModeNumber = typeof CodeModeNumber.Type;
 
 /**
  * Allocates the null-prototype data object used at guest-language boundaries.
@@ -119,7 +163,7 @@ export class CodeModePromise extends S.TaggedClass<CodeModePromise>($I`CodeModeP
  *
  * **Gotchas**
  *
- * The `time` field is `S.Number` so an invalid JavaScript Date (`NaN`) stays
+ * The `time` field is `CodeModeNumber` so an invalid JavaScript Date (`NaN`) stays
  * representable instead of being rejected by a finite-number schema.
  *
  * **Example** (Keep an invalid date observable)
@@ -140,8 +184,7 @@ export class CodeModePromise extends S.TaggedClass<CodeModePromise>($I`CodeModeP
 export class CodeModeDate extends S.TaggedClass<CodeModeDate>($I`CodeModeDate`)(
   "CodeModeDate",
   // Invalid JavaScript dates carry NaN and must remain representable.
-  // @effect-diagnostics-next-line schemaNumber:off
-  { time: S.Number.pipe(S.mutableKey) },
+  { time: CodeModeNumber.pipe(S.mutableKey) },
   $I.annote("CodeModeDate", {
     description: "Mutable JavaScript Date value represented by epoch milliseconds.",
   })
@@ -387,11 +430,11 @@ export const CodeModeValue = S.Union([
   CodeModeURL,
   CodeModeURLSearchParams,
 ]).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("CodeModeValue", {
     description: "Mutable guest values backed by native JavaScript state.",
   }),
-  SchemaUtils.withCodecStatics(["is"])
+  S.toTaggedUnion("_tag"),
+  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
 );
 
 /**

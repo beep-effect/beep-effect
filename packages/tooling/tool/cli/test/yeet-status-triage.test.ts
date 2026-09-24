@@ -18,11 +18,13 @@ import {
   yeetReviewThreadExcerpt,
   yeetStatusArtifactFromVerdictForTesting,
   yeetStatusNextCommandForTesting,
+  yeetStatusThreadTriageForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, FileSystem, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -153,6 +155,48 @@ describe("yeet unresolved-thread listing", () => {
     expect(lines[2]).toBe("  - PRRT_kwDOAbC2 comment 2412551123 @octocat: Please add a regression test");
   });
 
+  it("lists resolved threads where a reviewer spoke last as follow-ups under the unresolved block", () => {
+    const block = renderYeetReviewThreadBlock(
+      YeetStatusRemote.make({
+        available: true,
+        checked: true,
+        detail: "PR #560 OPEN",
+        unresolvedReviewThreadCount: 0,
+        unresolvedThreads: O.some([]),
+        followUpThreadCount: 1,
+        followUpThreads: O.some([triageThread]),
+      })
+    );
+    const lines = Str.split("\n")(block);
+
+    expect(lines[0]).toBe("review threads: 0 unresolved");
+    expect(lines[1]).toBe(
+      "review follow-ups: 1 resolved thread(s) where a reviewer spoke last; read and answer them (yeet reply posts on them)"
+    );
+    expect(lines[2]).toContain("PRRT_kwDOAbC1 comment 2412551122");
+  });
+
+  it("lists bot acknowledgements as advisory under the gating sections", () => {
+    const block = renderYeetReviewThreadBlock(
+      YeetStatusRemote.make({
+        available: true,
+        checked: true,
+        detail: "PR #560 OPEN",
+        unresolvedReviewThreadCount: 0,
+        unresolvedThreads: O.some([]),
+        acknowledgedThreadCount: 1,
+        acknowledgedThreads: O.some([triageThread]),
+      })
+    );
+    const lines = Str.split("\n")(block);
+
+    expect(lines[0]).toBe("review threads: 0 unresolved");
+    expect(lines[1]).toBe(
+      "review acknowledgements: 1 resolved thread(s) a review bot confirmed; advisory, nothing owed"
+    );
+    expect(lines[2]).toContain("PRRT_kwDOAbC1 comment 2412551122");
+  });
+
   it("falls back to the legacy inline id list when a snapshot carries no triage context", () => {
     const remote = YeetStatusRemote.make({
       available: true,
@@ -170,6 +214,256 @@ describe("yeet unresolved-thread listing", () => {
       renderYeetReviewThreadBlock(YeetStatusRemote.make({ available: false, checked: false, detail: "pass --remote" }))
     ).toBe("review threads: not checked");
   });
+});
+
+// The GraphQL payload shape `gh api graphql` prints for one page of the status
+// thread query, built from the fields the state rule actually reads.
+const threadComment = (login: string, body: string, typename = "User", databaseId = 2412551122) => ({
+  author: { __typename: typename, login },
+  body,
+  databaseId,
+});
+
+const threadNode = (fields: {
+  readonly id: string;
+  readonly isResolved: boolean;
+  readonly resolvedBy?: string;
+  readonly opening?: ReturnType<typeof threadComment>;
+  readonly latest?: ReturnType<typeof threadComment>;
+  readonly openingHasMorePages?: boolean;
+}) => ({
+  id: fields.id,
+  isResolved: fields.isResolved,
+  isOutdated: false,
+  path: "src/commands/Yeet/internal/MonitorLoop.ts",
+  line: 88,
+  resolvedBy: fields.resolvedBy === undefined ? null : { login: fields.resolvedBy },
+  comments: {
+    nodes: [fields.opening ?? threadComment("greptile-apps[bot]", greptileBody, "Bot")],
+    // Selected by the real query only as `first: 1`; a thread with more
+    // comments than that is exactly the case `latest` exists to classify.
+    pageInfo: { hasNextPage: fields.openingHasMorePages ?? false },
+  },
+  latest: { nodes: fields.latest === undefined ? [] : [fields.latest] },
+});
+
+const threadsPayload = (nodes: ReadonlyArray<ReturnType<typeof threadNode>>, author: string | null = "kriegcloud") =>
+  JSON.stringify({
+    data: {
+      node: {
+        author: author === null ? null : { login: author },
+        reviewThreads: { nodes, pageInfo: { hasNextPage: false, endCursor: null } },
+      },
+    },
+  });
+
+describe("yeet review-thread classification", () => {
+  it.effect("counts a resolved thread whose newest comment is a reviewer's as an outstanding follow-up", () =>
+    Effect.gen(function* () {
+      const triage = yield* yeetStatusThreadTriageForTesting(
+        threadsPayload([
+          threadNode({
+            id: "PRRT_kwDOAbC1",
+            isResolved: true,
+            resolvedBy: "kriegcloud",
+            latest: threadComment("octocat", humanBody),
+          }),
+        ])
+      );
+
+      expect(triage.counts.followUp).toBe(1);
+      expect(triage.counts.answered).toBe(0);
+      expect(A.map(triage.followUpThreads, (thread) => thread.author)).toEqual(["octocat"]);
+      // The row is triaged from the follow-up itself, not from the opening
+      // comment: the sentence the operator owes an answer to is the new one.
+      expect(A.map(triage.followUpThreads, (thread) => thread.excerpt)).toEqual(["Please add a regression test"]);
+
+      const mergeReady = deriveYeetMergeReady(
+        closeoutArtifact(0, O.some("5/5")),
+        YeetStatusRemote.make({
+          ...openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 }),
+          followUpThreadCount: triage.counts.followUp,
+        })
+      );
+
+      expect(O.flatMap(mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+    })
+  );
+
+  it.effect("stops counting the same thread once the author has replied on it", () =>
+    Effect.gen(function* () {
+      const triage = yield* yeetStatusThreadTriageForTesting(
+        threadsPayload([
+          threadNode({
+            id: "PRRT_kwDOAbC1",
+            isResolved: true,
+            resolvedBy: "kriegcloud",
+            latest: threadComment("kriegcloud", "Fixed in the follow-up commit."),
+          }),
+        ])
+      );
+
+      expect(triage.counts.followUp).toBe(0);
+      expect(triage.counts.answered).toBe(1);
+      expect(triage.followUpThreads).toEqual([]);
+    })
+  );
+
+  it.effect("classifies a thread with more comments than the opening page from its newest comment", () =>
+    Effect.gen(function* () {
+      const triage = yield* yeetStatusThreadTriageForTesting(
+        threadsPayload([
+          threadNode({
+            id: "PRRT_kwDOAbC1",
+            isResolved: true,
+            resolvedBy: "kriegcloud",
+            opening: threadComment("kriegcloud", "Opened by the author."),
+            openingHasMorePages: true,
+            latest: threadComment("octocat", humanBody),
+          }),
+        ])
+      );
+
+      expect(triage.counts.followUp).toBe(1);
+    })
+  );
+
+  it.effect("reports a review bot's last word as an acknowledgement that does not gate", () =>
+    Effect.gen(function* () {
+      const triage = yield* yeetStatusThreadTriageForTesting(
+        threadsPayload([
+          threadNode({
+            id: "PRRT_kwDOAbC1",
+            isResolved: true,
+            resolvedBy: "kriegcloud",
+            latest: threadComment("coderabbitai", "Verified, thanks!", "Bot"),
+          }),
+        ])
+      );
+
+      expect(triage.counts.acknowledged).toBe(1);
+      expect(triage.counts.followUp).toBe(0);
+      expect(A.map(triage.acknowledgedThreads, (thread) => thread.author)).toEqual(["coderabbitai"]);
+
+      const mergeReady = deriveYeetMergeReady(
+        closeoutArtifact(0, O.some("5/5")),
+        YeetStatusRemote.make({
+          ...openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 }),
+          acknowledgedThreadCount: triage.counts.acknowledged,
+        })
+      );
+
+      expect(O.map(mergeReady, (value) => value.ready)).toStrictEqual(O.some(true));
+    })
+  );
+
+  it.effect("treats a thread resolved by somebody other than the author as answered", () =>
+    Effect.gen(function* () {
+      const triage = yield* yeetStatusThreadTriageForTesting(
+        threadsPayload([
+          threadNode({
+            id: "PRRT_kwDOAbC1",
+            isResolved: true,
+            resolvedBy: "octocat",
+            latest: threadComment("octocat", humanBody),
+          }),
+        ])
+      );
+
+      expect(triage.counts.answered).toBe(1);
+      expect(triage.counts.followUp).toBe(0);
+    })
+  );
+
+  it.effect("triages an unresolved thread from its opening comment", () =>
+    Effect.gen(function* () {
+      const triage = yield* yeetStatusThreadTriageForTesting(
+        threadsPayload([threadNode({ id: "PRRT_kwDOAbC1", isResolved: false })])
+      );
+
+      expect(triage.counts.unresolved).toBe(1);
+      expect(A.map(triage.unresolvedThreads, (thread) => thread.author)).toEqual(["greptile-apps[bot]"]);
+    })
+  );
+});
+
+// The review-thread page `gh api graphql` actually returned for PR #1184 on
+// 2026-09-22, kept verbatim in `test/fixtures/`. Two adaptations, neither
+// touching a fact the rule reads: the capture was taken through the
+// repository-rooted query, so its `data.repository.pullRequest` is moved under
+// the `data.node` root the status query selects, and its comment selection
+// asked only for authors, so the two display-only fields the status query also
+// selects are filled in as absent. Logins, actor typenames, `resolvedBy` and
+// resolution state are the file's own.
+const readCapturedThreads = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.readFileString(new URL("./fixtures/pr-review-bodies/pr1184-threads.json", import.meta.url).pathname);
+});
+
+const capturedThreadsText = await Effect.runPromise(
+  Effect.scoped(
+    Layer.build(NodeServices.layer).pipe(
+      Effect.flatMap((context) => readCapturedThreads().pipe(Effect.provide(context)))
+    )
+  )
+);
+
+const capturedThreadsPayload = (): string => {
+  const captured = JSON.parse(capturedThreadsText) as {
+    readonly data: {
+      readonly repository: {
+        readonly pullRequest: {
+          readonly author: { readonly login: string };
+          readonly reviewThreads: { readonly nodes: ReadonlyArray<Record<string, unknown>> };
+        };
+      };
+    };
+  };
+  const pullRequest = captured.data.repository.pullRequest;
+  const displayable = (connection: unknown) => ({
+    nodes: A.map((connection as { readonly nodes: ReadonlyArray<Record<string, unknown>> }).nodes, (node) => ({
+      body: null,
+      databaseId: null,
+      ...node,
+    })),
+  });
+  return JSON.stringify({
+    data: {
+      node: {
+        author: pullRequest.author,
+        reviewThreads: {
+          nodes: A.map(pullRequest.reviewThreads.nodes, (thread) => ({
+            ...thread,
+            comments: displayable(thread.comments),
+            latest: displayable(thread.latest),
+          })),
+          pageInfo: { hasNextPage: false, endCursor: null },
+        },
+      },
+    },
+  });
+};
+
+describe("yeet review-thread classification against a captured pull request", () => {
+  it.effect("reads PR #1184's eight threads as six answered and two bot acknowledgements", () =>
+    Effect.gen(function* () {
+      const triage = yield* yeetStatusThreadTriageForTesting(capturedThreadsPayload());
+
+      // Nothing is owed on that pull request: five threads a reviewer closed
+      // themselves or the author had the last word on, one the author closed
+      // after speaking last, and the two CodeRabbit confirmed after the author
+      // closed them. A rule that read "resolved by the author, somebody else
+      // spoke last" as a follow-up would have blocked the merge on those two.
+      expect(triage.counts).toMatchObject({ unresolved: 0, followUp: 0, acknowledged: 2, answered: 6 });
+      expect(triage.followUpThreads).toEqual([]);
+      expect(triage.unresolvedThreads).toEqual([]);
+      expect(A.map(triage.acknowledgedThreads, (thread) => thread.author)).toEqual(["coderabbitai", "coderabbitai"]);
+      expect(A.map(triage.acknowledgedThreads, (thread) => thread.threadId)).toEqual([
+        "PRRT_kwDOPbO_N86knAXS",
+        "PRRT_kwDOPbO_N86ksUUr",
+      ]);
+    })
+  );
 });
 
 describe("yeet merge readiness", () => {
@@ -315,6 +609,56 @@ describe("yeet merge readiness", () => {
         remote
       )
     ).toContain("beep yeet closeout");
+  });
+
+  it("suggests yeet reply when a reviewer follow-up is the one thing blocking the merge", () => {
+    const remote = YeetStatusRemote.make({
+      ...openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 }),
+      followUpThreadCount: 1,
+      followUpThreads: O.some([triageThread]),
+    });
+    const command = yeetStatusNextCommandForTesting(
+      YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
+      YeetStatusArtifact.make({ detail: "success", outcome: "success", path: "verdict.json", state: "present" }),
+      closeoutArtifact(0, O.some("5/5")),
+      remote
+    );
+
+    expect(command).toContain("bun run beep yeet reply");
+  });
+
+  it("does not send the operator to yeet reply while the required checks are also red", () => {
+    // `failing` names only the first blocker in protocol order, and threads
+    // lead required checks in that order. Answering reviewers would not make
+    // this branch mergeable, so the command has to stay on the red pipeline.
+    const remote = YeetStatusRemote.make({
+      ...openRemote({ checkCount: 24, failingCheckCount: 3, pendingCheckCount: 0 }),
+      followUpThreadCount: 1,
+      followUpThreads: O.some([triageThread]),
+      rerunFailedCommand: "gh run view 42",
+      rerunFailedDecision: "same-SHA failed workflow",
+    });
+    const command = yeetStatusNextCommandForTesting(
+      YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
+      YeetStatusArtifact.make({ detail: "success", outcome: "success", path: "verdict.json", state: "present" }),
+      closeoutArtifact(0, O.some("5/5")),
+      remote
+    );
+
+    expect(command).not.toContain("yeet reply");
+    expect(command).toContain("gh run view 42");
+  });
+
+  it("keeps recommending closeout when only the closeout artifact's own issues block threads-resolved", () => {
+    const command = yeetStatusNextCommandForTesting(
+      YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
+      YeetStatusArtifact.make({ detail: "success", outcome: "success", path: "verdict.json", state: "present" }),
+      closeoutArtifact(2, O.some("5/5")),
+      openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 })
+    );
+
+    expect(command).toContain("beep yeet closeout");
+    expect(command).not.toContain("yeet reply");
   });
 
   it("is ready with no failing criterion when all hard criteria hold, carrying Greptile as display only", () => {

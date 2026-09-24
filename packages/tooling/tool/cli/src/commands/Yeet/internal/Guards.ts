@@ -15,6 +15,7 @@ import { optionFromNonEmpty } from "./GitExec.ts";
 import { commitMessagePathForContext, writeTextFile } from "./IssueArtifacts.ts";
 import { validateOpenPullRequest } from "./PullRequest.ts";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetRunOptions } from "../Yeet.schemas.ts";
@@ -236,7 +237,7 @@ export const validateMonitorBranch = (context: RepoRunContext): Effect.Effect<vo
 export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(function* (
   context: RepoRunContext,
   options: YeetRunOptions
-): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   yield* validateStartPrEarlyPrGuard(options);
   yield* validateOptionGuards(options);
 
@@ -315,7 +316,7 @@ export const validateCommitMessage = Effect.fn("Yeet.validateCommitMessage")(fun
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const commitlint = yield* resolveLocalRepoBinary(context.repoRoot, "commitlint");
   const messagePath = yield* commitMessagePathForContext(context);

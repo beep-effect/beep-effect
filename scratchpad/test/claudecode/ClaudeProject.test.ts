@@ -18,6 +18,13 @@ import * as PlatformError from "effect/PlatformError";
 
 import * as ClaudeProject from "../../claudecode/ClaudeProject.ts";
 
+const provideBuiltLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scopedWith((scope) =>
+      Layer.buildWithScope(scope)(layer).pipe(Effect.flatMap((context) => Effect.provide(self, context)))
+    );
+
 // ---------------------------------------------------------------------------
 // Test layer builders
 // ---------------------------------------------------------------------------
@@ -96,7 +103,7 @@ describe("ClaudeProject", () => {
 
         const third = yield* project.settings;
         expect(third.model).toEqual(O.some("claude-sonnet-4-6"));
-      }).pipe(Effect.provide(makeTestLayer(files)));
+      }).pipe(provideBuiltLayer(makeTestLayer(files)));
     })()
   );
 
@@ -123,7 +130,7 @@ describe("ClaudeProject", () => {
 
         const third = yield* project.mcp;
         expect(O.isSome(third)).toBe(true);
-      }).pipe(Effect.provide(makeTestLayer(files)));
+      }).pipe(provideBuiltLayer(makeTestLayer(files)));
     })()
   );
 
@@ -154,8 +161,7 @@ describe("ClaudeProject", () => {
         if (O.isSome(third)) {
           expect(third.value.frontmatter.description).toEqual(O.some("Updated greeting"));
         }
-      }).pipe(Effect.provide(makeTestLayer(files)));
+      }).pipe(provideBuiltLayer(makeTestLayer(files)));
     })()
   );
 });
-/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

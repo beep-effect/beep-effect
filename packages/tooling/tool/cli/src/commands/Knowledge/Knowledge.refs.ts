@@ -319,6 +319,71 @@ export type KnowledgeRefClassification = typeof KnowledgeRefClassification.Type;
 export const isKnowledgeRefClassification = S.is(KnowledgeRefClassification);
 
 /**
+ * The informational classes the human listing folds into per-class counts instead of printing per row.
+ *
+ * **Details**
+ *
+ * Every member is derived from {@link KnowledgeRefClassification} and carries a "None" remediation:
+ * the observation is expected data (a resolved target, a documented convention, captured provenance,
+ * or rule and inventory literals), not something a reader can act on. None of them is ever counted
+ * by `--check` (see {@link KNOWLEDGE_REFS_GATED_CLASSIFICATIONS}), so folding them changes what
+ * the listing prints and nothing about what the gate decides. Classes with a real remediation
+ * (`broken-target`, `producer-owned-target`, `ungoverned-syntax`, ...) stay loud even though they
+ * are not gated either: they are the rows a human scans the listing for.
+ *
+ * **Example** (Read the quiet classes)
+ *
+ * ```ts
+ * import { KnowledgeRefQuietClassification } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ *
+ * console.log(KnowledgeRefQuietClassification.is.verified("verified")) // true
+ * console.log(KnowledgeRefQuietClassification.Options.length) // 5
+ * ```
+ *
+ * @see {@link isKnowledgeRefQuietClassification} for the derived guard the listing filters with.
+ * @category models
+ * @since 0.0.0
+ */
+export const KnowledgeRefQuietClassification = LiteralKit([
+  KnowledgeRefClassification.Enum.verified,
+  KnowledgeRefClassification.Enum["portable-home-convention"],
+  KnowledgeRefClassification.Enum["documented-temp-convention"],
+  KnowledgeRefClassification.Enum["archival-provenance"],
+  KnowledgeRefClassification.Enum["audit-pattern-literal"],
+]).pipe(
+  $I.annoteSchema("KnowledgeRefQuietClassification", {
+    description: "Informational classification the human listing summarizes as a count rather than per row.",
+  })
+);
+
+/**
+ * One informational triage class the listing summarizes.
+ *
+ * @see {@link KnowledgeRefQuietClassification} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type KnowledgeRefQuietClassification = typeof KnowledgeRefQuietClassification.Type;
+
+/**
+ * Narrows a classification to the quiet subset the listing summarizes.
+ *
+ * **Example** (A gated class is never quiet)
+ *
+ * ```ts
+ * import { isKnowledgeRefQuietClassification } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ *
+ * console.log(isKnowledgeRefQuietClassification("archival-provenance")) // true
+ * console.log(isKnowledgeRefQuietClassification("actionable-host-path")) // false
+ * console.log(isKnowledgeRefQuietClassification("broken-target")) // false
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isKnowledgeRefQuietClassification = S.is(KnowledgeRefQuietClassification);
+
+/**
  * Resolution outcome of one reference against the requested tree.
  *
  * **Details**
@@ -1778,15 +1843,29 @@ const PORTABLE_HOME_CONVENTIONS = HashSet.make(
 // Exact-mention conventions: naming the XDG user directory itself is portable, but any concrete
 // descendant (`~/Downloads/report.csv`) is machine session residue and stays gated — a prefix
 // admission here would let live guidance park arbitrary machine-local files behind the folder name.
-const PORTABLE_HOME_EXACT_CONVENTIONS = HashSet.make("~/Downloads");
+// The bare home root (`~/`) names no machine-local file: upstream skill mirrors use it as an
+// import-alias spelling (`@/`, `~/`) and as the generic "your home" placeholder.
+const PORTABLE_HOME_EXACT_CONVENTIONS = HashSet.make("~", "~/Downloads");
 const TEMP_CONVENTIONS = HashSet.make("/tmp/portless");
 const stripTrailingSlashes = Str.replace(/\/+$/u, "");
+// A shell assignment (`PORTLESS_STATE_DIR=~/.portless-lan`) carries the same convention as the bare
+// path; the variable name is not part of the anchor. Only a plain literal value is admitted: a
+// right-hand side with substitution, expansion, quoting, or globbing (`~/.portless-lan/$(hostname)`)
+// is not the path it appears to be, so the token is judged whole and stays gated.
+const SHELL_ASSIGNMENT_PREFIX_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*=/u;
+const SHELL_DYNAMIC_VALUE_PATTERN = /[$`"'\\(){}*?[\]]/u;
+const stripShellAssignment = (token: string): string => {
+  const value = Str.replace(SHELL_ASSIGNMENT_PREFIX_PATTERN, "")(token);
+  return value !== token && SHELL_DYNAMIC_VALUE_PATTERN.test(value) ? token : value;
+};
 
-const hasConventionPrefix = (conventions: HashSet.HashSet<string>, token: string): boolean =>
-  HashSet.some(conventions, (prefix) => token === prefix || Str.startsWith(`${prefix}/`)(token));
+const hasConventionPrefix = (conventions: HashSet.HashSet<string>, rawToken: string): boolean => {
+  const token = stripShellAssignment(rawToken);
+  return HashSet.some(conventions, (prefix) => token === prefix || Str.startsWith(`${prefix}/`)(token));
+};
 
 const isExactHomeConvention = (token: string): boolean =>
-  HashSet.has(PORTABLE_HOME_EXACT_CONVENTIONS, stripTrailingSlashes(token));
+  HashSet.has(PORTABLE_HOME_EXACT_CONVENTIONS, stripTrailingSlashes(stripShellAssignment(token)));
 
 /**
  * Whether a line reads as rule, pattern, or inventory text rather than as guidance.

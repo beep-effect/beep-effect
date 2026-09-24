@@ -1,0 +1,26 @@
+{
+  "status": "rejected-before-semantic-validation",
+  "wrapperExitCode": 1,
+  "reason": "Inherited Grit plugin paths do not resolve from the package-local project root. Baseline config loading fails.",
+  "references": [
+    {
+      "path": ".beep/qualification-local-preflight/package-scanner-d36toqjo/baseline/identity/biome.jsonc",
+      "sha256": "f8c7d3a3c4a588698efcc9179afeef17dab1670e59487e418a9fe1bce0f0b307"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/package-scanner-d36toqjo/baseline/verbose.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/package-scanner-d36toqjo/baseline/verbose.stderr",
+      "sha256": "c4a7ea35312fe61409154d80a7856ad0f60d19358f8a33ed9a8d5a9cbe8d09fa"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/package-scanner.log",
+      "sha256": "10a1b118ee56908072c03aff69c429f81f93896e0c59de0ac6296185ae74f32f"
+    }
+  ],
+  "postflightParity": "not reached because the probe failed",
+  "qualificationCredit": false,
+  "nextCandidate": "An explicitly selected sibling configuration file in the repository root; no repository config change yet."
+}

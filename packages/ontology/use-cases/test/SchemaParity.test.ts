@@ -3,8 +3,12 @@ import {
   ApplyOntologyBatchCommand,
   ApplyOntologyBatchResult,
   DiffWorkerResult,
+  decodeWorkerCommand,
+  decodeWorkerResult,
   ExportOntologyProvenanceCommand,
   ExportOntologyProvenanceResult,
+  encodeWorkerCommand,
+  encodeWorkerResult,
   OntologyActionError,
   OntologyFilePath,
   OntologyRepairProposal,
@@ -26,6 +30,7 @@ import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
 import { Option as O, Result } from "effect";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -174,5 +179,22 @@ describe("@beep/ontology-use-cases schema parity", () => {
     expect(Result.getOrThrow(decodeWorkerResultResult(Result.getOrThrow(encodeWorkerResultResult(result))))).toEqual(
       result
     );
+  });
+
+  it("round-trips worker commands and results through the exported boundary codecs", () => {
+    const command = WorkerCommand.make({
+      kind: "parseTurtle",
+      request: ParseTurtleRequest.make({
+        source: "@prefix ex: <https://example.test/> .",
+        baseIri: O.some("https://example.test/"),
+      }),
+    });
+    const result = WorkerResult.make({
+      kind: "diffDatasetsSucceeded",
+      result: DiffWorkerResult.make({ operations: [] }),
+    });
+
+    assertSuccess(Result.flatMap(encodeWorkerCommand(command), decodeWorkerCommand), command);
+    assertSuccess(Result.flatMap(encodeWorkerResult(result), decodeWorkerResult), result);
   });
 });

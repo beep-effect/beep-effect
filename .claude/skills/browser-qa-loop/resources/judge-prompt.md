@@ -60,7 +60,7 @@ Motion/interaction (each maps to a `lens` value in your output):
 
 Your FINAL message must be exactly:
 
-1. One fenced ```json block containing a single object conforming to
+1. One fenced `json` block containing a single object conforming to
    `qa-inventory/v1`:
 
 ```

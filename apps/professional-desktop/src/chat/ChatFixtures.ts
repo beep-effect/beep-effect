@@ -10,26 +10,27 @@ import { SafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-
-const decodeWorkspaceIdValue = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId);
+import type * as Effect from "effect/Effect";
 
 /**
- * Decode an unknown value into a validated {@link WorkspaceIdentity.WorkspaceId}
- * for use in fixture data.
+ * Decode an unknown fixture value into a validated {@link WorkspaceIdentity.WorkspaceId},
+ * keeping validation failures in the Effect error channel.
  *
  * **Example** (Decode workspace ID)
  *
  * ```ts
  * import { decodeWorkspaceId } from "@/chat/ChatFixtures"
+ * import * as Effect from "effect/Effect"
  *
- * const id = decodeWorkspaceId(1)
- * console.log(id)
+ * const id = await Effect.runPromise(decodeWorkspaceId(1))
+ * console.log(id) // 1
  * ```
  *
  * @category fixtures
  * @since 0.0.0
  */
-export const decodeWorkspaceId = (input: unknown): WorkspaceIdentity.WorkspaceId => decodeWorkspaceIdValue(input);
+export const decodeWorkspaceId: (input: unknown) => Effect.Effect<WorkspaceIdentity.WorkspaceId, S.SchemaError> =
+  S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId);
 
 /**
  * Build a single-paragraph `@beep/md` {@link Md.Document.Type} fixture from a

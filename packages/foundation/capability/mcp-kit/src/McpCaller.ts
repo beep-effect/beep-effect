@@ -1,5 +1,10 @@
 /**
- * Request-local MCP caller identity propagated by sanitized toolkit dispatch.
+ * Request-local MCP caller identity and the dispatch anchor, both propagated
+ * by sanitized toolkit dispatch: the identity carries transport facts only
+ * (the protocol exchange id the server assigned and, when a stateful
+ * transport echoes one, its session header), and the anchor is an opaque,
+ * product-neutral slot that host composition may fill, which the kit never
+ * derives, names, or documents.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -14,18 +19,15 @@ import * as S from "effect/Schema";
 const $I = $McpKitId.create("McpCaller");
 
 /**
- *  Initialized MCP caller identity assigned by the server transport.
+ * MCP caller identity assigned by the server transport for one dispatch.
  *
- * **Gotchas**
+ * **Details**
  *
- * `clientId` identifies one **protocol exchange**, not one session:
- * the HTTP protocol mints it per request (`RpcServer.ts` `clientId++` inside
- * the per-request effect), so consecutive `tools/call` posts of one MCP
- * session carry different values. `sessionId` is the transport-assigned
- * session identifier — the `mcp-session-id` header minted at `initialize` —
- * and is the only stable per-session key available to a dispatch. It is
- * `None` for transports that do not issue one (stdio), where the connection
- * itself is the session.
+ * `clientId` identifies one **protocol exchange**: the stateless HTTP
+ * protocol mints it per POST and stdio keeps one per connection, so it is a
+ * dispatch fact, not a durable key. `sessionId` is the optional
+ * `mcp-session-id` header a stateful (pre-`2026-07-28`) transport echoes; it
+ * is `None` on every stateless dispatch and on stdio.
  *
  * **Example** (Make identity with clientId)
  *
@@ -41,21 +43,24 @@ const $I = $McpKitId.create("McpCaller");
  */
 export class McpCallerIdentity extends S.Class<McpCallerIdentity>($I`McpCallerIdentity`)(
   {
-    clientId: NonNegativeInt,
+    clientId: NonNegativeInt.annotateKey({
+      description: "Server-assigned id of the protocol exchange that carried this dispatch.",
+    }),
     sessionId: S.OptionFromNullOr(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
-        description: "Transport-assigned MCP session identifier; the only stable per-session key.",
+        description:
+          "Optional mcp-session-id header echoed by stateful transports; None on stateless and stdio dispatches.",
       })
     ),
   },
   $I.annote("McpCallerIdentity", {
-    description: "Initialized MCP caller identity assigned by the server transport.",
+    description: "Transport facts about the MCP caller of one dispatch.",
   })
 ) {}
 
 /**
- *  Request-local initialized MCP caller, absent outside a real tool dispatch.
+ * Request-local MCP caller, absent outside a real tool dispatch.
  *
  * **Example** (Read current MCP caller)
  *
@@ -69,5 +74,70 @@ export class McpCallerIdentity extends S.Class<McpCallerIdentity>($I`McpCallerId
  * @since 0.0.0
  */
 export const CurrentMcpCaller = Context.Reference<O.Option<McpCallerIdentity>>($I`CurrentMcpCaller`, {
+  defaultValue: O.none,
+});
+
+/**
+ * Opaque dispatch anchor: a branded non-empty string that host composition
+ * may provide for one dispatch scope. The kit carries it unchanged and never
+ * interprets it.
+ *
+ * **Example** (Brand an anchor value)
+ *
+ * ```ts
+ * import { McpDispatchAnchor } from "@beep/mcp-kit/McpCaller"
+ * import * as S from "effect/Schema"
+ *
+ * const anchor = S.decodeUnknownSync(McpDispatchAnchor)("anchor-1")
+ * console.log(anchor)
+ * // "anchor-1"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const McpDispatchAnchor = S.NonEmptyString.pipe(
+  S.brand("McpDispatchAnchor"),
+  $I.annoteSchema("McpDispatchAnchor", {
+    description: "Opaque dispatch anchor supplied by host composition; carried, never interpreted, by the kit.",
+  })
+);
+
+/**
+ * Branded dispatch anchor value.
+ *
+ * **Example** (Accept an anchor by type)
+ *
+ * ```ts
+ * import type { McpDispatchAnchor } from "@beep/mcp-kit/McpCaller"
+ *
+ * const describe = (anchor: McpDispatchAnchor): string => anchor
+ * console.log(typeof describe)
+ * // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type McpDispatchAnchor = typeof McpDispatchAnchor.Type;
+
+/**
+ * Request-local dispatch anchor, absent unless host composition provides it.
+ *
+ * **Example** (Read the anchor default)
+ *
+ * ```ts
+ * import { CurrentMcpDispatchAnchor } from "@beep/mcp-kit/McpCaller"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(Effect.runSync(CurrentMcpDispatchAnchor)))
+ * // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const CurrentMcpDispatchAnchor = Context.Reference<O.Option<McpDispatchAnchor>>($I`CurrentMcpDispatchAnchor`, {
   defaultValue: O.none,
 });

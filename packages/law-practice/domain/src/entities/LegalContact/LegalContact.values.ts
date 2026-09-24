@@ -34,7 +34,7 @@ export const LegalContactRole = LegalContactRoleBase.pipe(
   }),
   SchemaUtils.withLiteralKitStatics(LegalContactRoleBase),
   SchemaUtils.withStatics((schema) => ({
-    fromUnknown: S.decodeUnknownSync(schema),
+    fromUnknown: S.decodeUnknownResult(schema),
     decodeOption: S.decodeUnknownOption(schema),
   }))
 );

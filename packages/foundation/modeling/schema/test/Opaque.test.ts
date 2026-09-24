@@ -1,6 +1,7 @@
 import { $SchemaId } from "@beep/identity";
 import { Defect } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("DefectTest");
@@ -22,9 +23,12 @@ describe("Defect", () => {
     expect(same(a, c)).toBe(false);
   });
 
-  it("keeps Effect's defect decoding intact", () => {
-    const decoded = S.decodeSync(Defect())({ message: "boom", name: "Error" });
+  it.effect(
+    "keeps Effect's defect decoding intact",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* S.decodeEffect(Defect())({ message: "boom", name: "Error" });
 
-    expect(decoded).toBeInstanceOf(Error);
-  });
+      expect(decoded).toBeInstanceOf(Error);
+    })
+  );
 });

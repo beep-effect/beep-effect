@@ -303,9 +303,10 @@ const renderMarkdownTable = (block: Table): string => {
   const paddedRows = A.map(block.children, padTableRow(columns));
 
   if (block.headerRow) {
-    return pipe(paddedRows, A.map(renderMarkdownTableRow), ([header, ...body]) =>
-      A.join([header, renderMarkdownTableSeparator(columns, block.align), ...body], "\n")
-    );
+    return A.matchLeft(A.map(paddedRows, renderMarkdownTableRow), {
+      onEmpty: thunkEmptyStr,
+      onNonEmpty: (header, body) => A.join([header, renderMarkdownTableSeparator(columns, block.align), ...body], "\n"),
+    });
   }
 
   const emptyHeader = renderMarkdownTableRow(
@@ -1134,9 +1135,10 @@ const renderMarkdownTableWithPolicy = (policy: UrlPolicySpec, block: Table): str
   const paddedRows = A.map(block.children, padTableRow(columns));
 
   if (block.headerRow) {
-    return pipe(paddedRows, A.map(renderRow), ([header, ...body]) =>
-      A.join([header, renderMarkdownTableSeparator(columns, block.align), ...body], "\n")
-    );
+    return A.matchLeft(A.map(paddedRows, renderRow), {
+      onEmpty: thunkEmptyStr,
+      onNonEmpty: (header, body) => A.join([header, renderMarkdownTableSeparator(columns, block.align), ...body], "\n"),
+    });
   }
 
   const emptyHeader = renderRow(

@@ -19,13 +19,35 @@ Mutable execution plan. Contract: [`SPEC.md`](./SPEC.md); binding decisions:
 
 ## Current lane
 
-**Paused at Benjamin's request on 2026-09-09 to publish a draft save PR.**
-The [pause handoff](./PAUSE.md) records the current state, unanswered decisions
-and resume order. Main `0c975f970b4ac4b101d7c1b11957a799d481af35` is merged;
-the [latest source-forward receipt](./data/post-r31-main0c-source-forward.json)
-verifies preservation of 1,469 committed packet files. The three audits of its
-seven changed source files are incomplete and have released their holds.
-No census, independent review, or implementation continues during the pause.
+The [2026-09-21 acknowledgement boundary correction](./data/ack-request-boundary-correction-2026-09-21.json)
+reclassifies the raw acknowledgement request as D1. The application already
+receives the existing tagged resolution; conflicting flags produce supported
+parser diagnostics. Current inventory is **754 records: 144 qualified and
+610 disqualified**, with **112 Tier 1 /32 Tier 2**, 21 historical reviewed,
+123 designed, and zero applied. The prior row and design are archived. No
+independent-review or implementation credit follows from this correction.
+
+
+**Resumed at Benjamin's instruction on 2026-09-14, after save PR #1069 merged.**
+The [handoff](./PAUSE.md) preserves the unanswered decisions and resume order.
+The new continuation branch starts from main
+`cecfb9f8e9a5f20d768666c65f89425349f7f9e6`. The prepared classifier resolves
+3,114 included corpus files across 27 lanes; 465 included files changed since
+the completed main-e7b refresh, affecting recorded source/evidence paths for 52
+qualified cases. This is a source-impact map, not a completed census or review.
+The [resumption receipt](./data/resume-2026-09-14-source-forward.json) records
+that map and the [bounded audit](./data/resume-2026-09-14-bounded-audit.json).
+Six qualified designs now have current-source corrections: Pincite, both
+MemoryFileSystem carriers, both Sweep clusters and coverage resolution. Coverage
+changes from 16/7 to 16/9 because scoped and no-op replacement are now supported;
+the target also preserves optional topology-owner arrays. One new D1 baseline
+writer-options row brings the inventory to 754 /145 qualified /609 disqualified.
+Nine existing rows are corrected with unchanged qualification statuses. The
+remaining 46 changed-path qualified cases and complete owner audits are pending.
+The historical [main-0c source-forward receipt](./data/post-r31-main0c-source-forward.json)
+and its three unfinished audits remain preserved. Rebind each audit to current
+inputs before reuse. The two citation decisions still prevent final R31
+reconciliation; GATE 2 and implementation remain evidence-gated.
 
 The scanner prerequisite [PR #1059](https://github.com/beep-effect/beep-effect/pull/1059)
 is merged as `be5b589aa013c8350a4fad5cdfe36a6f6188db1f`. Its [local full proof](./data/scanner-prerequisite-main702-proof.json)
@@ -433,7 +455,7 @@ foundation UI/capability, Tier 1D application/ontology UI, Tier 1E internal tool
 then 32 Tier 2 singleton PRs. Re-resolve and merge `origin/main` forward before every
 review and publication operation; never rebase or merge a PR as the agent.
 
-The current 113-record Tier 1 landing map is:
+The current 112-record Tier 1 landing map is:
 
 - **1A — backend and driver state (15):**
   `scan-state-json-lexer-flags`, `duckdb-transaction-began-closed`,
@@ -477,10 +499,10 @@ The current 113-record Tier 1 landing map is:
   `document-violation-flags`, `r2-domains-ontology-graph-worker-requeue-latches`,
   `composer-shell-edit-content`, `r2-apps-hero-clip-playback`,
   `r26-apps-sidecar-ipc-ready-latch`.
-- **1E — internal tooling domains (49):**
+- **1E — internal tooling domains (48):**
   `package-verify-step-outcome`, `create-package-template-type-flags`,
   `r2-tooling-bin-main-fast-paths`, `corpus-legacy-word-terminal`,
-  `yeet-ack-resolution-flags`, `worktree-removal-mode`,
+  `worktree-removal-mode`,
   `r3-tooling-docker-tag-kind-flags`, `r3-tooling-ecosystem-polarity-specifier-call`,
   `r2-tooling-packet-transition-stream-trace`,
   `r3-tooling-registration-deletion-note-phase`,

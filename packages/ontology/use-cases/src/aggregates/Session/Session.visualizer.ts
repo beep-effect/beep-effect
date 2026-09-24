@@ -13,7 +13,7 @@ import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { Float32Arr } from "@beep/schema/Float32Array";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { A, O, Str } from "@beep/utils";
+import { A, O, P, Str } from "@beep/utils";
 import { Effect, MutableHashMap, MutableHashSet, Order, pipe, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -804,10 +804,8 @@ const pinnedPositionMap = (
             MutableHashMap.get(currentIndexByIri, node.iri),
             O.getOrElse(() => previousIndex)
           );
-          const z =
-            previousIndex < projection.pointDepths.length
-              ? projection.pointDepths[previousIndex]
-              : deterministicDepth(node.iri, currentIndex);
+          const previousDepth = projection.pointDepths[previousIndex];
+          const z = P.isNotUndefined(previousDepth) ? previousDepth : deterministicDepth(node.iri, currentIndex);
           MutableHashMap.set(positions, node.iri, [node.x, node.y, z]);
         }
       },
@@ -883,6 +881,9 @@ const LINK_STRENGTH = 0.1;
 const VELOCITY_DAMPING = 0.6;
 const CONTAINMENT_RADIUS = 420;
 
+// Every typed array in the relaxation loops is sized from nodeCount, so an in-range index always holds a number.
+const float64At = (array: Float64Array, index: number): number => array[index]!;
+
 const spatialCellKey = (x: number, y: number, z: number): string =>
   `${Math.floor(x / FORCE_RANGE)}:${Math.floor(y / FORCE_RANGE)}:${Math.floor(z / FORCE_RANGE)}`;
 
@@ -890,8 +891,13 @@ const graphDegrees = (nodeCount: number, links: Float32Array): Float64Array<Arra
   const degrees = new Float64Array(nodeCount);
 
   for (let linkIndex = 0; linkIndex < links.length; linkIndex += 2) {
-    degrees[links[linkIndex]] += 1;
-    degrees[links[linkIndex + 1]] += 1;
+    const source = links[linkIndex];
+    const target = links[linkIndex + 1];
+
+    if (P.isNotUndefined(source) && P.isNotUndefined(target)) {
+      degrees[source] = float64At(degrees, source) + 1;
+      degrees[target] = float64At(degrees, target) + 1;
+    }
   }
 
   return degrees;
@@ -905,7 +911,11 @@ const buildSpatialGrid = (
 
   for (let index = 0; index < nodeCount; index += 1) {
     const offset = index * 3;
-    const key = spatialCellKey(positions[offset], positions[offset + 1], positions[offset + 2]);
+    const key = spatialCellKey(
+      float64At(positions, offset),
+      float64At(positions, offset + 1),
+      float64At(positions, offset + 2)
+    );
     const occupants = pipe(MutableHashMap.get(cells, key), O.getOrElse(A.empty<number>));
     MutableHashMap.set(cells, key, pipe(occupants, A.append(index)));
   }
@@ -926,9 +936,9 @@ const applyPairRepulsion = (
 
   const offset = index * 3;
   const neighborOffset = neighbor * 3;
-  let x = positions[offset] - positions[neighborOffset];
-  let y = positions[offset + 1] - positions[neighborOffset + 1];
-  let z = positions[offset + 2] - positions[neighborOffset + 2];
+  let x = float64At(positions, offset) - float64At(positions, neighborOffset);
+  let y = float64At(positions, offset + 1) - float64At(positions, neighborOffset + 1);
+  let z = float64At(positions, offset + 2) - float64At(positions, neighborOffset + 2);
   let distanceSquared = x * x + y * y + z * z;
 
   if (distanceSquared < 0.000_001) {
@@ -944,12 +954,12 @@ const applyPairRepulsion = (
   }
 
   const force = (-MANY_BODY_STRENGTH * alpha) / distanceSquared;
-  forces[offset] += x * force;
-  forces[offset + 1] += y * force;
-  forces[offset + 2] += z * force;
-  forces[neighborOffset] -= x * force;
-  forces[neighborOffset + 1] -= y * force;
-  forces[neighborOffset + 2] -= z * force;
+  forces[offset] = float64At(forces, offset) + x * force;
+  forces[offset + 1] = float64At(forces, offset + 1) + y * force;
+  forces[offset + 2] = float64At(forces, offset + 2) + z * force;
+  forces[neighborOffset] = float64At(forces, neighborOffset) - x * force;
+  forces[neighborOffset + 1] = float64At(forces, neighborOffset + 1) - y * force;
+  forces[neighborOffset + 2] = float64At(forces, neighborOffset + 2) - z * force;
 };
 
 const applyNeighborCellRepulsion = (
@@ -960,9 +970,9 @@ const applyNeighborCellRepulsion = (
   cells: MutableHashMap.MutableHashMap<string, ReadonlyArray<number>>
 ): void => {
   const offset = index * 3;
-  const cellX = Math.floor(positions[offset] / FORCE_RANGE);
-  const cellY = Math.floor(positions[offset + 1] / FORCE_RANGE);
-  const cellZ = Math.floor(positions[offset + 2] / FORCE_RANGE);
+  const cellX = Math.floor(float64At(positions, offset) / FORCE_RANGE);
+  const cellY = Math.floor(float64At(positions, offset + 1) / FORCE_RANGE);
+  const cellZ = Math.floor(float64At(positions, offset + 2) / FORCE_RANGE);
 
   for (let deltaX = -1; deltaX <= 1; deltaX += 1) {
     for (let deltaY = -1; deltaY <= 1; deltaY += 1) {
@@ -1002,21 +1012,28 @@ const applySpringForces = (
   for (let linkIndex = 0; linkIndex < links.length; linkIndex += 2) {
     const source = links[linkIndex];
     const target = links[linkIndex + 1];
+
+    if (P.isUndefined(source) || P.isUndefined(target)) {
+      continue;
+    }
+
     const sourceOffset = source * 3;
     const targetOffset = target * 3;
-    const x = positions[targetOffset] - positions[sourceOffset];
-    const y = positions[targetOffset + 1] - positions[sourceOffset + 1];
-    const z = positions[targetOffset + 2] - positions[sourceOffset + 2];
+    const x = float64At(positions, targetOffset) - float64At(positions, sourceOffset);
+    const y = float64At(positions, targetOffset + 1) - float64At(positions, sourceOffset + 1);
+    const z = float64At(positions, targetOffset + 2) - float64At(positions, sourceOffset + 2);
     const distance = Math.sqrt(x * x + y * y + z * z) || 1;
     const force = ((distance - LINK_REST_LENGTH) / distance) * LINK_STRENGTH * alpha;
-    const bias = degrees[source] / (degrees[source] + degrees[target]);
+    const sourceDegree = float64At(degrees, source);
+    const targetDegree = float64At(degrees, target);
+    const bias = sourceDegree / (sourceDegree + targetDegree);
 
-    forces[sourceOffset] += x * force * (1 - bias);
-    forces[sourceOffset + 1] += y * force * (1 - bias);
-    forces[sourceOffset + 2] += z * force * (1 - bias);
-    forces[targetOffset] -= x * force * bias;
-    forces[targetOffset + 1] -= y * force * bias;
-    forces[targetOffset + 2] -= z * force * bias;
+    forces[sourceOffset] = float64At(forces, sourceOffset) + x * force * (1 - bias);
+    forces[sourceOffset + 1] = float64At(forces, sourceOffset + 1) + y * force * (1 - bias);
+    forces[sourceOffset + 2] = float64At(forces, sourceOffset + 2) + z * force * (1 - bias);
+    forces[targetOffset] = float64At(forces, targetOffset) - x * force * bias;
+    forces[targetOffset + 1] = float64At(forces, targetOffset + 1) - y * force * bias;
+    forces[targetOffset + 2] = float64At(forces, targetOffset + 2) - z * force * bias;
   }
 };
 
@@ -1032,15 +1049,15 @@ const integratePositions = (
 
   for (let index = 0; index < nodeCount; index += 1) {
     const offset = index * 3;
-    velocities[offset] = (velocities[offset] + forces[offset]) * VELOCITY_DAMPING;
-    velocities[offset + 1] = (velocities[offset + 1] + forces[offset + 1]) * VELOCITY_DAMPING;
-    velocities[offset + 2] = (velocities[offset + 2] + forces[offset + 2]) * VELOCITY_DAMPING;
-    positions[offset] += velocities[offset];
-    positions[offset + 1] += velocities[offset + 1];
-    positions[offset + 2] += velocities[offset + 2];
-    meanX += positions[offset];
-    meanY += positions[offset + 1];
-    meanZ += positions[offset + 2];
+    velocities[offset] = (float64At(velocities, offset) + float64At(forces, offset)) * VELOCITY_DAMPING;
+    velocities[offset + 1] = (float64At(velocities, offset + 1) + float64At(forces, offset + 1)) * VELOCITY_DAMPING;
+    velocities[offset + 2] = (float64At(velocities, offset + 2) + float64At(forces, offset + 2)) * VELOCITY_DAMPING;
+    positions[offset] = float64At(positions, offset) + float64At(velocities, offset);
+    positions[offset + 1] = float64At(positions, offset + 1) + float64At(velocities, offset + 1);
+    positions[offset + 2] = float64At(positions, offset + 2) + float64At(velocities, offset + 2);
+    meanX += float64At(positions, offset);
+    meanY += float64At(positions, offset + 1);
+    meanZ += float64At(positions, offset + 2);
   }
 
   meanX /= nodeCount;
@@ -1058,20 +1075,19 @@ const centerAndContainPositions = (
 ): void => {
   for (let index = 0; index < nodeCount; index += 1) {
     const offset = index * 3;
-    positions[offset] -= meanX;
-    positions[offset + 1] -= meanY;
-    positions[offset + 2] -= meanZ;
-    const radius = Math.sqrt(
-      positions[offset] * positions[offset] +
-        positions[offset + 1] * positions[offset + 1] +
-        positions[offset + 2] * positions[offset + 2]
-    );
+    const x = float64At(positions, offset) - meanX;
+    const y = float64At(positions, offset + 1) - meanY;
+    const z = float64At(positions, offset + 2) - meanZ;
+    positions[offset] = x;
+    positions[offset + 1] = y;
+    positions[offset + 2] = z;
+    const radius = Math.sqrt(x * x + y * y + z * z);
 
     if (radius > CONTAINMENT_RADIUS) {
       const factor = 1 - (0.05 * (radius - CONTAINMENT_RADIUS)) / radius;
-      positions[offset] *= factor;
-      positions[offset + 1] *= factor;
-      positions[offset + 2] *= factor;
+      positions[offset] = x * factor;
+      positions[offset + 1] = y * factor;
+      positions[offset + 2] = z * factor;
     }
   }
 };
@@ -1124,11 +1140,13 @@ const relaxProjectedNodes = (
     nodes.length <= 10_000 && edges.length <= 30_000 ? relaxPositions(seedPositions3d, links) : seedPositions3d;
 
   return A.map(nodes, (node, index) => {
-    const x = relaxedPositions[index * 3];
-    const y = relaxedPositions[index * 3 + 1];
+    const positionOffset = index * 3;
+    const x = float64At(relaxedPositions, positionOffset);
+    const y = float64At(relaxedPositions, positionOffset + 1);
+    const z = float64At(relaxedPositions, positionOffset + 2);
     pointPositions[index * 2] = x;
     pointPositions[index * 2 + 1] = y;
-    pointDepths[index] = relaxedPositions[index * 3 + 2];
+    pointDepths[index] = z;
 
     return OntologyGraphNode.make({
       ...node,
@@ -1278,19 +1296,23 @@ const projectionFromRelationships = (
         return [];
       }
 
-      const source = nodes[sourceIndex.value];
-      const target = nodes[targetIndex.value];
+      const source = A.get(nodes, sourceIndex.value);
+      const target = A.get(nodes, targetIndex.value);
+
+      if (O.isNone(source) || O.isNone(target)) {
+        return [];
+      }
 
       return [
         OntologyGraphEdge.make({
           id: hashText(relationshipKey(relationship)),
-          sourceId: source.id,
-          targetId: target.id,
+          sourceId: source.value.id,
+          targetId: target.value.id,
           sourceIri: relationship.sourceIri,
           targetIri: relationship.targetIri,
           predicateIri: relationship.predicateIri,
           label: labelFromIri(relationship.predicateIri),
-          folded: source.folded || target.folded,
+          folded: source.value.folded || target.value.folded,
         }),
       ];
     }),
@@ -1314,10 +1336,10 @@ const projectionFromRelationships = (
     nodeFlags[index] = node.folded ? 1 : 0;
     pointPositions[index * 2] = node.x;
     pointPositions[index * 2 + 1] = node.y;
-    pointDepths[index] = seedDepths[index];
+    pointDepths[index] = float64At(seedDepths, index);
     seedPositions3d[index * 3] = node.x;
     seedPositions3d[index * 3 + 1] = node.y;
-    seedPositions3d[index * 3 + 2] = seedDepths[index];
+    seedPositions3d[index * 3 + 2] = float64At(seedDepths, index);
   }
 
   for (const [index, edge] of edges.entries()) {
@@ -1346,7 +1368,12 @@ const projectionFromRelationships = (
       pipe(
         MutableHashMap.get(nodeIriByResourceIri, iri),
         O.flatMap((nodeIri) => MutableHashMap.get(nodeIndexByIri, nodeIri)),
-        O.map((index) => nodes[index].id),
+        O.flatMap((index) =>
+          pipe(
+            A.get(nodes, index),
+            O.map((node) => node.id)
+          )
+        ),
         O.toArray
       )
     ),

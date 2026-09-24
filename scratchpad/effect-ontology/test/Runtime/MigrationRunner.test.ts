@@ -2,12 +2,13 @@ import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer, migrateBundle, PostgresDrizzle } from "@beep/postgres";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SqlClient, SqlSchema } from "effect/unstable/sql";
+import { describe } from "vitest";
 import { migrationsFolder } from "../../Runtime/Persistence/MigrationRunner.ts";
 
 const MigrationProbeRow = S.Struct({ id: S.Int, label: S.String });
@@ -25,7 +26,7 @@ const FutureProbe = {
 
 const DatabaseTestLayer = Layer.merge(makeDrizzleLayer().pipe(Layer.provideMerge(PgliteTestLayer)), BunCrypto.layer);
 
-describe.sequential("effect-ontology migrations", () => {
+describe("effect-ontology migrations", { concurrent: false }, () => {
   it.layer(BunServices.layer)("with generated migration files", (it) => {
     it.effect(
       "keeps unsupported PostgreSQL features in the reviewed custom migration",

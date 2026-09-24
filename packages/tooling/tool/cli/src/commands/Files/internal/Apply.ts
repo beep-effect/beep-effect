@@ -457,7 +457,7 @@ export const applyNormalizePlan = Effect.fn("Files.applyNormalizePlan")(function
 ): Effect.fn.Return<
   NormalizeApplyResult,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -664,7 +664,7 @@ export const applyArchivePoorCandidatesPlan = Effect.fn("Files.applyArchivePoorC
 ): Effect.fn.Return<
   void,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -923,7 +923,7 @@ export const applyStripMetadataPlan = Effect.fn("Files.applyStripMetadataPlan")(
 ): Effect.fn.Return<
   void,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

@@ -5,16 +5,21 @@
  * @since 0.0.0
  */
 
-import { randomUUID } from "node:crypto";
 import * as B from "@beep/box";
 import { $BoxProvisioningId } from "@beep/identity";
 import { Sha256Hex } from "@beep/schema";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { Context, DateTime, Effect, Equal, Layer, Match, MutableHashMap, MutableHashSet, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { BoxProvisioningBlockerContractError, BoxProvisioningInvariantError } from "./BoxProvisioningErrors.ts";
+import {
+  BoxProvisioningBlockerContractError,
+  BoxProvisioningInvariantError,
+  BoxProvisioningSchemaError,
+} from "./BoxProvisioningErrors.ts";
 import {
   BoxCollaborationIntent,
   BoxFolderIntent,
@@ -56,6 +61,7 @@ import {
   toObservedFolderFromFull,
   toObservedWebhook,
 } from "./internal/live.ts";
+import type * as PlatformError from "effect/PlatformError";
 import type { BoxProvisioningApplyJournalError } from "./BoxProvisioningErrors.ts";
 import type { BoxDesiredState, BoxLogicalKey } from "./BoxProvisioningIntent.ts";
 import type {
@@ -67,6 +73,7 @@ import type {
   BoxUpdateAction,
 } from "./BoxProvisioningPlan.ts";
 import type { BoxApplyJournalEntry, BoxApplyOutcome } from "./BoxProvisioningReceipt.ts";
+import type { BoxCanonicalDigestError } from "./internal/canonical.ts";
 
 const isBFolderMini = S.is(B.FolderMini);
 
@@ -86,26 +93,46 @@ type DesiredResource =
 
 const invariant = (code: BoxProvisioningInvariantError["code"]) => BoxProvisioningInvariantError.make({ code });
 
-const findDesired = <T extends DesiredResource>(
+type ApplyDigestError = PlatformError.PlatformError | BoxProvisioningSchemaError;
+
+const digestFailure = (error: BoxCanonicalDigestError): ApplyDigestError =>
+  P.isTagged("PlatformError")(error) ? error : BoxProvisioningSchemaError.make({ stage: "plan" });
+
+const hashed = <A>(effect: Effect.Effect<A, BoxCanonicalDigestError, Crypto.Crypto>) =>
+  effect.pipe(Effect.mapError(digestFailure));
+
+const journalErrorTag = (
+  error: B.BoxError | BoxProvisioningInvariantError | ApplyDigestError
+): "BoxError" | "BoxProvisioningInvariantError" | "UnknownFailure" =>
+  P.isTagged(error, "BoxError") || P.isTagged(error, "BoxProvisioningInvariantError") ? error._tag : "UnknownFailure";
+
+const findDesired = Effect.fnUntraced(function* <T extends DesiredResource>(
   resources: ReadonlyArray<T>,
   logicalKeyDigest: Sha256Hex
-): Effect.Effect<T, BoxProvisioningInvariantError> =>
-  pipe(
-    A.findFirst(resources, (resource) => Equal.equals(digestText(resource.logicalKey), logicalKeyDigest)),
-    Effect.fromOption(() => invariant("unresolved-dependency"))
+) {
+  const matches = yield* Effect.forEach(
+    resources,
+    Effect.fnUntraced(function* (resource) {
+      const digest = yield* hashed(digestText(resource.logicalKey));
+      return Equal.equals(digest, logicalKeyDigest) ? O.some(resource) : O.none<T>();
+    }),
+    { concurrency: 1 }
   );
+  return yield* Effect.fromOption(A.head(A.getSomes(matches)), () => invariant("unresolved-dependency"));
+});
 
 const requiredProviderId = (action: BoxPlanAction): Effect.Effect<BoxProviderId, BoxProvisioningInvariantError> =>
   Effect.fromOption(action.precondition.providerId, () => invariant("missing-provider-id"));
 
-const resolveFolderProviderId = (
+const resolveFolderProviderId = Effect.fnUntraced(function* (
   folderProviderIds: MutableHashMap.MutableHashMap<Sha256Hex, BoxProviderId>,
   logicalKey: BoxLogicalKey
-): Effect.Effect<BoxProviderId, BoxProvisioningInvariantError> =>
-  pipe(
-    MutableHashMap.get(folderProviderIds, digestText(logicalKey)),
+) {
+  return yield* pipe(
+    MutableHashMap.get(folderProviderIds, yield* hashed(digestText(logicalKey))),
     Effect.fromOption(() => invariant("unresolved-dependency"))
   );
+});
 
 const collaborationMatches = (
   desired: BoxCollaborationIntent,
@@ -120,31 +147,31 @@ const collaborationMatches = (
 const desiredAfterDigest = (
   desiredState: BoxDesiredState,
   action: BoxPlanAction
-): Effect.Effect<Sha256Hex, BoxProvisioningInvariantError> =>
+): Effect.Effect<Sha256Hex, BoxProvisioningInvariantError | ApplyDigestError, Crypto.Crypto> =>
   Match.value(action.resourceKind).pipe(
     Match.when("folder", () =>
       findDesired(desiredState.folders, action.logicalKeyDigest).pipe(
-        Effect.map((desired) => encodedDigest(BoxFolderIntent, desired))
+        Effect.flatMap((desired) => hashed(encodedDigest(BoxFolderIntent, desired)))
       )
     ),
     Match.when("collaboration", () =>
       findDesired(desiredState.collaborations, action.logicalKeyDigest).pipe(
-        Effect.map((desired) => encodedDigest(BoxCollaborationIntent, desired))
+        Effect.flatMap((desired) => hashed(encodedDigest(BoxCollaborationIntent, desired)))
       )
     ),
     Match.when("webhook", () =>
       findDesired(desiredState.webhooks, action.logicalKeyDigest).pipe(
-        Effect.map((desired) => encodedDigest(BoxWebhookIntent, canonicalWebhookIntent(desired)))
+        Effect.flatMap((desired) => hashed(encodedDigest(BoxWebhookIntent, canonicalWebhookIntent(desired))))
       )
     ),
     Match.when("metadata", () =>
       findDesired(desiredState.metadata, action.logicalKeyDigest).pipe(
-        Effect.map((desired) => encodedDigest(BoxMetadataIntent, desired))
+        Effect.flatMap((desired) => hashed(encodedDigest(BoxMetadataIntent, desired)))
       )
     ),
     Match.when("retention", () =>
       findDesired(desiredState.retention, action.logicalKeyDigest).pipe(
-        Effect.map((desired) => encodedDigest(BoxRetentionIntent, desired))
+        Effect.flatMap((desired) => hashed(encodedDigest(BoxRetentionIntent, desired)))
       )
     ),
     Match.exhaustive
@@ -301,7 +328,7 @@ const validateFolderDependency = Effect.fn("BoxProvisioningApplier.validateFolde
   folderProviderIds: MutableHashMap.MutableHashMap<Sha256Hex, BoxProviderId>,
   folderIdentities: MutableHashMap.MutableHashMap<Sha256Hex, BoxObservedFolder>
 ) {
-  const logicalKeyDigest = digestText(logicalKey);
+  const logicalKeyDigest = yield* hashed(digestText(logicalKey));
   const providerId = yield* resolveFolderProviderId(folderProviderIds, logicalKey);
   const reviewedIdentity = yield* MutableHashMap.get(folderIdentities, logicalKeyDigest).pipe(
     Effect.fromOption(() => invariant("unresolved-dependency"))
@@ -324,11 +351,13 @@ const validateExistingPrecondition = Effect.fn("BoxProvisioningApplier.validateE
   const actual = yield* Match.value(action.resourceKind).pipe(
     Match.when("folder", () =>
       readObservedFolder(box, providerId).pipe(
-        Effect.map((folder) => ({
-          digest: encodedDigest(BoxObservedFolder, folder),
-          etag: folder.etag,
-          folder: O.some(folder),
-        }))
+        Effect.flatMap((folder) =>
+          Effect.map(hashed(encodedDigest(BoxObservedFolder, folder)), (digest) => ({
+            digest,
+            etag: folder.etag,
+            folder: O.some(folder),
+          }))
+        )
       )
     ),
     Match.when("collaboration", () =>
@@ -336,21 +365,25 @@ const validateExistingPrecondition = Effect.fn("BoxProvisioningApplier.validateE
         .getCollaborationById(B.UserCollaborationsGetCollaborationByIdPayload.make({ collaborationId: providerId }))
         .pipe(
           Effect.flatMap(toObservedCollaborationFromFull),
-          Effect.map((collaboration) => ({
-            digest: encodedDigest(BoxObservedCollaboration, collaboration),
-            etag: O.none(),
-            folder: O.none<BoxObservedFolder>(),
-          }))
+          Effect.flatMap((collaboration) =>
+            Effect.map(hashed(encodedDigest(BoxObservedCollaboration, collaboration)), (digest) => ({
+              digest,
+              etag: O.none(),
+              folder: O.none<BoxObservedFolder>(),
+            }))
+          )
         )
     ),
     Match.when("webhook", () =>
       box.webhooks.getWebhookById(B.WebhooksGetWebhookByIdPayload.make({ webhookId: providerId })).pipe(
         Effect.flatMap(toObservedWebhook),
-        Effect.map((webhook) => ({
-          digest: encodedDigest(BoxObservedWebhook, webhook),
-          etag: O.none(),
-          folder: O.none<BoxObservedFolder>(),
-        }))
+        Effect.flatMap((webhook) =>
+          Effect.map(hashed(encodedDigest(BoxObservedWebhook, webhook)), (digest) => ({
+            digest,
+            etag: O.none(),
+            folder: O.none<BoxObservedFolder>(),
+          }))
+        )
       )
     ),
     Match.orElse(() => Effect.fail(invariant("unsupported-action")))
@@ -449,7 +482,7 @@ const applyCreate = (
   action: BoxCreateAction,
   folderProviderIds: MutableHashMap.MutableHashMap<Sha256Hex, BoxProviderId>,
   folderIdentities: MutableHashMap.MutableHashMap<Sha256Hex, BoxObservedFolder>
-): Effect.Effect<BoxApplyOutcome, B.BoxError | BoxProvisioningInvariantError> =>
+): Effect.Effect<BoxApplyOutcome, B.BoxError | BoxProvisioningInvariantError | ApplyDigestError, Crypto.Crypto> =>
   Match.value(action.resourceKind).pipe(
     Match.when("folder", () => createFolder(box, desiredState, action, folderProviderIds, folderIdentities)),
     Match.when("collaboration", () =>
@@ -495,7 +528,7 @@ const applyUpdate = (
   box: B.Box["Service"],
   desiredState: BoxDesiredState,
   action: BoxUpdateAction
-): Effect.Effect<BoxApplyOutcome, B.BoxError | BoxProvisioningInvariantError> =>
+): Effect.Effect<BoxApplyOutcome, B.BoxError | BoxProvisioningInvariantError | ApplyDigestError, Crypto.Crypto> =>
   Match.value(action.resourceKind).pipe(
     Match.when("collaboration", () => updateCollaboration(box, desiredState, action)),
     Match.when("webhook", () => updateWebhook(box, desiredState, action)),
@@ -549,7 +582,7 @@ const validateEntitlementFamily = Effect.fn("BoxProvisioningApplier.validateEnti
   yield* Effect.forEach(
     desiredResources,
     Effect.fnUntraced(function* (desired) {
-      const logicalKeyDigest = digestText(desired.logicalKey);
+      const logicalKeyDigest = yield* hashed(digestText(desired.logicalKey));
       const matches = A.filter(
         blockedActions,
         (action) =>
@@ -565,7 +598,7 @@ const validateEntitlementFamily = Effect.fn("BoxProvisioningApplier.validateEnti
       const blockedAction = yield* Effect.fromOption(A.head(matches), () =>
         blockerContractError(phase, "entitlement-blocker-mismatch")
       );
-      const folderLogicalKeyDigest = digestText(desired.folderKey);
+      const folderLogicalKeyDigest = yield* hashed(digestText(desired.folderKey));
       const folderAction = A.findFirst(
         plan.actions,
         (action) => action.resourceKind === "folder" && Equal.equals(action.logicalKeyDigest, folderLogicalKeyDigest)
@@ -727,132 +760,147 @@ export class BoxProvisioningApplyJournal extends Context.Service<
 
 const makeService = (
   box: B.Box["Service"],
-  journal: BoxProvisioningApplyJournal["Service"]
-): BoxProvisioningApplierShape => ({
-  apply: Effect.fn("BoxProvisioningApplier.apply")(function* (desiredState, plan, injectedAttemptId) {
-    if (!hasValidBoxProvisioningPlanDigest(plan)) {
-      return yield* invariant("invalid-plan-digest");
-    }
-    if (!sha256Equivalence(boxDesiredStateDigest(desiredState), plan.desiredStateDigest)) {
-      return yield* invariant("desired-state-digest-mismatch");
-    }
-    if (hasUnsupportedDestructiveAction(plan.actions)) {
-      return yield* invariant("unsupported-action");
-    }
-    yield* validateBoxProvisioningBlockerContract(desiredState, plan, "pre-apply");
+  journal: BoxProvisioningApplyJournal["Service"],
+  crypto: Crypto.Crypto
+): BoxProvisioningApplierShape => {
+  const apply = Effect.fn("BoxProvisioningApplier.apply")(
+    function* (desiredState: BoxDesiredState, plan: BoxProvisioningPlan, injectedAttemptId?: BoxApplyAttemptId) {
+      if (!(yield* hashed(hasValidBoxProvisioningPlanDigest(plan)))) {
+        return yield* invariant("invalid-plan-digest");
+      }
+      if (!sha256Equivalence(yield* hashed(boxDesiredStateDigest(desiredState)), plan.desiredStateDigest)) {
+        return yield* invariant("desired-state-digest-mismatch");
+      }
+      if (hasUnsupportedDestructiveAction(plan.actions)) {
+        return yield* invariant("unsupported-action");
+      }
+      yield* validateBoxProvisioningBlockerContract(desiredState, plan, "pre-apply");
 
-    const attemptId = O.getOrElse(O.fromUndefinedOr(injectedAttemptId), () => BoxApplyAttemptId.make(randomUUID()));
-    const completed = MutableHashSet.empty<Sha256Hex>();
-    const folderProviderIds = MutableHashMap.empty<Sha256Hex, BoxProviderId>();
-    const folderIdentities = MutableHashMap.empty<Sha256Hex, BoxObservedFolder>();
-    let sequence = 0;
-    const nextSequence = (): number => {
-      const current = sequence;
-      sequence += 1;
-      return current;
-    };
-    const journalMutation = Effect.fn("BoxProvisioningApplier.journalMutation")(function* (
-      action: BoxCreateAction | BoxUpdateAction,
-      mutation: Effect.Effect<BoxApplyOutcome, B.BoxError | BoxProvisioningInvariantError>
-    ) {
-      yield* journal.append(
-        BoxApplyJournalStarted.make({
-          actionKey: action.actionKey,
-          attemptId,
-          logicalKeyDigest: action.logicalKeyDigest,
-          planDigest: plan.planDigest,
-          providerId: action.precondition.providerId,
-          resourceKind: action.resourceKind,
-          sequence: nextSequence(),
-        })
+      const attemptId = yield* O.match(O.fromUndefinedOr(injectedAttemptId), {
+        onNone: Effect.fnUntraced(function* () {
+          const crypto = yield* Crypto.Crypto;
+          return BoxApplyAttemptId.make(yield* crypto.randomUUIDv4.pipe(Effect.mapError(digestFailure)));
+        }),
+        onSome: Effect.succeed,
+      });
+      const completed = MutableHashSet.empty<Sha256Hex>();
+      const folderProviderIds = MutableHashMap.empty<Sha256Hex, BoxProviderId>();
+      const folderIdentities = MutableHashMap.empty<Sha256Hex, BoxObservedFolder>();
+      let sequence = 0;
+      const nextSequence = (): number => {
+        const current = sequence;
+        sequence += 1;
+        return current;
+      };
+      const journalMutation = Effect.fn("BoxProvisioningApplier.journalMutation")(function* (
+        action: BoxCreateAction | BoxUpdateAction,
+        mutation: Effect.Effect<
+          BoxApplyOutcome,
+          B.BoxError | BoxProvisioningInvariantError | ApplyDigestError,
+          Crypto.Crypto
+        >
+      ) {
+        yield* journal.append(
+          BoxApplyJournalStarted.make({
+            actionKey: action.actionKey,
+            attemptId,
+            logicalKeyDigest: action.logicalKeyDigest,
+            planDigest: plan.planDigest,
+            providerId: action.precondition.providerId,
+            resourceKind: action.resourceKind,
+            sequence: nextSequence(),
+          })
+        );
+        return yield* mutation.pipe(
+          Effect.matchEffect({
+            onFailure: (error) =>
+              journal
+                .append(
+                  BoxApplyJournalFailed.make({
+                    actionKey: action.actionKey,
+                    attemptId,
+                    errorTag: journalErrorTag(error),
+                    logicalKeyDigest: action.logicalKeyDigest,
+                    planDigest: plan.planDigest,
+                    providerId: action.precondition.providerId,
+                    resourceKind: action.resourceKind,
+                    sequence: nextSequence(),
+                  })
+                )
+                .pipe(Effect.andThen(Effect.fail(error))),
+            onSuccess: (outcome) => {
+              const providerId = Match.value(outcome).pipe(
+                Match.tag("Applied", (applied) => O.some(applied.providerId)),
+                Match.orElse(() => action.precondition.providerId)
+              );
+              const parentProviderId =
+                action.resourceKind === "folder"
+                  ? O.flatMap(
+                      MutableHashMap.get(folderIdentities, action.logicalKeyDigest),
+                      (folder) => folder.parentProviderId
+                    )
+                  : O.none<BoxProviderId>();
+              return journal
+                .append(
+                  BoxApplyJournalApplied.make({
+                    actionKey: action.actionKey,
+                    attemptId,
+                    logicalKeyDigest: action.logicalKeyDigest,
+                    parentProviderId,
+                    planDigest: plan.planDigest,
+                    providerId,
+                    resourceKind: action.resourceKind,
+                    sequence: nextSequence(),
+                  })
+                )
+                .pipe(Effect.as(outcome));
+            },
+          })
+        );
+      });
+      const applyAction = Match.type<BoxPlanAction>().pipe(
+        Match.tag("Blocked", (action) => Effect.succeed(applyBlocked(action))),
+        Match.tag("Create", (action) =>
+          journalMutation(action, applyCreate(box, desiredState, action, folderProviderIds, folderIdentities))
+        ),
+        Match.tag("Delete", () => Effect.fail(invariant("unsupported-action"))),
+        Match.tag("Noop", (action) => applyNoop(action, folderProviderIds)),
+        Match.tag("Replace", () => Effect.fail(invariant("unsupported-action"))),
+        Match.tag("Update", (action) => journalMutation(action, applyUpdate(box, desiredState, action))),
+        Match.exhaustive
       );
-      return yield* mutation.pipe(
-        Effect.matchEffect({
-          onFailure: (error) =>
-            journal
-              .append(
-                BoxApplyJournalFailed.make({
-                  actionKey: action.actionKey,
-                  attemptId,
-                  errorTag: error._tag,
-                  logicalKeyDigest: action.logicalKeyDigest,
-                  planDigest: plan.planDigest,
-                  providerId: action.precondition.providerId,
-                  resourceKind: action.resourceKind,
-                  sequence: nextSequence(),
-                })
-              )
-              .pipe(Effect.andThen(Effect.fail(error))),
-          onSuccess: (outcome) => {
-            const providerId = Match.value(outcome).pipe(
-              Match.tag("Applied", (applied) => O.some(applied.providerId)),
-              Match.orElse(() => action.precondition.providerId)
-            );
-            const parentProviderId =
-              action.resourceKind === "folder"
-                ? O.flatMap(
-                    MutableHashMap.get(folderIdentities, action.logicalKeyDigest),
-                    (folder) => folder.parentProviderId
-                  )
-                : O.none<BoxProviderId>();
-            return journal
-              .append(
-                BoxApplyJournalApplied.make({
-                  actionKey: action.actionKey,
-                  attemptId,
-                  logicalKeyDigest: action.logicalKeyDigest,
-                  parentProviderId,
-                  planDigest: plan.planDigest,
-                  providerId,
-                  resourceKind: action.resourceKind,
-                  sequence: nextSequence(),
-                })
-              )
-              .pipe(Effect.as(outcome));
-          },
-        })
-      );
-    });
-    const applyAction = Match.type<BoxPlanAction>().pipe(
-      Match.tag("Blocked", (action) => Effect.succeed(applyBlocked(action))),
-      Match.tag("Create", (action) =>
-        journalMutation(action, applyCreate(box, desiredState, action, folderProviderIds, folderIdentities))
-      ),
-      Match.tag("Delete", () => Effect.fail(invariant("unsupported-action"))),
-      Match.tag("Noop", (action) => applyNoop(action, folderProviderIds)),
-      Match.tag("Replace", () => Effect.fail(invariant("unsupported-action"))),
-      Match.tag("Update", (action) => journalMutation(action, applyUpdate(box, desiredState, action))),
-      Match.exhaustive
-    );
-    const applyOne = Effect.fn("BoxProvisioningApplier.applyOne")(function* (action: BoxPlanAction) {
-      if (A.some(action.dependencies, (dependency) => !MutableHashSet.has(completed, dependency))) {
-        return yield* invariant("unresolved-dependency");
-      }
-      yield* validateActionDesiredBinding(desiredState, action);
-      yield* validateActionShape(action);
-      const validatedFolder = yield* Match.value(action).pipe(
-        Match.tag("Noop", (candidate) => validateExistingPrecondition(box, candidate)),
-        Match.tag("Update", (candidate) => validateExistingPrecondition(box, candidate)),
-        Match.orElse(() => Effect.succeed(O.none<BoxObservedFolder>()))
-      );
-      const outcome = yield* applyAction(action);
-      if (action.resourceKind === "folder") {
-        O.match(validatedFolder, {
-          onNone: () => undefined,
-          onSome: (folder) => MutableHashMap.set(folderIdentities, action.logicalKeyDigest, folder),
-        });
-      }
-      MutableHashSet.add(completed, action.actionKey);
-      return outcome;
-    });
-    const outcomes = yield* Effect.forEach(plan.actions, applyOne, { concurrency: 1 });
-    return BoxApplyReceipt.make({
-      appliedAt: yield* DateTime.now,
-      outcomes,
-      planDigest: plan.planDigest,
-    });
-  }),
-});
+      const applyOne = Effect.fn("BoxProvisioningApplier.applyOne")(function* (action: BoxPlanAction) {
+        if (A.some(action.dependencies, (dependency) => !MutableHashSet.has(completed, dependency))) {
+          return yield* invariant("unresolved-dependency");
+        }
+        yield* validateActionDesiredBinding(desiredState, action);
+        yield* validateActionShape(action);
+        const validatedFolder = yield* Match.value(action).pipe(
+          Match.tag("Noop", (candidate) => validateExistingPrecondition(box, candidate)),
+          Match.tag("Update", (candidate) => validateExistingPrecondition(box, candidate)),
+          Match.orElse(() => Effect.succeed(O.none<BoxObservedFolder>()))
+        );
+        const outcome = yield* applyAction(action);
+        if (action.resourceKind === "folder") {
+          O.match(validatedFolder, {
+            onNone: () => undefined,
+            onSome: (folder) => MutableHashMap.set(folderIdentities, action.logicalKeyDigest, folder),
+          });
+        }
+        MutableHashSet.add(completed, action.actionKey);
+        return outcome;
+      });
+      const outcomes = yield* Effect.forEach(plan.actions, applyOne, { concurrency: 1 });
+      return BoxApplyReceipt.make({
+        appliedAt: yield* DateTime.now,
+        outcomes,
+        planDigest: plan.planDigest,
+      });
+    },
+    (effect) => effect.pipe(Effect.provideService(Crypto.Crypto, crypto))
+  );
+  return { apply };
+};
 
 /**
  * Runtime contract for the explicitly invoked Box mutation boundary.
@@ -868,7 +916,11 @@ export interface BoxProvisioningApplierShape {
     attemptId?: BoxApplyAttemptId
   ) => Effect.Effect<
     BoxApplyReceipt,
-    B.BoxError | BoxProvisioningInvariantError | BoxProvisioningBlockerContractError | BoxProvisioningApplyJournalError
+    | B.BoxError
+    | BoxProvisioningInvariantError
+    | BoxProvisioningBlockerContractError
+    | BoxProvisioningApplyJournalError
+    | ApplyDigestError
   >;
 }
 
@@ -895,12 +947,13 @@ export interface BoxProvisioningApplierShape {
 export class BoxProvisioningApplier extends Context.Service<BoxProvisioningApplier, BoxProvisioningApplierShape>()(
   $I`BoxProvisioningApplier`
 ) {
-  static readonly layerWithJournal = Layer.effect(
-    BoxProvisioningApplier,
-    Effect.all([B.Box, BoxProvisioningApplyJournal]).pipe(
-      Effect.map(([box, journal]) => BoxProvisioningApplier.of(makeService(box, journal)))
+  static readonly layerWithJournal = Layer.unwrap(
+    Effect.all([B.Box, BoxProvisioningApplyJournal, Crypto.Crypto]).pipe(
+      Effect.map(([box, journal, crypto]) =>
+        Layer.succeed(BoxProvisioningApplier, BoxProvisioningApplier.of(makeService(box, journal, crypto)))
+      )
     )
-  );
+  ).pipe(Layer.provide(NodeCrypto.layer));
 
   static readonly layer = BoxProvisioningApplier.layerWithJournal.pipe(
     Layer.provide(BoxProvisioningApplyJournal.noopLayer)
@@ -921,12 +974,20 @@ export class BoxProvisioningApplier extends Context.Service<BoxProvisioningAppli
    * @since 0.0.0
    */
   static readonly makeLayerFromBox = (box: B.Box["Service"]): Layer.Layer<BoxProvisioningApplier> =>
-    Layer.succeed(BoxProvisioningApplier, BoxProvisioningApplier.of(makeService(box, noopApplyJournal)));
+    Layer.unwrap(
+      Effect.map(Crypto.Crypto, (crypto) =>
+        Layer.succeed(BoxProvisioningApplier, BoxProvisioningApplier.of(makeService(box, noopApplyJournal, crypto)))
+      )
+    ).pipe(Layer.provide(NodeCrypto.layer));
 
   /** Construct an applier layer with an explicit durable journal sink. */
   static readonly makeLayerFromBoxAndJournal = (
     box: B.Box["Service"],
     journal: BoxProvisioningApplyJournal["Service"]
   ): Layer.Layer<BoxProvisioningApplier> =>
-    Layer.succeed(BoxProvisioningApplier, BoxProvisioningApplier.of(makeService(box, journal)));
+    Layer.unwrap(
+      Effect.map(Crypto.Crypto, (crypto) =>
+        Layer.succeed(BoxProvisioningApplier, BoxProvisioningApplier.of(makeService(box, journal, crypto)))
+      )
+    ).pipe(Layer.provide(NodeCrypto.layer));
 }

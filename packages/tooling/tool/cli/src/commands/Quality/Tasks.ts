@@ -67,6 +67,7 @@ import {
 } from "../../internal/process/index.ts";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../internal/repo-run/ChangedFiles.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.ts";
 import {
   cleanCoverageRegressionOutputs,
   compareCoverageRegressionBaseline,
@@ -126,7 +127,7 @@ import {
 } from "./Quality.schemas.ts";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
-import type { Scope } from "effect";
+import type { Crypto, Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta, CoverageScopeOwner } from "./internal/CoverageScope.ts";
@@ -205,7 +206,12 @@ const capturedTimeoutResult = (error: CaptureCommandTimedOutError): CapturedStep
     truncated: false,
   });
 
-type QualityTaskEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+type QualityTaskEnvironment =
+  | Crypto.Crypto
+  | FileSystem.FileSystem
+  | Path.Path
+  | Crypto.Crypto
+  | ChildProcessSpawner.ChildProcessSpawner;
 
 type PackageJsonWorkspaces = ReadonlyArray<string> | PackageJsonWorkspacesDocument;
 
@@ -1290,6 +1296,9 @@ const turboSecretSessionStep: {
 export const turboSecretSessionStepForTesting = turboSecretSessionStep;
 
 const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(function* (step: QualityTaskStep) {
+  yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, step.env ?? {}).pipe(
+    QualityTaskConfigurationError.mapError("Rejected a caller-provided cache runtime identity.")
+  );
   if (step.useLocalEnv !== true) {
     return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
@@ -1312,10 +1321,11 @@ const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(
 const runStep = Effect.fn("QualityTasks.runStep")(function* (step: QualityTaskStep) {
   const resolved = yield* withTurboSecretSession(step);
   const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
+  const runtime = cacheRuntimeStep(resolved);
   yield* Console.log(`[beep-cli] ${resolved.label}: ${commandText(resolved.command, resolved.args)}`);
   const exitCode = yield* runToExit({
-    command: resolved.command,
-    args: resolved.args,
+    command: runtime.command,
+    args: runtime.args,
     cwd: resolved.cwd,
     env: {
       ...envOverrides,
@@ -1392,11 +1402,12 @@ const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQ
 ): Effect.fn.Return<QuarantineStepAttempt, QualityTaskConfigurationError, QualityTaskEnvironment> {
   const resolved = yield* withTurboSecretSession(step);
   const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
+  const runtime = cacheRuntimeStep(resolved);
   const command = commandText(resolved.command, resolved.args);
   yield* Console.log(`[beep-cli] ${resolved.label}: ${command}`);
   const result = yield* runCaptured({
-    command: resolved.command,
-    args: resolved.args,
+    command: runtime.command,
+    args: runtime.args,
     cwd: resolved.cwd,
     env: {
       ...envOverrides,
@@ -1641,7 +1652,7 @@ interface StreamingStepOutcome {
 type StreamingOutcomeObserver = (
   outcome: StreamingStepOutcome,
   index: number
-) => Effect.Effect<void, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path>;
+) => Effect.Effect<void, QualityTaskConfigurationError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
 
 const ignoreStreamingOutcome: StreamingOutcomeObserver = () => Effect.void;
 
@@ -1870,7 +1881,7 @@ const redSchedulingDecision = (
 
 type QualityTaskLaneRunObserver = (
   laneRun: QualityTaskLaneRun
-) => Effect.Effect<void, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path>;
+) => Effect.Effect<void, QualityTaskConfigurationError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
 
 const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
 
@@ -1985,7 +1996,9 @@ const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function
   lane: GithubCheckWaveLane,
   laneProofMode?: LaneProofSession["mode"]
 ) {
-  const session = yield* prepareLaneProofSession([lane], laneProofMode);
+  const session = yield* prepareLaneProofSession([lane], laneProofMode).pipe(
+    QualityTaskConfigurationError.mapError("Failed to prepare the lane-proof session.")
+  );
   const reusable = O.exists(session, (prepared) => hasReusableLaneProof(prepared, lane.id));
   const activeReuse = reusable && O.exists(session, (prepared) => prepared.mode === "active");
   if (reusable) {
@@ -2382,13 +2395,21 @@ export const runQualityTaskStreamingLaneGroup = Effect.fn("QualityTasks.runStrea
 
 const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOutput")(function* (
   step: QualityTaskStep
-): Effect.fn.Return<QualityTaskStepOutput, QualityTaskConfigurationError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  QualityTaskStepOutput,
+  QualityTaskConfigurationError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
+  yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, step.env ?? {}).pipe(
+    QualityTaskConfigurationError.mapError("Rejected a caller-provided cache runtime identity.")
+  );
   const command = commandText(step.command, step.args);
   const envOverrides = yield* turboEnvOverrides(step.command, step.args, Bun.env);
+  const runtime = cacheRuntimeStep(step);
   const captureTimeout = step.captureTimeoutMillis;
   const result = yield* runCaptured({
-    command: step.command,
-    args: step.args,
+    command: runtime.command,
+    args: runtime.args,
     cwd: step.cwd,
     env: {
       ...envOverrides,

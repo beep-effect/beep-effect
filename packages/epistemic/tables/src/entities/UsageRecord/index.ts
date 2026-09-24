@@ -21,6 +21,21 @@
  */
 export * from "./UsageRecord.converters.ts";
 /**
+ * UsageRecord converter error exports.
+ *
+ * **Example** (Access UsageRecordConverterError export)
+ *
+ * ```ts
+ * import * as UsageRecord from "@beep/epistemic-tables/entities/UsageRecord"
+ *
+ * console.log(UsageRecord.UsageRecordConverterError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./UsageRecord.errors.ts";
+/**
  * UsageRecord table exports.
  *
  * **Example** (Access Table entityType path)

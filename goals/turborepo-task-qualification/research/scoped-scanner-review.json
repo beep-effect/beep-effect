@@ -1,0 +1,147 @@
+{
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "authority": "Private configuration-overlay experiment; no repository configuration changed or qualification granted.",
+  "wrapperExitCode": 0,
+  "beforeAfterDependencyToolchainParity": "passed",
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/scoped-scanner-qp8jpzgm/receipt.json",
+    "sha256": "112ad117e21a48e73669ce6dcd36c9b6c9b951d8e2848858d313b35709233280"
+  },
+  "configuration": {
+    "path": ".beep/qualification-local-preflight/scoped-scanner-biome.json",
+    "sha256": "ab6eaac389031b523f602029b27b49a6096e609fc5dd9ebdc59942134710b058"
+  },
+  "probe": {
+    "path": ".beep/qualification-local-preflight/probe-scoped-scanner.py",
+    "sha256": "2d93c42bac88e8a5b0316d43c3b7436e0318593d4f5d25b71bb81e3fce92592a"
+  },
+  "reviewRecipe": {
+    "path": ".beep/qualification-local-preflight/review-scoped-scanner.py",
+    "sha256": "a92dbe7f37979ec20580f282b794dc03c7a0ba26a6f2fde6a2687fc56c6c8604"
+  },
+  "onlyConfigurationChange": "files.includes selects identity and types initial scan paths; rules, plugins, overrides and VCS settings unchanged.",
+  "controlComparison": "Import source identical; only the deprecation comment differs between imported JS/declaration overlays. Quiet exits are 0 and 1; no verbose diagnostic attribution claimed.",
+  "unmodifiedOtherRepositoryPaths": {
+    "original": 8456,
+    "scoped": 406
+  },
+  "results": [
+    {
+      "case": "scoped-unmodified",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/scoped-scanner-qp8jpzgm/scoped-unmodified-read-review.json",
+        "sha256": "e930561640b625702e7042cde0ead14639c527e8d978a57816d0a9f6928b1d4d"
+      },
+      "groups": {
+        "outside-repository": {
+          "uniquePaths": 20,
+          "readCalls": 489,
+          "returnedBytes": 173376
+        },
+        "other-repository-paths": {
+          "uniquePaths": 406,
+          "readCalls": 423,
+          "returnedBytes": 1339343
+        },
+        "identity-subtree": {
+          "uniquePaths": 27,
+          "readCalls": 31,
+          "returnedBytes": 281186
+        },
+        "installed-dependencies": {
+          "uniquePaths": 5655,
+          "readCalls": 26046,
+          "returnedBytes": 57941278
+        },
+        "non-filesystem-descriptor": {
+          "uniquePaths": 5,
+          "readCalls": 12,
+          "returnedBytes": 313
+        }
+      },
+      "unannotatedPositiveReads": {},
+      "nonemptyReadBuffers": 0
+    },
+    {
+      "case": "scoped-effect-control",
+      "exitCode": 0,
+      "review": {
+        "path": ".beep/qualification-local-preflight/scoped-scanner-qp8jpzgm/scoped-effect-control-read-review.json",
+        "sha256": "161ded71fc2ac6e458de1b58d39e61f20183166be55bd314aa0289547f18f7f6"
+      },
+      "groups": {
+        "outside-repository": {
+          "uniquePaths": 20,
+          "readCalls": 535,
+          "returnedBytes": 187646
+        },
+        "other-repository-paths": {
+          "uniquePaths": 406,
+          "readCalls": 426,
+          "returnedBytes": 1361703
+        },
+        "identity-subtree": {
+          "uniquePaths": 28,
+          "readCalls": 32,
+          "returnedBytes": 281292
+        },
+        "installed-dependencies": {
+          "uniquePaths": 5655,
+          "readCalls": 30300,
+          "returnedBytes": 68915879
+        },
+        "non-filesystem-descriptor": {
+          "uniquePaths": 5,
+          "readCalls": 12,
+          "returnedBytes": 313
+        }
+      },
+      "unannotatedPositiveReads": {},
+      "nonemptyReadBuffers": 0
+    },
+    {
+      "case": "scoped-effect-deprecated",
+      "exitCode": 1,
+      "review": {
+        "path": ".beep/qualification-local-preflight/scoped-scanner-qp8jpzgm/scoped-effect-deprecated-read-review.json",
+        "sha256": "fc2b88b0de19f1ce1c263b8fd94d3ff9dfe6c67afc19d78ff52273267217a3cb"
+      },
+      "groups": {
+        "outside-repository": {
+          "uniquePaths": 20,
+          "readCalls": 359,
+          "returnedBytes": 130508
+        },
+        "other-repository-paths": {
+          "uniquePaths": 406,
+          "readCalls": 424,
+          "returnedBytes": 1358131
+        },
+        "identity-subtree": {
+          "uniquePaths": 28,
+          "readCalls": 32,
+          "returnedBytes": 281292
+        },
+        "installed-dependencies": {
+          "uniquePaths": 5655,
+          "readCalls": 25652,
+          "returnedBytes": 56648606
+        },
+        "non-filesystem-descriptor": {
+          "uniquePaths": 5,
+          "readCalls": 12,
+          "returnedBytes": 313
+        }
+      },
+      "unannotatedPositiveReads": {},
+      "nonemptyReadBuffers": 0
+    }
+  ],
+  "remaining": [
+    "Resolve remaining workspace configuration and utils source dependencies",
+    "Verify workspace-dependency deprecation and ignored/generated-file semantics before adopting a candidate",
+    "Complete native hash/replay and full current-runtime stable/canary matrices for any adopted configuration",
+    "Signed sibling receipts and semantic/indirect-I/O closure remain required"
+  ]
+}

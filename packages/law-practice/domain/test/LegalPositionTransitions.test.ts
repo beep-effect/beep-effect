@@ -23,17 +23,23 @@ import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 const isActFrameElementRef = S.is(ActFrameElementRef);
 const isLegalVerdictFamily = S.is(LegalVerdictFamily);
 
-const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, runs = 10): void => {
-  const decode = S.decodeUnknownSync(schema);
-  const encode = S.encodeSync(schema);
-  const equivalent = S.toEquivalence(schema);
+const assertSchemaEncodedRoundTrips = Effect.fn("LegalPositionTransitionsTest.assertSchemaEncodedRoundTrips")(
+  function* <Schema extends S.Codec<unknown>>(schema: Schema, runs = 10) {
+    const decode = S.decodeUnknownEffect(schema);
+    const encode = S.encodeEffect(schema);
+    const equivalent = S.toEquivalence(schema);
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.schema(schema),
+      (value) =>
+        Effect.gen(function* () {
+          return equivalent(yield* decode(yield* encode(value)), value);
+        }),
+      { runs }
+    );
 
-  expect(
-    Effect.runSync(
-      Arbitrary.checkEffect(Arbitrary.schema(schema), (value) => equivalent(decode(encode(value)), value), { runs })
-    )._tag
-  ).toBe("Passed");
-};
+    expect(result._tag).toBe("Passed");
+  }
+);
 
 const norm = (designation: string, fragment: string | null) => ({ fragment, norm: { designation } });
 
@@ -292,19 +298,22 @@ describe("priority basis inputs", () => {
 });
 
 describe("transition value schemas", () => {
-  it("round-trips every generated transition value through its encoded form", () => {
-    for (const schema of [
-      ActFrameElementRef,
-      CorrectedElement,
-      ExerciseResult,
-      NormSourceReference,
-      PositionTransition,
-      PriorityBasis,
-      ValidatorReport,
-    ]) {
-      assertSchemaEncodedRoundTrips(schema, 10);
-    }
-  });
+  it.effect(
+    "round-trips every generated transition value through its encoded form",
+    Effect.fnUntraced(function* () {
+      for (const schema of [
+        ActFrameElementRef,
+        CorrectedElement,
+        ExerciseResult,
+        NormSourceReference,
+        PositionTransition,
+        PriorityBasis,
+        ValidatorReport,
+      ]) {
+        yield* assertSchemaEncodedRoundTrips(schema, 10);
+      }
+    })
+  );
 
   it("decodes every generated element pointer to itself", () => {
     assertSchemaArbitraryDecodesToSelf(ActFrameElementRef, { runs: 10 });

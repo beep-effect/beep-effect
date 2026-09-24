@@ -22,7 +22,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const SyncDriftTestLayer = DocumentsSyncFixtureLive.pipe(
@@ -30,8 +29,7 @@ const SyncDriftTestLayer = DocumentsSyncFixtureLive.pipe(
   Layer.provideMerge(BunPath.layer)
 );
 
-const workspaceId = S.decodeSync(WorkspaceIdentity.WorkspaceId)(11);
-const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
+const workspaceId = WorkspaceIdentity.WorkspaceId.make(11);
 const syncInput = (vaultRootPath: string) => SyncOnceInput.make({ vaultRootPath, workspaceId });
 const listConflictsInput = ListOpenConflictsInput.make({ workspaceId });
 
@@ -56,7 +54,7 @@ const findTrackedItem = (relPath: string) =>
   SyncItemRepository.pipe(
     Effect.flatMap((repository) =>
       repository.findByPath(
-        FindSyncItemByPathInput.make({ localRelPath: decodeVaultRelPath(relPath), provider: "box", workspaceId })
+        FindSyncItemByPathInput.make({ localRelPath: VaultRelPath.make(relPath), provider: "box", workspaceId })
       )
     ),
     Effect.flatMap(Effect.fromOption)

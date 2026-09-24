@@ -795,7 +795,7 @@ export const auditImagesImpl = Effect.fn("FilesCommandService.auditImages")(func
 ): Effect.fn.Return<
   ImageAuditManifest,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (options.minConfidence < 0 || options.minConfidence > 1) {
     return yield* FilesCommandError.make({
@@ -1472,7 +1472,7 @@ export const curateImagesImpl = Effect.fn("FilesCommandService.curateImages")(fu
 ): Effect.fn.Return<
   ImageCurationSummary,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Terminal.Terminal | ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Terminal.Terminal | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

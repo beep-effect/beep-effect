@@ -20,15 +20,16 @@ import {
 import { VersionSyncOptions } from "@beep/repo-cli/test/VersionSync";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A } from "@beep/utils";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
 import { Project, SyntaxKind, ts } from "ts-morph";
-import { describe, expect, it } from "vitest";
 
-const decodeFileGenerationPlanInputSync = S.decodeSync(FileGenerationPlanInput);
-const decodeUnknownSchemaCrispeningPolicyDocumentSync = S.decodeUnknownSync(SchemaCrispeningPolicyDocument);
+const decodeFileGenerationPlanInputEffect = S.decodeEffect(FileGenerationPlanInput);
+const decodeUnknownSchemaCrispeningPolicyDocumentEffect = S.decodeUnknownEffect(SchemaCrispeningPolicyDocument);
 
 const committedPolicyText = O.getOrElse(
   O.liftPredicate(
@@ -39,18 +40,20 @@ const committedPolicyText = O.getOrElse(
 );
 
 describe("packages/tooling/tool/cli schema-first models", () => {
-  it("applies decoding defaults for FileGenerationPlanInput.symlinks", () => {
-    const decoded = decodeFileGenerationPlanInputSync({
-      outputDir: "/tmp/demo",
-      directories: ["src"],
-      files: [{ relativePath: "src/index.ts", content: "export {};\n" }],
-    });
+  it.effect("applies decoding defaults for FileGenerationPlanInput.symlinks", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decodeFileGenerationPlanInputEffect({
+        outputDir: "/tmp/demo",
+        directories: ["src"],
+        files: [{ relativePath: "src/index.ts", content: "export {};\n" }],
+      });
 
-    expect(decoded.symlinks).toEqual([]);
-    // Assets default the same way, so every scaffold that emits no binary
-    // artifact keeps its plan input unchanged.
-    expect(decoded.assets).toEqual([]);
-  });
+      expect(decoded.symlinks).toEqual([]);
+      // Assets default the same way, so every scaffold that emits no binary
+      // artifact keeps its plan input unchanged.
+      expect(decoded.assets).toEqual([]);
+    })
+  );
 
   it("uses tagged-union helpers for GenerationAction", () => {
     const action = GenerationAction.cases["write-file"].make({
@@ -281,7 +284,7 @@ describe("fnSchemaEntryFromFunctionLike", () => {
       "fixture.ts",
       "export function updateWidget(input: { id: string; name: string }): void {}"
     );
-    const [functionDeclaration] = sourceFile.getFunctions();
+    const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     const entry = fnSchemaEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
 
     expect(O.isSome(entry)).toBe(true);
@@ -296,7 +299,7 @@ describe("fnSchemaEntryFromFunctionLike", () => {
       "fixture.ts",
       ["export function identity<T>(input: { value: T }): T {", "  return input.value;", "}"].join("\n")
     );
-    const [functionDeclaration] = sourceFile.getFunctions();
+    const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isNone(entry)).toBe(true);
@@ -332,7 +335,7 @@ describe("normalizationEntryFromCallExpression", () => {
   it("does not fire for a module-top-level trim() call", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile("fixture.ts", 'const trimmed = "  hi  ".trim();');
-    const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
+    const callExpression = O.getOrThrow(A.head(sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)));
     const entry = normalizationEntryFromCallExpression(callExpression, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isNone(entry)).toBe(true);
@@ -346,7 +349,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
       "fixture.ts",
       ["export function findUser(id: string): string | null {", "  return null;", "}"].join("\n")
     );
-    const [functionDeclaration] = sourceFile.getFunctions();
+    const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     const entry = nullReturnEntryFromFunctionLike({ file: "fixture.ts", owner: "@beep/test" })(functionDeclaration);
 
     expect(O.isSome(entry)).toBe(true);
@@ -360,7 +363,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
       "fixture.ts",
       ["export function findUser(id: string) {", "  return null;", "}"].join("\n")
     );
-    const [functionDeclaration] = sourceFile.getFunctions();
+    const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     const entry = nullReturnEntryFromFunctionLike(functionDeclaration, {
       file: "fixture.ts",
       owner: "@beep/test",
@@ -398,7 +401,7 @@ describe("getsomesStructEntryFromCallExpression", () => {
       "fixture.ts",
       ["export function pickSomes() {", "  return R.getSomes({ a: 1, b: 2 });", "}"].join("\n")
     );
-    const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
+    const callExpression = O.getOrThrow(A.head(sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)));
     const entry = getsomesStructEntryFromCallExpression({ file: "fixture.ts", owner: "@beep/test" })(callExpression);
 
     expect(O.isSome(entry)).toBe(true);
@@ -412,7 +415,7 @@ describe("getsomesStructEntryFromCallExpression", () => {
       "fixture.ts",
       ["export function pickSomes(dict: Record<string, number>) {", "  return R.getSomes(dict);", "}"].join("\n")
     );
-    const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
+    const callExpression = O.getOrThrow(A.head(sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)));
     const entry = getsomesStructEntryFromCallExpression(callExpression, {
       file: "fixture.ts",
       owner: "@beep/test",
@@ -439,7 +442,7 @@ describe("G4 foundation family-flip regression fixture", () => {
       "fixture.ts",
       "export function updateWidget(input: { id: string; name: string }): void {}"
     );
-    const [functionDeclaration] = sourceFile.getFunctions();
+    const functionDeclaration = O.getOrThrow(A.head(sourceFile.getFunctions()));
     return O.getOrThrow(fnSchemaEntryFromFunctionLike(functionDeclaration, { file, owner: "@beep/fixture" }));
   };
 
@@ -485,23 +488,25 @@ describe("G4 foundation family-flip regression fixture", () => {
     expect(counted[0]).toBe(foundationViolation);
   });
 
-  it("keeps the same ratchet result against the real committed policy document", () => {
-    // Bind the fixture to the on-disk policy: if a future edit reverts a
-    // family flip, these assertions fail. Flipped so far: foundation, drivers.
-    const policy = O.some(decodeUnknownSchemaCrispeningPolicyDocumentSync(parse(committedPolicyText)));
-    const isExempt = isSchemaCrispeningPolicyExempt(policy);
+  it.effect("keeps the same ratchet result against the real committed policy document", () =>
+    Effect.gen(function* () {
+      // Bind the fixture to the on-disk policy: if a future edit reverts a
+      // family flip, these assertions fail. Flipped so far: foundation, drivers.
+      const policy = O.some(yield* decodeUnknownSchemaCrispeningPolicyDocumentEffect(parse(committedPolicyText)));
+      const isExempt = isSchemaCrispeningPolicyExempt(policy);
 
-    expect(isExempt(foundationViolation)).toBe(false);
-    expect(isExempt(driversViolation)).toBe(false);
-    expect(schemaCrispeningFamilyForFile(toolingFile)).toEqual(O.some("tooling"));
-    expect(isExempt(toolingViolation)).toBe(false);
-    // All four families are flipped — the ratchet is fully closed.
-    expect(schemaCrispeningFamilyForFile(appsFile)).toEqual(O.some("apps-slices"));
-    expect(isExempt(appsViolation)).toBe(false);
-    // A path outside every wave family resolves to no family and stays exempt
-    // (PLAN: unassigned surfaces are non-blocking by construction).
-    const unassignedViolation = fnSchemaViolationForFile("scripts/OneOff.ts");
-    expect(O.isNone(schemaCrispeningFamilyForFile("scripts/OneOff.ts"))).toBe(true);
-    expect(isExempt(unassignedViolation)).toBe(true);
-  });
+      expect(isExempt(foundationViolation)).toBe(false);
+      expect(isExempt(driversViolation)).toBe(false);
+      expect(schemaCrispeningFamilyForFile(toolingFile)).toEqual(O.some("tooling"));
+      expect(isExempt(toolingViolation)).toBe(false);
+      // All four families are flipped — the ratchet is fully closed.
+      expect(schemaCrispeningFamilyForFile(appsFile)).toEqual(O.some("apps-slices"));
+      expect(isExempt(appsViolation)).toBe(false);
+      // A path outside every wave family resolves to no family and stays exempt
+      // (PLAN: unassigned surfaces are non-blocking by construction).
+      const unassignedViolation = fnSchemaViolationForFile("scripts/OneOff.ts");
+      expect(O.isNone(schemaCrispeningFamilyForFile("scripts/OneOff.ts"))).toBe(true);
+      expect(isExempt(unassignedViolation)).toBe(true);
+    })
+  );
 });

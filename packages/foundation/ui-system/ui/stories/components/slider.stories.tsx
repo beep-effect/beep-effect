@@ -1,4 +1,6 @@
 import { Slider } from "@beep/ui/components/slider";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import { expect, fn, userEvent, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
@@ -83,7 +85,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const thumb = canvas.getAllByRole("slider")[0];
+    const thumb = O.getOrThrow(A.head(canvas.getAllByRole("slider")));
     expect(thumb).toBeVisible();
     thumb.focus();
     return userEvent.keyboard("{ArrowRight}").then(() => {
@@ -133,7 +135,7 @@ export const Disabled: Story = {
   args: { disabled: true },
   play: ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const thumb = canvas.getAllByRole("slider")[0];
+    const thumb = O.getOrThrow(A.head(canvas.getAllByRole("slider")));
     thumb.focus();
     return userEvent.keyboard("{ArrowRight}").then(() => {
       expect(args.onValueChange).not.toHaveBeenCalled();

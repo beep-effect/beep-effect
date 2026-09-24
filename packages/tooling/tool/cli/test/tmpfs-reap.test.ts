@@ -19,9 +19,9 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const decodeTmpfsReapReportJson = S.decodeEffect(S.fromJsonString(TmpfsReapReport));
 const decodeTmpfsReapReport = S.decodeEffect(TmpfsReapReport);
-const decodeTmpfsReapReportJsonSync = S.decodeSync(S.fromJsonString(TmpfsReapReport));
+const decodeTmpfsReapReportJsonEffect = S.decodeEffect(S.fromJsonString(TmpfsReapReport));
 const encodeTmpfsReapReportJson = S.encodeEffect(S.fromJsonString(TmpfsReapReport));
-const encodeTmpfsReapReportJsonSync = S.encodeSync(S.fromJsonString(TmpfsReapReport));
+const encodeTmpfsReapReportJsonEffect = S.encodeEffect(S.fromJsonString(TmpfsReapReport));
 
 const FIXTURE_NOW_MILLIS = 2_000_000_000_000;
 const noProcessCommandLines = () => Effect.succeed(A.empty<string>());
@@ -1586,27 +1586,22 @@ describe("tmpfs reap", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
-  it("property: tmpfs-reap reports round-trip through the JSON codec", () => {
+  {
     const ReportArbitrary = Arbitrary.schema(TmpfsReapReport);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([ReportArbitrary]),
-          ([report]) => {
-            const encoded = encodeTmpfsReapReportJsonSync(report);
-            const decoded = decodeTmpfsReapReportJsonSync(encoded);
-            expect(decoded.schemaVersion).toBe(report.schemaVersion);
-            expect(decoded.tmpRoot).toBe(report.tmpRoot);
-            expect(A.length(decoded.candidates)).toBe(A.length(report.candidates));
-            // JSON drops the sign of -0, so the codec law is encode-stability
-            // rather than Object.is identity on numeric fields.
-            expect(encodeTmpfsReapReportJsonSync(decoded)).toBe(encoded);
-
-            return true;
-          },
-          fcRuns(32)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+    it.effect.prop(
+      "property: tmpfs-reap reports round-trip through the JSON codec",
+      [ReportArbitrary],
+      Effect.fnUntraced(function* ([report]) {
+        const encoded = yield* encodeTmpfsReapReportJsonEffect(report);
+        const decoded = yield* decodeTmpfsReapReportJsonEffect(encoded);
+        expect(decoded.schemaVersion).toBe(report.schemaVersion);
+        expect(decoded.tmpRoot).toBe(report.tmpRoot);
+        expect(A.length(decoded.candidates)).toBe(A.length(report.candidates));
+        // JSON drops the sign of -0, so the codec law is encode-stability
+        // rather than Object.is identity on numeric fields.
+        expect(yield* encodeTmpfsReapReportJsonEffect(decoded)).toBe(encoded);
+      }),
+      { arbitrary: fcRuns(32) }
+    );
+  }
 });

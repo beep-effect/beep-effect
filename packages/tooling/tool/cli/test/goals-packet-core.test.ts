@@ -23,18 +23,18 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
-import { describe, expect, it } from "vitest";
 
 const decodePacketTraceProjectionJson = S.decodeEffect(S.fromJsonString(PacketTraceProjection));
-const decodeUnknownPacketTraceEntrySync = S.decodeUnknownSync(PacketTraceEntry);
+const decodeUnknownPacketTraceEntryEffect = S.decodeUnknownEffect(PacketTraceEntry);
 const encodeUnknownPacketDerivedState = S.encodeUnknownEffect(PacketDerivedState);
-const encodeUnknownPacketTraceEntrySync = S.encodeUnknownSync(PacketTraceEntry);
+const encodeUnknownPacketTraceEntryEffect = S.encodeUnknownEffect(PacketTraceEntry);
 
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
 
@@ -134,7 +134,7 @@ describe("canonical encoding and digests", () => {
           const movedDigest = yield* packetEventDigest(moved);
           expect(baseDigest).toBe(stableDigest);
           expect(baseDigest).not.toBe(movedDigest);
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -151,21 +151,16 @@ describe("canonical encoding and digests", () => {
 
 describe("schema-derived properties", () => {
   const PacketTraceEntryArbitrary = Arbitrary.schema(PacketTraceEntry);
-  it("round-trips arbitrary timeline entries through encode/decode byte-stably", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([PacketTraceEntryArbitrary]),
-          ([entry]) => {
-            const encoded = encodeUnknownPacketTraceEntrySync(entry);
-            const reencoded = encodeUnknownPacketTraceEntrySync(decodeUnknownPacketTraceEntrySync(encoded));
-            return canonicalJsonText(reencoded) === canonicalJsonText(encoded);
-          },
-          fcRuns(50)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.effect.prop(
+    "round-trips arbitrary timeline entries through encode/decode byte-stably",
+    [PacketTraceEntryArbitrary],
+    Effect.fnUntraced(function* ([entry]) {
+      const encoded = yield* encodeUnknownPacketTraceEntryEffect(entry);
+      const reencoded = yield* encodeUnknownPacketTraceEntryEffect(yield* decodeUnknownPacketTraceEntryEffect(encoded));
+      expect(canonicalJsonText(reencoded) === canonicalJsonText(encoded)).toBe(true);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 });
 
 describe("foldPacketEvents", () => {
@@ -197,7 +192,7 @@ describe("foldPacketEvents", () => {
           expect(derived.furthestOrdinal).toBe(4);
           expect(derived.resumeStage).toBe("align");
           expect(derived.status).toBe("active");
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -223,7 +218,7 @@ describe("foldPacketEvents", () => {
           expect(derived.riskTierOverride?.reason).toBe("scope grew");
           expect(derived.riskTierOverride?.actor).toBe("test");
           expect(derived.riskTierOverride?.at).toBe("2026-08-17T00:02:00.000Z");
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -273,7 +268,7 @@ describe("foldPacketEvents", () => {
           expect(derived.revision).toBe(2);
           expect(derived.riskTierOverride?.tier).toBe("standard");
           expect(derived.riskTierOverride?.reason).toBe("initial routing");
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -316,7 +311,7 @@ describe("foldPacketEvents", () => {
           expect(fork?.children.length).toBe(2);
           // Derivations stop at the unambiguous prefix before the fork.
           expect(derived.revision).toBe(1);
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -372,7 +367,7 @@ describe("foldPacketEvents", () => {
           expect(derived.forks[1]?.parent).toBe(parentId);
           // Nothing derives past an unresolved genesis fork.
           expect(derived.revision).toBe(0);
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -404,7 +399,7 @@ describe("foldPacketEvents", () => {
           expect(A.length(derived.issues)).toBe(1);
           expect(derived.issues[0]?.kind).toBe("missing-parent");
           expect(derived.revision).toBe(0);
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -437,7 +432,7 @@ describe("foldPacketEvents", () => {
           }
           const derived = foldPacketEvents({ packet: "demo", root: "goals", events });
           expect(A.map(derived.forks, (fork) => fork.parent)).toStrictEqual(["a".repeat(64), "b".repeat(64)]);
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -589,7 +584,7 @@ describe("planForkRepair", () => {
           ]);
           const plan = yield* planForkRepair({ packet: "demo", root: "goals", events });
           expect(O.isNone(plan)).toBe(true);
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -688,7 +683,7 @@ describe("planForkRepair on genesis forks", () => {
           const repaired = foldPacketEvents({ packet: "demo", root: "goals", events: applied });
           expect(repaired.forks).toStrictEqual([]);
           expect(repaired.revision).toBe(2);
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -775,7 +770,7 @@ describe("planForkRepair on nested forks", () => {
           expect(A.length(after.forks)).toBe(2);
           expect(A.every(after.forks, (fork) => A.length(fork.children) === 2)).toBe(true);
           expect(A.some(after.forks, (fork) => fork.parent === plan.fork.parent)).toBe(false);
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );
@@ -995,7 +990,7 @@ describe("packetTraceIsStale", () => {
 
           const outdated = PacketTraceProjection.make({ ...fresh, projectorVersion: fresh.projectorVersion + 1 });
           expect(packetTraceIsStale(outdated, derived)).toBe(true);
-        })
+        }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
   );

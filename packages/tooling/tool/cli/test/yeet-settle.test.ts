@@ -52,11 +52,12 @@ import {
   yeetSettleVerdictIsTerminal,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Duration, Effect, Fiber, FileSystem, HashSet, Layer, Ref, Sink, Stream } from "effect";
+import { Duration, Effect, Fiber, FileSystem, HashSet, Layer, Ref, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -165,6 +166,7 @@ const spawner = (exitCode: number, output: string) =>
     })
   );
 const platform = Layer.mergeAll(
+  BunCrypto.layer,
   NodeFileSystem.layer,
   NodePath.layer,
   Layer.succeed(
@@ -653,7 +655,7 @@ describe("B7 settle contracts", () => {
           assertNone(result);
           expect(yield* TestConsole.errorLines).toHaveLength(1);
         }
-      }).pipe(provideScopedLayer(spawner(code, output)))
+      }).pipe(provideScopedLayer(Layer.mergeAll(BunCrypto.layer, spawner(code, output))))
     );
   }
 });
@@ -893,6 +895,53 @@ it.layer(platform)("B7 merge-loop timing", (layerIt) => {
   });
 });
 
+describe("closeout follow-up gate", () => {
+  // The closeout collector now raises a blocking pr-review issue for a thread
+  // the author resolved that a reviewer has spoken on since, and the live
+  // remote counts it as a follow-up. Either one alone keeps merge readiness
+  // blocked on threads-resolved, so a follow-up can never be merged over.
+  const remoteWith = (followUpThreadCount: number) =>
+    YeetStatusRemote.make({
+      available: true,
+      checked: true,
+      detail: "PR",
+      headSha: O.some("aaa111"),
+      checks: [check("Lint")],
+      state: "OPEN",
+      isDraft: false,
+      requiredCheckCount: 1,
+      failingRequiredCheckCount: 0,
+      pendingRequiredCheckCount: 0,
+      mergeable: "MERGEABLE",
+      mergeStateStatus: "CLEAN",
+      unresolvedReviewThreadCount: 0,
+      followUpThreadCount,
+      acknowledgedThreadCount: 1,
+    });
+  const closeoutWith = (issueCount: number) =>
+    YeetStatusArtifact.make({
+      detail: "PR #1184",
+      issueCount,
+      path: "pr-closeout.json",
+      state: "present",
+      reviewedHeadSha: O.some("aaa111"),
+    });
+
+  it("blocks threads-resolved on a reviewer follow-up and clears once it is answered", () => {
+    const blocked = deriveYeetMergeReady(closeoutWith(1), remoteWith(1));
+    expect(O.flatMap(blocked, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+
+    // The closeout artifact's own issue count still blocks on its own.
+    const artifactOnly = deriveYeetMergeReady(closeoutWith(1), remoteWith(0));
+    expect(O.flatMap(artifactOnly, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+
+    // Answered: no follow-up left, no closeout issues, and the bot
+    // acknowledgement never counted against the merge.
+    const answered = deriveYeetMergeReady(closeoutWith(0), remoteWith(0));
+    expect(O.flatMap(answered, (value) => value.failing)).toStrictEqual(O.none());
+  });
+});
+
 describe("settle policy boundaries", () => {
   it("admits settle timeout under either policy", () => {
     expect(HashSet.has(yeetMonitorPolicyTerminals(YeetUntilMergedPolicy.make({})), "settle-timeout")).toBe(true);
@@ -991,6 +1040,83 @@ it.effect("status retains classified checks from the existing two gh views", () 
       });
       expect(legacy.checks).toEqual([]);
       expect(legacy.labels).toEqual([]);
+    })
+  ).pipe(provideScopedLayer(platform))
+);
+
+it.effect("status refuses a review-thread page that names itself as its own successor", () =>
+  temporary((root) =>
+    Effect.gen(function* () {
+      const pageReads = yield* Ref.make(0);
+      const runner = ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
+        const [first, second] = command.args;
+        if (command.command === "git") return Effect.succeed(handle(0, ""));
+        if (first === "pr" && second === "view")
+          return Effect.succeed(
+            handle(
+              0,
+              JSON.stringify({
+                id: "PR_loop",
+                number: 1,
+                url: "https://github.com/beep/repo/pull/1",
+                state: "OPEN",
+                mergeable: "MERGEABLE",
+                mergeStateStatus: "CLEAN",
+                isDraft: false,
+                reviewDecision: null,
+                headRefOid: "aaa111",
+                labels: [],
+              })
+            )
+          );
+        if (first === "pr" && second === "checks") return Effect.succeed(handle(0, "[]"));
+        // Every page claims a successor at the cursor that was just requested:
+        // a loop that trusted it would re-read this page forever.
+        if (first === "api")
+          return Ref.update(pageReads, (n) => n + 1).pipe(
+            Effect.as(
+              handle(
+                0,
+                JSON.stringify({
+                  data: {
+                    node: {
+                      author: { login: "octocat" },
+                      reviewThreads: {
+                        nodes: [
+                          {
+                            id: "PRRT_loop",
+                            isResolved: false,
+                            isOutdated: false,
+                            path: "src/a.ts",
+                            line: 1,
+                            resolvedBy: null,
+                            comments: {
+                              nodes: [{ author: { __typename: "User", login: "reviewer" }, body: "?", databaseId: 1 }],
+                            },
+                            latest: {
+                              nodes: [{ author: { __typename: "User", login: "reviewer" }, body: "?", databaseId: 1 }],
+                            },
+                          },
+                        ],
+                        pageInfo: { hasNextPage: true, endCursor: "same-cursor" },
+                      },
+                    },
+                  },
+                })
+              )
+            )
+          );
+        return Effect.succeed(handle(0, "[]"));
+      });
+      const result = yield* collectYeetStatus(contextFor(root), true).pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner),
+        Effect.result
+      );
+      expect(Result.isFailure(result)).toBe(true);
+      expect(Result.isFailure(result) ? result.failure.message : "").toContain("repeated the same GraphQL end cursor");
+      // The first page and its claimed successor were read; the third lap never ran.
+      expect(yield* Ref.get(pageReads)).toBe(2);
     })
   ).pipe(provideScopedLayer(platform))
 );

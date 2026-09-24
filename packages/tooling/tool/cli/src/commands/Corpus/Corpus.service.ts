@@ -81,6 +81,7 @@ type CorpusCommandServiceRequirements =
   | Crypto.Crypto
   | FileSystem.FileSystem
   | Path.Path
+  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner;
 
 /**

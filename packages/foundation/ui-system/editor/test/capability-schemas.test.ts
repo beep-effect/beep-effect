@@ -153,22 +153,21 @@ describe("capability schemas", () => {
 describe("capability schema arbitraries", () => {
   // Schema-derived property coverage: every generated value survives an
   // encode → decode round trip structurally (S.Class instances are Equal).
-  const roundTrips = <A, I>(schema: S.Codec<A, I>): void =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(schema)]),
-          ([value]) => Equal.equals(S.decodeSync(schema)(S.encodeSync(schema)(value)), value),
-          { runs: 25 }
-        )
-      )._tag
-    ).toBe("Passed");
-
-  it("round-trips generated classifications", () => {
-    roundTrips(CapabilityClassification);
+  const roundTrips = Effect.fn("roundTrips")(function* <A, I>(schema: S.Codec<A, I>) {
+    const result = yield* Arbitrary.checkEffect(
+      Arbitrary.all([Arbitrary.schema(schema)]),
+      ([value]) =>
+        Effect.gen(function* () {
+          const encoded = yield* S.encodeEffect(schema)(value);
+          const decoded = yield* S.decodeEffect(schema)(encoded);
+          return Equal.equals(decoded, value);
+        }),
+      { runs: 25 }
+    );
+    expect(result._tag).toBe("Passed");
   });
 
-  it("round-trips generated resolved capabilities", () => {
-    roundTrips(ResolvedCapability);
-  });
+  it.effect("round-trips generated classifications", () => roundTrips(CapabilityClassification));
+
+  it.effect("round-trips generated resolved capabilities", () => roundTrips(ResolvedCapability));
 });

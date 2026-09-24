@@ -1,4 +1,3 @@
-import { createHash, randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import {
   AdmissionConfig,
@@ -35,6 +34,7 @@ import {
   DateTime,
   Deferred,
   Effect,
+  Encoding,
   Fiber,
   FileSystem,
   Layer,
@@ -44,6 +44,7 @@ import {
   Schedule,
 } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -56,12 +57,20 @@ const producerPath = "packages/tooling/tool/cli/test/quality-scheduler-synthetic
 const decodeUUID = S.decodeEffect(UUID);
 const encodeLease = S.encodeEffect(S.fromJsonString(YeetAdmissionLease));
 const encodeTicket = S.encodeEffect(S.fromJsonString(YeetAdmissionTicket));
-const encodeLeaseSync = S.encodeSync(S.fromJsonString(YeetAdmissionLease));
-const decodeLeaseSync = S.decodeUnknownSync(S.fromJsonString(YeetAdmissionLease));
-const encodeTicketSync = S.encodeSync(S.fromJsonString(YeetAdmissionTicket));
-const decodeTicketSync = S.decodeUnknownSync(S.fromJsonString(YeetAdmissionTicket));
+const encodeLeaseEffect = S.encodeEffect(S.fromJsonString(YeetAdmissionLease));
+const decodeLeaseEffect = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionLease));
+const encodeTicketEffect = S.encodeEffect(S.fromJsonString(YeetAdmissionTicket));
+const decodeTicketEffect = S.decodeUnknownEffect(S.fromJsonString(YeetAdmissionTicket));
 const decodeJsonObject = S.decodeUnknownEffect(S.fromJsonString(S.JsonObject));
 const encodeScenario = S.encodeUnknownEffect(S.fromJsonString(S.JsonObject, { space: 2 }));
+const sha256Hex = Effect.fnUntraced(function* (bytes: Uint8Array) {
+  const crypto = yield* Crypto.Crypto;
+  return Encoding.encodeHex(yield* crypto.digest("SHA-256", bytes));
+});
+const randomAttemptId = Effect.fnUntraced(function* () {
+  const crypto = yield* Crypto.Crypto;
+  return yield* decodeUUID(yield* crypto.randomUUIDv4);
+});
 const fastConfig = AdmissionConfig.make({
   capacityMaxTokens: 3,
   heartbeatSeconds: 0.02,
@@ -216,7 +225,7 @@ const exportScenario = Effect.fn("SyntheticAdmission.exportScenario")(function* 
   }
   const source = yield* fs.readFile(fileURLToPath(import.meta.url));
   const scenario = yield* encodeScenario({
-    producer: { path: producerPath, sha256: createHash("sha256").update(source).digest("hex") },
+    producer: { path: producerPath, sha256: yield* sha256Hex(source) },
     steps,
     capturedAt: DateTime.formatIso(yield* DateTime.now),
     expected: { tags: expectedTags, chains },
@@ -256,9 +265,7 @@ const expectExportCheck = Effect.fnUntraced(function* (
   expect(yield* decodeJsonObject(manifest)).toMatchObject({
     producer: {
       path: producerPath,
-      sha256: createHash("sha256")
-        .update(yield* fs.readFile(fileURLToPath(import.meta.url)))
-        .digest("hex"),
+      sha256: yield* sha256Hex(yield* fs.readFile(fileURLToPath(import.meta.url))),
     },
     steps,
     expected: { tags: expectedTags, chains },
@@ -294,10 +301,10 @@ describe("synthetic admission scenario", () => {
           const branchB = "feat/synthetic-contender-b";
           const branchLease = "feat/synthetic-dead-lease";
           const branchTicket = "feat/synthetic-dead-ticket";
-          const attemptA = yield* decodeUUID(randomUUID());
-          const attemptB = yield* decodeUUID(randomUUID());
-          const attemptLease = yield* decodeUUID(randomUUID());
-          const attemptTicket = yield* decodeUUID(randomUUID());
+          const attemptA = yield* randomAttemptId();
+          const attemptB = yield* randomAttemptId();
+          const attemptLease = yield* randomAttemptId();
+          const attemptTicket = yield* randomAttemptId();
           // Admission alone does not write normal attempt rows. Keep A's empty run directory as a receipt.
           for (const checkout of [checkoutA, checkoutB, checkoutLease, checkoutTicket]) {
             yield* fs.makeDirectory(path.join(checkout, ".beep", "yeet", "runs"), { recursive: true });
@@ -491,41 +498,22 @@ describe("synthetic admission scenario", () => {
         })
       )
     ));
-  it("property: dead-owner lease and ticket fixtures round-trip through the JSON codecs the scenario writes", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(YeetAdmissionLease)]),
-          ([lease]) => {
-            const encoded = encodeLeaseSync(lease);
-            const decoded = decodeLeaseSync(encoded);
-            expect(decoded.nonce).toBe(lease.nonce);
-            expect(decoded.checkoutRoot).toBe(lease.checkoutRoot);
-            // JSON drops the sign of -0, so the codec law is encode-stability rather than deep identity.
-            expect(encodeLeaseSync(decoded)).toBe(encoded);
+  it.effect.prop(
+    "property: dead-owner lease and ticket fixtures round-trip through the JSON codecs the scenario writes",
+    [Arbitrary.schema(YeetAdmissionLease), Arbitrary.schema(YeetAdmissionTicket)],
+    Effect.fnUntraced(function* ([lease, ticket]) {
+      const encodedLease = yield* encodeLeaseEffect(lease);
+      const decodedLease = yield* decodeLeaseEffect(encodedLease);
+      expect(decodedLease.nonce).toBe(lease.nonce);
+      expect(decodedLease.checkoutRoot).toBe(lease.checkoutRoot);
+      expect(yield* encodeLeaseEffect(decodedLease)).toBe(encodedLease);
 
-            return true;
-          },
-          fcRuns(32)
-        )
-      )._tag
-    ).toBe("Passed");
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([Arbitrary.schema(YeetAdmissionTicket)]),
-          ([ticket]) => {
-            const encoded = encodeTicketSync(ticket);
-            const decoded = decodeTicketSync(encoded);
-            expect(decoded.nonce).toBe(ticket.nonce);
-            expect(decoded.checkoutRoot).toBe(ticket.checkoutRoot);
-            expect(encodeTicketSync(decoded)).toBe(encoded);
-
-            return true;
-          },
-          fcRuns(32)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+      const encoded = yield* encodeTicketEffect(ticket);
+      const decoded = yield* decodeTicketEffect(encoded);
+      expect(decoded.nonce).toBe(ticket.nonce);
+      expect(decoded.checkoutRoot).toBe(ticket.checkoutRoot);
+      expect(yield* encodeTicketEffect(decoded)).toBe(encoded);
+    }),
+    { arbitrary: fcRuns(32) }
+  );
 });

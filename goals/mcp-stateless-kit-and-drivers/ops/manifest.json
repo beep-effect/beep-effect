@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "mcp-stateless-kit-and-drivers",
+    "title": "MCP Stateless Kit and Drivers",
+    "status": "completed-retained",
+    "created": "2026-09-22",
+    "updated": "2026-09-22",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/mcp-stateless-kit-and-drivers",
+  "lifecycle": "completed-retained",
+  "mission": "Rebase @beep/mcp-kit on the installed rc.117 MCP 2026-07-28 adapter, add the in-repo 2026 client and conformance port, and cut the five stdio hosts over to the stateless protocol, nlp-mcp last behind a live vendor capture.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/effect-mcp-2026-07-28",
+    "graduated": "2026-09-22"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/mcp-stateless-kit-and-drivers/README.md",
+    "goals/mcp-stateless-kit-and-drivers/SPEC.md",
+    "goals/mcp-stateless-kit-and-drivers/PLAN.md",
+    "goals/mcp-stateless-kit-and-drivers/GOAL.md",
+    "goals/mcp-stateless-kit-and-drivers/research/SOURCES.md",
+    "explorations/effect-mcp-2026-07-28/BRIEF.md",
+    "explorations/effect-mcp-2026-07-28/DECISIONS.md",
+    "explorations/effect-mcp-2026-07-28/MAP.md",
+    "packages/foundation/capability/mcp-kit/README.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "explorations/effect-mcp-2026-07-28/research/SOURCES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/mcp-stateless-kit-and-drivers/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete",
+      "exit": "Done in the exploration: ten grok lanes, Gate B (175/184 claims), Gate C, rc.117 landed on main via #1173."
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "in-progress",
+      "exit": "PR 1 (kit rebase, @beep/mcp-kit/client, conformance port) published 2026-09-22; PR 2-4 pending."
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/mcp-stateless-kit-and-drivers/GOAL.md)\" -le 4000",
+    "jq . goals/mcp-stateless-kit-and-drivers/ops/manifest.json",
+    "rg -n \"mcp-stateless-kit-and-drivers|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/mcp-stateless-kit-and-drivers",
+    "git diff --check -- goals/mcp-stateless-kit-and-drivers",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

@@ -309,7 +309,11 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       const imported = yield* readSecurityBundle(root);
       expect(imported.evidenceJson).toContain(token);
       const plan = yield* planPacket(imported.payload, {});
-      const docs = renderPacketDocuments({ plan, rawPayloadJson: imported.evidenceJson, rawReports: imported.reports });
+      const docs = yield* renderPacketDocuments({
+        plan,
+        rawPayloadJson: imported.evidenceJson,
+        rawReports: imported.reports,
+      });
       for (const document of A.filter(docs, (document) => document.tracked)) {
         expect(document.contents).not.toContain(token);
       }
@@ -385,7 +389,11 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       const imported = yield* readSecurityBundle(root);
       expect(imported.evidenceJson).toContain("private-owner");
       const plan = yield* planPacket(imported.payload, {});
-      const docs = renderPacketDocuments({ plan, rawPayloadJson: imported.evidenceJson, rawReports: imported.reports });
+      const docs = yield* renderPacketDocuments({
+        plan,
+        rawPayloadJson: imported.evidenceJson,
+        rawReports: imported.reports,
+      });
       for (const document of A.filter(docs, (document) => document.tracked)) {
         expect(document.contents).not.toContain("private-owner");
       }
@@ -402,7 +410,11 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
       expect(imported.evidenceJson).toContain("occ_bbbbbbbbbbbbbbbbbbbbbbbb");
       expect(imported.evidenceJson).toContain("manifestSha256");
       const plan = yield* planPacket(imported.payload, {});
-      const docs = renderPacketDocuments({ plan, rawPayloadJson: imported.evidenceJson, rawReports: imported.reports });
+      const docs = yield* renderPacketDocuments({
+        plan,
+        rawPayloadJson: imported.evidenceJson,
+        rawReports: imported.reports,
+      });
       for (const document of A.filter(docs, (document) => document.tracked)) {
         expect(document.contents).not.toContain("signed-in CSV export");
         expect(document.contents).not.toContain("close as `Already fixed`");
@@ -481,6 +493,36 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
         yield* writeJson(root, "scan-manifest.json", { ...manifest, scan });
         yield* expectRejected(root);
       }
+    })
+  );
+  it.effect("refuses directories, oversized artifacts, and a bundle exceeding the aggregate budget", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, manifest, findings } = yield* fixture();
+      yield* fs.remove(path.join(root, "findings.json"));
+      yield* fs.makeDirectory(path.join(root, "findings.json"));
+      expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toContain("regular file");
+      yield* fs.remove(path.join(root, "findings.json"), { recursive: true });
+      const bytes = new Uint8Array(16 * 1024 * 1024 + 1);
+      yield* fs.writeFile(path.join(root, "findings.json"), bytes);
+      expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toContain("16 MiB");
+      yield* writeJson(root, "findings.json", findings);
+      const large = new Uint8Array(16 * 1024 * 1024);
+      const digest = yield* hash(large);
+      const extra = yield* Effect.forEach(
+        [1, 2, 3, 4],
+        Effect.fnUntraced(function* (n) {
+          const name = `large-${n}.bin`;
+          yield* fs.writeFile(path.join(root, name), large);
+          return { path: name, sha256: digest, mediaType: "application/octet-stream" };
+        })
+      );
+      yield* writeJson(root, "scan-manifest.json", {
+        ...manifest,
+        scan: { ...manifest.scan, artifacts: [...extra, ...manifest.scan.artifacts] },
+      });
+      expect((yield* readSecurityBundle(root).pipe(Effect.flip)).message).toContain("64 MiB");
     })
   );
 });

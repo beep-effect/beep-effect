@@ -6,6 +6,7 @@ import * as assert from "@effect/vitest/utils";
 import { Effect, Layer, pipe } from "effect";
 import * as Cause from "effect/Cause";
 import * as Eq from "effect/Equal";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -14,11 +15,11 @@ import type { DrizzleClient } from "@beep/drizzle";
 
 const decodeDrizzleErrorResult = S.decodeResult(DrizzleError);
 const decodeDrizzleErrorContextResult = S.decodeResult(DrizzleErrorContext);
-const decodeDrizzleErrorSync = S.decodeSync(DrizzleError);
+const decodeDrizzleError = S.decodeUnknownEffect(DrizzleError);
 const decodeUnknownDrizzleErrorResult = S.decodeUnknownResult(DrizzleError);
 const decodeUnknownDrizzleErrorContextResult = S.decodeUnknownResult(DrizzleErrorContext);
+const decodeUnknownDrizzleRows = S.decodeUnknownEffect(DrizzleRows);
 const decodeUnknownDrizzleRowsResult = S.decodeUnknownResult(DrizzleRows);
-const decodeUnknownDrizzleErrorSync = S.decodeUnknownSync(DrizzleError);
 const encodeDrizzleErrorResult = S.encodeResult(DrizzleError);
 const encodeDrizzleErrorContextResult = S.encodeResult(DrizzleErrorContext);
 const encodeDrizzleRowsResult = S.encodeResult(DrizzleRows);
@@ -284,17 +285,20 @@ describe("DrizzleError", () => {
     expect(O.getOrThrow(error.params)).toEqual(["<redacted>"]);
   });
 
-  it("decodes an omitted cause as none", () => {
-    const error = decodeDrizzleErrorSync({
-      _tag: "DrizzleError",
-      operation: "execute",
-    });
+  it.effect(
+    "decodes an omitted cause as none",
+    Effect.fnUntraced(function* () {
+      const error = yield* decodeDrizzleError({
+        _tag: "DrizzleError",
+        operation: "execute",
+      });
 
-    expect(error.operation).toBe("execute");
-    expect(O.isNone(error.cause)).toBe(true);
-    expect(O.isNone(error.query)).toBe(true);
-    expect(O.isNone(error.params)).toBe(true);
-  });
+      expect(error.operation).toBe("execute");
+      expect(O.isNone(error.cause)).toBe(true);
+      expect(O.isNone(error.query)).toBe(true);
+      expect(O.isNone(error.params)).toBe(true);
+    })
+  );
 
   it("keeps context wire shape while decoding to Option fields", () => {
     const context = DrizzleErrorContext.make({
@@ -327,20 +331,31 @@ describe("DrizzleError", () => {
     });
     expect(decoded.operation).toBe(error.operation);
     expect(Eq.equals(decoded.params, error.params)).toBe(true);
-    expect(() =>
-      decodeUnknownDrizzleErrorSync({
-        _tag: "DrizzleError",
-        operation: "execute",
-        params: ["raw"],
-      })
-    ).toThrow();
   });
 
-  it("decodes product-neutral row arrays from the schema value", () => {
-    const rows = DrizzleRows.decodeUnknownSync([{ id: 1 }]);
+  it.effect(
+    "rejects unredacted params while decoding a normalized error",
+    Effect.fnUntraced(function* () {
+      const exit = yield* Effect.exit(
+        decodeDrizzleError({
+          _tag: "DrizzleError",
+          operation: "execute",
+          params: ["raw"],
+        })
+      );
 
-    expect(rows).toEqual([{ id: 1 }]);
-  });
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "decodes product-neutral row arrays from the schema value",
+    Effect.fnUntraced(function* () {
+      const rows = yield* decodeUnknownDrizzleRows([{ id: 1 }]);
+
+      expect(rows).toEqual([{ id: 1 }]);
+    })
+  );
 
   it("round-trips exported schemas with schema-derived arbitraries", () => {
     expect(

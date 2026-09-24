@@ -21,7 +21,9 @@ import * as NodeStdio from "@effect/platform-node-shared/NodeStdio";
 import { Cause, Effect, Exit, Stdio, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -131,8 +133,20 @@ export const processOutput = (options: {
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- This process-output constructor has no data operand; currying the optional exit code would misstate its semantics.
-export const stderrExit = (stderr: string, exitCode = 2): HookProcessOutput => processOutput({ stderr, exitCode });
+export const stderrExit: {
+  (stderr: string, exitCode?: number): HookProcessOutput;
+  (exitCode?: number): (stderr: string) => HookProcessOutput;
+} = dual(
+  (args) => P.isString(args[0]),
+  (stderr: string, exitCode = 2): HookProcessOutput => processOutput({ stderr, exitCode })
+);
+
+const provideBuiltLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scopedWith((scope) =>
+      Layer.buildWithScope(scope)(layer).pipe(Effect.flatMap((context) => Effect.provide(self, context)))
+    );
 
 /**
  * Build a process-output response that writes a raw string to stdout and
@@ -521,8 +535,7 @@ export const runMain = <In extends HookInputEnvelope, Out, E>(
   platformRunMain(
     runHookProgram(hook).pipe(
       // The platform runner is the process application boundary for the Node stdio layer.
-      // @effect-diagnostics-next-line strictEffectProvide:off
-      Effect.provide(NodeStdio.layer)
+      provideBuiltLayer(NodeStdio.layer)
     ),
     { teardown: hookTeardown }
   );
@@ -564,8 +577,7 @@ export const dispatch = <E>(hooks: DispatchMap<E, HookContext.Service>): void =>
   platformRunMain(
     runDispatchProgram<E, HookContext.Service>(hooks).pipe(
       // The platform runner is the process application boundary for the Node stdio layer.
-      // @effect-diagnostics-next-line strictEffectProvide:off
-      Effect.provide(NodeStdio.layer)
+      provideBuiltLayer(NodeStdio.layer)
     ),
     { teardown: hookTeardown }
   );

@@ -216,11 +216,11 @@ export class FailureModel extends S.TaggedClass<FailureModel>($I`FailureModel`)(
  * @since 0.0.0
  */
 export const ResultModel = S.Union([SuccessModel, FailureModel]).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("ResultModel", {
     description: "Schema-owned success or failure model.",
   }),
-  SchemaUtils.withCodecStatics(["is"])
+  S.toTaggedUnion("_tag"),
+  SchemaUtils.withStatics((schema) => ({ is: S.is(schema) }))
 );
 
 /**

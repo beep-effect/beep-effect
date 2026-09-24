@@ -15,48 +15,56 @@ import {
   DateTimeUtcFromValid,
 } from "@beep/schema/DateTimeUtcFromValid";
 import { describe, expect, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as Equal from "effect/Equal";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
-const decodeDateTimeInputDateSync = S.decodeSync(DateTimeInputDate);
-const decodeDateTimeInputDateTaggedSync = S.decodeSync(DateTimeInputDate.Tagged);
-const decodeDateTimeInputInstantWithZoneSync = S.decodeSync(DateTimeInputInstantWithZone);
-const decodeDateTimeInputKindSync = S.decodeSync(DateTimeInputKind);
-const decodeDateTimeInputNumberSync = S.decodeSync(DateTimeInputNumber);
-const decodeDateTimeInputNumberTaggedSync = S.decodeSync(DateTimeInputNumber.Tagged);
-const decodeDateTimeInputStringSync = S.decodeSync(DateTimeInputString);
-const decodeDateTimeInputStringTaggedSync = S.decodeSync(DateTimeInputString.Tagged);
-const decodeDateTimeUtcFromValidSync = S.decodeSync(DateTimeUtcFromValid);
-const decodeUnknownDateInputToDateTimeSync = S.decodeUnknownSync(DateInputToDateTime);
+const decodeDateTimeInputDate = S.decodeUnknownEffect(DateTimeInputDate);
+const decodeDateTimeInputDateTagged = S.decodeUnknownEffect(DateTimeInputDate.Tagged);
+const decodeDateTimeInputInstantWithZone = S.decodeUnknownEffect(DateTimeInputInstantWithZone);
+const decodeDateTimeInputKind = S.decodeUnknownEffect(DateTimeInputKind);
+const decodeDateTimeInputNumber = S.decodeUnknownEffect(DateTimeInputNumber);
+const decodeDateTimeInputNumberTagged = S.decodeUnknownEffect(DateTimeInputNumber.Tagged);
+const decodeDateTimeInputString = S.decodeUnknownEffect(DateTimeInputString);
+const decodeDateTimeInputStringTagged = S.decodeUnknownEffect(DateTimeInputString.Tagged);
+const decodeDateTimeUtcFromValid = S.decodeUnknownEffect(DateTimeUtcFromValid);
+const decodeUnknownDateInputToDateTime = S.decodeUnknownEffect(DateInputToDateTime);
 
 const NativeDate = globalThis.Date;
 
 const iso = "2024-01-01T00:00:00.000Z";
 const epochMilliseconds = 1_704_067_200_000;
 
-const decodeInput = S.decodeUnknownSync(DateTimeInput);
-const decodeUtc = S.decodeUnknownSync(DateTimeUtcFromValid);
-const encodeUtc = S.encodeSync(DateTimeUtcFromValid);
+const decodeInput = S.decodeUnknownEffect(DateTimeInput);
+const decodeUtc = S.decodeUnknownEffect(DateTimeUtcFromValid);
+const encodeUtc = S.encodeEffect(DateTimeUtcFromValid);
 
 const expectEpochMillis = (actual: DateTime.Utc, expected: number) => {
   expect(DateTime.toEpochMillis(actual)).toBe(expected);
 };
 
 describe("DateTimeInputKind", () => {
-  it("decodes supported discriminator values", () => {
-    expect(decodeDateTimeInputKindSync("Instant")).toBe("Instant");
-  });
+  it.effect(
+    "decodes supported discriminator values",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeDateTimeInputKind("Instant")).toBe("Instant");
+    })
+  );
 });
 
 describe("DateTime adapter helpers", () => {
-  it("decodes nullable adapter input", () => {
-    expect(decodeUnknownDateInputToDateTimeSync(null)).toBeNull();
-    expect(decodeUnknownDateInputToDateTimeSync(undefined)).toBeUndefined();
-    expect(decodeUnknownDateInputToDateTimeSync(iso)).toBe(iso);
-  });
+  it.effect(
+    "decodes nullable adapter input",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeUnknownDateInputToDateTime(null)).toBeNull();
+      expect(yield* decodeUnknownDateInputToDateTime(undefined)).toBeUndefined();
+      expect(yield* decodeUnknownDateInputToDateTime(iso)).toBe(iso);
+    })
+  );
 
   it("creates DateTime values with picker timezone semantics", () => {
     const utc = createDateTimeWithTimezone(iso, "UTC");
@@ -88,70 +96,106 @@ describe("DateTime adapter helpers", () => {
 });
 
 describe("DateTimeInput primitive schemas", () => {
-  it("decode raw string, number, and Date inputs", () => {
-    expect(decodeInput(iso)).toBe(iso);
-    expect(decodeInput(epochMilliseconds)).toBe(epochMilliseconds);
+  it.effect(
+    "decode raw string, number, and Date inputs",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeInput(iso)).toBe(iso);
+      expect(yield* decodeInput(epochMilliseconds)).toBe(epochMilliseconds);
 
-    const date = DateTime.toDateUtc(DateTime.makeUnsafe(iso));
+      const date = DateTime.toDateUtc(DateTime.makeUnsafe(iso));
 
-    expect(decodeInput(date)).toBe(date);
-  });
+      expect(yield* decodeInput(date)).toBe(date);
+    })
+  );
 
-  it("decode tagged string, number, and Date inputs", () => {
-    const stringInput = DateTimeInputString.makeTagged(iso);
-    const numberInput = DateTimeInputNumber.makeTagged(epochMilliseconds);
-    const dateInput = DateTimeInputDate.makeTagged(DateTime.toDateUtc(DateTime.makeUnsafe(iso)));
+  it.effect(
+    "decode tagged string, number, and Date inputs",
+    Effect.fnUntraced(function* () {
+      const stringInput = DateTimeInputString.makeTagged(iso);
+      const numberInput = DateTimeInputNumber.makeTagged(epochMilliseconds);
+      const dateInput = DateTimeInputDate.makeTagged(DateTime.toDateUtc(DateTime.makeUnsafe(iso)));
 
-    expect(decodeDateTimeInputStringTaggedSync(stringInput)).toEqual(stringInput);
-    expect(decodeDateTimeInputNumberTaggedSync(numberInput)).toEqual(numberInput);
-    expect(decodeDateTimeInputDateTaggedSync(dateInput)).toEqual(dateInput);
-    expect(DateTimeInputString.Tagged.is(stringInput)).toBe(true);
-    expect(DateTimeInputNumber.Tagged.is(numberInput)).toBe(true);
-    expect(DateTimeInputDate.Tagged.is(dateInput)).toBe(true);
-  });
+      expect(yield* decodeDateTimeInputStringTagged(stringInput)).toEqual(stringInput);
+      expect(yield* decodeDateTimeInputNumberTagged(numberInput)).toEqual(numberInput);
+      expect(yield* decodeDateTimeInputDateTagged(dateInput)).toEqual(dateInput);
+      expect(DateTimeInputString.Tagged.is(stringInput)).toBe(true);
+      expect(DateTimeInputNumber.Tagged.is(numberInput)).toBe(true);
+      expect(DateTimeInputDate.Tagged.is(dateInput)).toBe(true);
+    })
+  );
 
-  it("rejects invalid primitive inputs", () => {
-    expect(() => decodeDateTimeInputStringSync("not-a-date")).toThrow(
-      "Expected a string that can be converted into a DateTime.Utc"
-    );
-    expect(() => decodeDateTimeInputNumberSync(Number.POSITIVE_INFINITY)).toThrow();
-    expect(() => decodeDateTimeInputDateSync(Reflect.construct(NativeDate, ["not-a-date"]) as Date)).toThrow();
-  });
+  it.effect(
+    "rejects invalid primitive inputs",
+    Effect.fnUntraced(function* () {
+      const failure1 = yield* Effect.result(decodeDateTimeInputString("not-a-date"));
+      const isFailure1 = Result.isFailure(failure1);
+      assertTrue(isFailure1);
+      expect(failure1.failure.message).toContain("Expected a string that can be converted into a DateTime.Utc");
+      const isFailure2 = Result.isFailure(yield* Effect.result(decodeDateTimeInputNumber(Number.POSITIVE_INFINITY)));
+      assertTrue(isFailure2);
+      const isFailure3 = Result.isFailure(
+        yield* Effect.result(decodeDateTimeInputDate(Reflect.construct(NativeDate, ["not-a-date"])))
+      );
+      assertTrue(isFailure3);
+    })
+  );
 });
 
 describe("DateTimeInput tagged object schemas", () => {
-  it("decodes Instant and InstantWithZone transport objects", () => {
-    expect(decodeInput(DateTimeInputInstant.make({ epochMilliseconds }))).toEqual(
-      DateTimeInputInstant.make({ epochMilliseconds })
-    );
-    expect(
-      decodeInput(
+  it.effect(
+    "decodes Instant and InstantWithZone transport objects",
+    Effect.fnUntraced(function* () {
+      expect(yield* decodeInput(DateTimeInputInstant.make({ epochMilliseconds }))).toEqual(
+        DateTimeInputInstant.make({ epochMilliseconds })
+      );
+      expect(
+        yield* decodeInput(
+          DateTimeInputInstantWithZone.make({
+            epochMilliseconds,
+            timeZoneId: "Europe/London",
+          })
+        )
+      ).toEqual(
         DateTimeInputInstantWithZone.make({
           epochMilliseconds,
           timeZoneId: "Europe/London",
         })
-      )
-    ).toEqual(
-      DateTimeInputInstantWithZone.make({
-        epochMilliseconds,
-        timeZoneId: "Europe/London",
-      })
-    );
-  });
+      );
+    })
+  );
 
-  it("rejects invalid InstantWithZone time zone identifiers", () => {
-    expect(() =>
-      decodeDateTimeInputInstantWithZoneSync({
-        _tag: "InstantWithZone",
-        epochMilliseconds,
-        timeZoneId: "Not/AZone",
-      })
-    ).toThrow("Expected a valid DateTime time zone identifier");
-  });
+  it.effect(
+    "rejects invalid InstantWithZone time zone identifiers",
+    Effect.fnUntraced(function* () {
+      const failure2 = yield* Effect.result(
+        decodeDateTimeInputInstantWithZone({
+          _tag: "InstantWithZone",
+          epochMilliseconds,
+          timeZoneId: "Not/AZone",
+        })
+      );
+      const isFailure4 = Result.isFailure(failure2);
+      assertTrue(isFailure4);
+      expect(failure2.failure.message).toContain("Expected a valid DateTime time zone identifier");
+    })
+  );
 
-  it("decodes partial Parts transport objects", () => {
-    expect(
-      decodeInput(
+  it.effect(
+    "decodes partial Parts transport objects",
+    Effect.fnUntraced(function* () {
+      expect(
+        yield* decodeInput(
+          DateTimeInputParts.make({
+            year: 2024,
+            month: 1,
+            day: 2,
+            hour: 3,
+            minute: 4,
+            second: 5,
+            millisecond: 6,
+          })
+        )
+      ).toEqual(
         DateTimeInputParts.make({
           year: 2024,
           month: 1,
@@ -161,106 +205,112 @@ describe("DateTimeInput tagged object schemas", () => {
           second: 5,
           millisecond: 6,
         })
-      )
-    ).toEqual(
-      DateTimeInputParts.make({
-        year: 2024,
-        month: 1,
-        day: 2,
-        hour: 3,
-        minute: 4,
-        second: 5,
-        millisecond: 6,
-      })
-    );
-  });
+      );
+    })
+  );
 });
 
 describe("DateTimeUtcFromValid", () => {
-  it("decodes raw DateTime.Input primitives into DateTime.Utc", () => {
-    expectEpochMillis(decodeUtc(iso), epochMilliseconds);
-    expectEpochMillis(decodeUtc(epochMilliseconds), epochMilliseconds);
-    expectEpochMillis(decodeUtc(DateTime.makeUnsafe(iso).pipe(DateTime.toDateUtc)), epochMilliseconds);
-  });
+  it.effect(
+    "decodes raw DateTime.Input primitives into DateTime.Utc",
+    Effect.fnUntraced(function* () {
+      expectEpochMillis(yield* decodeUtc(iso), epochMilliseconds);
+      expectEpochMillis(yield* decodeUtc(epochMilliseconds), epochMilliseconds);
+      expectEpochMillis(yield* decodeUtc(DateTime.makeUnsafe(iso).pipe(DateTime.toDateUtc)), epochMilliseconds);
+    })
+  );
 
-  it("decodes tagged primitive inputs into DateTime.Utc", () => {
-    expectEpochMillis(decodeUtc(DateTimeInputString.makeTagged(iso)), epochMilliseconds);
-    expectEpochMillis(decodeUtc(DateTimeInputNumber.makeTagged(epochMilliseconds)), epochMilliseconds);
-    expectEpochMillis(
-      decodeUtc(DateTimeInputDate.makeTagged(DateTime.makeUnsafe(iso).pipe(DateTime.toDateUtc))),
-      epochMilliseconds
-    );
-  });
+  it.effect(
+    "decodes tagged primitive inputs into DateTime.Utc",
+    Effect.fnUntraced(function* () {
+      expectEpochMillis(yield* decodeUtc(DateTimeInputString.makeTagged(iso)), epochMilliseconds);
+      expectEpochMillis(yield* decodeUtc(DateTimeInputNumber.makeTagged(epochMilliseconds)), epochMilliseconds);
+      expectEpochMillis(
+        yield* decodeUtc(DateTimeInputDate.makeTagged(DateTime.makeUnsafe(iso).pipe(DateTime.toDateUtc))),
+        epochMilliseconds
+      );
+    })
+  );
 
-  it("decodes existing DateTime.Utc and DateTime.Zoned values into UTC", () => {
-    const utc = DateTime.makeUnsafe(iso);
-    const zoned = DateTime.makeZonedUnsafe(iso, { timeZone: "Europe/London" });
+  it.effect(
+    "decodes existing DateTime.Utc and DateTime.Zoned values into UTC",
+    Effect.fnUntraced(function* () {
+      const utc = DateTime.makeUnsafe(iso);
+      const zoned = DateTime.makeZonedUnsafe(iso, { timeZone: "Europe/London" });
 
-    expectEpochMillis(decodeUtc(utc), epochMilliseconds);
-    expectEpochMillis(decodeUtc(zoned), epochMilliseconds);
-  });
+      expectEpochMillis(yield* decodeUtc(utc), epochMilliseconds);
+      expectEpochMillis(yield* decodeUtc(zoned), epochMilliseconds);
+    })
+  );
 
-  it("decodes Instant and InstantWithZone into UTC", () => {
-    expectEpochMillis(decodeUtc(DateTimeInputInstant.make({ epochMilliseconds })), epochMilliseconds);
-    expectEpochMillis(
-      decodeUtc(
-        DateTimeInputInstantWithZone.make({
-          epochMilliseconds,
-          timeZoneId: "UTC",
+  it.effect(
+    "decodes Instant and InstantWithZone into UTC",
+    Effect.fnUntraced(function* () {
+      expectEpochMillis(yield* decodeUtc(DateTimeInputInstant.make({ epochMilliseconds })), epochMilliseconds);
+      expectEpochMillis(
+        yield* decodeUtc(
+          DateTimeInputInstantWithZone.make({
+            epochMilliseconds,
+            timeZoneId: "UTC",
+          })
+        ),
+        epochMilliseconds
+      );
+    })
+  );
+
+  it.effect(
+    "decodes partial Parts into UTC",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* decodeUtc(
+        DateTimeInputParts.make({
+          year: 2024,
+          month: 1,
+          day: 2,
+          hour: 3,
+          minute: 4,
+          second: 5,
+          millisecond: 6,
         })
-      ),
-      epochMilliseconds
-    );
-  });
+      );
 
-  it("decodes partial Parts into UTC", () => {
-    const decoded = decodeUtc(
-      DateTimeInputParts.make({
-        year: 2024,
-        month: 1,
-        day: 2,
-        hour: 3,
-        minute: 4,
-        second: 5,
-        millisecond: 6,
-      })
-    );
+      expect(DateTime.formatIso(decoded)).toBe("2024-01-02T03:04:05.006Z");
+    })
+  );
 
-    expect(DateTime.formatIso(decoded)).toBe("2024-01-02T03:04:05.006Z");
-  });
+  it.effect(
+    "encodes DateTime.Utc into canonical tagged ISO string input",
+    Effect.fnUntraced(function* () {
+      expect(yield* encodeUtc(DateTime.makeUnsafe(iso))).toEqual(DateTimeInputString.makeTagged(iso));
+    })
+  );
 
-  it("encodes DateTime.Utc into canonical tagged ISO string input", () => {
-    expect(encodeUtc(DateTime.makeUnsafe(iso))).toEqual(DateTimeInputString.makeTagged(iso));
-  });
+  it.effect(
+    "rejects input that passes the shape schema but cannot become a DateTime.Utc",
+    Effect.fnUntraced(function* () {
+      const failure3 = yield* Effect.result(decodeUtc(DateTimeInputParts.make({ year: 1e100 })));
+      const isFailure5 = Result.isFailure(failure3);
+      assertTrue(isFailure5);
+      expect(failure3.failure.message).toContain("Expected a valid Effect DateTime.Input value");
+    })
+  );
 
-  it("rejects input that passes the shape schema but cannot become a DateTime.Utc", () => {
-    expect(() => decodeUtc(DateTimeInputParts.make({ year: 1e100 }))).toThrow(
-      "Expected a valid Effect DateTime.Input value"
-    );
-  });
+  it.effect.prop(
+    "schema-derived values satisfy the encode round-trip law",
+    [Arbitrary.schema(DateTimeUtcFromValid)],
+    Effect.fnUntraced(function* ([utc]) {
+      // Encoding is lossy (canonical tagged ISO string), so assert the robust
+      // law encode(decode(encode(x))) deep-equals encode(x) plus the Type-level
+      // invariant that every decoded value is a DateTime.Utc preserving the instant.
+      const encoded = yield* encodeUtc(utc);
+      const roundTripped = yield* decodeDateTimeUtcFromValid(encoded);
 
-  it("schema-derived values satisfy the encode round-trip law", () => {
-    const arbitrary = Arbitrary.schema(DateTimeUtcFromValid);
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([utc]) => {
-            // Encoding is lossy (canonical tagged ISO string), so assert the robust
-            // law encode(decode(encode(x))) deep-equals encode(x) plus the Type-level
-            // invariant that every decoded value is a DateTime.Utc preserving the instant.
-            const encoded = encodeUtc(utc);
-            const roundTripped = decodeDateTimeUtcFromValidSync(encoded);
+      expect(DateTime.isDateTime(roundTripped)).toBe(true);
+      expect(Equal.equals(yield* encodeUtc(roundTripped), encoded)).toBe(true);
+      expect(DateTime.toEpochMillis(roundTripped)).toBe(DateTime.toEpochMillis(utc));
 
-            expect(DateTime.isDateTime(roundTripped)).toBe(true);
-            expect(Equal.equals(encodeUtc(roundTripped), encoded)).toBe(true);
-            expect(DateTime.toEpochMillis(roundTripped)).toBe(DateTime.toEpochMillis(utc));
-
-            return true;
-          },
-          fcRuns(50)
-        )
-      )
-    ).toMatchObject({ _tag: "Passed" });
-  });
+      return true;
+    }),
+    { arbitrary: fcRuns(50) }
+  );
 });

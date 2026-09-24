@@ -161,29 +161,38 @@ describe("thin lint workers", { concurrent: false }, () => {
       });
     }, providePlatform)
   );
-  it.effect(
-    "runs the standalone deprecated API command through the policy Turbo step",
-    Effect.fnUntraced(function* () {
-      const root = yield* findRepoRoot();
-      yield* run(["deprecated-apis"]);
-      const expected = pipe(
-        rootLintPolicyStepsForTesting(root, undefined, "origin/main"),
-        A.findFirst((step) => step.label === "lint:deprecated-apis"),
-        O.getOrUndefined
-      );
-      expect(execution).toHaveBeenCalledTimes(1);
-      expect(execution.mock.calls[0]?.[0]).toMatchObject({
-        command: expected?.command,
-        args: expected?.args,
-        cwd: root,
-      });
-      expect(execution.mock.calls[0]?.[0].args).toContain("--affected");
-      expect(execution.mock.calls[0]?.[0].env?.TURBO_SCM_BASE).toBe("origin/main");
-      execution.mockClear();
-      execution.mockImplementation(() => Effect.succeed(7));
-      expect(yield* run(["deprecated-apis"]).pipe(Effect.isFailure)).toBe(true);
-    }, providePlatform)
-  );
+  it.layer(platform, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "runs the standalone deprecated API command through the policy Turbo step",
+      Effect.fnUntraced(function* () {
+        const root = yield* findRepoRoot();
+        yield* run(["deprecated-apis"]);
+        const expected = pipe(
+          rootLintPolicyStepsForTesting(root, undefined, "origin/main"),
+          A.findFirst((step) => step.label === "lint:deprecated-apis"),
+          O.getOrUndefined
+        );
+        expect(execution).toHaveBeenCalledTimes(1);
+        expect(execution.mock.calls[0]?.[0]).toMatchObject({
+          command: "bun",
+          args: [
+            "--no-env-file",
+            expect.stringMatching(/bin\.(?:ts|js)$/u),
+            "cache",
+            "execute",
+            "--",
+            ...A.drop(expected?.args ?? [], 1),
+          ],
+          cwd: root,
+        });
+        expect(execution.mock.calls[0]?.[0].args).toContain("--affected");
+        expect(execution.mock.calls[0]?.[0].env?.TURBO_SCM_BASE).toBe("origin/main");
+        execution.mockClear();
+        execution.mockImplementation(() => Effect.succeed(7));
+        expect(yield* run(["deprecated-apis"]).pipe(Effect.isFailure)).toBe(true);
+      })
+    );
+  });
   it.effect(
     "runs the full standalone deprecated API command through the shard program",
     Effect.fnUntraced(function* () {
@@ -213,19 +222,35 @@ describe("thin lint workers", { concurrent: false }, () => {
       expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
     }, providePlatform)
   );
-  it.effect(
-    "runs full and hosted standalone deprecated sweeps through unfiltered Turbo",
-    Effect.fnUntraced(function* () {
-      const content = '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"turbo"}';
-      yield* runSweepCommand(["deprecated-apis", "--full"], content);
-      expect(execution.mock.calls[0]?.[0].args).toContain("turbo");
-      expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
-      execution.mockClear();
-      yield* runSweepCommand(["deprecated-apis"], content, { CI: "true" });
-      expect(execution.mock.calls[0]?.[0].args).toContain("turbo");
-      expect(execution.mock.calls[0]?.[0].env?.TURBO_SCM_BASE).toBeUndefined();
-    }, providePlatform)
-  );
+  it.layer(platform, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "runs full and hosted standalone deprecated sweeps through unfiltered Turbo",
+      Effect.fnUntraced(function* () {
+        const content = '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"turbo"}';
+        yield* runSweepCommand(["deprecated-apis", "--full"], content);
+        expect(A.take(execution.mock.calls[0]?.[0].args ?? [], 6)).toEqual([
+          "--no-env-file",
+          expect.stringMatching(/\/src\/bin\.ts$/),
+          "cache",
+          "execute",
+          "--",
+          "run",
+        ]);
+        expect(execution.mock.calls[0]?.[0].args).not.toContain("--affected");
+        execution.mockClear();
+        yield* runSweepCommand(["deprecated-apis"], content, { CI: "true" });
+        expect(A.take(execution.mock.calls[0]?.[0].args ?? [], 6)).toEqual([
+          "--no-env-file",
+          expect.stringMatching(/\/src\/bin\.ts$/),
+          "cache",
+          "execute",
+          "--",
+          "run",
+        ]);
+        expect(execution.mock.calls[0]?.[0].env?.TURBO_SCM_BASE).toBeUndefined();
+      })
+    );
+  });
   it.effect(
     "fails the standalone deprecated sweep before execution on malformed configuration",
     Effect.fnUntraced(function* () {

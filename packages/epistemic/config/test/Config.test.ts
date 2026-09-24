@@ -13,7 +13,8 @@ import { Cause, ConfigProvider, Effect, Exit, Layer } from "effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
-const decodeExecutionGrantSync = S.decodeSync(ExecutionGrant);
+const decodeSinkDestination = S.decodeEffect(SinkDestination);
+const decodeExecutionGrant = S.decodeEffect(ExecutionGrant);
 
 const configLayer = (configuration: Readonly<Record<string, string>>) =>
   EpistemicConfigLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(configuration))));
@@ -87,31 +88,40 @@ describe("EpistemicConfigLive", () => {
 });
 
 describe("resolveSinkAudience", () => {
-  it("classifies loopback destinations as local-workspace", () => {
-    const loopback = [
-      "http://localhost:3939",
-      "http://127.0.0.1:3939",
-      "https://LOCALHOST/mcp",
-      "http://[::1]:3939",
-      "http://0.0.0.0:3939",
-    ];
+  it.effect(
+    "classifies loopback destinations as local-workspace",
+    Effect.fnUntraced(function* () {
+      const loopback = [
+        "http://localhost:3939",
+        "http://127.0.0.1:3939",
+        "https://LOCALHOST/mcp",
+        "http://[::1]:3939",
+        "http://0.0.0.0:3939",
+      ];
 
-    for (const destination of loopback) {
-      expect(resolveSinkAudience(SinkDestination.decodeUnknownSync(destination))).toBe("local-workspace");
-    }
-  });
+      for (const destination of loopback) {
+        expect(resolveSinkAudience(yield* decodeSinkDestination(destination))).toBe("local-workspace");
+      }
+    })
+  );
 
-  it("classifies every other destination as external-network", () => {
-    const external = ["https://registry.example", "http://192.168.1.10/api", "https://localhost.attacker.example"];
+  it.effect(
+    "classifies every other destination as external-network",
+    Effect.fnUntraced(function* () {
+      const external = ["https://registry.example", "http://192.168.1.10/api", "https://localhost.attacker.example"];
 
-    for (const destination of external) {
-      expect(resolveSinkAudience(SinkDestination.decodeUnknownSync(destination))).toBe("external-network");
-    }
-  });
+      for (const destination of external) {
+        expect(resolveSinkAudience(yield* decodeSinkDestination(destination))).toBe("external-network");
+      }
+    })
+  );
 
-  it("takes the stricter branch for unparseable destinations", () => {
-    expect(resolveSinkAudience(SinkDestination.decodeUnknownSync("not a url"))).toBe("external-network");
-  });
+  it.effect(
+    "takes the stricter branch for unparseable destinations",
+    Effect.fnUntraced(function* () {
+      expect(resolveSinkAudience(yield* decodeSinkDestination("not a url"))).toBe("external-network");
+    })
+  );
 });
 
 describe("grant fixtures", () => {
@@ -119,30 +129,32 @@ describe("grant fixtures", () => {
     expect(verifyFrozenGrantSetDigest(fixtureFrozenGrantSet)).toBe(true);
   });
 
-  it("produces a byte-stable digest across reconstructions", () => {
-    // The acceptance test chains ledger rows against this digest, so a fixture
-    // that drifts between runs would make the chain unreproducible.
-    const grant = decodeExecutionGrantSync({
-      budget: { maxToolCalls: null },
-      expiresAt: 86_400_000,
-      operation: "ontology_publish_provenance",
-      policyRevision: defaultPolicyRevision,
-      principal: { component: "Runtime", kind: "System" },
-      purpose: "provenance-publication",
-      resource: "ontology-workspace",
-      sink: {
-        audience: "external-network",
-        destination: "https://registry.example",
-        sinkClass: "network-egress",
-      },
-    });
-    const rebuilt = freezeGrantSet(
-      Result.getOrThrow(addGrant(emptyDraftGrantSet(defaultPolicyRevision), grant)),
-      fixtureFrozenAt
-    );
+  it.effect(
+    "produces a byte-stable digest across reconstructions",
+    Effect.fnUntraced(function* () {
+      // The acceptance test chains ledger rows against this digest, so a fixture
+      // that drifts between runs would make the chain unreproducible.
+      const grant = yield* decodeExecutionGrant({
+        budget: { maxToolCalls: null },
+        expiresAt: 86_400_000,
+        operation: "ontology_publish_provenance",
+        policyRevision: defaultPolicyRevision,
+        principal: { component: "Runtime", kind: "System" },
+        purpose: "provenance-publication",
+        resource: "ontology-workspace",
+        sink: {
+          audience: "external-network",
+          destination: "https://registry.example",
+          sinkClass: "network-egress",
+        },
+      });
+      const rebuilt = Result.getOrThrow(
+        addGrant(emptyDraftGrantSet(defaultPolicyRevision), grant).pipe(Result.flatMap(freezeGrantSet(fixtureFrozenAt)))
+      );
 
-    expect(rebuilt.digest).toBe(fixtureFrozenGrantSet.digest);
-  });
+      expect(rebuilt.digest).toBe(fixtureFrozenGrantSet.digest);
+    })
+  );
 
   it("allowlists exactly the destination the fixture grant names", () => {
     expect(testEpistemicConfig.destinationAllowlist).toEqual([fixtureFrozenGrantSet.grants[0]?.sink.destination]);

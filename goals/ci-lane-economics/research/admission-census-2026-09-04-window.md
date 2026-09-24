@@ -1,4 +1,4 @@
-# Unratified census output generated 2026-09-12 by the population-resolution fix lane; the P3 session ratifies it.
+# Superseded: unratified PR-event-only census output generated 2026-09-12 by the population-resolution fix lane. The ratified `--event all` census denied this window on 2026-09-21; see [admission-week-p95.md](./admission-week-p95.md).
 
 - required contexts: 18 (expected 18; ruleset 10240248 version 48600030 effective 2026-09-03T17:12:53.589Z)
 

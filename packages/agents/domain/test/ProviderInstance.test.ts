@@ -22,9 +22,9 @@ import * as Struct from "effect/Struct";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeEnvVarNameResult = S.decodeResult(EnvVarName);
-const decodeAuthSnapshotSync = S.decodeSync(AuthSnapshot);
+const decodeAuthSnapshot = S.decodeEffect(AuthSnapshot);
 const decodeUnknownProviderInstanceResult = S.decodeUnknownResult(ProviderInstance);
-const decodeUnknownProviderInstanceSync = S.decodeUnknownSync(ProviderInstance);
+const decodeUnknownProviderInstance = S.decodeUnknownEffect(ProviderInstance);
 const encodeAuthSnapshotResult = S.encodeResult(AuthSnapshot);
 const encodeProviderInstanceResult = S.encodeResult(ProviderInstance);
 
@@ -84,86 +84,92 @@ describe("@beep/agents-domain ProviderInstance", () => {
     expect(EnvVarName.is("MY_TOKEN")).toBe(false);
   });
 
-  it("round-trips every AuthSnapshot variant through the tagged union", () => {
-    const authenticated = decodeAuthSnapshotSync({
-      status: "authenticated",
-      email: "dev@example.com",
-      subscriptionLabel: "max",
-      tokenSource: "claude.ai",
-      probedAt: probedAtIso,
-    });
-    const unauthenticated = decodeAuthSnapshotSync({
-      status: "unauthenticated",
-      probedAt: probedAtIso,
-    });
-    const probeFailed = decodeAuthSnapshotSync({
-      status: "probe-failed",
-      probedAt: probedAtIso,
-    });
-
-    expect(authenticated).toBeInstanceOf(AuthenticatedSnapshot);
-    expect(unauthenticated).toBeInstanceOf(UnauthenticatedSnapshot);
-    expect(probeFailed).toBeInstanceOf(ProbeFailedSnapshot);
-    expect(AuthSnapshot.is(authenticated)).toBe(true);
-    expect(AuthSnapshot.guards.authenticated(authenticated)).toBe(true);
-    expect(AuthSnapshot.guards.unauthenticated(authenticated)).toBe(false);
-
-    roundTrip(AuthSnapshot, authenticated);
-    roundTrip(AuthSnapshot, unauthenticated);
-    roundTrip(AuthSnapshot, probeFailed);
-
-    expect(Result.getOrThrow(encodeAuthSnapshotResult(unauthenticated))).toStrictEqual({
-      status: "unauthenticated",
-      probedAt: probedAtIso,
-    });
-  });
-
-  it("decodes, constructs, and round-trips a ProviderInstance row", () => {
-    const encoded = {
-      ...productEntityFixtureInput("AgentsProviderInstance", 7),
-      binaryPath: "/usr/local/bin/claude",
-      envVars: { NO_PROXY: "localhost" },
-      homePath: "/home/beep/.beep/providers/personal-max",
-      kind: "claude",
-      label: "personal-max",
-      lastProbe: {
+  it.effect("round-trips every AuthSnapshot variant through the tagged union", () =>
+    Effect.gen(function* () {
+      const authenticated = yield* decodeAuthSnapshot({
         status: "authenticated",
         email: "dev@example.com",
         subscriptionLabel: "max",
         tokenSource: "claude.ai",
         probedAt: probedAtIso,
-      },
-    };
-    const decoded = decodeUnknownProviderInstanceSync(encoded);
-    const constructed = ProviderInstance.make(decoded);
+      });
+      const unauthenticated = yield* decodeAuthSnapshot({
+        status: "unauthenticated",
+        probedAt: probedAtIso,
+      });
+      const probeFailed = yield* decodeAuthSnapshot({
+        status: "probe-failed",
+        probedAt: probedAtIso,
+      });
 
-    expect(decoded).toBeInstanceOf(ProviderInstance);
-    expect(constructed).toBeInstanceOf(ProviderInstance);
-    expect(constructed.entityType).toBe("AgentsProviderInstance");
-    expect(constructed.kind).toBe("claude");
-    expect(O.isSome(constructed.homePath)).toBe(true);
-    expect(O.isSome(constructed.lastProbe)).toBe(true);
-    expect(Result.getOrThrow(encodeProviderInstanceResult(decoded))).toStrictEqual(encoded);
-  });
+      expect(authenticated).toBeInstanceOf(AuthenticatedSnapshot);
+      expect(unauthenticated).toBeInstanceOf(UnauthenticatedSnapshot);
+      expect(probeFailed).toBeInstanceOf(ProbeFailedSnapshot);
+      expect(AuthSnapshot.is(authenticated)).toBe(true);
+      expect(AuthSnapshot.guards.authenticated(authenticated)).toBe(true);
+      expect(AuthSnapshot.guards.unauthenticated(authenticated)).toBe(false);
 
-  it("applies schema defaults for envVars, homePath, and lastProbe at construction", () => {
-    const encoded = {
-      ...productEntityFixtureInput("AgentsProviderInstance", 8),
-      binaryPath: "/usr/local/bin/codex",
-      envVars: {},
-      homePath: null,
-      kind: "codex",
-      label: "work-plus",
-      lastProbe: null,
-    };
-    const decoded = decodeUnknownProviderInstanceSync(encoded);
-    const constructed = ProviderInstance.make(Struct.omit(decoded, ["envVars", "homePath", "lastProbe"]));
+      roundTrip(AuthSnapshot, authenticated);
+      roundTrip(AuthSnapshot, unauthenticated);
+      roundTrip(AuthSnapshot, probeFailed);
 
-    expect(constructed.envVars).toStrictEqual({});
-    expect(O.isNone(constructed.homePath)).toBe(true);
-    expect(O.isNone(constructed.lastProbe)).toBe(true);
-    expect(Result.getOrThrow(encodeProviderInstanceResult(constructed))).toStrictEqual(encoded);
-  });
+      expect(Result.getOrThrow(encodeAuthSnapshotResult(unauthenticated))).toStrictEqual({
+        status: "unauthenticated",
+        probedAt: probedAtIso,
+      });
+    })
+  );
+
+  it.effect("decodes, constructs, and round-trips a ProviderInstance row", () =>
+    Effect.gen(function* () {
+      const encoded = {
+        ...productEntityFixtureInput("AgentsProviderInstance", 7),
+        binaryPath: "/usr/local/bin/claude",
+        envVars: { NO_PROXY: "localhost" },
+        homePath: "/home/beep/.beep/providers/personal-max",
+        kind: "claude",
+        label: "personal-max",
+        lastProbe: {
+          status: "authenticated",
+          email: "dev@example.com",
+          subscriptionLabel: "max",
+          tokenSource: "claude.ai",
+          probedAt: probedAtIso,
+        },
+      };
+      const decoded = yield* decodeUnknownProviderInstance(encoded);
+      const constructed = ProviderInstance.make(decoded);
+
+      expect(decoded).toBeInstanceOf(ProviderInstance);
+      expect(constructed).toBeInstanceOf(ProviderInstance);
+      expect(constructed.entityType).toBe("AgentsProviderInstance");
+      expect(constructed.kind).toBe("claude");
+      expect(O.isSome(constructed.homePath)).toBe(true);
+      expect(O.isSome(constructed.lastProbe)).toBe(true);
+      expect(Result.getOrThrow(encodeProviderInstanceResult(decoded))).toStrictEqual(encoded);
+    })
+  );
+
+  it.effect("applies schema defaults for envVars, homePath, and lastProbe at construction", () =>
+    Effect.gen(function* () {
+      const encoded = {
+        ...productEntityFixtureInput("AgentsProviderInstance", 8),
+        binaryPath: "/usr/local/bin/codex",
+        envVars: {},
+        homePath: null,
+        kind: "codex",
+        label: "work-plus",
+        lastProbe: null,
+      };
+      const decoded = yield* decodeUnknownProviderInstance(encoded);
+      const constructed = ProviderInstance.make(Struct.omit(decoded, ["envVars", "homePath", "lastProbe"]));
+
+      expect(constructed.envVars).toStrictEqual({});
+      expect(O.isNone(constructed.homePath)).toBe(true);
+      expect(O.isNone(constructed.lastProbe)).toBe(true);
+      expect(Result.getOrThrow(encodeProviderInstanceResult(constructed))).toStrictEqual(encoded);
+    })
+  );
 
   it("never stores token-bearing env-var names on a decoded instance", () => {
     const encoded = {

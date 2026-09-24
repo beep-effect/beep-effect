@@ -12,16 +12,16 @@
 import { Ecfr } from "@beep/ecfr";
 import { Govinfo } from "@beep/govinfo";
 import { $GovLegalMcpId } from "@beep/identity/packages";
-import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
+import { composeGatedLayers, gatedLayer, sanitizedToolkit, statelessMcpProtocols } from "@beep/mcp-kit";
 import { Layer } from "effect";
 import * as S from "effect/Schema";
-import * as McpProtocol from "effect/unstable/ai/McpProtocol";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { EcfrToolkitHandlersLive, GovinfoToolkitHandlersLive } from "./Handlers.ts";
 import { EcfrSourceAuthRegistration, GovinfoSourceAuthRegistration } from "./SourceAuth.ts";
 import { EcfrToolkit, GovinfoToolkit } from "./Tools.ts";
 import type { EcfrError } from "@beep/ecfr";
 import type { GovinfoError } from "@beep/govinfo";
+import type * as Config from "effect/Config";
 import type { Stdio } from "effect/Stdio";
 
 const $I = $GovLegalMcpId.create("Server");
@@ -57,8 +57,68 @@ export class GovLegalMcpServerConfig extends S.Class<GovLegalMcpServerConfig>($I
 ) {}
 
 /**
+ * Instructions the host advertises through `server/discover`.
+ *
+ * **Example** (Reading the advertised instructions)
+ *
+ * ```ts
+ * import { GOV_LEGAL_MCP_INSTRUCTIONS } from "@beep/gov-legal-mcp/Server"
+ *
+ * console.log(GOV_LEGAL_MCP_INSTRUCTIONS.startsWith("US federal legal sources"))
+ * // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const GOV_LEGAL_MCP_INSTRUCTIONS =
+  "US federal legal sources: the keyless eCFR tools list titles, search regulations and read a title's structure; the GovInfo search tool mounts only when GOVINFO_API_KEY is set. Call tools directly; the host is stateless and needs no initialize handshake.";
+
+/**
+ * Registrations only: both source toolkits behind their source-auth gates,
+ * sanitized, with no transport and no concrete `Ecfr`/`Govinfo` client.
+ *
+ * **Details**
+ *
+ * {@link makeServerLayer} provides the production clients and
+ * `McpServer.layerStdio`; the kit conformance runner provides fixture clients
+ * and its own transport.
+ *
+ * **Example** (Mounting the registrations without a transport)
+ *
+ * ```ts
+ * import { GovLegalMcpRegistrationsLive } from "@beep/gov-legal-mcp/Server"
+ * import * as Layer from "effect/Layer"
+ *
+ * console.log(Layer.isLayer(GovLegalMcpRegistrationsLive))
+ * // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const GovLegalMcpRegistrationsLive: Layer.Layer<
+  never,
+  Config.ConfigError | EcfrError | GovinfoError,
+  Ecfr | Govinfo
+> = composeGatedLayers<EcfrError | GovinfoError, Ecfr | Govinfo>(
+  gatedLayer(EcfrSourceAuthRegistration, sanitizedToolkit(EcfrToolkit).pipe(Layer.provide(EcfrToolkitHandlersLive))),
+  gatedLayer(
+    GovinfoSourceAuthRegistration,
+    sanitizedToolkit(GovinfoToolkit).pipe(Layer.provide(GovinfoToolkitHandlersLive))
+  )
+);
+
+/**
  * Build the stdio MCP layer with the keyless eCFR and hard-gated GovInfo
  * toolkits.
+ *
+ * **Details**
+ *
+ * The host serves `[McpProtocol.v2026_07_28]` only, pinned through the kit's
+ * `statelessMcpProtocols` (D-posture): clients open with `server/discover`
+ * and call tools with request metadata; a legacy `initialize` is answered
+ * with `-32022` and the supported list. There is no session.
  *
  * **Example** (Building stdio MCP layer)
  *
@@ -77,23 +137,16 @@ export class GovLegalMcpServerConfig extends S.Class<GovLegalMcpServerConfig>($I
  * @category layers
  * @since 0.0.0
  */
-export const makeServerLayer = (config: GovLegalMcpServerConfig): Layer.Layer<never, never, Stdio> => {
-  const ecfrToolkitLayer = sanitizedToolkit(EcfrToolkit).pipe(
-    Layer.provide(EcfrToolkitHandlersLive),
-    Layer.provide(Ecfr.layer)
-  );
-  const govinfoToolkitLayer = sanitizedToolkit(GovinfoToolkit).pipe(
-    Layer.provide(GovinfoToolkitHandlersLive),
-    Layer.provide(Govinfo.layer)
-  );
-
-  return composeGatedLayers<EcfrError | GovinfoError>(
-    gatedLayer(EcfrSourceAuthRegistration, ecfrToolkitLayer),
-    gatedLayer(GovinfoSourceAuthRegistration, govinfoToolkitLayer)
-  ).pipe(
+export const makeServerLayer = (config: GovLegalMcpServerConfig): Layer.Layer<never, never, Stdio> =>
+  GovLegalMcpRegistrationsLive.pipe(
+    Layer.provide(Layer.merge(Ecfr.layer, Govinfo.layer)),
     Layer.provide(
-      McpServer.layerStdio({ name: config.name, version: config.version, protocols: [McpProtocol.v2025_06_18] })
+      McpServer.layerStdio({
+        name: config.name,
+        version: config.version,
+        instructions: GOV_LEGAL_MCP_INSTRUCTIONS,
+        protocols: statelessMcpProtocols,
+      })
     ),
     Layer.orDie
   );
-};

@@ -12,7 +12,6 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { AtomRegistry } from "effect/unstable/reactivity";
 
 // The desktop registry disposes any atom with no listeners and no dependents once
@@ -22,12 +21,12 @@ const IDLE_TTL_MS = 40;
 
 const openSession = createSession(
   CreateSessionInput.make({
-    id: S.decodeSync(SessionId)("session-1"),
+    id: SessionId.make("session-1"),
     baseDataset: makeDataset([]),
   })
 );
 
-const openPath = S.decodeSync(OntologyFilePath)("fixtures/demo.ttl");
+const openPath = OntologyFilePath.make("fixtures/demo.ttl");
 
 describe("ontology workbench state lifetime", () => {
   it.live(

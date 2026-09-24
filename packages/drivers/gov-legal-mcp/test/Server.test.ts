@@ -22,10 +22,12 @@ import {
   EcfrSourceAuthRegistration,
   EcfrToolkit,
   EcfrToolkitHandlersLive,
+  GOV_LEGAL_MCP_INSTRUCTIONS,
   GovinfoSearchFailure,
   GovinfoSourceAuthRegistration,
   GovinfoToolkit,
   GovinfoToolkitHandlersLive,
+  GovLegalMcpRegistrationsLive,
   ProductionToolNameCollisionReport,
   projectToolNameCandidate,
   renderToolNameCollisionReport,
@@ -38,12 +40,15 @@ import {
 } from "@beep/gov-legal-mcp";
 import { Govinfo, GovinfoConfigInput, GovinfoError, GovinfoErrorOptions, Search } from "@beep/govinfo";
 import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
+import { conformance2026 } from "@beep/mcp-kit/test/Conformance";
 import { fcRuns } from "@beep/test-utils";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Crypto from "effect/Crypto";
 import * as FileSystem from "effect/FileSystem";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -75,7 +80,7 @@ const decodeSearchSuccess = S.decodeEffect(Search.Success);
 const decodeSearchResultsResponse = S.decodeEffect(SearchResultsResponse);
 const decodeStructureNode = S.decodeEffect(StructureNode);
 const decodeTitlesResponse = S.decodeEffect(TitlesResponse);
-const decodeUnknownGovinfoSearchFailure = S.decodeUnknownEffect(GovinfoSearchFailure);
+const decodeGovinfoSearchFailureFromJson = S.decodeEffect(S.fromJsonString(GovinfoSearchFailure));
 const decodeUnknownMcpSchemaCallToolResult = S.decodeUnknownEffect(McpSchema.CallToolResult);
 const decodeUnknownMcpSchemaTool = S.decodeUnknownEffect(McpSchema.Tool);
 const decodeUnknownMcpSchemaToolAnnotations = S.decodeUnknownEffect(McpSchema.ToolAnnotations);
@@ -290,6 +295,9 @@ const containsSensitiveValue = (value: unknown): boolean =>
     Match.orElse(() => false)
   );
 
+const withToolNameCrypto = <A, E>(effect: Effect.Effect<A, E, Crypto.Crypto>) =>
+  effect.pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make));
+
 const assertCollision = (
   result: Result.Result<ToolNameCollisionReport, ToolNameCollisionError | unknown>,
   reason: "duplicate_normalized" | "duplicate_final"
@@ -488,9 +496,14 @@ describe("gov-legal MCP frozen contract", () => {
         const result = yield* server.callTool({ name: "govinfo_search", arguments: govinfoArguments });
 
         assert.isTrue(result.isError);
-        const failure = yield* decodeUnknownGovinfoSearchFailure(result.structuredContent);
+        // rc.117 projects declared failures as tool errors whose encoded payload
+        // travels in `content[].text`; `structuredContent` describes successes
+        // only, since it must conform to the advertised `outputSchema`.
+        assert.isUndefined(result.structuredContent);
+        const [first] = result.content;
+        const failure = yield* decodeGovinfoSearchFailureFromJson(first?.type === "text" ? first.text : "");
+        assert.strictEqual(failure._tag, "GovinfoSearchFailure");
         assert.strictEqual(failure.reason, "transport");
-        assert.deepEqual(result.structuredContent, { _tag: "GovinfoSearchFailure", reason: "transport" });
         assert.isFalse(containsSensitiveValue(result));
       })
     );
@@ -500,10 +513,14 @@ describe("gov-legal MCP frozen contract", () => {
     "fails closed on cross-driver normalization collisions",
     Effect.fnUntraced(function* () {
       const error = assertCollision(
-        buildToolNameCollisionReport([
-          ToolNameCandidate.make({ source: "agency.alpha", operationId: "search" }),
-          ToolNameCandidate.make({ source: "agency_alpha", operationId: "search" }),
-        ]),
+        yield* Effect.result(
+          withToolNameCrypto(
+            buildToolNameCollisionReport([
+              ToolNameCandidate.make({ source: "agency.alpha", operationId: "search" }),
+              ToolNameCandidate.make({ source: "agency_alpha", operationId: "search" }),
+            ])
+          )
+        ),
         "duplicate_normalized"
       );
       assert.deepEqual(error.collisionKeys, ["agency_alpha_search"]);
@@ -538,10 +555,14 @@ describe("gov-legal MCP frozen contract", () => {
     "marks punctuation normalization duplicates before failing",
     Effect.fnUntraced(function* () {
       const error = assertCollision(
-        buildToolNameCollisionReport([
-          ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
-          ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" }),
-        ]),
+        yield* Effect.result(
+          withToolNameCrypto(
+            buildToolNameCollisionReport([
+              ToolNameCandidate.make({ source: "ecfr", operationId: "search.results" }),
+              ToolNameCandidate.make({ source: "ecfr", operationId: "search/results" }),
+            ])
+          )
+        ),
         "duplicate_normalized"
       );
       assert.isTrue(A.every(error.report.candidates, (row) => row.duplicateVerdict === "duplicate_normalized"));
@@ -561,8 +582,8 @@ describe("gov-legal MCP frozen contract", () => {
         source: "ecfr",
         operationId: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx_0000000011bm",
       });
-      const firstRow = Result.getOrThrow(projectToolNameCandidate(first));
-      const secondRow = Result.getOrThrow(projectToolNameCandidate(second));
+      const firstRow = yield* withToolNameCrypto(projectToolNameCandidate(first));
+      const secondRow = yield* withToolNameCrypto(projectToolNameCandidate(second));
 
       assert.strictEqual(firstRow.candidate, firstValue);
       assert.strictEqual(secondRow.candidate, secondValue);
@@ -570,7 +591,10 @@ describe("gov-legal MCP frozen contract", () => {
       assert.strictEqual(secondRow.digest, "a06e92ed");
       assert.strictEqual(firstRow.finalWireName.length, 64);
       assert.strictEqual(firstRow.finalWireName, secondRow.finalWireName);
-      const error = assertCollision(buildToolNameCollisionReport([first, second]), "duplicate_final");
+      const error = assertCollision(
+        yield* Effect.result(withToolNameCrypto(buildToolNameCollisionReport([first, second]))),
+        "duplicate_final"
+      );
       assert.isTrue(A.every(error.report.candidates, (row) => row.duplicateVerdict === "duplicate_final"));
     })
   );
@@ -608,31 +632,41 @@ const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec,
 };
 
 describe("tool-name report determinism", () => {
-  it.prop(
+  it.effect(
     "projects arbitrary candidates deterministically under the frozen cap and digest contract",
-    [ToolNameCandidateArbitrary],
-    ([candidate]) => {
-      expectRoundTrip(ToolNameCandidate, candidate);
+    Effect.fnUntraced(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.all([ToolNameCandidateArbitrary]),
+        ([candidate]) =>
+          withToolNameCrypto(
+            Effect.gen(function* () {
+              expectRoundTrip(ToolNameCandidate, candidate);
 
-      const first = projectToolNameCandidate(candidate);
-      const second = projectToolNameCandidate(candidate);
-      assert.deepEqual(second, first);
-      if (Result.isFailure(first)) {
-        return;
-      }
+              const first = yield* Effect.result(projectToolNameCandidate(candidate));
+              const second = yield* Effect.result(projectToolNameCandidate(candidate));
+              assert.deepEqual(second, first);
+              if (Result.isFailure(first)) {
+                return true;
+              }
 
-      const row = Result.getOrThrow(first);
-      expectRoundTrip(ToolNameCollisionRow, row);
-      assert.isAtMost(Str.length(row.finalWireName), 64);
-      if (row.truncated) {
-        assert.strictEqual(Str.length(row.finalWireName), 64);
-        assert.isTrue(P.isNotNull(row.digest));
-      } else {
-        assert.strictEqual(row.finalWireName, row.normalized);
-        assert.isTrue(P.isNull(row.digest));
-      }
-    },
-    { arbitrary: fcRuns(50) }
+              const row = first.success;
+              expectRoundTrip(ToolNameCollisionRow, row);
+              assert.isAtMost(Str.length(row.finalWireName), 64);
+              if (row.truncated) {
+                assert.strictEqual(Str.length(row.finalWireName), 64);
+                assert.isTrue(P.isNotNull(row.digest));
+              } else {
+                assert.strictEqual(row.finalWireName, row.normalized);
+                assert.isTrue(P.isNull(row.digest));
+              }
+              return true;
+            })
+          ),
+        fcRuns(50)
+      );
+
+      assert.strictEqual(result._tag, "Passed");
+    })
   );
 
   layer(NodeServices.layer)("with platform filesystem services", (it) => {
@@ -688,4 +722,22 @@ describe("tool-name report determinism", () => {
       })
     );
   });
+});
+
+// The host as the kit conformance runner sees it: the exported registrations
+// with fixture eCFR and GovInfo clients and a resolvable GOVINFO_API_KEY, so
+// both sources mount and the keyless eCFR search answers with fixture data.
+conformance2026({
+  name: "beep-gov-legal-test",
+  version: "0.0.0",
+  instructions: GOV_LEGAL_MCP_INSTRUCTIONS,
+  registrations: GovLegalMcpRegistrationsLive.pipe(
+    Layer.provide(Layer.merge(FixtureEcfr, FixtureGovinfo)),
+    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ GOVINFO_API_KEY: "fixture-secret" })))
+  ),
+  tool: {
+    name: "ecfr_search_results",
+    arguments: ecfrSearchArguments,
+    invalidArguments: { query: 1 },
+  },
 });

@@ -1,0 +1,301 @@
+{
+  "status": "historical relative-path integration evidence; superseded by absolute-routing implementation",
+  "authority": "Historical evidence bound to the source hashes below. Current implementation uses runtime-owned absolute passthrough and native hashed profile inputs; post-merge full proof and qualification remain pending.",
+  "baseRevision": "afce6d6625dc03574a776f2624b79e5bc48069ca",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "sha256": "25861fe4bb50ab1bccdd3d4cb53113a717af4c3a76dd7b38870fac8e40392f22"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
+      "sha256": "17a13a89a5ab4103d283ce2b2ed9086e2d957591398cfbc11099730445184e35"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.profile.ts",
+      "sha256": "dda7c5e5c0a15c7066fd9af01af31923e66928a1f8e25152433c38ec7f3c0c22"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "678a47d285b541ab7d0cd1722ae920c7e10008911202118efbaaedd64e07d275"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-runtime.test.ts",
+      "sha256": "43b467e5c822c03d23fb3d98c86699c5d16fa809fc279bbb51d140def9f51c9e"
+    }
+  ],
+  "behavior": [
+    "Governed identity profile freshness enforced before native task spawn even with caching disabled.",
+    "Fixed portable BIOME_CONFIG_PATH injection preserves any computed toolchain key.",
+    "Caller overrides, loose mode and global or other executable task forwarding rejected."
+  ],
+  "nativeClient": {
+    "version": "2.10.12",
+    "sha256": "cfca1bde77f1216d4dcc8964e567eed9d47be224c848e8001edc9a1a07839dde"
+  },
+  "actualCliFixture": {
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/profile-runtime-integration-_bvgecb3/receipt.json",
+      "sha256": "7bd59a361303d1c5abba6b03d6f75c4075aff8141218910a0f72d2719f52a0c5"
+    },
+    "hashAndDiagnosticReview": "passed",
+    "cases": [
+      {
+        "case": "generate",
+        "exitCode": 0,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "strict",
+        "exitCode": 0,
+        "executed": {
+          "identity": true,
+          "types": true
+        }
+      },
+      {
+        "case": "loose",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "caller",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "global-passthrough",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "dependency-env",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "stale",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      }
+    ],
+    "childEnvironmentAssertions": {
+      "identityReceivesFixedProfile": true,
+      "typesReceivesNoProfile": true
+    }
+  },
+  "focusedTests": {
+    "tests": 17,
+    "exitCode": 0,
+    "log": {
+      "path": ".beep/qualification-local-preflight/cache-profile-runtime-selection-tests.log",
+      "sha256": "87ffe86dfc805c138fcab4a71cbaa29f79ac07e3c1b56b2e63c1f1f4ada9eea5"
+    }
+  },
+  "typecheck": {
+    "exitCode": 0,
+    "log": {
+      "path": ".beep/qualification-local-preflight/cache-profile-runtime-typecheck-v2.log",
+      "sha256": "974993c2ca103531cde55bf67ea81306d30d277f87728341ae73bbd23332d687"
+    },
+    "repair": "Simplified nested collection inference after TS18046; real CLI fixture rerun after repair."
+  },
+  "packageVerification": {
+    "status": "passed",
+    "exitCode": 0,
+    "command": "bun run beep quality package-verify @beep/repo-cli",
+    "auditSeconds": 661.9,
+    "docgenSeconds": 19.9,
+    "sourceHashesVerifiedAfterCompletion": true,
+    "log": {
+      "path": ".beep/qualification-local-preflight/cache-profile-package-verify-v4.log",
+      "sha256": "c8a40a36cd981680781964a0b9a4a83b502118a3fdf0da9069ee93544fe4c994"
+    }
+  },
+  "limitations": [
+    "Native-client fixture proves runtime environment boundaries, not Biome semantic equivalence.",
+    "Matching positive environment declarations are conservatively rejected even if later negations exclude them.",
+    "Live identity configuration does not yet opt in; pilot integration and current-revision matrix remain outstanding.",
+    "No accepted sibling signed runtime receipts or qualified tuple are claimed."
+  ],
+  "expandedActualCliFixture": {
+    "receipt": {
+      "path": ".beep/qualification-local-preflight/profile-runtime-integration-rs_sgi7o/receipt.json",
+      "sha256": "0fdd4739e928f6959e5847639f5952a27f028219d82a4de085cf2c71d6846c24"
+    },
+    "cases": [
+      {
+        "case": "generate",
+        "exitCode": 0,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "strict",
+        "exitCode": 0,
+        "executed": {
+          "identity": true,
+          "types": true
+        }
+      },
+      {
+        "case": "loose",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "caller",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "global-passthrough",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "global-env",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "unrelated-global-patterns",
+        "exitCode": 0,
+        "executed": {
+          "identity": true,
+          "types": true
+        }
+      },
+      {
+        "case": "dependency-env",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "dependency-passthrough",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "missing",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "regenerate",
+        "exitCode": 0,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      },
+      {
+        "case": "regenerated-strict",
+        "exitCode": 0,
+        "executed": {
+          "identity": true,
+          "types": true
+        }
+      },
+      {
+        "case": "stale",
+        "exitCode": 1,
+        "executed": {
+          "identity": false,
+          "types": false
+        }
+      }
+    ],
+    "hashAndDiagnosticReview": "passed",
+    "recovery": "Missing profile rejected both tasks; regeneration restored successful execution with the same scoped environment.",
+    "noninterference": "Unrelated AWS_* and PORTLESS_* global passthrough declarations preserved successful identity/types isolation.",
+    "limits": "Minimal fixture has no lockfile; native client warns accordingly. This is runtime environment control evidence, not dependency identity or qualified cache replay."
+  },
+  "liveConsumerFollowup": {
+    "status": "failed; relative selection requires repair before acceptance",
+    "normalIdentityPackageVerification": {
+      "exitCode": 0,
+      "auditSeconds": 6.4,
+      "docgenSeconds": 2.7
+    },
+    "actualRuntimeLint": {
+      "exitCode": 1,
+      "types": "passed",
+      "identity": "failed before linting: VCS ignore lookup at package directory"
+    },
+    "absolutePathControl": {
+      "exitCode": 0,
+      "interpretation": "Same generated bytes work with absolute config selection; not portable task-hash acceptance."
+    },
+    "vcsRootControls": {
+      "default": 1,
+      "dot": 1,
+      "packageRelative": 1,
+      "packageRelativeDiagnostic": "No files processed; scanner paths resolved against the wrong base."
+    },
+    "nextAction": "Use a runtime-owned absolute routing path passed through without hashing its clone-specific bytes, while hashing generated profile bytes as native inputs. Prove override rejection and cross-root invariance before adoption.",
+    "authorityLimit": "Prior environment-reporting fixtures did not execute Biome and therefore did not cover config-origin resolution."
+  },
+  "checkpointFollowup": {
+    "implementation": "Runtime-owned absolute BIOME_CONFIG_PATH passthrough with generated profile bytes enforced as native inputs. Pilot regenerates the profile when root configuration is mutated.",
+    "postMergeRevision": "e7f185e233",
+    "effectVersion": "4.0.0-rc.117",
+    "focusedTests": {
+      "files": 3,
+      "tests": 33,
+      "exitCode": 0
+    },
+    "typecheckExitCode": 0,
+    "fallowAuditExitCode": 0,
+    "limits": "Focused proof is not full repository proof or signed qualification. Historical receipts and hashes above are retained unchanged.",
+    "fallowHealthExitCode": 0,
+    "liveRuntimeLint": {
+      "exitCode": 0,
+      "tasks": 2,
+      "cached": 0,
+      "command": "bun run beep cache execute -- run lint --filter=@beep/identity --cache=local: --env-mode=strict",
+      "authority": "Native Turbo and actual Biome execution, caching disabled; no qualification claim."
+    }
+  }
+}

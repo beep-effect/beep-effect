@@ -1,0 +1,78 @@
+{
+  "authority": "Native dry-run input maps with independent Git blob digest verification. No task execution, replay or complete semantic closure.",
+  "status": "proposal-not-adopted",
+  "sourceRevision": "0dca9987807d3ac2e4ae842f712522198a4ec965",
+  "receipt": {
+    "path": ".beep/qualification-local-preflight/profile-native-inputs-0s2c_hk6/receipt.json",
+    "sha256": "9b4bf064b00f139c3a7b2975d8da0fee74a8e7e8406427ed801cd73647f145ac"
+  },
+  "independentReview": {
+    "path": ".beep/qualification-local-preflight/profile-native-inputs-0s2c_hk6/input-review.json",
+    "sha256": "f235f02ec8e876db6604521a06dcbeb15926520ed3ccd744c1dd2d5eec2103e8"
+  },
+  "reviewRecipe": {
+    "path": ".beep/qualification-local-preflight/review-profile-native-inputs.py",
+    "sha256": "9bf98c2807abbd66f8e92e790d948e8d6c6fce314c591ed6af77fcfeea798dae"
+  },
+  "wrapperExitCode": 0,
+  "beforeAfterParity": "passed",
+  "cases": [
+    {
+      "case": "original-inputs",
+      "planSha256": "87e6f4d38b34e5a54cc99c41740cdc1616859e8371a0732e7ea083a33b154bf1",
+      "planBytes": 12101,
+      "verifiedNativeInputBlobEntries": 74,
+      "crlfNormalizedBlobEntries": 0,
+      "installedDependencyInputEntries": 0,
+      "coveredReadPaths": 49,
+      "taskInputCounts": {
+        "@beep/identity#lint": 46,
+        "@beep/types#lint": 28
+      },
+      "unmappedReadPathCount": 374,
+      "remainingPaths": [],
+      "configuredEnvironmentNames": {
+        "@beep/identity#lint": [
+          "BEEP_CACHE_TOOLCHAIN_DIGEST"
+        ],
+        "@beep/types#lint": []
+      }
+    },
+    {
+      "case": "proposed-inputs",
+      "planSha256": "cdffd7d836bbc56b811dc891cd71102765296ad822549da2ad0c786a0ad6f075",
+      "planBytes": 722752,
+      "verifiedNativeInputBlobEntries": 5694,
+      "crlfNormalizedBlobEntries": 40,
+      "installedDependencyInputEntries": 4912,
+      "coveredReadPaths": 422,
+      "taskInputCounts": {
+        "@beep/identity#lint": 5666,
+        "@beep/types#lint": 28
+      },
+      "unmappedReadPathCount": 1,
+      "remainingPaths": [
+        ".git"
+      ],
+      "configuredEnvironmentNames": {
+        "@beep/identity#lint": [
+          "BEEP_CACHE_TOOLCHAIN_DIGEST",
+          "BIOME_CONFIG_PATH"
+        ],
+        "@beep/types#lint": []
+      }
+    }
+  ],
+  "findings": [
+    "The proposed native inputs cover 422 of 423 observed repository read paths; the mounted Git pointer remains separate.",
+    "Broad explicit metadata globs also hash 4912 installed dependency paths. A revised exclusion is under test; raw installed dependency identity already has a separate retained-tree receipt.",
+    "Forty native input entries match CRLF-normalized Git blob hashes rather than raw bytes. This native map is not raw-byte identity proof.",
+    "Strict environment selection is task-scoped: the profile selector is configured only for identity. Types remains on its original configuration. Do not assume it inherits the selector."
+  ],
+  "limitations": [
+    "This is dry-run planning, not execution or replay.",
+    "Existing runtime digest held constant for comparison is not acceptance of a new runtime/profile identity.",
+    "Current path coverage does not prove future or alternate-path input closure.",
+    "Production generation, profile freshness, Git-pointer attribution and final pilot/signed acceptance remain pending."
+  ]
+}

@@ -1,5 +1,5 @@
 import { SourceTextResolver } from "@beep/file-processing/SourceText";
-import { CitingApplicationIdentity } from "@beep/law-practice-domain";
+import { UsptoCitingApplication, UsptoNormalizedApplicationNumber } from "@beep/law-practice-domain";
 import {
   CandorPromotionGateLive,
   CandorPromotionSubjectResolutionError,
@@ -21,7 +21,6 @@ import { provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
-import * as S from "effect/Schema";
 
 const subject = PromotionSubjectRef.make({ id: "application-16138242", kind: "patent-application" });
 const request = PromotionGateRequest.make({ subject, tenantRef: PromotionTenantRef.make("org-law-fixture") });
@@ -29,8 +28,8 @@ const otherTenantRequest = PromotionGateRequest.make({
   subject,
   tenantRef: PromotionTenantRef.make("org-other-fixture"),
 });
-const citingApplication = S.decodeSync(CitingApplicationIdentity)({
-  applicationNumber: "16138242",
+const citingApplication = UsptoCitingApplication.make({
+  applicationNumber: UsptoNormalizedApplicationNumber.make("16138242"),
   kind: "UsptoNormalized",
 });
 const scope = CandorFilingScope.make({ citingApplication, orgId: Shared.OrganizationId.make(1) });

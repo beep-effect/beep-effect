@@ -7,7 +7,9 @@
 
 import { A, O } from "@beep/utils";
 import { pipe } from "effect";
+import * as F from "effect/Function";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CourtsVocabularyData } from "../../internal/generated/free-law-project/courts-vocabulary.ts";
 import { ReportersVocabularyData } from "../../internal/generated/free-law-project/reporters-vocabulary.ts";
@@ -17,7 +19,12 @@ import {
   CourtVocabularyArtifact,
   ReporterVocabularyArtifact,
 } from "./CourtReporterVocabulary.model.ts";
-import type { CourtId, ReporterId } from "./CourtReporterVocabulary.model.ts";
+import type {
+  CourtId,
+  CourtVocabularyRecord,
+  ReporterId,
+  ReporterVocabularyRecord,
+} from "./CourtReporterVocabulary.model.ts";
 
 /**
  * Schema-decoded pinned courts-db public vocabulary.
@@ -26,14 +33,20 @@ import type { CourtId, ReporterId } from "./CourtReporterVocabulary.model.ts";
  *
  * ```ts
  * import { CourtVocabulary } from "@beep/law-practice-domain/values/CourtReporterVocabulary"
+ * import * as Result from "effect/Result"
  *
- * console.log(CourtVocabulary.stableIdCount) // 2809
+ * const stableIdCount = Result.match(CourtVocabulary, {
+ *   onFailure: () => 0,
+ *   onSuccess: (vocabulary) => vocabulary.stableIdCount,
+ * })
+ *
+ * console.log(stableIdCount) // 2809
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const CourtVocabulary = S.decodeUnknownSync(CourtVocabularyArtifact)(CourtsVocabularyData);
+export const CourtVocabulary = S.decodeUnknownResult(CourtVocabularyArtifact)(CourtsVocabularyData);
 
 /**
  * Schema-decoded pinned reporters-db public vocabulary.
@@ -42,14 +55,20 @@ export const CourtVocabulary = S.decodeUnknownSync(CourtVocabularyArtifact)(Cour
  *
  * ```ts
  * import { ReporterVocabulary } from "@beep/law-practice-domain/values/CourtReporterVocabulary"
+ * import * as Result from "effect/Result"
  *
- * console.log(ReporterVocabulary.stableIdCount) // 1262
+ * const stableIdCount = Result.match(ReporterVocabulary, {
+ *   onFailure: () => 0,
+ *   onSuccess: (vocabulary) => vocabulary.stableIdCount,
+ * })
+ *
+ * console.log(stableIdCount) // 1262
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const ReporterVocabulary = S.decodeUnknownSync(ReporterVocabularyArtifact)(ReportersVocabularyData);
+export const ReporterVocabulary = S.decodeUnknownResult(ReporterVocabularyArtifact)(ReportersVocabularyData);
 
 /**
  * Combined exact-version artifact consumed by citation parsing integrations.
@@ -58,21 +77,35 @@ export const ReporterVocabulary = S.decodeUnknownSync(ReporterVocabularyArtifact
  *
  * ```ts
  * import { CourtReporterArtifact } from "@beep/law-practice-domain/values/CourtReporterVocabulary"
+ * import * as Result from "effect/Result"
  *
- * console.log(CourtReporterArtifact.artifactVersion.startsWith("crv1:")) // true
+ * const startsWithCurrentPrefix = Result.match(CourtReporterArtifact, {
+ *   onFailure: () => false,
+ *   onSuccess: (artifact) => artifact.artifactVersion.startsWith("crv1:"),
+ * })
+ *
+ * console.log(startsWithCurrentPrefix) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const CourtReporterArtifact = CourtReporterArtifactContract.make({
-  schemaVersion: CourtVocabulary.schemaVersion,
-  projectionVersion: CourtVocabulary.projectionVersion,
-  artifactVersion: CourtVocabulary.artifactVersion,
-  policy: CourtReporterCompatibilityPolicy,
-  courts: CourtVocabulary,
-  reporters: ReporterVocabulary,
-});
+export const CourtReporterArtifact = pipe(
+  Result.all({
+    courts: CourtVocabulary,
+    reporters: ReporterVocabulary,
+  }),
+  Result.map(({ courts, reporters }) =>
+    CourtReporterArtifactContract.make({
+      schemaVersion: courts.schemaVersion,
+      projectionVersion: courts.projectionVersion,
+      artifactVersion: courts.artifactVersion,
+      policy: CourtReporterCompatibilityPolicy,
+      courts,
+      reporters,
+    })
+  )
+);
 
 /**
  * Checks whether a consumer was built for the exact pinned artifact.
@@ -89,30 +122,48 @@ export const CourtReporterArtifact = CourtReporterArtifactContract.make({
  *   CourtReporterArtifact,
  *   isCurrentCourtReporterArtifactVersion,
  * } from "@beep/law-practice-domain/values/CourtReporterVocabulary"
+ * import * as Result from "effect/Result"
  *
- * console.log(isCurrentCourtReporterArtifactVersion(CourtReporterArtifact.artifactVersion)) // true
+ * const current = Result.match(CourtReporterArtifact, {
+ *   onFailure: () => false,
+ *   onSuccess: (artifact) => isCurrentCourtReporterArtifactVersion(artifact.artifactVersion),
+ * })
+ *
+ * console.log(current) // true
  * ```
  *
  * @category predicates
  * @since 0.0.0
  */
 export const isCurrentCourtReporterArtifactVersion = (version: string): boolean =>
-  version === CourtReporterArtifact.artifactVersion;
+  Result.match(CourtReporterArtifact, {
+    onFailure: F.constFalse,
+    onSuccess: (artifact) => version === artifact.artifactVersion,
+  });
+
+const courtRecords = Result.match(CourtVocabulary, {
+  onFailure: A.empty<CourtVocabularyRecord>,
+  onSuccess: (vocabulary) => vocabulary.records,
+});
+const reporterRecords = Result.match(ReporterVocabulary, {
+  onFailure: A.empty<ReporterVocabularyRecord>,
+  onSuccess: (vocabulary) => vocabulary.records,
+});
 
 const courtsById = pipe(
-  CourtVocabulary.records,
+  courtRecords,
   A.map((court) => [court.id, court] as const),
   R.fromEntries
 );
 
 const reportersById = pipe(
-  ReporterVocabulary.records,
+  reporterRecords,
   A.map((reporter) => [reporter.id, reporter] as const),
   R.fromEntries
 );
 
 const courtsByAlias = pipe(
-  CourtVocabulary.records,
+  courtRecords,
   A.flatMap((court) =>
     pipe(
       court.aliases,
@@ -125,7 +176,7 @@ const courtsByAlias = pipe(
 );
 
 const reportersByAlias = pipe(
-  ReporterVocabulary.records,
+  reporterRecords,
   A.flatMap((reporter) =>
     pipe(
       reporter.aliases,
@@ -188,7 +239,7 @@ export const findReporterById = (id: ReporterId) => R.get(reportersById, id);
  * @since 0.0.0
  */
 export const findCourtsByAlias = (alias: string) =>
-  pipe(R.get(courtsByAlias, alias), O.getOrElse(A.empty<(typeof CourtVocabulary.records)[number]>));
+  pipe(R.get(courtsByAlias, alias), O.getOrElse(A.empty<CourtVocabularyRecord>));
 
 /**
  * Returns every reporter owning an abbreviation or variation.
@@ -210,4 +261,4 @@ export const findCourtsByAlias = (alias: string) =>
  * @since 0.0.0
  */
 export const findReportersByAlias = (alias: string) =>
-  pipe(R.get(reportersByAlias, alias), O.getOrElse(A.empty<(typeof ReporterVocabulary.records)[number]>));
+  pipe(R.get(reportersByAlias, alias), O.getOrElse(A.empty<ReporterVocabularyRecord>));

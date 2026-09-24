@@ -2,6 +2,7 @@ import { decodeEditorStateForRuntime, decodeEditorStateForRuntimeResult } from "
 import { TextDetailMask, TextFormatMask, TextNode } from "@beep/lexical-schema/Lexical.model";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
 
@@ -97,7 +98,7 @@ describe("@beep/editor runtime admission", () => {
       },
     };
     const decoded = decodedValidState();
-    const paragraph = decoded.root.children[0];
+    const paragraph = O.getOrThrow(A.head(decoded.root.children));
     Reflect.set(paragraph, "$", O.some({ plugin: 1n }));
 
     expect(Result.isFailure(decodeEditorStateForRuntimeResult(raw))).toBe(true);

@@ -1,0 +1,94 @@
+{
+  "schema": "beep.research.run/v0",
+  "date": "2026-09-23",
+  "status": "partial",
+  "window": {
+    "start": "2026-09-22T08:56:00-05:00",
+    "end": "2026-09-23T08:57:00-05:00",
+    "label": "America/Chicago"
+  },
+  "prior": {
+    "lastSuccessfulPacket": "research/2026-09-22",
+    "lastSuccessfulPr": 1199,
+    "lastSuccessfulRun": "2026-09-22T08:56:00-05:00"
+  },
+  "counts": {
+    "total": 24,
+    "window_new": 14,
+    "refute": 12,
+    "by_axis": {
+      "law": 6,
+      "effect": 8,
+      "agents": 10
+    }
+  },
+  "novelty": {
+    "window_new": 14,
+    "exclusion_url_collisions": 9,
+    "exclusion_collision_pct": 37.5,
+    "collision_urls": [
+      "https://data.uspto.gov/support",
+      "https://imanage.com/resources/resource-center/news/imanage-thomson-reuters-atrategic-partnership-governed-ai-legal-workflows/",
+      "https://www.harvey.ai/blog/harvey-everlaw-evidence-ediscovery",
+      "https://github.com/Effect-TS/effect/pull/8336",
+      "https://github.com/evoluhq/evolu/pull/708",
+      "https://www.instantdb.com/essays/instant_team_joins_openai",
+      "https://github.com/drizzle-team/drizzle-orm/issues/6162",
+      "https://github.com/modelcontextprotocol/go-sdk/pull/1238",
+      "https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3306"
+    ],
+    "window_new_collision_pct": 0.0,
+    "note": "Hard collisions are intentional refute-quota re-cites only (USPTO/iManage/Harvey-Everlaw/Instant/drizzle/Evolu/#8336/go-sdk#1238/#3306). Gate \u226440% pass on unique claim URLs. Soft narrative follows (Astra) use new URLs."
+  },
+  "quotaPools": {
+    "search": "web+github-mcp+arxiv+npm",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no Sol/Luna seat in this harness)",
+    "writer": "grok-bot-blinded",
+    "publisher": "cursor-cloud-agent"
+  },
+  "frictions": [
+    {
+      "source": "user-X",
+      "tools": ["search_posts_all", "search_news"],
+      "error": "client-not-enrolled",
+      "detail": "X API v2 Client Forbidden (client-not-enrolled); continued without X."
+    },
+    {
+      "source": "local-gh",
+      "error": "unauthenticated-rate-limit",
+      "detail": "Anonymous api.github.com rate-limited mid-run; GitHub via cursor-github MCP used instead."
+    },
+    {
+      "source": "npmjs-web",
+      "error": "cloudflare-avoided",
+      "detail": "Skipped npmjs.com HTML; used registry.npmjs.org JSON throughout."
+    },
+    {
+      "source": "arxiv-http",
+      "error": "empty-on-http-export",
+      "detail": "http://export.arxiv.org returned empty once; https://export.arxiv.org succeeded."
+    }
+  ],
+  "resume_cursor": {
+    "x": null,
+    "arxiv": null,
+    "note": "Retry X when project enrollment fixed. arXiv HTTPS export OK after HTTP miss."
+  },
+  "headline_deltas": [
+    "A2M arXiv 2609.26761 (Sep 22): MCP tool hijacking MTIR 93.6% / ASR 74.4% on GLM-4.6",
+    "PayPal zero-trust MCP arXiv 2609.22573: permission-filtered list_tools 152/720 \u2192 0/720",
+    "Effect tip still rc.117; #8336 refreshed Sep 23 still OPEN for rc.118",
+    "Zero head \u2192 1.11.0-head-bbc6b8b0-20260923 (canary.11 unchanged)",
+    "Cimplifi Maestro/CI Lake (Sep 22) extends Relativity aiR orchestration",
+    "SEP-2640 Go/Python SDK PRs updated Sep 23; still unmerged ship gate",
+    "GraphSkillEvo 2609.21749 + MAF skills-over-MCP keep skills IR pressure high",
+    "Standing HOLDs: USPTO ODP four-field, iManage/TR coming soon, Harvey\u2013Everlaw fall 2026, Instant 2027-08-31, drizzle #6162, Evolu #708, MCP #3306"
+  ],
+  "blinding": {
+    "cloned_beep_effect": false,
+    "opened_pr": true,
+    "called_cloud_agent": true
+  },
+  "written_at": "2026-09-23T09:15:00-05:00"
+}

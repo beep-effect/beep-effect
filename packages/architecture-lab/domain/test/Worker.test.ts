@@ -15,12 +15,14 @@ describe("Worker entity", () => {
     Effect.fnUntraced(function* () {
       const id = yield* decodeWorkerId(1);
       const organizationId = yield* decodeOrganizationId(1);
-      const worker = Worker.create(
-        Worker.CreateWorkerInput.make({
-          id,
-          organizationId,
-          displayName: "Ada Lovelace",
-        })
+      const worker = yield* Effect.fromResult(
+        Worker.create(
+          Worker.CreateWorkerInput.make({
+            id,
+            organizationId,
+            displayName: "Ada Lovelace",
+          })
+        )
       );
 
       expect(worker.id).toBe(1);

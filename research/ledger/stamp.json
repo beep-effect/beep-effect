@@ -1,11 +1,11 @@
 {
-  "lastSuccessfulRun": "2026-09-17T08:45:00-05:00",
-  "lastSuccessfulPacket": "research/2026-09-17",
-  "lastSuccessfulPr": 1171,
-  "lastAttemptedRun": "2026-09-17T08:45:00-05:00",
+  "lastSuccessfulRun": "2026-09-23T08:57:00-05:00",
+  "lastSuccessfulPacket": "research/2026-09-23",
+  "lastSuccessfulPr": 1215,
+  "lastAttemptedRun": "2026-09-23T08:57:00-05:00",
   "lastAttemptedStatus": "partial",
-  "lastAttemptedPacket": "research/2026-09-17",
-  "note": "Advances stamp after opening research/2026-09-17 as PR (publisher fills lastSuccessfulPr). Human admit still required. Never claim merged. Partial: X client-not-enrolled; arXiv export API 429; local gh CLI bad credentials \u2014 GitHub MCP used. Orphaned local research/2026-09-16 absorbed into research/ledger/excluded-packets/2026-09-16.jsonl (publisher never opened PR). Prior stamp research/2026-09-13 / PR #1136.",
+  "lastAttemptedPacket": "research/2026-09-23",
+  "note": "Draft until human merge of research/2026-09-23. Publisher fills lastSuccessfulPr after PR opens. Never claim merged. Never auto-merge. Partial: X client-not-enrolled. Prior stamp research/2026-09-22 / PR #1199 (merged 2026-09-22).",
   "excludedUnmergedPackets": [
     {
       "date": "2026-08-27",

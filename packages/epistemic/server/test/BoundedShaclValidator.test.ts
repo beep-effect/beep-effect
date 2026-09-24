@@ -18,20 +18,22 @@ import * as S from "effect/Schema";
 
 const decodeShaclValidationRequest = S.decodeEffect(ShaclValidationRequest);
 const encodeDataset = S.encodeEffect(Dataset);
+const decodeCandidate = S.decodeUnknownEffect(CandidateClaim);
+const decodeEvidence = S.decodeUnknownEffect(Evidence);
 
-const candidate = S.decodeUnknownSync(CandidateClaim)({
+const candidateInput = {
   ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
   fixtureKey: "claim.patentability",
   lifecycle: "candidate",
   snapshot: {},
-});
+};
 
-const evidence: Evidence = S.decodeUnknownSync(Evidence)({
+const evidenceInput = {
   ...productEntityFixtureInput("EpistemicEvidence", 10),
   artifactFixtureKey: "artifact.office-action",
   spanFixtureKey: "span.claim-1",
   span: { startChar: 0, endChar: 14, quote: "a claimed fact", confidence: 0.92 },
-});
+};
 
 const dataset = makeDataset([
   makeQuad(
@@ -50,13 +52,15 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
       Effect.fnUntraced(function* () {
         const shacl = yield* ShaclValidationService;
         const gate = ClaimGateUC.makeClaimGate(shacl);
+        const claim = yield* decodeCandidate(candidateInput);
+        const proof = yield* decodeEvidence(evidenceInput);
 
-        const verdict = yield* gate.evaluate(candidate, [evidence]);
+        const verdict = yield* gate.evaluate(claim, [proof]);
         expect(verdict.verdict).toBe("admitted");
 
-        const advanced = yield* ClaimLifecycleUC.makeClaimTransition().advance(candidate, verdict);
+        const advanced = yield* ClaimLifecycleUC.makeClaimTransition().advance(claim, verdict);
         expect(advanced.lifecycle).toBe("shape_valid");
-        expect(advanced.fixtureKey).toBe(candidate.fixtureKey);
+        expect(advanced.fixtureKey).toBe(claim.fixtureKey);
       })
     );
 
@@ -65,15 +69,16 @@ describe("@beep/epistemic-server bounded SHACL validator", () => {
       Effect.fnUntraced(function* () {
         const shacl = yield* ShaclValidationService;
         const gate = ClaimGateUC.makeClaimGate(shacl);
+        const claim = yield* decodeCandidate(candidateInput);
 
-        const verdict = yield* gate.evaluate(candidate, []);
+        const verdict = yield* gate.evaluate(claim, []);
         expect(verdict.verdict).toBe("rejected");
         if (ClaimGateResult.guards.rejected(verdict)) {
           expect(verdict.violations.length).toBeGreaterThan(0);
-          expect(verdict.violations[0].severity).toBe("violation");
+          expect(verdict.violations[0]?.severity).toBe("violation");
         }
 
-        const blocked = yield* ClaimLifecycleUC.makeClaimTransition().advance(candidate, verdict);
+        const blocked = yield* ClaimLifecycleUC.makeClaimTransition().advance(claim, verdict);
         expect(blocked.lifecycle).toBe("candidate");
       })
     );

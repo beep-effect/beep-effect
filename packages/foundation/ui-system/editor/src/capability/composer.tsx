@@ -28,7 +28,7 @@ import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { JSX } from "react";
 import type { ProfileResolutionError } from "./errors.ts";
 
-const encodeEditorStateFromJsonSync = S.encodeSync(EditorStateFromJson);
+const encodeEditorStateFromJsonOption = S.encodeOption(EditorStateFromJson);
 
 import type { CapabilityCatalog, EditorProfile, Platform } from "./schemas.ts";
 
@@ -97,8 +97,8 @@ export function CapabilityComposer({
     onSuccess: (resolved) => {
       // D3: content that the live runtime cannot admit stays readable as
       // escaped wire instead of silently mounting an empty editor.
-      const runtimeInitialState = runtimeInitialStateOption(initialState);
-      if (initialState !== undefined && O.isNone(runtimeInitialState)) {
+      const encodedInitialState = O.flatMap(runtimeInitialStateOption(initialState), encodeEditorStateFromJsonOption);
+      if (initialState !== undefined && O.isNone(encodedInitialState)) {
         return (
           <EditorWireViewer input={initialState} {...O.getSomesStruct({ className: O.fromUndefinedOr(className) })} />
         );
@@ -109,7 +109,7 @@ export function CapabilityComposer({
             namespace: "beep-editor-capability",
             theme: editorTheme,
             nodes: [...resolvedNodes(resolved)],
-            ...O.getSomesStruct({ editorState: O.map(runtimeInitialState, encodeEditorStateFromJsonSync) }),
+            ...O.getSomesStruct({ editorState: encodedInitialState }),
             onError: (error) => logEditorError(error),
           }}
         >

@@ -1,0 +1,81 @@
+{
+  "results": [
+    {
+      "case": "noncanonical-extends",
+      "exitCode": 1,
+      "excludedSyntaxMentioned": false,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "bd34a39e33f0c72267f75ebadff5fa980de104c64f17e0cf81dd9a8a9bd88740"
+    },
+    {
+      "case": "canonical-extends",
+      "exitCode": 1,
+      "excludedSyntaxMentioned": true,
+      "stdoutSha256": "82a45bb1a0516dffbf1a81ebbdb43f8daabdfdb37eef0d43145391e9b7f96dce",
+      "stderrSha256": "3a1bf662057147270f6a0bc2c0a985a4c75b1dcca3f6b18ab814a132ed5b6a1a"
+    },
+    {
+      "case": "canonical-self-contained",
+      "exitCode": 0,
+      "excludedSyntaxMentioned": false,
+      "stdoutSha256": "f5b580fbd61ccd0ef44ff3ef6c4fc0928a9275ab01d994a70a3cd7e86356340b",
+      "stderrSha256": "3827451a83e9a74d7f64664a26e6e388eea36da2b027bbc741c66f26aa723a67"
+    }
+  ],
+  "authority": "Small pinned-client configuration-selection control. Only canonical-extends and canonical-self-contained are valid comparisons; noncanonical-extends encountered ancestor configuration discovery and is rejected.",
+  "client": {
+    "path": "node_modules/@biomejs/cli-linux-x64/biome",
+    "sha256": "3cc9a0c3fa26ac26a89e8a3b203c010c9ae88e36f69a2679e79981f267ce9d57"
+  },
+  "references": [
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-extends/biome.json",
+      "sha256": "d649f946bb2072af0b64596d8dae7abf826cae2c4395a19a0d68c0014eb77bb2"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-extends/profile.json",
+      "sha256": "2694771e7595257cc38a3c15ad0bc370664037a47d7742820952e9a75be99453"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-extends/a/input.ts",
+      "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-extends/b/input.ts",
+      "sha256": "1863811115d972ef74151c6ff2368fa16ee78a50a677fac3455b50adabac3752"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-extends/stdout",
+      "sha256": "82a45bb1a0516dffbf1a81ebbdb43f8daabdfdb37eef0d43145391e9b7f96dce"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-extends/stderr",
+      "sha256": "3a1bf662057147270f6a0bc2c0a985a4c75b1dcca3f6b18ab814a132ed5b6a1a"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-self-contained/biome.json",
+      "sha256": "d649f946bb2072af0b64596d8dae7abf826cae2c4395a19a0d68c0014eb77bb2"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-self-contained/profile.json",
+      "sha256": "52b08ab62e244ae7e561b1d270abcaf873a115ad724829b69dcd4d99daf0cb48"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-self-contained/a/input.ts",
+      "sha256": "5d8f65d2774e206bc9f7a7a4ad39ca2dc563b5c31e46ab57ef4874961237ce29"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-self-contained/b/input.ts",
+      "sha256": "1863811115d972ef74151c6ff2368fa16ee78a50a677fac3455b50adabac3752"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-self-contained/stdout",
+      "sha256": "f5b580fbd61ccd0ef44ff3ef6c4fc0928a9275ab01d994a70a3cd7e86356340b"
+    },
+    {
+      "path": ".beep/qualification-local-preflight/biome-config-resolution-m8w4wfjt/canonical-self-contained/stderr",
+      "sha256": "3827451a83e9a74d7f64664a26e6e388eea36da2b027bbc741c66f26aa723a67"
+    }
+  ],
+  "interpretation": "With the tested pinned binary, extending the canonical base did not suppress the excluded syntax diagnostic; a self-contained explicit profile did. This does not identify the internal configuration-merging cause."
+}

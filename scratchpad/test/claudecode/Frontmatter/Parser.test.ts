@@ -10,7 +10,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import type * as Layer from "effect/Layer";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 
@@ -21,6 +21,13 @@ import * as Parser from "../../../claudecode/Frontmatter/Parser.ts";
 import * as Render from "../../../claudecode/Frontmatter/Render.ts";
 import * as Skill from "../../../claudecode/Frontmatter/Skill.ts";
 import * as Subagent from "../../../claudecode/Frontmatter/Subagent.ts";
+
+const provideBuiltLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scopedWith((scope) =>
+      Layer.buildWithScope(scope)(layer).pipe(Effect.flatMap((context) => Effect.provide(self, context)))
+    );
 
 // ---------------------------------------------------------------------------
 // Test layer builder
@@ -168,7 +175,7 @@ describe("Frontmatter.parseFile", () => {
       });
       expect(result.body.trim()).toBe("Hello from the body.");
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makeFileSystemLayer(
           new Map([
             [
@@ -189,7 +196,7 @@ describe("Frontmatter.parseFile", () => {
         _tag: "FrontmatterReadError",
         path: "/missing.md",
       });
-    }).pipe(Effect.provide(makeFileSystemLayer(new Map())))
+    }).pipe(provideBuiltLayer(makeFileSystemLayer(new Map())))
   );
 
   it.effect("surfaces YAML failures as FrontmatterParseError with the file path", () =>
@@ -200,7 +207,7 @@ describe("Frontmatter.parseFile", () => {
         _tag: "FrontmatterParseError",
         path: "/broken.md",
       });
-    }).pipe(Effect.provide(makeFileSystemLayer(new Map([["/broken.md", "---\nname: [bad\n---\nbody\n"]]))))
+    }).pipe(provideBuiltLayer(makeFileSystemLayer(new Map([["/broken.md", "---\nname: [bad\n---\nbody\n"]]))))
   );
 });
 
@@ -219,7 +226,7 @@ describe("Frontmatter.parse*File", () => {
       });
       expect(result.body.trim()).toBe("# Greet");
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makeFileSystemLayer(
           new Map([["/skills/greet/SKILL.md", "---\nname: greet\ndescription: Say hello\n---\n\n# Greet\n"]])
         )
@@ -236,7 +243,7 @@ describe("Frontmatter.parse*File", () => {
         model: O.some("claude-sonnet-4-6"),
       });
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makeFileSystemLayer(
           new Map([
             [
@@ -258,7 +265,7 @@ describe("Frontmatter.parse*File", () => {
         description: "Review code changes",
       });
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makeFileSystemLayer(
           new Map([
             [
@@ -280,7 +287,7 @@ describe("Frontmatter.parse*File", () => {
         description: O.some("Keep responses compact"),
       });
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makeFileSystemLayer(
           new Map([
             ["/output-styles/terse.md", "---\nname: terse\ndescription: Keep responses compact\n---\n\n# Terse\n"],
@@ -299,7 +306,7 @@ describe("Frontmatter.parse*File", () => {
         path: "/skills/bad/SKILL.md",
       });
     }).pipe(
-      Effect.provide(
+      provideBuiltLayer(
         makeFileSystemLayer(
           new Map([
             ["/skills/bad/SKILL.md", "---\nname: bad\ndescription: Bad effort\neffort: ludicrous\n---\n\n# Broken\n"],
@@ -340,4 +347,3 @@ describe("Frontmatter.render*", () => {
     })
   );
 });
-/** @effect-diagnostics strictEffectProvide:skip-file -- Vitest cases are application entry points; each provided Layer is composed immediately before the terminal Effect runner. */

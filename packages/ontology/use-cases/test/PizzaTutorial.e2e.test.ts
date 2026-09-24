@@ -13,9 +13,8 @@ import { makeDataset } from "@beep/rdf/Rdf";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, pipe } from "effect";
-import * as S from "effect/Schema";
 
-const sessionId = S.decodeSync(SessionId)("pizza-tutorial-session");
+const sessionId = SessionId.make("pizza-tutorial-session");
 
 describe("Pizza tutorial authoring flow", () => {
   it.effect(

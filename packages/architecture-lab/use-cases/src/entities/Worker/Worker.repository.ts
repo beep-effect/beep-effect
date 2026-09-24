@@ -198,16 +198,23 @@ export type WorkerRepositoryError = typeof WorkerRepositoryError.Type;
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
  * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import { Effect } from "effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const id = S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
- * const worker = DomainWorker.create(
+ * const decoded = DomainWorker.create(
  *   DomainWorker.CreateWorkerInput.make({
  *     id,
  *     organizationId: S.decodeUnknownSync(DomainWorker.WorkerOrganizationId)(10),
  *     displayName: "Avery Reviewer"
  *   })
  * )
+ *
+ * if (Result.isFailure(decoded)) {
+ *   throw new Error("expected Worker")
+ * }
+ *
+ * const worker = decoded.success
  *
  * const repository: WorkerRepositoryShape = {
  *   create: (created) => Effect.succeed(created),

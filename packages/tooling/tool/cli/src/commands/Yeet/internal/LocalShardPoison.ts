@@ -18,6 +18,7 @@ import {
 } from "./Inbox.ts";
 import { loadYeetInboxView } from "./InboxView.ts";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { YeetCommandError } from "../Yeet.errors.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/LocalShardPoison");
@@ -78,16 +79,17 @@ export class YeetLocalShardOutcome extends S.Class<YeetLocalShardOutcome>($I`Yee
 export const recordYeetLocalShardOutcome = Effect.fn("Yeet.recordYeetLocalShardOutcome")(function* (
   repoRoot: string,
   outcome: YeetLocalShardOutcome
-): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const observedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   if (outcome.exitCode !== 0) {
     const capsule = YeetLocalShardFailureCapsule.make(outcome);
+    const id = yield* yeetLocalShardFailedRowId(capsule);
     yield* appendYeetInboxRowOnce(
       repoRoot,
       YeetLocalShardFailedRow.make({
         capsule,
         checkout: repoRoot,
-        id: yeetLocalShardFailedRowId(capsule),
+        id,
         severity: "P0",
         ts: observedAt,
       })

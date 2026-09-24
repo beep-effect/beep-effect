@@ -16,7 +16,14 @@ import { GhComment } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { PrCloseoutOptions, PrCloseoutReport, PrCloseoutReportJson } from "./closeout/Closeout.schemas.ts";
-import { closeoutGateStates, gateIssues, reviewThreadIssue } from "./closeout/Gates.ts";
+import {
+  closeoutGateStates,
+  closeoutReviewAdvisories,
+  closeoutReviewThreadTriage,
+  gateIssues,
+  reviewFollowUpThreadIssue,
+  reviewThreadIssue,
+} from "./closeout/Gates.ts";
 import { closeoutGhOutput, collectPrCloseoutPayload, performCloseoutWriteActions } from "./closeout/GhCollect.ts";
 import {
   greptileAuthoredReviewThreadCount,
@@ -27,6 +34,7 @@ import {
 import { closeoutWritePlan } from "./closeout/WritePlan.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import type { FileSystem, Path } from "effect";
+import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutWriteAction } from "./closeout/Closeout.schemas.ts";
@@ -49,7 +57,13 @@ export {
   PrCloseoutReportJson,
   PrCloseoutWriteAction,
 } from "./closeout/Closeout.schemas.ts";
-export { closeoutGateStatesForTesting, greptileIssueLimitExceededForTesting } from "./closeout/Gates.ts";
+export {
+  closeoutGateStatesForTesting,
+  closeoutReviewAdvisories,
+  closeoutReviewThreadTriage,
+  greptileIssueLimitExceededForTesting,
+  reviewFollowUpThreadIssue,
+} from "./closeout/Gates.ts";
 export { inferGreptileIssueCountForTesting, latestGreptileSummaryForTesting } from "./closeout/GreptileSignal.ts";
 export { closeoutWritePlanForTesting } from "./closeout/WritePlan.ts";
 
@@ -62,7 +76,7 @@ export { closeoutWritePlanForTesting } from "./closeout/WritePlan.ts";
 export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
   context: RepoRunContext,
   options: PrCloseoutOptions
-): Effect.fn.Return<PrCloseoutReport, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<PrCloseoutReport, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   let { pullRequest, pr } = yield* collectPrCloseoutPayload(context);
   const writeRequested =
     Str.isNonEmpty(Str.trim(options.replyThread)) ||
@@ -88,11 +102,22 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
     pr = refreshed.pr;
   }
   const botTokens = normalizedTokens(options.bots);
-  const actionableThreads = pipe(
+  // Every thread goes through the shared state rule, so a thread the author
+  // resolved with a reviewer speaking after them blocks closeout even though
+  // GitHub reports it resolved.
+  const triage = closeoutReviewThreadTriage(
     pullRequest.reviewThreads.nodes,
-    A.filter((thread) => !thread.isResolved)
+    pipe(
+      O.fromUndefinedOr(pr.author),
+      O.flatMap(O.fromNullishOr),
+      O.map((author) => author.login)
+    )
   );
-  const threadIssues = pipe(actionableThreads, A.map(reviewThreadIssue));
+  const actionableThreads = triage.unresolvedThreads;
+  const threadIssues = [
+    ...pipe(actionableThreads, A.map(reviewThreadIssue)),
+    ...pipe(triage.followUpThreads, A.map(reviewFollowUpThreadIssue)),
+  ];
   const topLevelBotComments = pipe(
     pullRequest.comments.nodes,
     A.filter((comment) => isBotComment(botTokens, comment.author))
@@ -129,10 +154,13 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
     latestGreptileSummary(botComments),
     greptileAuthoredReviewThreadCount(pullRequest.reviewThreads.nodes)
   );
+  const advisories = closeoutReviewAdvisories(pullRequest.reviews.nodes, pullRequest.reviewThreads.nodes);
   const issues = [...threadIssues, ...gateIssues(options, actionableThreads.length, greptile)];
   const states = closeoutGateStates({
     actionableReviewThreadCount: actionableThreads.length,
+    advisories,
     botComments,
+    followUpThreadCount: triage.counts.followUp,
     greptile,
     options,
     reviewThreads: pullRequest.reviewThreads.nodes,
@@ -147,8 +175,11 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
   }
 
   return PrCloseoutReport.make({
+    acknowledgedThreadCount: triage.counts.acknowledged,
     actionableReviewThreadCount: actionableThreads.length,
+    advisoryCount: advisories.count,
     botCommentCount: botComments.length,
+    followUpThreadCount: triage.counts.followUp,
     greptile,
     issueCount: issues.length,
     issues,
@@ -188,7 +219,7 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
 export const writePrCloseoutReport = Effect.fn("Yeet.writePrCloseoutReport")(function* (
   context: RepoRunContext,
   report: PrCloseoutReport
-): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const reportPath = yield* runArtifactPathForContext(context, "pr-closeout.json");
   const json = yield* PrCloseoutReportJson.encode(report).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode yeet PR closeout report."))
@@ -264,7 +295,7 @@ export const runYeetAutomaticCloseout = Effect.fn("Yeet.runYeetAutomaticCloseout
 ): Effect.fn.Return<
   { readonly report: PrCloseoutReport; readonly reportPath: string },
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
   const report = yield* runPrCloseout(context, yeetAutomaticCloseoutOptions);
   const reportPath = yield* writePrCloseoutReport(context, report);

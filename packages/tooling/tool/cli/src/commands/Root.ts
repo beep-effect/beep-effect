@@ -29,6 +29,7 @@ import { knowledgeCommand } from "./Knowledge/index.ts";
 import { labsCommand } from "./Labs/index.ts";
 import { lawsCommand } from "./Laws/index.ts";
 import { lintCommand } from "./Lint/index.ts";
+import { modelsCommand } from "./Models/index.ts";
 import { purgeCommand } from "./Purge/index.ts";
 import { qaCommand } from "./Qa/index.ts";
 import { qualityCommand } from "./Quality/index.ts";
@@ -89,6 +90,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     labsCommand,
     lintCommand,
     lawsCommand,
+    modelsCommand,
     qualityCommand,
     researchCommand,
     runnersCommand,

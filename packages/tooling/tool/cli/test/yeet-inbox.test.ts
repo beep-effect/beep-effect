@@ -28,9 +28,10 @@ import {
   yeetSiblingCollisionRowId,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -53,16 +54,17 @@ const capsule = (overrides: Partial<Parameters<typeof YeetFailureCapsule.make>[0
     ...overrides,
   });
 
-const row = (subject: YeetFailureCapsule, severity: "P0" | "P1" = "P0"): YeetCheckFailedRow =>
-  YeetCheckFailedRow.make({
+const row = Effect.fnUntraced(function* (subject: YeetFailureCapsule, severity: "P0" | "P1" = "P0") {
+  return YeetCheckFailedRow.make({
     capsule: subject,
     checkout: "/repo",
-    id: yeetInboxRowId(subject),
+    id: yield* yeetInboxRowId(subject),
     severity,
     ts: AT,
   });
+});
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const PlatformLayer = Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requirements>(
   use: (root: string) => Effect.Effect<Value, Failure, Requirements>
@@ -74,135 +76,148 @@ const inTempRepo = Effect.fn("inTempRepo")(function* <Value, Failure, Requiremen
 });
 
 describe("yeetInboxRowId", () => {
-  it("is deterministic over the same failure and doubles as a safe filename", () => {
-    const first = yeetInboxRowId(capsule());
-    const second = yeetInboxRowId(capsule());
+  layer(BunCrypto.layer)((it) => {
+    it.effect("is deterministic over the same failure and doubles as a safe filename", () =>
+      Effect.gen(function* () {
+        const first = yield* yeetInboxRowId(capsule());
+        const second = yield* yeetInboxRowId(capsule());
 
-    expect(first).toBe(second);
-    // The id names the ack receipt file, so it must never need escaping.
-    expect(/^[A-Za-z0-9._-]+$/u.test(first)).toBe(true);
-  });
-
-  it("distinguishes head, lane, and pull request", () => {
-    const base = yeetInboxRowId(capsule());
-
-    expect(yeetInboxRowId(capsule({ headSha: "fff999" }))).not.toBe(base);
-    expect(yeetInboxRowId(capsule({ lane: "Check / Lint" }))).not.toBe(base);
-    expect(yeetInboxRowId(capsule({ prNumber: 99 }))).not.toBe(base);
-  });
-
-  it("keeps two lanes distinct even when they sanitize identically", () => {
-    // Both sanitize to "Check___Coverage"-ish segments; the digest suffix is
-    // what keeps their receipts from colliding.
-    const spaced = yeetInboxRowId(capsule({ lane: "Check / Coverage" }));
-    const starred = yeetInboxRowId(capsule({ lane: "Check * Coverage" }));
-
-    expect(spaced).not.toBe(starred);
-  });
-
-  it("identifies and describes every inbox row variant", () => {
-    const siblingCapsule = YeetSiblingCollisionCapsule.make({
-      contendedPaths: ["b.ts", "a.ts"],
-      ownerCheckout: "/fleet/a",
-      siblingCheckout: "/fleet/b",
-    });
-    const reviewCapsule = YeetReviewThreadCapsule.make({
-      headSha: "abc123def456",
-      link: null,
-      prNumber: 751,
-      threadId: "PRRT_abc",
-    });
-    const driftCapsule = YeetBaseDriftCapsule.make({
-      base: "origin/main",
-      headSha: "abc123def456",
-      prNumber: 751,
-    });
-    const localCapsule = YeetLocalShardFailureCapsule.make({
-      command: "bun run check",
-      exitCode: 1,
-      headSha: "abc123def456",
-      shard: "Check",
-    });
-    const mergeReadyCapsule = YeetPrMergeReadyCapsule.make({
-      closeoutAt: "2026-09-16T00:10:30.000Z",
-      headSha: "abc123def456",
-      prNumber: 751,
-      pushToReadyMs: 720000,
-      pushedAt: "2026-09-16T00:00:00.000Z",
-      readyAt: "2026-09-16T00:12:00.000Z",
-      settledAt: "2026-09-16T00:10:00.000Z",
-      url: "https://github.com/o/r/pull/751",
-    });
-    const unmeasuredMergeReadyCapsule = YeetPrMergeReadyCapsule.make({
-      closeoutAt: null,
-      headSha: "def456abc123",
-      prNumber: 751,
-      pushToReadyMs: null,
-      pushedAt: null,
-      readyAt: AT,
-      settledAt: null,
-      url: null,
-    });
-    const rows = [
-      YeetSiblingCollisionRow.make({
-        capsule: siblingCapsule,
-        checkout: "/fleet/a",
-        id: yeetSiblingCollisionRowId(siblingCapsule),
-        severity: "P0",
-        ts: AT,
-      }),
-      YeetReviewThreadRow.make({
-        capsule: reviewCapsule,
-        checkout: "/repo",
-        id: yeetReviewThreadRowId(reviewCapsule),
-        severity: "P1",
-        ts: AT,
-      }),
-      YeetBaseDriftRow.make({
-        capsule: driftCapsule,
-        checkout: "/repo",
-        id: yeetBaseDriftRowId(driftCapsule),
-        severity: "P2",
-        ts: AT,
-      }),
-      YeetLocalShardFailedRow.make({
-        capsule: localCapsule,
-        checkout: "/repo",
-        id: yeetLocalShardFailedRowId(localCapsule),
-        severity: "P0",
-        ts: AT,
-      }),
-      YeetPrMergeReadyRow.make({
-        capsule: mergeReadyCapsule,
-        checkout: "/repo",
-        id: yeetPrMergeReadyRowId(mergeReadyCapsule),
-        severity: "P1",
-        ts: AT,
-      }),
-      YeetPrMergeReadyRow.make({
-        capsule: unmeasuredMergeReadyCapsule,
-        checkout: "/repo",
-        id: yeetPrMergeReadyRowId(unmeasuredMergeReadyCapsule),
-        severity: "P1",
-        ts: AT,
-      }),
-    ];
-
-    expect(yeetSiblingCollisionRowId(siblingCapsule)).toBe(
-      yeetSiblingCollisionRowId(
-        YeetSiblingCollisionCapsule.make({ ...siblingCapsule, contendedPaths: ["a.ts", "b.ts"] })
-      )
+        expect(first).toBe(second);
+        // The id names the ack receipt file, so it must never need escaping.
+        expect(/^[A-Za-z0-9._-]+$/u.test(first)).toBe(true);
+      })
     );
-    expect(A.map(rows, yeetInboxExpectedRowId)).toStrictEqual(A.map(rows, (subject) => subject.id));
-    expect(yeetPrMergeReadyRowId(mergeReadyCapsule)).not.toBe(yeetPrMergeReadyRowId(unmeasuredMergeReadyCapsule));
-    expect(A.map(rows, describeYeetInboxRow)).toStrictEqual([
-      "sibling collision with /fleet/b (2 path(s))",
-      "review thread PRRT_abc (pr #751 @ abc123d)",
-      "base drift from origin/main (pr #751 @ abc123d)",
-      "local shard Check exited 1 @ abc123d",
-      "merge-ready pr #751 @ abc123d (push→ready 720s)",
-      "merge-ready pr #751 @ def456a",
-    ]);
+
+    it.effect("distinguishes head, lane, and pull request", () =>
+      Effect.gen(function* () {
+        const base = yield* yeetInboxRowId(capsule());
+
+        expect(yield* yeetInboxRowId(capsule({ headSha: "fff999" }))).not.toBe(base);
+        expect(yield* yeetInboxRowId(capsule({ lane: "Check / Lint" }))).not.toBe(base);
+        expect(yield* yeetInboxRowId(capsule({ prNumber: 99 }))).not.toBe(base);
+      })
+    );
+
+    it.effect("keeps two lanes distinct even when they sanitize identically", () =>
+      Effect.gen(function* () {
+        // Both sanitize to "Check___Coverage"-ish segments; the digest suffix is
+        // what keeps their receipts from colliding.
+        const spaced = yield* yeetInboxRowId(capsule({ lane: "Check / Coverage" }));
+        const starred = yield* yeetInboxRowId(capsule({ lane: "Check * Coverage" }));
+
+        expect(spaced).not.toBe(starred);
+      })
+    );
+
+    it.effect("identifies and describes every inbox row variant", () =>
+      Effect.gen(function* () {
+        const siblingCapsule = YeetSiblingCollisionCapsule.make({
+          contendedPaths: ["b.ts", "a.ts"],
+          ownerCheckout: "/fleet/a",
+          siblingCheckout: "/fleet/b",
+        });
+        const reviewCapsule = YeetReviewThreadCapsule.make({
+          headSha: "abc123def456",
+          link: null,
+          prNumber: 751,
+          threadId: "PRRT_abc",
+        });
+        const driftCapsule = YeetBaseDriftCapsule.make({
+          base: "origin/main",
+          headSha: "abc123def456",
+          prNumber: 751,
+        });
+        const localCapsule = YeetLocalShardFailureCapsule.make({
+          command: "bun run check",
+          exitCode: 1,
+          headSha: "abc123def456",
+          shard: "Check",
+        });
+        const mergeReadyCapsule = YeetPrMergeReadyCapsule.make({
+          closeoutAt: "2026-09-16T00:10:30.000Z",
+          headSha: "abc123def456",
+          prNumber: 751,
+          pushToReadyMs: 720000,
+          pushedAt: "2026-09-16T00:00:00.000Z",
+          readyAt: "2026-09-16T00:12:00.000Z",
+          settledAt: "2026-09-16T00:10:00.000Z",
+          url: "https://github.com/o/r/pull/751",
+        });
+        const unmeasuredMergeReadyCapsule = YeetPrMergeReadyCapsule.make({
+          closeoutAt: null,
+          headSha: "def456abc123",
+          prNumber: 751,
+          pushToReadyMs: null,
+          pushedAt: null,
+          readyAt: AT,
+          settledAt: null,
+          url: null,
+        });
+        const rows = [
+          YeetSiblingCollisionRow.make({
+            capsule: siblingCapsule,
+            checkout: "/fleet/a",
+            id: yield* yeetSiblingCollisionRowId(siblingCapsule),
+            severity: "P0",
+            ts: AT,
+          }),
+          YeetReviewThreadRow.make({
+            capsule: reviewCapsule,
+            checkout: "/repo",
+            id: yield* yeetReviewThreadRowId(reviewCapsule),
+            severity: "P1",
+            ts: AT,
+          }),
+          YeetBaseDriftRow.make({
+            capsule: driftCapsule,
+            checkout: "/repo",
+            id: yield* yeetBaseDriftRowId(driftCapsule),
+            severity: "P2",
+            ts: AT,
+          }),
+          YeetLocalShardFailedRow.make({
+            capsule: localCapsule,
+            checkout: "/repo",
+            id: yield* yeetLocalShardFailedRowId(localCapsule),
+            severity: "P0",
+            ts: AT,
+          }),
+          YeetPrMergeReadyRow.make({
+            capsule: mergeReadyCapsule,
+            checkout: "/repo",
+            id: yield* yeetPrMergeReadyRowId(mergeReadyCapsule),
+            severity: "P1",
+            ts: AT,
+          }),
+          YeetPrMergeReadyRow.make({
+            capsule: unmeasuredMergeReadyCapsule,
+            checkout: "/repo",
+            id: yield* yeetPrMergeReadyRowId(unmeasuredMergeReadyCapsule),
+            severity: "P1",
+            ts: AT,
+          }),
+        ];
+        const resortedSibling = yield* yeetSiblingCollisionRowId(
+          YeetSiblingCollisionCapsule.make({ ...siblingCapsule, contendedPaths: ["a.ts", "b.ts"] })
+        );
+
+        expect(yield* yeetSiblingCollisionRowId(siblingCapsule)).toBe(resortedSibling);
+        expect(yield* Effect.all(A.map(rows, yeetInboxExpectedRowId))).toStrictEqual(
+          A.map(rows, (subject) => subject.id)
+        );
+        expect(yield* yeetPrMergeReadyRowId(mergeReadyCapsule)).not.toBe(
+          yield* yeetPrMergeReadyRowId(unmeasuredMergeReadyCapsule)
+        );
+        expect(A.map(rows, describeYeetInboxRow)).toStrictEqual([
+          "sibling collision with /fleet/b (2 path(s))",
+          "review thread PRRT_abc (pr #751 @ abc123d)",
+          "base drift from origin/main (pr #751 @ abc123d)",
+          "local shard Check exited 1 @ abc123d",
+          "merge-ready pr #751 @ abc123d (push→ready 720s)",
+          "merge-ready pr #751 @ def456a",
+        ]);
+      })
+    );
   });
 });
 
@@ -230,7 +245,7 @@ describe("yeetInboxPaths", () => {
 describe("renderYeetInboxRowLine", () => {
   it.effect("renders one single-line JSON document that round-trips through the codec", () =>
     Effect.gen(function* () {
-      const subject = row(capsule());
+      const subject = yield* row(capsule());
       const line = yield* renderYeetInboxRowLine(subject);
 
       expect(Str.includes("\n")(line)).toBe(false);
@@ -238,7 +253,7 @@ describe("renderYeetInboxRowLine", () => {
       expect(decoded.kind).toBe("check-failed");
       expect(decoded.schemaVersion).toBe(YEET_INBOX_SCHEMA_VERSION);
       expect(decoded.capsule).toStrictEqual(subject.capsule);
-    })
+    }).pipe(provideScopedLayer(BunCrypto.layer))
   );
 
   it("rejects garbage instead of decaying to a partial row", () => {
@@ -252,8 +267,8 @@ describe("appendYeetInboxRow", () => {
     inTempRepo((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const first = row(capsule());
-        const second = row(capsule({ lane: "Check / Lint" }));
+        const first = yield* row(capsule());
+        const second = yield* row(capsule({ lane: "Check / Lint" }));
 
         yield* appendYeetInboxRow(root, first);
         yield* appendYeetInboxRow(root, second);
@@ -282,7 +297,7 @@ describe("appendYeetInboxRow", () => {
   it.live("appends a row once and reports a duplicate without rewriting it", () =>
     inTempRepo((root) =>
       Effect.gen(function* () {
-        const subject = row(capsule());
+        const subject = yield* row(capsule());
         expect(yield* appendYeetInboxRowOnce(root, subject)).toBe(true);
         expect(yield* appendYeetInboxRowOnce(root, subject)).toBe(false);
       })
@@ -291,11 +306,13 @@ describe("appendYeetInboxRow", () => {
 
   it.effect("falls back to history when active-index version inspection fails", () =>
     Effect.gen(function* () {
-      const failure = yield* Effect.flip(appendYeetInboxRowOnce("/repo", row(capsule())));
+      const subject = yield* row(capsule());
+      const failure = yield* Effect.flip(appendYeetInboxRowOnce("/repo", subject));
       expect(failure._tag).toBe("YeetCommandError");
     }).pipe(
       provideScopedLayer(
         Layer.mergeAll(
+          BunCrypto.layer,
           NodePath.layer,
           FileSystem.layerNoop({
             exists: (path) =>
@@ -322,7 +339,7 @@ describe("appendYeetInboxRow", () => {
         yield* fs.writeFileString(paths.failuresPath, "");
         yield* fs.symlink(paths.failuresPath, paths.activePath);
 
-        const failure = yield* Effect.flip(appendYeetInboxRow(root, row(capsule())));
+        const failure = yield* Effect.flip(appendYeetInboxRow(root, yield* row(capsule())));
 
         expect(failure.message).toContain("Failed to update the active inbox index");
         const names = yield* fs.readDirectory(paths.dir);
@@ -338,16 +355,16 @@ describe("appendYeetInboxRow", () => {
         const fs = yield* FileSystem.FileSystem;
         const paths = yield* yeetInboxPaths(root);
         yield* fs.makeDirectory(paths.dir, { recursive: true });
-        const protectedP0 = row(capsule({ lane: "Check / Protected P0" }));
-        const historical = [
-          protectedP0,
-          ...A.makeBy(3_000, (index) => row(capsule({ lane: `Check / Historical ${index}` }), "P1")),
-        ];
+        const protectedP0 = yield* row(capsule({ lane: "Check / Protected P0" }));
+        const historicalP1 = yield* Effect.all(
+          A.makeBy(3_000, (index) => row(capsule({ lane: `Check / Historical ${index}` }), "P1"))
+        );
+        const historical = [protectedP0, ...historicalP1];
         const lines = yield* Effect.forEach(historical, renderYeetInboxRowLine);
         yield* fs.writeFileString(paths.failuresPath, `${A.join(lines, "\n")}\n`);
         yield* fs.writeFileString(paths.activePath, `${lines.at(-1) ?? ""}\n`);
 
-        const current = row(capsule({ lane: "Check / Current" }));
+        const current = yield* row(capsule({ lane: "Check / Current" }));
         yield* appendYeetInboxRow(root, current);
 
         const activeText = yield* fs.readFileString(paths.activePath);
@@ -363,8 +380,8 @@ describe("appendYeetInboxRow", () => {
     inTempRepo((root) =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        const first = row(capsule());
-        const second = row(capsule({ lane: "Check / Lint" }));
+        const first = yield* row(capsule());
+        const second = yield* row(capsule({ lane: "Check / Lint" }));
         const firstLine = yield* renderYeetInboxRowLine(first);
         const paths = yield* yeetInboxPaths(root);
         let raceInjected = false;
@@ -407,7 +424,7 @@ describe("appendYeetInboxRow", () => {
         yield* fs.makeDirectory(`${root}/.beep`, { recursive: true });
         yield* fs.writeFileString(`${root}/.beep/inbox`, "squatter");
 
-        const failure = yield* Effect.flip(appendYeetInboxRow(root, row(capsule())));
+        const failure = yield* Effect.flip(appendYeetInboxRow(root, yield* row(capsule())));
         expect(failure.message).toContain("inbox");
       })
     ).pipe(provideScopedLayer(PlatformLayer))
@@ -427,7 +444,7 @@ describe("appendYeetInboxRow", () => {
         const paths = yield* yeetInboxPaths(repoRoot);
         yield* fs.symlink(outsideFailures, paths.failuresPath);
 
-        const failure = yield* appendYeetInboxRow(repoRoot, row(capsule())).pipe(Effect.flip);
+        const failure = yield* appendYeetInboxRow(repoRoot, yield* row(capsule())).pipe(Effect.flip);
 
         expect(failure._tag).toBe("YeetCommandError");
         expect(yield* fs.readFileString(outsideFailures)).toBe(sentinel);
@@ -448,7 +465,7 @@ describe("appendYeetInboxRow", () => {
         yield* fs.writeFileString(outsideFailures, sentinel);
         yield* fs.symlink(outsideInbox, `${repoRoot}/.beep/inbox`);
 
-        const failure = yield* appendYeetInboxRow(repoRoot, row(capsule())).pipe(Effect.flip);
+        const failure = yield* appendYeetInboxRow(repoRoot, yield* row(capsule())).pipe(Effect.flip);
 
         expect(failure._tag).toBe("YeetCommandError");
         expect(yield* fs.readFileString(outsideFailures)).toBe(sentinel);

@@ -55,6 +55,7 @@ import {
   yeetInboxPaths,
   yeetInboxRowId,
 } from "./Inbox.ts";
+import type { Crypto } from "effect";
 import type { YeetWatchCheck, YeetWatchSnapshot } from "./WatchStream.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Remediation");
@@ -444,7 +445,7 @@ export const yeetDispatchStatePath = Effect.fn("Yeet.yeetDispatchStatePath")(fun
  */
 export const loadYeetRemediationWave = Effect.fn("Yeet.loadYeetRemediationWave")(function* (
   repoRoot: string
-): Effect.fn.Return<O.Option<YeetRemediationWave>, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<O.Option<YeetRemediationWave>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const statePath = yield* yeetDispatchStatePath(repoRoot);
   const text = yield* Effect.option(fs.readFileString(statePath));
@@ -485,7 +486,7 @@ const writeRemediationWave = Effect.fn("Yeet.writeRemediationWave")(function* (
 const persistYeetRemediationWave = (
   repoRoot: string,
   wave: YeetRemediationWave
-): Effect.Effect<void, never, FileSystem.FileSystem | Path.Path> =>
+): Effect.Effect<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
   writeRemediationWave(repoRoot, wave).pipe(
     Effect.catch((error) => Console.error(renderYeetDispatchStateWarning(error.message)))
   );
@@ -671,7 +672,7 @@ export const dispatchYeetCheckFailure = Effect.fn("Yeet.dispatchYeetCheckFailure
   snapshot: YeetWatchSnapshot,
   check: YeetWatchCheck,
   at: string
-): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const capsule = YeetFailureCapsule.make({
     bucket: check.signal.bucket,
     headSha: snapshot.headSha,
@@ -682,10 +683,21 @@ export const dispatchYeetCheckFailure = Effect.fn("Yeet.dispatchYeetCheckFailure
     state: check.signal.state,
     workflow: check.workflow,
   });
+  const id = yield* yeetInboxRowId(capsule).pipe(
+    Effect.asSome,
+    Effect.catch((error) =>
+      Console.error(
+        `[yeet] failed to derive inbox row id for "${capsule.lane}" (${error.message}); the red is NOT queued and will retry on the next observation.`
+      ).pipe(Effect.as(O.none<string>()))
+    )
+  );
+  if (O.isNone(id)) {
+    return;
+  }
   const row = YeetCheckFailedRow.make({
     capsule,
     checkout: repoRoot,
-    id: yeetInboxRowId(capsule),
+    id: id.value,
     severity: check.required ? YeetInboxSeverity.Enum.P0 : YeetInboxSeverity.Enum.P1,
     ts: at,
   });
@@ -749,7 +761,7 @@ export const supersedeYeetDispatchState = Effect.fn("Yeet.supersedeYeetDispatchS
   headSha: string,
   prNumber: number,
   at: string
-): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const previous = yield* loadYeetRemediationWave(repoRoot);
   const wave = supersedeYeetRemediationWave(
     YeetWaveSupersedeInput.make({ at, headSha, prNumber, wave: O.getOrNull(previous) })

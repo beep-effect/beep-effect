@@ -298,7 +298,8 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
         const file = path.join(dir, "package.json");
         const text = yield* fs.readFileString(file);
         const manifest = yield* decodeManifest(text);
-        const actual = yield* scriptCodecs[kind].decode(R.get(manifest, "scripts").pipe(O.getOrElse(() => ({}))));
+        const codec = O.getOrThrow(R.get(scriptCodecs, kind));
+        const actual = yield* codec.decode(R.get(manifest, "scripts").pipe(O.getOrElse(() => ({}))));
         const local = DerivationEvidence.make({
           doctestOwners: HashSet.filter(evidence.doctestOwners, (entry) => entry === manifestPath),
           bypassingConfigs: HashSet.filter(evidence.bypassingConfigs, (entry) => entry === manifestPath),
@@ -307,7 +308,7 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
         const expected = expectedBlock(kind, actual, local);
         const conflicts = derivationConflicts(evidence, manifestPath, expected);
         if (write && A.isReadonlyArrayNonEmpty(diffBlock(actual, expected))) {
-          const scripts = yield* scriptCodecs[kind].encode(expected);
+          const scripts = yield* codec.encode(expected);
           const rendered = `${yield* jsonStringifyPretty({ ...manifest, scripts })}\n`;
           if (rendered !== text) {
             yield* fs.writeFileString(file, rendered);
