@@ -6,7 +6,8 @@ import {
   make as makeIdentity,
 } from "@beep/identity";
 import { $IdentityId } from "@beep/identity/packages";
-import { describe, expect, expectTypeOf, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { Context, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 

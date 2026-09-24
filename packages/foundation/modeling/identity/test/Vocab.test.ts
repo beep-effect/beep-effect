@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { CoreVocab, mergeVocab, SemanticFoundationVocab, VocabRegistry } from "@beep/identity";
-import { describe, expect, expectTypeOf, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";

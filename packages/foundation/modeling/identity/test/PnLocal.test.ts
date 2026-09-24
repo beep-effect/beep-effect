@@ -10,7 +10,8 @@ import {
   SafePnPrefix,
   unescapeLocal,
 } from "@beep/identity";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";

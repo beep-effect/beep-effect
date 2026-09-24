@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { Fibered } from "@beep/identity";
-import { describe, expect, expectTypeOf, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";

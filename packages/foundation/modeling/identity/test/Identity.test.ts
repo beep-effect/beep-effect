@@ -10,7 +10,8 @@ import {
   $SchemaId,
   $WorkspaceDomainId,
 } from "@beep/identity/packages";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
