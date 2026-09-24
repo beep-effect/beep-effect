@@ -1001,3 +1001,19 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** the optional `shard {index,total}` field on the
   partition (#1195), forwarding `--shard=i/n` as a Turbo pass-through so one
   package task can occupy several bins with the proof invariants enforced.
+
+## 2026-09-24 — the goal launcher fired five days before window 3 closes
+
+- **Doing:** executing `GOAL.md` for the window-3 admission census after the
+  repair train merged (#1195 2026-09-22T12:49Z, #1194 2026-09-22T16:34Z).
+- **Evidence:** the first complete half-open UTC week after the last merge is
+  `2026-09-23T00:00:00Z` → `2026-09-30T00:00:00Z`, so a session launched at
+  2026-09-24T22:09Z could only preview (`--until 2026-09-24T22:00:00Z`,
+  exit 0). `GOAL.md` and `PLAN.md` still read "#1194 in flight" and named no
+  window dates; the session hand-off had guessed a Monday-aligned week
+  (2026-09-28 → 2026-10-05) that the packet's own rule does not produce.
+- **Would have prevented it:** pinning the window bounds and the earliest
+  census time in `GOAL.md` at retarget time (done in this lane), and a
+  `--window` guard in `beep ci lane-timings` that refuses an `--until` in the
+  future or a span shorter than seven days unless `--preview` is passed, so
+  a partial run can never be mistaken for an admission.

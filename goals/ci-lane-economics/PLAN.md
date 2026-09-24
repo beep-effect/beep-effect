@@ -9,15 +9,29 @@ Status: `active`
 | P0 Cache-warm census | complete | Re-measure every required lane's p50/p95 on cache-warm PR and push waves (attempt-one successful runs only; failures and reruns feed flake attribution, never the percentiles). | Completed 2026-08-13 via the explicit 10-wave alternative; see `research/cache-warm-lane-census.md`. |
 | P1 Placement decisions | complete | Decide fleet vs hosted vs free re-fit per lane from the census plus cost model. | Signed and live-falsified 2026-08-13; see `research/placement-decision.md`. No fleet additions; the one hosted re-fit candidate remains on its existing fleet placement after two runner shutdowns. |
 | P2 Execute moves | complete | Move lanes per the placement table (workflow lane edits; sharding where caching cannot help). | Completed 2026-08-16: every signed zero-expansion move merged through #719. |
-| P3 Evidence + close | in progress — two windows denied, repair path | Prove the charter on live waves and close. | Window 1 (2026-09-04 → 2026-09-11, 18 contexts) denied 2026-09-21: `Check` 20m19s, `Coverage Regression` 30m58s, pickup 8m22s (`research/admission-week-p95.md`). Window 2 (2026-09-13 → 2026-09-20, ratified 17 contexts) denied 2026-09-22: `Test Unit` 22m02s, `Lint Policy` 21m59s, pickup 7m47s; `Check` recovered to 8m22s (`research/admission-week-2-p95.md`). Repair moves (`research/repair-decision-2.md`): #1195 `Test Unit` shard split merged 2026-09-22, #1194 refs-check quiet listing in flight; `Lint Policy` handed to `goals/time-to-certainty` C4 (measured, not repaired, here); window-3 census after the last merge, then close only when every required p95 under the ratified population is below 20m00s and no tripwire breaches. |
+| P3 Evidence + close | in progress — two windows denied, repair path | Prove the charter on live waves and close. | Window 1 (2026-09-04 → 2026-09-11, 18 contexts) denied 2026-09-21: `Check` 20m19s, `Coverage Regression` 30m58s, pickup 8m22s (`research/admission-week-p95.md`). Window 2 (2026-09-13 → 2026-09-20, ratified 17 contexts) denied 2026-09-22: `Test Unit` 22m02s, `Lint Policy` 21m59s, pickup 7m47s; `Check` recovered to 8m22s (`research/admission-week-2-p95.md`). Repair moves (`research/repair-decision-2.md`): #1195 `Test Unit` shard split merged 2026-09-22, #1194 refs-check quiet listing merged 2026-09-22T16:34Z; `Lint Policy` handed to `goals/time-to-certainty` C4 (measured, not repaired, here); window 3 is `2026-09-23T00:00:00Z` → `2026-09-30T00:00:00Z`, censused on or after 2026-09-30T00:00Z, then close only when every required p95 under the ratified population is below 20m00s and no tripwire breaches. |
 
 ## Notes
+
+- Window-3 retarget (2026-09-24): the last repair merge is #1194 at
+  2026-09-22T16:34Z, so window 3 is the first complete half-open UTC week
+  after it, `2026-09-23T00:00:00Z` → `2026-09-30T00:00:00Z`; the admission
+  census runs on or after 2026-09-30T00:00Z. A preview over the first 1.9
+  days (`--until 2026-09-24T22:00:00Z`, exit 0, 17 contexts resolved) showed
+  every required lane under 20m00s and pickup at 2m50s p95 (n=180); `Test
+  Unit` 14m21s p95 (p50 11m31s) against 22m02s in window 2, `Lint Policy`
+  19m51s p95 (p50 16m48s). The two `repo-cli` halves, read from the same
+  runs as attempt-one successful job spans (started to completed, 25 jobs
+  each, 19 cold at or above 240 s): `repo-cli-1` cold p50 676 s, max 717 s;
+  `repo-cli-2` cold p50 644 s, max 696 s, both under the 756–814 s
+  projection with 32 s of hash skew; `unit-a`/`unit-b` cold p50 619 s/605 s.
+  A preview is not an admission: the verdict is the full-week census only.
 
 - Repair decision (2026-09-22): `research/repair-decision-2.md` keeps
   `Test Unit` on free hosted runners and splits the `repo-cli` shard through an
   optional `shard {index,total}` field on `CiLanePartition` (#1195, merged
-  2026-09-22), with the refs-check quiet listing (#1194, in flight) as a
-  companion. The shard-merge option was dropped on cold arithmetic: `unit-a`
+  2026-09-22), with the refs-check quiet listing (#1194, merged 2026-09-22T16:34Z) as
+  a companion. The shard-merge option was dropped on cold arithmetic: `unit-a`
   and `unit-b` weigh 1214 s cold each, so a merged bin is 2428 s serialized,
   about 1214 s of body at concurrency two, plus 316–374 s setup gives
   25m30s–26m28s; `lint-a` and `lint-b` weigh 1132 s and 1134 s, so merged
