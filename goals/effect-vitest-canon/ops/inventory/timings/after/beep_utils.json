@@ -1,88 +1,88 @@
 {
   "package": "@beep/utils",
   "runner": "node-vitest",
-  "capturedAt": "2026-09-25T09:49:46.746000+00:00",
-  "totalMs": 604.16552734375,
+  "capturedAt": "2026-09-25T10:12:11.562000+00:00",
+  "totalMs": 503.366455078125,
   "testCount": 189,
   "files": [
     {
       "file": "packages/foundation/modeling/utils/test/Array.test.ts",
-      "ms": 8.6142578125,
+      "ms": 7.640380859375,
       "tests": 29
     },
     {
       "file": "packages/foundation/modeling/utils/test/DrainableWorker.test.ts",
-      "ms": 10.194580078125,
+      "ms": 9.969482421875,
       "tests": 1
     },
     {
       "file": "packages/foundation/modeling/utils/test/Errors.test.ts",
-      "ms": 13.7587890625,
+      "ms": 9.764404296875,
       "tests": 8
     },
     {
       "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
-      "ms": 13.614013671875,
+      "ms": 11.294921875,
       "tests": 7
     },
     {
       "file": "packages/foundation/modeling/utils/test/Function.test.ts",
-      "ms": 3.427978515625,
+      "ms": 3.35009765625,
       "tests": 7
     },
     {
       "file": "packages/foundation/modeling/utils/test/Glob.test.ts",
-      "ms": 39.16552734375,
+      "ms": 34.366455078125,
       "tests": 14
     },
     {
       "file": "packages/foundation/modeling/utils/test/HostProcess.test.ts",
-      "ms": 94.208251953125,
+      "ms": 81.644775390625,
       "tests": 4
     },
     {
       "file": "packages/foundation/modeling/utils/test/Number.test.ts",
-      "ms": 2.107421875,
+      "ms": 2.006103515625,
       "tests": 2
     },
     {
       "file": "packages/foundation/modeling/utils/test/Option.test.ts",
-      "ms": 4.858642578125,
+      "ms": 3.795654296875,
       "tests": 5
     },
     {
       "file": "packages/foundation/modeling/utils/test/Path.test.ts",
-      "ms": 8.80322265625,
+      "ms": 8.138916015625,
       "tests": 8
     },
     {
       "file": "packages/foundation/modeling/utils/test/Predicate.test.ts",
-      "ms": 3.3662109375,
+      "ms": 2.951171875,
       "tests": 5
     },
     {
       "file": "packages/foundation/modeling/utils/test/Schema.test.ts",
-      "ms": 3.22119140625,
+      "ms": 2.401611328125,
       "tests": 3
     },
     {
       "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
-      "ms": 16.040283203125,
+      "ms": 14.30859375,
       "tests": 7
     },
     {
       "file": "packages/foundation/modeling/utils/test/Str.test.ts",
-      "ms": 8.289794921875,
+      "ms": 9.2548828125,
       "tests": 50
     },
     {
       "file": "packages/foundation/modeling/utils/test/Struct.test.ts",
-      "ms": 9.485595703125,
+      "ms": 7.364013671875,
       "tests": 36
     },
     {
       "file": "packages/foundation/modeling/utils/test/TaggedError.equivalence.test.ts",
-      "ms": 4.522705078125,
+      "ms": 4.96630859375,
       "tests": 3
     }
   ],
@@ -90,52 +90,52 @@
     {
       "file": "packages/foundation/modeling/utils/test/HostProcess.test.ts",
       "testName": "HostProcess browser-eval guard evaluates the @beep/utils barrel without a process global",
-      "ms": 88.20827300000002
+      "ms": 74.64477199999999
     },
     {
       "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
       "testName": "@beep/utils schema parity preserves representative encoded option and path shapes",
-      "ms": 13.18035900000001
+      "ms": 11.849205999999981
     },
     {
       "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
       "testName": "@beep/utils schema parity round-trips Pattern",
-      "ms": 13.092833999999982
+      "ms": 11.763383000000033
     },
     {
       "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
       "testName": "@beep/utils schema parity round-trips GlobOptions",
-      "ms": 13.085451999999975
+      "ms": 11.756433000000015
     },
     {
       "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
       "testName": "@beep/utils schema parity round-trips AppendFileSyncOptions",
-      "ms": 13.082587999999987
+      "ms": 11.752898000000016
     },
     {
       "file": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
       "testName": "@beep/utils schema parity round-trips RmSyncOptions",
-      "ms": 13.079372000000035
+      "ms": 11.749612999999954
+    },
+    {
+      "file": "packages/foundation/modeling/utils/test/DrainableWorker.test.ts",
+      "testName": "makeDrainableWorker waits for work enqueued during active processing before draining",
+      "ms": 9.969551000000024
     },
     {
       "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
       "testName": "FileSystem sync wrappers appendFileSync appends to a file, creating it",
-      "ms": 11.595285999999987
+      "ms": 9.687117
     },
     {
       "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
       "testName": "FileSystem sync wrappers existsSync reports presence without a failure channel",
-      "ms": 11.448720000000037
+      "ms": 9.535102999999992
     },
     {
       "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
       "testName": "FileSystem sync wrappers statSync returns a File.Info with branded bigint size",
-      "ms": 11.434497999999962
-    },
-    {
-      "file": "packages/foundation/modeling/utils/test/FileSystem.test.ts",
-      "testName": "FileSystem sync wrappers readdirSync lists names, and Dirent entries with { withFileTypes: true }",
-      "ms": 11.428919000000008
+      "ms": 9.519237999999973
     }
   ]
 }

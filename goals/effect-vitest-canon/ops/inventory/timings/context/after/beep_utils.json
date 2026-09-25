@@ -2,8 +2,8 @@
   "schemaVersion": "effect-vitest-p1-timing-context/v1",
   "package": "@beep/utils",
   "phase": "after",
-  "headBefore": "782aa4d34b707fd0bb57e93bbb0310a05e974b32",
-  "headAfter": "782aa4d34b707fd0bb57e93bbb0310a05e974b32",
+  "headBefore": "edfe81e91d3280a35c8ca1d53748fc0e7f196a0e",
+  "headAfter": "edfe81e91d3280a35c8ca1d53748fc0e7f196a0e",
   "sourceFiles": {
     "bun.lock": "a9c329c67dcd420f0a78ff08b47eb7de673f6e17ab3f719be4eef228f6c3c737",
     "packages/foundation/modeling/utils/package.json": "c66343d7783e311013e3165e096522340c4e42a1a772208300966928fb2a07cd",
@@ -51,7 +51,7 @@
     "packages/foundation/modeling/utils/test/Schema.test.ts": "4739f24a60457f3d408bf39cb392f864365f9a3555363debdee6c558f77b4637",
     "packages/foundation/modeling/utils/test/SchemaParity.test.ts": "0177ebc688c3817b0f30df5f28c63e44b7bbcd3f8d93da459896fd5a36946530",
     "packages/foundation/modeling/utils/test/Str.test.ts": "bbb421b1ac34d7cf3bc81f43ce04daa784c955c16336fa7bc2c427ddac9437d1",
-    "packages/foundation/modeling/utils/test/Struct.test.ts": "60704a3809d59d9639bd88572915d6ce64ef06b02c8cb0e1b279d1b03ee12e42",
+    "packages/foundation/modeling/utils/test/Struct.test.ts": "5bae94451d43fb911fba0d54503f4b203aba033ec5ecd64d61c7b914aec076c2",
     "packages/foundation/modeling/utils/test/TaggedError.equivalence.test.ts": "61ef18c443f450a888f02808ead240ef8f22f2e0fae6e8e4bda18e117e93bc1f",
     "packages/foundation/modeling/utils/vitest.config.ts": "494ebcd87f9c17531a9ebc0555a504790ce7dd4a8984875633555dac3ffe026e",
     "vitest.shared.ts": "289eefd120d20af1deb848c1f8f8d097a9359c347ae8e32b2f41ca11f3bab387"
@@ -68,25 +68,25 @@
     "--reporter=json",
     "--outputFile=<private-reporter>"
   ],
-  "wholeCommandSeconds": 0.9812757740000961,
-  "loadAverage": [40.10302734375, 23.28271484375, 16.82373046875],
+  "wholeCommandSeconds": 0.827120024998294,
+  "loadAverage": [11.6357421875, 12.61279296875, 13.36181640625],
   "pressureBefore": {
-    "cpu": "some avg10=5.06 avg60=6.04 avg300=2.53 total=401915554\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.07 avg60=0.29 avg300=0.13 total=41872160\nfull avg10=0.07 avg60=0.28 avg300=0.13 total=38945299\n",
-    "io": "some avg10=0.06 avg60=0.43 avg300=0.16 total=84278135\nfull avg10=0.00 avg60=0.10 avg300=0.04 total=60812837\n"
+    "cpu": "some avg10=1.29 avg60=0.47 avg300=0.28 total=410489267\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=42001918\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=39060920\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=86382751\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=62336801\n"
   },
   "pressureAfter": {
-    "cpu": "some avg10=6.50 avg60=6.27 avg300=2.60 total=401923663\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
-    "memory": "some avg10=0.06 avg60=0.28 avg300=0.13 total=41887068\nfull avg10=0.06 avg60=0.27 avg300=0.13 total=38959867\n",
-    "io": "some avg10=0.05 avg60=0.41 avg300=0.16 total=84279663\nfull avg10=0.00 avg60=0.10 avg300=0.04 total=60813810\n"
+    "cpu": "some avg10=1.05 avg60=0.46 avg300=0.28 total=410492465\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+    "memory": "some avg10=0.00 avg60=0.00 avg300=0.00 total=42001918\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=39060920\n",
+    "io": "some avg10=0.00 avg60=0.00 avg300=0.00 total=86382823\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=62336860\n"
   },
   "resourceLimits": {
     "nofile": [1048576, 1048576],
     "addressSpace": [-1, -1]
   },
   "exitCode": 0,
-  "rawReporterSha256": "41dc28a267c08bfdfef2dbebdfa2689c02aae71b3e31003a4e16a6746a3778fa",
+  "rawReporterSha256": "a649406aa74341ad269e09d9fa5b3f814cfd4d774dc14080da6dfd3ae720bdba",
   "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing",
-  "comparability": "Pre-integration dirty Wave B source, identified by hashes. Historical runtime and test population differ; no speedup claim. Recheck source after prerequisite integration. Pressure is context, not an adjustment.",
+  "comparability": "Fresh sample after Struct public-API review repair. Source hashes stable. Historical runtime/test populations differ; no causal speedup claim.",
   "vitest": "5.0.1"
 }

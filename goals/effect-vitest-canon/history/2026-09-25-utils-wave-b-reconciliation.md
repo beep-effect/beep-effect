@@ -55,3 +55,12 @@ remained identical after that merge. The PR was pushed early while prerequisite
 heavy jobs were queued. Its own hosted checks and review closure remain pending.
 The shared-worker runner prerequisite in PR #1241 still needs to land before
 claiming the wider runner topology repaired. Benjamin retains merge authority.
+
+## Struct public-API review remediation
+
+PR review identified five mapper calls that erased the public signatures. All
+five now use Struct.mapPath or Struct.mapPathLazy with an options object,
+including tuple paths, runtime undefined and deferred lookup. Existing expected
+values remain unchanged. Full package audit (5.0 seconds) and docgen (2.4
+seconds) pass. The after-timing artifacts were refreshed against this source;
+they supersede the earlier pre-integration sample for the current PR head.

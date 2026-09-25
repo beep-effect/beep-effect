@@ -93,13 +93,8 @@ describe("@beep/utils Struct.mapPath", () => {
   it("supports data-first and data-last calls", () => {
     const source = { profile: { name: "beep" } } as const;
     const renderName = (value: unknown) => `${value}!`;
-    const mapPath = Struct.mapPath as unknown as (
-      source: unknown,
-      mapper: (value: unknown) => unknown,
-      path: string
-    ) => unknown;
 
-    const dataFirst = mapPath(source, renderName, "profile.name");
+    const dataFirst = Struct.mapPath(source, renderName, { path: "profile.name" });
     const dataLast = pipe(source, Struct.mapPath(renderName, { path: "profile.name" }));
 
     expect(dataFirst).toBe("beep!");
@@ -110,12 +105,7 @@ describe("@beep/utils Struct.mapPath", () => {
     const source = { profile: { name: "boop" } } as const;
     const shout = (value: unknown) => Str.toUpperCase(String(value));
 
-    const mapPath = Struct.mapPath as unknown as (
-      source: unknown,
-      mapper: (value: unknown) => unknown,
-      path: ReadonlyArray<string>
-    ) => unknown;
-    const result = mapPath(source, shout, ["profile", "name"] as const);
+    const result = Struct.mapPath(source, shout, { path: ["profile", "name"] as const });
 
     expect(result).toBe("BOOP");
   });
@@ -124,26 +114,17 @@ describe("@beep/utils Struct.mapPath", () => {
     const runtimeMismatch = { profile: {} } as unknown as { profile: { name: string } };
     const fallback = (value: unknown) => (value === undefined ? "anonymous" : String(value));
 
-    const mapPath = Struct.mapPath as unknown as (
-      source: unknown,
-      mapper: (value: unknown) => unknown,
-      path: string
-    ) => unknown;
-
-    expect(mapPath(runtimeMismatch, fallback, "profile.name")).toBe("anonymous");
+    expect(Struct.mapPath(runtimeMismatch, fallback, { path: "profile.name" })).toBe("anonymous");
   });
 });
 
 describe("@beep/utils Struct.mapPathLazy", () => {
   it("supports data-first and data-last calls", () => {
     const source = { profile: { name: "beep" }, count: 1 } as const;
-    const mapPathLazy = Struct.mapPathLazy as unknown as (
-      source: unknown,
-      mapper: (value: unknown) => unknown,
-      path: string
-    ) => () => unknown;
 
-    const dataFirst = mapPathLazy(source, (value: unknown) => Str.toUpperCase(String(value)), "profile.name");
+    const dataFirst = Struct.mapPathLazy(source, (value: unknown) => Str.toUpperCase(String(value)), {
+      path: "profile.name",
+    });
     const dataLast = pipe(
       source,
       Struct.mapPathLazy((value: number) => value + 1, { path: "count" })
@@ -155,12 +136,9 @@ describe("@beep/utils Struct.mapPathLazy", () => {
 
   it("defers the lookup until the thunk is invoked", () => {
     const source = { profile: { name: "before" } };
-    const mapPathLazy = Struct.mapPathLazy as unknown as (
-      source: unknown,
-      mapper: (value: unknown) => unknown,
-      path: string
-    ) => () => unknown;
-    const getUpper = mapPathLazy(source, (value: unknown) => Str.toUpperCase(String(value)), "profile.name");
+    const getUpper = Struct.mapPathLazy(source, (value: unknown) => Str.toUpperCase(String(value)), {
+      path: "profile.name",
+    });
 
     source.profile.name = "after";
 
