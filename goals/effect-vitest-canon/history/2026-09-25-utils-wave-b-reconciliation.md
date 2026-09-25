@@ -40,3 +40,18 @@ Vitest 5 with changed tests. The source hashes were stable across this run.
 CPU, memory and I/O pressure and process limits are retained in the timing
 context. Refresh or confirm these hashes after prerequisite integration before
 using the sample as final publication evidence.
+
+## Publication checkpoint
+
+PR #1245 publishes implementation commit
+`e58f992d4919667cdec08b8f0825a31dd0dcf2a6`. All 30 locally repaired actionable
+rows now cite that commit. The complete 63-row actionable ledger has 55 fixed
+rows (25 inherited, 30 in this implementation) and eight reasoned exceptions;
+no actionable utils rows remain open. No-findings coverage rows remain intact.
+
+All 15 cheap-gate lanes passed before publication. Main was merged to
+`220d9426da` before the implementation commit; every recorded timing source hash
+remained identical after that merge. The PR was pushed early while prerequisite
+heavy jobs were queued. Its own hosted checks and review closure remain pending.
+The shared-worker runner prerequisite in PR #1241 still needs to land before
+claiming the wider runner topology repaired. Benjamin retains merge authority.
