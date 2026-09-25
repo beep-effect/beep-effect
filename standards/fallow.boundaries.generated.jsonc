@@ -1392,10 +1392,12 @@
         "from": "@beep/data",
         "allow": [
           "@beep/data",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/data",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },

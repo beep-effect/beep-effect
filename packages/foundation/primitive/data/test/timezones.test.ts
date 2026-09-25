@@ -7,7 +7,8 @@ import {
   TimezoneDataVersion,
   TimezoneNameValues,
 } from "@beep/data/Timezones";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 describe("Timezones", () => {
   it("exports generated IANA timezone literals and lookup maps", () => {
