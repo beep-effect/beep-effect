@@ -46,7 +46,7 @@ spent only by the graft deep pass. Prepend the mise bun to PATH in every lane th
    `.claude/settings.json` permissions per `SPEC.md`. Tests for schema decoding, refresh planning
    (dirty/off-branch skips), unit rendering, and the worktree step.
 3. **S3 Docs sweep** (Codex lane, R13). Files listed in `SPEC.md` Target Surfaces. Prose says the
-   reference workspace lives at `~/YeeBois/references/effect` (provisioned by
+   reference workspace lives at `$HOME/YeeBois/references/effect` (provisioned by
    `scripts/setup-effect-ref.sh` from `scripts/references.json`), `.repos/effect` is the Effect
    child, `.repos/effect-workspace` is the graft target. Add the routing line to the AGENTS.md
    graft block. Cross-link `docs/runbooks/graft-local-recovery.md` and
@@ -56,18 +56,18 @@ spent only by the graft deep pass. Prepend the mise bun to PATH in every lane th
    1. Exclude the graft artifacts first, because `git status --porcelain` lists untracked files
       and `effect` already carries an untracked `graft/`: `printf 'graft/\n.graft/\n' >>
       <member>/.git/info/exclude` for both members. Then the preconditions:
-      `git -C ~/YeeBois/dev/effect status --porcelain` empty and on `main`; same for
-      `effect-tsgo`; `~/YeeBois/dev/effect-worktrees/docgen-enforce-examples` clean or
+      `git -C $HOME/YeeBois/dev/effect status --porcelain` empty and on `main`; same for
+      `effect-tsgo`; `$HOME/YeeBois/dev/effect-worktrees/docgen-enforce-examples` clean or
       operator-approved; proxy lists `claude-opus-5`; `mise trust --show` clean.
-   2. `mkdir -p ~/YeeBois/references/effect`; `mv ~/YeeBois/dev/effect ~/YeeBois/references/effect/effect`;
-      `mv ~/YeeBois/dev/effect-tsgo ~/YeeBois/references/effect/effect-tsgo`.
-   3. `git -C ~/YeeBois/references/effect/effect worktree repair ~/YeeBois/dev/effect-worktrees/docgen-enforce-examples`;
+   2. `mkdir -p $HOME/YeeBois/references/effect`; `mv $HOME/YeeBois/dev/effect $HOME/YeeBois/references/effect/effect`;
+      `mv $HOME/YeeBois/dev/effect-tsgo $HOME/YeeBois/references/effect/effect-tsgo`.
+   3. `git -C $HOME/YeeBois/references/effect/effect worktree repair $HOME/YeeBois/dev/effect-worktrees/docgen-enforce-examples`;
       `git worktree list` shows both.
    4. Delete the stale `graft/.cache/extract.496c9d83e6eb3668.json` and
       `fingerprint.496c9d83e6eb3668.json` in the moved `effect` clone.
-   5. `GRAFT_NO_GITIGNORE=1 graft build ~/YeeBois/references/effect` (structural, free) →
+   5. `GRAFT_NO_GITIGNORE=1 graft build $HOME/YeeBois/references/effect` (structural, free) →
       `graft/workspace.json` + per-child `graft/`; `graft check` passes.
-   6. Fleet relink: `for c in ~/YeeBois/projects/beep-effect*/ ~/YeeBois/projects/beep-effect*-worktrees/*/; do [ -e "$c/.git" ] && bash <worktree>/scripts/setup-effect-ref.sh "$c"; done`.
+   6. Fleet relink: `for c in $HOME/YeeBois/projects/beep-effect*/ $HOME/YeeBois/projects/beep-effect*-worktrees/*/; do [ -e "$c/.git" ] && bash <worktree>/scripts/setup-effect-ref.sh "$c"; done`.
    7. `bun run beep refs install-timer --owner <worktree-or-main-clone>`; then the single
       sanctioned seed: `systemctl --user start beep-refs-refresh.service`. Do not wait on it.
    8. Record the move in `history/2026-09-xx-move.md` (commands run, `git worktree list`,
@@ -88,7 +88,7 @@ Before marking the packet closed (and `status` → `completed-retained` / `compl
    missing/invalid reflection blocks closeout).
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase statuses +
    `initiative.status`.
-4. Confirm the next-morning deep tier: `test -s ~/YeeBois/references/effect/effect/graft/manifest.json`
+4. Confirm the next-morning deep tier: `test -s $HOME/YeeBois/references/effect/effect/graft/manifest.json`
    and the status file's coverage; record in `history/`.
 
 ## Execution Notes
@@ -118,19 +118,19 @@ git diff --check -- goals/effect-reference-workspace
 bun run beep quality package-verify @beep/repo-cli --quick
 bun run --cwd packages/tooling/tool/cli test -- test/setup-effect-ref.test.ts test/worktree-fleet.test.ts test/refs-*.test.ts
 # workspace (after S4)
-test -f ~/YeeBois/references/effect/graft/workspace.json
-graft check ~/YeeBois/references/effect
+test -f $HOME/YeeBois/references/effect/graft/workspace.json
+graft check $HOME/YeeBois/references/effect
 graft ask "Effect.fn vs fnUntraced" .repos/effect-workspace
 graft ask "Schema.Class extend" .repos/effect
 # fleet census
-for c in ~/YeeBois/projects/beep-effect*/ ~/YeeBois/projects/beep-effect*-worktrees/*/; do
+for c in $HOME/YeeBois/projects/beep-effect*/ $HOME/YeeBois/projects/beep-effect*-worktrees/*/; do
   [ -e "$c/.git" ] && printf '%s %s\n' "$c" "$(readlink "$c/.repos/effect-workspace" || echo missing)"; done | awk '{print $2}' | sort | uniq -c
 # timer + seed
 systemctl --user list-timers | grep beep-refs-refresh
 journalctl --user -u beep-refs-refresh -n 80
 jq . ~/.local/state/beep/refs/last-refresh.json
 # upstream hygiene
-for m in effect effect-tsgo; do git -C ~/YeeBois/references/effect/$m status --porcelain; done
+for m in effect effect-tsgo; do git -C $HOME/YeeBois/references/effect/$m status --porcelain; done
 # stale paths
 rg -n "YeeBois/dev/effect|BEEP_EFFECT_CHECKOUT" --glob '!explorations/**' --glob '!goals/**' --glob '!graft/**' .
 ```
