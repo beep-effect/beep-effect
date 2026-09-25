@@ -467,11 +467,19 @@ graft --version
 Do not pass `--ignore-scripts` to that install: `tree-sitter-kotlin` ships no
 prebuilt Linux binding and builds it in its install script, and without it
 every `graft` invocation dies at startup with `No native build was found`.
-If an install already skipped it, run `npm rebuild tree-sitter-kotlin` inside
-the installed package directory (the directory `readlink -f "$(command -v
-graft)"` resolves into, one level above `dist/`). Keep exactly one `graft` on
-the machine: a second copy installed into a mise node global shadows this one
-on the systemd unit's PATH and the preflight then reads the wrong version.
+If an install already skipped it, resolve the installed package root and rebuild:
+
+```sh
+graft_package="$(npm root -g --prefix "$HOME/.local")/@nanonets/graft"
+(cd "$graft_package" && npm rebuild tree-sitter-kotlin)
+```
+
+Resolve the package from the same user-local npm prefix used for installation.
+`command -v graft` can select a mise shim, whose location does not identify the
+installed package root.
+Keep exactly one `graft` on the machine: a second copy installed into a mise node
+global shadows this one on the systemd unit's PATH and the preflight then reads
+the wrong version.
 The deep build depends on workstation-local patches to the installed `dist/`,
 recorded as unified diffs under `scripts/graft/patches/<graft version>/`. Four
 fix the LLM passes (`ai/crux.js`, `ai/llm/openai.js`, `ai/synthesize.js`,

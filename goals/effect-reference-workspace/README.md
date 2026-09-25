@@ -41,11 +41,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify. S1–S3 landed on `feat/refs-workspace-impl` (Codex astra-medium lanes) and S4 ran on
-2026-09-25 with the operator present: clones moved, workspace built and checked, fleet relinked,
-`beep-refs-refresh` timer installed and seeded once. Next concrete action: confirm the deep tier
-from `~/.local/state/beep/refs/last-refresh.json` the morning of 2026-09-26, then re-point the
-timer owner to `beep-effect0` after the PR merges (see `history/2026-09-25-s4-move.md`).
+P4 Close. PR #1257 merged to `main` (`217e308592`, 2026-09-25); the lint-policy follow-up is PR #1271.
+The seed deep pass finished 16:50 UTC (effect 15943/19938 cards, effect-tsgo 5257/5908) and the
+`beep-refs-refresh` timer owner is `beep-effect0` (next run 2026-09-26 03:35 CDT). Remaining: closeout
+reflection, remove the session symlink, retire the worktree (see
+`history/2026-09-25-p2-p3-closeout.md`).
 
 ## Latest Evidence
 
