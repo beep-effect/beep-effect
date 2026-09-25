@@ -30,10 +30,12 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { UUID } from "@beep/schema/String";
 import { DateTime, Effect, Match } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { readContainedFileStringNoFollow, writeContainedFileString } from "../../../internal/cli/FsGuards.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -43,7 +45,52 @@ import type { FileSystem, Path } from "effect";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Ack");
 
-const YeetAckResolutionKind = LiteralKit(["fix-sha", "environment-only", "wontfix", "thread-url", "waive", "observed"]);
+/**
+ * The resolution kinds an ack receipt can record.
+ *
+ * **Details**
+ *
+ * Four permanent closing moves an operator or agent writes (`fix-sha`,
+ * `environment-only`, `wontfix`, `thread-url`), the expiring `waive`, the
+ * `observed` acknowledgment of informational rows, and `cleared`, which only
+ * the merge loop writes, when a conflicted head turns mergeable again. Every
+ * site that decides by kind matches exhaustively on the resolution union built
+ * from these literals. The inbox hook and the active-index script special-case
+ * only `waive` (expiry), so any other kind acknowledges its row.
+ *
+ * **Example** (Check a resolution kind)
+ *
+ * ```ts
+ * import { YeetAckResolutionKind } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetAckResolutionKind.is.cleared("cleared")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetAckResolutionKind = LiteralKit([
+  "fix-sha",
+  "environment-only",
+  "wontfix",
+  "thread-url",
+  "waive",
+  "observed",
+  "cleared",
+]).pipe(
+  $I.annoteSchema("YeetAckResolutionKind", {
+    title: "Yeet Ack Resolution Kind",
+    description: "What an ack receipt records: a closing move, a waiver, an observation, or a monitor-written clear.",
+  })
+);
+
+/**
+ * The resolution kinds an ack receipt can record.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetAckResolutionKind = typeof YeetAckResolutionKind.Type;
 
 /**
  * Schema version stamped on every ack receipt.
@@ -222,7 +269,56 @@ export class YeetAckObservedResolution extends S.Class<YeetAckObservedResolution
 ) {}
 
 /**
- * What was done about an inbox row: four permanent closing moves or a temporary waiver.
+ * The merge loop saw a conflicted head turn mergeable again, without a push.
+ *
+ * **Details**
+ *
+ * Only `yeet monitor --until-ready` writes it, for the `base-conflict` row of
+ * the head it is watching, when that same head reads `mergeable: MERGEABLE`
+ * with no conflict signal (for example, after the change that caused the
+ * conflict was reverted on the base). A push never needs it: the new head
+ * supersedes the row through the wave record. `headSha` and the raw merge
+ * fields are the evidence. `jobId` and `unit` name the detached monitor job
+ * that wrote the receipt, and both are absent when an attached monitor wrote
+ * it.
+ *
+ * **Example** (Build a cleared resolution)
+ *
+ * ```ts
+ * import { YeetAckClearedResolution } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const resolution = YeetAckClearedResolution.make({
+ *   headSha: "abc123",
+ *   mergeable: "MERGEABLE",
+ *   mergeStateStatus: "CLEAN",
+ *   jobId: O.none(),
+ *   unit: O.none()
+ * })
+ * console.log(resolution.kind) // "cleared"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetAckClearedResolution extends S.Class<YeetAckClearedResolution>($I`YeetAckClearedResolution`)(
+  {
+    kind: S.tag(YeetAckResolutionKind.Enum.cleared),
+    headSha: S.NonEmptyString,
+    mergeable: S.NonEmptyString,
+    mergeStateStatus: S.NullOr(S.String),
+    jobId: UUID.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    unit: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("YeetAckClearedResolution", {
+    description:
+      "The merge loop saw a conflicted head turn mergeable again; carries the head, the merge fields, and the monitor job.",
+  })
+) {}
+
+/**
+ * What was done about an inbox row: four permanent closing moves, a temporary
+ * waiver, an observation, or a monitor-written clear.
  *
  * **Details**
  *
@@ -230,7 +326,8 @@ export class YeetAckObservedResolution extends S.Class<YeetAckObservedResolution
  * or thread URL — while `environment-only` adds a reasoned attribution without
  * changing the `yeet-ack/v1` wire shape. The observed member applies only to the informational
  * `proof-job-finished` and `pr-merge-ready` rows; gate rows still require a resolution or an
- * attributed waiver.
+ * attributed waiver. The cleared member applies only to `base-conflict` rows and only the
+ * merge loop writes it.
  *
  * **Example** (Decode an environment-only resolution)
  *
@@ -255,11 +352,12 @@ export const YeetAckResolution = S.Union([
   YeetAckThreadResolution,
   YeetAckWaiveResolution,
   YeetAckObservedResolution,
+  YeetAckClearedResolution,
 ]).pipe(
   $I.annoteSchema("YeetAckResolution", {
     title: "Yeet Ack Resolution",
     description:
-      "What was done about one inbox row: a fix, environment-only attribution, wontfix, review thread, or expiring waiver.",
+      "What was done about one inbox row: a fix, environment-only attribution, wontfix, review thread, expiring waiver, observation, or monitor clear.",
   })
 );
 
@@ -298,6 +396,17 @@ export const renderYeetAckResolution = (resolution: YeetAckResolution): string =
       (waive) => `waive ${waive.shard} by ${waive.actor} until ${waive.expiresAt}: ${waive.reason}`
     ),
     Match.discriminator("kind")("wontfix", (wontfix) => `wontfix: ${wontfix.reason}`),
+    Match.discriminator("kind")(
+      "cleared",
+      (cleared) =>
+        `cleared at ${Str.slice(0, 7)(cleared.headSha)} (${cleared.mergeable}${O.match(
+          O.fromNullOr(cleared.mergeStateStatus),
+          { onNone: () => Str.empty, onSome: (status) => `/${status}` }
+        )}) by ${O.match(cleared.jobId, {
+          onNone: () => "an attached monitor",
+          onSome: (jobId) => `monitor job ${jobId}`,
+        })}`
+    ),
     Match.exhaustive
   );
 

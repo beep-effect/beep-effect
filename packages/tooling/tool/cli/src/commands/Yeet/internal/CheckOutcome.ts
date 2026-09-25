@@ -60,8 +60,12 @@ export type YeetCheckOutcome = typeof YeetCheckOutcome.Type;
  * `base-conflict`: the pull request no longer merges cleanly into its base
  * (`mergeable: CONFLICTING` / `mergeStateStatus: DIRTY`); GitHub empties the
  * check rollup in that state, so every context looks missing — the wait is
- * named, never counted toward the settle budget, and clears when the operator
- * merges the base and pushes. `registration`: no checks have reported for the
+ * named, never counted toward the settle budget, and clears when the woken
+ * agent merges the base and pushes. Under `--until-ready` the same literal
+ * names the P0 `base-conflict` inbox row that wakes that agent: the wait
+ * clears by re-reading the pull request, the row by the push superseding its
+ * wave, or by a `cleared` ack the loop writes when the same head turns
+ * mergeable again. `registration`: no checks have reported for the
  * head yet (GitHub's post-push registration window). `required-pending`: expected required
  * contexts are missing or still pending. `heavy-not-admitted`: the only open
  * contexts belong to a gated family (`Heavy / *`) whose admission verdict is

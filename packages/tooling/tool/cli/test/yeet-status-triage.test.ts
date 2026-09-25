@@ -7,6 +7,7 @@ import {
   renderYeetReviewThreadBlock,
   renderYeetStatusSummary,
   summarizeRemoteChecksForTesting,
+  YeetCheckSignal,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusReviewThread,
@@ -15,6 +16,7 @@ import {
   YeetStatusWorktree,
   YeetVerdict,
   YeetVerdictLane,
+  YeetWatchCheck,
   yeetReviewThreadExcerpt,
   yeetStatusArtifactFromVerdictForTesting,
   yeetStatusNextCommandForTesting,
@@ -871,7 +873,40 @@ describe("yeet status snapshot rendering and encoding", () => {
       expect(decoded.mergeReady).toStrictEqual(O.none());
       expect(decoded.remote.unresolvedThreads).toStrictEqual(O.none());
       expect(decoded.remote.headSha).toStrictEqual(O.none());
+      expect(decoded.remote.checks).toStrictEqual([]);
       expect(decoded.unprovenGates).toStrictEqual([]);
+    })
+  );
+
+  it.effect("round-trips each check's whole record and omits GitHub's instants when absent", () =>
+    Effect.gen(function* () {
+      const red = YeetWatchCheck.make({
+        name: "Check / Coverage",
+        outcome: "fail",
+        required: true,
+        link: "https://github.com/beep/beep/actions/runs/9/job/9",
+        signal: YeetCheckSignal.make({ bucket: "fail", state: "FAILURE" }),
+        workflow: "Check",
+        startedAt: O.some("2026-09-25T11:27:04Z"),
+        completedAt: O.some("2026-09-25T11:53:05Z"),
+      });
+      const external = YeetWatchCheck.make({
+        name: "Vercel",
+        outcome: "fail",
+        required: false,
+        signal: YeetCheckSignal.make({ bucket: "fail", state: "FAILURE" }),
+      });
+      const withChecks = YeetStatusSnapshot.make({
+        ...snapshot,
+        remote: YeetStatusRemote.make({ ...snapshot.remote, checks: [red, external] }),
+      });
+      const json = yield* YeetStatusSnapshotJson.encode(withChecks);
+      const decoded = yield* YeetStatusSnapshotJson.decode(json);
+
+      expect(decoded.remote.checks).toStrictEqual([red, external]);
+      expect(json).toContain('"completedAt":"2026-09-25T11:53:05Z"');
+      expect(Str.split(json, '"startedAt"')).toHaveLength(2);
+      expect(json).not.toContain('"_id":"Option"');
     })
   );
 
