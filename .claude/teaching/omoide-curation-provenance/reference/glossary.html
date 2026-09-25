@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Provenance glossary</title><link rel="stylesheet" href="../assets/course.css"></head>
+<body><main>
+<p class="kicker">Reference · Omoide source provenance</p>
+<h1>Glossary</h1>
+<p class="lede">The words the registration contract uses, in the sense the software uses them. Source: <a href="file:///home/elpresidank/YeeBois/workstation-apps/Omoide-ux7/docs/curation/source-registration.md">docs/curation/source-registration.md</a>.</p>
+<table>
+<tr><th>Term</th><th>Meaning here</th></tr>
+<tr><td><b>manifest</b></td><td>The JSON file the operator writes listing 1–100 exact files (path + SHA-256) plus the statements below. Registration reads only those files, never a directory.</td></tr>
+<tr><td><b>operator</b></td><td>The trusted local human running the CLI inside the container (Benjamin). Not an HTTP caller, not an agent.</td></tr>
+<tr><td><b>attestation</b></td><td>A statement the operator signs off on and the software stores verbatim with the manifest digest. Recorded, not verified.</td></tr>
+<tr><td><b>ancestry</b></td><td>Per file: where this exact byte sequence came from, as far as the operator knows.</td></tr>
+<tr><td><b><code>original_capture</code></b></td><td>Ancestry kind with <em>no declared parents</em>: this is the earliest form of the file the operator holds.</td></tr>
+<tr><td><b><code>non_generative_derivative</code></b></td><td>Ancestry kind that <em>requires parent hashes</em> and a complete chain; a resize/crop/re-encode of a file you can name.</td></tr>
+<tr><td><b>unknown / generative / incomplete / cyclic</b></td><td>Refused ancestry. Unknown means "I can't say"; generative means an AI model produced or edited it.</td></tr>
+<tr><td><b><code>rights_to_curate</code></b></td><td>Boolean attestation that the operator has the right to curate this selection for training. It is his claim, not a licence check.</td></tr>
+<tr><td><b><code>subject_identity_attested</code></b></td><td>Boolean attestation that the declared <code>subject_id</code> is who the operator says it is. Not face-verified.</td></tr>
+<tr><td><b><code>evidence_reference</code></b></td><td>A pointer (path, record id, <code>op://</code> reference) to where the supporting evidence lives. Never the evidence itself.</td></tr>
+<tr><td><b>capture group</b></td><td>Photos from the same session; the same group may not straddle train/validation/test splits.</td></tr>
+<tr><td><b>trust boundary</b></td><td>The line between what software checks (hashes, volume identity, schema) and what only the operator can vouch for (ancestry, rights, identity).</td></tr>
+</table>
+<p class="side">Back to <a href="../lessons/0001-where-did-this-file-come-from.html">Lesson 1</a>.</p>
+</main></body></html>

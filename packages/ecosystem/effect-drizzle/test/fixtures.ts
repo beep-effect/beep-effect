@@ -8,12 +8,14 @@ import { getTableConfig as getPgTableConfig } from "drizzle-orm/pg-core";
 import { head } from "effect/Array";
 import * as O from "effect/Option";
 import { getOrThrow } from "effect/Option";
+import { isNumber } from "effect/Predicate";
 import {
   Array,
   BigInt,
   Boolean,
   brand,
   Date as DateSchema,
+  declare,
   Finite,
   Int,
   instanceOf,
@@ -511,6 +513,26 @@ export const _declarationNeedsExplicitColumn = () => {
     value: instanceOf(RegExp),
   }) {}
   return DeclarationNeedsExplicitColumn;
+};
+
+// A declared number names its `number` carrier only through the representation annotation.
+export const RepresentedDeclaredNumber = declare(isNumber, { representation: pg.NumberDeclarationRepresentation });
+
+export const _unrepresentedDeclaredNumber = () => {
+  class UnrepresentedDeclaredNumber extends Model<UnrepresentedDeclaredNumber>("UnrepresentedDeclaredNumber")({
+    value: declare(isNumber).pipe(pg.doublePrecision()),
+  }) {}
+  return UnrepresentedDeclaredNumber;
+};
+
+export const _representedDeclaredNumberTextCarrierMismatch = () => {
+  class RepresentedDeclaredNumberText extends Model<RepresentedDeclaredNumberText>("RepresentedDeclaredNumberText")({
+    value: RepresentedDeclaredNumber.pipe(
+      // @ts-expect-error invariant: text requires a string-encoded schema
+      pg.text()
+    ),
+  }) {}
+  return RepresentedDeclaredNumberText;
 };
 
 export const _mixedExactCharWidths = () =>

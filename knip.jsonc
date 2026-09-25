@@ -133,6 +133,9 @@
     // Claude Code launches these by path from .claude/settings.json (the two
     // graft shims and the repo-owned loader they require); nothing imports them.
     ".claude/helpers/**",
+    // Self-contained HTML teaching courses (see .claude/teaching/*): lesson pages load their
+    // assets via <script src>/<link href>, so nothing in the workspace import graph reaches them.
+    ".claude/teaching/**",
     "goals/**",
     // explorations/ is the fuzzy front end of the goals/ pipeline (capture -> graduate, see
     // explorations/CLAUDE.md); prototype code there (e.g. identity-as-iri/assets/ontology-prototype)

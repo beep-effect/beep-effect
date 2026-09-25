@@ -112,6 +112,7 @@ sst-env.d.ts
 # lsmcp cache
 .lsmcp/cache
 .beep/*
+.fallow/
 **/.beep/*
 
 # Impeccable question servers persist live process metadata only locally.

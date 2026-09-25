@@ -217,6 +217,20 @@ const config: ViteUserConfig = {
     // the same way instrumentation does; give them the same generous cap.
     // In doctest mode the first example of a file pays the module transform; under the fleet's
     // 4-way task concurrency on a 4-vCPU runner that exceeded 30 s (C3.4 hosted round 1).
+    // Persist Vite transform output under `node_modules/.vitest-cache` at the workspace root and reuse
+    // it across reruns and separate vitest processes. Measured 2026-09-24 on
+    // @beep/documents-use-cases: warm reruns fell from 3.0s to 1.6s under Bun and from 5.2s to 3.8s
+    // under Node (transform share 55% -> 19%). The key is the absolute module id, file content,
+    // plugin names, and the config file contents, so doctest mode (extra plugin) and unit mode keep
+    // separate entries; a `bun.lock` change clears the whole cache.
+    fsModuleCache: true,
+    // The coverage producers pin `--maxWorkers=1` (2 for repo-cli), so with isolation every test file
+    // re-evaluates the shared module graph inside that one worker. Measured 2026-09-24 on
+    // @beep/schema under the coverage topology: 69s isolated vs 13s shared, 717 tests passing either
+    // way and an identical per-file coverage summary. Unit and doctest runs keep the default
+    // isolation; packages whose tests mock modules, stub globals, or change the working directory
+    // override this back to `true` in their own config.
+    isolate: !vitestCoverageRunActive,
     testTimeout: packageTestTimeout(30_000),
     hookTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 10_000,
     // Baseline generation/regeneration must tolerate test-less packages;
