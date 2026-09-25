@@ -1,0 +1,173 @@
+{
+  "authority": "explicit-environment planner reproduction and structural comparison",
+  "revision": "125c27d953",
+  "artifacts": [
+    {
+      "artifact": "entrypoint-plans.json",
+      "beforeSha256": "1f884298e3ad6730fb9ad09baf0c2858a390a645d6e8d2126c9c8ef812882834",
+      "afterSha256": "1f884298e3ad6730fb9ad09baf0c2858a390a645d6e8d2126c9c8ef812882834",
+      "changes": []
+    },
+    {
+      "artifact": "entrypoint-plans-hosted.json",
+      "beforeSha256": "a0e47093d641aea4baff03a624e42d0db5b68392b6a30dcd115b632217676867",
+      "afterSha256": "a0e47093d641aea4baff03a624e42d0db5b68392b6a30dcd115b632217676867",
+      "changes": []
+    },
+    {
+      "artifact": "yeet-plans.json",
+      "beforeSha256": "a4fd129d9b30c48e0385948858938cbae7d131a2aea11989ecc094691e68607f",
+      "afterSha256": "89c9b08ab9160b5bc4dcd547386323e9372b606059e58c79af461aa49f3e889e",
+      "changes": [
+        {
+          "branch": "main",
+          "mode": "verify-full",
+          "beforeIndex": 30,
+          "afterIndex": 18
+        },
+        {
+          "branch": "main",
+          "mode": "verify-collect-all",
+          "beforeIndex": 30,
+          "afterIndex": 18
+        },
+        {
+          "branch": "main",
+          "mode": "verify-force-turbo",
+          "beforeIndex": 30,
+          "afterIndex": 18
+        },
+        {
+          "branch": "main",
+          "mode": "publish-standard",
+          "beforeIndex": 30,
+          "afterIndex": 18
+        },
+        {
+          "branch": "main",
+          "mode": "publish-early",
+          "beforeIndex": 30,
+          "afterIndex": 18
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "verify-full",
+          "beforeIndex": 31,
+          "afterIndex": 19
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "verify-collect-all",
+          "beforeIndex": 31,
+          "afterIndex": 19
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "verify-force-turbo",
+          "beforeIndex": 31,
+          "afterIndex": 19
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "publish-standard",
+          "beforeIndex": 31,
+          "afterIndex": 19
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "publish-early",
+          "beforeIndex": 31,
+          "afterIndex": 19
+        }
+      ]
+    },
+    {
+      "artifact": "yeet-plans-hosted.json",
+      "beforeSha256": "0f7e9ff5aaa71a387814a3c4258c6837a350c00652bb7294c3ff6337b4f8888a",
+      "afterSha256": "89ec7a3770d98462bc411112d16ea4d29d79c78e33fffeb452db990610bebb94",
+      "changes": [
+        {
+          "branch": "main",
+          "mode": "verify-full",
+          "beforeIndex": 30,
+          "afterIndex": 18
+        },
+        {
+          "branch": "main",
+          "mode": "verify-collect-all",
+          "beforeIndex": 30,
+          "afterIndex": 18
+        },
+        {
+          "branch": "main",
+          "mode": "verify-force-turbo",
+          "beforeIndex": 30,
+          "afterIndex": 18
+        },
+        {
+          "branch": "main",
+          "mode": "publish-standard",
+          "beforeIndex": 30,
+          "afterIndex": 18
+        },
+        {
+          "branch": "main",
+          "mode": "publish-early",
+          "beforeIndex": 30,
+          "afterIndex": 18
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "verify-full",
+          "beforeIndex": 31,
+          "afterIndex": 19
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "verify-collect-all",
+          "beforeIndex": 31,
+          "afterIndex": 19
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "verify-force-turbo",
+          "beforeIndex": 31,
+          "afterIndex": 19
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "publish-standard",
+          "beforeIndex": 31,
+          "afterIndex": 19
+        },
+        {
+          "branch": "codex/qualification-example",
+          "mode": "publish-early",
+          "beforeIndex": 31,
+          "afterIndex": 19
+        }
+      ]
+    }
+  ],
+  "localEnvironment": {
+    "CI": "false",
+    "GITHUB_ACTIONS": "false"
+  },
+  "hostedEnvironment": {
+    "CI": "true",
+    "GITHUB_ACTIONS": "true"
+  },
+  "runner": "bun --no-env-file; environment cleared except PATH, HOME and the two explicit flags",
+  "result": "CI/Quality projections equal. Yeet projections differ only by moving quality:cache-policy earlier; lane inventory and all other projected values equal.",
+  "limits": [
+    "Pure illustrative planner calls, not lane execution or actual hosted proof.",
+    "Finite scenario set does not exhaust dynamic interpreter behavior.",
+    "No runtime or semantic-input closure, signed evidence or qualification promotion."
+  ],
+  "acceptedAttachment": {
+    "sources": 1014,
+    "artifacts": 6,
+    "reviews": 51,
+    "unresolved": 14
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "qualification-refs-entrypoint-review/v1",
+  "revision": "1149f36bd235042afca396825d8d85991c2613e8",
+  "sources": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.command.ts",
+      "sha256": "5b3b7e657aa41f02dbf7e4d9c17c86079a06f92deec23c4407e34479e84dfa6d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.service.ts",
+      "sha256": "c69fc57efa4f62c906e14c85b255bd69edffb37215fc2b5cde87f8be0cd29e9d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.schemas.ts",
+      "sha256": "afd0073c4d9e2b31132e04e438519dd4a1d9a1970139c08fadbaf0e18a0fc078"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/Refs.errors.ts",
+      "sha256": "24b7eb6a36aa8043bad676e5561494bb9c79ba420186d22b96716f20a4daf053"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Refs/index.ts",
+      "sha256": "80e1aaa830dbc5522dc38e69fe662d2a19f08f33e8dff72ac6539fe48e258457"
+    }
+  ],
+  "method": "Read-only source review; no operator maintenance command executed.",
+  "classifications": [
+    {
+      "operation": "plan",
+      "inputs": [
+        "HOME",
+        "BEEP_REFERENCES_ROOT",
+        "--root",
+        "owner scripts/references.json",
+        "member .git existence",
+        "checkout root and path resolution"
+      ],
+      "effects": [
+        "filesystem reads",
+        "stdout with resolved paths"
+      ],
+      "cacheDisposition": "Not established pure by read-only behavior: output depends on external filesystem existence and absolute roots."
+    },
+    {
+      "operation": "refresh",
+      "inputs": [
+        "manifest member URLs, names, tiers and onlyDir",
+        "HOME and PATH",
+        "--root and --jobs",
+        "member Git status, branch, HEAD and remote state",
+        "graft executable, configuration and generated indexes",
+        "ambient environment for deep builds",
+        "wall clock"
+      ],
+      "effects": [
+        "Git pull --ff-only",
+        "member .git/info/exclude writes",
+        "graft structural and optionally deep model-backed builds",
+        "workspace build and check",
+        "atomic last-refresh.json write under HOME",
+        "conditional notify-send",
+        "stdout serialized status with timestamp and captured output"
+      ],
+      "cacheDisposition": "Fresh external maintenance and side effects must not be replaced by ordinary task cache replay."
+    },
+    {
+      "operation": "install-timer / --refresh / --uninstall",
+      "inputs": [
+        "HOME",
+        "owner/root/calendar/Bun path",
+        "installed service and timer contents for refresh",
+        "graft environment-file accessibility",
+        "systemd user-manager state",
+        "PATH and inherited process environment"
+      ],
+      "effects": [
+        "user-unit writes or removals",
+        "systemctl daemon-reload",
+        "enable --now or disable --now timer",
+        "stdout unit paths"
+      ],
+      "cacheDisposition": "Stateful external operations; source-only qualification is insufficient."
+    },
+    {
+      "operation": "linkInto (service API)",
+      "inputs": [
+        "checkout root",
+        "reference root existence",
+        "manifest",
+        "existing .repos and symlink targets"
+      ],
+      "effects": [
+        "directory creation",
+        "symlink replacement or creation",
+        "preserves existing non-symlink entries"
+      ],
+      "cacheDisposition": "Filesystem repair effects must not be skipped through cached output."
+    },
+    {
+      "operation": "renderTimerUnits (service API)",
+      "inputs": [
+        "owner/home/root/calendar/Bun path",
+        "RefsTimerOptions decoder",
+        "Path implementation"
+      ],
+      "effects": [
+        "returns rendered service and timer values; no installFor execution"
+      ],
+      "cacheDisposition": "Potential separately bounded pure rendering computation, not qualification of installation or refresh."
+    }
+  ],
+  "captureBoundary": {
+    "limit": "8 MiB per subprocess capture",
+    "normalMaintenance": "Explicit HOME/PATH/CI/GRAFT_NO_GITIGNORE environment; ambient inheritance disabled except deep builds, notifications and systemctl.",
+    "caveat": "A bound is not a confidentiality proof. Pathful output and inherited deep-build environment need separate reviewed capture evidence."
+  },
+  "remaining": [
+    "Review transitive systemd/process/Graft/root-discovery implementations; the five direct Refs files are now reviewed only at source level.",
+    "Bind exact executable and external repository identities for any runtime experiment.",
+    "Review actual reachable entrypoint graph and emitted runtime outputs.",
+    "No approved signed remote or shadow evidence is supplied by this review."
+  ],
+  "qualificationGranted": false,
+  "schemaReview": {
+    "manifest": "Strict excess-property decoders, unique member names, version/theme literals, HOME-prefixed default root, and fixed workspaceLink. URL is only a nonempty string; this does not pin remote identity.",
+    "paths": "Member names exclude slash. onlyDir rejects absolute slash paths, parent-directory segments and control characters. Timer inputs delegate to SystemdUnitPath; its transitive implementation is not reviewed here.",
+    "status": "Timestamp and workspace output are strings; root is nonempty, exit codes integers, member coverage optional. Shape validation alone does not make captures safe or evidence authoritative.",
+    "errors": "ReferenceWorkspaceError carries path, message and optional defect including stack. Error schemas do not establish redaction.",
+    "exports": "Barrel re-exports command, errors, schemas and service; no additional operations are introduced by the barrel itself."
+  }
+}

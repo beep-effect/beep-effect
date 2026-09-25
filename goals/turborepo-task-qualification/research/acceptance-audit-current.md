@@ -2,9 +2,51 @@
 
 This audit is incomplete by design: it records the remaining work against the
 nine SPEC acceptance criteria. A scoped pass is not whole-goal completion.
-The opening table is the historical checkpoint at
+The earlier audit table is the historical checkpoint at
 `0dca9987807d3ac2e4ae842f712522198a4ec965`. Later dated sections record
 subsequent source and runtime evidence; none promotes the pilot.
+
+
+## Latest local checkpoint: 2026-09-25
+
+The [v23 local matrix receipt](./local-matrix-v23.md) records frozen source
+`ed2742ff4ff0c837e01df0cc38b452762c9a4d89`, stable Turbo 2.11.3 and canary
+2.11.5-canary.2. Both completed 67 observations, 40 passing checks and ten
+shadow decisions. Independent receipt reconstruction passed; both report
+hashes were checked again when the compact receipt was authored.
+
+This advances the local portion of real-pilot evidence. Native scalar I/O and
+archived-source input reviews passed, with hashes retained in the v23 receipt.
+The original trace lacks ring-entry bytes. A separate wrapped diagnostic run
+observed successful epoll-control submissions and completions with matching
+streams; its instrumentation and child-process limits remain explicit. Both clients passed five synthetic capture
+controls with independent retained-byte and production-parser review; repeated
+mixed-stream observations found two output orderings per client at unchanged
+task hashes. This synthetic fixture is ineligible for exact-log determinism;
+the quiet real pilot retains its separate evidence.
+Semantic input closure, accepted signed comparisons and sibling receipt
+integration remain incomplete. Existing entrypoint enforcement is not newly
+classified as unimplemented merely because historical report strings still
+list it: the v23 receipt now includes ordinary CLI execution, caller-override
+rejection and profile-drift recovery checks at `8f11af6e49`. Synthetic native key injection and declaration invalidation also passed with
+cache I/O bypassed. A subsequent isolated ordinary-CLI fixture also passed
+local miss/hit pairs before and after runtime declaration invalidation. The full
+entrypoint population and real-computation runtime evidence remain separate
+obligations. No real tuple qualifies, and no acceptance criterion is
+promoted to complete by this checkpoint.
+
+Checkpoint PRs #1233 and #1250 merged on 2026-09-25. PR #1250's full
+local publish verdict passed at `0b072273c4`, and its separate canonical
+monitor exited zero with `merge-ready: yes`. PR #1233's saved publish verdict
+failed at `monitor:01-pr-context`; that terminal job is not a full publish
+success, even though the PR subsequently merged. The unexpected-dependency
+fixture repair passed all 20 focused tests, and package lint/type checks
+passed in both worktrees. These checkpoint PRs do not constitute the final
+implementation PR or same-PR lifecycle closeout.
+
+## Earlier audit baseline
+
+Source revision: `0dca9987807d3ac2e4ae842f712522198a4ec965`.
 
 Runtime refresh on 2026-09-21 found a changed kernel and runtime linker at the
 same source revision. The installed dependency archive is unchanged. The
@@ -374,3 +416,101 @@ archive determinism across environments, deployed behavior or signed replay.
 No part of the chain was executed for this review. Six review/source files are
 archived with verified hashes; review SHA-256:
 `37353cfd13052e1d7d2601fac515cc055e63e94c8da8fc5405ade76f36ce2c51`.
+
+### Storybook dispatcher and migration generator controls
+
+Ten disposable controls ran the current scripts at `32e271e543`; see
+[nested-command-controls-current.json](./nested-command-controls-current.json).
+The Storybook dispatcher sorted 41 regular stories into 20/20/1 chunks, ignored
+a symlink and a non-story file, continued after a failed first chunk, and failed
+the aggregate. Browser-install failure stopped before Vitest; an empty story
+population failed. Only the exact string `CI=true` skipped installation.
+Playwright and Vitest were recorder executables: no browser or story result is
+claimed from this control.
+
+The actual migration generator ran against disposable SQL directories and a
+generated target. Stale checks failed without writing; generation sorted names
+and escaped template syntax; fresh checks passed without writing. Changing SQL
+made the check fail, and rewrite refreshed the target. No database migration
+was applied. Both census tasks retain `cache:false`; downstream runtime effects,
+complete semantic coverage and signed qualification remain separate obligations.
+
+### Lambda ZIP assembly controls — 2026-09-25
+
+Five isolated controls exercised the actual ZIP assembler with synthetic bundle
+bytes at `53aa105ecb`; see [the receipt](./lambda-zip-controls-current.json).
+Equal bytes and permissions produced identical archives. Changing permissions
+from 0644 to 0600 preserved payloads and normalized timestamps but changed ZIP
+external attributes and its digest. File mode is therefore a semantic input to
+this assembler. The undersize case failed after writing its archive; the missing
+writer case failed before archive creation. These are packaging controls only:
+no real bundle, handler, deployment or signed replay was executed. No tuple is
+qualified, and the complete nested-command obligation remains open.
+
+### Configuration-delta reconciliation — 2026-09-25
+
+The historical 133-source drift population now has a direct delta review for
+32 compiler configurations and 16 package manifests at `7468d15b17`. The
+compiler deltas select libraries, extend project references or change diagnostic
+configuration. Manifest scripts are unchanged; dependencies, patches, export
+routes and metadata changed. See [the receipt](./census-config-delta-review.json).
+
+The operational attachment accepted both review documents: 968 source bindings,
+six artifacts, 25 reviews and 13 unresolved obligations. The other 85 files
+remain outside this batch; separate evidence for them still requires assessment.
+Nineteen original drift members changed again after the historical checkpoint.
+Retain exact revision/hash boundaries. This source review establishes neither
+transitive semantic closure nor runtime or signed qualification.
+
+### CI partition delta and native selection — 2026-09-25
+
+Seven CI/workflow source deltas were reviewed at `1504e77bcf`; see
+[the receipt](./ci-entrypoint-delta-review.json). The two existing
+contract suites passed all 88 tests, including invalid shard sets and shimmed
+admission/execution. Six actual CLI dry-runs proved the committed partitions
+against 136 selected executable tasks per lane. Repo-cli forwards complementary
+`--shard=1/2` and `--shard=2/2` arguments; no task body ran in these dry-runs.
+
+The source review distinguishes the heavy-admission comment from its current
+implementation: Git output remains newline-split despite the comment describing
+NUL-delimited output. Lossless filename handling is not proved. The operational
+census accepted the review, retaining 968 sources, six artifacts, 26 reviews
+and all 13 unresolved obligations. Hosted execution and downstream runtime
+semantics remain separate evidence requirements; no tuple is qualified.
+
+### Census refresh and generated-input attribution — 2026-09-25
+
+The post-main census at `278b083df6` retains 144 workspaces and 3,473 nodes.
+All five planner snapshots reproduce the prior JSON. Twenty-eight source
+bindings changed: test-runner/fc-runs workspace dependencies and references,
+the workspace lock records, and Refs exports/aliases. The refreshed attachment
+accepted 968 bindings, six artifacts and 27 reviews, retaining 13 obligations.
+See [the receipt](./post-main-census-refresh.json).
+
+Identity lint's input count increased from 767 to 890 because the working tree
+contains 120 utils build outputs and three utils Turbo logs. Read-only,
+network-isolated plans that mask only those generated directories return to
+767 inputs. Two masked plans agree; the unmasked hash differs and all shared
+input digests match. No host files were removed and no lint body executed.
+This establishes generated-file sensitivity, not semantic irrelevance or a
+justification for exclusions. Frozen pilot evidence retains its recorded
+filesystem/source identity; no tuple is qualified by this refresh.
+
+### Generated-input execution controls and proof-reuse review — 2026-09-25
+
+Six fresh identity-lint executions at `338901fa4d` compare visible and masked
+utils generated directories for valid and malformed source. The valid cases
+exit zero with matching raw streams; malformed cases exit one with matching
+raw streams. Read-only namespace overlays preserve host files. Tool binaries,
+root configuration, lockfile, launcher and identity files match their pre/post
+hashes. See [the controls](./generated-input-lint-controls.json).
+This is bounded wrapper execution, not Turbo dependency execution, replay,
+syscall completeness or justification for changing input exclusions.
+
+The saved five-file proof-reuse delta review was revalidated after main:
+source bytes are unchanged, nine Turbo-digest tests and seven docgen-manifest
+tests passed. The earlier filtered run passed 23 tests and skipped 239.
+[The review](./proof-reuse-delta-review.json) distinguishes SHA256
+serialization from Crypto service/error propagation, temporary index/staging
+writes, and metadata-only package scope. It is accepted as review 28, with all
+13 broader obligations retained. No tuple is qualified by these results.
