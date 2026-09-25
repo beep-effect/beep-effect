@@ -196,10 +196,11 @@ const runStamp = Effect.fn("test.runStamp")(function* (
   );
   yield* registry.append(makeRecord());
   const runner = yield* makeGhRunner(fs, initialBody, freshBody, afterWrite, editHistory, freshUpdatedAt);
-  yield* ensureProvenanceFooter(context(root), repository, 42, runner.capture).pipe(
+  const outcome = yield* ensureProvenanceFooter(context(root), repository, 42, runner.capture).pipe(
     Effect.provideService(ConfigProvider.ConfigProvider, provider)
   );
   return {
+    outcome,
     body: yield* Ref.get(runner.written),
     bodies: yield* Ref.get(runner.writtenBodies),
     historyReads: yield* Ref.get(runner.historyReads),
@@ -325,6 +326,28 @@ describe("Yeet provenance footer splice", () => {
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("PR #42");
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("an unknown editor");
       expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("preserved");
+    }).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect("reports drifted when a later edit restores the known body without the footer", () =>
+    Effect.gen(function* () {
+      let warnings = A.empty<unknown>();
+      const currentConsole = yield* Console.Console;
+      const warningConsole: Console.Console = {
+        ...currentConsole,
+        warn: (...args) => {
+          warnings = A.appendAll(warnings, args);
+        },
+      };
+      const result = yield* runStamp("Original body", "Original body", () => "Original body").pipe(
+        Effect.provideService(Console.Console, warningConsole)
+      );
+      expect(result.writes).toBe(1);
+      expect(result.body).toContain("<!-- yeet-provenance:start -->");
+      expect(result.outcome.status).toBe("drifted");
+      expect(isProvenanceStampFailure(result.outcome)).toBe(true);
+      expect(warnings).toHaveLength(1);
+      expect(A.join(A.map(warnings, globalThis.String), "\n")).toContain("is not on the latest body");
     }).pipe(provideScopedLayer(PlatformLayer))
   );
 

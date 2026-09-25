@@ -44,7 +44,15 @@ const $I = $RepoCliId.create("commands/Yeet/internal/ProvenanceFooter");
 const repositoryPattern = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?$/u;
 
 /**
- * Stamp outcomes that mean the footer is NOT reliably on the pull request.
+ * Stamp outcomes that do not confirm the expected footer on the pull request.
+ *
+ * **Details**
+ *
+ * `skipped` means no write was attempted, `yielded` means contention outlasted
+ * the reconcile bound, and `drifted` means the post-write readback did not
+ * match what was written: either the non-footer body changed or the expected
+ * footer is missing. None of them proves the footer absent; all of them mean
+ * the stamp could not vouch for it, so the publish lane fails.
  *
  * **Example** (Classify a stamp status)
  *
@@ -61,7 +69,7 @@ const repositoryPattern = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?$/u;
  */
 export const ProvenanceStampFailureStatus = LiteralKit(["skipped", "drifted", "yielded"]).pipe(
   $I.annoteSchema("ProvenanceStampFailureStatus", {
-    description: "Provenance stamp statuses that leave the footer unasserted: skipped, drifted, or yielded.",
+    description: "Provenance stamp statuses that could not confirm the footer: skipped, drifted, or yielded.",
   })
 );
 
@@ -350,26 +358,33 @@ const verifyReconciledBody = Effect.fn("ProvenanceFooter.verifyReconciledBody")(
   capture: typeof runRepoCommandCapture,
   context: RepoRunContext,
   prNumber: PrNumber,
+  rendered: string,
   sourceBody: string,
   preservedForeign: O.Option<PrBodyEdit>
 ): Effect.fn.Return<ProvenanceStampOutcome, DomainError | S.SchemaError | YeetCommandError, ReconcileRequirements> {
   const readback = yield* readPrBody(capture, context, prNumber);
-  const drifted = !Str.Equivalence(bodyWithoutProvenanceFooter(readback), bodyWithoutProvenanceFooter(sourceBody));
-  const outcome = drifted
+  const bodyDrifted = !Str.Equivalence(bodyWithoutProvenanceFooter(readback), bodyWithoutProvenanceFooter(sourceBody));
+  const footerMissing = !Str.Equivalence(splicePrProvenanceFooter(readback, rendered), readback);
+  const outcome = bodyDrifted
     ? ProvenanceStampOutcome.make({
         status: "drifted",
         message: O.isSome(preservedForeign)
           ? `[yeet] provenance footer repair for PR #${prNumber} did not preserve the expected concurrent body; leaving the latest body unchanged`
           : `[yeet] provenance footer for PR #${prNumber} may have overwritten a concurrent body edit; leaving the latest body unchanged`,
       })
-    : O.match(preservedForeign, {
-        onNone: () => currentStamp(prNumber),
-        onSome: (edit) =>
-          ProvenanceStampOutcome.make({
-            status: "preserved",
-            message: `[yeet] provenance footer for PR #${prNumber} preserved a concurrent body edit by ${bodyEditorLabel(edit)}`,
-          }),
-      });
+    : footerMissing
+      ? ProvenanceStampOutcome.make({
+          status: "drifted",
+          message: `[yeet] provenance footer for PR #${prNumber} is not on the latest body after the stamp; leaving the latest body unchanged`,
+        })
+      : O.match(preservedForeign, {
+          onNone: () => currentStamp(prNumber),
+          onSome: (edit) =>
+            ProvenanceStampOutcome.make({
+              status: "preserved",
+              message: `[yeet] provenance footer for PR #${prNumber} preserved a concurrent body edit by ${bodyEditorLabel(edit)}`,
+            }),
+        });
   if (outcome.status !== "current") yield* Console.warn(outcome.message);
   return outcome;
 });
@@ -393,7 +408,7 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
   const edits = yield* readPrBodyEdits(capture, context, repository, prNumber);
   const foreign = newestUnknownEditSince(edits, baseline, known);
   if (O.isNone(foreign)) {
-    return yield* verifyReconciledBody(capture, context, prNumber, sourceBody, preservedForeign);
+    return yield* verifyReconciledBody(capture, context, prNumber, rendered, sourceBody, preservedForeign);
   }
   if (round >= maxReconcileRounds) {
     return yield* yieldToConcurrentEdit(capture, context, prNumber, bodyPath, writtenBody, foreign.value);
@@ -707,7 +722,7 @@ export const recordCurrentPrSession = Effect.fn("ProvenanceFooter.recordCurrentS
  * @param prNumber - Positive pull-request number used for lookup and the typed resume fence.
  * @param capture - Subprocess runner, injectable for deterministic GitHub body tests.
  * @param registryOverride - Optional in-memory registry used by fixture-safe tests.
- * @returns The typed stamp outcome; only {@link ProvenanceStampFailureStatus} members mean the footer is not asserted.
+ * @returns The typed stamp outcome; {@link ProvenanceStampFailureStatus} members mean the footer could not be confirmed.
  * @category workflows
  * @since 0.0.0
  */
@@ -738,7 +753,11 @@ export const ensureProvenanceFooter = Effect.fn("ProvenanceFooter.ensure")(funct
       Effect.orElseSucceed(() => true)
     );
     const first = A.head(rows);
-    if (O.isNone(first)) return currentStamp(prNumber);
+    if (O.isNone(first)) {
+      return skippedStamp(
+        `[yeet] provenance footer stamp skipped for PR #${prNumber}: no local registry rows were available`
+      );
+    }
     const publicValue = toPublicPrProvenance([first.value, ...A.drop(rows, 1)], O.some(prNumber), labels);
     const rendered = renderPrProvenance(publicValue);
     const body = yield* readPrBody(capture, context, prNumber);
