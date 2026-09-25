@@ -37,12 +37,11 @@ orchestrator writes schemas and contracts and judges evidence. Record friction r
 `research/OPPORTUNITIES.md` at the moment they happen, redacted for a public repo. Update PLAN
 checkmarks as items land; the status flip and closeout reflection ride the final PR.
 
-Status (2026-09-21): P0 complete; P1 hygiene complete. `research/baseline.md` is ratified (ruling 8: M1 P50
+Status (2026-09-25): P0, P1 and P3 complete. `research/baseline.md` is ratified (ruling 8: M1 P50
 43.3 min / P95 3.95 h; pre-push wave 65.9% of local wrapper time; M3/M4 unmeasurable until journals
-carry fingerprints and inner lanes). `research/decisions.md` holds sixty-four rulings: C1 schema,
-baseline, A5 journal facts and compaction, C3 package-task migration (19–34), B5 detached proof
-jobs (35–40), B7 until-ready monitoring (41–49), B8 heavy-check admission (50–57), the labs
-lane digest (58), legacy proof-store retirement (59–60), and C4 shadow mode (61–64). Landed: A4,
-A5/A5b/A5c, B1–B6, C1/C2, C3 complete (coverage, tsgo tests, lint-policy C3.1–C3.6, labs), C4a
-(legacy proof stores never migrate), and C4.1 (shadow mode + `yeet proof-report`). Next: C5
-fixtures, then C4.2 enforcement once the report reads ready; A3.
+carry fingerprints and inner lanes). `research/decisions.md` holds seventy-seven rulings (1–70 and
+73–79; 71–72 reserved for the C5 grill draft), the latest C4 shadow mode (61–64), D2 review
+follow-ups (65–67), the C5 tripwire (68–70), the A3 economics surface (73–75) and the D1 ordering
+handoff (76–79). Landed: A3, A4, A5/A5b/A5c, B1–B6, C1/C2, C3, C4a, C4.1, C5, D1 (the pre-push order
+handed to the ontology packet as `research/gate-order-handoff.json`) and D2. Next: C4.2 enforcement
+once the shadow report reads ready; then the P4 A1 close re-run.

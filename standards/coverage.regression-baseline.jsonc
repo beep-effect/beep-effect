@@ -25318,10 +25318,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts": {
-          "lines": 91.42,
-          "statements": 92.68,
+          "lines": 91.66,
+          "statements": 92.85,
           "branches": 100,
-          "functions": 86.66,
+          "functions": 86.95,
           "uncovered": {
             "lines": 6,
             "statements": 6,

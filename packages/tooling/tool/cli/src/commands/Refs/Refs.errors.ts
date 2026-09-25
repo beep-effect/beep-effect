@@ -25,4 +25,17 @@ export class ReferenceWorkspaceError extends S.TaggedError<ReferenceWorkspaceErr
   $I.annoteError<ReferenceWorkspaceError>("ReferenceWorkspaceError", {
     description: "Reference workspace operation refused or failed.",
   })
-) {}
+) {
+  /**
+   * Recognizes reference workspace failures without recompiling the guard.
+   *
+   * **Example** (Recognize a workspace failure)
+   * ```ts
+   * import { ReferenceWorkspaceError } from "@beep/repo-cli/commands/Refs"
+   * ReferenceWorkspaceError.is(ReferenceWorkspaceError.make({ path: "/refs", message: "Missing root." })) // => true
+   * ```
+   * @category guards
+   * @since 0.0.0
+   */
+  static readonly is = S.is(ReferenceWorkspaceError);
+}
