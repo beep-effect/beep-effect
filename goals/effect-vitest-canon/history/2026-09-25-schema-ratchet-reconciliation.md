@@ -91,3 +91,29 @@ EffectVitestFinding schema using onExcessProperty=error after this attribution.
 The first inherited batch is 11 detector rows plus two observability rows; it
 includes three Sha256 Promise-runtime bridges replaced with yielded effects.
 No other saved finding status was changed.
+
+## Published implementation and lens dispositions
+
+PR #1252 publishes implementation 369a8f6d981006937146f96cbb9e5ced4065f2ba
+and main integration 58e11ec558c5271b6577ef56ffba27c8eb3366ce. It is stacked on
+#1247 and must target main only after its prerequisite waves land. All 15 local
+cheap-gate lanes passed at the published head.
+
+Four resource, five property-oracle, one flake and 18 observability findings now
+cite the published implementation. The detector ledger retains the documented
+live-clock exception, preserving its original ID and evidence.
+
+Attribution review caught a missed CSP run-policy migration: the inherited native
+property still used bare runs:25. Repair 5cd27cd70555b4ee4798f1f4085909152f76e0c6 uses fcRuns(25),
+preserving the source arbitrary, callback and minimum while honoring shared seed
+and run configuration. Full package audit (10.6 seconds) and docgen (6.6 seconds)
+pass. Its property finding cites this separate repair, not the earlier wave.
+
+Current actionable schema ledger: 42 fixed, 1 exception, 468 open.
+No-findings coverage rows remain intact. Remaining detector and property-runner
+provenance still requires review; these counts do not claim wave completion.
+
+The post-CSP timing artifacts supersede the preceding sample: all 725 tests in
+78 files passed, whole-command time 5.758 seconds and reporter span 5,226.30 ms.
+Source hashes remained stable. Runtime/load caveats remain unchanged. All 786
+ledger rows pass the strict canonical decoder after these dispositions.

@@ -2233,3 +2233,12 @@ That output was not accepted wholesale. Only the five regenerated line numbers
 were applied to the original inventory; every original reason and status was
 retained. A generator that preserves reviewed dispositions across location-only
 changes would prevent this manual reconciliation.
+
+## PR 1252 external reviewer unavailable
+
+The `openclaw/pr-review` check failed before publishing any advisory review.
+Its check-run output reports `402 Payment Required: Grok Build usage balance
+exhausted`. There are no inline review findings to repair from this attempt.
+Keep this separate from code failures and do not claim review closure; the
+external reviewer needs available quota before a retry can produce evidence.
+Vercel deployment failures separately report the daily deployment rate limit.
