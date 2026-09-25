@@ -402,16 +402,41 @@ esac
     yield* writeExecutable(f.path.join(f.bin, "bun"), "#!/bin/sh\nexit 0\n");
     const cli = yield* f.path.fromFileUrl(new URL("../src/bin.ts", import.meta.url));
     const ambientPath = yield* Config.String("PATH");
-    // Vitest may run under Node; resolve Bun before the fixture shadows it.
+    // Real Bun must be on ambient PATH even when Vitest runs under Node.
+    // Resolve and verify it before the fixture shadows the bun command.
     const runtime = yield* ChildProcess.make("bun", ["-p", "process.execPath"], {
       env: { PATH: ambientPath },
       stdin: "ignore",
       stdout: "pipe",
-      stderr: "inherit",
+      stderr: "pipe",
     });
-    const bun = yield* runtime.stdout.pipe(Stream.decodeText(), Stream.mkString, Effect.map(Str.trim));
-    expect(yield* runtime.exitCode).toBe(0);
+    const [resolveExitCode, resolveStdout, resolveStderr] = yield* Effect.all(
+      [
+        runtime.exitCode,
+        runtime.stdout.pipe(Stream.decodeText(), Stream.mkString),
+        runtime.stderr.pipe(Stream.decodeText(), Stream.mkString),
+      ],
+      { concurrency: "unbounded" }
+    );
+    expect(resolveExitCode, resolveStderr).toBe(0);
+    const bun = Str.trim(resolveStdout);
     expect(bun).not.toBe("");
+    const probe = yield* ChildProcess.make(bun, ["-p", "typeof Bun"], {
+      env: { PATH: ambientPath },
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const [probeExitCode, probeStdout, probeStderr] = yield* Effect.all(
+      [
+        probe.exitCode,
+        probe.stdout.pipe(Stream.decodeText(), Stream.mkString),
+        probe.stderr.pipe(Stream.decodeText(), Stream.mkString),
+      ],
+      { concurrency: "unbounded" }
+    );
+    expect(probeExitCode, probeStderr).toBe(0);
+    expect(Str.trim(probeStdout)).toBe("object");
     const handle = yield* ChildProcess.make(bun, [cli, "worktree", "new", "topic"], {
       cwd: f.owner,
       env: { HOME: f.home, PATH: `${f.bin}:${ambientPath}`, BEEP_REFERENCES_ROOT: f.root },
