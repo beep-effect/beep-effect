@@ -7,12 +7,19 @@
  *
  * One poll loop serves two policies. `until-merged` follows the pull request
  * to `MERGED` (then sweeps) or `CLOSED`; `until-ready` ends the first poll on
- * which merge readiness is `yes`, and otherwise ends on a required red that
- * matched no flake class (or whose rerun is spent), on a closed PR, on a
- * settle timeout, or when the consecutive poll-error budget is spent. Optional
- * checks never affect a terminal state in either policy. The exit code and the
- * operator summary for every terminal state live in one table so the CLI, the
- * inbox row, and the tests read the same data.
+ * which merge readiness is `yes`, and otherwise ends on a closed PR, on a
+ * settle timeout, or when the consecutive poll-error budget is spent. A
+ * required red and a base conflict are not terminal under `until-ready`
+ * (pr-event-awareness D16): the loop converges them into inbox rows, re-pins
+ * the wave per head, and keeps polling across the fix push, while
+ * `yeet job wait` hands control back on the wave. An attached `until-ready`
+ * run has no job to wait on, so it ends itself with `wave` (exit 2) on the
+ * first new wake-set row on its pull request: any P0 row, or a P1
+ * `review-thread` or `pr-comment` row. Optional checks never decide readiness
+ * or a failure terminal in either policy; an optional red is still written as
+ * a P1 inbox row, but it never wakes a waiter (ttc ruling 42). The exit code
+ * and the operator summary for every terminal state live in one table so the
+ * CLI, the inbox row, and the tests read the same data.
  *
  * **Gotchas**
  *
@@ -29,6 +36,7 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorPolicy");
 
@@ -73,9 +81,14 @@ export const YEET_MONITOR_POLL_ERROR_BUDGET = 5;
  * **Details**
  *
  * `merged` and `closed` are pull-request states. `ready` is the
- * `--until-ready` success terminal. `required-red`, `settle-timeout`, and
+ * `--until-ready` success terminal. `wave` is the attached `--until-ready`
+ * hand-back: a new P0/P1 inbox wave landed on the pull request and the loop
+ * stops so the operator can fix and re-run it. `settle-timeout` and
  * `poll-error-budget` are the failure terminals; which terminals a policy
- * admits is {@link yeetMonitorPolicyTerminals}.
+ * admits is {@link yeetMonitorPolicyTerminals}, and a loop's, with `wave`, is
+ * {@link yeetMonitorLoopTerminals}. A required red is not a
+ * terminal state by itself: a detached loop keeps polling past it and
+ * `yeet job wait` returns on the wave instead.
  *
  * **Example** (List the terminal states)
  *
@@ -92,7 +105,7 @@ export const YeetMonitorTerminalState = LiteralKit([
   "merged",
   "closed",
   "ready",
-  "required-red",
+  "wave",
   "settle-timeout",
   "poll-error-budget",
 ]).pipe(
@@ -109,6 +122,43 @@ export const YeetMonitorTerminalState = LiteralKit([
  * @since 0.0.0
  */
 export type YeetMonitorTerminalState = typeof YeetMonitorTerminalState.Type;
+
+/**
+ * Whether a merge loop runs attached to the operator's command or detached
+ * inside a proof job.
+ *
+ * **Details**
+ *
+ * The porcelain decides it from `BEEP_YEET_JOB_ID`, which only a job's unit
+ * sets. `detached` loops keep polling through an inbox wave, because
+ * `yeet job wait` on the job carries it back. An `attached` `--until-ready`
+ * loop has no job to wait on, so it ends with `wave` itself.
+ *
+ * **Example** (List the attachments)
+ *
+ * ```ts
+ * import { YeetMonitorAttachment } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetMonitorAttachment.Options) // ["attached", "detached"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetMonitorAttachment = LiteralKit(["attached", "detached"]).pipe(
+  $I.annoteSchema("YeetMonitorAttachment", {
+    title: "Yeet Monitor Attachment",
+    description: "Whether a merge loop runs attached to the operator's command or detached inside a proof job.",
+  })
+);
+
+/**
+ * Whether a merge loop runs attached or detached.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetMonitorAttachment = typeof YeetMonitorAttachment.Type;
 
 /**
  * Follow the pull request until it merges or closes; announce readiness once
@@ -128,8 +178,9 @@ export class YeetUntilMergedPolicy extends S.Class<YeetUntilMergedPolicy>($I`Yee
 ) {}
 
 /**
- * End on the first poll where merge readiness is `yes`; fail on a required
- * red, a closed PR, a settle timeout, or a spent poll-error budget.
+ * End on the first poll where merge readiness is `yes`; fail on a closed PR, a
+ * settle timeout, or a spent poll-error budget. Required reds and base
+ * conflicts become inbox rows and the loop keeps polling.
  *
  * @category models
  * @since 0.0.0
@@ -178,6 +229,13 @@ export type YeetMonitorLoopPolicy = typeof YeetMonitorLoopPolicy.Type;
 /**
  * The terminal states one policy admits.
  *
+ * **Details**
+ *
+ * This is the set for a detached loop, and every policy-level question
+ * (does readiness end the loop, does a merge) reads it. `wave` is never in it:
+ * only an attached `until-ready` loop ends on a wave, which
+ * {@link yeetMonitorLoopTerminals} adds.
+ *
  * **Example** (An until-merged loop never ends on readiness)
  *
  * ```ts
@@ -204,13 +262,86 @@ export const yeetMonitorPolicyTerminals = (policy: YeetMonitorLoopPolicy): HashS
         "ready",
         "merged",
         "closed",
-        "required-red",
         "settle-timeout",
         "poll-error-budget"
       )
     ),
     Match.exhaustive
   );
+
+/**
+ * Whether a loop under this policy converges the inbox on every poll.
+ *
+ * **Details**
+ *
+ * `until-ready` is the canonical detached babysit, so it is the producer of
+ * the inbox wave: each poll writes `check-failed`, `review-thread` and
+ * `base-drift` rows from the status snapshot and re-pins the wave record on
+ * every new head. `until-merged` keeps its contract and writes no wave rows.
+ *
+ * **Example** (Only the readiness loop converges)
+ *
+ * ```ts
+ * import { yeetMonitorPolicyConverges, YeetUntilMergedPolicy, YeetUntilReadyPolicy } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetMonitorPolicyConverges(YeetUntilReadyPolicy.make({}))) // true
+ * console.log(yeetMonitorPolicyConverges(YeetUntilMergedPolicy.make({}))) // false
+ * ```
+ *
+ * @param policy - The loop policy.
+ * @returns `true` when the loop writes inbox rows and pins the wave record.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetMonitorPolicyConverges = (policy: YeetMonitorLoopPolicy): boolean =>
+  Match.value(policy).pipe(
+    Match.discriminator("kind")("until-merged", () => false),
+    Match.discriminator("kind")("until-ready", () => true),
+    Match.exhaustive
+  );
+
+/**
+ * The terminal states one loop admits: its policy's, plus `wave` for an
+ * attached loop that converges the inbox.
+ *
+ * **Details**
+ *
+ * An attached `until-ready` loop writes inbox rows with no job for
+ * `yeet job wait` to return on, so it hands a new wave back itself and exits
+ * 2. A detached loop keeps polling through the wave, and an `until-merged`
+ * loop writes no rows, so neither admits `wave`.
+ *
+ * **Example** (Only the attached readiness loop ends on a wave)
+ *
+ * ```ts
+ * import { yeetMonitorLoopTerminals, YeetUntilMergedPolicy, YeetUntilReadyPolicy } from "@beep/repo-cli/test/Yeet"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * console.log(HashSet.has(yeetMonitorLoopTerminals(YeetUntilReadyPolicy.make({}), "attached"), "wave")) // true
+ * console.log(HashSet.has(yeetMonitorLoopTerminals(YeetUntilReadyPolicy.make({}), "detached"), "wave")) // false
+ * console.log(HashSet.has(yeetMonitorLoopTerminals(YeetUntilMergedPolicy.make({}), "attached"), "wave")) // false
+ * ```
+ *
+ * @param policy - What the loop follows: the merge itself, or merge readiness.
+ * @param attachment - Whether the loop runs attached or inside a proof job.
+ * @returns The set of terminal states that end that loop.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetMonitorLoopTerminals: {
+  (attachment: YeetMonitorAttachment): (policy: YeetMonitorLoopPolicy) => HashSet.HashSet<YeetMonitorTerminalState>;
+  (policy: YeetMonitorLoopPolicy, attachment: YeetMonitorAttachment): HashSet.HashSet<YeetMonitorTerminalState>;
+} = dual(
+  2,
+  (policy: YeetMonitorLoopPolicy, attachment: YeetMonitorAttachment): HashSet.HashSet<YeetMonitorTerminalState> => {
+    const terminals = yeetMonitorPolicyTerminals(policy);
+    return YeetMonitorAttachment.$match(attachment, {
+      attached: () =>
+        yeetMonitorPolicyConverges(policy) ? HashSet.add(terminals, YeetMonitorTerminalState.Enum.wave) : terminals,
+      detached: () => terminals,
+    });
+  }
+);
 
 /**
  * One row of the exit-code table: the terminal state, the process exit code,
@@ -234,13 +365,13 @@ export class YeetMonitorExit extends S.Class<YeetMonitorExit>($I`YeetMonitorExit
  * The exit code and summary for a terminal state — the one table the CLI
  * route, the inbox row, and the tests read.
  *
- * **Example** (Readiness exits zero, a required red exits one)
+ * **Example** (Readiness exits zero, a settle timeout exits one)
  *
  * ```ts
  * import { yeetMonitorExitFor } from "@beep/repo-cli/test/Yeet"
  *
  * console.log(yeetMonitorExitFor("ready").exitCode) // 0
- * console.log(yeetMonitorExitFor("required-red").exitCode) // 1
+ * console.log(yeetMonitorExitFor("settle-timeout").exitCode) // 1
  * ```
  *
  * @param terminal - The state that ended the loop.
@@ -264,15 +395,16 @@ export const yeetMonitorExitFor = (terminal: YeetMonitorTerminalState): YeetMoni
         summary: "merge-ready: yes; every hard criterion is green; hand the pull request to the operator",
       })
     ),
+    Match.when("wave", () =>
+      YeetMonitorExit.make({
+        terminal: "wave",
+        exitCode: 2,
+        summary:
+          "a new P0/P1 inbox wave landed on the pull request; the rows stay in the inbox; fix, publish, then re-run the same monitor command",
+      })
+    ),
     Match.when("closed", () =>
       YeetMonitorExit.make({ terminal: "closed", exitCode: 1, summary: "pull request is CLOSED without merging" })
-    ),
-    Match.when("required-red", () =>
-      YeetMonitorExit.make({
-        terminal: "required-red",
-        exitCode: 1,
-        summary: "a required check is red and matched no rerunnable flake class, or its one rerun is spent",
-      })
     ),
     Match.when("settle-timeout", () =>
       YeetMonitorExit.make({
@@ -317,9 +449,11 @@ export const yeetMonitorExitTable: ReadonlyArray<YeetMonitorExit> = A.map(
  *
  * `firstObservedAt` is the poll that first saw the head. `pushedAt` is the head
  * commit's committer date (yeet publish commits and pushes in one step, so it
- * approximates the push). `settledAt`, `closeoutAt`, and `readyAt` are stamped
- * on first observation and never overwritten; a head change starts a new
- * timeline.
+ * approximates the push). `redAt` is GitHub's `completedAt` for the first
+ * failing check the loop saw on the head (the red as GitHub observed it, not
+ * as the poll did). `redAt`, `settledAt`, `closeoutAt`, and `readyAt` are
+ * stamped on first observation and never overwritten; a head change starts a
+ * new timeline.
  *
  * **Example** (Construct a timeline)
  *
@@ -338,12 +472,13 @@ export class YeetHeadTimeline extends S.Class<YeetHeadTimeline>($I`YeetHeadTimel
     headSha: S.NonEmptyString,
     firstObservedAt: S.String,
     pushedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    redAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     settledAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     closeoutAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     readyAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetHeadTimeline", {
-    description: "Push, settle, closeout, and ready instants for one pull request head.",
+    description: "Push, first-red, settle, closeout, and ready instants for one pull request head.",
   })
 ) {}
 
@@ -353,7 +488,7 @@ export class YeetHeadTimeline extends S.Class<YeetHeadTimeline>($I`YeetHeadTimel
  * @category models
  * @since 0.0.0
  */
-export const YeetHeadTimelineStamp = LiteralKit(["settledAt", "closeoutAt", "readyAt"]).pipe(
+export const YeetHeadTimelineStamp = LiteralKit(["redAt", "settledAt", "closeoutAt", "readyAt"]).pipe(
   $I.annoteSchema("YeetHeadTimelineStamp", {
     description: "Which timeline instant a loop event stamps.",
   })
@@ -396,6 +531,7 @@ export const yeetHeadTimelineStamp: {
   3,
   (timeline: YeetHeadTimeline, stamp: YeetHeadTimelineStamp, at: string): YeetHeadTimeline =>
     Match.value(stamp).pipe(
+      Match.when("redAt", () => YeetHeadTimeline.make({ ...timeline, redAt: O.orElseSome(timeline.redAt, () => at) })),
       Match.when("settledAt", () =>
         YeetHeadTimeline.make({ ...timeline, settledAt: O.orElseSome(timeline.settledAt, () => at) })
       ),
@@ -484,4 +620,143 @@ export const renderYeetHeadTimeline = (timeline: YeetHeadTimeline): string => {
     ", "
   );
   return `${wallClock} (${instants})`;
+};
+
+/**
+ * The stages of one head's push → row → ack timeline, in the order they happen.
+ *
+ * **Details**
+ *
+ * `pushed` is the head's committer date, `red` is GitHub's `completedAt` for
+ * the first failing check, `row` is when the first `check-failed` inbox row
+ * for the head was written, `injected` is when a harness session was first
+ * handed that row (the inbox hook's `firstSeenAt`), and `acked` is the row's
+ * ack receipt.
+ *
+ * **Example** (Check a stage)
+ *
+ * ```ts
+ * import { YeetPushToAckStage } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetPushToAckStage.is.injected("injected")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetPushToAckStage = LiteralKit(["pushed", "red", "row", "injected", "acked"]).pipe(
+  $I.annoteSchema("YeetPushToAckStage", {
+    description: "One stage of a head's push → row → ack timeline.",
+  })
+);
+
+/**
+ * The stages of one head's push → row → ack timeline.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type YeetPushToAckStage = typeof YeetPushToAckStage.Type;
+
+/**
+ * One head's push → row → ack timeline, joined from the stamps that exist.
+ *
+ * **Details**
+ *
+ * Every stage is optional: a head with no red has only `pushed`, a row the
+ * owning session never saw has no `injected`, and a row superseded by a push
+ * is often never acked. An absent stage renders as `-`, never as a failure.
+ *
+ * **Example** (A head with no red)
+ *
+ * ```ts
+ * import { YeetPushToAckTimeline } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const timeline = YeetPushToAckTimeline.make({ headSha: "abc1234", pushedAt: O.some("2026-09-25T12:00:00Z") })
+ * console.log(timeline.rowAt._tag) // "None"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetPushToAckTimeline extends S.Class<YeetPushToAckTimeline>($I`YeetPushToAckTimeline`)(
+  {
+    headSha: S.NonEmptyString,
+    pushedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    redAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    rowAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    injectedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    ackedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("YeetPushToAckTimeline", {
+    description: "Push, first-red, row-written, row-injected, and acked instants for one pull request head.",
+  })
+) {}
+
+const pushToAckInstant = (timeline: YeetPushToAckTimeline, stage: YeetPushToAckStage): O.Option<string> =>
+  Match.value(stage).pipe(
+    Match.when("pushed", () => timeline.pushedAt),
+    Match.when("red", () => timeline.redAt),
+    Match.when("row", () => timeline.rowAt),
+    Match.when("injected", () => timeline.injectedAt),
+    Match.when("acked", () => timeline.ackedAt),
+    Match.exhaustive
+  );
+
+const renderStageDelta = (previous: O.Option<number>, millis: O.Option<number>): string =>
+  O.match(O.all({ from: previous, to: millis }), {
+    onNone: () => "",
+    onSome: ({ from, to }) => ` (+${Duration.format(Duration.millis(Math.max(0, to - from)))})`,
+  });
+
+const renderPushToAckStage = (
+  previous: O.Option<number>,
+  stage: YeetPushToAckStage,
+  instant: O.Option<string>
+): readonly [O.Option<number>, string] =>
+  O.match(instant, {
+    onNone: () => [previous, `${stage} -`] as const,
+    onSome: (value) => {
+      const millis = epochMillis(value);
+      return [O.orElse(millis, () => previous), `${stage} ${value}${renderStageDelta(previous, millis)}`] as const;
+    },
+  });
+
+/**
+ * Render one head's push → row → ack timeline as one clause.
+ *
+ * **Details**
+ *
+ * Stages print in order; an absent stage prints `-`. A present stage after an
+ * earlier present stage carries `(+<duration>)`, the wall clock since the
+ * nearest earlier stamped stage, so the red → row and row → injected gaps read
+ * straight off the line.
+ *
+ * **Example** (Absent stages render as a dash)
+ *
+ * ```ts
+ * import { renderYeetPushToAckTimeline, YeetPushToAckTimeline } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const timeline = YeetPushToAckTimeline.make({
+ *   headSha: "abc1234def",
+ *   pushedAt: O.some("2026-09-25T12:00:00Z"),
+ *   redAt: O.some("2026-09-25T12:10:00Z"),
+ *   rowAt: O.some("2026-09-25T12:10:20Z")
+ * })
+ * console.log(renderYeetPushToAckTimeline(timeline))
+ * // push→row→ack abc1234: pushed 2026-09-25T12:00:00Z, red 2026-09-25T12:10:00Z (+10m), row 2026-09-25T12:10:20Z (+20s), injected -, acked -
+ * ```
+ *
+ * @param timeline - The joined stamps for one head.
+ * @returns One clause naming the head and every stage, `-` for the absent ones.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetPushToAckTimeline = (timeline: YeetPushToAckTimeline): string => {
+  const [, clauses] = A.mapAccum(YeetPushToAckStage.Options, O.none<number>(), (previous, stage) =>
+    renderPushToAckStage(previous, stage, pushToAckInstant(timeline, stage))
+  );
+  return `push→row→ack ${Str.slice(0, 7)(timeline.headSha)}: ${A.join(clauses, ", ")}`;
 };

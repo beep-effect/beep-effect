@@ -11,6 +11,7 @@ export * from "../commands/Yeet/internal/ArtifactPaths.ts";
 export * from "../commands/Yeet/internal/AttemptJournal.ts";
 export * from "../commands/Yeet/internal/CheckOutcome.ts";
 export * from "../commands/Yeet/internal/Closeout.ts";
+export * from "../commands/Yeet/internal/Converge.ts";
 export * from "../commands/Yeet/internal/closeout/Closeout.schemas.ts";
 export * from "../commands/Yeet/internal/closeout/Gates.ts";
 export * from "../commands/Yeet/internal/closeout/Gh.schemas.ts";

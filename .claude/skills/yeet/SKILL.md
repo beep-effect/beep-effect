@@ -84,9 +84,21 @@ bun run beep yeet job cancel <jobId>
 ```
 
 `repair`, `closeout`, and `monitor` also accept `--detach`. Use
-`--job-max-runtime "2 hours"` to set a systemd runtime ceiling. `--plan` and
-recursive detachment inside a job are rejected. `job wait` returns 0 for green,
-1 for red, and 2 for termination, and acknowledges the informational inbox row.
+`--job-max-runtime "2 hours"` to set a systemd runtime ceiling; give one to a
+detached `monitor --until-ready` that may be abandoned, because a red does not
+end it. `--plan` and recursive detachment inside a job are rejected.
+`job wait` returns:
+
+| Exit | Outcome | Meaning |
+| --- | --- | --- |
+| 0 | `success` | The job settled green (a monitor ended `ready` or `merged`). |
+| 1 | `failure` | The job settled red: a proof failed, or a monitor ended `closed`, `settle-timeout`, or `poll-error-budget`. |
+| 2 | `wave` | A new wave landed on the monitor job's pull request: new P0 rows, new P1 `review-thread` or `pr-comment` rows, or a required red that came back red on a rerun of the same head. Optional reds never count. The job keeps running and the rows stay live (see Inbox). |
+| 3 | `terminated` | The job ended without a verdict (for example `cancelled`, `oom-killed`, `signal`, or `timeout`); re-submit it. |
+
+A `--timeout` expiry also exits 1 but leaves the job running. `job wait`
+acknowledges the job's own informational inbox row when the job settles and
+never acknowledges wave rows.
 Use `yeet inbox ack <id> --observed` to acknowledge a job result manually.
 The finalizer records abnormal deaths in the attempt journal; job records and
 logs remain under `.beep/yeet/jobs/`, with the newest 50 terminal jobs retained.
@@ -207,8 +219,9 @@ bun run beep yeet monitor --until-merged
   derived from the failing check's own record — to
   `<checkout>/.beep/inbox/failures.ndjson` (`yeet-inbox/v1`) and advances the
   wave record at `.beep/inbox/dispatch.json` (`yeet-dispatch/v1`): first red
-  for a head opens the repair session, later reds queue with headSha+lane
-  dedup, a new push supersedes the wave:
+  for a head opens the repair session, later reds queue with `headSha`+`lane`
+  (check name) dedup, a new push supersedes the wave. `--until-ready` writes
+  the same rows through the same convergence; see Inbox for the row kinds:
 
 ```bash
 bun run beep yeet monitor --watch
@@ -222,8 +235,10 @@ bun run beep yeet monitor --watch
   comment-only wake; non-zero means a required red, a closed PR, a settle
   timeout, or a poll error. Optional reds never trigger the event exit. The
   comment cursor is a durable branch-scoped watermark shared with plain
-  `yeet monitor`, so relaunching after acting loses nothing: a comment posted
-  while no monitor was attached is the next session's first row. Run it as a
+  `yeet monitor`, `status --remote`, and `closeout` (`--until-ready` and
+  `--until-merged` keep their own; see Comment replay), so relaunching after
+  acting loses nothing: a comment posted while no monitor was attached is the
+  next session's first row. Run it as a
   blocking command and treat its exit as the signal to act:
 
 ```bash
@@ -448,7 +463,9 @@ expected required context to report a terminal result. If an exact parent name
 is absent but `<context> (<variant>)` children report, the parent is tolerated
 and those children must finish. A missing parent with no children keeps waiting.
 If the ruleset read fails, one warning precedes fallback to the `--required`
-view. Optional reds do not affect exit codes. `--settle-timeout` defaults to
+view. Optional reds never affect an exit code in any mode; under
+`--until-ready` an optional red is still a P1 `check-failed` inbox row, but it
+never hands back a wave. `--settle-timeout` defaults to
 30 minutes; it applies to `--until-ready`, `--until-merged`, and `--watch`, and
 it bounds registration only: the budget counts while no check has registered
 or an expected context is still missing, never while a registered required
@@ -457,7 +474,9 @@ Gate lines name `registration`, `required-pending`, `heavy-not-admitted`,
 `base-conflict`, `closeout-pending`, or `settle-timeout`, including missing and
 pending contexts. `base-conflict` means the base moved under the head (GitHub
 reports `CONFLICTING`/`DIRTY` and empties the check rollup): merge `origin/main`
-and push; the wait never spends the budget. A context once seen registered for
+and push; the wait never spends the budget. Under `--until-ready` it is also a
+P0 `base-conflict` inbox row, and neither it nor a required red ends the loop
+(see Inbox). A context once seen registered for
 a head stays `pending` when one poll omits it, never `missing`. `heavy-not-admitted` is tier-2 admission (B8): the loop computes the
 heavy verdict every poll from the same function CI runs (`ready-for-heavy`
 label, docs-only diff) and, while the verdict is `hold` with `Heavy / *`
@@ -470,7 +489,91 @@ the verdict changes, and the label admits within one poll. `skip-satisfied`
 passed without work on a hosted runner, `skip` where a lane is still skipped.
 A settled head does not time out while waiting for review closeout. The final
 readiness gate line includes the head timeline and push→ready wall clock when
-the push date is known.
+the push date is known. A `push→row→ack <sha7>: pushed …, red …, row …,
+injected …, acked …` line follows it (`-` for a stage not reached; `injected`
+is the first hook hand-off to any session), and the loop prints the same line
+when it leaves a head that never reached ready.
+
+## Inbox
+
+The checkout inbox, `<checkout>/.beep/inbox/`, is how Yeet hands pull request
+events to the session that owns them. The inbox hook
+(`.claude/hooks/yeet-inbox.sh`) injects unacknowledged P0 and P1 rows into
+that session at the next prompt or tool call, and P0 rows also hold Stop until
+they are acknowledged or superseded. The hook stamps each row's first hand-off
+to a session (`firstSeenAt` in its session file), which is the `injected`
+stage of the push→row→ack line. `bun run beep yeet inbox list --unacked`
+prints what is open, with each row's liveness.
+
+Vocabulary:
+
+- **checkout**: the repository root the inbox lives under. Rows, capsules,
+  and prose about them say checkout, never lane; inside a `check-failed`
+  capsule, `lane` is the failing check's name.
+- **inbox row**: one `yeet-inbox/v1` line in `failures.ndjson` with a kind, a
+  deterministic id, a severity (P0, P1, P2), and a capsule. It stays open
+  until an ack receipt under `acks/` resolves it or a push supersedes it.
+- **capsule**: a row's payload, the observed facts behind it: the pull request
+  number, the head SHA, and the kind's own fields (a red check's bucket,
+  state, link, and workflow; a `pr-comment` row's comment URL, author, and
+  excerpt).
+- **wave**: the new rows on one pull request that are in the wake set (every
+  P0 row, plus P1 `review-thread` and `pr-comment` rows) and neither
+  acknowledged nor superseded; `yeet job wait` returns them together with
+  exit 2. A required red that comes back red on a rerun of the same head
+  keeps its row id, so it is a new wave by its changed red set instead. The
+  wave record, `dispatch.json` (`yeet-dispatch/v1`), pins the head those rows
+  belong to and carries that head's required red set; a push re-pins it and
+  supersedes the previous head's rows.
+- **owner session**: the harness session that submitted the monitor and waits
+  on it. A detached job forwards `CLAUDE_CODE_SESSION_ID` and
+  `CODEX_THREAD_ID`, so the pull request's session registry row names that
+  session's harness and id for `bun run beep yeet resume <pr>`. The woken
+  owner dispatches any fix itself; Yeet launches nothing.
+
+`--until-ready`, attached or detached, converges the status snapshot into rows
+on every poll; `--watch` does the same for checks, threads, and drift.
+`--until-merged` writes no wave rows.
+
+| Kind | Severity | Written when | Closes on |
+| --- | --- | --- | --- |
+| `check-failed` | P0 required, P1 optional | a check is red on the head | the next push, or an ack |
+| `base-conflict` | P0 | GitHub reports the head `CONFLICTING`/`DIRTY` (`--until-ready` only) | the next push, or the `cleared` ack the monitor writes when the same head reads mergeable again |
+| `review-thread` | P1 | a thread is unresolved or owes a follow-up | an ack only; survives pushes |
+| `pr-comment` | P1 | a person's top-level comment lands after the window start (`--until-ready` only; see Comment replay) | an ack only; survives pushes |
+| `base-drift` | P2 | the head is `BEHIND` its base | the next push |
+
+`review-thread` and `pr-comment` rows are wave-exempt: a push never supersedes
+them, because the thread or comment still needs its answer on the next head.
+One open row is kept per thread. Acknowledge them once answered, for example
+with `bun run beep yeet inbox ack <id> --thread-url <url>`. Observation rows
+(`proof-job-finished`, `pr-merge-ready`) are injected too but never join a
+wave.
+
+- `job wait` returns only for rows on its own job's pull request, so two
+  monitors in one checkout on different pull requests never wake each
+  other's waiter. It never acknowledges the rows: the hook keeps injecting
+  them and a P0 keeps holding Stop until the fix lands.
+- A re-run of `job wait` on the same job skips the rows it already returned
+  and waits for new rows or for the job to settle. A red that stays the same
+  on the same head is not returned twice: push the fix. A rerun that comes
+  back red (a new job link on the same head, a spent flake rerun or a manual
+  `gh run rerun`) is a new wave, and the same row is returned again.
+- Optional reds never wake a waiter. An optional red, a rate-limited Vercel
+  deployment included, is a P1 `check-failed` row the hook injects, but it
+  never makes a wave for `job wait` or an attached `--until-ready`.
+- Rows already open count. The first `job wait` on a new job returns at once
+  on any open, not superseded wake-set row on the pull request, including one
+  an earlier monitor wrote.
+- A P0 row reads `unknown` while `dispatch.json` is missing or unreadable, and
+  it then holds Stop until an attributed ack.
+- `cleared` has no operator form: only the monitor writes it, and only for a
+  `base-conflict` row whose head it re-read as mergeable.
+
+Rollout: `review-thread` rows that an earlier wave superseded read live again
+under the wave-exempt rule. Clear the answered ones once: list them with
+`bun run beep yeet inbox list --unacked` and acknowledge each with
+`bun run beep yeet inbox ack <id> --thread-url <url>`.
 
 ## Mergeable PR Workflow
 
@@ -483,22 +586,31 @@ the push date is known.
 5. If no pull request exists for the pushed branch, prefer publishing with
    `--pr` so Yeet creates a ready PR from the commit log and local proof
    summary; `gh pr create --draft --fill` remains the manual fallback.
-6. As soon as the PR exists, submit the babysit loop as a detached job and block
-   on it from a background tool call:
-   `bun run beep yeet monitor --until-ready --detach`, then
+6. As soon as the PR exists, submit the babysit loop as a detached job from
+   the checkout you are working in, and block on it from a background tool
+   call: `bun run beep yeet monitor --until-ready --detach`, then
    `bun run beep yeet job wait <jobId>`. The job survives session restarts and
    the ten-minute tool-call cap, but not a reboot: re-submit it after one.
-   `job wait` returns 0 for green (the loop ended `ready`), 1 for red
-   (`required-red`, `settle-timeout`, `closed`, or a spent poll-error budget),
-   2 for a terminated job. When the user manager is unreachable, run
-   `bun run beep yeet monitor --until-ready` attached instead. Exit 0 with
+   A required red or a base conflict does not end the monitor: it writes inbox
+   rows and keeps polling across your fix pushes, so do not re-submit it after
+   a red. `job wait` returns 0 for green (the loop ended `ready`), 2 for a wave
+   (new P0 rows or P1 thread and comment rows on this PR, or a required red
+   that came back red on a rerun: read the gate line, act on the rows, publish
+   any fix, then re-run `bun run beep yeet job wait <jobId>` on the same job),
+   1 for red (`settle-timeout`, `closed`, or a spent poll-error budget), and 3
+   for a terminated job. When the user manager is unreachable, run
+   `bun run beep yeet monitor --until-ready` attached instead: it has no job,
+   so it ends itself with exit 2 on a wave (rows already in the inbox when it
+   started end it only when a rerun of their check comes back red); re-run it
+   after the fix push. Exit 0 with
    `merge-ready: yes` means hand the PR to the operator; it does not merge it.
-   On exit 1, read the summary line, fix the named blocker, publish, and re-arm
-   the command. A code PR holds at `heavy-not-admitted` until you apply the
-   `ready-for-heavy` label (see Merge Loop); do that once tier 1 is green, not
-   at publish. Act on unresolved review threads through the reply flow while
-   the loop waits. The loop runs read-first closeout automatically after the
-   required checks settle. `monitor --summary` remains a one-shot compact read.
+   On exit 1 or 3, read the summary line, fix the named blocker, publish, and
+   re-submit the monitor. A code PR holds at `heavy-not-admitted` until you
+   apply the `ready-for-heavy` label (see Merge Loop); do that once tier 1 is
+   green, not at publish. Act on unresolved review threads through the reply
+   flow while the loop waits. The loop runs read-first closeout automatically
+   after the required checks settle. `monitor --summary` remains a one-shot
+   compact read.
 7. Run `bun run beep yeet closeout --summary --require-greptile-score 5/5 --require-greptile-issues 0 --require-review-comments 0`
    to inspect unresolved actionable review threads and review-bot gates.
 8. Use `bun run beep yeet verify --tier review-fix` while fixing PR comments,
@@ -592,16 +704,32 @@ they are printed with `(advisory)` and they never gate a merge.
 
 Every read-first surface replays the PR's comment stream before it reports:
 `yeet status --remote` (once it has a PR number), `yeet closeout`, and the first
-cycle of `yeet monitor`. Replay prints each review comment, issue comment and
-review body newer than the saved position, then advances that position — so a
-reboot, a killed monitor or a session change no longer loses comments that
-arrived while nothing was watching. It prints
+cycle of `yeet monitor --until-merged`. Replay prints each review comment, issue
+comment and review body newer than the saved position, then advances that
+position — so a reboot, a killed monitor or a session change no longer loses
+comments that arrived while nothing was watching. It prints
 `comment replay: N comment(s) since <watermark>`, or
 `comment replay: no watermark for #N; starting at <now>` on the first open,
 which spawns nothing and only records the position. Writing that cursor is the
 one write a read-first closeout makes; a failed read prints
 `comment replay unavailable: …` and leaves the position untouched rather than
 failing the closeout.
+
+Each consumer mode keeps its own position in `.beep/yeet/runs/<branch>/`:
+`--until-ready` in `monitor-comments.until-ready.json`, `--until-merged` in
+`monitor-comments.until-merged.json`, and every other reader (plain
+`yeet monitor`, `--watch`, `status --remote`, `closeout`) in the shared
+`monitor-comments.json`. A mode's first position starts at the later of its
+window start and the shared position, so its first run replays no history.
+
+`--until-ready` never prints the backlog. Each poll turns top-level comments
+(issue comments and review bodies) into P1 `pr-comment` rows when a person
+wrote them — not a bot, not the login the monitor runs as, not a deleted
+account — after the window start: the job's submit time for a detached run,
+the loop's start for an attached one. Older comments only advance the
+position; a comment posted between an earlier monitor's exit and this submit
+is the accepted miss. Inline review comments reach the inbox as
+`review-thread` rows instead.
 
 ## Fast Plus Monitor
 

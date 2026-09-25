@@ -32,7 +32,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect, HashMap, Match } from "effect";
+import { DateTime, Effect, flow, HashMap, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -132,6 +132,68 @@ export const classifyYeetCheckOutcome = (check: YeetCheckSignal): YeetCheckOutco
 };
 
 /**
+ * Normalize one optional text field of a raw `gh pr checks` record.
+ *
+ * **Details**
+ *
+ * gh renders an absent `link` or `workflow` as `""` for some check sources
+ * (plain commit statuses) and a caller may not have requested the field at
+ * all; both read as absent, and the check record stores absent as `null`
+ * ("the record has no such field"). Every collector that builds a
+ * {@link YeetWatchCheck} from a gh row uses this rule, so a failure capsule
+ * reads the same whichever loop observed the red.
+ *
+ * **Example** (An empty workflow is absent)
+ *
+ * ```ts
+ * import { yeetCheckRecordText } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.getOrNull(yeetCheckRecordText(""))) // null
+ * console.log(O.getOrNull(yeetCheckRecordText("Check"))) // "Check"
+ * ```
+ *
+ * @param value - The raw field as gh reported it, when it reported it.
+ * @returns The field, or `None` when it is absent or empty.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const yeetCheckRecordText = (value: string | null | undefined): O.Option<string> =>
+  O.filter(O.fromNullishOr(value), Str.isNonEmpty);
+
+/**
+ * Normalize one optional instant of a raw `gh pr checks` record.
+ *
+ * **Details**
+ *
+ * gh reports an instant it does not have as Go's zero time
+ * (`0001-01-01T00:00:00Z`): a queued check has no `completedAt`, and external
+ * status contexts (Vercel, CodeRabbit) carry neither instant. Some sources
+ * send `null` or omit the key. All of those read as absent; only a parseable
+ * instant after the Unix epoch is kept, verbatim.
+ *
+ * **Example** (Go's zero time is absent)
+ *
+ * ```ts
+ * import { yeetCheckRecordInstant } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(yeetCheckRecordInstant("0001-01-01T00:00:00Z"))) // true
+ * console.log(O.getOrNull(yeetCheckRecordInstant("2026-09-25T11:53:05Z"))) // "2026-09-25T11:53:05Z"
+ * ```
+ *
+ * @param value - The raw instant as gh reported it, when it reported it.
+ * @returns The instant, or `None` when it is absent, empty, unparseable, or gh's zero time.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const yeetCheckRecordInstant = (value: string | null | undefined): O.Option<string> =>
+  pipe(
+    O.fromNullishOr(value),
+    O.filter((instant) => O.exists(DateTime.make(instant), (dateTime) => DateTime.toEpochMillis(dateTime) > 0))
+  );
+
+/**
  * One check within a watch snapshot: its classified outcome plus its record.
  *
  * **Details**
@@ -141,6 +203,12 @@ export const classifyYeetCheckOutcome = (check: YeetCheckSignal): YeetCheckOutco
  * failing check's record instead of a classifier pass over composite output.
  * They default (null link/workflow, empty signal) so synthetic snapshots in
  * differ tests stay terse; the collector always fills them from the live row.
+ *
+ * `startedAt` and `completedAt` are GitHub's own instants for the check; a
+ * failing check's `completedAt` is when GitHub observed the red. The status
+ * collector behind `yeet monitor --until-ready` requests and fills them; the
+ * `--watch` collector does not request them, so they stay `None` there and an
+ * encoded check without them omits both keys. They never feed a capsule.
  *
  * @category models
  * @since 0.0.0
@@ -155,11 +223,52 @@ export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
       S.withConstructorDefault(Effect.succeed(YeetCheckSignal.make({ bucket: "", state: "" })))
     ),
     workflow: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
+    startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    completedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("YeetWatchCheck", {
     description: "One PR check's name, classified outcome, and raw record within a watch snapshot.",
   })
 ) {}
+
+const instantMillis = (instant: string): number =>
+  O.getOrElse(O.map(DateTime.make(instant), DateTime.toEpochMillis), () => Number.POSITIVE_INFINITY);
+
+const instantOrder: Order.Order<string> = Order.mapInput(Order.Number, instantMillis);
+
+/**
+ * When GitHub first observed a red among one head's checks.
+ *
+ * **Details**
+ *
+ * The earliest `completedAt` of any check that classifies as `fail`, required
+ * or not, because either kind writes a `check-failed` inbox row. Checks whose
+ * record carries no `completedAt` (external status contexts, a `--watch`
+ * snapshot) do not contribute; with none left the instant is unknown.
+ *
+ * **Example** (The earliest failing completion wins)
+ *
+ * ```ts
+ * import { YeetWatchCheck, yeetFirstRedAt } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const red = (name: string, completedAt: string) =>
+ *   YeetWatchCheck.make({ name, outcome: "fail", completedAt: O.some(completedAt) })
+ * const first = yeetFirstRedAt([red("Lint", "2026-09-25T12:05:00Z"), red("Check", "2026-09-25T12:01:00Z")])
+ * console.log(O.getOrNull(first)) // "2026-09-25T12:01:00Z"
+ * ```
+ *
+ * @param checks - One poll's checks for the head.
+ * @returns The earliest failing check's `completedAt`, or `None` when no failing check carries one.
+ * @category getters
+ * @since 0.0.0
+ */
+export const yeetFirstRedAt: (checks: ReadonlyArray<YeetWatchCheck>) => O.Option<string> = flow(
+  A.filter((check: YeetWatchCheck) => check.outcome === YeetCheckOutcome.Enum.fail),
+  A.flatMap((check) => O.toArray(check.completedAt)),
+  A.sort(instantOrder),
+  A.head
+);
 
 /**
  * One review thread within a watch snapshot: its identity and what it owes.

@@ -701,13 +701,37 @@ const statusRemoteStep = (context: RepoRunContext): RepoPlanStep =>
     verification: "current-branch-pr-status",
   });
 
+/**
+ * The `gh pr checks --json` fields the remote status collector requests.
+ *
+ * **Details**
+ *
+ * One list for the collector and for the dry-run step that shows it, so the
+ * plan never names fewer fields than the read makes. It is every field a
+ * failure capsule and the push → row → ack timeline read: the classification
+ * signal (`state`, `bucket`), the capsule's `link` and `workflow`, and GitHub's
+ * `startedAt`/`completedAt` instants.
+ *
+ * **Example** (Read the field list)
+ *
+ * ```ts
+ * import { YEET_STATUS_CHECK_FIELDS } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_STATUS_CHECK_FIELDS) // "name,state,bucket,link,workflow,completedAt,startedAt"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const YEET_STATUS_CHECK_FIELDS = "name,state,bucket,link,workflow,completedAt,startedAt" as const;
+
 const statusRemoteChecksStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "status:03-remote-checks",
     label: "status:remote-checks",
     phase: "monitor",
     command: "gh",
-    args: ["pr", "checks", "--json", "name,state,bucket"],
+    args: ["pr", "checks", "--json", YEET_STATUS_CHECK_FIELDS],
     cwd: context.repoRoot,
     scope: "repo",
     mutability: "readonly",
