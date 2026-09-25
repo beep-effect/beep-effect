@@ -1,5 +1,6 @@
 /**
  * Pull-only reference workspace operations and nightly scheduling.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -60,6 +61,7 @@ const $I = $RepoCliId.create("commands/Refs/Refs.service");
 
 /**
  * Read-only planning, pull-only refresh, checkout linking, and unit rendering.
+ *
  * @category services
  * @since 0.0.0
  */
@@ -103,6 +105,7 @@ export interface ReferenceWorkspaceShape {
  * import { Effect } from "effect"
  * Effect.isEffect(ReferenceWorkspace.use((workspace) => workspace.plan("/home/op", "/refs"))) // => true
  * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -569,6 +572,9 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
  * import * as Layer from "effect/Layer"
  * Layer.isLayer(referenceWorkspaceLayer("/checkout")) // => true
  * ```
+ *
+ * @param owner - Absolute path of the checkout that owns scripts/references.json.
+ * @returns The reference workspace layer bound to that checkout.
  * @category layers
  * @since 0.0.0
  */
@@ -589,6 +595,7 @@ export const referenceWorkspaceLayer = (
  * import * as Layer from "effect/Layer"
  * Layer.isLayer(ReferenceWorkspaceLive) // => true
  * ```
+ *
  * @category layers
  * @since 0.0.0
  */
