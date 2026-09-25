@@ -383,11 +383,11 @@
   "implementationStarted": false,
   "ownerAdmissionReceipt": {
     "file": "goals/boolean-creep/data/r32-owner-admissions-2026-09-25.json",
-    "sha256": "ce9f11838f5aa78f72bf38f538f34eb75b4f279d45168e59d3b691e86792a711"
+    "sha256": "051f07ddc377241176e8b16c200760182f94acf73bd3d1defc7c567fc66135c1"
   },
   "parentReconciliationReceipt": {
     "file": "goals/boolean-creep/data/r32-reconciliation-progress-2026-09-24.json",
-    "sha256": "b8bb220bc171a82c18ab108e9b2e5e0771a35681c841ca0b1bdda1c97aa2550c"
+    "sha256": "abc71f68c64cb9f45d5627a0b2d4cf61a3b28b902b18abcf8ae8ef1e09469172"
   },
   "statusCounts": {
     "reviewed": 16,

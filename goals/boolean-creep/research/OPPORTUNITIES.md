@@ -1563,3 +1563,13 @@ search across constructors/defaults/fixtures, and separation of successful
 producer outputs from exported contracts would prevent these repeated
 misclassifications. Corrections remain reconciliation work, not implementation
 or dry-round credit.
+
+## 2026-09-25 — Publication formatting invalidated receipt bindings
+
+R33 predecessor preflight rejected `r32-reconciliation-progress` after the
+pre-commit Biome hook reformatted four JSON files. The pre-publication binding
+check had passed, but the hook ran afterward. Original JSON bytes reconstructed
+exactly against saved hashes; values are unchanged. The repair receipt retains
+those bytes and updates the dependent bindings after formatting. Format every
+receipt before binding it, then recheck bindings after the actual commit.
+Evidence: `data/publication-format-repair-2026-09-25.json`.

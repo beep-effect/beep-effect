@@ -76,15 +76,15 @@
     },
     {
       "file": "goals/boolean-creep/data/r32-parent-integration-2026-09-25.json",
-      "sha256": "3fdc0858076bbb8ef5c9697cdad536f66d985200224dfe9a1c48860410e88c22"
+      "sha256": "cc62e90372499b9b2581824b13e0a2c970fc102636ceda6126a8d9e4703943bc"
     },
     {
       "file": "goals/boolean-creep/data/r32-reconciliation-progress-2026-09-24.json",
-      "sha256": "b8bb220bc171a82c18ab108e9b2e5e0771a35681c841ca0b1bdda1c97aa2550c"
+      "sha256": "abc71f68c64cb9f45d5627a0b2d4cf61a3b28b902b18abcf8ae8ef1e09469172"
     },
     {
       "file": "goals/boolean-creep/data/r32-owner-admissions-2026-09-25.json",
-      "sha256": "ce9f11838f5aa78f72bf38f538f34eb75b4f279d45168e59d3b691e86792a711"
+      "sha256": "051f07ddc377241176e8b16c200760182f94acf73bd3d1defc7c567fc66135c1"
     },
     {
       "file": "goals/boolean-creep/history/inventory/2026-09-25-r32-final-reconciled.jsonl",
@@ -97,10 +97,6 @@
     {
       "file": "goals/boolean-creep/data/decision-snapshot-index-2026-09-22.json",
       "sha256": "d952ea6ccca9d4005746f7ddc0a5f9393d571a8953bca5210953623d6d9dae4c"
-    },
-    {
-      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/source-sha.txt",
-      "sha256": "8f6aab963d411f6382a5bea588266dd88011c5c76dd8b6cc13a5d52e5283f693"
     }
   ],
   "note": "Source-stable full census reconciled against complete owners. Three new qualifications; explicit owner ruling authorizes Cache receipt64/27. Withdrawals correct recall scope and earn no implementation credit. Replacement independent P3 and two current-source dry rounds remain required."

@@ -30,7 +30,7 @@
   "verifiedHashBindings": 39,
   "savedSubset": {
     "sourceReceipt": "data/tooling-tmpfs-refresh-2026-09-22.json",
-    "sourceReceiptSha256": "6d02ae5d8edf14cd4268510ea0ea3996b9e06a21ad2139e6fae57135b2243c74",
+    "sourceReceiptSha256": "66400682f8cffbc8d98ee468ac864ff4d12b2847b6994265b2db6b79ab169bd6",
     "previousPendingCount": 1,
     "completedIds": ["yeet-status-remote-check-phase"],
     "pendingCount": 0,

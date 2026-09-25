@@ -58,7 +58,7 @@
   "publicOutputs": [
     {
       "file": "goals/boolean-creep/data/r32-owner-reviews/cache-pilot-run-observations/finite-table.json",
-      "sha256": "57ddfadcdd99512348f30ead6e4d10b46f08c239a0d423aad153d4a08a5bacad"
+      "sha256": "bec5fe9057b4bdb13e12e5690d34d9505d8703b8904f8b83f4d9be10d0972fa1"
     },
     {
       "file": "goals/boolean-creep/data/r32-owner-reviews/cache-pilot-run-observations/disposition.md",
