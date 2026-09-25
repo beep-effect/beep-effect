@@ -5,6 +5,7 @@
   "type": "module",
   "homepage": "https://github.com/beep-effect/beep-effect/tree/main/scratchpad",
   "exports": {
+    "./beep": "./beep/index.ts",
     "./beep-docs": "./beep-docs/api-reference/index.ts",
     "./codemode": "./codemode/index.ts",
     "./glob": "./glob/index.ts",

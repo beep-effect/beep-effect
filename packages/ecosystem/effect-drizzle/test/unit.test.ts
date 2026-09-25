@@ -104,6 +104,7 @@ import {
   _repositoryNullableUniqueLocator,
   _repositoryUniqueIndexLocator,
   _repositoryVersionLocator,
+  _representedDeclaredNumberTextCarrierMismatch,
   _reverseRelationCollision,
   _runtimeArrayCarrierMismatch,
   _runtimeByteCarrierMismatch,
@@ -116,6 +117,7 @@ import {
   _twoPrimaryKeys,
   _twoVersions,
   _unboundedVarchar,
+  _unrepresentedDeclaredNumber,
   _uuidTextFkMismatch,
   ArrayRecord,
   AuditedRecord,
@@ -135,6 +137,7 @@ import {
   pgCheckedUuid,
   pgEmptyEnumLabel,
   pgFiniteFloat,
+  RepresentedDeclaredNumber,
   User,
   UserId,
   uniquePhysicalResolutionSchema,
@@ -636,6 +639,17 @@ describe("schema corroboration and invariants", () => {
     expect(_runtimeObjectCarrierMismatch).toThrow("encodes string");
     expect(_runtimeModeCarrierMismatch).toThrow("encodes bigint");
     expect(_runtimeArrayCarrierMismatch).toThrow("outer schema does not match");
+  });
+
+  it("derives the number carrier for a declaration only through its representation", () => {
+    class DeclaredNumberProjection extends Model<DeclaredNumberProjection>("DeclaredNumberProjection")({
+      value: RepresentedDeclaredNumber.pipe(pg.doublePrecision()),
+    }) {}
+    const columns = DeclaredNumberProjection.pipe(pg.toPgTable, getTableConfig).columns;
+    expect(DeclaredNumberProjection.sql.columns.value.column.kind).toBe("doublePrecision");
+    expect(columnFrom(columns, "value").getSQLType()).toBe("double precision");
+    expect(_representedDeclaredNumberTextCarrierMismatch).toThrow("encodes number[0]");
+    expect(_unrepresentedDeclaredNumber).toThrow("Encoded declaration has no SQL carrier.");
   });
 
   it("refuses ambiguous encodings and mirrors model invariants at runtime", () => {

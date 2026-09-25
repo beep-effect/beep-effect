@@ -145,7 +145,7 @@ const normalizeSegments = (segments: ReadonlyArray<string>): O.Option<ReadonlyAr
       segment === ".."
         ? A.matchRight(kept, {
             onEmpty: O.none<ReadonlyArray<string>>,
-            onNonEmpty: (init) => O.some<ReadonlyArray<string>>(init),
+            onNonEmpty: O.some<ReadonlyArray<string>>,
           })
         : O.some(A.append(kept, segment))
     )

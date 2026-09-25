@@ -17,6 +17,11 @@ export * from "./combinators.ts";
  * @since 0.0.0
  */
 export { default_ as default } from "./combinators.ts";
+/** Representation annotation that gives a declared number schema the `number` carrier.
+ * @category constants
+ * @since 0.0.0
+ */
+export { NumberDeclarationRepresentation } from "./derive.ts";
 /** PostgreSQL table-extra constructors and guards.
  * @category tables
  * @since 0.0.0

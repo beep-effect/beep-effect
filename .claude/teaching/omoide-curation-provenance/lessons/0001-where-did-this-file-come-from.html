@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Where did this file come from?</title>
+<link rel="stylesheet" href="../assets/course.css"></head>
+<body><main>
+<nav class="course"><span>Lesson 1 of the <a href="../MISSION.md">provenance mission</a></span><a href="../reference/glossary.html">Glossary</a></nav>
+<p class="kicker">Lesson 0001 · about 6 minutes</p>
+<h1>Where did this file come from?</h1>
+<p class="lede">What the <code>ancestry</code> field in an Omoide registration manifest really asks, why two of its answers are allowed and three are refused, and which answer is honest for the aubri pilot.</p>
+
+<h2>1. The story (like you're 5)</h2>
+<div class="card story">
+<p>Imagine a lunchbox rule at school. Every lunchbox needs a sticker that says where the food came from, and the teacher will only let you eat food with a sticker she can read.</p>
+<p>There are only two stickers she accepts. <b>"I packed this myself"</b> means: this is the oldest version of the food I have, I did not make it out of something else I can point to. <b>"Made from Grandma's recipe, card attached"</b> means: I made it from something else, and here is the exact recipe card so anyone can check.</p>
+<p>Three stickers get the lunchbox sent home. <b>"Found it on the floor"</b> (nobody knows where it came from). <b>"A robot cooked it"</b> (a machine invented it). And <b>"made from Grandma's recipe"</b> with <em>no card attached</em>, because a claim you cannot check is the same as no claim.</p>
+<p>The sticker is <em>your</em> promise. The teacher does not taste the food to check it. She writes your name next to the sticker so everyone knows who promised.</p>
+</div>
+
+<h2>2. The same thing as a type</h2>
+<p>The lunchbox stickers are a sum type. The registry only has two constructors, and everything else is a refusal, not a third case.</p>
+<pre><code>// What the manifest can say about one file (paraphrasing source-registration.md §72–84)
+type Ancestry =
+  | { kind: "original_capture";            parent_sha256: [] }              // "I packed this myself"
+  | { kind: "non_generative_derivative";   parent_sha256: NonEmpty&lt;Sha256&gt;;
+      ancestry_complete: true }                                             // "recipe card attached"
+
+// Every variant also carries the operator's words, stored verbatim:
+//   statement: string, evidence_reference: string
+
+// Refused at registration (error codes come from the validator, not the UI):
+//   kind === "unknown" | "generative"          → refused
+//   derivative with missing/partial parents    → refused ("incomplete")
+//   a parent that is itself a descendant       → refused ("cyclic")</code></pre>
+<p class="side">Nothing here is inferred. The doc is explicit: "The service does not invent ancestry from filenames, old flags or EXIF." An empty parent list is not "unknown parents"; it is the claim "there are no parents to name".</p>
+
+<h2>3. What the software checks vs what you promise</h2>
+<figure>
+<svg viewBox="0 0 720 210" width="100%" role="img" aria-label="Flow: manifest goes through software checks, then operator attestations are stored, then review and export happen later">
+  <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="currentColor"/></marker></defs>
+  <g fill="none" stroke="currentColor" stroke-width="1.5" color="var(--ink)">
+    <rect x="10" y="60" width="150" height="70" rx="10"/>
+    <rect x="215" y="20" width="200" height="150" rx="10" stroke="var(--accent)"/>
+    <rect x="470" y="20" width="240" height="150" rx="10" stroke="var(--accent-2)"/>
+    <path d="M160 95 H213" marker-end="url(#a)"/><path d="M415 95 H468" marker-end="url(#a)"/>
+  </g>
+  <g font-size="14" fill="var(--ink)">
+    <text x="85" y="90" text-anchor="middle">manifest.json</text><text x="85" y="110" text-anchor="middle" font-size="12" fill="var(--muted)">12 files + statements</text>
+    <text x="315" y="45" text-anchor="middle" font-weight="700" fill="var(--accent)">software verifies</text>
+    <text x="230" y="72">✓ SHA-256 of each file</text><text x="230" y="94">✓ volume UUID + mount</text><text x="230" y="116">✓ schema + refusal rules</text><text x="230" y="138">✓ splits don't leak groups</text><text x="230" y="160" font-size="12" fill="var(--muted)">no decoding, no EXIF, no listing</text>
+    <text x="590" y="45" text-anchor="middle" font-weight="700" fill="var(--accent-2)">stored verbatim, unverified</text>
+    <text x="485" y="72">• ancestry kind + statement</text><text x="485" y="94">• rights_to_curate</text><text x="485" y="116">• subject_identity_attested</text><text x="485" y="138">• evidence_reference</text><text x="485" y="160" font-size="12" fill="var(--muted)">with your operator id + manifest digest</text>
+  </g>
+</svg>
+<figcaption>Registration is two boxes. The left box is machine truth; the right box is your word, recorded so it can be audited later. This is the "trust boundary with the local operator" the contract names.</figcaption>
+</figure>
+
+<h2>4. So what is honest for the aubri files?</h2>
+<p>A read-only census of the first twelve T7-rooted aubri files found <b>no camera EXIF at all</b> (no make, model, date or software tag) and no ICC profile. They are the files as downloaded or received, already re-encoded by whatever platform they came through. You hold no earlier copies and no parent hashes.</p>
+<table>
+<tr><th>Option</th><th>What the registry does</th><th>Is it honest?</th></tr>
+<tr><td><code>non_generative_derivative</code></td><td class="refuse">Refused: no parent hashes, so the chain is incomplete.</td><td>It would be truer in spirit (something upstream re-encoded them) but you cannot supply the card, so the software will not accept the sticker.</td></tr>
+<tr><td><code>unknown</code></td><td class="refuse">Refused by design.</td><td>Honest about the platform history, but it blocks admission, which is the point of the rule.</td></tr>
+<tr><td><code>original_capture</code></td><td class="ok">Accepted with an empty parent list.</td><td>Honest <em>if the statement says what "original" means here</em>: the earliest form you hold, no generative ancestry known, upstream platform re-encoding possible and undocumented.</td></tr>
+</table>
+<div class="callout">
+<p><b>Recommended statement</b> (stored verbatim on every file):</p>
+<p><em>"As-received file from the subject's public or provided media; the earliest form held by the operator; no generative ancestry known; upstream re-encoding by the source platform is possible and undocumented."</em></p>
+<p class="side">The enum says "original_capture". Your sentence says exactly how far that word reaches. An auditor reads both.</p>
+</div>
+<p>What this does <b>not</b> do: it does not claim you took the photo, it does not claim a licence, and it does not prove the subject is aubri. Those are the separate <code>rights_to_curate</code> and <code>subject_identity_attested</code> fields, which are the next lesson.</p>
+
+<h2>5. Check yourself</h2>
+<div class="quiz">
+<fieldset id="q1" data-answer="b" data-why="An empty parent list is the definition of original_capture." data-hint="Re-read section 2: which constructor has parent_sha256: []?">
+<legend>You have a file and no earlier copy of it. Which kind can the registry accept?</legend>
+<label><input type="radio" name="q1" value="a"> non_generative_derivative</label>
+<label><input type="radio" name="q1" value="b"> original_capture, empty list</label>
+<label><input type="radio" name="q1" value="c"> unknown, with a good note</label>
+</fieldset>
+<fieldset id="q2" data-answer="c" data-why="Ancestry, rights and identity are operator attestations; the software records them and checks hashes, volume and schema." data-hint="Look at the two boxes in section 3.">
+<legend>Which of these does the software actually verify at registration?</legend>
+<label><input type="radio" name="q2" value="a"> that the subject is aubri</label>
+<label><input type="radio" name="q2" value="b"> that you own the rights</label>
+<label><input type="radio" name="q2" value="c"> that the SHA-256 matches</label>
+</fieldset>
+<fieldset id="q3" data-answer="a" data-why="A derivative without a complete, checkable parent chain is refused; a claim you cannot check is no claim." data-hint="Which sticker gets sent home even though it sounds truthful?">
+<legend>You declare non_generative_derivative but list no parent hashes. Result?</legend>
+<label><input type="radio" name="q3" value="a"> refused as incomplete</label>
+<label><input type="radio" name="q3" value="b"> accepted with warning</label>
+<label><input type="radio" name="q3" value="c"> accepted, no parents</label>
+</fieldset>
+</div>
+
+<h2>6. Read the primary source</h2>
+<p>Ten lines, and they settle every argument: <a href="file:///home/elpresidank/YeeBois/workstation-apps/Omoide-ux7/docs/curation/source-registration.md">docs/curation/source-registration.md</a>, the paragraph starting "The operator's rights, identity, capture group, split and ancestry statements are stored as operator attestations" (lines 72–84 on branch <code>codex/curation-human-authority</code>).</p>
+
+<p class="side">Anything unclear? Ask your agent in the session. It can show you the validator code path for any error code, or draft the rights statement with you next.</p>
+</main>
+<script src="../assets/quiz.js"></script>
+</body></html>

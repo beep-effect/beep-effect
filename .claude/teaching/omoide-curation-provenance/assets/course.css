@@ -1,0 +1,226 @@
+:root {
+  --paper: #f7f3e8;
+  --ink: #1d2a22;
+  --muted: #5d6b62;
+  --accent: #1f5a3a;
+  --accent-2: #b8672b;
+  --refuse: #8f2d2d;
+  --ok: #2d6d43;
+  --card: #fffdf7;
+  --line: #d9d2c0;
+  --code: #ece6d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1a14;
+    --ink: #e8e4d6;
+    --muted: #a3ada6;
+    --accent: #7fd3a0;
+    --accent-2: #e8a76a;
+    --refuse: #ff8a8a;
+    --ok: #8fe0a8;
+    --card: #15231b;
+    --line: #2b3b31;
+    --code: #1b2a21;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1a14;
+  --ink: #e8e4d6;
+  --muted: #a3ada6;
+  --accent: #7fd3a0;
+  --accent-2: #e8a76a;
+  --refuse: #ff8a8a;
+  --ok: #8fe0a8;
+  --card: #15231b;
+  --line: #2b3b31;
+  --code: #1b2a21;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  font-size: 18px;
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  line-height: 1.55;
+}
+main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 2.5rem 16px 5rem;
+}
+h1 {
+  font-size: 2rem;
+  line-height: 1.15;
+  margin: 0 0 0.25rem;
+  color: var(--accent);
+}
+h2 {
+  font-size: 1.35rem;
+  margin: 2.2rem 0 0.6rem;
+  color: var(--accent);
+}
+h3 {
+  font-size: 1.05rem;
+  margin: 1.4rem 0 0.4rem;
+}
+p {
+  margin: 0.6rem 0;
+}
+.kicker {
+  color: var(--muted);
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.lede {
+  font-size: 1.15rem;
+  color: var(--muted);
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  margin: 1rem 0;
+}
+.story {
+  border-left: 4px solid var(--accent-2);
+  padding-left: 1rem;
+  font-style: italic;
+}
+code,
+pre {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+}
+pre {
+  background: var(--code);
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  line-height: 1.45;
+}
+code {
+  background: var(--code);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+pre code {
+  background: none;
+  padding: 0;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+th {
+  color: var(--muted);
+  font-weight: 600;
+}
+.ok {
+  color: var(--ok);
+  font-weight: 700;
+}
+.refuse {
+  color: var(--refuse);
+  font-weight: 700;
+}
+.side {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+a {
+  color: var(--accent-2);
+}
+figure {
+  margin: 1.2rem 0;
+}
+figcaption {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
+}
+svg text {
+  font-family: inherit;
+}
+nav.course {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+.quiz {
+  margin: 1rem 0;
+}
+.quiz fieldset {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  margin: 0.8rem 0;
+  background: var(--card);
+}
+.quiz legend {
+  font-weight: 600;
+  padding: 0 0.4rem;
+}
+.quiz label {
+  display: block;
+  padding: 0.3rem 0;
+  cursor: pointer;
+}
+.quiz .fb {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  min-height: 1.3em;
+}
+.quiz .fb.ok {
+  color: var(--ok);
+}
+.quiz .fb.no {
+  color: var(--refuse);
+}
+.quiz button {
+  font: inherit;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--paper);
+  cursor: pointer;
+}
+.callout {
+  background: var(--card);
+  border: 1px dashed var(--accent);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  margin: 1rem 0;
+}
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+  main {
+    padding: 0;
+  }
+  .quiz button {
+    display: none;
+  }
+}

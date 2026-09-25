@@ -273,6 +273,41 @@ reports first-touch remote-eligible hit rate plus p50/p95 by cache mode, exclude
 forced or disabled runs, and fails its correctness tripwires when a changed
 source task is incorrectly reused.
 
+## Sharing the local cache across sibling checkouts
+
+Turbo task hashes are repo-relative: two checkouts of the same commit with the
+same package inputs produce the same hash (measured 2026-09-24, `beep-effect3`
+and `beep-effect18` both hashed `@beep/documents-use-cases#test` identically).
+The default `.turbo/cache` is per checkout, so a lane proven in one clone is
+re-proven in every sibling. Point every checkout at one absolute directory
+instead; Turbo 2.11 accepts it (`bunx turbo config` prints the resolved
+`cacheDir`):
+
+```sh
+export TURBO_CACHE_DIR="$HOME/.cache/beep/turbo"
+```
+
+The repository `.envrc` exports that default under direnv, and the CLI's Turbo
+lanes extend the ambient environment, so the setting reaches Yeet proofs and
+`beep ci lane` bodies without any `.env` change. The remote-read quad and the
+`TURBO_FORCE` control above are unaffected.
+
+Two things defeat cross-checkout hits:
+
+- Untracked residue inside a package. A fallow audit leaves `.fallow/` with its
+  own `*` gitignore, which git honors but Turbo's `$TURBO_DEFAULT$` walk hashed
+  anyway (`.fallow/.gitignore` shifted seven `transit` hashes between two clean
+  clones at the same commit). The root `.gitignore` now ignores `.fallow/` and
+  every root task that hashes `$TURBO_DEFAULT$` excludes `!.fallow/**` next to `!.beep/**`.
+- A `bun.lock` that differs from the sibling's. The lockfile is part of every
+  hash, so a branch that bumps dependencies shares nothing until it merges.
+
+Vitest's `fsModuleCache` (enabled in `vitest.shared.ts`) is deliberately not
+shared this way: its key includes the absolute module path, and one
+`_metadata.json` lockfile hash governs the whole directory, so checkouts on
+different lockfiles would clear each other. Leave `fsModuleCachePath` at its
+per-checkout default.
+
 ## Related
 
 - `goals/ship-velocity/research/c4-turbo-cache.md` — the audit this implements.

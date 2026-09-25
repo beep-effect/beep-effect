@@ -15,6 +15,7 @@
     "identity-kit-probe.ts",
     "exec.ts",
     "effect-ontology/**",
+    "beep/**",
     "claudecode/vitest.config.ts"
   ],
   "enforceDescriptions": true,
