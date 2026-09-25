@@ -2129,3 +2129,15 @@ PR #1272 remains open for the inline-schema repairs and the host-path finding
 belongs to the Effect/Vitest inventory.
 [The attribution](./research/proof-7877-attribution.json) preserves this as
 a failed proof, with current-head verification still required.
+
+### Refs entrypoint semantic review at `1149f36bd2`
+
+[Refs entrypoint semantics](research/refs-entrypoint-semantics.json) binds the
+five direct Refs source hashes and classifies plan, refresh, timer operations,
+link repair, and isolated unit rendering. The review identifies external
+filesystem, Git, clock, process/environment and systemd inputs and effects.
+No maintenance command was executed. This is a bounded source review only;
+transitive helpers, runtime captures, and signed comparisons remain open.
+The canonical attachment accepted this receipt as review 52: 1,014 sources and
+six artifacts, with all 14 unresolved obligations retained. The direct schema
+review does not prove safe capture, immutable remote identity or runtime purity.
