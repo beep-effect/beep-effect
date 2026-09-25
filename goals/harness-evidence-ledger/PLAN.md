@@ -14,6 +14,7 @@ Status: `in-progress`. P0 is complete. P1 is next.
 | P3 Yeet PR1 to mergeable | pending | Ship the packet, schemas, CLI, hook-pulse change, scorer fixes, and rerun config. | `merge-ready: yes` from `yeet monitor`; zero outstanding review threads. |
 | P4 PR2 results + reflection | pending | Ship rerun results, first rows, pruning proposal output, and the reflection. | PR2 merge-ready; `lint reflection-artifacts` passes. |
 | P5 Close | pending | Flip packet state and record the verdict. | Manifest and README status updated in the same PR as the final work. |
+- Scorer sandbox floor: no lift claim until the fixture copy is self-contained (see `research/OPPORTUNITIES.md`, 2026-09-25); the step-1 accept at 0.9583 is leakage evidence, not lift.
 
 ## P0 Research (complete)
 
