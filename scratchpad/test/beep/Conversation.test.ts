@@ -1,6 +1,7 @@
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
@@ -82,14 +83,21 @@ describe("Conversation", () => {
       ],
     });
     expect(getTranscript(conversation, false)).toContain("User: Hello");
+    expect(pipe(conversation, getTranscript())).toEqual(getTranscript(conversation));
+    expect(pipe(conversation, getTranscript(false))).toEqual(getTranscript(conversation, false));
+    expect(pipe(conversation, getTranscript(true, [], "Ben"))).toEqual(getTranscript(conversation, true, [], "Ben"));
     expect(getPersonIds(conversation)).toContain("p1");
     expect(getPhotosDescription(conversation, false)).toBe("None");
+    expect(pipe(conversation, getPhotosDescription())).toEqual(getPhotosDescription(conversation));
+    expect(pipe(conversation, getPhotosDescription(true))).toEqual(getPhotosDescription(conversation, true));
     expect(projectSharedConversation(conversation, []).structured.title).toBe("Standup");
     expect(asDictCleanedDates(conversation).id).toBe("c1");
     expect(decode(ConversationSyncOperation, { type: "setTitle", title: "Next" }).type).toBe("setTitle");
     expect(decode(ConversationSyncOperation, { type: "setStarred", starred: true }).type).toBe("setStarred");
     const external = ExternalIntegrationCreateConversation.make({ text: " Hello ", textSource: "message" });
     expect(externalGetTranscript(external, true)).toBe("Hello");
+    expect(pipe(external, externalGetTranscript())).toEqual(externalGetTranscript(external));
+    expect(pipe(external, externalGetTranscript(true))).toEqual(externalGetTranscript(external, true));
     expect(externalGetPersonIds(external)).toEqual([]);
     expect(CreateConversation.make({
       text: "Hi",

@@ -23,6 +23,7 @@ import {
   filterProactiveNotificationScopes,
   getImageUrl,
   getRatingAvg,
+  hasCapability,
   hasChatTools,
   isAPersona,
   reduceDict,
@@ -110,6 +111,8 @@ describe("App", () => {
     const memories = App.make({ ...base, capabilities: HashSet.fromIterable(["memories"]) });
     assert.strictEqual(worksWithMemories(memories), true);
     assert.strictEqual(worksWithChat(memories), false);
+    assert.strictEqual(hasCapability("memories")(memories), true);
+    assert.strictEqual(hasCapability("chat")(memories), false);
     const chat = App.make({ ...base, capabilities: HashSet.fromIterable(["chat"]) });
     assert.strictEqual(worksWithChat(chat), true);
     const persona = App.make({ ...base, capabilities: HashSet.fromIterable(["persona"]) });
@@ -136,6 +139,7 @@ describe("App", () => {
       proactiveNotification: O.some(ProactiveNotification.make({ scopes: HashSet.fromIterable(["calendar"]) })),
     });
     assert.deepStrictEqual(filterProactiveNotificationScopes(scoped, ["calendar", "mail"]), ["calendar"]);
+    assert.deepStrictEqual(filterProactiveNotificationScopes(["calendar", "mail"])(scoped), ["calendar"]);
     const cleared: unknown = { ...wireBase, chatTools: null };
     const none = Effect.runSync(decodeApp(cleared));
     assert.strictEqual(hasChatTools(none), false);

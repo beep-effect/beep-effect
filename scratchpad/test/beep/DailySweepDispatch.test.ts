@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -62,6 +63,24 @@ describe("DailySweepDispatch", () => {
       skipped = true;
     }))), true);
     assert.strictEqual(skipped, false);
+  });
+
+  it("offers pipeable forms that match the data-first results", () => {
+    const issued = makeSweepPreDispatchError("daily_sweep_summary_agent");
+    const scope = SweepDispatchScope.make({ issued: O.some(issued), reason: O.some(issued.extractor) });
+    assert.strictEqual(pipe(scope, provesPreDispatch(issued)), true);
+    assert.strictEqual(pipe(scope, provesPreDispatch(makeSweepPreDispatchError("daily_sweep_summary_agent"))), false);
+    assert.strictEqual(O.getOrElse(pipe(scope, preDispatchReason(issued)), () => "source_locked_before_dispatch"), issued.extractor);
+    let ran = false;
+    const marked = pipe(
+      O.some(scope),
+      markProviderDispatch(O.some(() => {
+        ran = true;
+      })),
+    );
+    assert.strictEqual(ran, true);
+    assert.strictEqual(O.getOrElse(marked, () => SweepDispatchScope.make({})).dispatched, true);
+    assert.strictEqual(O.isNone(O.flatMap(marked, preDispatchReason(issued))), true);
   });
 
   it("certifies a preparation failure and rethrows after dispatch", () => {

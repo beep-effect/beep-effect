@@ -14,6 +14,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Arr from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -373,13 +374,15 @@ export const chatFileNormalizedMime = (mimeType: string | null): string => {
  * @category predicates
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Name and MIME type are co-primary inputs, and neither is a pipeable value.
-export const chatFileIsDocument = (name: string, mimeType: string | null): boolean => {
+export const chatFileIsDocument: {
+  (mimeType: string | null): (name: string) => boolean;
+  (name: string, mimeType: string | null): boolean;
+} = dual(2, (name: string, mimeType: string | null): boolean => {
   const ext = fileExtension(name);
   if (ext.length > 0) return HashSet.has(CHAT_FILE_DOCUMENT_EXTENSIONS, ext);
   const mime = chatFileNormalizedMime(mimeType);
   return mime.length > 0 && HashSet.has(CHAT_FILE_DOCUMENT_MIME_TYPES, mime);
-};
+});
 
 /**
  * Who sent a chat message.
@@ -550,11 +553,11 @@ export class FileChat extends Model<FileChat>("FileChat")(
   {
     id: text("id"),
     name: text("name"),
-    thumbnail: optionDefault(S.String, () => ""),
+    thumbnail: S.String.pipe(optionDefault(() => "")),
     mimeType: text("mime_type"),
     openaiFileId: text("openai_file_id"),
     createdAt: timestamp("created_at"),
-    thumbName: optionDefault(S.String, () => ""),
+    thumbName: S.String.pipe(optionDefault(() => "")),
   },
   $I.annote("FileChat", { description: "File attached to a chat message. thumb_name is omitted from the dump." }),
 ) {}
@@ -1356,19 +1359,21 @@ export const decodeMessage = (input: unknown) =>
  * @category decoding
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Records and the error callback are co-primary inputs, and neither is a pipeable value.
-export const deserializeManySafe = (
-  records: ReadonlyArray<unknown>,
-  onError?: (record: unknown) => void,
-): ReadonlyArray<Message> => {
-  const parsed: Array<Message> = [];
-  for (const record of records) {
-    const exit = Effect.runSyncExit(decodeMessage(record));
-    if (exit._tag === "Success") parsed.push(exit.value);
-    else if (onError !== undefined) onError(record);
-  }
-  return parsed;
-};
+export const deserializeManySafe: {
+  (onError?: (record: unknown) => void): (records: ReadonlyArray<unknown>) => ReadonlyArray<Message>;
+  (records: ReadonlyArray<unknown>, onError?: (record: unknown) => void): ReadonlyArray<Message>;
+} = dual(
+  (args) => Arr.isArray(args[0]),
+  (records: ReadonlyArray<unknown>, onError?: (record: unknown) => void): ReadonlyArray<Message> => {
+    const parsed: Array<Message> = [];
+    for (const record of records) {
+      const exit = Effect.runSyncExit(decodeMessage(record));
+      if (exit._tag === "Success") parsed.push(exit.value);
+      else if (onError !== undefined) onError(record);
+    }
+    return parsed;
+  },
+);
 
 /**
  * Resolves an app display name. The resolver is supplied by the caller.
@@ -1434,28 +1439,44 @@ const resolveSenderName = (
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Messages and formatting flags are co-primary inputs, and neither is a pipeable value.
-export const messagesAsString = (
-  messages: ReadonlyArray<Message>,
-  useUserNameIfAvailable = false,
-  usePluginName = false,
-  includeFileInfo = false,
-  resolver?: AppNameResolver,
-): string => {
-  void useUserNameIfAvailable;
-  const names: { [key: string]: string | null } = {};
-  const sorted = Arr.sort(messages, Order.mapInput(DateTime.Order, (message: Message) => message.createdAt));
-  return sorted
-    .map((message) => {
-      const sender = resolveSenderName(message, usePluginName, names, resolver);
-      let line = `(${formatChatStamp(message.createdAt)}) ${sender}: ${message.text}`;
-      if (includeFileInfo && message.filesId.length > 0) {
-        line = `${line} [Files attached: ${message.filesId.length} file(s), IDs: ${message.filesId.join(", ")}]`;
-      }
-      return line;
-    })
-    .join("\n");
-};
+export const messagesAsString: {
+  (
+    useUserNameIfAvailable?: boolean,
+    usePluginName?: boolean,
+    includeFileInfo?: boolean,
+    resolver?: AppNameResolver,
+  ): (messages: ReadonlyArray<Message>) => string;
+  (
+    messages: ReadonlyArray<Message>,
+    useUserNameIfAvailable?: boolean,
+    usePluginName?: boolean,
+    includeFileInfo?: boolean,
+    resolver?: AppNameResolver,
+  ): string;
+} = dual(
+  (args) => Arr.isArray(args[0]),
+  (
+    messages: ReadonlyArray<Message>,
+    useUserNameIfAvailable: boolean = false,
+    usePluginName: boolean = false,
+    includeFileInfo: boolean = false,
+    resolver?: AppNameResolver,
+  ): string => {
+    void useUserNameIfAvailable;
+    const names: { [key: string]: string | null } = {};
+    const sorted = Arr.sort(messages, Order.mapInput(DateTime.Order, (message: Message) => message.createdAt));
+    return sorted
+      .map((message) => {
+        const sender = resolveSenderName(message, usePluginName, names, resolver);
+        let line = `(${formatChatStamp(message.createdAt)}) ${sender}: ${message.text}`;
+        if (includeFileInfo && message.filesId.length > 0) {
+          line = `${line} [Files attached: ${message.filesId.length} file(s), IDs: ${message.filesId.join(", ")}]`;
+        }
+        return line;
+      })
+      .join("\n");
+  },
+);
 
 /**
  * Renders messages as XML history for a model prompt.
@@ -1486,37 +1507,53 @@ export const messagesAsString = (
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Messages and formatting flags are co-primary inputs, and neither is a pipeable value.
-export const messagesAsXml = (
-  messages: ReadonlyArray<Message>,
-  useUserNameIfAvailable = false,
-  usePluginName = false,
-  includeFileInfo = false,
-  resolver?: AppNameResolver,
-): string => {
-  void useUserNameIfAvailable;
-  const names: { [key: string]: string | null } = {};
-  const sorted = Arr.sort(messages, Order.mapInput(DateTime.Order, (message: Message) => message.createdAt));
-  return sorted
-    .map((message) => {
-      let fileSection = "";
-      if (includeFileInfo && message.files.length > 0) {
-        const rows = message.files.map((file) => `  <file id="${file.id}" name="${file.name}" type="${file.mimeType}"/>`);
-        fileSection = `<attachments>\n${rows.join("\n")}\n</attachments>`;
-      } else if (includeFileInfo && message.filesId.length > 0) {
-        fileSection = `<attachments>\n${message.filesId.map((id) => `  <file id="${id}"/>`).join("\n")}\n</attachments>`;
-      } else if (message.files.length > 0) {
-        fileSection = `<attachments>${message.files.map((file) => `<file>${file.name}</file>`).join("")}</attachments>`;
-      }
-      return `<message>
+export const messagesAsXml: {
+  (
+    useUserNameIfAvailable?: boolean,
+    usePluginName?: boolean,
+    includeFileInfo?: boolean,
+    resolver?: AppNameResolver,
+  ): (messages: ReadonlyArray<Message>) => string;
+  (
+    messages: ReadonlyArray<Message>,
+    useUserNameIfAvailable?: boolean,
+    usePluginName?: boolean,
+    includeFileInfo?: boolean,
+    resolver?: AppNameResolver,
+  ): string;
+} = dual(
+  (args) => Arr.isArray(args[0]),
+  (
+    messages: ReadonlyArray<Message>,
+    useUserNameIfAvailable: boolean = false,
+    usePluginName: boolean = false,
+    includeFileInfo: boolean = false,
+    resolver?: AppNameResolver,
+  ): string => {
+    void useUserNameIfAvailable;
+    const names: { [key: string]: string | null } = {};
+    const sorted = Arr.sort(messages, Order.mapInput(DateTime.Order, (message: Message) => message.createdAt));
+    return sorted
+      .map((message) => {
+        let fileSection = "";
+        if (includeFileInfo && message.files.length > 0) {
+          const rows = message.files.map((file) => `  <file id="${file.id}" name="${file.name}" type="${file.mimeType}"/>`);
+          fileSection = `<attachments>\n${rows.join("\n")}\n</attachments>`;
+        } else if (includeFileInfo && message.filesId.length > 0) {
+          fileSection = `<attachments>\n${message.filesId.map((id) => `  <file id="${id}"/>`).join("\n")}\n</attachments>`;
+        } else if (message.files.length > 0) {
+          fileSection = `<attachments>${message.files.map((file) => `<file>${file.name}</file>`).join("")}</attachments>`;
+        }
+        return `<message>
 <created_at>${formatChatStamp(message.createdAt)}</created_at>
 <sender>${resolveSenderName(message, usePluginName, names, resolver)}</sender>
 <content>${message.text}</content>
 ${fileSection}
 </message>`.trim();
-    })
-    .join("\n");
-};
+      })
+      .join("\n");
+  },
+);
 
 /**
  * Message plus the optional NPS prompt flag.
@@ -2008,17 +2045,33 @@ export const decodeLegacyChatSession = (input: unknown) =>
  * console.log(once.fileIds.join(",")) // "f1,f2"
  * ```
  *
+ * **Example** (Add file ids in a pipe)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import { pipe } from "effect/Function"
+ * import { ChatSession, addFileIds } from "./Chat.ts"
+ *
+ * const session = pipe(
+ *   ChatSession.make({ id: "s1", createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z") }),
+ *   addFileIds(["f1", "f2"]),
+ * )
+ * console.log(session.fileIds.join(",")) // "f1,f2"
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Session and file ids are co-primary inputs, and neither is a pipeable value.
-export const addFileIds = (session: ChatSession, newFileIds: ReadonlyArray<string>): ChatSession => {
+export const addFileIds: {
+  (newFileIds: ReadonlyArray<string>): (session: ChatSession) => ChatSession;
+  (session: ChatSession, newFileIds: ReadonlyArray<string>): ChatSession;
+} = dual(2, (session: ChatSession, newFileIds: ReadonlyArray<string>): ChatSession => {
   const next = [...session.fileIds];
   for (const fileId of newFileIds) {
     if (!next.includes(fileId)) next.push(fileId);
   }
   return ChatSession.make({ ...session, fileIds: next });
-};
+});
 
 /**
  * File ids in the request that the session does not already have.
@@ -2040,13 +2093,29 @@ export const addFileIds = (session: ChatSession, newFileIds: ReadonlyArray<strin
  * console.log(fresh.includes("f2")) // true
  * ```
  *
+ * **Example** (Find new ids in a pipe)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import { pipe } from "effect/Function"
+ * import { ChatSession, retrieveNewFile } from "./Chat.ts"
+ *
+ * const fresh = pipe(
+ *   ChatSession.make({ id: "s1", createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"), fileIds: ["f1"] }),
+ *   retrieveNewFile(["f1", "f2"]),
+ * )
+ * console.log(fresh.join(",")) // "f2"
+ * ```
+ *
  * @category getters
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Session and file ids are co-primary inputs, and neither is a pipeable value.
-export const retrieveNewFile = (session: ChatSession, fileIds: ReadonlyArray<string>): ReadonlyArray<string> => {
+export const retrieveNewFile: {
+  (fileIds: ReadonlyArray<string>): (session: ChatSession) => ReadonlyArray<string>;
+  (session: ChatSession, fileIds: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(2, (session: ChatSession, fileIds: ReadonlyArray<string>): ReadonlyArray<string> => {
   const existing = HashSet.fromIterable(session.fileIds);
   return Arr.filter(fileIds, (fileId) => !HashSet.has(existing, fileId));
-};
+});
 
 

@@ -11,6 +11,7 @@ import {
   DailySummaryDecisionMade,
   DailySummaryKnowledgeNugget,
   DailySummaryLocationPin,
+  DailySummaryLocationPinWire,
   DailySummaryResponse,
   DailySummaryTopicHighlight,
   DailySummaryUnresolvedQuestion,
@@ -38,6 +39,18 @@ describe("DailySummary", () => {
     const missing = decode(DailySummaryActionItemWire, {});
     assert.strictEqual(O.isNone(missing.description), true);
     assert.strictEqual(O.isNone(missing.sourceConversationId), true);
+  });
+
+  it("admits non-finite pin coordinates and decodes null as None", () => {
+    const nonFinite = decode(DailySummaryLocationPinWire, {
+      latitude: Number.NaN,
+      longitude: Number.NEGATIVE_INFINITY,
+    });
+    assert.isNaN(O.getOrThrow(nonFinite.latitude));
+    assert.strictEqual(O.getOrThrow(nonFinite.longitude), Number.NEGATIVE_INFINITY);
+    const nulled = decode(DailySummaryLocationPinWire, { latitude: null });
+    assert.strictEqual(O.isNone(nulled.latitude), true);
+    assert.strictEqual(O.isNone(nulled.longitude), true);
   });
 
   it("keeps unknown response keys and lifts them back", () => {

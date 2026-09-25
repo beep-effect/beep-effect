@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import { isRecord, jsonList, Model } from "./Port.ts";
 
 const $I = $ScratchpadId.create("beep/ConversationMetadata");
@@ -143,13 +144,24 @@ const stringsFromList = (value: ReadonlyArray<unknown>): ReadonlyArray<string> =
  * console.log(metadataList({ topics: "shipping" }, "topics").length) // 0
  * ```
  *
+ * **Example** (Read topics in a pipeline)
+ *
+ * ```ts
+ * import { pipe } from "effect/Function"
+ * import { metadataList } from "./ConversationMetadata.ts"
+ *
+ * console.log(pipe({ topics: ["shipping"] }, metadataList("topics")).length) // 1
+ * ```
+ *
  * @category getters
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Metadata and key are co-primary inputs, and neither is a pipeable value.
-export const metadataList = (metadata: unknown, key: string): ReadonlyArray<string> => {
+export const metadataList: {
+  (key: string): (metadata: unknown) => ReadonlyArray<string>;
+  (metadata: unknown, key: string): ReadonlyArray<string>;
+} = dual(2, (metadata: unknown, key: string): ReadonlyArray<string> => {
   if (!isRecord(metadata) || !R.has(metadata, key)) return [];
   const value = metadata[key];
   if (A.isArray(value)) return stringsFromList(value);
   return [];
-};
+});

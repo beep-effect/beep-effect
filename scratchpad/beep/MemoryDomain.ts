@@ -14,6 +14,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -92,7 +93,7 @@ const requiredInstant = (column: string, description: string) =>
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { MemoryLayer } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { MemoryLayer } from "./MemoryDomain.ts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(MemoryLayer)("long_term"))
  * console.log(decoded) // "long_term"
@@ -130,7 +131,7 @@ export type MemoryLayer = typeof MemoryLayer.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { ProductMemoryTier } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { ProductMemoryTier } from "./MemoryDomain.ts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(ProductMemoryTier)("archive"))
  * console.log(decoded) // "archive"
@@ -174,7 +175,7 @@ export type ProductMemoryTier = typeof ProductMemoryTier.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { MemoryRecordStatus } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { MemoryRecordStatus } from "./MemoryDomain.ts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(MemoryRecordStatus)("tombstoned"))
  * console.log(decoded) // "tombstoned"
@@ -212,7 +213,7 @@ export type MemoryRecordStatus = typeof MemoryRecordStatus.Type;
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { PhysicalMemoryStatus } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { PhysicalMemoryStatus } from "./MemoryDomain.ts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(PhysicalMemoryStatus)("hidden"))
  * console.log(decoded) // "hidden"
@@ -252,7 +253,7 @@ const isPhysicalMemoryStatus = S.is(PhysicalMemoryStatus);
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { MemoryProcessingState } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { MemoryProcessingState } from "./MemoryDomain.ts"
  *
  * const decoded = Effect.runSync(S.decodeUnknownEffect(MemoryProcessingState)("processed"))
  * console.log(decoded) // "processed"
@@ -282,7 +283,7 @@ export type MemoryProcessingState = typeof MemoryProcessingState.Type;
  * **Example** (Build an illegal-combination error)
  *
  * ```ts
- * import { MemoryDomainError } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { MemoryDomainError } from "./MemoryDomain.ts"
  *
  * const error = MemoryDomainError.make({ message: "illegal memory state combination" })
  * console.log(error.message) // "illegal memory state combination"
@@ -323,7 +324,7 @@ export declare namespace MemoryDomainError {
  * **Example** (Map hidden)
  *
  * ```ts
- * import { canonicalRecordStatus } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { canonicalRecordStatus } from "./MemoryDomain.ts"
  *
  * console.log(canonicalRecordStatus("hidden")) // "tombstoned"
  * ```
@@ -345,7 +346,7 @@ export const canonicalRecordStatus = (physicalStatus: PhysicalMemoryStatus): Mem
  *
  * ```ts
  * import * as Effect from "effect/Effect"
- * import { physicalStatusToRecordStatus } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { physicalStatusToRecordStatus } from "./MemoryDomain.ts"
  *
  * console.log(Effect.runSync(physicalStatusToRecordStatus("active"))) // "active"
  * console.log(Effect.runSyncExit(physicalStatusToRecordStatus("context_only"))._tag) // "Failure"
@@ -383,25 +384,35 @@ export const physicalStatusToRecordStatus = Effect.fn("MemoryDomain.physicalStat
  * **Example** (Reject archive superseded)
  *
  * ```ts
- * import { isLegalStateCombination } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { isLegalStateCombination } from "./MemoryDomain.ts"
  *
  * console.log(isLegalStateCombination("archive", "superseded", "processed")) // false
  * console.log(isLegalStateCombination("short_term", "active", "pending")) // true
  * ```
  *
+ * **Example** (Check a layer in a pipeline)
+ *
+ * ```ts
+ * import { pipe } from "effect/Function"
+ * import { isLegalStateCombination } from "./MemoryDomain.ts"
+ *
+ * console.log(pipe("long_term", isLegalStateCombination("active", "pending"))) // false
+ * ```
+ *
  * @category predicates
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Layer, status, and processing state are co-primary inputs.
-export const isLegalStateCombination = (
-  layer: MemoryLayer,
-  status: MemoryRecordStatus,
-  processingState: MemoryProcessingState,
-): boolean => {
-  if (Equal.equals(layer, "short_term")) return true;
-  if (Equal.equals(layer, "long_term")) return Equal.equals(processingState, "processed");
-  return !Equal.equals(status, "superseded") && Equal.equals(processingState, "processed");
-};
+export const isLegalStateCombination: {
+  (status: MemoryRecordStatus, processingState: MemoryProcessingState): (layer: MemoryLayer) => boolean;
+  (layer: MemoryLayer, status: MemoryRecordStatus, processingState: MemoryProcessingState): boolean;
+} = dual(
+  3,
+  (layer: MemoryLayer, status: MemoryRecordStatus, processingState: MemoryProcessingState): boolean => {
+    if (Equal.equals(layer, "short_term")) return true;
+    if (Equal.equals(layer, "long_term")) return Equal.equals(processingState, "processed");
+    return !Equal.equals(status, "superseded") && Equal.equals(processingState, "processed");
+  },
+);
 
 /**
  * Fail when the §1.3 triple is illegal.
@@ -422,7 +433,7 @@ export const isLegalStateCombination = (
  *
  * ```ts
  * import * as Effect from "effect/Effect"
- * import { assertLegalState } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { assertLegalState } from "./MemoryDomain.ts"
  *
  * console.log(Effect.runSyncExit(assertLegalState("long_term", "active", "pending"))._tag) // "Failure"
  * ```
@@ -454,7 +465,7 @@ export const assertLegalState = Effect.fn("MemoryDomain.assertLegalState")(funct
  * **Example** (Map short-term)
  *
  * ```ts
- * import { tierToLayer } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { tierToLayer } from "./MemoryDomain.ts"
  *
  * console.log(tierToLayer("short_term")) // "short_term"
  * ```
@@ -475,7 +486,7 @@ export const tierToLayer = (tier: ProductMemoryTier): MemoryLayer => {
  * **Example** (Map archive)
  *
  * ```ts
- * import { layerToTier } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { layerToTier } from "./MemoryDomain.ts"
  *
  * console.log(layerToTier("archive")) // "archive"
  * ```
@@ -519,7 +530,7 @@ export const layerToTier = (layer: MemoryLayer): ProductMemoryTier => {
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { LegalMemoryDomainRecord } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { LegalMemoryDomainRecord } from "./MemoryDomain.ts"
  *
  * const input = {
  *   id: "mem-1",
@@ -639,7 +650,7 @@ const legalMemoryState = S.makeFilter(
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
- * import { LegalMemoryDomainRecord } from "@beep/scratchpad/beep/MemoryDomain.ts"
+ * import { LegalMemoryDomainRecord } from "./MemoryDomain.ts"
  *
  * const decoded = Effect.runSync(
  *   S.decodeUnknownEffect(LegalMemoryDomainRecord)({

@@ -16,6 +16,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { boolDefault, Model, optionalNull, pg } from "./Port.ts";
@@ -382,13 +383,34 @@ export const exitSweepDispatch = Effect.fn("SweepDispatchScope.exit")(function* 
  * console.log(provesPreDispatch(scope, makeSweepPreDispatchError("daily_sweep_summary_agent"))) // false
  * ```
  *
+ * **Example** (Check the proof in a pipeline)
+ *
+ * ```ts
+ * import { pipe } from "effect/Function"
+ * import * as O from "effect/Option"
+ * import {
+ *   SweepDispatchScope,
+ *   makeSweepPreDispatchError,
+ *   provesPreDispatch,
+ * } from "@beep/scratchpad/beep/DailySweepDispatch"
+ *
+ * const issued = makeSweepPreDispatchError("daily_sweep_summary_agent")
+ * const scope = SweepDispatchScope.make({ issued: O.some(issued), reason: O.some(issued.extractor) })
+ * console.log(pipe(scope, provesPreDispatch(issued))) // true
+ * ```
+ *
  * @see {@link preDispatchReason} for the reason that proof unlocks.
  * @category predicates
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scope and error are co-primary inputs, and neither is a pipeable value.
-export const provesPreDispatch = (scope: SweepDispatchScope, error: unknown): boolean =>
-  !scope.dispatched && O.isSome(scope.issued) && scope.issued.value === error;
+export const provesPreDispatch: {
+  (error: unknown): (scope: SweepDispatchScope) => boolean;
+  (scope: SweepDispatchScope, error: unknown): boolean;
+} = dual(
+  2,
+  (scope: SweepDispatchScope, error: unknown): boolean =>
+    !scope.dispatched && O.isSome(scope.issued) && scope.issued.value === error,
+);
 
 /**
  * Returns the stored reason when {@link provesPreDispatch} is true.
@@ -416,9 +438,14 @@ export const provesPreDispatch = (scope: SweepDispatchScope, error: unknown): bo
  * @category getters
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scope and error are co-primary inputs, and neither is a pipeable value.
-export const preDispatchReason = (scope: SweepDispatchScope, error: unknown): O.Option<PreDispatchReason> =>
-  provesPreDispatch(scope, error) ? scope.reason : O.none();
+export const preDispatchReason: {
+  (error: unknown): (scope: SweepDispatchScope) => O.Option<PreDispatchReason>;
+  (scope: SweepDispatchScope, error: unknown): O.Option<PreDispatchReason>;
+} = dual(
+  2,
+  (scope: SweepDispatchScope, error: unknown): O.Option<PreDispatchReason> =>
+    provesPreDispatch(scope, error) ? scope.reason : O.none(),
+);
 
 /**
  * Latches provider dispatch on the active scope.
@@ -443,19 +470,32 @@ export const preDispatchReason = (scope: SweepDispatchScope, error: unknown): O.
  * console.log(O.getOrElse(next, () => SweepDispatchScope.make({})).dispatched) // true
  * ```
  *
+ * **Example** (Latch in a pipeline without a callback)
+ *
+ * ```ts
+ * import { pipe } from "effect/Function"
+ * import * as O from "effect/Option"
+ * import { SweepDispatchScope, markProviderDispatch } from "@beep/scratchpad/beep/DailySweepDispatch"
+ *
+ * const next = pipe(O.some(SweepDispatchScope.make({})), markProviderDispatch(O.none()))
+ * console.log(O.getOrElse(next, () => SweepDispatchScope.make({})).dispatched) // true
+ * ```
+ *
  * @see {@link certifyPreDispatch} for the failure path this latch blocks.
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Active scope and callback are co-primary inputs, and neither is a pipeable value.
-export const markProviderDispatch = (
-  active: O.Option<SweepDispatchScope>,
-  before: O.Option<() => void>,
-): O.Option<SweepDispatchScope> =>
-  O.map(active, (scope) => {
-    if (O.isSome(before)) before.value();
-    return withPatch(scope, { dispatched: true });
-  });
+export const markProviderDispatch: {
+  (before: O.Option<() => void>): (active: O.Option<SweepDispatchScope>) => O.Option<SweepDispatchScope>;
+  (active: O.Option<SweepDispatchScope>, before: O.Option<() => void>): O.Option<SweepDispatchScope>;
+} = dual(
+  2,
+  (active: O.Option<SweepDispatchScope>, before: O.Option<() => void>): O.Option<SweepDispatchScope> =>
+    O.map(active, (scope) => {
+      if (O.isSome(before)) before.value();
+      return withPatch(scope, { dispatched: true });
+    }),
+);
 
 const coerceReason = (error: unknown): PreDispatchReason => {
   const candidate =

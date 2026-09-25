@@ -15,6 +15,7 @@ describe("ConversationMetadata", () => {
     expect(metadataList({ topics: ["shipping", 2] }, "topics")).toEqual(["shipping", "2"]);
     expect(metadataList({ topics: "shipping" }, "topics")).toEqual([]);
     expect(metadataList(null, "topics")).toEqual([]);
+    expect(metadataList("topics")({ topics: ["shipping", 2] })).toEqual(["shipping", "2"]);
     expect(ConversationMetadata.make({}).people).toEqual([]);
   });
 });

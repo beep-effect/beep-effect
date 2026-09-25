@@ -13,6 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as SchemaGetter from "effect/SchemaGetter";
@@ -100,6 +101,15 @@ const tooShort = (value: string, minLength: number, options: SchemaAST.ParseOpti
  * when `minLength` is greater than 0. Numbers are not strings, so they fail
  * before this transform.
  *
+ * **Gotchas**
+ *
+ * `minLength` is required: pass `0` to admit blank text. Both bounds are
+ * numbers, so an optional `minLength` would make a one-argument call ambiguous
+ * between the data-first and the data-last form. The data-last form takes
+ * `minLength` and returns a function of `maxLength`. `strippedText(n)` is now
+ * the data-last form (min first) and no longer means max `n` with min `0`, so
+ * a one-argument call returns a function.
+ *
  * **Example** (Strip padding and reject a blank title)
  *
  * ```ts
@@ -114,24 +124,29 @@ const tooShort = (value: string, minLength: number, options: SchemaAST.ParseOpti
  * @category schemas
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Maximum and minimum lengths are co-primary inputs, and neither is a pipeable value.
-export const strippedText = (maxLength: number, minLength = 0) =>
-  S.String.check(S.isMaxLength(maxLength)).pipe(
-    S.decodeTo(
-      minLength > 0
-        ? S.String.check(S.isMinLength(minLength), S.isMaxLength(maxLength))
-        : S.String.check(S.isMaxLength(maxLength)),
-      {
-        decode: SchemaGetter.transformEffect((value, options) => {
-          if (value.length > maxLength) return Effect.fail(tooLong(value, maxLength, options));
-          const stripped = Str.trim(value);
-          if (stripped.length < minLength) return Effect.fail(tooShort(value, minLength, options));
-          return Effect.succeed(stripped);
-        }),
-        encode: SchemaGetter.transform((value) => value),
-      },
+export const strippedText: {
+  (minLength: number): (maxLength: number) => S.decodeTo<S.String, S.String>;
+  (maxLength: number, minLength: number): S.decodeTo<S.String, S.String>;
+} = dual(
+  2,
+  (maxLength: number, minLength: number): S.decodeTo<S.String, S.String> =>
+    S.String.check(S.isMaxLength(maxLength)).pipe(
+      S.decodeTo(
+        minLength > 0
+          ? S.String.check(S.isMinLength(minLength), S.isMaxLength(maxLength))
+          : S.String.check(S.isMaxLength(maxLength)),
+        {
+          decode: SchemaGetter.transformEffect((value, options) => {
+            if (value.length > maxLength) return Effect.fail(tooLong(value, maxLength, options));
+            const stripped = Str.trim(value);
+            if (stripped.length < minLength) return Effect.fail(tooShort(value, minLength, options));
+            return Effect.succeed(stripped);
+          }),
+          encode: SchemaGetter.transform((value) => value),
+        },
+      ),
     ),
-  );
+);
 
 const optionalStripped = (column: string, maxLength: number, minLength = 0) =>
   optionalNull(strippedText(maxLength, minLength)).pipe(pg.text(), pg.columnName(column));

@@ -11,8 +11,10 @@
  */
 import { sql } from "drizzle-orm";
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as SchemaIssue from "effect/SchemaIssue";
@@ -180,7 +182,8 @@ export declare namespace ConversationPhoto {
  *
  * Blank descriptions are skipped. With timestamps, each line is
  * `- [HH:MM:SS] "description"`. Without them, the clock is omitted. The clock
- * is UTC.
+ * is UTC. Call it data-first with the photos, or data-last with only the
+ * timestamp flag to get a function for `pipe`.
  *
  * **Example** (Skip a blank description)
  *
@@ -192,19 +195,40 @@ export declare namespace ConversationPhoto {
  * console.log(photosAsString([photo], false)) // "None"
  * ```
  *
+ * **Example** (Print UTC clocks in a pipe)
+ *
+ * ```ts
+ * import * as DateTime from "effect/DateTime"
+ * import { pipe } from "effect/Function"
+ * import * as O from "effect/Option"
+ * import { ConversationPhoto, photosAsString } from "./ConversationPhoto.ts"
+ *
+ * const photo = ConversationPhoto.make({
+ *   base64: "pixels",
+ *   description: O.some("desk"),
+ *   createdAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+ * })
+ * console.log(pipe([photo], photosAsString(true))) // '- [03:04:05] "desk"'
+ * ```
+ *
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Photos and the timestamp flag are co-primary inputs, and neither is a pipeable value.
-export const photosAsString = (photos: ReadonlyArray<ConversationPhoto>, includeTimestamps = false): string => {
-  if (photos.length === 0) return "None";
-  const lines: Array<string> = [];
-  for (const photo of photos) {
-    const description = O.getOrElse(photo.description, () => "");
-    if (Str.trim(description).length === 0) continue;
-    const timestamp = includeTimestamps ? `[${clockUtc(photo.createdAt)}] ` : "";
-    lines.push(`- ${timestamp}"${description}"`);
-  }
-  if (lines.length === 0) return "None";
-  return lines.join("\n");
-};
+export const photosAsString: {
+  (includeTimestamps?: boolean): (photos: ReadonlyArray<ConversationPhoto>) => string;
+  (photos: ReadonlyArray<ConversationPhoto>, includeTimestamps?: boolean): string;
+} = dual(
+  (args) => A.isArray(args[0]),
+  (photos: ReadonlyArray<ConversationPhoto>, includeTimestamps: boolean = false): string => {
+    if (photos.length === 0) return "None";
+    const lines: Array<string> = [];
+    for (const photo of photos) {
+      const description = O.getOrElse(photo.description, () => "");
+      if (Str.trim(description).length === 0) continue;
+      const timestamp = includeTimestamps ? `[${clockUtc(photo.createdAt)}] ` : "";
+      lines.push(`- ${timestamp}"${description}"`);
+    }
+    if (lines.length === 0) return "None";
+    return lines.join("\n");
+  },
+);

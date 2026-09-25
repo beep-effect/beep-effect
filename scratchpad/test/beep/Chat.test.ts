@@ -1,6 +1,7 @@
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
@@ -70,13 +71,29 @@ describe("Chat", () => {
     expect(O.getOrElse(decoded.appId, () => "")).toBe("app-1");
     expect(decoded.contentBlocks.length).toBe(1);
     expect(deserializeManySafe([{ id: "bad" }, humanWire]).length).toBe(1);
+    const records = [{ id: "bad" }, humanWire];
+    expect(pipe(records, deserializeManySafe())).toEqual(deserializeManySafe(records));
+    const rejected: Array<unknown> = [];
+    expect(pipe(records, deserializeManySafe((record) => rejected.push(record)))).toEqual(deserializeManySafe(records));
+    expect(rejected).toEqual([{ id: "bad" }]);
   });
 
   it("formats messages and evidence branches", () => {
     expect(messagesAsString([human], true)).toContain("User: Hello");
+    expect(pipe([human], messagesAsString())).toEqual(messagesAsString([human]));
+    expect(pipe([human], messagesAsString(true))).toEqual(messagesAsString([human], true));
     expect(messagesAsXml([human], false, true)).toContain("<sender>User</sender>");
+    expect(pipe([human], messagesAsXml())).toEqual(messagesAsXml([human]));
+    expect(pipe([human], messagesAsXml(false, true))).toEqual(messagesAsXml([human], false, true));
     const ai = Message.make({ ...human, id: "m2", sender: "ai", appId: O.some("app-1") });
     expect(messagesAsString([ai], false, true, false, () => O.some("Plugin"))).toContain("Plugin:");
+    const pluginName = () => O.some("Plugin");
+    expect(pipe([ai], messagesAsString(false, true, false, pluginName))).toEqual(
+      messagesAsString([ai], false, true, false, pluginName),
+    );
+    expect(pipe([ai], messagesAsXml(false, true, false, pluginName))).toEqual(
+      messagesAsXml([ai], false, true, false, pluginName),
+    );
     expect(messagesAsString([ai], false, true, true)).toContain("AI:");
     expect(O.isNone(readEvidenceId("  "))).toBe(true);
     expect(O.getOrElse(readEvidenceId(" ev "), () => "")).toBe("ev");
