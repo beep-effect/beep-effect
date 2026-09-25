@@ -2597,11 +2597,13 @@
         "from": "@beep/ontology-config",
         "allow": [
           "@beep/identity",
-          "@beep/ontology-config"
+          "@beep/ontology-config",
+          "@beep/test-runner"
         ],
         "allowTypeOnly": [
           "@beep/identity",
-          "@beep/ontology-config"
+          "@beep/ontology-config",
+          "@beep/test-runner"
         ]
       },
       {

@@ -1,5 +1,6 @@
 import { DEFAULT_FC_NUM_RUNS, envFcSeed, fcRuns, parseFcNumRunsFloor } from "@beep/fc-runs";
 import { describe, expect, it, vi } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, Context } from "effect";
 import * as O from "effect/Option";
 
@@ -40,8 +41,9 @@ describe("fcRuns (one-round-loop P1 env-max helper)", () => {
       stdout: "pipe",
       stderr: "pipe",
     });
-    expect(result.success).toBe(true);
-    expect(result.stdout.toString()).toBe("400/9000");
+    const diagnostic = `fcRuns boot probe: exit=${result.exitCode}, signal=${result.signalCode}, stderr=${result.stderr.toString().slice(0, 2000)}`;
+    assertTrue(result.success, diagnostic);
+    expect(result.stdout.toString(), diagnostic).toBe("400/9000");
   });
 });
 

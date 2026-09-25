@@ -2161,3 +2161,12 @@ barrel and the three test-utils compatibility entrypoints. Added canonical
 The bounded docgen command refuses this branch because global inputs changed,
 so use full `bun run docgen` for the validation. Inventory-ratchet success does
 not establish the full docgen metadata contract.
+
+## Wave A fast publication still queues before push
+
+Publishing with `yeet publish --fast --monitor --pr` committed the reviewed
+change but queued for full-proof admission before pushing. This defeats the
+operator's early-push request despite passing package proofs. The owned queued
+process was interrupted before it ran a proof; retry with the explicit
+`--start-pr-early` route. Fast publication should avoid admission that is only
+needed for the skipped local full proof, or document the remaining dependency.
