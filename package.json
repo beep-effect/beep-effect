@@ -328,7 +328,8 @@
     "knip@6.38.0": "patches/knip@6.38.0.patch",
     "onnxruntime-node@1.30.0": "patches/onnxruntime-node@1.30.0.patch",
     "@effect/platform-node-shared@https://pkg.pr.new/Effect-TS/effect/@effect/platform-node-shared@330b7475e2135bb9bc6aad1df5d513d32299ebc1": "patches/@effect%2Fplatform-node-shared@4.0.0-rc.117-330b7475e2.patch",
-    "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch"
+    "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch",
+    "effect@https://pkg.pr.new/Effect-TS/effect/effect@330b7475e2135bb9bc6aad1df5d513d32299ebc1": "patches/effect@4.0.0-rc.117-330b7475e2.patch"
   },
   "private": true,
   "repository": {
