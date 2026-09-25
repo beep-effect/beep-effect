@@ -36,5 +36,5 @@
   "registeredTestStatuses": {
     "passed": 8
   },
-  "acceptance": "Pre-integration configured Node sample, not coverage or hosted proof. Workstation load recorded without adjustment. Runtime versions and test population differ from baseline; no causal speedup claimed."
+  "acceptance": "Post-integration configured Node sample on a loaded workstation; not coverage or hosted proof. Workstation load is recorded without adjustment. Runtime versions and test population differ from baseline; no causal speedup or regression is claimed."
 }
