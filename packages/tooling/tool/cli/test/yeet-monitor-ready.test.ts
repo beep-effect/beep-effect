@@ -327,6 +327,81 @@ it.layer(platform, { timeout: "30 seconds" })("push → row → ack timeline", (
       })
     )
   );
+
+  test.effect("follows the red's own row when another required red's row shares its poll stamp", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const polledAt = "2026-09-16T00:04:00.000Z";
+        // One poll sees two required reds, Build listed before Check, and the
+        // loop dispatches both rows with the poll's stamp in that order. GitHub
+        // completed Check first, so Check stamps the head's red and its lane.
+        const buildId = yield* yeetInboxRowId({ headSha: head, lane: "Build", prNumber: 7 });
+        const checkId = yield* yeetInboxRowId({ headSha: head, lane: "Check", prNumber: 7 });
+        yield* fs.makeDirectory(`${root}/.beep/inbox/sessions`, { recursive: true });
+        yield* fs.writeFileString(
+          `${root}/.beep/inbox/sessions/claude-1.json`,
+          yield* encodeJson({
+            schemaVersion: "yeet-hook-session/v1",
+            incidentId: null,
+            seenIds: [buildId, checkId],
+            firstSeenAt: { [buildId]: "2026-09-16T00:04:10Z", [checkId]: "2026-09-16T00:04:40Z" },
+          })
+        );
+        yield* writeYeetAckReceipt(
+          root,
+          YeetAckReceipt.make({
+            id: buildId,
+            ackedAt: "2026-09-16T00:05:00.000Z",
+            resolution: YeetAckFixResolution.make({ sha: nextHead }),
+          })
+        );
+        yield* writeYeetAckReceipt(
+          root,
+          YeetAckReceipt.make({
+            id: checkId,
+            ackedAt: "2026-09-16T00:06:00.000Z",
+            resolution: YeetAckFixResolution.make({ sha: nextHead }),
+          })
+        );
+        const build = YeetWatchCheck.make({
+          name: "Build",
+          outcome: "fail",
+          completedAt: O.some("2026-09-16T00:03:30Z"),
+        });
+        const red = YeetWatchCheck.make({
+          name: "Check",
+          outcome: "fail",
+          completedAt: O.some("2026-09-16T00:03:00Z"),
+        });
+        const calls = yield* Ref.make(0);
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          now: Effect.succeed(DateTime.makeUnsafe(polledAt)),
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.map((n) =>
+                n === 0
+                  ? snapshot(root, [check("Lint", "pending"), build, red], false)
+                  : snapshot(root, [check("Lint")], n >= 2, nextHead)
+              )
+            ),
+          closeout: () => Effect.succeed(report(nextHead)),
+        });
+        expect(terminal).toBe("ready");
+        const reds = A.filter(yield* rows(root), (row) => row.kind === "check-failed");
+        expect(A.map(reds, (row) => [row.id, row.ts])).toStrictEqual([
+          [buildId, polledAt],
+          [checkId, polledAt],
+        ]);
+        expect(yield* lines).toContain(
+          "[yeet] push→row→ack aaaaaaa: pushed 2026-09-16T00:00:00.000Z, red 2026-09-16T00:03:00Z (+3m), " +
+            "row 2026-09-16T00:04:00.000Z (+1m), injected 2026-09-16T00:04:40Z (+40s), " +
+            "acked 2026-09-16T00:06:00.000Z (+1m 20s)"
+        );
+      })
+    )
+  );
 });
 
 it.layer(platform, { timeout: "30 seconds" })("B8 settle clock resumes with the budget", (test) => {

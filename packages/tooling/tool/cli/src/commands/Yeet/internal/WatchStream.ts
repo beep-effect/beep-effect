@@ -40,6 +40,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
+import { YeetHeadRed } from "./MonitorPolicy.ts";
 import { YeetReviewThreadStateTag } from "./ReviewThreadState.ts";
 import { YeetSettleVerdict, yeetSettleCensusRequires } from "./Settle.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriteria, YeetMergeReadyCriterion } from "./Verdict.ts";
@@ -236,17 +237,21 @@ const instantMillis = (instant: string): number =>
 
 const instantOrder: Order.Order<string> = Order.mapInput(Order.Number, instantMillis);
 
+const headRedOrder: Order.Order<YeetHeadRed> = Order.mapInput(instantOrder, (red: YeetHeadRed) => red.at);
+
 /**
- * When GitHub first observed a required red among one head's checks.
+ * Which required check GitHub first observed red on one head, and when.
  *
  * **Details**
  *
- * The earliest `completedAt` of any required check that classifies as `fail`.
- * A required red is what writes the P0 `check-failed` inbox row the
- * push → row → ack chain follows; an optional red writes a P1 row and never
- * stamps the head's red. Checks whose record carries no `completedAt`
- * (external status contexts, a `--watch` snapshot) do not contribute; with
- * none left the instant is unknown.
+ * The failing required check with the earliest `completedAt`, as a
+ * {@link YeetHeadRed}: `at` is that instant and `lane` the check's name, the
+ * lane its P0 `check-failed` inbox row carries. A required red is what writes
+ * the P0 row the push → row → ack chain follows; an optional red writes a P1
+ * row and never stamps the head's red. Checks whose record carries no
+ * `completedAt` (external status contexts, a `--watch` snapshot) do not
+ * contribute; with none left the red is unknown. Equal instants keep the
+ * rollup's order.
  *
  * **Gotchas**
  *
@@ -257,28 +262,28 @@ const instantOrder: Order.Order<string> = Order.mapInput(Order.Number, instantMi
  * **Example** (The earliest required failing completion wins)
  *
  * ```ts
- * import { YeetWatchCheck, yeetFirstRedAt } from "@beep/repo-cli/test/Yeet"
+ * import { YeetWatchCheck, yeetFirstRed } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
  * const red = (name: string, completedAt: string, required = true) =>
  *   YeetWatchCheck.make({ name, outcome: "fail", required, completedAt: O.some(completedAt) })
- * const first = yeetFirstRedAt([
+ * const first = yeetFirstRed([
  *   red("Vercel", "2026-09-25T11:59:00Z", false),
  *   red("Lint", "2026-09-25T12:05:00Z"),
  *   red("Check", "2026-09-25T12:01:00Z")
  * ])
- * console.log(O.getOrNull(first)) // "2026-09-25T12:01:00Z"
+ * console.log(O.getOrNull(O.map(first, (value) => `${value.lane} ${value.at}`))) // "Check 2026-09-25T12:01:00Z"
  * ```
  *
  * @param checks - One poll's checks for the head.
- * @returns The earliest failing required check's `completedAt`, or `None` when no failing required check carries one.
+ * @returns The earliest failing required check's name and `completedAt`, or `None` when no failing required check carries one.
  * @category getters
  * @since 0.0.0
  */
-export const yeetFirstRedAt: (checks: ReadonlyArray<YeetWatchCheck>) => O.Option<string> = flow(
+export const yeetFirstRed: (checks: ReadonlyArray<YeetWatchCheck>) => O.Option<YeetHeadRed> = flow(
   A.filter((check: YeetWatchCheck) => check.required && check.outcome === YeetCheckOutcome.Enum.fail),
-  A.flatMap((check) => O.toArray(check.completedAt)),
-  A.sort(instantOrder),
+  A.flatMap((check) => O.toArray(O.map(check.completedAt, (at) => YeetHeadRed.make({ at, lane: check.name })))),
+  A.sort(headRedOrder),
   A.head
 );
 

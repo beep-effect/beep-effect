@@ -111,6 +111,7 @@ import {
   YeetMonitorTerminalState,
   YeetUntilMergedPolicy,
   yeetHeadTimelineStamp,
+  yeetHeadTimelineStampRed,
   yeetMonitorLoopTerminals,
   yeetMonitorPolicyConverges,
   yeetMonitorPolicyTerminals,
@@ -123,6 +124,7 @@ import {
   stampYeetWaveRedSet,
   supersedeYeetDispatchState,
   yeetBaseConflictGeneration,
+  yeetBaseConflictWalk,
   yeetRedSetKey,
   yeetWaveRedSetKey,
 } from "./Remediation.ts";
@@ -157,13 +159,14 @@ import {
   YeetMergeReadyCriteria,
   YeetMergeReadyCriterion,
 } from "./Verdict.ts";
-import { YeetWatchThread, yeetFirstRedAt } from "./WatchStream.ts";
+import { YeetWatchThread, yeetFirstRed } from "./WatchStream.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetPrCommentRow } from "./Inbox.ts";
 import type { YeetMonitorLoopPolicy } from "./MonitorPolicy.ts";
+import type { YeetBaseConflictWalk } from "./Remediation.ts";
 import type { YeetStatusReviewThread } from "./Status.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
@@ -1124,6 +1127,10 @@ class MonitorHeadState extends S.Class<MonitorHeadState>($I`MonitorHeadState`)(
     // Whether this loop already said why a conflict on this head writes no row
     // (its generation carries another ack kind than `cleared`): once per head.
     conflictAckNoticed: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    // The conflict generations on this head whose ack receipt does not decode
+    // and that this loop already named: the walk passes them silently on every
+    // conflicted poll, so each is said once per head.
+    conflictCorruptNoticed: S.HashSet(S.Int).pipe(SchemaUtils.withKeyDefaults(HashSet.empty<number>())),
     // Whether the wave record has been pinned to this head (until-ready only);
     // a new head starts unpinned, so the first converging poll supersedes.
     wavePinned: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
@@ -1383,6 +1390,27 @@ const noticeMonitorConflictAck = Effect.fn("YeetMonitorLoop.noticeConflictAck")(
   return true;
 });
 
+// The generation walk counts an undecodable-but-acked receipt as consumed and
+// returns it without printing, because the walk runs from the dispatch, the
+// recall, and the ack notice on every conflicted poll. Name each such receipt
+// once per head and generation; the caller keeps the noticed set.
+const noticeMonitorCorruptReceipts = Effect.fn("YeetMonitorLoop.noticeCorruptReceipts")(function* (
+  observed: YeetConvergeObservation,
+  walk: YeetBaseConflictWalk,
+  noticed: HashSet.HashSet<number>
+) {
+  const fresh = A.filter(walk.corruptReceipts, (receipt) => !HashSet.has(noticed, receipt.generation));
+  yield* Effect.forEach(
+    fresh,
+    (receipt) =>
+      Console.error(
+        `[yeet] base-conflict ack receipt ${receipt.path} does not decode; counting conflict generation ${receipt.generation} on head ${Str.slice(0, 7)(observed.headSha)} as consumed`
+      ),
+    { discard: true }
+  );
+  return A.reduce(fresh, noticed, (acc, receipt) => HashSet.add(acc, receipt.generation));
+});
+
 // The conflict row's same-head clear (pr-event-awareness D17): the head read
 // mergeable again without a push, so the loop acknowledges its own row, the
 // latest conflict generation's (every earlier one already has its receipt),
@@ -1442,13 +1470,23 @@ const convergeMonitorBaseConflict = Effect.fn("YeetMonitorLoop.convergeBaseConfl
   const { snapshot, at } = observation;
   if (monitorBaseConflict(snapshot)) {
     if (O.isSome(current.conflictRow)) return current;
-    const written = yield* yeetBaseConflictGeneration(context.repoRoot, observed).pipe(
-      Effect.flatMap((generation) =>
-        dispatchYeetBaseConflict(
+    const walk = yield* yeetBaseConflictWalk(context.repoRoot, observed).pipe(
+      Effect.asSome,
+      Effect.catch((error) =>
+        Console.error(
+          `[yeet] failed to derive the base-conflict generation for head ${Str.slice(0, 7)(observed.headSha)}: ${error.message}; retrying next poll`
+        ).pipe(Effect.as(O.none<YeetBaseConflictWalk>()))
+      )
+    );
+    const corruptNoticed = O.isSome(walk)
+      ? yield* noticeMonitorCorruptReceipts(observed, walk.value, current.conflictCorruptNoticed)
+      : current.conflictCorruptNoticed;
+    const written = O.isSome(walk)
+      ? yield* dispatchYeetBaseConflict(
           context.repoRoot,
           YeetBaseConflictCapsule.make({
             base: context.base,
-            generation,
+            generation: walk.value.generation,
             headSha: observed.headSha,
             link: snapshot.remote.url ?? null,
             mergeable: snapshot.remote.mergeable ?? null,
@@ -1456,15 +1494,8 @@ const convergeMonitorBaseConflict = Effect.fn("YeetMonitorLoop.convergeBaseConfl
             prNumber: observed.prNumber,
           }),
           at
-        )
-      ),
-      Effect.map(O.map((row) => row.id)),
-      Effect.catch((error) =>
-        Console.error(
-          `[yeet] failed to derive the base-conflict generation for head ${Str.slice(0, 7)(observed.headSha)}: ${error.message}; retrying next poll`
-        ).pipe(Effect.as(O.none<string>()))
-      )
-    );
+        ).pipe(Effect.map(O.map((row) => row.id)))
+      : O.none<string>();
     // `None` means this poll wrote nothing: the generation's row is already in
     // the inbox (a restarted loop), an ack receipt closes it, or the write
     // failed. Recall it only when it is live, so the guard above stops
@@ -1480,6 +1511,7 @@ const convergeMonitorBaseConflict = Effect.fn("YeetMonitorLoop.convergeBaseConfl
       conflictRow: open,
       conflictRecalled: true,
       conflictAckNoticed: noticed,
+      conflictCorruptNoticed: corruptNoticed,
     });
   }
   const mergeable = yeetBaseMergeableFor(
@@ -1711,9 +1743,9 @@ const stampMonitorReadiness = Effect.fn("YeetMonitorLoop.stampReadiness")(functi
   const { at, poll } = observation;
   let snapshot = bindRequiredCensus(observation.snapshot, verdict);
   let timeline = O.getOrThrow(poll.head).timeline;
-  const firstRed = yeetFirstRedAt(snapshot.remote.checks);
+  const firstRed = yeetFirstRed(snapshot.remote.checks);
   if (O.isSome(firstRed)) {
-    timeline = yeetHeadTimelineStamp(timeline, "redAt", firstRed.value);
+    timeline = yeetHeadTimelineStampRed(timeline, firstRed.value);
   }
   if (O.exists(snapshot.mergeReady, (ready) => ready.criteria.closeoutRun)) {
     timeline = yeetHeadTimelineStamp(timeline, "closeoutAt", at);

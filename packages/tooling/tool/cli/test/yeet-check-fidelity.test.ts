@@ -6,11 +6,12 @@ import {
   GhStatusCheck,
   RepoRunContext,
   YeetCheckSignal,
+  YeetHeadRed,
   YeetInboxRowJson,
   YeetWatchCheck,
   yeetCheckRecordInstant,
   yeetCheckRecordText,
-  yeetFirstRedAt,
+  yeetFirstRed,
   yeetInboxPaths,
 } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -201,18 +202,26 @@ describe("check record normalization", () => {
     const record = (name: string, outcome: "fail" | "pass", completedAt: O.Option<string>, required = true) =>
       YeetWatchCheck.make({ name, outcome, required, completedAt });
     assertSome(
-      yeetFirstRedAt([
+      yeetFirstRed([
         record("Lint", "fail", O.some("2026-09-25T12:05:00Z")),
         record("Build", "pass", O.some("2026-09-25T11:00:00Z")),
         record("Vercel", "fail", O.none()),
         record("Preview", "fail", O.some("2026-09-25T11:30:00Z"), false),
         record("Check", "fail", O.some("2026-09-25T12:01:00Z")),
       ]),
-      "2026-09-25T12:01:00Z"
+      YeetHeadRed.make({ at: "2026-09-25T12:01:00Z", lane: "Check" })
     );
-    assertNone(yeetFirstRedAt([record("Vercel", "fail", O.none())]));
+    // Equal instants keep the rollup's order, so the lane always names the red.
+    assertSome(
+      yeetFirstRed([
+        record("Lint", "fail", O.some("2026-09-25T12:01:00Z")),
+        record("Check", "fail", O.some("2026-09-25T12:01:00Z")),
+      ]),
+      YeetHeadRed.make({ at: "2026-09-25T12:01:00Z", lane: "Lint" })
+    );
+    assertNone(yeetFirstRed([record("Vercel", "fail", O.none())]));
     // An optional red never stamps the head's red, however early it completes.
-    assertNone(yeetFirstRedAt([record("Preview", "fail", O.some("2026-09-25T11:30:00Z"), false)]));
+    assertNone(yeetFirstRed([record("Preview", "fail", O.some("2026-09-25T11:30:00Z"), false)]));
   });
 });
 

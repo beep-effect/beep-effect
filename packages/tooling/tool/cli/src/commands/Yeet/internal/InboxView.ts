@@ -835,13 +835,13 @@ export const loadYeetHookFirstSeen = Effect.fn("Yeet.loadYeetHookFirstSeen")(fun
 
 const entryOrder: Order.Order<YeetInboxEntry> = Order.mapInput(instantOrder, (entry: YeetInboxEntry) => entry.row.ts);
 
-// The first required red's row: an optional red's P1 row, written by the same
-// watch, never stands in for it.
-const firstRequiredRedRowFor = (
+// The head's P0 check-failed rows on this pull request, oldest first: an
+// optional red's P1 row, written by the same watch, is never among them.
+const requiredRedRowsFor = (
   entries: ReadonlyArray<YeetInboxEntry>,
   headSha: string,
   prNumber: O.Option<number>
-): O.Option<YeetInboxEntry> =>
+): ReadonlyArray<YeetInboxEntry> =>
   pipe(
     entries,
     A.filter(
@@ -851,9 +851,29 @@ const firstRequiredRedRowFor = (
         entry.row.capsule.headSha === headSha &&
         O.contains(prNumber, entry.row.capsule.prNumber)
     ),
-    A.sort(entryOrder),
-    A.head
+    A.sort(entryOrder)
   );
+
+const rowLaneIs =
+  (lane: string) =>
+  (entry: YeetInboxEntry): boolean =>
+    entry.row.kind === "check-failed" && entry.row.capsule.lane === lane;
+
+// The row of the required red that stamped the head's red: the P0 row whose
+// lane is the timeline's `redLane`. The earliest P0 row stands in only when
+// the timeline predates `redLane` or that lane's row is not written yet.
+const firstRequiredRedRowFor = (
+  entries: ReadonlyArray<YeetInboxEntry>,
+  timeline: YeetHeadTimeline,
+  prNumber: O.Option<number>
+): O.Option<YeetInboxEntry> => {
+  const rows = requiredRedRowsFor(entries, timeline.headSha, prNumber);
+  return pipe(
+    timeline.redLane,
+    O.flatMap((lane) => A.findFirst(rows, rowLaneIs(lane))),
+    O.orElse(() => A.head(rows))
+  );
+};
 
 /**
  * Join one head's push → row → ack timeline from the monitor's stamps and the inbox.
@@ -861,15 +881,20 @@ const firstRequiredRedRowFor = (
  * **Details**
  *
  * `pushed` and `red` come from the head timeline the monitor loop stamped;
- * `red` is the head's first required red. The rest of the chain follows that
- * red's P0 row: the head's earliest P0 `check-failed` row on this pull
- * request, since a required red is what writes a P0 row. The timeline does
- * not record which check stamped `red`, so the earliest P0 row stands in for
- * it. An optional red's P1 row never joins, even when it was written first.
- * `row` is the chosen row's `ts`, `injected` the earliest hook `firstSeenAt`
- * for that row id, and `acked` that row's receipt `ackedAt` while the receipt
- * still acknowledges it. A head with no P0 row, or an unknown pull request
- * number, keeps those stages absent.
+ * `red` is the head's first required red, and the timeline's `redLane` names
+ * the check that set it. The rest of the chain follows that red's P0 row: the
+ * head's P0 `check-failed` row on this pull request whose capsule lane is
+ * `redLane`, since a required red is what writes a P0 row and its lane is the
+ * check's name. Rows sharing one poll's stamp can sort in any order, so the
+ * lane, not the row order, picks the row. An optional red's P1 row never
+ * joins, even when it was written first. `row` is the chosen row's `ts`,
+ * `injected` the earliest hook `firstSeenAt` for that row id, and `acked`
+ * that row's receipt `ackedAt` while the receipt still acknowledges it.
+ *
+ * The head's earliest P0 row stands in for the red's row in two cases: the
+ * timeline has no `redLane` (a record written before the field existed), or
+ * no row for `redLane` is in the inbox yet. A head with no P0 row, or an
+ * unknown pull request number, keeps those stages absent.
  *
  * **Example** (Build the join)
  *
@@ -895,7 +920,7 @@ export const loadYeetPushToAckTimeline = Effect.fn("Yeet.loadYeetPushToAckTimeli
   prNumber: O.Option<number>
 ): Effect.fn.Return<YeetPushToAckTimeline, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const view = yield* loadYeetInboxView(repoRoot);
-  const row = firstRequiredRedRowFor(view.entries, timeline.headSha, prNumber);
+  const row = firstRequiredRedRowFor(view.entries, timeline, prNumber);
   const firstSeen = yield* loadYeetHookFirstSeen(repoRoot);
   return YeetPushToAckTimeline.make({
     headSha: timeline.headSha,

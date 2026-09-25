@@ -46,6 +46,7 @@ import {
   YeetWatchCheck,
   yeetBaseConflictGeneration,
   yeetBaseConflictRowId,
+  yeetBaseConflictWalk,
   yeetBaseMergeableFor,
   yeetInboxExpectedRowId,
   yeetInboxHoldsRow,
@@ -761,10 +762,14 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
     Effect.gen(function* () {
       const root = yield* tempRoot();
       const fs = yield* FileSystem.FileSystem;
-      const earlier = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
       // A truncated write: the receipt file exists, so it acks the row, but it no longer decodes.
-      const receiptPath = yield* writeEarlierClear(root, earlier.id);
-      yield* fs.writeFileString(receiptPath, Str.slice(0, 24)(yield* fs.readFileString(receiptPath)));
+      const corruptReceipt = Effect.fnUntraced(function* (id: string) {
+        const path = yield* writeEarlierClear(root, id);
+        yield* fs.writeFileString(path, Str.slice(0, 24)(yield* fs.readFileString(path)));
+        return path;
+      });
+      const earlier = O.getOrThrow(yield* dispatchYeetBaseConflict(root, capsuleFor(head), at));
+      const receiptPath = yield* corruptReceipt(earlier.id);
       const ack = yield* readYeetAckState(root, earlier.id);
       assertTrue(ack.acked);
       assertNone(O.fromNullOr(ack.receipt));
@@ -799,6 +804,54 @@ it.layer(platform, { timeout: "30 seconds" })("until-ready merge loop as the bas
       expect(A.filter(printed.errors, Str.includes(`P0 capsule ${second} opened the repair session`))).toHaveLength(0);
       expect(A.filter(printed.errors, Str.includes(`P0 capsule ${second} queued to the head aaaaaaa`))).toHaveLength(1);
       strictEqual(yield* yeetBaseConflictGeneration(root, { headSha: head, prNumber: 7 }), 1);
+      const walk = yield* yeetBaseConflictWalk(root, { headSha: head, prNumber: 7 });
+      expect(A.map(walk.corruptReceipts, (receipt) => [receipt.generation, receipt.path])).toStrictEqual([
+        [0, receiptPath],
+      ]);
+
+      // Generation 1 acked wontfix keeps the head's conflict open with no row, so
+      // every conflicted poll walks past the corrupt receipt again: from the
+      // dispatch, the recall, and the ack notice. Polls 0-2: head A conflicted.
+      // Polls 3-5: the fix push, conflicted too, whose own generation 0 receipt
+      // is corrupt. Poll 6 reads the pull request closed.
+      yield* ackYeetInboxRow(root, second, YeetAckWontfixResolution.make({ reason: "base revert pending" }), at);
+      const fixReceiptPath = yield* corruptReceipt(
+        yield* yeetBaseConflictRowId({ generation: 0, headSha: fixHead, prNumber: 7 })
+      );
+      const fixSecond = yield* yeetBaseConflictRowId({ generation: 1, headSha: fixHead, prNumber: 7 });
+      const repeatMark = yield* consoleMark();
+      const repeatPolls = yield* Ref.make(0);
+      const repeated = yield* runYeetMonitorUntilMerged(contextFor(root), {
+        ...loopOptions,
+        policy: YeetUntilReadyPolicy.make({}),
+        collectStatus: () =>
+          Ref.getAndUpdate(repeatPolls, (n) => n + 1).pipe(
+            Effect.map((n) => {
+              if (n <= 2) return conflicted(root);
+              if (n <= 5) return conflicted(root, fixHead);
+              return snapshot(root, { checks: [pendingCheck], sha: fixHead, state: "CLOSED" });
+            })
+          ),
+        closeout: () => Effect.die("unexpected closeout"),
+      });
+      strictEqual(repeated, "closed");
+      strictEqual(yield* Ref.get(repeatPolls), 7);
+      expect(A.map(yield* conflictRows(root), (row) => row.id)).toStrictEqual([earlier.id, second, fixSecond]);
+      const repeatedErrors = (yield* consoleSince(repeatMark)).errors;
+      // Once per head and generation: three polls on head A name its corrupt
+      // receipt once, and the new head names its own once.
+      expect(
+        A.filter(repeatedErrors, Str.includes(`[yeet] base-conflict ack receipt ${receiptPath} does not decode`))
+      ).toHaveLength(1);
+      expect(
+        A.filter(
+          repeatedErrors,
+          Str.includes(
+            `[yeet] base-conflict ack receipt ${fixReceiptPath} does not decode; counting conflict generation 0 on head bbbbbbb as consumed`
+          )
+        )
+      ).toHaveLength(1);
+      expect(A.filter(repeatedErrors, Str.includes(`${second} carries a wontfix ack receipt`))).toHaveLength(1);
     })
   );
 

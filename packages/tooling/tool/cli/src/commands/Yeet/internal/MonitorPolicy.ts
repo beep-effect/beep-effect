@@ -451,9 +451,17 @@ export const yeetMonitorExitTable: ReadonlyArray<YeetMonitorExit> = A.map(
  * commit's committer date (yeet publish commits and pushes in one step, so it
  * approximates the push). `redAt` is GitHub's `completedAt` for the first
  * failing required check the loop saw on the head (the red as GitHub observed
- * it, not as the poll did); an optional red never stamps it. `redAt`,
- * `settledAt`, `closeoutAt`, and `readyAt` are stamped on first observation
- * and never overwritten; a head change starts a new timeline.
+ * it, not as the poll did); an optional red never stamps it. `redLane` names
+ * that check, the lane its P0 `check-failed` row carries, and is stamped
+ * together with `redAt` (`yeetHeadTimelineStampRed`), so the push → row → ack
+ * join follows the same red. `redAt`, `redLane`, `settledAt`, `closeoutAt`,
+ * and `readyAt` are stamped on first observation and never overwritten; a
+ * head change starts a new timeline.
+ *
+ * **Gotchas**
+ *
+ * A timeline encoded before `redLane` existed decodes with `redAt` and no
+ * `redLane`; the join then falls back to the head's earliest P0 row.
  *
  * **Example** (Construct a timeline)
  *
@@ -473,6 +481,7 @@ export class YeetHeadTimeline extends S.Class<YeetHeadTimeline>($I`YeetHeadTimel
     firstObservedAt: S.String,
     pushedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     redAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    redLane: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     settledAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     closeoutAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     readyAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -483,12 +492,87 @@ export class YeetHeadTimeline extends S.Class<YeetHeadTimeline>($I`YeetHeadTimel
 ) {}
 
 /**
- * The timeline instants the loop stamps after first observation.
+ * The required red that stamps a head's red: which check, and when.
+ *
+ * **Details**
+ *
+ * `lane` is the failing required check's name, the same string its P0
+ * `check-failed` inbox row carries as the capsule lane. `at` is GitHub's
+ * `completedAt` for that check.
+ *
+ * **Example** (Name the red)
+ *
+ * ```ts
+ * import { YeetHeadRed } from "@beep/repo-cli/test/Yeet"
+ *
+ * const red = YeetHeadRed.make({ at: "2026-09-25T12:01:00Z", lane: "Check" })
+ * console.log(red.lane) // "Check"
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const YeetHeadTimelineStamp = LiteralKit(["redAt", "settledAt", "closeoutAt", "readyAt"]).pipe(
+export class YeetHeadRed extends S.Class<YeetHeadRed>($I`YeetHeadRed`)(
+  {
+    at: S.String,
+    lane: S.NonEmptyString,
+  },
+  $I.annote("YeetHeadRed", {
+    description: "The failing required check that stamps a head's red, and GitHub's completedAt for it.",
+  })
+) {}
+
+/**
+ * Stamp a head's red and the check that set it, keeping the first red.
+ *
+ * **Details**
+ *
+ * `redAt` and `redLane` are written together or not at all: once a red is
+ * stamped, a later red leaves both untouched, so the lane always names the
+ * check whose instant `redAt` holds.
+ *
+ * **Example** (The first red wins, lane and all)
+ *
+ * ```ts
+ * import { YeetHeadRed, YeetHeadTimeline, yeetHeadTimelineStampRed } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const timeline = YeetHeadTimeline.make({ headSha: "abc123", firstObservedAt: "2026-09-16T00:00:00.000Z" })
+ * const once = yeetHeadTimelineStampRed(timeline, YeetHeadRed.make({ at: "2026-09-16T00:05:00Z", lane: "Check" }))
+ * const twice = yeetHeadTimelineStampRed(once, YeetHeadRed.make({ at: "2026-09-16T00:06:00Z", lane: "Lint" }))
+ * console.log(O.getOrNull(twice.redAt), O.getOrNull(twice.redLane)) // "2026-09-16T00:05:00Z" "Check"
+ * ```
+ *
+ * @param timeline - The head timeline receiving the stamp.
+ * @param red - The first failing required check and its `completedAt`.
+ * @returns The stamped timeline, unchanged when a red was already stamped.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetHeadTimelineStampRed: {
+  (red: YeetHeadRed): (timeline: YeetHeadTimeline) => YeetHeadTimeline;
+  (timeline: YeetHeadTimeline, red: YeetHeadRed): YeetHeadTimeline;
+} = dual(
+  2,
+  (timeline: YeetHeadTimeline, red: YeetHeadRed): YeetHeadTimeline =>
+    O.match(timeline.redAt, {
+      onNone: () => YeetHeadTimeline.make({ ...timeline, redAt: O.some(red.at), redLane: O.some(red.lane) }),
+      onSome: () => timeline,
+    })
+);
+
+/**
+ * The timeline instants the loop stamps after first observation.
+ *
+ * **Details**
+ *
+ * The red is not one of them: it carries its check too, so it is stamped
+ * through `yeetHeadTimelineStampRed`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetHeadTimelineStamp = LiteralKit(["settledAt", "closeoutAt", "readyAt"]).pipe(
   $I.annoteSchema("YeetHeadTimelineStamp", {
     description: "Which timeline instant a loop event stamps.",
   })
@@ -531,7 +615,6 @@ export const yeetHeadTimelineStamp: {
   3,
   (timeline: YeetHeadTimeline, stamp: YeetHeadTimelineStamp, at: string): YeetHeadTimeline =>
     Match.value(stamp).pipe(
-      Match.when("redAt", () => YeetHeadTimeline.make({ ...timeline, redAt: O.orElseSome(timeline.redAt, () => at) })),
       Match.when("settledAt", () =>
         YeetHeadTimeline.make({ ...timeline, settledAt: O.orElseSome(timeline.settledAt, () => at) })
       ),
@@ -628,10 +711,10 @@ export const renderYeetHeadTimeline = (timeline: YeetHeadTimeline): string => {
  * **Details**
  *
  * `pushed` is the head's committer date, `red` is GitHub's `completedAt` for
- * the first failing check, `row` is when the first `check-failed` inbox row
- * for the head was written, `injected` is when a harness session was first
- * handed that row (the inbox hook's `firstSeenAt`), and `acked` is the row's
- * ack receipt.
+ * the first failing required check, `row` is when that check's P0
+ * `check-failed` inbox row was written, `injected` is when a harness session
+ * was first handed that row (the inbox hook's `firstSeenAt`), and `acked` is
+ * the row's ack receipt.
  *
  * **Example** (Check a stage)
  *

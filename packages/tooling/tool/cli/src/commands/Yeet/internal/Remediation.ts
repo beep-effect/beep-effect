@@ -875,7 +875,76 @@ const renderYeetBaseConflictDispatchLine = (outcome: YeetRemediationOutcome, row
 };
 
 /**
- * Derive the conflict generation for the next base-conflict row on one pull request head.
+ * One base-conflict ack receipt the generation walk passed without decoding it.
+ *
+ * **Details**
+ *
+ * The receipt file exists, so it acks its row, but it does not decode (a
+ * truncated write). The walk counts its generation as consumed and hands the
+ * receipt back instead of printing, so its caller decides how often to name
+ * it. `path` is the receipt file; `generation` is the conflict generation on
+ * the walked head whose row it acks.
+ *
+ * **Example** (Name a corrupt receipt)
+ *
+ * ```ts
+ * import { YeetBaseConflictCorruptReceipt } from "@beep/repo-cli/test/Yeet"
+ *
+ * const receipt = YeetBaseConflictCorruptReceipt.make({ generation: 0, path: "/repo/.beep/inbox/acks/conflict.json" })
+ * console.log(receipt.generation) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetBaseConflictCorruptReceipt extends S.Class<YeetBaseConflictCorruptReceipt>(
+  $I`YeetBaseConflictCorruptReceipt`
+)(
+  {
+    generation: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    path: S.String,
+  },
+  $I.annote("YeetBaseConflictCorruptReceipt", {
+    description: "A base-conflict ack receipt that exists but does not decode, and the generation it acks.",
+  })
+) {}
+
+/**
+ * Where one head's base-conflict generation walk stopped, and what it passed.
+ *
+ * **Details**
+ *
+ * `generation` is the conflict generation for the head's next base-conflict
+ * row (see {@link yeetBaseConflictWalk}). `corruptReceipts` lists, oldest
+ * generation first, every receipt the walk counted as consumed because it
+ * exists but does not decode; it is empty on a clean chain.
+ *
+ * **Example** (A clean walk)
+ *
+ * ```ts
+ * import { YeetBaseConflictWalk } from "@beep/repo-cli/test/Yeet"
+ *
+ * const walk = YeetBaseConflictWalk.make({ generation: 1 })
+ * console.log(walk.corruptReceipts.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetBaseConflictWalk extends S.Class<YeetBaseConflictWalk>($I`YeetBaseConflictWalk`)(
+  {
+    generation: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    corruptReceipts: S.Array(YeetBaseConflictCorruptReceipt).pipe(
+      SchemaUtils.withKeyDefaults(A.empty<YeetBaseConflictCorruptReceipt>())
+    ),
+  },
+  $I.annote("YeetBaseConflictWalk", {
+    description: "A head's next base-conflict generation and the undecodable ack receipts the walk passed to reach it.",
+  })
+) {}
+
+/**
+ * Walk one pull request head's base-conflict generations to the next one.
  *
  * **Details**
  *
@@ -897,10 +966,52 @@ const renderYeetBaseConflictDispatchLine = (outcome: YeetRemediationOutcome, row
  * again. A receipt that exists but does not decode (a truncated write) still
  * acks its row, so the append would skip that id and the recall would ignore
  * it; stopping there would leave the head's next conflict with no row. The
- * walk counts it as consumed instead and prints one stderr line naming the
- * receipt path. A decodable receipt of any kind other than `cleared` stays
- * the current generation: a row an operator acked some other way keeps the
- * head's conflict closed until a push.
+ * walk counts it as consumed instead and returns it in `corruptReceipts`
+ * without printing anything: the walk runs from the dispatch, the recall, and
+ * the ack notice on every conflicted poll, so the until-ready loop names each
+ * corrupt receipt once per head and generation. A decodable receipt of any
+ * kind other than `cleared` stays the current generation: a row an operator
+ * acked some other way keeps the head's conflict closed until a push.
+ *
+ * **Example** (Build the walk)
+ *
+ * ```ts
+ * import { yeetBaseConflictWalk } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = yeetBaseConflictWalk("/repo", { headSha: "abc123", prNumber: 751 })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - The checkout whose ack receipts are read.
+ * @param coordinates - The pull request number and head SHA.
+ * @returns The next generation (the number of consumed rows) and the undecodable receipts the walk passed.
+ * @category services
+ * @since 0.0.0
+ */
+export const yeetBaseConflictWalk = Effect.fn("Yeet.yeetBaseConflictWalk")(function* (
+  repoRoot: string,
+  coordinates: Pick<YeetBaseConflictCapsule, "headSha" | "prNumber">
+): Effect.fn.Return<YeetBaseConflictWalk, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+  let generation = 0;
+  let corruptReceipts = A.empty<YeetBaseConflictCorruptReceipt>();
+  let consumed = yield* baseConflictGenerationConsumed(repoRoot, { ...coordinates, generation });
+  while (O.isSome(consumed)) {
+    corruptReceipts = A.appendAll(corruptReceipts, consumed.value);
+    generation += 1;
+    consumed = yield* baseConflictGenerationConsumed(repoRoot, { ...coordinates, generation });
+  }
+  return YeetBaseConflictWalk.make({ generation, corruptReceipts });
+});
+
+/**
+ * Derive the conflict generation for the next base-conflict row on one pull request head.
+ *
+ * **Details**
+ *
+ * The `generation` of {@link yeetBaseConflictWalk}, for callers that need only
+ * the row id. Like the walk it prints nothing, so deriving the id on every
+ * poll repeats no line.
  *
  * **Example** (Build the derivation)
  *
@@ -922,32 +1033,32 @@ export const yeetBaseConflictGeneration = Effect.fn("Yeet.yeetBaseConflictGenera
   repoRoot: string,
   coordinates: Pick<YeetBaseConflictCapsule, "headSha" | "prNumber">
 ): Effect.fn.Return<number, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
-  let generation = 0;
-  while (yield* baseConflictGenerationConsumed(repoRoot, { ...coordinates, generation })) {
-    generation += 1;
-  }
-  return generation;
+  return (yield* yeetBaseConflictWalk(repoRoot, coordinates)).generation;
 });
 
-// Whether the generation's row id is consumed: its receipt is `cleared`, or
-// the receipt file exists but does not decode. A corrupt receipt still acks
-// the row, so ending the walk on it would wedge the head at that generation;
-// it is passed with one stderr line instead. A missing receipt, or a
-// decodable one of another kind, ends the walk at that generation.
+// Whether the generation's row id is consumed, and by what. `None` when the
+// receipt is missing or a decodable kind other than `cleared`: the walk ends
+// at that generation. `Some` holds nothing for a `cleared` receipt, and the
+// receipt itself when the file exists but does not decode: a corrupt receipt
+// still acks the row, so ending the walk on it would wedge the head at that
+// generation. Nothing prints here; the walk's caller names corrupt receipts.
 const baseConflictGenerationConsumed = Effect.fnUntraced(function* (
   repoRoot: string,
   coordinates: Pick<YeetBaseConflictCapsule, "generation" | "headSha" | "prNumber">
-): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  O.Option<ReadonlyArray<YeetBaseConflictCorruptReceipt>>,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+> {
   const id = yield* yeetBaseConflictRowId(coordinates);
   const ack = yield* readYeetAckState(repoRoot, id);
   const receipt = O.fromNullOr(ack.receipt);
-  if (O.isSome(receipt)) return receipt.value.resolution.kind === "cleared";
-  if (!ack.acked) return false;
-  const ackPath = yield* yeetInboxAckPath(repoRoot, id);
-  yield* Console.error(
-    `[yeet] base-conflict ack receipt ${ackPath} does not decode; counting conflict generation ${coordinates.generation} on head ${Str.slice(0, 7)(coordinates.headSha)} as consumed`
-  );
-  return true;
+  if (O.isSome(receipt)) {
+    return receipt.value.resolution.kind === "cleared" ? O.some(A.empty()) : O.none();
+  }
+  if (!ack.acked) return O.none();
+  const path = yield* yeetInboxAckPath(repoRoot, id);
+  return O.some(A.of(YeetBaseConflictCorruptReceipt.make({ generation: coordinates.generation, path })));
 });
 
 /**

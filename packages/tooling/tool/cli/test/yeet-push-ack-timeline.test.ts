@@ -8,13 +8,14 @@ import {
   YeetAckReceipt,
   YeetCheckFailedRow,
   YeetFailureCapsule,
+  YeetHeadRed,
   YeetHeadTimeline,
   YeetHookSessionState,
   YeetHookSessionStateJson,
   YeetInboxRow,
   YeetInboxRowJson,
   YeetPushToAckTimeline,
-  yeetHeadTimelineStamp,
+  yeetHeadTimelineStampRed,
   yeetInboxPaths,
   yeetInboxRowId,
 } from "@beep/repo-cli/test/Yeet";
@@ -125,9 +126,11 @@ describe("push → row → ack rendering", () => {
 
   it("keeps the first red the loop stamped for a head", () => {
     const timeline = YeetHeadTimeline.make({ headSha: head, firstObservedAt: "2026-09-25T12:00:30Z" });
-    const first = yeetHeadTimelineStamp(timeline, "redAt", "2026-09-25T12:10:00Z");
-    const second = yeetHeadTimelineStamp(first, "redAt", "2026-09-25T12:20:00Z");
+    const first = yeetHeadTimelineStampRed(timeline, YeetHeadRed.make({ at: "2026-09-25T12:10:00Z", lane: "Check" }));
+    const second = yeetHeadTimelineStampRed(first, YeetHeadRed.make({ at: "2026-09-25T12:20:00Z", lane: "Lint" }));
+    // The red and its lane are one stamp: the second red moves neither.
     assertSome(second.redAt, "2026-09-25T12:10:00Z");
+    assertSome(second.redLane, "Check");
   });
 
   it("decodes a hook session file written before firstSeenAt existed", () => {
@@ -317,6 +320,85 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("push → row → ack join", 
           "row 2026-09-25T18:27:50.483Z (+1m 14s 483ms), injected 2026-09-25T18:28:48Z (+57s 517ms), " +
           "acked 2026-09-25T18:35:10.000Z (+6m 22s)"
       );
+    })
+  );
+
+  it.effect("follows the red's lane past another required red's row that shares its poll stamp", () =>
+    Effect.gen(function* () {
+      const root = yield* makeTempRoot();
+      // One poll saw two required reds and stamped both rows with its own
+      // instant, dispatching Lint before Coverage. GitHub completed Coverage
+      // first, so Coverage stamped the head's red and names its lane.
+      const polledAt = "2026-09-25T12:12:00.000Z";
+      const lint = yield* writeRedRow(root, "Check / Lint", head, polledAt);
+      const coverage = yield* writeRedRow(root, "Check / Coverage", head, polledAt);
+      yield* writeSessionFile(
+        root,
+        "claude-1.json",
+        yield* encodeJson({
+          schemaVersion: "yeet-hook-session/v1",
+          incidentId: null,
+          seenIds: [lint, coverage],
+          firstSeenAt: { [lint]: "2026-09-25T12:12:10Z", [coverage]: "2026-09-25T12:12:40Z" },
+        })
+      );
+      yield* writeYeetAckReceipt(
+        root,
+        YeetAckReceipt.make({
+          id: lint,
+          ackedAt: "2026-09-25T12:13:00.000Z",
+          resolution: YeetAckFixResolution.make({ sha: "fix1111" }),
+        })
+      );
+      yield* writeYeetAckReceipt(
+        root,
+        YeetAckReceipt.make({
+          id: coverage,
+          ackedAt: "2026-09-25T12:16:00.000Z",
+          resolution: YeetAckFixResolution.make({ sha: "fix2222" }),
+        })
+      );
+
+      const legacyRecord = {
+        headSha: head,
+        firstObservedAt: "2026-09-25T12:00:30.000Z",
+        pushedAt: "2026-09-25T12:00:00.000Z",
+        redAt: "2026-09-25T12:10:00Z",
+      };
+      const stamped = yeetHeadTimelineStampRed(
+        YeetHeadTimeline.make({
+          headSha: head,
+          firstObservedAt: legacyRecord.firstObservedAt,
+          pushedAt: O.some(legacyRecord.pushedAt),
+        }),
+        YeetHeadRed.make({ at: legacyRecord.redAt, lane: "Check / Coverage" })
+      );
+      strictEqual(
+        renderYeetPushToAckTimeline(yield* loadYeetPushToAckTimeline(root, stamped, O.some(pr))),
+        "push→row→ack abc1234: pushed 2026-09-25T12:00:00.000Z, red 2026-09-25T12:10:00Z (+10m), " +
+          "row 2026-09-25T12:12:00.000Z (+2m), injected 2026-09-25T12:12:40Z (+40s), " +
+          "acked 2026-09-25T12:16:00.000Z (+3m 20s)"
+      );
+
+      // A record encoded before redLane existed decodes without it, and the
+      // join falls back to the earliest P0 row: with equal stamps, the row
+      // dispatched first.
+      const legacy = yield* S.decodeEffect(HeadTimelineJson)(yield* encodeJson(legacyRecord));
+      assertNone(legacy.redLane);
+      strictEqual(
+        renderYeetPushToAckTimeline(yield* loadYeetPushToAckTimeline(root, legacy, O.some(pr))),
+        "push→row→ack abc1234: pushed 2026-09-25T12:00:00.000Z, red 2026-09-25T12:10:00Z (+10m), " +
+          "row 2026-09-25T12:12:00.000Z (+2m), injected 2026-09-25T12:12:10Z (+10s), " +
+          "acked 2026-09-25T12:13:00.000Z (+50s)"
+      );
+
+      // A lane whose row is not in the inbox yet falls back the same way.
+      const unwritten = yield* loadYeetPushToAckTimeline(
+        root,
+        YeetHeadTimeline.make({ ...stamped, redLane: O.some("Check / Docgen") }),
+        O.some(pr)
+      );
+      assertSome(unwritten.injectedAt, "2026-09-25T12:12:10Z");
     })
   );
 
