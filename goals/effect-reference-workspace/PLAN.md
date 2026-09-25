@@ -96,6 +96,10 @@ Before marking the packet closed (and `status` → `completed-retained` / `compl
 - `graft build --deep`, `beep refs refresh`, and a fresh `install-timer` are never run from an
   agent session; S4 step 7 is executed with the operator present.
 - When a second theme appears, revisit R8 before generalizing.
+- Packet-only PRs stay on the docs-only heavy path only while every changed file matches the
+  `HeavyAdmission.ts` docs pattern (`*.md`, packet `ops/manifest.json`, `docs/**`, `research/**`).
+  The template's `history/**/.gitkeep` files do not match and force a `hold`; `_TEMPLATE.md`
+  already keeps those directories, so this packet ships without them.
 
 ## Verification Commands
 
