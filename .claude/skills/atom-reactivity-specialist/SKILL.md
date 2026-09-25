@@ -96,6 +96,9 @@ Is this state...
 
 ## Source References
 
+`.repos/effect` points to `~/YeeBois/references/effect/effect`, the Effect
+child of the reference workspace; Effect `main` is v4.
+
 - `.repos/effect/packages/effect/src/unstable/reactivity/{Atom,Reactivity,AtomRpc,AsyncResult}.ts`
 - `node_modules/@effect/atom-react/src/{Hooks,RegistryContext,ScopedAtom,ReactHydration}.ts`
 

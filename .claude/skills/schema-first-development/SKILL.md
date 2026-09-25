@@ -37,6 +37,8 @@ Keep `Schema` as the source of truth for pure data models.
 - Real repository examples: `references/examples.md`
 
 3. Check local Effect v4 source for nontrivial Schema API choices.
+   `.repos/effect` points to `~/YeeBois/references/effect/effect`, the Effect
+   child of the reference workspace; Effect `main` is v4.
 - Start with `.repos/effect/packages/effect/SCHEMA.md`.
 - Confirm behavior in `.repos/effect/packages/effect/src/Schema.ts` or the
   specialized module (`SchemaAST`, `SchemaGetter`, `SchemaIssue`,

@@ -192,7 +192,8 @@ The Effect version tells you what it needs, what can go wrong, and what it
 returns. The async version *hopes*. I am done hoping.
 
 APIs get validated against the live Effect source referenced at
-`.repos/effect`, not against whatever an agent remembers from training. See
+`.repos/effect`, the Effect child of `~/YeeBois/references/effect`, rather than
+whatever an agent remembers from training. See
 [`standards/effect-first-development.md`](standards/effect-first-development.md)
 and
 [`standards/schema-first-development-prompt.md`](standards/schema-first-development-prompt.md).
@@ -276,11 +277,24 @@ Agent law: [`AGENTS.md`](AGENTS.md).
 First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
 `explorations/`, `standards/`, and the authored `docs/` tree.
 
-`.repos/effect` is a gitignored symlink to a machine-local clone of
-[Effect-TS/effect](https://github.com/Effect-TS/effect), provisioned by
-`scripts/setup-effect-ref.sh`, so agents validate APIs against real Effect
-v4 source instead of training-data priors. Nothing under `.repos/` is part
-of the tracked tree.
+The reference workspace lives at `~/YeeBois/references/effect`, with `effect`
+and `effect-tsgo` child clones. `scripts/setup-effect-ref.sh` provisions it from
+`scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides the workspace root.
+The gitignored `.repos/effect` link still points to the
+[Effect-TS/effect](https://github.com/Effect-TS/effect) child, whose `main` is
+Effect v4, so existing relative source links stay valid. `.repos/effect-tsgo`
+points to the tsgo child; `.repos/effect-workspace` points to the parent.
+Nothing under `.repos/` is part of the tracked tree.
+
+Use `graft ask "<q>" .repos/effect-workspace` to query across members, or
+`graft ask "<q>" .repos/effect` to narrow to Effect. The nightly 03:30
+`beep-refs-refresh` timer, installed by `beep refs install-timer`, refreshes
+the workspace with the `claude-opus-5` deep tier through CLIProxyAPI, reusing
+`$HOME/.config/beep-graft/env`. See the [timer runbook](docs/runbooks/systemd-timers.md).
+Agents may run `beep refs plan` and `beep refs install-timer --refresh` to
+inspect the plan or re-render an installed timer. Agents never run
+`beep refs refresh`, a fresh `beep refs install-timer`, `graft init`, or
+`graft build --deep`.
 
 Do **not** add git subtrees under `.repos/`. Historical subtree imports
 still sit in git objects and poison naive `git log` author counts — those

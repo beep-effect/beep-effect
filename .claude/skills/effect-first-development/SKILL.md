@@ -116,6 +116,12 @@ Additional checks with no law counterpart below:
 
 ## Source of Truth References
 
+`.repos/effect` points to the Effect child at
+`~/YeeBois/references/effect/effect` (Effect `main` is v4). The workspace also
+contains `effect-tsgo`; `scripts/setup-effect-ref.sh` provisions it from
+`scripts/references.json`, with `BEEP_REFERENCES_ROOT` overriding the
+`~/YeeBois/references/effect` root.
+
 - [Effect LLMS guide](../../../.repos/effect/LLMS.md)
 - [Effect ai-docs index](../../../.repos/effect/ai-docs/src/index.md)
 - [Effect migration notes](../../../.repos/effect/MIGRATION.md)

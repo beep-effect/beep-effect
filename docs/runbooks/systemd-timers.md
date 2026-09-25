@@ -1,14 +1,22 @@
-# systemd user timers: research and graft
+# systemd user timers: research, graft, and references
 
-Two repo CLI commands render systemd **user** units into
+Three repo CLI commands render systemd **user** units into
 `$HOME/.config/systemd/user/` on a workstation and enable their timers:
 
 | Command | Units | Schedule |
 | --- | --- | --- |
 | `bun run beep research install-timers` | `beep-research-daily.{service,timer}`, `beep-research-repo-card.{service,timer}` | daily 21:00, Sunday 20:30 |
 | `bun run beep graft deep install-timer --owner <clone>` | `beep-graft-deep-refresh.{service,timer}` | nightly 02:30 |
+| `bun run beep refs install-timer --owner <clone>` | `beep-refs-refresh.{service,timer}` | nightly 03:30 |
 
-Both installers share one module, `packages/tooling/tool/cli/src/internal/systemd/`:
+The refs timer refreshes the `effect` and `effect-tsgo` members under
+`~/YeeBois/references/effect`, provisioned from `scripts/references.json` by
+`scripts/setup-effect-ref.sh` (`BEEP_REFERENCES_ROOT` overrides the root).
+Its deep tier uses `claude-opus-5` through CLIProxyAPI and reuses
+`$HOME/.config/beep-graft/env`; see [graft recovery](graft-local-recovery.md)
+for the shared provider environment.
+
+All installers share one module, `packages/tooling/tool/cli/src/internal/systemd/`:
 the Bun the unit runs is the mise shim (`$HOME/.local/share/mise/shims/bun`)
 when this user can execute it, else `$HOME/.bun/bin/bun`, else the Bun that
 ran the installer; `--bun-path` pins one explicitly. Every path is validated
@@ -34,13 +42,14 @@ Three things rot it:
 
 `--refresh` is the answer to the third: it re-renders the installed units from
 what they recorded — `WorkingDirectory` (repo root / owner), the `--page` in
-`ExecStart` (research), `EnvironmentFile` and the timer's `OnCalendar` (graft)
+`ExecStart` (research), `EnvironmentFile` and the timer's `OnCalendar` (graft and refs)
 — with a fresh Bun resolution; a flag given alongside `--refresh` still
 wins over the recorded value:
 
 ```bash
 bun run beep research install-timers --refresh
 bun run beep graft deep install-timer --refresh
+bun run beep refs install-timer --refresh
 ```
 
 Run them from a checkout that already contains the merged renderer change (the
@@ -52,9 +61,13 @@ owning clone after `bun run beep yeet sweep --retire`, or any fresh worktree).
 The agent that shipped the change, as part of post-merge closeout, per
 `AGENTS.md`. The permissions are granted to agents on purpose:
 `Bash(bun run beep research install-timers:*)`,
-`Bash(bun run beep graft deep install-timer --refresh:*)` (the graft
-installer's only agent-allowed form, because a first install schedules a
-nightly model-spending job), and the read-only
+`Bash(bun run beep graft deep install-timer --refresh:*)`, and
+`Bash(bun run beep refs install-timer --refresh:*)`. For graft and refs,
+`--refresh` is the only agent-allowed installer form because a first install
+schedules a nightly model-spending job. `beep refs plan` is read-only and
+agent-permitted; agents never run `beep refs refresh`, a fresh
+`beep refs install-timer`, `graft init`, or `graft build --deep`. Agents may
+also use the read-only
 `systemctl --user list-timers`, `systemctl --user status beep-…`, and
 `journalctl --user -u beep-…` queries used to verify. The status and journal
 grants are scoped to the `beep-` unit namespace on purpose: a unit's status
@@ -103,7 +116,7 @@ schema-owned document (`yeet-retire-sweep-plan/v1` with `--plan`,
 ## Verify
 
 ```bash
-systemctl --user list-timers --no-pager | grep -E "beep-research|beep-graft"
+systemctl --user list-timers --no-pager | grep -E "beep-research|beep-graft|beep-refs"
 grep -E "^(ExecStart|WorkingDirectory)=" $HOME/.config/systemd/user/beep-research-daily.service
 journalctl --user -u beep-research-daily.service -n 20 --no-pager
 ```

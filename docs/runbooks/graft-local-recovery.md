@@ -231,6 +231,14 @@ night. The first seed is what saves the first night's full build: the refresh
 re-summarizes only changed files, so the owner starts from a meaning tier rather
 than from nothing.
 
+The Effect reference workspace at `~/YeeBois/references/effect` has its own
+03:30 `beep-refs-refresh` timer, rendered by `beep refs install-timer`.
+It uses `claude-opus-5` through CLIProxyAPI and reuses
+`$HOME/.config/beep-graft/env` unchanged. See the [systemd timer
+runbook](systemd-timers.md) for the agent-permitted `beep refs plan` and
+`beep refs install-timer --refresh` forms; agents never run `beep refs refresh`
+or a fresh refs timer install.
+
 The provider keys live in `$HOME/.config/beep-graft/env`, which systemd reads as
 the unit's `EnvironmentFile`. It holds the same keys as the deep-build
 environment files below (`GRAFT_PROVIDER`, `GRAFT_BASE_URL`, `GRAFT_API_KEY`,
