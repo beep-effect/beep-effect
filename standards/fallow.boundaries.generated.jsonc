@@ -1364,14 +1364,18 @@
         "from": "@beep/colors",
         "allow": [
           "@beep/colors",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/colors",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/utils"
         ]
       },
