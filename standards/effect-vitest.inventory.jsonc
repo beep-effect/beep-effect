@@ -92819,7 +92819,7 @@
       "line": 189,
       "endLine": 221,
       "symbol": "scoped",
-      "occurrence": "v2:f83444a794f03ac78cf2b021163e2e902b1c380857fa059f8dd3f8769867f737",
+      "occurrence": "v2:2ac4af0e56fc313fe04fb4e2c3589d65a05810176e70dc49d829edb6e27e8024",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { vi.stubGlobal(\"requestAnimationFrame\", undefined); yield* Effect.logInfo(\"Cosmos stage: acquire unframed renderer\"); yield* Effect.scoped( Effect.acquireReleas",
       "replacement": {
@@ -92841,7 +92841,7 @@
       "line": 193,
       "endLine": 197,
       "symbol": "scoped",
-      "occurrence": "v2:6548670d614fbaba2fe68c24e962da09b7475ddce4d49516cfa7b1bf02802256",
+      "occurrence": "v2:b76ac36e120d83baf08f45ab187d7d3a980e4fb8ccc8fe1438a8a391bf3dc6c0",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.acquireRelease(renderCosmosGraph(container, initial), (unframedHandle) => Effect.sync(() => unframedHandle.destroy()) ) )",
       "replacement": {
@@ -92863,7 +92863,7 @@
       "line": 236,
       "endLine": 244,
       "symbol": "scoped",
-      "occurrence": "v2:e7f58c32fd4ba83d5684170d39d5b4e2c1237ecc2c7efd0f443689dafa193ce9",
+      "occurrence": "v2:f846b8a396a4d5d3eca1be5fd273f8d4228c6ef15d04c880b4f204f2e196dbd8",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { yield* Effect.logInfo(\"Cosmos stage: acquire failure-path renderer\"); yield* Effect.acquireRelease(renderCosmosGraph(failureContainer, failureProjection), (han",
       "replacement": {
