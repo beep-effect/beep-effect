@@ -1718,3 +1718,13 @@ The checker treated it as a path relative to the design directory. The design
 now names the full package subpath and tracked repository target. Preserve
 historical receipt hashes and bind this mechanical correction separately.
 Run both knowledge checks on refreshed design prose before publication.
+
+### 2026-09-25 — Inherited live reference paths block unrelated PRs
+
+PR #1246's knowledge refs check reports 32 live host-path findings in the
+Effect reference workspace packet. The same check against main at `eaa9ac640c`
+reports identical debt. The live packet now names the configured root and
+explicit operator path inputs; its frozen census, layout rulings, manifest
+default, and move preconditions remain intact. Run the whole-tree reference
+check before merging new goal packets to avoid spreading this failure to
+unrelated branches.
