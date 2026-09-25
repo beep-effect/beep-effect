@@ -11,6 +11,7 @@ import { fixture, testPlatform, workspace, writeExecutable } from "./refs-test-u
 
 // JSON normalizes -0 to 0; schema equivalence compares their numeric value.
 const refreshStatusEquivalent = S.toEquivalence(RefsRefreshStatus);
+const manifestEquivalent = S.toEquivalence(ReferenceWorkspaceManifest);
 
 const gitStub = `#!/bin/sh
 printf 'git %s %s\\n' "\${PWD##*/}" "$*" >> "$HOME/commands.log"
@@ -41,6 +42,48 @@ const prepare = Effect.fn("RefsTest.prepare")(function* () {
 });
 
 describe("reference planning and refresh", () => {
+  it.effect(
+    "round-trips manifests through the JSON codec",
+    Effect.fnUntraced(function* () {
+      const result = yield* Arbitrary.checkEffect(
+        Arbitrary.schema(ReferenceWorkspaceManifest),
+        (manifest) =>
+          ReferenceWorkspaceManifest.encodeJson(manifest).pipe(
+            Effect.flatMap(ReferenceWorkspaceManifest.decodeJson),
+            Effect.map((decoded) => {
+              expect(manifestEquivalent(decoded, manifest)).toBe(true);
+              return true;
+            })
+          ),
+        fcRuns(100)
+      );
+      expect(result._tag).toBe("Passed");
+    })
+  );
+
+  it.effect(
+    "rejects undeclared manifest and member keys through decode",
+    Effect.fnUntraced(function* () {
+      const manifest = {
+        schemaVersion: "beep-references/v1",
+        theme: "effect",
+        rootDefault: "$HOME/refs",
+        workspaceLink: ".repos/effect-workspace",
+        members: [{ name: "effect", url: "upstream", tier: "deep" }],
+      };
+      expect((yield* ReferenceWorkspaceManifest.decode(manifest).pipe(Effect.result))._tag).toBe("Success");
+      expect(
+        (yield* ReferenceWorkspaceManifest.decode({ ...manifest, branch: "topic" }).pipe(Effect.result))._tag
+      ).toBe("Failure");
+      expect(
+        (yield* ReferenceWorkspaceManifest.decode({
+          ...manifest,
+          members: [{ name: "effect", url: "upstream", tier: "deep", branch: "topic" }],
+        }).pipe(Effect.result))._tag
+      ).toBe("Failure");
+    })
+  );
+
   it.effect(
     "round-trips refresh status through the JSON codec",
     Effect.fnUntraced(function* () {

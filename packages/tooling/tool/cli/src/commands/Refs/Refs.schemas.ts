@@ -14,7 +14,11 @@ import { GraftDeepCoverage } from "../Graft/Graft.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Refs/Refs.schemas");
 const MemberName = S.NonEmptyString.check(S.isPattern(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/u));
-const RelativeDirectory = S.NonEmptyString.check(S.isPattern(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^\p{Cc}]+$/u));
+const RelativeDirectory = S.NonEmptyString.check(
+  S.isPattern(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^\p{Cc}]+$/u, {
+    arbitraryConstraint: { patterns: [{ source: "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$", flags: "" }] },
+  })
+);
 
 /**
  * Indexing cost selected for an upstream member.
@@ -89,7 +93,11 @@ export class ReferenceWorkspaceManifest extends S.Class<ReferenceWorkspaceManife
   {
     schemaVersion: S.Literal("beep-references/v1"),
     theme: S.Literal("effect"),
-    rootDefault: S.NonEmptyString.check(S.isPattern(/^\$HOME\/[^\p{Cc}]+$/u)),
+    rootDefault: S.NonEmptyString.check(
+      S.isPattern(/^\$HOME\/[^\p{Cc}]+$/u, {
+        arbitraryConstraint: { patterns: [{ source: "^\\$HOME/[a-zA-Z0-9_-]+$", flags: "" }] },
+      })
+    ),
     members: S.Array(ReferenceMember).check(
       S.makeFilter(
         (members) => HashSet.size(HashSet.fromIterable(A.map(members, (member) => member.name))) === A.length(members),
@@ -98,6 +106,7 @@ export class ReferenceWorkspaceManifest extends S.Class<ReferenceWorkspaceManife
           title: "Unique members",
           description: "Member names identify distinct directories.",
           message: "Member names must be unique.",
+          arbitraryConstraint: { uniqueBy: (member: ReferenceMember) => member.name },
         }
       )
     ),
@@ -117,7 +126,9 @@ export class ReferenceWorkspaceManifest extends S.Class<ReferenceWorkspaceManife
    * @category decoding
    * @since 0.0.0
    */
-  static readonly decode = S.decodeEffect(ReferenceWorkspaceManifest);
+  static readonly decode = S.decodeUnknownEffect(ReferenceWorkspaceManifest, {
+    onExcessProperty: "error",
+  });
 
   /**
    * Serializes a validated manifest to JSON.
