@@ -1,0 +1,21 @@
+{
+  "lane": "r40-foundation-schema-n-z",
+  "reviewedAt": "2026-09-25T10:44:58.677509+00:00",
+  "executionSha256": "f41874d0bf9ada2a97e95dcf153320a53db5c0dca9bd623f33338b7ba4c3d140",
+  "transcriptSha256": "8fa966c50b3283b02c3dbe8983c23d8e30e8b870ce369735e2d36724e0acf4b4",
+  "sourceFiles": 82,
+  "seedRows": 7,
+  "newQualified": 0,
+  "newDisqualified": 0,
+  "coverage": "Transcript all-root enumeration/scans (lines100,133,179,341,446), source reads and seven seeded owners independently inspected. ParserOptions declaration137 remains a valid anchor; field139 is not declaration drift. CSV toggles and comment/row-limit getters remain independent; XML constructor flags D2; three property-descriptor owners independent ES attributes; Semver both-numeric, left-only, right-only and neither branches preserve all four combinations.",
+  "seedDispositions": {
+    "parser-options-csv-toggles": "retain D1",
+    "xml-parser-sdk-flags": "retain D2",
+    "with-codec-statics-install-on-owned-schema": "retain D1",
+    "with-statics-attach-statics": "retain D1",
+    "r2-foundation-static-descriptors-mode": "retain D1",
+    "r24-foundation-schema-n-z-parser-options-derived-gates": "retain D1",
+    "r25-foundation-schema-n-z-semver-prerelease-numeric-flags": "retain D1"
+  },
+  "disposition": "reconciled-no-new-records"
+}

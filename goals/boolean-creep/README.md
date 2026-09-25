@@ -1,5 +1,27 @@
 # Boolean-Creep Eradication
 
+## R40 partial census and reviewed corrections, 2026-09-25
+
+R40 stopped after provider usage exhaustion (HTTP 402), with 11 successful
+lanes, 4 failed lanes, and 12 unexecuted lanes. All 11 successful lanes were
+reconciled against historical source `e624ab45` and main `5bb7754c`.
+The original 34 execution artifacts are preserved byte-for-byte. R40 remains
+incomplete; no missing-lane recovery or round relaunch has been performed.
+
+The reviewed checkpoint has **725 rows: 108 qualified, 617 disqualified,
+zero applied**. One new writer owner is designed after bounded independent
+admission review. One qualified tour owner and one disqualified HTML attribute
+owner are withdrawn for failing the actual-Boolean recall threshold, with their
+original records preserved. Two citation/kind corrections and the DuckDB
+rollback clarification preserve behavior; both affected original designs are
+archived. The stored stream-state and new writer designs share one migration.
+
+See `data/r40-partial-reconciliation/README.md` and the R40 partial round verdict.
+The dry streak remains zero. This checkpoint grants no full P3 or implementation
+credit. Complete current-source census, two dry rounds, replacement campaign-wide
+P3 review, Benjamin's ratification merge, implementation and final exact-main
+closure remain outstanding.
+
 ## R39 complete census and reconciliation, 2026-09-25
 
 R39 completed all 27 census lanes against historical source `ea3ac408` and
@@ -19,11 +41,11 @@ R39 is complete and wet. The dry streak remains zero. See
 replacement campaign-wide P3 review, Benjamin's packet ratification merge,
 implementation and final exact-main closure remain outstanding.
 
-## Status
+## R38 historical census snapshot, 2026-09-25
 
 R38 completed and reconciled all 27 census lanes against source `ab77f10c`
 and main `9a1bd380`. All 3,951 frozen input bindings were verified before
-integration. The inventory now has **722 rows: 106 qualified and 616
+integration. The inventory then had **722 rows: 106 qualified and 616
 disqualified**, with zero applied.
 
 Five qualified owners were withdrawn because each contains only one actual

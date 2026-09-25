@@ -1,5 +1,27 @@
 # PLAN — Boolean-Creep Eradication
 
+## R40 partial census and reviewed corrections, 2026-09-25
+
+R40 stopped after provider usage exhaustion (HTTP 402), with 11 successful
+lanes, 4 failed lanes, and 12 unexecuted lanes. All 11 successful lanes were
+reconciled against historical source `e624ab45` and main `5bb7754c`.
+The original 34 execution artifacts are preserved byte-for-byte. R40 remains
+incomplete; no missing-lane recovery or round relaunch has been performed.
+
+The reviewed checkpoint has **725 rows: 108 qualified, 617 disqualified,
+zero applied**. One new writer owner is designed after bounded independent
+admission review. One qualified tour owner and one disqualified HTML attribute
+owner are withdrawn for failing the actual-Boolean recall threshold, with their
+original records preserved. Two citation/kind corrections and the DuckDB
+rollback clarification preserve behavior; both affected original designs are
+archived. The stored stream-state and new writer designs share one migration.
+
+See `data/r40-partial-reconciliation/README.md` and the R40 partial round verdict.
+The dry streak remains zero. This checkpoint grants no full P3 or implementation
+credit. Complete current-source census, two dry rounds, replacement campaign-wide
+P3 review, Benjamin's ratification merge, implementation and final exact-main
+closure remain outstanding.
+
 ## R39 complete census and reconciliation, 2026-09-25
 
 R39 completed all 27 census lanes against historical source `ea3ac408` and
@@ -987,12 +1009,12 @@ test "$(wc -m < goals/boolean-creep/GOAL.md)" -le 4000
 
 ## Remaining gates
 
-R38 is complete and wet, with 722 inventory rows: 106 qualified and 616
-disqualified. The dry streak remains zero. Preserve the completed rounds'
-frozen execution evidence, reconciled inventories, archived designs, and owner
-audits; do not restart their controllers. Continue the current-source census
-from the reconciled inventory and complete designs, with fresh admission inputs
-and independent review for each new round.
+R40 is incomplete: 11 successful lanes are reconciled, 4 failed, and 12 were
+not executed after provider usage exhaustion. Inventory is 725 rows: 108
+qualified and 617 disqualified, zero applied. Preserve the original execution
+artifacts and historical source bindings. Do not restart the original controller
+or count incomplete coverage as dry. Any recovery requires a separate reviewed
+admission; none is included in this checkpoint.
 
 Two consecutive complete current-source dry rounds remain required, followed
 by replacement independent zero-finding P3 review and a packet ratification
