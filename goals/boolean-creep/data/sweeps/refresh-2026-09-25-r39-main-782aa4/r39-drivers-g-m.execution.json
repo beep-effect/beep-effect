@@ -1,0 +1,22 @@
+{
+  "lane": "r39-drivers-g-m",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:48:28.279136+00:00",
+  "finished": "2026-09-25T08:50:24.275798+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-drivers-g-m.jsonl` \u2014 confirmed 0, disqualified 0. All seven assigned roots were covered. The seven seed clusters still match the current source and stay unchanged, so nothing was rewritten. No unresolved source question. Single-boolean fields and the `GraphDriveItem` file/folder facets stay outside the net.",
+  "transcriptSha256": "5e695cb0adcd1bb69d447651b286ec92d43a72b2646f69d26cf29f7417f025f6",
+  "runnerSha256": "0b2a4b9b7e3dab094fdc7bba1612a0dbb2b87a20f4d14e03578f6cfd502b5d9c",
+  "seedSha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

@@ -1,0 +1,20 @@
+{
+  "kind": "r39-created-input-verification",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "originMainSha": "782aa4d34b707fd0bb57e93bbb0310a05e974b32",
+  "admissionSha256": "675c8e28b559498a2380ffa45f1f0d5d25991f90cb6920f7f8be1fc951dcbc0e",
+  "seedSha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "inventorySha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "laneMapSha256": "55607779474d99ebafe59a993d567a17e2e7d4912dbd305d301be54962051d18",
+  "laneMapValuesMatchApprovedPlan": true,
+  "laneMapFormatterStable": true,
+  "runnerSha256": "0b2a4b9b7e3dab094fdc7bba1612a0dbb2b87a20f4d14e03578f6cfd502b5d9c",
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "includedFilesVerified": 3186,
+  "selectedDesignsVerified": 106,
+  "logicalIndexUnchanged": true,
+  "controllerRunningAtVerification": true,
+  "independentP3Approval": false,
+  "dryRoundCredit": false
+}

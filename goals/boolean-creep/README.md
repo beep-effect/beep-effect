@@ -1,5 +1,21 @@
 # Boolean-Creep Eradication
 
+## R39 partial admission, 2026-09-25
+
+Two new owners passed independent bounded admission review with zero findings:
+`effect-vitest-inspect-context-phase` (8/4) and
+`r39-cli-internal-root-append-terminal-already` (4/3). Their reviewed designs
+and inventory records are installed with status `designed`. Inventory now has
+**726 rows:108 qualified,618 disqualified,zero applied**.
+Forty-four citation/status-note updates and two PackageShell D2 census records
+are installed; see `data/r39-citation-integration/integration.json`.
+
+R39 remains incomplete:26 of27 lanes are reconciled, and the final CLI lane's
+design-reference review and citation integration remain pending. See
+[data/r39-owner-admission/README.md](data/r39-owner-admission/README.md).
+The dry streak stays zero; this bounded review does not replace campaign P3.
+
+
 ## Status
 
 R38 completed and reconciled all 27 census lanes against source `ab77f10c`

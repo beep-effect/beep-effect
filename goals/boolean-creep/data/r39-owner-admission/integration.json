@@ -1,0 +1,51 @@
+{
+  "kind": "r39-partial-owner-admission/v1",
+  "sourceHead": "220d9426dad4b708807b6297cb71d75449288749",
+  "historicalRoundSource": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "roundComplete": false,
+  "dryCredit": false,
+  "blanketP3Approval": false,
+  "implementation": false,
+  "independentPrivateReceiptSha256": "f6587685a52651f6dd89484789f5af1b6888cfa5759b7409e3418353f04e89f6",
+  "inventoryBeforeSha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "inventoryAfterSha256": "44f8554d9573dc275a21ebc900e04e1b34f31c798c31fa486767325a68a58cf2",
+  "counts": {
+    "rows": 724,
+    "qualified": 108,
+    "disqualified": 616,
+    "applied": 0
+  },
+  "admittedIds": [
+    "effect-vitest-inspect-context-phase",
+    "r39-cli-internal-root-append-terminal-already"
+  ],
+  "designHashes": [
+    {
+      "file": "goals/boolean-creep/designs/effect-vitest-inspect-context-phase.md",
+      "sha256": "8f18cd2aebe80a27cf67e67c6a8bb0ba3084ecc40e71206f5e8d7e991abe479e"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r39-cli-internal-root-append-terminal-already.md",
+      "sha256": "3f703de48a9afac7bb81c3df37c6831dd43a1c29437a4b71aa6d6475652afe62"
+    }
+  ],
+  "publicArtifacts": [
+    {
+      "file": "goals/boolean-creep/data/r39-owner-admission/projection-checks.json",
+      "sha256": "a3de6cd03b0287a4c0b76f456e05be30f3d509434242e117affc9e517eacd762"
+    },
+    {
+      "file": "goals/boolean-creep/data/r39-owner-admission/proposed-rows.json",
+      "sha256": "ce3ed69eea55b7c3373eebf3f312318a7def6c3003b06932fbfacf4f42225701"
+    },
+    {
+      "file": "goals/boolean-creep/data/r39-owner-admission/review.json",
+      "sha256": "6e58d35484bcbfe9b394bc0f9bb6d6f8f65e29a4c3d17d169c1d0f5af194c9fd"
+    },
+    {
+      "file": "goals/boolean-creep/data/r39-owner-admission/review.md",
+      "sha256": "938545af043814ab96723e9320a47749e98abcfc461d31e6310b7bea70085f48"
+    }
+  ],
+  "remaining": "Complete L-Q design-reference review and remaining source citation integration before finalizing R39. Main-forward Graft anchor correction remains separately bound."
+}

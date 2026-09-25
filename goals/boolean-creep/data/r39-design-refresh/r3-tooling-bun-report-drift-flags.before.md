@@ -55,17 +55,3 @@ Retain the existing FF/TF/TT fixtures and add a bounded assertion that equal pin
 The main risk is deleting item construction because it looks redundant with the mismatch flag; only the flag calculation is redundant. Both full pin values and all non-pin drift causes must remain. No product implementation accompanies this P2 design; independent P3 remains pending.
 
 Landing: use the ordered Tier 1E internal tooling subsystem batch. VersionSync category selection precedes the Bun report simplification. Keep all shared-file edits serial and verify the completed subsystem batch.
-
-
-## R39 current-source location map
-
-At source `ea3ac40867e4f292b7f0708b156231f0462ddcd9`, the historical R28 contract above remains unchanged. This location map supersedes its source/test line locators only; it confers no independent P3 approval.
-
-- `BunResolver.ts`: target selection293-312; complete state/defaults/Options322-341; required equality helper501-510; optional comparison512-517; checksum pair519-525; report builder535-565; five item calculations540-551; required pin comparisons541-542; Boolean locals553-554; status OR557.
-- `VersionSync.schemas.ts`: existing status kit122, schema138, thunks187; Bun report205-219. `VersionSync.render.ts`: status rendering70-76.
-- Existing array-to-status implementations: `NodeResolver.ts:255-258`, `BiomeResolver.ts:189-192`, `EffectResolver.ts:229-232`. Reuse this vocabulary and pattern; no additional domain.
-- `internal/services/ResolverService.ts`: Bun import20; category resolution87-95 preserves error fallback to the empty state and absence when the local version is empty.
-- `test/version-sync-effect.test.ts`: schema-derived round trip316-327; unequal pin fixtures390-418; equal pins with Vercel/archive drift420-442; post-update clean report483; updater report543 onward. Preserve these fixtures and the previously specified newer-latest case.
-- `src/test/VersionSync.test-kit.ts:10` reexports the Bun resolver. Package exports retain the `./commands/VersionSync` entry. No API visibility change is proposed.
-
-The migration still removes two derived Boolean locals, one redundant inequality and one OR; it preserves every drift item and derives the same status from array emptiness. The 4/3 implication follows from raw string equality, including empty and non-semver strings. Full string/Option payloads, defaults, item order and encoded report remain unchanged. Tests were inspected, not executed as implementation proof.

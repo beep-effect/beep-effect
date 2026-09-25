@@ -116,39 +116,3 @@ After implementation, run the focused knowledge refs suite and full `bun run bee
 # Risk & sequencing
 
 This newly qualified private carrier is independent of any decision about the broader exported classifier API. Land its classes, three writers, parser call sites, resolution/ordering/identity readers and scanner tests atomically in the Tier 1 internal tooling batch after independent P3/GATE 2. The principal risks are accidentally resolving ambiguous/ungoverned targets, changing manifest IO order, changing refId sort/preimage semantics, and assuming displayPath absence means ambiguity. The design explicitly preserves each contract.
-
-# R39 current-source location supplement (2026-09-25)
-
-The historical source snapshot and design above are retained. At source
-`ea3ac40867e4f292b7f0708b156231f0462ddcd9`, Knowledge.refs.ts differs from
-`f137beedb270a071d4aa2ecc1dd52a9d233044d1` only by 65 added lines after
-line320 defining the quiet-classification subset and its derived guard.
-The complete remainder is byte-for-byte line-equivalent: every historical
-source citation after320 maps to its old line plus65. The candidate and
-classifier implementations, accepted contracts and cardinalities are unchanged.
-
-Current anchors: ClassificationInput1920-1929; classifyKnowledgeRef2025-2052
-with grammar checks2026-2030; RefCandidate2326-2341; host writer2577-2600;
-repo writer2687-2716 with normalized presence2713; goal writer2733-2757
-with slug presence2755; goal callers2759-2816; candidate sorting2906-2912;
-slug pre-resolution3009-3013; resolution3016-3022; classifier adapter3023-3032;
-identity/observation3033 onward. These current locations supersede historical
-line locators only, preserving guard accounting, ordering and encoded behavior.
-
-The two Knowledge designs must land atomically as the classifier design
-already requires. Its owner-specific ruling supersedes the older candidate
-design's temporary instruction to retain the public flag bag at joint
-implementation. Preserve independent patternContext on every candidate and
-classifier case; do not add it to the classifier's minimal 16/6 grammar
-projection or narrow host fallback, resolution, anchor or token behavior.
-
-The current knowledge-refs.test.ts diff adds five imports and expands quiet
-listing tests; existing scanner/identity/operational tests remain. Historical
-test ranges173-225,375-409,419-499 and503 onward before listing map by+5;
-the post-listing ranges647-704,772-808 and1090-1290 map by+42. The changed
-listing tests preserve verbose/loud rendering assertions and add skipped
-counts plus quiet/gated-set disjointness. Keep those expectations during
-implementation. This is an inspected source/test diff, not executed test proof.
-
-No implementation, independent P3, admission or dry-round credit is claimed
-by this supplement. Full reviewed migration and final quality gates remain.
