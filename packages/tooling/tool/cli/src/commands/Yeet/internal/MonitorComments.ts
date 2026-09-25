@@ -749,7 +749,7 @@ export const renderYeetMonitorReviewBodySignal = (signal: YeetReviewBodySignal):
         `greptile: confidence ${O.getOrElse(greptile.confidence, () => "unknown")}, new P0:${greptile.newFindings.p0} P1:${greptile.newFindings.p1} P2:${greptile.newFindings.p2} (advisory)`
       )
     ),
-    Match.discriminator("signal")("plain", () => O.none<string>()),
+    Match.discriminator("signal")("plain", O.none<string>),
     Match.exhaustive
   );
 
@@ -913,7 +913,7 @@ const fetchComments = Effect.fn("YeetMonitor.fetchComments")(function* <Comment>
       "--slurp",
       "-f",
       "per_page=100",
-      ...O.match(since, { onNone: () => A.empty<string>(), onSome: (at) => ["-f", `since=${at}`] }),
+      ...O.match(since, { onNone: A.empty<string>, onSome: (at) => ["-f", `since=${at}`] }),
     ],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to poll pull request comments during yeet monitor.")));
@@ -932,7 +932,7 @@ const fetchComments = Effect.fn("YeetMonitor.fetchComments")(function* <Comment>
   // intact prefix shows what was read and leaves the rest behind the cursor.
   if (result.truncated) {
     yield* Console.error(renderYeetMonitorCommentTruncation(endpoint));
-    return yield* decode(salvageClippedJsonArray(result.output)).pipe(Effect.orElseSucceed(() => A.empty<Comment>()));
+    return yield* decode(salvageClippedJsonArray(result.output)).pipe(Effect.orElseSucceed(A.empty<Comment>));
   }
   return yield* decode(result.output).pipe(
     Effect.mapError(YeetCommandError.new("Failed to decode pull request comments during yeet monitor."))
