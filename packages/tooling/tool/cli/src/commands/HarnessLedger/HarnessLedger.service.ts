@@ -92,7 +92,7 @@ export interface HarnessLedgerServiceShape {
  *
  * ```ts
  * import { HarnessLedgerProposeOptions, HarnessLedgerService } from "@beep/repo-cli/commands/HarnessLedger"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.flatMap(HarnessLedgerService, (ledger) =>
  *   ledger.propose(
@@ -291,7 +291,7 @@ const makeHarnessLedgerService = Effect.fn("HarnessLedgerService.make")(function
  * ```ts
  * import { HarnessLedgerServiceLive } from "@beep/repo-cli/commands/HarnessLedger"
  * import { NodeServices } from "@effect/platform-node"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * const layer = HarnessLedgerServiceLive.pipe(Layer.provide(NodeServices.layer))
  * console.log(Layer.isLayer(layer)) // true

@@ -576,7 +576,7 @@ export type HookPulseNotificationType = typeof HookPulseNotificationType.Type;
  *
  * ```ts
  * import { HookPulseRawToolInput } from "@beep/repo-ai-metrics"
- * import { Result } from "effect"
+ * import * as Result from "effect/Result"
  *
  * const input = Result.getOrThrow(
  *   HookPulseRawToolInput.decodeResult({ file_path: "/repo/.claude/hooks/law-pulse.sh", content: "#!/bin/sh" })

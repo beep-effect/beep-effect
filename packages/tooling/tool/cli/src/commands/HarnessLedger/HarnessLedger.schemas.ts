@@ -190,7 +190,7 @@ const splitPrefixed = (spec: string): O.Option<readonly [string, string]> =>
  *
  * ```ts
  * import { parseHarnessEditSpec } from "@beep/repo-cli/commands/HarnessLedger"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const edit = Effect.runSync(parseHarnessEditSpec("commit:489ea7c488"))
  * console.log(edit.kind) // "commit"
@@ -221,7 +221,7 @@ export const parseHarnessEditSpec = Effect.fn("HarnessLedger.parseHarnessEditSpe
  *
  * ```ts
  * import { parseHarnessSurfaceSpec } from "@beep/repo-cli/commands/HarnessLedger"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const surface = Effect.runSync(parseHarnessSurfaceSpec("skill:yeet"))
  * console.log(surface.kind) // "skill"

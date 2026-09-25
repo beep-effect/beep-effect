@@ -200,7 +200,7 @@ const harnessLedgerError =
  *
  * ```ts
  * import { contextSurfaceId } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const id = Effect.runPromise(contextSurfaceId("skill", "yeet"))
  * console.log(id)
@@ -395,7 +395,7 @@ const encodeHarnessFingerprintPartsJson = S.encodeEffect(S.fromJsonString(Harnes
  * ```ts
  * import { deriveHarnessFingerprintId, HarnessFingerprintParts } from "@beep/repo-ai-metrics"
  * import { Sha256Hex } from "@beep/schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const id = Effect.runPromise(
  *   deriveHarnessFingerprintId(
@@ -438,7 +438,7 @@ export const deriveHarnessFingerprintId = Effect.fn("AiMetrics.deriveHarnessFing
  * ```ts
  * import { harnessFingerprintFromParts, HarnessFingerprintParts } from "@beep/repo-ai-metrics"
  * import { Sha256Hex } from "@beep/schema"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const fingerprint = Effect.runPromise(
  *   harnessFingerprintFromParts(
@@ -522,7 +522,7 @@ const decodeSha256Hex = S.decodeUnknownEffect(Sha256Hex);
  *
  * ```ts
  * import { HarnessFingerprintInput, makeHarnessFingerprint } from "@beep/repo-ai-metrics"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * const program = makeHarnessFingerprint(
@@ -749,7 +749,9 @@ export type HarnessLedgerRowId = typeof HarnessLedgerRowId.Type;
  *
  * ```ts
  * import { makeHarnessLedgerRowId } from "@beep/repo-ai-metrics"
- * import { DateTime, Effect, Random } from "effect"
+ * import * as DateTime from "effect/DateTime"
+ * import * as Effect from "effect/Effect"
+ * import * as Random from "effect/Random"
  *
  * const id = Effect.runSync(
  *   makeHarnessLedgerRowId(DateTime.makeUnsafe("2026-09-25T12:00:00.000Z")).pipe(Random.withSeed("ledger"))
