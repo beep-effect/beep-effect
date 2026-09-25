@@ -9,3 +9,8 @@ configuration or command from the goal branch replaces main's policy changes.
 Prior review bases remain in `obs-cache-review.md` and the qualification packet's
 `utils-main-merge-review.md`. This is conflict reconciliation, not new cache
 qualification or performance evidence.
+
+PR #1264 landed while this merge was being prepared. A second three-way
+comparison preserves its additional 18 PGlite and Tailscale dependency-list
+changes; these are disjoint from main's two lint-node changes. All 68 migration
+dependency deltas are retained alongside main's qualification policy.
