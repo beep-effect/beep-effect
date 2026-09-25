@@ -14,6 +14,7 @@ import {
   proofLedgerPathForCheckout,
   proofShadowAttemptFacts,
   RepoRunContext,
+  readYeetChangedPathsStrict,
   recordProofShadowForAttempt,
   renderProofChangedPackages,
   renderProofShadowAttemptSummary,
@@ -663,6 +664,16 @@ describe("proof shadow changed packages", () => {
 
   // Two workspaces are the smallest repository in which "deepest containing workspace"
   // and "outside every workspace" are both observable.
+  // Bun's spawnSync keeps the repository setup synchronous and out of the capture seam the
+  // fixture is measuring.
+  const runGit = (cwd: string, args: ReadonlyArray<string>) =>
+    Effect.sync(() => {
+      const result = Bun.spawnSync(["git", ...args], { cwd, stderr: "pipe", stdout: "pipe" });
+      if (result.exitCode !== 0) {
+        throw new Error(`git ${A.join(args, " ")} failed: ${result.stderr.toString()}`);
+      }
+    });
+
   const seedWorkspaces = Effect.fn("ProofShadowTest.seedWorkspaces")(function* (root: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -854,6 +865,76 @@ describe("proof shadow changed packages", () => {
           O.getOrThrow
         );
         expect(diffArgs).toStrictEqual(["diff", "--name-only", "--no-renames", "-z", "origin/main...HEAD"]);
+
+        // The package set above only observes directory prefixes, so a per-path trim
+        // would leave it green. Read the strict reader directly and compare the exact
+        // strings, including the leading and trailing spaces that belong to a name.
+        const verbatim = yield* readYeetChangedPathsStrict(
+          context(root),
+          Effect.fn("ProofShadowTest.spacedPaths")(function* () {
+            return {
+              exitCode: 0,
+              truncated: false,
+              output: " packages/x/src/leading.ts\0packages/y/src/with space.ts\0packages/x/src/trailing.ts \0",
+            };
+          })
+        );
+        expect(verbatim).toStrictEqual([
+          " packages/x/src/leading.ts",
+          "packages/y/src/with space.ts",
+          "packages/x/src/trailing.ts ",
+        ]);
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  // Review round 2: every other fixture here replaces `runRepoCommandCapture`, so none of
+  // them can see what the capture itself does to the bytes. This one drives both readers
+  // through the real capture against a real repository. The default capture trims the whole
+  // buffer and merges stderr; a NUL is not whitespace, so the leading space of the first
+  // `-z` status record — which is how git spells an unstaged-only change, ` M path` — used
+  // to be eaten, and that record was then dropped silently while the result still read
+  // `known`.
+  it.effect("reads real git output through the real capture without losing the first record", () =>
+    inTempRoot((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* seedWorkspaces(root);
+        const src = path.join(root, "packages", "x", "src");
+        yield* fs.writeFileString(path.join(src, "a.ts"), "export const a = 1;\n");
+        yield* fs.writeFileString(path.join(src, "renamed from.ts"), "export const b = 2;\n");
+        yield* runGit(root, ["init", "--quiet", "--initial-branch=main"]);
+        yield* runGit(root, ["config", "user.email", "lane@example.invalid"]);
+        yield* runGit(root, ["config", "user.name", "Lane"]);
+        yield* runGit(root, ["config", "commit.gpgsign", "false"]);
+        yield* runGit(root, ["add", "."]);
+        yield* runGit(root, ["commit", "--quiet", "-m", "base"]);
+        // The base ref the reader diffs against is this commit.
+        yield* runGit(root, ["branch", "--force", "base-ref"]);
+        // Committed on top of the base: a rename whose source carries a space.
+        yield* runGit(root, ["mv", "packages/x/src/renamed from.ts", "packages/x/src/renamed to.ts"]);
+        yield* runGit(root, ["commit", "--quiet", "-m", "rename"]);
+        // Left unstaged, so its porcelain record begins with a space.
+        yield* fs.writeFileString(path.join(src, "a.ts"), "export const a = 2;\n");
+
+        const changed = yield* changedPackagesForAttempt(
+          RepoRunContext.make({
+            base: "base-ref",
+            branch: "feat/transport",
+            cwd: root,
+            head: "HEAD",
+            originalArgv: [],
+            packetDir: ".beep/yeet",
+            repoRoot: root,
+            turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+          })
+        );
+
+        // The unstaged `a.ts` plus both sides of the rename, deduped: three paths, one package.
+        expect(changed).toStrictEqual(
+          ProofChangedPackagesKnown.make({ kind: "known", packages: ["@beep/x"], paths: 3 })
+        );
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
