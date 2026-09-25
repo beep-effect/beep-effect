@@ -126,3 +126,20 @@ Full package verification passed: audit 16.7s and docgen 3.2s. The first audit
 reported import ordering; the corrected source passed the subsequent full run.
 This is intermediate proof, not completion of the Effect Drizzle wave: array
 codec generation, runner adoption and final ledger/timing closeout remain.
+
+## PostgreSQL schema-derived array law
+
+Added an `it.effect.prop` using `ArrayRecord.insert` directly and `fcRuns(100)`.
+It verifies decoded equality, encoded stability, schema membership and omission
+of the database-defaulted matrix field when constructing a labels-only insert.
+No test-only schema, filter or weakened array domain is introduced. The exact
+ragged-array rejection, SQL default projection and native matrix round-trip
+remain unchanged.
+
+An intermediate assertion incorrectly expected `pg.default` to populate a
+constructor value. The shrunk counterexample was `{ labels: [] }`; the field
+correctly remains omitted for the database to supply its default. The final
+property asserts preservation of that omission. Full package verification
+passed (audit 16.0s, docgen 3.2s), and the focused Node property passed with 54
+unrelated cases skipped. The initial failure log remains in private proof
+artifacts. Runner adoption, final ledger reconciliation and timings remain.

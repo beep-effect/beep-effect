@@ -2,6 +2,7 @@
 
 import { Model, ModelInvariantError, VersionConflictError } from "@beep/effect-drizzle";
 import * as pg from "@beep/effect-drizzle/pg";
+import { fcRuns } from "@beep/fc-runs";
 import { describe, expect, it } from "@effect/vitest";
 import { defineRelations, getTableName } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -16,6 +17,7 @@ import {
   Array as ArraySchema,
   Boolean as BooleanSchema,
   decodeEffect,
+  encodeEffect,
   FiniteFromString,
   is,
   isLengthBetween,
@@ -171,6 +173,25 @@ describe("PostgreSQL name invariants", () => {
 });
 
 describe("PostgreSQL Wave E value and structure invariants", () => {
+  it.effect.prop(
+    "round-trips schema-derived PostgreSQL array insert variants",
+    [ArrayRecord.insert],
+    ([value]) =>
+      fnUntraced(function* () {
+        const encoded = yield* encodeEffect(ArrayRecord.insert)(value);
+        const decoded = yield* decodeEffect(ArrayRecord.insert)(encoded);
+        expect(decoded).toEqual(value);
+        expect(yield* encodeEffect(ArrayRecord.insert)(decoded)).toEqual(encoded);
+        expect(is(ArrayRecord.insert)(decoded)).toBe(true);
+        // The database supplies pg.default; the insert codec preserves omission.
+        const omitted = yield* makeEffect(ArrayRecord.insert)({ labels: value.labels });
+        expect(omitted.matrix).toBeUndefined();
+        expect((yield* encodeEffect(ArrayRecord.insert)(omitted)).matrix).toBeUndefined();
+        expect(omitted.labels).toEqual(value.labels);
+      })(),
+    { arbitrary: fcRuns(100) }
+  );
+
   it("injects closed scalar domains and multidimensional rectangularity", () => {
     expect(is(pgBoundedInteger.schema)(2_147_483_648)).toBe(false);
     expect(is(pgBoundedSmallint.schema)(32_768)).toBe(false);
