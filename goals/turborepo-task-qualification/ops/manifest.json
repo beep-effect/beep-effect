@@ -360,7 +360,14 @@
     "research/scoped-resource-test-repair.json",
     "research/refs-provider-test-repair.json",
     "research/ai-sync-dependency-policy-review.json",
-    "research/registered-command-binding-audit.json"
+    "research/registered-command-binding-audit.json",
+    "research/generated-boundary-review.json",
+    "research/cli-relative-import-discovery.json",
+    "research/tsconfig-entrypoint-review.json",
+    "research/tsconfig-discovery-review.json",
+    "research/nested-lambda-boundary-review.json",
+    "research/application-static-review-reuse.json",
+    "research/compiled-output-delta-review.json"
   ],
   "agentLaunchers": [
     {
