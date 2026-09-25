@@ -1,0 +1,71 @@
+{
+  "kind": "r40-mechanical-publication-normalization/v1",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "purpose": "Normalize required design sections, public references and admission-stage wording; preserve unchanged inventory line bytes. No owner, cardinality, target, supported-input or behavior change.",
+  "inputs": {
+    "reviewedDraftDesign": {
+      "file": "goals/boolean-creep/data/r40-partial-reconciliation/writer-admission/r40-drivers-openai-compat-stream-choice-writer.design.md",
+      "sha256": "8f878ce720d802e4a4e4d821197ada189db185df653e0ff7b05dd6c2642f0111"
+    },
+    "historicalCandidateInventorySha256": "ea14a4a6bc3f894676c939203c3fb6451901a29f0ef3960431bc8201f37271a8",
+    "originalInventoryArchive": {
+      "file": "goals/boolean-creep/history/inventory/2026-09-25-r40-before-partial-integration.jsonl",
+      "sha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc"
+    },
+    "publicIndependentAdmissionReview": {
+      "file": "goals/boolean-creep/data/r40-partial-reconciliation/receipts/stream-choice-writer-independent-review.json",
+      "sha256": "1ca41dcc09b8a1f56a39193766d6d65cd36fdccafb54c9c97ac6cee3306382f6"
+    }
+  },
+  "outputs": {
+    "canonicalDesign": {
+      "file": "goals/boolean-creep/designs/r40-drivers-openai-compat-stream-choice-writer.md",
+      "sha256": "132532e69638804043c821f2919585cb61ed5da2b81892e7f35fb7dbb14598ba"
+    },
+    "canonicalInventory": {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "4b7e97420b6c67b9eb09f60a85578b492997041161d22a0014453c64312f2f07"
+    }
+  },
+  "designChanges": [
+    "Add Current shape and Cardinality gap sections by splitting existing owner discussion.",
+    "Add Target schema heading with existing reuse decision; rename Migration inventory, Encoded-side impact and Test impact.",
+    "Name Risk and admission boundary; restate existing ordering and shared-migration risks.",
+    "Replace broken private reference labels with public receipt links and completed bounded-admission wording."
+  ],
+  "inventoryChanges": {
+    "recordObjectsExactlyEqualApprovedCandidate": true,
+    "unchangedRowsPreservedByteForByte": 722,
+    "correctedIds": [
+      "nlp-mcp-text-stream-options",
+      "openclaw-telegram-channel-document-flags"
+    ],
+    "withdrawnIds": [
+      "html-standard-global-boolean-attributes",
+      "tour-state-open-payload"
+    ],
+    "addedId": "r40-drivers-openai-compat-stream-choice-writer",
+    "rows": 725,
+    "qualified": 108,
+    "disqualified": 617,
+    "applied": 0
+  },
+  "archivePolicy": "Reviewed draft remains exact in writer-admission. All historical review/proposal input and output hashes, including the original candidate inventory hash, remain unchanged. The new output hashes identify the mechanically normalized installed bytes.",
+  "validation": {
+    "inventory": {
+      "exitCode": 0,
+      "summary": "inventory OK: 725 records, 725 unique ids"
+    },
+    "designs": {
+      "exitCode": 0,
+      "summary": "design coverage OK: 108 qualified ids"
+    }
+  },
+  "preparationLimitation": "Prior bundle verification checked design path existence but not required headings; canonical validation caught the seven missing heading names. This receipt does not relabel that earlier check as passing.",
+  "credits": {
+    "P3": false,
+    "dryRound": false,
+    "implementation": false
+  },
+  "runtimeSourceEdited": false
+}

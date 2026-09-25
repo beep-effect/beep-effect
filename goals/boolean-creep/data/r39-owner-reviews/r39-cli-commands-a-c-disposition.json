@@ -1,0 +1,941 @@
+{
+  "verdict": "accept-ac-plus-two-D2-additions",
+  "sourceHead": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "sourceBindings": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts",
+      "sha256": "ef1411cd35d3b0978163c99481a17da0825afeca4c6d8bd9f5e21d1c7613bd7a",
+      "bytes": 38551
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.config.ts",
+      "sha256": "265100bcafe9b39364dcfca11ee005237c40cbd87c2956e0fa63be75eda36d0e",
+      "bytes": 606
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
+      "sha256": "8faafbede274af3dcc4fa627b38f0df34f67919cbd2ecb1b2dac59aadb0bedcb",
+      "bytes": 5063
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.schemas.ts",
+      "sha256": "790354fda6c8c80cf16bb22c8721d3df8c395e78821a774f751add074b26e194",
+      "bytes": 443
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/index.ts",
+      "sha256": "3c39661a36ef798ee9e2780f056c725d96af90948895f0520eed9f13f0a378b1",
+      "bytes": 337
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Forwarder.ts",
+      "sha256": "3e254f6f86369f8c3fd00d4bd46b6e468e565bef735c568aa6f6658db976c780",
+      "bytes": 230
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Ingest.ts",
+      "sha256": "b9509c1882da2e125c8d956b82e025f99ca2fb8a0c91009696b293d1428ea39b",
+      "bytes": 296
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Install.ts",
+      "sha256": "72df7d0009f08e1acb0e36170c2e0c9f07262ff333ab77dbc3dbb84a9c2ebb48",
+      "bytes": 286
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Mirror.ts",
+      "sha256": "b7e1e907a7935009c4211e4d7183e1d2d336355f97f695700c2b38ca3ec49536",
+      "bytes": 244
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "sha256": "f7807d0240ec0665e5e6dfbc05220a68f28035d440bc99639bd1fc976abbd640",
+      "bytes": 104211
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Retention.ts",
+      "sha256": "220d37f510c8c85b1a55bd1b4421f8245ce3588baeaba55aeb0bf0321529737b",
+      "bytes": 305
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Scorecard.ts",
+      "sha256": "41c37750c33f6a7e307c502a7035e86596627b10b49a900129382b0d7bf6b122",
+      "bytes": 358
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Window.ts",
+      "sha256": "944d0c91a8a820d0e9bba9ced2edde3c530ecc909ef6c9da2f65f911e19c35e3",
+      "bytes": 388
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts",
+      "sha256": "c7da9015cf03c88ebf6735fc6b4f18e5767b5b9303fb85daada75c20de81fdd2",
+      "bytes": 25697
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.errors.ts",
+      "sha256": "31bd2876c174293cd8bee9b2739cb75b3e8db1ae2e10d70f124cd9a3ea2ef1ca",
+      "bytes": 2540
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
+      "sha256": "889869fb071ba9e9ba0b8b823c2a4e47b923354daefa9b9333b0f6efe0e74352",
+      "bytes": 17049
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/index.ts",
+      "sha256": "84add9500915e9ec57efb86c2ebeb8ec742ffb3c5b0ff843988873fd2396ee7a",
+      "bytes": 520
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalComparison.ts",
+      "sha256": "2c9220f4e5fe0ff19f0d613e5c7f5e74e9eb3f32ae9083fd089ae8ce9ba326f5",
+      "bytes": 8038
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalFixture.ts",
+      "sha256": "46b9c719cdb14e48c3512a2818e4254f2c321151337fab3433a4f77f032a58c6",
+      "bytes": 9520
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalLawLanes.ts",
+      "sha256": "98f29bea5c778be46945501292a573db3b96adb74c3290c3e9031cf9004341ec",
+      "bytes": 14409
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalRecord.ts",
+      "sha256": "4727a419fc3ecea3665b7eb152de557da50fc0c277d21dd23ae897053c95abb7",
+      "bytes": 5178
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "sha256": "7eb27cf8dd0105fb0ca77230ac639a8f8568fd60604747bb024f8cb449aa59ea",
+      "bytes": 9609
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScoring.ts",
+      "sha256": "afe77660f77422fd9348abe870d890d4bf7021fbf18c037275746c87a5b84872",
+      "bytes": 8236
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.command.ts",
+      "sha256": "8265fe02da0cd1db9714b4b5c8e7f394a4d80926c8894cd2179002c0af6075c5",
+      "bytes": 12027
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.plan.ts",
+      "sha256": "49856387fca724a7932a4a1eef748b7f391b3415dd6353f69490182fbca59af4",
+      "bytes": 11306
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
+      "sha256": "9e9cc4b38a765933ce1d206668ac0ce060c6c2f3834760506122ef3778538817",
+      "bytes": 28586
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "sha256": "08f4619fff6265a458207c5c1d9145c9ad66739e55849e1f3783b34a0d9fe21b",
+      "bytes": 438
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlanExecution.ts",
+      "sha256": "965c574e55ad2ca62a20d3fa594332eb5df905637d9618ff4f6f726e8af9e4c3",
+      "bytes": 12604
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlanPackageJson.ts",
+      "sha256": "cedae813722afbbfc3f1c4cb368f22c49cfaa6750e65818773cf648270929b7c",
+      "bytes": 4630
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/index.ts",
+      "sha256": "a29fd9b2528c36477dd9f5d2ebab82e15f446cca25c5797499da96043dd38410",
+      "bytes": 716
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts",
+      "sha256": "755772e3005cee3c329749d9e59a9d0baf850c7c5660b1d805be827ec39605f4",
+      "bytes": 25462
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/internal/PackageShell.ts",
+      "sha256": "4f30e31102d33cf7c9944e2d5828eb6b012f290547913cdfbcae2fec0a40d7c1",
+      "bytes": 21827
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/internal/RoleTopology.ts",
+      "sha256": "f3107fcd38a0b4f0cc7f9e7cd3f128707c3643f670fa3c9fb4a87a21c9b69c68",
+      "bytes": 11783
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/internal/TemplateRetarget.ts",
+      "sha256": "3058aaa79ff97029a95b54bc121741e980fa71ca067afde73f90ca0595d81a91",
+      "bytes": 11361
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts",
+      "sha256": "dab12febdd6a6a98a96eb78ada1819e2c8b0bc7391b407403478393ce2e67d49",
+      "bytes": 23536
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "11446080842615a3a1c724bef294716c0d1dd8495bfcd69a8ccf5102a28e8795",
+      "bytes": 35125
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.schemas.ts",
+      "sha256": "f83dcd16bcff13c96c4de22d84c3a06a1c00e247218c0f279b8a912d5eb1c600",
+      "bytes": 1784
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.dependencies.ts",
+      "sha256": "215a2a23be9968492a33c7e3309185f5bc89b7b6281e09ee679109a008057c8c",
+      "bytes": 12548
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.schemas.ts",
+      "sha256": "07ae0a3c14fac2fb4a8490a42bfc73d2615e48431edd7288740b8176adbf146d",
+      "bytes": 5065
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.ts",
+      "sha256": "28d2f6ba3aaa26189853635393228e9db2718c24f2cf10ca944f44774f88788f",
+      "bytes": 4672
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
+      "sha256": "95f16b54366de6b81e67b090ab1397dc3faa6f07bc1b822699e3f5adf1876022",
+      "bytes": 4193
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.schemas.ts",
+      "sha256": "16dbb806b26ee9c6f96877e38545b3e77597932b2bbbe1267ee6d5e03b41df3a",
+      "bytes": 6815
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.experiment.ts",
+      "sha256": "cd599594ff4b015eb0953c81bb2b70e16e5d509492cbec9dae816d5e7b4c1e61",
+      "bytes": 34628
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.fingerprint.ts",
+      "sha256": "d3a7e93423d3279bbe72534ef323652f26dcdb31f7ce69f8b4fd60ce770282c0",
+      "bytes": 17090
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.linker.ts",
+      "sha256": "a1d657bdb74e4e77235bd5c04c358c38bad800ebc8f85d50391fe0ac28b19d60",
+      "bytes": 7448
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.capture.ts",
+      "sha256": "604726648fc9d74ba9d89a410f5b3cc95b7fcc4a897960556c89cdb9e9f34293",
+      "bytes": 3904
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.schemas.ts",
+      "sha256": "786b1a39528da31f68a5ec4d0580c2d903e1af19d52313f14af208feab58e00a",
+      "bytes": 10494
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.ts",
+      "sha256": "6b29c91b19b0637e9e221c360a62c53fda3ba2152fffe2d256e96384af39f664",
+      "bytes": 66352
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.profile.ts",
+      "sha256": "fcc765eb08a0261a3a97e251d1e19f7811488753adf7fafb9f24068c145d578a",
+      "bytes": 5235
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.runtime.ts",
+      "sha256": "baadcd12bce60347fad5847886185ba9419bc75707382bf6c0287b52c6226ecc",
+      "bytes": 7559
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.schemas.ts",
+      "sha256": "e12aa97e6518e86406fb2ab66ae14adbf764ad250341fef2d2c20ccaab93c47c",
+      "bytes": 24514
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/Cache.service.ts",
+      "sha256": "a3df83ce53a4f71cbed5c591891a754a8128d9a16ad8666409edcae0eeea6190",
+      "bytes": 23839
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Cache/index.ts",
+      "sha256": "3c457378c4f401218365013355754c2685ae680625c2d5152205d38741b146d0",
+      "bytes": 3905
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+      "sha256": "96be51862e4fa4c01ca9f54eb2ec33d264591f6fddc759833071aaaca516dd87",
+      "bytes": 12926
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
+      "sha256": "f4544b8a5e64e75f4e0094a6b50e16e4a4e76ada7d25fff7c1f6551b27ec9065",
+      "bytes": 4207
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiAdmission.ts",
+      "sha256": "c7c32e69e58085d4fde93c76812ed0bca07640275839e188aa84603c288472ac",
+      "bytes": 9369
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "sha256": "deefb333b6a52dbc6109f76022b148c91296ca356f842e85d5420220548fb820",
+      "bytes": 93652
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
+      "sha256": "465da996f42c801e7556cac0647f0aabba34d6f58168e7d0f177f23fbeb0429e",
+      "bytes": 14517
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+      "sha256": "96dbb8b7b71862c89eca3b6d8c5b8781dbf003ca189f0ddf47e313af2fa17687",
+      "bytes": 23048
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+      "sha256": "1ef50c114c2596d977a07b5b138dbf9e7a04dfc6ccf2523a1467c6125b6828f9",
+      "bytes": 109307
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
+      "sha256": "1d528275eb531401eb21009442b1ecd069f5eb8bf78ea0a8ac2ddbe084b1e5ab",
+      "bytes": 970
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codegen/Codegen.command.ts",
+      "sha256": "1db041ef7c0b7ab87592b2701312b21c48d52ba86765305a8b540e7dbc39a3ab",
+      "bytes": 16002
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codegen/index.ts",
+      "sha256": "4aa597f6295c099af22f3489d213572aaa2972fe9e9088d2ea9269699c97443a",
+      "bytes": 212
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Codex.command.ts",
+      "sha256": "945bfd9809d2999d8759284c5293ab7740984bbc396f1f2afb9166cc4e504c3b",
+      "bytes": 4108
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Codex.errors.ts",
+      "sha256": "dd6f6121c0732b8d8b9dc535ea7ed7970cf522db1c3d3c7900f9245bd8043af7",
+      "bytes": 1997
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.capture.schemas.ts",
+      "sha256": "f238008d0ad67fad7784900047dc947850790b7750a7e685060234f1250cefce",
+      "bytes": 23042
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
+      "sha256": "b41602afd2abd5da4224db88b28377993e9d3950ea9fb36033538909d25ab711",
+      "bytes": 20992
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.csv.ts",
+      "sha256": "94c50dbbd8969360c7de5d2f5edcc8395d56e8af4f29c719e277941fa9b5745e",
+      "bytes": 12776
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.errors.ts",
+      "sha256": "0ba2c006825cc28f86551691c1b72a00324cd95af9271c11326583a1a54ee395",
+      "bytes": 9150
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.normalize.ts",
+      "sha256": "5ea8d6c5b72811fcc8aaafc8fabf6a22a4c68bedcc986fc374094e90a105e512",
+      "bytes": 13604
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts",
+      "sha256": "4d337de7e88de0254e00b9aafe37c653978b901aa445e01f8a65a067c7994cb9",
+      "bytes": 34928
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+      "sha256": "c41e9c39c6b267304b3b054747ea941bfcd3f74548cc4487083ff6a6f6a3a2cd",
+      "bytes": 48955
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.scan.ts",
+      "sha256": "80f99e2c0bc23c5f5e526392d86e3040c7624ce63a5128e478a3ecb0f52262a9",
+      "bytes": 11073
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.schemas.ts",
+      "sha256": "229ec77ebf38ab3ca53619992e2f8d5cf5ae0b11220e8efd514f95e89a3ba834",
+      "bytes": 13568
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.triage.schemas.ts",
+      "sha256": "ff5d9ebd1eda6836bdafe34b6bfef35b5ecb684fe747dea011a0d5c1bd8ca0d7",
+      "bytes": 15461
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.write.ts",
+      "sha256": "8e10178d1fa0c80e98c6ab8f3bd4292982034ed85c32df7e3444db4c8a5a5f82",
+      "bytes": 12445
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Security.bundle.ts",
+      "sha256": "6eeea3b98e09f3f70658862c742a594a08822b91b342b0e44d9448574b6726ba",
+      "bytes": 15853
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
+      "sha256": "c9692869e5d8f8ce2ae3c7323e00e7811c590bd4e34b442daa7c80ac779128b2",
+      "bytes": 13738
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Security.errors.ts",
+      "sha256": "94dd5bdbea2b3e8476b0ebaca3c5876d2985437b9eeaac402c46d31ca1c5598d",
+      "bytes": 2918
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Security.packet.ts",
+      "sha256": "1bd2078fa3373a483945bf4cf85ef9450361d5496639e70f4415482fbd5a6482",
+      "bytes": 6637
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Security.runtime.ts",
+      "sha256": "5abc6886775ddd9f70a2feefa6913759b4c687b84503a5a0be012227a5a04469",
+      "bytes": 6816
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Security.schemas.ts",
+      "sha256": "8fa5d068b000aa2f1f45e87bb65e90de5c51d88b19186ad080e6a26a475a8724",
+      "bytes": 16158
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/index.ts",
+      "sha256": "e0998e217aada42e4d3dee450aa8b1550f599d23f3ba7e823d0f46aca80ae7f0",
+      "bytes": 2130
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.command.ts",
+      "sha256": "b8936705a7222aba85622690bde310feca0925f0a968f9b598621a83381b61e1",
+      "bytes": 29489
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.errors.ts",
+      "sha256": "92d449861fb4faa61499e120bc51008a324f256c40b4b8c035fd4b38a33e1456",
+      "bytes": 12171
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.recyclebin.ts",
+      "sha256": "ec767ebbd8e6166f51d5a018d0b490defb15c00abce91f4610a812eee2634eec",
+      "bytes": 10199
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "sha256": "5b9d06783e1164e3ca74cca4b8e2132938ccbeaa9a2ece73d5e7f7d0c379d0d6",
+      "bytes": 1534
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "sha256": "96222201e4afbabe76f9f84743896bf58e4a824a741ecf9436c1d2ac8d26a723",
+      "bytes": 33699
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/index.ts",
+      "sha256": "e4509af0591ab4087a650e1c951827aebfc6766d72715c10938857bf2c9c5e35",
+      "bytes": 1235
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ArchiveMove.schemas.ts",
+      "sha256": "f72a944b00084164d7466d756a2341281609643566d5553f1379430edc66a9ad",
+      "bytes": 4548
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ArchiveMove.ts",
+      "sha256": "75eae0de836d2c4612d37d8ef7adc8f447e4ef14cf99ec4629753b632f55971a",
+      "bytes": 157
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Catalog.schemas.ts",
+      "sha256": "a8b72a1cc02781fa3e7e218ef3a5c27a387f516ff9618b454df42a4a979b39cb",
+      "bytes": 11111
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Catalog.ts",
+      "sha256": "a532755081a0a044980ea76d2cc44eadd636aed8b4abf60a7fb3da3d820d9068",
+      "bytes": 154
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/CorpusDb.ts",
+      "sha256": "6f7467a548e8b6fcfc120c21367081df080b03693824b76a35c57cb7e258b5a1",
+      "bytes": 192
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Docket.ts",
+      "sha256": "dc938cc055666bcb0a53b6529c129538afe9a743f15295f86bfd6c046cf0f4e8",
+      "bytes": 178
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Enrich.schemas.ts",
+      "sha256": "ab7ab20a4f83012177d88ce0c3dad7ae5a5978cf8ae934dc47ed0ef0862b5b69",
+      "bytes": 5269
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Enrich.ts",
+      "sha256": "d918125248dd2fbe1c6bf697e50cad6e2ece2933dcc5949da78e1ec2b0bf4f4b",
+      "bytes": 162
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Extract.schemas.ts",
+      "sha256": "f56bf19807b2b72e0b040546554d4ace569eeea0496e3b0d33aadf224a940e24",
+      "bytes": 3687
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Extract.ts",
+      "sha256": "91b5dcd714d9cd96d3ebed1b136bdb02793c9079ba18501510b88b3976f276bd",
+      "bytes": 157
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Organize.schemas.ts",
+      "sha256": "baf4b6502b089458fda82054571ad398520aec3b14dc015ed9026a5f26857417",
+      "bytes": 6814
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Organize.ts",
+      "sha256": "d4c21bddb113c495c329464228e625da99928c2a064a847bfb73654e2c518cce",
+      "bytes": 169
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.contracts.ts",
+      "sha256": "ff6cba0b7c19858ce3da9bc23d232303d09402a4ab7aeb0d443a8b6ccdc79335",
+      "bytes": 5013
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.schemas.ts",
+      "sha256": "dcc436ac4e1c7f77a21e3608e41a79d1f33266c063fb8e1787a465ce0ef63598",
+      "bytes": 33488
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Preservation.ts",
+      "sha256": "9472f35e41a3201a237d1f7f95761b159112d4bf5c18368e9daceeac8418c7f4",
+      "bytes": 72306
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Provenance.ts",
+      "sha256": "01eedfcbda42700371b49eef3c7d2e65d5047eff88c5c46d57f4ea9c1279977d",
+      "bytes": 332
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
+      "sha256": "a2c29dcaf761eb72ff09c4b0445dfd4c55e105f79bfe6f5f20d93e970239b5b2",
+      "bytes": 10996
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.schemas.ts",
+      "sha256": "9109aab6fb7d213841c93c5363c3b403a6aac083d0444ccd30c48c6b9e12fa27",
+      "bytes": 47629
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Restoration.ts",
+      "sha256": "1dc292df90c3bdc48d3e4f14289ea86c9e7493fcae9b1c1c7ef770a9c5ccddaa",
+      "bytes": 114860
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RestorationTransformations.ts",
+      "sha256": "9a0168e82fac4a588cfc9364e2ef4f3351729987962aa549cf1e6c91d1c7c388",
+      "bytes": 209596
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Salvage.schemas.ts",
+      "sha256": "c25c71e4fc88bbfbf6fe0f92b301bc89423e2d5d84f4a1d060a8c14ecc2def89",
+      "bytes": 10360
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Salvage.ts",
+      "sha256": "e938f63c9bf089ddbcb45f8ca3e808eb8ee19db91d7eb651ad27aa619f5c8ea7",
+      "bytes": 196
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
+      "sha256": "4ac6172b29f33604dcf9c82f307af251fe831d7442c9932ea3cc5ff9564c46ec",
+      "bytes": 120086
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Shared.ts",
+      "sha256": "4abcc25740ffb1519fc1a51543abc8d56877ed59d021c85a126032d3523fc165",
+      "bytes": 387
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/ConfigUpdater.ts",
+      "sha256": "e15c30d6cd1f58f730755438bda026a51e728cbbd6f9b883d2a04a6a436784ad",
+      "bytes": 22635
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "sha256": "114634462e491e27c25477578d32008bdac6a2c7094d404d7484c8d0b21b1c7a",
+      "bytes": 81037
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",
+      "sha256": "7ce3ce7ba6dc2dc699665cfeecb058ffa07da3cfc19552a1b97e39ebef36d6a7",
+      "bytes": 29388
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TemplateService.ts",
+      "sha256": "70e5e1544cf16a5ad2b16ff024c82dd4d3a60a5fcd6f8d556f858b23265e04cd",
+      "bytes": 7346
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TsMorphIntegrationService.ts",
+      "sha256": "57747c1f0d11667e01d6619112925a678456342c00878350a2ec8adf39c1b58d",
+      "bytes": 9424
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/index.ts",
+      "sha256": "4097f8871b5b25b21611d31fa04d59fa434fbb456f25ebb2c59e13f45bc43482",
+      "bytes": 217
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityBulkRegistration.ts",
+      "sha256": "fbf8af5096c9999fc0c55a6ecf8e78f932fbc28c2cc1465d6036902c7c848cb6",
+      "bytes": 3173
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityExportBlock.ts",
+      "sha256": "646805630cad6c6e3702e1bcc4b40ef42f0833b6a30cecadc177087cae13849a",
+      "bytes": 2439
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts",
+      "sha256": "faee4fcfcf91293b9a01d5f88c31c3e86d6f99d97c0b845d44a7b6451eb01b80",
+      "bytes": 14654
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/LabIdentitySegment.ts",
+      "sha256": "cda696de6aec24bff26078d42ff3596759d3f9c543194ee78974fb97b56bcda1",
+      "bytes": 14406
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/RetiredNameRegistry.ts",
+      "sha256": "ef6b6b2d7ec76b43c46c9f26f6b75fabefb5635080ca0d1f5147c5871e467d4e",
+      "bytes": 2980
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/AGENTS.md.hbs",
+      "sha256": "c85e45afd2ea87d8de5cf4a57e3fbada3162a2a8db601b2dea3b21ce5b040182",
+      "bytes": 473
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/LICENSE.hbs",
+      "sha256": "4c3826f9d83ba73340bae3df41dedb5333991ed4626b04580878617b5bf65807",
+      "bytes": 1072
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/README.md.hbs",
+      "sha256": "7434c165e5decff5d516950cd01029b78d12a1eb752701d6c93bd85e9cd42ea7",
+      "bytes": 624
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-lab-next.config.ts.hbs",
+      "sha256": "c38a4d1f7ff16a5217da936ac7eb102c35026c0ebdde653c7a56b516fbab4610",
+      "bytes": 294
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-lab-postcss.config.mjs.hbs",
+      "sha256": "2ee9434af4fb47623ea9254b1b710f9110ec3befbf449591dadba2e5500344ea",
+      "bytes": 51
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-lab-src-app-globals.css.hbs",
+      "sha256": "19b011e8d6e12c1a414fef2493426f98eea4501b09e3555be4e2d057b63f57fd",
+      "bytes": 39
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-lab-tsconfig.next.json.hbs",
+      "sha256": "669b6a6d4e2124a4663af6afd49a27abdebf6360bcfe8a71ae0616c284f6c5c1",
+      "bytes": 140
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-next-env.d.ts.hbs",
+      "sha256": "e95800745f8e1171c294cfa6b29d663d557493989a26a7c44f32361ee468813b",
+      "bytes": 156
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-next.config.ts.hbs",
+      "sha256": "ab4c61f6ee100ae43610a18512f1ebcec842bb2405431e1009266173f21cf772",
+      "bytes": 104
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-src-app-globals.css.hbs",
+      "sha256": "1a8753f8a84a07a2ba4e4da6eee66eda571c5ce190d01bd23bac18f70899b47c",
+      "bytes": 209
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-src-app-layout.tsx.hbs",
+      "sha256": "217b79987685cf6ea8c6862fa90266a5e550740795be707ba4f0e3522be4d78e",
+      "bytes": 370
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-src-app-page.tsx.hbs",
+      "sha256": "a3e75168bd8b571c2b158c34549242baa17c4c7beb22629a3150a06b8732979f",
+      "bytes": 104
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-test-app.test.tsx.hbs",
+      "sha256": "48ebad42ebbe139f929429145a01e97fb49dbe9f80f8bc10be35a2c89115cf1e",
+      "bytes": 328
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-tsconfig.json.hbs",
+      "sha256": "d84a91f5ae46266eb2964426a413fa45252f76305ad27200e946d1ffd8991ae9",
+      "bytes": 861
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-next-vitest.config.ts.hbs",
+      "sha256": "cc07f894b6055ae78b3f0f78928ee2f28ddfc6c351912d696526f0de0df802f7",
+      "bytes": 420
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-real-AGENTS.md.hbs",
+      "sha256": "7a74f78671ac103ca1ecfabbd59a433bff061076375f0c188325c935f75aa8be",
+      "bytes": 608
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-real-README.md.hbs",
+      "sha256": "c0e9ad58e9c4b2595329047ecf5fe4a3d5fa4ff7b3106bd33a0777e8fb066f46",
+      "bytes": 304
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-src-Api.ts.hbs",
+      "sha256": "f487d1ce880c61d286db24868109d5f38335dff0fb439df3e1b9ff56f9490ff7",
+      "bytes": 757
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-src-main.ts.hbs",
+      "sha256": "1b33ec43818924a9030e74b2861f47cc45639041ece3b50b6ff125326b6eb5ce",
+      "bytes": 974
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-src-runtime-Layer.ts.hbs",
+      "sha256": "7c46e55a773eb004448a5557bf617ba9f3b70519770e4663705644ce905b1466",
+      "bytes": 408
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-test-health.test.ts.hbs",
+      "sha256": "64fd6ccdc79fa7c5376604166d6fc60c82faa917b815ff576a4174dd4eb987e0",
+      "bytes": 1719
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-tsconfig.json.hbs",
+      "sha256": "d4031af003d9cebd1487dada80ee78283c6c68a72f1daab9dc34fe8910cea95a",
+      "bytes": 662
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-service-vitest.config.ts.hbs",
+      "sha256": "a956444418f643c16c5cb1b8c3e70628a76af3bf9bdd7047de42b0c73c3a552b",
+      "bytes": 386
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-index.html.hbs",
+      "sha256": "13d58eb6adc363278cb4cfe0160cade85e1f42ffeee4851d500262337dffeff9",
+      "bytes": 301
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-App.tsx.hbs",
+      "sha256": "15b69a6714acd4bbc1b178356631b1e630c4448f7163b2f6a801de09f781f298",
+      "bytes": 129
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-main.tsx.hbs",
+      "sha256": "2f7505f0df3560bff0c325f3d77f4080f10a8213b96ba99883a615408c82029b",
+      "bytes": 285
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-Cargo.toml.hbs",
+      "sha256": "019e49ec21a8e29b05ebbda227436fb768b702f52e980b360f285d609c967032",
+      "bytes": 381
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-build.rs.hbs",
+      "sha256": "b01bb80b64916f502a3033afdb4567227ef2abcc3b938889f02283aefa780fbe",
+      "bytes": 37
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-capabilities-default.json.hbs",
+      "sha256": "09af8956ac5ac2c73b2ac061b05685dd6127699fdce7175698c69ae87d8738e4",
+      "bytes": 131
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-src-lib.rs.hbs",
+      "sha256": "804a9dee766ae6352fa8896da7780304fd77a722189235a596da945b32b9e71b",
+      "bytes": 295
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-src-main.rs.hbs",
+      "sha256": "fa2840b447c24acb2027e98f79984b267ade1d47055092285d46bee433915b67",
+      "bytes": 114
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-src-tauri-tauri.conf.json.hbs",
+      "sha256": "d19251c91f265f3a7df7bdc10c68ef800fdab644c3176c71d654db3930108582",
+      "bytes": 1003
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-test-App.test.tsx.hbs",
+      "sha256": "90b3832f802ad5827b0a15e54866fd3e1804cf8f87b86a2cb9748a8335e184bd",
+      "bytes": 326
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-tsconfig.json.hbs",
+      "sha256": "82969c8c35cb87e6437b28421acf54ec75b811ca66f93aadd695bcb014ce01f8",
+      "bytes": 746
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-vite.config.ts.hbs",
+      "sha256": "f0df6a4706ef5d3c4c4ece6bd4f0bc80b2c6a4d130a18cadbfcdc943dc262cf3",
+      "bytes": 584
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-tauri-vitest.config.ts.hbs",
+      "sha256": "cc07f894b6055ae78b3f0f78928ee2f28ddfc6c351912d696526f0de0df802f7",
+      "bytes": 420
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-index.html.hbs",
+      "sha256": "13d58eb6adc363278cb4cfe0160cade85e1f42ffeee4851d500262337dffeff9",
+      "bytes": 301
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-postcss.config.mjs.hbs",
+      "sha256": "2ee9434af4fb47623ea9254b1b710f9110ec3befbf449591dadba2e5500344ea",
+      "bytes": 51
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-src-App.tsx.hbs",
+      "sha256": "0d69ab89a272d9e876ba028c4d76d2547ee17bc6dd4439620ba6b39bc432d79e",
+      "bytes": 95
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-src-main.tsx.hbs",
+      "sha256": "931dd98be5250dfbf7cf5415dbe85d8f7006c3cfa413123332ed69cb4da748c9",
+      "bytes": 316
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-src-styles-globals.css.hbs",
+      "sha256": "1130591d0d571f9283a4f9a414974f3e270078c356af594fa958c8975417f5d8",
+      "bytes": 279
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-test-App.test.tsx.hbs",
+      "sha256": "84af18feef677c65a5fc195e8b53d4032811ac95d3262cf233aaa4cf207b8b39",
+      "bytes": 322
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-tsconfig.json.hbs",
+      "sha256": "82969c8c35cb87e6437b28421acf54ec75b811ca66f93aadd695bcb014ce01f8",
+      "bytes": 746
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-vite.config.ts.hbs",
+      "sha256": "bdb98d63e58e594184d1f1325fd45b9e158ac113904f8ef927cbc8482e9ed6e7",
+      "bytes": 584
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/app-vite-vitest.config.ts.hbs",
+      "sha256": "cc07f894b6055ae78b3f0f78928ee2f28ddfc6c351912d696526f0de0df802f7",
+      "bytes": 420
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/assets/tauri-icon.png",
+      "sha256": "4dc033db61b65b578c9d583b0097b7aafbdd9236f5b2a2f24b4b26347042ef47",
+      "bytes": 4770
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/docgen.json.hbs",
+      "sha256": "ff963d3d97781d18a629471fd19fe91922d527aea3e58871ebaf52deb3333684",
+      "bytes": 988
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/docs-index.md.hbs",
+      "sha256": "ba76a2f867d8dea95282295085588d301603c1897cd205dc9b3fdcafee7e9410",
+      "bytes": 78
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/src-index.ts.hbs",
+      "sha256": "7707301486b458b229018a044678b56e91542cee72829be62763c2982352074e",
+      "bytes": 137
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/stories-tsconfig.json.hbs",
+      "sha256": "c2d7ce7734d76cd3cfa73c8ee7ccfdea927bc2ebb93553becbf0335ceef2fb33",
+      "bytes": 98
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.check.json.hbs",
+      "sha256": "01ef0df6f36d222343425768f3b1a0c59ab23a1bcb85bd205f25f62ebf7d87c7",
+      "bytes": 297
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.json.hbs",
+      "sha256": "8bcd7adfb2e7514ddf27c665139ee7b0d045c7f5abff614cd14c81a377e7a7bf",
+      "bytes": 328
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.stories.json.hbs",
+      "sha256": "8998861f2bc4a7cd25ce5df0db9a5b0e9db8b34620465db801d4859c694e596a",
+      "bytes": 620
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/tsconfig.test.json.hbs",
+      "sha256": "c180e9d9e802af650e337114af05304f29b51065e64b50cc7eb692939d23bb25",
+      "bytes": 474
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/templates/vitest.config.ts.hbs",
+      "sha256": "b5b0d0dcc1471bb05e8669bc44bf1c24d901ed073411cd311747964d4a5c4560",
+      "bytes": 233
+    }
+  ],
+  "inputs": [
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-commands-a-c.execution.json",
+      "sha256": "6a265a88bea384aa9f9a1b6d3d6c3e8f3f6249bf08390e69f094923a10dda751"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-cli-commands-a-c.ndjson",
+      "sha256": "964f4c5edc7214c837477f8fc965f9fe2409fdd38d491eb169cff1169105e3ee"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25-r39-main-782aa4.seed.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r39-package-shell-audit/disposition.json",
+      "sha256": "5b3153001a640f6e469644a1630bf1ce083f6a36741f609686b7136494ef2257"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-commands-a-c.jsonl",
+      "sha256": "9a93fb90adb6d22663d97499c6cc0a9e232fc19b2f3b32ff6a1a143efe47806b"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "disposition.md",
+      "sha256": "0cc6db549c788de775d99a2b7aa6ed90f7462fd7e95858e91de67aeacb60c468"
+    },
+    {
+      "path": "seed-accounting.json",
+      "sha256": "7fb427728ee774aec95b9c93f3f1d72940adf8ee9d687b8033135934d1cf5d9e"
+    },
+    {
+      "path": "template-coverage.json",
+      "sha256": "1b04bac518a4bd2ce3860a022d9a242adf385c2d135334e50e7f8d39e4c10d50"
+    }
+  ],
+  "qualifiedDelta": 0,
+  "disqualifiedDelta": 2,
+  "P3Credit": false,
+  "dryCredit": false
+}
