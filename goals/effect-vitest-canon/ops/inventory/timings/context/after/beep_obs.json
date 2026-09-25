@@ -1,8 +1,8 @@
 {
   "schemaVersion": "effect-vitest-p1-timing-context/v1",
   "package": "@beep/obs",
-  "headBefore": "dc3497d6e0e84e7c45be58489e44d96937f159a9",
-  "headAfter": "dc3497d6e0e84e7c45be58489e44d96937f159a9",
+  "headBefore": "242a6ac6b235afd44b8c6475da1daf64b6d1ec74",
+  "headAfter": "242a6ac6b235afd44b8c6475da1daf64b6d1ec74",
   "sourceManifestSha256": "7c50870e7559c9076b22a345e7f360c25ae10e3f488975dbd9912ba67b1ecbed",
   "rawReporterSha256": "658fa6bc47d78566db9450a6781664999e319cab11ce6ffa12f33a96b556bbec",
   "rawLogSha256": "3e111328758d676d6b376505f2ae68ae2652072304dd42b89ce87f10ab5b7479",

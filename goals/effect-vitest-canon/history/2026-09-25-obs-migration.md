@@ -40,3 +40,13 @@ speedup is claimed. Private reproducible receipts live under
 Two shorter handshake scopes remain intentional exceptions. Ten no-findings
 coverage records remain unchanged. The 17 fixes point to implementation commit `1201d9f3fc5609988129bcf0af5b8b05ce01fdb5`.
 All 29 records strictly decode; hosted publication remains a separate gate.
+
+## Timing provenance reconciliation
+
+The timing run was collected from uncommitted migration sources while Git HEAD
+still named the Cosmos parent. Both context heads now identify the equivalent
+committed source tree `242a6ac6b235afd44b8c6475da1daf64b6d1ec74`. Every one of
+the 13 saved source/config manifest hashes matches that commit, including the
+lockfile, package manifest and four migrated tests. These are source-equivalence
+anchors, not a claim that the measurement ran after that commit was created.
+Raw report/log hashes, timing, runtime, load and acceptance remain unchanged.
