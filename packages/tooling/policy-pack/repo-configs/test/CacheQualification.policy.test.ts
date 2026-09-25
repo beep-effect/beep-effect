@@ -297,6 +297,26 @@ describe("cache qualification policy", () => {
   });
 
   it.effect(
+    "accepts portable scoped package evidence paths",
+    Effect.fnUntraced(function* () {
+      for (const path of ["node_modules/@babel/cli/package.json", "@beep/schema/index.ts", ".beep/review.json"]) {
+        const reference = yield* decodeCacheEvidenceReference({ path, sha256: digest(1) });
+        expect(reference.path).toBe(path);
+      }
+      for (const path of [
+        "node_modules/@scope/../outside",
+        "node_modules/@scope/./package.json",
+        "node_modules/@scope//package.json",
+        "node_modules/@scope/package.json\n",
+        "@/package.json",
+        "https://example.com/@scope/package.json",
+      ]) {
+        expect(yield* decodeCacheEvidenceReference({ path, sha256: digest(1) }).pipe(Effect.isFailure)).toBe(true);
+      }
+    })
+  );
+
+  it.effect(
     "rejects invalid identities, unbound evidence and unsafe receipt paths at decode",
     Effect.fnUntraced(function* () {
       for (const computation of ["lint", "workspace#", "workspace#lint#extra", "workspace #lint"]) {

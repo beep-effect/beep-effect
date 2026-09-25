@@ -2108,3 +2108,11 @@ baseline was expanded to waive the findings.
   the bounded review receipt. No path rewrite or schema exception was applied.
 - A future tool-identity attachment contract must explicitly model scoped npm
   paths and installed dependency provenance before counting these as bindings.
+
+### Package verifier plural help mismatch — 2026-09-25
+
+While verifying the scoped evidence-path repair, `beep quality package-verify
+@beep/repo-configs @beep/repo-cli` was rejected with “expected at most one package
+argument, received 2.” Help advertises `[<package...>]`. Run one package per
+invocation; matching help cardinality to the command guard would prevent this
+failed invocation. No proof credit is assigned to it.

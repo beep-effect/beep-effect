@@ -367,7 +367,8 @@
     "research/tsconfig-discovery-review.json",
     "research/nested-lambda-boundary-review.json",
     "research/application-static-review-reuse.json",
-    "research/compiled-output-delta-review.json"
+    "research/compiled-output-delta-review.json",
+    "research/scoped-evidence-path-review.json"
   ],
   "agentLaunchers": [
     {

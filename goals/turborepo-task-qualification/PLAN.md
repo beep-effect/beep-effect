@@ -1990,3 +1990,18 @@ attachment path schema rejects scoped npm paths. See
 The attachment validator accepts 1002 sources, six planner artifacts and 45
 reviews. All 14 unresolved obligations remain. These reviews do not renew any
 runtime result, discharge signed sibling evidence, or promote a cache tuple.
+
+### Scoped tool evidence binding — 2026-09-25
+
+The portable evidence path schema now accepts `@` at the start of a segment.
+The existing bounded no-follow reader still rejects symlinked scopes and digest
+mismatches. All 37 focused policy/attachment tests pass, including scoped npm
+paths and unsafe-path negatives. See
+[the repair receipt](./research/scoped-evidence-path-review.json).
+
+The actual attachment now verifies the four installed Babel/plugin files that
+were previously retained only inside a review. It accepts 1009 sources, six
+artifacts and 46 reviews; all 14 broader obligations remain. The historical
+receipt retains its original limitation. This repair proves source identity,
+not tool execution, transitive input closure or signed-remote qualification.
+Full package and PR proof remain pending.
