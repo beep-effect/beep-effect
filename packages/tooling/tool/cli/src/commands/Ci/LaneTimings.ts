@@ -53,6 +53,7 @@ import * as Stream from "effect/Stream";
 import { Command, Flag } from "effect/unstable/cli";
 import { detectGithubJobShapeClass, GithubJobRecord, GithubJobStepRecord } from "../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
+import { nearestRank } from "../../internal/stats/NearestRank.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as SchemaAST from "effect/SchemaAST";
@@ -2190,11 +2191,6 @@ const rowsForRun = (
 const isDurationWindowRow = S.is(CiLaneTimingDurationRow);
 const isAttributionWindowRow = S.is(CiLaneTimingAttributionRow);
 const isPickupWindowRow = S.is(CiLaneTimingPickupRow);
-
-const nearestRank = (values: ReadonlyArray<number>, quantile: number): O.Option<number> => {
-  const sorted = A.sort(values, Order.Number);
-  return A.length(sorted) === 0 ? O.none() : O.fromNullishOr(sorted[Math.ceil(quantile * A.length(sorted)) - 1]);
-};
 
 const timingWindowStat = (rows: ReadonlyArray<CiLaneTimingDurationRow>, lane: string): CiLaneTimingWindowStat => {
   const laneRows = A.filter(rows, (row) => Str.equivalence(row.lane, lane));

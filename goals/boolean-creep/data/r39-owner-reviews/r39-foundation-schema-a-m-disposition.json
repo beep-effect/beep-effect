@@ -1,0 +1,131 @@
+{
+  "kind": "r39-schema-am-supplement/v1",
+  "sourceHead": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "originMain": "782aa4d34b707fd0bb57e93bbb0310a05e974b32",
+  "verdict": "eleven-seeds-covered-footer-count-corrected-no-census-change",
+  "seedCount": 11,
+  "primaryFooterSeedCount": 10,
+  "fileCount": 188,
+  "sourceBindings": [
+    {
+      "file": "packages/foundation/modeling/schema/src/Conformance/Conformance.invariant.schema.ts",
+      "sha256": "9ad14c399cbbcacf5911ef8a621d2b49f3887b676e313d3f34432d27848a501f",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts",
+      "sha256": "73942b62bb4782552c7d6b7169a820ae8adf28072ac1f27ffb37225249345529",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/FileTypeChecker/FileTypeChecker.behavior.ts",
+      "sha256": "17eaf5cc4a2a66f9fbdef76a223c1424b24d3237fb618b54356ca7a08fc50053",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
+      "sha256": "e9e6b9e1856d271db5045a69fb9e04b4523d112d875479dbb10de74aa209175c",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
+      "sha256": "bffbf83b7d815a6876d71929f3cb4c6aab1191acce28ba9fdb25a31ea654357e",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Jsonc.ts",
+      "sha256": "dc29bea835a5f759506ac8934b193081867aa5ccd69b7db1e3616a94fd1a5c1a",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "sha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+      "sha256": "6ac39215a60caab0e334e0caf02efb06bd0030dd1dcea608c54ae02918741fb9",
+      "matches": {
+        "ea3ac40867e4f292b7f0708b156231f0462ddcd9": true,
+        "782aa4d34b707fd0bb57e93bbb0310a05e974b32": true
+      }
+    }
+  ],
+  "inputHashes": [
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/lane-map.json",
+      "sha256": "55607779474d99ebafe59a993d567a17e2e7d4912dbd305d301be54962051d18"
+    },
+    {
+      "file": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-foundation-schema-a-m.ndjson",
+      "sha256": "41a8ccc1faddaff26436b7cd8c4c452ad4f7240aadc1ab64aff7cf6659a5c4fb"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-foundation-schema-a-m.execution.json",
+      "sha256": "2aea6162b512398cd76fc5ad61f186bfbc740bd23bf42e3ea1cb177d45663094"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-foundation-schema-a-m.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r3-foundation-invariant-enforcement-channels.md",
+      "sha256": "e160fc888b3915a2e215838fe97a00ce66b209fbc0767a9b8ee9be56e33238b7"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    }
+  ],
+  "unresolvedOwnerQuestions": [],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "designs": 0
+  },
+  "P3Credit": false,
+  "dryCredit": false,
+  "outputs": [
+    {
+      "file": "seed-coverage.json",
+      "sha256": "3274055c36f04a86d73c89ebc48fb926b93998370d7675b16b32228ef10cd149"
+    },
+    {
+      "file": "proposed-rows.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "disposition.md",
+      "sha256": "a1beb7483ebc6c7caac6751d8d1cde006b2726d8fe07e9c38fdbc22e1943947a"
+    }
+  ]
+}

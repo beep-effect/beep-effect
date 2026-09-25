@@ -1,0 +1,22 @@
+{
+  "lane": "r39-cli-commands-d-k",
+  "sourceSha": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "92cca49a104d75a6b2ac730ec002f723931cd799365a6edc00df5f426b2c9979",
+  "started": "2026-09-25T08:58:22.546939+00:00",
+  "finished": "2026-09-25T09:02:33.622101+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-cli-commands-d-k.jsonl` (validator: 0 records).\n\nConfirmed 0, disqualified 0. All ten assigned roots were covered (118 non-test source files). No seed was withdrawn. Prior clusters still match their owners and classifications, including `DeletePackagePolicy`, the Docgen/Files/Goals request carriers, and the designed `RefCandidate` / template-search / worker-score records.\n\nSeed drift, not re-recorded: several object-literal locators moved (ts-morph project options, tar extract, `Apply` remove options). `knowledge-ref-candidate` evidence that used to cite the reader now lands in a doc comment; the same normalized-then-slug read is at `Knowledge.refs.ts:3018`. `KnowledgeRefClassificationInput` still has enum `kind` plus an independent `patternContext` boolean that the designed member list leaves out.\n\nOut of net (one Boolean): `DocgenGenerationResult.success` is written with `error` only on failure, and quality `timedOut` forces status `partial` in `analyzePackageQuality`. No unresolved owner.",
+  "transcriptSha256": "4db9ac1a78090274f45bc6603ae26acfe3c6f790f5fc4aefe65b863874d33f3e",
+  "runnerSha256": "0b2a4b9b7e3dab094fdc7bba1612a0dbb2b87a20f4d14e03578f6cfd502b5d9c",
+  "seedSha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

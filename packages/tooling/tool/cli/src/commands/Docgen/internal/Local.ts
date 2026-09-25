@@ -17,7 +17,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as ChildProcess from "effect/unstable/process/ChildProcess";
-import { readTurboCacheEnvironment } from "../../../internal/cli/EnvConfig.ts";
+import { isCi, isCiSync, readTurboCacheEnvironment } from "../../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../../internal/cli/TurboCache.ts";
@@ -422,17 +422,20 @@ const selectedPackageFromWorkspacePackage = (
     reasons,
   });
 
-const localTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
-  turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci: Bun.env.CI === "true" }));
+const localTurboCacheArgs = (args: ReadonlyArray<string>, ci: boolean): ReadonlyArray<string> =>
+  turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironment(Bun.env), { args, ci }));
 
 const turboArgsForSelectedPackages = (
   selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>,
-  parallel: number
+  parallel: number,
+  ci: boolean
 ): ReadonlyArray<string> => {
   const args = [
     ...A.map(selectedPackages, turboFilterForPackage),
     `--concurrency=${localParallel(parallel)}`,
-    "--summarize",
+    // Run summaries feed the hosted CI lane only; locally nothing reads them back and
+    // they accumulate under `.turbo/runs` until the residue janitor reaps them.
+    ...(ci ? ["--summarize"] : []),
     "--ui=stream",
     // No background daemon: a daemon spawned inside this child survives it and
     // holds process handles, which repeatedly kept the hosted Docgen lane's bun
@@ -441,12 +444,12 @@ const turboArgsForSelectedPackages = (
     // the daemon for `turbo run` at all); `--no-daemon` remains accepted.
     "--no-daemon",
   ];
-  return ["turbo", "run", "docgen", ...localTurboCacheArgs(args), ...args];
+  return ["turbo", "run", "docgen", ...localTurboCacheArgs(args, ci), ...args];
 };
 
 const fullTurboArgs = (parallel: number): ReadonlyArray<string> => {
   const args = [`--concurrency=${localParallel(parallel)}`];
-  return ["run", "docgen", ...localTurboCacheArgs(args), ...args];
+  return ["run", "docgen", ...localTurboCacheArgs(args, isCiSync()), ...args];
 };
 
 const discoverConfiguredPackages = Effect.fn("DocgenLocal.discoverConfiguredPackages")(function* () {
@@ -493,7 +496,8 @@ const buildPlanFromChangedFiles = Effect.fn("DocgenLocal.buildPlanFromChangedFil
     mode,
     parallel: localParallel(options.parallel),
     selectedPackages: sortedSelectedPackages,
-    turboArgs: mode === "scoped" ? [...turboArgsForSelectedPackages(sortedSelectedPackages, options.parallel)] : [],
+    turboArgs:
+      mode === "scoped" ? [...turboArgsForSelectedPackages(sortedSelectedPackages, options.parallel, yield* isCi)] : [],
   });
 });
 
@@ -535,7 +539,8 @@ const buildPlanFromPackage = Effect.fn("DocgenLocal.buildPlanFromPackage")(funct
     mode,
     parallel: localParallel(options.parallel),
     selectedPackages,
-    turboArgs: mode === "scoped" ? [...turboArgsForSelectedPackages(selectedPackages, options.parallel)] : [],
+    turboArgs:
+      mode === "scoped" ? [...turboArgsForSelectedPackages(selectedPackages, options.parallel, yield* isCi)] : [],
   });
 });
 
@@ -1247,28 +1252,37 @@ export const selectDocgenLocalPackagesForTesting: {
 /**
  * Build Turbo argv for local docgen targets.
  *
- * **Example** (Plan local docgen work)
+ * **Details**
+ *
+ * `--summarize` is passed only under CI, where the hosted lane reads the run
+ * summary back. `CI` is read through the ambient `ConfigProvider`, so a test
+ * pins it by providing one.
+ *
+ * **Example** (Plan local docgen work outside CI)
  *
  * ```ts
  * import { docgenLocalTurboArgsForTesting } from "@beep/repo-cli/commands/Docgen/internal/Local"
+ * import { ConfigProvider, Effect } from "effect"
  *
  * const args = docgenLocalTurboArgsForTesting([
  *   { name: "@beep/schema", path: "packages/foundation/modeling/schema", reasons: [] }
- * ], 1)
- * console.log(args.join(" "))
+ * ], 1).pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({}))))
+ * console.log(Effect.isEffect(args)) // true
  * ```
  *
  * @param selectedPackages - Packages selected for local docgen execution.
  * @param parallel - Maximum package concurrency requested by the caller.
- * @returns Turbo command arguments for the scoped local docgen run.
+ * @returns An effect yielding the Turbo command arguments for the scoped local docgen run.
  * @category testing
  * @since 0.0.0
  */
 export const docgenLocalTurboArgsForTesting: {
-  (parallel: number): (selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>) => ReadonlyArray<string>;
-  (selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>, parallel: number): ReadonlyArray<string>;
+  (
+    parallel: number
+  ): (selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>) => Effect.Effect<ReadonlyArray<string>>;
+  (selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>, parallel: number): Effect.Effect<ReadonlyArray<string>>;
 } = dual(2, (selectedPackages: ReadonlyArray<DocgenLocalSelectedPackage>, parallel: number) =>
-  turboArgsForSelectedPackages(selectedPackages, parallel)
+  Effect.map(isCi, (ci) => turboArgsForSelectedPackages(selectedPackages, parallel, ci))
 );
 
 /**

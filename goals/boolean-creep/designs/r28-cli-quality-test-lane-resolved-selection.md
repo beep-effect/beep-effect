@@ -160,3 +160,31 @@ runtime wrapper preservation, and distinction between accumulated process
 failures and aborting Effect failures. Implement schema, parser, runtime reads,
 alias docs/tests and diagnostic writer atomically, coordinating shared Tasks.ts
 edits with coverage/proof owners. Independent P3 remains required.
+
+
+## R39 source and test reconciliation (authoritative current map)
+
+Bound to HEAD `220d9426dad4b708807b6297cb71d75449288749`. This appendix supersedes older numeric
+locations for the files listed here; it preserves earlier design semantics and
+immutable historical evidence. It grants no blanket P3, implementation or dry credit.
+
+Retain normalized 4/3 and raw independent false/false accumulator. Strip only one leading delimiter; consume exact selector tokens even after retained delimiters; preserve every other token in order. Preserve unit/parallel/serial failure accumulation versus aborting Effect failures and SQL acquisition/release. Keep diagnostic writer projected old JSON, current cache-runtime wrapper and Crypto requirements.
+
+Current Tasks.ts landmarks: raw test state239, parser315-329, normalized writes324-326, alias347; coverage carrier256-264, raw parser644-654, nonaffected resolver685-699, resolver862-955, selected/noop writers933-951, validator975-977, coverage step2543, selected adapter3396, raw step adapter3457, selected executor3535, root coverage3551, root test3620, root dispatch3669. Proof outcome2021-2028, session preparation2035-2037, phase locals2038-2039, reuse2044-2059, executed outcome2070-2079, persistence2082-2102, wave2116, ordered fold2141-2152, wave collector2210, public runner2381 and test alias3895. These are symbol/branch anchors, not a uniform offset.
+
+Tests retain their existing Effect-based harness and NodeCrypto layer. In quality-tasks.test.ts, legacy lane/report inputPackages decoding is1241-1274; crypto failure distinctions are2014-2050; concurrent ordered journaling2520 and next-chunk stop2576. Coverage scoped replacement fixture is near3902; normalized selection fixtures7846/7855; SQL fixtures7097/7142/7165. Existing tests are supporting inventory, not execution evidence for this migration. Complete test-name locations follow.
+
+### Current named test locations
+
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:3266` — leaves test and coverage without a static root plan
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7097` — builds the integration lane command with shared SQL environment
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7142` — forwards shared SQL env vars to the integration child process
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7165` — fails nonzero integration children and releases the shared SQL resource
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7538` — limits root integration test filters to script-owning workspaces
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7846` — selects the flagged lanes and keeps the remaining arguments in order
+- `packages/tooling/tool/cli/test/quality-tasks.test.ts:7855` — runs both lanes when no lane flag is present
+
+The private review also supplies source-location-maps.json with exact unchanged
+line blocks and explicit changed blocks, plus symbol-locations.json/test-locations.json.
+Use named sites for implementation; never apply a uniform offset across changed code.
+No tests were executed for this read-only reconciliation.

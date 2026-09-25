@@ -1,0 +1,92 @@
+{
+  "verdict": "retain-17-seeds-correct-footer-count",
+  "sourceHead": "ea3ac40867e4f292b7f0708b156231f0462ddcd9",
+  "seedCount": 17,
+  "reportedSeedCount": 18,
+  "sourceBindings": [
+    {
+      "path": "packages/tooling/tool/docgen/src/CLI.ts",
+      "sha256": "8094e0b4a66f0f0abe023ea479970d8af035cfc5aa80307d38d4937d849ac260"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/Checker.ts",
+      "sha256": "b180f70055ff7ca72984fd83ff145f1bcf1400f7d94afcb36437c972c7e9cbc0"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/Configuration.ts",
+      "sha256": "ac1a676711a1eb1d4837403d642469e2ecb72e8af984892959605293b450e1fd"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/Core.ts",
+      "sha256": "d6ba58abb574a4f37b789772d4bbbe253eb36628d7a9a8470b0b22628a9becca"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/Domain.ts",
+      "sha256": "5159a8e1c88ed3139a63ef647855edb70fcfb6cd0054de4aa3dafe48fbffc243"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/Parser.ts",
+      "sha256": "8076a7d7cc2d24f6c7df3c534f2b87f12ed2f2bfafbe01c71690c0c4ea7f81d1"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/Printer.ts",
+      "sha256": "265c7376b077474c5e18680f444cf32fb5e2959adb7168ce5657728962f7dcc3"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/ProofManifest.ts",
+      "sha256": "08ba428406df312d4f7992b470c8bed56a3660b90e536469d277cd69086e9b8b"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/Version.ts",
+      "sha256": "72b8351a3b7057a59ba0740bcc533f52351fd8565726051b85f0af61791cb82d"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/bin.ts",
+      "sha256": "0333cf9b1814bc859f950171d6b64826742fde6d61a012cd5acf413125bb60f2"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/index.ts",
+      "sha256": "eb7af5b59975dd76a8a806e2ddbdd5e9135c01b8ef731e891c5b447f14103604"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/internal/JsonFile.ts",
+      "sha256": "1ad841672a5b61cf685c842155efccf9ee99fb93a44af25bace023ef28ac6ace"
+    },
+    {
+      "path": "packages/tooling/tool/docgen/src/markdown-toc.d.ts",
+      "sha256": "a6426367fcbc67e3bd0ac78e0db4bc4dbd4cfc83dd3ed774c46c74a3ae572dbc"
+    }
+  ],
+  "inputs": [
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-tool-docgen.execution.json",
+      "sha256": "1febce0e3620cf0929fc34d222684a0f6d6c4f8a5d64a22458105a7fed19ab3c"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/transcripts/refresh-2026-09-25-r39-main-782aa4/r39-tool-docgen.ndjson",
+      "sha256": "895371632564f5a5bbc5ae106a5219fd15326dc0430b04b228c45e599f02e6af"
+    },
+    {
+      "path": "~/.cache/beep/boolean-creep/refresh-2026-09-25-r39-main-782aa4.seed.jsonl",
+      "sha256": "7178f9425d840cbaf08d5d3a3f2410defe1fc575b9b17950ca7323047adaba41"
+    },
+    {
+      "path": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r39-main-782aa4/r39-tool-docgen.jsonl",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "disposition.md",
+      "sha256": "114fd57a520de3a6daa1631abb7ea6a84657880cba4f3f696792a7821aaa0515"
+    },
+    {
+      "path": "seed-accounting.json",
+      "sha256": "1aee50dcca4414e7815aaabf688302dba2580c650c2d7e70304f837d8627c7f7"
+    }
+  ],
+  "delta": 0,
+  "P3Credit": false,
+  "dryCredit": false,
+  "graftEstimatedTokensSaved": 2608
+}

@@ -1,0 +1,1252 @@
+{
+  "kind": "r40-capability-reconciliation/v1",
+  "createdAt": "2026-09-25T10:51:45.068328+00:00",
+  "sourceSha": "e624ab45f8ffc5e62ee8be19a94b7e3c1d40d363",
+  "originMainSha": "5bb7754cce8ea58ee540c08d78a4f3bf2e653cfc",
+  "disposition": "retain-current22-seeds-reject-both-unnecessary-raw-replacements",
+  "inputHashes": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/lane-map.json",
+      "sha256": "1b45fb51661ea399ef235f1891eda3bd02cb39cf20e13d28be826bee79408c03"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/frozen-inputs.json",
+      "sha256": "cf8590622591513df2c88567a7da1bf8849cc701b9ef2672336ada971032fc83"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-capability.execution.json",
+      "sha256": "78491ca240f62133d03f3242ab74bf4fbd812bb32721ba9f7115b3de39f1c914"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r40-main-5bb775/r40-foundation-capability.jsonl",
+      "sha256": "146d1ba4770f9418d6270580452d8150b61e24cc5903e4e68f3c9f44445ab48c"
+    },
+    {
+      "file": "private-evidence/boolean-creep/transcripts/refresh-2026-09-25-r40-main-5bb775/r40-foundation-capability.ndjson",
+      "sha256": "17a6a326b3af649acf1e5e8979b0fdf24eed159a84f90357a210a5254a425703"
+    },
+    {
+      "file": "goals/boolean-creep/data/inventory.jsonl",
+      "sha256": "1cd0adbbd47daceab5c33ef060cf01c0450589066b7c9eaedc71912bd594eedc"
+    },
+    {
+      "file": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r39-capability-review/disposition.json",
+      "sha256": "2e5f6b13e98c54b791fe274f3d3e4bedd4a496bdfae99e1e886473e3390aad3a"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r39-capability-review/seed-owners.json",
+      "sha256": "fad46cbfe17f952362f0abac338343120a22205e12f60b91220cb184142418b7"
+    },
+    {
+      "file": "private-evidence/boolean-creep/refresh-2026-09-25/r38-alignment-owner-audit/disposition.json",
+      "sha256": "c23a1ef10ca6ff3ccce79fc804b11ea9546e533305bfcbfce94ee355102695ed"
+    }
+  ],
+  "sourceBindings": [
+    {
+      "file": "packages/foundation/capability/api-transport/src/EgressDenied.ts",
+      "sha256": "65128037a7d2e1652e7e8a50834f5c07a4087f90129eb3fe21340af4dfbc95e0",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+      "sha256": "976b59a9e33b013d8339aa69c0b121dd78ad37c03cd6ed4201f9a209d55cc497",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/Version.ts",
+      "sha256": "76825d7f111b3a513c7e44d5efe355b6f127c7020c9acd4c4c997bb2b0f067ff",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/index.ts",
+      "sha256": "03be93b28c5de38dfd2bff8b31d67990c382cde4924f09c231e711b9cb6eb84c",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
+      "sha256": "311a6b5e59340694515602fc2c74263cb48a6c417f45eb69ae5774645f442274",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/Chalk.ts",
+      "sha256": "810e27bf5bc3f00b2ad6dd44ee3c3b2e1b02b6f63f9d40e3f4f24d486d1906d4",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/index.ts",
+      "sha256": "cd9aa6d4976e5c3589ecac9f5637b42be3d58ea9ed3bdb6aeef52d16970d769f",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+      "sha256": "5d7489e03a66597c0b6f3b7633373901622eb6f1534a4fed1a2a32d9994e565c",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+      "sha256": "ac7648cce8c86ab0c3773e6768194d9c4ed64c96f82a27f5a0171cf918cb5245",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+      "sha256": "b24b47e75cd99a4a7b8a198b96d7670a81e914e6a8e758c7cfb77e3d3c81ad2e",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+      "sha256": "c31d63890c202eccdf929ddac81ab64c5fdf6e453512c119b234a2e28f4e5b40",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts",
+      "sha256": "af640bc44d095da655fe425a37dad92b23bf9c64089b6abbe4ede59543a86656",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+      "sha256": "54aea37313f575bd57b8afe49f08aa90027749b382a80523916823bd955c8fdd",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/chalk/src/internal/Utilities.ts",
+      "sha256": "a6576ef1e13b51f294ca2ceac3ad366525f142832bf08f30dcc3751219c11647",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/colors/src/Colors.browser.ts",
+      "sha256": "e81db92d4b13a4b2a8674e3304f58a8e9d0d14a69ce9cc592738024381816e99",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/colors/src/Colors.ts",
+      "sha256": "ff919b7c3f9ce5d72112b5d4ee5afb748a45572fd3655747bf34b32c9f620eae",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/colors/src/index.ts",
+      "sha256": "bc71fd71b6ea32412b4030056e5dc825747b7e3434d76a06b8fa5fcaa2f718af",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/colors/src/internal/ColorsSchema.ts",
+      "sha256": "2568c730e21112e2d5d805d164f0fce7992e0f3de41d6db98c9ff64f3be84939",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Artifact/Artifact.constructors.ts",
+      "sha256": "7a8a6a43ddabb6cec98ad26a18b12943e441328431c39838fe485fac659c6872",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts",
+      "sha256": "19f5ba225346b59ebcf66a5341ecf7470b4bf459a69c70bf6f9c1cb980bda6ff",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
+      "sha256": "4e532a9ef7abfc233ab0ff3e710a187d4fa41cabd9c197a89bff7ad681dc0f1f",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.codec.ts",
+      "sha256": "2473d50a8a93fd3fff01cf2b110b4bfcd27ac011d8075437bca9e20f726cbedb",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.manifest.ts",
+      "sha256": "4fd9f9919da1b22a313b39ea9061c8b27cca71f48cfcd837cba598f57318614b",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/Extraction.schema.ts",
+      "sha256": "bc5734cd90c8a00ef3fc01beff533859e9a0058f0cd489b85d5bb3505195f1f1",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "sha256": "cf4fab205138acbb1a020a5b067a59d337db2f0ae26e6626a8cc6c1b491da0e0",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Operation/Operation.errors.ts",
+      "sha256": "f6ffed86a87e11cb5289e9aa3b3824ab114b7f08e52f7d6c4173b605e2c169f1",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Operation/Operation.schema.ts",
+      "sha256": "9678feb0f311d235377b0dfdac4aa5f41da83f1ce2d22b26f3e3e09019527a17",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+      "sha256": "6d54a14f1b2308886897091ee4e24720f048d0f9e162c44fbace1362fc4a9a8e",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.errors.ts",
+      "sha256": "1000ad027fa250c21556ee70d583e67eba4ecbd384881f98a0c714daaa0e675c",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.policy.ts",
+      "sha256": "53a10ab26ba670d85adab74e8b379c4e20cc65894500d871a0f0a2525236f309",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.service.ts",
+      "sha256": "73841280514e2fb496e04d0541d7f3a1c401ed5351e672a21179ac768e3d9ac6",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+      "sha256": "4f31ddee79755d8364a8307d566f86de554cf504663c6b97959db3ca224e906d",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Service/FileProcessing.layer.ts",
+      "sha256": "c377e23938a1f592f317dbaf1b64adb8ac979000c7fabe77e6183082d9027545",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Service/FileProcessing.service.ts",
+      "sha256": "fe37377d90605b208adfb0ec0fa7211a0aa06e06036c47196d5e57829a918f85",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
+      "sha256": "fed3ee9238ba12536083dc8126553b1b79a13cd08ce5c03e1d3a6a578edf968b",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.errors.ts",
+      "sha256": "03c62e47c0fd07d4b42a3749a86923dd16b9aaf1f1ee1be20ae2e635a95e73c6",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.paging.ts",
+      "sha256": "24c121d209bb80b41e3b01ed6f695890ee9aa8b37b920d46d3ab78c4297edfa5",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.schema.ts",
+      "sha256": "45e91461e7d58b144d8a99b664412d89ea8ac4f3713a2d1d9f6c936c6690d602",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceTextResolver.service.ts",
+      "sha256": "638c97f16dc4107864c48e2f021562f6298e271741b9ed588ca9ea6bfe31b119",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/SourceText/index.ts",
+      "sha256": "1fa2a7c9e8acc109ff610efe0f43277e5206b50a53bbbcf8363b419673ba6603",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Strategy/Strategy.schema.ts",
+      "sha256": "7fca365ade67ac9bb5e86b016e6d595b3b98744ae27e58864da8dd0f35465173",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+      "sha256": "dffc63b42915fa54e46b3d71f14c3e19bb3543204410eeb130a5c689def28a67",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/index.ts",
+      "sha256": "ba4c49205fe6560cac7bbb2ea2b8109d88ef9f50b6bf78d70aac326eb858df79",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/test.ts",
+      "sha256": "d6baea31514d60af7ae92ea21a81cbf93bebcad0ad7b67e613310733d4e29036",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
+      "sha256": "92030e2bc1141fbcc530bbc906727dbcd99612ca2f87aae8db774e42372e22bb",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.config.ts",
+      "sha256": "6cba364ed99e5fdc5f4d7857159d3237483e9a32a4fc9055241485e04f7ef4c3",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.model.ts",
+      "sha256": "f77f745a3e176ccbf1dea2e99347475ed1b3a85f570827ea58e211692dd6c152",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
+      "sha256": "39c4502f237844c4935b670a04fac2f6c45833068c9d2d90e673aaf1cc0985c1",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/Extraction.behavior.ts",
+      "sha256": "6a6d9b4e318b2d4018f7c3e600a0efca23538c15c42f91f6f15d5df892ac0772",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/Extraction.config.ts",
+      "sha256": "ac078fa1f779be959dbf3aa8124e116cabfa1bb04d3fd70c20edf31b2017f1fe",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/Extraction.errors.ts",
+      "sha256": "f790ca75dd218333664a59c0cc1c804cbbc921198b0824d5c3936a80ddadc9a6",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/Extraction.model.ts",
+      "sha256": "9cdf0e06c6a19de6a8466f21ca38dfcdc6e111fe5504c60ce1c0cc6924ca98a8",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+      "sha256": "839ee8ece5eb0ccaf3f0a90979ecc785b8cad2eebf29986c5226f765bf7b1cce",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Handoff/Handoff.behavior.ts",
+      "sha256": "166bdbb5ec6a70f1a0029d3f6f2a21e2950eca6670c3b8ffbba4181b5e95409f",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Handoff/Handoff.model.ts",
+      "sha256": "1c187f8b0774621ca0e332a004451bd90fd0cdf882e360fb481a2bb96460fa92",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Handoff/index.ts",
+      "sha256": "144fe98f88e7e902c21f6f5e2ebe4dbecd0da6436d33ddffe4fa78b560be6e8f",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Service/Service.layer.ts",
+      "sha256": "b5d1f0cca2687baf410c2bc6eca96b7f46b8215a9e40c25936d1980417469f9c",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Service/Service.policy.ts",
+      "sha256": "68996c7031238b9a75c0d63eb0dc73c08ff57baf03be2e439f6add9640c87179",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Service/Service.prompt.ts",
+      "sha256": "dd1f7eb49f484e669fc6a646b31b1b6ef30db5844080bacb53915b94810f9aa1",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Service/Service.service.ts",
+      "sha256": "c1f23984556b69ed628f9774e819aa2b078789f20bd7c41be406fdf510d5e1d5",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Service/index.ts",
+      "sha256": "b995835bb2948e6be398b97c440bdf748c745b133c34557dd5ebcb184b72b4fa",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Target/Target.model.ts",
+      "sha256": "4fa06d3c2e5794ebcf147b5f35fea4af125760f46124d2cebc079aa16707df27",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Target/index.ts",
+      "sha256": "95401cf76d6eef8813f816c99ddf25ebf4a00c215157a5d3bff8406e1b4be54f",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.behavior.ts",
+      "sha256": "1077f8b1fa97671797e25922c8eade99b7ab933e86b80a9d09108d9c8535ce49",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.config.ts",
+      "sha256": "6504de7c0e7c71d0facc091529ee9d387b155d4d0a02fddc58f3a4b34dab0acb",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.errors.ts",
+      "sha256": "c9343c923054b78479073990ef886e60ffc3ace053207c88b4f2d2631b7b47d7",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
+      "sha256": "90491cfb18525783afb2b591db44855ec241851dd4d40da641ef0a0326d33e1b",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.normalization.ts",
+      "sha256": "b2edd23ec02ad3f9ec5b0920a5c575b970b6a3a318c3059f5a68d46f5b6f7196",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/index.ts",
+      "sha256": "d2941507249cbe418458e635078e9de4615a3e2ef6c233435f99d707eeac0f89",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/index.ts",
+      "sha256": "22b13faae426f06d99801160039b8ec609554d0673e6012a3db1b418b3403d17",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+      "sha256": "1aea9195d69c5014c6e6a10239100d2a425ce4847047d773f7a9d497ef06fce8",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+      "sha256": "af239de0eda321a9d37b63c38544b52018e637ac071cbdd8c1a26d61b698fa75",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
+      "sha256": "1ec635a271fbbff2180ffbe77a1681073d12533958a829579dc15e9cb0900dd9",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+      "sha256": "e8b5c85dc5d4d3ff0ddadf20c93d74d749ec81e2d28d2359414f2b769eccc69c",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+      "sha256": "f562f2a00eca1ea3bf86f2e82086f9a677015458d2eb8374da86e128d0fb186a",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+      "sha256": "27d680e7aeee445e8d385f68cce127ca2e818c332e6e6b2eb59d7a41c0bef0bb",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+      "sha256": "ce85e1373f3944806e8058f430961fc828d5f3706b292677ef93ee00973d8d3f",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/ToolkitComposition.ts",
+      "sha256": "eafcff7c5b47646c224fb7709a9bd344a339b4282b65c14375749938a429f6ff",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/Version.ts",
+      "sha256": "a3738f23a8df4e0cdccded5ce6721b9b067a897f290a1284fab5c8b3377db1b7",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.node.ts",
+      "sha256": "e81385ac0de878367715dc38caeddbde5d02ca54bbd4b68f3986ea1390833c73",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
+      "sha256": "1ba551aa76476bab0618d3db436206fbc36b9ce11578e2e458871b9dfdb5dfcd",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/index.ts",
+      "sha256": "3eb8b93697f6965f161e14a227e8b7e0e085b908822361504293164acbbeda81",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts",
+      "sha256": "395039f21af38c49c7a11737ad46377dce63fb3baaefdc9b08771d7961b362f5",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
+      "sha256": "5dd5f1850bfe3e914f638972c159e09ba3d24e88db17c315ad9f62a8e13d71f4",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Backend/index.ts",
+      "sha256": "856faa330c92f7a3c319c0eba5189f4fedb0a748221024f475f916bc0f74057b",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Core/Tokenization.ts",
+      "sha256": "c86e3fbc857d4b3d893ea7b3baa5dc28cfabd7152d3013ae943b688e665a0da8",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Core/index.ts",
+      "sha256": "13062b45fa2cd3684b7767d194f08e254534b215ad21e53abfd8a85c6b055bc7",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
+      "sha256": "b00bac0173281341f9c58e4af6d1f42fa49690eb154f97e47d4e3eec47bcdfe6",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts",
+      "sha256": "1535a3b030b2055b84e4f0bccd38f8a5eba279dddb683fa17c82c30644782477",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Catalog.ts",
+      "sha256": "95e5628ac441064d7a9168289d1d7e11e875e279ed087d9f209a59076ae656e1",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Errors.ts",
+      "sha256": "315387111c50671d7ca363d147af7746f354bcedb4bdc34554645bd28c54fb19",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Executor.ts",
+      "sha256": "23a794846846867ba71f5237749558d0153870535ec1bd5bc09295f44b90ac51",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Operation.ts",
+      "sha256": "881c579604c274ae40b973924c37e9239a6fa9c36e5b552f7592cf61a593303c",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/ResultStore.ts",
+      "sha256": "abe7b69c76e27b13b1d90a23fdfe0ebbfa7809998be1e91f4289475344c06400",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+      "sha256": "f0f7370e52c6de1d010aed5f72e05a315e31896fd52213b2393a582bb180c9e0",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/index.ts",
+      "sha256": "b5cbd7587f144eb4da2e31e053e9322e1c0af7a469b8ad9f59d2b8072efda6a0",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/TextGraph.ts",
+      "sha256": "b4715c1c581d6ebf7e8e9ab6c3ad68bbe0156a977657b2e04854126dde6c92fb",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
+      "sha256": "c95554d76b27d5f8659aead6a8c6100baa46a1c855f2287932c9ba59dd530203",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/index.ts",
+      "sha256": "209ff56df40c26e1875e9b75763c5364ad67532c1f9aa2ef780eef72a4480028",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/NLPService.ts",
+      "sha256": "9f72709cfe38f604ed75927f8841d102f13134c249d267826f2ed9b7e447305d",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/Analyze.ts",
+      "sha256": "e2796d18b960ac51c30d72577ecfae1a4417a3e006cbcb4abe020ff56ee2f8d7",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/BagOfWords.ts",
+      "sha256": "be868c66bb20df493e2e17d5f8e2f20ba1e60058340f7d84b58443248d6e0102",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/BowCosineSimilarity.ts",
+      "sha256": "36345bea03d1d4d74278512a85e3a69df13fc76bc8ddcae059e2094bf09adc19",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/ChunkBySentences.ts",
+      "sha256": "e90dea546302ac163044f7c03c265ad088c40605f937903b1112f70cea18cead",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/CorpusStats.ts",
+      "sha256": "6d45c269cf9a0f74a1b64b3795570a2603033eefee3168e66d2ab5cf5d2ec9b9",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/CreateCorpus.ts",
+      "sha256": "841fc1d7da74055472167eaa4e60d4c12b61067db329d2e6d48983f47250cf35",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/DeleteCorpus.ts",
+      "sha256": "e347fb55126223fad068aa01852c878a06f6de062008156e1df34b5fd2c6d6f2",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/DocumentStats.ts",
+      "sha256": "2ea40afb9f334ae10577ec9fcf889ffa37fdfd35d0d2024d1fadac05040a3942",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/ExtractEntities.ts",
+      "sha256": "21457a4b088cf22489628debd53468a30691cdddd213e15bc5be9f6c7567f636",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/ExtractKeywords.ts",
+      "sha256": "9e78fc85930d5fa9e4a81d277201e4113cf78c3148443ac68e146c12fdd82a24",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/LearnCorpus.ts",
+      "sha256": "3872b389fbab107e16277a6928493d32ce41a7de7d8ab05f3b070bda0624353e",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/LearnCustomEntities.ts",
+      "sha256": "ee4272fa71d59fd9fbbcca42d7884a3a91555cae0b147e123c59bfe005081dd7",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/NGrams.ts",
+      "sha256": "a523b71e82e0a1d0c63fadf06599ba0f3bc43db1d0703417a7f99985d90e20a3",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/NlpToolkit.ts",
+      "sha256": "d739169b9b8beb1fd8d346f7dff5b5332c6718020d024c137dba8da49573f574",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/Paragraphize.ts",
+      "sha256": "f671d20daa7688a7cc9063de0bc6a3063397df79f740afe0ead72ac54ca5534f",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/PhoneticMatch.ts",
+      "sha256": "3522fb7ab72d31431804728ca3e8161fb416db0c217afe967e01fbe12a84260a",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/QueryCorpus.ts",
+      "sha256": "6b814f3637199be1d461bcf6f14340344a5c14365c2395453f2d30afc8a710ac",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/RankByRelevance.ts",
+      "sha256": "c33b9f835497c57c610361ec7349525990fc69742889382ed03ccdaaab306824",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/RemoveStopWords.ts",
+      "sha256": "dd3f628051349eeb4def0ea613258f00b48ae911db957e0bbabc22b43d419f7f",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/Sentences.ts",
+      "sha256": "f18fb41931edcbd681980ccacdeff905f9a8aef457667a3c633a68d797b481a8",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/Stem.ts",
+      "sha256": "8a1d5a2db4c9e40ffd4b30d7affb4e92df04c4d885313e0b076787840e621912",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/TextSimilarity.ts",
+      "sha256": "a8871175d210f1c20d40c92c684dd5a3d4e6a704430faa70d46a013dcaa07962",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/Tokenize.ts",
+      "sha256": "69a994ac336a8dc4aa38f60b904ebb19df63a636137e2324e7820d560b58b76c",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/ToolExport.ts",
+      "sha256": "0e7ac6b230fbc15bebbb0437b6422505a47b70dcae0104ba29ec364e0cd55800",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/TransformText.ts",
+      "sha256": "cc74cb848b51e471089d415b3d7f341b5359f48151af921f6e40c228d6c8e09c",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/TverskySimilarity.ts",
+      "sha256": "baa1c515c7cf16ed0ace82bdc2357f2fce723a18eb6846230da8e177babf0db7",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/WordCount.ts",
+      "sha256": "aa36cb425f202f01503683c34d31b344407b0905370fb6862806406ef6a43015",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/_schemas.ts",
+      "sha256": "3d3a20029425b69affede5d8f943984b75aaf856fe7296ddd93c4a28673eec01",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/index.ts",
+      "sha256": "53c13c178fbb1c3452cb1be711d92dab4ea4e851f00d6b9c578d57ab736c3428",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/index.ts",
+      "sha256": "adc9ffb15a9494c2b4dcbf7ab6c03b516f6ce8e14cd296213d01d78b39d934ea",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/internal/observability.ts",
+      "sha256": "42b6d434fff3a1cd01980b0ff8f21cfbaa36c4651f9982ede9a77ec8fb0cca40",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CauseDiagnostics.ts",
+      "sha256": "ac127be79376f199dc0a695733f06e7c78b35ceb5d49311e5f7c5e7a5f2abffe",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+      "sha256": "ab15bcb2e07eaf1333be11e31b7e84a82477f83e02e2a83931b3953df7e8b72e",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/CoreConfig.ts",
+      "sha256": "5a668607a832b9ea795c5e679023044bd9832cda4da23d704609ed789f447686",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/HttpError.ts",
+      "sha256": "129404524f9d56e0c06ca30095da9205c558293c6cbb28f155e58b6e28bcc47f",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Logging.ts",
+      "sha256": "d1c081c67b4daeada440a0c157af12947eec619c121125fc542044c1bf740250",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Metric.ts",
+      "sha256": "07c62dba2475ac46f0bad98baf54328abbb7d46cc199084b03ecd1bb4a8c8aee",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Observed.ts",
+      "sha256": "1399aafe4e9cee67604fa93a89506d484a6f719e5361d3d74ed4ff718e984e17",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/PhaseProfiler.ts",
+      "sha256": "a7e0a4a7a5eb1e372500d3edec9b504f9845e133c2c90313d23b50225ae0a5d5",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/Version.ts",
+      "sha256": "adba98af0dd625470823db2ba8c04fd8f277f45e53d0c14d80ca0bc711700107",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/experimental/server/DevToolsRelay.ts",
+      "sha256": "5e7e6405905ce177919fbca81f8dd2a4dfe451deab036d03e3871c73f3fc834e",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts",
+      "sha256": "2da12d646e051f219cd0551f11fb833c349a0a0ce5d9a0de478d171846614a20",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/experimental/server/index.ts",
+      "sha256": "185290f98b345151a7a2d704f5bf63348a929dbdc95f9f43c37baf259ab33767",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/index.ts",
+      "sha256": "987f6e96cae1eec22e0215bccb5a52b4592ed1a67f5d0dbf7b3e47dea3ea4da8",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/internal/decode.ts",
+      "sha256": "d1fce15d0e5be568cb51a899d5bb75ffec56613cdb6e8c4c3a9b0c95c34fabe7",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/Config.ts",
+      "sha256": "bbb3efacc13c75baaac8cfb3d2ca050fb7c792eb11abfa1ff8f3ee44e3d19e3a",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/DevTools.ts",
+      "sha256": "691df07522fdaef6c7015b93ae14db976563b839dacff28b04149ef70628d045",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/ErrorReporting.ts",
+      "sha256": "b2613c19e5b5c601843f5abbc28831b51dc88354b89e3476c6d327b47d9351bb",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+      "sha256": "ea229c7a707ee3bea14af858d08468f5738277baf08c1d45f5104effbbcf867c",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/Layer.ts",
+      "sha256": "041880f87915b0f94185d40f1ba6b414aa27c0b8619de471d90a9b2ede6cca0a",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+      "sha256": "53bab371bf7eb16663403b7aece1899f516a06e367cd8cd21d825164d6457cd8",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/Prometheus.ts",
+      "sha256": "a4f461d4b8178b7166a3445d59ee065bbe2c97652b3b6f064d6c4b6c2afed0a1",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/TraceContext.ts",
+      "sha256": "b94cc2a6360ed2b84e74951bbe8b509466ffd223e1e795a786d2e2ad7318b1c0",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/server/index.ts",
+      "sha256": "48b36d0c3fce457621fc84929a843bf7f96a9c517a3363ed95df47505e0cc063",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/web/Config.ts",
+      "sha256": "38569a01c679455ae08d42a9ef10d3ebab5b46dcb548c7613ca4dd58ae950573",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/web/Layer.ts",
+      "sha256": "e7d635e241a2747c4de88059993bb07b0411beb7f7ff1922b26d32b3eb869a99",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/observability/src/web/index.ts",
+      "sha256": "ed2dfc1745bbd4f601176cdb6ac883c021b0a8e47352d9dbaec172484a41f281",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRdfBinding.ts",
+      "sha256": "3baa2e40eaac28b8b744d08b11a3fedcb30fc82870244a935775d9ac41fd006c",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityRegistryDataset.ts",
+      "sha256": "9beeb038d7f6d08e0436dbe4cf4a42823b357a6e90f87ce5cc8310e1c9bc94be",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/IdentityShaclProjection.ts",
+      "sha256": "c7b6a47222d4895b4410949ad49492a8b6a3c26c2c580cd22724c6b19001206f",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/identity/index.ts",
+      "sha256": "c6cd0c3d5317d253f126ae8afff7ba52858eca49d460aadae0b2290c4fe5c2be",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/index.ts",
+      "sha256": "148d2dd441544ae7b028b10c3f879cf1b1f5b4cf3707a15308aa46e40d9bbabb",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/services/canonicalization.ts",
+      "sha256": "1b948fecaa005e1d207cc2e54fc48da39b7f2830bdd29396d361692ad3807287",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
+      "sha256": "713a63c9ee288a60dd86385a88a0e297719cf80cef784cdb91b99f2b8956e47d",
+      "matchesR39FrozenAndCurrentSource": true
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/services/sparql-query.ts",
+      "sha256": "dcccbeb5f82446c9d84ef5c877b2c1340ad062c023469695fbe7e7085c4e187d",
+      "matchesR39FrozenAndCurrentSource": true
+    }
+  ],
+  "designBindings": [
+    {
+      "file": "goals/boolean-creep/designs/color-support-level-flags.md",
+      "sha256": "57cdde407a66b52710e9d8256b9fcf48501036a4734c08ae52592d07606ad876",
+      "unchangedSinceR39": true
+    },
+    {
+      "file": "goals/boolean-creep/designs/langextract-minimal-fold-segment-kind.md",
+      "sha256": "c59a0b8267a9c00afe1069be15fbef0944a0e9ea433cb40e57cf4bbcce7467a0",
+      "unchangedSinceR39": true
+    },
+    {
+      "file": "goals/boolean-creep/designs/r2-foundation-unique-match-search.md",
+      "sha256": "0998085f931e5038bfb407d637704d5ed0d51d51afa97fd4e426bf40293dea29",
+      "unchangedSinceR39": true
+    },
+    {
+      "file": "goals/boolean-creep/designs/r3-foundation-tier-gate-tool-hints.md",
+      "sha256": "13ece9a600765600ab9680c31483d4b90edf0443dbbc7e00a917db2ae2fb71b5",
+      "unchangedSinceR39": true
+    }
+  ],
+  "counts": {
+    "roots": 9,
+    "files": 165,
+    "typescript": 165,
+    "nonTypescript": 0,
+    "seeds": 22,
+    "rawProposals": 2,
+    "acceptedReplacements": 0,
+    "newOwners": 0
+  },
+  "primaryEvidence": {
+    "transcriptHashMatches": true,
+    "exitCode": 0,
+    "endTurn": true,
+    "reportValidationExitCode": 0,
+    "allSourceReadScanLines": [248, 274, 580],
+    "unboundedBooleanSearchLines": [363, 385],
+    "alignmentFullReadLines": [431, 453, 488],
+    "colorFullReadLines": [826, 882, 884, 1084]
+  },
+  "seedLedger": [
+    {
+      "id": "color-support-level-flags",
+      "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+      "line": 267,
+      "symbol": "ColorSupport",
+      "members": ["hasBasic", "has256", "has16m"],
+      "status": "reviewed",
+      "recordedAnchorText": "    hasBasic: S.Boolean,",
+      "currentRowSha256": "8e92b53f83f646450abfbaba59f9a83d6252688bf40628374d3435d83ff4b7ba",
+      "disposition": "retain",
+      "currentAnchorText": "hasBasic: S.Boolean,"
+    },
+    {
+      "id": "backend-capabilities",
+      "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
+      "line": 247,
+      "symbol": "BackendCapabilities",
+      "members": [
+        "constituencyParsing",
+        "coreferenceResolution",
+        "dependencyParsing",
+        "lemmatization",
+        "ner",
+        "posTagging",
+        "relationExtraction",
+        "sentencization",
+        "tokenization"
+      ],
+      "status": "disqualified",
+      "recordedAnchorText": "export class BackendCapabilities extends S.Class<BackendCapabilities>($I`BackendCapabilities`)(",
+      "currentRowSha256": "3d5f2f00384e48a630e2ac343b22f4f1c825d4851e1a7e0671737f2131cdf66b",
+      "disposition": "retain",
+      "currentAnchorText": "export class BackendCapabilities extends S.Class<BackendCapabilities>($I`BackendCapabilities`)("
+    },
+    {
+      "id": "four-hint-annotations",
+      "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+      "line": 44,
+      "symbol": "FourHintAnnotations",
+      "members": ["destructive", "idempotent", "openWorld", "readOnly"],
+      "status": "disqualified",
+      "recordedAnchorText": "    destructive: S.Boolean.annotateKey({",
+      "currentRowSha256": "92abb9e29241ee536e5230b22a0a56cca2e558073235f4b8138df48f3aa7e62c",
+      "disposition": "retain",
+      "currentAnchorText": "destructive: S.Boolean.annotateKey({"
+    },
+    {
+      "id": "annotation-options-include-flags",
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
+      "line": 316,
+      "symbol": "AnnotationOptions",
+      "members": [
+        "includeDependencies",
+        "includeEntities",
+        "includeLemmas",
+        "includePOS"
+      ],
+      "status": "disqualified",
+      "recordedAnchorText": "class AnnotationOptions extends S.Class<AnnotationOptions>($I`AnnotationOptions`)(",
+      "currentRowSha256": "e2bcb487c1bd078fbf5224c84964a8e852f9ae71cd742b2f3fc09b665eac68d7",
+      "disposition": "retain",
+      "currentAnchorText": "class AnnotationOptions extends S.Class<AnnotationOptions>($I`AnnotationOptions`)("
+    },
+    {
+      "id": "corpus-stats-parameters-include-flags",
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/CorpusStats.ts",
+      "line": 21,
+      "symbol": "CorpusStatsParameters",
+      "members": ["includeIdf", "includeMatrix"],
+      "status": "disqualified",
+      "recordedAnchorText": "    includeIdf: S.optionalKey(S.Boolean).annotateKey({",
+      "currentRowSha256": "0fc15e7a076ff1128b0a12ec55ff9115155907fbfb06eaef8448cc06b0ab2f65",
+      "disposition": "retain",
+      "currentAnchorText": "includeIdf: S.optionalKey(S.Boolean).annotateKey({"
+    },
+    {
+      "id": "server-observability-config-toggles",
+      "file": "packages/foundation/capability/observability/src/server/Config.ts",
+      "line": 46,
+      "symbol": "ServerObservabilityConfig",
+      "members": ["otlpEnabled", "devtoolsEnabled"],
+      "status": "disqualified",
+      "recordedAnchorText": "    otlpEnabled: S.Boolean,",
+      "currentRowSha256": "ecdf86f389a5f71f73cb237a563c6b31de31ca923505c0abdbe3de1941804a7f",
+      "disposition": "retain",
+      "currentAnchorText": "otlpEnabled: S.Boolean,"
+    },
+    {
+      "id": "error-reporter-layer-options-flags",
+      "file": "packages/foundation/capability/observability/src/server/ErrorReporting.ts",
+      "line": 66,
+      "symbol": "ErrorReporterLayerOptions",
+      "members": ["includeCause", "mergeWithExisting"],
+      "status": "disqualified",
+      "recordedAnchorText": "    includeCause: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)).annotateKey({",
+      "currentRowSha256": "5fbd75ea4d83e5678991d98a64b6b78c1533d8e15831b14ea9b72febdab78e48",
+      "disposition": "retain",
+      "currentAnchorText": "includeCause: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)).annotateKey({"
+    },
+    {
+      "id": "ai-token-annotation-flags",
+      "file": "packages/foundation/capability/nlp-processing/src/Tools/_schemas.ts",
+      "line": 126,
+      "symbol": "AiToken",
+      "members": ["isPunctuation", "isStopWord"],
+      "status": "disqualified",
+      "recordedAnchorText": "    isPunctuation: describe(S.Boolean, \"Whether the token represents punctuation.\"),",
+      "currentRowSha256": "c13fc78e5b76bad26a4b97451209d795ebbe0f2b2245517e10c71ac7191a25a7",
+      "disposition": "retain",
+      "currentAnchorText": "isPunctuation: describe(S.Boolean, \"Whether the token represents punctuation.\"),"
+    },
+    {
+      "id": "execution-options-cache-trace",
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+      "line": 638,
+      "symbol": "ExecutionOptions",
+      "members": ["cache", "trace"],
+      "status": "disqualified",
+      "recordedAnchorText": "    cache: SchemaUtils.withKeyDefaults(S.Boolean, true),",
+      "currentRowSha256": "a57915cdca0847336948196ecd722ab32545772dbc6c3f2874bec67149dad00b",
+      "disposition": "retain",
+      "currentAnchorText": "cache: SchemaUtils.withKeyDefaults(S.Boolean, true),"
+    },
+    {
+      "id": "shacl-validation-result-flags",
+      "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
+      "line": 284,
+      "symbol": "ShaclValidationResult",
+      "members": ["conforms", "truncated"],
+      "status": "disqualified",
+      "recordedAnchorText": "export class ShaclValidationResult extends S.Class<ShaclValidationResult>($I`ShaclValidationResult`)(",
+      "currentRowSha256": "8637316fbf0b8c398c9d2a94b6dbe711f7d5ae4715cc061e179f141a902e8645",
+      "disposition": "retain",
+      "currentAnchorText": "export class ShaclValidationResult extends S.Class<ShaclValidationResult>($I`ShaclValidationResult`)("
+    },
+    {
+      "id": "source-text-page-nav-flags",
+      "file": "packages/foundation/capability/file-processing/src/SourceText/SourceText.schema.ts",
+      "line": 131,
+      "symbol": "SourceTextPageStruct",
+      "members": ["hasNextPage", "hasPreviousPage"],
+      "status": "disqualified",
+      "recordedAnchorText": "class SourceTextPageStruct extends S.Class<SourceTextPageStruct>($I`SourceTextPageStruct`)(",
+      "currentRowSha256": "ab068aaa34d06a7755b6e2cdc620849581e5716f8f0d7c9875c6d6b58f1ea28c",
+      "disposition": "retain",
+      "currentAnchorText": "class SourceTextPageStruct extends S.Class<SourceTextPageStruct>($I`SourceTextPageStruct`)("
+    },
+    {
+      "id": "supports-color-decision-input-flags",
+      "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+      "line": 86,
+      "symbol": "SupportsColorDecisionInput",
+      "members": ["isTTY", "sniffFlags"],
+      "status": "disqualified",
+      "recordedAnchorText": "    isTTY: S.optionalKey(S.Boolean),",
+      "currentRowSha256": "dde6fcc5539028db41b3f8b96804762fe8a6fb9fc40a5a76e95ea6ff315affa5",
+      "disposition": "retain",
+      "currentAnchorText": "isTTY: S.optionalKey(S.Boolean),"
+    },
+    {
+      "id": "color-heuristic-input-flags",
+      "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+      "line": 103,
+      "symbol": "ColorHeuristicInput",
+      "members": ["isTTY", "sniffFlags"],
+      "status": "disqualified",
+      "recordedAnchorText": "    isTTY: S.optionalKey(S.Boolean),",
+      "currentRowSha256": "bd6262183b909a039d8e4dc5dd15f64e0acaa625b771c2991d9c57df0d9e9087",
+      "disposition": "retain",
+      "currentAnchorText": "isTTY: S.optionalKey(S.Boolean),"
+    },
+    {
+      "id": "langextract-minimal-fold-segment-kind",
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
+      "line": 186,
+      "symbol": "minimalFoldTokens.segmentKind",
+      "members": ["endOfLineHyphen", "whitespace"],
+      "status": "designed",
+      "recordedAnchorText": "          const segmentKind = {",
+      "currentRowSha256": "501af457d7228e219749153988a16b46bd3409f26c7742a00bb95d007e4b830b",
+      "disposition": "retain",
+      "currentAnchorText": "const segmentKind = {"
+    },
+    {
+      "id": "path-safety-atomic-write-remove-options",
+      "file": "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.service.ts",
+      "line": 291,
+      "symbol": "writeWithinCanonicalRootAtomically",
+      "members": ["force", "recursive"],
+      "status": "disqualified",
+      "recordedAnchorText": "        const cleanup = fs.remove(temporaryDirectory, { force: true, recursive: true });",
+      "currentRowSha256": "8ad30e123708bb429e94428539dac09ad38cba397cffd396f356368aecf3fc42",
+      "disposition": "retain",
+      "currentAnchorText": "const cleanup = fs.remove(temporaryDirectory, { force: true, recursive: true });"
+    },
+    {
+      "id": "r2-foundation-retry1-cause-redaction-truncation",
+      "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+      "line": 352,
+      "symbol": "redactCauseSummary",
+      "members": ["messageTruncated", "detailTruncated"],
+      "status": "disqualified",
+      "recordedAnchorText": "  const messageTruncated = wasTruncated(summary.primaryMessage, options.messageLimit);",
+      "currentRowSha256": "e09bcd42b1c79282973809c1d8b81bc53d2754b811df925d880185a2af90244e",
+      "disposition": "retain",
+      "currentAnchorText": "const messageTruncated = wasTruncated(summary.primaryMessage, options.messageLimit);"
+    },
+    {
+      "id": "r2-foundation-unique-match-search",
+      "file": "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts",
+      "line": 32,
+      "symbol": "UniqueMatchSearch / MinimalFoldMatchSearch",
+      "members": ["ambiguous", "match", "exhausted"],
+      "status": "designed",
+      "recordedAnchorText": "interface UniqueMatchSearch {",
+      "currentRowSha256": "782ed7f51323eb29f18f4ce57fb4cfabdd20bb17e26721b3475828614c5d8970",
+      "disposition": "retain",
+      "currentAnchorText": "interface UniqueMatchSearch {"
+    },
+    {
+      "id": "r3-foundation-tier-gate-tool-hints",
+      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+      "line": 464,
+      "symbol": "fromApprovedToolsPolicy.evaluate",
+      "members": ["destructive", "readOnly", "approved"],
+      "status": "designed",
+      "recordedAnchorText": "      const destructive = isDestructive(request.tool);",
+      "currentRowSha256": "b9e466390e955b9ab8cec655fde431f6e66c07bf441c6379130216df8aeaa603",
+      "disposition": "retain",
+      "currentAnchorText": "const destructive = isDestructive(request.tool);"
+    },
+    {
+      "id": "r3-foundation-verified-span-source-failure-facts",
+      "file": "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts",
+      "line": 619,
+      "symbol": "sourceFailureMatchesEvidence",
+      "members": [
+        "expectedInMatter",
+        "sourceInMatter",
+        "expectedVersionSupported",
+        "sourceVersionSupported"
+      ],
+      "status": "disqualified",
+      "recordedAnchorText": "  const expectedInMatter = Eq.equals(attempt.matterRef, attempt.expectedSource.scopeRef);",
+      "currentRowSha256": "1146cc10e1563ad3d4eb68e8e623c26cbbcf8c190871de01aa98b9365610b1e0",
+      "disposition": "retain",
+      "currentAnchorText": "const expectedInMatter = Eq.equals(attempt.matterRef, attempt.expectedSource.scopeRef);"
+    },
+    {
+      "id": "r31-foundation-capability-mcp-wire-tool-annotations",
+      "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+      "line": 458,
+      "symbol": "wireToolFor.annotations",
+      "members": [
+        "readOnlyHint",
+        "destructiveHint",
+        "idempotentHint",
+        "openWorldHint"
+      ],
+      "status": "disqualified",
+      "recordedAnchorText": "    annotations: {",
+      "currentRowSha256": "8b42eb0d5eba8f44f399eed2060c0ac980104608b2605a12bfc730688ad3f5d3",
+      "disposition": "retain",
+      "currentAnchorText": "annotations: {"
+    },
+    {
+      "id": "r32-foundation-capability-http-protocol-supports",
+      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
+      "line": 929,
+      "symbol": "layerProtocolHttp",
+      "members": ["supportsAck", "supportsTransferables"],
+      "status": "disqualified",
+      "recordedAnchorText": "          supportsAck: false,",
+      "currentRowSha256": "457154edbdd8b3b47ebce1141322aa7609c0e9ec45b3b955a09479bd222041a5",
+      "disposition": "retain",
+      "currentAnchorText": "supportsAck: false,"
+    },
+    {
+      "id": "r32-foundation-capability-ndjson-protocol-supports",
+      "file": "packages/foundation/capability/mcp-kit/src/client.ts",
+      "line": 1084,
+      "symbol": "layerProtocolNdjson",
+      "members": ["supportsAck", "supportsTransferables"],
+      "status": "disqualified",
+      "recordedAnchorText": "          supportsAck: false,",
+      "currentRowSha256": "ef8815cc2a3a2f7687cedbb9ab5b7a6f566d12a7b6299f7506e8f4a272376eb9",
+      "disposition": "retain",
+      "currentAnchorText": "supportsAck: false,"
+    }
+  ],
+  "rawDispositions": [
+    {
+      "id": "color-support-level-flags",
+      "decision": "reject-replacement",
+      "reason": "Canonical design explicitly measures named three-Boolean projection8/3 while retaining level as source state. Full class264-274 has3actualBooleans plus numeric literal level.32 is the full product abstraction, not a correction of the existing member projection. Node318-329 emits false for0 and enabled stacks for1/2/3; browser41-53 emits1/3. Public schema permits arbitrary tuples; retain that compatibility distinction and do not narrow decoder/fixture acceptance from detector writers. Existing design already carries public structural migration caveat. No source or design drift demonstrated. Preserve reviewed status."
+    },
+    {
+      "id": "r2-foundation-unique-match-search",
+      "decision": "reject-replacement",
+      "reason": "Complete MinimalFoldMatchSearch114-116 inherits ambiguous and match from UniqueMatchSearch32-35. ActualBooleanCount2; match Option is allowed finite payload-presence axis after recall, not a third Boolean. Existing8/4 means none, unique(payload), ambiguous, exhausted. Writers354-360 and consumer466-489 preserve this relationship. Raw33 is inherited first field, not MinimalFold declaration, and removing match from named projection while retaining8/4 obscures axis accounting. Canonical combined owner anchor32 and designed status are correct. Exact source matches priorR38 full audit."
+    }
+  ],
+  "metadataDispositions": [
+    {
+      "symbol": "BackendCapabilities",
+      "canonicalLine": 247,
+      "reportedFirstBooleanLine": 250,
+      "decision": "retain-declaration-anchor"
+    },
+    {
+      "symbol": "AnnotationOptions",
+      "canonicalLine": 316,
+      "reportedFirstBooleanLine": 318,
+      "decision": "retain-declaration-anchor"
+    }
+  ],
+  "coverageLimit": "Bounded reconciliation uses complete primary source scan/search evidence plus exact165-file source-forward identity and prior22-owner ledger; not a fresh blanket P3 review.",
+  "findings": [],
+  "unresolvedOwnerQuestions": [],
+  "proposedRows": [],
+  "proposedDesignChanges": [],
+  "delta": {
+    "rows": 0,
+    "qualified": 0,
+    "designs": 0
+  },
+  "P3Credit": false,
+  "dryCredit": false,
+  "sourceAndCanonicalEdited": false
+}

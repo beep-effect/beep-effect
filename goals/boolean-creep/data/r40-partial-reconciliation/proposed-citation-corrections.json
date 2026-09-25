@@ -1,0 +1,64 @@
+[
+  {
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "nlp-mcp-text-stream-options",
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "line": 251,
+      "symbol": "TextStreamOptions",
+      "kind": "schema-struct",
+      "members": ["skipEmpty", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Spreads TextReadOptions.fields; skipEmpty and trim remain independent windowed-read toggles, not exclusive states."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "nlp-mcp-text-stream-options",
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "line": 253,
+      "symbol": "TextStreamOptions",
+      "kind": "schema-struct",
+      "members": ["skipEmpty", "trim"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D1",
+        "note": "Spreads TextReadOptions.fields; skipEmpty and trim remain independent windowed-read toggles, not exclusive states."
+      }
+    },
+    "reason": "Declaration253; old251 is JSDoc."
+  },
+  {
+    "before": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "openclaw-telegram-channel-document-flags",
+      "file": "packages/drivers/openclaw/src/OpenclawRender.ts",
+      "line": 126,
+      "symbol": "telegramChannelDocument",
+      "kind": "type-literal",
+      "members": ["configWrites", "enabled"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "OpenClaw Telegram channel config.json wire fields emitted by the deployment renderer; configWrites and enabled are independent channel settings in the external configuration surface."
+      }
+    },
+    "after": {
+      "schemaVersion": "boolean-creep-inventory/v1",
+      "id": "openclaw-telegram-channel-document-flags",
+      "file": "packages/drivers/openclaw/src/OpenclawRender.ts",
+      "line": 123,
+      "symbol": "telegramChannelDocument",
+      "kind": "object-literal",
+      "members": ["configWrites", "enabled"],
+      "status": "disqualified",
+      "disqualifier": {
+        "class": "D2",
+        "note": "OpenClaw Telegram channel config.json wire fields emitted by the deployment renderer; configWrites and enabled are independent channel settings in the external configuration surface."
+      }
+    },
+    "reason": "Actual object-literal owner123; Boolean fields125/127, old126 is dmPolicy."
+  }
+]
