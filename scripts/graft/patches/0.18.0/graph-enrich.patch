@@ -1,0 +1,32 @@
+--- a/graph/enrich.js
++++ b/graph/enrich.js
+@@ -40,12 +40,28 @@
+         errors: [],
+         failedFiles: 0,
+         skippedFiles: 0,
++        excluded: 0,
+     };
+     // Which nodes actually need an LLM call this run (after cache carry-over).
+     const dirty = [];
++    // Local patch (2026-09-25): `.graftignore` (util/deep-ignore.js) takes a file
++    // out of the meaning tier. Its symbols become `excluded` (neither `pending`
++    // nor `stale`, so `graft check` stops asking for a deep build) but keep any
++    // prior summary/crux, and an `excluded` node with an unchanged body is a cache
++    // hit again once the file leaves the list, so ignoring is free to reverse.
++    const ignore = opts.ignore ?? (() => false);
+     for (const node of nodes) {
+         const was = prior.get(node.id);
+-        if (was?.summary_state === "ready" && was.body_hash === node.body_hash) {
++        if (ignore(node.path)) {
++            const keep = was && was.body_hash === node.body_hash && was.summary ? was : undefined;
++            node.summary = keep?.summary ?? null;
++            node.crux = keep?.crux ?? null;
++            node.summary_state = "excluded";
++            stats.excluded++;
++            continue;
++        }
++        const reusable = was?.summary_state === "ready" || (was?.summary_state === "excluded" && Boolean(was.summary));
++        if (was && reusable && was.body_hash === node.body_hash) {
+             node.summary = was.summary;
+             node.crux = was.crux;
+             node.summary_state = "ready";
