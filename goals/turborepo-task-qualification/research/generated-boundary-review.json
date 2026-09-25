@@ -1,0 +1,23 @@
+{
+  "authority": "generated-boundary-dependency-repair",
+  "head": "da096d1852bd5fc62696e26c59c100e9e91dad0b",
+  "sources": [
+    {
+      "path": "standards/fallow.boundaries.generated.jsonc",
+      "sha256": "aeade3c784b2364c13fd94f61f8845e5af74c70a3b6c9522b337c145c86bebfe"
+    }
+  ],
+  "generator": "bun run fallow:boundaries:write",
+  "validation": {
+    "command": "bun run fallow:boundaries:check",
+    "exit": 0
+  },
+  "findings": [
+    "Generated AI-sync allow and allowTypeOnly arrays each remove only @beep/types, matching the previously removed development dependency.",
+    "The exact-head local publication and hosted Repo Sanity both rejected the stale generated boundary projection."
+  ],
+  "limits": [
+    "No cache policy expansion, qualification transition, signed runtime evidence or semantic closure.",
+    "All existing unresolved census obligations remain."
+  ]
+}

@@ -2085,3 +2085,11 @@ baseline was expanded to waive the findings.
   its inherited rootDir excludes tests.
 - The generated package-test-typecheck script invokes the canonical synthetic
   config builder. Read that script before selecting a direct compiler command.
+
+### 2026-09-25 — Dependency repair omitted generated boundary permissions
+- Removing the AI-sync types development dependency updated the lockfile and
+  TypeScript references but left Fallow boundary permissions stale. Both local
+  publication and #1268 Repo Sanity failed `fallow:boundaries:config-check`.
+- `bun run fallow:boundaries:write` removes two obsolete permission entries;
+  `bun run fallow:boundaries:check` passes. Dependency repair should refresh this
+  projection alongside TypeScript references before publication.

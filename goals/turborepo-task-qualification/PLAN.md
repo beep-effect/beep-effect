@@ -1937,3 +1937,17 @@ this static result is not an assertion that all their runtime behaviors are
 in scope or unreviewed. See
 [the diagnostic](./research/registered-command-binding-audit.json).
 Historical runtime evidence is not renewed by dependency/source hash refresh.
+
+### Generated boundary repair and transitive discovery — 2026-09-25
+
+The AI-sync dependency removal also requires regenerating Fallow boundary
+permissions. The canonical generator removes exactly two obsolete types-package
+entries; its check passes. See [the receipt](./research/generated-boundary-review.json).
+
+Conservative relative-import traversal from the root command registry discovers
+604 source files and 2519 edges, including type and lazy imports. Of those files,
+448 are absent from the existing source attachment. External package edges are
+not traversed, and this is not an execution or semantic-closure proof. See
+[the discovery inventory](./research/cli-relative-import-discovery.json).
+The attachment adds only the generated boundary file and its bounded review;
+all 14 unresolved obligations remain. No runtime evidence is renewed.
