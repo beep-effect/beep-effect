@@ -2141,3 +2141,16 @@ transitive helpers, runtime captures, and signed comparisons remain open.
 The canonical attachment accepted this receipt as review 52: 1,014 sources and
 six artifacts, with all 14 unresolved obligations retained. The direct schema
 review does not prove safe capture, immutable remote identity or runtime purity.
+
+### Refs helper inputs and capture correction
+
+[Refs transitive semantics](research/refs-transitive-semantics.json) reviews the
+shared systemd helpers and root discovery, plus selected process-capture bodies.
+It identifies filesystem metadata, current-directory, interpreter, installed-unit
+and admission-metadata inputs. It corrects the prior receipt: the capture bound
+is 8,388,608 string characters plus a truncation notice, not an 8 MiB byte limit.
+Merged stdout/stderr ordering and child registration remain relevant effects.
+The canonical attachment accepted this supplemental receipt as review 53 and
+bound four previously absent helper sources: 1,018 sources, six artifacts and
+14 unresolved obligations. Transitive closure and runtime qualification remain
+incomplete.
