@@ -31,6 +31,8 @@ import * as Str from "effect/String";
 import type { TurboCacheValueSource } from "@beep/repo-cli/test/SharedInternals";
 
 const decodeTurboCachePlanEffect = S.decodeEffect(TurboCachePlan);
+const decodeTurboCachePlanJson = S.decodeEffect(S.fromJsonString(TurboCachePlan));
+const encodeTurboCachePlanJson = S.encodeEffect(S.fromJsonString(TurboCachePlan));
 
 const REMOTE_READ_MODE = TurboCacheMode.Enum.LocalWriteRemoteRead;
 const LOCAL_ONLY_ARG = `--cache=${TurboCacheMode.Enum.LocalOnly}`;
@@ -285,7 +287,7 @@ describe("shared turbo cache directory", () => {
   it.effect("round-trips a plan that carries the directory", () =>
     Effect.gen(function* () {
       const plan = resolveTurboCachePlan(withHome(TurboCacheEnvironment.make({})), { args: [], ci: false });
-      expect(yield* decodeTurboCachePlanEffect(JSON.parse(JSON.stringify(plan)))).toEqual(plan);
+      expect(yield* decodeTurboCachePlanJson(yield* encodeTurboCachePlanJson(plan))).toEqual(plan);
     })
   );
 });
