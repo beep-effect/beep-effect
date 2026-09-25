@@ -1,0 +1,22 @@
+{
+  "expectedRevision": 4,
+  "entry": {
+    "key": {
+      "computation": "@beep/test-runner#lint",
+      "layer": "turbo-task-result",
+      "profile": "local-linux-x64-bun1.4.2",
+      "epoch": "qualification-v2"
+    },
+    "status": {
+      "state": "excluded",
+      "review": {
+        "reviewer": "goal-executor",
+        "reason": "Require fresh dependency observations in the expanded identity pilot; no accepted qualification receipt and no unsafe-reuse finding.",
+        "basis": {
+          "path": "goals/turborepo-task-qualification/research/dependency-lint-exclusion-review.md",
+          "sha256": "cb188d63404ad76b063b384f65819043d1f676b396e906e3e82c0002e2ee57e4"
+        }
+      }
+    }
+  }
+}

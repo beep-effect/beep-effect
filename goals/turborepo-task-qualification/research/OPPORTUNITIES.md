@@ -1754,6 +1754,19 @@ corruption setup without dropping negative cases; all 19 orchestration tests
 pass. Run local Fallow with an explicit `--base origin/main` outside Yeet:
 the root wrapper uses `BEEP_PROOF_BASE`, and an unset value fails resolution.
 
+
+### 2026-09-25 — Expanded dependencies require baseline scope before transition
+
+While excluding the newly selected pilot dependencies, `beep cache transition`
+rejected the first request: "Transition is outside the reviewed pilot scope,
+profile or epoch." The ledger was unchanged. Regenerating the reviewed baseline
+with the four-task scope before applying transitions resolved the refusal. A
+preflight showing scope membership alongside ledger revision would make this
+ordering explicit. The merged repair checkout also retained installed Turbo
+2.11.2 despite a 2.11.3 lockfile; a newly bootstrapped experiment lane resolved
+that mismatch. Clean-install proof in a separate checkout is not evidence that
+the experiment checkout itself has synchronized dependencies.
+
 ### 2026-09-25 — Fixture copies changed symlink input bytes
 
 The expanded stable pilot v19 failed before its matrix with "Read-only pilot
