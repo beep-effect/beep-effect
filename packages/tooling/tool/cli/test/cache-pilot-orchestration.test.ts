@@ -203,7 +203,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       task: "lint",
       command: O.some("bun run beep:lint"),
       commandDigest: digest,
-      dependencies: id === task ? dependencyTasks : [],
+      dependencies: id === task ? selectedDependencies : [],
       configuration:
         profile && id === task
           ? CacheTaskConfiguration.make({ ...configuration, passThroughEnv: ["BIOME_CONFIG_PATH"] })
@@ -376,7 +376,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
               task: "lint",
               package: O.getOrThrow(A.head(Str.split("#")(id))),
               command: fault === "wrong-command" ? "unreviewed" : "bun run beep:lint",
-              dependencies: id === task ? dependencyTasks : [],
+              dependencies: id === task ? selectedDependencies : [],
               inputs: {},
               resolvedTaskDefinition: { ...configuration, passThroughEnv: [] },
               hash: taskHash,
@@ -447,7 +447,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
                   });
                   const writeObservation = Effect.fn("PilotOrchestrationTest.writeObservation")(function* () {
                     const selected = nativeTask(task, taskHash, hit, exitCode);
-                    const dependency = A.map(dependencyTasks, (id) =>
+                    const dependency = A.map(selectedDependencies, (id) =>
                       nativeTask(id, "fedcba9876543210", fault === "dependency-hit")
                     );
                     yield* write(
