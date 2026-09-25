@@ -49,6 +49,8 @@
       "Bash(bun run beep laws:*)",
       "Bash(bun run beep research install-timers:*)",
       "Bash(bun run beep graft deep install-timer --refresh:*)",
+      "Bash(bun run beep refs plan:*)",
+      "Bash(bun run beep refs install-timer --refresh:*)",
       "Bash(systemctl --user list-timers:*)",
       "Bash(systemctl --user status beep-:*)",
       "Bash(journalctl --user -u beep-:*)",
@@ -83,6 +85,8 @@
       "Edit(**/.github/workflows/**)",
       "Edit(**/docs/_internal/**)",
       "Edit(**/.claude/settings.json)",
+      "Bash(bun run beep refs refresh:*)",
+      "Bash(bun run beep refs install-timer)",
       "Bash(graft init:*)",
       "Bash(graft uninstall:*)",
       "Bash(graft upgrade:*)"

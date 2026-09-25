@@ -1,8 +1,10 @@
 import { Age } from "@beep/schema/Age";
 import { NonNegativeInt } from "@beep/schema/Number";
+import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
-import { describe, expect, expectTypeOf, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, pipe } from "effect";
 import * as S from "effect/Schema";
 import type { Int } from "@beep/schema/Int";
 
@@ -32,7 +34,9 @@ describe("Age", () => {
     "rejects out-of-range, fractional, and non-numeric ages",
     Effect.fnUntraced(function* () {
       for (const value of [-1, 0, 151, 1.5, "42"]) {
-        expect(Exit.isFailure(yield* Effect.exit(decodeUnknownAge(value)))).toBe(true);
+        pipe(yield* Effect.exit(decodeUnknownAge(value)), Exit.isFailure, (failed) =>
+          assertTrue(failed, `Invalid Age input: ${JSON.stringify(value)}`)
+        );
       }
     })
   );
@@ -49,8 +53,8 @@ describe("Number schemas", () => {
       expect(yield* decodeNonNegativeInt(0)).toBe(0);
       expect(yield* decodeNonNegativeInt(42)).toBe(42);
 
-      expect(Exit.isFailure(yield* Effect.exit(decodeNonNegativeInt(-1)))).toBe(true);
-      expect(Exit.isFailure(yield* Effect.exit(decodeNonNegativeInt(1.5)))).toBe(true);
+      pipe(yield* Effect.exit(decodeNonNegativeInt(-1)), Exit.isFailure, assertTrue);
+      pipe(yield* Effect.exit(decodeNonNegativeInt(1.5)), Exit.isFailure, assertTrue);
     })
   );
 });

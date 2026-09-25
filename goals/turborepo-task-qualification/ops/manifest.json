@@ -339,7 +339,8 @@
     "research/nested-command-controls-current.json",
     "research/lambda-zip-controls-current.json",
     "research/census-config-delta-review.json",
-    "research/ci-entrypoint-delta-review.json"
+    "research/ci-entrypoint-delta-review.json",
+    "research/main-alias-integration-repair.json"
   ],
   "agentLaunchers": [
     {

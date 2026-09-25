@@ -51,9 +51,7 @@
   "frictions": [
     {
       "source": "user-X",
-      "tools": [
-        "search_posts_all"
-      ],
+      "tools": ["search_posts_all"],
       "error": "client-not-enrolled",
       "detail": "X connector search_posts_all: client-not-enrolled (Appropriate Level of API Access) — skipped; continued without X."
     },

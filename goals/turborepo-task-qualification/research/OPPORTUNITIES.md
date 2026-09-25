@@ -2013,3 +2013,12 @@ still requests `git diff --name-only` and splits/trim lines. Source receipt:
 to the actual reader, and synchronized documentation, would prevent treating
 the comment as evidence of lossless handling. This review does not establish
 a hosted admission exploit or qualify external verdict reuse.
+
+### Generated alias drift discovered in merged preview — 2026-09-25
+
+The full merged-preview proof failed `lint:tsgo-rules` because main added the
+Refs command path without its `vitest.aliases.generated.json` projection.
+Regenerating from root `compilerOptions.paths` added three lines and restored
+the parity check. Evidence: `research/main-alias-integration-repair.json`.
+Updating both projections when adding command exports would avoid discovering
+this after a long proof queue. No baseline was weakened.

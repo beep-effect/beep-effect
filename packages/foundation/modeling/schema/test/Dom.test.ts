@@ -4,7 +4,8 @@ import { DOMEvent } from "@beep/schema/DomEvent";
 import { DOMHtmlElement, isHTMLElement } from "@beep/schema/DomHtmlElement";
 import { DOMMouseEvent } from "@beep/schema/DomMouseEvent";
 import { createDOMRefSchema, DOMReactNode, isReactNode, isReactRef } from "@beep/schema/DomReactNode";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { afterAll, beforeAll, describe, expect } from "@effect/vitest";
 import { DateTime } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -33,13 +34,32 @@ const DragEventConstructor = domConstructorOr("DragEvent", TestDragEvent);
 const HTMLElementConstructor = domConstructorOr("HTMLElement", TestHTMLElement);
 const MouseEventConstructor = domConstructorOr("MouseEvent", TestMouseEvent);
 
-Object.assign(globalThis, {
-  DragEvent: DragEventConstructor,
-  HTMLElement: HTMLElementConstructor,
-  MouseEvent: MouseEventConstructor,
-});
+describe("DOM element and event guards", { concurrent: false }, () => {
+  const constructors = {
+    DragEvent: DragEventConstructor,
+    HTMLElement: HTMLElementConstructor,
+    MouseEvent: MouseEventConstructor,
+  };
+  let originalDescriptors: ReadonlyArray<readonly [string, PropertyDescriptor | undefined]> = [];
 
-describe("DOM element and event guards", () => {
+  beforeAll(() => {
+    originalDescriptors = Object.keys(constructors).map((name) => [
+      name,
+      Object.getOwnPropertyDescriptor(globalThis, name),
+    ]);
+    Object.assign(globalThis, constructors);
+  });
+
+  afterAll(() => {
+    for (const [name, descriptor] of originalDescriptors) {
+      if (descriptor === undefined) {
+        Reflect.deleteProperty(globalThis, name);
+      } else {
+        Object.defineProperty(globalThis, name, descriptor);
+      }
+    }
+  });
+
   it("recognizes DOM class-backed values", () => {
     const element = new HTMLElementConstructor();
     const dragEvent = new DragEventConstructor("dragstart");

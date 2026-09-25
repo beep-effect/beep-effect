@@ -1,7 +1,11 @@
 import { isPromise, PromiseSchema } from "@beep/schema/PromiseSchema";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as Result from "effect/Result";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 
 // Promise identity is the data under test, not async work for the Effect runtime to await.
@@ -43,10 +47,12 @@ describe("PromiseSchema", () => {
       };
 
       expect(isPromise(thenable)).toBe(false);
-      const failure1 = yield* Effect.result(decodeUnknownPromisePayload({ value: thenable }));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toMatch(/Expected @beep\/schema\/PromiseSchema\/PromiseSchema/);
+      const failure1 = yield* Effect.exit(decodeUnknownPromisePayload({ value: thenable }));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toMatch(
+          /Expected @beep\/schema\/PromiseSchema\/PromiseSchema/
+        );
       }
     })
   );
@@ -55,10 +61,12 @@ describe("PromiseSchema", () => {
     "rejects non-promise values",
     Effect.fnUntraced(function* () {
       expect(isPromise("nope")).toBe(false);
-      const failure2 = yield* Effect.result(decodeUnknownPromisePayload({ value: "nope" }));
-      expect(Result.isFailure(failure2)).toBe(true);
-      if (Result.isFailure(failure2)) {
-        expect(failure2.failure.message).toMatch(/Expected @beep\/schema\/PromiseSchema\/PromiseSchema/);
+      const failure2 = yield* Effect.exit(decodeUnknownPromisePayload({ value: "nope" }));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure2)) {
+        expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toMatch(
+          /Expected @beep\/schema\/PromiseSchema\/PromiseSchema/
+        );
       }
     })
   );

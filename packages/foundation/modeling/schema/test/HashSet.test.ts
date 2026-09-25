@@ -1,12 +1,16 @@
 import { fcRuns } from "@beep/fc-runs";
 import { HashSet } from "@beep/schema/HashSet";
 import { withKeyDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
 import * as HashSet_ from "effect/HashSet";
+import * as Option from "effect/Option";
 import * as Order from "effect/Order";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -43,10 +47,10 @@ describe("HashSet", () => {
       // This is the whole reason the module exists: `effect/Schema`'s own
       // `HashSet` accepts a live set here and encodes back to one, which no jsonb
       // column can hold and no driver row can return.
-      const failure1 = yield* Effect.result(S.decodeUnknownEffect(schema)(HashSet_.make("1", "2")));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("Expected array");
+      const failure1 = yield* Effect.exit(S.decodeUnknownEffect(schema)(HashSet_.make("1", "2")));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain("Expected array");
       }
     })
   );
@@ -56,10 +60,10 @@ describe("HashSet", () => {
     Effect.fnUntraced(function* () {
       const schema = HashSet(S.FiniteFromString);
 
-      const failure2 = yield* Effect.result(S.decodeUnknownEffect(schema)(["1", null]));
-      expect(Result.isFailure(failure2)).toBe(true);
-      if (Result.isFailure(failure2)) {
-        expect(failure2.failure.message).toContain(`Expected string
+      const failure2 = yield* Effect.exit(S.decodeUnknownEffect(schema)(["1", null]));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure2)) {
+        expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(`Expected string
   at [1]`);
       }
     })

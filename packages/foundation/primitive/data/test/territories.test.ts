@@ -8,7 +8,8 @@ import {
   TerritoryDataReleaseTag,
   TerritoryDataValues,
 } from "@beep/data/Territories";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 
 describe("Territories", () => {
   it("exports generated CLDR territory literals and lookup maps", () => {

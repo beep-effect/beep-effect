@@ -1665,3 +1665,11 @@ NUL-delimited output. Lossless filename handling is not proved. The operational
 census accepted the review, retaining 968 sources, six artifacts, 26 reviews
 and all 13 unresolved obligations. Hosted execution and downstream runtime
 semantics remain separate evidence requirements; no tuple is qualified.
+
+### Main integration alias repair — 2026-09-25
+
+The running merged-preview proof exposed inherited generated Vitest alias drift
+for the new Refs command. Main merged cleanly, and regenerating the alias data
+added exactly that missing entry. The tsgo-rules/alias-parity gate passed; see
+`research/main-alias-integration-repair.json`. Final merged-head proof remains
+required. Frozen experiments retain their original source and runtime identity.

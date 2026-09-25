@@ -1,10 +1,13 @@
 import { fcRuns } from "@beep/fc-runs";
 import * as Duration from "@beep/schema/Duration";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Cause from "effect/Cause";
 import * as D from "effect/Duration";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -30,10 +33,12 @@ describe("DurationInput", () => {
   it.effect(
     "rejects empty duration objects",
     Effect.fnUntraced(function* () {
-      const failure1 = yield* Effect.result(decodeUnknownDurationInputEffect({}));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("Duration object must include at least one populated unit field.");
+      const failure1 = yield* Effect.exit(decodeUnknownDurationInputEffect({}));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, O.getOrThrow).message).toContain(
+          "Duration object must include at least one populated unit field."
+        );
       }
     })
   );
@@ -108,10 +113,12 @@ describe("DurationFromInput", () => {
   it.effect(
     "preserves DurationInput validation failures",
     Effect.fnUntraced(function* () {
-      const failure2 = yield* Effect.result(decodeUnknownDurationFromInputEffect({}));
-      expect(Result.isFailure(failure2)).toBe(true);
-      if (Result.isFailure(failure2)) {
-        expect(failure2.failure.message).toContain("Duration object must include at least one populated unit field.");
+      const failure2 = yield* Effect.exit(decodeUnknownDurationFromInputEffect({}));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure2)) {
+        expect(pipe(failure2.cause, Cause.findErrorOption, O.getOrThrow).message).toContain(
+          "Duration object must include at least one populated unit field."
+        );
       }
     })
   );
@@ -119,10 +126,10 @@ describe("DurationFromInput", () => {
   it.effect(
     "forbids encoding normalized Duration values back to the source boundary",
     Effect.fnUntraced(function* () {
-      const failure3 = yield* Effect.result(encodeDurationFromInputEffect(D.seconds(1)));
-      expect(Result.isFailure(failure3)).toBe(true);
-      if (Result.isFailure(failure3)) {
-        expect(failure3.failure.message).toContain(
+      const failure3 = yield* Effect.exit(encodeDurationFromInputEffect(D.seconds(1)));
+      pipe(failure3, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure3)) {
+        expect(pipe(failure3.cause, Cause.findErrorOption, O.getOrThrow).message).toContain(
           "Encoding DurationFromInput results back to the original duration input is not supported"
         );
       }

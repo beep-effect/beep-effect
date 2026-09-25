@@ -1,0 +1,81 @@
+{
+  "package": "@beep/obs",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T16:02:31.056784+00:00",
+  "totalMs": 4071.993896484375,
+  "testCount": 21,
+  "files": [
+    {
+      "file": "packages/drivers/obs/test/Obs.equivalence.test.ts",
+      "ms": 1.799560546875,
+      "tests": 2
+    },
+    {
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "ms": 16.44970703125,
+      "tests": 8
+    },
+    {
+      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
+      "ms": 26.993896484375,
+      "tests": 10
+    },
+    {
+      "file": "packages/drivers/obs/test/integration/Obs.live.test.ts",
+      "ms": 0,
+      "tests": 1
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
+      "testName": "ObsProtocol.connectWith tags a close-4009 handshake rejection as an authentication failure",
+      "ms": 19.548221000000012
+    },
+    {
+      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
+      "testName": "ObsProtocol.connectWith answers an authentication challenge with the derived authentication string",
+      "ms": 17.996752000000015
+    },
+    {
+      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
+      "testName": "ObsProtocol.connectWith completes the handshake without authentication and identifies with the configured subscriptions",
+      "ms": 17.02756999999974
+    },
+    {
+      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
+      "testName": "ObsProtocol.connectWith fails the handshake actionably when authentication is required but no password is configured",
+      "ms": 15.144308999999794
+    },
+    {
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "testName": "Obs ensureRunning decodes GetVersion and reports the spawn origin",
+      "ms": 13.293949999999768
+    },
+    {
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "testName": "Obs ensureQaScene provisions the scene and input when missing and reads back the restore token",
+      "ms": 13.083536999999978
+    },
+    {
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "testName": "Obs ensureQaScene is idempotent when the scene and input already exist and the input is attached",
+      "ms": 13.067011999999977
+    },
+    {
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "testName": "Obs ensureQaScene attaches a pre-existing global input that is missing from the QA scene",
+      "ms": 13.057908000000225
+    },
+    {
+      "file": "packages/drivers/obs/test/Obs.service.test.ts",
+      "testName": "Obs startRecording sets the record directory, awaits STARTED, and anchors the clock",
+      "ms": 13.050106000000142
+    },
+    {
+      "file": "packages/drivers/obs/test/ObsProtocol.test.ts",
+      "testName": "computeObsAuthentication reproduces the documented obs-websocket authentication vector",
+      "ms": 11.980669000000034
+    }
+  ]
+}
