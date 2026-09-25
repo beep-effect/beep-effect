@@ -192,8 +192,10 @@ question, rejected option and cite.
       new P0/P1 wave on its own PR with the rows still live, and reaches
       `ready` exit 0 on re-run; `MonitorLoop` and `WatchMode` both import
       `Converge.ts`.
-- [ ] W3: one `base-conflict` row per head, idempotent across polls; a
-      `cleared` ack lands only when the same head is observed mergeable.
+- [ ] W3: one `base-conflict` row per (head, generation), idempotent across
+      polls; a `cleared` ack lands only when the same head is observed
+      mergeable, and a conflict that returns on that head after it writes
+      generation + 1 as a new row and wave.
 - [ ] W4: `--watch` and `--until-ready` on one branch keep separate
       watermarks; the backlog becomes rows bounded by the submit time; the
       first namespaced run replays nothing.

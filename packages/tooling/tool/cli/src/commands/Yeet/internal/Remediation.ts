@@ -60,6 +60,7 @@ import {
   YeetFailureCapsule,
   YeetInboxSeverity,
   yeetBaseConflictRowId,
+  yeetInboxAckPath,
   yeetInboxPaths,
   yeetInboxRowId,
 } from "./Inbox.ts";
@@ -878,22 +879,28 @@ const renderYeetBaseConflictDispatchLine = (outcome: YeetRemediationOutcome, row
  *
  * **Details**
  *
- * Counts the head's base-conflict rows that carry a `cleared` receipt, by
- * walking the deterministic id chain from generation 0 and stopping at the
- * first id without one. Generation n + 1 is only ever written after
- * generation n was acked `cleared`, so the walk sees every cleared row. While
- * the latest row is still open this returns its generation, so every poll
- * and a restarted monitor derive the same id and append nothing; after the
- * loop acks it `cleared`, the next conflict on the same head gets the next
- * generation and a new row.
+ * Counts the head's consumed base-conflict rows, by walking the
+ * deterministic id chain from generation 0 and stopping at the first id that
+ * is not consumed. A row is consumed when its ack receipt is `cleared`, or
+ * when a receipt file exists but does not decode. Generation n + 1 is only
+ * ever written after generation n was consumed, so the walk sees every
+ * consumed row. While the latest row is still open this returns its
+ * generation, so every poll and a restarted monitor derive the same id and
+ * append nothing; after the loop acks it `cleared`, the next conflict on the
+ * same head gets the next generation and a new row.
  *
  * **Gotchas**
  *
  * The walk reads the ack receipts, not the bounded active index: the index
  * drops an acked row the next time any row is appended, so counting the rows
  * it holds would lose cleared generations and derive an acknowledged id
- * again. Only a `cleared` receipt advances the generation; a row an operator
- * acked some other way stays the current generation.
+ * again. A receipt that exists but does not decode (a truncated write) still
+ * acks its row, so the append would skip that id and the recall would ignore
+ * it; stopping there would leave the head's next conflict with no row. The
+ * walk counts it as consumed instead and prints one stderr line naming the
+ * receipt path. A decodable receipt of any kind other than `cleared` stays
+ * the current generation: a row an operator acked some other way keeps the
+ * head's conflict closed until a push.
  *
  * **Example** (Build the derivation)
  *
@@ -907,7 +914,7 @@ const renderYeetBaseConflictDispatchLine = (outcome: YeetRemediationOutcome, row
  *
  * @param repoRoot - The checkout whose ack receipts are read.
  * @param coordinates - The pull request number and head SHA.
- * @returns The number of the head's base-conflict rows acked `cleared`.
+ * @returns The number of the head's consumed base-conflict rows: acked `cleared`, or with a receipt that does not decode.
  * @category services
  * @since 0.0.0
  */
@@ -916,20 +923,31 @@ export const yeetBaseConflictGeneration = Effect.fn("Yeet.yeetBaseConflictGenera
   coordinates: Pick<YeetBaseConflictCapsule, "headSha" | "prNumber">
 ): Effect.fn.Return<number, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   let generation = 0;
-  while (yield* baseConflictGenerationCleared(repoRoot, { ...coordinates, generation })) {
+  while (yield* baseConflictGenerationConsumed(repoRoot, { ...coordinates, generation })) {
     generation += 1;
   }
   return generation;
 });
 
-// Whether the generation's row id carries a `cleared` receipt. A missing,
-// unreadable or other-kind receipt ends the walk at that generation.
-const baseConflictGenerationCleared = Effect.fnUntraced(function* (
+// Whether the generation's row id is consumed: its receipt is `cleared`, or
+// the receipt file exists but does not decode. A corrupt receipt still acks
+// the row, so ending the walk on it would wedge the head at that generation;
+// it is passed with one stderr line instead. A missing receipt, or a
+// decodable one of another kind, ends the walk at that generation.
+const baseConflictGenerationConsumed = Effect.fnUntraced(function* (
   repoRoot: string,
   coordinates: Pick<YeetBaseConflictCapsule, "generation" | "headSha" | "prNumber">
 ): Effect.fn.Return<boolean, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
-  const ack = yield* readYeetAckState(repoRoot, yield* yeetBaseConflictRowId(coordinates));
-  return O.exists(O.fromNullOr(ack.receipt), (receipt) => receipt.resolution.kind === "cleared");
+  const id = yield* yeetBaseConflictRowId(coordinates);
+  const ack = yield* readYeetAckState(repoRoot, id);
+  const receipt = O.fromNullOr(ack.receipt);
+  if (O.isSome(receipt)) return receipt.value.resolution.kind === "cleared";
+  if (!ack.acked) return false;
+  const ackPath = yield* yeetInboxAckPath(repoRoot, id);
+  yield* Console.error(
+    `[yeet] base-conflict ack receipt ${ackPath} does not decode; counting conflict generation ${coordinates.generation} on head ${Str.slice(0, 7)(coordinates.headSha)} as consumed`
+  );
+  return true;
 });
 
 /**

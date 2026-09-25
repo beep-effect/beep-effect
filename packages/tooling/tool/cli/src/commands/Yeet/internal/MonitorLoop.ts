@@ -1121,6 +1121,9 @@ class MonitorHeadState extends S.Class<MonitorHeadState>($I`MonitorHeadState`)(
     // Whether this loop already knows the head's conflict row, from writing it or
     // from an inbox lookup, so a restarted loop recalls it once, not every poll.
     conflictRecalled: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    // Whether this loop already said why a conflict on this head writes no row
+    // (its generation carries another ack kind than `cleared`): once per head.
+    conflictAckNoticed: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     // Whether the wave record has been pinned to this head (until-ready only);
     // a new head starts unpinned, so the first converging poll supersedes.
     wavePinned: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
@@ -1330,27 +1333,54 @@ const monitorJobAttribution = Effect.fn("YeetMonitorLoop.jobAttribution")(functi
   return { jobId, unit };
 });
 
-// A restarted monitor has no memory of the head's conflict row. It recalls the
-// latest generation's row when the inbox still holds it unacked: on the head's
-// first positively mergeable poll, so a conflict that cleared while no monitor
-// watched it can still be cleared, and on a conflicted poll whose dispatch
-// found that row already written. Every earlier generation already carries its
-// `cleared` receipt, so only the latest is ever recalled, and only it is
-// cleared. The first poll after a restart often reads UNKNOWN while GitHub
-// recomputes, so the recall waits for a conclusive read instead of the first poll.
-const recallMonitorConflictRow = Effect.fn("YeetMonitorLoop.recallConflictRow")(function* (
-  repoRoot: string,
-  observed: YeetConvergeObservation
-) {
-  const id = yield* yeetBaseConflictGeneration(repoRoot, observed).pipe(
+// The row id of the head's latest conflict generation; `None` when the
+// generation walk fails.
+const monitorConflictRowId = (repoRoot: string, observed: YeetConvergeObservation) =>
+  yeetBaseConflictGeneration(repoRoot, observed).pipe(
     Effect.flatMap((generation) =>
       yeetBaseConflictRowId({ generation, headSha: observed.headSha, prNumber: observed.prNumber })
     ),
     Effect.option
   );
+
+// A restarted monitor has no memory of the head's conflict row. It recalls the
+// latest generation's row when the inbox still holds it unacked: on the head's
+// first positively mergeable poll, so a conflict that cleared while no monitor
+// watched it can still be cleared, and on a conflicted poll whose dispatch
+// found that row already written. Every earlier generation is already
+// consumed (acked `cleared`, or with a receipt that does not decode), so only
+// the latest is ever recalled, and only it is cleared. The first poll after a
+// restart often reads UNKNOWN while GitHub recomputes, so the recall waits for
+// a conclusive read instead of the first poll.
+const recallMonitorConflictRow = Effect.fn("YeetMonitorLoop.recallConflictRow")(function* (
+  repoRoot: string,
+  observed: YeetConvergeObservation
+) {
+  const id = yield* monitorConflictRowId(repoRoot, observed);
   if (O.isNone(id) || !(yield* yeetInboxHoldsRow(repoRoot, id.value))) return O.none<string>();
   const ack = yield* readYeetAckState(repoRoot, id.value);
   return ack.acked ? O.none<string>() : id;
+});
+
+// A conflicted poll that wrote no row and recalled none: when the latest
+// generation's row carries a decodable ack receipt of another kind than
+// `cleared` (an operator acked it wontfix, waived it, ...), the append skips
+// that id, the recall ignores it, and only a `cleared` receipt moves the head
+// to the next generation, so the conflict raises nothing until a push. Say so
+// once per head; the caller keeps the flag. Returns whether the line printed.
+const noticeMonitorConflictAck = Effect.fn("YeetMonitorLoop.noticeConflictAck")(function* (
+  repoRoot: string,
+  observed: YeetConvergeObservation
+) {
+  const id = yield* monitorConflictRowId(repoRoot, observed);
+  if (O.isNone(id)) return false;
+  const ack = yield* readYeetAckState(repoRoot, id.value);
+  const receipt = O.filter(O.fromNullOr(ack.receipt), (value) => value.resolution.kind !== "cleared");
+  if (O.isNone(receipt)) return false;
+  yield* Console.error(
+    `[yeet] base conflict on head ${Str.slice(0, 7)(observed.headSha)} raises no new row: ${id.value} carries a ${receipt.value.resolution.kind} ack receipt, not cleared, so this head writes no further conflict row; the next push re-arms it`
+  );
+  return true;
 });
 
 // The conflict row's same-head clear (pr-event-awareness D17): the head read
@@ -1438,9 +1468,19 @@ const convergeMonitorBaseConflict = Effect.fn("YeetMonitorLoop.convergeBaseConfl
     // `None` means this poll wrote nothing: the generation's row is already in
     // the inbox (a restarted loop), an ack receipt closes it, or the write
     // failed. Recall it only when it is live, so the guard above stops
-    // re-dispatching and a later mergeable read clears it.
+    // re-dispatching and a later mergeable read clears it. A row closed by
+    // another ack kind than `cleared` is not re-raised; the loop says so once.
     const open = O.isSome(written) ? written : yield* recallMonitorConflictRow(context.repoRoot, observed);
-    return MonitorHeadState.make({ ...current, conflictRow: open, conflictRecalled: true });
+    const noticed =
+      O.isNone(open) && !current.conflictAckNoticed
+        ? yield* noticeMonitorConflictAck(context.repoRoot, observed)
+        : current.conflictAckNoticed;
+    return MonitorHeadState.make({
+      ...current,
+      conflictRow: open,
+      conflictRecalled: true,
+      conflictAckNoticed: noticed,
+    });
   }
   const mergeable = yeetBaseMergeableFor(
     O.fromUndefinedOr(snapshot.remote.mergeable),

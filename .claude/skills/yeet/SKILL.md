@@ -525,6 +525,13 @@ Vocabulary:
   wave record, `dispatch.json` (`yeet-dispatch/v1`), pins the head those rows
   belong to and carries that head's required red set; a push re-pins it and
   supersedes the previous head's rows.
+- **generation**: a `base-conflict` capsule's count of the earlier conflicts
+  on its head that the monitor acked `cleared`. The row id is keyed on (pull
+  request, head, generation), so a conflict that returns on the same head
+  after a `cleared` ack is generation + 1: a new row and a new wave. A push
+  starts the new head at generation 0. A receipt that no longer decodes also
+  advances it; a row acked any other way keeps that head's conflict closed
+  until a push, and the monitor says so once on stderr.
 - **owner session**: the harness session that submitted the monitor and waits
   on it. A detached job forwards `CLAUDE_CODE_SESSION_ID` and
   `CODEX_THREAD_ID`, so the pull request's session registry row names that
@@ -538,7 +545,7 @@ on every poll; `--watch` does the same for checks, threads, and drift.
 | Kind | Severity | Written when | Closes on |
 | --- | --- | --- | --- |
 | `check-failed` | P0 required, P1 optional | a check is red on the head | the next push, or an ack |
-| `base-conflict` | P0 | GitHub reports the head `CONFLICTING`/`DIRTY` (`--until-ready` only) | the next push, or the `cleared` ack the monitor writes when the same head reads mergeable again |
+| `base-conflict` | P0 | GitHub reports the head `CONFLICTING`/`DIRTY` (`--until-ready` only) | the next push, or the `cleared` ack the monitor writes when the same head reads mergeable again; a `CONFLICTING` read after `cleared` on the same head writes generation + 1 as a new row and wave |
 | `review-thread` | P1 | a thread is unresolved or owes a follow-up | an ack only; survives pushes |
 | `pr-comment` | P1 | a person's top-level comment lands after the window start (`--until-ready` only; see Comment replay) | an ack only; survives pushes |
 | `base-drift` | P2 | the head is `BEHIND` its base | the next push |
