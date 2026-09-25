@@ -1,5 +1,6 @@
+import { it } from "@beep/test-runner";
 import { P } from "@beep/utils";
-import { describe, expect, it } from "vitest";
+import { describe, expect } from "@effect/vitest";
 
 describe("Predicate utilities", () => {
   it("chains refinements in order", () => {

@@ -1,6 +1,7 @@
+import { it } from "@beep/test-runner";
 import { O } from "@beep/utils";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
 import { pipe } from "effect/Function";
-import { describe, expect, expectTypeOf, it } from "vitest";
 
 describe("@beep/utils O.propFromNullishOr", () => {
   it("supports data-first and data-last calls", () => {
