@@ -104,6 +104,7 @@
 "@beep/semantica": patch
 "@beep/shared-domain": patch
 "@beep/skill-contract": patch
+"@beep/storybook": patch
 "@beep/tailscale": patch
 "@beep/test-utils": patch
 "@beep/tika": patch
