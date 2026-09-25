@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-worker-arch-refresh.jsonl",
+    "sha256": "5ab42622406dec216b20f7153faaf3c06c0ce5424c3f44d2a9603fe071969785"
+  },
+  "inventoryAfterSha256": "23e70595917673b3d8f708303e50b7f6adbb9b751b8a51a3270edc0e312f8e01",
+  "refreshedIds": [
+    "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+    "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+    "r3-drivers-arch-folder-resolution-blocked-provider"
+  ],
+  "unchangedRows": 754,
+  "statusCounts": {
+    "reviewed": 16,
+    "designed": 133,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/r28-cli-commands-d-k-docgen-quality-worker-eval-source.md",
+      "sha256": "948e3f2482b35edbe802b5bc4bf342ef1e9a0ab8c52d3d7ed26729c7081177ac"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r28-cli-commands-d-k-docgen-quality-worker-eval-source.md",
+      "sha256": "da35ed5a577417e5ba9532c5edbd3bb03e803f2890deaf36076093a0110339da"
+    },
+    {
+      "file": "data/2026-09-22-r28-cli-commands-d-k-docgen-quality-worker-eval-source-projection.json",
+      "sha256": "d6149649852295de45790e8d8ae17b9ab8a9755f85ea167bd72cfe52e3852402"
+    },
+    {
+      "file": "designs/r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.md",
+      "sha256": "1125032df86158ab19cf6f4bba75bae652142de3a7cfe7ca4a671dd86ebca7bb"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source.md",
+      "sha256": "f8d95d95077ca9602973183cd15814c6e72d0fbeae3d46b793cff7862da1641d"
+    },
+    {
+      "file": "data/2026-09-22-r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source-projection.json",
+      "sha256": "d6149649852295de45790e8d8ae17b9ab8a9755f85ea167bd72cfe52e3852402"
+    },
+    {
+      "file": "designs/r3-drivers-arch-folder-resolution-blocked-provider.md",
+      "sha256": "4df5e3e9f8c81b2837f061bd111f9c0785117292d6b3ab6fafa1217ee36159dd"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r3-drivers-arch-folder-resolution-blocked-provider.md",
+      "sha256": "4c68566d6f10b75bdb945cc428edff3a82cd899bb536d3d78c5a5b0813e0eedf"
+    }
+  ],
+  "verifiedHashBindings": 37,
+  "savedSubset": {
+    "sourceReceipt": "data/packet-migration-readmission-2026-09-22.json",
+    "sourceReceiptSha256": "5c5dc1e8992c8802589f4acdb747becf3cbb32c28bcc53f3643d0cde7581530d",
+    "previousPendingCount": 10,
+    "completedIds": [
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r3-drivers-arch-folder-resolution-blocked-provider"
+    ],
+    "pendingCount": 7,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "yeet-status-remote-check-phase",
+      "yeet-merge-ready-criterion-changed",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "yeet-prepared-publish-commit",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "meaning": "Dated subset only; full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-yeet-state-refresh.jsonl"
+}

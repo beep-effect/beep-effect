@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "date": "2026-09-22",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-scaffold-worktree-refresh.jsonl",
+    "sha256": "dd959f534b7bb48876562fea0d8f31a5fd8a3415e7eb4260ef4414e2d9380135"
+  },
+  "inventoryAfterSha256": "61f1f56bdfe47df11f3a7a916560e7983b04cb8370313d30793d91797bc08ed7",
+  "refreshedIds": [
+    "worktree-removal-mode",
+    "create-package-scaffold-shape",
+    "create-package-template-type-flags"
+  ],
+  "unchangedRows": 754,
+  "statusCounts": {
+    "reviewed": 18,
+    "designed": 131,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/worktree-removal-mode.md",
+      "sha256": "050a79ac5d16dfc151e81d9581cc36ff6356504e2ecc58495e2b90bdbcda6c31"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-worktree-removal-mode.md",
+      "sha256": "330c749fe756e7a9b1aa9f21f28c5fbe050f9c9af2ec35a27f1ff5042bf442bf"
+    },
+    {
+      "file": "data/2026-09-22-worktree-removal-mode-projection.json",
+      "sha256": "d71379596d379ee0bca9b5c76d4418faeed3de43084183f32d585c9547805eec"
+    },
+    {
+      "file": "designs/create-package-scaffold-shape.md",
+      "sha256": "52b28aa1ccc14b10341d73c5e39b34e4caf3a29d0ad7b3c35e73ddbbaad3967e"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-create-package-scaffold-shape.md",
+      "sha256": "016ea78e8737afa43cdd8885e401c46b4734c14f222e67ffc727ebbc94d7de6c"
+    },
+    {
+      "file": "data/2026-09-22-create-package-scaffold-shape-projection.json",
+      "sha256": "ac4c04b10ef32cdb3c4f1ae50d521ee57dbf339ce87fba13d46f36d02116f2db"
+    },
+    {
+      "file": "designs/create-package-template-type-flags.md",
+      "sha256": "832ce7578791adee0a6d0599bd15f2905fba8f2fcc65d6e8377c74bf74faa938"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-create-package-template-type-flags.md",
+      "sha256": "9d775e6571f81509433b8678a1782f43e550fb88c915eabe2d1decfa8eda84d6"
+    },
+    {
+      "file": "data/2026-09-22-create-package-template-type-flags-projection.json",
+      "sha256": "da53cd7f97386aa6745fdfd843e27197541ee10b48fbf9e198681d72357042ad"
+    }
+  ],
+  "verifiedHashBindings": 90,
+  "savedSubset": {
+    "sourceReceipt": "data/supra-shortform-admission-2026-09-22.json",
+    "sourceReceiptSha256": "d06f68ca93f6b8345cc02e21100235492f28de4a5025f8f5b778ae9c1bfee00b",
+    "previousPendingCount": 28,
+    "completedIds": [
+      "worktree-removal-mode",
+      "create-package-scaffold-shape",
+      "create-package-template-type-flags"
+    ],
+    "pendingCount": 25,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "yeet-status-remote-check-phase",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "vault-sync-push-failure-disposition",
+      "create-package-retired-name-reconciliation",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "meaning": "Dated subset only; full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-disqualified-impact-reconciliation.jsonl"
+}

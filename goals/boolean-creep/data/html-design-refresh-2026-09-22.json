@@ -1,0 +1,143 @@
+{
+  "schemaVersion": "boolean-creep-bounded-design-refresh/v1",
+  "date": "2026-09-22",
+  "sourceSha": "f137beedb270a071d4aa2ecc1dd52a9d233044d1",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-html-refresh.jsonl",
+    "sha256": "22189fe9ecc326fadf0bb1d0743b903e297894acfb8aadd853b4f4a9e8826917"
+  },
+  "inventoryAfterSha256": "9c4eaaf326b781e0b6239b197098e82e25aa394c70da15225f5a2e4d8704c8d3",
+  "changedIds": [
+    "html-select-child-grammar",
+    "html-dl-child-grammar",
+    "html-datalist-child-grammar"
+  ],
+  "unchangedRows": 750,
+  "qualificationChanged": false,
+  "statusCounts": {
+    "reviewed": 18,
+    "designed": 127,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/html-select-child-grammar.md",
+      "sha256": "c58454cf521486be6f3ea653824901a3422dfc3582bd2b4a8eb35d65c904d109"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-html-select-child-grammar.md",
+      "sha256": "46908aa9b6fa880763c71cb1e5bca1ead532c6a21e8cece093e47cdd15812a90"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-html-select-child-grammar.md",
+      "sha256": "c62d0a18d49ff059e914c160bcff0f9bf595c1410dd5e96e7dace06a30489ff2"
+    },
+    {
+      "file": "designs/html-dl-child-grammar.md",
+      "sha256": "6f9e612920de3a49801f94abf7d6aadbebc4358839cd6809a4dbcd5da36a841b"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-html-dl-child-grammar.md",
+      "sha256": "cf86ded01408c0e891b6e4f4690d5821d61aebe88fd3552b0f2f95bce0b25646"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-html-dl-child-grammar.md",
+      "sha256": "80017068d12451f8ec7042aa6611bb488cc9ea0090abf7138a9cb6f6f9c9ddfc"
+    },
+    {
+      "file": "designs/html-datalist-child-grammar.md",
+      "sha256": "6e5857d0379e6602c027dd434daa5c2ca4de9b466b738675c1ad01e8e5fc9f8e"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-html-datalist-child-grammar.md",
+      "sha256": "a4447b5e124bf56d78b8e006eae2b753889ce59a9c42306fc38001f14d6c5ebf"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-html-datalist-child-grammar.md",
+      "sha256": "90e2c0feb53716e8cfebf9f4d940e4feef19a18dbb5685cb8bbee195c1da8e6d"
+    },
+    {
+      "file": "data/html-select-behavior-probe-2026-09-22.json",
+      "sha256": "5545113733669d47a51e9a7118568c756fd126ebb0af54018d8339e4aa0f7b6d"
+    },
+    {
+      "file": "data/html-select-behavior-probe-2026-09-22.md",
+      "sha256": "36a227da23d74b0589c89db8e4bf1bfb8d5b7c397d2a324a23f288fcaf8bcc5a"
+    }
+  ],
+  "probes": {
+    "select": {
+      "boundedSequences": 9331,
+      "maximumSequenceLength": 5,
+      "publicAstFixtures": 21,
+      "exitCode": 0
+    },
+    "descriptionList": {
+      "selectedAstFixtures": 19,
+      "exitCode": 0
+    },
+    "datalist": {
+      "directAstFixtures": 8,
+      "nestedDiagnosticFixture": 1,
+      "exitCode": 0
+    },
+    "limit": "Current API samples and bounded predicate comparison; no implemented refactor, exhaustive arbitrary-tree validation, or package verification."
+  },
+  "savedSubset": {
+    "sourceReceipt": "data/knowledge-websocket-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "486afe883640643aa119140b307adb5f38aebf5066dfdf1ae58bcd7b26f5503f",
+    "previousPendingCount": 41,
+    "completedIds": [
+      "html-select-child-grammar",
+      "html-dl-child-grammar",
+      "html-datalist-child-grammar"
+    ],
+    "pendingCount": 38,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "create-package-template-type-flags",
+      "yeet-status-remote-check-phase",
+      "create-package-scaffold-shape",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "worktree-removal-mode",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-arch-ecosystem-internal-pg-timestamp-timezone",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "html-img-sizes-disposition",
+      "html-link-imagesizes-disposition",
+      "contained-file-read-outcome",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "files-worker-score-thresholds",
+      "files-person-reference-disposition",
+      "m365-tool-error-retryability",
+      "vault-sync-push-failure-disposition",
+      "receipt-fallback-draft-occupancy",
+      "create-package-retired-name-reconciliation",
+      "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations",
+      "r30-cli-commands-l-q-github-check-lane-outcome"
+    ],
+    "meaning": "Saved September14 subset only; complete current-source backlog remains uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-responsive-timestamp-refresh.jsonl"
+}

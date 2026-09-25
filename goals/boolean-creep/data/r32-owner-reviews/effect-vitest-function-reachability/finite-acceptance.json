@@ -1,0 +1,298 @@
+{
+  "schemaVersion": "boolean-creep-finite-projection/v1",
+  "representable": 32,
+  "legal": 24,
+  "rejected": 8,
+  "orderedPairChecks": 576,
+  "scope": "private mathematical projection, not implemented runtime proof",
+  "rows": [
+    {
+      "plain": false,
+      "effect": false,
+      "testClock": false,
+      "outside": false,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "none"
+    },
+    {
+      "plain": false,
+      "effect": false,
+      "testClock": false,
+      "outside": false,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "none"
+    },
+    {
+      "plain": false,
+      "effect": false,
+      "testClock": false,
+      "outside": true,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "none"
+    },
+    {
+      "plain": false,
+      "effect": false,
+      "testClock": false,
+      "outside": true,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "none"
+    },
+    {
+      "plain": false,
+      "effect": false,
+      "testClock": true,
+      "outside": false,
+      "uncertain": false,
+      "accepted": false,
+      "effectHarness": null
+    },
+    {
+      "plain": false,
+      "effect": false,
+      "testClock": true,
+      "outside": false,
+      "uncertain": true,
+      "accepted": false,
+      "effectHarness": null
+    },
+    {
+      "plain": false,
+      "effect": false,
+      "testClock": true,
+      "outside": true,
+      "uncertain": false,
+      "accepted": false,
+      "effectHarness": null
+    },
+    {
+      "plain": false,
+      "effect": false,
+      "testClock": true,
+      "outside": true,
+      "uncertain": true,
+      "accepted": false,
+      "effectHarness": null
+    },
+    {
+      "plain": false,
+      "effect": true,
+      "testClock": false,
+      "outside": false,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "live-only"
+    },
+    {
+      "plain": false,
+      "effect": true,
+      "testClock": false,
+      "outside": false,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "live-only"
+    },
+    {
+      "plain": false,
+      "effect": true,
+      "testClock": false,
+      "outside": true,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "live-only"
+    },
+    {
+      "plain": false,
+      "effect": true,
+      "testClock": false,
+      "outside": true,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "live-only"
+    },
+    {
+      "plain": false,
+      "effect": true,
+      "testClock": true,
+      "outside": false,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "test-clock"
+    },
+    {
+      "plain": false,
+      "effect": true,
+      "testClock": true,
+      "outside": false,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "test-clock"
+    },
+    {
+      "plain": false,
+      "effect": true,
+      "testClock": true,
+      "outside": true,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "test-clock"
+    },
+    {
+      "plain": false,
+      "effect": true,
+      "testClock": true,
+      "outside": true,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "test-clock"
+    },
+    {
+      "plain": true,
+      "effect": false,
+      "testClock": false,
+      "outside": false,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "none"
+    },
+    {
+      "plain": true,
+      "effect": false,
+      "testClock": false,
+      "outside": false,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "none"
+    },
+    {
+      "plain": true,
+      "effect": false,
+      "testClock": false,
+      "outside": true,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "none"
+    },
+    {
+      "plain": true,
+      "effect": false,
+      "testClock": false,
+      "outside": true,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "none"
+    },
+    {
+      "plain": true,
+      "effect": false,
+      "testClock": true,
+      "outside": false,
+      "uncertain": false,
+      "accepted": false,
+      "effectHarness": null
+    },
+    {
+      "plain": true,
+      "effect": false,
+      "testClock": true,
+      "outside": false,
+      "uncertain": true,
+      "accepted": false,
+      "effectHarness": null
+    },
+    {
+      "plain": true,
+      "effect": false,
+      "testClock": true,
+      "outside": true,
+      "uncertain": false,
+      "accepted": false,
+      "effectHarness": null
+    },
+    {
+      "plain": true,
+      "effect": false,
+      "testClock": true,
+      "outside": true,
+      "uncertain": true,
+      "accepted": false,
+      "effectHarness": null
+    },
+    {
+      "plain": true,
+      "effect": true,
+      "testClock": false,
+      "outside": false,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "live-only"
+    },
+    {
+      "plain": true,
+      "effect": true,
+      "testClock": false,
+      "outside": false,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "live-only"
+    },
+    {
+      "plain": true,
+      "effect": true,
+      "testClock": false,
+      "outside": true,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "live-only"
+    },
+    {
+      "plain": true,
+      "effect": true,
+      "testClock": false,
+      "outside": true,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "live-only"
+    },
+    {
+      "plain": true,
+      "effect": true,
+      "testClock": true,
+      "outside": false,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "test-clock"
+    },
+    {
+      "plain": true,
+      "effect": true,
+      "testClock": true,
+      "outside": false,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "test-clock"
+    },
+    {
+      "plain": true,
+      "effect": true,
+      "testClock": true,
+      "outside": true,
+      "uncertain": false,
+      "accepted": true,
+      "effectHarness": "test-clock"
+    },
+    {
+      "plain": true,
+      "effect": true,
+      "testClock": true,
+      "outside": true,
+      "uncertain": true,
+      "accepted": true,
+      "effectHarness": "test-clock"
+    }
+  ]
+}

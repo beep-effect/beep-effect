@@ -1,0 +1,281 @@
+{
+  "kind": "boolean-creep-r33-owner-evidence-index/v1",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "owners": [
+    {
+      "ownerAudit": "drivers-a-f",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/audit.md",
+      "originalSha256": "dfa7a799353ba5eaa6dde381e27488a973a5bc80a9b72092daba65134fee8320",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/drivers-a-f/audit.md.txt",
+      "publishedSha256": "18c7c5c437a820725234e3503e835a46f1fa5a817766a47cf3fe2095d31c1d2f"
+    },
+    {
+      "ownerAudit": "drivers-a-f",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-a-f/disposition.json",
+      "originalSha256": "9edf53a3500c949022493b2535213e42d56cb580c4d641610bdbfc49394af7ec",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/drivers-a-f/disposition.json",
+      "publishedSha256": "14bc089f0d0ab81be4c4f9a9d1740822aac42806fcc46377539923a322a85bb0"
+    },
+    {
+      "ownerAudit": "agents-workspace",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/audit.md",
+      "originalSha256": "c6d9aa92107b87657bfe63e8eaf49522423f0f2ade9168ebdea012914c2720af",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/agents-workspace/audit.md.txt",
+      "publishedSha256": "c1e58809c4317d95c3dfb5b6b1d6b6b13c77ddb5df5f67e5bfa7269120fab56e"
+    },
+    {
+      "ownerAudit": "agents-workspace",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/agents-workspace/disposition.json",
+      "originalSha256": "42c4ea90dc1f806b4eec2aefa100329963c4899ea1fd33296c1529940176cc11",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/agents-workspace/disposition.json",
+      "publishedSha256": "42c4ea90dc1f806b4eec2aefa100329963c4899ea1fd33296c1529940176cc11"
+    },
+    {
+      "ownerAudit": "vault-sync-status",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/vault-sync-status/audit.md",
+      "originalSha256": "9a74e17a7fab2bd9e8637e2eca563a46802dce728fbf87c432a92a129c3bf328",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/vault-sync-status/audit.md.txt",
+      "publishedSha256": "31ab3266ce395c0eabbe1ef963b36bf4796c08e6ec46eb7b743fefaf14b6b1a4"
+    },
+    {
+      "ownerAudit": "vault-sync-status",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/vault-sync-status/disposition.md",
+      "originalSha256": "d5b957a2761b1893eff69af2bd2cd68da34b501fcec29b66225a4fccee61cd87",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/vault-sync-status/disposition.md",
+      "publishedSha256": "d5b957a2761b1893eff69af2bd2cd68da34b501fcec29b66225a4fccee61cd87"
+    },
+    {
+      "ownerAudit": "vault-sync-status",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/vault-sync-status/withdrawal-proposal.json",
+      "originalSha256": "fb9c99d437ce68dbc8c9c70d4ba29c662498b576c0fd9daf4a388f8e6664ab60",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/vault-sync-status/withdrawal-proposal.json",
+      "publishedSha256": "273a74ab3bb02bc2fdf484446779a0905421039b996d02e4d0ffc94b71a6f2b4"
+    },
+    {
+      "ownerAudit": "practice-kg-tool-results",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/practice-kg-tool-results/audit.md",
+      "originalSha256": "24e97cdb57a218c587467c8ab81885561f584ba0315252a702ba5be34edce63b",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/practice-kg-tool-results/audit.md.txt",
+      "publishedSha256": "255a86444fb6177cf05614b5422ac61aed8b92681c21bed525b2268bf5e7e81e"
+    },
+    {
+      "ownerAudit": "practice-kg-tool-results",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/practice-kg-tool-results/disposition.json",
+      "originalSha256": "458c8b5cbfd013f0ba201a6c351cae5068c74dda383aebf402a62a7954c76deb",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/practice-kg-tool-results/disposition.json",
+      "publishedSha256": "c5ce91cd4eedf0271b560850fbb64e7bf9456c40141fd86d842f19b0fd7584e4"
+    },
+    {
+      "ownerAudit": "apps-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/audit.md",
+      "originalSha256": "4b3232a59846b8f29ffdb197f86c1b94fb171b2e835928541c65aeb5c09fc82b",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/apps-scope/audit.md.txt",
+      "publishedSha256": "8beb94063e2af61f6b934c344232812195aedaf78a4a41d84ce208f7ff55f983"
+    },
+    {
+      "ownerAudit": "apps-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/apps-scope/disposition.json",
+      "originalSha256": "54bd8910af6ad47546d14672a3b9aa9a80eea68665585d96ad0d832806436278",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/apps-scope/disposition.json",
+      "publishedSha256": "54bd8910af6ad47546d14672a3b9aa9a80eea68665585d96ad0d832806436278"
+    },
+    {
+      "ownerAudit": "drivers-n-r-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-n-r-scope/audit.json",
+      "originalSha256": "aaea485e9fc1cd190acf46102f9a9f981e11478c68ba9b22d1c420184666fcc0",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/drivers-n-r-scope/audit.json.txt",
+      "publishedSha256": "aaea485e9fc1cd190acf46102f9a9f981e11478c68ba9b22d1c420184666fcc0"
+    },
+    {
+      "ownerAudit": "drivers-n-r-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-n-r-scope/dispositions.md",
+      "originalSha256": "dae0f08339521c537d24b8af6b599c7dfade428267c9c789ac11087bfaffca2f",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/drivers-n-r-scope/dispositions.md",
+      "publishedSha256": "dae0f08339521c537d24b8af6b599c7dfade428267c9c789ac11087bfaffca2f"
+    },
+    {
+      "ownerAudit": "drivers-n-r-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-n-r-scope/scope-dispositions.json",
+      "originalSha256": "c914d39bb157a0e3560c3781607ed19dddba27b7f6834af29a040bfd8cd2c775",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/drivers-n-r-scope/scope-dispositions.json",
+      "publishedSha256": "77e1111e2bfd4d1866af47a977b5ed3241a051045b461598c9c2fe2431e20e2b"
+    },
+    {
+      "ownerAudit": "drivers-n-r-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/drivers-n-r-scope/all-seed-ledger.json",
+      "originalSha256": "08cfcbd9d27203ff493ea331c3aeed5eb92d1b9edb422705a595c740625277a5",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/drivers-n-r-scope/all-seed-ledger.json",
+      "publishedSha256": "0681c6e2fd74fffe4de6a7ccc9b1ee7f4d88b447036f09f0286dea33cb726f5f"
+    },
+    {
+      "ownerAudit": "cli-internal-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/cli-internal-scope/audit.md",
+      "originalSha256": "06c413f0dfa560f98f9c4b2d78d6a72f63f8d41f0706962acc6a1c359ba686fa",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/cli-internal-scope/audit.md.txt",
+      "publishedSha256": "47bf4a08625a627f46d5f67222507a9f7b25968b2c320663d4829e3dd5d99e77"
+    },
+    {
+      "ownerAudit": "cli-internal-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/cli-internal-scope/disposition.md",
+      "originalSha256": "6f7b1c9081102013edf600136787dc496c618139f208b2ee79f3c169f6ddbf80",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/cli-internal-scope/disposition.md",
+      "publishedSha256": "6f7b1c9081102013edf600136787dc496c618139f208b2ee79f3c169f6ddbf80"
+    },
+    {
+      "ownerAudit": "cli-internal-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/cli-internal-scope/scope-proposal.json",
+      "originalSha256": "c5e21d41531adc91aca716605bc4de757a84634a7ac168af509b00ce604a2491",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/cli-internal-scope/scope-proposal.json",
+      "publishedSha256": "c5e21d41531adc91aca716605bc4de757a84634a7ac168af509b00ce604a2491"
+    },
+    {
+      "ownerAudit": "docgen-owner-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/audit.md",
+      "originalSha256": "0f408a6ff64c5ecc7ce025c8999602a2b67c6892f595bb32b12fb4941f70d81b",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/docgen-owner-scope/audit.md.txt",
+      "publishedSha256": "01d5e770e1491e0db5965524847701fdb1fc6016803b6379ffce5f1ec28a298d"
+    },
+    {
+      "ownerAudit": "docgen-owner-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/docgen-owner-scope/disposition.json",
+      "originalSha256": "cc3ba6f587c0e37a43fcaacd164e76cbf9718c658782fb601add43c7e16f7407",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/docgen-owner-scope/disposition.json",
+      "publishedSha256": "af8e93ef29e781ec189ea3f8bce50cea296f53e72c3cbcfcb2a2340c66f08520"
+    },
+    {
+      "ownerAudit": "goals-owner-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/goals-owner-scope/audit.md",
+      "originalSha256": "53378e548b5ffeb4f781f45fcd021052b0d7243ea55f419a19f52fd72b71963b",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/goals-owner-scope/audit.md.txt",
+      "publishedSha256": "8a108c6b71cbe86258fc8c22e5a5643f99bb23c75361e0df711af5ee8837bce0"
+    },
+    {
+      "ownerAudit": "goals-owner-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/goals-owner-scope/disposition.md",
+      "originalSha256": "87b0de28134b9cc14dd05fae878bc54d15969fe3cabdc77ec50f0dfc3789f59d",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/goals-owner-scope/disposition.md",
+      "publishedSha256": "87b0de28134b9cc14dd05fae878bc54d15969fe3cabdc77ec50f0dfc3789f59d"
+    },
+    {
+      "ownerAudit": "goals-owner-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/goals-owner-scope/scope-proposal.json",
+      "originalSha256": "5f9efcd5d59330311bd6c07d7d7e862fa942b35c1c7eef60f006b63a5af36cba",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/goals-owner-scope/scope-proposal.json",
+      "publishedSha256": "1520c479f39f97774a2ce42fef4c76b8a45e153b3e847ed1a672486339af4676"
+    },
+    {
+      "ownerAudit": "files-owner-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/files-owner-scope/audit.json",
+      "originalSha256": "09230fe8517b06c647d957bc7b3bf3a83c3a2ac8dad05fa2753afac5b2f583f6",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/files-owner-scope/audit.json.txt",
+      "publishedSha256": "09230fe8517b06c647d957bc7b3bf3a83c3a2ac8dad05fa2753afac5b2f583f6"
+    },
+    {
+      "ownerAudit": "files-owner-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/files-owner-scope/dispositions.md",
+      "originalSha256": "4a7a1efcc3f228900ac8c0fba0deba7a5c522a599c60d94d0dfa695a68773624",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/files-owner-scope/dispositions.md",
+      "publishedSha256": "4a7a1efcc3f228900ac8c0fba0deba7a5c522a599c60d94d0dfa695a68773624"
+    },
+    {
+      "ownerAudit": "files-owner-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/files-owner-scope/scope-dispositions.json",
+      "originalSha256": "0410bc2113f5dba8f98d6f38e8de38cc0d29b31921af4f665943cb2ad9dc3dd3",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/files-owner-scope/scope-dispositions.json",
+      "publishedSha256": "526e1a5266d007254b9e8a163fb7c1797711f6946b6cc9e4b90cdb1b978e8ae3"
+    },
+    {
+      "ownerAudit": "files-owner-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/files-owner-scope/finite-evidence.json",
+      "originalSha256": "c1e88f21b56dfceecd04a4210d5af21bedd3a097f3a21b2284b1cc7233c61b88",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/files-owner-scope/finite-evidence.json",
+      "publishedSha256": "e7da27b8d17f8941f446580f77d77da24208da95325087599fa77a5cb7b37035"
+    },
+    {
+      "ownerAudit": "r33-tail-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r33-tail-scope/audit.md",
+      "originalSha256": "aecee3d9cb40bf734520debc210adb302403c350c213386ca66c8f6373256613",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/r33-tail-scope/audit.md.txt",
+      "publishedSha256": "c3a4aba6d482ef07e1c932cddbd5f7a1583d34819eae248d07a77ae1a14deb3b"
+    },
+    {
+      "ownerAudit": "r33-tail-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r33-tail-scope/disposition.md",
+      "originalSha256": "547477576b7f597359b5133da827c77cfa62715cd026914121bf0f71a5fd5c16",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/r33-tail-scope/disposition.md",
+      "publishedSha256": "547477576b7f597359b5133da827c77cfa62715cd026914121bf0f71a5fd5c16"
+    },
+    {
+      "ownerAudit": "r33-tail-scope",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/r33-tail-scope/scope-proposal.json",
+      "originalSha256": "69f154335a63277c65bc523dd85974b4b83c268be062c8a06170c19aac785f36",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/r33-tail-scope/scope-proposal.json",
+      "publishedSha256": "cd95392a5200b7cd935b72d550a6e4c921e3593db9fb4d595f9b6d6723181d2a"
+    },
+    {
+      "ownerAudit": "obs-qa-scene",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/obs-qa-scene/audit.json",
+      "originalSha256": "0f0ea7e8c6e44e5bd869de58b79f9f69e4b80fefaf8eda6683148ed15ca72690",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/obs-qa-scene/audit.json.txt",
+      "publishedSha256": "0f0ea7e8c6e44e5bd869de58b79f9f69e4b80fefaf8eda6683148ed15ca72690"
+    },
+    {
+      "ownerAudit": "obs-qa-scene",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/obs-qa-scene/disposition.md",
+      "originalSha256": "f81d68582d7d09df3af4eb53851bab07757aeeaf078e515c105c7a7b617d9378",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/obs-qa-scene/disposition.md",
+      "publishedSha256": "f81d68582d7d09df3af4eb53851bab07757aeeaf078e515c105c7a7b617d9378"
+    },
+    {
+      "ownerAudit": "obs-qa-scene",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/obs-qa-scene/finite-table.json",
+      "originalSha256": "7593e1b29560d7de8b7861fde8ee4d96663bc6bc3a8bc6fbd45b0eb3347f2832",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/obs-qa-scene/finite-table.json",
+      "publishedSha256": "b1c009f67cfc77c9a13334f4c3d842255f5477a893422c1fd95c339900db8096"
+    },
+    {
+      "ownerAudit": "clip-scan",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/clip-scan/audit.md",
+      "originalSha256": "f43352a7a2d6781f68e56f1c5e90e586f1475c31ebd34b70c602378627f7a4e2",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/clip-scan/audit.md.txt",
+      "publishedSha256": "f1a67a0c16f283e5f2969115b24f2a11eb28b606a290eb4e5fbb1704095221c6"
+    },
+    {
+      "ownerAudit": "clip-scan",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/clip-scan/finite-table.json",
+      "originalSha256": "228a0e7c5b0c609d107161626f23b1a3bb42dd3bfc1b4ad81ecfffa75e6dec40",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/clip-scan/finite-table.json",
+      "publishedSha256": "228a0e7c5b0c609d107161626f23b1a3bb42dd3bfc1b4ad81ecfffa75e6dec40"
+    },
+    {
+      "ownerAudit": "html-element-meta",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/html-element-meta/lane-scope-audit.json",
+      "originalSha256": "55a8eeb395c753fe28a4a6b40a626286fa945e8994452de968fa5af4e1308a85",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/html-element-meta/lane-scope-audit.json",
+      "publishedSha256": "55a8eeb395c753fe28a4a6b40a626286fa945e8994452de968fa5af4e1308a85"
+    },
+    {
+      "ownerAudit": "html-element-meta",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/html-element-meta/lane-scope-audit.md",
+      "originalSha256": "6cfa390566487ae3cbe33faf9d1197b548064db37a5c440cd7274c0860dae2b9",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/html-element-meta/lane-scope-audit.md",
+      "publishedSha256": "6cfa390566487ae3cbe33faf9d1197b548064db37a5c440cd7274c0860dae2b9"
+    },
+    {
+      "ownerAudit": "html-element-meta",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/html-element-meta/supplemental-seed-coverage.json",
+      "originalSha256": "68ad8b13aaef2d93a065c2f0dc3410d2aaf1fe12f4a79aa0596d3c7bbcf81dbf",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/html-element-meta/supplemental-seed-coverage.json",
+      "publishedSha256": "68ad8b13aaef2d93a065c2f0dc3410d2aaf1fe12f4a79aa0596d3c7bbcf81dbf"
+    },
+    {
+      "ownerAudit": "html-element-meta",
+      "originalPrivateFile": "~/.cache/beep/boolean-creep/refresh-2026-09-25/html-element-meta/supplemental-seed-coverage.md",
+      "originalSha256": "8d657273576e44178bf2ae5b9fff3b4766515c5b10686182fb0799a64e61191b",
+      "publishedFile": "goals/boolean-creep/data/r33-owner-reviews/html-element-meta/supplemental-seed-coverage.md",
+      "publishedSha256": "68345efb578e9cd6a6989ba4fad8060339ce0b6094a6e904b88d9eb32ce73a50"
+    }
+  ],
+  "independentP3Approval": false,
+  "note": "Original audit bindings are source-commit/private-artifact identities; public copies abbreviate home paths and may be formatted. Historical inventory and design snapshots preserve prior canonical inputs."
+}

@@ -1,0 +1,35 @@
+{
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "mainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "withdrawals": [
+    {
+      "id": "runtime-activity-payload-kind",
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "reason": "Complete owner contains fewer than two actual Boolean-typed members; do not count Option presence or literal discriminator alternatives as Boolean members."
+    },
+    {
+      "id": "agents-chat-turn-surface",
+      "priorStatus": "disqualified",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "reason": "Complete owner contains fewer than two actual Boolean-typed members; do not count Option presence or literal discriminator alternatives as Boolean members."
+    },
+    {
+      "id": "r26-agents-workspace-runtime-evidence-span-presence",
+      "priorStatus": "disqualified",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false,
+      "reason": "Complete owner contains fewer than two actual Boolean-typed members; do not count Option presence or literal discriminator alternatives as Boolean members."
+    },
+    {
+      "id": "receipt-fallback-draft-occupancy",
+      "priorStatus": "designed",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true,
+      "reason": "Complete owner contains fewer than two actual Boolean-typed members; do not count Option presence or literal discriminator alternatives as Boolean members."
+    }
+  ],
+  "integration": "Parent only after R33 terminal. Keep footer/raw rows immutable. No D1/D2 substitution."
+}

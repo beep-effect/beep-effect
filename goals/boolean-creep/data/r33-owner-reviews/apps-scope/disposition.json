@@ -1,0 +1,91 @@
+{
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "mainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "withdrawals": [
+    {
+      "id": "r2-apps-ipc-spike-mount-gates",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r2-apps-dms-mirror-disconnected-bits",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-chat-orchestrator-incremental-metrics",
+      "priorStatus": "disqualified",
+      "priorClassification": "D2",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-ontology-orchestrator-incremental-metrics",
+      "priorStatus": "disqualified",
+      "priorClassification": "D2",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-intake-orchestrator-incremental-metrics",
+      "priorStatus": "disqualified",
+      "priorClassification": "D2",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-vault-sync-orchestrator-incremental-metrics",
+      "priorStatus": "disqualified",
+      "priorClassification": "D2",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-tauri-ipc-incremental-metrics",
+      "priorStatus": "disqualified",
+      "priorClassification": "D2",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r3-apps-editor-proof-document-markdown-flags",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r25-apps-hero-video-state-playing-element",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r25-apps-streaming-turn-view-active",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "sidecar-transport-ipc-token",
+      "priorStatus": "disqualified",
+      "priorClassification": "D1",
+      "disposition": "outside-recall-net",
+      "archiveDesign": false
+    },
+    {
+      "id": "r26-apps-sidecar-ipc-ready-latch",
+      "priorStatus": "designed",
+      "priorClassification": "qualified",
+      "disposition": "outside-recall-net",
+      "archiveDesign": true
+    }
+  ],
+  "integration": "Parent only after R33 terminal. Preserve footer and history. No D1/D2 replacement. Do not alter unrelated HeroClipLayer playback/media owners."
+}

@@ -1,0 +1,537 @@
+{
+  "seedCount": 43,
+  "withdrawCount": 15,
+  "unchangedByFullOwnerScopeAudit": 27,
+  "separateObsAuditCount": 1,
+  "seeds": [
+    {
+      "id": "pretext-engine-profile",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/pretext/src/Pretext.models.ts",
+      "symbol": "EngineProfile",
+      "booleanMembers": [
+        "carryCJKAfterClosingQuote",
+        "breakKeepAllAfterPunctuation",
+        "preferPrefixWidthsForBreakableRuns",
+        "preferEarlySoftHyphenBreak"
+      ],
+      "booleanMemberCount": 4,
+      "declarationStart": 53,
+      "declarationEnd": 64,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-stream-state",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "symbol": "StreamState",
+      "booleanMembers": [
+        "finished",
+        "textEnded",
+        "textStarted"
+      ],
+      "booleanMemberCount": 3,
+      "declarationStart": 221,
+      "declarationEnd": 248,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-migration-journal-shape-row",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "symbol": "MigrationJournalShapeRow",
+      "booleanMembers": [
+        "exists",
+        "hasName"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 349,
+      "declarationEnd": 354,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-pcl-page-info",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/pacer/src/Pcl.models.ts",
+      "symbol": "PageInfo",
+      "booleanMembers": [
+        "first",
+        "last"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 137,
+      "declarationEnd": 150,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-openclaw-channel-health",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "symbol": "OpenclawChannelHealth",
+      "booleanMembers": [
+        "connected",
+        "restartPending",
+        "running"
+      ],
+      "booleanMemberCount": 3,
+      "declarationStart": 592,
+      "declarationEnd": 613,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-openai-compat-chat-completion-request",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+      "symbol": "OpenAiCompatChatCompletionRequest",
+      "booleanMembers": [
+        "parallel_tool_calls",
+        "stream"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 833,
+      "declarationEnd": 885,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-ensure-qa-scene-result",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/obs/src/Obs.models.ts",
+      "symbol": "EnsureQaSceneResult",
+      "booleanMembers": [
+        "inputCreated",
+        "sceneCreated"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 415,
+      "declarationEnd": 447,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-obs-record-status",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+      "symbol": "ObsRecordStatus",
+      "booleanMembers": [
+        "outputActive",
+        "outputPaused"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 1127,
+      "declarationEnd": 1160,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-read-lines-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ReadLinesOptions",
+      "booleanMembers": [
+        "skipEmpty",
+        "trim"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 567,
+      "declarationEnd": 592,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-text-stats-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "TextStatsOptions",
+      "booleanMembers": [
+        "skipEmpty",
+        "trim"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 648,
+      "declarationEnd": 663,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-sample-lines-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "SampleLinesOptions",
+      "booleanMembers": [
+        "skipEmpty",
+        "trim"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 710,
+      "declarationEnd": 725,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-read-jsonl-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ReadJsonlOptions",
+      "booleanMembers": [
+        "collectErrors",
+        "skipInvalid"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 774,
+      "declarationEnd": 787,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-load-lines-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadLinesOptions",
+      "booleanMembers": [
+        "skipEmpty",
+        "trim"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 1017,
+      "declarationEnd": 1034,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-process-file-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ProcessFileOptions",
+      "booleanMembers": [
+        "skipEmpty",
+        "stopOnError"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 1199,
+      "declarationEnd": 1217,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-filter-lines-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "FilterLinesOptions",
+      "booleanMembers": [
+        "caseInsensitive",
+        "invert"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 1266,
+      "declarationEnd": 1281,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "drivers-extract-matches-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ExtractMatchesOptions",
+      "booleanMembers": [
+        "caseInsensitive",
+        "fullLines"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 1330,
+      "declarationEnd": 1347,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "openclaw-channel-account-status",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "symbol": "OpenclawChannelAccountStatus",
+      "booleanMembers": [
+        "configured",
+        "connected",
+        "enabled",
+        "probeOk",
+        "running"
+      ],
+      "booleanMemberCount": 5,
+      "declarationStart": 675,
+      "declarationEnd": 710,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "nlp-mcp-dataset-load-lines-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+      "symbol": "DatasetLoadLinesOptions",
+      "booleanMembers": [
+        "skipEmpty",
+        "trim"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 259,
+      "declarationEnd": 274,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "nlp-mcp-text-read-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "symbol": "TextReadOptions",
+      "booleanMembers": [
+        "skipEmpty",
+        "trim"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 221,
+      "declarationEnd": 236,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "nlp-mcp-text-stream-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+      "symbol": "TextStreamOptions",
+      "booleanMembers": [
+        "skipEmpty",
+        "trim"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 253,
+      "declarationEnd": 266,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "nlp-mcp-pipeline-process-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+      "symbol": "PipelineProcessOptions",
+      "booleanMembers": [
+        "skipEmpty",
+        "stopOnError"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 169,
+      "declarationEnd": 185,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "openai-compat-language-model-config",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "symbol": "OpenAiCompatLanguageModelConfig",
+      "booleanMembers": [
+        "parallelToolCalls",
+        "strictJsonSchema"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 98,
+      "declarationEnd": 124,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "pretext-detect-engine-family",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/pretext/src/browser.ts",
+      "symbol": "detectEngineProfile.engineFamily",
+      "booleanMembers": [
+        "isSafari",
+        "isChromium"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 64,
+      "declarationEnd": 87,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "phoenix-prompt-read-exists",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
+      "symbol": "PhoenixPromptReadResult",
+      "booleanMemberCount": 1,
+      "declarationStart": 825,
+      "declarationEnd": 837
+    },
+    {
+      "id": "nlp-mcp-file-info-exists",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "FileInfoOutput",
+      "booleanMemberCount": 1,
+      "declarationStart": 126,
+      "declarationEnd": 153
+    },
+    {
+      "id": "openclaw-channel-probe-wire",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+      "symbol": "OpenclawChannelProbeWire",
+      "booleanMemberCount": 1,
+      "declarationStart": 121,
+      "declarationEnd": 133
+    },
+    {
+      "id": "onepassword-cli-account-signed-in",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.models.ts",
+      "symbol": "OnePasswordCliAccount",
+      "booleanMemberCount": 1,
+      "declarationStart": 194,
+      "declarationEnd": 206
+    },
+    {
+      "id": "obs-request-status-result",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+      "symbol": "ObsRequestStatus",
+      "booleanMemberCount": 1,
+      "declarationStart": 385,
+      "declarationEnd": 407
+    },
+    {
+      "id": "obs-record-state-changed-data",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+      "symbol": "ObsRecordStateChangedData",
+      "booleanMemberCount": 1,
+      "declarationStart": 876,
+      "declarationEnd": 899
+    },
+    {
+      "id": "obs-record-state-changed-event",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/obs/src/ObsProtocol.models.ts",
+      "symbol": "ObsRecordStateChangedEvent",
+      "booleanMemberCount": 1,
+      "declarationStart": 923,
+      "declarationEnd": 951
+    },
+    {
+      "id": "openclaw-telegram-channel-document-flags",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/openclaw/src/OpenclawRender.ts",
+      "symbol": "telegramChannelDocument",
+      "booleanMembers": [
+        "configWrites",
+        "enabled"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 123,
+      "declarationEnd": 134,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "r24-drivers-n-r-openclaw-channel-account-probe-ok-error",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "symbol": "OpenclawChannelAccountStatus",
+      "booleanMembers": [
+        "configured",
+        "connected",
+        "enabled",
+        "probeOk",
+        "running"
+      ],
+      "booleanMemberCount": 5,
+      "declarationStart": 675,
+      "declarationEnd": 710,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "r24-drivers-n-r-openclaw-agent-turn-aborted-stop-reason",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "symbol": "OpenclawAgentTurn",
+      "booleanMemberCount": 1,
+      "declarationStart": 732,
+      "declarationEnd": 759
+    },
+    {
+      "id": "r24-drivers-n-r-openclaw-agent-meta-wire-aborted-stop-reason",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+      "symbol": "OpenclawAgentMetaWire",
+      "booleanMemberCount": 1,
+      "declarationStart": 197,
+      "declarationEnd": 212
+    },
+    {
+      "id": "r25-drivers-n-r-openai-compat-chat-completion-stream-options",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+      "symbol": "OpenAiCompatChatCompletionRequest",
+      "booleanMembers": [
+        "parallel_tool_calls",
+        "stream"
+      ],
+      "booleanMemberCount": 2,
+      "declarationStart": 833,
+      "declarationEnd": 885,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "r25-drivers-n-r-stream-state-finished-finish-reason",
+      "action": "no-full-owner-withdrawal",
+      "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+      "symbol": "StreamState",
+      "booleanMembers": [
+        "finished",
+        "textEnded",
+        "textStarted"
+      ],
+      "booleanMemberCount": 3,
+      "declarationStart": 221,
+      "declarationEnd": 248,
+      "note": "Complete declaration has at least two Boolean-valued members; scope audit does not independently reapprove qualification or establish a new relationship."
+    },
+    {
+      "id": "r25-drivers-n-r-jsonl-output-truncated-errors",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "JsonlOutput",
+      "booleanMemberCount": 1,
+      "declarationStart": 241,
+      "declarationEnd": 272
+    },
+    {
+      "id": "r25-drivers-n-r-openclaw-gateway-health-wire-ok-plugins",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
+      "symbol": "OpenclawGatewayHealthWire",
+      "booleanMemberCount": 1,
+      "declarationStart": 98,
+      "declarationEnd": 113
+    },
+    {
+      "id": "r25-drivers-n-r-openclaw-secrets-reload-output-ok",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "symbol": "OpenclawSecretsReloadOutput",
+      "booleanMemberCount": 1,
+      "declarationStart": 449,
+      "declarationEnd": 461
+    },
+    {
+      "id": "r25-drivers-n-r-runpod-raw-request-authenticated-body",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/runpod/src/Runpod.service.ts",
+      "symbol": "RunpodRawRequest",
+      "booleanMemberCount": 1,
+      "declarationStart": 132,
+      "declarationEnd": 144
+    },
+    {
+      "id": "r26-drivers-n-r-openclaw-gateway-health-ok-plugins",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/openclaw/src/Openclaw.models.ts",
+      "symbol": "OpenclawGatewayHealth",
+      "booleanMemberCount": 1,
+      "declarationStart": 634,
+      "declarationEnd": 652
+    },
+    {
+      "id": "r26-drivers-n-r-openclaw-telegram-group-intent",
+      "action": "withdraw-out-of-net",
+      "file": "packages/drivers/openclaw/src/OpenclawIntent.models.ts",
+      "symbol": "OpenclawTelegramGroupIntent",
+      "booleanMemberCount": 1,
+      "declarationStart": 910,
+      "declarationEnd": 922
+    },
+    {
+      "id": "obs-qa-scene-provisioning",
+      "action": "separate-completed-OBS-audit",
+      "reference": "~/.cache/beep/boolean-creep/refresh-2026-09-25/obs-qa-scene/audit.json"
+    }
+  ]
+}

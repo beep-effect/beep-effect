@@ -1,0 +1,435 @@
+{
+  "count": 32,
+  "rows": [
+    {
+      "imagesrcset": null,
+      "imagesizes": null,
+      "icon": false,
+      "issues": []
+    },
+    {
+      "imagesrcset": null,
+      "imagesizes": null,
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": null,
+      "imagesizes": "100vw",
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> requires a width-descriptor imagesrcset"
+        }
+      ]
+    },
+    {
+      "imagesrcset": null,
+      "imagesizes": "100vw",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> requires a width-descriptor imagesrcset"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": null,
+      "imagesizes": "auto",
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> requires a width-descriptor imagesrcset"
+        }
+      ]
+    },
+    {
+      "imagesrcset": null,
+      "imagesizes": "auto",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> requires a width-descriptor imagesrcset"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": null,
+      "imagesizes": "10%",
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "imagesrcset": null,
+      "imagesizes": "10%",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> is not a valid source-size-list"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 400w",
+      "imagesizes": null,
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesrcset"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesrcset> using width descriptors requires imagesizes"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 400w",
+      "imagesizes": null,
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesrcset"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesrcset> using width descriptors requires imagesizes"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 400w",
+      "imagesizes": "100vw",
+      "icon": false,
+      "issues": []
+    },
+    {
+      "imagesrcset": "small.png 400w",
+      "imagesizes": "100vw",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 400w",
+      "imagesizes": "auto",
+      "icon": false,
+      "issues": []
+    },
+    {
+      "imagesrcset": "small.png 400w",
+      "imagesizes": "auto",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 400w",
+      "imagesizes": "10%",
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 400w",
+      "imagesizes": "10%",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> is not a valid source-size-list"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 1x",
+      "imagesizes": null,
+      "icon": false,
+      "issues": []
+    },
+    {
+      "imagesrcset": "small.png 1x",
+      "imagesizes": null,
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 1x",
+      "imagesizes": "100vw",
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> requires a width-descriptor imagesrcset"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 1x",
+      "imagesizes": "100vw",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> requires a width-descriptor imagesrcset"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 1x",
+      "imagesizes": "auto",
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> requires a width-descriptor imagesrcset"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 1x",
+      "imagesizes": "auto",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> requires a width-descriptor imagesrcset"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 1x",
+      "imagesizes": "10%",
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> is not a valid source-size-list"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "small.png 1x",
+      "imagesizes": "10%",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> is not a valid source-size-list"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "bad%url 1x",
+      "imagesizes": null,
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesrcset"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesrcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "bad%url 1x",
+      "imagesizes": null,
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesrcset"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesrcset> is not a valid srcset"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "bad%url 1x",
+      "imagesizes": "100vw",
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesrcset"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesrcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "bad%url 1x",
+      "imagesizes": "100vw",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesrcset"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesrcset> is not a valid srcset"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "bad%url 1x",
+      "imagesizes": "auto",
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesrcset"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesrcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "bad%url 1x",
+      "imagesizes": "auto",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesrcset"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesrcset> is not a valid srcset"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "bad%url 1x",
+      "imagesizes": "10%",
+      "icon": false,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> is not a valid source-size-list"
+        },
+        {
+          "path": ["attributes.imagesrcset"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesrcset> is not a valid srcset"
+        }
+      ]
+    },
+    {
+      "imagesrcset": "bad%url 1x",
+      "imagesizes": "10%",
+      "icon": true,
+      "issues": [
+        {
+          "path": ["attributes.imagesizes"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesizes> is not a valid source-size-list"
+        },
+        {
+          "path": ["attributes.imagesrcset"],
+          "rule": "attributeRelationship",
+          "message": "<link imagesrcset> is not a valid srcset"
+        },
+        {
+          "path": ["attributes.sizes"],
+          "rule": "attributeRelationship",
+          "message": "<link sizes> requires an icon link relation"
+        }
+      ]
+    }
+  ]
+}

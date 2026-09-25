@@ -1,0 +1,22 @@
+{
+  "lane": "r32-tooling-policy",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T00:53:38.746107+00:00",
+  "finished": "2026-09-25T00:55:35.426645+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 2,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-tooling-policy.jsonl`. Confirmed 0, disqualified 2. Both lane roots were covered (`lint-rules/src`, `repo-configs/src`).\n\nSeed drift: `ExperimentalConfig` still stands as a Next wire mirror, but `fallbackNodePolyfills` and `allowDevelopmentBuild` are optional single literals, so they are no longer boolean members. `RouteBaseFields` (`basePath`, `locale`) is the same kind of optional `Literal(false)` pair and is withdrawn as out of net. The other seeded clusters are unchanged. No unresolved source question.",
+  "transcriptSha256": "3ab21da339fc75af010aa60b48b183fd881847a249e4c02908cfd4b8047d0376",
+  "runnerSha256": "aa44ba577e1b7204b1c85a0549dec38d8afaa068dc269d06b86150e89fc633b4",
+  "seedSha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 2 records, 2 unique ids\n"
+}

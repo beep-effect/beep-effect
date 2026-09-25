@@ -1,0 +1,155 @@
+{
+  "kind": "boolean-creep-round-verdict/v1",
+  "round": "refresh-2026-09-25-r33-main-339da1",
+  "roundNumber": 33,
+  "finalizedAt": "2026-09-25T02:11:18.401893+00:00",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "originMainSha": "339da1562a2ed52f73a0a693c176fc52cca9ccb6",
+  "complete": true,
+  "sourceStable": true,
+  "disposition": "finalized-complete-wet",
+  "executionExitCode": 0,
+  "reconciliationComplete": true,
+  "unresolvedOwnerQuestions": [],
+  "primaryLanes": 27,
+  "successfulPrimaryLanes": 27,
+  "includedFiles": 3181,
+  "supplementallyCoveredFiles": 2,
+  "rawOccurrenceDispositions": 50,
+  "newQualifiedIds": ["r33-cli-yeet-clip-scan"],
+  "newQualifiedCount": 1,
+  "changedQualifiedIds": ["obs-qa-scene-provisioning"],
+  "withdrawnQualifiedIds": [
+    "docgen-generation-outcome",
+    "docgen-quality-package-outcome",
+    "docgen-runpod-cleanup-outcome",
+    "docgen-subject-collection-outcome",
+    "docgen-worker-packet-review",
+    "files-border-classification",
+    "files-face-detection-presence",
+    "files-person-reference-disposition",
+    "goals-packet-migration-kind",
+    "goals-transition-plan-disposition",
+    "nlp-mcp-file-info-exists",
+    "phoenix-prompt-read-exists",
+    "r2-tooling-packet-transition-stream-trace",
+    "r26-apps-sidecar-ipc-ready-latch",
+    "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+    "r3-drivers-arch-folder-resolution-blocked-provider",
+    "receipt-fallback-draft-occupancy",
+    "runtime-activity-payload-kind",
+    "vault-sync-status-connected"
+  ],
+  "withdrawnDisqualifiedIds": [
+    "agents-chat-turn-surface",
+    "obs-record-state-changed-data",
+    "obs-record-state-changed-event",
+    "obs-request-status-result",
+    "onepassword-cli-account-signed-in",
+    "openclaw-channel-probe-wire",
+    "practice-kg-document-tool-row-truncated",
+    "practice-kg-tool-result-truncated",
+    "r2-apps-dms-mirror-disconnected-bits",
+    "r2-apps-ipc-spike-mount-gates",
+    "r24-drivers-n-r-openclaw-agent-meta-wire-aborted-stop-reason",
+    "r24-drivers-n-r-openclaw-agent-turn-aborted-stop-reason",
+    "r25-apps-hero-video-state-playing-element",
+    "r25-apps-streaming-turn-view-active",
+    "r25-cli-commands-r-z-fleet-checkout-detached-branch",
+    "r25-cli-internal-root-gh-page-info",
+    "r25-drivers-a-f-box-action-base-destructive-provider",
+    "r25-drivers-n-r-jsonl-output-truncated-errors",
+    "r25-drivers-n-r-openclaw-gateway-health-wire-ok-plugins",
+    "r25-drivers-n-r-openclaw-secrets-reload-output-ok",
+    "r25-drivers-n-r-runpod-raw-request-authenticated-body",
+    "r26-agents-workspace-runtime-evidence-span-presence",
+    "r26-drivers-n-r-openclaw-gateway-health-ok-plugins",
+    "r26-drivers-n-r-openclaw-telegram-group-intent",
+    "r28-shared-documents-vault-sync-status-cursor-position",
+    "r3-apps-chat-orchestrator-incremental-metrics",
+    "r3-apps-editor-proof-document-markdown-flags",
+    "r3-apps-intake-orchestrator-incremental-metrics",
+    "r3-apps-ontology-orchestrator-incremental-metrics",
+    "r3-apps-tauri-ipc-incremental-metrics",
+    "r3-apps-vault-sync-orchestrator-incremental-metrics",
+    "sidecar-transport-ipc-token"
+  ],
+  "reclassifiedQualifiedIds": ["files-image-orientation-state"],
+  "records": 747,
+  "qualified": 123,
+  "disqualified": 624,
+  "wet": true,
+  "dry": false,
+  "dryCredit": false,
+  "consecutiveCurrentDryRounds": 0,
+  "independentP3Approval": false,
+  "applied": 0,
+  "inventorySha256": "274513d2bea4dc0ba1868af0e0dc0832fd78b5a13e80955af98d47f2f90869cf",
+  "finalizationBindings": [
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/execution-summary.json",
+      "sha256": "219a41b87ad036660c2b33b7360dadad0b7492692396dccfdd3884ecd007671b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/execution-audit.json",
+      "sha256": "a18864c95b893865c81456f6c3257b9c0b1a41e46795c1d40204bbf543a71d62"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/execution-audit.md",
+      "sha256": "dd56e284949829d8fd935c4b73d6df44256b581cec82329336a333385e0c25d9"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/private-input-bindings.json",
+      "sha256": "a845c0ef048ce00743036e620c32661f425f3523dcb312bf544116a933aa702b"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/footers.json.txt",
+      "sha256": "bf9f77057d7c19fd987e12afe5e3fc99511cee3ed7d43f1b30d81dd62625374d"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/lane-map.json",
+      "sha256": "9e6a2fcf470d041b79acd07b6413259a2763284174ef0d5a96d399117f93e303"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/launch-controller-exit.json",
+      "sha256": "88b40f5039ac69c8b48883e8a1a2cbe78777f152cba9a8baa18ded4eeb076502"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-parent-integration-2026-09-25.json",
+      "sha256": "99652292922d7d5515405e18e4e6095ca49fb1cca552feaa4a02630896b97db0"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-reconciliation-progress-2026-09-25.json",
+      "sha256": "86cd53b1b9bf40a5c8145f87a2791c575a6d451325070563940f28ac8456da27"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-admissions-2026-09-25.json",
+      "sha256": "6604b22a9e3e223ee86110047852df2db06297865f22331205eff65c8fb74c5b"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-publication-format-2026-09-25.json",
+      "sha256": "87eebf3a0354df8d81d275fdf232f1bc415e0136297c284fb46065acaf1dd032"
+    },
+    {
+      "file": "goals/boolean-creep/history/inventory/2026-09-25-r33-final-reconciled.jsonl",
+      "sha256": "274513d2bea4dc0ba1868af0e0dc0832fd78b5a13e80955af98d47f2f90869cf"
+    },
+    {
+      "file": "goals/boolean-creep/DECISIONS.md",
+      "sha256": "af6a0b56445319122358d4edcdbd6670f70b5619078f25164ad4d15545d65084"
+    },
+    {
+      "file": "goals/boolean-creep/data/decision-snapshot-index-2026-09-22.json",
+      "sha256": "d952ea6ccca9d4005746f7ddc0a5f9393d571a8953bca5210953623d6d9dae4c"
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/source-sha.txt",
+      "sha256": "b1177f1e9d92db9e3ae88f0eee9277a67d2a397e288c6f125987afe4c68e1912"
+    },
+    {
+      "file": "goals/boolean-creep/data/r33-owner-reviews/html-element-meta/supplemental-seed-coverage.json",
+      "sha256": "68ad8b13aaef2d93a065c2f0dc3410d2aaf1fe12f4a79aa0596d3c7bbcf81dbf"
+    }
+  ],
+  "note": "Full current-source census reconciled with bounded complete-owner audits. Separate supplemental coverage repairs two omitted non-TypeScript ontology files without rewriting primary reports. One new qualification and corrected OBS design;51 out-of-net withdrawals and orientation precision reclassification. User-specific contract rulings remain unchanged. No implementation or independent review credit."
+}

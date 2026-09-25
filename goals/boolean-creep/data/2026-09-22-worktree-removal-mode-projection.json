@@ -1,0 +1,22 @@
+[
+  {
+    "archive": false,
+    "deleteBranch": false,
+    "legal": true
+  },
+  {
+    "archive": false,
+    "deleteBranch": true,
+    "legal": false
+  },
+  {
+    "archive": true,
+    "deleteBranch": false,
+    "legal": true
+  },
+  {
+    "archive": true,
+    "deleteBranch": true,
+    "legal": true
+  }
+]

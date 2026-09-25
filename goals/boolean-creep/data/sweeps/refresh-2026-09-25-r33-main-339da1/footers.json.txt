@@ -1,0 +1,110 @@
+[
+  {
+    "lane": "r33-foundation-primitive",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-primitive.jsonl`\n\nConfirmed 0, disqualified 0. Both assigned roots were covered (generated `packages/foundation/primitive/data/src/generated/*` excluded by codegen banners). No seed entries, so no seed drift. No unresolved owner: the lane has no co-carried boolean cluster. Out of net: the single `inittedMaps` latch, predicate return types, and the `false | MimeType` lookup sentinel. Validator: `inventory OK: 0 records`."
+  },
+  {
+    "lane": "r33-foundation-capability",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-capability.jsonl`. Confirmed 0, disqualified 0. All nine assigned roots were covered (165 non-test, non-generated source files); the validator accepted the empty report.\n\nSeed owners, members, and classifications still match current writers and readers, so nothing new or corrected was recorded. Anchor drift only: `registerSanitizedToolkit.wireTool.annotations` is now at `SanitizedSpan.ts:458` (inventory line 258). Smaller shifts: `BackendCapabilities` 247\u2192250, `AnnotationOptions` 316\u2192318, `ShaclValidationResult` 284\u2192286, `SourceTextPageStruct` 131\u2192134, `sourceFailureMatchesEvidence` locals at 619 (inventory line 634). No unresolved source question."
+  },
+  {
+    "lane": "r33-foundation-modeling-rest",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-modeling-rest.jsonl`\n\nConfirmed 1, disqualified 14. Every assigned root was covered. The validator passed.\n\nListed seeds still match their members, lines, and classifications, so they were not repeated. No withdrawals and no unresolved source question."
+  },
+  {
+    "lane": "r33-foundation-schema-a-m",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-schema-a-m.jsonl`\n\nConfirmed **0**, disqualified **3**. Every assigned root was covered (188 non-test source files; HEAD `32f111f3707a63168b68ed04516af800ecc3a66c`).\n\nSeed drift, locator only, classification unchanged: `literalkit-attach-helper-descriptors` 618\u2192620, `literalkit-readonly-property` 818\u2192820, `collectEbmlEvidence` 151\u2192164 (`webm`/`matroska`). Unchanged and not re-emitted: JSON Schema `Node`, `CsvCodecOptions`, `ForceHttpsRedirectConfig`, `decodeJsoncUnknown.parse`, the three MappedLiteralKit descriptor objects, and `hasCoherentEnforcement` (derived OR/NOT aliases still match the designed record). No unresolved source question."
+  },
+  {
+    "lane": "r33-foundation-schema-n-z",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-schema-n-z.jsonl`\n\nConfirmed 0, disqualified 0. Every assigned root was covered. The seven seed clusters still match the current source and stay D1 or D2, so none were rewritten. No seed withdrawal and no unresolved source question. Standalone predicates and single false-or-payload header unions are outside the two-boolean net."
+  },
+  {
+    "lane": "r33-foundation-ui",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-foundation-ui.jsonl` (validator: 0 records, OK).\n\n**Counts:** 0 confirmed, 0 disqualified.\n\n**Coverage:** All five assigned roots were scanned (`brand`, `dock`, `dock-react`, `editor`, `ui`), including files with no boolean members. Seed owners, members, and classifications still match current writers and readers, so nothing was re-emitted and no seed was withdrawn.\n\n**Unresolved:** `useScribe.connect` (`handledError`, `settled`) still has no resting `handledError && !settled` on the normal path, but `onError` can throw after `handledError = true` and before `settled = true`. That leaves the canonical D1 in place rather than a new E4."
+  },
+  {
+    "lane": "r33-drivers-a-f",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-a-f.jsonl`. Confirmed 0, disqualified 0. Every assigned root was covered (99 non-generated sources; `_generated` and tests excluded). HEAD matches `32f111f3707a63168b68ed04516af800ecc3a66c`.\n\nSeed classifications still hold, so nothing was re-emitted. Line anchors drifted without a class change: `FolderResolution` is now line 67 (canonical 58; the old E2 cite 132 is the root writer, and the blocked short-circuit is `dependentAction` at 173), `ActionBaseInput` is now line 73 (canonical 69), `clientProtocol` is 851 (canonical 855), and `serverProtocol` is 868 (canonical 872). No seed withdrawals and no unresolved source question."
+  },
+  {
+    "lane": "r33-drivers-g-m",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-g-m.jsonl`. Confirmed 0, disqualified 0. Every assigned root was covered. Validator: `inventory OK: 0 records`.\n\nSeed owners still match the current source and their classifications still hold, so nothing was re-emitted. `collisionReportFromRows` still has the phase implication (a normalized-name duplicate forces a final-wire duplicate on both producers). The Graph mail/event flags and the Three.js renderer/material option objects are still external wire or SDK mirrors. No withdrawal and no unresolved source question. The canonical `SpriteMaterial` row is labeled `type-literal` while the live owner is the constructor object at `Graph3D.renderer.ts:537`; that label was left unchanged because the D2 classification did not change."
+  },
+  {
+    "lane": "r33-drivers-n-r",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-n-r.jsonl`. Confirmed 1, disqualified 0. All 15 assigned roots were covered.\n\nSeed drift: `obs-qa-scene-provisioning` drops `existingSettings` (an Option payload, not a boolean), so the coexisting domain is 8 representable / 4 legal. Single-boolean-plus-payload seeds (`FileInfoOutput`, `PhoenixPromptReadResult`, and the other payload pairs in the seed list) stay out of this net and were not re-recorded. No unresolved source question."
+  },
+  {
+    "lane": "r33-drivers-s-z",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-s-z.jsonl`.\n\nConfirmed 3, disqualified 0. All nine assigned roots were covered. The five seed clusters are unchanged D1 records (same owners and members), so they were not rewritten. No unresolved source question."
+  },
+  {
+    "lane": "r33-architecture-ecosystem-internal",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-architecture-ecosystem-internal.jsonl` \u2014 confirmed 0, disqualified 0. Validator: `inventory OK: 0 records`. All nine assigned roots were covered (114 non-test source files at `32f111f370`).\n\nSeeds unchanged, so not re-recorded: `WorkItemPublicConfig` D1, `readWorkItemConfig.envFlags` D1, `Meta` `[hasDefault, primaryKey, unique, version]` D1 (declaration now starts at line 273; members and independence still hold \u2014 identity sets `hasDefault` without a `default` payload, and `version()` blocks identity, not primary key or unique). No withdrawals. Out of net: `Timestamp` pairs one boolean (`withTimezone`) with an `ident` literal. No unresolved source question."
+  },
+  {
+    "lane": "r33-agents-workspace",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-agents-workspace.jsonl`. Confirmed 0, disqualified 0. All nine assigned roots were covered (149 non-test source files at `32f111f3707a63168b68ed04516af800ecc3a66c`).\n\nUnchanged seeds were not rewritten: `TextInline` (D1), `ScanState` (E4), `refreshTimeline` (D1), and `reconcileReceiptFallbacks` (boolean plus optional turn; prior cardinality still holds).\n\nWithdrawn from this sweep as out of net (no second boolean-typed member): `RuntimeActivity` (`activityType` plus two Options), `RuntimeEvidenceRef` (`spanId`/`spanIds` Options), and `Chat.atoms.turnSurface` (two Option atoms). No new clusters and no unresolved source question."
+  },
+  {
+    "lane": "r33-epistemic-ontology",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-epistemic-ontology.jsonl`.\n\nConfirmed 0, disqualified 0. All 13 assigned roots were scanned (230 non-test source files). The validator passed.\n\nSeed classifications still match current writers and readers, so nothing new was appended. The bounded SHACL `conforms`/`truncated` pair stays a shared-contract D1: this producer never emits `true`/`true`, and that does not narrow `ShaclValidationResult`. No ineligible seed withdrawals and no unresolved source question."
+  },
+  {
+    "lane": "r33-shared-documents",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-shared-documents.jsonl` (validator: 0 records). Confirmed 0, disqualified 0.\n\nAll seven assigned roots were covered (220 non-test source files). No new or reclassified clusters. Seed owners still match their members and classifications; nothing withdrawn.\n\nLine drift only: `VaultSyncStatus.connected` is line 70 (inventory still 65); `enqueueMoveDeltas` locals are lines 736\u2013737 (inventory 729). `dms-mirror-probe-connected` is already in the canonical inventory and was left out of this round\u2019s seed list; Box writers at `DmsMirrorBox.ts` 849\u2013866 are unchanged, so it was not re-emitted."
+  },
+  {
+    "lane": "r33-law-practice-domain",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-law-practice-domain.jsonl`\n\nConfirmed 0, disqualified 0. Every file under `packages/law-practice/domain/src` was covered (generated surfaces excluded). Seeded clusters still match current owners, members, and classifications; no withdrawals or line drift that changes a record. Lone booleans (`Claim.independent`, `DurableLocatorOptions.fullSpan`) and `ConstitutionalCitation.preamble` paired only with numeric article/amendment options stay outside the two-boolean net. The validator accepted the empty report."
+  },
+  {
+    "lane": "r33-law-practice-runtime",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-law-practice-runtime.jsonl` (validator OK). Confirmed 0, disqualified 0. All three roots were covered (`server/src`, `tables/src`, `use-cases/src`); HEAD matches `32f111f3707a63168b68ed04516af800ecc3a66c`.\n\nUnchanged seeds left out of the report: `PracticeKgOptions`, `existingSourceSpecs`, `closedWorldReadOnlyHints` (MCP `FourHintAnnotations` wire), and `buildPracticeKgBundleImpl` (`manifestExists` / `overwrite`).\n\nSeed drift, no replacement records: `PracticeKgDocumentToolRow` (`truncated` plus `text: NullOr<string>`) and `PracticeKgToolResult` (`truncated` plus optional `note` string) each have one boolean member, so those pairs are outside the net. No other unresolved source question."
+  },
+  {
+    "lane": "r33-apps",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-apps.jsonl`. It contains 0 confirmed and 0 disqualified records. Every assigned root was covered at `32f111f3707a63168b68ed04516af800ecc3a66c`.\n\nCo-owned seeded clusters still match their classifications, so they were not repeated. These seeds are withdrawn because the current source no longer has two Boolean members on one owner:\n\n- `r26-apps-sidecar-ipc-ready-latch`: `Sidecar` stores only `ipc_ready`. `ipc` is a setup local.\n- `sidecar-transport-ipc-token`: only `ipc` is Boolean. `rpcSessionToken` is an `Option`.\n- `r25-apps-hero-video-state-playing-element` and `r25-apps-streaming-turn-view-active`: the paired fields are a nullable element and an `Option`, not Booleans.\n- `r2-apps-ipc-spike-mount-gate`: a field and a predicate call, not two members.\n- `r2-apps-dms-mirror-disconnected-bits`: `retryable` and `connected` are on two different `make()` objects.\n- `r3-apps-editor-proof-document-markdown-flags`: `TaskItem.checked` and `Table.headerRow` are separate objects.\n- The orchestrator `*.incrementalMetrics` seeds are separate one-Boolean counter option objects.\n\nNo unresolved source question remains on an eligible cluster."
+  },
+  {
+    "lane": "r33-tooling-library-observability",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-observability.jsonl`: **0 confirmed**, **17 disqualified**. Every assigned root was covered (`ai-metrics/src`, `ai-sync/src`, `qa-capture/src`), with tests and `_generated` excluded.\n\nSeed drift: `HttpRouter.serve` options moved from line 432 to the object at line 430. The classification stays D2. No withdrawals and no unresolved source question.\n\nOut of net (single Boolean, or a Boolean plus a non-Boolean enum): `AiMetricsRedactionResult.safeForDerivedUi`, `AiMetricsMirrorPrivacyProof.safe`, `p6ProofPreserved`, `BenchmarkRun` and `AiMetricsBenchmarkRunInput` `passed` plus `qualityGate`, `BeaconEvent.isWhite`, and `CaptureSession.commitDirty`."
+  },
+  {
+    "lane": "r33-tooling-library-support",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-library-support.jsonl`. Confirmed 0, disqualified 1. Every assigned root was covered.\n\nSeed owners, members, and classifications still match the current source, including the pinned docgen literals, OpenMode/OpenFileDescriptor derivations, and the D1/D2 tooling records. No withdrawals and no anchor drift.\n\n`JSDocTagDefinition.isDeprecated` stays out of the report: it is one boolean beside an optional string note, and the catalog only writes `false` with the note omitted. Function flag parameters were skipped."
+  },
+  {
+    "lane": "r33-tooling-policy",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tooling-policy.jsonl`. Confirmed 0, disqualified 0. Both assigned roots were covered at `32f111f3707a63168b68ed04516af800ecc3a66c`.\n\nSeed clusters still match their current owners and member sets, including the boolean-admitting unions on `ExperimentalConfig` (`prefetchInlining`, `cssChunking`, `browserDebugInfoInTerminal`). No withdrawals and no unresolved source question. Lone booleans and `Literal(false)` route fields stayed out of the net."
+  },
+  {
+    "lane": "r33-tool-docgen",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-tool-docgen.jsonl`. Confirmed 0, disqualified 0. Every file under `packages/tooling/tool/docgen/src` was covered. The 17 seeded clusters still match current owners, members, lines, and D1/D2 classifications, so nothing was rewritten. No unresolved source question. The validator reported 0 records, OK."
+  },
+  {
+    "lane": "r33-cli-internal-root",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-internal-root.jsonl`. Confirmed 2, disqualified 0. Validator passed. Every assigned root was covered (`bin-main.ts`, `bin.ts`, `index.ts`, `internal/`).\n\nSeed classifications still hold, so they were not re-emitted. Line anchors drifted without a status change: `GhPageInfo.hasNextPage` is now line 69 (inventory 61) and `DiscoveredCandidate.classified` is line 67 (inventory 66). `assertExclusiveModeFlags` stays withdrawn as an anonymous function-parameter object. No unresolved source question."
+  },
+  {
+    "lane": "r33-cli-commands-a-c",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-a-c.jsonl`\n\nConfirmed **0**, disqualified **0**. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (173 in-scope files at `32f111f3707a63168b68ed04516af800ecc3a66c`, matching the source SHA). Codegen has only `Flag.Boolean` descriptors, which are out of net. Seeded owners and member clusters still match current writers and readers, so nothing was re-recorded. Canonical line numbers have drifted (for example `CiLocalOptions` 2203 \u2192 2341, `LegacyWordTerminal` 3283 \u2192 3305, `MakeInstallDoctorProgramOptions` 992 \u2192 1002) without a classification change. No seed withdrawals and no unresolved source question."
+  },
+  {
+    "lane": "r33-cli-commands-d-k",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-d-k.jsonl` (validator: 0 records).\n\nConfirmed 0, disqualified 0. All ten assigned roots were covered (118 non-test source files at `32f111f3707a63168b68ed04516af800ecc3a66c`). Seeded clusters still match their owners and classifications; no withdrawals. Canonical inventory line numbers are stale for several of those records, and that drift does not change the adjudication. Function-parameter flag bags were left out of the net."
+  },
+  {
+    "lane": "r33-cli-commands-l-q",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-l-q.jsonl`. Confirmed 0, disqualified 2. All seven assigned roots were covered (115 non-test source files at `32f111f3707a63168b68ed04516af800ecc3a66c`).\n\nSeed classifications still match current writers and contracts. No withdrawals. `EffectImportRulesSummary.strictFailure` stays an orthogonal verdict bit beside the existing `write`/`candidate` pair, so that cluster was not expanded. `cleanCoverageRegressionOutputs`\u2019s remove-options object is now at `CoverageRegression.ts:1314` with the same `force`/`recursive` shape."
+  },
+  {
+    "lane": "r33-cli-commands-r-z",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-r-z.jsonl`. It contains 0 confirmed and 4 disqualified records, and the validator passed.\n\nEvery assigned root was covered: Research, `Root.ts`, Runners, Skills, SyncDataToTs, TopoSort, TsconfigSync, VersionSync, and Worktree.\n\nSeed classifications that were re-read still hold. Anchor drift only: `PorcelainAccumulator` is at line 604 (cited 361), `WorkspaceDescriptor` fields are at 972 (cited 958), `TsconfigSyncModeFlags` is at 449 (cited 441), `worktreeResidueReason`'s object is at 423 (cited 297), `isUnpinnedTag` is at 423 (cited 428), `WorktreeDoctorEntry` booleans start at 237 (cited 226), and `FleetCheckout.detached` is at 1240 (cited 997). No unresolved source question."
+  },
+  {
+    "lane": "r33-cli-yeet",
+    "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-yeet.jsonl`\n\nConfirmed 1, disqualified 1. The Yeet lane (70 non-test source files) was covered.\n\nAll 34 seeded owners still exist with the same members and classifications, so none were rewritten. Canonical line numbers are stale for `GhStatusReviewThread`, `ReplyLiveThread`, `GhReviewThread`, `SharedOptions` `ciParity`/`noFailFast`, `BuildYeetRunPlanTestOptions`, `PreparedPublishCommit`, and `YeetMonitorFailedJob`. The `SweepGitState` occupancy flags stay outside `r29-yeet-sweep-worktree-probe-address`: helper fixtures still build unreliable-with-branch-free and reliable-addressed-with-both-occupancy-false. No unresolved source question."
+  }
+]

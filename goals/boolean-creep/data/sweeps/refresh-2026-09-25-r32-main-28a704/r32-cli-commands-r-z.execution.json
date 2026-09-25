@@ -1,0 +1,22 @@
+{
+  "lane": "r32-cli-commands-r-z",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T00:59:01.347206+00:00",
+  "finished": "2026-09-25T01:02:47.215587+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 3,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-commands-r-z.jsonl`\n\nConfirmed 0, disqualified 3. The validator passed. Every assigned root was covered, including `Root.ts` and `TopoSort` (no boolean clusters).\n\nSeed drift: `turboOnly` is now on `VersionSyncOptionsCheck`, `VersionSyncOptionsWrite`, and `VersionSyncOptionsDryRun`. Those three records are expanded and still D1. The other seeded clusters match current writers and readers, so they were not repeated. `exemptInvokerSession` stays an independent optional axis beside `archive` and `deleteBranch`.",
+  "transcriptSha256": "2bc69400e71be3f8adb1ab059de3043fb4656d2945aed5b0bade13f435fd6622",
+  "runnerSha256": "aa44ba577e1b7204b1c85a0549dec38d8afaa068dc269d06b86150e89fc633b4",
+  "seedSha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 3 records, 3 unique ids\n"
+}

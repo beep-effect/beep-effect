@@ -1,0 +1,112 @@
+{
+  "kind": "boolean-creep-publication-format-repair/v1",
+  "publishedCommit": "1e6cc6f0d30b57cd9d9f274bc9ea91c1635beb65",
+  "cause": "Pre-commit Biome formatted four JSON files after bindings were recorded. Original bytes reconstructed and matched against the pre-commit SHA-256 manifest. Dependent receipt bindings updated after formatting.",
+  "records": [
+    {
+      "file": "goals/boolean-creep/data/tooling-tmpfs-refresh-2026-09-22.json",
+      "beforeSha256": "66400682f8cffbc8d98ee468ac864ff4d12b2847b6994265b2db6b79ab169bd6",
+      "afterSha256": "6d02ae5d8edf14cd4268510ea0ea3996b9e06a21ad2139e6fae57135b2243c74",
+      "retainedBefore": "goals/boolean-creep/history/2026-09-25-publication-format/data--tooling-tmpfs-refresh-2026-09-22.json-66400682f8cf.txt",
+      "jsonValuesUnchanged": true
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-reconciliation-progress-2026-09-24.json",
+      "beforeSha256": "abc71f68c64cb9f45d5627a0b2d4cf61a3b28b902b18abcf8ae8ef1e09469172",
+      "afterSha256": "b8bb220bc171a82c18ab108e9b2e5e0771a35681c841ca0b1bdda1c97aa2550c",
+      "retainedBefore": "goals/boolean-creep/history/2026-09-25-publication-format/data--r32-reconciliation-progress-2026-09-24.json-abc71f68c64c.txt",
+      "jsonValuesUnchanged": true
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/cache-pilot-run-observations/finite-table.json",
+      "beforeSha256": "bec5fe9057b4bdb13e12e5690d34d9505d8703b8904f8b83f4d9be10d0972fa1",
+      "afterSha256": "57ddfadcdd99512348f30ead6e4d10b46f08c239a0d423aad153d4a08a5bacad",
+      "retainedBefore": "goals/boolean-creep/history/2026-09-25-publication-format/cache-pilot-run-observations--finite-table.json-bec5fe9057b4.txt",
+      "jsonValuesUnchanged": true
+    },
+    {
+      "file": "goals/boolean-creep/data/owner-readmission-2026-09-24.json",
+      "beforeSha256": "2d609e73a820d7d59891611385ce3a1417cc84bd1e670c3d67504294bbd65ed8",
+      "afterSha256": "552b2173f5d67000028c620fac2acb4c7aa0e39a614f381b4c308be0803a7664",
+      "retainedBefore": "goals/boolean-creep/history/2026-09-25-publication-format/data--owner-readmission-2026-09-24.json-2d609e73a820.txt",
+      "jsonValuesUnchanged": true
+    },
+    {
+      "file": "goals/boolean-creep/data/owner-readmission-2026-09-24.json",
+      "beforeSha256": "552b2173f5d67000028c620fac2acb4c7aa0e39a614f381b4c308be0803a7664",
+      "afterSha256": "faea982e7cf8303a8e364ab70ad34db61a026a1564f94485bcd560f79542d18a",
+      "retainedBefore": "goals/boolean-creep/history/2026-09-25-publication-format/data--owner-readmission-2026-09-24.json-552b2173f5d6.txt",
+      "bindingReplacements": [
+        {
+          "before": "66400682f8cffbc8d98ee468ac864ff4d12b2847b6994265b2db6b79ab169bd6",
+          "after": "6d02ae5d8edf14cd4268510ea0ea3996b9e06a21ad2139e6fae57135b2243c74"
+        }
+      ]
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/cache-pilot-run-observations/admission.json",
+      "beforeSha256": "d1437e3ff0f600674a896811c1c1a75242c2c2b65edbb315d0e53795f23a09ca",
+      "afterSha256": "d91ed54d0d671ec1712c67017df0e465b9c69f68184c294b2e3cd3e83f5c00bd",
+      "retainedBefore": "goals/boolean-creep/history/2026-09-25-publication-format/cache-pilot-run-observations--admission.json-d1437e3ff0f6.txt",
+      "bindingReplacements": [
+        {
+          "before": "bec5fe9057b4bdb13e12e5690d34d9505d8703b8904f8b83f4d9be10d0972fa1",
+          "after": "57ddfadcdd99512348f30ead6e4d10b46f08c239a0d423aad153d4a08a5bacad"
+        }
+      ]
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-admissions-2026-09-25.json",
+      "beforeSha256": "051f07ddc377241176e8b16c200760182f94acf73bd3d1defc7c567fc66135c1",
+      "afterSha256": "ce9f11838f5aa78f72bf38f538f34eb75b4f279d45168e59d3b691e86792a711",
+      "retainedBefore": "goals/boolean-creep/history/2026-09-25-publication-format/data--r32-owner-admissions-2026-09-25.json-051f07ddc377.txt",
+      "bindingReplacements": [
+        {
+          "before": "d1437e3ff0f600674a896811c1c1a75242c2c2b65edbb315d0e53795f23a09ca",
+          "after": "d91ed54d0d671ec1712c67017df0e465b9c69f68184c294b2e3cd3e83f5c00bd"
+        }
+      ]
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-parent-integration-2026-09-25.json",
+      "beforeSha256": "cc62e90372499b9b2581824b13e0a2c970fc102636ceda6126a8d9e4703943bc",
+      "afterSha256": "3fdc0858076bbb8ef5c9697cdad536f66d985200224dfe9a1c48860410e88c22",
+      "retainedBefore": "goals/boolean-creep/history/2026-09-25-publication-format/data--r32-parent-integration-2026-09-25.json-cc62e9037249.txt",
+      "bindingReplacements": [
+        {
+          "before": "abc71f68c64cb9f45d5627a0b2d4cf61a3b28b902b18abcf8ae8ef1e09469172",
+          "after": "b8bb220bc171a82c18ab108e9b2e5e0771a35681c841ca0b1bdda1c97aa2550c"
+        },
+        {
+          "before": "051f07ddc377241176e8b16c200760182f94acf73bd3d1defc7c567fc66135c1",
+          "after": "ce9f11838f5aa78f72bf38f538f34eb75b4f279d45168e59d3b691e86792a711"
+        }
+      ]
+    },
+    {
+      "file": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/round-verdict.json",
+      "beforeSha256": "78f2ef826ab77b7afcc694ce62f02fc85a5aaa7698cfe20a0cdda8b86bc69413",
+      "afterSha256": "82b3f81bf9b00751a3dcbbdabb72979b7930293284d9c0325f46e00d3c84a8d2",
+      "retainedBefore": "goals/boolean-creep/history/2026-09-25-publication-format/refresh-2026-09-25-r32-main-28a704--round-verdict.json-78f2ef826ab7.txt",
+      "bindingReplacements": [
+        {
+          "before": "abc71f68c64cb9f45d5627a0b2d4cf61a3b28b902b18abcf8ae8ef1e09469172",
+          "after": "b8bb220bc171a82c18ab108e9b2e5e0771a35681c841ca0b1bdda1c97aa2550c"
+        },
+        {
+          "before": "051f07ddc377241176e8b16c200760182f94acf73bd3d1defc7c567fc66135c1",
+          "after": "ce9f11838f5aa78f72bf38f538f34eb75b4f279d45168e59d3b691e86792a711"
+        },
+        {
+          "before": "cc62e90372499b9b2581824b13e0a2c970fc102636ceda6126a8d9e4703943bc",
+          "after": "3fdc0858076bbb8ef5c9697cdad536f66d985200224dfe9a1c48860410e88c22"
+        }
+      ],
+      "addedBinding": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/source-sha.txt"
+    }
+  ],
+  "semanticFindingsChanged": false,
+  "independentP3Approval": false,
+  "dryRoundCredit": false,
+  "additionalCorrection": "R33 predecessor preflight also required the unchanged source-sha.txt receipt as a direct finalization binding. Added it after verifying exact equality to the recorded source SHA."
+}

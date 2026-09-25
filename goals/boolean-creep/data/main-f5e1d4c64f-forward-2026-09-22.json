@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "boolean-creep-main-forward/v1",
+  "date": "2026-09-22",
+  "from": "f137beedb270a071d4aa2ecc1dd52a9d233044d1",
+  "to": "f5e1d4c64f37e0a8c42e217eee5f06841220c161",
+  "strategy": "fast-forward",
+  "changedPaths": [
+    "goals/effect-vitest-canon/history/2026-09-22-runner-detector-prerequisite.md",
+    "goals/effect-vitest-canon/research/OPPORTUNITIES.md",
+    "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+    "packages/tooling/tool/cli/test/effect-vitest-detectors.test.ts"
+  ],
+  "packetDirtyWorkPreserved": true,
+  "dependenciesChanged": false,
+  "meaning": "PR1185 modifies one lint source and its tests/docs. Prior refreshed owner files unchanged; historical receipts keep original source bindings. This is not whole-corpus census or review proof.",
+  "censusCredit": false,
+  "independentP3Approval": false,
+  "inventoryRowsReferencingChangedPaths": []
+}

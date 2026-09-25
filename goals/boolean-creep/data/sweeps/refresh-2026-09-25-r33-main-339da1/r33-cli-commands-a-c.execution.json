@@ -1,0 +1,22 @@
+{
+  "lane": "r33-cli-commands-a-c",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T01:50:02.806086+00:00",
+  "finished": "2026-09-25T01:53:21.910192+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-cli-commands-a-c.jsonl`\n\nConfirmed **0**, disqualified **0**. Validator: `inventory OK: 0 records`.\n\nEvery assigned root was covered (173 in-scope files at `32f111f3707a63168b68ed04516af800ecc3a66c`, matching the source SHA). Codegen has only `Flag.Boolean` descriptors, which are out of net. Seeded owners and member clusters still match current writers and readers, so nothing was re-recorded. Canonical line numbers have drifted (for example `CiLocalOptions` 2203 \u2192 2341, `LegacyWordTerminal` 3283 \u2192 3305, `MakeInstallDoctorProgramOptions` 992 \u2192 1002) without a classification change. No seed withdrawals and no unresolved source question.",
+  "transcriptSha256": "e0dc56d1d78951b8138e07041e78a2c9dada15f7d180a8220e9dc84696bac87c",
+  "runnerSha256": "df68fe961bf9e930bbc2fc81cb07eb9f1ec98fe4dd21dec5fab3317f22fbdc70",
+  "seedSha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}

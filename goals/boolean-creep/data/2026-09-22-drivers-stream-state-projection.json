@@ -1,0 +1,121 @@
+{
+  "scope": "abstract source-derived closure; excludes independent full payloads, not runtime proof",
+  "states": 12,
+  "projection": [
+    [true, false, true],
+    [true, true, false],
+    [false, false, false],
+    [true, false, false],
+    [false, false, true],
+    [true, true, true]
+  ],
+  "witnesses": [
+    {
+      "state": [false, false, false, false, false],
+      "chunks": []
+    },
+    {
+      "state": [false, false, true, false, true],
+      "chunks": [
+        {
+          "choices": [],
+          "usage": true
+        }
+      ]
+    },
+    {
+      "state": [false, false, false, false, true],
+      "chunks": [
+        {
+          "choices": [[false, false]],
+          "usage": true
+        }
+      ]
+    },
+    {
+      "state": [false, false, false, true, false],
+      "chunks": [
+        {
+          "choices": [[false, true]],
+          "usage": false
+        }
+      ]
+    },
+    {
+      "state": [false, false, true, true, true],
+      "chunks": [
+        {
+          "choices": [[false, true]],
+          "usage": true
+        }
+      ]
+    },
+    {
+      "state": [true, false, false, false, false],
+      "chunks": [
+        {
+          "choices": [[true, false]],
+          "usage": false
+        }
+      ]
+    },
+    {
+      "state": [true, false, false, false, true],
+      "chunks": [
+        {
+          "choices": [[true, false]],
+          "usage": true
+        }
+      ]
+    },
+    {
+      "state": [true, true, false, true, false],
+      "chunks": [
+        {
+          "choices": [[true, true]],
+          "usage": false
+        }
+      ]
+    },
+    {
+      "state": [true, true, true, true, true],
+      "chunks": [
+        {
+          "choices": [[true, true]],
+          "usage": true
+        }
+      ]
+    },
+    {
+      "state": [true, false, false, true, false],
+      "chunks": [
+        {
+          "choices": [[false, true], [true, false]],
+          "usage": false
+        }
+      ]
+    },
+    {
+      "state": [true, false, true, true, true],
+      "chunks": [
+        {
+          "choices": [[false, true], [true, false]],
+          "usage": true
+        }
+      ]
+    },
+    {
+      "state": [true, false, true, false, true],
+      "chunks": [
+        {
+          "choices": [],
+          "usage": true
+        },
+        {
+          "choices": [[true, false]],
+          "usage": false
+        }
+      ]
+    }
+  ]
+}

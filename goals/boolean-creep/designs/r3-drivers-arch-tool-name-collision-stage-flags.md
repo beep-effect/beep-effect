@@ -1,269 +1,203 @@
 # Design: aggregate MCP tool-name collision stage
 
-Stable ID: `r3-drivers-arch-tool-name-collision-stage-flags`. P2 draft on frozen
-HEAD `93217d998f851e2e93d9864e2b5315552eaa58a7`, main
-`d1b4d769fbaffddd55717f3b1ba461897dd545c5`. Independent R28 drivers-g-m census
-corrects D1 to E4, 4 representable / 3 legal. Derived/internal, Tier 1. The corrected owner is admitted; replacement independent P3 review is pending.
-Evidence, exact replacement row, callable withdrawals, and file hashes are in
-`../data/design-refresh-2026-09-09-r28-driver-collision-values.md`.
+Stable ID: `r3-drivers-arch-tool-name-collision-stage-flags`. P2 refresh against
+`f97a89bdfdc5bc71b69aab09b8d425591698d42a`. E4, 4 representable / 3 legal;
+derived/internal, Tier 1. Fresh independent P3 is required. No implementation,
+review approval, census dry credit, or GATE 2 transition is claimed.
 
 ## Current shape
 
-`packages/drivers/gov-legal-mcp/src/ToolNames.ts:483–532` exports
-`buildToolNameCollisionReport`. After successful projection of all candidates,
-the function groups the same rows by normalized and final wire name, retains
-both duplicate-key sets, and derives two Boolean locals:
+The actual owner is now private `collisionReportFromRows` at
+`packages/drivers/gov-legal-mcp/src/ToolNames.ts:492-539`, not exported
+`buildToolNameCollisionReport`. The helper derives two actual non-callable
+Boolean locals at :497-498 from normalized and final duplicate-key sets over
+one projected array. It labels individual rows at :503-509, builds aggregate
+report verdict at :516, then chooses normalized error before final error at
+:519/:529, otherwise Result success. The helper has exactly two callers:
 
-```ts
-const hasNormalizedDuplicates = N.isGreaterThan(HashSet.size(normalizedDuplicates), 0);
-const hasFinalDuplicates = N.isGreaterThan(HashSet.size(finalDuplicates), 0);
-```
+- Exported Effect builder :561-566 first projects candidates with
+  `Effect.forEach(candidates, projectToolNameCandidate)` and lifts the private
+  helper's Result with Effect.fromResult at :565.
+- Eager `ProductionToolNameCollisionReport` :628-634 uses Result.all of the
+  private synchronous `projectUntruncatedToolNameCandidate`, then
+  Result.flatMap(collisionReportFromRows) at :631 and getOrThrowWith(identity).
 
-These are actual non-callable sibling values at 490–491. The scanner's
-`.stageFlags` suffix does not name a source object or declaration; the corrected
-owner symbol is `buildToolNameCollisionReport`. There is no Boolean default,
-optional Boolean, constructor argument, or independently exposed field for
-either local. Required arrays, sets, names, counts, and associated row payloads
-are not extra axes in this owner.
-
-The pair is read by the report's `duplicateVerdict` at 508 and the ordered error
-branches at 511 and 521. Normalized collisions win over final collisions. Both
-duplicate-key sets also label each report row independently at 497–501. A row
-keeps normalized precedence when it belongs to both kinds of duplicate group.
-
-Preserve the complete surrounding contract:
-
-- Input `ToolNameCandidate` at 105 requires `operationId` and `source` as
-  nonempty strings, with no added defaults or deduplication.
-- `ToolNameCollisionRow` at 144 keeps `candidate`, `digest` (`null` or string),
-  `duplicateVerdict`, `finalWireName`, `normalized`, `originalOperationId`,
-  `source`, and `truncated` (explicit Boolean). Neither null digest nor false
-  truncation may be omitted or rewritten by this record.
-- `ToolNameCollisionReport` at 175 keeps its candidate array, aggregate
-  `clean`/`duplicate` verdict, and constructor-default `S.tag` version
-  `gov-legal-mcp/tool-name-collision-report/v1`.
-- `ToolNameCollisionError` at 244 keeps its tag, sorted `collisionKeys`,
-  nonempty `message`, existing `reason` literal, and complete report.
-- Projection at 433–459 keeps normalization, the >64 truncation threshold,
-  first-55-character prefix, underscore separator, first-eight-hex SHA-256
-  digest, and existing normalization failures. The normalization error still
-  returns before grouping when any candidate projection fails.
+The whole context remains intact. Candidate :106 requires nonempty operationId
+and source. Row :145 exposes eight fields: candidate, null-or-string digest,
+row duplicateVerdict, finalWireName, normalized, originalOperationId, source,
+and explicit Boolean truncated. Report :176 retains candidate array, clean or
+duplicate verdict, and constructor-default S.tag version. Normalization error
+:205, collision error :249 and registration error :287 remain public typed
+schemas. Collision errors retain sorted keys, exact message/reason and full
+report. No defaults exist on either selected Boolean local.
 
 ## Cardinality gap
 
-The current pair represents four states. Exactly three are supported:
+| Normalized duplicate | Final duplicate | Stage | Outcome |
+| --- | --- | --- | --- |
+| false | false | unique | clean report / Result success |
+| false | true | duplicate_final | final collision error and duplicate report |
+| true | true | duplicate_normalized | normalized collision error and duplicate report |
+| true | false | impossible on both admitted caller paths | no stage member |
 
-| Pair `(normalized, final)` | Aggregate stage | Existing externally observable outcome |
-| --- | --- | --- |
-| `(false, false)` | `unique` | Successful `clean` report. |
-| `(false, true)` | `duplicate_final` | Failure with final collision keys and final-collision message/reason; report is `duplicate`. |
-| `(true, true)` | `duplicate_normalized` | Failure with normalized collision keys and normalized-collision message/reason; report is `duplicate`. |
-| `(true, false)` | No member | Impossible because final name is a deterministic function of normalized name. |
+**Both** paths establish the implication; it is not an invariant of arbitrary
+exported ToolNameCollisionRow values. Effect projection :483-490 normalizes
+candidate text, tests the64-character cap and obtains a SHA-256 prefix for long
+names through Crypto.Crypto. Shared `toolNameRow` :322-338 chooses normalized
+unchanged without a digest or the first55 characters plus underscore plus the
+first8 digest hex characters. Equal normalized names produce equal final names
+under the SHA-256 service contract, whether truncated or not.
 
-`groupsBy` at 312 and `duplicateKeys` at 322 preserve duplicate multiplicity.
-For any two equal normalized strings, `projectToolNameCandidate` at 439–446
-chooses the same truncation branch and produces the same final wire name. Thus
-every normalized duplicate is a final duplicate. The stage preserves the
-combined-true case; it does not impose mutual exclusion on the two events.
+The synchronous production projection :442-464 rejects normalized names longer
+than64 with ToolNameNormalizationError (invalid_normalized and its exact
+production cap message). Successful rows pass None digest to toolNameRow and
+have finalWireName exactly equal to normalized. Thus normalized duplicate implies
+final duplicate there too; this path cannot produce final-only. Its currently
+fixed four candidates are clean. The two paths never pass a mixed arbitrary
+exported row array to the private helper. A future new caller must establish
+the same provenance or force re-audit; do not strengthen the public row schema.
 
-All legal states have source-supported witnesses. The empty input and the four
-production candidates give clean reports. Cross-driver and punctuation cases at
-`test/Server.test.ts:499–549` yield both true. The frozen collision at 551–576
-uses distinct 68-character normalized strings ending `_000000000g50` and
-`_0000000011bm`, each with the same `ecfr_` plus 50 `x` prefix. Both digest to
-prefix `a06e92ed` and produce one 64-character final wire name, proving false/true
-without assuming an unobserved hash collision.
+All three legal states exist across the owner call closure. Empty/ordinary
+inputs are clean. Normalization collision tests at Server.test.ts:512-528 and
+:554-571 yield both true. The frozen final-only collision at :573-601 uses
+`ecfr_` plus50 x characters and suffixes `_000000000g50` / `_0000000011bm`.
+The distinct68-character normalized strings have equal first8 SHA-256 hex
+characters `a06e92ed` and equal64-character final names. This fixture preserves
+false/true without treating unlikely collisions as impossible. Repeated equal
+candidates remain duplicates; no deduplication is introduced.
 
-This is a 4 → 3 reduction. The existing report verdict alone has two values and
-would erase the failure-stage distinction; the error reason alone has two
-values and lacks success. A schema for all four original pairs would retain
-the invalid state instead of fixing the owner.
+The qualification is E4 for these derived locals on the complete private call
+closure. It does not claim a4/3 public ToolNameCollisionRow contract, reject
+arbitrary report rows, or conflate row truncation/digest with this owner.
 
 ## Target schema
 
-Reuse the existing private `RowDuplicateVerdict` LiteralKit at `ToolNames.ts:47`
-as the finite domain of one aggregate `collisionStage` local. It already has
-exactly `unique`, `duplicate_normalized`, and `duplicate_final`. The aggregate
-stage is the highest-priority collision verdict present among the rows, or
-`unique` when all rows are unique, including the empty report.
+Reuse existing private `RowDuplicateVerdict` LiteralKit at ToolNames.ts:48
+(unique, duplicate_normalized, duplicate_final). No new literal family, public
+export, package, schema default, role file or decode boundary is needed. Keep
+its identity and per-row annotations; derive local type from its Type. Existing
+kit $match overloads in LiteralKit.schema.ts:583-605 provide exhaustive matching.
 
-No new literal family, public schema, compatibility alias, field, role file,
-or decoding boundary is needed. Keep the kit's existing identity and annotation
-for its row schema use; reusing its values internally does not change the
-schema field's per-candidate meaning. Do not rename the kit or public row field
-as an incidental cleanup. Derive the local type from `typeof RowDuplicateVerdict.Type`.
+Inside collisionReportFromRows only, replace the two Boolean locals with one
+`collisionStage`, classifying duplicate sets with normalized precedence, then
+final, then unique. Use kit Enum/thunk and Effect Match helpers; do not first
+store the pair or recreate it as getters. Keep both sets and existing per-row
+membership verdicts. The aggregate stage must never overwrite individual row
+verdicts in a mixed report.
 
-At the one producer boundary, select the existing literal from duplicate sets
-with normalized precedence: nonempty normalized set → `duplicate_normalized`;
-otherwise nonempty final set → `duplicate_final`; otherwise → `unique`. Use
-Effect matching helpers and the existing kit's `Enum`/`thunk` helpers where they
-give the tersest equivalent expression. Do not first store the two old Boolean
-results or add a tuple of them behind the new literal.
+Match stage exhaustively to report verdict (unique => clean, others => duplicate).
+Match stage exhaustively to **Result**, preserving the private helper's
+synchronous Result signature:
 
-Use `RowDuplicateVerdict.$match(collisionStage, cases)` for the aggregate
-consumers. The existing local implementation supports the data-first overload
-and exhaustive cases at
-`packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:582–605`
-and exposes the helper on its schema type at 639–648. No advanced Effect Schema
-v3/v4 transformation is introduced by this design.
-
-The report-verdict match maps `unique` to `clean` and both duplicate members to
-`duplicate`. The result match has the following complete branches:
-
-- `unique`: succeed with the already-built report.
-- `duplicate_normalized`: produce the existing `ToolNameCollisionError` using
-  sorted normalized duplicate keys, reason `duplicate_normalized`, and exact
-  message `Duplicate normalized MCP tool names are forbidden.`
-- `duplicate_final`: produce the existing error using sorted final duplicate
-  keys, reason `duplicate_final`, and exact message
+- unique => Result.succeed(report).
+- duplicate_normalized => Result.fail(existing collision error), sorted
+  normalized keys, reason duplicate_normalized and exact message
+  `Duplicate normalized MCP tool names are forbidden.`
+- duplicate_final => Result.fail(existing collision error), sorted final keys,
+  reason duplicate_final and exact message
   `Duplicate final MCP wire names are forbidden.`
 
-Retain the report on both error branches. Avoid a default branch that could
-silently turn an unhandled stage into a clean report. There is no new schema
-default and no stage-bearing object whose fields could leak into rendering.
+Do not return Effect from the helper, move crypto into it, call an Effect runner
+at module load, defer production initialization, catch the eager thrown error,
+or replace the synchronous production path with the general digesting projector.
+Effect builder retains Effect.fromResult at :565 and its existing service/error
+requirements. The production Result.all/flatMap/getOrThrowWith chain remains
+unchanged, including early normalization/cap failure before collision grouping.
 
-Keep both duplicate-key sets and each row's current membership-based verdict.
-For example, a single report can contain a normalization-collision pair, a
-different final-only pair, and one unique row. Its aggregate stage must be
-`duplicate_normalized`, while its rows still expose all three row verdicts.
+Local Effect source confirms Effect.fromResult :1827, Result.flatMap :1278 and
+Result.getOrThrowWith :1162. No new advanced Schema transform API is involved.
+The inspected contracts are API evidence, not a compiled implementation proof.
 
 ## Migration inventory
 
-All paths here are under `packages/drivers/gov-legal-mcp/` unless specified.
+All package-relative paths below are under packages/drivers/gov-legal-mcp.
 
-| Writer or consumer | Planned migration or preservation |
+| Site | Required change / preservation |
 | --- | --- |
-| `src/ToolNames.ts:487–491` | Retain candidate projection, normalization failure, duplicate grouping, and both sets. Replace the two aggregate locals with one schema-derived stage. |
-| `src/ToolNames.ts:492–504` | Preserve row payload spread, per-row normalized/final key-membership checks, and final/source/operation-ID sort. Stage never overwrites all rows with one verdict. |
-| `src/ToolNames.ts:506–531` | Build the same report with an exhaustive stage-to-report-verdict mapping; replace the ordered Boolean error branches with an exhaustive stage-to-result match. |
-| `src/ToolNames.ts:47`, 105, 144, 175, 204, 244, 282 | Reuse the existing private kit. Keep candidate, row, report, normalization-error, collision-error, and registration-error schemas and their annotations, fields, defaults, and public names. |
-| `src/ToolNames.ts:297–310`, 375–459 | Keep sort order, candidate text, hashing, normalization, projection, truncation threshold, and digest payload unchanged. |
-| `src/ToolNames.ts:331–358`, 554–555 | Keep the canonical renderer's recursive ordering, indentation, escaping, and exactly one trailing LF. New stage is local and absent from rendered data. |
-| `src/ToolNames.ts:572–597` | Keep the four production candidates and eager report construction via `Result.getOrThrowWith`; duplicate production names still prevent initialization. |
-| `src/ToolNames.ts:620` onward; `src/Tools.ts:32–40` and declarations | Preserve the curried and data-first registration resolver, exact wire-name literal return types, absent-candidate/drift errors, and all registered tool names. |
-| `src/index.ts:46`; `package.json` exports | Keep root and `@beep/gov-legal-mcp/ToolNames` public access. The aggregate stage and kit remain private. |
-| `scripts/generate.ts:10`, 51–75 | Writer continues receiving the same report and renderer; preserve output path, report bytes, independent version-module output, and offline behavior. No generator logic update belongs to this record. |
-| `src/_generated/tool-name-collision-report.json` | Read-only encoded compatibility fixture; existing byte content should remain identical after implementation. |
-| `test/Server.test.ts:293`, 499–576, 610–689 | Preserve failure assertions, frozen collision witnesses, registration proof, arbitrary row codec checks, and deterministic artifact checks; add only meaningful missing aggregate-stage behavior proof. |
-| `test/GovLegalMcp.equivalence.test.ts` | Preserve source-alias imports and existing candidate/normalization/registration schema consumers; no new stage export is needed for testing. |
+| ToolNames.ts:48 | Reuse private row verdict kit; no new export or identity. |
+| ToolNames.ts:492-539 | Sole edit locus: replace locals497-498, aggregate516 and Result branches519/529 with one stage and exhaustive matching. |
+| ToolNames.ts:500-512 | Preserve row spread, row-specific verdicts, sorting by finalWireName/source/originalOperationId. |
+| ToolNames.ts:322-357 | Preserve row construction, null digest, truncation, multiplicity grouping and duplicate sets. |
+| ToolNames.ts:403-490 | Preserve normalization, synchronous cap failure and effectful digest projection separately. |
+| ToolNames.ts:561-566 | Preserve projection before helper call, original Effect scheduling, trace and errors; only downstream helper implementation changes. |
+| ToolNames.ts:606-634 | Preserve four production candidates, synchronous module initialization, Result chain and original thrown normalization/collision error. |
+| ToolNames.ts:657-708; src/Tools.ts:32-40 | Preserve curried/data-first registration resolution and exact wire-name literal typing, missing/drift errors and fail-closed declarations. |
+| ToolNames.ts:359-384,588-589 | Preserve recursive canonical JSON rendering; stage stays local and absent from reports. |
+| src/index.ts and package.json | Preserve root and ToolNames exports; helper and stage stay private. |
+| scripts/generate.ts:10,51-75 | Preserve imported eager report, report bytes/output path and independent generated version module. |
+| src/_generated/tool-name-collision-report.json | Unchanged compatibility fixture; no generator churn. |
+| test/Server.test.ts:512-601,637-719 | Preserve normalized/final collision cases, projected row laws, artifact bytes and registration tests; extend mixed/empty/permutation behavior only as needed. |
+| test/GovLegalMcp.equivalence.test.ts | Preserve arbitrary public row/report/schema acceptance and equivalence; do not narrow these to producer provenance. |
+| src/Tools.ts,Handlers.ts,Server.ts,bin.ts | Import closure consumes eager validated report; preserve import/startup behavior, no async crypto requirement introduced for toolkit initialization. |
 
-The tool declarations feed handlers, server, and guarded bin construction; their
-public contracts require no shape change. Graft's exhaustive package searches,
-the scoped apps no-hit result, package export inspection, and source-level
-generator/schema reads supplement the call graph. The graph's absent edges
-for module-level initialization or schema references are not treated as proof
-those consumers do not exist.
-
-The existing confirmed `tool-name-collision-row-truncated-digest` record is
-4/2, Tier 2, with its separate design in
-`designs/tool-name-collision-row-truncated-digest.md`. It owns the row's
-truncation/digest representation and exact encoded compatibility. It overlaps
-the same file and the row reconstruction in this function but does not own the
-two aggregate flags.
-
-Stage this Tier 1 record first, then merge current main forward in the Tier 2
-singleton branch and refresh its design to preserve the aggregate match while
-adapting only row constructors and its renderer codec boundary. Never rebase. If the Tier 2 change lands first, adapt the stage design to its
-landed row type and leave that codec in place. Never apply both records in the
-Tier 2 singleton PR, claim the same guard twice, or introduce a temporary public
-alias merely to combine their staging. The current canonical row design remains
-unchanged by this P2 draft.
+Graft caller graph alone misses an edge: exhaustive symbol search confirms both
+helper invocations at565 and631. Selected-source and package queries plus public
+exports and generator reads establish the bounded closure. Refresh if source
+changes before implementation.
 
 ## Guard-deletion accounting
 
-| Frozen site | Concrete accounting |
-| --- | --- |
-| `ToolNames.ts:490–491` | Delete two named Boolean local declarations. The two set-size observations remain at the single producer classifier; no claim that the actual duplicate detection disappears. |
-| `ToolNames.ts:508` | Delete the Boolean OR expression and ternary reader. Replace it with the existing-domain exhaustive mapping to the two encoded report verdicts. |
-| `ToolNames.ts:511`, 521 | Delete both Boolean-controlled branches and their ordering dependency. One exhaustive literal-stage match retains the two typed failures and clean success. |
-| `ToolNames.ts:497–501` | Zero deletion credit. Per-row membership checks represent which rows belong to which groups, not redundant copies of the aggregate pair. |
-| Projection, `duplicateKeys`, normalization and registration checks | Zero deletion credit. Keep these real computations and boundary guards. |
-| `ToolNameCollisionRow.truncated` / `digest` | Zero deletion credit in this record; these belong to the separate Tier 2 owner. |
+- Delete exactly the two Boolean locals497-498. Duplicate set-size observations
+  remain in one classifier, so detection itself earns no deletion credit.
+- Delete aggregate Boolean OR/ternary516; replace with exhaustive stage mapping.
+- Delete ordered Boolean error branches519 and529; replace with exhaustive
+  stage-to-Result selection preserving normalized priority and exact payloads.
+- Zero credit for per-row membership503-509, duplicateKeys, projection,
+  normalization, crypto, synchronous cap guard, registration, or startup failure.
+- Zero credit for row truncated/digest: the complete exported row class has only
+  one Boolean field and is outside this campaign recall net. Preserve it unchanged.
 
-Net structural change: two local Boolean axes become one existing three-member
-literal; one aggregate Boolean combination and two downstream Boolean branches
-disappear. No additional Boolean getter or helper is allowed to recreate the
-old pair for the readers. Do not describe all branches as removed: domain
-classification and legitimate result selection remain.
+No Boolean helper or aggregate tuple is introduced to reconstruct the old pair.
 
 ## Encoded-side impact
 
-No encoded schema or public field changes in this Tier 1 implementation. The
-row still encodes all eight existing keys; false `truncated` and null `digest`
-remain explicit. The report still encodes `candidates`, `duplicateVerdict`, and
-`schemaVersion: "gov-legal-mcp/tool-name-collision-report/v1"`. Error reason,
-message, tag, collision-key array, and complete attached report remain identical.
-Candidate and registration-error codecs and both resolver calling forms remain
-unchanged. No aliases, deprecations, new defaults, version bump, or compatibility
-codec are needed for a local aggregate-stage replacement.
+No public schema, report field, default, tag, version, codec, error channel, or
+encoded representation changes. Preserve all eight row keys with explicit
+false/null, all report fields and complete collision error payloads. The public
+row schema remains broadly accepted exactly as before, even when callers
+construct rows that the two private projection paths would never emit.
 
-`renderToolNameCollisionReport` currently canonicalizes the actual report object
-directly rather than schema-encoding it first. That is safe for this stage-only
-change because no report or row representation changes. Do not attach the
-stage to the report or a spread source. The separate row-codec design must add
-its own encoded projection before rendering when it changes the decoded row;
-that requirement is not waived by this record's zero encoded delta.
-
-Preserve sorted rows and collision keys, object key order, two-space indentation,
-JSON escaping, no timestamps or CR characters, and exactly one final newline.
-The frozen generated report SHA-256 is
+Canonical renderer processes report objects directly. This remains safe because
+stage is a local value, never attached to report/row. Preserve sorted rows and
+keys, escaping, indentation, no timestamp/CR and exactly one trailing newline.
+Generated report SHA256 remains
 `2a6d73fb1379a3321b890be6ff3a487395d5ece0ca2ede829758fcdb3cd4fe1e`.
-The generator's unrelated `version.ts` output and all four production MCP wire
-names remain unchanged. There is no SQL, JSONL, database, or telemetry schema
-carrying these two local flags.
+No generator run, version bump or persisted rewrite is needed.
 
 ## Test impact
 
-No tests were executed or edited for this P2 draft. Existing proof to preserve:
+This P2 refresh runs no package tests or implementation. Required later proof:
 
-- `test/Server.test.ts:499–510` covers normalized-collision failure and selected
-  normalized collision keys; 537–549 covers per-row normalized verdicts.
-- Lines 551–576 cover the concrete final-only SHA-256/truncation fixture and
-  per-row final verdicts. Keep its exact values and deterministic assertion.
-- Lines 513–535 retain missing-candidate and wire-name-drift registration
-  failures. Guarded-bin import behavior at 578 remains unchanged.
-- Lines 610–635 retain arbitrary projection, candidate/row codec round trips,
-  deterministic names, truncation limit, explicit false/null behavior.
-- Lines 637–689 compare rendered bytes with the checked-in artifact and preserve
-  exact production names, all row keys, ordering, and newline conventions.
-- `test/GovLegalMcp.equivalence.test.ts` retains exported-schema equivalence and
-  normalization/registration error contracts; the new local needs no test API.
-
-Add focused behavior coverage at the exported report builder for empty and
-ordinary clean inputs, repeated identical candidates, and a mixed report with
-the existing normalized pair, the existing final-only pair, and a unique row.
-The mixed report must fail with normalized reason/message and only normalized
-collision keys while keeping normalized, final, and unique row verdicts. Check
-input permutations preserve deterministic rendered report and sorted keys.
-Preserve early normalization errors for invalid candidates before any collision
-report is returned. Include row/report/collision-error encoding equivalence for
-all three supported outcomes; do not expose the private stage solely to test
-its implementation.
-
-In the authorized implementation lane, run the focused gov-legal-mcp tests and
-mandatory `bun run beep quality package-verify @beep/gov-legal-mcp`. Verify the
-generated report stays byte-identical without accepting generator churn. Any
-additional full-repo acceptance remains governed by the goal packet. Static
-source proof and fixture arithmetic here are not substitutes for those checks.
+- Existing normalized collision, frozen final-only SHA256, registration failures,
+  projection determinism and exact artifact tests remain green.
+- Exercise public Effect builder with empty, ordinary, repeated and mixed inputs.
+  Mixed normalized-pair + final-only-pair + unique-row must select normalized
+  error/keys while retaining all three row verdicts. Permutations preserve sorted
+  keys and canonical bytes. Keep normalization failures before grouping.
+- Verify source import and eager ProductionToolNameCollisionReport remain
+  synchronous and clean without crypto service provisioning or launching stdio.
+  Preserve exact four names and all registration behavior. Statically verify
+  production projector still rejects over-cap names instead of hashing them;
+  do not export private helpers solely for tests or mutate production candidates.
+- Retain public row/report codecs and arbitrary equivalence tests, including
+  valid exported rows outside producer provenance. No new schema restrictions.
+- Compare report and collision-error encodings for all3 outcomes, unchanged
+  generated artifact and newline. Require owning check/tests and
+  `bun run beep quality package-verify @beep/gov-legal-mcp` at handoff, plus named
+  campaign gates. Scoped static proof is not runtime/package proof.
 
 ## Risk
 
-The main risk is losing normalized failure priority or flattening row-specific
-verdicts into the aggregate stage. Retaining both sets and testing the mixed
-case directly addresses both. Another risk is eliminating final-only as
-theoretically unlikely; the fixed 68-character witness makes that unacceptable.
-Repeated identical candidates must continue failing, so no deduplication can be
-introduced while consolidating the classifier.
+The prior design's Effect-owned body description is stale: converting this helper
+to Effect would change eager initialization and service requirements. Preserve
+Result and both caller boundaries. The4/3 invariant depends on private producer
+provenance; applying it to arbitrary public rows would narrow an unrelated API.
+Keep normalized priority, multiplicity and per-row detail despite aggregate stage.
 
-The private `RowDuplicateVerdict` domain is reused because the aggregate stage
-is the highest-priority member of that same verdict domain. Its existing schema
-identity and row annotation remain stable. A future reason to create a separate
-domain would need an actual semantic difference; a new name alone is not a
-reason to duplicate literals or add a compatibility alias.
-
-Source locality makes this Tier 1, but public error payloads, fail-closed tool
-registration, and the persisted report remain consequential consumers. Exact
-bytes, required fields, explicit false/null, version defaults, and constructor
-behavior are acceptance conditions. Coordinate serially with the separate
-Tier 2 row migration to prevent accidental combined implementation or loss of
-its renderer codec. Implementation awaits independent P3 review and the campaign Gate 2 requirements.
+The former Tier 2 row truncated/digest record is queued for withdrawal after
+R32 as outside the recall net, not D1: complete ToolNameCollisionRow has only
+one Boolean, truncated. This stage migration has no dependency on a row
+migration, no serial row landing plan and no row codec change. Preserve the
+existing exported row exactly. The stage helper independently remains two
+Boolean locals with a 4/3 gap. All implementation remains gated on replacement
+P3 and campaign GATE 2.

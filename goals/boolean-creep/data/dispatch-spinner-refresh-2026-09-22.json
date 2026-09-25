@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "sourceSha": "0be1f13d62fa00cb65e34ff69ec99043380f8d81",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-dispatch-spinner-refresh.jsonl",
+    "sha256": "a855479f1664aa3ec732645113bb91f637095e2115cc65ec9260d76a82965178"
+  },
+  "inventoryAfterSha256": "74279d873907caef82966090d93df735f6068ee03fd14c1c4f06c08512a7ef95",
+  "refreshedIds": [
+    "r2-tooling-bin-main-fast-paths",
+    "r27-boolean-state-foundation-spinner-state"
+  ],
+  "heldIds": ["goals-packet-migration-kind"],
+  "withdrawalMeaning": "Unproved public legal-state count withdrawn into explicit contract hold, not D1 or census closure. Remains pending in dated subset.",
+  "unchangedRows": 754,
+  "statusCounts": {
+    "reviewed": 16,
+    "designed": 132,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/r2-tooling-bin-main-fast-paths.md",
+      "sha256": "737bc13042d15d0c62a79fc31d4250c586a44f65a97a75cc00b3f12a98006013"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r2-tooling-bin-main-fast-paths.md",
+      "sha256": "cec5d888a4cf20006766627a0be8af0927dbed1702d18efcebbf2a1e496993a0"
+    },
+    {
+      "file": "data/2026-09-22-r2-tooling-bin-main-fast-paths-projection.json",
+      "sha256": "9315c1901338e842012af6a77fada157a1a0b5dc42d237c2992233e829c41799"
+    },
+    {
+      "file": "designs/r27-boolean-state-foundation-spinner-state.md",
+      "sha256": "b4e85ca55268012858b241d7adbded00eed209c75fdc3d0ca5b2c71bb67c8bd7"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-r27-boolean-state-foundation-spinner-state.md",
+      "sha256": "dbd3cce4522eab5cb10fbaf42f7aa7eda6fcca989f636cd8c47bbc5b220b0d51"
+    },
+    {
+      "file": "data/goals-packet-migration-contract-hold-2026-09-22.md",
+      "sha256": "ab963aa04168646639891c1bf5a4b2d5c1f3b7eafb5bd1b40785fa15294567d8"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-goals-packet-migration-kind.md",
+      "sha256": "98b68ed8996c6963d1e671abacc71db4d6751f69dca07c5a218f45b63f893a64"
+    },
+    {
+      "file": "data/2026-09-22-goals-packet-migration-kind-projection.json",
+      "sha256": "8ed7bbda5d66fefab170bacc3a995bd77004023826da95c0aa7719c11ab93b3a"
+    }
+  ],
+  "verifiedHashBindings": 31,
+  "savedSubset": {
+    "sourceReceipt": "data/desktop-bake-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "62a121a945b23a17d680ecbcc69d784cfa14339119f85cca48ef8e043f44b63c",
+    "previousPendingCount": 13,
+    "completedIds": [
+      "r2-tooling-bin-main-fast-paths",
+      "r27-boolean-state-foundation-spinner-state"
+    ],
+    "pendingCount": 11,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "yeet-status-remote-check-phase",
+      "yeet-merge-ready-criterion-changed",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "goals-packet-migration-kind",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations"
+    ],
+    "meaning": "Dated subset only, includes held packet-migration owner; full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-packet-migration-readmission.jsonl"
+}

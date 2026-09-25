@@ -1,0 +1,131 @@
+{
+  "kind": "boolean-creep-owner-parent-admission/v1",
+  "id": "r29-yeet-sweep-worktree-probe-address",
+  "sourceSha": "f97a89bdfdc5bc71b69aab09b8d425591698d42a",
+  "privateAuditSha256": "f8556c6818c14ef6c9fc952b9ab85d7b4c37e1216e262964fbe658f36e6bca8b",
+  "inputBindings": [
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.ts",
+      "sha256": "97b5d41c7f2c90f8ca917f50329e8a2b580b7563c300d13720d59420e55999f2"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.schemas.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Sweep.schemas.ts",
+      "sha256": "144a32a95cc11183dd97fb13af33ad08b4b23090fde0c3923a46805c070991a8"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.ts",
+      "sha256": "cc12188b29f9582680eee74932bf6e3277e7fb528b5eba751e146228f2dcd3a8"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.schemas.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Retire.schemas.ts",
+      "sha256": "33895eec1ba7e58ceb474b8221c80aa244a30b64f21dc023407031cb40738374"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Porcelain.ts",
+      "sha256": "0aafba4506498844c9646055909126b50d650aef68d8a3cdf7616ae5119eb11a"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Merge.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Merge.ts",
+      "sha256": "a41e9b4ad7fa65b316fd0f8c09cbaa51facabf63e075b16426848f5aef02fd0d"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts",
+      "sha256": "6ca166e2587ec88a65d96605a017030209b3aba6df4847d2ee23ac1a689722d3"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/src/test/Yeet.test-kit.ts",
+      "retainedFile": "packages/tooling/tool/cli/src/test/Yeet.test-kit.ts",
+      "sha256": "de1cfbe8dfaaaefa06fdcb3c6d2f17a769dd0ea8224f8848e98a238f4fc0ee43"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/package.json",
+      "retainedFile": "packages/tooling/tool/cli/package.json",
+      "sha256": "ba4232534d6e5f0616dffc1574549a2b2655e6509ee2112ae4c9f00a00581847"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "retainedFile": "packages/tooling/tool/cli/test/yeet-sweep-plan.test.ts",
+      "sha256": "99a83ceb5e9a3a9042baf7ee8572f82de9dfb89bb273a9ff6de81537e4857d4e"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/test/yeet-sweep-retire.test.ts",
+      "retainedFile": "packages/tooling/tool/cli/test/yeet-sweep-retire.test.ts",
+      "sha256": "b6bb923ec333abfc97d5efbd17532cb54627ae11157fec451ea1756b606823e1"
+    },
+    {
+      "originalFile": "packages/tooling/tool/cli/test/support/RetireFenceInvoker.ts",
+      "retainedFile": "packages/tooling/tool/cli/test/support/RetireFenceInvoker.ts",
+      "sha256": "60dd792ab885b47f9a41747a9a63ed00f287b77a4e50a648f2fbb29434401f5a"
+    },
+    {
+      "originalFile": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "retainedFile": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "sha256": "f482cd3c83b1862a1f454efdf10cefa02961f725eeeea22d04391179a0b63cd5"
+    },
+    {
+      "originalFile": "packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts",
+      "retainedFile": "packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts",
+      "sha256": "e7ce42e18be6fa70eed37b50d2d9f16218e176fda6329195be4bc2ac88c4f9cb"
+    },
+    {
+      "originalFile": "goals/boolean-creep/SPEC.md",
+      "retainedFile": "goals/boolean-creep/SPEC.md",
+      "sha256": "9df7ebe63b9c7c1e253892ff1b36600baa8b22f7c6598617e7e8995575ad5087"
+    },
+    {
+      "originalFile": "goals/boolean-creep/DECISIONS.md",
+      "retainedFile": "goals/boolean-creep/history/2026-09-25-pre-cache-observation-ruling-DECISIONS.md",
+      "sha256": "0718a4972d3581beaa515183559b1d7d1d8d1a6cfa8986852cf4f13c2eb8b108"
+    },
+    {
+      "originalFile": "goals/boolean-creep/designs/r29-yeet-sweep-worktree-probe-address.md",
+      "retainedFile": "goals/boolean-creep/history/designs/2026-09-25-pre-r32-reconciliation/r29-yeet-sweep-worktree-probe-address.md",
+      "sha256": "0420f7854fd3592261c599096e44e1d1e892f6ec0a2de8122e8be7acf27e27f2"
+    },
+    {
+      "originalFile": "goals/boolean-creep/data/inventory.jsonl",
+      "retainedFile": "goals/boolean-creep/history/inventory/2026-09-25-pre-r32-reconciliation.jsonl",
+      "sha256": "98f4bcaac4687f8b530cb2aa57153c903d6436fa02638301b5c60c3d8c24ad3a"
+    },
+    {
+      "originalFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "retainedFile": "goals/boolean-creep/data/sweeps/refresh-2026-09-25-r32-main-28a704/r32-cli-yeet.jsonl",
+      "sha256": "e556d9d874518676d4ca557e2a6a0c29e31c663b7c23602d4c6ca0089ecf055a"
+    },
+    {
+      "originalFile": ".repos/effect/packages/effect/SCHEMA.md",
+      "retainedFile": ".repos/effect/packages/effect/SCHEMA.md",
+      "sha256": "453a48b8a697d251d4d15edb49c5ef765b543a3c4c8c5db2209084671109adb2"
+    },
+    {
+      "originalFile": ".repos/effect/packages/effect/src/Schema.ts",
+      "retainedFile": ".repos/effect/packages/effect/src/Schema.ts",
+      "sha256": "9850f35d5f425ed58c187f7c809dc6d5aaff1e80d67ce3f40e498d404ff06192"
+    }
+  ],
+  "publicOutputs": [
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/r29-yeet-sweep-worktree-probe-address/finite-table.json",
+      "sha256": "956d740ba33e4501e19a32ac8b8055f7af32c4dce03e5fec70e0f91c8ebd645b"
+    },
+    {
+      "file": "goals/boolean-creep/data/r32-owner-reviews/r29-yeet-sweep-worktree-probe-address/disposition.md",
+      "sha256": "c154f93a58f5f834904e0ee913b2c7b37b20ef1ee8affa38e163f35481381f3b"
+    },
+    {
+      "file": "goals/boolean-creep/designs/r29-yeet-sweep-worktree-probe-address.md",
+      "sha256": "6142f066feac1f4d1bce1fb8282cf87837d52d34d477331035c9b9969a6c5c5e"
+    }
+  ],
+  "parentReviewed": true,
+  "independentP3Approval": false,
+  "runtimeTestsRun": false,
+  "note": "Input bindings resolve historical packet snapshots where canonical files advanced after this audit. Parent normalized required section headings in Sweep and Cache designs; private output hashes remain historical."
+}

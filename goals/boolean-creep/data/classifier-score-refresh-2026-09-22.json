@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "boolean-creep-bounded-adjudication/v1",
+  "date": "2026-09-22",
+  "sourceSha": "f5e1d4c64f37e0a8c42e217eee5f06841220c161",
+  "inventoryBefore": {
+    "file": "history/inventory/2026-09-22-pre-classifier-score-refresh.jsonl",
+    "sha256": "46b954087cab523cdbe80ac0bbb434706803e5f7c95bcbc2b02a8277b1d7d412"
+  },
+  "inventoryAfterSha256": "e710d6d59420ca225ee0c516384ce1797a1d37f7afce9eed2906032db3f450b9",
+  "changedIds": [
+    "knowledge-ref-classification-input",
+    "files-worker-score-thresholds"
+  ],
+  "newQualifiedIds": ["knowledge-ref-classification-input"],
+  "unchangedRows": 752,
+  "statusCounts": {
+    "reviewed": 18,
+    "designed": 128,
+    "disqualified": 608
+  },
+  "artifacts": [
+    {
+      "file": "designs/knowledge-ref-classification-input.md",
+      "sha256": "2a0215d2b13ac93fcfce6432f52f9ed1be30ad145c419c02b8ee4ecb239a2215"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-knowledge-ref-classification-input.md",
+      "sha256": "9347282175c597492f0a195d738f90cba69bb970cdf56a18aae889c257ecd7c7"
+    },
+    {
+      "file": "history/designs/2026-09-22-pre-refresh-files-worker-score-thresholds.md",
+      "sha256": "280b55d34c564bf42b0abd78e4d503d3ac8f224b7a2b4234783e21f68e040cc8"
+    },
+    {
+      "file": "designs/files-worker-score-thresholds.md",
+      "sha256": "3e47aff0840b80b7fe3b77ac6fd1aa458512701497171e3a7d058b49929f4c5c"
+    },
+    {
+      "file": "data/design-refresh-2026-09-22-files-worker-score-thresholds.md",
+      "sha256": "1762f2a345aa3d0be4e00043af33625d7b2fd8134624490f966c8eff994176c0"
+    },
+    {
+      "file": "data/2026-09-22-classifier-recovery-cardinality.json",
+      "sha256": "25d731a21854c971a6698c6f5a7c100aa396a8767b2541b8d1d2cb49988ee946"
+    },
+    {
+      "file": "data/2026-09-22-worker-score-probe-result.json",
+      "sha256": "57670929d60171e7b4e8897164eb4ebed65ea8b9a4132f4839ee7d9e600bf765"
+    },
+    {
+      "file": "data/knowledge-candidate-classifier-sequencing-2026-09-22.md",
+      "sha256": "9e268964545b717ec36806feff4f33244107119150731c7f4dd77b09fed33804"
+    }
+  ],
+  "parentAdjustments": [
+    "Normalized score design section headings to validation contract; unchanged domain and migration semantics."
+  ],
+  "savedSubset": {
+    "sourceReceipt": "data/read-receipt-m365-refresh-2026-09-22.json",
+    "sourceReceiptSha256": "94733b571ffa8afe55f52305007e80748a0e06c5bfb72ce82c01978c49853842",
+    "previousPendingCount": 32,
+    "completedIds": ["files-worker-score-thresholds"],
+    "pendingCount": 31,
+    "pendingIds": [
+      "yeet-merge-ready-verdict",
+      "runners-bake-freshness",
+      "drivers-stream-state",
+      "dms-mirror-probe-connected",
+      "vault-sync-status-connected",
+      "create-package-template-type-flags",
+      "yeet-status-remote-check-phase",
+      "create-package-scaffold-shape",
+      "sync-data-target-selection",
+      "statutes-at-large-pincite-is-range",
+      "r2-tooling-bin-main-fast-paths",
+      "yeet-merge-ready-criterion-changed",
+      "worktree-removal-mode",
+      "r3-apps-pglite-data-dir-probe",
+      "r3-apps-sidecar-devtools-gates",
+      "r3-tooling-ecosystem-polarity-specifier-call",
+      "r3-drivers-arch-folder-resolution-blocked-provider",
+      "yeet-prepared-publish-commit",
+      "citation-blank-page",
+      "goals-packet-migration-kind",
+      "worktree-fleet-epoch-target",
+      "files-person-reference-disposition",
+      "vault-sync-push-failure-disposition",
+      "create-package-retired-name-reconciliation",
+      "r27-cli-commands-l-q-github-check-lane-proof-reuse",
+      "r27-boolean-state-foundation-spinner-state",
+      "r28-cli-internal-root-tmpfs-discovered-classified-skip",
+      "r28-cli-commands-d-k-docgen-quality-worker-eval-source",
+      "r28-cli-commands-d-k-docgen-quality-worker-runpod-eval-source",
+      "r28-cli-internal-root-tmpfs-stub-observations",
+      "r30-cli-commands-l-q-github-check-lane-outcome"
+    ],
+    "meaning": "Dated subset only; classifier qualification outside subset. Full current-source backlog uncounted."
+  },
+  "censusLaunched": false,
+  "dryCredit": false,
+  "independentP3Approval": false,
+  "implementationStarted": false,
+  "ownerDecision": {
+    "file": "DECISIONS.md",
+    "sha256": "3a65df50371937b9ad000949030ef1b5be1ab6148f7c0fd1f2de246542620f44",
+    "priorSnapshot": "history/2026-09-22-pre-classifier-ruling-DECISIONS.md"
+  },
+  "inventoryAfterSnapshot": "history/inventory/2026-09-22-pre-person-reference-refresh.jsonl"
+}

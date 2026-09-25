@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "boolean-creep-finite-projection/v1",
+  "representable": 16,
+  "legal": 10,
+  "rejected": 6,
+  "optionWrapperRepresentable": 17,
+  "optionWrapperLegal": 11,
+  "vertexProjection": {
+    "supportedVertices": 24,
+    "absentPreimages": 4,
+    "emittedPreimages": 20,
+    "distinctPresentOutputs": 10
+  },
+  "scope": "mathematical output projection only, no runtime proof",
+  "rows": [
+    {
+      "effect": false,
+      "testClock": false,
+      "plain": false,
+      "shared": false,
+      "accepted": false,
+      "mode": null
+    },
+    {
+      "effect": false,
+      "testClock": false,
+      "plain": false,
+      "shared": true,
+      "accepted": false,
+      "mode": null
+    },
+    {
+      "effect": false,
+      "testClock": false,
+      "plain": true,
+      "shared": false,
+      "accepted": true,
+      "mode": "plain"
+    },
+    {
+      "effect": false,
+      "testClock": false,
+      "plain": true,
+      "shared": true,
+      "accepted": true,
+      "mode": "plain"
+    },
+    {
+      "effect": false,
+      "testClock": true,
+      "plain": false,
+      "shared": false,
+      "accepted": false,
+      "mode": null
+    },
+    {
+      "effect": false,
+      "testClock": true,
+      "plain": false,
+      "shared": true,
+      "accepted": false,
+      "mode": null
+    },
+    {
+      "effect": false,
+      "testClock": true,
+      "plain": true,
+      "shared": false,
+      "accepted": false,
+      "mode": null
+    },
+    {
+      "effect": false,
+      "testClock": true,
+      "plain": true,
+      "shared": true,
+      "accepted": false,
+      "mode": null
+    },
+    {
+      "effect": true,
+      "testClock": false,
+      "plain": false,
+      "shared": false,
+      "accepted": true,
+      "mode": "live"
+    },
+    {
+      "effect": true,
+      "testClock": false,
+      "plain": false,
+      "shared": true,
+      "accepted": true,
+      "mode": "live"
+    },
+    {
+      "effect": true,
+      "testClock": false,
+      "plain": true,
+      "shared": false,
+      "accepted": true,
+      "mode": "plain-live"
+    },
+    {
+      "effect": true,
+      "testClock": false,
+      "plain": true,
+      "shared": true,
+      "accepted": true,
+      "mode": "plain-live"
+    },
+    {
+      "effect": true,
+      "testClock": true,
+      "plain": false,
+      "shared": false,
+      "accepted": true,
+      "mode": "test-clock"
+    },
+    {
+      "effect": true,
+      "testClock": true,
+      "plain": false,
+      "shared": true,
+      "accepted": true,
+      "mode": "test-clock"
+    },
+    {
+      "effect": true,
+      "testClock": true,
+      "plain": true,
+      "shared": false,
+      "accepted": true,
+      "mode": "plain-test-clock"
+    },
+    {
+      "effect": true,
+      "testClock": true,
+      "plain": true,
+      "shared": true,
+      "accepted": true,
+      "mode": "plain-test-clock"
+    }
+  ]
+}

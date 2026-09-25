@@ -1,0 +1,22 @@
+{
+  "lane": "r33-drivers-g-m",
+  "sourceSha": "32f111f3707a63168b68ed04516af800ecc3a66c",
+  "maxTurns": 60,
+  "basePromptSha256": "6f54a113c39ea40a0254725aebf460ffcbb707792aa3e8b60aafb7f7a443dc5b",
+  "extraPromptSha256": "e879b891d3e08fe351b878cb89c7ff0a09e311042e4b97ba1b2aea0ddfe5229c",
+  "started": "2026-09-25T01:38:55.595638+00:00",
+  "finished": "2026-09-25T01:41:18.988123+00:00",
+  "exitCode": 0,
+  "endTurnEvent": true,
+  "reportExists": true,
+  "reportJsonValid": true,
+  "reportRecords": 0,
+  "qualifiedCandidates": 0,
+  "errors": [],
+  "completionSummary": "`goals/boolean-creep/data/sweeps/refresh-2026-09-25-r33-main-339da1/r33-drivers-g-m.jsonl`. Confirmed 0, disqualified 0. Every assigned root was covered. Validator: `inventory OK: 0 records`.\n\nSeed owners still match the current source and their classifications still hold, so nothing was re-emitted. `collisionReportFromRows` still has the phase implication (a normalized-name duplicate forces a final-wire duplicate on both producers). The Graph mail/event flags and the Three.js renderer/material option objects are still external wire or SDK mirrors. No withdrawal and no unresolved source question. The canonical `SpriteMaterial` row is labeled `type-literal` while the live owner is the constructor object at `Graph3D.renderer.ts:537`; that label was left unchanged because the D2 classification did not change.",
+  "transcriptSha256": "cd7716e96a3c651173b7ed4d7f51e5a44797d7d30bf08505f78ba654e05ff87f",
+  "runnerSha256": "df68fe961bf9e930bbc2fc81cb07eb9f1ec98fe4dd21dec5fab3317f22fbdc70",
+  "seedSha256": "b830fd3d594700a95cff229c414d06d2073346e6d18e5aa480ddfd563f14900c",
+  "reportValidationExitCode": 0,
+  "reportValidationSummary": "inventory OK: 0 records, 0 unique ids\n"
+}
