@@ -723,7 +723,7 @@ describe("residue reap", () => {
         expect(decoded.candidates[0]).toBeInstanceOf(ResidueReapCandidate);
         // v2 widened every literal domain, so a v1-tagged payload must not decode as v2.
         const v1Payload = Str.replace("residue-reap/v2", "residue-reap/v1")(encoded);
-        expect(Result.isFailure(yield* Effect.result(decodeResidueReapReportJson(v1Payload)))).toBe(true);
+        expect(S.isSchemaError(yield* Effect.flip(decodeResidueReapReportJson(v1Payload)))).toBe(true);
 
         const filtered = yield* runResidueReap({
           classes: ["turbo-runs", "qualification-views"],

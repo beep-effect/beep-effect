@@ -808,17 +808,35 @@ describe("Docgen operations", () => {
     )
   );
 
-  it("pins direct docgen Turbo invocations to a requested local-only cache", () =>
-    withEnvVar("TURBO_CACHE", "local:rw", () => {
-      const args = Effect.runSync(
-        docgenLocalTurboArgsForTesting(schemaSelection, 1).pipe(
-          Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))
-        )
-      );
+  const turboCacheEnvName = "TURBO_CACHE";
 
-      expect(args).toContain("--cache=local:rw");
-      expect(args).not.toContain("--cache=local:rw,remote:r");
-    }));
+  it.effect("pins direct docgen Turbo invocations to a requested local-only cache", () =>
+    withConfigEnv(
+      {},
+      Effect.acquireUseRelease(
+        Effect.sync(() => {
+          const previous = Bun.env[turboCacheEnvName];
+          Bun.env[turboCacheEnvName] = "local:rw";
+          return previous;
+        }),
+        () =>
+          Effect.gen(function* () {
+            const args = yield* docgenLocalTurboArgsForTesting(schemaSelection, 1);
+
+            expect(args).toContain("--cache=local:rw");
+            expect(args).not.toContain("--cache=local:rw,remote:r");
+          }),
+        (previous) =>
+          Effect.sync(() => {
+            if (previous === undefined) {
+              delete Bun.env[turboCacheEnvName];
+            } else {
+              Bun.env[turboCacheEnvName] = previous;
+            }
+          })
+      )
+    )
+  );
 
   it("writes and verifies package-level docgen proof manifests", () =>
     Effect.runPromise(
