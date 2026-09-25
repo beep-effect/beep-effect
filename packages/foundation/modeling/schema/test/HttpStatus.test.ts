@@ -1,8 +1,10 @@
 import { fcRuns } from "@beep/fc-runs";
 import { HttpStatusCode as RootHttpStatusCode } from "@beep/schema";
 import * as HttpStatus from "@beep/schema/HttpStatus";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
@@ -19,10 +21,10 @@ const encodeHttpStatusSchemaEffect = S.encodeEffect(HttpStatus.Schema);
 describe("HttpStatus", () => {
   it("accepts the complete standard three-digit status range", () => {
     expect(RootHttpStatusCode).toBe(HttpStatus.HttpStatusCode);
-    expect(HttpStatus.HttpStatusCode.decodeUnknownOption(100)).toStrictEqual(O.some(100));
-    expect(HttpStatus.HttpStatusCode.decodeUnknownOption(599)).toStrictEqual(O.some(599));
-    expect(O.isNone(HttpStatus.HttpStatusCode.decodeUnknownOption(99))).toBe(true);
-    expect(O.isNone(HttpStatus.HttpStatusCode.decodeUnknownOption(600))).toBe(true);
+    assertSome<number>(HttpStatus.HttpStatusCode.decodeUnknownOption(100), 100);
+    assertSome<number>(HttpStatus.HttpStatusCode.decodeUnknownOption(599), 599);
+    pipe(HttpStatus.HttpStatusCode.decodeUnknownOption(99), O.isNone, assertTrue);
+    pipe(HttpStatus.HttpStatusCode.decodeUnknownOption(600), O.isNone, assertTrue);
   });
 
   it.effect(

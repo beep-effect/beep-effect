@@ -1,5 +1,6 @@
 import { collectAnnotationsAt } from "@beep/schema/SchemaUtils/collectAnnotationsAt";
-import { describe, expect, it } from "@effect/vitest";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
 import { Effect, identity } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -88,6 +89,9 @@ describe("collectAnnotationsAt", () => {
     const Declaration = S.declare<string>((input): input is string => typeof input === "string", {
       traversalLabel: "declaration",
     });
+    const ParameterizedDeclaration = S.Option(S.String.annotate({ traversalLabel: "parameter" })).annotate({
+      traversalLabel: "parameterized-declaration",
+    });
     const Union = S.Union([
       S.String.annotate({ traversalLabel: "left" }),
       S.Finite.annotate({ traversalLabel: "right" }),
@@ -98,6 +102,11 @@ describe("collectAnnotationsAt", () => {
     );
 
     expect(collectAnnotationsAt(Declaration, "traversalLabel")).toEqual(["declaration"]);
+    expect(ParameterizedDeclaration.ast._tag).toBe("Declaration");
+    expect(collectAnnotationsAt(ParameterizedDeclaration, "traversalLabel")).toEqual([
+      "parameterized-declaration",
+      "parameter",
+    ]);
     expect(collectAnnotationsAt(Union, "traversalLabel")).toEqual(["left", "right"]);
     expect(collectAnnotationsAt(Record, "traversalLabel")).toEqual(["record-key", "record-value"]);
   });

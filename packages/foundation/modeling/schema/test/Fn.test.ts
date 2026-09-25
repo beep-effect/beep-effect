@@ -1,29 +1,14 @@
 import { AnyFn, Fn, ThunkOf } from "@beep/schema/Fn";
+import { it } from "@beep/test-runner";
 import { Str } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertExitFailure, assertTrue } from "@effect/vitest/utils";
+import { Effect, Exit, pipe } from "effect";
 import * as Cause from "effect/Cause";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 
 const decodeAnyFnEffect = S.decodeEffect(AnyFn);
-
-const runResult = <A, E>(effect: Effect.Effect<A, E>) =>
-  Effect.runPromise(
-    Effect.match(effect, {
-      onFailure: (error) => ({
-        _tag: "Failure" as const,
-        error,
-      }),
-      onSuccess: (value) => ({
-        _tag: "Success" as const,
-        value,
-      }),
-    })
-  );
-
-const runCause = <A, E>(effect: Effect.Effect<A, E>) => Effect.runPromise(Effect.flip(Effect.sandbox(effect)));
 
 describe("Fn schema", () => {
   it.effect(
@@ -45,10 +30,10 @@ describe("Fn schema", () => {
     Effect.fnUntraced(function* () {
       const schema = Fn({ output: S.String });
 
-      const failure1 = yield* Effect.result(S.decodeUnknownEffect(schema)(null));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("Expected @beep/schema/Fn/Fn");
+      const failure1 = yield* Effect.exit(S.decodeUnknownEffect(schema)(null));
+      pipe(failure1, Exit.isFailure, assertTrue);
+      if (Exit.isFailure(failure1)) {
+        expect(Cause.pretty(failure1.cause)).toContain("Expected @beep/schema/Fn/Fn");
       }
     })
   );
@@ -68,12 +53,9 @@ describe("Fn thunks", () => {
         error: S.FiniteFromString,
       });
       const impl = schema.implementEffect(() => Effect.fail(2));
-      const result = yield* Effect.promise(() => Promise.resolve(runResult(impl())));
+      const result = yield* Effect.exit(impl());
 
-      expect(result).toEqual({
-        _tag: "Failure",
-        error: 2,
-      });
+      assertExitFailure(result, Cause.fail(2));
       expect(schema.errorSchema).toBe(S.FiniteFromString);
     })
   );
@@ -96,12 +78,9 @@ describe("Fn thunks", () => {
         error: S.String,
       });
       const impl = schema.implementEffect(() => Effect.fail("boom" as const));
-      const result = yield* Effect.promise(() => Promise.resolve(runResult(impl())));
+      const result = yield* Effect.exit(impl());
 
-      expect(result).toEqual({
-        _tag: "Failure",
-        error: "boom",
-      });
+      assertExitFailure(result, Cause.fail("boom"));
     })
   );
 
@@ -119,7 +98,7 @@ describe("Fn thunks", () => {
         error: S.String,
       });
       const impl = schema.implementEffect(() => Effect.die("boom"));
-      const cause = yield* Effect.promise(() => Promise.resolve(runCause(impl())));
+      const cause = yield* Effect.flip(Effect.sandbox(impl()));
 
       expect(Cause.hasDies(cause)).toBe(true);
       expect(Cause.hasFails(cause)).toBe(false);
@@ -152,10 +131,13 @@ describe("Fn unary functions", () => {
         called = true;
         return Effect.succeed(`${count}`);
       });
-      const result = yield* Effect.promise(() => Promise.resolve(runResult(impl("nope"))));
+      const result = yield* Effect.exit(impl("nope"));
 
       expect(called).toBe(false);
-      expect(result._tag).toBe("Failure");
+      pipe(result, Exit.isFailure, assertTrue);
+      if (Exit.isFailure(result)) {
+        pipe(result.cause, Cause.hasFails, assertTrue);
+      }
     })
   );
 
@@ -166,9 +148,12 @@ describe("Fn unary functions", () => {
         output: S.NonEmptyString,
       });
       const impl = schema.implement(() => "");
-      const result = yield* Effect.promise(() => Promise.resolve(runResult(impl(1))));
+      const result = yield* Effect.exit(impl(1));
 
-      expect(result._tag).toBe("Failure");
+      pipe(result, Exit.isFailure, assertTrue);
+      if (Exit.isFailure(result)) {
+        pipe(result.cause, Cause.hasFails, assertTrue);
+      }
     })
   );
 
@@ -180,11 +165,14 @@ describe("Fn unary functions", () => {
         error: S.NonEmptyString,
       });
       const impl = schema.implementEffect(() => Effect.fail(""));
-      const result = yield* Effect.promise(() => Promise.resolve(runResult(impl(1))));
+      const result = yield* Effect.exit(impl(1));
 
-      expect(result._tag).toBe("Failure");
-      if (result._tag === "Failure") {
-        expect(SchemaIssue.isIssue(result.error)).toBe(true);
+      pipe(result, Exit.isFailure, assertTrue);
+      if (Exit.isFailure(result)) {
+        pipe(result.cause, Cause.hasFails, assertTrue);
+      }
+      if (Exit.isFailure(result)) {
+        expect(SchemaIssue.isIssue(Cause.squash(result.cause))).toBe(true);
       }
     })
   );

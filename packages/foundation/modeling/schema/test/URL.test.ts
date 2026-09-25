@@ -1,24 +1,34 @@
 import { HttpsUrl, URLStr } from "@beep/schema/URL";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Array as A, Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
 const decodeUnknownHttpsUrl = S.decodeUnknownEffect(HttpsUrl);
 
 describe("URL", () => {
-  it("publishes a canonical arbitrary for URL strings", () => {
-    expect(
-      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(URLStr), { count: 20, seed: 0x5eed })).every(URLStr.is)
-    ).toBe(true);
-  });
+  it.effect(
+    "publishes a canonical arbitrary for URL strings",
+    Effect.fnUntraced(function* () {
+      const samples = yield* Arbitrary.sampleEffect(Arbitrary.schema(URLStr), { count: 20, seed: 0x5eed });
+      A.forEach(samples, (sample, index) => {
+        assertTrue(URLStr.is(sample), `URLStr sample ${index}: ${sample}`);
+      });
+    })
+  );
 
-  it("publishes codec statics and a canonical arbitrary for HTTPS URLs", () => {
-    expect(
-      Effect.runSync(Arbitrary.sampleEffect(Arbitrary.schema(HttpsUrl), { count: 20, seed: 0x5eed })).every(HttpsUrl.is)
-    ).toBe(true);
-    expect(HttpsUrl.decodeUnknownSync("https://example.com/resource")).toBe("https://example.com/resource");
-  });
+  it.effect(
+    "publishes codec statics and a canonical arbitrary for HTTPS URLs",
+    Effect.fnUntraced(function* () {
+      const samples = yield* Arbitrary.sampleEffect(Arbitrary.schema(HttpsUrl), { count: 20, seed: 0x5eed });
+      A.forEach(samples, (sample, index) => {
+        assertTrue(HttpsUrl.is(sample), `HttpsUrl sample ${index}: ${sample}`);
+      });
+      expect(HttpsUrl.decodeUnknownSync("https://example.com/resource")).toBe("https://example.com/resource");
+    })
+  );
 
   it.effect(
     "accepts valid https URL strings",

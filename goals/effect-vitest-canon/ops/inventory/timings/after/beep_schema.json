@@ -1,0 +1,451 @@
+{
+  "package": "@beep/schema",
+  "runner": "node-vitest",
+  "capturedAt": "2026-09-25T11:52:14.657063+00:00",
+  "totalMs": 5992.548583984375,
+  "testCount": 725,
+  "files": [
+    {
+      "file": "packages/foundation/modeling/schema/test/Address.test.ts",
+      "ms": 28.13916015625,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/ArrayBuffer.test.ts",
+      "ms": 34.555908203125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/AtURI.test.ts",
+      "ms": 51.125732421875,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/BinaryFileExtension.test.ts",
+      "ms": 15.002197265625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/BlockchainRedacted.test.ts",
+      "ms": 60.346923828125,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/CaseStr.test.ts",
+      "ms": 41.28515625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Color.test.ts",
+      "ms": 71.969970703125,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Conformance.test.ts",
+      "ms": 81.69873046875,
+      "tests": 14
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Csp.test.ts",
+      "ms": 62.1259765625,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Csv.test.ts",
+      "ms": 124.01025390625,
+      "tests": 15
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/CsvParser.test.ts",
+      "ms": 33.971923828125,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Cuid.test.ts",
+      "ms": 28.4091796875,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
+      "ms": 12.945068359375,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/DateTimeUtcFromValid.test.ts",
+      "ms": 81.20166015625,
+      "tests": 19
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Did.test.ts",
+      "ms": 49.098876953125,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Dom.test.ts",
+      "ms": 3.430419921875,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Duration.test.ts",
+      "ms": 55.3974609375,
+      "tests": 12
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/EffectSchema.test.ts",
+      "ms": 10.85205078125,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Email.test.ts",
+      "ms": 12.96435546875,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/EthAmount.test.ts",
+      "ms": 15.62841796875,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/EthereumValidatorPublicKey.test.ts",
+      "ms": 12.173095703125,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/EvmAddress.test.ts",
+      "ms": 14.286376953125,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileDiff.test.ts",
+      "ms": 10.939697265625,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileInfo.test.ts",
+      "ms": 65.76513671875,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileName.test.ts",
+      "ms": 36.967041015625,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FilePath.test.ts",
+      "ms": 78.875,
+      "tests": 28
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileTypeChecker.test.ts",
+      "ms": 145.258544921875,
+      "tests": 18
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Fn.test.ts",
+      "ms": 30.33056640625,
+      "tests": 19
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Glob.test.ts",
+      "ms": 48.947021484375,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Graph.test.ts",
+      "ms": 86.57958984375,
+      "tests": 24
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/HashSet.test.ts",
+      "ms": 45.298828125,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/HttpHeaders.test.ts",
+      "ms": 82.81689453125,
+      "tests": 34
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/HttpStatus.test.ts",
+      "ms": 24.573974609375,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Int.test.ts",
+      "ms": 45.0791015625,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/JSONSchema.test.ts",
+      "ms": 994.548583984375,
+      "tests": 22
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Json.test.ts",
+      "ms": 14.14453125,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Jsonc.test.ts",
+      "ms": 17.760986328125,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Jsonl.test.ts",
+      "ms": 18.12890625,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/LiteralKit.test.ts",
+      "ms": 36.820556640625,
+      "tests": 27
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
+      "ms": 77.05859375,
+      "tests": 73
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts",
+      "ms": 41.008056640625,
+      "tests": 13
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Markdown.test.ts",
+      "ms": 76.1298828125,
+      "tests": 10
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/MimeType.test.ts",
+      "ms": 3.198486328125,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/MutableHashMap.test.ts",
+      "ms": 47.5859375,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/MutableHashSet.test.ts",
+      "ms": 40.660400390625,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Number.test.ts",
+      "ms": 13.0107421875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Opaque.test.ts",
+      "ms": 7.8916015625,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Options.test.ts",
+      "ms": 40.20556640625,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/ParserOptions.test.ts",
+      "ms": 17.53759765625,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Percentage.test.ts",
+      "ms": 2.13427734375,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Port.test.ts",
+      "ms": 45.44580078125,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/PosixPath.test.ts",
+      "ms": 14.0498046875,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/PromiseSchema.test.ts",
+      "ms": 14.626220703125,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/ProtobufScalars.test.ts",
+      "ms": 236.123046875,
+      "tests": 28
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/RegExp.test.ts",
+      "ms": 43.450927734375,
+      "tests": 8
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SafeObject.test.ts",
+      "ms": 128.177001953125,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SafeRemoteHost.test.ts",
+      "ms": 12.94775390625,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SchemaUtils.test.ts",
+      "ms": 50.32861328125,
+      "tests": 31
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Semver.test.ts",
+      "ms": 31.625,
+      "tests": 11
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SeverityLevel.test.ts",
+      "ms": 2.086669921875,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Sha256.test.ts",
+      "ms": 37.571044921875,
+      "tests": 11
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Slug.test.ts",
+      "ms": 15.253662109375,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/StatusCauseError.test.ts",
+      "ms": 5.752197265625,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/String.test.ts",
+      "ms": 20.255615234375,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/TaggedError.equivalence.test.ts",
+      "ms": 23.4560546875,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/TerritoryCode.test.ts",
+      "ms": 17.412353515625,
+      "tests": 6
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Timestamp.test.ts",
+      "ms": 3.096923828125,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Timezone.test.ts",
+      "ms": 9.285888671875,
+      "tests": 2
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Toml.test.ts",
+      "ms": 22.28125,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Transformations.test.ts",
+      "ms": 19.40087890625,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/TxnHash.test.ts",
+      "ms": 20.8369140625,
+      "tests": 5
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/TypedArrays.test.ts",
+      "ms": 64.292236328125,
+      "tests": 9
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/URL.test.ts",
+      "ms": 24.3896484375,
+      "tests": 4
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Unknown.test.ts",
+      "ms": 10.94482421875,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Xml.test.ts",
+      "ms": 20.04248046875,
+      "tests": 3
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Yaml.test.ts",
+      "ms": 27.6044921875,
+      "tests": 7
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/codecStatics.test.ts",
+      "ms": 50.212158203125,
+      "tests": 12
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/collectAnnotationsAt.test.ts",
+      "ms": 6.619873046875,
+      "tests": 11
+    }
+  ],
+  "slowest": [
+    {
+      "file": "packages/foundation/modeling/schema/test/JSONSchema.test.ts",
+      "testName": "JSONSchema wire round-trips property: encode then decode returns an equivalent node",
+      "ms": 267.8161390000005
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/JSONSchema.test.ts",
+      "testName": "JSONSchema wire round-trips property: nodes survive a JSON string boundary",
+      "ms": 252.20935399999962
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/JSONSchema.test.ts",
+      "testName": "JSONSchema wire round-trips property: Document round-trips through its envelope",
+      "ms": 206.13711299999977
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/JSONSchema.test.ts",
+      "testName": "JSONSchema validity of generated documents property: every generated node encodes to a valid draft-2020-12 document",
+      "ms": 156.39260599999943
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileTypeChecker.test.ts",
+      "testName": "encodes DetectedFileInfo through its generation link",
+      "ms": 145.25861900000018
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/FileTypeChecker.test.ts",
+      "testName": "encodes FileSignature through its generation link",
+      "ms": 144.0567379999993
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SafeObject.test.ts",
+      "testName": "SafeObject derives arbitrary values that round-trip",
+      "ms": 128.17689400000017
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SafeObject.test.ts",
+      "testName": "SafeObjectFromObjectKeyword derives arbitrary safe objects that round-trip",
+      "ms": 102.90976099999989
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Graph.test.ts",
+      "testName": "Graph indices derives valid graph primitives from their source schemas",
+      "ms": 86.57961299999988
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Csv.test.ts",
+      "testName": "CSV round-trips schema-derived rows with CSV null-byte normalization",
+      "ms": 86.01025600000003
+    }
+  ]
+}

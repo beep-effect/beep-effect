@@ -1,10 +1,14 @@
 import { fcRuns } from "@beep/fc-runs";
 import { isMutableHashMap, MutableHashMap, MutableHashMapFromSelf } from "@beep/schema/MutableHashMap";
+import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe } from "effect";
+import * as Cause from "effect/Cause";
+import * as Exit from "effect/Exit";
 import * as MutableHashMap_ from "effect/MutableHashMap";
-import * as Result from "effect/Result";
+import * as Option from "effect/Option";
 import * as S from "effect/Schema";
 import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary";
 
@@ -38,10 +42,12 @@ describe("MutableHashMapFromSelf", () => {
         value: S.FiniteFromString,
       });
 
-      const failure1 = yield* Effect.result(S.decodeUnknownEffect(schema)(null));
-      expect(Result.isFailure(failure1)).toBe(true);
-      if (Result.isFailure(failure1)) {
-        expect(failure1.failure.message).toContain("Expected @beep/schema/MutableHashMap/MutableHashMapFromSelf");
+      const failure1 = yield* Effect.exit(S.decodeUnknownEffect(schema)(null));
+      pipe(failure1, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure1)) {
+        expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
+          "Expected @beep/schema/MutableHashMap/MutableHashMapFromSelf"
+        );
       }
     })
   );
@@ -54,10 +60,10 @@ describe("MutableHashMapFromSelf", () => {
         value: S.FiniteFromString,
       });
 
-      const failure2 = yield* Effect.result(S.decodeUnknownEffect(schema)(MutableHashMap_.make(["a", null])));
-      expect(Result.isFailure(failure2)).toBe(true);
-      if (Result.isFailure(failure2)) {
-        expect(failure2.failure.message).toContain(`Expected string
+      const failure2 = yield* Effect.exit(S.decodeUnknownEffect(schema)(MutableHashMap_.make(["a", null])));
+      pipe(failure2, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure2)) {
+        expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(`Expected string
   at ["entries"][0][1]`);
       }
     })
@@ -131,10 +137,10 @@ describe("MutableHashMap", () => {
         value: S.FiniteFromString,
       });
 
-      const failure3 = yield* Effect.result(S.decodeUnknownEffect(schema)(MutableHashMap_.make(["a", null])));
-      expect(Result.isFailure(failure3)).toBe(true);
-      if (Result.isFailure(failure3)) {
-        expect(failure3.failure.message).toContain(`Expected array`);
+      const failure3 = yield* Effect.exit(S.decodeUnknownEffect(schema)(MutableHashMap_.make(["a", null])));
+      pipe(failure3, Exit.hasFails, assertTrue);
+      if (Exit.hasFails(failure3)) {
+        expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(`Expected array`);
       }
     })
   );
