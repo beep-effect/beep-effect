@@ -292,6 +292,7 @@
   },
   "name": "@beep/root",
   "overrides": {
+    "@effect/platform-node": "catalog:",
     "@effect/platform-node-shared": "catalog:",
     "@effect/tsgo-darwin-arm64": "catalog:",
     "@effect/tsgo-darwin-x64": "catalog:",
