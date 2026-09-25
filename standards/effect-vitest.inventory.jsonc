@@ -148835,7 +148835,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The subject is the native Chromium DOM/WebGL renderer, including RAF, real canvas hit testing, GPU disposal and remount behavior. TestClock cannot drive those native browser callbacks. Retain it.live; browser instrumentation remains separately open under L-OBS-01."
+      "reason": "The subject is the native Chromium DOM/WebGL renderer, including RAF, real canvas hit testing, GPU disposal and remount behavior. TestClock cannot drive those native browser callbacks. Retain it.live for the native browser subject. Instrumented runner adoption is verified in 72ea45def6 and L-OBS-01 is fixed."
     },
     {
       "id": "EV009:packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts:47:it.live@2#1",
@@ -148857,7 +148857,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The subject is the native Chromium DOM/WebGL renderer, including RAF, real canvas hit testing, GPU disposal and remount behavior. TestClock cannot drive those native browser callbacks. Retain it.live; browser instrumentation remains separately open under L-OBS-01."
+      "reason": "The subject is the native Chromium DOM/WebGL renderer, including RAF, real canvas hit testing, GPU disposal and remount behavior. TestClock cannot drive those native browser callbacks. Retain it.live for the native browser subject. Instrumented runner adoption is verified in 72ea45def6 and L-OBS-01 is fixed."
     },
     {
       "id": "EV009:packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts:82:it.live@2#1",
@@ -148879,7 +148879,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The subject is the native Chromium DOM/WebGL renderer, including RAF, real canvas hit testing, GPU disposal and remount behavior. TestClock cannot drive those native browser callbacks. Retain it.live; browser instrumentation remains separately open under L-OBS-01."
+      "reason": "The subject is the native Chromium DOM/WebGL renderer, including RAF, real canvas hit testing, GPU disposal and remount behavior. TestClock cannot drive those native browser callbacks. Retain it.live for the native browser subject. Instrumented runner adoption is verified in 72ea45def6 and L-OBS-01 is fixed."
     },
     {
       "id": "EV009:packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts:135:it.live@2#1",
@@ -148901,7 +148901,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The subject is the native Chromium DOM/WebGL renderer, including RAF, real canvas hit testing, GPU disposal and remount behavior. TestClock cannot drive those native browser callbacks. Retain it.live; browser instrumentation remains separately open under L-OBS-01."
+      "reason": "The subject is the native Chromium DOM/WebGL renderer, including RAF, real canvas hit testing, GPU disposal and remount behavior. TestClock cannot drive those native browser callbacks. Retain it.live for the native browser subject. Instrumented runner adoption is verified in 72ea45def6 and L-OBS-01 is fixed."
     },
     {
       "id": "EV009:packages/drivers/graph-3d/test/browser/Graph3D.renderer.test.ts:175:it.live@2#1",
@@ -148923,7 +148923,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The subject is the native Chromium DOM/WebGL renderer, including RAF, real canvas hit testing, GPU disposal and remount behavior. TestClock cannot drive those native browser callbacks. Retain it.live; browser instrumentation remains separately open under L-OBS-01."
+      "reason": "The subject is the native Chromium DOM/WebGL renderer, including RAF, real canvas hit testing, GPU disposal and remount behavior. TestClock cannot drive those native browser callbacks. Retain it.live for the native browser subject. Instrumented runner adoption is verified in 72ea45def6 and L-OBS-01 is fixed."
     },
     {
       "id": "EV009:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1036:it.live@2#1",
