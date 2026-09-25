@@ -11,6 +11,7 @@ import { Service } from "effect/Context";
 import { formatIso, makeUnsafe, toDate } from "effect/DateTime";
 import {
   acquireRelease,
+  acquireUseRelease,
   addFinalizer,
   exit,
   flip,
@@ -41,6 +42,7 @@ import {
 } from "effect/Schema";
 import { makeEffect } from "effect/SchemaParser";
 import { camelCase, snakeCase } from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { SqlClient } from "effect/unstable/sql/SqlClient";
 import { isSqlError } from "effect/unstable/sql/SqlError";
 import { makeRepository as makeSqlRepository } from "effect/unstable/sql/SqlModel";
@@ -110,54 +112,62 @@ const resolveNodeBinary = (): string => {
 const nodeBinary = resolveNodeBinary();
 
 const runPush = (databasePath: string) =>
-  tryPromise({
-    try: (): Promise<string> => {
-      const inheritedOptions = Bun.env.NODE_OPTIONS;
-      const nodeOptions =
-        inheritedOptions === undefined ? `--require=${preloadPath}` : `${inheritedOptions} --require=${preloadPath}`;
-      const process = Bun.spawn(
-        [
-          nodeBinary,
-          "./node_modules/.bin/drizzle-kit",
-          "push",
-          "--dialect",
-          "sqlite",
-          "--schema",
-          schemaPath,
-          "--url",
-          databasePath,
-          "--force",
-          "--verbose",
-        ],
-        {
-          cwd: repositoryRoot,
-          env: { ...Bun.env, NODE_OPTIONS: nodeOptions },
-          stdin: "ignore",
-          stdout: "pipe",
-          stderr: "pipe",
-        }
-      );
-      return Promise.all([
-        process.exited,
-        new Response(process.stdout).text(),
-        new Response(process.stderr).text(),
-      ]).then(([status, stdout, stderr]) => {
-        const output = `${stdout}\n${stderr}`;
-        if (status !== 0) {
-          throw SqliteHarnessError.make({
-            message: `drizzle-kit SQLite push failed (${status})`,
-            cause: output,
-          });
-        }
-        return output;
-      });
-    },
-    catch: (cause) =>
-      SqliteHarnessError.make({
-        message: "drizzle-kit SQLite push failed",
-        cause,
+  acquireUseRelease(
+    tryPromise({
+      try: () => {
+        const inheritedOptions = Bun.env.NODE_OPTIONS;
+        const nodeOptions =
+          inheritedOptions === undefined ? `--require=${preloadPath}` : `${inheritedOptions} --require=${preloadPath}`;
+        const process = Bun.spawn(
+          [
+            nodeBinary,
+            "./node_modules/.bin/drizzle-kit",
+            "push",
+            "--dialect",
+            "sqlite",
+            "--schema",
+            schemaPath,
+            "--url",
+            databasePath,
+            "--force",
+            "--verbose",
+          ],
+          {
+            cwd: repositoryRoot,
+            env: { ...Bun.env, NODE_OPTIONS: nodeOptions },
+            stdin: "ignore",
+            stdout: "pipe",
+            stderr: "pipe",
+          }
+        );
+        return Promise.resolve({
+          process,
+          output: Tuple.make(process.exited, new Response(process.stdout).text(), new Response(process.stderr).text()),
+        });
+      },
+      catch: (cause) => SqliteHarnessError.make({ message: "drizzle-kit SQLite push failed", cause }),
+    }),
+    ({ output }) =>
+      tryPromise({
+        try: () =>
+          Promise.all(output).then(([status, stdout, stderr]) => {
+            const output = `${stdout}\n${stderr}`;
+            if (status !== 0) {
+              throw SqliteHarnessError.make({
+                message: `drizzle-kit SQLite push failed (${status})`,
+                cause: output,
+              });
+            }
+            return output;
+          }),
+        catch: (cause) => SqliteHarnessError.make({ message: "drizzle-kit SQLite push failed", cause }),
       }),
-  });
+    ({ process, output }) =>
+      tryPromise(() => {
+        if (process.exitCode === null) process.kill("SIGKILL");
+        return Promise.allSettled(output);
+      }).pipe(orDie)
+  );
 
 class SqliteHarness extends Service<
   SqliteHarness,

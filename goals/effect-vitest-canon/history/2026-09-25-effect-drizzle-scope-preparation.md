@@ -22,3 +22,24 @@ seconds and docgen 3.6 seconds. This is scoped preparation, not complete wave
 proof or a causal performance comparison. Subprocess ownership, oracle/property
 findings, instrumentation, final timings, ledger attribution and hosted gates
 remain outstanding.
+
+## Subprocess ownership
+
+The bundle-probe child is acquired in the scope supplied by it.effect. Each real
+Node drizzle-kit push uses acquireUseRelease, so its lifetime ends before the
+outer temporary database directory is removed. Both paths begin stdout/stderr
+draining immediately; release kills a still-running child and awaits settlement
+of exit and both stream reads, including interruption or a failed read.
+
+The commands, native runtimes, one-byte regression input, nonzero-exit check,
+first-line delta and error-text assertions remain. No timeout was increased.
+The installed/reference Vitest API confirms it.effect supplies Scope; an initial
+it.scoped attempt was corrected before proof. Effect checker async-function
+findings were also corrected rather than suppressed.
+
+Full package audit passed in 24.3 seconds and docgen in 5.6 seconds. Focused Bun
+execution passed all 18 tests across the bundle and SQLite suites. The ordered
+11 and 43 expect-statement start lines are unchanged; this textual comparison
+is supporting evidence, not an AST-equivalence or cancellation-path proof.
+A deterministic interruption witness is still needed before claiming that
+branch of cleanup has been exercised. Remaining lens work is not closed.

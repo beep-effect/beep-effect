@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { fnUntraced, tryPromise } from "effect/Effect";
+import { acquireRelease, fnUntraced, orDie, tryPromise } from "effect/Effect";
+import * as Tuple from "effect/Tuple";
 import { buildBundleConsumer } from "./bundle-build.ts";
 import { compareBundleSize, formatBundleSizeLine } from "./bundle-size.ts";
 
@@ -48,21 +49,36 @@ describe.runIf(hasBunSpawn)("bundle size probe process", () => {
     fnUntraced(function* () {
       const artifact = yield* tryPromise(buildBundleConsumer);
       const baselineRawBytes = artifact.rawBytes - 1;
-      const probe = Bun.spawn(
-        [
-          Bun.which("bun") ?? "bun",
-          new URL("./bundle-size.probe.ts", import.meta.url).pathname,
-          `--test-baseline-raw-bytes=${baselineRawBytes}`,
-        ],
-        {
-          cwd: new URL("../", import.meta.url).pathname,
-          stdout: "pipe",
-          stderr: "pipe",
-        }
+      const probe = yield* acquireRelease(
+        tryPromise(() => {
+          const process = Bun.spawn(
+            [
+              Bun.which("bun") ?? "bun",
+              new URL("./bundle-size.probe.ts", import.meta.url).pathname,
+              `--test-baseline-raw-bytes=${baselineRawBytes}`,
+            ],
+            {
+              cwd: new URL("../", import.meta.url).pathname,
+              stdout: "pipe",
+              stderr: "pipe",
+            }
+          );
+          return Promise.resolve({
+            process,
+            output: Tuple.make(
+              process.exited,
+              new Response(process.stdout).text(),
+              new Response(process.stderr).text()
+            ),
+          });
+        }),
+        ({ process, output }) =>
+          tryPromise(() => {
+            if (process.exitCode === null) process.kill("SIGKILL");
+            return Promise.allSettled(output);
+          }).pipe(orDie)
       );
-      const [exitCode, stdout, stderr] = yield* tryPromise(() =>
-        Promise.all([probe.exited, new Response(probe.stdout).text(), new Response(probe.stderr).text()])
-      );
+      const [exitCode, stdout, stderr] = yield* tryPromise(() => Promise.all(probe.output));
       expect(exitCode).not.toBe(0);
       const lines = stdout.split("\n");
       expect(lines[0]).toBe(formatBundleSizeLine(artifact.rawBytes, baselineRawBytes));
