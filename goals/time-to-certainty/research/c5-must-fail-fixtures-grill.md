@@ -138,3 +138,65 @@ ran them. Open question for the lock: concurrent appends from two lanes — ruli
 per attempt" relies on O_APPEND atomicity for a multi-line write, so either measure the largest
 attempt append against `PIPE_BUF` or add a per-append rename publish through
 `publishJournalTextAtomically`. Machine-wide (across clones) stays the deferred P3 candidate.
+
+## Proposed ruling 72 (open — needs Benjamin's lock, NOT implemented): a red run still records its input digest, as observation, so disagreements are observable
+
+Evidence: a shadow disagreement is `isHit(row.decision) && !isPassed(row.observed)` — the ledger would
+have reused a fact and the lane failed when it actually ran. A red lane cannot reach that state.
+`turboLaneDigestFromSummary` folds a digest only when every selected task passed or replayed from cache
+(`taskPassed` in `TurboLaneDigest.ts`; C3 states it as "a lane never records a reusable digest for a red
+run"), and `resolveLaneInputDigestSource` short-circuits on `O.isSome(outcome.failure)` to the declared
+digest, which every production lane tuple sets to `O.none()` — `runGithubCheckLane` in `Tasks.ts` and
+`ciLocalLaneInputsForTesting` in `CiLane.ts`, whose own doc reads "Ordered lane inputs with absent
+executor digests". So a failed lane's key is always `undeclared`, `decideAgainstFacts` refuses it as
+`undeclared-inputs` before any fact is read, and `isDisagreement` is unreachable.
+
+The consequence is not cosmetic. Every disagreement counter — the attempt summary's `disagreements`,
+`ProofShadowReport.disagreements` and `barDisagreements`, `ProofLedger.disagreements` — is structurally
+zero, so ruling 7's `disagreements: 0` criterion in `ProofShadowEnforcementBar.ratified` is satisfied by
+construction. The one empirical safety criterion gating C4.2 enforcement cannot fail. The fixtures that
+appear to prove detection works (`proof-shadow.test.ts`, the first-attempt case and the
+would-reuse-hit-then-failed case) build a failed lane carrying a digest, which production never
+produces; they prove the counter arithmetic, not that the guard is live.
+
+Proposal: fold task hashes into the lane digest regardless of task outcome — the Turbo hash is derived
+from a task's inputs, not from whether it passed, so it identifies the same work either way — and
+resolve the digest and its package scope on the failure branch too instead of short-circuiting past the
+lane ledger. The recorded fact keeps `outcome: "failed"`, which is never a reuse source: `decideExactFact`
+answers an exact-match failed fact with `miss(key, "prior-failed")` today and would continue to. A
+passed fact followed by a red run on the same key then registers as a hit-versus-failed row, and the
+changed-package tripwire gains a scope on failed lanes as a side effect.
+
+Must-fail fixture for the lock: a passed fact recorded for key K, then a failed run that resolves the
+same K through the ordinary production path, must record exactly one disagreement — replacing the
+test-only construction that hands a failed lane a digest by hand.
+
+Rejected: leaving the bar vacuous and enforcing C4.2 on it anyway (a criterion that cannot fail is not
+evidence, and ruling 7 asked for evidence); counting `undeclared-inputs` misses as disagreements
+(absence of a reusable key is not a contradiction between two runs); recording failed runs as reusable
+facts (that would make a red run serve a later lane, which rulings 1 and 4 exist to prevent).
+
+## Open question for ruling 69 (not implemented): root-level lane inputs outside the epoch
+
+Ruling 69 drops every changed path that falls under no workspace, and the justification written into the
+code was that "root config is already the epoch". That is narrower than it sounds. The proof epoch is
+exactly six inputs (`collectProofEpoch` in `ProofDigest.ts`): `bun.lock`, `.bun-version`, `.nvmrc`,
+`turbo.json`, `tsconfig.base.json`, and `packages/tooling/policy-pack/lint-rules/package.json`. Real lane
+inputs that live in no workspace and in no epoch component therefore trip nothing at all: the ratchet
+baselines and inventories under `standards/*.jsonc`, `biome.json` (and `biome.identity.jsonc`), the
+workflow definitions under `.github/workflows/`, and `scripts/`. A change to any of them can alter what a
+lane checks while every lane's digest and the epoch both stay put, so a reused proof would be a proof of
+the old rules.
+
+Two candidate answers for the lock, neither implemented here:
+
+1. Widen the epoch to cover the standards baselines, the Biome configuration and the workflow files. It
+   keeps the tripwire's per-lane scope honest and reuses the mechanism ruling 4 already built, at the cost
+   of invalidating every fact on any baseline write — which the ratchets do routinely.
+2. Treat any unmapped path that is not under `docs/` or `goals/` as tripping every lane with a non-empty
+   scope. It needs no epoch change and fails closed, but it is coarse: one `standards/` write would refuse
+   the whole attempt's reuse, which is close to the "any edit anywhere invalidates every lane" defect
+   ruling 1 rejected.
+
+Until one is locked, the code says what is true: unmapped paths are outside the tripwire by ruling 69,
+six root inputs are covered by the epoch, and the rest is a known gap.
