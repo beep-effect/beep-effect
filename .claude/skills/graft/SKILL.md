@@ -155,7 +155,7 @@ available; the guidance is identical.
   federate across `effect` and `effect-tsgo`, or `graft ask "<q>" .repos/effect`
   to narrow to Effect. `.repos/effect` and `.repos/effect-tsgo` point to the
   child clones; `.repos/effect-workspace` points to their parent at
-  `~/YeeBois/references/effect`. `scripts/setup-effect-ref.sh` provisions these
+  `$HOME/YeeBois/references/effect`. `scripts/setup-effect-ref.sh` provisions these
   links from `scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides the root.
   The `beep-refs-refresh` timer runs nightly at 03:30 with `claude-opus-5`
   through CLIProxyAPI, reusing `$HOME/.config/beep-graft/env`.

@@ -254,10 +254,10 @@ If you touch this, load or run this first. Do not hand-author around it.
 ## Tool Routing
 
 - effect v3↔v4 differences: validate against the Effect reference checkout
-  (`.repos/effect`, the Effect child at `~/YeeBois/references/effect/effect`),
+  (`.repos/effect`, the Effect child at `$HOME/YeeBois/references/effect/effect`),
   never training-data priors. `scripts/setup-effect-ref.sh` provisions the
   workspace from `scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides
-  its `~/YeeBois/references/effect` root.
+  its `$HOME/YeeBois/references/effect` root.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer
   the shadcn skill + shadcn MCP for registry discovery and installs.
 - UI motion evidence comes from `bun run beep qa` artifacts. There is no QA

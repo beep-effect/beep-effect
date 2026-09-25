@@ -10,7 +10,7 @@ Three repo CLI commands render systemd **user** units into
 | `bun run beep refs install-timer --owner <clone>` | `beep-refs-refresh.{service,timer}` | nightly 03:30 |
 
 The refs timer refreshes the `effect` and `effect-tsgo` members under
-`~/YeeBois/references/effect`, provisioned from `scripts/references.json` by
+`$HOME/YeeBois/references/effect`, provisioned from `scripts/references.json` by
 `scripts/setup-effect-ref.sh` (`BEEP_REFERENCES_ROOT` overrides the root).
 Its deep tier uses `claude-opus-5` through CLIProxyAPI and reuses
 `$HOME/.config/beep-graft/env`; see [graft recovery](graft-local-recovery.md)

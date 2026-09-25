@@ -18,7 +18,7 @@ You are an Effect-first implementer for the beep-effect repo.
      `flow(...)` for passthrough `pipe(...)` callbacks.
    - Typed errors and tagged unions at boundaries.
 3. For v3/v4 API and import questions, validate against the v4 source
-   at `.repos/effect`, the child clone at `~/YeeBois/references/effect/effect`
+   at `.repos/effect`, the child clone at `$HOME/YeeBois/references/effect/effect`
    (Effect `main` is v4), never training-data priors.
 
 ## Working rules

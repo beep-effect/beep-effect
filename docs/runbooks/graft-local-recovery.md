@@ -231,7 +231,7 @@ night. The first seed is what saves the first night's full build: the refresh
 re-summarizes only changed files, so the owner starts from a meaning tier rather
 than from nothing.
 
-The Effect reference workspace at `~/YeeBois/references/effect` has its own
+The Effect reference workspace at `$HOME/YeeBois/references/effect` has its own
 03:30 `beep-refs-refresh` timer, rendered by `beep refs install-timer`.
 It uses `claude-opus-5` through CLIProxyAPI and reuses
 `$HOME/.config/beep-graft/env` unchanged. See the [systemd timer

@@ -192,7 +192,7 @@ The Effect version tells you what it needs, what can go wrong, and what it
 returns. The async version *hopes*. I am done hoping.
 
 APIs get validated against the live Effect source referenced at
-`.repos/effect`, the Effect child of `~/YeeBois/references/effect`, rather than
+`.repos/effect`, the Effect child of `$HOME/YeeBois/references/effect`, rather than
 whatever an agent remembers from training. See
 [`standards/effect-first-development.md`](standards/effect-first-development.md)
 and
@@ -277,7 +277,7 @@ Agent law: [`AGENTS.md`](AGENTS.md).
 First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
 `explorations/`, `standards/`, and the authored `docs/` tree.
 
-The reference workspace lives at `~/YeeBois/references/effect`, with `effect`
+The reference workspace lives at `$HOME/YeeBois/references/effect`, with `effect`
 and `effect-tsgo` child clones. `scripts/setup-effect-ref.sh` provisions it from
 `scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides the workspace root.
 The gitignored `.repos/effect` link still points to the
