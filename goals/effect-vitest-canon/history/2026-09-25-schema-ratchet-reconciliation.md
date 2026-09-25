@@ -117,3 +117,48 @@ The post-CSP timing artifacts supersede the preceding sample: all 725 tests in
 78 files passed, whole-command time 5.758 seconds and reporter span 5,226.30 ms.
 Source hashes remained stable. Runtime/load caveats remain unchanged. All 786
 ledger rows pass the strict canonical decoder after these dispositions.
+
+## Exact-occurrence detector attribution
+
+Reconciliation uses the baseline at the parent of implementation commit
+369a8f6d981006937146f96cbb9e5ced4065f2ba, not a moving-main scan.
+All 362 still-open saved detector rows matching that baseline by file, rule and
+occurrence fingerprint now cite the implementation: 35 EV001, 297 EV006,
+28 EV007, one EV011 and one EV014. The actual post-implementation scan retains
+only the separately justified EV009 live-clock exception. Assertion parity,
+error-payload preservation and package proofs are recorded in the wave receipts.
+
+The scoped pre-wave baseline also contained 233 findings absent from the frozen
+ledger: 122 EV005, 108 EV006 and three EV014. They are appended with their original
+IDs, evidence and occurrence fingerprints and the same implementation fix SHA.
+No original row is deleted; there are no ID collisions or duplicate occurrence
+keys in either input. This accounts for exactly the 595 resolved schema baseline
+entries without counting unrelated package changes.
+
+Actionable schema totals are now 637 fixed, one exception and 106 open. The
+remaining open rows are unmatched historical detector findings and property-runner
+observability judgments; they remain uncredited until their provenance is reviewed.
+
+## Remaining historical findings reconciled
+
+All 71 remaining EV001/EV007 saved evidence snippets match the parent source of
+b1aa7e320cde926e7e80a98073ba8b0d517d7c8c after whitespace normalization.
+At that commit, the relevant files contain no Arbitrary.checkEffect calls and
+use native it.effect.prop; the 38 runtime findings also have no remaining calls
+to their captured Effect.runSync/runPromise symbol. Twenty-six remaining
+observability snippets independently match that same preimage and native-property
+transition. These 97 findings cite the inherited commit.
+
+Nine older EV006 assertion findings survived the codec migration under changed
+syntax: HttpHeaders invalid creation, two Number rejection checks, four Options
+None/Some checks, and two SchemaUtils optional-label checks. Their operand and
+payload continuity is visible across the inherited migration and the current
+implementation diff. They cite 369a8f6d981006937146f96cbb9e5ced4065f2ba,
+which replaces them with canonical typed-error, Boolean and Option assertions.
+
+The final scoped ledger has 743 fixed actionable rows, one documented live-clock
+exception, and zero open actionable rows. All frozen rows and no-findings coverage
+records remain represented; the 233 selected-package baseline-delta rows are
+additional. This closes finding disposition only. Coverage integration, review
+service availability, hosted proof against main and Benjamin's merge remain
+required before calling Wave C complete.
