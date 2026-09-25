@@ -11,6 +11,12 @@ The goal is to make failure, absence, decoding, and dependency wiring explicit a
 
 ## Primary References
 
+`.repos/effect` points to the Effect child at
+`$HOME/YeeBois/references/effect/effect` (Effect `main` is v4). The workspace also
+contains `effect-tsgo`; `scripts/setup-effect-ref.sh` provisions it from
+`scripts/references.json`, with `BEEP_REFERENCES_ROOT` overriding the
+`$HOME/YeeBois/references/effect` root.
+
 - [Effect LLMS guide](../.repos/effect/LLMS.md)
 - [Effect ai-docs index](../.repos/effect/ai-docs/src/index.md)
 - [Effect migration notes](../.repos/effect/MIGRATION.md)
